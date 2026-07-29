@@ -1,13 +1,129 @@
 /**
- * Terminal Draft — Singularity faction.
- * vim-styled editor on near-black, scanline overlay, blinking cursor.
+ * The Singularity edit praxis — composer v2 (#1186, epic #1179; design project
+ * c491945e, `Singularity Edit Praxis.dc.html`, `faction="singularity"`).
+ *
+ * A terminal session. The composer's shared layout (ADR-0065) worn as window
+ * chrome over a phosphor chassis: three lamps and a process name on the bar, a
+ * standing raster and a travelling scan band on the ground, dashed hairlines
+ * between the regions, and a block cursor blinking after the submit key.
+ *
+ * ## The layout is not this file's
+ *
+ * masthead → status row → the task slip → `Title` → `How it was done` → the
+ * mode block (roster or duel pair) → `Write-up` (Write / Preview) → `Proof` →
+ * footer (`Save draft` … `Submit`), in that order and no other. Every region
+ * comes from `shared.tsx`, every control from `controls.tsx`, and the footer
+ * keeps the global `[Cancel] … [Submit]` order settled in #646.
+ * `DefaultEditPraxis` is the reference implementation; this file is the same
+ * page wearing the terminal's dress and differs from it in **no** structural
+ * respect. A skin brings frame, type, ornament and motion — nothing else.
+ *
+ * ## One responsive component, no mobile twin (ADR-0065 §2)
+ *
+ * `useComposerSizes()` picks the size set and `sizes.isMobile` gates conditional
+ * ornament — one tree at two widths. The phone stacks with flow (the task slip
+ * turns its column, the mode keys wrap); there is no fixed-px grid anywhere
+ * below (SPEC-faction-ui-profile §1a). `pages/editPraxis/mobileArchetypes/` and
+ * the `mobileEditPraxis` surface were retired outright in #1181.
+ *
+ * ## Copy (ADR-0065 §3)
+ *
+ * The one neutral shared `editPraxis.composer.*` set. `editPraxis.singularity`'s
+ * page keys — the whole `terminal.*` command line, the `--solo/--networked/
+ * --adversarial` flags, `TRANSMIT SIGNAL`, `[esc] :q`, `rm`, `+ attach` — are
+ * deleted with this issue. `editPraxis.singularity.collab` SURVIVES: that is
+ * `collabCopy`'s override table, a different resolver that also feeds
+ * `CollabRoster` on the read page, and `collabCopy.test.ts` pins it.
+ *
+ * Two strings here are untranslated and that is deliberate: `praxis.proc` on
+ * the window bar and `[ok]` as the status mark are ORNAMENT, in the same class
+ * as the three lamps beside them — marks that happen to be made of glyphs
+ * (WORLD_ZERO_STYLE §4, "role vocabulary"). They are module constants rather
+ * than JSX text so they read as identifiers to `i18next/no-literal-string`,
+ * which is the shape `BODY_TOOLBAR_BUTTONS` already uses for its glyphs, and
+ * both sit inside `aria-hidden` chrome so neither is announced. The status
+ * row's real content — `Draft`, `Saved just now` — is beside the mark, in the
+ * shared neutral catalog.
+ *
+ * ## Colour
+ *
+ * Every value is a `--faction-singularity-term-*` token, the two-theme contract
+ * the v2 task card minted (#1023) and the task/praxis details extended (#1034).
+ * WORLD_ZERO_STYLE §6 is explicit that this family is NOT theme-invariant even
+ * though both its halves are near-black: the chassis stays black and the
+ * cascade flips the PHOSPHOR. So there is no `dark ?` branch in this file and
+ * no hex; the two halos and the CTA glow are declared as whole shadow values
+ * precisely so a component never writes one.
+ *
+ * Every pairing this skin introduces was measured on the ground it actually
+ * lands on, in both halves (§3, "contrast is a pairing"). The tightest are
+ * `dim` on the chrome bar (4.52 light / 5.35 dark), `dim` on the readout well
+ * (4.57 / 5.10) and `blue-bright` on that same well (4.68 / 9.50). Everything
+ * clears 4.5:1; nothing needed walking.
+ *
+ * ## Motion — three classes, no inline `animation:`
+ *
+ * `.ep-pulse` on the status lamp (re-timed to the design's 1.6s through
+ * `--ep-pulse-dur`, the documented hook), `.ep-blink` on the submit cursor, and
+ * `.sg-scan` on the travelling band. All three are class-gated behind the
+ * shared `prefers-reduced-motion` guard in `index.css`; an inline `animation:`
+ * would bypass it, which is what #1003 retired. This file touches `index.css`
+ * for nothing.
+ *
+ * ## Not built as drawn — and why, at the site
+ *
+ * - **The sweep runs `.sg-scan`, not `.ep-sweep`.** The issue names
+ *   `epSweep 6.5s`, but the repo's `epSweep` is `translateY(-120% → 220%)` and
+ *   a percentage translate resolves against the ELEMENT — on a 38px band that
+ *   is 130px of travel, not a pass down the sheet. `.sg-scan` animates
+ *   `top: -24% → 120%` of its parent, which is the motion drawn, and it is
+ *   already Singularity's sweep on its task card, task detail and praxis detail
+ *   (WORLD_ZERO_STYLE §6: a faction's ornament is one primitive, not one per
+ *   surface). Deviation: 5s rather than 6.5s, the sibling surfaces' timing.
+ * - **Neither mark is a `RingMark`.** The shared ring is the geometry the other
+ *   skins' two marks share; this design draws the points as a bordered readout
+ *   box and the status as the bare string `[ok]`, so the ring would be a shape
+ *   the terminal does not have.
+ * - **`[ok]` is 18px, not the design's 19.** `--text-content` is the rung; a
+ *   `--text-*` token names a tier (§4a) and this mark is read, not scanned.
+ * - **The points numeral's bloom is `--…-term-halo-blue` (14px), not the
+ *   design's 12px.** That token exists for exactly this numeral and is already
+ *   `none` in light / lit in dark, which is the "glow in dark only" the design
+ *   asks for; minting a second one for 2px is a token nobody can find.
+ * - **The submit cursor blinks at 1s, not 1.05s.** `.ep-blink` is
+ *   `epBlink 1s step-end`, and `step-end` IS `steps(1)`.
+ * - **The breadcrumb keeps the app's neutral ink.** It sits above the sheet on
+ *   the page's own watercolour ground, and a phosphor measured on a black
+ *   chassis is the #1118 trap — a block whose ground is not yours keeps the ink
+ *   it was measured with.
+ * - **No forfeit, no duel clock.** #1071 decisions 3 and 4: at `active` an
+ *   unsubmit is a free neutral reopen (ADR-0011 §Forfeit, and #718 rejected the
+ *   forfeit framing once already), and no expiry field exists to draw a clock
+ *   from. The awaiting stage belongs to `PraxisWaitingSurface` and to #1189.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
-import { Breadcrumb, ErrorBanner, TitleCounter, formatClock } from "./shared";
+import MediaArt from "../blocks/MediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
+import {
+  Breadcrumb,
+  ComposerFooter,
+  ComposerGround,
+  ComposerMasthead,
+  ComposerRule,
+  ComposerSection,
+  ComposerSheet,
+  ComposerStatusRow,
+  ErrorBanner,
+  TaskSlip,
+  TitleCounter,
+  composerLabelStyle,
+  formatAutosave,
+  useComposerSizes,
+} from "./shared";
 import {
   BodyPreview,
   BodyTextarea,
@@ -18,6 +134,8 @@ import {
   PublishButton,
   SaveDraftButton,
   TitleField,
+  WriteUpTabs,
+  type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -26,643 +144,668 @@ interface Props {
   state: EditPraxisState;
 }
 
+/* The terminal's two-theme contract (#1023/#1034), named for the ROLE each
+ * plays in this design's skin row rather than for its colour. Both halves are
+ * near-black and the cascade flips the phosphor — see the header. */
+const CHASSIS = "var(--faction-singularity-term-bg)";
+const CHROME = "var(--faction-singularity-term-chrome)";
+/** The raised box: fields, the task slip, proof tiles. */
+const PANEL = "var(--faction-singularity-term-panel)";
+/** The points readout's well — the token was minted for this exact mark. */
+const READOUT = "var(--faction-singularity-term-readout)";
+const INK = "var(--faction-singularity-term-ink)";
+/** The design's `accent`: titles, the status mark, the lit lamp. */
+const ACCENT = "var(--faction-singularity-term-bright)";
+/** The design's `muted`: labels, captions, the leaving end of the footer. */
+const MUTED = "var(--faction-singularity-term-dim)";
+const BLUE = "var(--faction-singularity-term-blue)";
+/** The design's `accentDeep`: the points numeral, and nothing else. */
+const ACCENT_DEEP = "var(--faction-singularity-term-blue-bright)";
+const BORDER = "var(--faction-singularity-term-border)";
+const HAIR = "var(--faction-singularity-term-hair)";
+const SCAN = "var(--faction-singularity-term-scan)";
+const SWEEP = "var(--faction-singularity-term-sweep)";
+const CTA_BG = "var(--faction-singularity-term-cta-bg)";
+const CTA_INK = "var(--faction-singularity-term-cta-ink)";
+const CTA_GLOW = "var(--faction-singularity-term-cta-glow)";
+const HALO_GREEN = "var(--faction-singularity-term-halo-green)";
+const HALO_BLUE = "var(--faction-singularity-term-halo-blue)";
+const SHADOW = "var(--faction-singularity-term-shadow)";
+
+/* Share Tech Mono, for the title, the body AND the label — the whole surface is
+ * one face. Reached through the faction's own accessor rather than through
+ * --font-faction-terminal directly, which is what §4 asks for when the face IS
+ * the faction's (as against a face a single surface borrows). */
+const FACE = "var(--faction-singularity-card-font)";
+
+/** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
+const RADIUS = 2;
+
+/* Ornament, not copy — see the header. Module constants so they reach JSX as
+ * identifier expressions rather than as literal text. */
+const PROC_NAME = "praxis.proc";
+const STATUS_MARK = "[ok]";
+
+/** The composer's label tier in the terminal's face. */
+function termLabel(overrides: CSSProperties = {}): CSSProperties {
+  return composerLabelStyle({ fontFamily: FACE, ...overrides });
+}
+
 export default function SingularityEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
+  const sizes = useComposerSizes();
+  const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
   const task = state.task;
 
-  const modeOptions: Array<{ key: PraxisType; flag: string; desc: string }> = (
-    ["solo", "collab", "duel"] as const
-  ).map((key) => ({
-    key,
-    flag: t(`editPraxis.singularity.mode.${key}.label`),
-    desc: t(`editPraxis.singularity.mode.${key}.desc`),
-  }));
-
-  // Singularity-specific tokens; these CSS vars resolve to terminal-green/black.
-  const term = factionCssVar("singularity", "card-text"); // #4ade80 in both modes
-  const dim = factionCssVar("singularity", "card-muted");
-  const bg = factionCssVar("singularity", "card-bg"); // black in both modes
-  const accent = factionCssVar("singularity");
-
-  const [cursorOn, setCursorOn] = useState(true);
-  useEffect(() => {
-    const id = setInterval(() => setCursorOn((c) => !c), 600);
-    return () => clearInterval(id);
-  }, []);
-
-  const lineCount = useMemo(() => state.body.split("\n").length, [state.body]);
-
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+  const modeOptions: Array<{ key: PraxisType; label: string }> = [
+    { key: "solo", label: t("editPraxis.composer.modeSolo") },
+    { key: "collab", label: t("editPraxis.composer.modeCollab") },
+    { key: "duel", label: t("editPraxis.composer.modeDuel") },
+  ];
+
+  /** Every field is the same lit panel inside a hard 1px frame. */
+  const fieldBox = {
+    width: "100%",
+    background: PANEL,
+    color: INK,
+    border: `1px solid ${BORDER}`,
+    borderRadius: RADIUS,
+    padding: "var(--space-md)",
+    fontFamily: FACE,
+    outline: "none",
+    boxSizing: "border-box",
+  } as const;
+
+  /* The section divider: a dashed hair, not a solid rule. One node, handed to
+     every section, so the rhythm cannot drift between regions. */
+  const hairRule = (
+    <ComposerRule
+      style={{
+        height: 0,
+        background: "none",
+        borderTop: `1px dashed ${HAIR}`,
+      }}
+    />
+  );
 
   return (
-    <div
-      style={{
-        background: bg,
-        color: term,
-        fontFamily: "'Share Tech Mono', monospace",
-        position: "relative",
-        minHeight: "100vh",
-        boxShadow: `0 0 0 1px ${accent}, 0 0 80px rgba(37,99,235,.2) inset`,
-      }}
-    >
-      {/* Scanlines overlay */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          backgroundImage:
-            "repeating-linear-gradient(to bottom, transparent 0, transparent 2px, rgba(74,222,128,.05) 2px, rgba(74,222,128,.05) 3px)",
-          zIndex: 1,
-        }}
-      />
-
-      {/* Window chrome */}
+    <div style={{ fontFamily: FACE, color: INK }}>
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "var(--space-sm) var(--space-lg)",
-          borderBottom: `1px solid ${accent}`,
-          background: "linear-gradient(to bottom, #0a1f2e, #050f1c)",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
-        <div style={{ display: "flex", gap: "var(--space-sm)", alignItems: "center" }}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              style={{
-                width: 9,
-                height: 7,
-                background: bg,
-                border: `1px solid ${accent}`,
-              }}
-            />
-          ))}
-          <span
-            style={{
-              fontSize: "var(--text-base)",
-              color: dim,
-              marginLeft: "var(--space-md)",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-            }}
-          >
-            {t("editPraxis.singularity.terminal.sessionPath", { session: praxis.id.toString(16) })}
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: "var(--space-md)", fontSize: "var(--text-base)", color: dim }}>
-          <span style={{ color: term }}>{cursorOn ? "●" : "○"} REC</span>
-        </div>
-      </div>
-
-      <div
-        style={{
-          padding: "var(--space-lg) var(--space-xl) var(--space-xl)",
-          position: "relative",
-          zIndex: 2,
-          maxWidth: 880,
+          maxWidth: sizes.maxWidth,
           margin: "0 auto",
+          padding: "var(--space-lg) var(--space-lg) 0",
         }}
       >
+        {/* No inkColor: the breadcrumb is on the page's ground, not the
+            terminal's, so it keeps the ink that ground was measured with. */}
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={dim}
         />
+      </div>
 
-        {/* Boot lines */}
-        <div style={{ marginBottom: "var(--space-lg)", fontSize: "var(--text-md)", lineHeight: 1.7 }}>
-          <div style={{ color: dim }}>{t("editPraxis.singularity.terminal.whoami")}</div>
-          <div style={{ color: term }}>
-            {t("editPraxis.singularity.terminal.whoamiResult", { name: praxis.created_by_display_name })}
-          </div>
-          <div style={{ color: dim }}>
-            {t("editPraxis.singularity.terminal.editCommand", { id: praxis.id })}
-          </div>
-        </div>
-
-        {/* Task block */}
-        <div style={{ marginBottom: "var(--space-xl)", position: "relative" }}>
-          <span
+      <ComposerSheet
+        sizes={sizes}
+        style={{
+          background: CHASSIS,
+          border: `1px solid ${BORDER}`,
+          borderRadius: RADIUS,
+          boxShadow: SHADOW,
+        }}
+        masthead={
+          /* The window bar. `ComposerMasthead` is a 3px band by default; the
+             skin gives it its own height and padding through `style`, which is
+             spread last. Its whole content is aria-hidden chrome. */
+          <ComposerMasthead
+            background={CHROME}
             style={{
-              position: "absolute",
-              top: -8,
-              left: 12,
-              background: bg,
-              padding: "0 var(--space-sm)",
-              fontSize: "var(--text-sm)",
-              color: accent,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
+              height: "auto",
+              padding: "var(--space-sm) var(--space-lg)",
+              borderBottom: `1px solid ${BORDER}`,
             }}
           >
-            {t("editPraxis.singularity.taskRefLabel")}
-          </span>
-          <div
-            style={{
-              border: `1px solid ${accent}`,
-              padding: "var(--space-md) var(--space-lg)",
-              background: "rgba(37,99,235,.05)",
-            }}
-          >
-            <div style={{ fontSize: "var(--text-content)", color: term, lineHeight: 1.4 }}>
-              <span style={{ color: dim }}>&gt; </span>
-              {praxis.task_title}
-            </div>
-            {task?.description && (
-              <div style={{ fontSize: "var(--text-content)", color: dim, lineHeight: 1.5, marginTop: "var(--space-xs)", whiteSpace: "pre-wrap" }}>
-                <span style={{ color: accent }}># </span>
-                {task.description}
-              </div>
-            )}
             <div
+              aria-hidden
               style={{
                 display: "flex",
-                gap: "var(--space-md)",
-                marginTop: "var(--space-sm)",
-                fontSize: "var(--text-base)",
-                color: dim,
-                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "var(--space-sm)",
               }}
             >
-              <span>
-                <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.factionLabel")}</span> {t("editPraxis.singularity.terminal.factionValue")}
+              {[MUTED, BLUE, ACCENT].map((tone) => (
+                <span
+                  key={tone}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: tone,
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+              <span
+                style={termLabel({
+                  color: MUTED,
+                  letterSpacing: "0.1em",
+                  textTransform: "none",
+                  marginLeft: "var(--space-sm)",
+                })}
+              >
+                {PROC_NAME}
               </span>
-              {task && (
-                <span>
-                  <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.ptsLabel")}</span> {task.point_value}
-                </span>
-              )}
-              {task && (
-                <span>
-                  <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.lvlLabel")}</span>{" "}
-                  {task.level_required}
-                </span>
-              )}
-              <span>
-                <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.modeLabel")}</span> {praxis.type}
-              </span>
+              {/* The session lamp: lit, breathing, and glowing only where a
+                  glow reads (the halo token is `none` on the lighter black). */}
+              <span
+                className="ep-pulse"
+                style={{
+                  marginLeft: "auto",
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: ACCENT,
+                  boxShadow: HALO_GREEN,
+                  flexShrink: 0,
+                  ...({ "--ep-pulse-dur": "1.6s" } as CSSProperties),
+                }}
+              />
             </div>
-          </div>
-        </div>
+          </ComposerMasthead>
+        }
+        ground={
+          /* The standing raster, at inset 0 — a fixed scrim, so unlike the
+             spectrum's aurora it neither drifts nor overhangs. The travelling
+             band rides inside it and overhangs horizontally instead, so its
+             soft ends never show against the sheet's edges. */
+          <ComposerGround
+            inset={0}
+            background={`repeating-linear-gradient(0deg, ${SCAN} 0 1px, transparent 1px 3px)`}
+          >
+            <div
+              aria-hidden
+              className="sg-scan"
+              style={{
+                position: "absolute",
+                left: "-30%",
+                right: "-30%",
+                height: 38,
+                background: SWEEP,
+              }}
+            />
+          </ComposerGround>
+        }
+      >
+        <ComposerStatusRow
+          status={t("editPraxis.composer.statusDraft")}
+          meta={
+            state.autosaveAt
+              ? t("editPraxis.composer.statusSaved", {
+                  ago: formatAutosave(state.autosaveAt),
+                })
+              : t("editPraxis.composer.statusUnsaved")
+          }
+          statusStyle={{ fontFamily: FACE, color: ACCENT }}
+          metaStyle={{ fontFamily: FACE, color: MUTED }}
+          mark={
+            <span
+              aria-hidden
+              style={{
+                fontFamily: FACE,
+                // 19 in the design → the 18px content rung (§4a).
+                fontSize: "var(--text-content)",
+                lineHeight: 1,
+                color: ACCENT,
+              }}
+            >
+              {STATUS_MARK}
+            </span>
+          }
+        />
 
-        {/* Mode selector */}
-        {!state.controlsLocked && (
-          <div style={{ marginBottom: "var(--space-xl)" }}>
-            <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
-              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.setModeCommand")}
+        {/* The task reference slip, on a raised panel, with the points readout
+            at its end. It turns its column on a phone so the readout never
+            squeezes the borrowed title. */}
+        <TaskSlip
+          praxis={praxis}
+          task={task}
+          style={{
+            background: PANEL,
+            border: `1px solid ${BORDER}`,
+            borderRadius: RADIUS,
+            padding: "var(--space-lg)",
+            flexDirection: sizes.isMobile ? "column" : "row",
+          }}
+          labelStyle={{ fontFamily: FACE, color: MUTED }}
+          titleStyle={{
+            fontFamily: FACE,
+            color: ACCENT,
+            textShadow: HALO_GREEN,
+          }}
+          descriptionStyle={{ fontFamily: FACE, color: INK }}
+          pillStyle={{ fontFamily: FACE, color: BLUE, borderRadius: RADIUS }}
+          mark={
+            <div
+              style={{
+                background: READOUT,
+                border: `1px solid ${BORDER}`,
+                borderRadius: RADIUS,
+                padding: "var(--space-md) var(--space-lg)",
+                textAlign: "center",
+                alignSelf: sizes.isMobile ? "flex-start" : "auto",
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: FACE,
+                  fontSize: "var(--text-title)",
+                  lineHeight: 1,
+                  color: ACCENT_DEEP,
+                  textShadow: HALO_BLUE,
+                }}
+              >
+                {task?.point_value ?? 0}
+              </div>
+              <div
+                style={termLabel({
+                  color: MUTED,
+                  letterSpacing: "0.1em",
+                  marginTop: "var(--space-xs)",
+                })}
+              >
+                {t("editPraxis.composer.pointsUnit")}
+              </div>
             </div>
+          }
+        />
+
+        <ComposerSection
+          label={t("editPraxis.composer.titleLabel")}
+          htmlFor="composer-title"
+          rule={hairRule}
+          meta={<TitleCounter length={state.title.length} color={MUTED} />}
+          labelStyle={{ fontFamily: FACE, color: MUTED }}
+          metaStyle={{ fontFamily: FACE }}
+        >
+          <TitleField
+            state={state}
+            skin={{
+              id: "composer-title",
+              placeholder: t("editPraxis.composer.titlePlaceholder"),
+              inputStyle: { ...fieldBox, color: ACCENT },
+            }}
+          />
+        </ComposerSection>
+
+        {/* How it was done — hidden once the mode can no longer change, per the
+            house rule that an unusable control is not drawn disabled. */}
+        {!state.controlsLocked && (
+          <ComposerSection
+            label={t("editPraxis.composer.modeLabel")}
+            rule={hairRule}
+            labelStyle={{ fontFamily: FACE, color: MUTED }}
+          >
             <ModePicker
               state={state}
               skin={{
-                containerStyle: { display: "flex", gap: 0 },
+                containerStyle: {
+                  display: "flex",
+                  gap: "var(--space-sm)",
+                  flexWrap: "wrap",
+                },
                 options: modeOptions,
                 allowedModes,
-                renderOption: (opt, { active, disabled, onSelect }) => (
+                renderOption: (option, { active, disabled, onSelect }) => (
                   <button
-                    key={opt.key}
+                    key={option.key}
                     type="button"
                     aria-pressed={active}
                     onClick={onSelect}
                     disabled={disabled && !active}
-                    style={{
-                      flex: 1,
+                    style={termLabel({
                       cursor: disabled ? "not-allowed" : "pointer",
-                      textAlign: "left",
-                      background: active ? term : "transparent",
-                      color: active ? bg : term,
-                      border: `1px solid ${active ? term : accent}`,
-                      borderRight: "none",
-                      padding: "var(--space-sm) var(--space-md)",
-                      fontFamily: "'Share Tech Mono', monospace",
-                    }}
+                      padding: "var(--space-sm) var(--space-lg)",
+                      borderRadius: RADIUS,
+                      background: active ? CTA_BG : PANEL,
+                      color: active ? CTA_INK : MUTED,
+                      border: `1px solid ${active ? CTA_BG : BORDER}`,
+                      boxShadow: active ? CTA_GLOW : undefined,
+                    })}
                   >
-                    <div
-                      style={{
-                        fontSize: "var(--text-lg)",
-                        fontWeight: 700,
-                        marginBottom: "var(--space-xs)",
-                      }}
-                    >
-                      {active && "["}
-                      {opt.flag}
-                      {active && "]"}
-                    </div>
-                    <div style={{ fontSize: "var(--text-sm)", opacity: active ? 0.85 : 0.6 }}>
-                      {opt.desc}
-                    </div>
+                    {option.label}
                   </button>
                 ),
               }}
             />
-          </div>
+          </ComposerSection>
         )}
 
-        {/* Invite */}
+        {/* The mode block: the collaborator roster, or the duel pair. One
+            control draws both — `InviteSearch` switches on `state.duelMode`. */}
         {state.showInviteBox && (
-            <div style={{ marginBottom: "var(--space-xl)" }}>
-              <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
-                <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.inviteCommand")}
-              </div>
-              <div
-                style={{
-                  border: `1px dashed ${accent}`,
-                  padding: "var(--space-sm) var(--space-md)",
-                  background: "rgba(37,99,235,.04)",
-                }}
-              >
-                <InviteSearch
-                  state={state}
-                  skin={{
-                    fontFamily: "'Share Tech Mono', monospace",
-                    inputBg: "transparent",
-                    inputColor: term,
-                    inputBorder: `1px dashed ${accent}`,
-                    dropdownBg: bg,
-                    dropdownBorder: `1px solid ${accent}`,
-                    acceptedBg: "rgba(74,222,128,.15)",
-                    acceptedColor: term,
-                    pendingBg: "transparent",
-                    pendingColor: dim,
-                    placeholder: t("editPraxis.singularity.invitePlaceholder"),
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-        {/* Metatasks */}
-        {state.showSealStack && (
-          <div style={{ marginBottom: "var(--space-xl)" }}>
-            <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
-              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.metataskCommand")}
-            </div>
-            <div
-              style={{
-                border: `1px dashed ${accent}`,
-                padding: "var(--space-sm)",
-              }}
-            >
-              <MetataskSealStack state={state} />
-            </div>
-          </div>
-        )}
-
-        {/* Title */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-xs)" }}>
-            <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.titleCommand")}{" "}
-            <TitleCounter length={state.title.length} color={dim} />
-          </div>
-          <div
-            style={{
-              position: "relative",
-              borderBottom: `1px solid ${state.title ? term : accent}`,
-              paddingBottom: "var(--space-xs)",
-            }}
+          <ComposerSection
+            label={
+              state.duelMode
+                ? t("editPraxis.composer.opponentLabel")
+                : t("editPraxis.composer.collaboratorsLabel", {
+                    count: praxis.members.length,
+                  })
+            }
+            rule={hairRule}
+            labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 4,
-                color: dim,
-                fontSize: "var(--text-content)",
-              }}
-            >
-              #{" "}
-            </span>
-            <TitleField
+            <InviteSearch
               state={state}
               skin={{
-                placeholder: t("editPraxis.singularity.titlePlaceholder"),
-                inputStyle: {
-                  width: "100%",
-                  paddingLeft: "var(--space-xl)",
-                  fontFamily: "'Lora', serif",
-                  fontStyle: "italic",
-                  color: term,
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                },
+                fontFamily: FACE,
+                inputBg: PANEL,
+                inputColor: INK,
+                inputBorder: `1px solid ${BORDER}`,
+                dropdownBg: CHASSIS,
+                dropdownBorder: `1px solid ${BORDER}`,
+                acceptedBg: CTA_BG,
+                acceptedColor: CTA_INK,
+                pendingColor: MUTED,
+                placeholder: t("editPraxis.composer.invitePlaceholder"),
+                leaveStyle: { fontFamily: FACE, color: MUTED },
               }}
             />
-          </div>
-        </div>
+          </ComposerSection>
+        )}
 
-        {/* Body */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-              marginBottom: "var(--space-xs)",
-            }}
+        {state.showSealStack && (
+          <ComposerSection
+            label={t("editPraxis.composer.sealsLabel")}
+            rule={hairRule}
+            labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
-            <div style={{ fontSize: "var(--text-base)", color: dim }}>
-              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.bodyCommand")}{" "}
-              <span style={{ color: dim }}>
-                {t("editPraxis.singularity.bodyMeta", {
-                  words: state.wordCount,
-                  lines: lineCount,
-                })}
-              </span>
-            </div>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              border: `1px solid ${accent}`,
-              background: "rgba(0,0,0,.4)",
-              minHeight: 240,
-            }}
-          >
-            {/* Line numbers */}
-            <div
-              aria-hidden
-              style={{
-                background: "rgba(37,99,235,.08)",
-                padding: "var(--space-md) var(--space-sm)",
-                borderRight: `1px solid ${accent}`,
-                fontSize: "var(--text-md)",
-                color: dim,
-                lineHeight: 1.7,
-                textAlign: "right",
-                minWidth: 36,
-                fontFamily: "'Share Tech Mono', monospace",
+            <MetataskSealStack state={state} />
+          </ComposerSection>
+        )}
+
+        {/* Write-up — the tabs sit in the section's meta slot, so the label row
+            reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
+        <ComposerSection
+          label={t("editPraxis.composer.writeUpLabel")}
+          htmlFor="composer-body"
+          rule={hairRule}
+          labelStyle={{ fontFamily: FACE, color: MUTED }}
+          meta={
+            <WriteUpTabs
+              tab={tab}
+              setTab={setTab}
+              skin={{
+                containerStyle: { gap: "var(--space-xs)" },
+                buttonStyle: (active) =>
+                  termLabel({
+                    padding: "var(--space-xs) var(--space-sm)",
+                    borderRadius: RADIUS,
+                    border: `1px solid ${active ? BORDER : "transparent"}`,
+                    background: active ? PANEL : "transparent",
+                    color: active ? ACCENT : MUTED,
+                  }),
               }}
-            >
-              {Array.from({ length: Math.max(12, lineCount) }).map((_, i) => (
-                <div key={i}>{String(i + 1).padStart(2, " ")}</div>
-              ))}
-            </div>
-            <div
-              style={{ flex: 1, padding: "var(--space-md)", position: "relative" }}
-            >
+            />
+          }
+        >
+          {/* Both panels are mounted only one at a time: a hidden textarea would
+              still be a tab stop and still be submitted by a form, and drawing
+              both would put the body in the DOM twice. */}
+          {tab === "write" ? (
+            <>
               <BodyTextarea
                 state={state}
                 skin={{
-                  rows: 12,
-                  placeholder: t("editPraxis.singularity.bodyPlaceholder"),
+                  id: "composer-body",
+                  rows: 10,
+                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
                   textareaStyle: {
-                    width: "100%",
-                    height: "100%",
-                    minHeight: 220,
-                    fontFamily: "'Share Tech Mono', monospace",
-                    lineHeight: 1.7,
-                    color: term,
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
+                    ...fieldBox,
                     resize: "vertical",
+                    minHeight: 200,
+                    lineHeight: 1.7,
+                  },
+                  toolbarButtonStyle: {
+                    background: PANEL,
+                    color: MUTED,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: RADIUS,
+                    fontFamily: FACE,
                   },
                 }}
               />
-              {!state.body && (
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    bottom: 16,
-                    left: 14,
-                    fontSize: "var(--text-lg)",
-                    color: dim,
-                    fontStyle: "italic",
-                    pointerEvents: "none",
-                  }}
-                >
-                  --INSERT-- {cursorOn ? "▊" : " "}
-                </div>
-              )}
-            </div>
-          </div>
-          {/* status bar */}
+              <div
+                style={termLabel({
+                  color: MUTED,
+                  marginTop: "var(--space-sm)",
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </div>
+            </>
+          ) : (
+            <BodyPreview
+              state={state}
+              skin={{
+                wrapperStyle: { ...fieldBox, minHeight: 200 },
+                markdownStyle: {
+                  fontFamily: FACE,
+                  lineHeight: 1.7,
+                  color: INK,
+                },
+                emptyState: (
+                  <p
+                    style={{
+                      fontFamily: FACE,
+                      fontSize: "var(--text-content)",
+                      color: MUTED,
+                      margin: 0,
+                    }}
+                  >
+                    {t("editPraxis.composer.bodyPlaceholder")}
+                  </p>
+                ),
+              }}
+            />
+          )}
+        </ComposerSection>
+
+        <ComposerSection
+          label={t("editPraxis.composer.proofLabel")}
+          rule={hairRule}
+          labelStyle={{ fontFamily: FACE, color: MUTED }}
+        >
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              gap: "var(--space-lg)",
               alignItems: "center",
-              background: accent,
-              color: bg,
-              padding: "var(--space-xs) var(--space-md)",
-              fontSize: "var(--text-base)",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
+              flexWrap: "wrap",
             }}
           >
-            <span>{t("editPraxis.singularity.terminal.insertMode")}</span>
-            <span>
-              {t("editPraxis.singularity.terminal.statusLine", { words: state.wordCount, chars: state.body.length })}
-            </span>
-            <span>
-              {state.saveStatus === "saving"
-                ? t("editPraxis.singularity.saveState.saving")
-                : state.autosaveAt
-                  ? t("editPraxis.singularity.saveState.saved", {
-                      time: formatClock(state.autosaveAt),
-                    })
-                  : t("editPraxis.singularity.saveState.unsaved")}
-            </span>
-          </div>
-          <BodyPreview
-            state={state}
-            skin={{
-              wrapperStyle: {
-                marginTop: "var(--space-md)",
-                border: `1px solid ${accent}`,
-                padding: "var(--space-md) var(--space-lg)",
-                background: "rgba(0,0,0,.5)",
-              },
-              label: (
-                <div style={{ fontSize: "var(--text-sm)", color: dim, marginBottom: "var(--space-sm)" }}>
-                  <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.renderCommand")}
-                </div>
-              ),
-              markdownStyle: {
-                fontFamily: "'Share Tech Mono', monospace",
-                lineHeight: 1.7,
-                color: term,
-              },
-            }}
-          />
-        </div>
-
-        {/* Media */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
-            <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.attachCommand")}
-          </div>
-          <div
-            style={{
-              border: `1px dashed ${accent}`,
-              padding: "var(--space-md) var(--space-lg)",
-              background: "rgba(37,99,235,.04)",
-            }}
-          >
-            {state.media.length === 0 ? (
-              <div
-                style={{
-                  fontSize: "var(--text-md)",
-                  color: dim,
-                  fontStyle: "italic",
-                  marginBottom: "var(--space-md)",
+            {state.media.map((item) => {
+              const filename = item.file_path.split("/").pop() ?? item.file_path;
+              const src = mediaUrl(item.file_path);
+              return (
+                <MediaTile
+                  key={item.id}
+                  caption={filename}
+                  onRemove={() => void state.removeMedia(item)}
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={src}
+                      alt=""
+                      style={{ width: 120, height: 120, objectFit: "cover" }}
+                    />
+                  ) : item.type === "video" ? (
+                    <video
+                      src={src}
+                      style={{ width: 120, height: 120, objectFit: "cover" }}
+                    />
+                  ) : (
+                    <MediaArt
+                      art={pickArtKey(filename, "audio")}
+                      width={120}
+                      height={120}
+                    />
+                  )}
+                </MediaTile>
+              );
+            })}
+            {!state.controlsLocked && (
+              <FilePicker
+                state={state}
+                skin={{
+                  buttonStyle: termLabel({
+                    cursor: "pointer",
+                    background: "transparent",
+                    border: `1px dashed ${BORDER}`,
+                    borderRadius: RADIUS,
+                    padding: "var(--space-lg) var(--space-xl)",
+                    color: ACCENT,
+                  }),
+                  buttonLabel: t("editPraxis.composer.proofButton"),
+                  helperText: t("editPraxis.composer.proofHelper"),
+                  helperStyle: {
+                    fontFamily: FACE,
+                    fontSize: "var(--text-content)",
+                    color: MUTED,
+                    maxWidth: 260,
+                    lineHeight: 1.5,
+                    marginTop: "var(--space-sm)",
+                  },
                 }}
-              >
-                {t("editPraxis.singularity.mediaEmpty")}
-                <br />
-                <span style={{ fontSize: "var(--text-sm)" }}>
-                  {t("editPraxis.singularity.mediaHelper")}
-                </span>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-xs)",
-                  marginBottom: "var(--space-sm)",
-                }}
-              >
-                {state.media.map((item) => {
-                  const filename =
-                    item.file_path.split("/").pop() ?? item.file_path;
-                  const src = mediaUrl(item.file_path);
-                  return (
-                    <div
-                      key={item.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-md)",
-                        padding: "var(--space-xs) var(--space-sm)",
-                        background: "rgba(74,222,128,.06)",
-                        border: `1px solid ${accent}`,
-                        fontSize: "var(--text-md)",
-                        color: term,
-                      }}
-                    >
-                      <span style={{ color: accent }}>[{item.type}]</span>
-                      <a
-                        href={src}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ flex: 1, color: term, textDecoration: "none" }}
-                      >
-                        {filename}
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => void state.removeMedia(item)}
-                        style={{
-                          background: "transparent",
-                          color: "#f87171",
-                          border: "none",
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                          fontSize: "var(--text-base)",
-                        }}
-                      >
-                        {t("editPraxis.singularity.removeButton")}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+              />
             )}
-            <FilePicker
-              state={state}
-              skin={{
-                buttonStyle: {
-                  background: "transparent",
-                  color: term,
-                  border: `1px solid ${term}`,
-                  fontFamily: "'Share Tech Mono', monospace",
-                  fontSize: "var(--text-base)",
-                  padding: "var(--space-xs) var(--space-md)",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                },
-                buttonLabel: t("editPraxis.singularity.fileButton"),
-                errorColor: "#f87171",
-              }}
-            />
           </div>
-        </div>
+        </ComposerSection>
 
         <ErrorBanner message={state.error} />
 
-        {/* CTAs */}
-        <div
+        <ComposerRule
           style={{
-            borderTop: `1px solid ${accent}`,
-            paddingTop: "var(--space-lg)",
-            paddingBottom: "var(--space-xl)",
-            display: "flex",
-            gap: "var(--space-sm)",
-            alignItems: "center",
-            flexWrap: "wrap",
+            height: 0,
+            background: "none",
+            borderTop: `1px dashed ${HAIR}`,
           }}
-        >
-          <SaveDraftButton state={state} />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.singularity.dropLabel"),
-              style: {
-                background: "transparent",
-                color: dim,
-                fontFamily: "'Share Tech Mono', monospace",
-                fontSize: "var(--text-sm)",
-                border: "none",
-                cursor: "pointer",
-                textDecoration: "underline",
-              },
-            }}
-          />
-          <div style={{ flex: 1 }} />
-          <PublishButton
-            state={state}
-            skin={{
-              idleLabel: t("editPraxis.singularity.publishIdle"),
-              busyLabel: t("editPraxis.singularity.publishBusy"),
-              ornament: (
-                <span
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 3,
-                    border: "1px dashed rgba(0,0,0,.3)",
-                    pointerEvents: "none",
-                  }}
-                />
-              ),
-              style: {
-                background: term,
-                color: bg,
-                fontFamily: "'Share Tech Mono', monospace",
-                fontSize: "var(--text-lg)",
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                padding: "var(--space-md) var(--space-xl)",
-                border: `2px solid ${term}`,
-                cursor: state.submitting ? "wait" : "pointer",
-                textTransform: "uppercase",
-                position: "relative",
-              },
-            }}
-          />
-        </div>
-      </div>
+        />
+
+        {/* [Cancel] … [Submit] — the global order from #646. */}
+        <ComposerFooter
+          start={
+            <>
+              <SaveDraftButton
+                state={state}
+                skin={{ style: termLabel({ color: MUTED }) }}
+              />
+              <DropButton
+                state={state}
+                skin={{
+                  style: termLabel({
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    color: MUTED,
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }),
+                }}
+              />
+            </>
+          }
+          end={
+            <PublishButton
+              state={state}
+              skin={{
+                idleLabel: t("editPraxis.composer.submit"),
+                busyLabel: t("editPraxis.composer.submitBusy"),
+                // The prompt's block cursor, trailing the word. `.ep-blink` is
+                // `epBlink 1s step-end` in index.css, behind the reduced-motion
+                // guard — an inline `animation:` here would bypass it (#1003).
+                trailingOrnament: (
+                  <span
+                    aria-hidden
+                    className="ep-blink"
+                    style={{
+                      display: "inline-block",
+                      width: "0.55em",
+                      height: "1em",
+                      marginLeft: "var(--space-sm)",
+                      verticalAlign: "-0.12em",
+                      background: "currentColor",
+                    }}
+                  />
+                ),
+                style: termLabel({
+                  display: "inline-flex",
+                  alignItems: "center",
+                  cursor: state.submitting ? "wait" : "pointer",
+                  border: `1px solid ${CTA_BG}`,
+                  borderRadius: RADIUS,
+                  padding: "var(--space-md) var(--space-xl)",
+                  color: CTA_INK,
+                  background: CTA_BG,
+                  boxShadow: CTA_GLOW,
+                  letterSpacing: "0.1em",
+                }),
+              }}
+            />
+          }
+        />
+      </ComposerSheet>
+    </div>
+  );
+}
+
+interface MediaTileProps {
+  children: React.ReactNode;
+  caption: string;
+  onRemove: () => void;
+}
+
+/** One already-uploaded proof item, framed on the terminal's raised panel. */
+function MediaTile({ children, caption, onRemove }: MediaTileProps) {
+  const { t } = useTranslation("forms");
+  return (
+    <div
+      style={{
+        position: "relative",
+        background: PANEL,
+        border: `1px solid ${BORDER}`,
+        borderRadius: RADIUS,
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ width: 120, height: 120, overflow: "hidden" }}>{children}</div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={t("media.removeAria", { name: caption })}
+        style={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          width: 22,
+          height: 22,
+          borderRadius: RADIUS,
+          background: CHASSIS,
+          border: `1px solid ${BORDER}`,
+          color: ACCENT,
+          fontFamily: FACE,
+          fontSize: "var(--text-md)",
+          cursor: "pointer",
+          lineHeight: 1,
+          padding: 0,
+        }}
+      >
+        ×
+      </button>
     </div>
   );
 }

@@ -437,6 +437,44 @@
   --faction-snide-note-cta-ink: #14110b;
   --faction-snide-note-shadow: 0 12px 28px -14px rgba(20, 17, 11, 0.55);
 
+  /* ══ S.N.I.D.E. — THE FLYPOSTED SHEET (edit-praxis composer, #1184) ══
+     The composer is a xerox sheet taped to the wall: grain raster, two tape
+     strips, a near-black masthead bar with the wordmark in acid, censor stripes
+     for section rules, and a full-bleed acid submit bar at the foot.
+
+     THIS FAMILY FLIPS, for the same reason `-note-*` above does and NOT for the
+     reason `-card-*` doesn't: a sheet of paper is the whole conceit, so it goes
+     warm xerox stock by day and photocopier black by night. The theme-invariant
+     `-paper`/`-ink`/`-acid` pigments at the head of this faction's block are the
+     PRESS's constants — the ink that prints on an acid ground stays #14110b in
+     both themes, which is what the submit bar and the points numeral read. These
+     are the SHEET's tiers, they are not synonyms for those, and collapsing the
+     two puts paper-white type on acid green (1.2:1).
+
+     Declared rather than borrowed, on #1181's reasoning for the na composer: the
+     obvious borrows are `-note-paper`/`-note-bar`/`-note-grain`, which are the
+     PRAXIS CARD's clipping — same values today, a different surface's contract
+     tomorrow, and reading them here is the "tokenized-looking, not tokenized"
+     failure a var() at the wrong tier always passes lint with.
+
+     ONE INK IS WALKED DOWN from the design, the same way the clipping walked its
+     pink: the `PTS` caption under the points blob is drawn in acid, and acid is a
+     poster colour, not an ink — #b6ff2e measures 1.35:1 on the stock. It takes a
+     deep acid in the light half and the bright one only where the ground is
+     dark. Measured against the ground it actually sits on, which is the task
+     slip's field rather than the sheet (#1028: contrast is a pairing): 4.7:1 on
+     the field, 5.2:1 on the stock. Acid stays bright everywhere it is a DRAWN
+     THING: the masthead rule, the blobs, the submit bar. */
+  --faction-snide-composer-sheet: #f4f1e8; /* the xerox stock (FLIPS) */
+  --faction-snide-composer-ink: #14110b; /* type on that stock (FLIPS) */
+  --faction-snide-composer-muted: #5f5c50; /* the task's prose, the pill */
+  --faction-snide-composer-faint: #6e6b5d; /* counter, autosave line — 4.8:1 */
+  --faction-snide-composer-field: #eae6d8; /* an input, a shade off the sheet */
+  --faction-snide-composer-rule: rgba(20, 17, 11, 0.5); /* a drawn hairline */
+  --faction-snide-composer-bar: #14110b; /* masthead bar + the censor stripe */
+  --faction-snide-composer-grain: rgba(20, 17, 11, 0.09); /* the raster */
+  --faction-snide-composer-acid-ink: #457000; /* acid that is TEXT, not a line */
+
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
@@ -1142,6 +1180,18 @@
      for text. */
   --faction-everymen-dispatch-rule: rgba(100, 140, 200, 0.12);
 
+  /* ══ Everymen — THE WORK ORDER (edit-praxis composer, #1187) ══
+     One token, for the reason the two blocks above are short: the composer is
+     the bill's ray burst and the broadsheet's plates printed on the faction's
+     own card ground, and every colour it needs already has a home here. The
+     exception is the SHEET's frame, which the design's skin row takes from gold
+     by day and the deep accent by night — a poster frame rather than a printed
+     rule, so it is neither `--everymen-frame` (which is ink) nor a live accent.
+     It carries no text and never bounds a control: a 2px band at 1.87:1 on the
+     paper is a frame in the same sense WOW's gilt is (§3), so every field inside
+     the sheet keeps `--everymen-frame` and no form boundary rests on this. */
+  --faction-everymen-composer-frame: var(--everymen-gold);
+
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
      edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
@@ -1435,6 +1485,24 @@
   --faction-snide-note-bar-ink: #ff2d8b; /* the bar's ordinal goes pink — 5.75:1 */
   --faction-snide-note-pink-ink: #ff69ac;
   --faction-snide-note-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.85);
+
+  /* ── The flyposted sheet, lights out (#1184) ──
+     The stock and its type SWAP, exactly as the clipping's do: photocopier black
+     with xerox-white type. The masthead bar and the censor stripe go a shade
+     BELOW the sheet rather than above it — a redaction is always the darkest
+     thing on the page, and lifting it to white would turn every section rule
+     into a highlighter. Acid becomes text-safe on this ground, so
+     `-acid-ink` takes the bright pigment back. Measured on the dark stock:
+     muted 11.0:1, faint 5.7:1, acid-ink 15.6:1. */
+  --faction-snide-composer-sheet: #14110b;
+  --faction-snide-composer-ink: #f4f1e8;
+  --faction-snide-composer-muted: #cfcdbf;
+  --faction-snide-composer-faint: #94917f;
+  --faction-snide-composer-field: #1e1a12;
+  --faction-snide-composer-rule: rgba(244, 241, 232, 0.32);
+  --faction-snide-composer-bar: #080706;
+  --faction-snide-composer-grain: rgba(244, 241, 232, 0.07);
+  --faction-snide-composer-acid-ink: #b6ff2e;
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── Singularity terminal session, lights out (#1023) ──
@@ -1807,6 +1875,10 @@
   /* The ledger rule inverts with the paper: a pale blue line ON the near-black
      newsprint instead of a dark one in it (#1123). */
   --faction-everymen-dispatch-rule: rgba(150, 185, 230, 0.09);
+  /* The work order's frame at night: the design's skin row swaps gold for the
+     deep accent, which is the one edge on the sheet that does NOT lift with the
+     paper — a printed poster frame stays the colour it was printed in (#1187). */
+  --faction-everymen-composer-frame: var(--everymen-red-deep);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
