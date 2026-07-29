@@ -1,8 +1,7 @@
 {
   "page": {
     "show": "show",
-    "loading": "Loading...",
-    "empty": "No updates yet. Activity from friends, foes, and the community will appear here."
+    "loading": "Loading..."
   },
   "mobile": {
     "title": "Updates",
@@ -19,9 +18,6 @@
       "requests": "Requests",
       "archived": "Archived"
     }
-  },
-  "filter": {
-    "archived": "Archived"
   },
   "kicker": {
     "friend_completion": "Task completed",
