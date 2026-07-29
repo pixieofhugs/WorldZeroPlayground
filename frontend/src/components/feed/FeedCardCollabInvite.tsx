@@ -14,7 +14,6 @@ import {
 } from "../../api/praxis";
 import { extractError } from "../../utils/errors";
 import { factionColor, factionFill, isKnownFaction } from "../../utils/factions";
-import { relativeTime } from "../../utils/dates";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
@@ -23,6 +22,16 @@ interface Props {
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
 
+/**
+ * The collaboration invite — a PAYLOAD BODY inside the faction chassis as of
+ * #1194 (epic #1192 decision 9). A strip-the-wrapper refactor: the accept /
+ * decline handlers, the bank-full drop-and-retry flow and the accepted
+ * "✓ Joined / open the praxis" state variant all survive untouched, because the
+ * chassis takes arbitrary children rather than a fixed slot bag.
+ *
+ * The one removal is its own timestamp — the chassis band draws that for every
+ * card now, and a body that drew it too printed it twice.
+ */
 export default function FeedCardCollabInvite({ item }: Props) {
   const {
     praxis_id,
@@ -165,16 +174,6 @@ export default function FeedCardCollabInvite({ item }: Props) {
               </span>
               <FeedBadge type="your_stuff" label={i18n.t("feed:badge.yourStuff")} />
             </div>
-            <span
-              className="eyebrow"
-              style={{
-                color: "var(--color-text-tertiary)",
-                display: "block",
-                marginTop: "var(--space-xs)",
-              }}
-            >
-              {relativeTime(item.timestamp)}
-            </span>
           </div>
         </div>
 

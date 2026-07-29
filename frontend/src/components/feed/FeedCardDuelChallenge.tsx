@@ -10,7 +10,6 @@ import { useAuth } from "../../auth/AuthContext";
 import { deletePraxis, leavePraxis } from "../../api/praxis";
 import { cancelChallenge, respondToChallenge } from "../../api/duel";
 import { factionColor, factionFill, isKnownFaction } from "../../utils/factions";
-import { relativeTime } from "../../utils/dates";
 import { extractError } from "../../utils/errors";
 import FeedBadge from "./FeedBadge";
 
@@ -25,6 +24,18 @@ const BANK_FULL_MARKER = "Task bank is full";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
 
+/**
+ * The duel challenge — a PAYLOAD BODY inside the faction chassis as of #1194
+ * (epic #1192 decision 9). `FeedCardRouter` used to warn that this card owns real
+ * accept/decline handlers that "must NOT collapse into slots"; that objection was
+ * about `FeedRowContent`'s fixed slot bag, and the chassis takes arbitrary
+ * children. So this was a strip-the-wrapper refactor and nothing else: every
+ * handler, the bank-full drop-and-retry flow, the withdraw path and each state
+ * variant are untouched.
+ *
+ * The one removal is its own timestamp — the chassis band draws that for every
+ * card now, and a body that drew it too printed it twice.
+ */
 export default function FeedCardDuelChallenge({ item }: Props) {
   // Duel payload carries duel_id / challenger_praxis_id / duel_status — NOT
   // the collab invite_id / praxis_id / invite_status fields. The shared hook
@@ -194,16 +205,6 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               </span>
               <FeedBadge type="duel" label={i18n.t("feed:badge.duel")} />
             </div>
-            <span
-              className="eyebrow"
-              style={{
-                color: "var(--color-text-tertiary)",
-                display: "block",
-                marginTop: "var(--space-xs)",
-              }}
-            >
-              {relativeTime(item.timestamp)}
-            </span>
           </div>
         </div>
 

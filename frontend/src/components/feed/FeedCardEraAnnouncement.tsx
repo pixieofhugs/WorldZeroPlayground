@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
@@ -5,9 +6,17 @@ import FeedBadge from './FeedBadge'
 
 interface Props {
   item: ActivityFeedItem
+  /**
+   * The dismiss control, dropped into the existing header. #1194's ONE change to
+   * this card: it is the single factionless feed type and stays that way (epic
+   * #1192 decision 6). An era turn can strip a player of their faction, so
+   * speaking that specific card in their faction's voice is exactly backwards —
+   * it keeps its neutral always-dark chrome and gains the ✕, nothing else.
+   */
+  archive?: ReactNode
 }
 
-export default function FeedCardEraAnnouncement({ item }: Props) {
+export default function FeedCardEraAnnouncement({ item, archive }: Props) {
   const { era_name, era_notes } = item.payload
 
   /* Era announcement is intentionally always-dark (Style Guide §8).
@@ -30,6 +39,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
         <span style={{ marginLeft: 'auto' }}>
           <FeedBadge type="admin" label={i18n.t('feed:badge.admin')} />
         </span>
+        {archive}
       </div>
 
       <h3
