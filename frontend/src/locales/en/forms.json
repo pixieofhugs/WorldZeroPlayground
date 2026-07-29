@@ -426,37 +426,7 @@
         "successHeading": "IT'S OUT THERE",
         "successBody": "whole gang's in. it hit the street.",
         "successContinue": "go see it"
-      },
-      "masthead": "ZINE #47 ·· S.N.I.D.E. ·· FREE / STEAL ME",
-      "pageTitle": "edit praxis",
-      "taskRefLabel": "Re: completion of",
-      "modeLabel": "how shall we DO this??",
-      "mode": {
-        "solo": { "label": "LONE WOLF", "desc": "just me" },
-        "collab": { "label": "THE GANG", "desc": "a gang of us" },
-        "duel": { "label": "BEEF", "desc": "me v. them" }
-      },
-      "inviteLabel": "WHO ELSE",
-      "inviteLabelDuel": "✗ THE OPPOSITION ✗",
-      "invitePlaceholder": "@ who else?",
-      "invitePlaceholderDuel": "@ who are you fighting?",
-      "titleLabel": "HEADLINE · cut from anywhere",
-      "titleEmptyHint": "(snip letters out of magazines · paste here)",
-      "titlePlaceholder": "type your headline · we'll cut the letters for you",
-      "bodyLabel": "↳ the manifesto · {{words}} words · markdown ok",
-      "bodyPlaceholder": "lead with the lie. bury the truth in paragraph five...",
-      "previewLabel": "Preview",
-      "mediaOnPageLabel": "↳ already glued in",
-      "figureCaption": "FIG. {{number}} · {{name}}",
-      "filesLabel": "↳ glue in proof · photos / audio / receipts",
-      "fileButton": "+ paste it in",
-      "fileHelper": "images · video · audio · max 50mb each",
-      "metatasksLabel": "★ optional bonus",
-      "publishIdle": "FILE IT & RUN",
-      "publishBusy": "running...",
-      "dropLabel": "burn it",
-      "autosaveSaved": "↳ photocopied & filed {{ago}}",
-      "autosaveUnsaved": "↳ unsaved · staple it before it walks off"
+      }
     },
     "singularity": {
       "collab": {
