@@ -19,7 +19,7 @@ describe('MobileTabBar', () => {
     for (const label of ['Home', 'Tasks', 'Praxis', 'Players', 'Factions']) {
       expect(html).toContain(label)
     }
-    for (const href of ['href="/"', 'href="/tasks"', 'href="/praxes"', 'href="/leaderboard"', 'href="/factions"']) {
+    for (const href of ['href="/"', 'href="/tasks"', 'href="/praxis"', 'href="/leaderboard"', 'href="/factions"']) {
       expect(html).toContain(href)
     }
   })

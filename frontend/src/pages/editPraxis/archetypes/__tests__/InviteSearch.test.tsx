@@ -31,7 +31,7 @@ function duelSide(characterId: number, name: string): DuelSideOut {
 /**
  * A duel side's composer state. `praxis.created_by_id` is the VIEWER's own
  * character id — a duel side's composer only ever renders its own praxis,
- * never the rival's (per the reproduce case: "As B, open /praxes/<B's>/edit").
+ * never the rival's (per the reproduce case: "As B, open /praxis/<B's>/edit").
  */
 function duelState(viewerCharacterId: number): EditPraxisState {
   const duel: DuelDetailOut = {

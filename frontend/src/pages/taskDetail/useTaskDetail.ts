@@ -213,7 +213,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     setSignupError(null);
     try {
       const praxis = await createPraxis({ task_id: task.id, type: "solo" });
-      navigate(`/praxes/${praxis.id}/edit`);
+      navigate(`/praxis/${praxis.id}/edit`);
     } catch (err) {
       setSignupError(extractError(err, "Could not sign up for this task."));
     }

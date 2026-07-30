@@ -63,7 +63,7 @@ test.describe('duel lifecycle', () => {
     try {
       // 1. Challenge (UI): Alice flips to duel mode and picks Bob → duel pending.
       const alicePage = await alice.ctx.newPage()
-      await alicePage.goto(`/praxes/${alicePraxisId}/edit`)
+      await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
       await challengeViaUi(alicePage, bob.name)
 
       // 2. Accept (UI): Bob accepts on his updates feed → duel active, and Bob
@@ -77,7 +77,7 @@ test.describe('duel lifecycle', () => {
 
       // 3b. Alice reloads (her page still shows the pre-accept state) and seals →
       //     both sides submitted → duel settled.
-      await alicePage.goto(`/praxes/${alicePraxisId}/edit`)
+      await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
       await waitForDuelAttached(alicePage, bob.name)
       await sealViaUi(alicePage)
 
@@ -85,7 +85,7 @@ test.describe('duel lifecycle', () => {
       //    live tally. Backend analogue: test_duel_detail_returns_both_sides_with_tallies.
       //    #1090 replaced the "⚔ Duel vs …" rail headline with the card's own
       //    label, so the anchor is the label rather than the old glyph.
-      await alicePage.goto(`/praxes/${alicePraxisId}`)
+      await alicePage.goto(`/praxis/${alicePraxisId}`)
       const main = alicePage.getByRole('main')
       await expect(main.getByText(/The duel/i).first()).toBeVisible()
       await expect(main.getByText(bob.name).first()).toBeVisible()
@@ -101,14 +101,14 @@ test.describe('duel lifecycle', () => {
   // ACTIVE duel (→ declined, no forfeit penalty). Backend already allowed it
   // (services/duel.py); #956 added the composer-chip "dissolve duel" control
   // (aria-label "dissolve the duel") reachable while the duel is active. Alice's
-  // in_progress praxis redirects /praxes/{id} → the edit composer, where the chip
+  // in_progress praxis redirects /praxis/{id} → the edit composer, where the chip
   // (and its dissolve button) live.
   test('D1: an active duel can be neutrally dissolved by a participant', async ({ browser }) => {
     const seed = await seedChallenge(browser)
     const { alice, bob, alicePraxisId } = seed
     try {
       const alicePage = await alice.ctx.newPage()
-      await alicePage.goto(`/praxes/${alicePraxisId}/edit`)
+      await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
       await challengeViaUi(alicePage, bob.name)
 
       const bobPage = await bob.ctx.newPage()
@@ -116,7 +116,7 @@ test.describe('duel lifecycle', () => {
 
       // Intended: a dissolve/cancel control is reachable to a participant on the
       // active-duel view. None exists today.
-      await alicePage.goto(`/praxes/${alicePraxisId}`)
+      await alicePage.goto(`/praxis/${alicePraxisId}`)
       await expect(
         alicePage.getByRole('main').getByRole('button', { name: /dissolve|call off the duel|cancel the duel/i }),
       ).toBeVisible()
@@ -135,7 +135,7 @@ test.describe('duel lifecycle', () => {
     const { alice, bob, alicePraxisId } = seed
     try {
       const alicePage = await alice.ctx.newPage()
-      await alicePage.goto(`/praxes/${alicePraxisId}/edit`)
+      await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
       await challengeViaUi(alicePage, bob.name) // pending — NOT accepted
 
       const bobPage = await bob.ctx.newPage()

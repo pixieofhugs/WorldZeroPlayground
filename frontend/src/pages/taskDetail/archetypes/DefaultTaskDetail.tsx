@@ -94,7 +94,7 @@ export default function DefaultTaskDetail({
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
   // The gallery expands in place (the design's own "View all N praxis →" /
-  // "Show fewer ↑"). It deliberately does NOT link out to `/praxes?task_id=N`:
+  // "Show fewer ↑"). It deliberately does NOT link out to `/praxis?task_id=N`:
   // the reader stays on the task. That URL does filter properly since #1050;
   // before it, the feed read no such param and showed everything.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
@@ -319,7 +319,7 @@ export default function DefaultTaskDetail({
           >
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryButton}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={primaryButton}>
             {t("detail.submitted.edit")}
           </Link>
         </div>
@@ -346,7 +346,7 @@ export default function DefaultTaskDetail({
             }}
           >
             <Link
-              to={`/praxes/${inProgressPraxisId}/edit`}
+              to={`/praxis/${inProgressPraxisId}/edit`}
               style={{ ...primaryButton, flex: 1, width: "auto" }}
             >
               {t("detail.inProgress.continue")}

@@ -34,7 +34,7 @@
  *    the duel `active`, so ADR-0062's published-only redirect does not catch it,
  *    and `_duel_side_hidden_condition` (`services/praxis.py`) leaves the AUTHOR
  *    able to load their own live side. They get the composer's waiting surface
- *    at `/praxes/{id}/edit`, which narrates the wait properly; a second, thinner
+ *    at `/praxis/{id}/edit`, which narrates the wait properly; a second, thinner
  *    account of the same beat here is the one-state-two-owners problem ADR-0062
  *    exists to prevent.
  *
@@ -385,7 +385,7 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
       <div style={{ borderTop: hairline, marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
         {rival.praxis_id != null ? (
           <Link
-            to={`/praxes/${rival.praxis_id}`}
+            to={`/praxis/${rival.praxis_id}`}
             style={{
               display: 'flex',
               alignItems: 'center',

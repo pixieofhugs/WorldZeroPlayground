@@ -77,7 +77,7 @@ export type SaveStatus = "idle" | "saving" | "saved" | "error";
  * The last two are what a published praxis used to get instead: a **locked
  * composer**, i.e. a third read-only rendering of a praxis beside the detail
  * page and this surface. Owner ruling on #1164: a multi-party praxis shows the
- * completed reading with a way through to `/praxes/:id`, and a solo one — which
+ * completed reading with a way through to `/praxis/:id`, and a solo one — which
  * has no roster and never had anyone to wait for — simply hands off.
  *
  * `controlsLocked` therefore stops meaning "render the composer, disabled" and
@@ -580,7 +580,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           viewerId != null &&
           loaded.members.some((member) => member.character_id === viewerId);
         if (!isMember) {
-          navigate(`/praxes/${idParam}`, { replace: true });
+          navigate(`/praxis/${idParam}`, { replace: true });
           return;
         }
         setPraxis(loaded);
@@ -877,7 +877,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           return;
         }
       }
-      navigate(`/praxes/${idParam}`);
+      navigate(`/praxis/${idParam}`);
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
     } finally {
@@ -1014,7 +1014,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Deliberately not a timer — the player leaves when they've read it (#591).
   const continueFromCollabSuccess = useCallback(() => {
     setCollabSuccess(false);
-    navigate(`/praxes/${idParam}`);
+    navigate(`/praxis/${idParam}`);
   }, [idParam, navigate]);
 
   const cancel = useCallback(async () => {

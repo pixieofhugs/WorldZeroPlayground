@@ -17,7 +17,7 @@
  *     base and total stay separately legible either way (ADR-0053's
  *     dead-arithmetic trap is reconstructing one from the other).
  *  4. The gallery's "view all" expands IN PLACE. The old build linked out to
- *     `/praxes?task_id=N`, which showed the whole feed — the praxis feed read no
+ *     `/praxis?task_id=N`, which showed the whole feed — the praxis feed read no
  *     such param until #1050.
  *  5. The dress is actually mounted: the broadsheet backdrop class and the
  *     masthead's faction line.

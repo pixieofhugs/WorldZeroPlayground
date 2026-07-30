@@ -5,21 +5,21 @@
   },
   "listPage": {
     "title": "Praxis",
-    "intro": "Proof of action. All praxes from across World Zero.",
+    "intro": "Proof of action. All praxis from across World Zero.",
     "loading": "Loading praxis...",
-    "empty": "No praxes yet. Be the first.",
+    "empty": "No praxis yet. Be the first.",
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
     "count": "{{count}} shown",
     "loadMore": "Load more",
     "taskFilter": {
       "notice": "Proof of action, narrowed to a single task.",
-      "clear": "Show all praxes"
+      "clear": "Show all praxis"
     },
     "filter": {
       "typeLabel": "type:",
       "showLabel": "show:",
       "searchPlaceholder": "Search proof, task, or player…",
-      "searchLabel": "Search praxes",
+      "searchLabel": "Search praxis",
       "all": "All",
       "needsMyVote": "needs my vote",
       "voted": "voted",
@@ -108,7 +108,7 @@
       "tasks": "Tasks",
       "current": "Praxis"
     },
-    "back": "Praxes",
+    "back": "Praxis",
     "sections": {
       "proof": "Proof",
       "writeUp": "Write-up",

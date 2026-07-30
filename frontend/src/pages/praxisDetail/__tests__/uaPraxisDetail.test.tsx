@@ -372,10 +372,10 @@ describe("UA praxis detail — the layout contract (#1129)", () => {
     const wide = render(state());
     expect(wide.html, "to the task bank").toContain('href="/tasks"');
     expect(wide.html, "to the task").toContain('href="/tasks/7"');
-    expect(wide.html, "no phone back link on desktop").not.toContain('href="/praxes"');
+    expect(wide.html, "no phone back link on desktop").not.toContain('href="/praxis"');
 
     const phone = render(state(), "mobile");
-    expect(phone.html, "phone back link").toContain('href="/praxes"');
+    expect(phone.html, "phone back link").toContain('href="/praxis"');
   });
 });
 

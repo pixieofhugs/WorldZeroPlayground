@@ -73,7 +73,7 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
           {i18n.t('feed:eraAnnouncement.seeNewTasks')}
         </Link>
         <Link
-          to="/praxes"
+          to="/praxis"
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 'var(--text-base)',

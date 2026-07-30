@@ -16,7 +16,7 @@
  *
  * `editPraxis.coven.collab` is deliberately exempt: that block is `collabCopy`'s
  * override table, a different resolver, and it also feeds `CollabRoster` on the
- * read page `/praxes/:id`. `collabCopy.test.ts` pins it from the other side.
+ * read page `/praxis/:id`. `collabCopy.test.ts` pins it from the other side.
  *
  * renderToStaticMarkup needs no DOM, matching the rest of this suite. Effects
  * never run, so nothing here can assert on state that arrives after mount.

@@ -236,11 +236,11 @@ describe('Coven praxis detail — the shared layout contract', () => {
     const wide = render(state())
     expect(wide.html, 'breadcrumb links to the task bank').toContain('href="/tasks"')
     expect(wide.html, 'breadcrumb links to the task').toContain('href="/tasks/7"')
-    expect(wide.html, 'no phone back link on desktop').not.toContain('href="/praxes"')
+    expect(wide.html, 'no phone back link on desktop').not.toContain('href="/praxis"')
 
     const phone = render(state(), 'mobile')
-    expect(phone.html, 'phone back link to the praxis index').toContain('href="/praxes"')
-    expect(phone.text, 'and its label').toContain('Praxes')
+    expect(phone.html, 'phone back link to the praxis index').toContain('href="/praxis"')
+    expect(phone.text, 'and its label').toContain('Praxis')
   })
 
   it('gives the desktop aside the eight designs 330px track, and none on mobile', () => {
@@ -382,10 +382,10 @@ describe('Coven praxis detail — the state axes', () => {
 
   it('shows owner controls to a member and nothing to a visitor', () => {
     expect(render(state()).html, 'a visitor gets no edit link').not.toContain(
-      'href="/praxes/1/edit"',
+      'href="/praxis/1/edit"',
     )
     const owner = state({ isOwner: true, user: VIEWER })
-    expect(render(owner).html).toContain('href="/praxes/1/edit"')
+    expect(render(owner).html).toContain('href="/praxis/1/edit"')
   })
 
   it('lists who voted and each voters own rung, never an average', () => {

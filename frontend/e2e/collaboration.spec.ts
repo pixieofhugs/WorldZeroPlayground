@@ -115,7 +115,7 @@ test.describe('collaboration lifecycle', () => {
 
       // Page: the published praxis renders on its detail page.
       const page = await seed.alice.ctx.newPage()
-      await page.goto(`/praxes/${seed.praxisId}`)
+      await page.goto(`/praxis/${seed.praxisId}`)
       await expect(page.getByRole('heading', { name: `Collab life` })).toBeVisible()
       // Creator byline (scope to main — the name also appears in nav + sidebar card).
       await expect(page.getByRole('main').getByRole('link', { name: seed.alice.name })).toBeVisible()
@@ -131,7 +131,7 @@ test.describe('collaboration lifecycle', () => {
       const page = await seed.alice.ctx.newPage()
       await page.goto('/')
       const sidebar = page.locator('aside')
-      await expect(sidebar.locator(`a[href="/praxes/${seed.praxisId}/edit"]`)).toBeVisible()
+      await expect(sidebar.locator(`a[href="/praxis/${seed.praxisId}/edit"]`)).toBeVisible()
       await expect(sidebar.getByText(seed.task.title)).toBeVisible()
     } finally {
       await seed.alice.ctx.close()
@@ -147,7 +147,7 @@ test.describe('collaboration lifecycle', () => {
       const page = await seed.bob.ctx.newPage()
       await page.goto('/')
       const sidebar = page.locator('aside')
-      await expect(sidebar.locator(`a[href="/praxes/${seed.praxisId}/edit"]`)).toBeVisible()
+      await expect(sidebar.locator(`a[href="/praxis/${seed.praxisId}/edit"]`)).toBeVisible()
     } finally {
       await seed.alice.ctx.close()
       await seed.bob.ctx.close()
@@ -165,7 +165,7 @@ test.describe('collaboration lifecycle', () => {
     try {
       await bothEditAndSubmit(seed)
       const page = await seed.bob.ctx.newPage()
-      await page.goto(`/praxes/${seed.praxisId}`)
+      await page.goto(`/praxis/${seed.praxisId}`)
       // Scope to main: the collaborator's name must appear in the praxis CONTENT,
       // not merely in the nav/sidebar chrome (where the logged-in viewer's own
       // name shows regardless).
@@ -234,8 +234,8 @@ test.describe('collaboration UI (clicked buttons)', () => {
       const aPage = await alice.ctx.newPage()
       await aPage.goto(`/tasks/${task.id}`)
       await aPage.getByRole('button', { name: SNIDE_SIGNUP }).click()
-      await aPage.waitForURL(/\/praxes\/\d+\/edit/)
-      const praxisId = Number(aPage.url().match(/\/praxes\/(\d+)\/edit/)![1])
+      await aPage.waitForURL(/\/praxis\/\d+\/edit/)
+      const praxisId = Number(aPage.url().match(/\/praxis\/(\d+)\/edit/)![1])
 
       // 2. Flip solo → collab through the ModePicker.
       await aPage.getByRole('button', { name: SNIDE_COLLAB_MODE }).click()
@@ -253,16 +253,16 @@ test.describe('collaboration UI (clicked buttons)', () => {
       const bPage = await bob.ctx.newPage()
       await bPage.goto('/updates?filter=requests')
       await bPage.getByRole('main').getByRole('button', { name: 'Accept' }).click()
-      await bPage.waitForURL(/\/praxes\/\d+\/edit/)
+      await bPage.waitForURL(/\/praxis\/\d+\/edit/)
 
       // 5. Both edit the body, then cast through the footer PublishButton.
       //    Alice reloads so her roster reflects Bob's membership (her cast label
       //    depends on the live member count) before she casts.
-      await aPage.goto(`/praxes/${praxisId}/edit`)
+      await aPage.goto(`/praxis/${praxisId}/edit`)
       await aPage.locator('textarea').first().fill('Alice weaves her part')
       await aPage.getByRole('button', { name: SNIDE_CAST }).click()
 
-      await bPage.goto(`/praxes/${praxisId}/edit`)
+      await bPage.goto(`/praxis/${praxisId}/edit`)
       await bPage.locator('textarea').first().fill('Bob weaves his part')
       await bPage.getByRole('button', { name: SNIDE_CAST }).click()
 
@@ -272,7 +272,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // 6. The published praxis renders on its detail page (creator byline in
       //    main — mirrors the green API-driven lifecycle assertion above).
       const view = await alice.ctx.newPage()
-      await view.goto(`/praxes/${praxisId}`)
+      await view.goto(`/praxis/${praxisId}`)
       await expect(
         view.getByRole('main').getByRole('link', { name: alice.name }),
       ).toBeVisible()
@@ -289,7 +289,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
     const seed = await seedCollabDraft(browser, 'ui-kick')
     try {
       const page = await seed.alice.ctx.newPage()
-      await page.goto(`/praxes/${seed.praxisId}/edit`)
+      await page.goto(`/praxis/${seed.praxisId}/edit`)
       await expect(
         page.getByRole('button', {
           name: new RegExp(`(kick|remove).*${seed.bob.name}`, 'i'),
@@ -308,7 +308,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
     const seed = await seedCollabDraft(browser, 'ui-leave')
     try {
       const page = await seed.bob.ctx.newPage()
-      await page.goto(`/praxes/${seed.praxisId}/edit`)
+      await page.goto(`/praxis/${seed.praxisId}/edit`)
       await expect(page.getByRole('button', { name: /leave/i })).toBeVisible()
     } finally {
       await seed.alice.ctx.close()
@@ -325,7 +325,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // Alice casts (API) → the collab enters `pending`; Bob is the holdout.
       await seed.alice.ctx.request.post(`${API}/praxes/${seed.praxisId}/submit`)
       const page = await seed.bob.ctx.newPage()
-      await page.goto(`/praxes/${seed.praxisId}`)
+      await page.goto(`/praxis/${seed.praxisId}`)
       // The unsubmit control must NOT be offered to a member who never cast.
       await expect(
         page.getByRole('button', { name: 'unsubmit', exact: true }),

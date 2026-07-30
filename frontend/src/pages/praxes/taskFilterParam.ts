@@ -2,17 +2,17 @@
  * `?task_id=` on the praxis feed (#1050) — the pure half.
  *
  * Task-detail surfaces have always linked "view all N praxis" to
- * `/praxes?task_id=${task.id}`, and the backend list route has always accepted
+ * `/praxis?task_id=${task.id}`, and the backend list route has always accepted
  * `task_id`. The feed hook read no search params at all, so the filter was built
  * by the linker and thrown away by the page it landed on: the player asked for
  * one task's proof and silently got the whole game's.
  *
  * The fix is this one read in `usePraxes`, not a change in every caller. It is
  * still worth having now that the task-details v2 skins expand their gallery in
- * place instead of linking out: `/praxes?task_id=N` is a URL people can share or
+ * place instead of linking out: `/praxis?task_id=N` is a URL people can share or
  * bookmark, and today it lies.
  *
- * The filter is strictly OPTIONAL — a bare `/praxes` is still the whole feed.
+ * The filter is strictly OPTIONAL — a bare `/praxis` is still the whole feed.
  *
  * Kept pure and separate from the hook so it is testable: the repo's harness is
  * `renderToStaticMarkup` only (no jsdom, effects never run), so a self-fetching

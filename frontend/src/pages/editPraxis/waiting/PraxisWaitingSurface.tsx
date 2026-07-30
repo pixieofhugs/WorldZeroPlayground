@@ -739,7 +739,7 @@ export default function PraxisWaitingSurface({
           <ComposerFooter
             end={
               <Link
-                to={`/praxes/${praxis.id}`}
+                to={`/praxis/${praxis.id}`}
                 className={primaryClass}
                 style={dress.primaryStyle}
               >

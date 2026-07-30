@@ -442,7 +442,7 @@
     },
     "successMeta": {
       "heading": "Meta task proposed!",
-      "body": "An admin will review it. Once activated, {{faction}} players can apply it to their praxes for a points bonus."
+      "body": "An admin will review it. Once activated, {{faction}} players can apply it to their praxis for a points bonus."
     },
     "factionSelectorLabel": "Choose a faction for this task, or leave it open to everyone",
     "factionDescriptor": {

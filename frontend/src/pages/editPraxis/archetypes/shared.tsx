@@ -62,7 +62,7 @@ export function Breadcrumb({
       </Link>
       <span> &rsaquo; </span>
       <Link
-        to={`/praxes/${praxisId}`}
+        to={`/praxis/${praxisId}`}
         style={{ color: "inherit", textDecoration: "none" }}
       >
         {t("breadcrumb.praxis")}

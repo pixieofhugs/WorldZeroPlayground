@@ -163,7 +163,7 @@ export function useTasks(): TasksState {
     setSignupMsg(null)
     try {
       const praxis = await createPraxis({ task_id: id, type: 'solo' })
-      navigate(`/praxes/${praxis.id}/edit`)
+      navigate(`/praxis/${praxis.id}/edit`)
     } catch (err) {
       setSignupMsg({ id, msg: extractError(err, 'Could not sign up — make sure you are logged in.'), ok: false })
     }
