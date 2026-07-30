@@ -610,6 +610,31 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--color-success" },
   { what: "ua seal stakes well, credit ink", surface: "--faction-ua-panel", text: "--color-success" },
 
+  // ── THE STAKES PANEL'S MUTED INK (#1173) ─────────────────────────────────
+  //
+  // The same second sheet, one slot further in. #1168 routed the two GLOBAL
+  // functional inks the panel carries; the panel also carries each faction's OWN
+  // muted ink, because `StakesTiles` and `RaceRoster` paint `theme.muted` on
+  // whatever ground the skin mounts them over. That ink was chosen against the
+  // faction's SHEET, and CARD_PAIRS measures it there — which is why two of them
+  // could sit under AA on the deeper stock with every guard green.
+  //
+  // What it carries at 18px: the roster's "walking" mark for a side that has not
+  // cast, `duelStakes.tieLine` + `duelStakes.beforeVotes`, and — while the duel
+  // is `pending` — `duelStakes.soloFallback`, i.e. the whole stakes block. It
+  // also sets the two tile captions at label size. Normal floor throughout.
+  //
+  // Two factions, not three. WOW's `-card-muted` read 4.24:1 on the chronicle
+  // panel and Everymen's `-muted` 4.25:1 on the deep stock, so each grew a
+  // `-quiet` sibling for its own panel; the ink itself is untouched and keeps
+  // clearing on the body ground (CARD_PAIRS still measures it there). The
+  // EPHEMERISTS panel needed nothing: #1208 moved that band off the codex onto
+  // the Valley plate's inner cell, whose quiet ink `ephemerists panel cell,
+  // quiet ink` above already measures at 6.21 / 5.52 — the same pairing, so a
+  // second row here would be a second name for one measurement.
+  { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-chronicle-quiet" },
+  { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
+
   // The ZERO figure — `--color-danger` on every stakes panel, which is what a
   // S.N.I.D.E. duelist sees in the lose tile (0.0×, `eras/era_1.py`). 24px/700,
   // so AA_LARGE genuinely applies; every one of these clears it as shipped and

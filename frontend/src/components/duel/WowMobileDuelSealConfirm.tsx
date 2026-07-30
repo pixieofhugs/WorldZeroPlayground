@@ -46,6 +46,7 @@ import {
   ON_RIBBON,
   PANEL,
   PANEL_BORDER,
+  PANEL_QUIET,
   RIBBON,
   Rosette,
   useWowSealVoice,
@@ -66,7 +67,9 @@ export default function WowMobileDuelSealConfirm({
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
   const soft = factionCssVar(foe.faction_slug, 'light')
-  const theme: DuelSlotTheme = { accent: CHAMPION, muted: MUTED, bodyFont: BODY_FONT }
+  // PANEL_QUIET, not MUTED — the slots stack on the parchment plates below, the
+  // same second sheet the desktop skin mounts them on (#1173).
+  const theme: DuelSlotTheme = { accent: CHAMPION, muted: PANEL_QUIET, bodyFont: BODY_FONT }
 
   return (
     <div

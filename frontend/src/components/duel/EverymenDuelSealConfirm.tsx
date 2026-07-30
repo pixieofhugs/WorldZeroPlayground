@@ -44,10 +44,15 @@
  * Left alone as measured: the reopen note in `--color-success` on the paper
  * (7.01 / 9.82), the zero figure in `--color-danger` on both panel stocks (3.10
  * tan / 3.55 ink, 24px bold at a 3:1 floor), and the roster's "walking" in CREAM
- * on the ink (14.55). One pairing on this surface is BELOW threshold and is NOT
- * fixed here because it is a different bug — `--everymen-muted` reads 4.25:1 on
- * `--everymen-paper-deep`, a faction ink on a faction sub-sheet rather than a
- * global ink on faction paper; it is filed separately.
+ * on the ink (14.55).
+ *
+ * The pairing #1168 left below threshold — `--everymen-muted` at 4.25:1 on the
+ * tan `--everymen-paper-deep`, a faction ink on a faction SUB-SHEET rather than a
+ * global ink on faction paper — is fixed in #1173, and the fix is a token rather
+ * than a call-site swap: the slots take `--everymen-quiet` (4.77 / 7.39), the
+ * muted ink walked down for the deeper stock. `theme.muted` reaches only
+ * `StakesTiles` and `RaceRoster`, both of which are inside that panel, so no
+ * other line on this dialog moves.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -65,7 +70,14 @@ const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const CREAM = 'var(--everymen-cream)'
 const INK = 'var(--everymen-ink)'
 const PAPER_TEXT = 'var(--everymen-paper-text)'
-const MUTED = 'var(--everymen-muted)'
+/**
+ * The DEEP STOCK's muted ink (#1173). `--everymen-muted` is measured on
+ * `--everymen-paper` (5.09:1) and this dialog sets muted copy one sheet down, on
+ * the tan `PAPER_DEEP` panel, where the same ink is **4.25:1** — under the 4.5:1
+ * an 18px line owes. `--everymen-quiet` is that brown walked down for the deeper
+ * stock: 4.77 / 7.39. The muted ink is untouched and keeps the paper.
+ */
+const QUIET = 'var(--everymen-quiet)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
 /**
@@ -111,7 +123,7 @@ export default function EverymenDuelSealConfirm({
   // resolves field-by-field rather than by spread (#1168).
   const theme: DuelSlotTheme = {
     accent,
-    muted: onInk ? CREAM : MUTED,
+    muted: onInk ? CREAM : QUIET,
     bodyFont: BODY,
     credit: onInk ? GOLD : undefined,
   }
