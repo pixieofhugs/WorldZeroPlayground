@@ -146,6 +146,12 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
   if (!faction) return null;
 
+  // The burn (#1305) — this viewer left this faction this era, so
+  // `can_join_faction` refuses the join for the rest of it. It reuses the
+  // gate's chassis below: only the words change, and they are neutral
+  // platform copy (ADR-0061) because this is the platform speaking.
+  const burned = membership.state === "burned";
+
   // ② manifesto paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
@@ -365,10 +371,12 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   </div>
                 )}
 
-                {membership.state === "gate" && (
+                {(membership.state === "gate" || burned) && (
                   <div>
                     <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
-                      {t("everymen.roll.gateKicker")}
+                      {burned
+                        ? t("detail.burned.kicker")
+                        : t("everymen.roll.gateKicker")}
                     </div>
                     <div
                       style={{
@@ -380,10 +388,14 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                         marginBottom: "var(--space-md)",
                       }}
                     >
-                      {t("everymen.roll.gateTitle")}
+                      {burned
+                        ? t("detail.burned.title", { faction: factionName(faction.slug) })
+                        : t("everymen.roll.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.65, color: INK }}>
-                      {t("everymen.roll.gateBody", { faction: factionName(faction.slug) })}
+                      {burned
+                        ? t("detail.burned.body", { faction: factionName(faction.slug) })
+                        : t("everymen.roll.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

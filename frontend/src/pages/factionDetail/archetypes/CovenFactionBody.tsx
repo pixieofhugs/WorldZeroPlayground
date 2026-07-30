@@ -114,6 +114,12 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
   if (!faction) return null;
 
+  // The burn (#1305) — this viewer left this faction this era, so
+  // `can_join_faction` refuses the join for the rest of it. It reuses the
+  // gate's chassis below: only the words change, and they are neutral
+  // platform copy (ADR-0061) because this is the platform speaking.
+  const burned = membership.state === "burned";
+
   // ② manifesto paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
@@ -359,7 +365,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 </div>
               )}
 
-              {membership.state === "gate" && (
+              {(membership.state === "gate" || burned) && (
                 <div>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
                     {/* eslint-disable-next-line local/no-raw-style-values -- ornament: optical nudge aligning the sparkle glyph to the script cap-height. */}
@@ -376,11 +382,15 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                         lineHeight: 1.2,
                       }}
                     >
-                      {t("coven.join.gateTitle")}
+                      {burned
+                        ? t("detail.burned.title", { faction: factionName(faction.slug) })
+                        : t("coven.join.gateTitle")}
                     </span>
                   </div>
                   <div className="content-text" style={PROSE}>
-                    {t("coven.join.gateBody", { faction: factionName(faction.slug) })}
+                    {burned
+                      ? t("detail.burned.body", { faction: factionName(faction.slug) })
+                      : t("coven.join.gateBody", { faction: factionName(faction.slug) })}
                   </div>
                 </div>
               )}
