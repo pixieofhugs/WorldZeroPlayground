@@ -182,6 +182,226 @@ async def test_update_vote_is_free(
     assert compute_votes_available(stats) == budget_after_first  # unchanged
 
 
+# ---------------------------------------------------------------------------
+# One vote per praxis per ACCOUNT (#1150) — the alt-character gap.
+#
+# Before this, uniqueness was (praxis_id, voter_character_id) and the
+# existing-vote lookup matched the character, so switching life let one account
+# stack several votes onto one praxis. The budget stays per character by owner
+# ruling; only the concentrated case is closed.
+# ---------------------------------------------------------------------------
+
+
+async def _add_second_life(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    *,
+    username: str,
+) -> Character:
+    """Seed a second character (with current-era stats) on ``account``."""
+    alt = Character(
+        account_id=account.id,
+        username=username,
+        display_name=username.title(),
+        faction_slug="ua",
+    )
+    db_session.add(alt)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=alt.id,
+            era_id=era.id,
+            score=0,
+            all_time_score=0,
+            level=0,
+            votes_spent_this_era=0,
+        )
+    )
+    await db_session.commit()
+    await db_session.refresh(alt)
+    return alt
+
+
+@pytest.mark.asyncio
+async def test_alt_life_re_rates_the_accounts_vote_instead_of_adding_one(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Switching life and voting again UPDATES the account's one vote (#1150).
+
+    The regression: two rows, two lots of vote points on one praxis. Now the
+    single row's value moves, and its ``voter_character_id`` follows the life
+    that set the value that stands.
+    """
+    from models.vote import Vote
+
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Alt vote test"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    first = await client.post(
+        f"/praxes/{praxis_id}/vote", json={"value": 5}, headers=auth_headers
+    )
+    assert first.status_code == 200
+    assert first.json()["voter_character_id"] == character.id
+
+    alt = await _add_second_life(db_session, account, era, username="altlife")
+    switch = await client.post(
+        "/me/active-character", json={"character_id": alt.id}, headers=auth_headers
+    )
+    assert switch.status_code == 200, switch.text
+    assert switch.json()["character"]["id"] == alt.id
+
+    # Same account, different life, same praxis — accepted, but as an update.
+    second = await client.post(
+        f"/praxes/{praxis_id}/vote", json={"value": 1}, headers=auth_headers
+    )
+    assert second.status_code == 200, second.text
+    assert second.json()["value"] == 1
+    assert second.json()["voter_character_id"] == alt.id
+    assert second.json()["id"] == first.json()["id"]  # the same row, re-rated
+
+    rows = (
+        (await db_session.execute(select(Vote).where(Vote.praxis_id == praxis_id)))
+        .scalars()
+        .all()
+    )
+    assert len(rows) == 1
+    assert rows[0].value == 1
+    assert rows[0].voter_account_id == account.id
+
+
+@pytest.mark.asyncio
+async def test_alt_re_rating_is_free_and_leaves_both_budgets_alone(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Re-rating across lives spends nothing, and the budget stays per character.
+
+    The owner ruling on #1150 keeps ``votes_spent_this_era`` on
+    ``CharacterStats`` per (character, era). So the first life keeps the one
+    point it spent and the alt spends none — it updated an existing vote, which
+    is free for any life.
+    """
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Alt budget test"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    assert (
+        await client.post(
+            f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers
+        )
+    ).status_code == 200
+
+    alt = await _add_second_life(db_session, account, era, username="altbudget")
+    assert (
+        await client.post(
+            "/me/active-character", json={"character_id": alt.id}, headers=auth_headers
+        )
+    ).status_code == 200
+    assert (
+        await client.post(
+            f"/praxes/{praxis_id}/vote", json={"value": 2}, headers=auth_headers
+        )
+    ).status_code == 200
+
+    spent = {
+        stats.character_id: stats.votes_spent_this_era
+        for stats in (
+            await db_session.execute(
+                select(CharacterStats).where(
+                    CharacterStats.character_id.in_([character.id, alt.id]),
+                    CharacterStats.era_id == era.id,
+                )
+            )
+        )
+        .scalars()
+        .all()
+    }
+    assert spent[character.id] == 1
+    assert spent[alt.id] == 0
+
+
+@pytest.mark.asyncio
+async def test_unique_constraint_rejects_a_second_vote_from_one_account(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    faction_ua,
+    praxis_solo,
+    character3: Character,
+):
+    """``uq_vote_praxis_account`` is the backstop under the service's lookup.
+
+    The lookup in ``cast_or_update_vote`` routes a second rating into an update,
+    so this state is unreachable through the API. Asserted directly at the DB so
+    the constraint cannot be dropped without a failing test — a raw insert path
+    (a script, a future service) still cannot stack two votes on one account.
+    """
+    from sqlalchemy.exc import IntegrityError
+
+    from models.vote import Vote
+
+    # praxis_solo is authored by ``character``; ``character3`` (its own account)
+    # votes on it, then a second life on character3's account tries to add one.
+    db_session.add(
+        Vote(
+            praxis_id=praxis_solo.id,
+            voter_character_id=character3.id,
+            voter_account_id=character3.account_id,
+            value=4,
+        )
+    )
+    await db_session.flush()
+
+    alt = Character(
+        account_id=character3.account_id,
+        username="constraintalt",
+        display_name="Constraint Alt",
+        faction_slug="ua",
+    )
+    db_session.add(alt)
+    await db_session.flush()
+
+    db_session.add(
+        Vote(
+            praxis_id=praxis_solo.id,
+            voter_character_id=alt.id,
+            voter_account_id=character3.account_id,
+            value=1,
+        )
+    )
+    with pytest.raises(IntegrityError):
+        await db_session.flush()
+    await db_session.rollback()
+
+
 @pytest.mark.asyncio
 async def test_invalid_stars_returns_422(
     client: AsyncClient,

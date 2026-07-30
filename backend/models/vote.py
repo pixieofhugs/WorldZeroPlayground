@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Integer, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -13,9 +13,15 @@ if TYPE_CHECKING:
 class Vote(Base):
     __tablename__ = "vote"
     __table_args__ = (
-        # One vote per voter per praxis. Duel sides are separate praxes, so
-        # this naturally enforces one vote per voter per duel side.
-        UniqueConstraint("praxis_id", "voter_character_id", name="uq_vote_praxis"),
+        # One vote per ACCOUNT per praxis (#1150). Anti-abuse is enforced one
+        # layer up from where the action happens (ADR-0041), so the uniqueness
+        # anchor is the account, not the character: alt characters on one
+        # account cannot stack several votes onto the same praxis. Duel sides
+        # are separate praxes, so this also gives one vote per account per duel
+        # side. ``voter_character_id`` stays on the row as attribution — it
+        # records which life set the value that stands — and is deliberately
+        # not part of the key.
+        UniqueConstraint("praxis_id", "voter_account_id", name="uq_vote_praxis_account"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
