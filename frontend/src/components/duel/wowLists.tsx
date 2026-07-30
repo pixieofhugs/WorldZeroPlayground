@@ -1,11 +1,13 @@
 /**
- * WOW — THE LISTS (#895). The vocabulary the four duel surfaces share.
+ * WOW — THE LISTS (#895). The vocabulary the duel surfaces share.
  *
  * WOW's duel conceit is a tourney joust: a gold-framed enclosure (the *lists*),
  * a checkered barrier rail, a rosette for the rider who comes from elsewhere,
  * and a ribbon that goes home with the loser. This module holds the pieces that
- * would otherwise be drawn four times — the token names, the barrier band, the
- * rosette, and the seal's voice resolver.
+ * would otherwise be drawn twice — the token names, the barrier band, the
+ * rosette, and the seal's voice resolver. It shipped serving FOUR surfaces; the
+ * two `*DuelRail` skins went with the rail in #1090, so the consumers are now
+ * `WowDuelSealConfirm` and `WowMobileDuelSealConfirm`.
  *
  * WHY THE ROSETTE IS THE ONLY PLACE THE OPPONENT'S COLOUR LANDS
  * -------------------------------------------------------------
@@ -14,8 +16,10 @@
  * cream-and-gold chrome most of those are illegible as a text ground and several
  * are illegible as an ink. The kit's answer, and the load-bearing decision of
  * its rail: hold the foreign colour as a RING and a BAR — never behind or as
- * text. `Rosette` is that ring, drawn once. Nothing in these four files paints
- * text in `accent` or on `accent`.
+ * text. `Rosette` is that ring, drawn once. Nothing in these two seal frames
+ * paints text in `accent` or on `accent`, and `__tests__/wowSealAccent.test.tsx`
+ * holds them to it (#1115). The same rule at the praxis-detail call site is
+ * `pages/praxisDetail/__tests__/duelCardOpponentInk.test.tsx` (#1308).
  *
  * MOTION lives in index.css behind `prefers-reduced-motion: no-preference`
  * (`.wow-duel-twinkle`, `.wow-duel-ribbon-sway`), never inline. Both marks reuse
