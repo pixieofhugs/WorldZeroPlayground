@@ -32,6 +32,7 @@ import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { TaskOut } from "../../../api/tasks";
+import type { CommentOut } from "../../../api/comments";
 
 /** The comment thread's pre-fetch state — present iff the thread mounted. */
 const THREAD_ANCHOR = "loading…";
@@ -58,11 +59,31 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
+/** One row the page fetched alongside the task (#1281). */
+const COMMENT: CommentOut = {
+  id: 7,
+  praxis_id: null,
+  task_id: 207,
+  body_text: "seedlings along the estuary",
+  is_edited: false,
+  created_at: "2026-01-04T00:00:00Z",
+  updated_at: "2026-01-04T00:00:00Z",
+  author: {
+    id: 42,
+    username: "ada",
+    display_name: "Adabel",
+    avatar_url: null,
+    faction_slug: null,
+  },
+  mentions: [],
+};
+
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
+    comments: null,
     submissions: [],
     friends: new Set(),
     foes: new Set(),
@@ -108,6 +129,17 @@ describe("task-detail comments slot", () => {
         <Archetype state={baseState({ task: { ...TASK, status: "archived" } })} />,
       );
       expect(text.toLowerCase()).not.toContain(THREAD_ANCHOR);
+    });
+
+    it(`${slug} feeds the thread the rows the PAGE fetched`, () => {
+      // #1281: the `status === "active"` gate above unmounts the thread, so its
+      // own effect could not start until the task had landed — comments were
+      // always a round trip late. `useTaskDetail` now fetches them in the same
+      // batch as the task and the shared slot seeds the thread. No effects run
+      // here, so a row in this markup can only be the page's own fetch.
+      const { text } = render(<Archetype state={baseState({ comments: [COMMENT] })} />);
+      expect(text, "the page's rows").toContain(COMMENT.body_text);
+      expect(text.toLowerCase(), "nothing left to wait for").not.toContain(THREAD_ANCHOR);
     });
   }
 });
