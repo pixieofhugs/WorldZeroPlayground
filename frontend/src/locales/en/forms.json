@@ -88,6 +88,13 @@
   "media": {
     "removeAria": "Remove {{name}}"
   },
+  "portrait": {
+    "chooseAction": "Choose a photo",
+    "changeAction": "Change photo",
+    "noneChosen": "No photo chosen yet",
+    "chosen": "Chosen: {{name}}",
+    "keepingCurrent": "Keeping your current photo"
+  },
   "editPraxis": {
     "loadingPageTitle": "Edit Praxis",
     "loading": "Loading...",

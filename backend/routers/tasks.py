@@ -13,13 +13,14 @@ from dependencies import (
 from models.account import Account
 from models.character import Character
 from models.task import Task
-from schemas.task import TaskCreate, TaskOut
+from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
 from services.task import (
     UNKNOWN_TASK_AUTHOR,
     authors_for_tasks,
     build_task_out,
     build_task_out_for_viewer,
+    build_task_signup_out,
     in_progress_counts_for_tasks,
     list_signups_for_task,
     list_tasks as service_list_tasks,
@@ -89,28 +90,19 @@ async def list_tasks(
     ]
 
 
-def _build_signup_dict(member, character, praxis, level: int) -> dict:
-    return {
-        "character_id": character.id,
-        "display_name": character.display_name,
-        "avatar_url": character.avatar_url,
-        "faction_slug": character.faction_slug,
-        # Current-era level for the roster row's "lvl N" (#1029); joined in
-        # list_signups_for_task, so the roster is still one query.
-        "level": level,
-        "praxis_type": praxis.type.value,
-        "joined_at": member.joined_at,
-    }
-
-
-@router.get("/{task_id}/signups", response_model=list[dict])
+@router.get("/{task_id}/signups", response_model=list[TaskSignupOut])
 async def list_task_signups(
     task_id: int,
     session: AsyncSession = Depends(get_db),
-):
-    """List characters currently working on a task via praxis membership."""
+) -> list[TaskSignupOut]:
+    """List characters currently working on a task via praxis membership.
+
+    ``response_model`` is the real schema, not ``list[dict]`` (#1051): the rows
+    are now validated and the shape appears in the OpenAPI document, so the schema
+    can no longer drift away from the route unnoticed.
+    """
     rows = await list_signups_for_task(task_id, session)
-    return [_build_signup_dict(*row) for row in rows]
+    return [build_task_signup_out(*row) for row in rows]
 
 
 @router.get("/{task_id}", response_model=TaskOut)

@@ -58,8 +58,8 @@ const SIGNUP: TaskSignupOut = {
   avatar_url: "",
   faction_slug: "coven",
   level: 5,
-  status: "in_progress",
-  signed_up_at: "2026-01-03T00:00:00Z",
+  praxis_type: "solo",
+  joined_at: "2026-01-03T00:00:00Z",
 };
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
