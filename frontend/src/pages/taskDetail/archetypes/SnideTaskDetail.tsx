@@ -86,7 +86,11 @@ const PINK = "var(--faction-snide-pink)";
 /** Photocopier black that does NOT flip: borders and shadows printed on acid. */
 const HARD = "var(--faction-snide-ink)";
 
-/** Praxis cards shown before the gallery expands. `PraxisCard` is `1 1 394px`. */
+/**
+ * Praxis cards shown before the gallery expands. The row is `.praxis-gallery`,
+ * which narrows `PraxisCard`'s basis from the feed's 394px to 320px (#1137), so
+ * three land in a row at the 1200 cap instead of two.
+ */
 const GALLERY_PREVIEW = 3;
 
 /**
@@ -908,7 +912,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)

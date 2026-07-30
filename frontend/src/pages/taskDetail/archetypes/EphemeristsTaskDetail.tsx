@@ -89,10 +89,11 @@ const SHADOW = "var(--faction-ephemerists-plate-shadow)";
    else on this page; #1124 retired the cartouche with the task id it framed. */
 
 /**
- * Praxis cards shown before the gallery expands. `PraxisCard` carries
- * `flex: 1 1 394px`, so three land in one row at the 1200 cap and the row
- * rewraps on its own — never the design's `repeat(3,1fr)`, which would squeeze
- * every card instead.
+ * Praxis cards shown before the gallery expands. The row is `.praxis-gallery`,
+ * which narrows `PraxisCard`'s basis to 320px (#1137), so three land in one row
+ * at the 1200 cap and the row rewraps on its own — never the design's
+ * `repeat(3,1fr)`, which would squeeze every card instead. The feed's own 394px
+ * basis fitted only two across the content column.
  */
 const GALLERY_PREVIEW = 3;
 
@@ -1127,7 +1128,7 @@ export default function EphemeristsTaskDetail({
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis ? sortedSubmissions : sortedSubmissions.slice(0, GALLERY_PREVIEW)).map(
               (praxis) => (
                 <PraxisCard key={praxis.id} praxis={praxis} />

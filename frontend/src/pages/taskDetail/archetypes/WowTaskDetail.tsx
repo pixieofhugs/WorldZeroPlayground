@@ -49,7 +49,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   voice and none of them ships. Dress is ours, words are not.
  * - **The gallery mounts the live `<PraxisCard>`** in the shared
  *   `flex flex-wrap gap-4`, not the design's `repeat(3,1fr)` grid of mock cards
- *   (PraxisCard carries its own `flex: 1 1 394px` basis). The balloons therefore
+ *   (PraxisCard carries its own basis, narrowed to 320px by `.praxis-gallery`,
+ *   #1137). The balloons therefore
  *   live in this page's section dress, not inside thumbnails we do not own.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
@@ -95,9 +96,10 @@ const INSET = "var(--faction-wow-detail-inset)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 
 /**
- * Praxis cards shown before the gallery expands. `PraxisCard` carries
- * `flex: 1 1 394px`, so three land in a row at the 1200 cap and the row reflows
- * on its own below that.
+ * Praxis cards shown before the gallery expands. The row is `.praxis-gallery`,
+ * which narrows `PraxisCard`'s basis from the feed's 394px to 320px (#1137), so
+ * three land in a row at the 1200 cap instead of two, and the row reflows on its
+ * own below that.
  */
 const GALLERY_PREVIEW = 3;
 
@@ -814,7 +816,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)

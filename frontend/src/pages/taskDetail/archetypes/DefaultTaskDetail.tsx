@@ -16,9 +16,12 @@ import type { TaskDetailState } from "../useTaskDetail";
 
 /**
  * Praxis cards the gallery shows before handing off to the full praxis list.
- * `PraxisCard` carries `flex: 1 1 394px`, so at the 1200 page cap three land in
- * one row and the row reflows on its own below that — no fixed column grid
- * (a `repeat(3,1fr)` would squeeze every card instead of rewrapping).
+ * The row is `.praxis-gallery`, which narrows `PraxisCard`'s basis to 320px
+ * (#1137), so at the 1200 page cap three land in one row and the row reflows on
+ * its own below that — no fixed column grid (a `repeat(3,1fr)` would squeeze
+ * every card instead of rewrapping). The feed's own 394px basis fitted only two
+ * across the ~1136px content column, which is what made this read as a
+ * transplanted feed.
  */
 const GALLERY_PREVIEW = 3;
 
@@ -751,7 +754,7 @@ export default function DefaultTaskDetail({
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)

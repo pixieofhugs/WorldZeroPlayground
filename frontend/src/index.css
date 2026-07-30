@@ -2827,6 +2827,30 @@
     font-size: var(--text-title);
   }
 
+  /* ── Task-detail praxis gallery (issue #1137) ──
+     The completed-praxis grid on a task detail mounts the SAME <PraxisCard> the
+     /praxes feed does — one responsive component per faction since ADR-0067 —
+     so it arrived at the feed's 394px basis and landed two to a row inside the
+     1200 column, reading as somebody else's list dropped into the page.
+
+     The constraint lives on the CONTAINER, which is the whole point: the basis
+     is an inline style on nine bespoke frames, so a class selector could not
+     override it and a `compact` prop would fork all nine. A custom property
+     inherits, so the mount answers the question and every other surface — the
+     feed, the character profile, the faction pages — keeps `frameBase`'s 394px
+     fallback untouched.
+
+     320px, not lower: the basis only decides where the row WRAPS (the cards
+     then grow to fill it), so 320 puts three in the ~1136px content column at
+     ~368px each and degrades to two the moment the column drops under ~992px,
+     rather than cramming three narrow cards into a tablet. It is also clear of
+     the card's own 280px min-width, which is the floor that keeps a phone at
+     one card per row and would silently swallow anything smaller. */
+
+  .praxis-gallery {
+    --praxis-card-basis: 320px;
+  }
+
   /* ── Pennant shape (faction filter tabs) ── */
 
   .pennant-shape {

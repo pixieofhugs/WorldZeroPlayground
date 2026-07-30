@@ -79,9 +79,11 @@ const CTA_BG = "var(--faction-singularity-term-cta-bg)";
 const CTA_INK = "var(--faction-singularity-term-cta-ink)";
 
 /**
- * Praxis cards the gallery shows before expanding in place. `PraxisCard` carries
- * `flex: 1 1 394px`, so three land in a row at the 1200 cap and the row reflows
- * on its own — the design's `repeat(3,1fr)` would squeeze every card instead.
+ * Praxis cards the gallery shows before expanding in place. The row is
+ * `.praxis-gallery`, which narrows `PraxisCard`'s basis to 320px (#1137), so
+ * three land in a row at the 1200 cap and the row reflows on its own — the
+ * design's `repeat(3,1fr)` would squeeze every card instead. The feed's own
+ * 394px basis fitted only two across the content column.
  */
 const GALLERY_PREVIEW = 3;
 
@@ -822,7 +824,7 @@ export default function SingularityTaskDetail({
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)
