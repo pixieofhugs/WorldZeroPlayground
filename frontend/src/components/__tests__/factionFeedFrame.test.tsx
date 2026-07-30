@@ -15,7 +15,7 @@
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
-import FactionFeedFrame from "../feed/FactionFeedFrame";
+import FactionFeedFrame, { DefaultFeedFrame } from "../feed/FactionFeedFrame";
 
 const CARD = <span>card-body</span>;
 
@@ -117,6 +117,59 @@ describe("FactionFeedFrame dispatch", () => {
     expect(html).not.toBe("<span>card-body</span>");
     expect(html).toContain("<span>card-body</span>");
     expect(html).toContain("card-bg");
+  });
+
+  // #1148, and #983 one level down: the chassis's 4px left edge was
+  // `borderLeft: 4px solid card-accent`. A border is a scalar, so the edge could
+  // only ever hold that ink — near-black on the na card's cream sheet. Drawn as
+  // an element it is a fill, and ADR-0039 gives it the spectrum unamended.
+  it("draws the chassis edge as a filled rule, never a border", () => {
+    const html = frameFor(null);
+    expect(html, "no border on the edge").not.toContain("border-left");
+    expect(html, "no accent ink on the edge").not.toContain("card-accent");
+    expect(html, "the vertical spectrum instead").toContain(
+      "--faction-default-rainbow-vertical",
+    );
+  });
+
+  it("gives the edge the VERTICAL cut, and hides it from assistive tech", () => {
+    // The cut is the whole reason `rule` exists next to `bar`: the 90deg ramp
+    // spends seven stops across the rule's 4px and reads as mud. And the rule is
+    // pure ornament sitting over a card full of links, so it is `aria-hidden`
+    // and `pointer-events: none` like every other ornament layer in this seam.
+    const html = frameFor(null);
+    expect(html).not.toContain("var(--faction-default-rainbow)");
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain("pointer-events:none");
+  });
+
+  it("gives albescent the same spectrum edge na gets, not an ink one (#1203)", () => {
+    // The blast radius the issue named as na-only is na AND Albescent: #1203
+    // added the ninth `feedFrame` claim, and it renders THIS chassis with
+    // `slug="albescent"`, which `CSS_KEY` maps to `default`. `albescent ≡ na +
+    // drift` (ADR-0048), so repainting one repaints the other by construction —
+    // that is the property, not a side effect.
+    expect(frameFor("albescent")).toContain("--faction-default-rainbow-vertical");
+    expect(frameFor("albescent")).not.toContain("card-accent");
+  });
+
+  it("gives a themed faction a flat hue here, never the spectrum", () => {
+    // Rendered DIRECTLY, because no themed faction reaches this chassis through
+    // dispatch — all eight registered frames claim `feedFrame`, which is what
+    // makes the repaint na-and-Albescent-only. Pinned anyway, and pinned
+    // honestly: this is not byte-identical to what the border drew. A real
+    // faction's `factionFill` is its SPINE hue `var(--faction-{key})`, where the
+    // scalar path read its `card-accent` ink — the same substitution every other
+    // border-to-fill conversion makes, and invisible today because nothing routes
+    // here. What matters is that no faction with a hue of its own picks up a
+    // gradient by falling back.
+    const html = renderToStaticMarkup(
+      <DefaultFeedFrame slug="coven" kicker="Task completed" time="2h ago" tag={null} archive={null}>
+        {CARD}
+      </DefaultFeedFrame>,
+    );
+    expect(html).toContain("background:var(--faction-coven)");
+    expect(html).not.toContain("--faction-default-rainbow-vertical");
   });
 
   it("draws all four chrome slots on EVERY frame, default included (#1194)", () => {
