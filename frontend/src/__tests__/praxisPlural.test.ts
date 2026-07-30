@@ -40,13 +40,23 @@ const toRelative = (path: string) => relative(SRC_DIR, path).split('\\').join('/
 const stripComments = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 
-/** `from './praxes/usePraxes'` / `import('../pages/praxes/x')` — a directory, not a URL. */
-const stripImportSpecifiers = (source: string) =>
+/**
+ * `pages/praxes/` is a real source directory — an import specifier, or a plain
+ * path string a source-scanning test reads a file by. Renaming directories is
+ * out of scope for #1136, so those are not findings.
+ *
+ * A route segment after `/praxes/` is always `:id` or `${...}` or a number; a
+ * letter there means a filesystem path.
+ */
+const stripModulePaths = (source: string) =>
   source
+    // `import { x } from './praxis'` is the api/praxis.ts MODULE, not a URL.
     .replace(/from\s*['"][^'"]+['"]/g, 'from ""')
     .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)/g, 'import("")')
+    // `readFileSync('../../pages/praxes/usePraxes.ts')` is a path on disk.
+    .replace(/praxes\/(?=[A-Za-z_])/g, 'DIR/')
 
-const routePaths = (source: string) => stripImportSpecifiers(stripComments(source))
+const routePaths = (source: string) => stripModulePaths(stripComments(source))
 
 /** This file spells the forbidden path in its own fixtures. */
 const SELF = '__tests__/praxisPlural.test.ts'
@@ -108,9 +118,13 @@ describe('the scan sees the codebase', () => {
     expect(sourceFiles(SRC_DIR).length).toBeGreaterThan(100)
   })
 
-  it('strips comments and import paths, but not real route literals', () => {
+  it('strips comments and source paths, but not real route literals', () => {
     expect(routePaths('// GET /praxes/{id}/voters')).not.toContain('/praxes')
     expect(routePaths("import x from './praxes/usePraxes'")).not.toContain('/praxes')
+    expect(routePaths("readFileSync('../../pages/praxes/usePraxes.ts')")).not.toContain('/praxes')
+    expect(routePaths("import { getPraxis } from './praxis'")).not.toContain('/praxis')
     expect(routePaths('navigate(`/praxes/${id}/edit`)')).toContain('/praxes')
+    expect(routePaths('<Route path="/praxes/:id" />')).toContain('/praxes')
+    expect(routePaths("<Link to='/praxes'>")).toContain('/praxes')
   })
 })
