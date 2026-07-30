@@ -260,12 +260,15 @@ const headingStyle: CSSProperties = {
   color: 'var(--color-text-primary)',
   margin: 0,
 }
+// The title's rule takes the spectrum's four-stop cut (#1220, ADR-0066) — a
+// 4px × 220px band, which is the geometry --faction-default-total-rainbow is
+// cut for; the seven-stop ramp smears at this size.
 const rainbowUnderline: CSSProperties = {
   height: 4,
   width: 220,
   marginTop: 'var(--space-sm)',
   borderRadius: 2,
-  background: 'linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
+  background: 'var(--faction-default-total-rainbow)',
 }
 const rosterRow: CSSProperties = {
   display: 'flex',
@@ -346,8 +349,10 @@ const progressTrack: CSSProperties = {
   background: 'var(--color-bg-surface)',
   border: '1px solid var(--color-border-strong)',
 }
+// Narrower still — a 6px fill inside a 160px track, and only 45% of it drawn.
+// Three stops, which is --faction-default-eyebrow-rainbow (#1220, ADR-0066).
 const progressFill: CSSProperties = {
   height: '100%',
   width: '45%',
-  background: 'linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6))',
+  background: 'var(--faction-default-eyebrow-rainbow)',
 }

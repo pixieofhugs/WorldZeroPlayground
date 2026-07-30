@@ -26,7 +26,14 @@ const VOID = 'var(--faction-singularity-card-bg)'
 const PHOSPHOR = 'var(--faction-singularity-card-accent)'
 const SIGNAL = 'var(--faction-singularity-card-muted)'
 const BORDER_HARD = 'var(--faction-singularity-border-hard)'
-const AMBER = 'var(--underline-1)'
+// The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
+// palette's first stop until #1220 (ADR-0066) pointed it at the token that
+// actually means "the spectrum's yellow as an ink". Consequence to know: the
+// brand palette was theme-invariant and this one is not, so the accent now
+// deepens in light (7.0:1 on the terminal black) and lifts in dark (10.0:1).
+// If Singularity's credits panel ever wants its own gold, that is a
+// --faction-singularity-* token, not a brand one.
+const AMBER = 'var(--faction-default-gold)'
 const FONT = 'var(--font-faction-terminal)'
 
 const phosphor = (pct: number): string => `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`
