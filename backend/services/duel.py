@@ -38,6 +38,37 @@ from services.praxis import (
 )
 
 
+# One account may never hold both sides of a duel (ADR-0041, #1237). Shared by
+# the challenge and the acceptance guard so the two read alike and cannot drift.
+SELF_DUEL_DETAIL = "You cannot duel your own character."
+
+
+async def _characters_share_account(
+    first_character_id: int,
+    second_character_id: int,
+    session: AsyncSession,
+) -> bool:
+    """Whether two characters belong to the same ACCOUNT (ADR-0041).
+
+    Anti-abuse is an account-level rule: one account owns many characters, so a
+    duel between two of a player's own lives is self-dealing even though the two
+    character ids differ. Same rule family — and the same shape — as
+    ``services.vote._voter_account_owns_praxis`` / ``_voter_in_praxis_duel``,
+    which both resolve through ``Character.account_id``.
+
+    A missing character is *not* treated as a shared account: the callers each
+    raise their own 404 for that case, and returning True here would answer with
+    the wrong error.
+    """
+    if first_character_id == second_character_id:
+        return True
+    first = await session.get(Character, first_character_id)
+    second = await session.get(Character, second_character_id)
+    if first is None or second is None:
+        return False
+    return first.account_id == second.account_id
+
+
 def _build_duel_out(duel: Duel) -> DuelOut:
     return DuelOut(
         id=duel.id,
@@ -185,10 +216,13 @@ async def issue_duel_challenge(
     This does NOT create a praxis — it loads the challenger's existing one and
     creates only the pending Duel row pointing at it. The opponent must not
     already have an active praxis for this task (Everymen exempt); challenger
-    and opponent cannot be the same.
+    and opponent cannot belong to the same ACCOUNT (ADR-0041) — comparing
+    character ids alone let an account duel its own alt (#1237).
     """
-    if challenger_character_id == opponent_character_id:
-        raise HTTPException(status_code=400, detail="Cannot challenge yourself.")
+    if await _characters_share_account(
+        challenger_character_id, opponent_character_id, session
+    ):
+        raise HTTPException(status_code=400, detail=SELF_DUEL_DETAIL)
 
     challenger_praxis = await get_praxis(challenger_praxis_id, session)
     if challenger_praxis.created_by_id != challenger_character_id:
@@ -281,6 +315,21 @@ async def respond_to_duel_challenge(
     opponent = await session.get(Character, character_id)
     if opponent is None:
         raise HTTPException(status_code=404, detail="Character not found.")
+
+    # Account-level self-duel guard (ADR-0041, #1237). The invitation check above
+    # only proves the responder is the invited *character*; it says nothing about
+    # whose account that character sits on. Without this, an account that had a
+    # pending challenge against its own alt could accept it and then forfeit one
+    # side for a deterministic win (ADR-0052 decides a forfeit ahead of points).
+    #
+    # Deliberately on the ACCEPT path only: declining stays open — as does
+    # :func:`cancel_duel_challenge` — so a same-account challenge that predates
+    # this guard can still be dissolved rather than being stuck pending forever.
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    if challenger_praxis is not None and await _characters_share_account(
+        challenger_praxis.created_by_id, character_id, session
+    ):
+        raise HTTPException(status_code=400, detail=SELF_DUEL_DETAIL)
 
     task = await session.get(Task, duel.task_id)
     if task is None:
