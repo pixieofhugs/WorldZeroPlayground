@@ -699,7 +699,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   {
     what: "danger fill, on-danger ink",
     surface: "--color-danger",
-    text: "--color-text-on-accent",
+    text: "--color-on-danger",
   },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
