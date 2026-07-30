@@ -375,10 +375,10 @@ describe("Everymen praxis detail — the state axes", () => {
 
   it("shows owner controls to a member and nothing to a visitor", () => {
     expect(render(state()).html, "a visitor gets no edit link").not.toContain(
-      'href="/praxes/1/edit"',
+      'href="/praxis/1/edit"',
     );
     const owner = state({ isOwner: true, user: VIEWER });
-    expect(render(owner).html).toContain('href="/praxes/1/edit"');
+    expect(render(owner).html).toContain('href="/praxis/1/edit"');
   });
 
   it("lists who voted and each voter's own rung, never an average", () => {

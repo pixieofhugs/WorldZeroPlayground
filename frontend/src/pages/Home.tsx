@@ -73,7 +73,7 @@ export default function Home() {
     setSignupMsg(null)
     try {
       const praxis = await createPraxis({ task_id: id, type: 'solo' })
-      navigate(`/praxes/${praxis.id}/edit`)
+      navigate(`/praxis/${praxis.id}/edit`)
     } catch (err) {
       setSignupMsg(extractError(err, t('signup.error')))
     }
@@ -188,7 +188,7 @@ export default function Home() {
 
       {/* ── FEATURED PRAXIS ── */}
       <section style={{ paddingTop: 'var(--space-4xl)' }}>
-        <SectionHeader title={t('sections.featuredPraxis.title')} href="/praxes" linkLabel={t('sections.featuredPraxis.link')} />
+        <SectionHeader title={t('sections.featuredPraxis.title')} href="/praxis" linkLabel={t('sections.featuredPraxis.link')} />
         {feed.length === 0 ? (
           <p className="font-body text-muted">{t('sections.featuredPraxis.empty')}</p>
         ) : (

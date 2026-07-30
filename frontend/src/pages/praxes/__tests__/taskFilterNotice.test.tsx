@@ -3,7 +3,7 @@
  *
  * `renderToStaticMarkup` never runs effects, so the fetch can't be observed —
  * but `useSearchParams` is read during render, not in an effect, so mounting
- * <Praxes /> under a `MemoryRouter` at `/praxes?task_id=7` DOES exercise the
+ * <Praxes /> under a `MemoryRouter` at `/praxis?task_id=7` DOES exercise the
  * real `usePraxes` param read. That makes this the closest thing to the bug's
  * actual symptom the repo can assert: the page landed on with a task filter used
  * to be indistinguishable from the bare feed.
@@ -45,28 +45,28 @@ function text(entry: string): string {
 describe.each(['desktop', 'mobile'] as const)('%s praxis feed with ?task_id=', (formFactor) => {
   it('announces that the feed is narrowed to one task', () => {
     mocks.formFactor = formFactor
-    const out = text('/praxes?task_id=7')
+    const out = text('/praxis?task_id=7')
     expect(out, 'the notice').toContain(NOTICE)
     expect(out, 'a way back to the whole feed').toContain(CLEAR)
   })
 
   it('says nothing about a task filter on the bare feed', () => {
     mocks.formFactor = formFactor
-    const out = text('/praxes')
+    const out = text('/praxis')
     expect(out).not.toContain(NOTICE)
     expect(out).not.toContain(CLEAR)
   })
 
   it('treats a junk task_id as no filter at all', () => {
     mocks.formFactor = formFactor
-    expect(text('/praxes?task_id=abc')).not.toContain(NOTICE)
+    expect(text('/praxis?task_id=abc')).not.toContain(NOTICE)
   })
 })
 
 describe('desktop intro copy', () => {
   it('drops the "all praxes from across World Zero" claim when filtered', () => {
     mocks.formFactor = 'desktop'
-    expect(text('/praxes'), 'unfiltered still says it').toContain(INTRO)
-    expect(text('/praxes?task_id=7'), 'a subset must not claim to be all').not.toContain(INTRO)
+    expect(text('/praxis'), 'unfiltered still says it').toContain(INTRO)
+    expect(text('/praxis?task_id=7'), 'a subset must not claim to be all').not.toContain(INTRO)
   })
 })

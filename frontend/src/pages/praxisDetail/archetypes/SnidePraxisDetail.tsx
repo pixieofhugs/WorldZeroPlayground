@@ -394,7 +394,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         marginBottom: "var(--space-md)",
       }}
     >
-      <Link to="/praxes" style={{ ...eyebrow, color: INK, textDecoration: "none" }}>
+      <Link to="/praxis" style={{ ...eyebrow, color: INK, textDecoration: "none" }}>
         <span aria-hidden="true">‹ </span>
         {t("detail.back")}
       </Link>

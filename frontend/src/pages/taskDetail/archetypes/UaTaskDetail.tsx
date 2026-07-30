@@ -54,7 +54,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   basePoints` (ADR-0053's dead arithmetic).
  * - **The gallery expands in place.** "View all" is a show-more/show-fewer
  *   toggle, as on na — the reader stays on the task. The old link went to
- *   `/praxes?task_id=N`, which showed the whole feed until #1050 taught it to
+ *   `/praxis?task_id=N`, which showed the whole feed until #1050 taught it to
  *   filter.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
@@ -343,7 +343,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           <div style={{ ...aside, marginBottom: "var(--space-sm)" }}>
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryAction}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={primaryAction}>
             {t("detail.submitted.edit")}
           </Link>
         </div>
@@ -382,7 +382,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <Link
-              to={`/praxes/${inProgressPraxisId}/edit`}
+              to={`/praxis/${inProgressPraxisId}/edit`}
               style={{ ...primaryAction, flex: 1, width: "auto" }}
             >
               {t("detail.inProgress.continue")}

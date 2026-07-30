@@ -383,7 +383,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       }}
     >
       <Link
-        to="/praxes"
+        to="/praxis"
         style={{
           ...UA_EYEBROW,
           color: "var(--faction-ua-card-accent)",

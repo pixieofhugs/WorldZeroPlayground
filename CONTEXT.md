@@ -89,18 +89,19 @@ reads SNIDE; a praxis of that task reads SNIDE.
 
 **Praxis**:
 A character's (or group's) record of doing one task — from claiming it through posting the
-proof Sally shows after "jump really high". One task has many praxes. A praxis exists from
+proof Sally shows after "jump really high". One task has many praxis. A praxis exists from
 the moment it's claimed (`in_progress`), so it is *not* synonymous with the completion; it's
 the whole record that spans claim → proof. One praxis becomes open to community voting once
 it is **submitted** (see **Praxis status**).
-_Avoid_: "sealed" (legacy term, retired — the code/DB/UI all say *submitted*); post, entry.
+_Avoid_: "sealed" (legacy term, retired — the code/DB/UI all say *submitted*); post, entry;
+"praxes" (*praxis* is both the singular and the plural here — "one praxis", "many praxis").
 
 **Praxis type**:
 Which collaboration shape a doing-of-a-task takes: **solo**, **collab**, or **duel**. Solo and
 collab are *one shared praxis* (collab just has many members on it); a **duel** is **two linked
-praxes that compete** — see **Duel**.
+praxis that compete** — see **Duel**.
 
-**Duel** *(two-linked-praxes model; ADR-0011 — landed)*:
+**Duel** *(two-linked-praxis model; ADR-0011 — landed)*:
 A head-to-head competition between two characters on the same task. Each side authors **its own
 `type=solo` praxis** — own owner, body, media, votes — and the two are joined by a **Duel link**.
 The win/loss multiplier is applied per **side** at scoring time and **floats with the votes until
@@ -185,7 +186,7 @@ window of `era.collab_auto_submit_days` (10); if every member submits it goes Li
 otherwise **silence is consent** — when the window elapses with no edit, it auto-publishes. Any
 member **editing the document** during the window is a hard reset: it cancels the countdown and
 clears everyone's `has_submitted`, dropping back to plain drafting ("an edit means we're not
-done"). A member may also **leave** to drop their hold. Solo and duel praxes do not use this.
+done"). A member may also **leave** to drop their hold. Solo and duel praxis do not use this.
 _Avoid_: "unanimous"/"all must submit" (the timeout publishes without unanimity); "approval".
 
 **In-progress privacy**:
@@ -223,7 +224,7 @@ not a discard — vote history survives the trip.
 _Avoid_: "withdraw" as a synonym for delete (a withdrawn praxis still exists and can return).
 
 **Task bank**:
-The set of a character's `in_progress` praxes, capped per character by the era's
+The set of a character's `in_progress` praxis, capped per character by the era's
 `max_task_signups`. Claiming a task ("signing up") adds to the bank; submitting or
 withdrawing frees a slot.
 
@@ -361,15 +362,15 @@ present reality.
 - **Praxis-wide**: once applied, **every member** of that praxis banks the bonus — scoring does
   **no** per-member access re-check; `get_meta_task_points` is a dumb sum of attached
   `point_value`s. _Avoid_: per-member metatask gating (rejected — see ADR-0015).
-- **Duel symmetry**: a metatask applies to **both** linked duel praxes (ADR-0011), so neither
+- **Duel symmetry**: a metatask applies to **both** linked duel praxis (ADR-0011), so neither
   duelist gains a base-point head start. (Today's single-praxis duel already gets this via
-  praxis-wide; the two-praxes model needs both-sides attachment — coordinates with #185.)
+  praxis-wide; the two-praxis model needs both-sides attachment — coordinates with #185.)
 - **See**, **propose**, and **apply** all gate at **level 5** — distinct actions that share a
   level. A praxis holds **1** metatask until the applying character reaches **level 7**, which
   raises the cap to **3** (`metatasks_per_praxis_base`/`_max`/`_max_level`).
 
 **Register row / Praxis Index**:
-The faction's list view of submitted praxes; the praxis **card** lives here (compact, next to
+The faction's list view of submitted praxis; the praxis **card** lives here (compact, next to
 task cards). Distinct from **Praxis Read** — the detail page showing one praxis in full
 (account body, evidence, the voting control).
 
@@ -463,7 +464,7 @@ The one character an account is currently **stepped into** (`account.active_char
 resolved by `resolve_active_character`). It is the **actor** for every authenticated write
 path and the **viewer** for read-time, viewer-relative fields — you act *as* the life you
 carry, switch to carry another (`POST /me/active-character`; FieldDesk `enterLife`). A second
-life is a **sock puppet**: fully independent — own identity, score, faction, praxes, votes —
+life is a **sock puppet**: fully independent — own identity, score, faction, praxis, votes —
 **except** the account-scoped anti-cheat guards (no voting on a sibling's praxis; no ganging
 to flag). Edit/delete is **carried-character-only**: you manage only the life you're wearing.
 _Avoid_: acting as "the first/oldest character" (the pre-ADR-0025 bug); an account-wide edit
@@ -527,7 +528,7 @@ members (ADR-0024). Endpoint is `POST /praxes/{id}/withdraw`; ADR-0007 also call
 entirely); "reopen"/"resubmit" as separate operations (retired in ADR-0007).
 
 **Member** *(of a praxis)*:
-A co-owner. Solo/duel praxes have exactly one (the creator); a collab has all its
+A co-owner. Solo/duel praxis have exactly one (the creator); a collab has all its
 collaborators (ADR-0013). Membership — not authorship — is the visibility and edit key for
 an `in_progress` praxis. _Avoid_: "owner"/"creator" when the rule is really "any member".
 

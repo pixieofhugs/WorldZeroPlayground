@@ -130,7 +130,7 @@ describe("SNIDE composer copy is the shared neutral set (ADR-0065 §3)", () => {
   });
 
   it("kept editPraxis.snide.collab — collabCopy's table, not page copy", () => {
-    // Also read by CollabRoster on /praxes/:id, a surface this epic is not
+    // Also read by CollabRoster on /praxis/:id, a surface this epic is not
     // touching. `collabCopy.test.ts` is the other half of this guard.
     expect(i18n.exists("forms:editPraxis.snide.collab.castAction")).toBe(true);
     expect(i18n.exists("forms:editPraxis.snide.collab.successHeading")).toBe(true);

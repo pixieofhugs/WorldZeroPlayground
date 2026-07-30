@@ -447,7 +447,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         marginBottom: "var(--space-lg)",
       }}
     >
-      <Link to="/praxes" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
+      <Link to="/praxis" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
         <span aria-hidden>‹ </span>
         {t("detail.back")}
       </Link>

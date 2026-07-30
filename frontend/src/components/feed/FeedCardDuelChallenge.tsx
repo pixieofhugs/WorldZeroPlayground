@@ -79,7 +79,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
     // Accepting creates the opponent's fresh praxis server-side — land the
     // responder on its editor so they can start working (mirrors collab).
     navigate(
-      praxisId ? `/praxes/${praxisId}/edit` : `/praxes/${challenger_praxis_id}`,
+      praxisId ? `/praxis/${praxisId}/edit` : `/praxis/${challenger_praxis_id}`,
     );
   };
 
@@ -348,7 +348,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
         {status === "accepted" && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
-              to={`/praxes/${challenger_praxis_id}`}
+              to={`/praxis/${challenger_praxis_id}`}
               className="eyebrow"
               style={{ color: "var(--badge-duel)", textDecoration: "none" }}
             >

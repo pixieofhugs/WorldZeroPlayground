@@ -138,7 +138,7 @@ describe("Everymen composer copy is the neutral set (ADR-0065 §3)", () => {
   });
 
   it("keeps editPraxis.everymen.collab, which is not composer copy", () => {
-    // collabCopy's override table, also read by CollabRoster on /praxes/:id.
+    // collabCopy's override table, also read by CollabRoster on /praxis/:id.
     expect(i18n.t("forms:editPraxis.everymen.collab.castAction")).toBe(
       "Sign off on my part",
     );

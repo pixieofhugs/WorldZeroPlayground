@@ -108,7 +108,7 @@
       },
       "filter": {
         "all": "All",
-        "praxes": "Praxes",
+        "praxes": "Praxis",
         "comments": "Comments"
       },
       "byline": "by {{author}}",

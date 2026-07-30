@@ -139,7 +139,7 @@ const ACCENT_PAIRS: Pair[] = [
  *     file could ever have named the pairing. The manifest is authored from
  *     index.css's stated roles, and "the collab roster paints this on UA's
  *     cream" was not one.
- *   - `e2e/contrast.spec.ts` walks `/`, `/tasks`, `/praxes`, `/leaderboard`,
+ *   - `e2e/contrast.spec.ts` walks `/`, `/tasks`, `/praxis`, `/leaderboard`,
  *     `/factions` and `/factions/{slug}`. The composer is on none of them, and
  *     the roster only renders at >= 2 members with a MIXED cast state — a
  *     fixture no route walk reaches. So the sweep never rendered the surface.

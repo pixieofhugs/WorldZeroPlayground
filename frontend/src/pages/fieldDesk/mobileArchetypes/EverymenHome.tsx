@@ -243,7 +243,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             {activeTasks.map((praxis, index) => (
               <Link
                 key={praxis.id}
-                to={`/praxes/${praxis.id}/edit`}
+                to={`/praxis/${praxis.id}/edit`}
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid color-mix(in srgb, var(--everymen-ink) 20%, transparent)`, textDecoration: 'none' }}
               >

@@ -30,7 +30,7 @@
  * deleted with this issue, and the archetype reads `editPraxis.composer.*` like
  * every other skin. `editPraxis.everymen.collab` SURVIVES: that block is
  * `collabCopy`'s override table, a different resolver that also feeds
- * `CollabRoster` on `/praxes/:id`, and it is pinned by `collabCopy.test.ts`.
+ * `CollabRoster` on `/praxis/:id`, and it is pinned by `collabCopy.test.ts`.
  *
  * The masthead plate is the one place the design puts words on the dress, and
  * the design's own word there is faction voice (`FILE YOUR REPORT`), which

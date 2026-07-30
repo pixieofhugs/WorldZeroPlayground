@@ -53,7 +53,7 @@ export default function EditPraxis() {
   // rather than push: the composer is not a step in the history of reading a
   // praxis, and Back should leave the way it came.
   if (state.phase === "handoff") {
-    return <Navigate to={`/praxes/${state.praxis.id}`} replace />;
+    return <Navigate to={`/praxis/${state.praxis.id}`} replace />;
   }
 
   const slug = state.task?.primary_faction_slug ?? null;

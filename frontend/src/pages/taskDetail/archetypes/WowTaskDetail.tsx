@@ -228,7 +228,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const desktop = formFactor !== "mobile";
   const size = SIZES[desktop ? "desktop" : "mobile"];
   // The gallery expands IN PLACE. It deliberately does not link out to
-  // `/praxes?task_id=N` — the reader stays on the task. #1030 found that link
+  // `/praxis?task_id=N` — the reader stays on the task. #1030 found that link
   // dead on every archetype (the feed read no such param and showed everything);
   // #1050 made the URL filter, and the in-place expand still stands.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
@@ -461,7 +461,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {mySubmission && (
         <div>
           <div style={plateHeading}>{t("detail.submitted.text")}</div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={ctaStyle(true)}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={ctaStyle(true)}>
             <Star size={13} color={GOLD} />
             {t("detail.submitted.edit")}
           </Link>
@@ -471,7 +471,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
         <div>
           <div style={plateHeading}>{t("detail.inProgress.text")}</div>
-          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={ctaStyle(true)}>
+          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={ctaStyle(true)}>
             <Star size={13} color={GOLD} />
             {t("detail.inProgress.continue")}
           </Link>
