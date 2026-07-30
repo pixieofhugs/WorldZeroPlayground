@@ -118,7 +118,11 @@ describe("Ephemerists task detail — the Valley plate", () => {
     const { text } = render(<EphemeristsTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
-    expect(text).toContain("Task №305");
+    // The breadcrumb is the shared "Tasks" crumb and nothing after it: #1124
+    // retired `Task №{id}`, which was the trail's whole second crumb here (a
+    // brass cartouche framing it).
+    expect(text).toContain("Tasks");
+    expect(text, "no task id in the breadcrumb").not.toContain("№");
     // ADR-0057: the retired Discordant Map voice.
     for (const retired of [
       "credence",

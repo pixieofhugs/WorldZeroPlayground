@@ -138,9 +138,13 @@ function render(
 }
 
 describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
-  it('carries the uniform "Task {id}" ordinal, no faction ordinal', () => {
+  // #1020 gave every card a uniform "Task {id}" eyebrow; #1124 retired the id
+  // from cards altogether. Both halves are negative now: no shared ordinal, and
+  // still none of the design canvases' per-faction ordinals — which is why the
+  // regex survives the change that deleted the string it was guarding.
+  it('draws no task id, in the uniform voice or a faction one', () => {
     const { text } = render(skin)
-    expect(text).toContain(i18n.t('feed:taskCard.ordinal', { id: 7 }))
+    expect(text, 'no uniform ordinal').not.toContain('Task 7')
     expect(text, 'no folio/fragment/dispatch ornament from the design canvas')
       .not.toMatch(/№|Nº|Fragment|Folio|Dispatch/)
   })

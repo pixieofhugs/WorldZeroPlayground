@@ -138,9 +138,15 @@ describe("Singularity task detail — the terminal dress", () => {
     expect(html).toContain("var(--faction-singularity-term-cta-glow)");
   });
 
-  it("titles the window with the task's ordinal in hex", () => {
+  // The window bar used to slug the task's id in hex (`0x0D0` for 208) as a
+  // process id. #1124 retired the task id from this page, and a base-16 id is
+  // still the id, so the slug went with the `Task №{id}` crumb beside it. The
+  // assertion inverts rather than disappears: hex is exactly the shape this
+  // number would come back in.
+  it("slugs no process id — the task id is gone from the window bar, hex included", () => {
     const { text } = render(<SingularityTaskDetail state={baseState()} />);
-    expect(text).toContain("0x0D0"); // 208
+    expect(text).not.toContain("0x");
+    expect(text).not.toContain("№");
   });
 });
 
