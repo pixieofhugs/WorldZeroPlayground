@@ -60,7 +60,6 @@ export interface TaskFilters {
   status?: string
   faction?: string
   level?: number
-  exclude_character_id?: number
   created_by?: number
   task_type?: TaskType
   /**

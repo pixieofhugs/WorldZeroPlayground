@@ -1,7 +1,6 @@
 import type { TaskOut } from '../api/tasks'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
-import { updateTaskStatus } from '../api/admin'
 import DefaultTaskCard from './cards/DefaultTaskCard'
 import { factionCssVar, factionFill, factionName } from '../utils/factions'
 import { pickVariant } from '../utils/factionDispatch'
@@ -56,7 +55,11 @@ export default function TaskCard({
   const { adminMode } = useAdminMode()
   const showAdminControls = user?.is_admin && adminMode
 
+  // `api/admin` is loaded here rather than at module scope (#1141): a task card
+  // renders for every visitor, and a static import put the admin chunk in every
+  // logged-out `/tasks` waterfall for a control only a moderator can reach.
   const handleStatusChange = async (newStatus: string) => {
+    const { updateTaskStatus } = await import('../api/admin')
     await updateTaskStatus(task.id, newStatus)
     window.location.reload()
   }

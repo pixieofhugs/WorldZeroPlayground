@@ -181,7 +181,8 @@
     "voters": {
       "heading": "Who voted",
       "count_one": "{{count}} vote",
-      "count_other": "{{count}} votes"
+      "count_other": "{{count}} votes",
+      "valueAria": "{{value}} of 5"
     },
     "score": {
       "heading": "Score"
