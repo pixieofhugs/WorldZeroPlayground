@@ -372,35 +372,9 @@ export default function EphemeristsTaskCard({
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* The cartouche, carrying the uniform ordinal (#1020). */}
-            <div style={{ display: "flex", justifyContent: "center", padding: "var(--space-md) 0 var(--space-xs)" }}>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
-                  padding: "var(--space-xs) var(--space-md)",
-                  border: "1.5px solid var(--faction-ephemerists-plate-brass)",
-                  borderRadius: 12,
-                  background: "var(--faction-ephemerists-plate-wash)",
-                }}
-              >
-                <span aria-hidden="true" style={{ width: 1.5, height: 12, background: "var(--faction-ephemerists-plate-brass)" }} />
-                <span
-                  style={{
-                    ...SMALL_CAPS,
-                    fontWeight: 700,
-                    fontSize: "var(--text-base)",
-                    letterSpacing: "0.24em",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-                </span>
-                <span aria-hidden="true" style={{ width: 1.5, height: 12, background: "var(--faction-ephemerists-plate-brass)" }} />
-              </span>
-            </div>
-
+            {/* #1020's brass cartouche stood here, ruling off the uniform "Task
+                {id}" ordinal at both ends. #1124 retired the id from every card
+                and the cartouche held nothing else, so both are gone. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-md) 0 var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)", lineHeight: 1 }}>
                 <span style={{ ...SMALL_CAPS, fontSize: "var(--text-sm)", color: "var(--faction-ephemerists-plate-caption)" }}>

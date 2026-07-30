@@ -274,6 +274,10 @@ export default function EverymenTaskDetail({
   );
 
   // ── Header: breadcrumb, masthead, title, byline, stats ──
+  //
+  // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
+  // the task id, and the id WAS the second crumb, so the separator went with it
+  // rather than dangling.
   const header = (
     <div>
       <nav
@@ -296,15 +300,6 @@ export default function EverymenTaskDetail({
         >
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden className="eyebrow" style={{ color: MUTED }}>
-          /
-        </span>
-        <span
-          className="eyebrow"
-          style={{ letterSpacing: "0.2em", color: MUTED }}
-        >
-          {t("detail.breadcrumb.current", { number: task.id })}
-        </span>
       </nav>
 
       {/* The masthead — the faction line, set as the paper's nameplate. */}

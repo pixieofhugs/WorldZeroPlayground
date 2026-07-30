@@ -113,19 +113,10 @@ export default function DefaultTaskCard({
           to={`/tasks/${task.id}`}
           style={{ display: "block", textDecoration: "none", color: "inherit" }}
         >
-          {/* Eyebrow — the uniform ordinal every faction card carries (#1020). */}
-          <div
-            style={{
-              ...CAPTION,
-              fontSize: "var(--text-base)",
-              letterSpacing: "0.22em",
-              marginBottom: "var(--space-lg)",
-            }}
-          >
-            {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-          </div>
-
-          {/* Hero — level, a hairline, the marks in their ring, the modifier. */}
+          {/* Hero — level, a hairline, the marks in their ring, the modifier.
+              #1020's uniform "Task {id}" eyebrow sat above this row until #1124
+              retired the id from every card, taking the whole eyebrow with it:
+              the ordinal was the only thing in it. */}
           <div
             style={{
               display: "flex",

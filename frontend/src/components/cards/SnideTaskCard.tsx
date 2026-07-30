@@ -216,7 +216,9 @@ export default function SnideTaskCard({
           transform: "rotate(-0.4deg)",
         }}
       >
-        {/* The header bar — wordmark, a broken acid rule, the ordinal. */}
+        {/* The header bar — wordmark and a broken acid rule. The bar's right end
+            carried the uniform "Task {id}" ordinal until #1124 retired the id
+            from every card; the rule takes the freed width. */}
         <div
           style={{
             position: "relative",
@@ -242,9 +244,6 @@ export default function SnideTaskCard({
                 "repeating-linear-gradient(90deg, var(--faction-snide-acid) 0 6px, transparent 6px 10px)",
             }}
           />
-          <span style={{ fontFamily: TYPE, fontSize: "var(--text-base)", letterSpacing: "0.12em" }}>
-            {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-          </span>
         </div>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>

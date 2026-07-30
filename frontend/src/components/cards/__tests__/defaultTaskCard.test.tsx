@@ -74,9 +74,13 @@ function card(props: Partial<{
 const SIGNUP = i18n.t('feed:taskCard.na.signup')
 
 describe('na task card — content slots', () => {
-  it('carries the uniform "Task {id}" ordinal, not a faction ordinal', () => {
+  // #1020 gave every card a uniform "Task {id}" eyebrow; #1124 retired the id
+  // from cards altogether. Both halves of this assertion are now negative: no
+  // shared ordinal, and still no faction ordinal — the design canvas's "Task No."
+  // ornament was never ours to draw either.
+  it('draws no task id, in the uniform voice or a faction one', () => {
     const { text } = card()
-    expect(text).toContain(i18n.t('feed:taskCard.ordinal', { id: 7 }))
+    expect(text, 'no uniform ordinal').not.toContain('Task 7')
     expect(text, 'no Task No. ornament from the design canvas').not.toContain('№')
   })
 

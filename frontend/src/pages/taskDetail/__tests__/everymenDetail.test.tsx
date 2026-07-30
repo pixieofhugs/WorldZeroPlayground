@@ -189,7 +189,10 @@ describe("Everymen task detail — the broadsheet", () => {
     const { html, text } = render(<EverymenTaskDetail state={baseState()} />);
     expect(html).toContain("em-broadsheet");
     expect(text).toContain("Everymen");
-    expect(text).toContain("Task №207");
+    // The breadcrumb is the shared "Tasks" crumb and nothing after it: #1124
+    // retired `Task №{id}`, which was the trail's whole second crumb.
+    expect(text).toContain("Tasks");
+    expect(text, "no task id in the breadcrumb").not.toContain("№");
   });
 
   it("renders the author byline from the task's denormalised fields", () => {

@@ -597,13 +597,12 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           flexWrap: "wrap",
         }}
       >
+        {/* One crumb, not two: the trail read `TASKS / Task №{id}` until #1124
+            retired the task id, and the id WAS the second crumb, so the
+            separator went with it rather than dangling. */}
         <Link to="/tasks" style={{ ...eyebrow, color: DEEP, textDecoration: "none" }}>
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden style={eyebrow}>
-          /
-        </span>
-        <span style={eyebrow}>{t("detail.breadcrumb.current", { number: task.id })}</span>
       </nav>
 
       <div

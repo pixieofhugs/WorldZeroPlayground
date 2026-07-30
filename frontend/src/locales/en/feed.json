@@ -181,7 +181,6 @@
     "title": "Task Crown — top praxis for this task"
   },
   "taskCard": {
-    "ordinal": "Task {{id}}",
     "inProgress": "{{count}} in progress",
     "multiplier": "×{{value}}",
     "modifierCaption": "modifier",
@@ -231,7 +230,6 @@
       "signup": "sign up",
       "levelPill": "lvl {{level}}",
       "windowTitle": "task.proc — singularity",
-      "bootPrefix": "> query",
       "levelCaption": "lvl",
       "pointsUnit": "pts"
     },
