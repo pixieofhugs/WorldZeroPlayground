@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
-import { CovenSigil } from "../../../components/cards/CovenSigil";
+import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import {
   Braid,
   CAPTION,

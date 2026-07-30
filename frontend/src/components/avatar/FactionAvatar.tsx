@@ -4,7 +4,7 @@ import { mediaUrl } from '../../utils/media'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { factionCssVar, isKnownFaction } from '../../utils/factions'
-import DefaultSigil from '../cards/DefaultSigil'
+import DefaultSigil from '../sigil/DefaultSigil'
 
 /**
  * Per-faction avatar + membership-badge dispatcher (Tier-3 surface). Keyed by

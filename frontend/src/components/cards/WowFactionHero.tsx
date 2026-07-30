@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { WowSigil } from "./WowSigil";
+import { WowSigil } from "../sigil/WowSigil";
 
 /**
  * WOW faction-page hero — the recruiting banner (kit §08, #900).

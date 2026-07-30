@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { EverymenSigil } from "./EverymenSigil";
+import { EverymenSigil } from "../sigil/EverymenSigil";
 
 /**
  * The Everymen faction-page hero — a union masthead poster. A sunburst red

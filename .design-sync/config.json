@@ -15,7 +15,7 @@
     "CollaborationCard": "src/components/CollaborationCard.tsx",
     "CommentThread": "src/components/comments/CommentThread.tsx",
     "CredentialCard": "src/components/CredentialCard.tsx",
-    "DefaultSigil": "src/components/cards/DefaultSigil.tsx",
+    "DefaultSigil": "src/components/sigil/DefaultSigil.tsx",
     "DefaultTaskCard": "src/components/cards/DefaultTaskCard.tsx",
     "EphemeristsAvatar": "src/components/avatar/EphemeristsAvatar.tsx",
     "EphemeristsBackdrop": "src/components/backdrop/EphemeristsBackdrop.tsx",

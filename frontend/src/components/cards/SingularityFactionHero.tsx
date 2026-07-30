@@ -1,7 +1,7 @@
 import { Trans } from "react-i18next";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { SingularitySigil } from "./SingularitySigil";
+import { SingularitySigil } from "../sigil/SingularitySigil";
 
 /**
  * Singularity faction-page hero — a terminal boot-sequence frontispiece. The

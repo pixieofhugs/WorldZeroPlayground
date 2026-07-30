@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
-import { EphemeristsSigil } from "../cards/EphemeristsSigil";
+import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import { BAND, BRASS, CAPS, DISC, GOLD, INK, PLATE } from "../cards/ephemeristsPlate";
 
 /**

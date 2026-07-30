@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { UaSigil } from "./UaSigil";
+import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "./UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "./uaAtoms";
 

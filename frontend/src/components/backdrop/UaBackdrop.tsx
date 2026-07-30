@@ -1,5 +1,5 @@
 import UaMandala from '../cards/UaMandala'
-import { UaSigil } from '../cards/UaSigil'
+import { UaSigil } from '../sigil/UaSigil'
 
 /**
  * UA page backdrop — mesa sand (kit §10, #851).

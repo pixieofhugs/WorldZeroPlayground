@@ -1,7 +1,7 @@
 import type { FactionCardProps } from "./FactionCard";
 import i18n from "../../i18n";
 import { factionName, factionDescription } from "../../utils/factions";
-import { EverymenSigil } from "./EverymenSigil";
+import { EverymenSigil } from "../sigil/EverymenSigil";
 
 /**
  * EverymenFactionCard — the Everymen faction PREVIEW card.

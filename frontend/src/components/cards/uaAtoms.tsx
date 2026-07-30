@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { UaSigil } from "./UaSigil";
+import { UaSigil } from "../sigil/UaSigil";
 
 /**
  * UA shared presentation atoms — the pieces every UA desktop surface repeats

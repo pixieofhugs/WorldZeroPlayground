@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
-import { CovenSigil } from '../../../components/cards/CovenSigil'
+import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import {
   Braid,
   CAPTION,

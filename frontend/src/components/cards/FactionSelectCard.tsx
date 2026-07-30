@@ -1,17 +1,17 @@
 import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
-import { UaSigil } from "./UaSigil";
+import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "./UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from "./uaAtoms";
 import * as coven from "./covenSlip";
 import { SnideSigil } from "../snide/snideAtoms";
-import { EphemeristsSigil } from "./EphemeristsSigil";
+import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import * as eph from "./ephemeristsPlate";
-import { SingularitySigil } from "./SingularitySigil";
-import { EverymenSigil } from "./EverymenSigil";
-import { WowSigil } from "./WowSigil";
-import AlbescentSigil from "./AlbescentSigil";
+import { SingularitySigil } from "../sigil/SingularitySigil";
+import { EverymenSigil } from "../sigil/EverymenSigil";
+import { WowSigil } from "../sigil/WowSigil";
+import AlbescentSigil from "../sigil/AlbescentSigil";
 import DefaultSelectCard from "./DefaultSelectCard";
 
 /**

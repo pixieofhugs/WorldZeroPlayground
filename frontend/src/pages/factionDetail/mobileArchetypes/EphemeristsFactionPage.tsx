@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { factionName, factionDescription } from '../../../utils/factions'
-import { EphemeristsSigil } from '../../../components/cards/EphemeristsSigil'
+import { EphemeristsSigil } from '../../../components/sigil/EphemeristsSigil'
 import {
   AuthorOctagon,
   BRASS,

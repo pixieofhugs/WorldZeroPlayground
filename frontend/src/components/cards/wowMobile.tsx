@@ -36,7 +36,7 @@
  */
 import type { CSSProperties, ReactNode } from "react";
 
-import { WowSigil } from "./WowSigil";
+import { WowSigil } from "../sigil/WowSigil";
 
 export const WOW_INK = "var(--faction-wow-card-text)";
 export const WOW_MUTED = "var(--faction-wow-card-muted)";

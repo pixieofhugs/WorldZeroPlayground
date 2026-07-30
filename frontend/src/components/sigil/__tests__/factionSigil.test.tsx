@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import FactionSigil from "../FactionSigil";
-import UaMandala from "../UaMandala";
+import UaMandala from "../../cards/UaMandala";
 
 describe("FactionSigil dispatcher (#659)", () => {
   it("renders the UA ensō for the ua slug", () => {

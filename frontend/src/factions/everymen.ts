@@ -29,7 +29,7 @@ const EverymenPraxisCard = lazyArchetype(() => import('../components/praxisCard/
 const EverymenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EverymenPraxisDetail'))
 const EverymenScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EverymenScoreStamp'))
 const EverymenSeal = lazyArchetype(() => import('../components/metataskSeal/skins/EverymenSeal'))
-const EverymenSigil = lazyArchetype(() => import('../components/cards/EverymenSigil').then((m) => ({ default: m.EverymenSigil })))
+const EverymenSigil = lazyArchetype(() => import('../components/sigil/EverymenSigil').then((m) => ({ default: m.EverymenSigil })))
 const EverymenCard = lazyArchetype(() => import('../components/cards/EverymenFactionCard'))
 const EverymenSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.EverymenSelectCard })))
 

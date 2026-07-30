@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CovenSigil } from '../../../components/cards/CovenSigil'
+import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import {
   Braid,
   CAPTION,

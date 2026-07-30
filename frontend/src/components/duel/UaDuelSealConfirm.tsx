@@ -67,7 +67,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionFill } from '../../utils/factions'
-import { UaSigil } from '../cards/UaSigil'
+import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from '../cards/uaAtoms'
 import {
   duelSides,

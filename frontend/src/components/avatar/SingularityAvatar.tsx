@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
-import { SingularitySigil } from "../cards/SingularitySigil";
+import { SingularitySigil } from "../sigil/SingularitySigil";
 
 /**
  * The Singularity avatar — a terminal-black circle in faction monospace plus a

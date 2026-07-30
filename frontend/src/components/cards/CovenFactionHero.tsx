@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { CovenSigil } from "./CovenSigil";
+import { CovenSigil } from "../sigil/CovenSigil";
 import {
   Braid,
   CAPTION,

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
-import { EphemeristsSigil } from "../../../components/cards/EphemeristsSigil";
+import { EphemeristsSigil } from "../../../components/sigil/EphemeristsSigil";
 import {
   AuthorOctagon,
   BAND,

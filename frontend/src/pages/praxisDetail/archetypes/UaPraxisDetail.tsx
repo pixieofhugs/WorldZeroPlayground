@@ -8,7 +8,7 @@ import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { Lotus } from "../../../components/factionMarks";
-import { UaSigil } from "../../../components/cards/UaSigil";
+import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
   UA_DISPLAY,
   UA_EYEBROW,

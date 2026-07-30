@@ -4,7 +4,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { Lotus } from "../factionMarks";
-import { UaSigil } from "./UaSigil";
+import { UaSigil } from "../sigil/UaSigil";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "./uaAtoms";
 
 /**

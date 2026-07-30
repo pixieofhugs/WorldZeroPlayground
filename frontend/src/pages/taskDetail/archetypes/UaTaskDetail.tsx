@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { Lotus } from "../../../components/factionMarks";
-import { UaSigil } from "../../../components/cards/UaSigil";
+import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
   UA_DISPLAY,
   UA_EYEBROW,

@@ -1,5 +1,5 @@
 import { useFormFactor } from '../../hooks/useFormFactor'
-import { UaSigil } from '../cards/UaSigil'
+import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UaInkColumn } from '../cards/uaAtoms'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'

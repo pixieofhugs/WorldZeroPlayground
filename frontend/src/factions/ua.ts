@@ -29,7 +29,7 @@ const UaPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archety
 const UaTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/UaTaskDetail'))
 const UaVote = lazyArchetype(() => import('../components/vote/UaVote'))
 const UaPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/UaPraxisCard'))
-const UaSigilAdapter = lazyArchetype(() => import('../components/cards/FactionSigil').then((m) => ({ default: m.UaSigilAdapter })))
+const UaSigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.UaSigilAdapter })))
 const UaCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.UaCard })))
 const UaSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.UaSelectCard })))
 

@@ -39,7 +39,7 @@ const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '
  *
  * This used to pin the two-arc approximation's path geometry. #908 deleted that
  * drawing: there is one ensō now, the vendored ensō, delivered as a CSS
- * mask at every size (see `cards/UaSigil.tsx` and `factionMarks/Enso.tsx`).
+ * mask at every size (see `sigil/UaSigil.tsx` and `factionMarks/Enso.tsx`).
  * Same guard, new mechanism — the surfaces still have to render *a* mark.
  */
 const ENSO_MARK = '/factionMarks/enso.webp'

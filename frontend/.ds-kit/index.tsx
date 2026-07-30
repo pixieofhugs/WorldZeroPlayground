@@ -6,7 +6,7 @@ export { default as CharacterBadge } from "../src/components/CharacterBadge";
 export { default as CollaborationCard } from "../src/components/CollaborationCard";
 export { default as CommentThread } from "../src/components/comments/CommentThread";
 export { default as CredentialCard } from "../src/components/CredentialCard";
-export { default as DefaultSigil } from "../src/components/cards/DefaultSigil";
+export { default as DefaultSigil } from "../src/components/sigil/DefaultSigil";
 export { default as DefaultTaskCard } from "../src/components/cards/DefaultTaskCard";
 export { default as EphemeristsAvatar } from "../src/components/avatar/EphemeristsAvatar";
 export { default as EphemeristsBackdrop } from "../src/components/backdrop/EphemeristsBackdrop";

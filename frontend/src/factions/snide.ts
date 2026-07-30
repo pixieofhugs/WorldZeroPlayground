@@ -29,7 +29,7 @@ const SnideVote = lazyArchetype(() => import('../components/vote/SnideVote'))
 const SnidePraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SnidePraxisCard'))
 const SnideScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SnideScoreStamp'))
 const SnideSeal = lazyArchetype(() => import('../components/metataskSeal/skins/SnideSeal'))
-const SnideSigil = lazyArchetype(() => import('../components/cards/SnideSigil').then((m) => ({ default: m.SnideSigil })))
+const SnideSigil = lazyArchetype(() => import('../components/sigil/SnideSigil').then((m) => ({ default: m.SnideSigil })))
 const SnideCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SnideCard })))
 const SnideSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SnideSelectCard })))
 

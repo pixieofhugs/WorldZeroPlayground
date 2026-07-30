@@ -3,7 +3,7 @@ import { factionFill, UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
 // Type-only, so this does NOT close a runtime cycle with the dispatcher that
 // imports this component as its fallback.
 import type { FactionSelectCardProps } from "./FactionSelectCard";
-import DefaultSigil from "./DefaultSigil";
+import DefaultSigil from "../sigil/DefaultSigil";
 
 /**
  * DefaultSelectCard — THE OPEN SHEET. The faction-directory tile for the
