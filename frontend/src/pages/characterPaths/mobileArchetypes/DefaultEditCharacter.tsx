@@ -243,7 +243,7 @@ const confirmCancel: CSSProperties = {
 const confirmDelete: CSSProperties = {
   flex: 1, cursor: 'pointer', background: 'var(--color-danger)', border: 'none',
   borderRadius: 8, padding: 'var(--space-md)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)',
-  letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-bg-page)',
+  letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-on-danger)',
 }
 const errorBox: CSSProperties = {
   fontFamily: 'var(--font-body)', color: 'var(--color-danger)',

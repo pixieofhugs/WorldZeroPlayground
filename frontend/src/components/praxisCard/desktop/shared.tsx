@@ -57,10 +57,23 @@ export type ArchetypeProps = {
  * rest 398). Collapsed to a single 394px basis — under flex the difference is
  * absorbed by the row anyway, and nine bespoke bases would be nine things to
  * keep in sync for a <5% delta. The RADIUS is not collapsed; see below.
+ *
+ * 394px is the FEED's basis, and a mount may narrow it through
+ * `--praxis-card-basis` (#1137). One card serves every surface since ADR-0067,
+ * so a task detail was showing the `/praxes` card at the `/praxes` width — two
+ * to a row inside the 1200 column, reading as a transplanted feed. A custom
+ * property is what lets the CONTAINER answer that without a `compact` prop
+ * forking nine bespoke frames: it inherits, so it reaches an inline style that
+ * a class selector could not override, and a surface that sets nothing is
+ * byte-identical. `.praxis-gallery` in index.css is the only setter today.
+ *
+ * `minWidth` deliberately stays out of it. It is the floor that keeps one card
+ * per row on a phone, and it is also the clamp that would silently swallow any
+ * basis below 280 — so the variable is only ever useful in [280, 394].
  */
 export const frameBase: CSSProperties = {
   width: "100%",
-  flex: "1 1 394px",
+  flex: "1 1 var(--praxis-card-basis, 394px)",
   minWidth: 280,
   boxSizing: "border-box",
   // NO borderRadius here on purpose. The prototype's frame radius is per-faction

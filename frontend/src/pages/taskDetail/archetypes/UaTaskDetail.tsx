@@ -85,7 +85,11 @@ import type { TaskDetailState } from "../useTaskDetail";
  * which is the same gesture without resurrecting the palette that was killed.
  */
 
-/** Praxis shown before the gallery expands — `PraxisCard` is `flex 1 1 394px`. */
+/**
+ * Praxis shown before the gallery expands. The row is `.praxis-gallery`, which
+ * narrows `PraxisCard`'s basis from the feed's 394px to 320px (#1137), so three
+ * land in a row at the 1200 cap instead of two.
+ */
 const GALLERY_PREVIEW = 3;
 
 /** Initials fallback for an author with no uploaded avatar. */
@@ -786,7 +790,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)
