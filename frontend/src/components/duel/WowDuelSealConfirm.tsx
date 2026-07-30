@@ -1,5 +1,14 @@
 /**
- * Warriors of Whimsy DESKTOP duel seal-confirm (#895) — THE LISTS SEAL.
+ * Warriors of Whimsy duel seal-confirm (#895) — THE LISTS SEAL.
+ *
+ * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
+ * `DuelSealSheet` frames the enclosure in gold on a plum scrim at laptop width
+ * and lets it take the whole screen on a phone — "there is nothing for it to
+ * float above at 375px" was the twin's own reasoning, and it is now the chassis
+ * rule for all eight sheets. The kit's 46px seal buttons survive the collapse
+ * through `phoneClassName`; the twin's pinned action bar does not, because the
+ * band under it was drawn for a phone and the actions sit inside the enclosure
+ * on the kit's laptop sheet.
  *
  * The kit's `16-duel-seal.html`: a gold-framed enclosure on a plum scrim, the
  * checkered barrier along its top edge, the crest set beside the title, the
@@ -63,6 +72,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import DuelSealSheet from './DuelSealSheet'
 import {
   BODY_FONT,
   CHAMPION,
@@ -115,185 +125,178 @@ export default function WowDuelSealConfirm({
   const theme: DuelSlotTheme = { accent: CHAMPION, muted: PANEL_QUIET, bodyFont: BODY_FONT }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ padding: 'var(--space-lg)', background: SCRIM }}
+    <DuelSealSheet
+      label={copy.heading}
+      scrim={SCRIM}
+      ground={{ background: LISTS_BG, color: INK, fontFamily: BODY_FONT }}
+      card={{
+        borderRadius: 15,
+        overflow: 'hidden',
+        border: `2px solid ${HOLD}`,
+        boxShadow: `0 26px 54px -22px ${SHADOW}`,
+      }}
+      // The kit's 46px seal buttons, phone only — see `DuelSealSheet`.
+      phoneClassName="wow-seal-actions--mobile"
     >
-      <div
-        className="w-full max-w-[460px]"
-        style={{
-          borderRadius: 15,
-          overflow: 'hidden',
-          background: LISTS_BG,
-          color: INK,
-          fontFamily: BODY_FONT,
-          border: `2px solid ${HOLD}`,
-          boxShadow: `0 26px 54px -22px ${SHADOW}`,
-        }}
-      >
-        <ListsBand />
+      <ListsBand />
 
-        <div style={{ padding: 'var(--space-lg)' }}>
-          {/* ── crest + title ── */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
-              marginBottom: 'var(--space-md)',
-            }}
-          >
-            <WowSigil size={46} />
-            <div style={{ minWidth: 0 }}>
-              {/* The kicker is WOW's; the HEADING below is the shared, neutral
-                  one (#718 — and `duelSkinSlots.test.tsx` enforces it). A span,
-                  not a <p>: this line is a byline, Label tier by role, and the
-                  seal guard rightly treats a Label-sized <p> as sunk body copy. */}
-              <span
-                style={{
-                  display: 'block',
-                  fontFamily: BODY_FONT,
-                  fontStyle: 'italic',
-                  fontSize: 'var(--text-lg)',
-                  color: MUTED,
-                }}
-              >
-                {voice.sub}
-              </span>
-              <h2
-                className="content-title"
-                style={{ fontFamily: DISPLAY_FONT, color: INK, lineHeight: 1.15 }}
-              >
-                {copy.heading} <ListsSpark />
-              </h2>
-            </div>
+      <div style={{ flex: 1, padding: 'var(--space-lg)' }}>
+        {/* ── crest + title ── */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-md)',
+            marginBottom: 'var(--space-md)',
+          }}
+        >
+          <WowSigil size={46} />
+          <div style={{ minWidth: 0 }}>
+            {/* The kicker is WOW's; the HEADING below is the shared, neutral
+                one (#718 — and `duelSkinSlots.test.tsx` enforces it). A span,
+                not a <p>: this line is a byline, Label tier by role, and the
+                seal guard rightly treats a Label-sized <p> as sunk body copy. */}
+            <span
+              style={{
+                display: 'block',
+                fontFamily: BODY_FONT,
+                fontStyle: 'italic',
+                fontSize: 'var(--text-lg)',
+                color: MUTED,
+              }}
+            >
+              {voice.sub}
+            </span>
+            <h2
+              className="content-title"
+              style={{ fontFamily: DISPLAY_FONT, color: INK, lineHeight: 1.15 }}
+            >
+              {copy.heading} <ListsSpark />
+            </h2>
           </div>
+        </div>
 
-          {/* ── the shared, figure-bearing copy ── the forfeit face takes the
-              sheet-measured NOTICE ink rather than the global red (#1168); the
-              red is the rule beside it, where it carries no text. */}
+        {/* ── the shared, figure-bearing copy ── the forfeit face takes the
+            sheet-measured NOTICE ink rather than the global red (#1168); the
+            red is the rule beside it, where it carries no text. */}
+        <p
+          className="content-text"
+          style={{
+            fontFamily: BODY_FONT,
+            lineHeight: 1.55,
+            ...(copy.danger
+              ? {
+                  color: NOTICE,
+                  fontWeight: 700,
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: `3px solid var(--color-danger)`,
+                }
+              : {}),
+          }}
+        >
+          {copy.body}
+        </p>
+
+        {copy.note && (
           <p
             className="content-text"
             style={{
+              marginTop: 'var(--space-sm)',
               fontFamily: BODY_FONT,
-              lineHeight: 1.55,
-              ...(copy.danger
-                ? {
-                    color: NOTICE,
-                    fontWeight: 700,
-                    paddingLeft: 'var(--space-md)',
-                    borderLeft: `3px solid var(--color-danger)`,
-                  }
-                : {}),
+              color: 'var(--color-success)',
             }}
           >
-            {copy.body}
+            {copy.note}
           </p>
+        )}
 
-          {copy.note && (
-            <p
-              className="content-text"
-              style={{
-                marginTop: 'var(--space-sm)',
-                fontFamily: BODY_FONT,
-                color: 'var(--color-success)',
-              }}
-            >
-              {copy.note}
-            </p>
-          )}
-
-          {/* ── the roster, on a parchment plate ── */}
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <span
-              style={{
-                ...listsEyebrow,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-sm)',
-                marginBottom: 'var(--space-sm)',
-              }}
-            >
-              {voice.rosterLabel}
-              <Rosette accent={accent} soft={soft} size={18} />
-            </span>
-            <div
-              style={{
-                background: PANEL,
-                border: `1.5px solid ${PANEL_BORDER}`,
-                borderRadius: 11,
-                padding: 'var(--space-md) var(--space-lg)',
-              }}
-            >
-              <RaceRoster me={me} foe={foe} theme={theme} />
-            </div>
+        {/* ── the roster, on a parchment plate ── */}
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          <span
+            style={{
+              ...listsEyebrow,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
+              marginBottom: 'var(--space-sm)',
+            }}
+          >
+            {voice.rosterLabel}
+            <Rosette accent={accent} soft={soft} size={18} />
+          </span>
+          <div
+            style={{
+              background: PANEL,
+              border: `1.5px solid ${PANEL_BORDER}`,
+              borderRadius: 11,
+              padding: 'var(--space-md) var(--space-lg)',
+            }}
+          >
+            <RaceRoster me={me} foe={foe} theme={theme} />
           </div>
+        </div>
 
-          {/* ── the stakes, struck in gold ── */}
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <span style={{ ...listsEyebrow, marginBottom: 'var(--space-sm)' }}>
-              {voice.stakesLabel}
-            </span>
-            <div
-              style={{
-                background: PANEL,
-                border: `1.5px solid ${HOLD}`,
-                borderRadius: 11,
-                padding: 'var(--space-md) var(--space-lg)',
-              }}
-            >
-              <StakesTiles
-                viewerFactionSlug={me.faction_slug}
-                opponentFactionSlug={foe.faction_slug}
-                opponentName={foe.display_name}
-                taskPointValue={taskPointValue}
-                status={duel.status}
-                theme={theme}
-              />
-            </div>
-
-            {/* The ribbon promise — suppressed on the forfeit face, where it
-                would be a lie: a rider who quits has not entered the lists to
-                the end. */}
-            {!copy.danger && (
-              <p
-                className="content-text"
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: 'var(--space-sm)',
-                  marginTop: 'var(--space-sm)',
-                  padding: 'var(--space-sm) var(--space-md)',
-                  borderRadius: 11,
-                  background: RIBBON,
-                  color: ON_RIBBON,
-                  fontFamily: BODY_FONT,
-                  fontStyle: 'italic',
-                }}
-              >
-                <ListsRibbonMark color={ON_RIBBON} />
-                <span>{voice.ribbonLine}</span>
-              </p>
-
-            )}
-          </div>
-
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <SealActions
-              onConfirm={onConfirm}
-              onCancel={onCancel}
-              busy={busy}
-              confirmLabel={voice.confirm}
-              cancelLabel={voice.cancel}
-              danger={copy.danger}
+        {/* ── the stakes, struck in gold ── */}
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          <span style={{ ...listsEyebrow, marginBottom: 'var(--space-sm)' }}>
+            {voice.stakesLabel}
+          </span>
+          <div
+            style={{
+              background: PANEL,
+              border: `1.5px solid ${HOLD}`,
+              borderRadius: 11,
+              padding: 'var(--space-md) var(--space-lg)',
+            }}
+          >
+            <StakesTiles
+              viewerFactionSlug={me.faction_slug}
+              opponentFactionSlug={foe.faction_slug}
+              opponentName={foe.display_name}
+              taskPointValue={taskPointValue}
+              status={duel.status}
               theme={theme}
             />
           </div>
+
+          {/* The ribbon promise — suppressed on the forfeit face, where it
+              would be a lie: a rider who quits has not entered the lists to
+              the end. */}
+          {!copy.danger && (
+            <p
+              className="content-text"
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 'var(--space-sm)',
+                marginTop: 'var(--space-sm)',
+                padding: 'var(--space-sm) var(--space-md)',
+                borderRadius: 11,
+                background: RIBBON,
+                color: ON_RIBBON,
+                fontFamily: BODY_FONT,
+                fontStyle: 'italic',
+              }}
+            >
+              <ListsRibbonMark color={ON_RIBBON} />
+              <span>{voice.ribbonLine}</span>
+            </p>
+
+          )}
+        </div>
+
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          <SealActions
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            busy={busy}
+            confirmLabel={voice.confirm}
+            cancelLabel={voice.cancel}
+            danger={copy.danger}
+            theme={theme}
+          />
         </div>
       </div>
-    </div>
+    </DuelSealSheet>
   )
 }

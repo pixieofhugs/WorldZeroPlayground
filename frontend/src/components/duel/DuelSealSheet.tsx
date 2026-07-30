@@ -57,6 +57,18 @@ export interface DuelSealSheetProps {
   ground: CSSProperties
   /** Floating-card chrome — border, radius, clip, shadow. DESKTOP ONLY. */
   card?: CSSProperties
+  /**
+   * A class applied to the PHONE shell only, for a rule that must not reach the
+   * laptop. One consumer: WOW's `.wow-seal-actions--mobile`, which stretches the
+   * seal buttons and holds them at the kit's 46px touch targets (#895 asks that
+   * those be kept, and inline styles cannot express "only under 768px").
+   *
+   * ponytail: this exists because colours and rules live in `index.css` and a
+   * component cannot add a media query. The upgrade path is to wrap that rule in
+   * `@media (max-width: 767px)` there, after which the skin can carry the class
+   * itself at both widths and this prop can go.
+   */
+  phoneClassName?: string
   children: ReactNode
 }
 
@@ -65,6 +77,7 @@ export default function DuelSealSheet({
   scrim = SEAL_SCRIM,
   ground,
   card,
+  phoneClassName,
   children,
 }: DuelSealSheetProps) {
   const isMobile = useFormFactor() === 'mobile'
@@ -75,7 +88,9 @@ export default function DuelSealSheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className="fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto"
+        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto${
+          phoneClassName ? ` ${phoneClassName}` : ''
+        }`}
         style={{ background: 'var(--color-bg-page)', ...ground }}
       >
         {children}

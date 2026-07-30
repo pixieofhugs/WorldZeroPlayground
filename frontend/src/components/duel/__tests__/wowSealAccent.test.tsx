@@ -5,8 +5,11 @@
  * and re-aimed. That file asserted the rule structurally against three real
  * accents; #1090 retired the duel rail and the test went with it, correctly — but
  * the RULE did not go away with the surface. It moved to the seal skins
- * (`components/duel/wowLists.tsx` + the two `Wow*DuelSealConfirm` frames), which
- * are mounted by the composer and by `PraxisSubmitControls`.
+ * (`components/duel/wowLists.tsx` + the `WowDuelSealConfirm` frame), which
+ * is mounted by the composer and by `PraxisSubmitControls`. It was TWO frames
+ * until #1313 collapsed the seal to one responsive component per faction; the
+ * rule is asserted at both form factors instead of against two files, because
+ * the phone shell paints the same ground and holds the same rosette.
  *
  * THE RULE (WORLD_ZERO_STYLE §3, "On the lists"). `accent`/`soft` are the
  * OPPONENT's faction tokens (#310) and can be ANY hue in the palette —
@@ -33,12 +36,18 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
-import type { ComponentType } from 'react'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import { factionCssVar } from '../../../utils/factions'
-// Type-only, so it is erased before the vi.mock hoist.
-import type { DuelSealConfirmProps } from '../DuelSealConfirm'
+
+const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
+
+// The seal is one component at two widths (#1313); the phone branch is
+// unreachable in this harness without the mock — `renderToStaticMarkup` always
+// takes `useSyncExternalStore`'s server snapshot, which is 'desktop'.
+vi.mock('../../../hooks/useFormFactor', () => ({
+  useFormFactor: () => mocks.formFactor,
+}))
 
 /**
  * Only the VIEWER's faction is looked up (`useDuelStakes` reads the modifier that
@@ -64,9 +73,8 @@ vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => CONFIG,
 }))
 
-// Loaded after the mock, the pattern `duelSkinSlots.test.tsx` established.
+// Loaded after the mocks, the pattern `duelSkinSlots.test.tsx` established.
 const { default: WowDuelSealConfirm } = await import('../WowDuelSealConfirm')
-const { default: WowMobileDuelSealConfirm } = await import('../WowMobileDuelSealConfirm')
 
 function side(overrides: Partial<DuelSideOut>): DuelSideOut {
   return {
@@ -113,19 +121,19 @@ function duelFor(mode: 'submit' | 'forfeit', foeSlug: string): DuelDetailOut {
  */
 const OPPONENTS = ['snide', 'singularity', 'everymen'] as const
 
-const SKINS: [string, ComponentType<DuelSealConfirmProps>][] = [
-  ['desktop', WowDuelSealConfirm],
-  ['mobile', WowMobileDuelSealConfirm],
-]
+/** One component, two shells — the rule must hold in both (#1313). */
+const FORM_FACTORS = ['desktop', 'mobile'] as const
 
 const MODES = ['submit', 'forfeit'] as const
 
 describe('WOW seal: the opponent colour is a ring, never an ink and never a text ground', () => {
-  const cases = SKINS.flatMap(([surface, Skin]) =>
-    OPPONENTS.flatMap((slug) => MODES.map((mode) => [surface, slug, mode, Skin] as const)),
+  const cases = FORM_FACTORS.flatMap((surface) =>
+    OPPONENTS.flatMap((slug) => MODES.map((mode) => [surface, slug, mode] as const)),
   )
 
-  it.each(cases)('%s seal, %s opponent, %s mode', (_surface, slug, mode, Skin) => {
+  it.each(cases)('%s seal, %s opponent, %s mode', (_surface, slug, mode) => {
+    mocks.formFactor = _surface
+    const Skin = WowDuelSealConfirm
     // Resolved exactly as the skin resolves them, so this asserts WHERE the
     // opponent's tokens land, not which tokens they are.
     const accent = factionCssVar(slug, 'card-accent')
