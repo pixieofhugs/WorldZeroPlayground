@@ -378,14 +378,14 @@ export default function ModerationTab() {
                       <button
                         onClick={() => void handlePraxisAction(item.praxis, 'hidden')}
                         className="btn-outline text-xs"
-                        style={{ borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}
+                        style={{ borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}
                       >
                         {t('moderation.queue.actions.remove')}
                       </button>
                       <button
                         onClick={() => setFailNoteTarget(failNoteTarget === item.praxis.id ? null : item.praxis.id)}
                         className="btn-outline text-xs"
-                        style={{ borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}
+                        style={{ borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}
                       >
                         {t('moderation.queue.actions.fail')}
                       </button>
@@ -459,7 +459,7 @@ export default function ModerationTab() {
                       <button
                         onClick={() => void handleCommentAction(item.comment, 'deleted')}
                         className="btn-outline text-xs"
-                        style={{ borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}
+                        style={{ borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}
                       >
                         {t('moderation.queue.actions.remove')}
                       </button>

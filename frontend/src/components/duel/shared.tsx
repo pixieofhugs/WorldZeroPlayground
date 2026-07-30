@@ -521,7 +521,10 @@ export function SealActions({
             ? {
                 background: 'var(--color-danger)',
                 borderColor: 'var(--color-danger)',
-                color: 'var(--color-text-on-accent)',
+                // NOT --color-text-on-accent: that is #ffffff in both themes
+                // and the dark red is bright, so the forfeit label measured
+                // 2.77:1 (#1169). --color-on-danger is the ink for this fill.
+                color: 'var(--color-on-danger)',
               }
             : {}),
         }}

@@ -152,20 +152,20 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
           {praxis.moderation_status === 'flagged' && (
             <>
               <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)' }}>{t('detail.admin.approve')}</button>
-              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
             </>
           )}
           {praxis.moderation_status === 'visible' && (
             <>
-              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
             </>
           )}
           {(praxis.moderation_status === 'hidden' || praxis.moderation_status === 'failed') && (
             <>
               <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)' }}>{t('detail.admin.restore')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
             </>
           )}
         </div>
@@ -280,7 +280,7 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           has one owner — the composer's waiting surface (#1071) — instead of two
           that described it differently. */}
       {praxis.moderation_status === 'failed' && praxis.admin_note && (
-        <div style={{ background: 'rgba(220,38,38,0.05)', border: '2px solid rgba(220,38,38,0.3)', borderRadius: 8, padding: 'var(--space-sm) var(--space-lg)', marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+        <div style={{ background: 'var(--color-danger-veil)', border: '2px solid var(--color-danger-edge)', borderRadius: 8, padding: 'var(--space-sm) var(--space-lg)', marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {/* Ornament: a ✗ dingbat used as an icon, not readable text. Sized
               from the label tier (nearest token to its old 16px), never the
               content floor — see WORLD_ZERO_STYLE.md §4, ornament role. */}
@@ -470,7 +470,7 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
       <button
         onClick={handleWithdraw}
         disabled={withdrawing}
-        style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
+        style={{ background: 'var(--color-danger-veil)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
       >
         {withdrawing ? t('detail.owner.submitting') : t(unsubmitCopy.confirm)}
       </button>
@@ -523,7 +523,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
   return (
     <div className="sidebar-card" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
       <div className="flex items-center gap-3">
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(220,38,38,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-danger-edge)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <span className="eyebrow">{t('detail.flag.badge')}</span>
         </div>
         <div className="flex-1">
@@ -531,7 +531,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           <p className="font-body" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{t('detail.flag.body')}</p>
         </div>
         {!showFlagForm && (
-          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>
+          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}>
             {t('detail.flag.flag')}
           </button>
         )}
@@ -552,7 +552,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
                   fontSize: 'var(--text-sm)',
                   padding: 'var(--space-xs) var(--space-md)',
                   ...(flagReason === value
-                    ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }
+                    ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
                     : {}),
                 }}
               >
@@ -579,7 +579,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           )}
           <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
             {flagReason !== null && (
-              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
                 {flagging ? t('detail.flag.submitting') : t('detail.flag.submit')}
               </button>
             )}
