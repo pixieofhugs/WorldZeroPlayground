@@ -150,6 +150,71 @@ describe('normalizeFeedItem', () => {
     expect(row.headline).not.toContain('napping')
   })
 
+  // ── comment_mention (#1196) ────────────────────────────────────────────────
+  //
+  // The type shipped with a correct query, a complete payload and NO case here,
+  // so the normalizer returned null, `FeedCardRouter` fell through to `return
+  // null`, and every @mention anyone ever received rendered as nothing at all.
+
+  it('maps a mention to a quoted excerpt over the praxis it sits on', () => {
+    const row = normalizeFeedItem(
+      item('comment_mention', {
+        comment_id: 11,
+        character_id: 8,
+        praxis_id: 12,
+        task_id: null,
+        excerpt: 'the second half is yours @ada',
+      }),
+    )!
+    expect(row.actor).toBe('Ada')
+    expect(row.actorHref).toBe('/characters/8')
+    expect(row.action).toBe('mentioned you in a comment')
+    // News about you, not a request of you — nothing is being asked.
+    expect(row.badge?.label).toBe('Your Stuff')
+    expect(row.headline).toBe('the second half is yours @ada')
+    // Speech, so it is quoted like a taunt rather than titled like a task.
+    expect(row.headlineQuoted).toBe(true)
+    expect(row.headlineHref).toBe('/praxes/12')
+    expect(row.points).toBeNull()
+    expect(row.level).toBeNull()
+  })
+
+  it('sends a mention on a TASK comment to the task instead', () => {
+    // Exactly one of the two ids is ever set — `num_nonnulls(praxis_id, task_id)
+    // = 1` is a DB CHECK — so reading them in order cannot pick the wrong target.
+    const row = normalizeFeedItem(
+      item('comment_mention', {
+        comment_id: 12,
+        character_id: 8,
+        praxis_id: null,
+        task_id: 5,
+        excerpt: 'thought of you for this one',
+      }),
+    )!
+    expect(row.headlineHref).toBe('/tasks/5')
+  })
+
+  it('offers exactly one CTA on a mention, into the page holding the thread', () => {
+    // The Snide sheet draws two — "open the composer" and "open the thread" — and
+    // in this app those are the SAME navigation: `CommentThread` mounts the
+    // composer directly under the list, and no route, hash or query parameter
+    // opens one without the other. Two buttons with identical hrefs is not two
+    // affordances, so the quoted excerpt opens the thread and this is the
+    // invitation to answer it. Same ground on which #1194 struck "Nudge back".
+    const row = normalizeFeedItem(
+      item('comment_mention', { comment_id: 11, praxis_id: 12, excerpt: 'hi' }),
+    )!
+    expect(row.actions.map((action) => action.id)).toEqual(['reply'])
+    expect(row.actions[0].href).toBe('/praxes/12')
+    expect(row.actions[0].call).toBeUndefined()
+  })
+
+  it('builds no mention CTA when the payload names no target', () => {
+    const row = normalizeFeedItem(item('comment_mention', { comment_id: 11 }))!
+    expect(row.actions).toEqual([])
+    expect(row.headlineHref).toBeNull()
+  })
+
   it('has an actorless system row for a global task', () => {
     const row = normalizeFeedItem(item('global_task', { task_id: 5, task_title: 'New job', task_point_value: 10, task_level_required: 2 }))!
     expect(row.actor).toBeNull()
@@ -218,6 +283,49 @@ describe('FeedRowContent', () => {
     const naHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
     const albHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('albescent')} avatarUrl={null} /></MemoryRouter>)
     expect(albHtml).toBe(naHtml)
+  })
+
+  // A quoted headline used to be unconditionally inert, which was right while
+  // `foe_taunt` was the only quoted row (ADR-0031: no taunt page to link to) and
+  // wrong the moment a second one arrived carrying a target — the mention's href
+  // would have been silently dropped.
+  it('links a quoted excerpt to its target, and leaves a taunt inert', () => {
+    const mention = normalizeFeedItem(
+      item('comment_mention', {
+        comment_id: 11,
+        character_id: 8,
+        praxis_id: 12,
+        excerpt: 'over to you',
+      }),
+    )!
+    const mentionHtml = renderToStaticMarkup(
+      <MemoryRouter><FeedRowContent row={mention} avatarUrl={null} /></MemoryRouter>,
+    )
+    // Quoted (curly quotes from the catalog) AND clickable.
+    expect(mentionHtml).toContain('“over to you”')
+    expect(mentionHtml).toContain('href="/praxes/12"')
+    // The CTA is the second route to the same page, not a second destination.
+    expect(mentionHtml).toContain('Reply')
+
+    const taunt = normalizeFeedItem(
+      item('foe_taunt', {
+        from_character_id: 9,
+        taunt_id: 2,
+        faction_slug: 'coven',
+        trigger_type: 'level_up',
+        from_name: 'Ada',
+        to_name: 'Bo',
+      }),
+    )!
+    const tauntHtml = renderToStaticMarkup(
+      <MemoryRouter><FeedRowContent row={taunt} avatarUrl={null} /></MemoryRouter>,
+    )
+    // Its only destination is the actor — the quote itself goes nowhere.
+    expect(tauntHtml).toContain('href="/characters/9"')
+    expect(tauntHtml, 'the quote is a paragraph, not a link').toContain('<p class="font-body"')
+    for (const route of ['href="/praxes', 'href="/tasks']) {
+      expect(tauntHtml, `${route} must not appear on a taunt`).not.toContain(route)
+    }
   })
 
   // The other half of ADR-0039, and the half that looks like a bug: an actor's

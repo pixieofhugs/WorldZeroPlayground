@@ -162,12 +162,7 @@ export default function FeedRowContent({
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             {row.headlineQuoted ? (
-              <p
-                className="font-body"
-                style={{ margin: 0, fontSize: 'var(--text-content)', fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.4 }}
-              >
-                {i18n.t('feed:row.quotedHeadline', { headline: row.headline })}
-              </p>
+              <QuotedHeadline headline={row.headline} href={row.headlineHref} />
             ) : row.headlineHref ? (
               <Link
                 to={row.headlineHref}
@@ -200,6 +195,43 @@ export default function FeedRowContent({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * A quoted headline: somebody's actual words, not a title.
+ *
+ * Two row types use it. A taunt has nowhere to go — ADR-0031 means the catalog
+ * owns the words and there is no taunt page, so `headlineHref` is null. A comment
+ * mention's excerpt DOES have a home: the praxis or task the comment sits on
+ * (#1196). So the quote becomes a link exactly when the row handed it one.
+ *
+ * It was unconditionally inert before, which was right while `foe_taunt` was the
+ * only quoted row and wrong the moment a second one arrived carrying a target —
+ * the href would have been silently dropped. The type, size and italic are
+ * identical either way: the quote is speech, and dressing it as a bold title link
+ * would undo the distinction the quoting exists to draw.
+ */
+function QuotedHeadline({ headline, href }: { headline: string; href: string | null }) {
+  const quoted = i18n.t('feed:row.quotedHeadline', { headline })
+  const style: React.CSSProperties = {
+    margin: 0,
+    fontSize: 'var(--text-content)',
+    fontStyle: 'italic',
+    color: 'var(--color-text-primary)',
+    lineHeight: 1.4,
+  }
+  if (!href) {
+    return (
+      <p className="font-body" style={style}>
+        {quoted}
+      </p>
+    )
+  }
+  return (
+    <Link to={href} className="font-body" style={{ ...style, display: 'block', textDecoration: 'none' }}>
+      {quoted}
+    </Link>
   )
 }
 
