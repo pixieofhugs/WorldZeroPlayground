@@ -489,7 +489,9 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           top: '55%',
           width: 200,
           height: 200,
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: half the 200px candle halo, centring the glow on its anchor. The offsets ARE the drawn disc's size; no rung halves it.
           marginLeft: -100,
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the vertical half of the same halo centring.
           marginTop: -100,
           borderRadius: '50%',
           background: 'var(--faction-coven-slip-sigil-halo)',
