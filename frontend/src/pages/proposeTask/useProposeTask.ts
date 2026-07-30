@@ -17,11 +17,12 @@
  * slug and metatasks are faction-open, so anyone may apply an `na` metatask
  * (#894).
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { proposeTask, type TaskCreate } from "../../api/tasks";
 import { proposeMetatask, type MetataskProposal } from "../../api/metaTasks";
-import { getFactions, type FactionOut } from "../../api/factions";
+import type { FactionOut } from "../../api/factions";
+import { useFactions } from "../../hooks/useFactions";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
@@ -127,7 +128,8 @@ export interface ProposeTaskState {
 export function useProposeTask(): ProposeTaskState {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [factions, setFactions] = useState<FactionOut[]>([]);
+  // App-wide cached, one request per page load across all five consumers (#1284).
+  const factions: FactionOut[] = useFactions() ?? [];
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [pointValue, setPointValue] = useState<string>("10");
@@ -141,12 +143,6 @@ export function useProposeTask(): ProposeTaskState {
   const [success, setSuccess] = useState(false);
   const [isMetaTask, setIsMetaTask] = useState(false);
   const [metaBonusValue, setMetaBonusValue] = useState("10");
-
-  useEffect(() => {
-    getFactions()
-      .then(setFactions)
-      .catch(() => {});
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
