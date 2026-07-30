@@ -190,9 +190,11 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
         )}
       </section>
 
-      {membership.state === 'gate' && (
+      {(membership.state === 'gate' || membership.state === 'burned') && (
         <p className="content-text" style={{ fontFamily: FONT, color: phosphor(55), marginTop: 'var(--space-xl)' }}>
-          {t('mobile.gateHint', { faction: name })}
+          {membership.state === 'burned'
+            ? t('mobile.burnedHint', { faction: name })
+            : t('mobile.gateHint', { faction: name })}
         </p>
       )}
 

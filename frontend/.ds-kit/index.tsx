@@ -81,7 +81,7 @@ export { default as WowTaskCard } from "../src/components/cards/WowTaskCard";
 export { default as WowVote } from "../src/components/vote/WowVote";
 export { default as DefaultCreateCharacter } from "../src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter";
 export { default as DefaultEditCharacter } from "../src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter";
-export { default as DefaultProfile } from "../src/pages/characterProfile/mobileArchetypes/DefaultProfile";
+export { default as DefaultProfileBody } from "../src/pages/characterProfile/archetypes/DefaultProfileBody";
 export { default as DefaultEditPraxis } from "../src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis";
 export { default as EphemeristsComposer } from "../src/pages/editPraxis/mobileArchetypes/EphemeristsComposer";
 export { default as EverymenComposer } from "../src/pages/editPraxis/mobileArchetypes/EverymenComposer";

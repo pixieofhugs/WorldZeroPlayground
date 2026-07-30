@@ -185,9 +185,11 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
         )}
       </section>
 
-      {membership.state === 'gate' && (
+      {(membership.state === 'gate' || membership.state === 'burned') && (
         <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, marginTop: 'var(--space-xl)', transform: 'rotate(-1deg)' }}>
-          {t('mobile.gateHint', { faction: name })}
+          {membership.state === 'burned'
+            ? t('mobile.burnedHint', { faction: name })
+            : t('mobile.gateHint', { faction: name })}
         </p>
       )}
 

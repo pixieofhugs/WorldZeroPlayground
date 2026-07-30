@@ -265,7 +265,12 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   if (!praxis) return null;
 
   const members = orderedMembers(praxis);
-  const isCollab = members.length > 1;
+  // A collab is a collab at ONE member (#1274). This used to read
+  // `members.length > 1`, which hid the whole Members section from a collab
+  // nobody had joined yet while the heading still counted them. Tested
+  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
+  // `!== 'solo'` would put a roster on every duel (#992).
+  const isCollab = praxis.type === "collab";
   // The shared banners draw the roster while a collab is still resolving, so the
   // Members section takes the complement — one roster on the page, never two.
   const rosterInBanners = praxis.status === "in_progress" || praxis.status === "pending";
@@ -696,6 +701,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       {sectionHead(t("detail.sections.members"))}
       <div style={{ ...CREW_INK, color: INK }}>
         <CollabRoster
+          praxisType={praxis.type}
+          invites={praxis.invites}
           members={praxis.members}
           currentCharacterId={state.user?.character?.id ?? null}
           factionSlug={praxis.task_faction_slug}

@@ -108,6 +108,7 @@ function state(overrides: Partial<TaskDetailState>): TaskDetailState {
     task: TASK_ABOVE,
     fetchError: null,
     submissions: [],
+    comments: null,
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,

@@ -252,7 +252,12 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   if (!praxis) return null;
 
   const members = orderedMembers(praxis);
-  const isCollab = members.length > 1;
+  // A collab is a collab at ONE member (#1274). This used to read
+  // `members.length > 1`, which hid the whole Members section from a collab
+  // nobody had joined yet while the heading still counted them. Tested
+  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
+  // `!== 'solo'` would put a roster on every duel (#992).
+  const isCollab = praxis.type === "collab";
 
   // A payload with no member rows still credits its creator, so the byline is
   // never empty and the author is always reachable from it. Initials only:
@@ -784,6 +789,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead(t("detail.sections.members"))}
       <CollabRoster
+        praxisType={praxis.type}
+        invites={praxis.invites}
         members={praxis.members}
         currentCharacterId={state.user?.character?.id ?? null}
         factionSlug={praxis.task_faction_slug}

@@ -21,6 +21,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import type { DuelDetailOut } from "../../../api/duel";
 import type { CurrentUser } from "../../../api/auth";
+import type { CommentOut } from "../../../api/comments";
 import { PraxisFlagBlock } from "../shared";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
@@ -109,11 +110,31 @@ const VIEWER: CurrentUser = {
   },
 } as unknown as CurrentUser;
 
+/** One row the page fetched alongside the praxis (#1281). */
+const COMMENT: CommentOut = {
+  id: 7,
+  praxis_id: 1,
+  task_id: null,
+  body_text: "seedlings along the estuary",
+  is_edited: false,
+  created_at: "2026-01-04T00:00:00Z",
+  updated_at: "2026-01-04T00:00:00Z",
+  author: {
+    id: 42,
+    username: "ada",
+    display_name: "Adabel",
+    avatar_url: null,
+    faction_slug: null,
+  },
+  mentions: [],
+};
+
 function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
   return {
     loading: false,
     praxis: PRAXIS,
     fetchError: null,
+    comments: null,
     votes: { praxis_id: 1, total_votes: 2, total_score: 4 },
     voters: [
       { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
@@ -259,6 +280,18 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   it("hides the comment region on a praxis that is not visible", () => {
     const hidden = state({ praxis: { ...PRAXIS, moderation_status: "hidden" } });
     expect(render(hidden).text).not.toContain("Discussion");
+  });
+
+  it("feeds the thread the rows the PAGE fetched, not a second round trip", () => {
+    // #1281: the thread sits behind the visibility gate above, so its own
+    // effect could not run until the praxis had landed and the region mounted
+    // — comments were always one wave late. `usePraxisDetail` now fetches them
+    // in the same `Promise.all` as the praxis and seeds the thread. This
+    // harness runs no effects, so a row in the markup can ONLY have come from
+    // the page's fetch.
+    const { text } = render(state({ comments: [COMMENT] }));
+    expect(text, "the page's rows").toContain(COMMENT.body_text);
+    expect(text, "nothing left to wait for").not.toContain("Loading…");
   });
 });
 

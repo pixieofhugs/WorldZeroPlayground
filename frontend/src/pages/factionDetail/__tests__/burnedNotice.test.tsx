@@ -1,0 +1,80 @@
+/**
+ * The burned notice on the faction detail page (#1305).
+ *
+ * Walks every desktop faction-body archetype plus the Default fallback (which
+ * is what WOW and Albescent render — the surface the defect was reported on)
+ * and pins the two non-actionable states apart:
+ *
+ *   - "gate"   → not invited YET (#454). "Keep doing tasks" is true here.
+ *   - "burned" → left this faction this era; `can_join_faction` refuses the
+ *                join for the rest of it. "Keep doing tasks" is a lie here.
+ *
+ * UA is the exception in both directions: graduation-gating resolves it to
+ * "none" before any status is consulted (#200/#243), so its page must never
+ * grow the notice.
+ */
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import type { ReactElement } from 'react'
+import { describe, it, expect } from 'vitest'
+// Initialize the i18n catalog so faction copy keys resolve to English text.
+import '../../../i18n'
+import { surfaceMap } from '../../../factions'
+import DefaultFactionBody from '../archetypes/DefaultFactionBody'
+import type { FactionDetailState, MembershipState } from '../useFactionDetail'
+
+/** A tail of `detail.burned.body` with no apostrophe — SSR escapes those. */
+const ERA_NOTICE = 'until the next one begins'
+
+function text(node: ReactElement): string {
+  return renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>).replace(
+    /<[^>]*>/g,
+    '',
+  )
+}
+
+function stateWith(slug: string, state: MembershipState): FactionDetailState {
+  return {
+    slug,
+    loading: false,
+    faction: { slug },
+    fetchError: null,
+    members: [],
+    tasks: [],
+    recentPraxis: [],
+    viewerFactionSlug: null,
+    gameFactions: [],
+    membership: {
+      state,
+      currentFactionSlug: null,
+      join: async () => {},
+      joining: false,
+      joinError: null,
+    },
+  }
+}
+
+// The Default body is keyed to `wow` — the faction the defect was filed
+// against, which has no bespoke body of its own yet (#951).
+const bodies = { ...surfaceMap('factionBody'), wow: DefaultFactionBody }
+
+describe('burned viewers are told the era is closed, not to keep tasking', () => {
+  for (const [slug, Body] of Object.entries(bodies)) {
+    it(`${slug} keeps the burn and the soft gate distinguishable`, () => {
+      const gate = text(<Body state={stateWith(slug, 'gate')} />)
+      const burned = text(<Body state={stateWith(slug, 'burned')} />)
+
+      expect(gate, 'the soft gate keeps its own faction-voiced copy').not.toContain(
+        ERA_NOTICE,
+      )
+
+      if (slug === 'ua') {
+        // Unreachable in the hook; asserted at the render seam anyway so a
+        // future refactor of the mapping cannot quietly light it up.
+        expect(burned, 'UA never burns (#200/#243)').not.toContain(ERA_NOTICE)
+      } else {
+        expect(burned, 'the era notice replaces the gate').toContain(ERA_NOTICE)
+      }
+    })
+  }
+})

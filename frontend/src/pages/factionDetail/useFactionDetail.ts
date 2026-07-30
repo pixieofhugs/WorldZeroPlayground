@@ -35,10 +35,54 @@ import type { FactionConfigOut } from "../../api/gameConfig";
  *   - "member"   → already on this faction's roll
  *   - "eligible" → invited / can return / holds an open letter — show Join
  *   - "gate"     → not invited yet — show the soft "keep doing tasks" gate
+ *   - "burned"   → left this faction this era and it does not take you back —
+ *                  show the neutral closed-for-the-era notice (#1305)
  * The standardization's soft gate has no formula/progress bar (ADR-0019: joining
  * is invite-earned and switching factions is irreversible, so Join confirms).
+ *
+ * "gate" and "burned" must stay distinguishable: "keep doing tasks" is the
+ * right message for "not invited yet" (#454) and a lie for the burn, which
+ * `can_join_faction` refuses for the rest of the era.
  */
-export type MembershipState = "none" | "member" | "eligible" | "gate";
+export type MembershipState =
+  | "none"
+  | "member"
+  | "eligible"
+  | "gate"
+  | "burned";
+
+/**
+ * Resolve {@link MembershipState} from the raw status map entry
+ * ("member" | "invited" | "not_invited" | "defected" | "can_return") plus
+ * whether an open invitation letter exists.
+ *
+ * Exported because this mapping is the whole join-block contract and the hook
+ * around it is effect-driven — the seam is unit-testable, the hook is not.
+ */
+export function resolveMembershipState(
+  hasCharacter: boolean,
+  rawStatus: string | null,
+  hasInvite: boolean,
+  slug: string | undefined,
+): MembershipState {
+  if (!hasCharacter) return "none";
+  if (rawStatus === "member") return "member";
+  // UA has no chosen-join flow — membership is graduation-gated, not earned by
+  // tasking, and has no join design (#200/#243). So UA never surfaces an
+  // "eligible" Join CTA nor the "keep tasking" gate: a non-member viewer sees
+  // no join block at all ("none"), per the "hide unusable controls"
+  // convention. This precedes every status branch below, so no UA viewer can
+  // reach one.
+  if (slug === "ua") return "none";
+  // The burn (#1305) outranks any open letter, exactly as the backend ranks it:
+  // `get_faction_status_map` yields "defected" over "invited", and
+  // `can_join_faction` refuses the join for the rest of the era. A faction with
+  // `can_always_rejoin` reads "can_return" instead and stays eligible below.
+  if (rawStatus === "defected") return "burned";
+  if (rawStatus === "invited" || rawStatus === "can_return" || hasInvite)
+    return "eligible";
+  return "gate";
+}
 
 export interface Membership {
   state: MembershipState;
@@ -164,21 +208,12 @@ export function useFactionDetail(
     };
   }, [slug, characterId]);
 
-  // UA has no chosen-join flow — membership is graduation-gated, not earned by
-  // tasking, and has no join design (#200/#243). So UA never surfaces an
-  // "eligible" Join CTA nor the "keep tasking" gate: a non-member viewer sees no
-  // join block at all ("none"), per the "hide unusable controls" convention.
-  const isGraduationGated = slug === "ua"
-
-  const membershipState: MembershipState = !characterId
-    ? "none"
-    : rawStatus === "member"
-      ? "member"
-      : isGraduationGated
-        ? "none"
-        : rawStatus === "invited" || rawStatus === "can_return" || hasInvite
-          ? "eligible"
-          : "gate";
+  const membershipState = resolveMembershipState(
+    Boolean(characterId),
+    rawStatus,
+    hasInvite,
+    slug,
+  );
 
   const join = useCallback(async () => {
     if (!slug) return;

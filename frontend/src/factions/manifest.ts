@@ -147,13 +147,22 @@ export interface FactionManifest {
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  // Task cards, task detail, praxis detail, the EDIT-PRAXIS COMPOSER and now the
-  // PRAXIS CARD have no mobile twin: ADR-0056, ADR-0058, ADR-0061/#1085,
-  // ADR-0065/#1181 and ADR-0067 each collapsed their surface to one responsive
-  // component per faction and retired it. All five licences are scoped to their
-  // own surface — ADR-0035 still governs every twin below, and each of these
-  // records says in terms that it licenses no further collapse: the next surface
-  // needs its own record, the same way.
+  // Task cards, task detail, praxis detail, the EDIT-PRAXIS COMPOSER, the PRAXIS
+  // CARD and now the CHARACTER PROFILE have no mobile twin: ADR-0056, ADR-0058,
+  // ADR-0061/#1085, ADR-0065/#1181, ADR-0067 and #1319 each collapsed their
+  // surface to one responsive component per faction and retired it. Every one of
+  // those licences is scoped to its own surface — ADR-0035 still governs the
+  // twins below, and each record says in terms that it licenses no further
+  // collapse: the next surface needs its own record, the same way.
+  //
+  // `mobileProfile` is the sixth (#1319). It was the clearest case for the
+  // collapse and the weakest seam in the set: TWO of nine slugs ever filled it
+  // (na by being the call site's Default, wow by registering), so a Coven or UA
+  // player got the na spectrum profile on a phone and their own dress on a
+  // laptop. Both skins are now the mobile branch of their own `profileBody`
+  // (`DefaultProfileBody`, `WowProfileBody`), and every other faction reaches
+  // its own body at both widths through `ProfileSkin`, which grew the same
+  // `useFormFactor()` read.
   //
   // `mobilePraxisCard` is the fifth (ADR-0067). It was the last CARD-level twin
   // and the largest — ten skins and a 556-line slot library that re-derived the
@@ -179,7 +188,6 @@ export interface FactionManifest {
   // is not a seam, it is a lookup that always returns the same answer.
   readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
-  readonly mobileProfile?: Lazy<ComponentType<ProfileBodyProps>>
   readonly mobileDuelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 }
 
@@ -216,7 +224,6 @@ export const SURFACE_KEYS = [
   'duelSeal',
   'mobileFactionPage',
   'mobileFieldDesk',
-  'mobileProfile',
   'mobileDuelSeal',
 ] as const satisfies readonly FactionSurface[]
 

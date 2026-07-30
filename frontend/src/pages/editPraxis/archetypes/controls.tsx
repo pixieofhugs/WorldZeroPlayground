@@ -160,8 +160,14 @@ export function InviteSearch({
             )
           : [
               // Live cast-status roster replaces the flat member pills (#591).
+              // `invites` is deliberately NOT passed here, and this is the only
+              // mount that withholds it (#1274): the roster's `awaiting` line
+              // names outstanding invitees, and on THIS surface they are already
+              // drawn as the pending chips immediately below — with the rescind
+              // × the line cannot offer. One fact, one place.
               <div key="roster" style={{ flex: "1 1 100%" }}>
                 <CollabRoster
+                  praxisType={praxis.type}
                   members={praxis.members}
                   currentCharacterId={state.currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
