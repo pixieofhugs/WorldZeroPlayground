@@ -592,6 +592,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   // ── Header: breadcrumb, the bar, the cut-up headline, author, stats ──
+  //
+  // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
+  // the task id, and the id WAS the second crumb, so the separator went with it
+  // rather than dangling.
   const header = (
     <div>
       <nav
@@ -614,12 +618,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         >
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden="true" style={eyebrow}>
-          /
-        </span>
-        <span style={eyebrow}>
-          {t("detail.breadcrumb.current", { number: task.id })}
-        </span>
       </nav>
 
       {/* The masthead bar — the faction line, a broken acid rule, and (only on

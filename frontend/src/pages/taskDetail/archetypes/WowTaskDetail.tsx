@@ -554,15 +554,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           flexWrap: "wrap",
         }}
       >
+        {/* One crumb, not two: the trail read `TASKS / Task №{id}` until #1124
+            retired the task id, and the id WAS the second crumb, so the
+            separator went with it rather than dangling. */}
         <Link to="/tasks" style={{ ...EYEBROW, color: PLUM, textDecoration: "none" }}>
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden style={{ ...EYEBROW, color: LABEL }}>
-          /
-        </span>
-        <span style={{ ...EYEBROW, color: LABEL }}>
-          {t("detail.breadcrumb.current", { number: task.id })}
-        </span>
       </nav>
 
       <div

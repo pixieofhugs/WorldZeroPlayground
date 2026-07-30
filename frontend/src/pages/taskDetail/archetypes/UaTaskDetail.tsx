@@ -465,6 +465,10 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   // ── Header: breadcrumb, faction line, title, author, the two counts ──
+  //
+  // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
+  // the task id, and the id WAS the second crumb, so the separator went with it
+  // rather than dangling.
   const header = (
     <div>
       <nav
@@ -486,12 +490,6 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         >
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden style={UA_EYEBROW}>
-          /
-        </span>
-        <span style={UA_EYEBROW}>
-          {t("detail.breadcrumb.current", { number: task.id })}
-        </span>
       </nav>
 
       {/* The faction line — the mark, then the name resolved from the catalog by

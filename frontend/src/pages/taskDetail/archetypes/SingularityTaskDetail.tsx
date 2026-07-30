@@ -94,10 +94,10 @@ const LABEL: CSSProperties = {
   color: DIM,
 };
 
-/** The task's ordinal in hex — the window's process id. Ornament, never copy. */
-function hexOf(id: number): string {
-  return `0x${id.toString(16).toUpperCase().padStart(3, "0")}`;
-}
+/* `hexOf` rendered the task's id as a `0x131` process slug at the right end of
+   the window bar. It read as ornament, but the number it drew was the task id in
+   another base, and #1124 retired that id from this page — so the slug and the
+   helper are gone rather than the id surviving in hex. */
 
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -257,9 +257,15 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── Window chrome: lamps (desktop) or a back arrow (mobile), the breadcrumb,
-  //    and the process id. The design drew a second breadcrumb row inside the
-  //    header; one window title bar is enough, so the breadcrumb lives here.
+  // ── Window chrome: lamps (desktop) or a back arrow (mobile) and the
+  //    breadcrumb. The design drew a second breadcrumb row inside the header; one
+  //    window title bar is enough, so the breadcrumb lives here.
+  //
+  //    The bar used to carry the task id twice — `Task №{id}` as the trail's
+  //    second crumb and a `0x131` process slug at the far right. #1124 retired
+  //    the id, and both were it, so the bar is the back affordance plus the one
+  //    crumb: on desktop a TASKS link, on mobile the arrow alone (the crumb text
+  //    was always desktop-only).
   const chrome = (
     <div
       style={{
@@ -297,28 +303,10 @@ export default function SingularityTaskDetail({
       )}
 
       {desktop && (
-        <>
-          <Link to="/tasks" style={{ ...LABEL, color: BLUE, textDecoration: "none" }}>
-            {t("detail.breadcrumb.tasks")}
-          </Link>
-          <span aria-hidden style={LABEL}>
-            /
-          </span>
-        </>
+        <Link to="/tasks" style={{ ...LABEL, color: BLUE, textDecoration: "none" }}>
+          {t("detail.breadcrumb.tasks")}
+        </Link>
       )}
-      <span
-        style={{
-          ...LABEL,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {t("detail.breadcrumb.current", { number: task.id })}
-      </span>
-      <span aria-hidden style={{ ...LABEL, marginLeft: "auto", color: BLUE, flex: "none" }}>
-        {hexOf(task.id)}
-      </span>
     </div>
   );
 

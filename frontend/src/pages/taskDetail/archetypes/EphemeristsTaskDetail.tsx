@@ -85,7 +85,8 @@ const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 const RULE = "var(--faction-ephemerists-plate-rule)";
 const LINE = "var(--faction-ephemerists-plate-line)";
 const SHADOW = "var(--faction-ephemerists-plate-shadow)";
-const WASH = "var(--faction-ephemerists-plate-wash)";
+/* `--faction-ephemerists-plate-wash` filled the breadcrumb cartouche and nothing
+   else on this page; #1124 retired the cartouche with the task id it framed. */
 
 /**
  * Praxis cards shown before the gallery expands. `PraxisCard` carries
@@ -651,7 +652,7 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb cartouche, faction line, title, author, stats ──
+  // ── Header: breadcrumb, faction line, title, author, stats ──
   const header = (
     <div>
       <nav
@@ -663,30 +664,13 @@ export default function EphemeristsTaskDetail({
           flexWrap: "wrap",
         }}
       >
+        {/* One crumb, not two. A brass cartouche ruled the second crumb off at
+            both ends, and that crumb was the task's ordinal — #1124 retired the
+            id, so the cartouche and the separator before it went with it rather
+            than framing nothing. */}
         <Link to="/tasks" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden style={{ ...eyebrow, color: QUIET }}>
-          /
-        </span>
-        {/* The cartouche — the task's ordinal, ruled off at both ends. */}
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            padding: "var(--space-xs) var(--space-md)",
-            border: `1.5px solid ${BRASS}`,
-            borderRadius: 12,
-            background: WASH,
-          }}
-        >
-          <span aria-hidden style={{ width: 1.5, height: 12, background: BRASS }} />
-          <span style={{ ...SMALL_CAPS, fontWeight: 700, fontSize: "var(--text-base)", color: INK, whiteSpace: "nowrap" }}>
-            {t("detail.breadcrumb.current", { number: task.id })}
-          </span>
-          <span aria-hidden style={{ width: 1.5, height: 12, background: BRASS }} />
-        </span>
       </nav>
 
       <div

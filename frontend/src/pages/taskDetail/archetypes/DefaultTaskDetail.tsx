@@ -428,6 +428,11 @@ export default function DefaultTaskDetail({
   );
 
   // ── Header: breadcrumb, faction line, title, author, stats ──
+  //
+  // The breadcrumb is one crumb, not two. It read `TASKS / Task №{id}` until
+  // #1124 retired the task id from this page; the trail's second crumb WAS the
+  // id, so the separator went with it rather than being left to dangle. The
+  // title sits two rows below and names the page.
   const header = (
     <div>
       <nav
@@ -450,12 +455,6 @@ export default function DefaultTaskDetail({
         >
           {t("detail.breadcrumb.tasks")}
         </Link>
-        <span aria-hidden className="eyebrow">
-          /
-        </span>
-        <span className="eyebrow" style={{ letterSpacing: "0.2em" }}>
-          {t("detail.breadcrumb.current", { number: task.id })}
-        </span>
       </nav>
 
       <div
