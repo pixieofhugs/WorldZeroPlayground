@@ -562,7 +562,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--color-bg-page",
     text: "--faction-default-card-notice",
   },
-  { what: "coven seal body, notice ink", surface: "--faction-coven-body-bg", text: "--faction-coven-card-notice" },
+  // #1209 moved this ground: the seal dialogs were a `coven.exe` window on the
+  // dotted board and are the candlelit ward page now. The RED still fails on it
+  // — 4.31:1 in light, the identical reading it had on the board — so the notice
+  // ink survives the move for exactly the reason it was routed in the first place.
+  { what: "coven seal body, notice ink", surface: "--faction-coven-ward-page", text: "--faction-coven-card-notice" },
   { what: "wow seal body, notice ink", surface: "--faction-wow-duel-lists-bg", text: "--faction-wow-card-notice" },
   { what: "everymen seal body, notice ink", surface: "--everymen-paper", text: "--faction-everymen-card-notice" },
   // Snide had already routed its own body ink: the forfeit copy sits in a
@@ -572,7 +576,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // The reopen note. Five sheets keep `--color-success` because they MEASURE —
   // they are light by day and dark by night, so the token flips with them.
   { what: "default seal note, success on the page", surface: "--color-bg-page", text: "--color-success" },
-  { what: "coven seal note, success on the board", surface: "--faction-coven-body-bg", text: "--color-success" },
+  { what: "coven seal note, success on the ward page", surface: "--faction-coven-ward-page", text: "--color-success" },
   { what: "wow seal note, success on the lists ground", surface: "--faction-wow-duel-lists-bg", text: "--color-success" },
   { what: "everymen seal note, success on the paper", surface: "--everymen-paper", text: "--color-success" },
   { what: "snide seal note, acid on the halftone", surface: "--faction-snide-ink", text: "--faction-snide-acid" },
@@ -582,7 +586,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // `card-bg`, so a skin mounting the slots on a deeper stock has to re-measure
   // (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
   // already had"). Gates the roster's 18px "sealed" mark and the win figure.
-  { what: "coven seal stakes scrap, credit ink", surface: "--faction-coven-notepad-bg", text: "--color-success" },
+  { what: "coven seal stakes panel, credit ink", surface: "--faction-coven-ward-card", text: "--color-success" },
   { what: "wow seal stakes plate, credit ink", surface: "--faction-wow-chronicle-panel", text: "--color-success" },
   {
     // The terminal's green glass, laid over the always-dark chassis before any
@@ -618,7 +622,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
   {
     what: "coven seal zero figure, large display type",
-    surface: "--faction-coven-notepad-bg",
+    surface: "--faction-coven-ward-card",
     text: "--color-danger",
     floor: AA_LARGE,
   },

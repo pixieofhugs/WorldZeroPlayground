@@ -2280,25 +2280,11 @@
   background-size: auto, auto, 6px 6px;
 }
 
-/* ══ Cozy Coven lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */
-.coven-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-color: var(--faction-coven-body-bg);
-  background-image:
-    radial-gradient(46% 36% at 0% 0%, color-mix(in srgb, var(--faction-coven) 12%, transparent), transparent 70%),
-    radial-gradient(50% 40% at 100% 100%, color-mix(in srgb, var(--faction-coven-ivy) 12%, transparent), transparent 70%),
-    radial-gradient(var(--faction-coven-dot) 1.4px, transparent 1.6px);
-  background-size: 100% 100%, 100% 100%, 14px 14px;
-}
-.coven-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 95% at 50% 0%, transparent 45%, color-mix(in srgb, var(--faction-coven-body-bg) 70%, transparent));
-}
+/* ══ Cozy Coven's viewport backdrop USED to live here ══
+   The lo-fi `coven.exe` desktop: `--faction-coven-body-bg` under a dotted grid,
+   a pink/ivy corner glow and a vignette. #1209 retired it. `.coven-backdrop` is
+   the candlelight wash now, and it is declared beside the COLUMN wash it shares
+   its four blooms with — search "COVEN — THE CANDLELIT WARD" below. */
 
 /* ══ S.N.I.D.E. flyposted-wall backdrop (faction-context pages; theme-aware) ══ */
 /* The wall PAINT, shared by two mounts with different geometry:
@@ -4634,7 +4620,24 @@
   background: var(--faction-coven-ward-page);
   transition: background 300ms;
 }
-.coven-candle-backdrop::before {
+/* The same wash on the VIEWPORT. `.coven-backdrop` is the `backdrop` surface,
+   which `FactionBackdrop` mounts behind a Coven player's character profile —
+   `useFactionBackdrop` has exactly one caller, so that page is the whole of it.
+   It was the lo-fi `coven.exe` desktop until #1209; the blooms are SHARED with
+   the column wash above rather than restated, because a second copy of four
+   radial gradients is a second thing to re-tune. The vignette went with the
+   desktop metaphor — the haze already falls off at its own edges. */
+.coven-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--faction-coven-ward-page);
+  transition: background 300ms;
+}
+.coven-candle-backdrop::before,
+.coven-backdrop::before {
   content: "";
   position: absolute;
   inset: -25%;
@@ -4655,7 +4658,8 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .coven-candle-backdrop::before {
+  .coven-candle-backdrop::before,
+  .coven-backdrop::before {
     animation: cvn-haze 34s ease-in-out infinite;
   }
 }

@@ -1,13 +1,40 @@
 import { useTranslation } from 'react-i18next'
 
 import { factionName } from '../../../utils/factions'
+import {
+  Braid,
+  CAPTION,
+  CARD,
+  BORDER,
+  DEEP,
+  DISPLAY,
+  GOLD,
+  HOLD_INK,
+  INK,
+  SHADOW,
+} from '../../cards/covenSlip'
 import type { SealSkinProps } from '../types'
 
 /**
- * Cozy Coven seal — a hand-lettered sticker pressed on with a strip of washi
- * tape. Same three-field contract as every seal (label / condition / bonus) but
- * in Coven's own voice: Caveat script on blush sticker stock, a pink hairline
- * edge, and the bonus punched out as a little gummed stamp chip.
+ * Cozy Coven seal (#1209) — a spell slip tied on with a braided thread.
+ *
+ * Same three-field contract as every seal (label / condition / bonus) in Coven's
+ * own hand: the ward's candle-lit paper inside the slip's pink edge, the
+ * metatask's name in Grenze Gotisch, and the bonus struck as a candle-gold chip.
+ *
+ * The washi tape and the blush marker-sticker stock are gone — both belonged to
+ * the `coven.exe` / pink-sticker metaphor the v2 task card retired. The braid
+ * replaces the tape because it does the same job (it is what holds a Coven
+ * surface to the one under it) and it is a mark this faction already ships.
+ *
+ * THE TILT STAYS. `rotate(-0.6deg)` is not a lo-fi mark — a slip pressed onto
+ * somebody else's praxis sits crooked, and the ward pages keep every other
+ * hand-placed thing slightly off-square.
+ *
+ * The bonus chip's gold/ink pair is `--faction-coven-slip-gold` under
+ * `--faction-coven-ward-hold-ink`, measured for the "you already hold this task"
+ * band at 6.20:1 light / 7.03:1 dark; the retired `-stamp-chip-*` pair was a
+ * theme-invariant amber nothing re-measured after the ward landed.
  */
 export default function CovenSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -17,31 +44,18 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
     <div
       className="relative"
       style={{
-        background: 'var(--faction-coven-sticker-bg)',
-        color: 'var(--faction-coven-sticker-muted)',
-        border: '1px solid var(--faction-coven-sticker-border)',
+        background: CARD,
+        color: INK,
+        border: `2px solid ${BORDER}`,
         borderRadius: 14,
-        padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
-        boxShadow: '0 3px 10px var(--faction-coven-sticker-shadow)',
-        fontFamily: 'var(--faction-coven-card-font)',
+        padding: 'var(--space-md) var(--space-lg) var(--space-md)',
+        boxShadow: SHADOW,
         transform: 'rotate(-0.6deg)',
         overflow: 'hidden',
       }}
     >
-      {/* washi tape holding the sticker to the host praxis */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: -8,
-          left: '50%',
-          width: 72,
-          height: 20,
-          marginLeft: -36,
-          background: 'var(--faction-coven-tape)',
-          transform: 'rotate(-2.5deg)',
-        }}
-      />
+      {/* the braid that ties the slip to the praxis under it */}
+      <Braid style={{ marginBottom: 'var(--space-sm)' }} />
 
       {removable && (
         <button
@@ -55,7 +69,7 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
             zIndex: 2,
             background: 'transparent',
             border: 'none',
-            color: 'var(--faction-coven-sticker-accent)',
+            color: DEEP,
             fontSize: 'var(--text-xl)',
             cursor: 'pointer',
           }}
@@ -64,20 +78,19 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
         </button>
       )}
 
-      <span
-        className="eyebrow block"
-        style={{ color: 'var(--faction-coven-sticker-accent)' }}
-      >
+      <span className="block" style={CAPTION}>
         {t('detail.seal.label', { faction })}
       </span>
 
       <span
         className="block"
         style={{
-          fontFamily: 'var(--faction-coven-card-font)',
+          fontFamily: DISPLAY,
+          fontWeight: 600,
           fontSize: 'var(--text-title)',
           lineHeight: 1.1,
-          color: 'var(--faction-coven-title-text)',
+          letterSpacing: '0.005em',
+          color: INK,
           marginTop: 'var(--space-xs)',
         }}
       >
@@ -85,18 +98,18 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
       </span>
 
       <span
-        className="inline-block font-body"
+        className="inline-block"
         style={{
-          background: 'var(--faction-coven-stamp-chip-bg)',
-          color: 'var(--faction-coven-stamp-chip-text)',
+          background: GOLD,
+          color: HOLD_INK,
+          fontFamily: 'var(--font-faction-rounded)',
           fontSize: 'var(--text-lg)',
           fontWeight: 700,
           letterSpacing: '0.04em',
           padding: 'var(--space-xs) var(--space-sm)',
-          borderRadius: 6,
+          borderRadius: 8,
           marginTop: 'var(--space-sm)',
           transform: 'rotate(-1.5deg)',
-          boxShadow: '0 1px 3px var(--faction-coven-stamp-shadow)',
         }}
       >
         {t('detail.seal.bonus', { points: metatask.point_value })}
