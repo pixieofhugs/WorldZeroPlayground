@@ -24,7 +24,9 @@ same idea, with **no dark override at all**. It dressed the site's top-level
 chrome — the nav wordmark's rule, every page title's per-letter bars, the Home
 hero, the field desk, the level-up popup — plus three Singularity credit accents
 that were only ever using its first stop as a gold. `--fdl-rainbow`, the Task
-Crown's ring, is a third copy of that same hex set (retired separately, #1213).
+Crown's ring, was a third copy of that same hex set; #1213 retired it by deleting
+the token outright rather than re-pointing it, and the crown reads
+`--faction-default-rainbow-conic` directly.
 
 A census of every multi-hue spectrum in `frontend/` found nineteen definitions
 across six distinct hue sets. Two of the six were this duplication.
@@ -77,7 +79,9 @@ identical hexes in light and dark, and now take the brightened dark stops.
   Crown's ring is brand chrome and brand chrome flips. ADR-0054's actual subject
   — one canonical crown, theme-aware only, no per-faction recolour — is untouched
   and still correct; only its claim about the *ring's* theme behaviour is amended.
-  The ring token itself is #1213's work.
+  The ring token itself was #1213's work, and its answer was to delete it: the
+  crown reads `--faction-default-rainbow-conic` and there is no crown-owned
+  rainbow token any more.
 - **Three deliberate exceptions remain, and they are exceptions on the record.**
   `--badge-victor-stop-*` and `--spectrum-glow-*` are theme-INVARIANT identities;
   `--faction-default-chip` is a fixed green→blue pill whose white ink is measured
