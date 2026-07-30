@@ -3,13 +3,16 @@ import TaskCard from '../components/TaskCard'
 import PageTitle from '../components/ui/PageTitle'
 import FilterStamps from '../components/ui/FilterStamps'
 import FilterFactionTabs from '../components/ui/FilterFactionTabs'
-import FilterLevelNodes from '../components/ui/FilterLevelNodes'
 import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
+import CanSignUpEmpty from './tasks/CanSignUpEmpty'
 import MetaTaskSeal from '../components/metaTaskSeal/MetaTaskSeal'
 import type { TaskType } from '../api/tasks'
+
+/** The eligibility filter's two stamps: everything, or only what I can claim. */
+const ELIGIBILITY_OPTIONS = ['all', 'canSignUp']
 
 export default function Tasks() {
   const state = useTasks()
@@ -35,15 +38,14 @@ function DesktopTasks({ state }: { state: TasksState }) {
     error,
     factions,
     statusFilters,
-    levelFilters,
     taskType,
     setTaskType,
     status,
     setStatus,
     faction,
     setFaction,
-    level,
-    setLevel,
+    canSignUp,
+    setCanSignUp,
     query,
     setQuery,
     hasMore,
@@ -64,11 +66,23 @@ function DesktopTasks({ state }: { state: TasksState }) {
         <TaskTypeToggle value={taskType} onChange={setTaskType} />
         <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
         <FilterFactionTabs factions={factions} value={faction} onChange={setFaction} />
-        {/* Options come from the era's level ladder (#1046); until /game-config
-            lands there is no range to offer, so the control stays hidden rather
-            than rendering an empty or wrongly-bounded row. */}
-        {levelFilters.length > 0 && (
-          <FilterLevelNodes levels={levelFilters} value={level} onChange={setLevel} />
+        {/* "Tasks I can sign up for" (#1130), in the slot the level filter
+            used to hold. Hidden when logged out: the server answers `[]` for an
+            anonymous viewer, so it is a control that cannot work — and this page
+            hides unusable controls rather than disabling them. Anonymous browse
+            keeps search, faction, type and points; the default ordering is still
+            level-ascending, so the ladder stays legible without it. */}
+        {user && (
+          <FilterStamps
+            label={t('browse.eligibility')}
+            options={ELIGIBILITY_OPTIONS}
+            optionLabels={{
+              all: t('browse.allTasks'),
+              canSignUp: t('browse.canSignUp'),
+            }}
+            value={canSignUp ? 'canSignUp' : 'all'}
+            onChange={(next) => setCanSignUp(next === 'canSignUp')}
+          />
         )}
         <input
           type="search"
@@ -103,7 +117,13 @@ function DesktopTasks({ state }: { state: TasksState }) {
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : tasks.length === 0 ? (
-        <p className="font-body text-muted">{t('listPage.empty')}</p>
+        /* An empty eligible list has a reason worth naming — most often a full
+           task bank, which is a gate on the player, not on the catalogue. */
+        canSignUp ? (
+          <CanSignUpEmpty />
+        ) : (
+          <p className="font-body text-muted">{t('listPage.empty')}</p>
+        )
       ) : (
         <>
           {isMetatask ? (

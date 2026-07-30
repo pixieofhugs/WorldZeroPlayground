@@ -72,8 +72,6 @@ const CANNED: TasksState = {
   error: null,
   factions: [{ slug: 'everymen' }],
   factionConfigs: [],
-  // Derived from the era ladder at runtime (#1046) — era_1 has nine levels.
-  levelFilters: [0, 1, 2, 3, 4, 5, 6, 7, 8],
   statusFilters: ['All', 'active'],
   taskType: 'standard',
   setTaskType: () => {},
@@ -81,8 +79,8 @@ const CANNED: TasksState = {
   setStatus: () => {},
   faction: '',
   setFaction: () => {},
-  level: '',
-  setLevel: () => {},
+  canSignUp: false,
+  setCanSignUp: () => {},
   query: '',
   setQuery: () => {},
   hasMore: false,
@@ -179,5 +177,49 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
       signupMsg: { id: 7, msg: 'Could not sign up.', ok: false },
     }
     expect(text()).toContain('Could not sign up.')
+  })
+})
+
+/**
+ * The "tasks I can sign up for" filter (#1130), which replaced the level filter.
+ * Two decisions worth pinning because both are the less obvious option: the
+ * control is HIDDEN when logged out (the server answers `[]` for an anonymous
+ * viewer, so it could only ever empty the page), and it defaults OFF (the page
+ * is a catalogue; defaulting on would make tasks look scarce and tie first
+ * paint to auth resolving).
+ */
+describe('can-sign-up filter (#1130)', () => {
+  const CAN_SIGN_UP = i18n.t('tasks:browse.canSignUp')
+
+  it('offers the filter on both form factors when signed in', () => {
+    for (const formFactor of ['mobile', 'desktop'] as const) {
+      dispatch.formFactor = formFactor
+      state.current = { ...CANNED, user: VIEWER }
+      expect(text().toLowerCase(), formFactor).toContain(CAN_SIGN_UP.toLowerCase())
+    }
+  })
+
+  it('hides the filter on both when logged out', () => {
+    for (const formFactor of ['mobile', 'desktop'] as const) {
+      dispatch.formFactor = formFactor
+      state.current = { ...CANNED, user: null }
+      expect(text().toLowerCase(), formFactor).not.toContain(CAN_SIGN_UP.toLowerCase())
+    }
+  })
+
+  it('names the eligible-empty case instead of blaming the filters', () => {
+    for (const formFactor of ['mobile', 'desktop'] as const) {
+      dispatch.formFactor = formFactor
+      state.current = { ...CANNED, user: VIEWER, canSignUp: true, tasks: [] }
+      const out = text()
+      expect(out, formFactor).toContain(i18n.t('tasks:listPage.emptyEligible'))
+      expect(out, formFactor).not.toContain(i18n.t('tasks:listPage.empty'))
+    }
+  })
+
+  it('keeps the generic empty state when the filter is off', () => {
+    dispatch.formFactor = 'desktop'
+    state.current = { ...CANNED, user: VIEWER, canSignUp: false, tasks: [] }
+    expect(text()).toContain(i18n.t('tasks:listPage.empty'))
   })
 })
