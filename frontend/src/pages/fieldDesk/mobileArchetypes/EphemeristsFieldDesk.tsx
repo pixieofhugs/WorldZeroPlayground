@@ -66,7 +66,7 @@ function Leaf({ children }: { children: ReactNode }) {
   )
 }
 
-export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }) {
+export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
 

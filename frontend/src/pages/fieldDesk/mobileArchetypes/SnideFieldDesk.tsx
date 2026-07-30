@@ -72,7 +72,7 @@ function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: numbe
   )
 }
 
-export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
+export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
 

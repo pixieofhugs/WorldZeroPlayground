@@ -82,7 +82,7 @@ function Panel({ children }: { children: ReactNode }) {
   )
 }
 
-export default function SingularityHome({ state }: { state: FieldDeskHomeState }) {
+export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
 
