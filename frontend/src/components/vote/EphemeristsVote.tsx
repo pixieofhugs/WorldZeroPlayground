@@ -138,6 +138,7 @@ export default function EphemeristsVote({
             right: 14,
             top: '50%',
             height: 1.5,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: half the drawn 1.5px rail, centring the hairline on `top: 50%`. The offset IS the stroke; the smallest rung is 4px, which drops the rail below the metals it threads.
             marginTop: -1,
             background:
               active > 0

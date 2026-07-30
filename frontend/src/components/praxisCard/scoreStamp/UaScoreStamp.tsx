@@ -239,10 +239,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
       <div
         style={{
           display: "flex",
-          // ornament: the ring overlaps the plate's foot; that overlap IS the
-          // drawing. No directive — a unary minus is not a Literal, so the rule
-          // never sees it (one of the #750 laundering shapes) and the directive
-          // would report as unused.
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the ring overlaps the plate's foot by 6px; that overlap IS the drawing, and the nearest rungs (4/8) either open a gap under the plate or swallow its last working line.
           marginTop: -6,
         }}
       >

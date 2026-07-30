@@ -163,6 +163,14 @@ function findRawSpacingClass(node) {
 }
 
 function isRawPxValue(node) {
+  // `marginLeft: -3.5` is a UnaryExpression wrapping a Literal, not a Literal,
+  // so a Literal-only check waved every negative through while catching the
+  // identical positive (#1233) — the sixth laundering pattern past the five the
+  // #763 audit named. Unwrap the sign and judge the operand: `-0` then reads as
+  // `0` and stays exempt, and `-3.5` reports like `3.5`.
+  if (node.type === 'UnaryExpression' && (node.operator === '-' || node.operator === '+')) {
+    return isRawPxValue(node.argument)
+  }
   // Zero is exempt: it is the absence of spacing, not a choice from the scale.
   // It is unit-less and theme-invariant, so it carries none of the drift the
   // token scale exists to prevent — and there is deliberately no --space-none
@@ -210,6 +218,20 @@ function isRawPxValue(node) {
 // Gap C — `calc()`. `calc(3.5rem + env(safe-area-inset-bottom))` passes, since
 //   the component split never sees a bare length. 4a already names this
 //   ("never compose with calc() to dodge the scale"); it is a review rule.
+//
+// Gap D — a MINUS SIGN the AST cannot resolve. The `UnaryExpression` unwrap
+//   above (#1233) closes `marginLeft: -3.5` — but only where the operand is a
+//   literal to judge. Two shapes remain, and both are the sign meeting an
+//   indirection rather than a new hole in the negative case:
+//     - `marginLeft: -bleed` (EphemeristsTaskCard) negates an Identifier whose
+//       number lives in a `SizeSet` table. Reading it needs flow analysis this
+//       rule deliberately does not do — the same "laundered through a data
+//       structure" shape the #763 audit named for positives.
+//     - ``margin: `0 calc(-1 * ${padX})` `` builds the sign inside a template
+//       literal, where it is already Gap C wearing a minus.
+//   Every current use is legitimate (declared ornament geometry; a negated
+//   `--space-*` token) — but that is a fact about today's tree, not a guarantee
+//   the rule enforces, and only review holds it.
 const noRawStyleValues = {
   rules: {
     'no-raw-style-values': {
