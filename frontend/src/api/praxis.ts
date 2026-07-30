@@ -312,6 +312,43 @@ export async function uploadPraxisMedia(id: number, file: File): Promise<MediaIt
   return data
 }
 
+/**
+ * One entry per file submitted to the batch route — `schemas/praxis.py`'s
+ * `MediaUploadResultOut`. Exactly one of `media_item` / `error` is set.
+ *
+ * `filename` is echoed back verbatim and unsanitized so a failure can name the
+ * file the player recognises. It is for DISPLAY only: two files in one selection
+ * can share a basename, so callers must attribute by position (the array is in
+ * request order), never by matching on this string.
+ */
+export interface MediaUploadResultOut {
+  filename: string
+  media_item: MediaItemOut | null
+  error: string | null
+  status_code: number | null
+}
+
+/**
+ * Upload N media files to one praxis in a single multipart request (#1286).
+ *
+ * Partial success by design: the 201 means "the request was processed", not
+ * "everything landed", so read every entry. Results come back in request order
+ * and `display_order` is derived from request position server-side (this route
+ * takes no `display_order` field), appended after any media already attached.
+ *
+ * `uploadPraxisMedia` above stays — the crop/rotate path uploads one edited
+ * image at a time by design (#514).
+ */
+export async function uploadPraxisMediaBatch(
+  id: number,
+  files: File[],
+): Promise<MediaUploadResultOut[]> {
+  const form = new FormData()
+  for (const file of files) form.append('files', file)
+  const { data } = await api.post<MediaUploadResultOut[]>(`/praxes/${id}/media/batch`, form)
+  return data
+}
+
 export async function deletePraxisMedia(id: number, mediaId: number): Promise<void> {
   await api.delete(`/praxes/${id}/media/${mediaId}`)
 }

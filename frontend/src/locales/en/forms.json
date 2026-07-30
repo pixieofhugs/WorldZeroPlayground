@@ -107,6 +107,7 @@
       "drop": "Could not drop the task.",
       "changeMode": "Could not change mode.",
       "upload": "Could not upload {{name}}.",
+      "uploadNamed": "Could not upload {{name}} — {{reason}}",
       "removeMedia": "Could not remove media item.",
       "invite": "Could not invite {{name}}.",
       "leave": "Could not leave the collab.",
