@@ -20,6 +20,7 @@ import {
 } from "../../api/praxis";
 import { getVotes, getVoters, type VoteSummary, type VoterDetail } from "../../api/votes";
 import { getDuelDetail, type DuelDetailOut } from "../../api/duel";
+import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
 import { extractError } from "../../utils/errors";
@@ -43,6 +44,20 @@ export interface PraxisDetailState {
   voters: VoterDetail[];
   /** Duel detail when this praxis is one side of a duel (#313); null otherwise. */
   duel: DuelDetailOut | null;
+  /**
+   * The comment rows for this praxis, fetched in the batch below off the route
+   * param and handed to `CommentThread` as its seed (#1281).
+   *
+   * The thread cannot fetch these itself in time: `PraxisDetailComments` gates
+   * on `moderation_status === 'visible'`, so the component is unmounted — its
+   * effect cannot run at all — until the praxis has landed. That put comments a
+   * full round trip behind everything else on the page. The gate stays exactly
+   * where it is; the request just no longer waits behind it. The accepted cost
+   * is one discarded request on a moderation-hidden praxis (owner decision,
+   * #1281). Null while in flight, or if that fetch failed — the thread then
+   * falls back to its own request, which is also the bare-mount path.
+   */
+  comments: CommentOut[] | null;
 
   // Derived
   /** True when the viewer is a MEMBER of this praxis (ADR-0013 co-ownership) —
@@ -132,6 +147,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const [votes, setVotes] = useState<VoteSummary | null>(null);
   const [voters, setVoters] = useState<VoterDetail[]>([]);
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
+  const [comments, setComments] = useState<CommentOut[] | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -173,11 +189,21 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   useEffect(() => {
     if (!idParam) return;
     const pid = parseInt(idParam, 10);
-    Promise.all([getPraxis(pid), getVotes(pid), getVoters(pid)])
-      .then(([p, v, vr]) => {
+    Promise.all([
+      getPraxis(pid),
+      getVotes(pid),
+      getVoters(pid),
+      // Off the ROUTE PARAM, in this wave — see the `comments` field above for
+      // why the thread cannot start its own fetch this early (#1281). A failed
+      // comments fetch must not fail the page, hence the local catch: the
+      // thread falls back to its own request when the seed is null.
+      listComments("praxes", pid).catch(() => null),
+    ])
+      .then(([p, v, vr, c]) => {
         setPraxis(p);
         setVotes(v);
         setVoters(vr);
+        setComments(c);
       })
       .catch((err) =>
         setFetchError(extractError(err, t("detail.errors.load"))),
@@ -314,6 +340,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     votes: displayVotes,
     voters,
     duel: displayDuel,
+    comments,
 
     user,
 
