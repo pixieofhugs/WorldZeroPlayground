@@ -642,6 +642,28 @@
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
   --faction-ua-rule: #dbcbb3; /* neutral hairline / divider (cf. -border, orange) */
   --faction-ua-hair: #e4d8c3; /* faintest divider, below -rule */
+  /* THE PAPER STOCK — the three-stop sheet UA's design sheets draw as
+     `--cardGrad`, never a flat fill: lift at the top edge, the sheet through the
+     middle, panel at the foot. Composed from the three surface primitives above
+     instead of repeating their hex, so it needs NO dark half — the var()s
+     re-resolve under [data-theme="dark"] and the stock dims with the faction.
+
+     WHY NOT `--faction-ua-card-parchment`, which is the same gradient. That name
+     lives inside the PRAXIS-CARD-ONLY exception block below (#857), which asks
+     in writing not to be widened; a second surface reading it would quietly turn
+     the exception into the rule. So the stock is named once out here, where any
+     UA surface may take it — #1201's feed chassis and comment note are the first
+     two — and the exception keeps its own private copy.
+
+     Every ink UA already measures is measured on all three stops (see
+     --faction-ua-card-muted's note: 4.87/5.13/5.45 light, 4.55/5.10/5.64 dark),
+     so painting on the ramp introduces no new pairing. */
+  --faction-ua-parchment: linear-gradient(
+    158deg,
+    var(--faction-ua-lift),
+    var(--faction-ua-card-bg) 46%,
+    var(--faction-ua-panel)
+  );
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
