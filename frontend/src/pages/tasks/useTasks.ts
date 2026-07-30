@@ -22,7 +22,8 @@ import { useNavigate } from 'react-router-dom'
 import { listTasks, type TaskOut, type TaskType } from '../../api/tasks'
 import { createPraxis } from '../../api/praxis'
 import { getFactions, type FactionOut } from '../../api/factions'
-import { getGameConfig, type FactionConfigOut } from '../../api/gameConfig'
+import type { FactionConfigOut } from '../../api/gameConfig'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import { extractError } from '../../utils/errors'
 import { useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
@@ -107,8 +108,13 @@ export function useTasks(): TasksState {
   const navigate = useNavigate()
 
   const [factions, setFactions] = useState<FactionOut[]>([])
-  const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
-  const [levelThresholds, setLevelThresholds] = useState<number[]>([])
+  // One `/game-config` read for the whole app (#1141) — the shared cache in
+  // `useGameConfig`, derived rather than mirrored into two more `useState`s.
+  // Both slices are empty until it lands, which is what they were before: the
+  // faction modifier settles at 1.0 and the level filter stays hidden (#1046).
+  const gameConfig = useGameConfig()
+  const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
+  const levelThresholds = gameConfig?.level_thresholds ?? []
   const [taskType, setTaskTypeState] = useState<TaskType>('standard')
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
@@ -122,14 +128,6 @@ export function useTasks(): TasksState {
 
   useEffect(() => {
     getFactions().then(setFactions).catch(() => {})
-    getGameConfig()
-      .then((config) => {
-        setFactionConfigs(config.factions)
-        // The level filter is bounded by the era's own ladder (#1046), which
-        // arrives on the same payload the faction modifiers do — no second call.
-        setLevelThresholds(config.level_thresholds ?? [])
-      })
-      .catch(() => {})
   }, [])
 
   const trimmedQuery = debouncedQuery.trim()

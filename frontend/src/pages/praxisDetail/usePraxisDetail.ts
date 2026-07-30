@@ -22,7 +22,6 @@ import { getVotes, getVoters, type VoteSummary, type VoterDetail } from "../../a
 import { getDuelDetail, type DuelDetailOut } from "../../api/duel";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
-import { moderatePraxis } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { seedViewerVote, useVoteOverride } from "../../components/vote/voteOverrides";
 import {
@@ -151,11 +150,14 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
   const showAdminBar = !!(user?.is_admin && adminMode && praxis);
 
+  // `api/admin` loads when a moderator acts, not when the page renders (#1141)
+  // — the detail page is public, the admin bar is not.
   const handleModerate = async (status: string, note?: string) => {
     if (!praxis) return;
     setModerating(true);
     setModerateError(null);
     try {
+      const { moderatePraxis } = await import("../../api/admin");
       const updated = await moderatePraxis(praxis.id, status, note);
       setPraxis(updated);
       setShowFailInput(false);
