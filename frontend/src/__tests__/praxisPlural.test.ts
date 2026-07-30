@@ -62,7 +62,16 @@ const routePaths = (source: string) => stripModulePaths(stripComments(source))
 const SELF = '__tests__/praxisPlural.test.ts'
 
 describe('the API keeps saying /praxes (#1136)', () => {
-  const apiFiles = sourceFiles(join(SRC_DIR, 'api'))
+  /**
+   * Shipped client modules only. `api/__tests__/sessionRedirect.test.ts` holds
+   * both kinds at once — `shouldReturnToLanding(status, requestUrl, pathname)`
+   * takes an API URL *and* a `window.location.pathname` — so a route path in
+   * there is correct, not a regression. Nothing under `__tests__` issues a
+   * request, which is what this rule is about.
+   */
+  const apiFiles = sourceFiles(join(SRC_DIR, 'api')).filter(
+    (path) => !toRelative(path).startsWith('api/__tests__/'),
+  )
 
   it('never requests the frontend route path /praxis', () => {
     // If this fails, a rename crossed the seam: the client is now calling an
@@ -79,7 +88,7 @@ describe('the API keeps saying /praxes (#1136)', () => {
     const occurrences = apiFiles
       .map((path) => readFileSync(path, 'utf8').match(/\/praxes/g)?.length ?? 0)
       .reduce((total, n) => total + n, 0)
-    expect(occurrences).toBeGreaterThanOrEqual(30)
+    expect(occurrences).toBeGreaterThanOrEqual(25)
   })
 })
 
