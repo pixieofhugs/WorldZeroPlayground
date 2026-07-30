@@ -679,6 +679,29 @@ const ARCHETYPE_PAIRS: Pair[] = [
     floor: AA_LARGE,
   },
 
+  // ── THE DANGER FILL (#1169, absorbing #1174) ─────────────────────────────
+  //
+  // The row that could not exist before the token did. `--color-danger` has two
+  // roles — an INK (`color:` on error copy, ~30 sites) and a FILL (the forfeit
+  // button, the confirm dialog's destructive half, the flag chips) — and only
+  // the ink role was ever measured, by the seal rows above. The fill role had no
+  // named ink at all: eight sites reached for whichever pale token was nearby
+  // (`--color-text-on-accent` white, `--color-bg-page`, and, on two flag chips,
+  // the TRANSLUCENT `--color-bg-surface`), and each of the three fails somewhere:
+  //
+  //   white       on danger  4.83 light / 2.77 dark
+  //   bg-page     on danger  4.40 light / 6.72 dark
+  //   bg-surface  on danger  3.08 light / 1.04 dark   ← alpha, composited
+  //
+  // `--color-on-danger` is one named ink for the one fill, in the shape #649 and
+  // #924 already established for faction fills. Deepening `--color-danger` in
+  // dark was the rejected lever: it is the same token the ink role reads.
+  {
+    what: "danger fill, on-danger ink",
+    surface: "--color-danger",
+    text: "--color-text-on-accent",
+  },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It
