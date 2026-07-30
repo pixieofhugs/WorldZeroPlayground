@@ -88,10 +88,15 @@ describe('Cozy Coven wears one identity (#1209)', () => {
   })
 
   it('the slip and ward families are what the sweep moved TO, so they are read', () => {
+    // Either directly, or through `components/cards/covenSlip.tsx`, which is
+    // where the marks used by more than one Coven surface are drawn.
     const readers = sourceFiles(SRC_DIR).filter((path) =>
-      /--faction-coven-(slip|ward)-/.test(stripComments(readFileSync(path, 'utf8'))),
+      /--faction-coven-(slip|ward)-|cards\/covenSlip/.test(stripComments(readFileSync(path, 'utf8'))),
     )
-    // The three reference implementations plus the thirteen swept surfaces.
-    expect(readers.length).toBeGreaterThanOrEqual(16)
+    // The reference implementations (task card, task detail, praxis detail,
+    // comment voice, feed frame, composer) plus the twelve swept surfaces and
+    // the kit itself. A floor, not a census — it only has to fail if the sweep
+    // is reverted or the kit is orphaned.
+    expect(readers.length).toBeGreaterThanOrEqual(17)
   })
 })
