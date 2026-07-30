@@ -132,8 +132,11 @@ export default function Home() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               paddingBottom: 'var(--space-sm)',
+              // Same two-layer rule as the nav wordmark, 6px instead of 2px:
+              // the spectrum's four-stop cut (#1220, ADR-0066), not a ramp of
+              // its own.
               backgroundImage:
-                'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
+                'linear-gradient(var(--color-bg-page), var(--color-bg-page)), var(--faction-default-total-rainbow)',
               backgroundSize: '100% calc(100% - 6px), 100% 6px',
               backgroundPosition: 'top, bottom',
               backgroundRepeat: 'no-repeat',
