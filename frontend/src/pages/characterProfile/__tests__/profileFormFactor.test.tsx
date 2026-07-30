@@ -20,6 +20,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import '../../../i18n'
 import type { CharacterOut } from '../../../api/auth'
+import type { PraxisCardOut } from '../../../api/praxis'
+import type { TaskOut } from '../../../api/tasks'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
 
@@ -49,11 +51,61 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
   }
 }
 
-function renderBody(overrides: Partial<CharacterOut> = {}): string {
+function makePraxis(): PraxisCardOut {
+  return {
+    id: 101,
+    task_id: 5,
+    task_title: 'Map a hidden gap',
+    task_point_value: 20,
+    task_level_required: 2,
+    type: 'solo',
+    status: 'submitted',
+    title: 'A quiet finding',
+    moderation_status: 'visible',
+    created_by_id: 7,
+    created_by_display_name: 'Reza',
+    created_at: '2026-01-02T00:00:00Z',
+    updated_at: '2026-01-02T00:00:00Z',
+    submitted_at: '2026-01-02T00:00:00Z',
+    member_count: 1,
+    score: 32,
+    voter_count: 3,
+    metatask_points: 0,
+    display_multiplier: 1.0,
+    points_from_votes: 12,
+    is_top_for_task: false,
+    task_faction_slug: 'ephemerists',
+  }
+}
+
+function makeTask(): TaskOut {
+  return {
+    id: 55,
+    title: 'Plant a tree',
+    description: 'Dig a hole and plant a native sapling.',
+    point_value: 20,
+    level_required: 2,
+    status: 'active',
+    task_type: 'standard',
+    created_by: 7,
+    primary_faction_slug: 'ephemerists',
+    metatask_faction_slug: null,
+    is_task_vision_eligible: false,
+    created_at: '2026-01-01T00:00:00Z',
+    can_submit_praxis: true,
+    allowed_modes: ['solo'],
+    eligible_for_current_user: true,
+  }
+}
+
+function renderBody(
+  overrides: Partial<CharacterOut> = {},
+  content: Partial<Pick<ProfileBodyProps, 'submissions' | 'proposedTasks'>> = {},
+): string {
   const props: ProfileBodyProps = {
     character: makeCharacter(overrides),
-    submissions: [],
-    proposedTasks: [],
+    submissions: content.submissions ?? [],
+    proposedTasks: content.proposedTasks ?? [],
     progression: {
       nextLevel: 8,
       currentThreshold: 1500,
@@ -84,10 +136,28 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
     mocks.formFactor = 'mobile'
     const html = renderBody({ faction_slug: null })
     expect(html, 'the na mobile skin').toContain('data-testid="mobile-profile"')
-    // Its two signatures: the segmented Praxis/Tasks toggle and the centred
-    // credential. Neither exists on the desktop body.
-    expect(html, 'segmented toggle').toContain('Tasks')
-    expect(html, 'friend/foe kept').toContain('Friend')
+  })
+
+  // The content-slot invariant the retired `mobileArchetypes` test carried
+  // (#517/#969), moved here whole rather than dropped with the file: the phone
+  // skin renders the same #459 contract fields it always did.
+  it('still renders every #459 contract slot on a phone', () => {
+    mocks.formFactor = 'mobile'
+    const html = renderBody(
+      {},
+      { submissions: [makePraxis()], proposedTasks: [makeTask()] },
+    )
+    const text = html.replace(/<[^>]*>/g, '')
+    expect(text, 'name (credential)').toContain('Reza')
+    // #969: the mobile stats row was replaced by the redesign's progression
+    // panel (level ring + points-into-level bar toward level+1).
+    expect(text, 'progression next-level label').toContain('next · lvl 8')
+    expect(text, 'progression points-into-level').toContain('380 / 500 pts this level')
+    expect(text, 'badge').toContain('Sock Puppet')
+    expect(text, 'friend/foe control').toContain('Friend')
+    // Praxis is the default segment → the reused PraxisCard renders.
+    expect(text, 'praxis card').toContain('Map a hidden gap')
+    expect(text, 'tasks tab present').toContain('Tasks')
   })
 
   it('still renders the desktop body on a wide viewport', () => {
