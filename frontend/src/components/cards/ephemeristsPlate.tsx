@@ -52,6 +52,8 @@ export const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
 export const GOLD = "var(--faction-ephemerists-plate-gold)";
 export const BAND = "var(--faction-ephemerists-plate-band)";
 export const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
+/** The masthead's second tier — a measured quiet ink ON THE BAND, not an alpha. */
+export const BAND_QUIET = "var(--faction-ephemerists-plate-band-quiet)";
 export const DISC = "var(--faction-ephemerists-plate-disc)";
 export const OCHRE = "var(--faction-ephemerists-plate-ochre)";
 export const NILE = "var(--faction-ephemerists-plate-nile)";
@@ -430,6 +432,29 @@ export function AuthorOctagon({ name, size, fontSize }: {
         }}
       >
         {initialsOf(name)}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The faction's emblem struck in a stepped octagon — the winged disc at sign
+ * scale inside the same double-ruled cartouche {@link AuthorOctagon} cuts for a
+ * person. It is what a faction-branded surface shows where the codex used to
+ * press a wax seal: a roundel is the one shape this geometry never makes.
+ */
+export function EmblemOctagon({ size }: { size: number }) {
+  return (
+    <span
+      aria-hidden
+      style={{ position: "relative", display: "block", width: size, height: size, flexShrink: 0 }}
+    >
+      <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ position: "absolute", inset: 0 }}>
+        <Octagon inset={0} stroke={BRASS} width={2.4} fill={DISC} />
+        <Octagon inset={8} stroke={BRASS_LIGHT} width={0.8} />
+      </svg>
+      <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <WingedDiscSign size={size * 0.56} color={BRASS} />
       </span>
     </span>
   );

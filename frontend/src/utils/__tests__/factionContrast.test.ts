@@ -539,11 +539,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // measurement is what the WOW block warns against:
   //   ua seal body / note              = `ua roster notice ink` / `credit ink`
   //   singularity seal body / note     = `singularity roster notice / credit ink`
-  //   ephemerists forfeit cost panel   = `ephemerists parchment element, ink`
-  //                                      (the same two colours; the ratio is
-  //                                      symmetric, so swapping which is the
-  //                                      ground measures nothing new)
-  //   ephemerists seal note            = `ephemerists vellum, muted`
+  //   ephemerists forfeit cost panel   = `ephemerists cornice band, masthead`
+  //                                      (#1208 moved the panel onto the plate's
+  //                                      night band; the ratio is symmetric, so
+  //                                      swapping which is the ground measures
+  //                                      nothing new)
+  //   ephemerists seal note            = `ephemerists plate, quiet ink`
   //   default stakes panel             = `default seal note` (one ground)
   //
   // The BODY LINE and the reopen NOTE are 18px content copy and owe 4.5:1. The
@@ -605,15 +606,18 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--everymen-gold",
   },
   { what: "snide seal stakes scrap, credit ink", surface: "--faction-snide-ink", text: "--faction-snide-card-credit" },
-  { what: "ephemerists seal ledger band, credit ink", surface: "--eph-vellum-deep", text: "--color-success" },
+  // #1208 swept this dialog off the codex; the band is the plate's panel cell.
+  { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--color-success" },
   { what: "ua seal stakes well, credit ink", surface: "--faction-ua-panel", text: "--color-success" },
 
   // The ZERO figure — `--color-danger` on every stakes panel, which is what a
   // S.N.I.D.E. duelist sees in the lose tile (0.0×, `eras/era_1.py`). 24px/700,
   // so AA_LARGE genuinely applies; every one of these clears it as shipped and
   // none is repainted. They are rows so that a later repaint of any panel is
-  // caught — `ephemerists seal zero figure` measures 3.01:1, the narrowest
-  // margin in the family, and would go red on almost any darkening of the band.
+  // caught. `ephemerists seal zero figure` used to measure 3.01:1 and be the
+  // narrowest margin in the family; #1208 moved that band onto the Valley
+  // plate's panel cell and it reads 3.93:1 there, so the tightest reading in
+  // this group is now somebody else's.
   {
     what: "default seal zero figure, large display type",
     surface: "--color-bg-page",
@@ -659,7 +663,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
   {
     what: "ephemerists seal zero figure, large display type",
-    surface: "--eph-vellum-deep",
+    surface: "--faction-ephemerists-plate-inner",
     text: "--color-danger",
     floor: AA_LARGE,
   },
