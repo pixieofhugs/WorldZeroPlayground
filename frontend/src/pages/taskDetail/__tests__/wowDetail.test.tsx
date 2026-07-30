@@ -24,7 +24,7 @@ import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import WowTaskDetail from "../archetypes/WowTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TASK: TaskOut = {
   id: 663,
@@ -50,23 +50,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Ossuary Pete",
-  avatar_url: "",
-  faction_slug: "snide",
-  level: 7,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -166,11 +155,10 @@ describe("wow task detail — the contract points it inherits", () => {
     expect(text).toContain("18");
   });
 
-  it("renders no in-progress roster, only the header count", () => {
+  it("renders the in-progress population as a header count", () => {
     // Owner ruling 2026-07-28, reversing epic #1028 decision 3. The design's own
     // header comment says the header count covers it.
-    const { text } = render(<WowTaskDetail state={baseState({ signups: [SIGNUP] })} />);
-    expect(text).not.toContain("Ossuary Pete");
+    const { text } = render(<WowTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("4");
   });

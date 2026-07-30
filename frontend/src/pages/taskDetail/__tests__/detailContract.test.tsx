@@ -15,10 +15,14 @@
  *     appear on its own the day an era ships a real modifier — without anyone
  *     reconstructing the ratio from `modifiedPoints / basePoints` (ADR-0053's
  *     dead-arithmetic trap, ADR-0055's rule).
- *  3. **No skin renders an in-progress roster.** Owner ruling 2026-07-28,
- *     reversing epic #1028 decision 3: the header count is the only place that
- *     population appears. The design file builds a roster const and never mounts
- *     it; this pins that the dead code stayed dead.
+ *  3. **No skin renders an in-progress roster — and no skin *can*.** Owner
+ *     ruling 2026-07-28, reversing epic #1028 decision 3: the header count is
+ *     the only place that population appears. #1262 then took `signups` off
+ *     `TaskDetailState` altogether, because the hook was fetching
+ *     `GET /tasks/{id}/signups` on every task-detail load and discarding the
+ *     parsed response. The guard is structural now rather than textual: the
+ *     roster has no source. Re-adding the slot re-adds the round trip, so it
+ *     wants a `needs-design` issue for the surface that would read it.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -28,7 +32,6 @@ import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { TaskOut } from "../../../api/tasks";
-import type { TaskSignupOut } from "../../../api/tasks";
 
 /** The comment thread's pre-fetch state — present iff the thread mounted. */
 const THREAD_ANCHOR = "loading…";
@@ -55,23 +58,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Ossuary Pete",
-  avatar_url: "",
-  faction_slug: "snide",
-  level: 7,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -177,13 +169,26 @@ describe("na / Default task detail — the reference anatomy", () => {
     expect(text).toContain("23");
   });
 
-  it("renders no in-progress roster, only the header count", () => {
-    const { text } = render(
-      <DefaultTaskDetail state={baseState({ signups: [SIGNUP] })} />,
-    );
-    expect(text).not.toContain("Ossuary Pete");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<DefaultTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("6");
+  });
+
+  /**
+   * #1262 — the roster is unrenderable, not merely unrendered.
+   *
+   * The runtime half pins that the shared fixture stopped carrying `signups`.
+   * The `@ts-expect-error` half is the real guard and `tsc` is its runner: it
+   * fails the build the day `signups` comes back onto `TaskDetailState`, which
+   * is the day the discarded `GET /tasks/{id}/signups` round trip comes back
+   * with it. (The route itself survives — owner ruling; it is the *fetch* that
+   * had no consumer.)
+   */
+  it("carries no roster on the state contract", () => {
+    expect(baseState()).not.toHaveProperty("signups");
+    // @ts-expect-error `signups` is not part of TaskDetailState.
+    baseState({ signups: [] });
   });
 
   it("renders the author byline from the task's denormalised fields", () => {

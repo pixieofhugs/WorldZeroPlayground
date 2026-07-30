@@ -250,8 +250,8 @@ describe('FeedRowContent', () => {
   })
 
   // ADR-0039: an unaffiliated (na) actor's monogram avatar is the rainbow ring,
-  // not the flat grey a scalar factionColor would hand it. Real factions keep
-  // their tinted disc.
+  // not the flat grey a scalar accent would hand it. Real factions keep their
+  // tinted disc.
   it('gives an na actor the rainbow-ring avatar, a real faction a tinted disc', () => {
     const naRow = normalizeFeedItem({ ...item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }), context_faction_slug: 'na' })!
     const naHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={naRow} avatarUrl={null} /></MemoryRouter>)
@@ -260,6 +260,18 @@ describe('FeedRowContent', () => {
     const covenRow = normalizeFeedItem(item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }))!
     const covenHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={covenRow} avatarUrl={null} /></MemoryRouter>)
     expect(covenHtml).not.toContain('var(--faction-default-rainbow-conic)')
+  })
+
+  // #1269: the row's THREE faction paints — actor ink, monogram disc, headline
+  // rule — must every one of them be a cascade lookup. The disc was the holdout:
+  // it interpolated a JS hex (`${accent}, ${accent}88`), so it could neither
+  // follow the [data-theme="dark"] lift nor be checked against index.css. UA is
+  // the slug that proved it — its JS literal was #c2541f, the na spectrum's
+  // orange, while --faction-ua is #c24a18.
+  it('paints every faction accent from the cascade, never a JS hex (#1269)', () => {
+    const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('ua')} avatarUrl={null} /></MemoryRouter>)
+    expect(html).toContain('var(--faction-ua)')
+    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
   // #983: the headline rule read grey for `na` only because it was written as a
@@ -333,7 +345,9 @@ describe('FeedRowContent', () => {
   // (#649), so `na` keeps the neutral grey. Deliberate, not a fallback.
   it('leaves an na actor name neutral grey', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
-    expect(html).toContain('color:#6b6a7a')
+    // The token, not the hex it happens to hold: #1269 gave the unaffiliated
+    // neutral a dark half (#8b8aa0) that a pinned literal could never see.
+    expect(html).toContain('color:var(--faction-default)')
     expect(html).not.toContain('background-clip:text')
   })
 })

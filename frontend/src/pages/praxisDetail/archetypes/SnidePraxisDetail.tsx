@@ -751,7 +751,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           className="markdown-preview content-text"
           style={{ fontFamily: TYPE, lineHeight: 1.6, color: INK }}
         />
-        <CensorRule style={{ marginTop: "var(--space-lg)" }} />
       </div>
     </section>
   );

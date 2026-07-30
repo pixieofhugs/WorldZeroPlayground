@@ -116,7 +116,7 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 **Frontend theme**
 6. `index.css` → the `--faction-{key}-*` block in `:root` AND `[data-theme="dark"]` (§3).
-7. `utils/factions.ts` → a `FACTION_FALLBACKS` entry **and** a `CSS_KEY` entry (underscore-slug → hyphen-css-key). Keep the fallback `color` equal to the light primary so JS and CSS agree on first paint before the API hydrates.
+7. `utils/factions.ts` → one `CSS_KEY` entry (underscore-slug → hyphen-css-key). That is the whole step: there is no colour to add, because the JS side holds no hex since #1269 and `getAllFactions()` derives from this map. (It used to also want a `FACTION_FALLBACKS` row whose `color` had to equal the light primary. That mirror drifted, and a literal could never carry the dark value anyway.)
 8. Fonts: only if the archetype needs a face not already loaded.
 
 **Frontend dispatch**

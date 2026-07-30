@@ -11,10 +11,14 @@ import { useSyncExternalStore } from 'react'
  *
  * ONE writer (useVote), and every reader merges through useVotedPraxis.ts —
  * `applyVoteDelta` for a praxis payload, `applyVoteSummaryDelta` for a
- * VoteSummary. Keep it that way. This docblock used to enumerate the three
- * COMPONENTS that read a tally, and #1142 was that list going stale: one of them
- * had been replaced by a panel reading the praxis object, which the detail page
- * merged nothing into. Name the merge points, not what renders below them.
+ * VoteSummary, `applyDuelVoteDelta` for the duel card's DuelDetailOut. Keep it
+ * that way. This docblock used to enumerate the three COMPONENTS that read a
+ * tally, and #1142 was that list going stale: one of them had been replaced by a
+ * panel reading the praxis object, which the detail page merged nothing into.
+ * Name the merge points, not what renders below them. #1239 was the same gap one
+ * payload over — a third fetch with its own field for the same number, outside
+ * the scheme entirely — which is why the duel merge is named here rather than
+ * left to whoever next reads a duel side.
  *
  * An override lives only until the server catches up: every fetch that returns
  * fresh truth for a praxis clears it (see clearVoteOverrides' callers in the
@@ -119,7 +123,7 @@ export function tallyDelta(praxisId: number): VoteDelta | null {
   return entry ? deltaFrom(entry) : null
 }
 
-/** Subscribing read for the three merge points. */
+/** Subscribing read for the merge points above. */
 export function useVoteOverride(praxisId: number): VoteDelta | null {
   const read = () => overrides.get(praxisId) ?? null
   // Third arg is the server snapshot: praxis cards render through

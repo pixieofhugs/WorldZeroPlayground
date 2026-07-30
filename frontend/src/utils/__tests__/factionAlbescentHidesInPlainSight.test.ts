@@ -20,7 +20,6 @@ import { describe, expect, it } from "vitest";
 import {
   FACTION_ALIASES,
   FACTION_RAINBOW_ORDER,
-  factionColor,
   factionCssVar,
   factionFill,
   getAllFactions,
@@ -42,7 +41,14 @@ const SUFFIXES = [
   "on-fill",
 ];
 
-const SHAPES: FactionFillShape[] = ["bar", "dot", "pill", "frame", "rule"];
+const SHAPES: FactionFillShape[] = [
+  "bar",
+  "dot",
+  "disc",
+  "pill",
+  "frame",
+  "rule",
+];
 
 describe("Albescent is indistinguishable from unaffiliated", () => {
   it("resolves every CSS variable to exactly what `na` resolves to", () => {
@@ -76,9 +82,14 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
     );
   });
 
-  it("has the same raw colour as `na` in canvas/SVG contexts", () => {
-    expect(factionColor("albescent")).toBe(factionColor("na"));
-    expect(factionColor("albescent")).toBe(factionColor(null));
+  it("is as anonymous as a missing slug, not merely as `na`", () => {
+    // This used to read factionColor(), a second hex table that has since been
+    // deleted (#1269) — its primary-colour half is now the `undefined` suffix
+    // above. What that loop does NOT cover is the null slug: a surface with no
+    // faction at all. Albescent must be indistinguishable from that too, or the
+    // society is visible to anyone who diffs a themed row against a bare one.
+    expect(factionCssVar("albescent")).toBe(factionCssVar(null));
+    expect(factionFill("albescent", "disc")).toEqual(factionFill(null, "disc"));
   });
 
   it("is not a known faction — it has no resolvable theme", () => {

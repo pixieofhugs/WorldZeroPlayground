@@ -95,6 +95,9 @@ const kit: ProfileKit = {
     </div>
   ),
   nameSize: 56,
+  // The one eyebrow kept as a literal (#1291): the catalog name for `ua` is the
+  // initialism "UA", and this masthead spells the institution out. Deriving it
+  // would mean either changing the copy or hardcoding the long form anyway.
   playerEyebrow: 'Practising · University of Asthmatics',
   progressionStyle: {
     marginTop: 'var(--space-xl)',

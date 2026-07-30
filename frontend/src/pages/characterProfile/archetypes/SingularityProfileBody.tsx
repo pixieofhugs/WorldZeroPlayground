@@ -93,7 +93,7 @@ const kit: ProfileKit = {
     letterSpacing: '0.04em',
     textShadow: '0 0 12px rgba(74,222,128,0.35)',
   },
-  playerEyebrow: '> PLAYER: SINGULARITY // NODE STATUS: ONLINE',
+  playerEyebrow: (faction) => `> PLAYER: ${faction.toUpperCase()} // NODE STATUS: ONLINE`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: VOID,
