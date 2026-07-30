@@ -1,6 +1,6 @@
 /**
  * Duel shared slots (#718) — bespoke-frame + shared-slots, the split
- * `praxisCard/mobile/shared.tsx` uses.
+ * `praxisCard/shared.tsx` uses.
  *
  * Skins own the FRAME (chrome, fonts, ornament). These slots own the LOGIC —
  * the stakes arithmetic and the per-side cast status — so it is written once and

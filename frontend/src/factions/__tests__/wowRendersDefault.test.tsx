@@ -4,7 +4,8 @@
  * #784 moved its lo-fi pink `.exe` identity wholesale to Cozy Coven, leaving
  * `wow` with no manifest and no theme. #812 gave back a minimal yellow
  * `--faction-wow-*` block, so WOW rejoins the rainbow. #821 ships its FIRST
- * bespoke surfaces: the praxis card, its mobile twin, and the vote widget; #840
+ * bespoke surfaces: the praxis card (its mobile twin retired with the surface in
+ * ADR-0067) and the vote widget; #840
  * adds the score stamp when it rebuilds the chronicle from source; #835 adds the
  * desktop edit-praxis composer, #836 its mobile twin, #897 the crest sigil plus
  * the avatar that mounts it, #899 the three repeating desktop surfaces (the
@@ -109,7 +110,6 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'comment',
   'feedFrame',
   'praxisCard',
-  'mobilePraxisCard',
   'scoreStamp',
   'vote',
   'editPraxis',

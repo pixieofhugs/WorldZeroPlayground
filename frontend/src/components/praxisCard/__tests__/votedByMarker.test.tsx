@@ -8,15 +8,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import { PraxisVotedByMarker } from '../shared'
-import { MobileVotedByMarker } from '../mobile/shared'
 import FilterStamps from '../../ui/FilterStamps'
-
-const theme = {
-  ink: 'var(--x)',
-  muted: 'var(--x)',
-  accent: 'var(--x)',
-  paper: 'var(--x)',
-}
 
 function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
   return { id: 1, ...overrides } as PraxisCardOut
@@ -38,18 +30,9 @@ describe('voted-by marker', () => {
     ).toBe('')
   })
 
-  it('mobile: names the account-mate when voted_by_name is set', () => {
-    const html = renderToStaticMarkup(
-      <MobileVotedByMarker praxis={praxis({ voted_by_name: 'Bob' })} theme={theme} />,
-    )
-    expect(text(html)).toContain('voted by Bob')
-  })
-
-  it('mobile: renders nothing without voted_by_name', () => {
-    expect(
-      renderToStaticMarkup(<MobileVotedByMarker praxis={praxis({})} theme={theme} />),
-    ).toBe('')
-  })
+  // The two `MobileVotedByMarker` cases are gone with the `mobilePraxisCard`
+  // surface (ADR-0067). The marker read the same `voted_by_name` field through
+  // the same catalog key; the desktop cases above now pin both form factors.
 })
 
 describe('FilterStamps widening', () => {

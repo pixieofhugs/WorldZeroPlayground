@@ -151,7 +151,7 @@ export interface PraxisCardOut {
   /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
   is_top_for_task: boolean
   task_faction_slug: string | null
-  // Full-fidelity fields for the bespoke mobile praxis cards (#573). The list
+  // Full-fidelity fields the bespoke praxis cards need (#573). The list
   // schema now emits these; older callers simply ignore them.
   /** Proof body excerpt — clamped to 1–2 lines in the mobile card. */
   body_text?: string | null
