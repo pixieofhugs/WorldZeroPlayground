@@ -327,6 +327,20 @@ function inlineConstants(file: string, source: string): string {
 
 /** The innermost `{...}` around `index`, with nested blocks stripped out. */
 function enclosingScope(source: string, index: number): string {
+  // A JSX attribute's scope is its own TAG, not the brace block around it.
+  // `<text fontFamily="IM Fell English, serif" fontStyle="italic">` sits inside
+  // MediaArt's 12,000-character `switch` body, so every `fontWeight="700"`
+  // anywhere in that body counted as this element's — inventing an IM Fell
+  // English bold italic, a Bebas Neue bold italic and a Courier Prime bold
+  // italic that no plate sets. Harmless while the guard only ever *kept* faces
+  // (#1230); the direction below turns an invented face into a demand to load
+  // one. Truncating early on an attribute value containing `>` would only drop
+  // weights, which is the permissive direction.
+  if (/^font-?[fF]amily\s*=\s*["']/.test(source.slice(index, index + 16))) {
+    const start = source.lastIndexOf("<", index);
+    const end = source.indexOf(">", index);
+    if (start !== -1 && end !== -1) return source.slice(start, end);
+  }
   let depth = 0;
   let start = -1;
   for (let cursor = index; cursor >= 0; cursor--) {
@@ -538,6 +552,87 @@ describe("font weights are used (#1230)", () => {
         `pins both the family and the weight. Pin them together rather than
 ` +
         `widening the guard, or the fake-bold it exists to catch walks back in.`,
+    ).toEqual([]);
+  });
+});
+
+/**
+ * The same axis, the other way round (#1294).
+ *
+ * #1230 asked "does anything render in this face?" and deleted the answers that
+ * were no. It could not ask the converse — a weight a stylesheet sets and the
+ * request omits does not fail, it *resolves*: 60 `--font-display` sites asked
+ * for 400 and rendered in Lora 500, and 20 more asked for bold and rendered
+ * semibold. Nothing on screen says so, which is #839's failure class one axis
+ * down: a declaration that looks right and renders as something else.
+ *
+ * The owner's ruling (#1294) is that the stylesheet is the truth and the loader
+ * follows it — where a surface declares a weight, that weight gets requested,
+ * rather than the declaration being quietly rewritten to name whichever face the
+ * browser happened to substitute.
+ *
+ * Resolution is CSS Fonts 4's, shared with the check above, so this is not a set
+ * comparison: it asks what the browser would actually paint and objects only
+ * when that is not what the source asked for.
+ *
+ * ponytail: this guards WEIGHT, not slant. A declared italic with no italic face
+ * requested resolves against the family's upright — which is what the browser
+ * does, synthesising the slant — and passes. Telling "this family has no italic"
+ * from "this family has an italic we did not request" needs Google's catalogue,
+ * which is a network call from a unit test. Bebas Neue is the live instance: it
+ * ships one upright face, five na surfaces set `fontStyle: italic` on it, and
+ * the oblique is synthetic on every one. Upgrade path is a checked-in catalogue
+ * snapshot of the families we load, if a family ever gains an italic we miss.
+ */
+describe("used weights are requested (#1294)", () => {
+  const faces = loadedFaces();
+  const families = new Set(faces.map((face) => face.family));
+
+  it("sees the weights source files actually set (sanity check)", () => {
+    const declared = declaredFaces(families);
+    expect(declared.length).toBeGreaterThan(100);
+    // WowSigil's motto band, via `--font-display` — reachable only by resolving
+    // the token, and only inside its own scope.
+    expect(declared).toContainEqual({ family: "lora", weight: 700, italic: false });
+  });
+
+  it("renders every declared weight in a face it requests", () => {
+    const substituted = new Set<string>();
+    for (const face of declaredFaces(families)) {
+      // Slant is matched before weight (CSS Fonts 4 §5.2): with no italic face
+      // the browser takes the family's upright and slants it itself, so those
+      // are the faces the weight then resolves against.
+      const sameSlant = faces.filter(
+        (candidate) => candidate.family === face.family && candidate.italic === face.italic,
+      );
+      const available = (
+        sameSlant.length > 0
+          ? sameSlant
+          : faces.filter((candidate) => candidate.family === face.family && !candidate.italic)
+      ).map((candidate) => candidate.weight);
+      const rendered = matchedWeight(face.weight, available);
+      if (rendered !== face.weight) {
+        substituted.add(
+          `${face.family} ${face.weight}${face.italic ? " italic" : ""} renders as ${rendered ?? "no face"}`,
+        );
+      }
+    }
+
+    expect(
+      [...substituted].sort(),
+      `Source sets these weights and index.html does not request them, so the
+` +
+        `browser substitutes: a real face at the wrong weight, or a synthesised
+` +
+        `fake-bold. Add the axis value to the family's spec in index.html — the
+` +
+        `family is already loaded, so it is one more face, not one more request.
+` +
+        `If the family has no such face at all (Bebas Neue is upright 400 and
+` +
+        `nothing else), the declaration is the thing that is wrong: drop the
+` +
+        `weight rather than pretending the request can satisfy it (#1294).`,
     ).toEqual([]);
   });
 });

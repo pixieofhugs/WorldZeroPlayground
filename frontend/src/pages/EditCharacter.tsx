@@ -51,7 +51,9 @@ const fieldLabel: CSSProperties = {
 const headingStyle: CSSProperties = {
   fontFamily: DISPLAY,
   fontStyle: 'italic',
-  fontWeight: 700,
+  // No fontWeight: Bebas Neue ships exactly one face, upright 400, and Google
+  // Fonts has no bold of it to request — so `700` here bought a synthesised
+  // fake-bold over an already-condensed display face, not a heavier cut (#1294).
   fontSize: 'var(--text-heading)',
   lineHeight: 1,
   margin: 'var(--space-xs) 0 0',
