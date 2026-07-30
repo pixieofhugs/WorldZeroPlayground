@@ -151,7 +151,9 @@ export default function EphemeristsFeedFrame({
         <svg
           width="100%"
           height={size.height}
-          viewBox={`0 0 ${size.view} 30`}
+          // The viewBox tracks the band's own height so `slice` crops the
+          // register at the edges rather than through the middle of every sign.
+          viewBox={`0 0 ${size.view} ${size.height}`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
           style={{ position: 'absolute', inset: 0, zIndex: 1 }}
@@ -164,7 +166,7 @@ export default function EphemeristsFeedFrame({
           />
           <GlyphRegister
             width={size.view}
-            y={23}
+            y={size.height - 7}
             strength={size.register}
             keyPrefix="feed"
           />
