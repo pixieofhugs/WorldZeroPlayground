@@ -257,7 +257,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // nobody had joined yet while the heading still counted them. Tested
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
-  const isCollab = praxis.type === 'collab';
+  const isCollab = praxis.type === "collab";
 
   // A payload with no member rows still credits its creator, so the byline is
   // never empty and the author is always reachable from it. Initials only:

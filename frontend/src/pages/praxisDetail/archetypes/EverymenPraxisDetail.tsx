@@ -212,7 +212,7 @@ export default function EverymenPraxisDetail({
   // nobody had joined yet while the heading still counted them. Tested
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
-  const isCollab = praxis.type === 'collab';
+  const isCollab = praxis.type === "collab";
   // The shared banners draw the roster while a collab is still resolving, so the
   // Members section takes the complement — one roster on the page, never two.
   const rosterInBanners =
