@@ -13,7 +13,6 @@ import { lazyArchetype } from './lazyArchetype'
 
 const SnideAvatar = lazyArchetype(() => import('../components/avatar/SnideAvatar'))
 const SnideDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideDuelSealConfirm'))
-const SnideMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideMobileDuelSealConfirm'))
 const SnideBackdrop = lazyArchetype(() => import('../components/backdrop/SnideBackdrop'))
 const SnideComment = lazyArchetype(() => import('../components/comments/voices/SnideComment'))
 const SnideEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SnideEditPraxis'))
@@ -58,5 +57,4 @@ export const SNIDE_MANIFEST: FactionManifest = {
   duelSeal: () => SnideDuelSealConfirm,
   mobileFactionPage: () => SnideFactionPage,
   mobileFieldDesk: () => SnideHome,
-  mobileDuelSeal: () => SnideMobileDuelSealConfirm,
 }

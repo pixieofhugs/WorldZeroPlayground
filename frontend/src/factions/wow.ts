@@ -112,7 +112,6 @@ const WowScoreStamp = lazyArchetype(() => import('../components/praxisCard/score
 const WowSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/WowSeal'))
 const WowEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/WowEditPraxis'))
 const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDuelSealConfirm'))
-const WowMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowMobileDuelSealConfirm'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
@@ -148,10 +147,11 @@ export const WOW_MANIFEST: FactionManifest = {
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WOWSelectCard,
 
-  // #895 — the lists: the duel seal, both form factors. Its rail skins went with
-  // the `duelRail` / `mobileDuelRail` SURFACES in #1090, not with WOW.
+  // #895 — the lists: the duel seal, both form factors from ONE component since
+  // #1313 retired the `mobileDuelSeal` twin (the Lists sheet is responsive now,
+  // not deleted). Its rail skins went with the `duelRail` / `mobileDuelRail`
+  // SURFACES in #1090, not with WOW.
   duelSeal: () => WowDuelSealConfirm,
-  mobileDuelSeal: () => WowMobileDuelSealConfirm,
 
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
   // phone screen, which is the `mobileFieldDesk`; `mobileFactionPage` is derived
