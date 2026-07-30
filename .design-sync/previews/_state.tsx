@@ -17,7 +17,6 @@ import type { CreateCharacterState } from '../../frontend/src/pages/characterPat
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
 import type { ProfileBodyProps } from '../../frontend/src/pages/characterProfile/FactionProfileBody'
 import type { PlayersDirectoryProps } from '../../frontend/src/pages/players/mobileArchetypes/DefaultPlayers'
-import type { TaskSignupOut } from '../../frontend/src/api/tasks'
 import type { VoterDetail } from '../../frontend/src/api/votes'
 import {
   characterFor,
@@ -80,11 +79,17 @@ export function tasksState(slug: string): TasksState {
 }
 
 // ── taskDetail ───────────────────────────────────────────────────────────────
-const SIGNUPS: TaskSignupOut[] = [
-  { character_id: 12, display_name: 'Sam Okafor', avatar_url: '', faction_slug: 'everymen', status: 'active', signed_up_at: '2026-06-28T09:12:00Z' },
-  { character_id: 19, display_name: 'Pip Marigold', avatar_url: '', faction_slug: 'wow', status: 'active', signed_up_at: '2026-06-29T10:00:00Z' },
-]
-/** A task with a few ranked submissions and open slots. */
+/**
+ * A task with a few ranked submissions and open slots.
+ *
+ * No `signups`: #1262 took the roster off `TaskDetailState` because nothing read
+ * it. The fixture that used to sit here had been stale since #1051 corrected
+ * `TaskSignupOut` (it still built `status` / `signed_up_at`), and nothing caught
+ * that — `frontend/tsconfig.json` has `include: ["src"]`, so `tsc --noEmit`
+ * never sees this directory. Anything here that mirrors an app type is
+ * unprotected by CI and drifts silently; re-check it by hand when a shared type
+ * moves.
+ */
 export function taskDetailState(slug: string): TaskDetailState {
   const submissions = praxisCardsFor(slug)
   return {
@@ -92,17 +97,19 @@ export function taskDetailState(slug: string): TaskDetailState {
     task: taskFor(slug, { level_required: 3, point_value: 30 }),
     fetchError: null,
     submissions,
-    signups: SIGNUPS,
     friends: new Set<number>([12]),
     foes: new Set<number>(),
     mySubmission: undefined,
     isInProgress: false,
     inProgressPraxisId: null,
     canSignUp: true,
+    levelJumpSignup: false,
     slotsOpen: 3,
     maxTaskSlots: 5,
+    basePoints: 30,
     factionMultiplier: 1.5,
     modifiedPoints: 45,
+    inProgressCount: 4,
     topScore: 42,
     voteCount: 8,
     submissionSort: 'score',
