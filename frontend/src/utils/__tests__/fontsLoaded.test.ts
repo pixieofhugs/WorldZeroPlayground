@@ -54,7 +54,6 @@ const GENERIC_FAMILIES = new Set([
   "arial",
   "times new roman",
   "segoe ui",
-  "blackletter",
   "trajan pro",
 ]);
 
