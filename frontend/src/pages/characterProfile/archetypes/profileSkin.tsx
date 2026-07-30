@@ -23,6 +23,7 @@ import { badgeArtFor } from '../../../components/badges/badgeArt'
 import CredentialCard from '../../../components/CredentialCard'
 import PraxisCard from '../../../components/PraxisCard'
 import TaskCard from '../../../components/TaskCard'
+import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 
@@ -76,8 +77,19 @@ export interface ProfileKit {
   nameSize?: number
   /** Optional CSS text-shadow / transform on the name. */
   nameExtra?: CSSProperties
-  /** Eyebrow above the name, e.g. "Player · University of Asthmatics". */
-  playerEyebrow: string
+  /** Eyebrow above the name, e.g. "Player · Cozy Coven".
+   *
+   *  Prefer the FUNCTION form: it is handed the faction's display name resolved
+   *  from `slug` through the factions.json catalog (ADR-0038), so the eyebrow
+   *  cannot name a faction other than the one it skins. Coven's eyebrow read
+   *  "Player · Warriors of Whimsy" for a year because it was a literal that rode
+   *  in with a ported template (#1291) — a literal replacement would only have
+   *  reset the same trap.
+   *
+   *  A plain string is still accepted for the one eyebrow whose wording is not
+   *  derivable from the catalog (UA spells its institution out where the catalog
+   *  holds the initials). `factionProfileBody.test.tsx` guards either form. */
+  playerEyebrow: string | ((factionName: string) => string)
 
   /* ── progression panel ── */
   /** Style for the progression panel container. */
@@ -266,6 +278,13 @@ export function ProfileSkin({
     : String(character.level)
   const levelUnit = kit.levelUnitLabel ?? 'pts this level'
 
+  // Resolved from the KIT's slug, not the character's: the kit is the archetype
+  // speaking about itself, and `character.faction_slug` is nullable.
+  const playerEyebrow =
+    typeof kit.playerEyebrow === 'function'
+      ? kit.playerEyebrow(factionName(kit.slug))
+      : kit.playerEyebrow
+
   const credential = (
     <CredentialCard
       displayName={character.display_name}
@@ -388,7 +407,7 @@ export function ProfileSkin({
                   marginBottom: 'var(--space-sm)',
                 }}
               >
-                {kit.playerEyebrow}
+                {playerEyebrow}
               </div>
 
               <h1
