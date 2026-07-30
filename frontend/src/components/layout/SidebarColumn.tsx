@@ -40,23 +40,30 @@ export interface SidebarColumnProps {
 }
 
 /**
- * The handle is the only way back from a collapsed rail, so the column is
- * sticky — otherwise a player deep in a long `/tasks` list would have to scroll
- * back to the top to recover it. `top-14` matches `NavBar`'s `sticky top-0 h-14`.
+ * The rail scrolls WITH the page — a sticky, self-scrolling column put a second
+ * scrollbar next to the page's own, which read as chrome, not content. The one
+ * thing that must survive deep scroll is the handle while COLLAPSED: it is the
+ * only way back, so it alone goes sticky in that state — `self-stretch`
+ * (overriding the grid's `items-start`) keeps the column full row height so the
+ * sticky handle has room to travel. While
+ * expanded it stays in flow — pinning it would float it over the rail's own
+ * panels as they scrolled underneath. `top-14` matches `NavBar`'s
+ * `sticky top-0 h-14`.
  */
-const SIDEBAR_COLUMN =
-  'hidden lg:block lg:col-start-1 lg:row-start-1 lg:sticky lg:top-14 lg:max-h-[calc(100vh-3.5rem)] lg:overflow-y-auto'
+const SIDEBAR_COLUMN = 'hidden lg:block lg:col-start-1 lg:row-start-1 lg:self-stretch'
 
 export default function SidebarColumn({ collapsed, onToggle }: SidebarColumnProps) {
   const { pendingRequests, refetch } = usePendingRequests()
 
   return (
     <div className={SIDEBAR_COLUMN}>
-      <SidebarHandle
-        collapsed={collapsed}
-        onToggle={onToggle}
-        pendingCount={pendingRequests.length}
-      />
+      <div className={collapsed ? 'lg:sticky lg:top-14' : undefined}>
+        <SidebarHandle
+          collapsed={collapsed}
+          onToggle={onToggle}
+          pendingCount={pendingRequests.length}
+        />
+      </div>
       <div hidden={collapsed}>
         <Sidebar pendingRequests={pendingRequests} refetchPendingRequests={refetch} />
       </div>
