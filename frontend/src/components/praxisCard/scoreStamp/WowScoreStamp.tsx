@@ -20,7 +20,8 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * The design files WOW under the shared box pattern ("the remaining box-pattern
  * factions … follow the Unaffiliated mechanism exactly"), so the ROWS match
  * {@link DefaultScoreStamp} and row selection stays in `scoreBreakdown`
- * (ADR-0047). Everything else is the chronicle: MedievalSharp figures, Lora
+ * (ADR-0047) — base included, which drops out when it would only repeat the
+ * total under the rule (#1131). Everything else is the chronicle: MedievalSharp figures, Lora
  * italic for the working, the plum chip, the gold rule.
  */
 export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
@@ -63,52 +64,57 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         />
       )}
 
-      {/* Base, with the plum multiplier chip pinned to the right rail. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-xs)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span
+      {/* Base, with the plum multiplier chip pinned to the right rail. The entry
+          is only written when something moved the figure (#1131); the total under
+          the gold rule already states it otherwise. The chip rides this line and
+          may: a live multiplier is one of the things that keeps the line. */}
+      {base !== null && (
+        <div
           style={{
-            fontFamily: "var(--faction-wow-body-font)",
-            fontStyle: "italic",
-            fontSize: "var(--text-base)",
-            color: "var(--faction-wow-card-muted)",
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-xs)",
+            whiteSpace: "nowrap",
           }}
         >
-          {t("card.stamp.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--faction-wow-card-font)",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the chronicle's base numeral, the design's 25 (§4a)
-            fontSize: 25,
-            lineHeight: 0.8,
-            color: "var(--faction-wow-card-text)",
-          }}
-        >
-          {base}
-        </span>
-        {mult !== null && (
           <span
             style={{
-              marginLeft: "auto",
-              fontFamily: "var(--faction-wow-card-font)",
-              fontSize: "var(--text-lg)",
-              color: "var(--faction-wow-stamp-chip-text)",
-              background: "var(--faction-wow-stamp-chip-bg)",
-              borderRadius: 4,
-              padding: "0 var(--space-xs)",
+              fontFamily: "var(--faction-wow-body-font)",
+              fontStyle: "italic",
+              fontSize: "var(--text-base)",
+              color: "var(--faction-wow-card-muted)",
             }}
           >
-            {formatMult(mult)}
+            {t("card.stamp.base")}
           </span>
-        )}
-      </div>
+          <span
+            style={{
+              fontFamily: "var(--faction-wow-card-font)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the chronicle's base numeral, the design's 25 (§4a)
+              fontSize: 25,
+              lineHeight: 0.8,
+              color: "var(--faction-wow-card-text)",
+            }}
+          >
+            {base}
+          </span>
+          {mult !== null && (
+            <span
+              style={{
+                marginLeft: "auto",
+                fontFamily: "var(--faction-wow-card-font)",
+                fontSize: "var(--text-lg)",
+                color: "var(--faction-wow-stamp-chip-text)",
+                background: "var(--faction-wow-stamp-chip-bg)",
+                borderRadius: 4,
+                padding: "0 var(--space-xs)",
+              }}
+            >
+              {formatMult(mult)}
+            </span>
+          )}
+        </div>
+      )}
 
       {meta !== null && (
         <div style={workingStyle}>
@@ -116,7 +122,16 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
-      <div style={workingStyle}>{t("card.stamp.fromVotes", { votes })}</div>
+      {/* The tally, always. Its lead belongs to the line above, so it goes when
+          the base entry does (#1131) and the leaf keeps its own inset. */}
+      <div
+        style={{
+          ...workingStyle,
+          marginTop: base !== null ? workingStyle.marginTop : undefined,
+        }}
+      >
+        {t("card.stamp.fromVotes", { votes })}
+      </div>
 
       {/* The gold→plum hairline, then the total and its star. */}
       <div

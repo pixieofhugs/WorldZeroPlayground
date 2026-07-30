@@ -82,6 +82,52 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
     expect(scoreBreakdown(praxis({ points_from_votes: 0 })).votes).toBe(0)
   })
 
+  /**
+   * #1131. The base row is the one row whose content can be entirely implied by
+   * the total mark: with no multiplier, no metatask and no votes the stamp said
+   * `10.0 POINTS` and then `BASE 10`. The votes row is NOT part of this — the
+   * owner was offered "hide base and `+0 from votes`" and declined it, so the
+   * empty state is the mark plus the tally.
+   */
+  it('hides the base row when it would only restate the total', () => {
+    const bare = praxis({
+      task_point_value: 10,
+      display_multiplier: 1,
+      metatask_points: 0,
+      points_from_votes: 0,
+      score: 10,
+    })
+    expect(scoreBreakdown(bare)).toEqual({
+      base: null,
+      mult: null,
+      meta: null,
+      votes: 0,
+      total: 10,
+    })
+  })
+
+  it('brings the base row back the moment any term moves the figure', () => {
+    const bare = { task_point_value: 10, display_multiplier: 1, metatask_points: 0, points_from_votes: 0 }
+    // Each of the three terms, alone, is enough to make the base row explain
+    // something — which is why a stamp may hang its multiplier chip off it.
+    expect(scoreBreakdown(praxis({ ...bare, points_from_votes: 4, score: 14 })).base).toBe(10)
+    expect(scoreBreakdown(praxis({ ...bare, metatask_points: 3, score: 13 })).base).toBe(10)
+    expect(scoreBreakdown(praxis({ ...bare, display_multiplier: 1.1, score: 11 })).base).toBe(10)
+  })
+
+  it('keeps the base row when the score disagrees with its own terms', () => {
+    // A `score` that has drifted from the terms behind it must stay legible.
+    // Hiding the row here would collapse two different numbers into one mark.
+    const drifted = praxis({
+      task_point_value: 10,
+      display_multiplier: 1,
+      metatask_points: 0,
+      points_from_votes: 0,
+      score: 99,
+    })
+    expect(scoreBreakdown(drifted).base).toBe(10)
+  })
+
   it('never derives vote points by subtraction (the old Merit assumption)', () => {
     // score is authoritative and unrelated to base/votes arithmetic here.
     const rows = scoreBreakdown(praxis({ task_point_value: 12, points_from_votes: 4, score: 99 }))
@@ -160,6 +206,50 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
 })
 
 /**
+ * The five conditional states of design v2, shared by both stamp waves below.
+ *
+ * `showsBase` is part of the state, not a detail of one skin: 'base only' is the
+ * #1131 empty state, where the figure equals the total and the row would print it
+ * twice, so every stamp must OMIT it there and print it in the other four.
+ */
+const STATES = [
+  {
+    name: 'base only',
+    fields: { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, score: 12 },
+    showsBase: false,
+  },
+  {
+    name: '+ votes',
+    fields: { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, score: 16 },
+    showsBase: true,
+  },
+  {
+    name: '× mult',
+    fields: { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, score: 9.6 },
+    showsBase: true,
+  },
+  {
+    name: '+ metatask',
+    fields: { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, score: 32 },
+    showsBase: true,
+  },
+  {
+    name: 'full formula',
+    fields: { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, score: 29.6 },
+    showsBase: true,
+  },
+] as const
+
+/**
+ * Every stamp labels the row from the same key, so one assertion covers all
+ * eight: the label is present exactly when the resolver kept the figure.
+ */
+function expectBaseRow(html: string, showsBase: boolean) {
+  if (showsBase) expect(html).toContain('base')
+  else expect(html).not.toContain('base')
+}
+
+/**
  * The five conditional states of design v2, on both #841 stamps. The failure
  * mode this guards is not a missing row — `scoreBreakdown` is tested above —
  * but a stamp that stops READING as itself when a row drops out: a tally whose
@@ -167,15 +257,7 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
  * it. Each state must still print the total and its own device.
  */
 describe('#841 stamps across the conditional states (ADR-0047)', () => {
-  const STATES = [
-    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, score: 12 }],
-    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, score: 16 }],
-    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, score: 9.6 }],
-    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, score: 32 }],
-    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, score: 29.6 }],
-  ] as const
-
-  for (const [name, fields] of STATES) {
+  for (const { name, fields, showsBase } of STATES) {
     it(`Everymen prints the tally and the roundel — ${name}`, () => {
       const html = text(renderToStaticMarkup(<EverymenScoreStamp praxis={praxis({ ...fields })} />))
       expect(html).toContain('TALLY')
@@ -184,6 +266,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain(fields.score.toFixed(1))
       // The votes row survives at 0 — the deliberate ADR-0047 deviation.
       expect(html).toContain('votes')
+      expectBaseRow(html, showsBase)
       expect(html).not.toMatch(HEX)
     })
 
@@ -191,7 +274,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       const html = text(
         renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({ ...fields })} />),
       )
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       expect(html).toContain('from votes')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).not.toMatch(HEX)
@@ -200,7 +283,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     it(`UA prints the score box and the ensō — ${name}`, () => {
       const markup = renderToStaticMarkup(<UaScoreStamp praxis={praxis({ ...fields })} />)
       const html = text(markup)
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       // The votes row survives at 0 — the deliberate ADR-0047 deviation.
       expect(html).toContain('from votes')
       expect(html).toContain(fields.score.toFixed(1))
@@ -212,10 +295,10 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     })
   }
 
-  for (const [name, fields] of STATES) {
+  for (const { name, fields, showsBase } of STATES) {
     it(`WOW prints the working and keeps the star — ${name}`, () => {
       const html = text(renderToStaticMarkup(<WowScoreStamp praxis={praxis({ ...fields })} />))
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       expect(html).toContain('from votes')
       expect(html).toContain(fields.score.toFixed(1))
       // The retired ✦ survives here and only here — see ADR-0050 / the design
@@ -226,7 +309,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
 
     it(`Coven prints the working and keeps the sparkle — ${name}`, () => {
       const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />))
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       expect(html).toContain('from votes')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('✨')
@@ -300,18 +383,10 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
  * assertions below are deliberately notation-aware.
  */
 describe('#842 stamps across the conditional states (ADR-0047)', () => {
-  const STATES = [
-    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, score: 12 }],
-    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, score: 16 }],
-    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, score: 9.6 }],
-    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, score: 32 }],
-    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, score: 29.6 }],
-  ] as const
-
-  for (const [name, fields] of STATES) {
+  for (const { name, fields, showsBase } of STATES) {
     it(`S.N.I.D.E. prints the working and the total in pts — ${name}`, () => {
       const html = text(renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />))
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       expect(html).toContain('from votes')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('pts')
@@ -322,7 +397,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       const html = text(
         renderToStaticMarkup(<SingularityScoreStamp praxis={praxis({ ...fields })} />),
       )
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       expect(html).toContain('tot')
       // The terminal pads its output: two decimals, and a zero-padded votes row.
       expect(html).toContain(fields.score.toFixed(2))
@@ -332,11 +407,60 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
 
     it(`the unaffiliated sheet prints the working and the total — ${name}`, () => {
       const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ ...fields })} />))
-      expect(html).toContain('base')
+      expectBaseRow(html, showsBase)
       expect(html).toContain('from votes')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('points')
       expect(html).not.toMatch(HEX)
+    })
+  }
+})
+
+/**
+ * #1131 on every registered stamp at once. The rule lives in `scoreBreakdown`,
+ * but each skin still has to ACT on the null — nine files built their own row
+ * arrays from the resolver's nulls, and a skin that interpolates `base` straight
+ * into JSX would render an empty label instead of dropping the row. So this
+ * asserts the state on all eight rather than trusting the resolver test.
+ *
+ * The state is the commonest one on the site: a freshly submitted praxis, before
+ * anyone votes, under `era_1`'s neutral ×1.0 — which is also what the composer's
+ * waiting surface shows the moment you submit.
+ */
+describe('the base row leaves every stamp when it restates the total (#1131)', () => {
+  const STAMPS = [
+    ['the unaffiliated sheet', DefaultScoreStamp],
+    ['Everymen', EverymenScoreStamp],
+    ['the Ephemerists', EphemeristsScoreStamp],
+    ['S.N.I.D.E.', SnideScoreStamp],
+    ['Singularity', SingularityScoreStamp],
+    ['WOW', WowScoreStamp],
+    ['Coven', CovenScoreStamp],
+    ['UA', UaScoreStamp],
+  ] as const
+
+  /** No multiplier, no metatask, no votes: base IS the total. */
+  const bare = praxis({
+    task_point_value: 10,
+    display_multiplier: 1,
+    metatask_points: 0,
+    points_from_votes: 0,
+    score: 10,
+  })
+
+  for (const [name, Stamp] of STAMPS) {
+    it(`${name} states the figure once, and still says nobody has voted`, () => {
+      const html = text(renderToStaticMarkup(<Stamp praxis={bare} />))
+      expect(html).not.toContain('base')
+      // The total mark stays — under ADR-0049 it is the faction's signature
+      // device, so it is the one number that never drops out. Singularity's
+      // two-decimal `10.00` contains this too.
+      expect(html).toContain('10.0')
+      // And the votes row stays at +0: ADR-0047's declared exception, which the
+      // owner re-affirmed against hiding it alongside base.
+      expect(html).toMatch(/votes/)
+      // The label is gone, not blanked: no orphaned figure left behind.
+      expect(html).not.toMatch(/\b10\b(?!\.)/)
     })
   }
 })
