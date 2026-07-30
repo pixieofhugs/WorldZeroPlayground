@@ -2524,9 +2524,7 @@
   --font-faction-typewriter: "Special Elite", "Courier New", serif;
   --font-faction-terminal: "Share Tech Mono", monospace;
   --font-faction-marker: "Permanent Marker", "Marker Felt", cursive;
-  --font-faction-blackletter: "UnifrakturCook", "Blackletter", serif;
   --font-faction-script: "Caveat", cursive;
-  --font-faction-old: "IM Fell English", Georgia, serif;
   --font-faction-engraved: "Cinzel", serif;
   /* Shared headline serif (#848). Cormorant Garamond is already loaded in
      index.html. Deliberately NOT --eph-script, which is the same face but is
@@ -4195,10 +4193,7 @@
 /* ── Faction display-font tokens referenced by FactionSelectCard (design
    select.card). Aliased to families already loaded in index.html. ── */
 :root {
-  --font-faction-gilt: "Cormorant Garamond", Georgia, serif;
-  --font-faction-engraved-caps: "Cinzel", serif;
   --font-faction-anton: "Anton", Impact, sans-serif;
-  --font-faction-codex: "Cinzel", serif;
   --font-faction-codex-script: "EB Garamond", Georgia, serif;
   --font-faction-poster: "Bebas Neue", Impact, sans-serif;
   --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
