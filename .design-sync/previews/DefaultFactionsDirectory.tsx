@@ -1,7 +1,9 @@
-// DefaultFactionsDirectory mobile — the factions grid. Fetches its own data;
-// in the preview harness (network disabled) it renders its shell/loading state.
+// DefaultFactionsDirectory mobile — the factions grid. Presentation-only: it
+// takes the whole directory as one `state` prop (it no longer self-fetches), so
+// the preview hands it a populated roster of every live faction.
 import { DefaultFactionsDirectory } from 'worldzero-frontend'
+import { factionsDirectoryState } from './_state'
 
 export function Directory() {
-  return <DefaultFactionsDirectory />
+  return <DefaultFactionsDirectory state={factionsDirectoryState()} />
 }

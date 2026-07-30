@@ -20,6 +20,8 @@ import type {
 import type { CommentOut } from '../../frontend/src/api/comments'
 import type { ActivityFeedItem } from '../../frontend/src/api/activityFeed'
 import type { CredentialCardProps } from '../../frontend/src/components/CredentialCard'
+import type { DuelDetailOut } from '../../frontend/src/api/duel'
+import type { AdminProps } from '../../frontend/src/components/praxisCard/shared'
 
 // The seven live faction slugs. `na`/null are the neutral (default) treatment.
 export const FACTION_SLUGS: string[] = [
@@ -29,6 +31,7 @@ export const FACTION_SLUGS: string[] = [
   'ephemerists',
   'singularity',
   'everymen',
+  'coven',
   'albescent',
 ]
 
@@ -70,6 +73,7 @@ const TASK_TITLE_BY_SLUG: Record<string, string> = {
   ephemerists: 'Catalogue every bench along the river walk',
   singularity: 'Log one week of your resting heart rate',
   everymen: 'Organize a neighborhood tool library',
+  coven: 'Brew a tea from three plants you foraged yourself',
   albescent: "Sit with a stranger's grief for one hour",
 }
 
@@ -119,6 +123,7 @@ const NAME_BY_SLUG: Record<string, string> = {
   ephemerists: 'Dr. Iris Vale',
   singularity: 'node_44',
   everymen: 'Sam Okafor',
+  coven: 'Wren Hollowell',
   albescent: 'The Quiet Hand',
 }
 
@@ -205,6 +210,7 @@ const PRAXIS_BODY_BY_SLUG: Record<string, string> = {
   ephemerists: 'Sixty-one benches logged, each with coordinates, a condition note, and the name carved into it if any. Bench 44 remembers someone called Marguerite.',
   singularity: 'Seven days of resting HR, sampled on waking. Mean 58, variance tightening after day four. Attaching the raw series and the rolling average.',
   everymen: 'The tool library opens Saturday. Twelve neighbors donated, one lent a shed, and we built a lending log out of an old ledger. Everyone gets a key.',
+  coven: 'Nettle, yarrow, and a little wild mint from the ditch behind the allotments. Steeped nine minutes. It tasted green and slightly of pennies, and I slept straight through.',
   albescent: 'I sat with her while the light went. She did not need me to say anything. I have written down only that it happened, and nothing of what was said.',
 }
 
@@ -464,6 +470,11 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     updated_at: NOW,
     submitted_at: NOW,
     member_count: 1,
+    // score = (task_point_value + metatask_points) x display_multiplier
+    //         + points_from_votes  -> (30 + 0) x 1 + 12 = 42
+    metatask_points: 0,
+    display_multiplier: 1,
+    points_from_votes: 12,
     score: 42,
     voter_count: 8,
     is_top_for_task: true,
@@ -484,7 +495,90 @@ export function praxisCardsFor(slug: string): PraxisCardOut[] {
       id: 602, task_id: 108, task_faction_slug: slug, status: 'draft',
       task_title: 'Organize a neighborhood tool library',
       title: 'Second pass, west light',
-      submitted_at: null, score: 0, voter_count: 0, is_top_for_task: false,
+      submitted_at: null, score: 0, points_from_votes: 0, voter_count: 0, is_top_for_task: false,
     }),
   ]
+}
+
+// ---------------------------------------------------------------------------
+// Praxis-card moderation bag + duel fixtures (signature families)
+// ---------------------------------------------------------------------------
+
+/**
+ * The moderation bag every desktop praxis-card archetype takes. Default is the
+ * ordinary reader's view: controls off, nothing to report. Pass
+ * `{ showAdminControls: true }` for the moderator cell.
+ */
+export function adminPropsFor(
+  praxis: PraxisCardOut,
+  overrides: Partial<AdminProps> = {},
+): AdminProps {
+  return {
+    praxis,
+    showAdminControls: false,
+    onHide: noop,
+    onFail: noop,
+    moderateError: null,
+    ...overrides,
+  }
+}
+
+/**
+ * A live duel mid-flight: the viewer (character 7) has submitted and leads on
+ * votes, the opponent has not answered yet. `winner_character_id` and the final
+ * point fields stay null — those only populate at era close (ADR-0052), and a
+ * `settled` duel is the forfeit beat, not a resolved one.
+ */
+export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
+  return {
+    id: 44,
+    task_id: 101,
+    status: 'active',
+    forfeited_by_character_id: null,
+    challenger: {
+      praxis_id: 601,
+      character_id: 7,
+      display_name: 'Ada Reed',
+      faction_slug: 'ua',
+      avatar_url: '',
+      points_from_votes: 42,
+      is_submitted: true,
+    },
+    opponent: {
+      praxis_id: null,
+      character_id: 19,
+      display_name: 'Pip Marigold',
+      faction_slug: 'wow',
+      avatar_url: '',
+      points_from_votes: 28,
+      is_submitted: false,
+    },
+    viewer_is_participant: true,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
+    ...overrides,
+  }
+}
+
+/** A duel whose two sides wear the given faction, so a skin reads in context. */
+export function duelFor(slug: string, overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
+  const base = makeDuel(overrides)
+  return {
+    ...base,
+    challenger: { ...base.challenger, faction_slug: slug, display_name: NAME_BY_SLUG[slug] ?? base.challenger.display_name },
+    opponent: { ...base.opponent, faction_slug: slug },
+  }
+}
+
+/** A metatask sticker's payload: the condition line + the bonus it carries. */
+export function metataskFor(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
+  return taskFor(slug, {
+    id: 900,
+    title: 'Finish before the first frost',
+    point_value: 15,
+    task_type: 'metatask',
+    metatask_faction_slug: slug,
+    ...overrides,
+  })
 }

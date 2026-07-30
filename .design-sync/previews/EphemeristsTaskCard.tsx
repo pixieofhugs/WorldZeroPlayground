@@ -11,7 +11,7 @@ export function Default() {
   const task = taskFor('ephemerists')
   return (
     <div style={wrap}>
-      <EphemeristsTaskCard task={task} displayPoints={task.point_value} />
+      <EphemeristsTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }
@@ -21,7 +21,7 @@ export function WithSignup() {
   const task = taskFor('ephemerists')
   return (
     <div style={wrap}>
-      <EphemeristsTaskCard task={task} displayPoints={task.point_value} onSignup={noop} />
+      <EphemeristsTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} onSignup={noop} />
     </div>
   )
 }
@@ -38,7 +38,7 @@ export function HighLevelNoDescription() {
   })
   return (
     <div style={wrap}>
-      <EphemeristsTaskCard task={task} displayPoints={task.point_value} />
+      <EphemeristsTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }

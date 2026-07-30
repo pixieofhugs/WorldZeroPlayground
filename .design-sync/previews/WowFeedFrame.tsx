@@ -1,7 +1,7 @@
 // WowFeedFrame preview — the "whimsy.exe" desktop-window chrome (pink title bar
 // + notepad body). The frame is pure wrapper; the feed ROW arrives as children.
 // We compose realistic Warriors-of-Whimsy rows so the window reads as a feed.
-import { WowFeedFrame } from 'worldzero-frontend'
+import { WowFeedFrame, FeedArchiveButton } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 24, maxWidth: 400 }
 
@@ -121,7 +121,12 @@ const ACCENT = 'var(--faction-wow)'
 export function FriendCompletion() {
   return (
     <div style={wrap}>
-      <WowFeedFrame>
+      <WowFeedFrame
+        kicker="Praxis"
+        time="2h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="P"
@@ -141,7 +146,12 @@ export function FriendCompletion() {
 export function FriendSignup() {
   return (
     <div style={wrap}>
-      <WowFeedFrame>
+      <WowFeedFrame
+        kicker="Vote"
+        time="5h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="A"

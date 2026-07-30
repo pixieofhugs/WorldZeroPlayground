@@ -2,7 +2,7 @@
 // chrome (black slab, signal-blue inset, scanlines, `>` boot strip). Pure
 // wrapper; the feed ROW arrives as children. Rows use light text (dark=true)
 // so they read on the terminal-black body, like the real printout.
-import { SingularityFeedFrame } from 'worldzero-frontend'
+import { SingularityFeedFrame, FeedArchiveButton } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 24, maxWidth: 400 }
 
@@ -122,7 +122,12 @@ const ACCENT = 'var(--faction-singularity)'
 export function FriendCompletion() {
   return (
     <div style={wrap}>
-      <SingularityFeedFrame>
+      <SingularityFeedFrame
+        kicker="Praxis"
+        time="2h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           dark
           accent={ACCENT}
@@ -143,7 +148,12 @@ export function FriendCompletion() {
 export function VoteOnMine() {
   return (
     <div style={wrap}>
-      <SingularityFeedFrame>
+      <SingularityFeedFrame
+        kicker="Vote"
+        time="5h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           dark
           accent={ACCENT}

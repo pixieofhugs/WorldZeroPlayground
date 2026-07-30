@@ -11,7 +11,7 @@ export function Default() {
   const task = taskFor('everymen')
   return (
     <div style={wrap}>
-      <EverymenTaskCard task={task} displayPoints={task.point_value} />
+      <EverymenTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }
@@ -21,7 +21,7 @@ export function WithSignup() {
   const task = taskFor('everymen')
   return (
     <div style={wrap}>
-      <EverymenTaskCard task={task} displayPoints={task.point_value} onSignup={noop} />
+      <EverymenTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} onSignup={noop} />
     </div>
   )
 }
@@ -38,7 +38,7 @@ export function HighLevelNoDescription() {
   })
   return (
     <div style={wrap}>
-      <EverymenTaskCard task={task} displayPoints={task.point_value} />
+      <EverymenTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }

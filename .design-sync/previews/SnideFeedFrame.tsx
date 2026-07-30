@@ -1,7 +1,7 @@
 // SnideFeedFrame preview — the "intercepted ransom-note slip" chrome (xerox
 // paper, taped down, tilted, acid margin). Pure wrapper; the feed ROW arrives
 // as children. We compose realistic S.N.I.D.E. rows so the slip reads as a feed.
-import { SnideFeedFrame } from 'worldzero-frontend'
+import { SnideFeedFrame, FeedArchiveButton } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 28, maxWidth: 400 }
 
@@ -121,7 +121,12 @@ const ACCENT = 'var(--faction-snide)'
 export function FriendCompletion() {
   return (
     <div style={wrap}>
-      <SnideFeedFrame>
+      <SnideFeedFrame
+        kicker="Praxis"
+        time="2h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="R"
@@ -141,7 +146,12 @@ export function FriendCompletion() {
 export function DuelChallenge() {
   return (
     <div style={wrap}>
-      <SnideFeedFrame>
+      <SnideFeedFrame
+        kicker="Vote"
+        time="5h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="R"

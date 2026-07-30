@@ -13,10 +13,12 @@ import type { TaskDetailState } from '../../frontend/src/pages/taskDetail/useTas
 import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
 import type { FactionDetailState } from '../../frontend/src/pages/factionDetail/useFactionDetail'
+import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/useFactionsDirectory'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
 import type { ProfileBodyProps } from '../../frontend/src/pages/characterProfile/FactionProfileBody'
 import type { PlayersDirectoryProps } from '../../frontend/src/pages/players/mobileArchetypes/DefaultPlayers'
+import type { TaskSignupOut } from '../../frontend/src/api/tasks'
 import type { VoterDetail } from '../../frontend/src/api/votes'
 import {
   characterFor,
@@ -66,30 +68,47 @@ export function tasksState(slug: string): TasksState {
     factionConfigs: gameFactionConfigs,
     levelFilters: [1, 2, 3, 4, 5, 6, 7, 8],
     statusFilters: ['active', 'completed'],
+    taskType: 'standard',
+    setTaskType: noop,
     status: 'active',
     setStatus: noop,
     faction: slug,
     setFaction: noop,
     level: '',
     setLevel: noop,
+    query: '',
+    setQuery: noop,
+    hasMore: false,
+    loadMore: noop,
     signupMsg: SIGNUP_OK,
     handleSignup: anoop,
     displayPointsFor: (task) => task.point_value,
+    // era_1 neutralises the faction modifier to 1.0 — no ×badge on any card.
+    displayMultiplierFor: () => 1,
+  }
+}
+
+// ── factions (directory) ─────────────────────────────────────────────────────
+/**
+ * The populated factions grid. #1101 moved this surface off its own fetch and
+ * onto a passed state — the provider's GET /factions mock no longer reaches it.
+ */
+export function factionsDirectoryState(): FactionsDirectoryState {
+  return {
+    factions: factionOuts,
+    factionPage: null,
+    invitations: [],
+    loading: false,
+    error: null,
   }
 }
 
 // ── taskDetail ───────────────────────────────────────────────────────────────
-/**
- * A task with a few ranked submissions and open slots.
- *
- * No `signups`: #1262 took the roster off `TaskDetailState` because nothing read
- * it. The fixture that used to sit here had been stale since #1051 corrected
- * `TaskSignupOut` (it still built `status` / `signed_up_at`), and nothing caught
- * that — `frontend/tsconfig.json` has `include: ["src"]`, so `tsc --noEmit`
- * never sees this directory. Anything here that mirrors an app type is
- * unprotected by CI and drifts silently; re-check it by hand when a shared type
- * moves.
- */
+const SIGNUPS: TaskSignupOut[] = [
+  { character_id: 12, display_name: 'Sam Okafor', avatar_url: '', faction_slug: 'everymen', status: 'active', signed_up_at: '2026-06-28T09:12:00Z' },
+  { character_id: 19, display_name: 'Pip Marigold', avatar_url: '', faction_slug: 'wow', status: 'active', signed_up_at: '2026-06-29T10:00:00Z' },
+]
+/** A task with a few ranked submissions and open slots. */
 export function taskDetailState(slug: string): TaskDetailState {
   const submissions = praxisCardsFor(slug)
   return {
@@ -97,19 +116,17 @@ export function taskDetailState(slug: string): TaskDetailState {
     task: taskFor(slug, { level_required: 3, point_value: 30 }),
     fetchError: null,
     submissions,
+    signups: SIGNUPS,
     friends: new Set<number>([12]),
     foes: new Set<number>(),
     mySubmission: undefined,
     isInProgress: false,
     inProgressPraxisId: null,
     canSignUp: true,
-    levelJumpSignup: false,
     slotsOpen: 3,
     maxTaskSlots: 5,
-    basePoints: 30,
     factionMultiplier: 1.5,
     modifiedPoints: 45,
-    inProgressCount: 4,
     topScore: 42,
     voteCount: 8,
     submissionSort: 'score',

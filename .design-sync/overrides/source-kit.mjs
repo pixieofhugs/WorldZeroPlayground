@@ -1,4 +1,7 @@
-// forked from design-sync lib/source-kit.mjs — GENERIC_DIR += pages,mobileArchetypes so 54 mobile page-archetypes group by surface (fielddesk/tasks/...) not one flat bucket
+// forked from design-sync lib/source-kit.mjs — GENERIC_DIR += the repo's layer-name
+// directories (pages, archetypes, mobileArchetypes, desktop, mobile, skins, blocks,
+// waiting) so page skins and card families group by SURFACE (taskdetail, praxiscard,
+// metataskseal, …) instead of collapsing into one flat "archetypes"/"desktop" bucket.
 // Non-storybook `package` adapter. Bundles dist/ when present (the authoritative
 // component list comes from shipped .d.ts; with no dist it synthesizes an
 // entry from src/ as a last resort) and opportunistically enriches each
@@ -22,7 +25,11 @@ const NON_IMPL_RX = /\.(stories|test|spec)\./;
 const SRC_IMPL_RX = /\.(tsx|jsx)$/;
 // Dir names that don't usefully group components — skip so the emitted path
 // is `components/<group>/<Name>` not `components/components/<Name>`.
-const GENERIC_DIR = new Set(['components', 'component', 'src', 'lib', 'ui', 'packages', 'react', 'pages', 'mobilearchetypes']);
+const GENERIC_DIR = new Set([
+  'components', 'component', 'src', 'lib', 'ui', 'packages', 'react',
+  // World Zero layer directories — they name a form factor or a layer, never a surface.
+  'pages', 'archetypes', 'mobilearchetypes', 'desktop', 'mobile', 'skins', 'blocks', 'waiting',
+]);
 const slug = (s) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
 
 // No .d.ts → scan src files for PascalCase value exports via ts-morph.
