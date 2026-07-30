@@ -1521,7 +1521,6 @@
   /* ── Filter stamp dashed-border (inverts with active state bg) ── */
   --stamp-active-dashed: rgba(255, 255, 255, 0.2);
   --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
-  --stamp-inactive-bg: rgba(255, 255, 255, 0.8);
 
   /* ── Leaderboard rank colors (podium — stable across themes) ── */
   --rank-gold: #f59e0b;
@@ -2110,7 +2109,6 @@
   /* ── Filter stamp dashed-border (dark-mode inversions) ── */
   --stamp-active-dashed: rgba(0, 0, 0, 0.15);
   --stamp-inactive-dashed: rgba(255, 255, 255, 0.1);
-  --stamp-inactive-bg: rgba(255, 255, 255, 0.06);
 
   /* ── Leaderboard rank accent (dark) ── */
   --color-rank-accent: #818cf8;
@@ -2701,42 +2699,6 @@
     background: var(--color-text-primary);
     color: var(--color-bg-page);
     border-color: var(--color-text-primary);
-  }
-
-  /* ── Vote stamps (1–5 rating buttons) ── */
-
-  .vote-stamp {
-    position: relative;
-    width: 44px;
-    height: 44px;
-    border: 2.5px solid var(--stamp-color);
-    border-radius: 0;
-    background: var(--stamp-inactive-bg);
-    color: var(--stamp-color);
-    font-family: "Courier Prime", monospace;
-    /* A stamp glyph sized to its 44px box, not body copy — but 18px is
-       --text-content exactly, so the token keeps it out of raw pixels (#627). */
-    font-size: var(--text-content);
-    font-weight: 900;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 120ms;
-  }
-  .vote-stamp:hover:not(.vote-stamp-active):not(:disabled) {
-    background: color-mix(in srgb, var(--stamp-color) 10%, transparent);
-  }
-  .vote-stamp-active {
-    background: var(--stamp-color);
-    color: var(--color-text-on-accent);
-  }
-  .vote-stamp:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-  [data-theme="dark"] .vote-stamp:not(.vote-stamp-active) {
-    color: var(--color-text-primary);
   }
 
   /* ── Eyebrow / label text ── */
@@ -3972,8 +3934,14 @@
    • THE EDGE IS A 1px MASKED RING, not a border, for the same reason
      `.alb-task-edge` and `.alb-praxis-edge` are. It lands on `.sidebar-card`'s
      own hairline so the effect reads as that border coming alive, and it is a
-     hairline rather than the task card's 3px so the chassis's 4px `card-accent`
-     rule down the left edge still reads as the near-black rule it is.
+     hairline rather than the task card's 3px so the chassis's own 4px rule down
+     the left edge stays the louder of the two. #1148 made that rule the VERTICAL
+     spectrum (it was `card-accent`, a near-black ink drawn as a border), so the
+     two are now the same palette in two geometries — a still ramp down the left
+     edge under a travelling loop around all four. The reason for the hairline did
+     not change with it: 3px of moving spectrum beside 4px of resting spectrum is
+     two rainbows arguing, which is exactly what an unremarkable card must not
+     look like.
 
    • THE RADIUS IS THE TOKEN, not a literal. `.sidebar-card` corners with
      `--radius-xl`, so this follows it for free — unlike the three earlier

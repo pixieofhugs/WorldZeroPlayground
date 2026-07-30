@@ -10,8 +10,6 @@ import { factionCssVar, factionName } from '../utils/factions'
 import { relativeTime } from '../utils/dates'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { pickVariant } from '../utils/factionDispatch'
-import { surfaceMap } from '../factions'
 import DefaultFactionsDirectory from './factions/mobileArchetypes/DefaultFactionsDirectory'
 import { useFactionsDirectory, type FactionsDirectoryState } from './factions/useFactionsDirectory'
 
@@ -41,10 +39,9 @@ export default function Factions() {
   // instead of re-requesting it. Both surfaces read this one state.
   const state = useFactionsDirectory()
 
-  if (formFactor === 'mobile') {
-    const Mobile = pickVariant(surfaceMap('mobileFactionsDirectory'), null, DefaultFactionsDirectory)
-    return <Mobile state={state} />
-  }
+  // No faction ever claimed `mobileFactionsDirectory`, so the slot and its
+  // dispatch are gone: mobile renders the Default skin directly.
+  if (formFactor === 'mobile') return <DefaultFactionsDirectory state={state} />
 
   return <DesktopFactions state={state} />
 }
