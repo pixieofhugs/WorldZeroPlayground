@@ -210,7 +210,8 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${RULE}`, textDecoration: 'none' }}
               >
-                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the register's lead dot, drawn to the row's cap height. */}
+                {/* ornament: the register's lead dot, drawn square to the row's
+                    cap height — illustration geometry, not layout spacing. */}
                 <span className="shrink-0" style={{ width: 9, height: 9, background: OCHRE }} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: DECO, fontSize: 'var(--text-content)', lineHeight: 1.15, color: INK }}>

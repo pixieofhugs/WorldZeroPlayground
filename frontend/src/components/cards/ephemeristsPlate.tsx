@@ -428,7 +428,9 @@ export function AuthorOctagon({ name, size, fontSize }: {
           justifyContent: "center",
           fontFamily: CAPS,
           fontWeight: 500,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the monogram is sized from the octagon it is cut into, not from the type ramp.
+          // ornament: the monogram is sized from the octagon it is cut into, not
+          // from the type ramp. A prop rather than a literal, so the rule never
+          // fires here — the note is for the reader, not the linter.
           fontSize,
           letterSpacing: "0.08em",
           color: INK,
