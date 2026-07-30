@@ -1,26 +1,50 @@
+import { useFormFactor } from '../../hooks/useFormFactor'
 import { UaSigil } from '../cards/UaSigil'
-import FeedChassisBand from './FeedChassisBand'
+import { UA_DISPLAY, UA_EYEBROW, UaInkColumn } from '../cards/uaAtoms'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
- * UA feed frame (per-faction surface #12, kit §12, #851).
+ * UA feed CHASSIS — the practice's day-book leaf (surface #12, kit §12, #1201).
  *
- * A thin presentational WRAPPER: it dresses the neutral feed card (`children`)
- * as a UA row and reimplements none of the card's internals, which arrive as
- * children and keep their slot order (ADR-0016).
+ * Not a row wrapper any more (#1194): the frame owns the outside of the card and
+ * the body arrives as `children`, faction-blind. See {@link FeedFrameProps} for
+ * the four chrome slots this must draw, and `FeedItemSlot` for the archive
+ * interaction it must NOT reimplement — the ✕ handed in as `archive` is already
+ * hover/focus-gated, keyboard reachable, labelled, and `null` on the one type
+ * that cannot be archived (`awaiting_submission`). This file places it and adds
+ * nothing to it.
  *
- * The dress is two things: a 3px orange rule down the left edge and one small
- * ensō as the faction mark. No mandala — a feed is a dense, text-heavy surface
- * and the pattern is ABSENT there (brief §5). No gilt sandwich, no gold liner,
- * no engraved masthead: the salon is dead, and a feed row was the worst place
- * it lived.
+ * THE DRESS is parchment and one ensō, and that is deliberately the whole of it:
  *
- * #1194: a CHASSIS BAND sits above the row, carrying the kicker, the tag, the
- * time and the dismiss control. It is inset on the right so it clears the ensō
- * rather than moving the faction mark: a functional control must not land under
- * an ornament. The dress is otherwise unchanged; UA's dress issue restyles it.
+ *  - The ground is UA's three-stop paper stock (`--faction-ua-parchment`), the
+ *    design sheet's `--cardGrad`, rather than a flat fill. It is composed from
+ *    the surface primitives, so both themes come from the `[data-theme="dark"]`
+ *    cascade with no second declaration and no ternary.
+ *  - The ink column down the left edge (`UaInkColumn`) is the faction's declared
+ *    chrome for a surface too dense for the mandala. It replaces the old flat
+ *    3px border: same reading, drawn with the kit's own primitive. The mandala is
+ *    ABSENT here — a strength, not an omission (brief §5).
+ *  - ONE ensō, at the head of the kicker band. This is the faction-mark half of
+ *    the mark's reservation (brief §4); it is never a container border.
  *
- * Both themes come from the `[data-theme="dark"]` cascade.
+ * WHY THE MARK MOVED INTO THE BAND. It used to sit in the card's top-right
+ * corner, which is exactly where the dismiss control has to go; #1194 answered
+ * that by insetting the band's right edge to clear the ornament. Making the mark
+ * the band's leading glyph removes the collision instead of routing around it —
+ * the ✕ gets the corner it wants, the mark reads as the leaf's seal, and no
+ * functional control sits under an ornament.
+ *
+ * TYPE. Kicker in Cormorant Garamond (the display cut), uppercase and widely
+ * tracked; the time in the EB Garamond eyebrow, the pairing the sheet draws.
+ * Both are label tier — a kind label and a timestamp are scanned, not read (§4).
+ *
+ * NO COPY. Every string on this card arrives as a prop from the neutral `feed`
+ * catalog; the sheet's own dialect is discarded (epic #1192), and there is no
+ * faction-name label anywhere.
+ *
+ * One responsive component, no mobile twin (ADR-0056 / 0058 / 0063): the layout
+ * is fluid, and `useFormFactor` only trims the gutter where a phone column has
+ * none to spare.
  */
 export default function UaFeedFrame({
   kicker,
@@ -29,44 +53,85 @@ export default function UaFeedFrame({
   archive,
   children,
 }: FeedFrameProps) {
+  const gutter = useFormFactor() === 'mobile' ? 'var(--space-md)' : 'var(--space-xl)'
   return (
     <div
       style={{
         position: 'relative',
         overflow: 'hidden',
-        background: 'var(--faction-ua-card-bg)',
+        background: 'var(--faction-ua-parchment)',
         color: 'var(--faction-ua-card-text)',
         border: '1px solid var(--faction-ua-rule)',
-        borderLeft: '3px solid var(--faction-ua)',
         borderRadius: 'var(--radius-md)',
-        padding: 'var(--space-lg) var(--space-xl)',
+        padding: `var(--space-lg) ${gutter}`,
       }}
     >
-      {/* the faction mark — one of the ensō's two sanctioned uses (brief §4) */}
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          right: 10,
-          top: 10,
-          opacity: 0.5,
-          pointerEvents: 'none',
-        }}
-      >
-        <UaSigil width={18} height={18} />
-      </span>
+      {/* The ink column — UA's signature on a dense surface. Absolutely
+          positioned, so the padding above is what it sits inside. */}
+      <UaInkColumn
+        style={{ left: 0, top: 'var(--space-md)', bottom: 'var(--space-md)' }}
+      />
 
-      {/* chassis band — inset on the right so the ✕ clears the ensō */}
+      {/* The chassis band, placed by hand rather than via `FeedChassisBand`: the
+          mark leads it. Its `color` is the muted ink, and that is what tints the
+          archive control, which paints in `currentColor` (#1194). Muted clears AA
+          on all three stops of the stock, in both themes. */}
       <div
         style={{
-          color: 'var(--faction-ua-card-text)',
-          paddingRight: 'var(--space-xl)',
-          borderBottom: '1px solid var(--faction-ua-rule)',
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 'var(--space-sm)',
+          minWidth: 0,
+          color: 'var(--faction-ua-card-muted)',
+          borderBottom: '1px solid var(--faction-ua-hair)',
           paddingBottom: 'var(--space-xs)',
           marginBottom: 'var(--space-sm)',
         }}
       >
-        <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
+        {/* the faction mark — the band's seal (brief §4) */}
+        <span
+          aria-hidden="true"
+          style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.8 }}
+        >
+          <UaSigil width={15} height={15} />
+        </span>
+        <span
+          style={{
+            fontFamily: UA_DISPLAY,
+            fontSize: 'var(--text-lg)',
+            fontWeight: 600,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--faction-ua-card-accent)',
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {kicker}
+        </span>
+        {tag && (
+          /* The status tag, filled: the sheet's chip is solid with warm-white
+             lettering, which is the accent / on-accent pair exactly (#924). */
+          <span
+            style={{
+              ...UA_EYEBROW,
+              color: 'var(--faction-ua-on-accent)',
+              background: 'var(--faction-ua-card-accent)',
+              borderRadius: 999,
+              padding: '0 var(--space-sm)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {tag}
+          </span>
+        )}
+        <span style={{ ...UA_EYEBROW, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+          {time}
+        </span>
+        {archive}
       </div>
 
       {children}

@@ -41,8 +41,16 @@ async def cast_or_update_vote(
 ) -> Vote:
     """Cast or update a vote on a solo or collab praxis.
 
-    Enforces account-level anti-self-vote so alt characters on the same account
-    cannot vote on each other's praxes.
+    Every rule here is account-level (ADR-0041): alt characters on one account
+    cannot vote on each other's praxes, cannot rate a duel any of them is in,
+    and — since #1150 — cannot hold more than one vote on the same praxis. The
+    third is not an extra rejection: an alt's second rating *updates* the
+    account's existing vote, which is free (no budget deduction).
+
+    The vote *budget* stays per character by owner ruling (#1150) — one
+    ``CharacterStats`` row per (character, era). An account with several
+    characters deliberately carries several budgets; it just cannot spend them
+    twice on one praxis.
     """
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
@@ -52,6 +60,8 @@ async def cast_or_update_vote(
     # enforcement path and the ``viewer_can_vote`` predicate that drives the UI
     # share one source of truth (#998). Budget (below) is deliberately NOT part
     # of that predicate — it is temporary and re-rating an existing vote is free.
+    # Nor is one-vote-per-account (C, below) part of it: it never denies a vote,
+    # it routes the second one into an update, so ``viewer_can_vote`` stays True.
     if await _voter_account_owns_praxis(voter, praxis, session):
         raise HTTPException(status_code=403, detail="Cannot vote on your own praxis.")
     if await _voter_in_praxis_duel(voter, praxis, session):
@@ -60,16 +70,24 @@ async def cast_or_update_vote(
             detail="Cannot vote on a duel you're a participant in.",
         )
 
+    # C. One vote per praxis per ACCOUNT (#1150) — matched on the account, not
+    # the character, so an alt life re-rates the account's existing vote instead
+    # of falling through as a brand-new one. This is the lookup half of the
+    # ``uq_vote_praxis_account`` constraint; the constraint is the backstop.
     result = await session.execute(
         select(Vote).where(
             Vote.praxis_id == praxis.id,
-            Vote.voter_character_id == voter.id,
+            Vote.voter_account_id == voter.account_id,
         )
     )
     existing = result.scalar_one_or_none()
 
     if existing is not None:
-        # Update is free — no budget deduction
+        # Update is free — no budget deduction, whichever life re-rates. The
+        # account holds one vote; ``voter_character_id`` follows the life that
+        # set the value that stands, so the voter list, the activity feed and
+        # the character-scoped ``viewer_vote`` star all name the same character.
+        existing.voter_character_id = voter.id
         existing.value = value
         await session.flush()
         await recalculate_character_stats(praxis.created_by_id, session, era)
@@ -168,8 +186,11 @@ async def viewer_can_vote(
     participation (B) applies — the same two blocks ``cast_or_update_vote``
     enforces. Budget exhaustion is NOT considered: it is temporary and
     re-rating an existing vote is free, so the module stays visible for
-    out-of-budget viewers. Anonymous viewers (``voter is None``) get ``True`` —
-    the client shows its own login gate regardless.
+    out-of-budget viewers. One-vote-per-account (#1150) is not considered
+    either, for the same reason: an account that has already voted may still
+    re-rate, so an existing vote never turns this ``False``. Anonymous viewers
+    (``voter is None``) get ``True`` — the client shows its own login gate
+    regardless.
     """
     if voter is None:
         return True

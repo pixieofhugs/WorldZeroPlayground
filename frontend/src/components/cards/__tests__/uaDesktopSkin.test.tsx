@@ -224,6 +224,71 @@ describe('the ensō is reserved for the score and the faction mark', () => {
   })
 })
 
+describe('the feed chassis and the comment note (#1201)', () => {
+  /** The chassis with all four chrome slots filled, as `FeedItemSlot` hands them. */
+  const chassis = () =>
+    routed(
+      <UaFeedFrame
+        kicker="Task completed"
+        time="2h ago"
+        tag="Still waiting"
+        archive={<button type="button">archive-node</button>}
+      >
+        <span>card-body</span>
+      </UaFeedFrame>,
+    )
+
+  it('draws all four chrome slots and swallows none of them', () => {
+    // A frame that drops one loses a FEATURE, not a decoration: the kicker is the
+    // card's only kind label, the time its only timestamp, and the archive node
+    // the entire keyboard/screen-reader route to the archive (#1194).
+    const html = chassis()
+    expect(html, 'kicker').toContain('Task completed')
+    expect(html, 'time').toContain('2h ago')
+    expect(html, 'tag').toContain('Still waiting')
+    expect(html, 'archive node placed, not rebuilt').toContain('archive-node')
+    expect(html, 'body intact').toContain('<span>card-body</span>')
+  })
+
+  it('grounds the card in the three-stop paper stock, not a flat fill', () => {
+    // The design sheet's `--cardGrad`. A flat `card-bg` is what this replaced.
+    expect(chassis()).toContain('var(--faction-ua-parchment)')
+  })
+
+  it('reads NO token from the praxis-card-only exception block (#857)', () => {
+    // `--faction-ua-card-parchment` is the same gradient under a name scoped to
+    // the praxis card, whose block asks in writing not to be widened. The stock
+    // is named once in UA's primitives instead; reading the exception's copy here
+    // would quietly make the exception the rule.
+    const html = chassis()
+    expect(html).not.toContain('--faction-ua-card-parchment')
+    expect(html).not.toContain('--faction-ua-card-frame')
+  })
+
+  it('puts no archive affordance on a comment', () => {
+    // The epic's load-bearing structural fact: comments are NEVER archivable,
+    // only update cards are. Every design sheet says it in its own dialect.
+    const html = comment()
+    expect(html).not.toContain('data-feed-archive')
+    expect(html).not.toContain('data-feed-slot')
+  })
+
+  it('gates the owner row through the SHARED reveal, not a gate of its own', () => {
+    // F3 (#1195) owns the hover/focus gate. A voice wires two lines; it does not
+    // re-implement hover state, and a `display:none` gate would put the control
+    // out of reach of the keyboard entirely.
+    const source = readFileSync(
+      join(SRC_DIR, 'components/comments/voices/UaComment.tsx'),
+      'utf-8',
+    )
+    expect(source, 'uses the shared hook').toContain('useOwnerReveal')
+    expect(source, 'hands the reveal to the shared control').toMatch(
+      /reveal=\{reveal\}/,
+    )
+    expect(source, 'rolls its own hover state').not.toMatch(/useState/)
+  })
+})
+
 describe('the eleven rebuilt surfaces carry no salon left-overs', () => {
   const REBUILT = [
     'components/cards/UaTaskCard.tsx',
