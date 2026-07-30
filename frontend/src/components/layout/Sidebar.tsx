@@ -275,18 +275,44 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Slot-usage progress bar — rainbow fill, drifts unless reduced-motion */}
+        {/* Slot-usage progress bar — a STATIC window onto one track-wide rainbow
+            (#1128). The spectrum belongs to the TRACK, not to the fill: at 1 of 5
+            slots you see red→orange, at 5 of 5 the whole rainbow, and a visible
+            stop is the same physical width at every fill level. Nothing animates,
+            so there is no motion left for prefers-reduced-motion to gate — which
+            also retires the old drift's un-gated `background-size: 200%`, a
+            permanently half-drawn spectrum for anyone who reduced motion. */}
         <div className="mt-4">
           <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)' }}>
             <div
-              className="cs-shimmer"
               style={{
                 height: '100%',
                 width: `${slotPercent}%`,
                 borderRadius: 999,
-                background: 'var(--faction-default-rainbow)',
-                backgroundSize: '200% 100%',
-                transition: 'width 300ms',
+                /* --faction-default-rainbow is the 90deg ramp that runs red 0% →
+                   magenta 100%: exactly ONE pass of the spectrum, which is what a
+                   window wants. Deliberately not -rainbow-loop (eight stops, back
+                   to red at 100% — cut to TILE under a travelling
+                   background-position, and it would seat a second red at the
+                   track's far end), not -rainbow-conic (angular), not
+                   -rainbow-vertical (180deg, for a tall thin rule) and not
+                   -ring (hard wedges). With no repeat and no motion the ramp's
+                   red↔magenta seam never comes into view. */
+                backgroundImage: 'var(--faction-default-rainbow)',
+                backgroundRepeat: 'no-repeat',
+                /* Scale the gradient up by however much the fill is shrunk, so a
+                   fifth-width fill reveals the first fifth of one rainbow rather
+                   than squeezing all seven stops into a fifth of the bar.
+                   A PERCENTAGE is correct here, and this is not the px span
+                   UnaffiliatedVote's docstring (#842) argues for: that widget has
+                   five separate dot elements, so a percentage gave each dot its own
+                   restarted ramp. This is ONE fill, so the percentage resolves
+                   against it alone — fill = slotPercent% × track, therefore
+                   backgroundSize = (100/slotPercent)% × fill = track, exactly.
+                   Omitted at zero slots, where the ratio is Infinity (invalid CSS);
+                   the fill is 0%-wide there, so nothing is visible either way. */
+                ...(slotPercent > 0 ? { backgroundSize: `${(100 / slotPercent) * 100}% 100%` } : null),
+                transition: 'width 300ms, background-size 300ms',
               }}
             />
           </div>
