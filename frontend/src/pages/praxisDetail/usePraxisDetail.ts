@@ -25,6 +25,7 @@ import { useAdminMode } from "../../auth/AdminModeContext";
 import { extractError } from "../../utils/errors";
 import { seedViewerVote, useVoteOverride } from "../../components/vote/voteOverrides";
 import {
+  applyDuelVoteDelta,
   applyVoteDelta,
   applyVoteSummaryDelta,
 } from "../../components/vote/useVotedPraxis";
@@ -265,11 +266,17 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   // VoteUI pre-highlights the viewer's existing cast, and so a re-vote here
   // counts as a re-vote rather than a first vote (#626). Its own effect because
   // auth can resolve after the fetch does.
+  //
+  // `duel` is a dependency because the duel fetch CLEARS this praxis's override
+  // when it lands (#1239), and it lands after this effect has already run — so
+  // without the re-seed the page would forget the viewer's existing vote and
+  // charge their next cast as a first vote, +1 voter and all. `seedViewerVote`
+  // returns early on an occupied slot, so re-running it is free.
   useEffect(() => {
     if (viewerCharacterId == null || praxis == null) return;
     const own = voters.find((voter) => voter.character_id === viewerCharacterId);
     if (own) seedViewerVote(praxis.id, own.value);
-  }, [voters, viewerCharacterId, praxis?.id]);
+  }, [voters, viewerCharacterId, praxis?.id, duel]);
 
   // Merge the viewer's own just-cast vote into everything this page renders
   // (#626). It has to land on the PRAXIS, not only on the vote summary (#1142):
@@ -282,6 +289,21 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const displayPraxis = praxis && voteDelta ? applyVoteDelta(praxis, voteDelta) : praxis;
   const displayVotes = votes && voteDelta ? applyVoteSummaryDelta(votes, voteDelta) : votes;
 
+  // The duel card is a THIRD payload with the same number in it (#1239): both
+  // rows' totals, and the margin its verdict line subtracts out of them, come
+  // off `DuelDetailOut` and nothing merged into that. Looked up per SIDE rather
+  // than reusing `voteDelta`, because a spectator voting the RIVAL is the
+  // reported case and the rival's praxis is not this page's — there is no
+  // praxis payload here to read it off.
+  const challengerDelta = useVoteOverride(duel?.challenger.praxis_id ?? -1);
+  const opponentDelta = useVoteOverride(duel?.opponent.praxis_id ?? -1);
+  const displayDuel = duel
+    ? applyDuelVoteDelta(duel, {
+        challenger: challengerDelta,
+        opponent: opponentDelta,
+      })
+    : duel;
+
   const isOwner = isViewerMember(praxis, user?.character?.id);
 
   return {
@@ -291,7 +313,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
     votes: displayVotes,
     voters,
-    duel,
+    duel: displayDuel,
 
     user,
 

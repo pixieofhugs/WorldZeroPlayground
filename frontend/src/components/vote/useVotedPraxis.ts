@@ -1,3 +1,4 @@
+import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
 import type { PraxisCardOut } from '../../api/praxis'
 import type { VoteSummary } from '../../api/votes'
 import type { ScoredPraxis } from '../praxisCard/scoreStamp/scoreBreakdown'
@@ -56,6 +57,43 @@ export function applyVoteSummaryDelta(votes: VoteSummary, delta: VoteDelta): Vot
     ...votes,
     total_score: votes.total_score + delta.score,
     total_votes: votes.total_votes + delta.voters,
+  }
+}
+
+/** One duellist's row, moved by whatever was cast on THAT side's praxis. */
+function applyDuelSideDelta(side: DuelSideOut, delta: VoteDelta | null): DuelSideOut {
+  if (!delta) return side
+  return { ...side, points_from_votes: side.points_from_votes + delta.score }
+}
+
+/**
+ * The same delta on the duel card's own payload (#1239).
+ *
+ * The third merge point, and the only one that takes TWO deltas: `DuelDetailOut`
+ * carries a `points_from_votes` per side, so a page showing a duel is showing
+ * two praxes' tallies at once and either may be the one just voted. The reported
+ * case was a spectator voting the RIVAL side — which has no praxis payload on
+ * this page at all, so nothing short of merging into the duel can move it.
+ *
+ * The margin comes for free: `DuelCard` derives its verdict line by subtracting
+ * one side's total from the other, so merging the pair moves the sentence too.
+ *
+ * Deliberately does NOT touch `challenger_final_points` / `opponent_final_points`
+ * — era close froze those (ADR-0052) and a resolved duel is done taking votes.
+ *
+ * No voter count to move: a duel side carries none. Returns the payload
+ * unchanged when neither side has a pending cast, so the common case keeps its
+ * identity and the card doesn't re-render for nothing.
+ */
+export function applyDuelVoteDelta(
+  duel: DuelDetailOut,
+  deltas: { challenger: VoteDelta | null; opponent: VoteDelta | null },
+): DuelDetailOut {
+  if (!deltas.challenger && !deltas.opponent) return duel
+  return {
+    ...duel,
+    challenger: applyDuelSideDelta(duel.challenger, deltas.challenger),
+    opponent: applyDuelSideDelta(duel.opponent, deltas.opponent),
   }
 }
 

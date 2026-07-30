@@ -1,11 +1,16 @@
 /**
- * The merge arithmetic, exercised on BOTH payload shapes (#1142).
+ * The merge arithmetic, exercised on EVERY payload shape a tally reaches
+ * (#1142, #1239).
  *
  * The bug was a detail page merging the viewer's cast into its `VoteSummary`
  * while its score panel read the praxis object — so the guard has to be that one
  * delta reaches both, and that the praxis arm is read back through
  * `scoreBreakdown()`, the single row-selection authority (ADR-0053). Asserting
  * the merged fields alone would pass even if the resolver stopped reading them.
+ *
+ * #1239 was the same gap one payload over: the duel card reads both sides'
+ * `points_from_votes` off `DuelDetailOut`, a third payload on a third fetch, so
+ * a spectator's cast left the tally AND the margin derived from the pair stale.
  *
  * Deliberately not a click test: the harness is `renderToStaticMarkup` with no
  * jsdom, effects never run, and `useSyncExternalStore`'s server snapshot is
@@ -14,9 +19,14 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { PraxisCardOut, PraxisOut } from '../../../api/praxis'
+import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { VoteSummary } from '../../../api/votes'
 import { scoreBreakdown } from '../../praxisCard/scoreStamp/scoreBreakdown'
-import { applyVoteDelta, applyVoteSummaryDelta } from '../useVotedPraxis'
+import {
+  applyDuelVoteDelta,
+  applyVoteDelta,
+  applyVoteSummaryDelta,
+} from '../useVotedPraxis'
 import { __resetVoteOverrides, recordVote, tallyDelta } from '../voteOverrides'
 
 const PRAXIS_ID = 7
@@ -83,6 +93,42 @@ const CARD: PraxisCardOut = {
 }
 
 const SUMMARY: VoteSummary = { praxis_id: PRAXIS_ID, total_votes: 2, total_score: 4 }
+
+/** The other side of the duel — the one a spectator's cast used to leave stale. */
+const RIVAL_PRAXIS_ID = 8
+
+const MINE_SIDE: DuelSideOut = {
+  praxis_id: PRAXIS_ID,
+  character_id: 3,
+  display_name: 'Ada',
+  faction_slug: 'coven',
+  avatar_url: '',
+  points_from_votes: 4,
+  is_submitted: true,
+}
+
+const RIVAL_SIDE: DuelSideOut = {
+  praxis_id: RIVAL_PRAXIS_ID,
+  character_id: 4,
+  display_name: 'Rax',
+  faction_slug: 'snide',
+  avatar_url: '',
+  points_from_votes: 6,
+  is_submitted: true,
+}
+
+const DUEL: DuelDetailOut = {
+  id: 5,
+  task_id: 2,
+  status: 'settled',
+  forfeited_by_character_id: null,
+  challenger: MINE_SIDE,
+  opponent: RIVAL_SIDE,
+  viewer_is_participant: false,
+  winner_character_id: null,
+  challenger_final_points: null,
+  opponent_final_points: null,
+}
 
 /** The delta a first cast of 5 publishes: +5 points, +1 voter. */
 function firstCastOfFive() {
@@ -168,5 +214,90 @@ describe('applyVoteSummaryDelta (#1142)', () => {
       total_score: 6,
     })
     expect(scoreBreakdown(applyVoteDelta(DETAIL, delta)).total).toBe(18)
+  })
+})
+
+describe('applyDuelVoteDelta (#1239)', () => {
+  beforeEach(() => {
+    __resetVoteOverrides()
+  })
+
+  /** A first cast of 5 on whichever side is being voted. */
+  function firstCastOfFiveOn(praxisId: number) {
+    recordVote(praxisId, 5, null)
+    const delta = tallyDelta(praxisId)
+    if (!delta) throw new Error('expected an active override')
+    return delta
+  }
+
+  /** What `DuelCard` derives its verdict line from: the difference of the pair. */
+  function margin(duel: DuelDetailOut): number {
+    return duel.challenger.points_from_votes - duel.opponent.points_from_votes
+  }
+
+  it('a spectator voting the RIVAL side moves the rival row and the margin', () => {
+    // The reported case, and the one no praxis payload can cover: the rival
+    // side has none on this page. Rax led by 2; a spectator's 5 for Rax has to
+    // widen that to 7 the moment it lands, not on the next refetch.
+    const merged = applyDuelVoteDelta(DUEL, {
+      challenger: null,
+      opponent: firstCastOfFiveOn(RIVAL_PRAXIS_ID),
+    })
+    expect(merged.opponent.points_from_votes).toBe(11)
+    expect(merged.challenger.points_from_votes, 'the unvoted side is untouched').toBe(4)
+    expect(margin(merged), 'the margin is as stale as the tally without this').toBe(-7)
+  })
+
+  it('a cast on THIS page\'s side moves that row instead', () => {
+    const merged = applyDuelVoteDelta(DUEL, {
+      challenger: firstCastOfFiveOn(PRAXIS_ID),
+      opponent: null,
+    })
+    expect(merged.challenger.points_from_votes).toBe(9)
+    expect(merged.opponent.points_from_votes).toBe(6)
+    expect(margin(merged), 'a lead that changes hands').toBe(3)
+  })
+
+  it('moves a duel side by the same points as the praxis payload', () => {
+    // One arithmetic across the three payloads is the whole point: the score
+    // panel and the duel card sit on the same page and must never disagree
+    // about the same cast.
+    const delta = firstCastOfFiveOn(PRAXIS_ID)
+    const duelMoved =
+      applyDuelVoteDelta(DUEL, { challenger: delta, opponent: null }).challenger
+        .points_from_votes - DUEL.challenger.points_from_votes
+    const praxisMoved =
+      scoreBreakdown(applyVoteDelta(DETAIL, delta)).votes - scoreBreakdown(DETAIL).votes
+    expect(duelMoved).toBe(praxisMoved)
+  })
+
+  it('leaves the server payload untouched, so a re-render cannot compound it', () => {
+    applyDuelVoteDelta(DUEL, {
+      challenger: null,
+      opponent: firstCastOfFiveOn(RIVAL_PRAXIS_ID),
+    })
+    expect(DUEL.opponent.points_from_votes).toBe(6)
+  })
+
+  it('hands back the same object when nobody has voted', () => {
+    // Identity, not a clone: the duel card re-renders for nothing otherwise.
+    expect(applyDuelVoteDelta(DUEL, { challenger: null, opponent: null })).toBe(DUEL)
+  })
+
+  it('never touches the frozen pair a resolved duel prints', () => {
+    // Era close froze those figures (ADR-0052) and voting is over; a live
+    // override must not reach them even if one is somehow still around.
+    const resolved: DuelDetailOut = {
+      ...DUEL,
+      status: 'resolved',
+      challenger_final_points: 21,
+      opponent_final_points: 24.5,
+    }
+    const merged = applyDuelVoteDelta(resolved, {
+      challenger: firstCastOfFiveOn(PRAXIS_ID),
+      opponent: null,
+    })
+    expect(merged.challenger_final_points).toBe(21)
+    expect(merged.opponent_final_points).toBe(24.5)
   })
 })
