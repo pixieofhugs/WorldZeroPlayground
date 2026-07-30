@@ -435,10 +435,11 @@
               not a rule: it sets the autosave line, the word count, the body
               placeholder, the inactive write-up tab and both footer exits. Same
               two hues, walked until each clears the tighter of the two grounds
-              it lands on (the FIELD, which is the lighter stock by day and the
-              lifted one by night): 4.85:1 light, 4.62:1 dark. It stays a tier
-              under -card-muted (6.05 / 5.23), so the three tiers still read as
-              three.
+              it lands on. By day the sheet and the field are one colour, so
+              there is only one reading (4.86:1); by night the field LIFTS off
+              the sheet and is the tighter of the two (4.61:1, against 4.79:1 on
+              the sheet). It stays a tier under -card-muted (6.05 / 5.23), so
+              the three tiers still read as three.
      `hair`   the section RULE. Half the weight of --faction-default-border,
               which is a card EDGE: a divider inside the sheet is quieter than
               the sheet's own outline, and collapsing the two flattens the
@@ -660,7 +661,7 @@
      #6e6b5d: that reading was taken on the SHEET (4.74:1) and the ink also lands
      on the FIELD — the placeholder inside the write-up box, and `quietStyle` over
      `panelStyle` on the waiting surface — where the same hue was 4.28:1. Walked
-     until it clears the tighter ground: 4.64:1 on the field, 5.11:1 on the stock,
+     until it clears the tighter ground: 4.62:1 on the field, 5.11:1 on the stock,
      still a tier under -composer-muted (5.36 / 5.93). Dark was never the miss. */
   --faction-snide-composer-faint: #696658;
   --faction-snide-composer-field: #eae6d8; /* an input, a shade off the sheet */
