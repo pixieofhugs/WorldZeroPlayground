@@ -103,9 +103,11 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
         )}
       </section>
 
-      {membership.state === 'gate' && (
+      {(membership.state === 'gate' || membership.state === 'burned') && (
         <p className="font-body text-muted content-text mt-6">
-          {t('mobile.gateHint', { faction: name })}
+          {membership.state === 'burned'
+            ? t('mobile.burnedHint', { faction: name })
+            : t('mobile.gateHint', { faction: name })}
         </p>
       )}
 
