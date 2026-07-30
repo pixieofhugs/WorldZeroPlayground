@@ -150,7 +150,7 @@
     },
     "owner": {
       "edit": "edit this praxis",
-      "submitting": "...",
+      "submitting": "Unsubmitting…",
       "unsubmit": "unsubmit",
       "unsubmitDuelLive": "pull my entry back",
       "confirmPrompt": "Sure? Points & votes will pause.",
@@ -174,7 +174,7 @@
       "reasonGroupLabel": "Flag reason",
       "notePlaceholder": "Add a note (optional)",
       "submit": "Submit flag",
-      "submitting": "...",
+      "submitting": "Submitting…",
       "cancel": "Cancel",
       "error": "Couldn't flag this. Please try again."
     },
@@ -205,7 +205,7 @@
     "composerPlaceholder": "Say something worth keeping…",
     "mentionHint": "@ to mention",
     "post": "Post comment",
-    "posting": "…",
+    "posting": "Posting…",
     "edited": "edited",
     "edit": "edit",
     "delete": "delete",

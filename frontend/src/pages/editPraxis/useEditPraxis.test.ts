@@ -5,7 +5,12 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { updatePraxis } from "../../api/praxis";
-import { draftNeedsTitle, flushEdits, hasUnsavedEdits } from "./useEditPraxis";
+import {
+  draftNeedsTitle,
+  flushEdits,
+  hasUnsavedEdits,
+  selfExcludedPickIds,
+} from "./useEditPraxis";
 // The mode-switch confirm moved out of the hook with the rest of them (#1082)
 // and now returns a whole ConfirmRequest instead of a `window.confirm` string.
 import { modeSwitchConfirm } from "../../components/confirm/composerConfirms";
@@ -173,5 +178,38 @@ describe("modeSwitchConfirm", () => {
       expect(request?.title.trim()).not.toBe("");
       expect(request?.confirmLabel.trim()).not.toBe("");
     }
+  });
+});
+
+/**
+ * Which of the viewer's own lives the invite/opponent picker withholds (#1257).
+ *
+ * The seam under test is the exclusion set that feeds the invite-search filter.
+ * It used to be exactly one id — the life you are carrying — which left every
+ * *other* life on your account offered as a duel opponent, and #1237 blocks
+ * both sides of a duel landing on one account. Selecting one could only 400.
+ */
+describe("selfExcludedPickIds", () => {
+  const roster = new Set([1, 2, 3]);
+
+  it("withholds the whole account roster in duel mode — none of them can be duelled", () => {
+    const excluded = selfExcludedPickIds(1, roster, true);
+    expect(excluded.has(2)).toBe(true);
+    expect(excluded.has(3)).toBe(true);
+  });
+
+  it("withholds only the carried life for a collab invite — inviting your own alt is legal", () => {
+    const excluded = selfExcludedPickIds(1, roster, false);
+    expect(excluded.has(1)).toBe(true);
+    expect(excluded.has(2)).toBe(false);
+    expect(excluded.has(3)).toBe(false);
+  });
+
+  it("still withholds the carried life in duel mode before the roster lands", () => {
+    expect(selfExcludedPickIds(1, new Set(), true).has(1)).toBe(true);
+  });
+
+  it("withholds nothing when nobody is carrying a life and the roster is empty", () => {
+    expect(selfExcludedPickIds(undefined, new Set(), true).size).toBe(0);
   });
 });
