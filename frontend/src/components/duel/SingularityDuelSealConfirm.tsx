@@ -1,5 +1,11 @@
 /**
- * Singularity DESKTOP duel seal-confirm (#723).
+ * Singularity duel seal-confirm (#723).
+ *
+ * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
+ * `DuelSealSheet` centres this terminal in a card on a laptop and lets it BE the
+ * screen on a phone — which is exactly what the twin did, and its whole reason
+ * to exist. The glass, the scanlines and the opponent's spine are `ground`; the
+ * small radius and the hairline frame are `card`.
  *
  * The Default dialog's content re-hung inside the faction's cold green-on-black
  * terminal: near-black ground lifted by two large soft radial glows (phosphor
@@ -53,6 +59,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import DuelSealSheet from './DuelSealSheet'
 
 const GROUND = 'var(--faction-singularity-card-bg)'
 const PHOSPHOR = 'var(--faction-singularity-card-accent)'
@@ -71,12 +78,27 @@ const CREDIT = 'var(--faction-singularity-card-credit)'
 
 /** Hairline rules and panel edges: the accent at low opacity, never a solid. */
 const HAIRLINE = `color-mix(in srgb, ${PHOSPHOR} 22%, transparent)`
+/**
+ * The panel edge, as three longhands: the opponent's spine is `ground` and a
+ * `border` shorthand in `card` would reset it (#1313).
+ */
+const HAIRLINE_EDGE = `1px solid ${HAIRLINE}`
+/** The always-dark scrim — see the ALWAYS-DARK note above. */
+const SCRIM = 'radial-gradient(circle, rgba(2,8,4,0.72), rgba(2,8,4,0.9))'
 /** Translucent green glass — the inner panel that holds the slots. */
 const GLASS = `color-mix(in srgb, ${PHOSPHOR} 5%, transparent)`
 
 /**
  * The two soft radial glows plus the scanline wash, as one background stack.
  * Both glows sit at very low opacity — they lift the black, they do not tint it.
+ *
+ * ONE PAIR OF PERCENTAGES, NOT TWO (#1313). The retired phone twin spread the
+ * same two glows wider and flatter (`70% 40%` / `65% 35%`) because it was
+ * anchoring them to a whole screen rather than to a 460px card. They are
+ * percentages of the painted box either way, so the card values re-scale to the
+ * screen on their own; the twin's numbers were a hand-tuned duplicate of a
+ * calculation CSS already does, and collapsing them loses nothing a viewer can
+ * name.
  */
 const TERMINAL_GROUND = {
   background: GROUND,
@@ -137,124 +159,120 @@ export default function SingularityDuelSealConfirm({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        padding: 'var(--space-lg)',
-        // Explicit near-black, not the theme's scrim: the panel is always-dark,
-        // so a light-mode page must not show through around it.
-        background: 'radial-gradient(circle, rgba(2,8,4,0.72), rgba(2,8,4,0.9))',
+    <DuelSealSheet
+      label={copy.heading}
+      // Explicit near-black, not the theme's scrim: the panel is always-dark,
+      // so a light-mode page must not show through around it.
+      scrim={SCRIM}
+      ground={{
+        ...TERMINAL_GROUND,
+        // The opponent still owns the edge that faces them — a spine on the
+        // card, full-height when the terminal IS the screen.
+        borderLeft: `3px solid ${accent}`,
+        color: PHOSPHOR_DIM,
+        fontFamily: TERMINAL,
+      }}
+      card={{
+        borderRadius: 6,
+        overflow: 'hidden',
+        borderTop: HAIRLINE_EDGE,
+        borderRight: HAIRLINE_EDGE,
+        borderBottom: HAIRLINE_EDGE,
+        boxShadow: `0 0 44px -18px color-mix(in srgb, ${accent} 55%, transparent)`,
       }}
     >
-      <div
-        className="w-full max-w-[460px]"
-        style={{
-          ...TERMINAL_GROUND,
-          borderRadius: 6,
-          overflow: 'hidden',
-          border: `1px solid ${HAIRLINE}`,
-          borderLeft: `3px solid ${accent}`,
-          boxShadow: `0 0 44px -18px color-mix(in srgb, ${accent} 55%, transparent)`,
-          color: PHOSPHOR_DIM,
-          fontFamily: TERMINAL,
-        }}
-      >
-        <div style={{ padding: 'var(--space-lg)' }}>
-          {/* Prompt line — `$` sigil, the heading, and the one blinking cursor. */}
-          <h2
-            style={{
-              fontSize: 'var(--text-title)',
-              color: PHOSPHOR,
-              letterSpacing: '0.02em',
-              ...(copy.danger ? { color: 'var(--color-danger)' } : {}),
-            }}
-          >
-            <span aria-hidden style={{ color: BRAND_BLUE }}>{'$ '}</span>
-            {copy.heading}
-            <BlockCursor />
-          </h2>
+      <div style={{ flex: 1, padding: 'var(--space-lg)' }}>
+        {/* Prompt line — `$` sigil, the heading, and the one blinking cursor. */}
+        <h2
+          style={{
+            fontSize: 'var(--text-title)',
+            color: PHOSPHOR,
+            letterSpacing: '0.02em',
+            ...(copy.danger ? { color: 'var(--color-danger)' } : {}),
+          }}
+        >
+          <span aria-hidden style={{ color: BRAND_BLUE }}>{'$ '}</span>
+          {copy.heading}
+          <BlockCursor />
+        </h2>
 
-          <div
-            aria-hidden
-            style={{ height: 1, background: HAIRLINE, margin: 'var(--space-md) 0' }}
-          />
+        <div
+          aria-hidden
+          style={{ height: 1, background: HAIRLINE, margin: 'var(--space-md) 0' }}
+        />
 
-          {/* NOTICE, not the global red: `--color-danger` reads 4.03:1 on this
-              always-dark chassis in light and this is 18px body copy (#1168).
-              The red survives as the rule beside it, carrying no text — and it
-              stays on the 24px heading above, where a 3:1 floor applies. */}
+        {/* NOTICE, not the global red: `--color-danger` reads 4.03:1 on this
+            always-dark chassis in light and this is 18px body copy (#1168).
+            The red survives as the rule beside it, carrying no text — and it
+            stays on the 24px heading above, where a 3:1 floor applies. */}
+        <p
+          className="content-text"
+          style={{
+            lineHeight: 1.55,
+            color: copy.danger ? NOTICE : PHOSPHOR_DIM,
+            ...(copy.danger
+              ? {
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: '3px solid var(--color-danger)',
+                }
+              : {}),
+          }}
+        >
+          {copy.body}
+        </p>
+
+        {/* The free-reopen half of the truth — the same condition the Default
+            skin uses, because it is a fact about the duel, not a flourish.
+            `copy.note` is null in forfeit mode; there is nothing reassuring
+            left to say, and that silence is the design. */}
+        {copy.note && (
           <p
             className="content-text"
-            style={{
-              lineHeight: 1.55,
-              color: copy.danger ? NOTICE : PHOSPHOR_DIM,
-              ...(copy.danger
-                ? {
-                    paddingLeft: 'var(--space-md)',
-                    borderLeft: '3px solid var(--color-danger)',
-                  }
-                : {}),
-            }}
+            style={{ marginTop: 'var(--space-sm)', color: CREDIT }}
           >
-            {copy.body}
+            <span aria-hidden>{'// '}</span>
+            {copy.note}
           </p>
+        )}
 
-          {/* The free-reopen half of the truth — the same condition the Default
-              skin uses, because it is a fact about the duel, not a flourish.
-              `copy.note` is null in forfeit mode; there is nothing reassuring
-              left to say, and that silence is the design. */}
-          {copy.note && (
-            <p
-              className="content-text"
-              style={{ marginTop: 'var(--space-sm)', color: CREDIT }}
-            >
-              <span aria-hidden>{'// '}</span>
-              {copy.note}
-            </p>
-          )}
-
-          {/* Green glass panel: the stakes pair and the cast roster. */}
-          <div
-            style={{
-              marginTop: 'var(--space-md)',
-              background: GLASS,
-              border: `1px solid ${HAIRLINE}`,
-              borderRadius: 3,
-              padding: 'var(--space-md)',
-            }}
-          >
-            <StakesTiles
-              viewerFactionSlug={me.faction_slug}
-              opponentFactionSlug={foe.faction_slug}
-              opponentName={foe.display_name}
-              taskPointValue={taskPointValue}
-              status={duel.status}
-              theme={theme}
-            />
-            <RaceRoster me={me} foe={foe} theme={theme} />
-          </div>
-
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <SealActions
-              onConfirm={onConfirm}
-              onCancel={onCancel}
-              busy={busy}
-              confirmLabel={copy.confirmLabel}
-              danger={copy.danger}
-              theme={theme}
-            />
-          </div>
-          {/* ponytail: SealActions keeps the shared btn-outline / btn-primary
-              pair rather than growing a terminal-button skin slot, on the same
-              reasoning CovenDuelSealConfirm recorded — the global
-              [Cancel] … [Submit] order (#646) is worth more than a bracketed
-              `[ SEAL ]`, and a skin prop on the shared component is foundation
-              work, not a skin change. */}
+        {/* Green glass panel: the stakes pair and the cast roster. */}
+        <div
+          style={{
+            marginTop: 'var(--space-md)',
+            background: GLASS,
+            border: `1px solid ${HAIRLINE}`,
+            borderRadius: 3,
+            padding: 'var(--space-md)',
+          }}
+        >
+          <StakesTiles
+            viewerFactionSlug={me.faction_slug}
+            opponentFactionSlug={foe.faction_slug}
+            opponentName={foe.display_name}
+            taskPointValue={taskPointValue}
+            status={duel.status}
+            theme={theme}
+          />
+          <RaceRoster me={me} foe={foe} theme={theme} />
         </div>
+
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          <SealActions
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            busy={busy}
+            confirmLabel={copy.confirmLabel}
+            danger={copy.danger}
+            theme={theme}
+          />
+        </div>
+        {/* ponytail: SealActions keeps the shared btn-outline / btn-primary
+            pair rather than growing a terminal-button skin slot, on the same
+            reasoning CovenDuelSealConfirm recorded — the global
+            [Cancel] … [Submit] order (#646) is worth more than a bracketed
+            `[ SEAL ]`, and a skin prop on the shared component is foundation
+            work, not a skin change. */}
       </div>
-    </div>
+    </DuelSealSheet>
   )
 }

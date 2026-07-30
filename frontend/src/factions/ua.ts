@@ -21,7 +21,6 @@ const UaFactionHero = lazyArchetype(() => import('../components/cards/UaFactionH
 const UaFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/UaFactionPage'))
 const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
 const UaHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaHome'))
-const UaMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaMobileDuelSealConfirm'))
 const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
 const UaScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/UaScoreStamp'))
 const UaSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/UaSeal'))
@@ -50,7 +49,6 @@ export const UA_MANIFEST: FactionManifest = {
   feedFrame: () => UaFeedFrame,
   vote: () => UaVote,
   duelSeal: () => UaDuelSealConfirm,
-  mobileDuelSeal: () => UaMobileDuelSealConfirm,
   taskDetail: () => UaTaskDetail,
   praxisDetail: () => UaPraxisDetail,
   editPraxis: () => UaEditPraxis,

@@ -3,9 +3,18 @@
  * applied to the duel SEAL registries.
  *
  * A skin owns the FRAME and may arrange the slots however its faction likes; it
- * may never DROP one and may never recompute one. Both seal registries are
- * walked (plus their Default fallback), so the faction skins that follow Coven
- * fail here the moment one of them loses a slot.
+ * may never DROP one and may never recompute one. The seal registry is walked
+ * (plus its Default fallback) at BOTH form factors, so the faction skins that
+ * follow Coven fail here the moment one of them loses a slot.
+ *
+ * IT USED TO WALK TWO REGISTRIES (#1313). `duelSeal` and `mobileDuelSeal` held
+ * a pair of near-identical files per faction; the seal is one responsive
+ * component now and `DuelSealSheet` owns the only form-factor branch. The
+ * coverage did not shrink with the registry: every skin is rendered at both
+ * widths here instead, which is the same number of assertions against half the
+ * files — and it now also catches a phone shell that drops a slot, which two
+ * separate component lists could never have caught for a faction that only
+ * registered one.
  *
  * The seal skins mount the real `StakesTiles` / `RaceRoster` / `SealActions`, so
  * the assertion is on the anchors those slots leave behind. The game config is
@@ -48,6 +57,15 @@ const CONFIG = {
 
 vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => CONFIG,
+}))
+
+const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
+
+// The harness has no DOM, so `renderToStaticMarkup` always takes
+// `useSyncExternalStore`'s server snapshot ('desktop'). The phone shell is only
+// reachable through this mock (#1313).
+vi.mock('../../../hooks/useFormFactor', () => ({
+  useFormFactor: () => mocks.formFactor,
 }))
 
 const { DefaultDuelSealConfirm } = await import('../DuelSealConfirm')
@@ -101,22 +119,28 @@ describe('duel seal skins render every slot', () => {
   const skins: [string, ComponentType<DuelSealConfirmProps>][] = [
     ['default', DefaultDuelSealConfirm],
     ...Object.entries(surfaceMap('duelSeal')),
-    ...Object.entries(surfaceMap('mobileDuelSeal')).map(
-      ([slug, skin]) => [`${slug} (mobile)`, skin] as [string, ComponentType<DuelSealConfirmProps>],
-    ),
   ]
 
-  // Both modes, every skin (#751). The seal dialog doubles as the forfeit
-  // dialog, so a skin that renders every slot in `submit` and quietly drops one
-  // in `forfeit` — the mode with the irreversible consequence — fails here
-  // rather than in front of a player.
-  const cases: [string, ComponentType<DuelSealConfirmProps>, 'submit' | 'forfeit', DuelDetailOut][] =
-    skins.flatMap(([name, Skin]) => [
-      [name, Skin, 'submit', DUEL] as const,
-      [name, Skin, 'forfeit', SETTLED_DUEL] as const,
-    ])
+  // Both modes and both form factors, every skin (#751, #1313). The seal dialog
+  // doubles as the forfeit dialog, so a skin that renders every slot in `submit`
+  // and quietly drops one in `forfeit` — the mode with the irreversible
+  // consequence — fails here rather than in front of a player.
+  type SlotCase = [
+    string,
+    ComponentType<DuelSealConfirmProps>,
+    'submit' | 'forfeit',
+    DuelDetailOut,
+    'desktop' | 'mobile',
+  ]
+  const cases: SlotCase[] = skins.flatMap(([name, Skin]) =>
+    (['desktop', 'mobile'] as const).flatMap((formFactor): SlotCase[] => [
+      [`${name} (${formFactor})`, Skin, 'submit', DUEL, formFactor],
+      [`${name} (${formFactor})`, Skin, 'forfeit', SETTLED_DUEL, formFactor],
+    ]),
+  )
 
-  it.each(cases)('%s keeps stakes, roster and actions in %s mode', (_name, Skin, mode, duel) => {
+  it.each(cases)('%s keeps stakes, roster and actions in %s mode', (_name, Skin, mode, duel, formFactor) => {
+    mocks.formFactor = formFactor
     const html = renderToStaticMarkup(
       <Skin
         duel={duel}
@@ -160,7 +184,8 @@ describe('duel seal skins render every slot', () => {
 
   it.each(cases)(
     '%s does not sink body copy below the content floor in %s mode',
-    (_name, Skin, mode, duel) => {
+    (_name, Skin, mode, duel, formFactor) => {
+      mocks.formFactor = formFactor
       const html = renderToStaticMarkup(
         <Skin
           duel={duel}
@@ -182,6 +207,7 @@ describe('duel seal skins render every slot', () => {
   // The mode branch itself: each mode must actually SAY its own thing, so a
   // skin can't satisfy the slot walk above by hardcoding the submit copy.
   it.each(skins)('%s speaks the forfeit copy in forfeit mode', (_name, Skin) => {
+    mocks.formFactor = 'desktop'
     const render = (mode: 'submit' | 'forfeit', duel: DuelDetailOut) =>
       renderToStaticMarkup(
         <Skin
