@@ -255,6 +255,57 @@ async def test_list_tasks_exclude_character_id(
 
 
 @pytest.mark.asyncio
+async def test_list_tasks_defaults_exclusion_to_viewer(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """An authenticated browse excludes the viewer's own started tasks without
+    the client passing exclude_character_id (#1229) — anonymous excludes none."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+
+    resp = await client.get("/tasks", headers=auth_headers)
+    assert resp.status_code == 200
+    assert active_task.id not in [t["id"] for t in resp.json()]
+
+    anon_resp = await client.get("/tasks")
+    assert anon_resp.status_code == 200
+    assert active_task.id in [t["id"] for t in anon_resp.json()]
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_explicit_exclusion_beats_viewer_default(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """An explicitly passed exclude_character_id wins over the viewer default,
+    so the viewer's own started task stays visible when another id is named."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+
+    resp = await client.get(
+        "/tasks",
+        params={"exclude_character_id": character2.id},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert active_task.id in [t["id"] for t in resp.json()]
+
+
+@pytest.mark.asyncio
 async def test_propose_task_with_description(
     client: AsyncClient,
     character2: Character,

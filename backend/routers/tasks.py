@@ -52,6 +52,13 @@ async def list_tasks(
     is_admin = account is not None and await account_has_admin_role(
         account.id, session
     )
+    # The viewer is the exclusion default (#1229): the browse hides tasks you
+    # have already started, and the server already knows who you are. Clients
+    # that echoed their own character id back made the page fetch twice — once
+    # before /auth/me settled and once after. An explicit value still wins;
+    # anonymous callers get None, which excludes nothing.
+    if exclude_character_id is None and viewer is not None:
+        exclude_character_id = viewer.id
     tasks = await service_list_tasks(
         session,
         status=status,
