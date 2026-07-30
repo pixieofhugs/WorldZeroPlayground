@@ -90,15 +90,18 @@ export function TaskDetailComments({
   heading?: ReactNode;
   style?: CSSProperties;
 }) {
-  const { task } = state;
+  const { task, comments } = state;
   if (!task || task.status !== "active") return null;
   return (
     <section style={style}>
       {heading}
+      {/* Seeded from the page's own batch (#1281) — the gate above means the
+          thread's effect could never have started this early on its own. */}
       <CommentThread
         target="tasks"
         targetId={task.id}
         showHeading={heading === undefined}
+        seed={comments}
       />
     </section>
   );
