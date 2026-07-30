@@ -475,6 +475,68 @@
   --faction-snide-composer-grain: rgba(20, 17, 11, 0.09); /* the raster */
   --faction-snide-composer-acid-ink: #457000; /* acid that is TEXT, not a line */
 
+  /* ══ S.N.I.D.E. — THE INTERCEPTED SLIP (feed chassis + comment sheet, #1198) ══
+     Design: `Snide Comment + Update Cards.dc.html` — a flyposted xerox slip
+     taped to the wall at half a degree off true, with a near-black intake bar
+     typed across its head, an acid sprocket stripe down its left edge, and the
+     halftone raster over the whole stock.
+
+     THIS FAMILY FLIPS, and here that is a bug fix rather than only a dress
+     choice. §3's "a block whose ink you do not control gets the stock that ink
+     was measured on" (#1118) decides it: the chassis's BODY is faction-blind
+     shared payload (`FeedRowContent`, three companions, the comment editor) and
+     every one of them paints the app's global inks — `--color-text-primary`,
+     `-secondary`, `-tertiary`, `--color-border-strong`. Those flip with the
+     theme, so the stock under them has to flip too. The frame previously painted
+     the theme-INVARIANT `--faction-snide-paper`, which put `#f0e6d0` body copy
+     on `#f4f1e8` paper under [data-theme="dark"] — 1.10:1, the headline of every
+     S.N.I.D.E. feed card invisible at night, with the actor line at 2.92:1.
+
+     ONE PAIRING STILL DOES NOT CLEAR AA, and it is not reachable from here:
+     `--color-danger` measures 4.28:1 on this stock (it is 4.75 on the na sheet,
+     3.98 on UA's cream, and was 3.90 on the invariant black card this replaces,
+     so the move is an improvement rather than a regression). It is painted by
+     `OwnerControls`, `ComposerControls` and `CommentFlagControl`, none of which
+     takes an ink prop — §3's #1153 case: a missing seam, not a missing
+     measurement. If that seam is ever added, the slip needs its own
+     `-slip-alarm`; `-card-notice`/`-card-credit` are measured on `-card-bg`.
+
+     So this is a THIRD flipping S.N.I.D.E. stock beside `-note-*` (the task
+     card's clipping) and `-composer-*` (the edit-praxis sheet), declared rather
+     than borrowed for #1181's reason: same values today, a different surface's
+     contract tomorrow, and reading another surface's token here is the
+     "tokenized-looking, not tokenized" failure that passes every lint gate.
+
+     WHAT IS NOT HERE, deliberately. Type on the intake bar and type on an acid
+     ground both read THE PRESS's theme-invariant constants at the head of this
+     faction's block — `--faction-snide-paper` on the bar (16.68:1 light,
+     17.82:1 dark) and `--faction-snide-ink` on acid (15.55:1) — exactly as
+     SnideEditPraxis's PRESS_PAPER / PRESS_INK do. Minting slip-local synonyms
+     for those would be a second name for one pigment.
+
+     TWO INKS ARE WALKED DOWN, both for the same reason the composer walked its
+     acid: acid and hot pink are POSTER COLOURS, not inks. On the light stock
+     `#b6ff2e` measures 1.35:1 and `#ff2d8b` 3.10:1. Both keep their bright
+     value everywhere they are a DRAWN THING — the sprocket stripe, the rule
+     under the bar, the filled submit button, the ransom letter tiles. */
+  --faction-snide-slip-paper: #f4f1e8; /* the slip's stock (FLIPS) */
+  --faction-snide-slip-ink: #14110b; /* type on that stock (FLIPS) — 16.68:1 */
+  --faction-snide-slip-muted: #5f5c50; /* byline, timestamp, meta — 5.93:1 */
+  --faction-snide-slip-faint: #6e6b5d; /* character count, hint — 4.74:1 */
+  --faction-snide-slip-field: #eae6d8; /* an input, a shade off the stock */
+  --faction-snide-slip-rule: rgba(20, 17, 11, 0.28); /* a drawn hairline */
+  --faction-snide-slip-grain: rgba(20, 17, 11, 0.06); /* the xerox raster */
+  /* The intake bar. Near-black in BOTH themes — it is over-inked, not a shade of
+     the stock — which is why it needs the acid rule at its foot to read as a
+     band at all once the stock goes dark too. */
+  --faction-snide-slip-bar: #14110b;
+  --faction-snide-slip-acid-ink: #457000; /* acid that is TEXT — 5.21:1 */
+  --faction-snide-slip-pink-ink: #be185d; /* pink that is TEXT — 5.35:1 */
+  --faction-snide-slip-shadow: 3px 4px 0 rgba(20, 17, 11, 0.3); /* printed, no blur */
+  /* The drop under a single cut-out ransom scrap — a colour, not a whole shadow,
+     because the scrap's offset is its own (1.5/2.5) and not the slip's. */
+  --faction-snide-slip-scrap-shadow: rgba(20, 17, 11, 0.4);
+
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
@@ -1557,6 +1619,31 @@
   --faction-snide-composer-bar: #080706;
   --faction-snide-composer-grain: rgba(244, 241, 232, 0.07);
   --faction-snide-composer-acid-ink: #b6ff2e;
+
+  /* ── The intercepted slip, lights out (#1198) ──
+     The stock and its type SWAP, as the clipping's and the sheet's do. The intake
+     bar goes a shade BELOW the stock rather than above it, for the same reason
+     the composer's redaction does — an over-inked band is the darkest thing on
+     the sheet, and lifting it to white would turn the card's own header into a
+     highlighter. That leaves the bar only 1.4:1 against the stock, so the acid
+     rule at its foot is what draws the band here; it is structure, not garnish.
+     Acid and pink become text-safe on this ground and both take their bright
+     pigment back. Measured on the dark stock: ink 16.68:1, muted 11.79:1,
+     faint 5.93:1, acid-ink 15.55:1, pink-ink 7.06:1. The shared body's global
+     inks land at primary 15.19:1, secondary 5.70:1, tertiary 6.29:1 — the
+     pairings the previous invariant stock broke (1.10:1 and 2.92:1). */
+  --faction-snide-slip-paper: #14110b;
+  --faction-snide-slip-ink: #f4f1e8;
+  --faction-snide-slip-muted: #cfcdbf;
+  --faction-snide-slip-faint: #94917f;
+  --faction-snide-slip-field: #1e1a12;
+  --faction-snide-slip-rule: rgba(244, 241, 232, 0.32);
+  --faction-snide-slip-grain: rgba(244, 241, 232, 0.07);
+  --faction-snide-slip-bar: #080706;
+  --faction-snide-slip-acid-ink: #b6ff2e;
+  --faction-snide-slip-pink-ink: #ff69ac;
+  --faction-snide-slip-shadow: 3px 4px 0 rgba(0, 0, 0, 0.6);
+  --faction-snide-slip-scrap-shadow: rgba(0, 0, 0, 0.6);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── Singularity terminal session, lights out (#1023) ──
