@@ -9,6 +9,7 @@ import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 import { useEditCharacter, type EditCharacterState } from './characterPaths/useEditCharacter'
+import PortraitPicker from './characterPaths/PortraitPicker'
 import DefaultEditCharacter from './characterPaths/mobileArchetypes/DefaultEditCharacter'
 
 /**
@@ -103,6 +104,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     setBio,
     location,
     setLocation,
+    avatarFile,
     avatarPreview,
     avatarSource,
     setAvatarSource,
@@ -222,14 +224,16 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
               <label className="font-body text-sm font-bold" style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
                 {t('editCharacter.avatarLabel')}
               </label>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
+              {/* The picker owns the hidden input and the readout (#1149). On this
+                  screen there may already be a saved portrait, so "nothing new
+                  chosen" reads as keeping it rather than as having none. */}
+              <PortraitPicker
+                inputRef={fileRef}
                 onChange={handleAvatarChange}
-                className="font-body text-sm"
+                chosenFile={avatarFile}
+                hasCurrentPortrait={Boolean(character.avatar_url)}
+                error={avatarError}
               />
-              {avatarError && <p className="font-body content-text text-red-600 mt-1">{avatarError}</p>}
               <p style={avatarHintStyle}>{t('editCharacter.avatarHint', { initial })}</p>
             </div>
           </div>

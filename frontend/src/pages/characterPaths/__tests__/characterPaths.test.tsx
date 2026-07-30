@@ -52,6 +52,7 @@ function createState(overrides: Partial<CreateCharacterState>): CreateCharacterS
     factionSlug: '',
     setFactionSlug: () => {},
     invited: [],
+    avatarFile: null,
     avatarPreview: null,
     avatarSource: null,
     setAvatarSource: () => {},
