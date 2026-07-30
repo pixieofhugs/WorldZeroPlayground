@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
@@ -42,9 +42,11 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_COLLAB_INVITE,
     FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
     FEED_ITEM_TYPE_COMMENT_MENTION,
+    FEED_ITEM_TYPE_DUEL_CHALLENGE,
     FEED_ITEM_TYPE_FRIEND_COMPLETION,
     FEED_ITEM_TYPE_FRIEND_SIGNUP,
     FEED_ITEM_TYPE_GLOBAL_TASK,
+    FEED_ITEM_TYPE_NUDGE,
     FEED_ITEM_TYPES,
     ITEM_KEY_SEPARATOR,
 )
@@ -52,6 +54,8 @@ from services.activity_feed import (
 ALL_FILTER = "all"
 FRIENDS_FILTER = "friends"
 FOES_FILTER = "foes"
+YOUR_STUFF_FILTER = "your_stuff"
+GLOBAL_FILTER = "global"
 REQUESTS_FILTER = "requests"
 
 # Item counts per tab for the ``full_feed`` seed, derived by hand from the
@@ -61,9 +65,20 @@ SEEDED_ITEM_COUNTS = {
     ALL_FILTER: 15,
     FRIENDS_FILTER: 3,
     FOES_FILTER: 2,
-    "your_stuff": 8,
-    "global": 2,
+    YOUR_STUFF_FILTER: 8,
+    GLOBAL_FILTER: 2,
     REQUESTS_FILTER: 3,
+}
+
+# Which key in ``counts`` carries which tab's badge — ``global`` is the one the
+# schema had to rename (``global_count``) around the Python keyword.
+COUNT_KEYS = {
+    ALL_FILTER: "all",
+    FRIENDS_FILTER: "friends",
+    FOES_FILTER: "foes",
+    YOUR_STUFF_FILTER: "your_stuff",
+    GLOBAL_FILTER: "global_count",
+    REQUESTS_FILTER: "requests",
 }
 
 
@@ -221,14 +236,13 @@ async def full_feed(
     )
     db_session.add(challenger_praxis)
     await db_session.flush()
-    db_session.add(
-        Duel(
-            task_id=active_task.id,
-            challenger_praxis_id=challenger_praxis.id,
-            opponent_character_id=character.id,
-            status=DuelStatus.pending,
-        )
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_praxis.id,
+        opponent_character_id=character.id,
+        status=DuelStatus.pending,
     )
+    db_session.add(duel)
 
     # --- invitation_letter + friend_defection --------------------------------
     db_session.add_all(
@@ -247,7 +261,10 @@ async def full_feed(
 
     return {
         "collab_invite_id": collab_invite.id,
+        "collab_praxis_id": collab_praxis.id,
+        "viewer_member_id": viewer_member.id,
         "friend_member_id": friend_member.id,
+        "duel_id": duel.id,
         "task_id": active_task.id,
     }
 
@@ -658,3 +675,164 @@ async def test_restore_all_can_be_scoped_to_one_filter(
 
     friends = await _feed(client, auth_headers, FRIENDS_FILTER)
     assert friends["items"] == []
+
+
+# ---------------------------------------------------------------------------
+# 6. Stale rows leave the LIVE feed — read-time only, never a write (#1301)
+#
+# Two halves of one rule: a feed item is derived from a source row, so "this
+# stopped being relevant" is a property of that row and belongs in the source's
+# WHERE. Nothing here writes `feed_dismissal` — ADR-0065 keeps the archive
+# player-owned, and every assertion below holds with an empty archive.
+# ---------------------------------------------------------------------------
+
+async def _resolve_the_requests(db_session: AsyncSession, full_feed: dict) -> None:
+    """Answer both requests: the invite accepted, the challenge accepted."""
+    await db_session.execute(
+        update(PraxisInvite)
+        .where(PraxisInvite.id == full_feed["collab_invite_id"])
+        .values(status=PraxisInviteStatus.accepted)
+    )
+    await db_session.execute(
+        update(Duel)
+        .where(Duel.id == full_feed["duel_id"])
+        .values(status=DuelStatus.active)
+    )
+    await db_session.commit()
+
+
+@pytest.mark.asyncio
+async def test_a_nudge_retires_when_the_recipient_files(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """The nudge dies with the obligation it names, not with the praxis.
+
+    The collab stays `in_progress` for everyone else — the collab case is
+    exactly where the praxis status alone is not enough, so the predicate has to
+    read the viewer's own member row the way `awaiting_submission` does.
+    """
+    before = await _feed(client, auth_headers)
+    assert FEED_ITEM_TYPE_NUDGE in {item["type"] for item in before["items"]}
+
+    await db_session.execute(
+        update(PraxisMember)
+        .where(PraxisMember.id == full_feed["viewer_member_id"])
+        .values(has_submitted=True, submitted_at=datetime.now(timezone.utc))
+    )
+    await db_session.commit()
+
+    praxis = (
+        await db_session.execute(
+            select(Praxis).where(Praxis.id == full_feed["collab_praxis_id"])
+        )
+    ).scalar_one()
+    assert praxis.status == PraxisStatus.in_progress
+
+    after = await _feed(client, auth_headers)
+    types = [item["type"] for item in after["items"]]
+    assert FEED_ITEM_TYPE_NUDGE not in types
+    assert FEED_ITEM_TYPE_AWAITING_SUBMISSION not in types
+    # The badge is a separate path; a stale nudge inflates a number too.
+    assert after["counts"]["all"] == before["counts"]["all"] - 2
+    assert after["counts"]["your_stuff"] == before["counts"]["your_stuff"] - 2
+
+
+@pytest.mark.asyncio
+async def test_a_nudge_retires_when_the_praxis_is_published(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """The other half of the predicate, isolated.
+
+    The viewer's member row is still unfiled here, so only the praxis status can
+    retire this one — a published collab owes nobody anything, whatever its
+    member rows say.
+    """
+    await db_session.execute(
+        update(Praxis)
+        .where(Praxis.id == full_feed["collab_praxis_id"])
+        .values(status=PraxisStatus.submitted)
+    )
+    await db_session.commit()
+
+    after = await _feed(client, auth_headers)
+    assert FEED_ITEM_TYPE_NUDGE not in {item["type"] for item in after["items"]}
+
+
+@pytest.mark.asyncio
+async def test_a_resolved_request_leaves_every_live_tab(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """`pending_invites_only` is a live-feed axis, not a per-tab one.
+
+    Knowingly: the duel challenge moves with the invite — one flag governs both
+    queries, and a resolved challenge is as stale as a resolved invite.
+    """
+    await _resolve_the_requests(db_session, full_feed)
+
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER, REQUESTS_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = [item["type"] for item in feed["items"]]
+        assert FEED_ITEM_TYPE_COLLAB_INVITE not in types, tab
+        assert FEED_ITEM_TYPE_DUEL_CHALLENGE not in types, tab
+
+
+@pytest.mark.asyncio
+async def test_badge_counts_match_the_list_on_every_tab(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """The trap: items and counts were built from different predicates.
+
+    Once the live feed is pending-only, a badge reading 5 over a list of 3 is
+    the failure mode. Checked on every tab, with two resolved requests present.
+    """
+    await _resolve_the_requests(db_session, full_feed)
+
+    for tab, count_key in COUNT_KEYS.items():
+        feed = await _feed(client, auth_headers, tab)
+        assert feed["counts"][count_key] == len(feed["items"]), tab
+
+    # ...and the badges keep describing the LIVE feed from inside the archive.
+    live = await _feed(client, auth_headers)
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    assert archived["counts"] == live["counts"]
+
+
+@pytest.mark.asyncio
+async def test_an_archived_request_stays_archived_after_it_is_answered(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """The stranding guard: the Archived tab keeps showing every status.
+
+    A player archives a pending invite, then answers it elsewhere. Nothing else
+    lists it, so the archive must not window itself to pending.
+    """
+    before = await _feed(client, auth_headers)
+    invite_key = _key_of(before, FEED_ITEM_TYPE_COLLAB_INVITE)
+    duel_key = _key_of(before, FEED_ITEM_TYPE_DUEL_CHALLENGE)
+    for key in (invite_key, duel_key):
+        response = await client.post(
+            "/activity-feed/dismiss", json={"item_key": key}, headers=auth_headers
+        )
+        assert response.status_code == 200, response.text
+
+    await _resolve_the_requests(db_session, full_feed)
+
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    archived_keys = [item["item_key"] for item in archived["items"]]
+    assert invite_key in archived_keys
+    assert duel_key in archived_keys
