@@ -132,7 +132,7 @@
     "fallbackName": "Wanderer",
     "credential": "credential",
     "unaffiliated": "unaffiliated",
-    "uploadTitle": "Drag a photo here, or click to upload",
+    "uploadTitle": "Click to upload a photo",
     "blankPassport": "A blank passport, waiting for its first stamp.",
     "factionToBeChosen": "— faction to be chosen —",
     "lvl": "lvl {{level}}",
