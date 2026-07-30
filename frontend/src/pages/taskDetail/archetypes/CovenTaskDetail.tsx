@@ -456,7 +456,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             {!levelJumpSignup && (
               <>
                 {" · "}
-                <span style={{ color: DEEP }}>
+                {/* The action cell is an `innerBox`, i.e. the ward PAGE ground
+                    inside the panel — so this emphasis takes INK (#1295). */}
+                <span style={{ color: INK }}>
                   {t("detail.signup.levelMet", { level: task.level_required })}
                 </span>
               </>
@@ -601,7 +603,10 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         {/* One crumb, not two: the trail read `TASKS / Task №{id}` until #1124
             retired the task id, and the id WAS the second crumb, so the
             separator went with it rather than dangling. */}
-        <Link to="/tasks" style={{ ...eyebrow, color: DEEP, textDecoration: "none" }}>
+        {/* INK, not DEEP (#1295): the crumb sits on the ward PAGE, the one
+            ground `slip-deep` misses — 4.44:1 flat, 3.47:1 under the peak of
+            the pink haze bloom, against a 4.5 floor at eyebrow size. */}
+        <Link to="/tasks" style={{ ...eyebrow, color: INK, textDecoration: "none" }}>
           {t("detail.breadcrumb.tasks")}
         </Link>
       </nav>
@@ -882,7 +887,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 fontFamily: DISPLAY,
                 fontWeight: 600,
                 fontSize: "var(--text-content)",
-                color: DEEP,
+                // The gallery is unpanelled, so this control sits on the ward
+                // PAGE and takes INK rather than DEEP (#1295).
+                color: INK,
               }}
             >
               {showAllPraxis
