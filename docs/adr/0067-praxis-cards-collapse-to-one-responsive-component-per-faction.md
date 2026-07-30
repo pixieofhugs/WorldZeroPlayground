@@ -6,6 +6,10 @@
 supersedes for one more surface)
 **Supersedes ADR-0035 for praxis cards** — ADR-0035 stands for every other mobile
 surface; only the praxis-card surface is unified here.
+**Superseded in part by ADR-0069** — the Consequences section below names the
+profile and the duel seal as keeping their distinct mobile archetypes. Both were
+collapsed on 2026-07-30. The reasoning here stands as written; only that
+inventory has moved on.
 
 ## Context
 
