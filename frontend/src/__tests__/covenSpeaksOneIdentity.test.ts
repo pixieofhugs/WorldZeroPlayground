@@ -94,9 +94,14 @@ describe('Cozy Coven wears one identity (#1209)', () => {
       /--faction-coven-(slip|ward)-|cards\/covenSlip/.test(stripComments(readFileSync(path, 'utf8'))),
     )
     // The reference implementations (task card, task detail, praxis detail,
-    // comment voice, feed frame, composer) plus the twelve swept surfaces and
-    // the kit itself. A floor, not a census — it only has to fail if the sweep
-    // is reverted or the kit is orphaned.
-    expect(readers.length).toBeGreaterThanOrEqual(17)
+    // comment voice, feed frame, composer) plus the swept surfaces and the kit
+    // itself. A floor, not a census — it only has to fail if the sweep is
+    // reverted or the kit is orphaned.
+    //
+    // 17 the day #1209 landed, 16 since #1313: retiring the `mobileDuelSeal`
+    // SURFACE deleted `CovenMobileDuelSealConfirm`, which was one of these
+    // readers. The sweep did not shrink — one file dresses the seal at both form
+    // factors now — so the floor drops by exactly the file that went, no more.
+    expect(readers.length).toBeGreaterThanOrEqual(16)
   })
 })

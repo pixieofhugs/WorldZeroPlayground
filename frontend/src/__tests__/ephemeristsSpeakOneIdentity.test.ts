@@ -75,9 +75,15 @@ describe('the Ephemerists wear one identity (#1208)', () => {
     )
     // The reference implementations (task card, task detail, praxis detail,
     // praxis card, score stamp, vote, seal, comment voice, feed frame) plus the
-    // swept surfaces and the kit itself — 18 files the day the sweep landed. A
-    // floor, not a census: it only has to fail if the sweep is reverted or the
-    // kit is orphaned, so it does not move when a surface is added or retired.
-    expect(readers.length).toBeGreaterThanOrEqual(18)
+    // swept surfaces and the kit itself — 18 files the day the sweep landed, 17
+    // since #1313. A floor, not a census: it only has to fail if the sweep is
+    // reverted or the kit is orphaned.
+    //
+    // It DOES move when a surface is RETIRED, which the previous wording denied:
+    // #1313 deleted `EphemeristsMobileDuelSealConfirm` along with the
+    // `mobileDuelSeal` surface, and that file was one of these readers. One file
+    // dresses the seal at both form factors now, so the floor drops by exactly
+    // the one that went, and by no more.
+    expect(readers.length).toBeGreaterThanOrEqual(17)
   })
 })
