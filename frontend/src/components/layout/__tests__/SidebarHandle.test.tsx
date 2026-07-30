@@ -7,19 +7,12 @@
  * reach assistive tech through the button's accessible name — that is what is
  * pinned here.
  *
- * `usePendingRequests` is mocked because it resolves in an effect, and this
- * harness is `renderToStaticMarkup`: effects never run, so a real one would
- * always report zero.
+ * The count arrives as a prop: `SidebarColumn` reads it once and shares it with
+ * the rail, so folding does not cost a second `limit: 100` fetch (#1343).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
-import type { ActivityFeedItem } from '../../../api/activityFeed'
-
-const pendingMock = vi.fn()
-vi.mock('../../../hooks/usePendingRequests', () => ({
-  usePendingRequests: () => ({ pendingRequests: pendingMock(), loading: false, refetch: () => {} }),
-}))
 
 vi.mock('../Sidebar', () => ({ default: () => null, panelStyle: {} }))
 
@@ -27,13 +20,10 @@ import SidebarHandle from '../SidebarHandle'
 
 const noop = () => {}
 
-function requests(count: number): ActivityFeedItem[] {
-  return Array.from({ length: count }) as ActivityFeedItem[]
-}
-
 function render(collapsed: boolean, pending: number): string {
-  pendingMock.mockReturnValue(requests(pending))
-  return renderToStaticMarkup(<SidebarHandle collapsed={collapsed} onToggle={noop} />)
+  return renderToStaticMarkup(
+    <SidebarHandle collapsed={collapsed} onToggle={noop} pendingCount={pending} />,
+  )
 }
 
 describe('SidebarHandle — collapsed pending badge', () => {

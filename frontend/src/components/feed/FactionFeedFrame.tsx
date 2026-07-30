@@ -11,6 +11,13 @@
  * which every design sheet puts on the chassis. The contract is now
  * {@link FeedFrameProps}; read its docblock before writing a faction skin.
  * Nothing may be written against the old `{ children }` shape.
+ *
+ * THERE IS NO `DefaultFeedFrame.tsx`, AND THAT IS NOT A GAP. `DefaultFeedFrame`
+ * is defined below rather than registered as a skin, so a listing of the feed
+ * frames shows only the factions that override it. It stays here on purpose: the
+ * dispatcher special-cases it by IDENTITY (`Frame === DefaultFeedFrame`) to hand
+ * it the slug the faction frames do not take, and that check is only readable
+ * next to the thing it compares against.
  */
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'

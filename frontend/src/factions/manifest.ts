@@ -13,6 +13,15 @@
  * everywhere, including on surfaces that do not exist yet. Partial registration
  * is the normal case, not a degraded one.
  *
+ * `Default*` NAMES AN ARCHETYPE, NOT NECESSARILY A FILE. Three surfaces carry
+ * their na rendering inside the dispatcher instead of in a skin module:
+ * `avatar` (`DefaultAvatar`, in `FactionAvatar.tsx`), `feedFrame`
+ * (`DefaultFeedFrame`, in `FactionFeedFrame.tsx`) and `backdrop` (which falls
+ * back to the site's own `WatercolorBackground`). Counting skin files therefore
+ * UNDERCOUNTS those three by one each — every slug is still served. Read an
+ * absent `Default*.tsx` as "co-located with its dispatcher", never as a hole in
+ * the na kit.
+ *
  * Adding a faction: one new module here, one line in `./index.ts`. Adding a
  * SURFACE: one field here, one entry in `SURFACE_KEYS`, and the dispatcher calls
  * `surfaceMap('<key>')` instead of declaring its own map.

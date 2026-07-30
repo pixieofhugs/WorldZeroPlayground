@@ -12,6 +12,11 @@ import DefaultSigil from '../cards/DefaultSigil'
  * the UNAFFILIATED / no-faction (`na`) skin (#418): the portrait/monogram inside
  * a thin spectrum ring, tagged with the spectrum sigil — every path still open.
  * All colours via --faction-default-* tokens; flips light/dark.
+ *
+ * THERE IS NO `DefaultAvatar.tsx`, AND THAT IS NOT A GAP. `DefaultAvatar` is
+ * defined in this file rather than registered as a skin, so a listing of the
+ * avatar skins shows only the factions that override it. The na kit is complete;
+ * it just lives here.
  */
 export interface FactionAvatarProps {
   character: CharacterOut

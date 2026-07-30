@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { usePendingRequests } from '../../hooks/usePendingRequests'
 import { panelStyle } from './Sidebar'
 
 /**
@@ -42,11 +41,10 @@ function HandleButton({
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      // Collapsed means the rail is UNMOUNTED, so a kept `aria-controls` would
-      // name an id that is not on the page — an axe `aria-valid-attr-value`
-      // failure and a dead reference for a screen reader to follow.
-      // `aria-expanded` carries the state on its own.
-      aria-controls={expanded ? 'wz-sidebar' : undefined}
+      // The rail stays on the page in both states (#1343), so this is a textbook
+      // disclosure: `aria-controls` always resolves to a real id and
+      // `aria-expanded` says whether that region is showing.
+      aria-controls="wz-sidebar"
       aria-label={label}
       title={label}
       className="flex flex-col items-center gap-1 w-8 mb-4"
@@ -59,20 +57,24 @@ function HandleButton({
 }
 
 /**
- * The collapsed handle owns the pending-request read, and is mounted ONLY while
- * collapsed — so there is never a second `limit: 100` fetch racing the expanded
- * `Sidebar`'s own one. The count has to live here rather than in a badge-only
- * child because it must reach assistive tech through the BUTTON's accessible
- * name; the badge itself is decorative and `aria-hidden`, exactly as the mobile
- * bell's is.
+ * The collapsed handle carries the pending-request count, because folding the
+ * rail away would otherwise silently hide incoming collab invites and duel
+ * challenges — the sidebar panel is their only desktop surface. The count
+ * reaches assistive tech through the BUTTON's accessible name; the badge itself
+ * is decorative and `aria-hidden`, exactly as the mobile bell's is.
  *
- * Without this, folding the rail away would silently hide incoming collab
- * invites and duel challenges — the sidebar panel is their only desktop surface.
+ * The count is a PROP, read once by `SidebarColumn` and shared with the rail
+ * (#1343): a second `usePendingRequests()` here would be a second `limit: 100`
+ * fetch racing the rail's own, now that the rail stays mounted while collapsed.
  */
-function CollapsedHandle({ onToggle }: { readonly onToggle: () => void }) {
+function CollapsedHandle({
+  onToggle,
+  pendingCount,
+}: {
+  readonly onToggle: () => void
+  readonly pendingCount: number
+}) {
   const { t } = useTranslation('common')
-  const { pendingRequests } = usePendingRequests()
-  const pendingCount = pendingRequests.length
 
   return (
     <HandleButton
@@ -111,13 +113,16 @@ function CollapsedHandle({ onToggle }: { readonly onToggle: () => void }) {
 export default function SidebarHandle({
   collapsed,
   onToggle,
+  pendingCount,
 }: {
   readonly collapsed: boolean
   readonly onToggle: () => void
+  /** Pending collab invites + duel challenges; badged only while collapsed. */
+  readonly pendingCount: number
 }) {
   const { t } = useTranslation('common')
 
-  if (collapsed) return <CollapsedHandle onToggle={onToggle} />
+  if (collapsed) return <CollapsedHandle onToggle={onToggle} pendingCount={pendingCount} />
 
   return (
     <HandleButton
