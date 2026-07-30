@@ -262,6 +262,18 @@ describe('FeedRowContent', () => {
     expect(covenHtml).not.toContain('var(--faction-default-rainbow-conic)')
   })
 
+  // #1269: the row's THREE faction paints — actor ink, monogram disc, headline
+  // rule — must every one of them be a cascade lookup. The disc was the holdout:
+  // it interpolated a JS hex (`${accent}, ${accent}88`), so it could neither
+  // follow the [data-theme="dark"] lift nor be checked against index.css. UA is
+  // the slug that proved it — its JS literal was #c2541f, the na spectrum's
+  // orange, while --faction-ua is #c24a18.
+  it('paints every faction accent from the cascade, never a JS hex (#1269)', () => {
+    const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('ua')} avatarUrl={null} /></MemoryRouter>)
+    expect(html).toContain('var(--faction-ua)')
+    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+  })
+
   // #983: the headline rule read grey for `na` only because it was written as a
   // `border`, which is a scalar and so can never hold a gradient. Drawn as a
   // filled bar it is a fill, and ADR-0039 gives it the spectrum unamended.
