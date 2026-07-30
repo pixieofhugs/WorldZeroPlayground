@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import Select, delete, func, select
+from sqlalchemy import Select, and_, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
@@ -148,9 +148,14 @@ COMMENT_EXCERPT_LENGTH = 140
 class FeedContext:
     """Everything a source's query needs, resolved once in the pre-fetch phase.
 
-    ``pending_invites_only`` is the sole per-request axis: the ``requests`` tab
-    windows collab invites / duel challenges to pending only; every other tab
-    (and the your_stuff / all counts) sees every status.
+    ``pending_invites_only`` is the sole per-request axis, and it is a
+    **live-feed** axis, not a per-tab one (#1301): every live tab windows collab
+    invites / duel challenges to pending, because an answered request is not
+    news — it is a thing that already happened, and leaving it on a live tab
+    draws a card about a decision nobody has to make. Only the Archived view
+    sets it False, so an item a player put away while it was pending is still
+    listed after it resolves; nothing else lists it, so hiding it there would
+    strand it.
     """
     character_id: int
     friend_ids: tuple[int, ...]
@@ -855,6 +860,16 @@ def _nudge_query(ctx: FeedContext) -> Select:
     ``Nudge.praxis_id`` is always the praxis the RECIPIENT owes, so the join to
     ``Praxis``/``Task`` gives the card a title and a link the recipient can
     actually open — their own editor.
+
+    A nudge is about an **obligation**, so it lives exactly as long as one: the
+    predicate below is ``_awaiting_submission_query``'s, read through the
+    recipient's own member row (#1301). Both halves are load-bearing and neither
+    subsumes the other — a collab stays ``in_progress`` while the group waits on
+    somebody else, which is precisely when *this* member's nudge stops applying;
+    and a member row can sit unfiled on a praxis that has since been published,
+    which owes nobody anything. It is also the read-time mirror of what
+    ``send_nudge`` checks at write time, so a nudge that could not be sent today
+    cannot still be on screen from yesterday.
     """
     sender = aliased(Character)
     query = (
@@ -874,7 +889,21 @@ def _nudge_query(ctx: FeedContext) -> Select:
         .join(Praxis, Nudge.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
         .join(sender, Nudge.from_character_id == sender.id)
-        .where(Nudge.to_character_id == ctx.character_id)
+        # The recipient's own member row on the nudged praxis. An INNER join, so
+        # a nudge whose recipient is no longer a member of that praxis retires
+        # with the membership — there is nothing left for them to owe.
+        .join(
+            PraxisMember,
+            and_(
+                PraxisMember.praxis_id == Nudge.praxis_id,
+                PraxisMember.character_id == Nudge.to_character_id,
+            ),
+        )
+        .where(
+            Nudge.to_character_id == ctx.character_id,
+            PraxisMember.has_submitted.is_(False),
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+        )
     )
     if ctx.before is not None:
         query = query.where(Nudge.created_at < ctx.before)
@@ -1194,52 +1223,38 @@ def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
 
 async def _compute_counts(
     count_ctx: FeedContext,
-    count_ctx_requests: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
 ) -> FeedCountsDC:
     """Badge counts, each derived from its source's own query (ADR-0036).
 
-    Every tab but ``requests`` sees all statuses (``count_ctx``); the
-    ``requests`` tab windows collab invites / duel challenges to pending only
-    (``count_ctx_requests``) — matching what that tab's fan-out returns.
-
     The six badges always count the **live** feed, never the archive: they are
     the sidebar's "what's waiting for you" numbers, and they stay truthful while
     the player is reading the Archived tab. Hence the forced
     ``archived_only=False`` — the caller's view flips the item fan-out, not the
-    badges.
+    badges — and hence the single context: the live feed windows requests to
+    pending on *every* tab (#1301), so one fan-out now answers all six badges.
+    Counting all statuses here while the tabs showed only pending is precisely
+    the drift ADR-0036 exists to prevent: a badge reading 5 over a list of 3.
     """
     live_view = replace(archive_view, archived_only=False)
-    requests_sources = [s for s in FEED_SOURCES if FILTER_REQUESTS in s.filters]
 
-    normal_results, requests_results = await asyncio.gather(
-        asyncio.gather(*(
-            _run_source_count(source, count_ctx, live_view, session_factory)
-            for source in FEED_SOURCES
-        )),
-        asyncio.gather(*(
-            _run_source_count(source, count_ctx_requests, live_view, session_factory)
-            for source in requests_sources
-        )),
-    )
-
-    normal_counts = {
+    results = await asyncio.gather(*(
+        _run_source_count(source, count_ctx, live_view, session_factory)
+        for source in FEED_SOURCES
+    ))
+    counts_by_type = {
         source.item_type: count
-        for source, count in zip(FEED_SOURCES, normal_results)
-    }
-    requests_counts = {
-        source.item_type: count
-        for source, count in zip(requests_sources, requests_results)
+        for source, count in zip(FEED_SOURCES, results)
     }
 
     return FeedCountsDC(
-        all=_sum_counts_for_tab(FILTER_ALL, normal_counts),
-        friends=_sum_counts_for_tab(FILTER_FRIENDS, normal_counts),
-        foes=_sum_counts_for_tab(FILTER_FOES, normal_counts),
-        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, normal_counts),
-        global_count=_sum_counts_for_tab(FILTER_GLOBAL, normal_counts),
-        requests=_sum_counts_for_tab(FILTER_REQUESTS, requests_counts),
+        all=_sum_counts_for_tab(FILTER_ALL, counts_by_type),
+        friends=_sum_counts_for_tab(FILTER_FRIENDS, counts_by_type),
+        foes=_sum_counts_for_tab(FILTER_FOES, counts_by_type),
+        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, counts_by_type),
+        global_count=_sum_counts_for_tab(FILTER_GLOBAL, counts_by_type),
+        requests=_sum_counts_for_tab(FILTER_REQUESTS, counts_by_type),
     )
 
 
@@ -1278,10 +1293,12 @@ async def get_activity_feed(
         if archived
         else FILTER_QUERIES.get(active_filter, FILTER_QUERIES[FILTER_ALL])
     )
-    # The ``requests`` window (pending invites/duels only) is a live-feed rule.
-    # An archived invite that was since declined is still archived, and hiding it
-    # would strand it: nothing else lists it.
-    is_requests_filter = active_filter == FILTER_REQUESTS and not archived
+    # The pending window (invites / duel challenges) is a live-feed rule, on
+    # every tab and not just ``requests`` (#1301): a request that has been
+    # answered is no longer news anywhere. An archived invite that was since
+    # declined is still archived, and hiding it would strand it — nothing else
+    # lists it — so the Archived view alone keeps showing every status.
+    live_feed = not archived
 
     # Pre-fetch relationship / task / era context. Badge counts span every tab
     # regardless of the active filter, so all context is loaded up front.
@@ -1298,28 +1315,12 @@ async def get_activity_feed(
         my_task_ids=my_task_ids,
         era_id=era_row.id,
         before=before_cursor,
-        pending_invites_only=is_requests_filter,
+        pending_invites_only=live_feed,
     )
-    # Counts always report every tab. The ``requests`` badge windows invites /
-    # duels to pending; every other tab counts all statuses.
-    count_ctx = FeedContext(
-        character_id=character_id,
-        friend_ids=friend_ids,
-        foe_ids=foe_ids,
-        my_task_ids=my_task_ids,
-        era_id=era_row.id,
-        before=before_cursor,
-        pending_invites_only=False,
-    )
-    count_ctx_requests = FeedContext(
-        character_id=character_id,
-        friend_ids=friend_ids,
-        foe_ids=foe_ids,
-        my_task_ids=my_task_ids,
-        era_id=era_row.id,
-        before=before_cursor,
-        pending_invites_only=True,
-    )
+    # Counts always report every tab, and always describe the LIVE feed — which
+    # is pending-only whatever the caller is looking at, so this context is the
+    # fetch one with the archive axis pinned rather than a third predicate.
+    count_ctx = replace(fetch_ctx, pending_invites_only=True)
 
     allowed_sources = [s for s in FEED_SOURCES if s.item_type in allowed_types]
 
@@ -1330,7 +1331,7 @@ async def get_activity_feed(
     ]
     gather_results = await asyncio.gather(
         *fetch_coros,
-        _compute_counts(count_ctx, count_ctx_requests, archive_view, session_factory),
+        _compute_counts(count_ctx, archive_view, session_factory),
     )
     counts: FeedCountsDC = gather_results[-1]
 
