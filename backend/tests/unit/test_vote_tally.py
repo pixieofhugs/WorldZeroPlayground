@@ -45,6 +45,12 @@ async def test_viewer_votes_for_splits_own_and_account_mate():
     Row shape is (praxis_id, voter_character_id, value, display_name). The carried
     character (id 7) yields ``value``; a different character on the account yields
     ``voted_by_name`` only when the carried character did not vote that praxis.
+
+    Praxis 12 (carried character AND a mate) is unreachable from the database
+    since #1150 — ``uq_vote_praxis_account`` allows one row per (praxis, account).
+    The stubbed rows keep the suppression branch covered as defence for pre-#1150
+    data; this is the reason the integration test for that case was replaced with
+    a re-rate test rather than deleted outright.
     """
 
     class _FakeResult:

@@ -45,9 +45,10 @@ async def _seed_solo_praxes_with_votes(
         db_session.add(praxis)
         await db_session.flush()
 
-        # Fresh voter per praxis — avoids UNIQUE(praxis_id, voter_character_id)
-        # collisions and also keeps voter identity distinct from the author
-        # (anti-self-vote is enforced at account_id level).
+        # Fresh voter ACCOUNT per praxis — avoids
+        # UNIQUE(praxis_id, voter_account_id) collisions (#1150) and also keeps
+        # voter identity distinct from the author (anti-self-vote is enforced at
+        # account_id level).
         voter_account = Account(email=f"voter_{tag}_{praxis_index}_{author.id}@example.com")
         db_session.add(voter_account)
         await db_session.flush()
