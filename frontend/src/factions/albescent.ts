@@ -146,7 +146,7 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * the cards above: it is the neutral spectrum row an unaffiliated player sees,
    * with the blobs slowly morphing between polygon lobe counts — a flourish over
    * Default's structure, not a repaint in Albescent's colours. Without this
-   * registration Albescent fell through to `UnaffiliatedVote`, which looked
+   * registration Albescent fell through to `DefaultVote`, which looked
    * plausible enough that the gap went unnoticed. Its tier WORDS stay gone
    * (#783): the widget prints plain numerals via `reframeLabel`.
    */

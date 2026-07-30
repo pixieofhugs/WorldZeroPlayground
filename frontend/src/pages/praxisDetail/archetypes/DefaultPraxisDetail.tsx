@@ -530,7 +530,7 @@ export default function DefaultPraxisDetail({
   // Per-voter values come straight off `GET /praxes/{id}/voters`, already
   // fetched by `usePraxisDetail`. Each voter's own rung is five dots, the first
   // `value` of them filled and the rest hollow rings — the read-only twin of
-  // the caster in `UnaffiliatedVote`, minus everything that made that an input
+  // the caster in `DefaultVote`, minus everything that made that an input
   // (touch targets, hover, glow, the tier caption, the rising-wave bob).
   //
   // THE ROW IS ONE GRADIENT, WINDOWED (#842). A single rainbow is stretched
