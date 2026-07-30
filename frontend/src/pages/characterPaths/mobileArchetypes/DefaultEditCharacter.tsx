@@ -68,12 +68,21 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
 
       {/* Photo */}
       <div style={{ textAlign: 'center' }}>
-        <button type="button" onClick={() => fileRef.current?.click()} style={ringBtn}>
+        {/* The ring's accessible name is the caption right below it (#1149) —
+            without it the name fell through to the portrait's alt text or to the
+            monogram letter, neither of which says this opens a file picker. */}
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          aria-label={t('editCharacter.mobile.changePhoto')}
+          style={ringBtn}
+        >
           <span style={ringInner}>
             {portraitSrc ? (
               <img src={portraitSrc} alt={character.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <span
+                aria-hidden
                 style={{
                   fontFamily: 'var(--faction-default-card-font)',
                   fontStyle: 'italic',

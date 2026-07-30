@@ -18,6 +18,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *  - the votes row zero-pads to two digits (`+04`), for the same reason.
  * Row SELECTION stays in `scoreBreakdown` — a hidden row leaves the register
  * shorter, never gappy, so all five conditional states read as one read-out.
+ * That now includes `BASE`, which the resolver drops when the figure would only
+ * restate `TOT` (#1131): the read-out prints `VOTES +00` and the total, and the
+ * machine is not made to echo itself.
  */
 export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -34,6 +37,46 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
     color: "var(--faction-singularity-phosphor-dim)",
     marginTop: "var(--space-xs)",
   } as const;
+
+  /**
+   * The register, as lines rather than fixed JSX, because since #1131 EVERY line
+   * above the tally is optional — including `base` — and the read-out's first
+   * line is the one that must not carry a leading gap. Whichever line comes
+   * first gets `marginTop: 0`; the machine never prints a blank line at the top.
+   */
+  const lines: { key: string; label: string; value: string; valueColor: string }[] = [];
+  if (base !== null) {
+    lines.push({
+      key: "base",
+      label: t("card.stamp.base"),
+      value: `${base}`,
+      valueColor: "var(--faction-singularity-terminal-ink)",
+    });
+  }
+  if (mult !== null) {
+    lines.push({
+      key: "mult",
+      label: t("card.stamp.mult"),
+      value: formatMult(mult),
+      valueColor: "var(--faction-singularity-led-amber)",
+    });
+  }
+  if (meta !== null) {
+    lines.push({
+      key: "meta",
+      label: t("card.stamp.meta"),
+      value: `+${meta}`,
+      valueColor: "var(--faction-singularity-terminal-ink)",
+    });
+  }
+  lines.push({
+    key: "votes",
+    label: t("card.stamp.votes"),
+    // The terminal pads its output — `+04`. Notation is this file's, not the
+    // resolver's (ADR-0047 fixes which rows exist, not how they read).
+    value: `+${String(votes).padStart(2, "0")}`,
+    valueColor: "var(--faction-singularity-terminal-ink)",
+  });
 
   return (
     <div
@@ -60,31 +103,12 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         />
       )}
 
-      <div style={{ ...rowStyle, marginTop: 0 }}>
-        <span>{t("card.stamp.base")}</span>
-        <span style={{ color: "var(--faction-singularity-terminal-ink)" }}>{base}</span>
-      </div>
-
-      {mult !== null && (
-        <div style={rowStyle}>
-          <span>{t("card.stamp.mult")}</span>
-          <span style={{ color: "var(--faction-singularity-led-amber)" }}>{formatMult(mult)}</span>
+      {lines.map((line, index) => (
+        <div key={line.key} style={{ ...rowStyle, marginTop: index === 0 ? 0 : rowStyle.marginTop }}>
+          <span>{line.label}</span>
+          <span style={{ color: line.valueColor }}>{line.value}</span>
         </div>
-      )}
-
-      {meta !== null && (
-        <div style={rowStyle}>
-          <span>{t("card.stamp.meta")}</span>
-          <span style={{ color: "var(--faction-singularity-terminal-ink)" }}>+{meta}</span>
-        </div>
-      )}
-
-      <div style={rowStyle}>
-        <span>{t("card.stamp.votes")}</span>
-        <span style={{ color: "var(--faction-singularity-terminal-ink)" }}>
-          {`+${String(votes).padStart(2, "0")}`}
-        </span>
-      </div>
+      ))}
 
       <div
         aria-hidden

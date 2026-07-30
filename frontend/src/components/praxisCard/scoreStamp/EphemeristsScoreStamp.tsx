@@ -19,6 +19,8 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * Row selection stays in `scoreBreakdown` (ADR-0047); this file is presentation
  * only. Each optional row is its own line, so the box reads as a shorter or
  * longer entry in all five conditional states rather than as a form with gaps.
+ * The BASE line is optional too since #1131 — when nothing has moved the figure
+ * the rubric already carries it, and the entry shortens to the tally alone.
  */
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -51,46 +53,51 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         />
       )}
 
-      {/* Base, with the multiplier chip pinned to the right rail. */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
-        <span
-          style={{
-            fontFamily: "var(--eph-serif)",
-            fontSize: "var(--text-sm)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "var(--eph-muted)",
-          }}
-        >
-          {t("card.stamp.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--eph-display)",
-            fontWeight: 600,
-            fontSize: "var(--text-title)",
-            lineHeight: 0.8,
-            color: "var(--eph-vellum-text)",
-          }}
-        >
-          {base}
-        </span>
-        {mult !== null && (
+      {/* Base, with the multiplier chip pinned to the right rail. The chip rides
+          this row, and it may: `scoreBreakdown` only nulls `base` when no other
+          term exists (#1131), so the whole line leaves together and the chip is
+          never orphaned. */}
+      {base !== null && (
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
           <span
             style={{
-              marginLeft: "auto",
-              fontFamily: "var(--eph-display)",
-              fontSize: "var(--text-md)",
-              color: "var(--faction-ephemerists-on-fill)",
-              background: "var(--faction-ephemerists)",
-              borderRadius: 3,
-              padding: "0 var(--space-xs)",
+              fontFamily: "var(--eph-serif)",
+              fontSize: "var(--text-sm)",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--eph-muted)",
             }}
           >
-            {formatMult(mult)}
+            {t("card.stamp.base")}
           </span>
-        )}
-      </div>
+          <span
+            style={{
+              fontFamily: "var(--eph-display)",
+              fontWeight: 600,
+              fontSize: "var(--text-title)",
+              lineHeight: 0.8,
+              color: "var(--eph-vellum-text)",
+            }}
+          >
+            {base}
+          </span>
+          {mult !== null && (
+            <span
+              style={{
+                marginLeft: "auto",
+                fontFamily: "var(--eph-display)",
+                fontSize: "var(--text-md)",
+                color: "var(--faction-ephemerists-on-fill)",
+                background: "var(--faction-ephemerists)",
+                borderRadius: 3,
+                padding: "0 var(--space-xs)",
+              }}
+            >
+              {formatMult(mult)}
+            </span>
+          )}
+        </div>
+      )}
 
       {meta !== null && (
         <div
@@ -132,13 +139,15 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         </div>
       )}
 
+      {/* The lead above the tally belongs to the working it follows; with no
+          working (the #1131 empty state) it would read as stray top padding. */}
       <div
         style={{
           fontFamily: "var(--eph-serif)",
           fontStyle: "italic",
           fontSize: "var(--text-md)",
           color: "var(--eph-muted)",
-          marginTop: "var(--space-xs)",
+          marginTop: base !== null ? "var(--space-xs)" : undefined,
         }}
       >
         {t("card.stamp.fromVotes", { votes })}

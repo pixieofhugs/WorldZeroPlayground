@@ -1,0 +1,142 @@
+import { useId, useRef, type ChangeEvent, type CSSProperties, type RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
+
+/**
+ * The portrait file control for the character screens (#1149).
+ *
+ * Both desktop screens used to render a naked `<input type="file">`, which draws
+ * the browser's own "No file chosen" text beside it. That text is a report on the
+ * INPUT's `files` list, and {@link useAvatarPicker}'s `handleAvatarChange`
+ * deliberately clears it (`event.target.value = ''`) the instant a file arrives —
+ * it has to, or re-picking the same path would fire no `change` event and the
+ * crop modal would never reopen. So the chrome went on saying "No file chosen"
+ * over a portrait that was plainly sitting in the preview: the label was telling
+ * the truth about an input we had emptied on purpose, and lying about the state
+ * the player cares about.
+ *
+ * That is an accessibility defect before it is a cosmetic one — a screen reader
+ * got told nothing was chosen. So the fix is not to hide the chrome and stop
+ * there: the native input goes `display: none` (removing it from the
+ * accessibility tree along with its stale label), and a real button plus a live
+ * status line take over. The button's accessible name IS its visible text, and
+ * the status line — a `role="status"` region the button points at through
+ * `aria-describedby` — reads the picker's React state, never `input.files`. What
+ * is announced and what is on screen are the same two strings.
+ *
+ * The mobile skins were never wrong here: they already hid the input behind a
+ * photo ring with its own caption. They keep their bespoke ring (each faction
+ * owns its archetype) and only gained the accessible name the ring was missing.
+ */
+
+export interface PortraitPickerProps {
+  /** The picker hook's input handler — validates size, then opens the cropper. */
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void
+  /**
+   * The cropped file awaiting upload, from React state. Null while nothing has
+   * been confirmed — including after a pick whose crop was cancelled, which is a
+   * genuine "nothing chosen" and reads as one.
+   */
+  chosenFile: File | null
+  /** True on the edit screen when the character already has a saved portrait. */
+  hasCurrentPortrait?: boolean
+  /** Avatar-scoped error (over-size, upload failure) — rendered under the row. */
+  error?: string
+  /**
+   * Share the hidden input so the surface can open it from elsewhere too — the
+   * create screen's credential-card portrait is a second trigger for it. Omit and
+   * the control keeps its own.
+   */
+  inputRef?: RefObject<HTMLInputElement>
+  /** Wrapper override, for a surface that owns the surrounding spacing. */
+  style?: CSSProperties
+  buttonStyle?: CSSProperties
+  statusStyle?: CSSProperties
+}
+
+const rowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--space-md)',
+  flexWrap: 'wrap',
+}
+
+const defaultStatusStyle: CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  color: 'var(--color-text-secondary)',
+  // Long filenames wrap rather than push the button off the row.
+  minWidth: 0,
+  wordBreak: 'break-word',
+}
+
+const errorStyle: CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  color: 'var(--color-danger)',
+  margin: 'var(--space-sm) 0 0',
+}
+
+export default function PortraitPicker({
+  onChange,
+  chosenFile,
+  hasCurrentPortrait = false,
+  error,
+  inputRef,
+  style,
+  buttonStyle,
+  statusStyle,
+}: PortraitPickerProps) {
+  const { t } = useTranslation('forms')
+  // Always called, then discarded when the caller supplied its own (hooks order).
+  const ownRef = useRef<HTMLInputElement>(null)
+  const ref = inputRef ?? ownRef
+  // The button's aria-describedby has to point at the status line by id, and two
+  // pickers could in principle share a page, so the id is generated.
+  const generatedId = useId()
+  const statusId = `portrait-status-${generatedId}`
+
+  // One expression, two consumers: the visible line and the button's description.
+  const statusText = chosenFile
+    ? t('portrait.chosen', { name: chosenFile.name })
+    : hasCurrentPortrait
+      ? t('portrait.keepingCurrent')
+      : t('portrait.noneChosen')
+
+  return (
+    <div style={style}>
+      <div style={rowStyle}>
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          aria-describedby={statusId}
+          className="btn-outline"
+          style={buttonStyle}
+        >
+          {chosenFile || hasCurrentPortrait ? t('portrait.changeAction') : t('portrait.chooseAction')}
+        </button>
+        {/* The state of record. `role="status"` so a confirmed crop is announced
+            without stealing focus; the text comes from React, not input.files. */}
+        <span
+          id={statusId}
+          role="status"
+          className="content-text"
+          style={{ ...defaultStatusStyle, ...statusStyle }}
+        >
+          {statusText}
+        </span>
+      </div>
+      {/* Hidden, so the browser's stale "no file chosen" chrome is gone from the
+          page AND from the accessibility tree. The button above is the control. */}
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        onChange={onChange}
+        style={{ display: 'none' }}
+      />
+      {error && (
+        <p className="content-text" style={errorStyle}>
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}

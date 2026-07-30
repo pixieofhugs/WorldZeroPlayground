@@ -40,6 +40,15 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
     showPicker,
   } = state
 
+  // One string for the ring's accessible name and its visible caption (#1149).
+  // The ring never showed the browser's "No file chosen" — its input has always
+  // been hidden — but it had no accessible name either: the name fell through to
+  // the "+" glyph, or to the portrait's alt text once one was picked. Naming it
+  // with the caption is what makes what is announced and what is on screen agree.
+  const photoAction = avatarPreview
+    ? t('createCharacter.mobile.changePhoto')
+    : t('createCharacter.mobile.addPhoto')
+
   return (
     <form data-skin="default" data-testid="mobile-create-character" onSubmit={handleSubmit} style={page}>
       {/* Top row — back + title */}
@@ -53,12 +62,13 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
 
       {/* Photo add */}
       <div style={{ textAlign: 'center' }}>
-        <button type="button" onClick={() => fileRef.current?.click()} style={ringBtn}>
+        <button type="button" onClick={() => fileRef.current?.click()} aria-label={photoAction} style={ringBtn}>
           <span style={ringInner}>
             {avatarPreview ? (
               <img src={avatarPreview} alt={handle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <span
+                aria-hidden
                 style={{
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: "+" is a glyph-as-icon, sized to the 104px photo ring, not text
                   fontSize: 26,
@@ -71,7 +81,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           </span>
         </button>
         <div className="eyebrow" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
-          {avatarPreview ? t('createCharacter.mobile.changePhoto') : t('createCharacter.mobile.addPhoto')}
+          {photoAction}
         </div>
         <div className="eyebrow" style={{ marginTop: 'var(--space-sm)', color: 'var(--color-text-tertiary)' }}>
           {t('createCharacter.mobile.step')}

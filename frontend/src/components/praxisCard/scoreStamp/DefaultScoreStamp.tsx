@@ -30,6 +30,10 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * `scoreBreakdown()` is the single row-selection authority (ADR-0053) and every
  * rule below is its call, not this file's:
+ *   - the BASE row appears only when some other term has moved the figure. With
+ *     no multiplier, no metatask and no votes the disc already states it, so the
+ *     row would print the same number twice (#1131) — the working out drops to
+ *     nothing and the tally keeps the sheet honest on its own.
  *   - the MULT row appears only when the multiplier is not ×1.0. `era_1`
  *     neutralises it to 1.0 for every faction, so the row is dark today and
  *     lights up on its own if an era ever configures one.
@@ -69,9 +73,10 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** The working out, in reading order. Selection belongs to scoreBreakdown. */
-  const rows: { key: string; label: string; value: string }[] = [
-    { key: "base", label: t("card.stamp.base"), value: `${base}` },
-  ];
+  const rows: { key: string; label: string; value: string }[] = [];
+  if (base !== null) {
+    rows.push({ key: "base", label: t("card.stamp.base"), value: `${base}` });
+  }
   if (mult !== null) {
     rows.push({ key: "mult", label: t("card.stamp.mult"), value: formatMult(mult) });
   }
@@ -232,12 +237,14 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
       ))}
 
       {/* The tally, under a rule of its own. Always drawn: `+ 0 from votes` is a
-          fact about this praxis, not a missing row. */}
+          fact about this praxis, not a missing row. Its rule separates it from
+          the working above — with no working (the #1131 empty state) there is
+          nothing to separate, and the rule would hang under the disc alone. */}
       <div
         style={{
-          borderTop: "1px solid var(--faction-default-card-line)",
+          borderTop: rows.length > 0 ? "1px solid var(--faction-default-card-line)" : undefined,
           marginTop: "var(--space-xs)",
-          paddingTop: "var(--space-sm)",
+          paddingTop: rows.length > 0 ? "var(--space-sm)" : undefined,
           fontFamily: "var(--font-body)",
           fontSize: "var(--text-base)",
           letterSpacing: "0.06em",

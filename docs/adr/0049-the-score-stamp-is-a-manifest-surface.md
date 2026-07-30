@@ -46,8 +46,11 @@ The split between shared and bespoke is drawn at **logic vs. presentation**:
 
 - **Shared, unchanged:** `scoreBreakdown(praxis)` — the pure function that
   decides *which rows exist* under ADR-0047 (mult hidden at `×1.0` or collab,
-  meta hidden at `≤ 0`, votes always, total to one decimal). One function, one
+  meta hidden at `≤ 0`, base hidden when it would restate the total — added
+  2026-07-29 by #1131 — votes always, total to one decimal). One function, one
   test, nine consumers. This is the invariant and it stays exactly where it is.
+  The **total mark never drops out**: it is the faction's device, so it is the
+  one thing a row rule may make redundant rather than remove.
 - **Bespoke, per faction:** everything about *what those rows look like* — the
   numerals' face and size, the chip, the rule, the rotation, the blend mode, and
   above all the **total mark**, which is frequently not a box at all.

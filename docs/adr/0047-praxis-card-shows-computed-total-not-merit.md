@@ -34,7 +34,20 @@ well-defined and non-identity.
 total**, not Merit — but **only where the total is well-defined**. The card
 renders a **conditional stamp** with these rules, per praxis type:
 
+The rows are one policy, not four accidents: **a row exists when it tells the
+viewer something the total mark does not already say** — with the votes row as
+the single declared exception below.
+
 - **Solo** — full Contribution total: `(base + meta) × faction_mult + votes`.
+  - The **base** row shows only when some other term has moved the figure.
+    **Added 2026-07-29 (#1131).** With no multiplier, no metatask and no vote
+    points, the stamp printed `10.0 POINTS` and then restated it as `BASE 10` —
+    the same number twice. So the base row is hidden when it would only repeat
+    the total. The total **mark** stays: under ADR-0049 it is the faction's
+    signature device (UA's ensō, Everymen's roundel, the Ephemerists' rubric),
+    and dropping it would cost identity, not redundancy. The owner was offered
+    "hide base *and* `+0 from votes`" and declined the second half, so the empty
+    state is the mark plus the tally.
   - The **multiplier** row shows only when `faction_mult ≠ 1.0`.
   - The **metatask** row shows only when `metatask_points > 0`.
   - The **votes** row always shows (`+0` is valid). **Re-affirmed 2026-07-20**
@@ -71,6 +84,17 @@ stylistically (e.g. Singularity's terminal `13.60` / `×0.80` / `+04`) — the
 underlying value is identical. Applies on both desktop (corner stamp) and mobile
 (horizontal `BASE | MULT | VOTES | TOT` strip; the MULT cell collapses out when
 not shown).
+
+### Where the rules live
+
+All of them live in `scoreBreakdown(praxis)` and nowhere else — ADR-0049 made
+that function the single row-selection authority for all nine stamps, and
+ADR-0053 made it the only place the breakdown is resolved. A hidden row is a
+`null` term (`base`, `mult`, `meta`); each skin decides only what a row *looks*
+like. `base` is null exactly when no other term is in play, so a skin that hangs
+its multiplier chip off the base row can drop the whole row as one unit without
+orphaning the chip. A row rule added to a component instead of the resolver is a
+bug in nine places.
 
 ## Consequences
 
