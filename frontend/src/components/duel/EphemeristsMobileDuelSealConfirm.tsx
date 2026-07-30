@@ -1,11 +1,12 @@
 /**
- * Ephemerists MOBILE duel seal-confirm (#724) — the codex leaf as a bottom
- * sheet: full-bleed on the page ground, the vellum pinned to a ruled top edge,
- * the actions last so the thumb lands on them.
+ * Ephemerists MOBILE duel seal-confirm (#724, swept onto the Valley plate by
+ * #1208) — the plate as a bottom sheet: full-bleed on the page ground, the
+ * papyrus pinned to a ruled top edge, the actions last so the thumb lands on
+ * them.
  *
- * Same vocabulary as the desktop leaf — foxed vellum, hairline rules, the
- * ochre/blue-ink double rule, inscriptional-caps masthead, italic hand — and
- * the same two modes (#751): `useDuelSealCopy` owns the heading, body, note,
+ * Same vocabulary as the desktop plate — hairline rules, the brass/nile double
+ * rule, an incised small-caps masthead, an italic hand — and the same two modes
+ * (#751): `useDuelSealCopy` owns the heading, body, note,
  * confirm label and danger tone for both, and the forfeit's inked cost panel is
  * the one chrome difference between them.
  *
@@ -15,8 +16,21 @@
  * the rubric heading are shared with the desktop skin rather than re-declared.
  */
 import { useTranslation } from 'react-i18next'
-import { Foxing } from '../cards/ephemeristsAtoms'
 import { factionCssVar } from '../../utils/factions'
+import {
+  BAND,
+  BAND_INK,
+  BRASS,
+  CAPS,
+  INK,
+  INNER,
+  LINE,
+  NILE,
+  OCHRE,
+  PLATE,
+  QUIET,
+  READING,
+} from '../cards/ephemeristsPlate'
 import { Rubric, RubricHeading } from './EphemeristsDuelSealConfirm'
 import {
   duelSides,
@@ -28,20 +42,8 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 
-const VELLUM = 'var(--eph-vellum)'
-const VELLUM_DEEP = 'var(--eph-vellum-deep)'
-const TEXT = 'var(--eph-vellum-text)'
-const MUTED = 'var(--eph-muted)'
-const RUBRIC = 'var(--eph-rubric)'
-const OCHRE = 'var(--eph-gold)'
-const LAPIS = 'var(--eph-lapis)'
-const INK = 'var(--eph-ink)'
-const PARCHMENT = 'var(--eph-parchment)'
-const DISPLAY = 'var(--eph-display)'
-const SERIF = 'var(--eph-serif)'
-
-const HAIRLINE_FAINT = `1px solid color-mix(in srgb, ${TEXT} 12%, transparent)`
-const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${LAPIS} 45%, transparent)`
+const HAIRLINE_FAINT = `1px solid ${LINE}`
+const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`
 
 export default function EphemeristsMobileDuelSealConfirm({
   duel,
@@ -57,7 +59,7 @@ export default function EphemeristsMobileDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: MUTED, bodyFont: SERIF }
+  const theme: DuelSlotTheme = { accent, muted: QUIET, bodyFont: READING }
 
   return (
     <div
@@ -71,14 +73,12 @@ export default function EphemeristsMobileDuelSealConfirm({
         style={{
           position: 'relative',
           overflow: 'hidden',
-          background: VELLUM,
+          background: PLATE,
           borderTop: `4px solid ${accent}`,
-          fontFamily: SERIF,
-          color: TEXT,
+          fontFamily: READING,
+          color: INK,
         }}
       >
-        <Foxing opacity={0.4} />
-
         <div style={{ position: 'relative', zIndex: 2 }}>
           {/* Masthead — centred on the sheet, over the double rule. */}
           <div
@@ -89,14 +89,14 @@ export default function EphemeristsMobileDuelSealConfirm({
               gap: 'var(--space-sm)',
               padding: 'var(--space-md) var(--space-lg)',
               background: `color-mix(in srgb, ${accent} 10%, transparent)`,
-              borderBottom: `1px solid color-mix(in srgb, ${OCHRE} 60%, transparent)`,
+              borderBottom: `1px solid color-mix(in srgb, ${BRASS} 60%, transparent)`,
               boxShadow: DOUBLE_RULE,
             }}
           >
             <Rubric />
             <h2
               style={{
-                fontFamily: DISPLAY,
+                fontFamily: CAPS,
                 fontSize: 'var(--text-title)',
                 fontWeight: 600,
                 letterSpacing: '0.05em',
@@ -116,10 +116,10 @@ export default function EphemeristsMobileDuelSealConfirm({
                   display: 'flex',
                   gap: 'var(--space-sm)',
                   padding: 'var(--space-md)',
-                  background: INK,
-                  border: `1px solid ${RUBRIC}`,
-                  borderLeft: `3px solid ${RUBRIC}`,
-                  color: PARCHMENT,
+                  background: BAND,
+                  border: `1px solid ${OCHRE}`,
+                  borderLeft: `3px solid ${OCHRE}`,
+                  color: BAND_INK,
                 }}
               >
                 <Rubric glyph="❦" />
@@ -141,9 +141,9 @@ export default function EphemeristsMobileDuelSealConfirm({
                   gap: 'var(--space-sm)',
                   marginTop: 'var(--space-md)',
                   padding: 'var(--space-xs) var(--space-sm)',
-                  borderTop: `1px solid color-mix(in srgb, ${OCHRE} 55%, transparent)`,
-                  borderBottom: `1px solid color-mix(in srgb, ${LAPIS} 45%, transparent)`,
-                  color: MUTED,
+                  borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
+                  borderBottom: `1px solid color-mix(in srgb, ${NILE} 45%, transparent)`,
+                  color: QUIET,
                   fontStyle: 'italic',
                 }}
               >
@@ -158,7 +158,7 @@ export default function EphemeristsMobileDuelSealConfirm({
               style={{
                 marginTop: 'var(--space-sm)',
                 padding: 'var(--space-md)',
-                background: VELLUM_DEEP,
+                background: INNER,
                 border: HAIRLINE_FAINT,
               }}
             >

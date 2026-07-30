@@ -4,7 +4,7 @@ import { factionCssVar, factionName, factionDescription } from "../../utils/fact
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import SnideMasthead from "./SnideMasthead";
-import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
+import * as eph from "./ephemeristsPlate";
 import * as coven from "./covenSlip";
 
 /**
@@ -379,9 +379,14 @@ export function SnideCard({
 }
 
 /**
- * The Ephemerists — a codex frontispiece "join me" card. Lapis celestial field
- * masthead with the sigil seal, gold rules, the name with one word in the blue,
- * and a vellum body. Colors via the --eph-* tokens (theme-aware).
+ * The Ephemerists — a Valley-plate "join me" card (#1208). The night-band
+ * masthead with the emblem struck in a stepped octagon, closed by the cavetto
+ * cornice, over a papyrus body.
+ *
+ * The codex’s LAPIS LAST WORD is gone with it: tinting the final word of the
+ * name was a manuscript tic, and the plate has no ink for it — `nile`, the only
+ * blue-green in the family, reads 2.3:1 on the band. The name is set whole, in
+ * the masthead’s own letterspaced Poiret One.
  */
 export function EphemeristsCard({
   faction,
@@ -397,13 +402,13 @@ export function EphemeristsCard({
         width: "100%",
         boxSizing: "border-box",
         overflow: "hidden",
-        border: "2px solid var(--eph-gold)",
-        boxShadow: "0 0 0 1px var(--eph-ink)",
-        fontFamily: "var(--eph-serif)",
+        border: `1px solid ${eph.LINE}`,
+        boxShadow: eph.SHADOW,
+        fontFamily: eph.READING,
         transition: "background 150ms, color 150ms",
       }}
     >
-      {/* Celestial-field masthead */}
+      {/* Cornice masthead */}
       <div
         style={{
           position: "relative",
@@ -411,21 +416,18 @@ export function EphemeristsCard({
           alignItems: "center",
           gap: "var(--space-lg)",
           padding: "var(--space-lg)",
-          background:
-            "radial-gradient(120% 150% at 82% 0%, var(--eph-lapis), var(--eph-field-deep) 60%, #05131c 100%)",
-          color: "var(--eph-parchment)",
-          borderBottom: "3px solid var(--eph-gold)",
+          background: eph.BAND,
+          color: eph.BAND_INK,
         }}
       >
-        <EphSeal size={64} bg="var(--eph-vellum)" eye="var(--eph-lapis)" />
+        <eph.EmblemOctagon size={64} />
         <div style={{ minWidth: 0 }}>
           <div
             style={{
-              fontFamily: "var(--eph-serif)",
+              ...eph.SMALL_CAPS,
               fontSize: "var(--text-xs)",
               letterSpacing: "0.26em",
-              textTransform: "uppercase",
-              color: "var(--eph-gold-light)",
+              color: eph.GOLD,
               marginBottom: "var(--space-xs)",
             }}
           >
@@ -433,24 +435,25 @@ export function EphemeristsCard({
           </div>
           <div
             style={{
-              fontFamily: "var(--eph-display)",
-              fontWeight: 800,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: codex frontispiece wordmark — display serif with a letterpress shadow
-              fontSize: 26,
-              lineHeight: 0.92,
-              color: "var(--eph-parchment)",
-              textShadow: "1px 1px 0 var(--eph-field-deep)",
+              fontFamily: eph.DECO,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the masthead wordmark, letterspaced until the width is the mark
+              fontSize: 22,
+              lineHeight: 1.12,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: eph.BAND_INK,
             }}
           >
-            <LapisLastWord text={factionName(faction.slug)} />
+            {factionName(faction.slug)}
           </div>
         </div>
       </div>
-      {/* Vellum body */}
+      <eph.Cornice />
+      {/* Papyrus body */}
       <div
         style={{
-          background: "var(--eph-vellum)",
-          color: "var(--eph-vellum-text)",
+          background: eph.PLATE,
+          color: eph.INK,
           padding: "var(--space-md) var(--space-lg) var(--space-lg)",
         }}
       >
@@ -459,14 +462,14 @@ export function EphemeristsCard({
         )}
         <div
           className="card-meta"
-          style={{ color: "var(--eph-rubric)", marginBottom: "var(--space-sm)" }}
+          style={{ color: eph.CAPTION, marginBottom: "var(--space-sm)" }}
         >
           <StatusBadge status={status} slug="ephemerists" />
         </div>
         {desc && (
           <div
             className="card-description"
-            style={{ color: "var(--eph-muted)", marginBottom: "var(--space-md)", fontStyle: "italic" }}
+            style={{ color: eph.QUIET, marginBottom: "var(--space-md)", fontStyle: "italic" }}
           >
             {desc}
           </div>

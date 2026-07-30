@@ -1249,9 +1249,13 @@
      Deco × Egypt: the deco-space card carried into a field journal out of the
      Valley. A papyrus plate under a cavetto-cornice masthead holding a winged
      sun disc between incised glyph registers; the points ride a stepped octagon
-     medallion. This is a full metaphor swap away from THE DISCORDANT MAP, whose
-     `--eph-*` illuminated-codex family stays declared — every other Ephemerists
-     surface still paints with it.
+     medallion. This is a full metaphor swap away from THE DISCORDANT MAP, and
+     since #1208 it is the faction's ONLY identity: no component paints
+     `--eph-*` any more, and `frontend/src/__tests__/ephemeristsSpeakOneIdentity`
+     is the guard that keeps it that way. The codex family stays DECLARED
+     because the `--faction-ephemerists-card-*` contract above still aliases six
+     of its members, and those are read through `factionCssVar` by surfaces that
+     are not Ephemerists skins at all.
 
      ONE VALUE IS WALKED DOWN. `-brass` is a FRAME AND RULE colour, never an ink:
      the design's #9A7A2E measures 2.97:1 on the plate, which is fine for a
@@ -3004,57 +3008,40 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EPHEMERISTS CODEX BACKDROP — the page as a sheet of the ephemeris:
-   aged vellum, faint foxing, two sets of astrolabe rings bleeding from
-   opposite corners, and ghost scribe-lines. Rendered behind the page
-   by the ephemerists FactionBackdrop variant. Theme-aware via --eph-*.
+   EPHEMERISTS BACKDROP — the page under the faction page and a
+   member's profile, rendered by the ephemerists FactionBackdrop
+   variant.
+
+   SWEPT OFF THE CODEX (#1208). This was the aged-vellum ephemeris
+   sheet — foxing, astrolabe rings, scribe-lines — and it was the
+   GROUND the two surfaces above it stand on, so leaving it in
+   `--eph-*` while their plates moved would have been the second
+   identity in its most visible form: papyrus floating on vellum.
+
+   It is now `-plate-page`, the same ground the task detail's sheet
+   sits on, wearing the plate's own marks: a gold bloom off the top
+   edge, two sets of surveyor's rings bleeding from opposite corners
+   in brass and nile, papyrus grain, and the journal's ruling. The
+   vignette follows `-plate-page` itself rather than a second sheet
+   colour, because the plate family has no "deep" twin — and it stays
+   a LIGHTENING wash at the top for the reason `.eph-plate-sheet`
+   records above: a darkening veil eats `-nile`'s measured margin.
    ══════════════════════════════════════════════════════════════ */
 .eph-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-color: var(--eph-vellum);
+  background-color: var(--faction-ephemerists-plate-page);
   background-image:
-    radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--eph-gold) 15%, transparent), transparent 72%),
-    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--eph-lapis) 13%, transparent), transparent 72%),
-    repeating-radial-gradient(circle at 90% 8%, transparent 0 33px, color-mix(in srgb, var(--eph-ink) 5%, transparent) 33px 34px),
-    repeating-radial-gradient(circle at 6% 96%, transparent 0 27px, color-mix(in srgb, var(--eph-lapis) 7%, transparent) 27px 28px),
-    radial-gradient(color-mix(in srgb, var(--eph-vellum-text) 5%, transparent) 0.6px, transparent 0.9px),
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--eph-vellum-text) 4%, transparent) 0 1px, transparent 1px 26px),
-    linear-gradient(170deg, var(--eph-vellum), var(--eph-vellum-deep));
+    radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--faction-ephemerists-plate-gold) 18%, transparent), transparent 72%),
+    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--faction-ephemerists-plate-nile) 12%, transparent), transparent 72%),
+    repeating-radial-gradient(circle at 90% 8%, transparent 0 33px, color-mix(in srgb, var(--faction-ephemerists-plate-brass) 12%, transparent) 33px 34px),
+    repeating-radial-gradient(circle at 6% 96%, transparent 0 27px, color-mix(in srgb, var(--faction-ephemerists-plate-nile) 10%, transparent) 27px 28px),
+    radial-gradient(var(--faction-ephemerists-plate-rule) 0.6px, transparent 0.9px),
+    repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-rule) 0 1px, transparent 1px 26px),
+    linear-gradient(170deg, var(--faction-ephemerists-plate-bg), var(--faction-ephemerists-plate-page));
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 5px 5px, 100% 100%, 100% 100%;
-}
-.eph-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 90% at 50% 6%, transparent 46%, color-mix(in srgb, var(--eph-vellum-deep) 58%, transparent));
-}
-
-/* ══════════════════════════════════════════════════════════════
-   EPHEMERISTS AGE-FOXING BLEND (#724) — the one Ephemerist ornament
-   that cannot be a colour token, because it is a *blend mode*.
-
-   Foxing is a stain: on light vellum it DARKENS the sheet, so `multiply`
-   is the physically right operator. On the dark-theme vellum
-   (--eph-vellum flips to a near-black tobacco) `multiply` has almost
-   nothing left to take away — the blotches vanish and, where they don't,
-   they read as mud. Dark-theme foxing is instead an age *bloom*: the
-   same four blotches lightening the sheet, so the operator flips to
-   `screen`.
-
-   This lives here rather than inline on the `Foxing` atom because a
-   `dark ? 'multiply' : 'screen'` ternary is exactly what §8 forbids;
-   the cascade owns the flip. (Only the MODE is set here — callers keep
-   passing their own `opacity` inline, which would win over any opacity
-   declared in this rule anyway.)
-   ══════════════════════════════════════════════════════════════ */
-.eph-foxing {
-  mix-blend-mode: multiply;
-}
-[data-theme="dark"] .eph-foxing {
-  mix-blend-mode: screen;
 }
 
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */
@@ -3065,16 +3052,11 @@
    by components, bypassing the reduced-motion guard. One keyframe, one guard. */
 @keyframes wz-blink { 50% { opacity: 0; } }
 
-/* Slow motion — rings turn, points breathe. Stilled for reduced-motion. */
-@keyframes eph-spin { to { transform: rotate(360deg); } }
+/* The codex's slow motion — turning astrolabe rings, breathing points — went
+   with the surfaces that used it (#1208). `eph-twinkle` is the survivor and is
+   no longer an Ephemerists keyframe at all: `.coven-moon-dust` is its only
+   consumer, and it carries the name it was written under. */
 @keyframes eph-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-@keyframes eph-depth { 0%, 100% { opacity: 0.92; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.03); } }
-@media (prefers-reduced-motion: no-preference) {
-  .eph-spin { animation: eph-spin 140s linear infinite; }
-  .eph-spin-rev { animation: eph-spin 100s linear infinite reverse; }
-  .eph-twinkle { animation: eph-twinkle 5s ease-in-out infinite; }
-  .eph-depth { animation: eph-depth 16s ease-in-out infinite; }
-}
 
 /* Unaffiliated spectrum-sweep vote widget (#820) — reached dots bob in a rising
    wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion
@@ -3334,9 +3316,10 @@
    `z-index: 0` child of it is a POSITIONED descendant of that stacking context
    and paints over the non-positioned sidebar beside it.
 
-   Deliberately NOT `.eph-backdrop` either — that is the illuminated-codex ground
-   (`--eph-*`) every OTHER Ephemerists surface still paints on. The v2 plate is a
-   full metaphor swap (ADR-0055) and the two grounds must not be confused.
+   Deliberately NOT `.eph-backdrop` either. That was the illuminated-codex ground
+   until #1208 repainted it onto `-plate-page`; the two are now the same colour
+   and still not the same thing — the backdrop is FIXED and belongs to the
+   faction page and the profile, this is the column's own surface.
 
    The wash only LIGHTENS (a gold bloom off the cornice) and never darkens. Both
    inks this ground carries were walked down to a measured margin over the FLAT

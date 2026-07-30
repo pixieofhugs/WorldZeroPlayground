@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
-import { toRoman } from "../../../components/cards/ephemeristsAtoms";
+import { toRoman } from "../../../utils/roman";
 import {
   UA_DISPLAY,
   UA_EYEBROW,
