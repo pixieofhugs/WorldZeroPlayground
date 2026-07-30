@@ -132,7 +132,9 @@ export default function CovenComment(props: CommentProps) {
         <div
           className="content-text"
           aria-busy={submitting}
-          style={{ fontFamily: READING, color: INK }}
+          // 500, not the default 400: index.html loads Cormorant Garamond at
+          // 500/600/700 only, so an unspecified weight would be synthesised.
+          style={{ fontFamily: READING, fontWeight: 500, color: INK }}
         >
           <ComposerControls
             value={value}
@@ -214,6 +216,8 @@ export default function CovenComment(props: CommentProps) {
         style={{
           marginTop: 'var(--space-sm)',
           fontFamily: READING,
+          // See the composer: Cormorant's 400 is not among the loaded weights.
+          fontWeight: 500,
           color: INK,
           lineHeight: 1.55,
           overflowWrap: 'anywhere',
