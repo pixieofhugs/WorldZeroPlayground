@@ -243,6 +243,10 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
       state({
         praxis: {
           ...PRAXIS,
+          // A two-member praxis is a COLLAB. The fixture left `type` at the
+          // base `solo` and leaned on the old count proxy; the Members
+          // section is gated on the type now (#1274).
+          type: "collab",
           members: [MEMBER, CO_MEMBER],
           applied_metatasks: [
             {

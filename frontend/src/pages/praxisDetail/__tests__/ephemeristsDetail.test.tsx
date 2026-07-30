@@ -335,7 +335,11 @@ describe("Ephemerists praxis detail — the state axes", () => {
     expect(solo.html, "solo links one author").toContain('href="/characters/3"');
     expect(solo.text, "and draws no members section").not.toContain("Members");
 
-    const collab = render(state({ praxis: { ...PRAXIS, members: [MEMBER, CO_MEMBER] } }));
+    // `type` matters as much as the crew: the Members section is gated on it
+    // now, so a collab fixture has to say it is one (#1274).
+    const collab = render(
+      state({ praxis: { ...PRAXIS, type: "collab", members: [MEMBER, CO_MEMBER] } }),
+    );
     expect(collab.html, "both co-authors are linked").toContain('href="/characters/4"');
     expect(collab.text, "and the members section renders").toContain("Members");
   });
