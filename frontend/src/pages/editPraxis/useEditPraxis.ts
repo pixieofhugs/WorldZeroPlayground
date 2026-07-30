@@ -58,6 +58,7 @@ import {
   blobToFile,
   partitionByEditability,
 } from "../../components/imageEdit/imageEditHelpers";
+import { uploadMediaInChunks } from "./mediaBatchUpload";
 import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -766,18 +767,20 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       // without a manual save (autosave covers title/body only; #297).
       const { toEdit, toUploadDirect } = partitionByEditability(valid);
       const praxisId = parseInt(idParam, 10);
-      for (const file of toUploadDirect) {
-        try {
-          const uploaded = await uploadPraxisMedia(praxisId, file);
-          setMedia((previous) => [...previous, uploaded]);
-        } catch (err) {
-          setError(
-            extractError(
-              err,
-              i18n.t("forms:editPraxis.errors.upload", { name: file.name }),
-            ),
-          );
+      if (toUploadDirect.length > 0) {
+        // One request for the whole selection instead of one per file (#1286).
+        // Tiles now appear together rather than trickling in — that is the
+        // accepted cost of the single round trip, so no artificial staggering.
+        const { uploaded, errors } = await uploadMediaInChunks(
+          praxisId,
+          toUploadDirect,
+        );
+        if (uploaded.length > 0) {
+          setMedia((previous) => [...previous, ...uploaded]);
         }
+        // One error slot, so the last failure wins — exactly what the old
+        // per-file loop left on screen when several files failed.
+        if (errors.length > 0) setError(errors[errors.length - 1]);
       }
       // Queue images for the modal; they're edited + uploaded one at a time.
       if (toEdit.length > 0) {

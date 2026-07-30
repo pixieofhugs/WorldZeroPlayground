@@ -20,10 +20,11 @@
  * set, so a narrowed feed never looks like the whole register. See
  * `./taskFilterParam.ts`.
  */
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listPraxes, type PraxisCardOut, type PraxisType } from '../../api/praxis'
-import { getFactions, type FactionOut } from '../../api/factions'
+import type { FactionOut } from '../../api/factions'
+import { useFactions } from '../../hooks/useFactions'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
@@ -83,7 +84,8 @@ export interface PraxesFeedState {
 }
 
 export function usePraxes(): PraxesFeedState {
-  const [factions, setFactions] = useState<FactionOut[]>([])
+  // App-wide cached, one request per page load across all five consumers (#1284).
+  const factions: FactionOut[] = useFactions() ?? []
   const [type, setTypeState] = useState<PraxisTypeFilter>('all')
   const [faction, setFactionState] = useState('')
   const [voted, setVotedState] = useState<VotedFilter>('')
@@ -95,10 +97,6 @@ export function usePraxes(): PraxesFeedState {
   const taskId = readTaskIdParam(searchParams)
 
   const debouncedQuery = useDebouncedValue(query, 200)
-
-  useEffect(() => {
-    getFactions().then(setFactions).catch(() => {})
-  }, [])
 
   const trimmedQuery = debouncedQuery.trim()
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(

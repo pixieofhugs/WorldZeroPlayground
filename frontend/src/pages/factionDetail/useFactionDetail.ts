@@ -4,14 +4,15 @@
  * same way the hero already does, without re-implementing the fetch.
  *
  * Behaviour preserved 1:1 from the original page (out-of-order-safe fetch keyed
- * on slug, faction-cleared-before-refetch, not-found when the slug has no match,
- * page backdrop themed to the faction). The returned {@link FactionDetailState}
- * is the stable contract every faction-body archetype consumes.
+ * on slug, not-found when the slug has no match, page backdrop themed to the
+ * faction). The returned {@link FactionDetailState} is the stable contract every
+ * faction-body archetype consumes. The faction itself is derived from the
+ * app-wide `useFactions` cache (#1284), which subsumes the old
+ * clear-before-refetch: a derived match cannot lag the slug.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  getFactions,
   getFactionStatus,
   getInvitations,
   chooseFaction,
@@ -21,6 +22,7 @@ import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listTasks, type TaskOut } from "../../api/tasks";
 import { listPraxes, type PraxisCardOut } from "../../api/praxis";
 import { useAuth } from "../../auth/AuthContext";
+import { useFactions } from "../../hooks/useFactions";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { extractError } from "../../utils/errors";
 import { useFactionBackdrop } from "../../components/backdrop/BackdropContext";
@@ -83,11 +85,18 @@ export function useFactionDetail(
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
-  const [faction, setFaction] = useState<FactionOut | null>(null);
+  // The directory list is app-wide cached (#1284), so `faction` is DERIVED from
+  // it rather than fetched and mirrored here. That also replaces the old
+  // clear-before-refetch: change the slug and the derived match changes with it,
+  // with no window where the previous faction is still on screen.
+  const allFactions = useFactions();
+  const faction: FactionOut | null =
+    allFactions?.find((f) => f.slug === slug) ?? null;
+
   const [members, setMembers] = useState<CharacterOut[]>([]);
   const [tasks, setTasks] = useState<TaskOut[]>([]);
   const [recentPraxis, setRecentPraxis] = useState<PraxisCardOut[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [entitiesLoading, setEntitiesLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   // App-wide cached game config — used for per-faction display-point multipliers.
@@ -102,22 +111,15 @@ export function useFactionDetail(
     // Guard against out-of-order responses: if the slug changes mid-fetch, the
     // stale request must not overwrite the newer faction's data.
     let cancelled = false;
-    setLoading(true);
+    setEntitiesLoading(true);
     setFetchError(null);
-    // Clear any prior faction so an unknown slug falls through to "not found"
-    // instead of showing the previously-viewed faction during/after the fetch.
-    setFaction(null);
     Promise.all([
-      getFactions(),
       listCharacters({ faction: slug }),
       listTasks({ faction: slug, status: "active" }),
       listPraxes({ faction: slug, status: "submitted", limit: 12 }),
     ])
-      .then(([factions, mems, tsks, praxis]) => {
+      .then(([mems, tsks, praxis]) => {
         if (cancelled) return;
-        const match = factions.find((f) => f.slug === slug);
-        if (!match) return; // faction stays null → renders the not-found state
-        setFaction(match);
         setMembers(mems);
         setTasks(tsks);
         setRecentPraxis(praxis);
@@ -127,7 +129,7 @@ export function useFactionDetail(
           setFetchError(extractError(err, t("detail.errors.load")));
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setEntitiesLoading(false);
       });
     return () => {
       cancelled = true;
@@ -195,7 +197,10 @@ export function useFactionDetail(
 
   return {
     slug,
-    loading,
+    // "Nothing to draw yet" still means both halves: an unresolved directory
+    // must not fall through to the not-found state, which is what a settled
+    // `entitiesLoading` with `allFactions` still null would do.
+    loading: entitiesLoading || allFactions === null,
     faction,
     fetchError,
 

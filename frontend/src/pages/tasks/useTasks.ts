@@ -3,7 +3,8 @@
  * the legacy Tasks.tsx so the desktop list and the mobile browse skin consume
  * one source of truth (mirrors useTaskDetail for the detail page).
  *
- * The factions/factionConfigs fetch on mount, the status/faction/level filter
+ * The factions/factionConfigs reads (both app-wide cached hooks), the
+ * status/faction/level filter
  * state, the task read keyed on those filters + the viewer's character id, and
  * the signup → navigate-to-edit handler with its inline message. The free-text search (#661) rides
  * alongside them, debounced 200ms via `useDebouncedValue` — the idiom #644 set on
@@ -17,12 +18,13 @@
  * era's `level_thresholds` off the same `/game-config` payload the faction
  * modifiers ride on (#1046), never a hardcoded range. See `./levelFilters.ts`.
  */
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listTasks, type TaskOut, type TaskType } from '../../api/tasks'
 import { createPraxis } from '../../api/praxis'
-import { getFactions, type FactionOut } from '../../api/factions'
+import type { FactionOut } from '../../api/factions'
 import type { FactionConfigOut } from '../../api/gameConfig'
+import { useFactions } from '../../hooks/useFactions'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { extractError } from '../../utils/errors'
 import { useAuth } from '../../auth/AuthContext'
@@ -107,11 +109,12 @@ export function useTasks(): TasksState {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [factions, setFactions] = useState<FactionOut[]>([])
-  // One `/game-config` read for the whole app (#1141) — the shared cache in
-  // `useGameConfig`, derived rather than mirrored into two more `useState`s.
+  // One `/factions` read for the whole app (#1284) and one `/game-config`
+  // (#1141) — both from shared module caches, derived rather than mirrored into
+  // local `useState`s.
   // Both slices are empty until it lands, which is what they were before: the
   // faction modifier settles at 1.0 and the level filter stays hidden (#1046).
+  const factions: FactionOut[] = useFactions() ?? []
   const gameConfig = useGameConfig()
   const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
   const levelThresholds = gameConfig?.level_thresholds ?? []
@@ -125,10 +128,6 @@ export function useTasks(): TasksState {
   // Debounced so a refetch fires once the typing settles, not per keystroke —
   // the same 200ms the praxis feed uses (#644).
   const debouncedQuery = useDebouncedValue(query, 200)
-
-  useEffect(() => {
-    getFactions().then(setFactions).catch(() => {})
-  }, [])
 
   const trimmedQuery = debouncedQuery.trim()
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
