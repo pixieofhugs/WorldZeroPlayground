@@ -4,53 +4,60 @@ import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
-import { EphemeristsSigil } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil } from '../../../components/cards/EphemeristsSigil'
+import {
+  BRASS,
+  CAPTION,
+  CTA_BG,
+  CTA_INK,
+  DECO,
+  FlutedRule,
+  INK,
+  INNER,
+  LINE,
+  MARGINALIA,
+  NILE,
+  OCHRE,
+  PAGE,
+  QUIET,
+  READING,
+  RULE,
+  SHADOW,
+  SMALL_CAPS,
+  PLATE as SHEET,
+} from '../../../components/cards/ephemeristsPlate'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
- * The Ephemerists MOBILE FieldDesk home (#527) — the vellum codex on a phone.
- * The carried life and its surveys-underway become ledger-ruled leaves bound in
- * gold-deep hairlines, headed by a Cinzel running-head. Same content slots as the
+ * The Ephemerists MOBILE FieldDesk home (#527, swept onto the Valley plate by
+ * #1208) — the field journal on a phone. The carried life and its
+ * surveys-underway become papyrus leaves bound in hairlines, headed by an
+ * incised running-head over the design's fluted rule. Same content slots as the
  * Default mobile home (character header, Points/Votes/Era stat tiles,
- * active-tasks list, primary actions) — only the dress changes. Grounds on the
- * `--eph-*` / `--faction-ephemerists-*` tokens already in index.css (the set the
- * desktop Ephemerists surfaces read) and is theme-aware through the cascade: the
- * vellum flips to tobacco in dark, no ternaries. Presentation-only — all data
- * arrives via {@link FieldDeskHomeState}.
+ * active-tasks list, primary actions) — only the dress changes. Grounds on
+ * `--faction-ephemerists-plate-*` and is theme-aware through the cascade: the
+ * papyrus flips to the night plate in dark, no ternaries. Presentation-only —
+ * all data arrives via {@link FieldDeskHomeState}.
  */
 
-const VELLUM = 'var(--eph-vellum)'
-const VELLUM_DEEP = 'var(--eph-vellum-deep)'
-const TEXT = 'var(--eph-vellum-text)'
-const MUTED = 'var(--eph-muted)'
-const RUBRIC = 'var(--eph-rubric)'
-const LAPIS = 'var(--eph-lapis)'
-const GOLD = 'var(--eph-gold)'
-const GOLD_DEEP = 'var(--eph-gold-deep)'
-const PARCHMENT = 'var(--eph-parchment)'
-const DISPLAY = 'var(--eph-display)'
-const SERIF = 'var(--eph-serif)'
-const SCRIPT = 'var(--eph-script)'
-
 const kicker: CSSProperties = {
-  fontFamily: DISPLAY,
+  ...SMALL_CAPS,
   fontSize: 'var(--text-xs)',
   letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color: MUTED,
+  color: QUIET,
 }
 
-const goldRule = `linear-gradient(90deg, ${GOLD}, transparent)`
+const brassRule = `linear-gradient(90deg, ${BRASS}, transparent)`
 
-/** A ledger leaf bound in a gold-deep hairline on aged vellum. */
+/** One leaf off the field journal — papyrus inside the plate's hairline. */
 function Leaf({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
         position: 'relative',
-        background: VELLUM,
-        border: `1px solid ${GOLD_DEEP}`,
-        boxShadow: '0 10px 24px rgba(42,29,18,0.14)',
+        background: SHEET,
+        border: `1px solid ${LINE}`,
+        boxShadow: SHADOW,
         padding: 'var(--space-lg)',
       }}
     >
@@ -73,25 +80,27 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
     <div
       data-skin="ephemerists"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: READING, color: INK, background: PAGE }}
     >
       {/* Cinzel running-head */}
       <header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: RUBRIC }}>
-          <EphemeristsSigil size={13} color={LAPIS} />
-          <span style={kicker}>{t('nav.home')}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <EphemeristsSigil size={13} color={BRASS} />
+          <span style={{ ...kicker, color: CAPTION }}>{t('nav.home')}</span>
         </div>
-        <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1.05, color: TEXT, margin: 'var(--space-xs) 0 0' }}>
+        <h1 style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1.05, letterSpacing: '0.04em', color: INK, margin: 'var(--space-xs) 0 0' }}>
           {t('fieldDesk.home.ephemerists.masthead')}
         </h1>
-        <div style={{ height: 1, marginTop: 'var(--space-sm)', background: goldRule }} />
+        <div style={{ marginTop: 'var(--space-sm)' }}>
+          <FlutedRule />
+        </div>
       </header>
 
       {/* ── Observer leaf ── */}
       <Leaf>
         <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
-          <span style={{ ...kicker, color: RUBRIC }}>{t('fieldDesk.home.ephemerists.charEyebrow')}</span>
-          <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: LAPIS, textDecoration: 'none' }}>
+          <span style={{ ...kicker, color: CAPTION }}>{t('fieldDesk.home.ephemerists.charEyebrow')}</span>
+          <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: NILE, textDecoration: 'none' }}>
             {t('fieldDesk.home.edit')}
           </Link>
         </div>
@@ -103,9 +112,9 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
               width: 56,
               height: 56,
               borderRadius: '50%',
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: gold ring thickness drawn around a 56px avatar; the nearest rung (4px) doubles the band.
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: brass ring thickness drawn around a 56px avatar; the nearest rung (4px) doubles the band.
               padding: 2,
-              background: GOLD_DEEP,
+              background: BRASS,
             }}
           >
             {character.avatar_url ? (
@@ -119,7 +128,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
               <span
                 className="flex w-full h-full items-center justify-center rounded-full"
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 56px gilt ring, not text
-                style={{ background: VELLUM_DEEP, fontFamily: DISPLAY, fontWeight: 700, fontSize: 24, color: RUBRIC }}
+                style={{ background: INNER, fontFamily: DECO, fontSize: 24, color: INK }}
               >
                 {character.display_name[0]?.toUpperCase()}
               </span>
@@ -129,11 +138,11 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1, color: TEXT, textDecoration: 'none' }}
+              style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1, letterSpacing: '0.03em', color: INK, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...SMALL_CAPS, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', color: QUIET }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -141,7 +150,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1, color: RUBRIC }}>
+            <div style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1, color: INK }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
             <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
@@ -153,9 +162,9 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
             <div
               key={stat.label}
               className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: VELLUM_DEEP, border: `1px solid ${GOLD_DEEP}`, padding: 'var(--space-md) var(--space-sm)' }}
+              style={{ flex: '1 1 0', minWidth: 0, background: INNER, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-sm)' }}
             >
-              <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)', lineHeight: 1, color: TEXT }}>
+              <div className="truncate" style={{ fontFamily: DECO, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
                 {stat.value}
               </div>
               <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
@@ -169,27 +178,27 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: TEXT, textDecoration: 'none' }}
+          style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
-          <span aria-hidden style={{ color: RUBRIC }}>›</span>
+          <span aria-hidden style={{ color: NILE }}>›</span>
         </Link>
       )}
 
       {/* ── Surveys underway ── */}
       <Leaf>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
-          <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
+          <span style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.18em', color: INK }}>
             {t('fieldDesk.home.ephemerists.questsHeading')}
           </span>
-          <span style={{ flex: 1, height: 1, background: goldRule }} />
-          <Link to="/tasks" style={{ ...kicker, color: LAPIS, textDecoration: 'none' }}>
+          <span style={{ flex: 1, height: 1, background: brassRule }} />
+          <Link to="/tasks" style={{ ...kicker, color: NILE, textDecoration: 'none' }}>
             {t('fieldDesk.home.viewAll')}
           </Link>
         </div>
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: MUTED, margin: 0 }}>
+          <p style={{ fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: QUIET, margin: 0 }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (
@@ -199,14 +208,15 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
                 key={praxis.id}
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
-                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${GOLD_DEEP}`, textDecoration: 'none' }}
+                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${RULE}`, textDecoration: 'none' }}
               >
-                <span className="shrink-0" style={{ width: 9, height: 9, borderRadius: '50%', background: RUBRIC }} />
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the register's lead dot, drawn to the row's cap height. */}
+                <span className="shrink-0" style={{ width: 9, height: 9, background: OCHRE }} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)', lineHeight: 1.15, color: TEXT }}>
+                  <div className="truncate" style={{ fontFamily: DECO, fontSize: 'var(--text-content)', lineHeight: 1.15, color: INK }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: DISPLAY, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...SMALL_CAPS, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: QUIET }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -215,7 +225,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: DISPLAY, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: LAPIS, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${GOLD_DEEP}` }}
+                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: NILE, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>
@@ -230,7 +240,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: PARCHMENT, background: RUBRIC, border: `1px solid ${GOLD}`, textDecoration: 'none' }}
+          style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -238,7 +248,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: TEXT, background: VELLUM, border: `1px solid ${GOLD_DEEP}`, textDecoration: 'none' }}
+            style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: INK, background: SHEET, border: `1px solid ${BRASS}`, textDecoration: 'none' }}
           >
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>

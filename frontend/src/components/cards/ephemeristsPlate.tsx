@@ -56,6 +56,9 @@ export const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
 export const BAND_QUIET = "var(--faction-ephemerists-plate-band-quiet)";
 export const DISC = "var(--faction-ephemerists-plate-disc)";
 export const OCHRE = "var(--faction-ephemerists-plate-ochre)";
+/** The summons band and its ink — the plate's one filled call to action. */
+export const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
+export const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 export const NILE = "var(--faction-ephemerists-plate-nile)";
 export const RULE = "var(--faction-ephemerists-plate-rule)";
 export const LINE = "var(--faction-ephemerists-plate-line)";

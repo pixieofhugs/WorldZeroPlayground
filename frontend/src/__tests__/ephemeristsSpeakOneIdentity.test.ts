@@ -75,8 +75,9 @@ describe('the Ephemerists wear one identity (#1208)', () => {
     )
     // The reference implementations (task card, task detail, praxis detail,
     // praxis card, score stamp, vote, seal, comment voice, feed frame) plus the
-    // eleven swept surfaces and the kit itself. A floor, not a census — it only
-    // has to fail if the sweep is reverted or the kit is orphaned.
-    expect(readers.length).toBeGreaterThanOrEqual(20)
+    // swept surfaces and the kit itself — 18 files the day the sweep landed. A
+    // floor, not a census: it only has to fail if the sweep is reverted or the
+    // kit is orphaned, so it does not move when a surface is added or retired.
+    expect(readers.length).toBeGreaterThanOrEqual(18)
   })
 })
