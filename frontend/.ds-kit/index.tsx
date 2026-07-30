@@ -27,7 +27,7 @@ export { default as FactionAvatar } from "../src/components/avatar/FactionAvatar
 export { default as FactionBackdrop } from "../src/components/backdrop/FactionBackdrop";
 export { default as FactionCard } from "../src/components/cards/FactionCard";
 export { default as FactionFeedFrame } from "../src/components/feed/FactionFeedFrame";
-export { default as FactionSelectCard } from "../src/components/cards/FactionSelectCard";
+export { default as FactionSelectCard } from "../src/components/selectCard/FactionSelectCard";
 export { default as FeedBadge } from "../src/components/feed/FeedBadge";
 export { default as FeedCardCollabInvite } from "../src/components/feed/FeedCardCollabInvite";
 export { default as FeedCardDuelChallenge } from "../src/components/feed/FeedCardDuelChallenge";

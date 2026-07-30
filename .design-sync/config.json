@@ -36,7 +36,7 @@
     "FactionBackdrop": "src/components/backdrop/FactionBackdrop.tsx",
     "FactionCard": "src/components/cards/FactionCard.tsx",
     "FactionFeedFrame": "src/components/feed/FactionFeedFrame.tsx",
-    "FactionSelectCard": "src/components/cards/FactionSelectCard.tsx",
+    "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
     "FeedBadge": "src/components/feed/FeedBadge.tsx",
     "FeedCardCollabInvite": "src/components/feed/FeedCardCollabInvite.tsx",
     "FeedCardDuelChallenge": "src/components/feed/FeedCardDuelChallenge.tsx",

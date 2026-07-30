@@ -31,7 +31,7 @@ const CovenScoreStamp = lazyArchetype(() => import('../components/praxisCard/sco
 const CovenSeal = lazyArchetype(() => import('../components/metataskSeal/skins/CovenSeal'))
 const CovenSigil = lazyArchetype(() => import('../components/sigil/CovenSigil').then((m) => ({ default: m.CovenSigil })))
 const CovenCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.CovenCard })))
-const COVENSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.COVENSelectCard })))
+const COVENSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.COVENSelectCard })))
 
 export const COVEN_MANIFEST: FactionManifest = {
   slug: 'coven',

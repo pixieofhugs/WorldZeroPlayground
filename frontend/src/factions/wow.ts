@@ -99,7 +99,7 @@ import { lazyArchetype } from './lazyArchetype'
 
 const WowAvatar = lazyArchetype(() => import('../components/avatar/WowAvatar'))
 const WowBackdrop = lazyArchetype(() => import('../components/backdrop/WowBackdrop'))
-const WOWSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
+const WOWSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
 const WowComment = lazyArchetype(() => import('../components/comments/voices/WowComment'))
 const WowFeedFrame = lazyArchetype(() => import('../components/feed/WowFeedFrame'))
 const WowFactionHero = lazyArchetype(() => import('../components/factionHero/WowFactionHero'))
