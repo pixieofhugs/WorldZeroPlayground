@@ -8,8 +8,9 @@ import FactionsDirectoryView from './FactionsDirectoryView'
 const NA_SLUG = 'na'
 
 /**
- * Default MOBILE factions-directory skin. Bespoke faction directory skins
- * register in Factions' `mobileFactionsDirectory` surface.
+ * The MOBILE factions-directory skin. It was one of two candidates for a
+ * `mobileFactionsDirectory` surface, but no faction ever registered a bespoke
+ * directory, so the slot was retired and Factions renders this directly.
  *
  * It used to self-fetch. That made `/factions` remount its data every time the
  * viewport crossed 767px, because the fetch sat below the form-factor switch;

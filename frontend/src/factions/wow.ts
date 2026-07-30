@@ -79,8 +79,9 @@
  * `praxisDetail` each serve WOW on both form factors.)
  * The shared vocabulary lives in `components/cards/wowMobile.tsx`.
  * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
- * `mobilePlayersDirectory` stay unclaimed on purpose — nothing in the kit
- * describes them.
+ * `mobilePlayersDirectory` were unclaimed here on purpose — nothing in the kit
+ * described them — and since no other faction claimed them either, the four
+ * slots were retired outright; those pages render their `Default*` skin.
  *
  * Override-only, like every manifest: WOW still falls through to the `Default*`
  * archetype on every OTHER surface — it is themed-and-partly-skinned now, not

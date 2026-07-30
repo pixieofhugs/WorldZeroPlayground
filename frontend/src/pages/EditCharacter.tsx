@@ -6,8 +6,6 @@ import DefaultSigil from '../components/cards/DefaultSigil'
 import ImageEditModal from '../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { pickVariant } from '../utils/factionDispatch'
-import { surfaceMap } from '../factions'
 import { useEditCharacter, type EditCharacterState } from './characterPaths/useEditCharacter'
 import PortraitPicker from './characterPaths/PortraitPicker'
 import DefaultEditCharacter from './characterPaths/mobileArchetypes/DefaultEditCharacter'
@@ -81,10 +79,9 @@ export default function EditCharacter() {
   const state = useEditCharacter()
   const formFactor = useFormFactor()
 
-  if (formFactor === 'mobile') {
-    const Mobile = pickVariant(surfaceMap('mobileEditCharacter'), null, DefaultEditCharacter)
-    return <Mobile state={state} />
-  }
+  // No faction ever claimed `mobileEditCharacter`, so the slot and its dispatch
+  // are gone: mobile renders the Default skin directly.
+  if (formFactor === 'mobile') return <DefaultEditCharacter state={state} />
 
   return <DesktopEditCharacter state={state} />
 }
