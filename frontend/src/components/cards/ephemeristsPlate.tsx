@@ -59,6 +59,16 @@ export const LINE = "var(--faction-ephemerists-plate-line)";
 export const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 export const WASH = "var(--faction-ephemerists-plate-wash)";
 
+/**
+ * The plate's STEPPED CORNER — top-left and bottom-right chamfered, so a cell
+ * reads as cut from stone rather than rounded. The design draws it on the score
+ * box (7), the ratio chip inside it (5), the byline cartouche (7) and the vote
+ * plate (7); `step` is the chamfer's leg in px, which is ornament geometry.
+ */
+export function stepClip(step: number): string {
+  return `polygon(${step}px 0, 100% 0, 100% calc(100% - ${step}px), calc(100% - ${step}px) 100%, 0 100%, 0 ${step}px)`;
+}
+
 /** Incised small caps — the plate's label voice, everywhere. */
 export const SMALL_CAPS: CSSProperties = {
   fontFamily: CAPS,

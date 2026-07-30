@@ -166,7 +166,7 @@ describe('findDuplicateJsonKeys scanner', () => {
 
 describe('i18next runtime', () => {
   it('resolves a nested key', () => {
-    expect(i18n.t('votes:ephemerists.plausible')).toBe('plausible')
+    expect(i18n.t('votes:ephemerists.silver')).toBe('silver')
   })
 
   it('interpolates a {{var}}', () => {
