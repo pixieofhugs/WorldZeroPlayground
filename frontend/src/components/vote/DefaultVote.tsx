@@ -40,7 +40,7 @@ const ROW_GAP = 9
 const ROW_SPAN = DOT_SIZES.length * HIT_SIZE + (DOT_SIZES.length - 1) * ROW_GAP
 const TIER_KEYS = ['so-so', 'decent', 'good', 'great', 'brilliant'] as const
 
-export default function UnaffiliatedVote({
+export default function DefaultVote({
   praxisId,
   currentValue,
   points,

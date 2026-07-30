@@ -471,7 +471,7 @@
   --faction-default-aurora-filter: blur(56px) saturate(0.5);
   --faction-default-aurora-blend: normal;
   /* ── The vote row's per-dot GLOW cast (#842, #1214) ──
-     Read as `var(--spectrum-glow-${value})` by vote/UnaffiliatedVote and
+     Read as `var(--spectrum-glow-${value})` by vote/DefaultVote and
      vote/AlbescentVote for each reached dot's box-shadow.
 
      A FIVE-SAMPLE OF THE SEVEN-STOP RAMP, keyed to where each dot windows into

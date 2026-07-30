@@ -5,7 +5,7 @@
  * It is deliberately UN-skinned: the panel itself wears the community spectrum
  * (the `na`/Default rainbow), themed by no single faction, because the choice
  * spans every issuing faction. Each ROW, however, wears its issuing faction's
- * dress by reusing the read-only `<MetaTaskSeal>` card, so the allegiance reads
+ * dress by reusing the read-only `<MetataskSeal>` card, so the allegiance reads
  * at a glance. A faction filter row and a title/description search narrow the
  * list; the footer confirms the pending choice before it attaches.
  *
@@ -20,10 +20,10 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TaskOut } from "../../api/tasks";
-import MetaTaskSeal from "../../components/metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "./MetataskSeal";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionCssVar, factionName } from "../../utils/factions";
-import type { EditPraxisState } from "./useEditPraxis";
+import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 const ALL_FILTER = "all" as const;
 
@@ -37,16 +37,16 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
   // Distinct issuing factions present in the eligible set — the filter chips.
   const factionSlugs = useMemo(() => {
     const seen: string[] = [];
-    for (const mt of state.metaTasks) {
+    for (const mt of state.metatasks) {
       const slug = mt.metatask_faction_slug;
       if (slug && !seen.includes(slug)) seen.push(slug);
     }
     return seen;
-  }, [state.metaTasks]);
+  }, [state.metatasks]);
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return state.metaTasks.filter((mt) => {
+    return state.metatasks.filter((mt) => {
       if (factionFilter !== ALL_FILTER && mt.metatask_faction_slug !== factionFilter) {
         return false;
       }
@@ -54,7 +54,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
       const haystack = `${mt.title} ${mt.description ?? ""}`.toLowerCase();
       return haystack.includes(needle);
     });
-  }, [state.metaTasks, query, factionFilter]);
+  }, [state.metatasks, query, factionFilter]);
 
   const chipStyle = (active: boolean, slug: string | null) => ({
     padding: "var(--space-xs) var(--space-md)",
@@ -229,7 +229,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                   outlineOffset: 2,
                 }}
               >
-                <MetaTaskSeal metatasks={[mt]} />
+                <MetataskSeal metatasks={[mt]} />
                 {sealed && (
                   <span
                     className="eyebrow block"

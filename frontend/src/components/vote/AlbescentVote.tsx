@@ -8,7 +8,7 @@ import { reframeLabel } from './voteReframes'
 /**
  * Albescent vote UI (#843) — FERROFLUID. Ported from the vote-stamps design
  * handoff (`AlbescentVote`), not re-imagined — ADR-0049. It is the eighth widget; until now Albescent fell through to
- * {@link import('./UnaffiliatedVote').default} and nobody noticed, because the
+ * {@link import('./DefaultVote').default} and nobody noticed, because the
  * fallback renders something plausible.
  *
  * It wears the SAME neutral spectrum as unaffiliated — that is the point, and the

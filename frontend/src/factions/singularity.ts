@@ -20,7 +20,7 @@ const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetai
 const SingularityFactionHero = lazyArchetype(() => import('../components/cards/SingularityFactionHero'))
 const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SingularityFactionPage'))
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
-const SingularityHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityHome'))
+const SingularityFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityFieldDesk'))
 const SingularityProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SingularityProfileBody'))
 const SingularityTaskCard = lazyArchetype(() => import('../components/cards/SingularityTaskCard'))
 const SingularityTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SingularityTaskDetail'))
@@ -28,7 +28,7 @@ const SingularityVote = lazyArchetype(() => import('../components/vote/Singulari
 const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))
 const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SingularityPraxisDetail'))
 const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
-const SingularitySeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SingularitySeal'))
+const SingularitySeal = lazyArchetype(() => import('../components/metataskSeal/skins/SingularitySeal'))
 const SingularitySigilAdapter = lazyArchetype(() => import('../components/cards/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
 const SingularityCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SingularityCard })))
 const SingularitySelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SingularitySelectCard })))
@@ -41,7 +41,7 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   taskCard: () => SingularityTaskCard,
   praxisCard: () => SingularityPraxisCard,
   scoreStamp: () => SingularityScoreStamp,
-  metaTaskSeal: () => SingularitySeal,
+  metataskSeal: () => SingularitySeal,
   avatar: () => SingularityAvatar,
   backdrop: () => SingularityBackdrop,
   sigil: () => SingularitySigilAdapter,
@@ -56,5 +56,5 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
   mobileFactionPage: () => SingularityFactionPage,
-  mobileFieldDesk: () => SingularityHome,
+  mobileFieldDesk: () => SingularityFieldDesk,
 }

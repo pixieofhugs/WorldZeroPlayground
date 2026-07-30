@@ -98,11 +98,11 @@ export { default as UaFactionPage } from "../src/pages/factionDetail/mobileArche
 export { default as WowFactionPage } from "../src/pages/factionDetail/mobileArchetypes/WowFactionPage";
 export { default as DefaultFactionsDirectory } from "../src/pages/factions/mobileArchetypes/DefaultFactionsDirectory";
 export { default as DefaultFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk";
-export { default as EphemeristsHome } from "../src/pages/fieldDesk/mobileArchetypes/EphemeristsHome";
-export { default as EverymenHome } from "../src/pages/fieldDesk/mobileArchetypes/EverymenHome";
-export { default as SingularityHome } from "../src/pages/fieldDesk/mobileArchetypes/SingularityHome";
-export { default as SnideHome } from "../src/pages/fieldDesk/mobileArchetypes/SnideHome";
-export { default as UaHome } from "../src/pages/fieldDesk/mobileArchetypes/UaHome";
+export { default as EphemeristsFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk";
+export { default as EverymenFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/EverymenFieldDesk";
+export { default as SingularityFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/SingularityFieldDesk";
+export { default as SnideFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk";
+export { default as UaFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/UaFieldDesk";
 export { default as WowFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/WowFieldDesk";
 export { default as DefaultPlayers } from "../src/pages/players/mobileArchetypes/DefaultPlayers";
 export { default as DefaultPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail";

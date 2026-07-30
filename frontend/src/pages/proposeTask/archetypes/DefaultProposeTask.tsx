@@ -152,8 +152,8 @@ export default function DefaultProposeTask({
     setFactionSlug,
     notes,
     setNotes,
-    isMetaTask,
-    setIsMetaTask,
+    isMetatask,
+    setIsMetatask,
     metaBonusValue,
     setMetaBonusValue,
     submitting,
@@ -187,7 +187,7 @@ export default function DefaultProposeTask({
           className="sidebar-card"
           style={{ padding: "var(--space-xl)", textAlign: "center" }}
         >
-          {isMetaTask ? (
+          {isMetatask ? (
             <>
               <p
                 className="content-title font-display italic"
@@ -422,7 +422,7 @@ export default function DefaultProposeTask({
                   marginBottom: "var(--space-md)",
                 }}
               >
-                {!isMetaTask && (
+                {!isMetatask && (
                   <div>
                     <span
                       className="eyebrow"
@@ -450,7 +450,7 @@ export default function DefaultProposeTask({
                     </span>
                   </div>
                 )}
-                {isMetaTask && (
+                {isMetatask && (
                   <div>
                     <span
                       className="eyebrow"
@@ -520,8 +520,8 @@ export default function DefaultProposeTask({
                   >
                     <input
                       type="checkbox"
-                      checked={isMetaTask}
-                      onChange={(e) => setIsMetaTask(e.target.checked)}
+                      checked={isMetatask}
+                      onChange={(e) => setIsMetatask(e.target.checked)}
                       style={{
                         accentColor: color,
                         width: 14,
@@ -533,7 +533,7 @@ export default function DefaultProposeTask({
                       className="content-text font-body"
                       style={{
                         color: "var(--color-text-primary)",
-                        fontWeight: isMetaTask ? 700 : 400,
+                        fontWeight: isMetatask ? 700 : 400,
                       }}
                     >
                       {t("proposeTask.metaToggle.label")}
@@ -556,7 +556,7 @@ export default function DefaultProposeTask({
             </div>
 
             {/* Notes to Admin (§20.5) — hidden for meta tasks */}
-            {!isMetaTask && (
+            {!isMetatask && (
               <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
                   className="eyebrow"
@@ -603,7 +603,7 @@ export default function DefaultProposeTask({
                   className="eyebrow"
                   style={{ color, marginBottom: "var(--space-xs)", display: "block" }}
                 >
-                  {isMetaTask
+                  {isMetatask
                     ? t("proposeTask.preview.metaHeading", { faction: fname })
                     : t("proposeTask.preview.taskHeading", { faction: fname })}
                 </span>
@@ -633,7 +633,7 @@ export default function DefaultProposeTask({
                   </p>
                 )}
                 <div style={{ display: "flex", gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
-                  {isMetaTask ? (
+                  {isMetatask ? (
                     <span
                       className="eyebrow"
                       style={{ color: "var(--color-success)" }}
@@ -654,7 +654,7 @@ export default function DefaultProposeTask({
                       level: levelRequired === "" ? 0 : levelRequired,
                     })}
                   </span>
-                  {!isMetaTask && (
+                  {!isMetatask && (
                     <span className="eyebrow" style={{ color }}>
                       {t("proposeTask.preview.pending")}
                     </span>
@@ -704,7 +704,7 @@ export default function DefaultProposeTask({
                 />
                 {submitting
                   ? t("proposeTask.submit.busy")
-                  : isMetaTask
+                  : isMetatask
                     ? t("proposeTask.submit.meta")
                     : t("proposeTask.submit.task")}
               </button>

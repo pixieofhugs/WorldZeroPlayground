@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName } from '../../utils/factions'
-import type { SealSkinProps } from './types'
+import { factionName } from '../../../utils/factions'
+import type { SealSkinProps } from '../types'
 
 /**
  * The neutral seal skin — plain caps, the whole rainbow, no allegiance (#930).
  *
  * This is the Unaffiliated (`na`) seal AND the shared fallback: every metatask
  * whose issuing faction has no bespoke skin registered falls through to it via
- * {@link MetaTaskSeal}'s dispatch table (e.g. `wow` until #931), so integrations
+ * {@link MetataskSeal}'s dispatch table (e.g. `wow` until #931), so integrations
  * render end to end before the per-faction skins land. It stays a tasteful
  * neutral card — a full-spectrum rainbow accent strip and an uppercase register
  * are its only signature — showing the "<FACTION> METATASK" label, the condition

@@ -127,7 +127,7 @@ function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     sendChallenge: async () => {},
     cancelDuel: async () => {},
     dissolveDuel: async () => {},
-    metaTasks: [],
+    metatasks: [],
     appliedMetatasks: new Set(),
     applyingMetatask: null,
     toggleMetatask: async () => {},

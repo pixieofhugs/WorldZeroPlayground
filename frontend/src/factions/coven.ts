@@ -28,7 +28,7 @@ const CovenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetyp
 const CovenVote = lazyArchetype(() => import('../components/vote/CovenVote'))
 const CovenPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/CovenPraxisCard'))
 const CovenScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/CovenScoreStamp'))
-const CovenSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/CovenSeal'))
+const CovenSeal = lazyArchetype(() => import('../components/metataskSeal/skins/CovenSeal'))
 const CovenSigil = lazyArchetype(() => import('../components/cards/CovenSigil').then((m) => ({ default: m.CovenSigil })))
 const CovenCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.CovenCard })))
 const COVENSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.COVENSelectCard })))
@@ -41,7 +41,7 @@ export const COVEN_MANIFEST: FactionManifest = {
   taskCard: () => CovenTaskCard,
   praxisCard: () => CovenPraxisCard,
   scoreStamp: () => CovenScoreStamp,
-  metaTaskSeal: () => CovenSeal,
+  metataskSeal: () => CovenSeal,
   avatar: () => CovenAvatar,
   backdrop: () => CovenBackdrop,
   sigil: () => CovenSigil,

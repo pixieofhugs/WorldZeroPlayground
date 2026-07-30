@@ -2,7 +2,7 @@ import type { } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { useAuth } from '../../auth/AuthContext'
-import UnaffiliatedVote from './UnaffiliatedVote'
+import DefaultVote from './DefaultVote'
 import { VoteFactionContext } from './VoteShell'
 
 /**
@@ -10,7 +10,7 @@ import { VoteFactionContext } from './VoteShell'
  * praxis's task faction (praxis.task_faction_slug). A faction that registers a
  * `vote` variant in its manifest gets its bespoke widget; `na` and every
  * themed-but-unskinned faction fall through to the global spectrum-sweep
- * {@link UnaffiliatedVote} (#820, ADR-0039). See SPEC-faction-ui-profile §1-2.
+ * {@link DefaultVote} (#820, ADR-0039). See SPEC-faction-ui-profile §1-2.
  */
 export interface VoteUIProps {
   praxisId: number
@@ -39,7 +39,7 @@ export default function VoteUI({
   if (user && viewerCanVote === false) {
     return null
   }
-  const Variant = pickVariant(surfaceMap('vote'), factionSlug, UnaffiliatedVote)
+  const Variant = pickVariant(surfaceMap('vote'), factionSlug, DefaultVote)
   // The slug is published to the shared chrome as well as dispatched on: the
   // logged-out gate speaks in the task faction's eyebrow voice (#855) and is
   // returned from inside each widget, which takes no slug prop.

@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../i18n";
 import i18n from "../../i18n";
-import type { EditPraxisState } from "./useEditPraxis";
+import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 import type { TaskOut } from "../../api/tasks";
 import { MetataskSealStack } from "./MetataskSealStack";
 import MetataskPicker from "./MetataskPicker";
@@ -44,7 +44,7 @@ const asyncNoop = async () => {};
 
 function mkState(partial: Partial<EditPraxisState>): EditPraxisState {
   return {
-    metaTasks: [],
+    metatasks: [],
     appliedMetatasks: new Set<number>(),
     appliedMetataskList: [],
     applyingMetatask: null,
@@ -117,7 +117,7 @@ describe("MetataskPicker", () => {
   it("renders the neutral header, both eligible rows, and the All filter", () => {
     const html = renderToStaticMarkup(
       <MetataskPicker
-        state={mkState({ metaTasks: rows, metataskPickerOpen: true })}
+        state={mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
     );
     expect(html).toContain(i18n.t("editPraxis.seal.pickerTitle", { ns: "forms" }));
@@ -130,7 +130,7 @@ describe("MetataskPicker", () => {
     const html = renderToStaticMarkup(
       <MetataskPicker
         state={mkState({
-          metaTasks: rows,
+          metatasks: rows,
           appliedMetatasks: new Set([1]),
           metataskPickerOpen: true,
         })}

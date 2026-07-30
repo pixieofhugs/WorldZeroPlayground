@@ -8,7 +8,7 @@ import { useFormFactor } from '../hooks/useFormFactor'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
 import CanSignUpEmpty from './tasks/CanSignUpEmpty'
-import MetaTaskSeal from '../components/metaTaskSeal/MetaTaskSeal'
+import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 import type { TaskType } from '../api/tasks'
 
 /** The eligibility filter's two stamps: everything, or only what I can claim. */
@@ -131,7 +131,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
                (#928), stacked read-only; no sign-up CTA (they're applied to a
                praxis via the picker). */
             <div style={{ maxWidth: 640 }}>
-              <MetaTaskSeal metatasks={tasks} />
+              <MetataskSeal metatasks={tasks} />
             </div>
           ) : (
             /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */

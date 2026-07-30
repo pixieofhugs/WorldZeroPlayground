@@ -20,7 +20,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { proposeTask, type TaskCreate } from "../../api/tasks";
-import { proposeMetatask, type MetataskProposal } from "../../api/metaTasks";
+import { proposeMetatask, type MetataskProposal } from "../../api/metatasks";
 import type { FactionOut } from "../../api/factions";
 import { useFactions } from "../../hooks/useFactions";
 import { useAuth } from "../../auth/AuthContext";
@@ -36,7 +36,7 @@ export { UNAFFILIATED_FACTION_SLUG };
 
 /** Raw form fields the submission planner reads. */
 export interface ProposalFields {
-  isMetaTask: boolean;
+  isMetatask: boolean;
   title: string;
   description: string;
   pointValue: string;
@@ -63,7 +63,7 @@ export type ProposalPlan =
  */
 export function planProposalSubmission(fields: ProposalFields): ProposalPlan {
   const level = fields.levelRequired === "" ? 0 : fields.levelRequired;
-  if (fields.isMetaTask) {
+  if (fields.isMetatask) {
     return {
       kind: "metatask",
       body: {
@@ -111,8 +111,8 @@ export interface ProposeTaskState {
   setFactionSlug: (value: string) => void;
   notes: string;
   setNotes: (value: string) => void;
-  isMetaTask: boolean;
-  setIsMetaTask: (value: boolean) => void;
+  isMetatask: boolean;
+  setIsMetatask: (value: boolean) => void;
   metaBonusValue: string;
   setMetaBonusValue: (value: string) => void;
 
@@ -141,7 +141,7 @@ export function useProposeTask(): ProposeTaskState {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [isMetaTask, setIsMetaTask] = useState(false);
+  const [isMetatask, setIsMetatask] = useState(false);
   const [metaBonusValue, setMetaBonusValue] = useState("10");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -162,7 +162,7 @@ export function useProposeTask(): ProposeTaskState {
     setError(null);
     try {
       const plan = planProposalSubmission({
-        isMetaTask,
+        isMetatask,
         title,
         description,
         pointValue,
@@ -180,7 +180,7 @@ export function useProposeTask(): ProposeTaskState {
       setError(
         extractError(
           err,
-          isMetaTask
+          isMetatask
             ? i18n.t("forms:proposeTask.errors.createMeta")
             : i18n.t("forms:proposeTask.errors.propose"),
         ),
@@ -215,8 +215,8 @@ export function useProposeTask(): ProposeTaskState {
     setFactionSlug,
     notes,
     setNotes,
-    isMetaTask,
-    setIsMetaTask,
+    isMetatask,
+    setIsMetatask,
     metaBonusValue,
     setMetaBonusValue,
 

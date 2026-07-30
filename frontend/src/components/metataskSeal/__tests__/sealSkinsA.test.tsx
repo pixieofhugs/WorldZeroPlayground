@@ -9,8 +9,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi } from "vitest";
 
-import MetaTaskSeal from "../MetaTaskSeal";
-import DefaultSeal from "../DefaultSeal";
+import MetataskSeal from "../MetataskSeal";
+import DefaultSeal from "../skins/DefaultSeal";
 import i18n from "../../../i18n";
 import type { TaskOut } from "../../../api/tasks";
 
@@ -47,7 +47,7 @@ describe("seal skins A content-slot invariant", () => {
     const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value });
 
     it(`${slug} renders the condition (title)`, () => {
-      const html = markup(<MetaTaskSeal metatasks={[task]} />);
+      const html = markup(<MetataskSeal metatasks={[task]} />);
       // Snide clips the condition into per-word "ransom" chips, so each word
       // lands in its own element rather than one contiguous text node.
       for (const word of task.title.split(" ")) {
@@ -56,12 +56,12 @@ describe("seal skins A content-slot invariant", () => {
     });
 
     it(`${slug} renders the bonus (+point_value PTS)`, () => {
-      const html = markup(<MetaTaskSeal metatasks={[task]} />);
+      const html = markup(<MetataskSeal metatasks={[task]} />);
       expect(html).toContain(bonus);
     });
 
     it(`${slug} renders its own skin, not the Default fallthrough`, () => {
-      const bespoke = markup(<MetaTaskSeal metatasks={[task]} />);
+      const bespoke = markup(<MetataskSeal metatasks={[task]} />);
       const fallback = markup(
         <DefaultSeal metatask={task} removable={false} />,
       );
@@ -71,18 +71,18 @@ describe("seal skins A content-slot invariant", () => {
     it(`${slug} wires removable + onRemove to the metatask id`, () => {
       const onRemove = vi.fn();
       renderToStaticMarkup(
-        <MetaTaskSeal metatasks={[task]} removable onRemove={onRemove} />,
+        <MetataskSeal metatasks={[task]} removable onRemove={onRemove} />,
       );
       // Static markup can't fire click handlers, but it must render the ×
       // control when removable so there's something to click.
       const html = markup(
-        <MetaTaskSeal metatasks={[task]} removable onRemove={onRemove} />,
+        <MetataskSeal metatasks={[task]} removable onRemove={onRemove} />,
       );
       expect(html).toContain("×");
     });
 
     it(`${slug} omits the × control when not removable`, () => {
-      const html = markup(<MetaTaskSeal metatasks={[task]} />);
+      const html = markup(<MetataskSeal metatasks={[task]} />);
       const removeLabel = i18n.t("praxis:detail.seal.remove");
       expect(html).not.toContain(`aria-label="${removeLabel}"`);
     });
@@ -96,9 +96,9 @@ describe("seal skins A — unregistered slug still falls through", () => {
     // unrecognized issuer. na — a real but deliberately-unskinned faction — is
     // covered in sealSkinsB.
     const task = metatask("nonesuch");
-    // MetaTaskSeal wraps its stack in a flex container, so compare the
+    // MetataskSeal wraps its stack in a flex container, so compare the
     // dispatched seal's own markup, not the wrapper around it.
-    const html = markup(<MetaTaskSeal metatasks={[task]} />);
+    const html = markup(<MetataskSeal metatasks={[task]} />);
     const fallback = markup(<DefaultSeal metatask={task} removable={false} />);
     expect(html).toContain(fallback);
   });

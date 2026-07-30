@@ -44,8 +44,8 @@ function state(overrides: Partial<ProposeTaskState> = {}): ProposeTaskState {
     setFactionSlug: () => {},
     notes: '',
     setNotes: () => {},
-    isMetaTask: false,
-    setIsMetaTask: () => {},
+    isMetatask: false,
+    setIsMetatask: () => {},
     metaBonusValue: '10',
     setMetaBonusValue: () => {},
     submitting: false,
@@ -90,7 +90,7 @@ describe('planProposalSubmission — checkbox routes to proposeMetatask', () => 
   it('routes a checked proposal through the metatask endpoint with the picked faction', () => {
     const plan = planProposalSubmission({
       ...base,
-      isMetaTask: true,
+      isMetatask: true,
       factionSlug: 'coven',
     })
     expect(plan.kind).toBe('metatask')
@@ -103,7 +103,7 @@ describe('planProposalSubmission — checkbox routes to proposeMetatask', () => 
   it('allows an Unaffiliated (na) metatask — anyone can apply it', () => {
     const plan = planProposalSubmission({
       ...base,
-      isMetaTask: true,
+      isMetatask: true,
       factionSlug: UNAFFILIATED_FACTION_SLUG,
     })
     expect(plan.kind).toBe('metatask')
@@ -114,7 +114,7 @@ describe('planProposalSubmission — checkbox routes to proposeMetatask', () => 
   it('routes an unchecked proposal through the standard task endpoint', () => {
     const plan = planProposalSubmission({
       ...base,
-      isMetaTask: false,
+      isMetatask: false,
       factionSlug: 'coven',
     })
     expect(plan.kind).toBe('standard')

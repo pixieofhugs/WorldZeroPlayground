@@ -57,7 +57,7 @@ function Sheet({ children }: { children: ReactNode }) {
   )
 }
 
-export default function UaHome({ state }: { state: FieldDeskHomeState }) {
+export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
 

@@ -5,7 +5,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
+import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { BalloonBunch, Bunting, Zig } from '../../../components/cards/wowOrnament'
 import { DuelCard } from '../DuelCard'
@@ -114,7 +114,7 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * `TaskCrown` (via the shared banners) · `ScoreStamp`, which since #1091 carries
  * the whole score rail and resolves WOW's own ✦ chronicle stamp · `VoteUI`,
  * which dispatches WOW's googly-balloon verdict and draws its own *"Cast thy
- * Verdict"* prompt · `CollabRoster` · `MediaGallery` · `MetaTaskSeal`,
+ * Verdict"* prompt · `CollabRoster` · `MediaGallery` · `MetataskSeal`,
  * READ-ONLY (no add-chips: `apply_metatask` requires `in_progress` and would
  * 422) · `DuelCard`, which owns all three duel readings and draws nothing on a
  * declined challenge · `CommentThread` via `PraxisDetailComments`, with the
@@ -730,14 +730,14 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </section>
   )
 
-  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
   // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
   // wears its ISSUING faction's dress (#927/#933). No "available" chips:
   // `apply_metatask` requires `status == in_progress`, so every one would 422.
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead('charms', t('detail.metatasks.heading'))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   )
 

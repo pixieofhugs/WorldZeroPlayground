@@ -20,7 +20,7 @@ const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetai
 const EphemeristsFactionHero = lazyArchetype(() => import('../components/cards/EphemeristsFactionHero'))
 const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EphemeristsFactionPage'))
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
-const EphemeristsHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsHome'))
+const EphemeristsFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk'))
 const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
 const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/EphemeristsTaskCard'))
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
@@ -28,7 +28,7 @@ const EphemeristsVote = lazyArchetype(() => import('../components/vote/Ephemeris
 const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EphemeristsPraxisCard'))
 const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
 const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
-const EphemeristsSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/EphemeristsSeal'))
+const EphemeristsSeal = lazyArchetype(() => import('../components/metataskSeal/skins/EphemeristsSeal'))
 const EphemeristsSigil = lazyArchetype(() => import('../components/cards/EphemeristsSigil'))
 const EphemeristsCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.EphemeristsCard })))
 const EphemeristsSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.EphemeristsSelectCard })))
@@ -45,7 +45,7 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   // contract, and dropping this line hands the surface straight back to it.
   praxisDetail: () => EphemeristsPraxisDetail,
   scoreStamp: () => EphemeristsScoreStamp,
-  metaTaskSeal: () => EphemeristsSeal,
+  metataskSeal: () => EphemeristsSeal,
   avatar: () => EphemeristsAvatar,
   backdrop: () => EphemeristsBackdrop,
   sigil: () => EphemeristsSigil,
@@ -59,5 +59,5 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   profileBody: () => EphemeristsProfileBody,
   duelSeal: () => EphemeristsDuelSealConfirm,
   mobileFactionPage: () => EphemeristsFactionPage,
-  mobileFieldDesk: () => EphemeristsHome,
+  mobileFieldDesk: () => EphemeristsFieldDesk,
 }

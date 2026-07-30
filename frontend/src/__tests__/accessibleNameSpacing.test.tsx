@@ -35,7 +35,7 @@ import '../i18n'
 import type { CommentOut } from '../api/comments'
 import type { TaskOut } from '../api/tasks'
 import PageTitle from '../components/ui/PageTitle'
-import MetaTaskSeal from '../components/metaTaskSeal/MetaTaskSeal'
+import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 import SnideComment from '../components/comments/voices/SnideComment'
 
 /** The text a screen reader has to work from: markup with every tag removed. */
@@ -93,7 +93,7 @@ describe('per-word and per-letter treatments keep their spaces in the text', () 
   it('SnideSeal: the clipped condition reads as a sentence', () => {
     // Per-word "cut from a magazine" chips, previously a `flex flex-wrap` row
     // spaced with `gap`.
-    expect(text(<MetaTaskSeal metatasks={[metatask()]} />)).toContain(CONDITION)
+    expect(text(<MetataskSeal metatasks={[metatask()]} />)).toContain(CONDITION)
   })
 
   it('SnideComment: the ransom byline reads as a name', () => {

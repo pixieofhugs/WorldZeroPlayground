@@ -10,7 +10,7 @@
  * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so
  * everything is asserted from the produced markup given props + a mocked
  * `useAuth`. `na`/absent faction slug dispatches to the spectrum-sweep
- * UnaffiliatedVote, whose logged-in markup is a row of five "Rate N — …"
+ * DefaultVote, whose logged-in markup is a row of five "Rate N — …"
  * buttons and whose anonymous markup is the shared "Log in to vote" gate.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -71,7 +71,7 @@ function render(viewerCanVote?: boolean): string {
   )
 }
 
-// UnaffiliatedVote's five rate buttons: aria-label "Rate {n} — {tier}" (#855).
+// DefaultVote's five rate buttons: aria-label "Rate {n} — {tier}" (#855).
 const RATE_BUTTON = /aria-label="Rate \d/
 const rateButtonCount = (html: string): number =>
   (html.match(/aria-label="Rate \d/g) ?? []).length

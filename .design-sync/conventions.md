@@ -54,7 +54,7 @@ faction's own component and let it carry its identity.
 ### Mobile page archetypes (full-screen, not atoms)
 The kit also ships **mobile full-screen page skins** — compose the whole screen,
 don't cherry-pick pieces. Nine surfaces, each faction-skinned with a `Default`
-(na) fallback: **FieldDesk** (home — `DefaultFieldDesk`, `WowFieldDesk`, `UaHome`…),
+(na) fallback: **FieldDesk** (home — `DefaultFieldDesk`, `WowFieldDesk`, `UaFieldDesk`…),
 **Tasks** (browse — `DefaultTasks`, `UaTaskList`…), **TaskDetail**, **PraxisDetail**
 (reading), **EditPraxis** (composer — `WowEditPraxis`, `UaComposer`…), **FactionPage**,
 plus singletons `DefaultPlayers`, `DefaultProfile`, `DefaultSettings`,

@@ -82,7 +82,7 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
   )
 }
 
-export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
+export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
 

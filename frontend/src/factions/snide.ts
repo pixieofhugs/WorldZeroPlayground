@@ -20,7 +20,7 @@ const SnideFactionBody = lazyArchetype(() => import('../pages/factionDetail/arch
 const SnideFactionHero = lazyArchetype(() => import('../components/cards/SnideFactionHero'))
 const SnideFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SnideFactionPage'))
 const SnideFeedFrame = lazyArchetype(() => import('../components/feed/SnideFeedFrame'))
-const SnideHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideHome'))
+const SnideFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideFieldDesk'))
 const SnidePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SnidePraxisDetail'))
 const SnideProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SnideProfileBody'))
 const SnideTaskCard = lazyArchetype(() => import('../components/cards/SnideTaskCard'))
@@ -28,7 +28,7 @@ const SnideTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetyp
 const SnideVote = lazyArchetype(() => import('../components/vote/SnideVote'))
 const SnidePraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SnidePraxisCard'))
 const SnideScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SnideScoreStamp'))
-const SnideSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SnideSeal'))
+const SnideSeal = lazyArchetype(() => import('../components/metataskSeal/skins/SnideSeal'))
 const SnideSigil = lazyArchetype(() => import('../components/cards/SnideSigil').then((m) => ({ default: m.SnideSigil })))
 const SnideCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SnideCard })))
 const SnideSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SnideSelectCard })))
@@ -41,7 +41,7 @@ export const SNIDE_MANIFEST: FactionManifest = {
   taskCard: () => SnideTaskCard,
   praxisCard: () => SnidePraxisCard,
   scoreStamp: () => SnideScoreStamp,
-  metaTaskSeal: () => SnideSeal,
+  metataskSeal: () => SnideSeal,
   avatar: () => SnideAvatar,
   backdrop: () => SnideBackdrop,
   sigil: () => SnideSigil,
@@ -56,5 +56,5 @@ export const SNIDE_MANIFEST: FactionManifest = {
   profileBody: () => SnideProfileBody,
   duelSeal: () => SnideDuelSealConfirm,
   mobileFactionPage: () => SnideFactionPage,
-  mobileFieldDesk: () => SnideHome,
+  mobileFieldDesk: () => SnideFieldDesk,
 }

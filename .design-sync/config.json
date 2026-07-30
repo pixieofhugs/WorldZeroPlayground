@@ -107,11 +107,11 @@
     "WowFactionPage": "src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx",
     "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
-    "EphemeristsHome": "src/pages/fieldDesk/mobileArchetypes/EphemeristsHome.tsx",
-    "EverymenHome": "src/pages/fieldDesk/mobileArchetypes/EverymenHome.tsx",
-    "SingularityHome": "src/pages/fieldDesk/mobileArchetypes/SingularityHome.tsx",
-    "SnideHome": "src/pages/fieldDesk/mobileArchetypes/SnideHome.tsx",
-    "UaHome": "src/pages/fieldDesk/mobileArchetypes/UaHome.tsx",
+    "EphemeristsFieldDesk": "src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx",
+    "EverymenFieldDesk": "src/pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx",
+    "SingularityFieldDesk": "src/pages/fieldDesk/mobileArchetypes/SingularityFieldDesk.tsx",
+    "SnideFieldDesk": "src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx",
+    "UaFieldDesk": "src/pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx",
     "WowFieldDesk": "src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx",
     "DefaultPlayers": "src/pages/players/mobileArchetypes/DefaultPlayers.tsx",
     "DefaultPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail.tsx",
@@ -266,23 +266,23 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "EphemeristsHome": {
+    "EphemeristsFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "EverymenHome": {
+    "EverymenFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "SingularityHome": {
+    "SingularityFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "SnideHome": {
+    "SnideFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "UaHome": {
+    "UaFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
     },

@@ -207,7 +207,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     duel: null,
     sendChallenge: anoop,
     cancelDuel: anoop,
-    metaTasks: [],
+    metatasks: [],
     appliedMetatasks: new Set<number>(),
     applyingMetatask: null,
     toggleMetatask: anoop,
