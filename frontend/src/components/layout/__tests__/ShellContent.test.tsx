@@ -158,8 +158,16 @@ describe('ShellContent sidebar handle', () => {
     expect(render(false, true)).toContain('aria-expanded="false"')
   })
 
-  it('points at the rail it controls', () => {
+  it('points at the rail it controls while that rail exists', () => {
     expect(render(false, false)).toContain('aria-controls="wz-sidebar"')
+  })
+
+  // Collapsed means the rail is UNMOUNTED, so keeping `aria-controls` would
+  // reference an id that is not on the page — an axe `aria-valid-attr-value`
+  // failure, and nothing useful for a screen reader to follow. `aria-expanded`
+  // carries the state on its own.
+  it('drops aria-controls once there is no rail to point at', () => {
+    expect(render(false, true)).not.toContain('aria-controls')
   })
 
   it('is a real button, so it is keyboard-reachable', () => {
@@ -169,14 +177,14 @@ describe('ShellContent sidebar handle', () => {
   // Decision 4: the 768–1023px band and the phone get no rail at all, so a
   // handle there would toggle something invisible.
   it('never renders on a phone, in either state', () => {
-    expect(render(true, false)).not.toContain('aria-controls="wz-sidebar"')
-    expect(render(true, true)).not.toContain('aria-controls="wz-sidebar"')
+    expect(render(true, false)).not.toContain('aria-expanded')
+    expect(render(true, true)).not.toContain('aria-expanded')
   })
 
   it('never renders for a signed-out visitor', () => {
     authMock.mockReturnValue(signedOut)
-    expect(render(false, false)).not.toContain('aria-controls="wz-sidebar"')
-    expect(render(false, true)).not.toContain('aria-controls="wz-sidebar"')
+    expect(render(false, false)).not.toContain('aria-expanded')
+    expect(render(false, true)).not.toContain('aria-expanded')
   })
 
   // Its wrapper carries the same `lg:` gate the rail has always had.

@@ -42,7 +42,11 @@ function HandleButton({
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      aria-controls="wz-sidebar"
+      // Collapsed means the rail is UNMOUNTED, so a kept `aria-controls` would
+      // name an id that is not on the page — an axe `aria-valid-attr-value`
+      // failure and a dead reference for a screen reader to follow.
+      // `aria-expanded` carries the state on its own.
+      aria-controls={expanded ? 'wz-sidebar' : undefined}
       aria-label={label}
       title={label}
       className="flex flex-col items-center gap-1 w-8 mb-4"
