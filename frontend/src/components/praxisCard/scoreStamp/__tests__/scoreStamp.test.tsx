@@ -318,6 +318,23 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
   }
 
   /**
+   * #1207 — the Ephemerists stamp crossed from THE CODEX to the Valley plate.
+   * The rows are unchanged (they are `scoreBreakdown`'s, asserted above); what
+   * moves is the whole presentation, and the tell that it moved is the token
+   * family. A skin that still reads `--eph-*` is painting the retired
+   * illuminated-codex ground on a papyrus card, which renders fine and is wrong.
+   */
+  it('strikes the Ephemerists total in the plate octagon, not the codex rubric', () => {
+    const markup = renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({})} />)
+    expect(markup).toContain('--faction-ephemerists-plate-')
+    expect(markup).not.toMatch(/--eph-[a-z]/)
+    // The stepped octagon on its lotus base, carrying the total.
+    expect(markup).toContain('M30 4 L70 4 L96 30')
+    // The codex's stuck-label tilt is gone: this cell is cut, not stuck on.
+    expect(markup).not.toContain('rotate(-1deg)')
+  })
+
+  /**
    * The sticker is not a rectangle and the plate is not upright — #821 replaced
    * both with the same level bordered box. Geometry, unlike copy, has no other
    * assertion that would catch it going flat again.

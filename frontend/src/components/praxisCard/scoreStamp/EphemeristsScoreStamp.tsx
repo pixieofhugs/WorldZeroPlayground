@@ -1,46 +1,81 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../cards/TaskCrown";
-import { Rubric } from "../../factionMarks";
+import {
+  BRASS,
+  BRASS_LIGHT,
+  CAPTION,
+  DECO,
+  DISC,
+  INK,
+  INNER,
+  OCHRE,
+  Octagon,
+  QUIET,
+  READING,
+  SMALL_CAPS,
+  WASH,
+  stepClip,
+} from "../../cards/ephemeristsPlate";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
- * The Ephemerists score stamp (#841, ADR-0049) — the codex's SCORE BOX with the
- * {@link Rubric} set into its foot.
+ * The Ephemerists score stamp (#1207) — the Valley plate's TALLY CELL: a cut
+ * panel of working with the total struck in a stepped octagon on a lotus base.
+ *
+ * It replaces the codex's rubric box (#841), which painted the retired
+ * `--eph-*` illuminated-codex family onto a card that is papyrus everywhere
+ * else. Every colour here is a `--faction-ephemerists-plate-*` token, so the
+ * cell flips through the `[data-theme="dark"]` cascade with no ternary; `-brass`
+ * stays a rule colour and never an ink, and every label takes `-caption` or
+ * `-quiet`.
  *
  * The design files this faction under the shared box pattern ("Ephemerists …
- * follow the Unaffiliated mechanism exactly"), so the row mechanics match
- * {@link DefaultScoreStamp} — base numeral with the multiplier chip pinned
- * right, the working underneath, then the total. Everything else is the codex:
- * gold leaf binding the box, the brighter leaf inside it, engraved caps for
- * every figure, the chip in celestial teal rather than spectrum, and the total
- * struck in rubrication red under a gold-to-verdigris hairline.
+ * follow the Unaffiliated mechanism exactly"), so the ROWS are
+ * {@link DefaultScoreStamp}'s: base with the multiplier beside it, the metatask
+ * line, the votes tally, the total. Row selection stays in `scoreBreakdown`
+ * (ADR-0047/0053) — this file is presentation only, and each row is its own
+ * line so the cell reads as a shorter or longer entry in all five conditional
+ * states rather than as a form with gaps. The BASE line is optional too since
+ * #1131: with nothing moving the figure, the octagon already carries it.
  *
- * Row selection stays in `scoreBreakdown` (ADR-0047); this file is presentation
- * only. Each optional row is its own line, so the box reads as a shorter or
- * longer entry in all five conditional states rather than as a form with gaps.
- * The BASE line is optional too since #1131 — when nothing has moved the figure
- * the rubric already carries it, and the entry shortens to the tally alone.
+ * DEVIATIONS from the vendored frame, both named in the PR:
+ *  • the multiplier chip is labelled from the SHARED `card.stamp.mult` key
+ *    rather than the design's "ratio", and prints `×0.80` rather than `0.80 :1`.
+ *    The stamp's row vocabulary is shared across every faction showing the same
+ *    number (the praxis-detail skin's note says so out loud); a faction word for
+ *    it would fork one number's name between two surfaces.
+ *  • the design draws no metatask row (its sample has none). One is drawn here,
+ *    in the box pattern's own place, because the stamp must stay legible in all
+ *    five states — its chip is ochre, the plate's one accent, since brass is
+ *    never an ink and a gold chip would pay under 3:1 behind a label.
  */
+
+/** The octagon medallion, and its inner rule. Ornament geometry (§4a). */
+const MEDALLION = 104;
+const MEDALLION_INSET = 6;
+
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
   const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
+  /** The cell's label voice: incised caps, at the plate's caption gold. */
+  const label = { ...SMALL_CAPS, fontSize: "var(--text-xs)", color: CAPTION };
+
   return (
     <div
       style={{
         position: "relative",
         flexShrink: 0,
-        minWidth: 116,
+        width: "100%",
+        maxWidth: MEDALLION + 24,
         boxSizing: "border-box",
-        background: "var(--eph-stamp-bg)",
-        border: "1.5px solid var(--eph-frame)",
-        borderRadius: 4,
-        boxShadow: "0 2px 6px rgba(42, 29, 18, 0.12)",
-        transform: "rotate(-1deg)",
+        background: INNER,
+        border: `1px solid ${BRASS}`,
         padding: "var(--space-sm) var(--space-md)",
+        clipPath: stepClip(7),
         lineHeight: 1.1,
       }}
     >
@@ -53,49 +88,42 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         />
       )}
 
-      {/* Base, with the multiplier chip pinned to the right rail. The chip rides
-          this row, and it may: `scoreBreakdown` only nulls `base` when no other
-          term exists (#1131), so the whole line leaves together and the chip is
-          never orphaned. */}
+      {/* Base, with the figure set against its label across the cell. */}
       {base !== null && (
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
-          <span
-            style={{
-              fontFamily: "var(--eph-serif)",
-              fontSize: "var(--text-sm)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--eph-muted)",
-            }}
-          >
-            {t("card.stamp.base")}
-          </span>
-          <span
-            style={{
-              fontFamily: "var(--eph-display)",
-              fontWeight: 600,
-              fontSize: "var(--text-title)",
-              lineHeight: 0.8,
-              color: "var(--eph-vellum-text)",
-            }}
-          >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            gap: "var(--space-sm)",
+          }}
+        >
+          <span style={label}>{t("card.stamp.base")}</span>
+          <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", lineHeight: 0.8, color: INK }}>
             {base}
           </span>
-          {mult !== null && (
-            <span
-              style={{
-                marginLeft: "auto",
-                fontFamily: "var(--eph-display)",
-                fontSize: "var(--text-md)",
-                color: "var(--faction-ephemerists-on-fill)",
-                background: "var(--faction-ephemerists)",
-                borderRadius: 3,
-                padding: "0 var(--space-xs)",
-              }}
-            >
-              {formatMult(mult)}
-            </span>
-          )}
+        </div>
+      )}
+
+      {/* The multiplier, in its own ruled chip — the design's "ratio" cell. */}
+      {mult !== null && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-xs)",
+            marginTop: "var(--space-sm)",
+            padding: "var(--space-xs) var(--space-sm)",
+            border: `1px solid ${BRASS}`,
+            background: WASH,
+            clipPath: stepClip(5),
+          }}
+        >
+          <span style={{ ...label, letterSpacing: "0.2em" }}>{t("card.stamp.mult")}</span>
+          <span aria-hidden style={{ width: 1, height: 11, background: BRASS_LIGHT }} />
+          <span style={{ fontFamily: DECO, fontSize: "var(--text-lg)", lineHeight: 1, color: INK }}>
+            {formatMult(mult)}
+          </span>
         </div>
       )}
 
@@ -105,56 +133,111 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             display: "flex",
             alignItems: "center",
             gap: "var(--space-xs)",
-            marginTop: "var(--space-xs)",
+            marginTop: "var(--space-sm)",
           }}
         >
           <span
             style={{
-              fontFamily: "var(--eph-display)",
-              fontSize: "var(--text-sm)",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--eph-parchment)",
-              // The design's meta chip is spectrum green; here it is the deep
-              // rubric — a manuscript marks an addition in red, and the gold
-              // that would otherwise be the codex choice pays only 4.2:1
-              // against parchment at this size.
-              background: "var(--eph-rubric-deep)",
-              borderRadius: 3,
+              ...SMALL_CAPS,
+              fontWeight: 600,
+              fontSize: "var(--text-xs)",
+              letterSpacing: "0.16em",
+              color: DISC,
+              background: OCHRE,
               padding: "0 var(--space-xs)",
             }}
           >
             {t("card.stamp.meta")}
           </span>
-          <span
-            style={{
-              fontFamily: "var(--eph-serif)",
-              fontStyle: "italic",
-              fontSize: "var(--text-md)",
-              color: "var(--eph-muted)",
-            }}
-          >
+          <span style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-md)", color: QUIET }}>
             +{meta}
           </span>
         </div>
       )}
 
-      {/* The lead above the tally belongs to the working it follows; with no
-          working (the #1131 empty state) it would read as stray top padding. */}
+      {/* The tally, always drawn — `+ 0 from votes` is a fact, not a gap. */}
       <div
         style={{
-          fontFamily: "var(--eph-serif)",
+          fontFamily: READING,
           fontStyle: "italic",
           fontSize: "var(--text-md)",
-          color: "var(--eph-muted)",
-          marginTop: base !== null ? "var(--space-xs)" : undefined,
+          color: QUIET,
+          marginTop: "var(--space-sm)",
         }}
       >
         {t("card.stamp.fromVotes", { votes })}
       </div>
 
-      {/* The total mark. */}
-      <Rubric total={total.toFixed(1)} unitLabel={t("card.stamp.points")} />
+      {/* The total, struck in the stepped octagon on its lotus base. */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "var(--space-xs)",
+          marginTop: "var(--space-sm)",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            width: MEDALLION,
+            height: MEDALLION,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg
+            width={MEDALLION}
+            height={MEDALLION}
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+            style={{ position: "absolute", inset: 0 }}
+          >
+            <Octagon inset={0} stroke={BRASS} width={1.6} fill={DISC} />
+            <Octagon inset={MEDALLION_INSET} stroke={BRASS_LIGHT} width={0.7} />
+            <circle cx={50} cy={50} r={34} fill="none" stroke={BRASS_LIGHT} strokeWidth={0.7} opacity={0.55} />
+            {/* The lotus base the medallion rests on. */}
+            <path d="M18 74 H82" stroke={BRASS_LIGHT} strokeWidth={0.7} opacity={0.5} />
+          </svg>
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              lineHeight: 0.82,
+            }}
+          >
+            <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", color: OCHRE }}>
+              {total.toFixed(1)}
+            </span>
+            <span
+              style={{
+                ...SMALL_CAPS,
+                fontSize: "var(--text-xs)",
+                letterSpacing: "0.2em",
+                color: CAPTION,
+                marginTop: "var(--space-xs)",
+              }}
+            >
+              {t("card.stamp.points")}
+            </span>
+          </div>
+        </div>
+        {/* The lotus itself, closing the cell. */}
+        <svg width={18} height={13} viewBox="0 0 18 13" aria-hidden="true" style={{ display: "block" }}>
+          <path
+            d="M9 13 V6 M9 6 C9 2.4 11.6 0.8 14.4 0.6 C14.4 4 12 6 9 6 M9 6 C9 2.4 6.4 0.8 3.6 0.6 C3.6 4 6 6 9 6"
+            fill="none"
+            stroke={BRASS_LIGHT}
+            strokeWidth={1.1}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
     </div>
   );
 }
