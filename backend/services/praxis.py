@@ -1385,7 +1385,7 @@ async def _next_media_display_order(praxis_id: int, session: AsyncSession) -> in
 
 async def add_media_batch(
     praxis: Praxis,
-    uploads: list[UploadFile],
+    uploads: List[UploadFile],
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
@@ -1410,6 +1410,14 @@ async def add_media_batch(
     ADR-0012: media is part of the shared document, so a successful batch cancels
     a pending publish — once for the whole batch, and not at all if every file
     was rejected (nothing was edited).
+
+    ponytail: two uploads with the same filename land on the same path, so the
+    later one overwrites the earlier while both rows persist. That is the shared
+    pipeline's pre-existing behaviour (the single-file route has always done it
+    when you upload ``photo.jpg`` twice); batching only makes it easier to hit by
+    picking same-named files from two folders in one selection. The upgrade path
+    is to uniquify the stored filename inside ``process_and_save_media`` — which
+    changes the single-file route too, so it belongs in its own change.
     """
     display_order = await _next_media_display_order(praxis.id, session)
     results: List[MediaUploadResultOut] = []
