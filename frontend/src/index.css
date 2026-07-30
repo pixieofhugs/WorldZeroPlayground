@@ -642,6 +642,28 @@
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
   --faction-ua-rule: #dbcbb3; /* neutral hairline / divider (cf. -border, orange) */
   --faction-ua-hair: #e4d8c3; /* faintest divider, below -rule */
+  /* THE PAPER STOCK — the three-stop sheet UA's design sheets draw as
+     `--cardGrad`, never a flat fill: lift at the top edge, the sheet through the
+     middle, panel at the foot. Composed from the three surface primitives above
+     instead of repeating their hex, so it needs NO dark half — the var()s
+     re-resolve under [data-theme="dark"] and the stock dims with the faction.
+
+     WHY NOT `--faction-ua-card-parchment`, which is the same gradient. That name
+     lives inside the PRAXIS-CARD-ONLY exception block below (#857), which asks
+     in writing not to be widened; a second surface reading it would quietly turn
+     the exception into the rule. So the stock is named once out here, where any
+     UA surface may take it — #1201's feed chassis and comment note are the first
+     two — and the exception keeps its own private copy.
+
+     Every ink UA already measures is measured on all three stops (see
+     --faction-ua-card-muted's note: 4.87/5.13/5.45 light, 4.55/5.10/5.64 dark),
+     so painting on the ramp introduces no new pairing. */
+  --faction-ua-parchment: linear-gradient(
+    158deg,
+    var(--faction-ua-lift),
+    var(--faction-ua-card-bg) 46%,
+    var(--faction-ua-panel)
+  );
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
@@ -3599,6 +3621,102 @@
   .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
   .alb-praxis-ring::before { animation: alb-praxis-wheel 58s linear infinite; }
   .alb-praxis-edge { animation: alb-praxis-edge 16s linear infinite; }
+}
+
+/* Albescent — the FEED CARD's tell (#1203, epic #1192, ADR-0048). The fifth
+   surface to unfreeze, and the same rule as the four before it: the shared
+   chassis an unaffiliated player sees, with light washed over it. Strip these two
+   spans and the card is `DefaultFeedFrame`, byte for byte.
+
+   NOT ONE NEW COLOUR VALUE IS DECLARED HERE, and that is the point. Both layers
+   read na's own spectrum tokens — `--faction-default-aurora` (with its opacity
+   and blur, both of which already flip with the theme) and
+   `--faction-default-rainbow-loop`. A hue of Albescent's own would put the
+   society back in the spectrum and un-hide it (#783 / WORLD_ZERO_STYLE §3), so
+   the whole delta is MOTION: a wash that drifts and a hairline that travels.
+
+   WHAT THIS BLOCK DECIDES:
+
+   • THE BLEND IS NOT READ FROM `--faction-default-aurora-blend`, deliberately.
+     That token says `normal` in light because it describes the composer's
+     GROUND, painted behind the copy. Here the same wash is an OVERLAY — a
+     component's inline sheet is not markup this file can reach behind, and
+     `z-index: -1` is not a position available (§5). At `normal` a 20% coloured
+     film would sit on top of the ink; `multiply` on the light sheet and `screen`
+     on the dark one is what keeps it legible. Reading the token here would be a
+     var() at the wrong tier: it passes every lint gate and means the wrong
+     thing. Same call `.alb-task-aurora` and `.alb-praxis-aurora` already make.
+
+   • THE EDGE IS A 1px MASKED RING, not a border, for the same reason
+     `.alb-task-edge` and `.alb-praxis-edge` are. It lands on `.sidebar-card`'s
+     own hairline so the effect reads as that border coming alive, and it is a
+     hairline rather than the task card's 3px so the chassis's 4px `card-accent`
+     rule down the left edge still reads as the near-black rule it is.
+
+   • THE RADIUS IS THE TOKEN, not a literal. `.sidebar-card` corners with
+     `--radius-xl`, so this follows it for free — unlike the three earlier
+     Albescent blocks, which had to hardcode 14 / 18px to track a component's
+     inline style.
+
+   • MOTION IS OPT-IN, gated on `no-preference`. Stilled, the card is a static
+     wash and a static edge; nothing carries meaning through motion alone. */
+@keyframes alb-feed-drift {
+  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.22) rotate(-5deg); }
+}
+@keyframes alb-feed-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+
+.alb-feed {
+  position: relative;
+  isolation: isolate;
+}
+.alb-feed-aurora,
+.alb-feed-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-xl);
+}
+
+/* The wash. Seven blooms blurred past recognition, so a short wide card reads it
+   as coloured light travelling across the sheet rather than as seven shapes. */
+.alb-feed-aurora {
+  overflow: hidden;
+}
+.alb-feed-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background-image: var(--faction-default-aurora);
+  filter: var(--faction-default-aurora-filter);
+  opacity: var(--faction-default-aurora-opacity);
+  mix-blend-mode: multiply;
+  transform: translate3d(-5%, -4%, 0) scale(1.14);
+}
+[data-theme="dark"] .alb-feed-aurora::before {
+  mix-blend-mode: screen;
+}
+
+/* The hairline, travelling. The loop cut is the seamless one, so the ring scrolls
+   forever without a red-meets-magenta seam passing through every cycle. */
+.alb-feed-edge {
+  padding: 1px;
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 300% 100%;
+  opacity: 0.6;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
+  .alb-feed-edge { animation: alb-feed-edge 16s linear infinite; }
 }
 
 /* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell
