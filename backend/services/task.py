@@ -10,7 +10,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
-from schemas.task import TaskCreate, TaskOut
+from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -328,6 +328,34 @@ async def list_signups_for_task(
         (member, character, praxis, int(level or 0))
         for member, character, praxis, level in result.all()
     ]
+
+
+def build_task_signup_out(
+    member: PraxisMember,
+    character: Character,
+    praxis: Praxis,
+    level: int,
+) -> TaskSignupOut:
+    """Assemble one roster row from a :func:`list_signups_for_task` tuple.
+
+    Mirrors :func:`build_task_out` — the row is composed here in the service, not
+    in the route, and the route simply maps this over the query result (#1051).
+
+    Deliberately projects a *chosen* set of columns off ``character`` rather than
+    validating the ORM object wholesale: ``Character`` carries ``account_id``,
+    which must never reach a public response.
+    """
+    return TaskSignupOut(
+        character_id=character.id,
+        display_name=character.display_name,
+        avatar_url=character.avatar_url,
+        faction_slug=character.faction_slug,
+        # Current-era level for the roster row's "lvl N" (#1029); joined in
+        # list_signups_for_task, so the roster is still one query.
+        level=level,
+        praxis_type=praxis.type,
+        joined_at=member.joined_at,
+    )
 
 
 async def in_progress_counts_for_tasks(
