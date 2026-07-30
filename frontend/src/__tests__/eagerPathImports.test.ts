@@ -31,10 +31,12 @@ import { describe, it, expect } from 'vitest'
 
 const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
 
+/** Shipped modules only — a test's imports are never in a visitor's bundle,
+ *  and this file names both guarded specifiers in its own fixtures. */
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((entry: string) => {
     const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return sourceFiles(path)
+    if (statSync(path).isDirectory()) return entry === '__tests__' ? [] : sourceFiles(path)
     return /\.tsx?$/.test(entry) ? [path] : []
   })
 }
@@ -85,10 +87,7 @@ describe('api/admin stays off the eager path (#1141)', () => {
 describe('/game-config is fetched once per load (#1141)', () => {
   it('routes every consumer through useGameConfig', () => {
     expect(
-      offendersFor(
-        /\/api\/gameConfig$/,
-        (path) => path === 'hooks/useGameConfig.ts' || path.startsWith('hooks/__tests__/'),
-      ).filter((path) => {
+      offendersFor(/\/api\/gameConfig$/, (path) => path === 'hooks/useGameConfig.ts').filter((path) => {
         // Type-shape consumers are fine; only the fetch function is deduped.
         const source = readFileSync(join(SRC_DIR, path), 'utf8')
         return /\bgetGameConfig\b/.test(stripComments(source))
