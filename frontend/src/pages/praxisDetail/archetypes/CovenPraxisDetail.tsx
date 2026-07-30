@@ -261,9 +261,16 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   const sectionGap = desktop ? 'var(--space-2xl)' : 'var(--space-xl)'
 
   // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
+  //
+  // INK, not DEEP (#1295). These crumbs sit on the ward PAGE, which is the one
+  // ground `slip-deep` does not clear: 4.44:1 flat and 3.47:1 under the peak of
+  // the pink haze bloom, against a 4.5 floor at this size. INK is the strongest
+  // of the three inks measured for the page (7.29:1 flat, 5.70:1 hazed) and it
+  // keeps the link louder than the LABEL the trailing crumb wears — SOFT/LABEL
+  // would have made the link quieter than the page it navigates away from.
   const crumbLink: CSSProperties = {
     ...CAPTION,
-    color: DEEP,
+    color: INK,
     textDecoration: 'none',
   }
 
@@ -435,10 +442,12 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           }}
         >
           <span style={CAPTION}>{t('detail.taskRef.label')}</span>
+          {/* INK for the same reason the crumbs take it (#1295): this band is
+              braid-ruled but unpanelled, so the link sits on the ward PAGE. */}
           <Link
             to={`/tasks/${praxis.task_id}`}
             className="content-text"
-            style={{ fontFamily: READING, fontWeight: 600, color: DEEP, textDecoration: 'none' }}
+            style={{ fontFamily: READING, fontWeight: 600, color: INK, textDecoration: 'none' }}
           >
             {praxis.task_title}
           </Link>
