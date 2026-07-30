@@ -123,6 +123,19 @@ describe('DefaultCreateCharacter mobile skin', () => {
     expect(text, 'sticky create').toContain('Create character')
     expect(text, 'born-unaffiliated explainer').toContain('Unaffiliated')
   })
+
+  // #1149: the ring's accessible name used to fall through to the "+" glyph or,
+  // once a portrait existed, to its alt text. It now matches the caption drawn
+  // right beneath it, in both states.
+  it('names the photo ring with its own caption', () => {
+    const empty = render(<DefaultCreateCharacter state={createState({})} />)
+    expect(empty.html, 'empty ring').toContain('aria-label="Add photo"')
+    expect(empty.text, 'and the caption agrees').toContain('Add photo')
+
+    const picked = render(<DefaultCreateCharacter state={createState({ avatarPreview: 'blob:p-1' })} />)
+    expect(picked.html, 'ring holding a portrait').toContain('aria-label="Change photo"')
+    expect(picked.text, 'and the caption agrees').toContain('Change photo')
+  })
 })
 
 describe('DefaultEditCharacter mobile skin', () => {
@@ -141,6 +154,12 @@ describe('DefaultEditCharacter mobile skin', () => {
   it('links out to a joined faction detail page', () => {
     const { html } = render(<DefaultEditCharacter state={editState({ character: character({ faction_slug: 'wow' }) })} />)
     expect(html).toContain('href="/factions/wow"')
+  })
+
+  it('names the photo ring with its own caption (#1149)', () => {
+    const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
+    expect(html).toContain('aria-label="Change photo"')
+    expect(text).toContain('Change photo')
   })
 
   it('shows a freshly cropped portrait (preview) over the persisted avatar (#985)', () => {
