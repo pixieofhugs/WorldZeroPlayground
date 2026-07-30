@@ -15,10 +15,11 @@ import {
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * How many praxis the gallery prints before the "view all" line. `PraxisCard`
- * carries `flex: 1 1 394px`, so three land in a row at the 1200 cap and the row
- * rewraps on its own below that — the design's `repeat(3,1fr)` grid would
- * squeeze every card instead (same call as the na reference, #1030).
+ * How many praxis the gallery prints before the "view all" line. The row is
+ * `.praxis-gallery`, which narrows `PraxisCard`'s basis to 320px (#1137), so
+ * three land in a row at the 1200 cap and the row rewraps on its own below that
+ * — the design's `repeat(3,1fr)` grid would squeeze every card instead (same
+ * call as the na reference, #1030). The feed's own 394px basis fitted two.
  */
 const GALLERY_PREVIEW = 3;
 
@@ -882,7 +883,7 @@ export default function EverymenTaskDetail({
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)

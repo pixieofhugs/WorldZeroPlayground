@@ -149,8 +149,12 @@ describe('one card, both form factors (ADR-0067)', () => {
    */
   it('carries no fixed frame width and no form-factor branch', () => {
     const markup = render(<EphemeristsPraxisCard praxis={praxis()} adminProps={adminProps} />)
-    // `frameBase`'s flex basis, not a width: one card per row at 375px.
-    expect(markup).toContain('flex:1 1 394px')
+    // `frameBase`'s flex basis, not a width: one card per row at 375px. The
+    // basis is a custom property since #1137, so a MOUNT can narrow it (the
+    // task-detail gallery does) without forking this frame — but the fallback
+    // is the feed's 394px, and it is still a basis rather than a width, which
+    // is the property this test exists to hold.
+    expect(markup).toContain('flex:1 1 var(--praxis-card-basis, 394px)')
     expect(markup).not.toMatch(/(^|[^-])width:39\d/)
   })
 })

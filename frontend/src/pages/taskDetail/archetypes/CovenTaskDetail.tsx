@@ -73,10 +73,11 @@ const CARD = "var(--faction-coven-ward-card)";
 const PAGE = "var(--faction-coven-ward-page)";
 
 /**
- * Praxis cards the gallery shows before the in-place expand. `PraxisCard`
- * carries `flex: 1 1 394px`, so three land in one row at the 1200 cap and the
- * row reflows itself below that — the design's `repeat(3,1fr)` would squeeze
- * every card instead of rewrapping.
+ * Praxis cards the gallery shows before the in-place expand. The row is
+ * `.praxis-gallery`, which narrows `PraxisCard`'s basis to 320px (#1137), so
+ * three land in one row at the 1200 cap and the row reflows itself below that —
+ * the design's `repeat(3,1fr)` would squeeze every card instead of rewrapping.
+ * The feed's own 394px basis fitted only two across the content column.
  */
 const GALLERY_PREVIEW = 3;
 
@@ -860,7 +861,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)
