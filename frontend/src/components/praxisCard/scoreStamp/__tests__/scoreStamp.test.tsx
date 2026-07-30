@@ -322,12 +322,15 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
    * both with the same level bordered box. Geometry, unlike copy, has no other
    * assertion that would catch it going flat again.
    */
-  it('keeps each faction its own geometry: WOW struck at -2deg, Coven a dashed sticker at -3deg', () => {
+  it('keeps each faction its own geometry: WOW struck at -2deg, Coven pinned crooked at -3deg under a braid', () => {
     const wow = renderToStaticMarkup(<WowScoreStamp praxis={praxis({})} />)
     const coven = renderToStaticMarkup(<CovenScoreStamp praxis={praxis({})} />)
     expect(wow).toContain('rotate(-2deg)')
     expect(coven).toContain('rotate(-3deg)')
-    expect(coven).toContain('dashed')
+    // #1209: the DASHED edge went with the pink marker sticker — it existed to
+    // match a die-cut this faction no longer draws. The braid is what rules a
+    // Coven surface, so that is what the working is tallied under now.
+    expect(coven).toContain('cvn-braid')
   })
 
   it('shows the UA multiplier chip only when a multiplier is live', () => {
