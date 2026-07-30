@@ -1,11 +1,25 @@
 /**
- * Page title with per-letter colored underline bars (Style Guide §5.2).
+ * Page title with per-letter colored underline bars (Style Guide §7).
  *
- * Each letter gets a border-bottom cycling through the faction-inspired palette.
- * Spaces render as gaps with no underline.
+ * Each letter gets a border-bottom cycling through the site's one rainbow —
+ * the na spectrum's seven scalar stops (#1220, ADR-0066). It cycled a separate
+ * six-hue brand palette (`underline-1…6`) until that palette was retired into
+ * the spectrum; the cycle is SEVEN long now, and it flips with the theme, which
+ * the brand palette never did. Spaces render as gaps with no underline.
+ *
+ * Scalars rather than `--faction-default-rainbow`: a per-letter bar needs stop
+ * N by index, and a gradient token cannot be indexed.
  */
 
-const UNDERLINE_COLORS = ['var(--underline-1)', 'var(--underline-2)', 'var(--underline-3)', 'var(--underline-4)', 'var(--underline-5)', 'var(--underline-6)']
+const SPECTRUM_STOPS = [
+  'var(--faction-default-stop-1)',
+  'var(--faction-default-stop-2)',
+  'var(--faction-default-stop-3)',
+  'var(--faction-default-stop-4)',
+  'var(--faction-default-stop-5)',
+  'var(--faction-default-stop-6)',
+  'var(--faction-default-stop-7)',
+]
 
 interface Props {
   title: string
@@ -29,7 +43,7 @@ export default function PageTitle({ title, eyebrow }: Props) {
               <span key={index} style={{ display: 'inline-block', width: '0.3em' }} />
             )
           }
-          const color = UNDERLINE_COLORS[colorIndex % UNDERLINE_COLORS.length]
+          const color = SPECTRUM_STOPS[colorIndex % SPECTRUM_STOPS.length]
           colorIndex++
           return (
             <span
