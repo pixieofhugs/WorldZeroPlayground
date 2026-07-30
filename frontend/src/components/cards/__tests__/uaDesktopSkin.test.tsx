@@ -25,7 +25,7 @@ import type { CommentOut } from '../../../api/comments'
 import type { CharacterOut } from '../../../api/auth'
 import type { TaskOut } from '../../../api/tasks'
 import UaTaskCard from '../../taskCard/UaTaskCard'
-import UaFactionHero from '../UaFactionHero'
+import UaFactionHero from '../../factionHero/UaFactionHero'
 import { UaSelectCard } from '../FactionSelectCard'
 import UaFeedFrame from '../../feed/UaFeedFrame'
 import UaAvatar from '../../avatar/UaAvatar'
@@ -292,7 +292,7 @@ describe('the feed chassis and the comment note (#1201)', () => {
 describe('the eleven rebuilt surfaces carry no salon left-overs', () => {
   const REBUILT = [
     'components/taskCard/UaTaskCard.tsx',
-    'components/cards/UaFactionHero.tsx',
+    'components/factionHero/UaFactionHero.tsx',
     'components/cards/uaAtoms.tsx',
     'components/feed/UaFeedFrame.tsx',
     'components/avatar/UaAvatar.tsx',

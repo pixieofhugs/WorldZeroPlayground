@@ -6,7 +6,7 @@
  *   • the pavilion chrome from the kit's one mobile screen — the crested header
  *     wash, the checker, the gold-framed cream panel
  *     (`components/cards/wowMobile.tsx`);
- *   • the desktop archetype `components/cards/WowFactionHero` (#900): the crest
+ *   • the desktop archetype `components/factionHero/WowFactionHero` (#900): the crest
  *     over the name, the motto in Lora italic, the charter's opening, and the
  *     MUSTER as burnt-gold figures. On the phone the muster's gold hairlines
  *     become framed plates, because three hairline-separated columns at 375px

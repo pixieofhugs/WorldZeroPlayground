@@ -17,7 +17,7 @@ const SnideBackdrop = lazyArchetype(() => import('../components/backdrop/SnideBa
 const SnideComment = lazyArchetype(() => import('../components/comments/voices/SnideComment'))
 const SnideEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SnideEditPraxis'))
 const SnideFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SnideFactionBody'))
-const SnideFactionHero = lazyArchetype(() => import('../components/cards/SnideFactionHero'))
+const SnideFactionHero = lazyArchetype(() => import('../components/factionHero/SnideFactionHero'))
 const SnideFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SnideFactionPage'))
 const SnideFeedFrame = lazyArchetype(() => import('../components/feed/SnideFeedFrame'))
 const SnideFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideFieldDesk'))

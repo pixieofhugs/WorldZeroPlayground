@@ -17,7 +17,7 @@ const UaComment = lazyArchetype(() => import('../components/comments/voices/UaCo
 const UaDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaDuelSealConfirm'))
 const UaEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/UaEditPraxis'))
 const UaFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/UaFactionBody'))
-const UaFactionHero = lazyArchetype(() => import('../components/cards/UaFactionHero'))
+const UaFactionHero = lazyArchetype(() => import('../components/factionHero/UaFactionHero'))
 const UaFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/UaFactionPage'))
 const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
 const UaFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaFieldDesk'))

@@ -17,7 +17,7 @@ const EverymenComment = lazyArchetype(() => import('../components/comments/voice
 const EverymenDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenDuelSealConfirm'))
 const EverymenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EverymenEditPraxis'))
 const EverymenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EverymenFactionBody'))
-const EverymenFactionHero = lazyArchetype(() => import('../components/cards/EverymenFactionHero'))
+const EverymenFactionHero = lazyArchetype(() => import('../components/factionHero/EverymenFactionHero'))
 const EverymenFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EverymenFactionPage'))
 const EverymenFeedFrame = lazyArchetype(() => import('../components/feed/EverymenFeedFrame'))
 const EverymenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EverymenFieldDesk'))

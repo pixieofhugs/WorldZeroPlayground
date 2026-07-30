@@ -17,7 +17,7 @@ const EphemeristsComment = lazyArchetype(() => import('../components/comments/vo
 const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
 const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
 const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EphemeristsFactionBody'))
-const EphemeristsFactionHero = lazyArchetype(() => import('../components/cards/EphemeristsFactionHero'))
+const EphemeristsFactionHero = lazyArchetype(() => import('../components/factionHero/EphemeristsFactionHero'))
 const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EphemeristsFactionPage'))
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
 const EphemeristsFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk'))

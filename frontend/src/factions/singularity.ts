@@ -17,7 +17,7 @@ const SingularityComment = lazyArchetype(() => import('../components/comments/vo
 const SingularityDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityDuelSealConfirm'))
 const SingularityEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SingularityEditPraxis'))
 const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SingularityFactionBody'))
-const SingularityFactionHero = lazyArchetype(() => import('../components/cards/SingularityFactionHero'))
+const SingularityFactionHero = lazyArchetype(() => import('../components/factionHero/SingularityFactionHero'))
 const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SingularityFactionPage'))
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
 const SingularityFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityFieldDesk'))
