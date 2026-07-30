@@ -27,7 +27,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * ROW SELECTION IS NOT OURS. `scoreBreakdown` decides which rows exist
  * (ADR-0047); this file only decides what a row looks like. The votes row
- * survives at `+0` — a declared deviation from the design, which drops it.
+ * survives at `+0` — a declared deviation from the design, which drops it. The
+ * base row does NOT survive a total it merely repeats (#1131): with nothing to
+ * multiply, add or vote, the plate keeps the tally and the ensō holds the figure.
  *
  * Every raw number below is ornament: the plate's own insets and leads, and
  * display type sized to the drawing rather than to the text scale (§4a).
@@ -117,37 +119,45 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
           padding: "7px 11px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the cap label and its figure.
-            gap: 7,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span style={labelStyle}>{t("card.stamp.base")}</span>
-          <span
+        {/*
+         * The base row. It goes when `scoreBreakdown` nulls the figure (#1131) —
+         * the ensō below is already saying it — and the chip goes with it, which
+         * is safe because a live multiplier is one of the things that keeps the
+         * base row alive in the first place.
+         */}
+        {base !== null && (
+          <div
             style={{
-              fontFamily: "var(--faction-ua-card-font)",
-              fontWeight: 600,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's engraved figure.
-              fontSize: 25,
-              lineHeight: 0.8,
-              color: "var(--faction-ua-card-text)",
+              display: "flex",
+              alignItems: "center",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the cap label and its figure.
+              gap: 7,
+              whiteSpace: "nowrap",
             }}
           >
-            {base}
-          </span>
-          {/*
-           * The chip stays on the base row in EVERY state. The design's
-           * "full formula" column moves it onto a `× mult` row of its own; the
-           * other four keep it here, and a plate that rearranges itself stops
-           * reading as the same object when a row drops out (§6 — the archetype
-           * is the identity). Declared deviation.
-           */}
-          {mult !== null && <MultChip>{formatMult(mult)}</MultChip>}
-        </div>
+            <span style={labelStyle}>{t("card.stamp.base")}</span>
+            <span
+              style={{
+                fontFamily: "var(--faction-ua-card-font)",
+                fontWeight: 600,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's engraved figure.
+                fontSize: 25,
+                lineHeight: 0.8,
+                color: "var(--faction-ua-card-text)",
+              }}
+            >
+              {base}
+            </span>
+            {/*
+             * The chip stays on the base row in EVERY state. The design's
+             * "full formula" column moves it onto a `× mult` row of its own; the
+             * other four keep it here, and a plate that rearranges itself stops
+             * reading as the same object when a row drops out (§6 — the archetype
+             * is the identity). Declared deviation.
+             */}
+            {mult !== null && <MultChip>{formatMult(mult)}</MultChip>}
+          </div>
+        )}
 
         {meta !== null && (
           <div
@@ -166,9 +176,11 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
          * The grouped subtotal, drawn under a hairline. It exists only when a
          * metatask AND a multiplier are both live — the design's "full formula"
          * column — because without a multiplier `(base + meta)` explains
-         * nothing and the plate reads as a form with a hole in it.
+         * nothing and the plate reads as a form with a hole in it. Either of
+         * those keeps the base row alive too (#1131), so the `base !== null`
+         * clause is the compiler's proof, not a fourth state.
          */}
-        {meta !== null && mult !== null && (
+        {meta !== null && mult !== null && base !== null && (
           <div
             style={{
               display: "flex",
@@ -205,8 +217,10 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         <div
           style={{
             ...workingStyle,
+            // A lead between working LINES — so none when the tally is the only
+            // line left standing (#1131).
             // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
-            marginTop: 3,
+            marginTop: base !== null ? 3 : undefined,
           }}
         >
           {t("card.stamp.fromVotes", { votes })}
