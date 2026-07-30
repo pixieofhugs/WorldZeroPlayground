@@ -185,12 +185,14 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
           )}
         </section>
 
-        {membership.state === "gate" && (
+        {(membership.state === "gate" || membership.state === "burned") && (
           <p
             className="content-text"
             style={{ fontFamily: WOW_BODY, lineHeight: 1.6, color: WOW_MUTED, margin: 0 }}
           >
-            {t("mobile.gateHint", { faction: name })}
+            {membership.state === "burned"
+              ? t("mobile.burnedHint", { faction: name })
+              : t("mobile.gateHint", { faction: name })}
           </p>
         )}
       </div>

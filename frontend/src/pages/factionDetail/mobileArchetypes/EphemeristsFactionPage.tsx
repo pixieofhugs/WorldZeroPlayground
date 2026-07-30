@@ -170,9 +170,11 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
         )}
       </section>
 
-      {membership.state === 'gate' && (
+      {(membership.state === 'gate' || membership.state === 'burned') && (
         <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: 'italic', color: QUIET, marginTop: 'var(--space-xl)' }}>
-          {t('mobile.gateHint', { faction: name })}
+          {membership.state === 'burned'
+            ? t('mobile.burnedHint', { faction: name })
+            : t('mobile.gateHint', { faction: name })}
         </p>
       )}
 

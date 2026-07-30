@@ -225,9 +225,11 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
         )}
       </section>
 
-      {membership.state === 'gate' && (
+      {(membership.state === 'gate' || membership.state === 'burned') && (
         <p className="content-text" style={{ ...PROSE, marginTop: 'var(--space-xl)' }}>
-          {t('mobile.gateHint', { faction: name })}
+          {membership.state === 'burned'
+            ? t('mobile.burnedHint', { faction: name })
+            : t('mobile.gateHint', { faction: name })}
         </p>
       )}
 
