@@ -206,20 +206,8 @@ export default function EverymenTaskCard({
             {/* Everything but the CTA reads the full call — a card-sized target
                 that stays valid HTML (no <button> nested in an <a>). */}
             <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-              {/* Dateline — the uniform ordinal every faction card carries. */}
-              <div
-                style={{
-                  fontFamily: TYPED,
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  color: "var(--everymen-muted)",
-                  marginBottom: "var(--space-md)",
-                }}
-              >
-                {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-              </div>
-
+              {/* The dateline carried the uniform "Task {id}" ordinal and nothing
+                  else, so #1124's retirement of the id takes the whole line. */}
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
                 <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                   <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>

@@ -277,20 +277,9 @@ export default function CovenTaskCard({
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            <div
-              style={{
-                fontFamily: HAND,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: the ordinal is pencilled on the slip in Caveat.
-                fontSize: 19,
-                lineHeight: 1,
-                color: "var(--faction-coven-slip-label)",
-                textAlign: "center",
-                padding: "var(--space-md) 0",
-              }}
-            >
-              {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-            </div>
-
+            {/* The slip's pencilled ordinal ("Task {id}", hand-lettered under the
+                masthead) is gone with #1124 — the id no longer shows on any card,
+                and it was the whole line. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)" }}>
                 <span style={{ fontFamily: READING, fontWeight: 600, fontSize: size.levelSize, lineHeight: 0.8 }}>
