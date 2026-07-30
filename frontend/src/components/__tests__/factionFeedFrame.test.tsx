@@ -59,12 +59,43 @@ describe("FactionFeedFrame dispatch", () => {
     }
   });
 
-  it("frames an albescent row exactly like an unaffiliated one (#783)", () => {
-    // The inverse of what this file used to assert. Albescent had its own
-    // Record frame (#232); it now takes the same default chrome as any
-    // unthemed slug, because a member reading the feed must be
-    // indistinguishable from an unaffiliated player.
-    expect(frameFor("albescent")).toBe(frameFor("no-such-faction"));
+  it("frames an albescent row as the unaffiliated card PLUS light (#1203)", () => {
+    // THE SECOND REVERSAL OF THIS ASSERTION, and each one narrowed it rather
+    // than flipping a verdict. It first demanded Albescent's own Record frame
+    // (#232). #783 demanded byte equality with an unthemed slug, because a
+    // member reading the feed must be indistinguishable from an unaffiliated
+    // player. ADR-0048 then made "frozen" mean "frozen UNTIL DESIGNED", and
+    // #1203 is that design: still the unaffiliated card, still not one colour of
+    // its own, with two ornament layers washed over it.
+    //
+    // Containment is the whole statement, and it is stronger than the equality
+    // it replaces: the unaffiliated chassis appears INSIDE the Albescent one,
+    // untouched and contiguous, so strip the wrapper and the two spans and the
+    // card is Default byte for byte. A skin that hand-copied the chrome — the
+    // failure this file exists to catch — would drift out of this the first time
+    // the shared chassis changed, without anyone editing this test.
+    const neutral = frameFor("no-such-faction");
+    const albescent = frameFor("albescent");
+
+    expect(albescent).toContain(neutral);
+    expect(albescent).not.toBe(neutral);
+    // Both flourishes present, and both inert: they are decoration over a card
+    // full of links and controls, so they are hidden from assistive tech here
+    // and `pointer-events: none` in index.css.
+    expect(albescent).toContain('aria-hidden="true" class="alb-feed-aurora"');
+    expect(albescent).toContain('aria-hidden="true" class="alb-feed-edge"');
+  });
+
+  it("tints albescent from na's token family, never one of its own (#783)", () => {
+    // The half of #783 that survives #1203 intact. `CSS_KEY` maps the slug to
+    // `default`, so the chassis paints --faction-default-*. Asserted against
+    // `na`'s OWN render rather than against a token name, so the two move
+    // together forever — the same discipline
+    // utils/__tests__/factionAlbescentHidesInPlainSight.test.ts applies to every
+    // other surface, and the reason a --faction-albescent-* block cannot creep
+    // back in through this one.
+    expect(frameFor("albescent")).toContain(frameFor(null));
+    expect(frameFor("albescent")).not.toContain("--faction-albescent");
   });
 
   it("gives a null/neutral slug the Unaffiliated chassis, NOT a passthrough (#1194)", () => {
