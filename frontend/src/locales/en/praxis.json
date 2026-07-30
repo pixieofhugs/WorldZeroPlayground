@@ -94,6 +94,10 @@
     },
     "coven": {
       "mediaEmpty": "Drop a happy little photo ✿"
+    },
+    "ephemerists": {
+      "for": "for:",
+      "mediaEmpty": "Affix the observation"
     }
   },
   "detail": {
