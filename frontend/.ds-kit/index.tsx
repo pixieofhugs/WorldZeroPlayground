@@ -17,7 +17,7 @@ export { default as EphemeristsTaskCard } from "../src/components/taskCard/Ephem
 export { default as EphemeristsVote } from "../src/components/vote/EphemeristsVote";
 export { default as EverymenAvatar } from "../src/components/avatar/EverymenAvatar";
 export { default as EverymenBackdrop } from "../src/components/backdrop/EverymenBackdrop";
-export { default as EverymenCard } from "../src/components/cards/EverymenFactionCard";
+export { default as EverymenCard } from "../src/components/factionCard/EverymenFactionCard";
 export { default as EverymenComment } from "../src/components/comments/voices/EverymenComment";
 export { default as EverymenFactionHero } from "../src/components/factionHero/EverymenFactionHero";
 export { default as EverymenFeedFrame } from "../src/components/feed/EverymenFeedFrame";
@@ -25,7 +25,7 @@ export { default as EverymenTaskCard } from "../src/components/taskCard/Everymen
 export { default as EverymenVote } from "../src/components/vote/EverymenVote";
 export { default as FactionAvatar } from "../src/components/avatar/FactionAvatar";
 export { default as FactionBackdrop } from "../src/components/backdrop/FactionBackdrop";
-export { default as FactionCard } from "../src/components/cards/FactionCard";
+export { default as FactionCard } from "../src/components/factionCard/FactionCard";
 export { default as FactionFeedFrame } from "../src/components/feed/FactionFeedFrame";
 export { default as FactionSelectCard } from "../src/components/selectCard/FactionSelectCard";
 export { default as FeedBadge } from "../src/components/feed/FeedBadge";
@@ -57,7 +57,7 @@ export { default as SnideBackdrop } from "../src/components/backdrop/SnideBackdr
 export { default as SnideComment } from "../src/components/comments/voices/SnideComment";
 export { default as SnideFactionHero } from "../src/components/factionHero/SnideFactionHero";
 export { default as SnideFeedFrame } from "../src/components/feed/SnideFeedFrame";
-export { default as SnideMasthead } from "../src/components/cards/SnideMasthead";
+export { default as SnideMasthead } from "../src/components/factionCard/SnideMasthead";
 export { default as SNIDETaskCard } from "../src/components/cards/SNIDETaskCard";
 export { default as SnideVote } from "../src/components/vote/SnideVote";
 export { default as TaskCard } from "../src/components/taskCard/TaskCard";
