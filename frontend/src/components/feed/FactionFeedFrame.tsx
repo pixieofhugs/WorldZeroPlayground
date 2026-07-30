@@ -59,8 +59,11 @@ function DefaultFeedFrame({ slug, kicker, time, tag, archive, children }: FeedFr
           (~12 surfaces read it as `color:`, and a contrast test measures it), and
           the ink doing an ornament's job here. A 4px stretched edge is
           geometrically a fill, so ADR-0039 hands it the spectrum with no
-          amendment, and a themed faction's `factionFill` is its own solid hue —
-          byte-identical to what `card-accent` gave it. `rule`, not `bar`: the ramp
+          amendment. A themed faction takes its own solid spine hue here rather
+          than its `card-accent` ink, which is the substitution `factionFill`
+          makes at every other border-to-fill conversion — and is unreachable
+          through dispatch anyway, since all eight registered frames claim
+          `feedFrame` and never see this chassis. `rule`, not `bar`: the ramp
           runs DOWN a 4px column, and the 90deg cut spends seven stops across those
           4px, i.e. mud. Ornament geometry — the 4px IS the drawn rule, not layout
           spacing, and 4px was kept over the row rule's 3px deliberately (owner,

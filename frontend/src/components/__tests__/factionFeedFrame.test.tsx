@@ -153,12 +153,16 @@ describe("FactionFeedFrame dispatch", () => {
     expect(frameFor("albescent")).not.toContain("card-accent");
   });
 
-  it("leaves a themed faction's edge as its own solid hue", () => {
-    // Rendered directly, because no themed faction reaches this chassis through
-    // dispatch — all nine claim `feedFrame`. The assertion is what makes the
-    // change provably na-only anyway: `factionFill` degrades to the same flat
-    // `var(--faction-{key})` the scalar `card-accent` path handed a real
-    // faction, so a faction that ever falls back here is unmoved.
+  it("gives a themed faction a flat hue here, never the spectrum", () => {
+    // Rendered DIRECTLY, because no themed faction reaches this chassis through
+    // dispatch — all eight registered frames claim `feedFrame`, which is what
+    // makes the repaint na-and-Albescent-only. Pinned anyway, and pinned
+    // honestly: this is not byte-identical to what the border drew. A real
+    // faction's `factionFill` is its SPINE hue `var(--faction-{key})`, where the
+    // scalar path read its `card-accent` ink — the same substitution every other
+    // border-to-fill conversion makes, and invisible today because nothing routes
+    // here. What matters is that no faction with a hue of its own picks up a
+    // gradient by falling back.
     const html = renderToStaticMarkup(
       <DefaultFeedFrame slug="coven" kicker="Task completed" time="2h ago" tag={null} archive={null}>
         {CARD}
