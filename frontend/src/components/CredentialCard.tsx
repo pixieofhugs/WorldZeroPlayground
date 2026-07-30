@@ -170,11 +170,19 @@ export default function CredentialCard({
               ) : null}
             </div>
           )
+          // The ring has no text, so its label is its whole accessible name —
+          // and it only ever opens PortraitPicker's file input. It used to
+          // promise a drop target that has never existed here (no onDrop, no
+          // onDragOver), which handed a screen-reader user an instruction the
+          // control cannot accept (#1263). One string, both consumers, so the
+          // tooltip and the accessible name cannot drift apart.
+          const uploadLabel = t('credential.uploadTitle')
           return onAvatarClick ? (
             <button
               type="button"
               onClick={onAvatarClick}
-              title={t('credential.uploadTitle')}
+              aria-label={uploadLabel}
+              title={uploadLabel}
               style={ringStyle}
             >
               {inner}
