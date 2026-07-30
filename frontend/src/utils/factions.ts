@@ -34,8 +34,8 @@ const tString = i18n.t as unknown as (key: string) => string;
  * The unaffiliated sentinel (ADR-0030 / ADR-0039). Mirrors the backend's
  * `UNAFFILIATED_FACTION_SLUG` (`services/faction_service.py`): a task carrying
  * this slug is generic / cross-faction, owned by no faction. Unaffiliated is a
- * state rather than a faction, so it is deliberately absent from the faction
- * registry — surfaces that offer it (the propose-task picker #704, the filter
+ * state rather than a faction, so `getAllFactions()` deliberately omits it —
+ * surfaces that offer it (the propose-task picker #704, the filter
  * pennant row #921) do so as an explicit extra option, never via `GET /factions`.
  *
  * Lives here, with the other slug/CSS-key knowledge, so both a `ui/` component
