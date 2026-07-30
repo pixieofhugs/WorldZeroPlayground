@@ -18,32 +18,41 @@ const CLIP_STYLES = [
 ]
 
 function ClippedCondition({ text }: { text: string }) {
-  const words = text.split(' ')
+  // `filter(Boolean)` because an empty word has no charCodeAt(0) to pick a clip
+  // with: a doubled space in a title used to throw on `clip.bg`.
+  const words = text.split(/\s+/).filter(Boolean)
   return (
-    <span
-      className="flex flex-wrap"
-      style={{ gap: 'var(--space-xs)', rowGap: 'var(--space-xs)' }}
-    >
+    // THE CONDITION MUST STAY ONE READABLE STRING. The chips were laid out as a
+    // wrapping flex row spaced with `gap`, which is a purely visual space — a
+    // flex container discards whitespace-only children, so the seal's text came
+    // out as "doitunderwater.nocuts." (#1043, the fix #1023 made on the SNIDE
+    // task card). Ordinary inline flow instead: the chips are still
+    // `inline-block` and still wrap, separated by REAL spaces, and the
+    // line-height carries the row rhythm the old `rowGap` drew.
+    <span style={{ display: 'block', fontSize: 'var(--text-md)', lineHeight: 2.1 }}>
       {words.map((word, index) => {
         const clip = CLIP_STYLES[(word.charCodeAt(0) + index) % CLIP_STYLES.length]
         return (
-          <span
-            key={index}
-            className="font-body"
-            style={{
-              display: 'inline-block',
-              background: clip.bg,
-              color: clip.color,
-              fontFamily: clip.font,
-              fontSize: 'var(--text-md)',
-              lineHeight: 1,
-              padding: 'var(--space-xs) var(--space-xs)',
-              transform: `rotate(${clip.rotate}deg)`,
-              boxShadow: '1px 2px 0 rgba(0,0,0,0.4)',
-              textTransform: 'uppercase',
-            }}
-          >
-            {word}
+          <span key={index}>
+            {index > 0 ? ' ' : ''}
+            <span
+              className="font-body"
+              style={{
+                display: 'inline-block',
+                verticalAlign: 'middle',
+                background: clip.bg,
+                color: clip.color,
+                fontFamily: clip.font,
+                fontSize: 'var(--text-md)',
+                lineHeight: 1,
+                padding: 'var(--space-xs) var(--space-xs)',
+                transform: `rotate(${clip.rotate}deg)`,
+                boxShadow: '1px 2px 0 rgba(0,0,0,0.4)',
+                textTransform: 'uppercase',
+              }}
+            >
+              {word}
+            </span>
           </span>
         )
       })}

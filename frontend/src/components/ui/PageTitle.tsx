@@ -39,9 +39,11 @@ export default function PageTitle({ title, eyebrow }: Props) {
       >
         {title.split('').map((char, index) => {
           if (char === ' ') {
-            return (
-              <span key={index} style={{ display: 'inline-block', width: '0.3em' }} />
-            )
+            // A REAL space, not an empty fixed-width box (#1043). The 0.3em
+            // spacer DREW the gap but put nothing in the title's text, so the
+            // heading's accessible name ran together as "EditPraxis". An
+            // ordinary space between the letters is both the gap and the space.
+            return <span key={index}>{' '}</span>
           }
           const color = SPECTRUM_STOPS[colorIndex % SPECTRUM_STOPS.length]
           colorIndex++

@@ -104,18 +104,24 @@ const RANSOM = [
 
 function Ransom({ text, size = 16 }: { text: string; size?: number }) {
   return (
-    <span style={{
-      display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center',
-      // eslint-disable-next-line local/no-raw-style-values -- ornament: kerning between the cut-out ransom letters; a rung breaks the pasted-up letterform run
-      gap: '3px 2px',
-    }}>
+    // THE NAME MUST STAY ONE READABLE STRING. This byline is the accessible
+    // name of the link to the author's profile, and it was an `inline-flex` row
+    // of per-letter tiles spaced with `gap`: a flex container discards
+    // whitespace-only children, and the space CHARACTER was drawn as an empty
+    // box, so the link announced "VexLineCrane" (#1043, the fix #1023 made on
+    // the SNIDE task card). Ordinary inline flow instead — REAL spaces between
+    // the words, the tiles still `inline-block` and still wrapping, their
+    // kerning carried by a margin and the wrapped rows by the line-height.
+    <span style={{ display: 'inline-block', fontSize: size, lineHeight: 1.25 }}>
       {[...text].map((char, index) => {
-        if (char === ' ') return <span key={index} style={{ width: size * 0.22 }} />
+        if (char === ' ') return <span key={index}>{' '}</span>
         const s = RANSOM[(char.charCodeAt(0) + index * 3) % RANSOM.length]
         return (
-          <span key={index} style={{ display: 'inline-block', background: s.bg, color: s.col, fontFamily: s.font, fontSize: size, lineHeight: 0.92,
+          <span key={index} style={{ display: 'inline-block', verticalAlign: 'middle', background: s.bg, color: s.col, fontFamily: s.font, fontSize: size, lineHeight: 0.92,
             // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a single cut-out letter tile inside its scrap of paper
             padding: '2px 5px 0',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: kerning between the cut-out ransom letters; a rung breaks the pasted-up letterform run
+            marginRight: 2,
             transform: `rotate(${s.rot}deg)`, boxShadow: '1.5px 2.5px 0 var(--faction-snide-slip-scrap-shadow)', textTransform: 'uppercase' }}>
             {char}
           </span>
