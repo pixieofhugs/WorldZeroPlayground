@@ -9,20 +9,14 @@ export default {
         display: ["Lora", "serif"],
         body: ["Courier Prime", "monospace"],
         accent: ["Bebas Neue", "sans-serif"],
-        // Per-faction headline fonts
-        "faction-ua": ["IM Fell English", "serif"],
-        "faction-everymen": ["Special Elite", "serif"],
-        "faction-wow": ["Caveat", "cursive"],
-        "faction-snide": ["Permanent Marker", "cursive"],
-        "faction-ephemerists": ["Cinzel", "serif"],
-        "faction-singularity": ["Share Tech Mono", "monospace"],
-        "faction-ua-masters": ["UnifrakturCook", "serif"],
-        // Style-named aliases (handoff naming)
-        "faction-marker": ["Permanent Marker", "cursive"],
-        "faction-codex": ["Cinzel", "serif"],
-        "faction-blackletter": ["UnifrakturCook", "serif"],
-        "faction-script": ["Caveat", "cursive"],
-        "faction-old": ["IM Fell English", "serif"],
+        // No faction rows here: the per-faction headline stacks live in
+        // index.css as --font-faction-* (marker/codex/blackletter/script/old
+        // and the slug-named set). Twelve hand-duplicated entries sat here —
+        // seven slug-named, five style-named "handoff" aliases — and Tailwind
+        // emitted none of them: every consumer reaches the stack through
+        // var(--font-faction-*), never a `font-faction-*` utility. Removed in
+        // #1212 alongside the faction colour block, same reasoning as the
+        // fontSize note below.
       },
       colors: {
         paper: "var(--color-bg-page)",
@@ -34,14 +28,20 @@ export default {
         surface: "var(--color-bg-surface)",
         "surface-alt": "var(--color-bg-surface-alt)",
         accent: "var(--color-accent-primary)",
-        // Faction palette — rainbow primaries (light mode; dark mode via CSS vars)
-        ua: { DEFAULT: "#7c3aed", accent: "#a78bfa" },
-        everymen: { DEFAULT: "#ca8a04", accent: "#fbbf24" },
-        wow: { DEFAULT: "#be185d", accent: "#f472b6" },
-        snide: { DEFAULT: "#6fae00", accent: "#b6ff2e" },
-        ephemerists: { DEFAULT: "#1d6e72", accent: "#b0863a" },
-        singularity: { DEFAULT: "#2563eb", accent: "#60a5fa" },
-        "ua-masters": { DEFAULT: "#c2410c", accent: "#fb923c" },
+        // No faction rows here. Every row above is var()-backed, so index.css
+        // stays the only home for a colour VALUE; a literal-hex faction block
+        // sat here for seven slugs and was a second place for the numbers to
+        // drift. It had drifted four ways by the time it went: `ua` was
+        // #7c3aed purple against a live burnt-sienna --faction-ua (#848),
+        // `everymen` and `wow` held na-spectrum stops rather than their own
+        // hues (the pink moved to Cozy Coven in #784, WOW took yellow in
+        // #812), Coven had no row at all, and `ua-masters` is not a faction.
+        // The `accent:` sub-key named a --faction-*-accent tier that has never
+        // existed. Tailwind emitted none of it — no bg-/text-/border-/ring-/
+        // from- utility for any of those keys appears in src. Removed in #1212.
+        // Faction colour is read through factionCssVar() / factionFill()
+        // (utils/factions.ts) against --faction-{key}-*, never a Tailwind
+        // utility.
       },
       // No fontSize block: the type scale lives in index.css as --text-*
       // (label tier) and --text-content/title/heading/display (content tier).
