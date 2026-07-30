@@ -74,9 +74,11 @@ describe('mobile Updates mixed multi-faction stream', () => {
     // Distinct per-faction frame markers appearing TOGETHER in one render
     // prove a mixed stream, not one uniform tint.
     expect(text, 'COVEN window chrome').toContain('coven.exe')
-    // UA's frame is dress only now (#851): a 3px orange rule and the ensō, no
-    // engraved masthead, so the marker is the token rather than a house line.
-    expect(html, 'UA ink-rule frame').toContain('3px solid var(--faction-ua)')
+    // UA's frame is dress only (#851), and #1201 restated that dress: the flat
+    // 3px orange border became the kit's own ink column and the ground became
+    // the three-stop paper stock. The stock is the marker — unique to the UA
+    // chassis, and still a token rather than a house line.
+    expect(html, 'UA parchment chassis').toContain('var(--faction-ua-parchment)')
     expect(html, 'SNIDE dossier tokens').toContain('--faction-snide')
     expect(html, 'COVEN scrapbook tokens').toContain('--faction-coven')
   })
