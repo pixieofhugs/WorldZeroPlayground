@@ -82,8 +82,12 @@ import {
 const HAIRLINE_FAINT = `1px solid ${LINE}`
 const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`
 
-/** The rubric mark — an incised sigil used as an icon. Not text. */
-export function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color?: string }) {
+/**
+ * The rubric mark — an incised sigil used as an icon. Not text. Local since
+ * #1313: it was exported for the retired phone twin, and nothing outside this
+ * file draws it.
+ */
+function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color?: string }) {
   return (
     <span
       aria-hidden
@@ -99,8 +103,11 @@ export function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color
   )
 }
 
-/** A lettered rubric: mark, letterspaced red caps, then the double rule. */
-export function RubricHeading({ children }: { children: ReactNode }) {
+/**
+ * A lettered rubric: mark, letterspaced red caps, then the double rule. Local
+ * since #1313, for the same reason as {@link Rubric}.
+ */
+function RubricHeading({ children }: { children: ReactNode }) {
   return (
     <div style={{ marginTop: 'var(--space-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>

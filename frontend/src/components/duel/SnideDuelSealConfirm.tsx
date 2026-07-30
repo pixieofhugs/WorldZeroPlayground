@@ -89,8 +89,11 @@ const HALFTONE: CSSProperties = {
 /**
  * The ransom-note masthead strip: cut squares of acid and pink at broken angles.
  * Ornament — not an icon, not text, and carrying none of the dialog's meaning.
+ *
+ * Local since #1313: it was exported for the retired phone twin, and nothing
+ * outside this file cuts one.
  */
-export function RansomStrip() {
+function RansomStrip() {
   return (
     <span style={{ display: 'flex', gap: 'var(--space-xs)' }} aria-hidden>
       {[ACID, PINK, ACID, PINK].map((color, index) => (
