@@ -83,31 +83,52 @@ const CAPTION: CSSProperties = {
   flexShrink: 0,
 }
 
-/** A four-point twinkle centred on (x, y), arms `r` wide and 2.6r long. */
+/**
+ * A four-point twinkle, arms `r` wide and 2.6r long. `(x, y)` is the TOP point,
+ * not the centre — the same construction the spell slip's stars use, so the two
+ * marks are the same shape.
+ */
 function twinkle(x: number, y: number, r: number): string {
   const arm = r * 2.6
   return `M${x} ${y - arm} l${r} ${arm} ${arm} ${r} -${arm} ${r} -${r} ${arm} -${r} -${arm} -${arm} -${r} ${arm} -${r} z`
 }
 
 /**
- * The gold candle-spark field, clipped to the head band so no spark ever lands
+ * The gold candle-spark field, confined to the head band so no spark ever lands
  * in copy. Three sparks, not the task card's six: this card is drawn dozens of
  * times down one scroll, and the slip's masthead field is a once-per-page mark.
+ *
+ * Each spark is its OWN square-viewBox svg placed by percentage, rather than one
+ * stretched sheet across the band. The task card can afford
+ * `preserveAspectRatio="none"` because its viewBox matches its fixed 340px width;
+ * a feed card takes whatever width the column gives it, and a stretched
+ * four-point star flattens into a dash.
  */
+const SPARKS: { left: string; top: number; size: number; opacity: number }[] = [
+  { left: '7%', top: 5, size: 9, opacity: 0.85 },
+  { left: '58%', top: 19, size: 6, opacity: 0.7 },
+  { left: '86%', top: 8, size: 10, opacity: 0.8 },
+]
+
 function SparkField() {
   return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox="0 0 320 34"
-      preserveAspectRatio="none"
+    <span
       aria-hidden="true"
-      style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+      style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}
     >
-      <path d={twinkle(28, 9, 1.5)} fill="var(--faction-coven-slip-gold)" opacity={0.85} />
-      <path d={twinkle(196, 25, 1.1)} fill="var(--faction-coven-slip-gold)" opacity={0.7} />
-      <path d={twinkle(288, 12, 1.7)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
-    </svg>
+      {SPARKS.map((spark) => (
+        <svg
+          key={spark.left}
+          width={spark.size}
+          height={spark.size}
+          viewBox="0 0 20 20"
+          style={{ position: 'absolute', left: spark.left, top: spark.top, opacity: spark.opacity }}
+        >
+          {/* top point at y = 20/2 − arm, so the star sits centred in its box */}
+          <path d={twinkle(10, 8.4, 1.6)} fill="var(--faction-coven-slip-gold)" />
+        </svg>
+      ))}
+    </span>
   )
 }
 
