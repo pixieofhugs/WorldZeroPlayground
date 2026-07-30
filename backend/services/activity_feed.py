@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import Select, delete, func, select
+from sqlalchemy import Select, and_, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
@@ -855,6 +855,15 @@ def _nudge_query(ctx: FeedContext) -> Select:
     ``Nudge.praxis_id`` is always the praxis the RECIPIENT owes, so the join to
     ``Praxis``/``Task`` gives the card a title and a link the recipient can
     actually open — their own editor.
+
+    A nudge is about an **obligation**, so it lives exactly as long as one: the
+    predicate below is ``_awaiting_submission_query``'s, read through the
+    recipient's own member row (#1301). Both halves are load-bearing and neither
+    subsumes the other — a collab stays ``in_progress`` while the group waits on
+    somebody else, which is precisely when this member's nudge stops applying;
+    and a member row stays unfiled forever on a praxis that was abandoned. It is
+    also the read-time mirror of what ``send_nudge`` checked at write time, so a
+    nudge that could not be sent today cannot still be showing from yesterday.
     """
     sender = aliased(Character)
     query = (
@@ -874,7 +883,21 @@ def _nudge_query(ctx: FeedContext) -> Select:
         .join(Praxis, Nudge.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
         .join(sender, Nudge.from_character_id == sender.id)
-        .where(Nudge.to_character_id == ctx.character_id)
+        # The recipient's own member row on the nudged praxis. An INNER join, so
+        # a nudge whose recipient is no longer a member of that praxis retires
+        # with the membership — there is nothing left for them to owe.
+        .join(
+            PraxisMember,
+            and_(
+                PraxisMember.praxis_id == Nudge.praxis_id,
+                PraxisMember.character_id == Nudge.to_character_id,
+            ),
+        )
+        .where(
+            Nudge.to_character_id == ctx.character_id,
+            PraxisMember.has_submitted.is_(False),
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+        )
     )
     if ctx.before is not None:
         query = query.where(Nudge.created_at < ctx.before)
