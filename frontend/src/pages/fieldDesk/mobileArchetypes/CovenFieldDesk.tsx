@@ -1,115 +1,109 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { CovenSigil } from '../../../components/cards/CovenSigil'
+import {
+  Braid,
+  CAPTION,
+  CARD,
+  BORDER,
+  CTA_FROM,
+  CTA_INK,
+  CTA_TO,
+  DEEP,
+  DISPLAY,
+  GLOW,
+  GOLD,
+  HAND,
+  HAIR,
+  INK,
+  READING,
+  SHADOW,
+  SigilMark,
+  SLIP_SHEET,
+  SOFT,
+} from '../../../components/cards/covenSlip'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
- * Cozy Coven MOBILE FieldDesk home (#500) — the scrapbook window idiom
- * on a phone: the carried life and its in-progress quests each become a little
- * pink "window" (traffic-light dots + sparkle-titled bar, a dotted board and an
- * inner notepad), taped to a rose board. Same content slots as the Default
- * mobile home — character header, stat tiles, active-tasks list, primary
- * actions — only the dress changes. Ported from the Field Kit `wow-treatment`
- * §02 home; grounds entirely on the `--faction-coven-*` window tokens already in
- * index.css (same set CovenTaskDetail uses). Presentation-only.
+ * Cozy Coven MOBILE FieldDesk home (#500, re-dressed by #1209) — the coven's
+ * desk, by candlelight.
+ *
+ * The carried life and its in-progress quests each sit under a slip band on the
+ * candlelit page. Same content slots as the Default mobile home — character
+ * header, stat tiles, active-tasks list, primary actions — only the dress
+ * changes.
+ *
+ * THE `wow.exe` WINDOWS ARE GONE. Traffic-light dots, the dotted board, the
+ * inner notepad and the `--faction-coven-scrap-*` stat tiles were the lo-fi
+ * metaphor the v2 task card retired (#1023). The `Window` helper survives as
+ * `Plate`: same job, the slip's chrome.
+ *
+ * The quest rows are the design's COMMENT ROW — mark, name, meta, trailing chip
+ * — which with the submission card is the only list shape the vocabulary draws.
+ *
+ * Presentation-only. No copy changed; every string is the `common` key it was.
  */
 
-const PINK = 'var(--faction-coven)'
-const TITLE_TEXT = 'var(--faction-coven-title-text)'
-const CARD_TEXT = 'var(--faction-coven-card-text)'
-const CARD_MUTED = 'var(--faction-coven-card-muted)'
-const WIN_BORDER = 'var(--faction-coven-win-border)'
-const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
-const BODY_BG = 'var(--faction-coven-body-bg)'
-const DOT = 'var(--faction-coven-dot)'
-const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
-const BODY = 'var(--font-body)' // Courier Prime
-const ON_ACCENT = 'var(--color-text-on-accent)'
+const CHROME = 'var(--font-faction-rounded)' // Quicksand
 
-/** The kit's four-point sparkle. */
-function Sparkle({ size, color, style }: { size: number; color: string; style?: CSSProperties }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} aria-hidden>
-      <path
-        d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
-        fill={color}
-      />
-    </svg>
-  )
+/** The reading voice — every prose line on the page. */
+const PROSE: CSSProperties = {
+  fontFamily: READING,
+  fontStyle: 'italic',
+  lineHeight: 1.5,
+  color: SOFT,
 }
 
-/** A pink window: dotted title bar + dotted board wrapping an inner notepad. */
-function Window({ title, children }: { title: string; children: ReactNode }) {
+/** A slip band over a candle-lit panel. */
+function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section
       style={{
-        borderRadius: 16,
+        borderRadius: 18,
         overflow: 'hidden',
-        border: `2px solid ${WIN_BORDER}`,
-        boxShadow: `0 8px 22px color-mix(in srgb, ${PINK} 22%, transparent)`,
+        border: `2px solid ${BORDER}`,
+        boxShadow: SHADOW,
       }}
     >
-      {/* title bar */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 'var(--space-sm)',
           padding: 'var(--space-sm) var(--space-md)',
-          background: 'linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))',
-          borderBottom: `2px solid ${WIN_BORDER}`,
+          background: SLIP_SHEET,
+          borderBottom: `2px solid ${BORDER}`,
         }}
       >
-        {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((c) => (
-          <span
-            key={c}
-            style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }}
-          />
-        ))}
-        <span
-          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
-        >
-          <Sparkle size={11} color={TITLE_TEXT} />
-          {title}
-        </span>
+        <SigilMark size={22} />
+        <span style={{ ...CAPTION, marginLeft: 'auto' }}>{title}</span>
       </div>
-      {/* dotted board */}
-      <div
-        style={{
-          padding: 'var(--space-md)',
-          background: BODY_BG,
-          backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
-          backgroundSize: '13px 13px',
-        }}
-      >
-        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 'var(--space-md)' }}>
-          {children}
-        </div>
-      </div>
+      <div style={{ background: CARD, padding: 'var(--space-lg)' }}>{children}</div>
     </section>
   )
 }
 
-const pinkButton: CSSProperties = {
+const primaryButton: CSSProperties = {
   flex: 1,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   gap: 'var(--space-sm)',
-  fontFamily: BODY,
+  fontFamily: CHROME,
   fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   fontWeight: 700,
   padding: 'var(--space-lg)',
   borderRadius: 14,
-  color: ON_ACCENT,
-  border: `1.5px solid ${WIN_BORDER}`,
-  background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
+  color: CTA_INK,
+  border: `1.5px solid ${CTA_TO}`,
+  background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`,
+  boxShadow: `0 8px 18px -8px ${GLOW}`,
   textDecoration: 'none',
 }
 
@@ -119,15 +113,15 @@ const ghostButton: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 'var(--space-sm)',
-  fontFamily: BODY,
+  fontFamily: CHROME,
   fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   padding: 'var(--space-lg)',
   borderRadius: 14,
-  color: TITLE_TEXT,
-  border: `1.5px solid ${NOTEPAD_BORDER}`,
-  background: NOTEPAD_BG,
+  color: INK,
+  border: `1.5px solid ${BORDER}`,
+  background: CARD,
   textDecoration: 'none',
 }
 
@@ -144,220 +138,226 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
   return (
     <div
       data-skin="coven"
-      className="page"
+      className="page coven-candle-backdrop"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-lg)',
-        fontFamily: BODY,
-        color: CARD_TEXT,
-        background: BODY_BG,
-        backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
-        backgroundSize: '15px 15px',
+        position: 'relative',
+        fontFamily: CHROME,
+        color: INK,
       }}
     >
-      <header>
-        <div className="eyebrow" style={{ color: CARD_MUTED }}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 0.9, color: TITLE_TEXT, margin: 0 }}>
-          {t('fieldDesk.home.title')}
-        </h1>
-      </header>
-
-      {/* ── Character window ── */}
-      <Window title={t('fieldDesk.home.coven.charWindow')}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
-          <span className="eyebrow" style={{ color: CARD_MUTED }}>
-            {t('fieldDesk.home.coven.charEyebrow')}
-          </span>
-          <Link
-            to={`/characters/${character.id}/edit`}
-            className="eyebrow"
-            style={{ color: PINK, textDecoration: 'none' }}
-          >
-            {t('fieldDesk.home.edit')}
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div
-            className="shrink-0"
+      {/* The candlelight wash is the page ground — `.coven-candle-backdrop` owns
+          the blooms, the drift and the light/dark flip, and its `::before` is
+          positioned, so the content sits above it explicitly (#911). */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+        <header>
+          <div style={CAPTION}>{t('nav.home')}</div>
+          <h1
             style={{
-              width: 56,
-              height: 56,
-              borderRadius: '50%',
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: pink ring thickness drawn around a 56px avatar; the nearest rung (4px) thickens the band by a third.
-              padding: 3,
-              background: PINK,
+              fontFamily: HAND,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the desk's own hand, not typeset copy.
+              fontSize: 34,
+              fontWeight: 700,
+              lineHeight: 0.9,
+              color: INK,
+              margin: 'var(--space-xs) 0 0',
             }}
           >
-            {character.avatar_url ? (
-              <img
-                src={mediaUrl(character.avatar_url)}
-                alt={character.display_name}
-                className="w-full h-full rounded-full"
-                style={{ objectFit: 'cover' }}
-              />
-            ) : (
-              <span
-                className="flex w-full h-full items-center justify-center rounded-full"
-                style={{
-                  background: 'radial-gradient(circle at 35% 28%, var(--faction-coven-title-from), var(--faction-coven))',
-                  fontFamily: SCRIPT,
-                  // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 56px medallion, not text
-                  fontSize: 24,
-                  color: ON_ACCENT,
-                }}
-              >
-                {character.display_name[0]?.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="block truncate"
-              style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 0.95, color: TITLE_TEXT, textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
-            <div
-              className="truncate"
-              style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}
-            >
-              {t('sidebar.characterCard.factionLevel', {
-                faction: factionName(character.faction_slug),
-                level: character.level,
-              })}
-            </div>
-          </div>
-          <div className="shrink-0 text-right">
-            <div style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 1, color: TITLE_TEXT }}>
-              {character.score?.toLocaleString() ?? '0'}
-            </div>
-            <div className="eyebrow" style={{ color: CARD_MUTED }}>
-              {t('fieldDesk.home.stats.points')}
-            </div>
-          </div>
-        </div>
+            {t('fieldDesk.home.title')}
+          </h1>
+          <Braid style={{ marginTop: 'var(--space-sm)' }} />
+        </header>
 
-        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-          {stats.map((stat) => (
+        {/* ── Character plate ── */}
+        <Plate title={t('fieldDesk.home.coven.charWindow')}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
+            <span style={CAPTION}>{t('fieldDesk.home.coven.charEyebrow')}</span>
+            <Link to={`/characters/${character.id}/edit`} style={{ ...CAPTION, color: DEEP, textDecoration: 'none' }}>
+              {t('fieldDesk.home.edit')}
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
             <div
-              key={stat.label}
-              className="text-center"
+              className="shrink-0"
               style={{
-                flex: '1 1 0',
-                minWidth: 0,
-                background: 'var(--faction-coven-scrap-mid)',
-                border: `1px solid ${NOTEPAD_BORDER}`,
-                borderRadius: 12,
-                padding: 'var(--space-md) var(--space-sm)',
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: ring thickness drawn around a 56px avatar; the nearest rung (4px) thickens the band by a third.
+                padding: 2,
+                background: `linear-gradient(150deg, var(--faction-coven-slip-pk), ${DEEP})`,
               }}
             >
-              <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', lineHeight: 1, color: TITLE_TEXT }}>
-                {stat.value}
-              </div>
-              <div className="eyebrow" style={{ marginTop: 'var(--space-xs)', color: CARD_MUTED }}>
-                {stat.label}
+              {character.avatar_url ? (
+                <img
+                  src={mediaUrl(character.avatar_url)}
+                  alt={character.display_name}
+                  className="w-full h-full rounded-full"
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <span
+                  className="flex w-full h-full items-center justify-center rounded-full"
+                  style={{
+                    background: CARD,
+                    fontFamily: READING,
+                    fontWeight: 600,
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: the monogram sized to its 56px disc, not to the type ramp
+                    fontSize: 24,
+                    color: DEEP,
+                  }}
+                >
+                  {character.display_name[0]?.toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <Link
+                to={`/characters/${character.id}`}
+                className="block truncate"
+                style={{ fontFamily: HAND, fontSize: 'var(--text-heading)', lineHeight: 0.95, color: INK, textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+              <div className="truncate" style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>
+                {t('sidebar.characterCard.factionLevel', {
+                  faction: factionName(character.faction_slug),
+                  level: character.level,
+                })}
               </div>
             </div>
-          ))}
-        </div>
-      </Window>
+            <div className="shrink-0 text-right">
+              <div style={{ fontFamily: READING, fontWeight: 600, fontSize: 'var(--text-heading)', lineHeight: 1, color: DEEP }}>
+                {character.score?.toLocaleString() ?? '0'}
+              </div>
+              <div style={CAPTION}>{t('fieldDesk.home.stats.points')}</div>
+            </div>
+          </div>
 
-      {/* ── Pending requests ── */}
-      {pendingCount > 0 && (
-        <Link
-          to="/updates?filter=requests"
-          className="flex items-center justify-between"
-          style={{
-            background: NOTEPAD_BG,
-            border: `1.5px solid ${NOTEPAD_BORDER}`,
-            borderRadius: 999,
-            padding: 'var(--space-md) var(--space-lg)',
-            fontSize: 'var(--text-content)',
-            color: TITLE_TEXT,
-            textDecoration: 'none',
-          }}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <Sparkle size={12} color={PINK} />
-            {t('fieldDesk.home.pending', { count: pendingCount })}
-          </span>
-          <span aria-hidden style={{ color: CARD_MUTED }}>›</span>
-        </Link>
-      )}
-
-      {/* ── Quests window ── */}
-      <Window title={t('fieldDesk.home.coven.questsWindow')}>
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-sm)' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
-            <Sparkle size={12} color={PINK} />
-            {t('fieldDesk.home.coven.questsHeading')}
-          </span>
-          <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${PINK} 0 8px, transparent 8px 14px)` }} />
-          <Link to="/tasks" className="eyebrow" style={{ color: PINK, textDecoration: 'none' }}>
-            {t('fieldDesk.home.viewAll')}
-          </Link>
-        </div>
-
-        {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: PINK, margin: 0 }}>
-            {t('fieldDesk.home.questsEmpty')}
-          </p>
-        ) : (
-          <div className="flex flex-col">
-            {activeTasks.map((praxis, index) => (
-              <Link
-                key={praxis.id}
-                to={`/praxes/${praxis.id}/edit`}
-                className="flex items-center gap-3"
+          <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="text-center"
                 style={{
-                  padding: 'var(--space-md) 0',
-                  borderTop: index === 0 ? undefined : `1px solid ${NOTEPAD_BORDER}`,
-                  textDecoration: 'none',
+                  flex: '1 1 0',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
+                  background: SLIP_SHEET,
+                  border: `1.5px solid ${BORDER}`,
+                  borderRadius: 12,
+                  padding: 'var(--space-md) var(--space-sm)',
                 }}
               >
-                <span className="shrink-0" style={{ width: 10, height: 10, borderRadius: 3, background: PINK }} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 'var(--text-content)', lineHeight: 1, color: TITLE_TEXT }}>
-                    {praxis.task_title}
-                  </div>
-                  <div
-                    className="truncate"
-                    style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CARD_MUTED }}
-                  >
-                    {t('fieldDesk.home.taskMeta', {
-                      faction: factionName(praxis.task_faction_slug),
-                      points: praxis.task_point_value,
-                    })}
-                  </div>
+                <div className="truncate" style={{ fontFamily: READING, fontWeight: 600, fontSize: 'var(--text-title)', lineHeight: 1, color: INK }}>
+                  {stat.value}
                 </div>
-                <span
-                  className="shrink-0 eyebrow"
-                  style={{ color: PINK, padding: 'var(--space-xs) var(--space-sm)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999 }}
-                >
-                  {praxisModeLabel(praxis, t)}
-                </span>
-              </Link>
+                <div style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>{stat.label}</div>
+              </div>
             ))}
           </div>
-        )}
-      </Window>
+        </Plate>
 
-      {/* ── Primary actions ── */}
-      <div className="flex gap-2.5">
-        <Link to="/tasks" style={pinkButton}>
-          <Sparkle size={13} color={ON_ACCENT} />
-          {t('fieldDesk.home.browseTasks')}
-        </Link>
-        {canProposeTask && (
-          <Link to="/propose-task" style={ghostButton}>
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-            <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-            {t('actions.proposeTask')}
+        {/* ── Pending requests ── */}
+        {pendingCount > 0 && (
+          <Link
+            to="/updates?filter=requests"
+            className="flex items-center justify-between"
+            style={{
+              background: CARD,
+              border: `1.5px solid ${BORDER}`,
+              borderRadius: 999,
+              padding: 'var(--space-md) var(--space-lg)',
+              fontFamily: READING,
+              fontSize: 'var(--text-content)',
+              color: INK,
+              textDecoration: 'none',
+            }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+              <CovenSigil size={12} color={GOLD} />
+              {t('fieldDesk.home.pending', { count: pendingCount })}
+            </span>
+            <span aria-hidden style={{ color: SOFT }}>›</span>
           </Link>
         )}
+
+        {/* ── Quests plate ── */}
+        <Plate title={t('fieldDesk.home.coven.questsWindow')}>
+          <div className="flex items-center" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
+            <span
+              style={{
+                fontFamily: DISPLAY,
+                fontWeight: 600,
+                fontSize: 'var(--text-title)',
+                lineHeight: 1.06,
+                letterSpacing: '0.02em',
+                color: INK,
+              }}
+            >
+              {t('fieldDesk.home.coven.questsHeading')}
+            </span>
+            <Braid style={{ flex: 1 }} />
+            <Link to="/tasks" style={{ ...CAPTION, color: DEEP, textDecoration: 'none', flex: 'none' }}>
+              {t('fieldDesk.home.viewAll')}
+            </Link>
+          </div>
+
+          {activeTasks.length === 0 ? (
+            <p className="content-text" style={{ ...PROSE, margin: 0 }}>
+              {t('fieldDesk.home.questsEmpty')}
+            </p>
+          ) : (
+            <div className="flex flex-col">
+              {activeTasks.map((praxis, index) => (
+                <Link
+                  key={praxis.id}
+                  to={`/praxes/${praxis.id}/edit`}
+                  className="flex items-center gap-3"
+                  style={{
+                    padding: 'var(--space-md) 0',
+                    borderTop: index === 0 ? undefined : `1px solid ${HAIR}`,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <CovenSigil size={12} color={GOLD} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate" style={{ fontFamily: HAND, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
+                      {praxis.task_title}
+                    </div>
+                    <div className="truncate" style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>
+                      {t('fieldDesk.home.taskMeta', {
+                        faction: factionName(praxis.task_faction_slug),
+                        points: praxis.task_point_value,
+                      })}
+                    </div>
+                  </div>
+                  <span
+                    className="shrink-0"
+                    style={{ ...CAPTION, padding: 'var(--space-xs) var(--space-sm)', border: `1.5px solid ${BORDER}`, borderRadius: 999 }}
+                  >
+                    {praxisModeLabel(praxis, t)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Plate>
+
+        {/* ── Primary actions ── */}
+        <div className="flex gap-2.5">
+          <Link to="/tasks" style={primaryButton}>
+            <CovenSigil size={13} color={CTA_INK} />
+            {t('fieldDesk.home.browseTasks')}
+          </Link>
+          {canProposeTask && (
+            <Link to="/propose-task" style={ghostButton}>
+              {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
+              <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
+              {t('actions.proposeTask')}
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   )

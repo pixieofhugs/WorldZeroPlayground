@@ -72,7 +72,7 @@ faction, same key shape in each branch:
 
 ```json
 {
-  "ephemerists": { "plausible": "plausible" },
+  "ephemerists": { "silver": "silver" },
   "snide": { "rad": "rad" }
 }
 ```

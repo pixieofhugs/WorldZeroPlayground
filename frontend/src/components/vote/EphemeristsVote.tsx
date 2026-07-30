@@ -1,77 +1,98 @@
 import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  BRASS,
+  BRASS_LIGHT,
+  DISC,
+  GOLD,
+  OCHRE,
+  QUIET,
+  READING,
+  DECO,
+  stepClip,
+} from '../cards/ephemeristsPlate'
+import { toRoman } from '../cards/ephemeristsAtoms'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
- * The Ephemerists vote UI (#821) — THE CONSTELLATION ATTESTATION. The 1-5
- * approval is a night-plate constellation: each reached star lights gold and a
- * dashed gold line ties the reached stars together (apocryphal → the whitened
- * CANONICAL star at V). Rank-5 twinkles with corner sparkles. It reframes the
- * vote as "how well does the filed record hold up in the sky of the archive?"
+ * The Ephemerists vote UI (#1207) — THE ALCHEMICAL METALS LADDER, which
+ * replaces the constellation attestation (#821).
  *
- * The plate is a fixed night surface that reads in BOTH themes (like coven's
- * moon plate), so its inner colours do not flip through the cascade — only the
- * caption ink does, via the already-flipping --eph-rubric/--eph-muted tokens
- * (never a `dark ? a : b` ternary; §8). Plugs into the vote dispatcher through
- * the shared {@link useVote} hook so cast/refetch/tally logic lives in one
- * place. Every motion is a reduced-motion-gated CSS class (.eph-vote-star /
- * .eph-vote-sparkle) — the stars still light and the line still connects when
- * stilled; motion is decoration, not meaning.
+ * The 1–5 approval is a transmutation: five discs on a stepped night plate,
+ * lead → copper → silver → gold → platinum, each carrying its own alchemical
+ * sigil and its roman numeral. Reaching a rank lights every disc up to it in its
+ * own metal — ray burst, sheen, shock ring — and rank 5 is haloed in gold with
+ * iron filings orbiting it. `numeral: 'roman'` in `voteReframes` is what puts
+ * I–V on the discs, and the tier WORDS are the metals themselves.
+ *
+ * THE PLATE IS A FIXED NIGHT SURFACE in both themes, as the constellation was.
+ * The design paints the light-theme plate cream and keeps one set of metals for
+ * both, on which silver/gold/platinum read 1.0–1.3:1 — a reached disc would be
+ * FAINTER than the unreached ring beside it. The full measurement is recorded
+ * at the token declaration in index.css. Only the caption ink flips, through the
+ * plate family's own tokens; there is no `dark ? a : b` anywhere (§8).
+ *
+ * Every motion is a reduced-motion-gated CSS class (`.eph-metal-*`, index.css),
+ * so the stilled state is a fully lit ladder — motion is decoration, never
+ * meaning. Cast/refetch/tally logic stays in the shared {@link useVote} hook.
  */
+
+/** The touch target, and the haloed top rank. Never shrink either (WCAG ≥44). */
+const DISC_SIZE = 44
+const TOP_DISC_SIZE = 50
 
 /**
- * Star anchor points on the plate — ornament geometry, kept raw.
+ * The five metals, in the tier order `VOTE_REFRAMES` declares. Each carries the
+ * classical sigil for its metal on the plate's own 24-unit square — Saturn for
+ * lead, Venus for copper, the crescent for silver, the sun for gold, and the
+ * moon-and-Mercury compound for platinum.
  *
- * GEOMETRY RE-SOLVE (#841). The design draws the constellation on a 284×68
- * plate at intrinsic star sizes (21/28px). #821 kept that plate but hung 44px
- * touch targets off the same anchors, and a 44px box centred on y=18 starts at
- * −4: every outer star's hit box hung off the top or bottom edge of its own
- * plate, so a third of each target was unclickable.
- *
- * Touch targets win, but a port is not a drop-in (`design-fidelity.md`): the
- * layout is RE-SOLVED rather than the target shrunk. The constellation's shape
- * is untouched — every anchor moves down by the same 8px and the plate grows to
- * 84 — which leaves each 44px box inside the plate with room to spare while the
- * figure the stars draw is bit-identical to the design's.
+ * Local rather than in `ephemeristsPlate`: the kit is the plate's shared
+ * ornament vocabulary (registers, cornice, cartouche, octagon), and these five
+ * signs have exactly one reader — this widget.
  */
-const STAR_POINTS = [
-  [24, 52],
-  [80, 26],
-  [136, 58],
-  [196, 28],
-  [256, 50],
+const METALS = [
+  {
+    color: 'var(--faction-ephemerists-metal-lead)',
+    glyph: 'M6.2 7.4 C7.4 4.6 10.2 4.8 10.2 7.8 C10.2 10.8 9 14.6 9.4 17.6 C9.8 20.4 11.8 21 13.8 19.4 M6.4 10.8 H13.4',
+    weight: 1.5,
+  },
+  {
+    color: 'var(--faction-ephemerists-metal-copper)',
+    glyph: 'M12 4.4 a4.4 4.4 0 1 0 0.01 0 Z M12 13.2 V20.6 M8.8 17.4 H15.2',
+    weight: 1.5,
+  },
+  {
+    color: 'var(--faction-ephemerists-metal-silver)',
+    glyph: 'M15.8 4.4 A8 8 0 1 0 15.8 19.6 A6.3 6.3 0 1 1 15.8 4.4 Z',
+    weight: 1.3,
+  },
+  {
+    color: 'var(--faction-ephemerists-metal-gold)',
+    glyph: 'M12 5 a7 7 0 1 0 0.01 0 Z M12 10.4 a1.7 1.7 0 1 0 0.01 0 Z',
+    weight: 1.5,
+  },
+  {
+    color: 'var(--faction-ephemerists-metal-platinum)',
+    glyph: 'M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z',
+    weight: 1.3,
+  },
 ]
-const PLATE_W = 284
-const PLATE_H = 84
-/** Touch-target box centred on each star (WCAG ≥44px). Never shrink this. */
-const HIT = 44
-
-/** Faint background dust motes scattered across the plate — ornament, raw. */
-const DUST = [
-  [40, 20],
-  [110, 68],
-  [172, 18],
-  [232, 68],
-  [270, 24],
-  [60, 62],
-]
-/** Corner-sparkle offsets around the rank-5 star (marginLeft/Top from centre). */
-const SPARK_SPOTS = [
-  [-11, -9],
-  [12, -8],
-  [11, 12],
-  [-12, 9],
-]
-
-/** A five-point star, and a four-point twinkle spark. */
-const STAR_D = 'M12 0.5 L13 10.6 L23.5 12 L13 13.4 L12 23.5 L11 13.4 L0.5 12 L11 10.6 Z'
-const SPARK_D =
-  'M12 2c.4 4.6 1.4 6.6 6 7-4.6.4-5.6 2.4-6 7-.4-4.6-1.4-6.6-6-7 4.6-.4 5.6-2.4 6-7z'
 
 const TIERS = VOTE_REFRAMES['ephemerists'].tiers
+
+/** The ray burst's spread beyond the disc it surrounds. Ornament geometry. */
+const BURST_MARGIN = 30
+/** How far the filings orbit past rank 5's edge. Ornament geometry. */
+const FILING_ORBIT = 13
+
+/** One phase of the burst: alternate rays are shorter and gold rather than metal. */
+function rayLength(index: number, top: boolean): number {
+  return (index % 2 ? 5 : 8.5) + (top ? 3 : 0)
+}
 
 export default function EphemeristsVote({
   praxisId,
@@ -89,82 +110,53 @@ export default function EphemeristsVote({
 
   const active = hovered || selected
   const caption = active ? TIERS[active - 1].label : t('chrome.ephemerists.idle')
-  // Reached stars, in order, connected head-to-tail by the dashed gold line.
-  const linePts = STAR_POINTS.slice(0, active)
-    .map(([x, y]) => `${x},${y}`)
-    .join(' ')
 
   return (
-    <div>
+    <div onMouseLeave={() => setHovered(0)}>
       <div
-        onMouseLeave={() => setHovered(0)}
         style={{
           position: 'relative',
-          width: PLATE_W,
-          height: PLATE_H,
-          maxWidth: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-md)',
+          padding: 'var(--space-md) var(--space-lg)',
           background:
-            'radial-gradient(130% 160% at 50% -10%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
-          borderRadius: 6,
-          border: '1px solid var(--faction-ephemerists-vote-plate-border)',
-          boxShadow: 'inset 0 1px 6px rgba(0, 0, 0, 0.6)',
+            'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
+          border: `1px solid ${BRASS}`,
+          boxShadow: 'inset 0 1px 8px rgba(30, 34, 51, 0.7)',
+          clipPath: stepClip(7),
         }}
       >
-        {/* Dust + the constellation line, behind the star buttons. */}
-        <svg
-          viewBox={`0 0 ${PLATE_W} ${PLATE_H}`}
-          width={PLATE_W}
-          height={PLATE_H}
+        {/* The rail the metals sit on — a dashed brass lead at rest, a gold
+            current running along it once a rank is reached. */}
+        <span
           aria-hidden
-          style={{ position: 'absolute', inset: 0, maxWidth: '100%', pointerEvents: 'none' }}
-        >
-          {DUST.map(([x, y], index) => (
-            <circle
-              key={`dust${index}`}
-              cx={x}
-              cy={y}
-              r={0.8}
-              fill="var(--faction-ephemerists-vote-dust)"
-              opacity={0.5}
-            />
-          ))}
-          {active >= 2 && (
-            <polyline
-              points={linePts}
-              fill="none"
-              stroke="var(--faction-ephemerists-vote-line)"
-              strokeWidth={1.4}
-              strokeDasharray="3 3"
-              opacity={0.9}
-              style={{ filter: 'drop-shadow(0 0 3px rgba(212, 171, 85, 0.85))' }}
-            />
-          )}
-        </svg>
+          className={active > 0 ? 'eph-metal-rail' : undefined}
+          style={{
+            position: 'absolute',
+            left: 14,
+            right: 14,
+            top: '50%',
+            height: 1.5,
+            marginTop: -1,
+            background:
+              active > 0
+                ? `repeating-linear-gradient(90deg, ${GOLD} 0 6px, transparent 6px 12px)`
+                : `repeating-linear-gradient(90deg, ${BRASS} 0 3px, transparent 3px 9px)`,
+            backgroundSize: '12px 100%',
+            opacity: active > 0 ? 0.8 : 0.35,
+          }}
+        />
 
         {TIERS.map((tier, index) => {
-          const [x, y] = STAR_POINTS[index]
+          const metal = METALS[index]
           const reached = active >= tier.value
           const picked = selected === tier.value
           const top = tier.value === 5
-          const size = top ? 28 : 21
-          const twinkling = reached && !top
-          const buttonStyle: CSSProperties = {
-            position: 'absolute',
-            left: x - HIT / 2,
-            top: y - HIT / 2,
-            width: HIT,
-            height: HIT,
-            border: 'none',
-            background: 'transparent',
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: saving ? 'default' : 'pointer',
-            transform: picked ? 'scale(1.18)' : 'none',
-            transition: 'transform 150ms',
-            ['--tw-delay' as string]: `${index * 0.4}s`,
-          }
+          const size = top ? TOP_DISC_SIZE : DISC_SIZE
+          const radius = size / 2
+          const burst = size + BURST_MARGIN
+          const rayCount = top ? 16 : 10
           return (
             <button
               key={tier.value}
@@ -173,66 +165,215 @@ export default function EphemeristsVote({
               onMouseEnter={() => setHovered(tier.value)}
               aria-label={t('chrome.ephemerists.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
-              className={twinkling ? 'eph-vote-star' : undefined}
-              style={buttonStyle}
+              style={{
+                position: 'relative',
+                width: size,
+                height: size,
+                borderRadius: '50%',
+                border: 'none',
+                background: 'transparent',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: saving ? 'default' : 'pointer',
+                transform: picked
+                  ? 'translateY(-3px) scale(1.08)'
+                  : reached
+                    ? 'translateY(-1px)'
+                    : 'none',
+                transition: 'transform 180ms cubic-bezier(.2,.8,.3,1.4)',
+              }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                width={size}
-                height={size}
+              {/* The disc's own rim: brass while idle, its metal once reached. */}
+              <span
+                aria-hidden
                 style={{
-                  overflow: 'visible',
-                  filter: reached ? 'drop-shadow(0 0 5px rgba(240, 211, 120, 0.95))' : 'none',
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '50%',
+                  border: `1px solid ${reached ? metal.color : BRASS}`,
+                  opacity: reached ? 1 : 0.85,
+                  boxShadow: reached
+                    ? `0 0 12px -2px color-mix(in srgb, ${metal.color} 60%, transparent), inset 0 0 10px -4px ${metal.color}`
+                    : 'none',
+                  transition: 'border-color 220ms ease, box-shadow 220ms ease',
+                }}
+              />
+
+              {reached && (
+                <>
+                  <svg
+                    aria-hidden
+                    width={burst}
+                    height={burst}
+                    viewBox={`0 0 ${burst} ${burst}`}
+                    style={{
+                      position: 'absolute',
+                      left: (size - burst) / 2,
+                      top: (size - burst) / 2,
+                      pointerEvents: 'none',
+                      overflow: 'visible',
+                    }}
+                  >
+                    {Array.from({ length: rayCount }).map((_, ray) => (
+                      <line
+                        key={ray}
+                        className="eph-metal-ray"
+                        x1={burst / 2}
+                        y1={burst / 2 - (radius + 3)}
+                        x2={burst / 2}
+                        y2={burst / 2 - (radius + 3 + rayLength(ray, top))}
+                        stroke={ray % 2 ? GOLD : metal.color}
+                        strokeWidth={ray % 2 ? 0.9 : 1.3}
+                        strokeLinecap="round"
+                        transform={`rotate(${(ray / rayCount) * 360} ${burst / 2} ${burst / 2})`}
+                        style={
+                          {
+                            '--metal-dur': `${2.4 + (ray % 3) * 0.5}s`,
+                            '--metal-delay': `${(ray * 0.09).toFixed(2)}s`,
+                          } as CSSProperties
+                        }
+                      />
+                    ))}
+                  </svg>
+
+                  {/* The shock ring leaving the disc as the metal strikes. */}
+                  <span
+                    aria-hidden
+                    className="eph-metal-shock"
+                    style={
+                      {
+                        position: 'absolute',
+                        inset: -2,
+                        borderRadius: '50%',
+                        pointerEvents: 'none',
+                        border: `1px solid ${top ? GOLD : metal.color}`,
+                        '--metal-dur': top ? '2.2s' : '3s',
+                        '--metal-delay': `${tier.value * 0.12}s`,
+                      } as CSSProperties
+                    }
+                  />
+                </>
+              )}
+
+              <svg
+                aria-hidden
+                width={size * 0.5}
+                height={size * 0.5}
+                viewBox="0 0 24 24"
+                style={{
+                  position: 'relative',
+                  display: 'block',
+                  filter: reached
+                    ? `drop-shadow(0 0 3px color-mix(in srgb, ${metal.color} 80%, transparent))${
+                        top ? ` drop-shadow(0 0 9px color-mix(in srgb, ${GOLD} 67%, transparent))` : ''
+                      }`
+                    : 'none',
+                  transition: 'filter 220ms ease',
                 }}
               >
                 <path
-                  d={STAR_D}
-                  fill={
-                    reached
-                      ? top
-                        ? 'var(--faction-ephemerists-vote-star-top)'
-                        : 'var(--faction-ephemerists-vote-star-on)'
-                      : 'var(--faction-ephemerists-vote-star-off)'
-                  }
-                  opacity={reached ? 1 : 0.85}
-                />
-                <circle
-                  cx={12}
-                  cy={12}
-                  r={reached ? (top ? 2.4 : 1.9) : 1.4}
-                  fill={
-                    reached
-                      ? top
-                        ? 'var(--faction-ephemerists-vote-core-top)'
-                        : 'var(--faction-ephemerists-vote-core-on)'
-                      : 'var(--faction-ephemerists-vote-core-off)'
-                  }
+                  d={metal.glyph}
+                  fill="none"
+                  stroke={reached ? metal.color : 'var(--faction-ephemerists-vote-idle-ink)'}
+                  strokeWidth={metal.weight}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ transition: 'stroke 220ms ease' }}
                 />
               </svg>
+
+              {reached && (
+                <span
+                  aria-hidden
+                  className="eph-metal-sheen"
+                  style={
+                    {
+                      position: 'absolute',
+                      inset: -1,
+                      borderRadius: '50%',
+                      pointerEvents: 'none',
+                      overflow: 'hidden',
+                      mixBlendMode: 'screen',
+                      background: `linear-gradient(112deg, transparent 38%, var(--faction-ephemerists-vote-sheen) 50%, transparent 62%)`,
+                      backgroundSize: '260% 100%',
+                      '--metal-dur': top ? '2.8s' : '3.6s',
+                      '--metal-delay': `${(tier.value * 0.35).toFixed(2)}s`,
+                    } as CSSProperties
+                  }
+                />
+              )}
+
+              {/* Iron filings, drawn to the fully transmuted disc. */}
               {reached &&
                 top &&
-                SPARK_SPOTS.map(([mx, my], sparkIndex) => (
-                  <span
-                    key={`sp${sparkIndex}`}
-                    aria-hidden
-                    className="eph-vote-sparkle"
-                    style={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: '50%',
-                      width: 9,
-                      height: 9,
-                      marginLeft: mx,
-                      marginTop: my,
-                      pointerEvents: 'none',
-                      ['--tw-delay' as string]: `${sparkIndex * 0.2}s`,
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="100%" height="100%">
-                      <path d={SPARK_D} fill="var(--faction-ephemerists-vote-spark)" />
-                    </svg>
-                  </span>
-                ))}
+                [0, 1, 2, 3, 4, 5].map((filing) => {
+                  const angle = (filing / 6) * Math.PI * 2 + 0.4
+                  return (
+                    <span
+                      key={`filing${filing}`}
+                      aria-hidden
+                      className="eph-metal-filing"
+                      style={
+                        {
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          width: 3,
+                          height: 3,
+                          marginLeft: Math.cos(angle) * (radius + FILING_ORBIT),
+                          marginTop: Math.sin(angle) * (radius + FILING_ORBIT),
+                          borderRadius: '50%',
+                          background: GOLD,
+                          boxShadow: `0 0 4px ${GOLD}`,
+                          pointerEvents: 'none',
+                          '--metal-delay': `${filing * 0.18}s`,
+                        } as CSSProperties
+                      }
+                    />
+                  )
+                })}
+
+              {/*
+               * The rank's numeral, struck on a night disc at the metal's edge.
+               *
+               * DEVIATION: the design fills this badge with brass (pale cream
+               * numeral) for ranks I–IV. Cream on the light theme's brass is
+               * 3.5:1, and nothing in the family clears 4.5 on that mid-tone —
+               * so the fill is the plate's own night and the numeral is gold,
+               * which is 11:1 and is the register the masthead already sets
+               * gold-on-night in. Rank V keeps the design's ochre.
+               */}
+              <span
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  right: -2,
+                  bottom: -1,
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: reached && top ? OCHRE : 'var(--faction-ephemerists-vote-plate-to)',
+                  color: reached
+                    ? top
+                      ? DISC
+                      : GOLD
+                    : 'var(--faction-ephemerists-plate-band-quiet)',
+                  fontFamily: 'var(--font-faction-engraved)',
+                  fontWeight: 600,
+                  fontSize: 'var(--text-xs)',
+                  letterSpacing: '0.04em',
+                  lineHeight: 1,
+                  boxShadow: `0 0 0 1px ${reached ? BRASS_LIGHT : BRASS}`,
+                  transition: 'background 220ms ease, color 220ms ease',
+                }}
+              >
+                {toRoman(tier.value)}
+              </span>
             </button>
           )
         })}
@@ -243,18 +384,18 @@ export default function EphemeristsVote({
           display: 'flex',
           alignItems: 'baseline',
           gap: 'var(--space-sm)',
-          marginTop: 'var(--space-sm)',
+          marginTop: 'var(--space-md)',
           minHeight: 20,
         }}
       >
         <span
           style={{
-            fontFamily: 'var(--eph-serif)',
+            fontFamily: READING,
             fontStyle: 'italic',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the widget's tier word is part of the mark, set at the design's 15 in the codex hand (#841, design-fidelity.md standing carve-out)
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the widget's tier word is part of the mark, set at the design's 15 in the plate's reading hand (design-fidelity.md standing carve-out)
             fontSize: 15,
             letterSpacing: '0.02em',
-            color: active ? 'var(--eph-rubric)' : 'var(--eph-muted)',
+            color: active ? OCHRE : QUIET,
             transition: 'color 140ms',
           }}
         >
@@ -266,7 +407,7 @@ export default function EphemeristsVote({
               fontSize: 'var(--text-xs)',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: 'var(--eph-muted)',
+              color: QUIET,
             }}
           >
             {`· ${t('chrome.ephemerists.tag')}`}
@@ -280,10 +421,10 @@ export default function EphemeristsVote({
         totalVotes={totalVotes}
         error={error}
         theme={{
-          muted: 'var(--eph-muted)',
-          accent: 'var(--eph-rubric)',
-          accentFont: 'var(--eph-display)',
-          errorColor: 'var(--eph-rubric)',
+          muted: QUIET,
+          accent: OCHRE,
+          accentFont: DECO,
+          errorColor: OCHRE,
           avgLetterSpacing: '0.02em',
         }}
       />

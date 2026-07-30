@@ -56,7 +56,10 @@ describe('useTasks drives the level filter from config', () => {
   })
 
   it('feeds the derivation from the /game-config level ladder', () => {
-    expect(USE_TASKS_SOURCE).toContain('config.level_thresholds')
+    // #1141 routed the read through the shared `useGameConfig` cache, so the
+    // ladder is now optional-chained off that hook's nullable return rather
+    // than destructured from a local `getGameConfig()` response.
+    expect(USE_TASKS_SOURCE).toMatch(/[Cc]onfig\??\.level_thresholds/)
   })
 
   it('holds no hardcoded level sequence', () => {
