@@ -524,6 +524,9 @@
   --faction-snide-slip-acid-ink: #457000; /* acid that is TEXT — 5.20:1 */
   --faction-snide-slip-pink-ink: #be185d; /* pink that is TEXT — 5.35:1 */
   --faction-snide-slip-shadow: 3px 4px 0 rgba(20, 17, 11, 0.3); /* printed, no blur */
+  /* The drop under a single cut-out ransom scrap — a colour, not a whole shadow,
+     because the scrap's offset is its own (1.5/2.5) and not the slip's. */
+  --faction-snide-slip-scrap-shadow: rgba(20, 17, 11, 0.4);
 
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
@@ -1577,6 +1580,7 @@
   --faction-snide-slip-acid-ink: #b6ff2e;
   --faction-snide-slip-pink-ink: #ff69ac;
   --faction-snide-slip-shadow: 3px 4px 0 rgba(0, 0, 0, 0.6);
+  --faction-snide-slip-scrap-shadow: rgba(0, 0, 0, 0.6);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── Singularity terminal session, lights out (#1023) ──
