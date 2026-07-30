@@ -1,9 +1,11 @@
+import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import i18n from '../../i18n'
-import { factionCssVar, factionFill, isKnownFaction } from '../../utils/factions'
+import { factionFill, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
 import FeedRowActions from './FeedRowActions'
+import { FeedRowSkinContext, resolveFeedRowInk } from './feedRowSkin'
 import type { FeedRow } from './normalizeFeedItem'
 
 /**
@@ -23,6 +25,13 @@ import type { FeedRow } from './normalizeFeedItem'
  * painted elements, so they ask `factionFill` and an unaffiliated actor gets the
  * spectrum. The actor's NAME is a single-ink `color:` — no stop of a seven-stop
  * ramp is legible as text (#649) — so `na` stays neutral grey there on purpose.
+ *
+ * #1252 changed it a third time, and this one is the chassis's rather than the
+ * payload's: the slots are no longer all fed from `row`. A faction frame may now
+ * publish a {@link FeedRowSkin} — a points renderer and an ink bag — and this
+ * body reads it from above. Nothing here dispatches on the slug to find that
+ * skin; the body stays faction-blind and paints whatever its chassis handed it.
+ * See `feedRowSkin.ts` for why it is a context and not a prop.
  */
 export default function FeedRowContent({
   row,
@@ -31,9 +40,13 @@ export default function FeedRowContent({
   row: FeedRow
   avatarUrl: string | null
 }) {
+  // The chassis's dress, or an empty bag outside one. Every field falls back to
+  // what this body painted before it existed — except the monogram glyph, whose
+  // old default failed AA on twelve of fourteen faction fills (#1252).
+  const skin = useContext(FeedRowSkinContext)
   // Scalar ink only — the actor's name. Never a fill: those go through
   // factionFill so `na` reaches the spectrum.
-  const accent = factionCssVar(row.slug)
+  const ink = resolveFeedRowInk(skin.ink, row.slug)
   const known = isKnownFaction(row.slug)
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
 
@@ -42,12 +55,12 @@ export default function FeedRowContent({
       <Link
         to={row.actorHref}
         className="font-body"
-        style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: accent, textDecoration: 'none' }}
+        style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: ink.actor, textDecoration: 'none' }}
       >
         {row.actor}
       </Link>
     ) : (
-      <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: accent }}>
+      <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: ink.actor }}>
         {row.actor}
       </span>
     )
@@ -56,7 +69,15 @@ export default function FeedRowContent({
   return (
     <div style={{ padding: 'var(--space-md) var(--space-lg)', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-md)' }}>
-        {/* Avatar — real image if present, else a faction-tinted monogram. */}
+        {/* Avatar — real image if present, else a faction-tinted monogram. The
+            glyph on that disc is inked with the faction's `-on-fill`, the pair
+            #649 measured for text on a faction fill, NOT the global
+            `--color-text-on-accent` it used to read: white is a statement about
+            the app's accent buttons and fails 4.5:1 on twelve of the fourteen
+            (faction × theme) disc fills, bottoming out at 1.21:1 on S.N.I.D.E.
+            in dark (#1252). A chassis may still repoint it — the disc fades to
+            53% of the hue over the CHASSIS ground, so its lower half is not the
+            hue's question alone. */}
         {row.actor && (
           <MaybeLink href={row.actorHref}>
             {avatarUrl ? (
@@ -75,7 +96,7 @@ export default function FeedRowContent({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--color-text-on-accent)',
+                  color: ink.monogram,
                   fontFamily: "'Courier Prime', monospace",
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the 28px avatar disc
                   fontSize: 12,
@@ -176,13 +197,23 @@ export default function FeedRowContent({
                 {row.headline}
               </span>
             )}
-            {(row.points || row.level != null) && (
-              <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
-                {row.points}
-                {row.points && row.level != null ? ' · ' : ''}
-                {row.level != null ? i18n.t('feed:row.level', { level: row.level }) : ''}
-              </span>
-            )}
+            {/* THE POINTS SLOT (#1252). The figure is the one part of the row
+                two design sheets draw as an OBJECT rather than a line — WOW's
+                crooked gold plaque, the Everymen's stamped circular seal — and
+                a chassis had no way to reach it, nor any value to strike one
+                with. A frame that publishes no `points` renderer gets the
+                eyebrow line below, unchanged; the gate is shared, so a skin
+                never has to guard for an empty figure. */}
+            {(row.points || row.level != null) &&
+              (skin.points ? (
+                skin.points({ points: row.points, level: row.level })
+              ) : (
+                <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+                  {row.points}
+                  {row.points && row.level != null ? ' · ' : ''}
+                  {row.level != null ? i18n.t('feed:row.level', { level: row.level }) : ''}
+                </span>
+              ))}
           </div>
         </div>
       )}

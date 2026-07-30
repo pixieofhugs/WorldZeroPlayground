@@ -1,0 +1,98 @@
+/**
+ * THE INK HALF OF THE BODY SEAM, end to end (#1252).
+ *
+ * Two claims that no other test can make, because both only exist once a frame
+ * and a body are rendered together:
+ *
+ *  1. **The context crosses the `children` boundary.** `FeedCardRouter` BUILDS
+ *     the body and hands it to the chassis, so the frame has no call site to
+ *     pass props at. React resolves context by position in the rendered tree
+ *     rather than by where the element was created — this asserts that, because
+ *     the whole seam rests on it.
+ *  2. **The ink a frame publishes clears AA on that frame's own ground.** This
+ *     is the pairing question §3 keeps re-learning: a token measured against the
+ *     app's near-white page is not measured against a faction's sheet. The
+ *     shared row paints the actor's name in `--faction-{slug}` and pays 1.96:1
+ *     on WOW's cream, 3.67:1 on the Singularity terminal and 4.04:1 on UA's
+ *     parchment — at 18px/700 the name owes 4.5:1.
+ *
+ * Grounds are read from index.css rather than pinned, and a GRADIENT ground is
+ * measured at every stop it declares: UA's parchment is a three-stop sheet, and
+ * "clears on the middle stop" is not a claim about the card.
+ */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect } from 'vitest'
+import UaFeedFrame from '../UaFeedFrame'
+import WowFeedFrame from '../WowFeedFrame'
+import SingularityFeedFrame from '../SingularityFeedFrame'
+import FeedRowContent from '../FeedRowContent'
+import { normalizeFeedItem } from '../normalizeFeedItem'
+import { AA_NORMAL, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
+import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import '../../../i18n'
+
+const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'))
+
+/** Every solid colour a ground declares — one for a flat token, three for a gradient. */
+function groundStops(name: string, theme: Theme): string[] {
+  const raw = resolveVar(name, theme, THEMES)
+  expect(raw, `${name} (${theme}) must resolve`).not.toBeNull()
+  const stops = raw!.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/g)
+  expect(stops, `${name} (${theme}) declared no solid stop`).not.toBeNull()
+  return stops!
+}
+
+function row(slug: string) {
+  return normalizeFeedItem({
+    type: 'friend_completion',
+    item_key: 'friend_completion:1',
+    timestamp: '2026-01-01T00:00:00Z',
+    actor_display_name: 'Ada',
+    actor_faction_slug: slug,
+    actor_avatar_url: null,
+    payload: { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 },
+    context_faction_slug: slug,
+  })!
+}
+
+const CASES = [
+  { slug: 'ua', Frame: UaFeedFrame, ink: '--faction-ua-card-accent', ground: '--faction-ua-parchment' },
+  { slug: 'wow', Frame: WowFeedFrame, ink: '--faction-wow-card-accent', ground: '--faction-wow-card-bg' },
+  {
+    slug: 'singularity',
+    Frame: SingularityFeedFrame,
+    ink: '--faction-singularity-card-accent',
+    ground: '--faction-singularity-term-bg',
+  },
+] as const
+
+describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Frame, ink, ground }) => {
+  it('reaches the actor name inside children it did not mount', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <Frame kicker="Task completed" time="2h ago" tag={null} archive={null}>
+          <FeedRowContent row={row(slug)} avatarUrl={null} />
+        </Frame>
+      </MemoryRouter>,
+    )
+    expect(html).toContain(`color:var(${ink})`)
+    // The row's default hue is gone from the NAME. It stays on the fills — the
+    // headline rule and the monogram disc — which are ADR-0039's, not this seam's.
+    expect(html).toContain(`background:var(--faction-${slug})`)
+    expect(html).not.toContain(`font-weight:700;color:var(--faction-${slug})`)
+  })
+
+  it.each(['light', 'dark'] as Theme[])('clears AA on its own ground in %s', (theme) => {
+    const text = parseColor(resolveVar(ink, theme, THEMES) ?? '')
+    expect(text, `${ink} (${theme})`).not.toBeNull()
+    for (const stop of groundStops(ground, theme)) {
+      const surface = parseColor(stop)
+      expect(surface, `${ground} stop ${stop}`).not.toBeNull()
+      const ratio = contrastRatio(text!, surface!)
+      expect(ratio, `${ink} on ${stop} (${theme}) = ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+  })
+})
