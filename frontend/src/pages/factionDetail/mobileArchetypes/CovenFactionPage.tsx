@@ -138,8 +138,12 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
         position: 'relative',
         fontFamily: CHROME,
         color: INK,
-        marginLeft: -16,
-        marginRight: -16,
+        // Full-bleed: cancel the mobile shell's gutter so the candle wash runs
+        // to the viewport edge, then put it back on the content. Layout, not
+        // ornament — it is the shell's own `--space-lg`, and the raw -16 could
+        // drift off it silently (#1233). Same spelling as `MobileStickyBar`.
+        marginLeft: 'calc(-1 * var(--space-lg))',
+        marginRight: 'calc(-1 * var(--space-lg))',
         paddingLeft: 'var(--space-lg)',
         paddingRight: 'var(--space-lg)',
       }}

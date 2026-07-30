@@ -296,6 +296,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         {/* ③ RE: YOU — join / gate / standing (taped dispatch) */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: half the 60px tape strip, centring it over the dispatch panel's head. The offset IS the drawn strip's width; a rung slides the tape off-centre. */}
             <Tape style={{ top: -10, left: "50%", marginLeft: -30, width: 60, transform: "rotate(-5deg)" }} />
             <div style={{ ...INK_PANEL, padding: "var(--space-xl)" }}>
               <Halftone on="ink" />
