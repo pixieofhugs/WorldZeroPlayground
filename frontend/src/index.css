@@ -1102,6 +1102,16 @@
      itself in plum and the design's gold frame never shipped. */
   --faction-wow-chronicle-border: var(--faction-wow-chronicle-gold);
   --faction-wow-chronicle-panel: #f3e7c4; /* the inset parchment plate */
+  /* The panel's QUIET ink (#1173) — `--faction-wow-card-muted` walked down for
+     the second sheet, the shape `--faction-ephemerists-plate-quiet` names
+     (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
+     already had"). The olive metadata ink is measured against the CREAM CARD,
+     where it reads 4.76:1; on the parchment plate inset into it, the same ink is
+     4.24:1 — under AA for the 18px copy the duel seal's stakes panel sets in it.
+     Same 43deg olive, darkened until it clears the plate: 4.86:1. It is a
+     SIBLING, not a replacement — `-card-muted` keeps every job it has on the
+     cream. */
+  --faction-wow-chronicle-quiet: #70623f;
   --faction-wow-chronicle-shadow: rgba(74, 56, 10, 0.5);
   /* The secondary face: Lora italic, the design's whole quiet register
      ("for the quest —", "Sealed by the Court"). #860 ask 1 — it had no token,
@@ -1387,6 +1397,16 @@
   --everymen-paper-deep: #ddceac;
   --everymen-paper-text: #221a12;
   --everymen-muted: #6c5a40;
+  /* The DEEP STOCK's quiet ink (#1173) — `--everymen-muted` walked down for the
+     second sheet, the shape `--faction-ephemerists-plate-quiet` names
+     (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
+     already had"). The muted brown is measured on `--everymen-paper`, where it
+     reads 5.09:1; on `--everymen-paper-deep` — the tan panel the duel seal
+     mounts its stakes block on — the same ink is 4.25:1, under AA for 18px copy.
+     Same brown, darkened until it clears the deep stock: 4.77:1 (and 5.71:1 back
+     on the paper, so a surface that mixes the two sheets is safe). A SIBLING:
+     `--everymen-muted` keeps every job it has on the paper. */
+  --everymen-quiet: #63533b;
   --everymen-field: #c1272d;
   --everymen-field-deep: #8d1c20;
   --faction-everymen-card-bg: var(--everymen-paper);
@@ -2153,6 +2173,12 @@
      plum is what carries the flip (#7a4a9e → #c79be0). */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg);
   --faction-wow-chronicle-panel: #2a2210; /* the inset parchment plate, darkened */
+  /* The quiet ink does NOT need its own dark value: the light-theme miss is the
+     whole bug, and by night the metadata olive already reads 5.94:1 on the
+     darkened plate. Aliased rather than copied so a future repaint of the dark
+     metadata ink carries the panel with it — the contrast row guards the pair
+     either way. */
+  --faction-wow-chronicle-quiet: var(--faction-wow-card-muted);
   --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.8);
   /* The eyebrow ink lifts (the kit states light only). Same 43deg olive-gold,
      raised until it clears both dark chronicle grounds — 8.83:1 on the deep
@@ -2222,6 +2248,11 @@
   --everymen-paper-deep: #17110d;
   --everymen-paper-text: #f3e7ce;
   --everymen-muted: #b6a079;
+  /* No separate dark value (#1173): the light theme is where the deep stock
+     costs contrast — by night the muted brown reads 7.39:1 on it, its most
+     comfortable ground in either theme. Aliased rather than copied so a repaint
+     of the dark muted ink carries the deep stock with it. */
+  --everymen-quiet: var(--everymen-muted);
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light

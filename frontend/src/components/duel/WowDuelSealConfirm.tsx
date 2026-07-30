@@ -43,6 +43,14 @@
  * "sealed" mark at 7.39 / 9.03 plus the Snide zero figure in `--color-danger` at
  * 3.92 / 5.69 (24px bold, a 3:1 floor). All are rows in
  * `utils/__tests__/factionContrast.test.ts`.
+ *
+ * A SECOND pairing failed once the panel itself was measured (#1173): the kit's
+ * own metadata olive is chosen against the CREAM, and on the parchment plate
+ * inset into it `--faction-wow-card-muted` is 4.24:1 — under the floor for the
+ * tie line, the solo-fallback sentence and the roster's "walking" mark, all of
+ * which the shared slots set in `theme.muted`. The slots take `PANEL_QUIET`
+ * (4.86 / 5.94); the olive keeps every job it has on the lists ground, including
+ * this skin's own kicker at 4.76:1.
  */
 import { factionCssVar } from '../../utils/factions'
 import { WowSigil } from '../cards/WowSigil'
@@ -71,6 +79,7 @@ import {
   ON_RIBBON,
   PANEL,
   PANEL_BORDER,
+  PANEL_QUIET,
   RIBBON,
   Rosette,
   SCRIM,
@@ -98,7 +107,12 @@ export default function WowDuelSealConfirm({
 
   // The stakes tiles take the champion gold as their rule colour, which is what
   // makes the pair read as struck metal rather than as a form.
-  const theme: DuelSlotTheme = { accent: CHAMPION, muted: MUTED, bodyFont: BODY_FONT }
+  //
+  // `muted` is PANEL_QUIET, not MUTED: this theme reaches only `StakesTiles`,
+  // `RaceRoster` and `SealActions`, and both slots that paint muted text are
+  // mounted on the parchment plate below, where the metadata olive is 4.24:1
+  // (#1173). The kicker above stays MUTED — it is on the lists ground.
+  const theme: DuelSlotTheme = { accent: CHAMPION, muted: PANEL_QUIET, bodyFont: BODY_FONT }
 
   return (
     <div

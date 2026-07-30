@@ -16,7 +16,8 @@
  * The contrast readings are the desktop form's verbatim — same paper, same
  * inverting stakes panel — so the same two routings apply (#1168): NOTICE for
  * the forfeit body with the red as its rule, and GOLD for the shared slots'
- * `credit` while the panel is ink. See `EverymenDuelSealConfirm.tsx`.
+ * `credit` while the panel is ink — plus QUIET for their muted text on the tan
+ * stock (#1173). See `EverymenDuelSealConfirm.tsx`.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -34,7 +35,8 @@ const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const CREAM = 'var(--everymen-cream)'
 const INK = 'var(--everymen-ink)'
 const PAPER_TEXT = 'var(--everymen-paper-text)'
-const MUTED = 'var(--everymen-muted)'
+/** The deep stock's muted ink — see `EverymenDuelSealConfirm` (#1173). */
+const QUIET = 'var(--everymen-quiet)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
 /** The sheet-measured warning ink — see `EverymenDuelSealConfirm` (#1168). */
@@ -62,7 +64,7 @@ export default function EverymenMobileDuelSealConfirm({
   // The panel's polarity decides the slots' inks — see the desktop skin (#1168).
   const theme: DuelSlotTheme = {
     accent,
-    muted: onInk ? CREAM : MUTED,
+    muted: onInk ? CREAM : QUIET,
     bodyFont: BODY,
     credit: onInk ? GOLD : undefined,
   }
