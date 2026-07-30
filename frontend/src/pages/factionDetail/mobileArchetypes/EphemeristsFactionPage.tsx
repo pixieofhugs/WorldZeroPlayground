@@ -3,108 +3,95 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { factionName, factionDescription } from '../../../utils/factions'
-import { EphemeristsSigil } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil } from '../../../components/cards/EphemeristsSigil'
+import {
+  AuthorOctagon,
+  BRASS,
+  CAPTION,
+  CTA_BG,
+  CTA_INK,
+  DECO,
+  FlutedRule,
+  INK,
+  INNER,
+  LINE,
+  MARGINALIA,
+  NILE,
+  OCHRE,
+  PAGE,
+  QUIET,
+  READING,
+  SHADOW,
+  SMALL_CAPS,
+  Tally,
+  PLATE as SHEET,
+} from '../../../components/cards/ephemeristsPlate'
 import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'
 
 /**
- * The Ephemerists MOBILE faction page (#527) — the codex, phone shaped. The same
- * single-column slots as the Default mobile faction page (a hero with real
- * member/task counts, top keepers, recent praxis, and the invite-gated Join model
- * via `state.membership`, ADR-0019) — only the dress changes: ledger-ruled vellum
- * leaves in gold-deep hairlines, Cinzel labels, lapis-inked keepers. Grounds on
- * the `--eph-*` tokens; theme-aware through the cascade. Reuses the shared
- * `mobile.*` faction copy so the slot contract holds. Presentation-only — all
- * data + the join handler arrive via {@link FactionDetailState}.
+ * The Ephemerists MOBILE faction page (#527, swept onto the Valley plate by
+ * #1208) — the plate, phone shaped. The same single-column slots as the Default
+ * mobile faction page (a hero with real member/task counts, top keepers, recent
+ * praxis, and the invite-gated Join model via `state.membership`, ADR-0019) —
+ * only the dress changes: papyrus leaves on the page ground, incised small-caps
+ * labels, keepers cut into octagon cartouches, and the summons on the plate's
+ * own CTA band. Grounds on `--faction-ephemerists-plate-*`; theme-aware through
+ * the cascade. Reuses the shared `mobile.*` faction copy so the slot contract
+ * holds. Presentation-only — all data + the join handler arrive via
+ * {@link FactionDetailState}.
  */
 
 const NA_SLUG = 'na'
 
-const VELLUM = 'var(--eph-vellum)'
-const VELLUM_DEEP = 'var(--eph-vellum-deep)'
-const TEXT = 'var(--eph-vellum-text)'
-const MUTED = 'var(--eph-muted)'
-const RUBRIC = 'var(--eph-rubric)'
-const LAPIS = 'var(--eph-lapis)'
-const INK = 'var(--eph-ink)'
-const GOLD = 'var(--eph-gold)'
-const GOLD_DEEP = 'var(--eph-gold-deep)'
-const PARCHMENT = 'var(--eph-parchment)'
-const DISPLAY = 'var(--eph-display)'
-const SERIF = 'var(--eph-serif)'
-const SCRIPT = 'var(--eph-script)'
-
 const kicker: CSSProperties = {
-  fontFamily: DISPLAY,
+  ...SMALL_CAPS,
   fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
-  textTransform: 'uppercase',
-  color: MUTED,
+  color: QUIET,
 }
 
-const initial = (name: string) => name.trim().charAt(0).toUpperCase() || '?'
-
-/** Circular initials medallion — vellum face, rubric Cinzel glyph. */
+/** A keeper's monogram, cut into the plate's octagon cartouche. */
 function Medallion({ name, size }: { name: string; size: number }) {
-  return (
-    <span
-      style={{
-        flexShrink: 0,
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: VELLUM_DEEP,
-        border: `1px solid ${GOLD_DEEP}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: DISPLAY,
-        fontWeight: 700,
-        // ornament: avatar monogram, sized from the circle it sits in — geometry, not text.
-        fontSize: size * 0.42,
-        color: RUBRIC,
-      }}
-    >
-      {initial(name)}
-    </span>
-  )
+  return <AuthorOctagon name={name} size={size} fontSize={size * 0.4} />
 }
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
-      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
-        {children}
-      </span>
-      <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+    <div style={{ marginBottom: 'var(--space-md)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-xs)' }}>
+        <span style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.18em', color: INK }}>
+          {children}
+        </span>
+        <span style={{ flex: 1, height: 1, background: BRASS, opacity: 0.5 }} />
+      </div>
+      <FlutedRule />
     </div>
   )
 }
 
 const joinButton: CSSProperties = {
   width: '100%',
-  fontFamily: DISPLAY,
-  fontWeight: 700,
+  ...SMALL_CAPS,
   fontSize: 'var(--text-xl)',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: PARCHMENT,
-  background: INK,
-  border: `1px solid ${GOLD}`,
+  letterSpacing: '0.12em',
+  color: CTA_INK,
+  background: CTA_BG,
+  border: `2px solid ${BRASS}`,
   padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
 /** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
 const cancelButton: CSSProperties = {
-  fontFamily: DISPLAY,
+  fontFamily: MARGINALIA,
+  fontStyle: 'italic',
   fontSize: 'var(--text-md)',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: MUTED,
+  letterSpacing: '0.06em',
+  color: QUIET,
   background: 'transparent',
-  border: `1px solid ${GOLD_DEEP}`,
+  border: `1px solid ${LINE}`,
   padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
@@ -122,27 +109,27 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
   const switching = currentSlug && currentSlug !== NA_SLUG
 
   return (
-    <div data-skin="ephemerists" className="py-4" style={{ fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }} data-testid="mobile-faction-page">
-      {/* Hero — ledger-ruled vellum masthead */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: 'var(--space-xl) var(--space-lg)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: RUBRIC }}>
-          <EphemeristsSigil size={13} color={LAPIS} />
-          <span style={{ ...kicker, color: LAPIS }}>{t('ephemerists.mobile.eyebrow')}</span>
+    <div data-skin="ephemerists" className="py-4" style={{ fontFamily: READING, color: INK, background: PAGE }} data-testid="mobile-faction-page">
+      {/* Hero — one plate off the field journal */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: SHEET, border: `1px solid ${LINE}`, boxShadow: SHADOW, padding: 'var(--space-xl) var(--space-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <EphemeristsSigil size={13} color={BRASS} />
+          <span style={{ ...kicker, color: CAPTION }}>{t('ephemerists.mobile.eyebrow')}</span>
         </div>
         <h1
           style={{
-            fontFamily: DISPLAY,
-            fontWeight: 700,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the illuminated title is the skin's identity (§4/§270).
+            fontFamily: DECO,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the plate's title is the skin's identity (§4/§270).
             fontSize: 32,
             lineHeight: 1.05,
-            color: TEXT,
+            letterSpacing: '0.04em',
+            color: INK,
             margin: 'var(--space-xs) 0 0',
           }}
         >
           {name}
         </h1>
-        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', lineHeight: 1.6, color: MUTED, margin: 'var(--space-sm) 0 0' }}>
+        <p className="content-text" style={{ fontFamily: READING, lineHeight: 1.7, color: QUIET, margin: 'var(--space-sm) 0 0' }}>
           {factionDescription(faction.slug)}
         </p>
         <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
@@ -152,14 +139,14 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: RUBRIC }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: NILE }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top keepers */}
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: 'italic', color: QUIET, margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -173,7 +160,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: 'italic', color: QUIET, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -184,7 +171,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, marginTop: 'var(--space-xl)' }}>
+        <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: 'italic', color: QUIET, marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -193,7 +180,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p className="content-text" style={{ fontFamily: SERIF, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: READING, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -201,7 +188,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
             </button>
           ) : (
             <>
-              <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: TEXT }}>
+              <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: 'italic', color: INK }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -234,8 +221,8 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: 'var(--space-md) var(--space-sm)' }}>
-      <b className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, display: 'block', lineHeight: 1, color: TEXT }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: INNER, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-sm)' }}>
+      <b className="content-title" style={{ fontFamily: DECO, display: 'block', lineHeight: 1, color: INK }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block' }}>{label}</span>
@@ -253,22 +240,21 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         alignItems: 'center',
         gap: 'var(--space-md)',
         padding: 'var(--space-md) var(--space-lg)',
-        background: VELLUM,
-        border: `1px solid ${GOLD_DEEP}`,
-        borderLeft: `4px solid ${RUBRIC}`,
+        background: SHEET,
+        border: `1px solid ${LINE}`,
+        borderLeft: `4px solid ${OCHRE}`,
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-xl)', color: RUBRIC, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: DECO, fontSize: 'var(--text-xl)', color: CAPTION, width: 16, flex: 'none' }}>{rank}</span>
       <Medallion name={member.display_name} size={28} />
       <span
         className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
-          fontFamily: DISPLAY,
-          fontWeight: 700,
-          color: TEXT,
+          fontFamily: READING,
+          color: INK,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
@@ -276,7 +262,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: LAPIS, flex: 'none' }}>
+      <Tally level={member.level} />
+      <span style={{ ...SMALL_CAPS, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', color: NILE, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

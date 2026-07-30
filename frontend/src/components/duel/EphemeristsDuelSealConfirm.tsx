@@ -1,8 +1,8 @@
 /**
- * Ephemerists DESKTOP duel seal-confirm (#724) — the seal beat as a leaf of the
- * codex: foxed vellum, hairline rules, an inscriptional-caps masthead over the
- * manuscript double rule (ochre, blue ink 2px under it), and an italic hand for
- * the body.
+ * Ephemerists DESKTOP duel seal-confirm (#724, swept onto the Valley plate by
+ * #1208) — the seal beat as one plate off the field journal: papyrus inside a
+ * hairline, an incised small-caps masthead over the brass/nile double rule, and
+ * an italic hand for the body.
  *
  * TWO MODES, ONE FILE (#751). `mode` is `'submit'` or `'forfeit'` and every
  * string for both comes from `useDuelSealCopy` — heading, body, note, confirm
@@ -22,30 +22,29 @@
  * tone reference, not strings, and no locale key is added. The one label this
  * skin adds, the stakes rubric, is the shipped `duelStakes.heading`.
  *
- * Colours are the existing `--eph-*` block; no new variables. Structural
- * hairlines mix from `--eph-vellum-text` (which flips to parchment in dark)
- * rather than `--eph-ink` (which stays dark), so a rule stays visible on the
- * dark-theme tobacco vellum.
+ * Colours are the `--faction-ephemerists-plate-*` block; no new variables. The
+ * hairline mixes from `-line`, the plate's own border weight, so a rule stays
+ * visible on the night plate without a ternary.
  *
- * CONTRAST (#1168): this is the ONE seal skin that needed no change. Measured
- * with `utils/contrast.ts` in both themes — the forfeit body is `--eph-parchment`
- * on the inked cost panel at 13.39 / 15.52 (the skin had already routed around
- * the global red, and the note above records why); the marginal gloss is
- * `--eph-muted` on the vellum at 4.72 / 6.80; and on the ledger band the win
- * figure and the roster's 18px "sealed" mark clear at 5.69 / 10.68 with the zero
- * figure at 3.01 / 6.73 (24px bold, a 3:1 floor, and the tightest reading in the
- * whole family — a row exists for it precisely because of that). Nothing is
- * repainted; the pairings are rows in `utils/__tests__/factionContrast.test.ts`
- * so a later repaint of the vellum cannot silently sink them.
+ * CONTRAST (#1168, re-measured on the new grounds for #1208): the forfeit body
+ * is `-band-ink` on the night band at 12.44 / 14.00 — the skin routes around the
+ * global red, and the note below records why; the marginal gloss is `-quiet` on
+ * the plate at 5.60 / 5.98; and the ledger band moved from the codex's
+ * `--eph-vellum-deep` to `-plate-inner`, where the win figure and the roster's
+ * 18px "sealed" mark clear at 7.41 / 9.18 and the zero figure — 24px bold
+ * against a 3:1 floor — sits at 3.93 / 5.78. The plate is the ONE ground in the
+ * family that improved both: the codex band had the zero figure at 3.01:1, the
+ * narrowest reading anywhere, and it is no longer the tightest. Both rows are in
+ * `utils/__tests__/factionContrast.test.ts`, repointed to the new sheet, so a
+ * later repaint of the plate cannot sink them.
  *
- * One pairing on this surface IS below threshold and is deliberately left:
- * `--eph-muted` reads 4.00:1 on `--eph-vellum-deep`, which is a faction ink on a
- * faction sub-sheet rather than a global ink on faction paper. Different bug,
- * filed separately.
+ * OCHRE IS A MARK, NEVER AN INK HERE. `-plate-ochre` reads 4.46:1 on the plate,
+ * a near miss, so it draws the rubric glyph, the cost panel's rule and the
+ * panel's edge — nothing legible is set in it. `-brass` is likewise a rule
+ * colour by its own declaration.
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Foxing } from '../cards/ephemeristsAtoms'
 import { factionCssVar } from '../../utils/factions'
 import {
   duelSides,
@@ -57,23 +56,26 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 
-const VELLUM = 'var(--eph-vellum)'
-const VELLUM_DEEP = 'var(--eph-vellum-deep)'
-const TEXT = 'var(--eph-vellum-text)'
-const MUTED = 'var(--eph-muted)'
-const RUBRIC = 'var(--eph-rubric)'
-const OCHRE = 'var(--eph-gold)'
-const LAPIS = 'var(--eph-lapis)'
-const INK = 'var(--eph-ink)'
-const PARCHMENT = 'var(--eph-parchment)'
-const DISPLAY = 'var(--eph-display)'
-const SERIF = 'var(--eph-serif)'
+import {
+  BAND,
+  BAND_INK,
+  BRASS,
+  CAPS,
+  INK,
+  INNER,
+  LINE,
+  NILE,
+  OCHRE,
+  PLATE,
+  QUIET,
+  READING,
+} from '../cards/ephemeristsPlate'
 
-const HAIRLINE_FAINT = `1px solid color-mix(in srgb, ${TEXT} 12%, transparent)`
-const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${LAPIS} 45%, transparent)`
+const HAIRLINE_FAINT = `1px solid ${LINE}`
+const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`
 
-/** The rubric mark — a scribe's sigil used as an icon. Not text. */
-export function Rubric({ glyph = '✧', color = RUBRIC }: { glyph?: string; color?: string }) {
+/** The rubric mark — an incised sigil used as an icon. Not text. */
+export function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color?: string }) {
   return (
     <span
       aria-hidden
@@ -97,7 +99,7 @@ export function RubricHeading({ children }: { children: ReactNode }) {
         <Rubric />
         {/* .eyebrow owns the size (§4); this contributes the inscriptional face
             and the rubrication red only. */}
-        <span className="eyebrow" style={{ fontFamily: DISPLAY, color: RUBRIC }}>
+        <span className="eyebrow" style={{ fontFamily: CAPS, color: OCHRE }}>
           {children}
         </span>
       </div>
@@ -106,7 +108,7 @@ export function RubricHeading({ children }: { children: ReactNode }) {
         style={{
           marginTop: 'var(--space-xs)',
           height: 1,
-          background: `color-mix(in srgb, ${OCHRE} 55%, transparent)`,
+          background: `color-mix(in srgb, ${BRASS} 55%, transparent)`,
           boxShadow: DOUBLE_RULE,
         }}
       />
@@ -130,7 +132,7 @@ export default function EphemeristsDuelSealConfirm({
   // Opponent tokens, the same rule as the Default dialog and the rail: the
   // foreign duelist looks foreign even on the Ephemerists' own vellum.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: MUTED, bodyFont: SERIF }
+  const theme: DuelSlotTheme = { accent, muted: QUIET, bodyFont: READING }
 
   return (
     <div
@@ -148,15 +150,13 @@ export default function EphemeristsDuelSealConfirm({
         style={{
           position: 'relative',
           overflow: 'hidden',
-          background: VELLUM,
+          background: PLATE,
           border: HAIRLINE_FAINT,
           borderLeft: `4px solid ${accent}`,
-          fontFamily: SERIF,
-          color: TEXT,
+          fontFamily: READING,
+          color: INK,
         }}
       >
-        <Foxing opacity={0.4} />
-
         <div style={{ position: 'relative', zIndex: 2 }}>
           {/* Masthead — inscriptional caps over the manuscript double rule. */}
           <div
@@ -166,14 +166,14 @@ export default function EphemeristsDuelSealConfirm({
               gap: 'var(--space-sm)',
               padding: 'var(--space-md) var(--space-xl)',
               background: `color-mix(in srgb, ${accent} 10%, transparent)`,
-              borderBottom: `1px solid color-mix(in srgb, ${OCHRE} 60%, transparent)`,
+              borderBottom: `1px solid color-mix(in srgb, ${BRASS} 60%, transparent)`,
               boxShadow: DOUBLE_RULE,
             }}
           >
             <Rubric />
             <h2
               style={{
-                fontFamily: DISPLAY,
+                fontFamily: CAPS,
                 fontSize: 'var(--text-title)',
                 fontWeight: 600,
                 letterSpacing: '0.06em',
@@ -195,10 +195,10 @@ export default function EphemeristsDuelSealConfirm({
                   display: 'flex',
                   gap: 'var(--space-sm)',
                   padding: 'var(--space-md)',
-                  background: INK,
-                  border: `1px solid ${RUBRIC}`,
-                  borderLeft: `3px solid ${RUBRIC}`,
-                  color: PARCHMENT,
+                  background: BAND,
+                  border: `1px solid ${OCHRE}`,
+                  borderLeft: `3px solid ${OCHRE}`,
+                  color: BAND_INK,
                 }}
               >
                 <Rubric glyph="❦" />
@@ -223,9 +223,9 @@ export default function EphemeristsDuelSealConfirm({
                   gap: 'var(--space-sm)',
                   marginTop: 'var(--space-md)',
                   padding: 'var(--space-xs) var(--space-md)',
-                  borderTop: `1px solid color-mix(in srgb, ${OCHRE} 55%, transparent)`,
-                  borderBottom: `1px solid color-mix(in srgb, ${LAPIS} 45%, transparent)`,
-                  color: MUTED,
+                  borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
+                  borderBottom: `1px solid color-mix(in srgb, ${NILE} 45%, transparent)`,
+                  color: QUIET,
                   fontStyle: 'italic',
                 }}
               >
@@ -241,7 +241,7 @@ export default function EphemeristsDuelSealConfirm({
               style={{
                 marginTop: 'var(--space-sm)',
                 padding: 'var(--space-md)',
-                background: VELLUM_DEEP,
+                background: INNER,
                 border: HAIRLINE_FAINT,
               }}
             >

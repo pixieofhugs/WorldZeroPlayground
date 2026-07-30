@@ -6,7 +6,8 @@ import UaMandala from "./UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from "./uaAtoms";
 import * as coven from "./covenSlip";
 import { SnideSigil } from "../snide/snideAtoms";
-import { EphemeristsSigil } from "./ephemeristsAtoms";
+import { EphemeristsSigil } from "./EphemeristsSigil";
+import * as eph from "./ephemeristsPlate";
 import { SingularitySigil } from "./SingularitySigil";
 import { EverymenSigil } from "./EverymenSigil";
 import { WowSigil } from "./WowSigil";
@@ -210,40 +211,50 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
   );
 }
 
+/**
+ * The Ephemerists tile — the cornice masthead the plate hangs under, standing on
+ * its own (#1208). The night band, an incised glyph register above the footer,
+ * the sigil ruled in brass, and the CTA in the plate’s gold. Nothing legible is
+ * set in `brass`; on this ground the inks are `band-ink` (12.4:1), `gold` (9.4)
+ * and `band-quiet` (8.6).
+ */
 export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--eph-field)", color: "var(--eph-parchment)", fontFamily: "var(--font-faction-codex)",
-      border: "1px solid var(--eph-gold-deep)", boxShadow: "0 8px 26px rgba(20,59,84,0.4)", display: "flex", flexDirection: "column",
+      background: eph.BAND, color: eph.BAND_INK, fontFamily: eph.READING,
+      border: `1px solid ${eph.BRASS}`, boxShadow: eph.SHADOW, display: "flex", flexDirection: "column",
     }}>
-      <div style={{ position: "absolute", inset: 9, border: "1px solid rgba(180,150,80,0.35)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-sm)", letterSpacing: "0.1em", color: "var(--eph-gold-light)", opacity: 0.7, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
+      <div style={{ position: "absolute", inset: 9, border: `1px solid color-mix(in srgb, ${eph.BRASS_LIGHT} 35%, transparent)`, pointerEvents: "none" }} />
+      <svg width="100%" height={26} viewBox="0 0 360 26" preserveAspectRatio="xMinYMid slice" aria-hidden="true" style={{ position: "absolute", left: 0, bottom: 62, opacity: 0.55 }}>
+        <eph.GlyphRegister width={360} y={13} strength={0.5} keyPrefix="sel" />
+      </svg>
+      <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-sm)", letterSpacing: "0.1em", color: eph.BAND_QUIET, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
-          <span style={{ width: 46, height: 46, borderRadius: "50%", border: "1.5px solid var(--eph-gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <EphemeristsSigil size={26} color="var(--eph-gold-light)" stroke={1.4} />
+          <span style={{ width: 46, height: 46, borderRadius: "50%", border: `1.5px solid ${eph.BRASS}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <EphemeristsSigil size={26} color={eph.GOLD} stroke={1.4} />
           </span>
           <div>
-            <div style={{ fontSize: "var(--text-sm)", letterSpacing: "0.24em", color: "var(--eph-gold-light)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: codex-leaf wordmark — engraved caps with a hard letterpress shadow */}
-            <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 800, fontSize: 26, lineHeight: 1, letterSpacing: "0.03em", color: "var(--eph-parchment)", marginTop: "var(--space-xs)", textShadow: "1px 1px 0 var(--eph-field-deep)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
+            <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.24em", color: eph.GOLD }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
+            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.BAND_INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
           </div>
         </div>
-        <div style={{ height: 1.5, background: "linear-gradient(90deg, var(--eph-gold) 0%, transparent 100%)", margin: "var(--space-lg) 0 var(--space-md)" }} />
-        <p className="content-text" style={{ margin: 0, fontFamily: "var(--font-faction-codex-script)", fontStyle: "italic", lineHeight: 1.45, color: "var(--eph-parchment)" }}>
+        <div style={{ height: 1.5, background: `linear-gradient(90deg, ${eph.BRASS_LIGHT} 0%, transparent 100%)`, margin: "var(--space-lg) 0 var(--space-md)" }} />
+        <p className="content-text" style={{ margin: 0, fontFamily: eph.READING, fontStyle: "italic", lineHeight: 1.45, color: eph.BAND_INK }}>
           {i18n.t("feed:factionSelect.ephemerists.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
-        <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.03em", color: "var(--eph-gold-light)", marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
+        <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: eph.BAND_QUIET, marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer", border: "1px solid var(--eph-gold)", background: "transparent", color: "var(--eph-gold-light)",
-          fontFamily: "var(--font-faction-engraved)", fontWeight: 600, fontSize: "var(--text-xl)", letterSpacing: "0.16em", padding: "var(--space-md)", textTransform: "uppercase",
+          width: "100%", cursor: "pointer", border: `1px solid ${eph.BRASS}`, background: "transparent", color: eph.GOLD,
+          ...eph.SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.16em", padding: "var(--space-md)",
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--eph-gold)"; e.currentTarget.style.color = "var(--eph-field-deep)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--eph-gold-light)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = eph.GOLD; e.currentTarget.style.color = eph.BAND; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = eph.GOLD; }}
         >{i18n.t("feed:factionSelect.ephemerists.cta")}</button>
       </div>
     </div>
