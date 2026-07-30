@@ -73,7 +73,12 @@ describe('mobile Updates mixed multi-faction stream', () => {
     const { text, html } = render(baseState({ items }))
     // Distinct per-faction frame markers appearing TOGETHER in one render
     // prove a mixed stream, not one uniform tint.
-    expect(text, 'COVEN window chrome').toContain('coven.exe')
+    // COVEN's frame prints no house line any more (#1197): the `coven.exe`
+    // window is retired and epic #1192 decision 5 forbids a faction-name label
+    // on this surface, so its marker is the candlelit slip's own gradient token
+    // — the same move #851 made for UA one line down.
+    expect(html, 'COVEN candlelit-slip chrome').toContain('--faction-coven-slip-mid')
+    expect(text, 'and no faction name survives on the card').not.toContain('coven.exe')
     // UA's frame is dress only (#851), and #1201 restated that dress: the flat
     // 3px orange border became the kit's own ink column and the ground became
     // the three-stop paper stock. The stock is the marker — unique to the UA
