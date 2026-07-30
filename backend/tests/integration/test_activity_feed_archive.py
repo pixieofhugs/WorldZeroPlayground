@@ -41,6 +41,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_AWAITING_SUBMISSION,
     FEED_ITEM_TYPE_COLLAB_INVITE,
     FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
+    FEED_ITEM_TYPE_COMMENT_MENTION,
     FEED_ITEM_TYPE_FRIEND_COMPLETION,
     FEED_ITEM_TYPE_FRIEND_SIGNUP,
     FEED_ITEM_TYPE_GLOBAL_TASK,
@@ -415,6 +416,32 @@ async def test_the_archive_is_per_character(
 
     other = await _feed(client, auth_headers2, "global")
     assert target in [item["item_key"] for item in other["items"]]
+
+
+@pytest.mark.asyncio
+async def test_a_mention_is_archivable_like_any_other_event(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """``comment_mention`` is an EVENT, not a standing obligation (#1196).
+
+    Someone said your name; there is nothing to answer and nothing clears itself,
+    so it takes the general archive rule. ``awaiting_submission`` is the sole
+    exemption, and this pins that the mention had not quietly joined it during the
+    long stretch when its card rendered as nothing and nobody could have noticed.
+    """
+    before = await _feed(client, auth_headers)
+    target = _key_of(before, FEED_ITEM_TYPE_COMMENT_MENTION)
+
+    response = await client.post(
+        "/activity-feed/dismiss", json={"item_key": target}, headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {"item_key": target, "archived": True, "changed": True}
+
+    after = await _feed(client, auth_headers)
+    assert target not in [item["item_key"] for item in after["items"]]
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    assert target in [item["item_key"] for item in archived["items"]]
 
 
 # ---------------------------------------------------------------------------

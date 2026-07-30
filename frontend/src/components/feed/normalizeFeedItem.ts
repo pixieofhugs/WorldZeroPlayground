@@ -34,6 +34,7 @@ export const FACTION_ROW_TYPES = new Set([
   'collaborator_submitted',
   'awaiting_submission',
   'nudge',
+  'comment_mention',
 ])
 
 /**
@@ -119,6 +120,45 @@ function buildAwaitingActions(payload: Record<string, any>): FeedRowAction[] {
     })
   }
   return actions
+}
+
+/**
+ * Where a comment lives: `/praxes/{id}` or `/tasks/{id}`, never both.
+ *
+ * A comment hangs off EXACTLY ONE target — `num_nonnulls(praxis_id, task_id) = 1`
+ * is a DB CHECK (migration 0005) and the service guards it with a 422 first — so
+ * reading the two ids in order can never pick the wrong one.
+ *
+ * There is deliberately NO per-comment anchor. The thread is a plain list on the
+ * target page with no id on any row and no hash handling anywhere, so a
+ * `#comment-{id}` link would resolve to nothing at all. The page the comment sits
+ * on IS the deep link; landing there and reading the thread is the behaviour.
+ */
+function commentTargetHref(payload: Record<string, any>): string | null {
+  if (payload.praxis_id != null) return `/praxes/${payload.praxis_id}`
+  if (payload.task_id != null) return `/tasks/${payload.task_id}`
+  return null
+}
+
+/**
+ * The mention row's CTA: "Reply", a navigation to the page the comment sits on —
+ * which is where its thread and the composer both are.
+ *
+ * ONE control, not the two the Snide sheet draws. The sheet's pair is "open the
+ * composer on the target page" and "open the thread", and in this app those are
+ * the *same navigation*: `CommentThread` mounts the composer directly beneath the
+ * list on the praxis/task page, and there is no route, hash or query parameter
+ * that opens one without the other. Two buttons with identical `href`s is not two
+ * affordances. So the pair is served by the two link surfaces the row actually
+ * has — the quoted excerpt opens the thread, this CTA is the invitation to answer
+ * it — and no third control is invented for a route that does not exist. Same
+ * ground on which #1194 struck "Nudge back" and the sheets' answer buttons: a
+ * drawn state with nothing behind it is not built.
+ */
+function buildMentionActions(payload: Record<string, any>): FeedRowAction[] {
+  const href = commentTargetHref(payload)
+  if (href == null) return []
+  return [{ id: 'reply', label: i18n.t('feed:rowAction.reply'), tone: 'primary', href }]
 }
 
 /** Map a faction-owned feed item to its row slots. Returns null for the
@@ -271,6 +311,37 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
                 },
               ]
             : [],
+      }
+    case 'comment_mention':
+      // Someone @mentioned you in a comment (#1196). This case is the whole of
+      // that fix: the backend has emitted the type with a complete payload since
+      // it shipped, and the router already reaches it — but there was no case
+      // here, so `normalizeFeedItem` returned null, the router fell through to
+      // `return null`, and EVERY mention anyone ever received rendered as
+      // nothing at all.
+      //
+      // Badged `your_stuff`, matching where the backend files it
+      // (`FILTER_ALL | FILTER_YOUR_STUFF`): a mention is news about you, not a
+      // request of you — nothing is being asked, so it is not a Request.
+      //
+      // Framed in the COMMENTER's voice: `context_faction_slug` resolves to the
+      // actor's faction, and a mention is something a named person did to you
+      // (the same reasoning as `nudge`).
+      return {
+        slug,
+        actor,
+        actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
+        action: i18n.t('feed:row.action.mentionedYou'),
+        badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
+        // The comment's own words, quoted rather than titled — the excerpt is
+        // speech, so it borrows `foe_taunt`'s quoted headline. The backend caps
+        // it at 140 characters; nothing is re-truncated here.
+        headline: p.excerpt ?? null,
+        headlineHref: commentTargetHref(p),
+        headlineQuoted: true,
+        points: null,
+        level: null,
+        actions: buildMentionActions(p),
       }
     case 'vote_on_mine':
       return {

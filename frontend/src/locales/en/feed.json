@@ -60,6 +60,7 @@
     "dropOut": "Drop out",
     "answer": "Answer",
     "fileYours": "File yours",
+    "reply": "Reply",
     "failed": "That didn't go through."
   },
   "badge": {
@@ -80,7 +81,8 @@
       "tauntsYou": "taunts you",
       "defected": "defected from {{oldFaction}} to {{newFaction}}",
       "globalTaskActivated": "A new task has been activated",
-      "awaitingSubmission": "Waiting on your submission"
+      "awaitingSubmission": "Waiting on your submission",
+      "mentionedYou": "mentioned you in a comment"
     },
     "points": "{{points}} pts",
     "pointsEarned": "+{{points}} pts",
