@@ -304,7 +304,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         marginBottom: 'var(--space-md)',
       }}
     >
-      <Link to="/praxes" style={crumbLink}>
+      <Link to="/praxis" style={crumbLink}>
         <span aria-hidden>‹ </span>
         {t('detail.back')}
       </Link>

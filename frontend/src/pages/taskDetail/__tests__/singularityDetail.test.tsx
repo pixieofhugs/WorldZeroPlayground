@@ -19,7 +19,7 @@
  *     decision 3) — the header count is the only place that number appears.
  *  4. **The `×mult` badge is off the raw factor**, not a reconstructed
  *     `modifiedPoints / basePoints` ratio (ADR-0053's trap, ADR-0055's rule).
- *  5. **No `/praxes?task_id=N`.** The gallery expands in place; the link was
+ *  5. **No `/praxis?task_id=N`.** The gallery expands in place; the link was
  *     dead on every archetype before #1050 and is not wanted now either.
  *
  * `renderToStaticMarkup` only: no DOM, no effects, so `useFormFactor()` reports
@@ -220,7 +220,7 @@ describe("Singularity task detail — the shared anatomy", () => {
     expect(text).toContain(long);
   });
 
-  it("never links out to the /praxes?task_id feed filter", () => {
+  it("never links out to the /praxis?task_id feed filter", () => {
     const { html } = render(<SingularityTaskDetail state={baseState()} />);
     expect(html).not.toContain("task_id=");
   });

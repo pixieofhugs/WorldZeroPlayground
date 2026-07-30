@@ -434,7 +434,7 @@ describe("the clock is config-driven, not assumed", () => {
  * COMPOSER — a form with every control hidden, and a third read-only rendering
  * of a praxis beside the detail page and this surface. Owner ruling: this
  * surface, in a reading that says everybody is in and offers the way out to
- * `/praxes/:id`.
+ * `/praxis/:id`.
  */
 describe("collab — everybody is in (#1164)", () => {
   const published = state({
@@ -465,7 +465,7 @@ describe("collab — everybody is in (#1164)", () => {
 
   it("links out to the praxis — the whole reason this beats a redirect", () => {
     expect(html).toContain(collabCopy(SLUG, "completedReadAction"));
-    expect(html).toContain('href="/praxes/1"');
+    expect(html).toContain('href="/praxis/1"');
   });
 
   it("keeps the write-up read-only, and offers no way back into it", () => {
@@ -541,7 +541,7 @@ describe("duel — both sides are in (#1164)", () => {
     // where it lives instead of pretending the rival's text is here.
     expect(html).toContain(collabCopy(SLUG, "duelCompletedPlaceholder"));
     expect(html).not.toContain(collabCopy(SLUG, "duelSealedPlaceholder"));
-    expect(html).toContain('href="/praxes/1"');
+    expect(html).toContain('href="/praxis/1"');
   });
 
   it("offers no pull-back — after settlement that would be a forfeit", () => {

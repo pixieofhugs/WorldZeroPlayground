@@ -96,7 +96,7 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
     it(`${slug} renders the active-tasks list (continue link)`, () => {
       const { html, text } = render(<Skin state={baseState()} />)
       expect(text, 'active task title slot').toContain('Sunday Soup')
-      expect(html, 'continue-in-progress slot').toContain('href="/praxes/55/edit"')
+      expect(html, 'continue-in-progress slot').toContain('href="/praxis/55/edit"')
     })
 
     it(`${slug} renders the empty state when no active tasks`, () => {

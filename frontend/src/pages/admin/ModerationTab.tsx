@@ -340,7 +340,7 @@ export default function ModerationTab() {
                   <div className="flex items-start gap-4">
                     <div className="flex-1">
                       <Link
-                        to={`/praxes/${item.praxis.id}`}
+                        to={`/praxis/${item.praxis.id}`}
                         className="font-display text-lg font-bold"
                         style={{ color: 'inherit' }}
                       >
@@ -361,7 +361,7 @@ export default function ModerationTab() {
                         </p>
                       )}
                       <Link
-                        to={`/praxes/${item.praxis.id}`}
+                        to={`/praxis/${item.praxis.id}`}
                         className="eyebrow"
                         style={{ display: 'inline-block', marginTop: 'var(--space-sm)' }}
                       >
@@ -441,7 +441,7 @@ export default function ModerationTab() {
                       {/* Linkback to the thread the comment lives on. */}
                       <Link
                         to={item.comment.praxis_id != null
-                          ? `/praxes/${item.comment.praxis_id}`
+                          ? `/praxis/${item.comment.praxis_id}`
                           : `/tasks/${item.comment.task_id}`}
                         className="eyebrow"
                         style={{ display: 'inline-block', marginTop: 'var(--space-sm)' }}

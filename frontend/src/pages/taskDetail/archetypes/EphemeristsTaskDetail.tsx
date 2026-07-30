@@ -48,7 +48,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  * - **Copy is the shared neutral `detail.*` set** (ADR-0057). None of the
  *   design's words survive, and none of the retired faction voice does either.
  * - **The gallery expands in place.** "View all" is a local expand: the reader
- *   stays on the task. (`/praxes?task_id=N` did not filter at all until #1050.)
+ *   stays on the task. (`/praxis?task_id=N` did not filter at all until #1050.)
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
  * collapses the two-column split. The separate Ephemerists mobile skin and the
@@ -460,7 +460,7 @@ export default function EphemeristsTaskDetail({
   const desktop = useFormFactor() !== "mobile";
   const size = SIZES[desktop ? "desktop" : "mobile"];
   // The gallery expands in place. It deliberately does NOT link out to
-  // `/praxes?task_id=N` — the reader stays on the task. That URL does filter
+  // `/praxis?task_id=N` — the reader stays on the task. That URL does filter
   // properly since #1050; before it, it silently showed the whole feed.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -952,7 +952,7 @@ export default function EphemeristsTaskDetail({
           <div style={{ ...quietItalic, marginBottom: "var(--space-sm)" }}>
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryButton}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={primaryButton}>
             {t("detail.submitted.edit")}
           </Link>
         </div>
@@ -965,7 +965,7 @@ export default function EphemeristsTaskDetail({
             <span style={{ ...quietItalic, color: NILE }}>{t("detail.inProgress.text")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-            <Link to={`/praxes/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
+            <Link to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
               {t("detail.inProgress.continue")}
             </Link>
             <button onClick={handleDrop} style={quietButton}>

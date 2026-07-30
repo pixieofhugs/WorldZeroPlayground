@@ -328,7 +328,7 @@ export default function EverymenPraxisDetail({
       }}
     >
       <Link
-        to="/praxes"
+        to="/praxis"
         className="eyebrow"
         style={{
           letterSpacing: "0.2em",

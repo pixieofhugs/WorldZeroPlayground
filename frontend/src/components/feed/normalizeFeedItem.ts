@@ -108,7 +108,7 @@ function buildAwaitingActions(payload: Record<string, any>): FeedRowAction[] {
       id: 'fileIt',
       label: i18n.t('feed:rowAction.fileIt'),
       tone: 'primary',
-      href: `/praxes/${payload.praxis_id}/edit`,
+      href: `/praxis/${payload.praxis_id}/edit`,
     },
   ]
   if (payload.praxis_type === 'collab') {
@@ -123,7 +123,7 @@ function buildAwaitingActions(payload: Record<string, any>): FeedRowAction[] {
 }
 
 /**
- * Where a comment lives: `/praxes/{id}` or `/tasks/{id}`, never both.
+ * Where a comment lives: `/praxis/{id}` or `/tasks/{id}`, never both.
  *
  * A comment hangs off EXACTLY ONE target — `num_nonnulls(praxis_id, task_id) = 1`
  * is a DB CHECK (migration 0005) and the service guards it with a 422 first — so
@@ -135,7 +135,7 @@ function buildAwaitingActions(payload: Record<string, any>): FeedRowAction[] {
  * on IS the deep link; landing there and reading the thread is the behaviour.
  */
 function commentTargetHref(payload: Record<string, any>): string | null {
-  if (payload.praxis_id != null) return `/praxes/${payload.praxis_id}`
+  if (payload.praxis_id != null) return `/praxis/${payload.praxis_id}`
   if (payload.task_id != null) return `/tasks/${payload.task_id}`
   return null
 }
@@ -182,7 +182,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
           ? { type: 'friend', label: i18n.t('feed:badge.friend') }
           : { type: 'duel', label: i18n.t('feed:badge.foe') },
         headline: p.task_title ?? null,
-        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}` : null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
         headlineQuoted: false,
         points:
           p.task_point_value != null
@@ -219,7 +219,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         action: i18n.t('feed:row.action.collaboratorSubmitted'),
         badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
         headline: p.task_title ?? null,
-        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}` : null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
         headlineQuoted: false,
         points:
           p.task_point_value != null
@@ -235,7 +235,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
                   id: 'fileYours',
                   label: i18n.t('feed:rowAction.fileYours'),
                   tone: 'primary',
-                  href: `/praxes/${p.praxis_id}/edit`,
+                  href: `/praxis/${p.praxis_id}/edit`,
                 },
               ]
             : [],
@@ -254,7 +254,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? { type: 'duel', label: i18n.t('feed:badge.duel') }
             : { type: 'collab', label: i18n.t('feed:badge.collab') },
         headline: p.task_title ?? null,
-        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}/edit` : null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}/edit` : null,
         headlineQuoted: false,
         points:
           p.task_point_value != null
@@ -290,7 +290,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? { type: 'collab', label: i18n.t('feed:badge.collab') }
             : { type: 'duel', label: i18n.t('feed:badge.duel') },
         headline: p.task_title ?? null,
-        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}/edit` : null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}/edit` : null,
         headlineQuoted: false,
         points:
           p.task_point_value != null
@@ -307,7 +307,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
                   id: 'answer',
                   label: i18n.t('feed:rowAction.answer'),
                   tone: 'primary',
-                  href: `/praxes/${p.praxis_id}/edit`,
+                  href: `/praxis/${p.praxis_id}/edit`,
                 },
               ]
             : [],
@@ -351,7 +351,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         action: i18n.t('feed:row.action.votedOnYourPraxis'),
         badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
         headline: p.praxis_title ?? null,
-        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}` : null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
         headlineQuoted: false,
         points:
           p.points_earned != null

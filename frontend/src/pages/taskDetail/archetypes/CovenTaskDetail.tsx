@@ -43,7 +43,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   The factor arrives raw on the state contract; it is never reconstructed as
  *   `modifiedPoints / basePoints` (ADR-0053's dead-arithmetic trap).
  * - **The gallery expands in place.** Reading a task's proof shouldn't bounce
- *   you to the feed. (`/praxes?task_id=N` dropped its filter entirely until
+ *   you to the feed. (`/praxis?task_id=N` dropped its filter entirely until
  *   #1050 taught `usePraxes` to read the param; the in-place expand is the
  *   ruling either way.)
  *
@@ -272,7 +272,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const desktop = formFactor !== "mobile";
   const size = SIZES[formFactor];
   // The gallery expands in place. It deliberately does NOT link out to
-  // `/praxes?task_id=N` — the reader stays on the task. That URL does filter
+  // `/praxis?task_id=N` — the reader stays on the task. That URL does filter
   // properly since #1050; before it, it silently showed the whole feed.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -478,7 +478,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={goldButton}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={goldButton}>
             {t("detail.submitted.edit")}
           </Link>
         </div>
@@ -497,7 +497,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.text")}
           </div>
-          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={goldButton}>
+          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={goldButton}>
             {t("detail.inProgress.continue")}
           </Link>
           <button

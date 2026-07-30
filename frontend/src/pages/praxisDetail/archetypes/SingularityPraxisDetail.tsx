@@ -362,7 +362,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       ) : (
         <>
           <Link
-            to="/praxes"
+            to="/praxis"
             style={{
               ...LABEL,
               fontSize: "var(--text-lg)",

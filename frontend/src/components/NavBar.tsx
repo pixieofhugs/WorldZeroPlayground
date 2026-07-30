@@ -15,7 +15,7 @@ export default function NavBar() {
   const links = [
     { to: '/', label: t('nav.home'), end: true },
     { to: '/tasks', label: t('nav.tasks') },
-    { to: '/praxes', label: t('nav.praxis') },
+    { to: '/praxis', label: t('nav.praxis') },
     { to: '/leaderboard', label: t('nav.players') },
     { to: '/factions', label: t('nav.factions') },
     { to: '/updates', label: t('nav.updates') },

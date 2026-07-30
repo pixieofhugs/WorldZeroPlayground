@@ -33,7 +33,7 @@
  * FINDING`, `THE ACCOUNT`, `THE EVIDENCE`, `alone / in concord / in dispute` —
  * was **deleted** with this issue; `editPraxis.ephemerists.collab` survives
  * because it is not composer page copy but `collabCopy`'s override table, read
- * by `CollabRoster` on `/praxes/:id` too. The masthead's one word is the
+ * by `CollabRoster` on `/praxis/:id` too. The masthead's one word is the
  * faction's NAME out of `factions.json` (`factionName`), the same string the
  * praxis-detail masthead sets — a name, not a voice.
  *

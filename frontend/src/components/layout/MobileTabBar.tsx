@@ -8,7 +8,7 @@ type TabKey = 'nav.home' | 'nav.tasks' | 'nav.praxis' | 'nav.players' | 'nav.fac
 const TABS: { to: string; key: TabKey; end?: boolean }[] = [
   { to: '/', key: 'nav.home', end: true },
   { to: '/tasks', key: 'nav.tasks' },
-  { to: '/praxes', key: 'nav.praxis' },
+  { to: '/praxis', key: 'nav.praxis' },
   { to: '/leaderboard', key: 'nav.players' },
   { to: '/factions', key: 'nav.factions' },
 ]

@@ -75,7 +75,7 @@ export function PraxisTitle({
   fonts?: PraxisCardFonts;
 }) {
   return (
-    <Link to={`/praxes/${praxis.id}`}>
+    <Link to={`/praxis/${praxis.id}`}>
       <h3
         className="content-title font-display font-semibold leading-tight hover:underline"
         style={{

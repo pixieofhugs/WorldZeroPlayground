@@ -13,7 +13,7 @@
  * other stage. The dispatcher draws NONE.
  *
  * The invariant #567 actually bought is unchanged, and is what this file pins:
- * **from every state of `/praxes/:id/edit`, at every width, there is exactly one
+ * **from every state of `/praxis/:id/edit`, at every width, there is exactly one
  * way back and never zero.** Two halves, two files:
  *
  *   never TWO  → this file. Every skin is mocked to null, so a breadcrumb in the
@@ -87,7 +87,7 @@ function render(
 }
 
 const WIDTHS = ["mobile", "desktop"] as const;
-const BACK_LINK = 'href="/praxes/55"';
+const BACK_LINK = 'href="/praxis/55"';
 
 const DRAWN_STATES = ["composing", "waiting", "completed"] as const;
 

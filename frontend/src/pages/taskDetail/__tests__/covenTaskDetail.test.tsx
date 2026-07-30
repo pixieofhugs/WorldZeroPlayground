@@ -16,7 +16,7 @@
  *  3. **No colour escapes index.css.** Every pigment on this skin is a token;
  *     a literal hex in a style/fill/stroke is a dark-mode bug that renders fine.
  *  4. **No in-progress roster** (owner ruling 2026-07-28) and **no dead
- *     `/praxes?task_id=` link** (the gallery expands in place instead).
+ *     `/praxis?task_id=` link** (the gallery expands in place instead).
  *
  * The harness is `renderToStaticMarkup` — no DOM, no effects. `useFormFactor`
  * therefore always reports its server default, so only the DESKTOP size set is
