@@ -99,7 +99,7 @@ const kit: ProfileKit = {
   ),
   nameSize: 48,
   nameExtra: { color: BAND_INK, letterSpacing: '0.08em', textTransform: 'uppercase' },
-  playerEyebrow: 'Player · The Ephemerists',
+  playerEyebrow: (faction) => `Player · ${faction}`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: 'transparent',

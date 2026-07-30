@@ -28,6 +28,21 @@ import type { CSSProperties } from "react";
  * two. So **`PINK` is ornament only** (rings, auras, hearts, bullets) and `DEEP`
  * is a rule, a strand and a large numeral, taking body-sized text only where it
  * sits on `CARD`. When a mark wants a pink that carries words, it wants `INK`.
+ *
+ * ## What "on `PAGE`" costs, measured under the haze (#1295)
+ *
+ * The page is not flat: `.coven-candle-backdrop` washes four blooms over it, and
+ * an ink laid on the page must clear the darkest one. In LIGHT, under the peak of
+ * the pink bloom, `DEEP` falls to **3.47:1** — so the 4.44 above is its BEST
+ * reading on that ground, not its worst. The three text inks hold there (INK
+ * 5.70, SOFT 4.86, LABEL 4.80), and dark clears everywhere with room.
+ *
+ * **The substitute is `INK`, not `SOFT`/`LABEL`.** Every consumer this rule
+ * caught was a link, an active control or an emphasised clause — an affordance,
+ * which must not read QUIETER than the copy around it. `INK` is the strongest of
+ * the three (7.29:1 flat, 5.70:1 hazed) and it stays louder than the `LABEL` a
+ * trailing crumb or an inactive tab wears. Reach for `SOFT`/`LABEL` when the
+ * role really is secondary text; reach for `INK` when `DEEP` was doing a job.
  */
 
 /* The four faces, exactly as the slip and the ward name them. */

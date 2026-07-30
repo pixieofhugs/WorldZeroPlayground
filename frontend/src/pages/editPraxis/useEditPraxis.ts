@@ -48,6 +48,7 @@ import {
 } from "../../components/confirm/composerConfirms";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { listRelationships } from "../../api/relationships";
+import { getMyCharacters } from "../../api/me";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listMetatasks } from "../../api/metaTasks";
@@ -466,6 +467,29 @@ export function draftNeedsTitle(
   );
 }
 
+/**
+ * Which of the viewer's own lives the invite/opponent picker withholds (#1257).
+ *
+ * Collab invites withhold only the life you are carrying — inviting your own alt
+ * to a collab is doing a task with yourself, which splits no points unfairly and
+ * which the backend allows. Duel mode withholds the whole account roster: #1237
+ * blocked both sides of a duel landing on one account, so offering an alt as an
+ * opponent could only ever earn a 400 on Challenge.
+ *
+ * `ownCharacterIds` is empty until the lazy `/me/characters` read lands (and
+ * stays empty if it fails), so the carried life is unioned in rather than
+ * assumed present — the narrow old rule remains the floor.
+ */
+export function selfExcludedPickIds(
+  carriedCharacterId: number | undefined,
+  ownCharacterIds: Set<number>,
+  duelMode: boolean,
+): Set<number> {
+  const excluded = new Set<number>(duelMode ? ownCharacterIds : []);
+  if (carriedCharacterId != null) excluded.add(carriedCharacterId);
+  return excluded;
+}
+
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
   const { user, refetch, loading: authLoading } = useAuth();
@@ -516,6 +540,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const duelLevelRequired = gameConfig?.duel_level_required ?? null;
   const autoSubmitDays = gameConfig?.collab_auto_submit_days ?? null;
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
+  // Every life on the viewer's account (#1257) — read lazily when the duel pane
+  // opens, since only duel mode withholds them and there is no app-wide cache of
+  // the roster to read. Empty until it lands, and on failure.
+  const [ownCharacterIds, setOwnCharacterIds] = useState<Set<number>>(new Set());
   // Seal confirmation (#718) — opened by PublishButton in duel mode.
   const [duelSealOpen, setDuelSealOpen] = useState(false);
 
@@ -621,6 +649,24 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         /* foes-first ordering is a nicety; ignore failures */
       });
   }, [user?.character?.id]);
+
+  // The account's own roster, for the duel opponent picker only (#1257). The
+  // picker already fetches per keystroke, so one read on a pane the player has
+  // just opened costs nothing on mount.
+  useEffect(() => {
+    if (!duelPaneOpen || !user?.character) return;
+    let cancelled = false;
+    getMyCharacters()
+      .then((roster) => {
+        if (!cancelled) setOwnCharacterIds(new Set(roster.map((c) => c.id)));
+      })
+      .catch(() => {
+        /* the carried life stays withheld either way — see selfExcludedPickIds */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [duelPaneOpen, user?.character?.id]);
 
   // ---- Duel detail (opponent chip + status) whenever this praxis is a duel side ----
   useEffect(() => {
@@ -1153,15 +1199,24 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
             .filter((i) => i.status === "pending")
             .map((i) => i.invitee_id),
         );
+        // The picker is choosing an *opponent* only while a duel is being set up;
+        // with a challenge already attached it is hidden, and otherwise it is
+        // choosing collab invitees.
+        const pickingOpponent = praxis.duel_id == null && duelPaneOpen;
+        const selfExcluded = selfExcludedPickIds(
+          user?.character?.id,
+          ownCharacterIds,
+          pickingOpponent,
+        );
         const filtered = results.filter(
           (c) =>
-            c.id !== user?.character?.id &&
+            !selfExcluded.has(c.id) &&
             !memberIds.has(c.id) &&
             !pendingInviteIds.has(c.id),
         );
         // In duel mode, surface the viewer's foes first (soft ordering; anyone
         // eligible can still be challenged).
-        if (praxis.duel_id == null && duelPaneOpen && foeIds.size > 0) {
+        if (pickingOpponent && foeIds.size > 0) {
           filtered.sort(
             (a, b) => Number(foeIds.has(b.id)) - Number(foeIds.has(a.id)),
           );
@@ -1177,7 +1232,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     return () => {
       cancelled = true;
     };
-  }, [inviteQuery, praxis, user, duelPaneOpen, foeIds]);
+  }, [inviteQuery, praxis, user, duelPaneOpen, foeIds, ownCharacterIds]);
 
   const sendInvite = useCallback(
     async (character: CharacterOut) => {

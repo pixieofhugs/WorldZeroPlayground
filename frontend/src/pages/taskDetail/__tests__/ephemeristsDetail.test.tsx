@@ -38,7 +38,7 @@ import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { readThemes } from "../../../utils/__tests__/cssVars";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TASK: TaskOut = {
   id: 305,
@@ -62,23 +62,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Thessaly Vane",
-  avatar_url: "",
-  faction_slug: "ephemerists",
-  level: 6,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -152,11 +141,8 @@ describe("Ephemerists task detail — the Valley plate", () => {
     expect(html, "retired illuminated-codex ground").not.toContain("--eph-vellum");
   });
 
-  it("renders no in-progress roster, only the header count", () => {
-    const { text } = render(
-      <EphemeristsTaskDetail state={baseState({ signups: [SIGNUP] })} />,
-    );
-    expect(text).not.toContain("Thessaly Vane");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<EphemeristsTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("9");
   });
