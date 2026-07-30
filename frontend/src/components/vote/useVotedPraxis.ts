@@ -62,8 +62,9 @@ export function applyVoteSummaryDelta(votes: VoteSummary, delta: VoteDelta): Vot
 /**
  * Merge the viewer's own just-cast vote into a praxis (#626).
  *
- * Both card dispatchers (desktop PraxisCard, mobile MobilePraxisCard) call this
- * before picking a faction skin, so every slot below them — the score stamp's
+ * The card dispatcher (`PraxisCard`, one per faction on both form factors since
+ * ADR-0067) calls this before picking a faction skin, so every slot below it —
+ * the score stamp's
  * breakdown and the VoteUI tally — reads one already-correct object instead of
  * each learning about the cast separately.
  *

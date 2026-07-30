@@ -857,8 +857,8 @@
      WHAT MADE IT SURVIVABLE: the card read NOTHING from the legacy gilt-salon
      family, so #853 could delete that family wholesale without touching this
      surface. Everything the card needs is named here, in its own
-     `--faction-ua-card-*` namespace. `UaPraxisCard.tsx` and
-     `UaMobilePraxisCard.tsx` are asserted at zero legacy hits.
+     `--faction-ua-card-*` namespace. `UaPraxisCard.tsx` is asserted at zero
+     legacy hits (`UaMobilePraxisCard.tsx` was too, until ADR-0067 deleted it).
 
      Values are the vote-stamps design handoff's UA band verbatim. Where #848
      already ported the same hex under a primitive name, this block POINTS at it

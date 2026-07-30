@@ -24,9 +24,10 @@ import VoteUI from "../vote/VoteUI";
 /**
  * Roster-name helper — the crew names shown on a collaboration card, capped so a
  * large crew doesn't overflow the card. Returns up to `cap` display names plus
- * the overflow count (the "+N more" tail). Shared by the desktop collaboration
- * surface (#587) and the mobile praxis card (#573) — put it here, not a mobile
- * copy, so both read the same cap.
+ * the overflow count (the "+N more" tail). Shared by the collaboration surface
+ * (#587) and the praxis card (#573) — it was put here rather than copied into
+ * the mobile tree so both read the same cap, and it outlived that tree
+ * (ADR-0067).
  */
 export const ROSTER_NAME_CAP = 7
 

@@ -5,8 +5,9 @@
  * and #812 gave back only a yellow THEME — no skin. This manifest is the first
  * slice of WOW's own kit: the CHRONICLE OF PROOF praxis card (cream/gold/plum —
  * ADR-0050; the yellow it briefly wore came from a mislabelled mockup), its
- * score stamp with the ✦ total mark, its mobile twin, and the googly-balloon
- * vote widget.
+ * score stamp with the ✦ total mark, and the googly-balloon vote widget. (The
+ * card shipped with a mobile twin; ADR-0067 retired it, so the one card serves
+ * both form factors.)
  *
  * #897 adds THE CREST — WOW's `sigil`, the mark every other surface in the kit
  * imports — and its first consumer, the `avatar`: the crest set in a gilt rope
@@ -104,7 +105,6 @@ const WowSigil = lazyArchetype(() => import('../components/cards/WowSigil').then
 const WowTaskCard = lazyArchetype(() => import('../components/cards/WowTaskCard'))
 const WowProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/WowProfileBody'))
 const WowVote = lazyArchetype(() => import('../components/vote/WowVote'))
-const WowMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/WowMobilePraxisCard'))
 const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/WowPraxisCard'))
 const WowScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/WowScoreStamp'))
 const WowSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/WowSeal'))
@@ -138,7 +138,6 @@ export const WOW_MANIFEST: FactionManifest = {
   praxisCard: () => WowPraxisCard,
   scoreStamp: () => WowScoreStamp,
   metaTaskSeal: () => WowSeal,
-  mobilePraxisCard: () => WowMobilePraxisCard,
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
 

@@ -14,7 +14,6 @@ import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 import { PraxisByline, PraxisStats, PraxisVoteFooter } from '../shared'
 import { PraxisBody } from '../desktop/shared'
-import { MobilePraxisBody, MobileVoteFooter } from '../mobile/shared'
 
 function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
   return {
@@ -78,14 +77,9 @@ describe('one score per card (#888, closes #663)', () => {
     expect(body).not.toMatch(/\d/)
   })
 
-  it('the mobile vote footer states no points and no vote count', () => {
-    const body = text(render(<MobileVoteFooter praxis={praxis({})} />))
-    expect(body).not.toMatch(/\bpts\b/)
-    // No FIGURE of any kind: the tally line was "{points} pts · {count} votes",
-    // and both numbers are gone with it. (The footer's own "log in to vote"
-    // prompt survives — this is about the tally, not the control.)
-    expect(body).not.toMatch(/\d/)
-  })
+  // `MobileVoteFooter` had the identical assertion against an identical
+  // `VoteUI` call. It is gone with the `mobilePraxisCard` surface (ADR-0067);
+  // the desktop case above is what a phone renders now.
 })
 
 describe('the byline portrait (#888)', () => {
@@ -152,25 +146,10 @@ describe('the applied-metatask seal stack (#932)', () => {
     expect(text(html)).not.toContain('Sealmark')
   })
 
-  it('the mobile body renders a seal below the score when a metatask is applied', () => {
-    const html = render(
-      <MobilePraxisBody
-        praxis={praxis({ created_by_faction_slug: 'wow', applied_metatasks: [snideSeal] })}
-        theme={{ paper: '#fff', ink: '#000', accent: '#333', muted: '#555' }}
-      />,
-    )
-    expect(text(html)).toContain('Sealmark')
-  })
-
-  it('the mobile body renders no seal when nothing is applied', () => {
-    const html = render(
-      <MobilePraxisBody
-        praxis={praxis({ applied_metatasks: [] })}
-        theme={{ paper: '#fff', ink: '#000', accent: '#333', muted: '#555' }}
-      />,
-    )
-    expect(text(html)).not.toContain('Sealmark')
-  })
+  // The two `MobilePraxisBody` cases are gone with the `mobilePraxisCard`
+  // surface (ADR-0067). They asserted the same seal placement against a second
+  // body that composed the same `MetaTaskSeal` from the same field; `PraxisBody`
+  // above is now the only anatomy, on both form factors.
 })
 
 describe('the faction font pair (#888)', () => {

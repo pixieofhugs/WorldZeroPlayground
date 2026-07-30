@@ -18,13 +18,19 @@ import ScoreStamp from "../scoreStamp/ScoreStamp";
 import MetaTaskSeal from "../../metaTaskSeal/MetaTaskSeal";
 
 /**
- * Bespoke DESKTOP praxis-card shared pieces (#839).
+ * Bespoke praxis-card shared pieces (#839).
  *
- * Mirrors the `praxisCard/mobile/` split: each faction's desktop card owns a
- * bespoke FRAME (chrome, fonts, tokens) in its own module under `./`, and the
- * CONTENT is the structural slots from `../shared`, composed here by
- * {@link PraxisBody}. Splitting the nine archetypes out of the old 700-line
- * `components/PraxisCard.tsx` gives each faction slice a disjoint footprint.
+ * Bespoke-frame + shared-slots: each faction's card owns a FRAME (chrome, fonts,
+ * tokens) in its own module under `./`, and the CONTENT is the structural slots
+ * from `../shared`, composed here by {@link PraxisBody}. Splitting the nine
+ * archetypes out of the old 700-line `components/PraxisCard.tsx` gives each
+ * faction slice a disjoint footprint.
+ *
+ * The directory is still called `desktop/`, but these archetypes serve BOTH form
+ * factors: ADR-0067 collapsed the praxis card to one responsive component per
+ * faction and deleted the `praxisCard/mobile/` tree this file used to mirror.
+ * The name is kept because renaming nine imported modules would be a larger diff
+ * than the fact it records.
  */
 
 /**

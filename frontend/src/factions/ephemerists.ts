@@ -22,7 +22,6 @@ const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetai
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
 const EphemeristsHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsHome'))
 const EphemeristsMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsMobileDuelSealConfirm'))
-const EphemeristsMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EphemeristsMobilePraxisCard'))
 const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
 const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/EphemeristsTaskCard'))
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
@@ -60,7 +59,6 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionBody: () => EphemeristsFactionBody,
   profileBody: () => EphemeristsProfileBody,
   duelSeal: () => EphemeristsDuelSealConfirm,
-  mobilePraxisCard: () => EphemeristsMobilePraxisCard,
   mobileFactionPage: () => EphemeristsFactionPage,
   mobileFieldDesk: () => EphemeristsHome,
   mobileDuelSeal: () => EphemeristsMobileDuelSealConfirm,

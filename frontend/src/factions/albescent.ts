@@ -36,7 +36,6 @@ const AlbescentSelectCard = lazyArchetype(() => import('../components/cards/Fact
 const AlbescentTaskCard = lazyArchetype(() => import('../components/cards/AlbescentTaskCard'))
 const AlbescentVote = lazyArchetype(() => import('../components/vote/AlbescentVote'))
 const AlbescentPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/AlbescentPraxisCard'))
-const AlbescentMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/AlbescentMobilePraxisCard'))
 const AlbescentSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/AlbescentSeal'))
 // #1038 — the task-detail unfreeze. Lazy like its siblings (#1063): a wrapper
 // that pulls in the whole na anatomy is exactly the weight route-splitting exists
@@ -69,7 +68,6 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * other surface still falls through to Default (#783).
    */
   praxisCard: () => AlbescentPraxisCard,
-  mobilePraxisCard: () => AlbescentMobilePraxisCard,
 
   /**
    * The task-card tell (#1023, ADR-0048) — the second surface to unfreeze, and
