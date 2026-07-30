@@ -1,8 +1,15 @@
 /**
- * S.N.I.D.E. DESKTOP duel seal-confirm (#722) — the rail's zine clipping scaled
- * up to a dialog: photocopier-black ground under the same 5px halftone screen, a
- * 2px acid-green border, the opponent's colour on a fat left edge, and a hard
- * offset shadow tinted hot pink. Square corners throughout.
+ * S.N.I.D.E. duel seal-confirm (#722) — the rail's zine clipping scaled up to a
+ * dialog: photocopier-black ground under the same 5px halftone screen, a 2px
+ * acid-green border, the opponent's colour on a fat left edge, and a hard offset
+ * shadow tinted hot pink. Square corners throughout.
+ *
+ * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
+ * `DuelSealSheet` centres this clipping over a scrim on a laptop and lets it
+ * take the whole screen on a phone. The halftone and the opponent's fat edge are
+ * `ground` and survive full-bleed; the acid frame and the pink offset shadow are
+ * `card`, because a hard 6px shadow and a border at the viewport edge are a card
+ * pretending it still floats.
  *
  * Pure frame. `StakesTiles` computes the win/lose figures from `useGameConfig()`
  * and the VIEWER's own faction — which is why a Snide duelist correctly reads a
@@ -43,6 +50,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import DuelSealSheet from './DuelSealSheet'
 
 const INK = 'var(--faction-snide-ink)'
 const ACID = 'var(--faction-snide-acid)'
@@ -58,6 +66,18 @@ const MUTED = 'var(--faction-snide-card-muted)'
  */
 const CREDIT = 'var(--faction-snide-card-credit)'
 const MARKER = 'var(--faction-snide-font-marker)'
+
+/**
+ * The clipping's own dimmer scrim — Snide dims harder than the shared
+ * {@link SEAL_SCRIM}, so the photocopier black never floats on a lit page.
+ */
+const SCRIM = 'radial-gradient(circle, rgba(0,0,0,0.6), rgba(0,0,0,0.82))'
+
+/**
+ * The acid frame, as three longhands: the opponent's fat left edge is `ground`
+ * and a `border` shorthand in `card` would reset it (#1313).
+ */
+const ACID_EDGE = `2px solid ${ACID}`
 
 /** The xerox screen: a 1px dot on a 5px grid, barely there. */
 const HALFTONE: CSSProperties = {
@@ -114,117 +134,112 @@ export default function SnideDuelSealConfirm({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        padding: 'var(--space-lg)',
-        background: 'radial-gradient(circle, rgba(0,0,0,0.6), rgba(0,0,0,0.82))',
+    <DuelSealSheet
+      label={copy.heading}
+      scrim={SCRIM}
+      ground={{
+        ...HALFTONE,
+        borderLeft: `7px solid ${accent}`,
+        color: PAPER,
+        fontFamily: 'var(--font-body)',
+      }}
+      card={{
+        borderTop: ACID_EDGE,
+        borderRight: ACID_EDGE,
+        borderBottom: ACID_EDGE,
+        boxShadow: `6px 6px 0 color-mix(in srgb, ${PINK} 55%, transparent)`,
       }}
     >
+      {/* masthead: accent wash under a dashed acid rule */}
       <div
-        className="w-full max-w-[460px]"
         style={{
-          ...HALFTONE,
-          border: `2px solid ${ACID}`,
-          borderLeft: `7px solid ${accent}`,
-          boxShadow: `6px 6px 0 color-mix(in srgb, ${PINK} 55%, transparent)`,
-          color: PAPER,
-          fontFamily: 'var(--font-body)',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-sm)',
+          flexWrap: 'wrap',
+          padding: 'var(--space-sm) var(--space-md)',
+          background: `color-mix(in srgb, ${accent} 16%, transparent)`,
+          borderBottom: `2px dashed ${ACID}`,
         }}
       >
-        {/* masthead: accent wash under a dashed acid rule */}
-        <div
+        <RansomStrip />
+        <h2 style={{ fontFamily: MARKER, fontSize: 'var(--text-title)' }}>{copy.heading}</h2>
+      </div>
+
+      <div style={{ flex: 1, padding: 'var(--space-lg)' }}>
+        {/* forfeit: the body goes behind a redaction bar — blacked out, pink
+            hard shadow, acid edge. `copy.danger` is the mode's own signal, so
+            this branches on the tone rather than on the mode name. */}
+        <p
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            flexWrap: 'wrap',
-            padding: 'var(--space-sm) var(--space-md)',
-            background: `color-mix(in srgb, ${accent} 16%, transparent)`,
-            borderBottom: `2px dashed ${ACID}`,
+            lineHeight: 1.5,
+            fontSize: 'var(--text-content)',
+            ...(copy.danger
+              ? {
+                  padding: 'var(--space-md)',
+                  background: INK,
+                  borderLeft: `4px solid ${PINK}`,
+                  boxShadow: `4px 4px 0 color-mix(in srgb, ${PINK} 70%, transparent)`,
+                  color: PINK,
+                  fontWeight: 700,
+                }
+              : {}),
           }}
         >
-          <RansomStrip />
-          <h2 style={{ fontFamily: MARKER, fontSize: 'var(--text-title)' }}>{copy.heading}</h2>
-        </div>
+          {copy.body}
+        </p>
 
-        <div style={{ padding: 'var(--space-lg)' }}>
-          {/* forfeit: the body goes behind a redaction bar — blacked out, pink
-              hard shadow, acid edge. `copy.danger` is the mode's own signal, so
-              this branches on the tone rather than on the mode name. */}
+        {/* The free-reopen half of the truth — same condition as every other
+            skin, because it is the same fact. A forfeit has no such note and
+            `copy.note` is null there. */}
+        {copy.note && (
           <p
             style={{
-              lineHeight: 1.5,
+              marginTop: 'var(--space-sm)',
               fontSize: 'var(--text-content)',
-              ...(copy.danger
-                ? {
-                    padding: 'var(--space-md)',
-                    background: INK,
-                    borderLeft: `4px solid ${PINK}`,
-                    boxShadow: `4px 4px 0 color-mix(in srgb, ${PINK} 70%, transparent)`,
-                    color: PINK,
-                    fontWeight: 700,
-                  }
-                : {}),
+              color: ACID,
             }}
           >
-            {copy.body}
+            {copy.note}
           </p>
+        )}
 
-          {/* The free-reopen half of the truth — same condition as every other
-              skin, because it is the same fact. A forfeit has no such note and
-              `copy.note` is null there. */}
-          {copy.note && (
-            <p
-              style={{
-                marginTop: 'var(--space-sm)',
-                fontSize: 'var(--text-content)',
-                color: ACID,
-              }}
-            >
-              {copy.note}
-            </p>
-          )}
+        {/* pasted-up panel: the stakes tiles and the race roster on one scrap */}
+        <div
+          style={{
+            marginTop: 'var(--space-md)',
+            padding: 'var(--space-md)',
+            border: `1px solid color-mix(in srgb, ${PAPER} 28%, transparent)`,
+          }}
+        >
+          <StakesTiles
+            viewerFactionSlug={me.faction_slug}
+            opponentFactionSlug={foe.faction_slug}
+            opponentName={foe.display_name}
+            taskPointValue={taskPointValue}
+            status={duel.status}
+            theme={theme}
+          />
+          <RaceRoster me={me} foe={foe} theme={theme} />
+        </div>
 
-          {/* pasted-up panel: the stakes tiles and the race roster on one scrap */}
-          <div
-            style={{
-              marginTop: 'var(--space-md)',
-              padding: 'var(--space-md)',
-              border: `1px solid color-mix(in srgb, ${PAPER} 28%, transparent)`,
-            }}
-          >
-            <StakesTiles
-              viewerFactionSlug={me.faction_slug}
-              opponentFactionSlug={foe.faction_slug}
-              opponentName={foe.display_name}
-              taskPointValue={taskPointValue}
-              status={duel.status}
-              theme={theme}
-            />
-            <RaceRoster me={me} foe={foe} theme={theme} />
-          </div>
-
-          {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-              pair rather than growing a Snide poster-button skin slot. The
-              global [Cancel] … [Submit] order (#646) and the shared destructive
-              tone matter more here than an acid-green button, and adding a skin
-              prop to the shared component would be foundation work. */}
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <SealActions
-              onConfirm={onConfirm}
-              onCancel={onCancel}
-              busy={busy}
-              confirmLabel={copy.confirmLabel}
-              danger={copy.danger}
-              theme={theme}
-            />
-          </div>
+        {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
+            pair rather than growing a Snide poster-button skin slot. The
+            global [Cancel] … [Submit] order (#646) and the shared destructive
+            tone matter more here than an acid-green button, and adding a skin
+            prop to the shared component would be foundation work. */}
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          <SealActions
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            busy={busy}
+            confirmLabel={copy.confirmLabel}
+            danger={copy.danger}
+            theme={theme}
+          />
         </div>
       </div>
-    </div>
+    </DuelSealSheet>
   )
 }
