@@ -1,113 +1,255 @@
-import i18n from '../../i18n'
-import FeedChassisBand from './FeedChassisBand'
+import type { CSSProperties } from 'react'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
- * Cozy Coven feed frame — the neutral feed card dressed as a tiny
- * "whimsy.exe" desktop window. A pink title bar (traffic-light dots + a script
- * window name + a sparkle charm) sits above a notepad/paper body that holds the
- * untouched card `{children}`. Frame-level chrome only: this is a thin wrapper,
- * not a reimplementation of the card. Flips with the theme via the Coven tokens.
+ * Cozy Coven — THE CANDLELIT SLIP, as a feed card (dress issue #1197, epic
+ * #1192).
  *
- * #1194: the title bar is now also the CHASSIS BAND — the window name keeps its
- * place and the kicker, the tag, the time and the dismiss control ride the same
- * strip, tinted by the bar's own title ink. The look is unchanged otherwise;
- * Coven's dress issue restyles it.
+ * The chassis is a leaf torn off the same stock as the v2 task card (#1023) and
+ * the candlelit ward (#1031): a pink→lavender gradient head under a gold twinkle
+ * field, a braided thread seam, and a near-white slip below it carrying the
+ * shared payload. Grenze Gotisch names the card's kind, Quicksand speaks the
+ * chrome, gold is the only non-pink note.
+ *
+ * THIS REPLACES the lo-fi `coven.exe` window this frame used to draw. That
+ * metaphor was retired for Coven wholesale by ADR-0055 / ADR-0056 (task cards)
+ * and again by #1031 (task detail); the feed card was the last surface still
+ * wearing it. Two things follow, and both are deliberate:
+ *   - the `--faction-coven-win-*` / `-notepad-*` tokens are NOT deleted — other
+ *     surfaces still paint with them (index.css says so at the family's head);
+ *   - `feed:identity.coven.windowTitle` ("coven.exe") is no longer read here. It
+ *     is still read by `FactionCard` and `FactionSelectCard`, so nothing is
+ *     orphaned — and epic #1192 decision 5 forbids a faction-name label on this
+ *     surface anyway. The skin is the identification.
+ *
+ * WHAT THIS OWNS, AND ONLY THIS (the three-layer seam, #1194):
+ *   FeedItemSlot      the archive — the ✕, the swipe, the write, the 6s undo
+ *                     strip. Inherited whole; nothing here touches it.
+ *   → this file       the CHASSIS: the four chrome slots and the stock they sit
+ *                     on. It PLACES `archive`; it does not rebuild it.
+ *   → children        the shared payload body (a row or one of the three
+ *                     companions). Faction-blind, pads itself, and is NOT
+ *                     re-inked here — hence no padding on the body wrapper.
+ *
+ * The four slots are placed by hand rather than through `FeedChassisBand`,
+ * because the band's `.eyebrow` sets the kicker at the label ramp's floor and
+ * this sheet wants it in the display face. Nothing is dropped: kicker · tag ·
+ * time · archive all ride the head, and the head is tinted `--faction-coven-
+ * slip-ink` so the archive control — which paints in `currentColor` — comes out
+ * in the slip's own ink.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0056 / 0058 / 0063): `useFormFactor` picks a
+ * size set, never a second file, and the card takes the width it is given.
+ *
+ * Colour is entirely `--faction-coven-slip-*` / `-ward-*`, which both themes
+ * already declare; light/dark flips through the `[data-theme="dark"]` cascade,
+ * never a ternary. Every ink on the head is already measured against the
+ * gradient's worst stop — see the slip block in index.css (#1023) and the ward
+ * block (#1031).
  */
 
-const WIN_BORDER = 'var(--faction-coven-win-border)'
-const TITLE_FROM = 'var(--faction-coven-title-from)'
-const TITLE_TO = 'var(--faction-coven-title-to)'
-const TITLE_TEXT = 'var(--faction-coven-title-text)'
-const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
-const SCRIPT = 'var(--faction-coven-card-font)'
-const PINK = 'var(--faction-coven)'
+const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
+const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 
-/** The four-point sparkle charm — Coven's signature window flourish. */
-function Sparkle({ size }: { size: number }) {
+interface SizeSet {
+  headPad: string
+  kickerSize: string
+  /** The pentacle charm's box. Ornament geometry, so a raw px number (§4a). */
+  charm: number
+}
+
+const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
+  desktop: {
+    headPad: 'var(--space-sm) var(--space-lg)',
+    kickerSize: 'var(--text-xl)',
+    charm: 20,
+  },
+  mobile: {
+    headPad: 'var(--space-sm) var(--space-md)',
+    kickerSize: 'var(--text-lg)',
+    charm: 18,
+  },
+}
+
+/** Small-caps chrome voice — every small mark on the head speaks in it. */
+const CAPTION: CSSProperties = {
+  fontFamily: CHROME,
+  fontWeight: 700,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
+}
+
+/** A four-point twinkle centred on (x, y), arms `r` wide and 2.6r long. */
+function twinkle(x: number, y: number, r: number): string {
+  const arm = r * 2.6
+  return `M${x} ${y - arm} l${r} ${arm} ${arm} ${r} -${arm} ${r} -${r} ${arm} -${r} -${arm} -${arm} -${r} ${arm} -${r} z`
+}
+
+/**
+ * The gold candle-spark field, clipped to the head band so no spark ever lands
+ * in copy. Three sparks, not the task card's six: this card is drawn dozens of
+ * times down one scroll, and the slip's masthead field is a once-per-page mark.
+ */
+function SparkField() {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 320 34"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+    >
+      <path d={twinkle(28, 9, 1.5)} fill="var(--faction-coven-slip-gold)" opacity={0.85} />
+      <path d={twinkle(196, 25, 1.1)} fill="var(--faction-coven-slip-gold)" opacity={0.7} />
+      <path d={twinkle(288, 12, 1.7)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
+    </svg>
+  )
+}
+
+/** The pentacle charm that heads the card — a pink disc, a dashed gold ring. */
+function Pentacle({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 44 44"
+      aria-hidden="true"
+      style={{ display: 'block', flexShrink: 0 }}
+    >
+      <circle cx="22" cy="22" r="19" fill="var(--faction-coven-slip-pk)" opacity="0.18" />
+      <circle
+        cx="22"
+        cy="22"
+        r="15"
+        fill="none"
+        stroke="var(--faction-coven-slip-gold)"
+        strokeWidth="1.2"
+        strokeDasharray="2 4"
+      />
       <path
-        d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
-        fill={PINK}
+        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
+        fill="none"
+        stroke="var(--faction-coven-slip-deep)"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
       />
     </svg>
   )
 }
 
 export default function CovenFeedFrame({ kicker, time, tag, archive, children }: FeedFrameProps) {
+  const formFactor = useFormFactor()
+  const size = SIZES[formFactor]
+
   return (
-    <div
+    <article
+      data-form-factor={formFactor}
       style={{
-        borderRadius: 13,
+        position: 'relative',
         overflow: 'hidden',
-        border: `2px solid ${WIN_BORDER}`,
-        boxShadow: `0 6px 18px color-mix(in srgb, ${PINK} 22%, transparent)`,
+        boxSizing: 'border-box',
+        borderRadius: 16,
+        border: '1.5px solid var(--faction-coven-slip-border)',
+        background: 'var(--faction-coven-ward-card)',
+        boxShadow: 'var(--faction-coven-slip-shadow)',
       }}
     >
-      {/* title bar — traffic-light dots + window name + sparkle */}
+      {/* THE HEAD — the slip's gradient band, and all four chrome slots. Tinted
+          slip-ink so the archive node (currentColor) inks itself from here. */}
       <div
         style={{
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: window title bar, sized around its 9px traffic-light dots and raw script type.
-          gap: 7,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: window title bar, sized around its 9px traffic-light dots and raw script type.
-          padding: '7px 12px',
-          background: `linear-gradient(180deg, ${TITLE_FROM}, ${TITLE_TO})`,
-          borderBottom: `2px solid ${WIN_BORDER}`,
+          gap: 'var(--space-sm)',
+          minWidth: 0,
+          padding: size.headPad,
+          background:
+            'linear-gradient(112deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 38%, var(--faction-coven-slip-lav) 78%, var(--faction-coven-slip-vio))',
+          color: 'var(--faction-coven-slip-ink)',
         }}
       >
-        {[
-          'var(--faction-coven-scrap-deep)',
-          'var(--faction-coven-tape)',
-          'var(--faction-coven-ivy-leaf)',
-        ].map((lightColor) => (
-          <span
-            key={lightColor}
-            style={{
-              width: 9,
-              height: 9,
-              borderRadius: '50%',
-              background: lightColor,
-              border: '1.2px solid rgba(255,255,255,0.7)',
-            }}
-          />
-        ))}
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            flexShrink: 0,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the hand-lettered window title and its sparkle.
-            gap: 6,
-            fontFamily: SCRIPT,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered window title on the frame chrome
-            fontSize: 17,
-            color: TITLE_TEXT,
-          }}
-        >
-          {i18n.t('feed:identity.coven.windowTitle')}
-          <Sparkle size={12} />
+        <SparkField />
+
+        <span style={{ position: 'relative', zIndex: 1, display: 'flex', flexShrink: 0 }}>
+          <Pentacle size={size.charm} />
         </span>
 
-        {/* chassis band — rides the title bar, inked with the window title */}
-        <div style={{ flex: 1, minWidth: 0, color: TITLE_TEXT }}>
-          <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
-        </div>
+        {/* kicker — the card's only kind label, in the coven's display face */}
+        <span
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: DISPLAY,
+            fontSize: size.kickerSize,
+            lineHeight: 1.1,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'inherit',
+          }}
+        >
+          {kicker}
+        </span>
+
+        {/* tag — nullable; today only "Still waiting", pinned in a gold hairline */}
+        {tag && (
+          <span
+            style={{
+              ...CAPTION,
+              position: 'relative',
+              zIndex: 1,
+              fontSize: 'var(--text-base)',
+              padding: '0 var(--space-xs)',
+              borderRadius: 999,
+              border: '1px solid var(--faction-coven-slip-gold)',
+              color: 'inherit',
+            }}
+          >
+            {tag}
+          </span>
+        )}
+
+        {/* time — the card's only timestamp since #1194 (the row stopped drawing one) */}
+        <span
+          style={{
+            ...CAPTION,
+            position: 'relative',
+            zIndex: 1,
+            marginLeft: 'auto',
+            color: 'var(--faction-coven-slip-label)',
+          }}
+        >
+          {time}
+        </span>
+
+        {/* archive — a finished node; placed, never rebuilt. `null` on
+            awaiting_submission, which is why nothing here draws a stand-in. */}
+        <span style={{ position: 'relative', zIndex: 1, display: 'flex', flexShrink: 0 }}>
+          {archive}
+        </span>
       </div>
 
-      {/* notepad/paper body — holds the neutral card, untouched */}
-      <div
-        style={{
-          background: NOTEPAD_BG,
-          borderTop: `1px solid ${NOTEPAD_BORDER}`,
-          padding: 'var(--space-md)',
-        }}
-      >
-        {children}
-      </div>
-    </div>
+      {/* the braided thread seam. `.cvn-braid` owns both its pigments and its
+          dark override — a data-URI SVG is a separate document, so `var(--…)`
+          inside one never resolves (index.css says so at the class). */}
+      <span
+        className="cvn-braid"
+        aria-hidden="true"
+        style={{ display: 'block', width: '100%' }}
+      />
+
+      {/* THE SLIP — the shared payload body. No padding and no ink of ours: every
+          body already pads itself, and the body is faction-blind by contract. */}
+      <div style={{ position: 'relative' }}>{children}</div>
+    </article>
   )
 }
