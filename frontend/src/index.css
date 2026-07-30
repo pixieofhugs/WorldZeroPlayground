@@ -3934,8 +3934,14 @@
    • THE EDGE IS A 1px MASKED RING, not a border, for the same reason
      `.alb-task-edge` and `.alb-praxis-edge` are. It lands on `.sidebar-card`'s
      own hairline so the effect reads as that border coming alive, and it is a
-     hairline rather than the task card's 3px so the chassis's 4px `card-accent`
-     rule down the left edge still reads as the near-black rule it is.
+     hairline rather than the task card's 3px so the chassis's own 4px rule down
+     the left edge stays the louder of the two. #1148 made that rule the VERTICAL
+     spectrum (it was `card-accent`, a near-black ink drawn as a border), so the
+     two are now the same palette in two geometries — a still ramp down the left
+     edge under a travelling loop around all four. The reason for the hairline did
+     not change with it: 3px of moving spectrum beside 4px of resting spectrum is
+     two rainbows arguing, which is exactly what an unremarkable card must not
+     look like.
 
    • THE RADIUS IS THE TOKEN, not a literal. `.sidebar-card` corners with
      `--radius-xl`, so this follows it for free — unlike the three earlier

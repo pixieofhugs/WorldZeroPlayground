@@ -171,11 +171,17 @@ describe('the chassis', () => {
     // their faction's voice is exactly backwards.
     const html = render(item('era_announcement', FAT_PAYLOAD, null))
     expect(html, 'keeps its own always-dark chrome').toContain('--badge-admin-bg')
-    // The chassis's own tint and accent rule. Asserted on the tokens rather than
+    // The chassis's own tint and edge rule. Asserted on the tokens rather than
     // on the kicker's WORD, because the card's own copy says "Era Announcement"
     // and "Era Archive" — the word proves nothing here, the chrome does.
+    //
+    // The edge half was `not.toContain('card-accent')` until #1148 stopped the
+    // chassis painting that ink at all, which left it unable to fail. It names
+    // what the chassis draws NOW: a null slug resolves to `default`, so the frame
+    // this card must not be wearing would put the vertical spectrum down its left
+    // edge. A guard aimed at a token nobody emits is not a guard.
     expect(html, 'no chassis tint').not.toContain('card-bg')
-    expect(html, 'no chassis accent rule').not.toContain('card-accent')
+    expect(html, 'no chassis edge rule').not.toContain('--faction-default-rainbow-vertical')
     expect(html, 'gains the ✕').toContain(ARCHIVE_LABEL)
   })
 
