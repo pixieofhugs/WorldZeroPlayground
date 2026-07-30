@@ -92,15 +92,14 @@ const FAT_PAYLOAD = {
   invite_id: 8,
   inviter_character_id: 3,
   task_faction_slug: 'coven',
+  comment_id: 11,
+  excerpt: 'your name came up',
 }
 
 describe('the archive control: which cards offer one', () => {
   it('draws an archive control on every archivable type', () => {
     for (const type of ALL_FEED_TYPES) {
       if (NON_ARCHIVABLE_TYPES.has(type)) continue
-      // comment_mention has no body until #1196 and renders nothing at all; it
-      // is not a card that lost its control.
-      if (type === 'comment_mention') continue
       expect(render(item(type, FAT_PAYLOAD)), `${type} offers the ✕`).toContain(
         ARCHIVE_LABEL,
       )
@@ -180,8 +179,24 @@ describe('the chassis', () => {
     expect(html, 'gains the ✕').toContain(ARCHIVE_LABEL)
   })
 
-  it('renders nothing for a type with no body yet (comment_mention, until #1196)', () => {
-    expect(render(item('comment_mention', FAT_PAYLOAD))).toBe('')
+  // REVERSED in #1196, deliberately. This asserted `render(comment_mention) ===
+  // ''` — a true description of a bug, pinned as if it were a rule. Every
+  // @mention anyone had ever received drew a blank card, and this is the
+  // assertion that would have caught it on day one had it been written the other
+  // way round. There is now no feed type the backend emits that renders nothing.
+  it('draws a real card for every one of the 15 types the backend emits', () => {
+    for (const type of ALL_FEED_TYPES) {
+      expect(render(item(type, FAT_PAYLOAD)), `${type} renders`).not.toBe('')
+    }
+  })
+
+  it('gives comment_mention the chassis with no change to the router (#1196)', () => {
+    // The seam's first customer: a body in `normalizeFeedItem` and the card
+    // inherits the kicker, the timestamp and the ✕ for free.
+    const html = render(item('comment_mention', FAT_PAYLOAD))
+    expect(html, 'the kicker band').toContain(feedKicker('comment_mention'))
+    expect(html, 'the archive route').toContain(ARCHIVE_LABEL)
+    expect(html, 'the coven chassis').toContain('--faction-coven')
   })
 })
 

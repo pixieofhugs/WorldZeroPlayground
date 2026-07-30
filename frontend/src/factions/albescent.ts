@@ -44,6 +44,9 @@ const AlbescentSeal = lazyArchetype(() => import('../components/metaTaskSeal/ski
 const AlbescentTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/AlbescentTaskDetail'))
 // #1140 — the praxis-detail unfreeze, lazy for the same reason as its sibling.
 const AlbescentPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/AlbescentPraxisDetail'))
+// #1203 — the feed-card unfreeze. Lazy like every wrapper above: it pulls in the
+// na chassis, which is exactly the weight route-splitting keeps off first load.
+const AlbescentFeedFrame = lazyArchetype(() => import('../components/feed/AlbescentFeedFrame'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -119,6 +122,26 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * factors.
    */
   praxisDetail: () => AlbescentPraxisDetail,
+
+  /**
+   * The feed-card tell (#1203, epic #1192, ADR-0048) — the FIFTH surface to
+   * unfreeze and the same "Default + light" shape as the four above.
+   * `AlbescentFeedFrame` is a WRAPPER: it renders the shared `DefaultFeedFrame`
+   * chassis whole, forwarding all four chrome slots (kicker, time, tag and the
+   * pre-composed archive node) untouched, and layers two ornament spans over it —
+   * a drifting spectrum wash and a travelling hairline. It has NO structural
+   * delta: the archive control, the swipe and the six-second undo live in
+   * `FeedItemSlot` outside every frame, and nothing here reimplements them.
+   *
+   * This row exists because the epic settled it as decision 13, which is also the
+   * decision NOT to claim `comment`: Albescent keeps `DefaultComment`, because
+   * the card is sufficiently distinct on its own once the light is on it. So the
+   * faction's feed presence is one manifest line and no voice of its own.
+   *
+   * `era_announcement` never reaches this frame — it is chassis-exempt by type
+   * for every faction (epic decision 6), so no exclusion is needed here.
+   */
+  feedFrame: () => AlbescentFeedFrame,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as
