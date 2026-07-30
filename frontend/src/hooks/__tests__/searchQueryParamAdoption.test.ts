@@ -34,7 +34,7 @@ describe.each(FEED_HOOKS)('$name puts its search in the URL', ({ relativePath })
   const source = readFeedHookSource(relativePath)
 
   it('imports useSearchQueryParam', () => {
-    expect(source).toContain("from '../useSearchQueryParam'")
+    expect(source).toContain("from '../../hooks/useSearchQueryParam'")
     expect(source).toContain('useSearchQueryParam')
   })
 
