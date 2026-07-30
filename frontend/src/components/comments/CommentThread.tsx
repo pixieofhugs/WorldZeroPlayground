@@ -298,6 +298,7 @@ export default function CommentThread({
   target,
   targetId,
   showHeading = true,
+  seed,
 }: {
   target: CommentTarget
   targetId: number
@@ -308,14 +309,39 @@ export default function CommentThread({
    * headings for one list.
    */
   showHeading?: boolean
+  /**
+   * Rows the mounting page already fetched, for `targetId` (#1281). Both detail
+   * pages gate this thread behind their own data — a hidden praxis and a
+   * non-active task render none — so the thread's own effect could not start
+   * until that data had landed, putting comments a whole round trip behind
+   * everything else on the two most-linked pages in the app. The page hooks now
+   * carry `listComments` in the `Promise.all` they already run off the route
+   * param and hand the result down here.
+   *
+   * It SEEDS the local state rather than replacing it: `comments` stays this
+   * component's own after mount, so `handlePost`'s optimistic append survives.
+   * Omit it (every bare mount) and the thread fetches for itself, unchanged.
+   * `[]` is an answer, not an absence — only `undefined`/`null` means "unasked".
+   */
+  seed?: CommentOut[] | null
 }) {
   const { t } = useTranslation('praxis')
   const { user } = useAuth()
-  const [comments, setComments] = useState<CommentOut[]>([])
-  const [loading, setLoading] = useState(true)
+  const [comments, setComments] = useState<CommentOut[]>(seed ?? [])
+  const [loading, setLoading] = useState(seed == null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // A seed always arrives in the same render as the `targetId` it belongs to
+    // — both pages read `targetId` off the entity the batch resolved, so they
+    // move together — which is why this effect can trust the current closure
+    // and take the seed on a target CHANGE too, not only on first mount.
+    if (seed) {
+      setComments(seed)
+      setError(null)
+      setLoading(false)
+      return
+    }
     let active = true
     setLoading(true)
     listComments(target, targetId)

@@ -110,6 +110,23 @@ const FILL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
  * so the surface column cannot be generated from the key. `default` (na) is
  * INCLUDED here where FILL_PAIRS omits it: the na composer paints its button in a
  * solid accent (not the rainbow), so `--faction-default-on-accent` is real text.
+ *
+ * SEVEN, NOT EIGHT (#1232). `EphemeristsComment` no longer passes an `-on-accent`
+ * at all: the Valley plate gave the voice its own CTA pair (`-plate-cta-bg` /
+ * `-plate-cta-ink`, measured by `ephemerists plate CTA band` below), which left
+ * `--faction-ephemerists-on-accent` with no reader anywhere in the app except the
+ * row that measured it. A row whose only consumer is itself is not coverage, so
+ * the token and the row went together.
+ *
+ * The remaining seven were re-checked against their voices at the same time. Two
+ * name an ALIAS rather than the literal var the voice passes — everymen's
+ * `-card-accent` resolves to `--everymen-red` and singularity's
+ * `-card-text` to `--faction-singularity-term-bright`, both value-for-value — so
+ * they measure the pairing that is on screen. Coven's does not: the voice sends
+ * `--faction-coven-slip-cta-from` / `-cta-ink`, which `coven slip CTA band top`
+ * already measures, so coven's row here is the same dead shape ephemerists had.
+ * It is left standing because `--faction-coven-on-accent` still has a reader; if
+ * that ever goes, this row should follow ephemerists'.
  */
 const ACCENT_PAIRS: Pair[] = [
   { key: "ua", accent: "--faction-ua-card-accent" },
@@ -117,7 +134,6 @@ const ACCENT_PAIRS: Pair[] = [
   { key: "coven", accent: "--faction-coven-card-accent" },
   { key: "snide", accent: "--faction-snide-pink" },
   { key: "wow", accent: "--faction-wow-card-accent" },
-  { key: "ephemerists", accent: "--faction-ephemerists-card-accent" },
   { key: "singularity", accent: "--faction-singularity-card-text" },
   { key: "default", accent: "--faction-default-card-accent" },
 ].map(({ key, accent }) => ({
@@ -730,6 +746,176 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--color-danger",
     text: "--color-on-danger",
   },
+
+  // ── THE EDIT-PRAXIS COMPOSERS (#1179) and THE FEED CHASSIS (#1192) ───────
+  //
+  // WHY BOTH WAVES LAND IN ONE PR, and why they had to. Every skin agent in
+  // both epics declined to touch this file while its siblings were live, and
+  // each was right: `ARCHETYPE_PAIRS` is asserted BOTH ways (listed = measured,
+  // unlisted = nothing), so two branches that each restate it drop each other's
+  // rows — every branch green, `main` red only after the second squash. The
+  // deferral was correct and the debt is settled here, once, for all eight.
+  //
+  // WHAT IS NEW ABOUT THESE SURFACES. Both waves put shared slots on a SECOND
+  // faction stock: `PraxisWaitingSurface` renders `dress.bodyStyle` and
+  // `dress.quietStyle` INSIDE `dress.panelStyle`, and the feed frames paint the
+  // app's global inks on a faction chassis. That is #1173's shape again
+  // (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
+  // already had"), and re-measuring is exactly how the three failures this issue
+  // fixed were found — none of them was visible from the ink's own sheet.
+  //
+  // TWO FACTIONS ADD NOTHING, which is a finding rather than an omission:
+  //   - UA's composer draws entirely from `--faction-ua-{card-bg,panel}` with
+  //     `-card-{text,body,muted,accent}` and the fill/on-fill pair. All twelve
+  //     pairings are in the sun-bleached block above. Its FEED frame grounds on
+  //     `--faction-ua-parchment`, a gradient; `ua leaf darkest stop, *` already
+  //     measures that ramp's tightest stop, which is the only honest scalar
+  //     reading of it.
+  //   - Ephemerists' composer is the Valley plate's own token set, measured in
+  //     the plate blocks above. (Its masthead band is a `color-mix()` of
+  //     `-plate-band` toward nile, which `parseColor` cannot resolve; the band's
+  //     lower stop is plain `-plate-band` and IS measured. A row for the mixed
+  //     stop would fail as "not a solid color", which is a hole this guard
+  //     cannot close — `e2e/contrast.spec.ts` is the one that can.)
+  //
+  // Four more pairings were checked and deliberately NOT written, because each
+  // is a second name for a measurement already here:
+  //   snide acid cast bar        = `snide seal note, acid on the halftone`
+  //                                (contrast is symmetric; swapping which of
+  //                                `-ink` / `-acid` is the ground measures
+  //                                nothing new)
+  //   snide pink modifier scrap  = `snide composer accent, on-accent`
+  //   everymen red mode button   = `everymen composer accent, on-accent`
+  //                                (`-card-accent` resolves to `--everymen-red`)
+  //   wow plate prose            = `wow seal stakes plate, quiet ink` — the WOW
+  //                                dress now hands its panel slots
+  //                                `-chronicle-quiet`, the ink #1173 minted for
+  //                                that plate, so the pairing is that row's.
+
+  // na / Default — THE AURORA SHEET (#1181). Three tiers, and the field is the
+  // tighter ground of the two: it is a shade LIGHTER than the sheet by day and
+  // a lifted stock by night, so an ink that clears the sheet can still miss it.
+  // That is how `-composer-faint` was caught at 2.08:1 — it had never been
+  // measured against anything.
+  { what: "na composer field, ink", surface: "--faction-default-composer-field", text: "--faction-default-card-text" },
+  { what: "na composer field, prose", surface: "--faction-default-composer-field", text: "--faction-default-card-muted" },
+  { what: "na composer field, faint ink", surface: "--faction-default-composer-field", text: "--faction-default-composer-faint" },
+  { what: "na composer sheet, faint ink", surface: "--faction-default-card-bg", text: "--faction-default-composer-faint" },
+  // The cast bar. na paints it in its own INK rather than an accent — the one
+  // composer in the set whose primary is the body colour — so this is not the
+  // `default composer accent, on-accent` pair up in ACCENT_PAIRS.
+  { what: "na cast bar, on-accent", surface: "--faction-default-card-text", text: "--faction-default-on-accent" },
+
+  // WOW — THE WRIT (#1186). The chronicle plate carries the composer's fields
+  // and the waiting surface's panels, so the two inks it had never been paired
+  // with get rows. `-card-muted` is absent by design: see the note above.
+  { what: "wow chronicle plate, ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-text" },
+  { what: "wow chronicle plate, label ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-accent-deep" },
+
+  // S.N.I.D.E. — THE FLYPOSTED SHEET (#1184). The third of this faction's four
+  // stocks, and index.css declares it apart from `-note-*` / `-slip-*` on
+  // purpose ("same values today, a different surface's contract tomorrow"). The
+  // rows follow that: measuring `-slip-paper` would not guard `-composer-sheet`
+  // the day one of them is repainted, which is the whole reason for two names.
+  { what: "snide composer sheet, ink", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-ink" },
+  { what: "snide composer sheet, prose", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-muted" },
+  { what: "snide composer sheet, faint ink", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-faint" },
+  { what: "snide composer field, ink", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-ink" },
+  { what: "snide composer field, prose", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-muted" },
+  { what: "snide composer field, faint ink", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-faint" },
+  // Acid as TEXT, on both stocks it lands on: the POINTS caption sits on the
+  // task slip (the field) and the same ink runs on the sheet. The bright acid
+  // is 1.35:1 on the light stock, which is why this ink exists at all.
+  { what: "snide composer field, acid caption", surface: "--faction-snide-composer-field", text: "--faction-snide-composer-acid-ink" },
+  { what: "snide composer sheet, acid ink", surface: "--faction-snide-composer-sheet", text: "--faction-snide-composer-acid-ink" },
+  // The masthead bar takes THE PRESS's theme-invariant pigments, not the
+  // sheet's flipping ones — the stage word in paper, the wordmark in acid.
+  { what: "snide composer bar, stage word", surface: "--faction-snide-composer-bar", text: "--faction-snide-paper" },
+  { what: "snide composer bar, wordmark", surface: "--faction-snide-composer-bar", text: "--faction-snide-acid" },
+
+  // Everymen — THE WORK ORDER (#1187). `--faction-everymen-sheet-panel` is the
+  // stock the sheet accent was MEASURED on, and the composer, the praxis detail
+  // and the comment voice all mount their typed area on it for that reason: red
+  // as ink is 4.49:1 on `--everymen-paper` and never set there. That near-miss
+  // is deliberately NOT a row — the pairing does not exist on screen, and a row
+  // for it would assert a failure nothing is committing.
+  { what: "everymen sheet panel, ink", surface: "--faction-everymen-sheet-panel", text: "--everymen-paper-text" },
+  { what: "everymen sheet panel, prose", surface: "--faction-everymen-sheet-panel", text: "--everymen-muted" },
+  { what: "everymen sheet panel, red ink", surface: "--faction-everymen-sheet-panel", text: "--faction-everymen-sheet-accent" },
+
+  // Singularity — THE SESSION (#1185) and its feed chassis (#1201). Always-dark
+  // in both themes (§6), so every row is two readings of a near-black ground.
+  // `-term-panel` had no row at all before this: it is the fields' ground in the
+  // composer and `--color-bg-surface` on the feed chassis, which is four inks.
+  { what: "singularity terminal panel, ink", surface: "--faction-singularity-term-panel", text: "--faction-singularity-term-ink" },
+  { what: "singularity terminal panel, title", surface: "--faction-singularity-term-panel", text: "--faction-singularity-term-bright" },
+  { what: "singularity terminal panel, label", surface: "--faction-singularity-term-panel", text: "--faction-singularity-term-dim" },
+  { what: "singularity terminal panel, level pill", surface: "--faction-singularity-term-panel", text: "--faction-singularity-term-blue" },
+  // The chassis carries the composer's page ink and the feed row's body.
+  { what: "singularity terminal chassis, prose", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-ink" },
+  // The points well's third ink — `-blue-bright` and `-blue` are measured on it
+  // above; the unit caption is `-dim`, and this well is its tighter ground.
+  { what: "singularity points well, caption", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-dim" },
+  // The two feed pairings #1252 argued out in prose. The chassis remaps
+  // `--color-danger` to the faction's notice ink through a cascade override, and
+  // the actor's name is the one body ink that override cannot reach (it is a
+  // `--faction-*` token, so `FeedRowSkin` carries it instead). Both are rows now
+  // rather than a comment, because a ratio in a comment is indistinguishable
+  // from a measurement and this one is computed.
+  { what: "singularity terminal chassis, alarm ink", surface: "--faction-singularity-term-bg", text: "--faction-singularity-card-notice" },
+  { what: "singularity terminal chassis, actor name", surface: "--faction-singularity-term-bg", text: "--faction-singularity-card-accent" },
+
+  // Coven — THE CANDLELIT COMPOSER (#1183). The ward's two grounds were already
+  // measured against the slip's three inks; what is new is the fourth, `-deep`,
+  // and the cast band.
+  { what: "coven ward panel, accent ink", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-deep" },
+  {
+    // `-deep` on the ward PAGE is 4.44:1, which is why the composer's own note
+    // rules it ornament-and-rules-only there (#1295). The ONE string it sets on
+    // that ground is the task slip's points numeral at `--text-title` (24px), so
+    // AA_LARGE genuinely applies — the same call `everymen seal numeral` makes.
+    what: "coven ward page, points numeral, large display type",
+    surface: "--faction-coven-ward-page",
+    text: "--faction-coven-slip-deep",
+    floor: AA_LARGE,
+  },
+  // Once your part is in the CTA band goes green. Both stops carry the label,
+  // for the same reason the slip's own CTA band has two rows.
+  { what: "coven cast band top", surface: "--faction-coven-cast-from", text: "--faction-coven-cast-ink" },
+  { what: "coven cast band foot", surface: "--faction-coven-cast-to", text: "--faction-coven-cast-ink" },
+
+  // S.N.I.D.E. — THE INTERCEPTED SLIP (#1198), the feed chassis and the comment
+  // sheet. Twelve tokens shipped with no row; these are the eight pairings they
+  // actually make. The stock FLIPS (that repoint was itself the fix for 1.10:1
+  // body copy at night), so each row is two different grounds, not one twice.
+  { what: "snide slip, ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-ink" },
+  { what: "snide slip, byline", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-muted" },
+  { what: "snide slip, faint ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-faint" },
+  // The two poster colours walked down for the one job each does as TYPE: the
+  // marker prompt across the head of the slip, and a resolved @mention.
+  { what: "snide slip, marker prompt", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-pink-ink" },
+  { what: "snide slip, mention ink", surface: "--faction-snide-slip-paper", text: "--faction-snide-slip-acid-ink" },
+  // The editor's input, and the first of the five ransom scraps — the only one
+  // that flips, being a paler patch of the sheet itself.
+  { what: "snide slip field, ink", surface: "--faction-snide-slip-field", text: "--faction-snide-slip-ink" },
+  // The intake bar. Near-black in BOTH themes, so it takes THE PRESS's
+  // invariant pigments exactly as the composer's masthead does.
+  { what: "snide slip intake bar, kicker", surface: "--faction-snide-slip-bar", text: "--faction-snide-paper" },
+  { what: "snide slip intake bar, acid", surface: "--faction-snide-slip-bar", text: "--faction-snide-acid" },
+
+  // Ephemerists — THE FEED PLATE (#1199). Two pairings the dress relies on and
+  // nothing above reached: the cornice band's SECOND ink tier (declared rather
+  // than faked with an opacity, which is why it is measurable at all), and nile
+  // on the plate — that link ink is measured on the page ground and the panel
+  // cell already, but the feed card grounds on `-plate-bg`, a third stock.
+  { what: "ephemerists cornice band, quiet ink", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-quiet" },
+  { what: "ephemerists plate, links", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-nile" },
+
+  // Everymen — THE DISPATCH SLIP (#1200). The masthead band: red as a FILL with
+  // the broadsheet's masthead ink on it. Its dark reading is the tightest in
+  // this whole group, which is why the dateline and the tag chip on that band
+  // print at FULL ink and separate themselves by face rather than by opacity.
+  { what: "everymen masthead band, ink", surface: "--everymen-red", text: "--everymen-masthead-text" },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
