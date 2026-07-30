@@ -25,6 +25,7 @@ import { useAdminMode } from "../../auth/AdminModeContext";
 import { extractError } from "../../utils/errors";
 import { seedViewerVote, useVoteOverride } from "../../components/vote/voteOverrides";
 import {
+  applyDuelVoteDelta,
   applyVoteDelta,
   applyVoteSummaryDelta,
 } from "../../components/vote/useVotedPraxis";
@@ -282,6 +283,21 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const displayPraxis = praxis && voteDelta ? applyVoteDelta(praxis, voteDelta) : praxis;
   const displayVotes = votes && voteDelta ? applyVoteSummaryDelta(votes, voteDelta) : votes;
 
+  // The duel card is a THIRD payload with the same number in it (#1239): both
+  // rows' totals, and the margin its verdict line subtracts out of them, come
+  // off `DuelDetailOut` and nothing merged into that. Looked up per SIDE rather
+  // than reusing `voteDelta`, because a spectator voting the RIVAL is the
+  // reported case and the rival's praxis is not this page's — there is no
+  // praxis payload here to read it off.
+  const challengerDelta = useVoteOverride(duel?.challenger.praxis_id ?? -1);
+  const opponentDelta = useVoteOverride(duel?.opponent.praxis_id ?? -1);
+  const displayDuel = duel
+    ? applyDuelVoteDelta(duel, {
+        challenger: challengerDelta,
+        opponent: opponentDelta,
+      })
+    : duel;
+
   const isOwner = isViewerMember(praxis, user?.character?.id);
 
   return {
@@ -291,7 +307,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
     votes: displayVotes,
     voters,
-    duel,
+    duel: displayDuel,
 
     user,
 
