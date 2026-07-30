@@ -837,7 +837,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             {task.description}
           </p>
         )}
-        <CensorRule style={{ marginTop: "var(--space-lg)" }} />
       </div>
     </section>
   );

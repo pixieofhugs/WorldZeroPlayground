@@ -117,6 +117,19 @@ describe("SNIDE task detail — the ransom dossier", () => {
     expect(html).not.toContain("color:transparent");
   });
 
+  it("heads sections with the censor rule and closes no box with it", () => {
+    const { html } = render(<SnideTaskDetail state={baseState()} />);
+    // One rule per section head — brief, gallery, discussion — and nothing
+    // else. A fourth used to sit at the foot of the brief panel, separating
+    // the last line of the description from the box's own edge (#1145).
+    expect(html.split("snd-censor").length - 1).toBe(3);
+    // The next rule after the brief text belongs to the gallery heading.
+    const afterBrief = html.slice(html.indexOf(BRIEF) + BRIEF.length);
+    expect(afterBrief.indexOf("snd-censor")).toBeGreaterThan(
+      afterBrief.indexOf("completed praxis"),
+    );
+  });
+
   it("keeps the cut-up headline one readable string", () => {
     const { html, text } = render(<SnideTaskDetail state={baseState()} />);
     // Cut word by word across four treatments — Anton plain, Anton on acid,
