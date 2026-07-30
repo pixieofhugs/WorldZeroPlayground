@@ -41,6 +41,11 @@ cd "$FRONTEND_DIR"
 VITE_API_URL="http://localhost:$BACKEND_PORT" npm run build
 
 echo "==> backend on :$BACKEND_PORT"
+# The backend defaults to allowing :3000 and :5173 only, and preview serves on
+# :4173 — so without this every data-dependent route is CORS-blocked and the
+# whole run reports NO CONTENT. run-e2e.sh does the same at its own port; that
+# export lives in a different step and does not reach here.
+export CORS_ORIGINS="http://localhost:$PREVIEW_PORT"
 (cd "$BACKEND_DIR" && "$PYTHON_BIN" -m uvicorn main:app --port "$BACKEND_PORT") &
 BACKEND_PID=$!
 

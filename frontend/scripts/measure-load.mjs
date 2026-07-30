@@ -70,7 +70,7 @@ const ROUTES = [
   { path: '/', name: 'home (guest)' },
   { path: '/', name: 'home (logged in — FieldDesk)', authenticate: true },
   { path: '/tasks', name: 'tasks list' },
-  { path: '/praxes', name: 'praxis list' },
+  { path: '/praxis', name: 'praxis list' },
   { path: '/factions', name: 'factions' },
   // Bespoke-skin slug, not `na`: faction-skinned routes pull a per-faction
   // chunk on demand, which is the interesting case for this measurement.
@@ -188,7 +188,7 @@ const median = (numbers) => [...numbers].sort((a, b) => a - b)[Math.floor(number
 
 const ids = await discoverIds()
 if (ids.task) ROUTES.push({ path: `/tasks/${ids.task}`, name: 'TASK DETAIL (faction)' })
-if (ids.praxis) ROUTES.push({ path: `/praxes/${ids.praxis}`, name: 'PRAXIS DETAIL (faction)' })
+if (ids.praxis) ROUTES.push({ path: `/praxis/${ids.praxis}`, name: 'PRAXIS DETAIL (faction)' })
 if (ids.character) ROUTES.push({ path: `/characters/${ids.character}`, name: 'CHARACTER DETAIL' })
 
 const browser = await chromium.launch()
