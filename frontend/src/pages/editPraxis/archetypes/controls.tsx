@@ -13,6 +13,7 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import type { EditPraxisState } from "../useEditPraxis";
+import { duelSides } from "../../../components/duel/shared";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
 import HoldoutPublishNotice from "../blocks/HoldoutPublishNotice";
@@ -60,6 +61,14 @@ export function InviteSearch({
   const duelMode = state.duelMode;
   const challengeAttached = duelMode && praxis.duel_id != null;
   const onPick = duelMode ? state.sendChallenge : state.sendInvite;
+  // The chip names the OTHER side, not the fixed `opponent` role — accepting a
+  // challenge puts the viewer's own praxis in that role, which used to make the
+  // chip print the viewer's own name (#1226). `praxis.created_by_id` is the
+  // viewer's character id here: a duel side's composer only ever shows its own
+  // praxis, never the rival's.
+  const duelFoeName = state.duel
+    ? duelSides(state.duel, praxis.created_by_id).foe.display_name
+    : null;
   // Cast progress drives the roster + hides "invite another" once weaving starts (#591).
   const castCount = praxis.members.filter((m) => m.has_submitted).length;
   // Any collab member can drop out from here (#958) — a standalone exit that
@@ -96,8 +105,7 @@ export function InviteSearch({
                 }}
               >
                 ⚔{" "}
-                {state.duel?.opponent.display_name ??
-                  t("editPraxis.invite.opponentFallback")}{" "}
+                {duelFoeName ?? t("editPraxis.invite.opponentFallback")}{" "}
                 <em>
                   ·{" "}
                   {state.duel?.status === "active"
