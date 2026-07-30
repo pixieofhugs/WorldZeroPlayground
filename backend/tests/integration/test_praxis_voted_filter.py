@@ -13,6 +13,7 @@ praxis when the carried character did not.
 from datetime import datetime, timezone
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
@@ -24,6 +25,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services.praxis import build_praxis_card_out, list_praxes, VotedFilter
+from services.vote import cast_or_update_vote
 from services.vote_tally import viewer_votes_for
 
 
@@ -243,7 +245,7 @@ async def test_voted_by_name_fires_for_account_mate_only(
 
 
 @pytest.mark.asyncio
-async def test_voted_by_name_suppressed_when_both_carried_and_mate_voted(
+async def test_carried_character_re_rating_a_mates_vote_takes_over_the_marker(
     db_session: AsyncSession,
     account: Account,
     character: Character,
@@ -251,12 +253,21 @@ async def test_voted_by_name_suppressed_when_both_carried_and_mate_voted(
     _make_character,
     _make_submitted_praxis,
 ):
-    """If both the carried character and an account-mate voted, the own star wins
-    and the marker is suppressed."""
+    """One vote per praxis per account (#1150): the carried character rating a
+    praxis an account-mate already voted RE-RATES that single vote.
+
+    Replaces the old "both of us voted" case, which asserted the marker was
+    suppressed when the carried character and a mate each held a row. Two rows
+    for one account on one praxis are now impossible — ``uq_vote_praxis_account``
+    rejects the second — so the state under test no longer exists. What is left
+    to pin down is the takeover: the row's value and its attribution both move to
+    the life that re-rated it, so the own star appears and the mate marker
+    retires. The ``own is not None`` suppression branch in ``viewer_votes_for``
+    stays covered as defensive code by ``tests/unit/test_vote_tally.py``.
+    """
     mate = await _make_character(account, "matecharacter", "Account Mate")
-    p_both = await _make_submitted_praxis(character3, "Both of us voted")
-    await _cast(db_session, p_both, character, 4)
-    await _cast(db_session, p_both, mate, 2)
+    p_shared = await _make_submitted_praxis(character3, "Mate voted first")
+    await _cast(db_session, p_shared, mate, 2)
 
     praxes = await list_praxes(
         session=db_session,
@@ -264,13 +275,22 @@ async def test_voted_by_name_suppressed_when_both_carried_and_mate_voted(
         viewer_id=character.id,
         viewer_account_id=character.account_id,
     )
+    target = next(p for p in praxes if p.id == p_shared.id)
+
+    await cast_or_update_vote(character, target, 4, db_session)
+
+    rows = (
+        (await db_session.execute(select(Vote).where(Vote.praxis_id == p_shared.id)))
+        .scalars()
+        .all()
+    )
+    assert len(rows) == 1
+    assert rows[0].value == 4
+    assert rows[0].voter_character_id == character.id
+
     viewer_votes = await viewer_votes_for(
         {p.id for p in praxes}, character.id, character.account_id, db_session
     )
-    card = await build_praxis_card_out(
-        next(p for p in praxes if p.id == p_both.id),
-        db_session,
-        viewer_votes=viewer_votes,
-    )
+    card = await build_praxis_card_out(target, db_session, viewer_votes=viewer_votes)
     assert card.viewer_vote == 4
     assert card.voted_by_name is None
