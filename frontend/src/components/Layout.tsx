@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
+import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed'
 import { BackdropProvider } from './backdrop/BackdropContext'
 import FactionBackdrop from './backdrop/FactionBackdrop'
 import LevelUpWatcher from './LevelUpWatcher'
@@ -13,7 +14,7 @@ import ShellContent from './layout/ShellContent'
 import SiteFooter from './layout/SiteFooter'
 
 /**
- * The app shell. Desktop gets the top NavBar + right sidebar + footer; the phone
+ * The app shell. Desktop gets the top NavBar + left sidebar + footer; the phone
  * gets a wordmark header + bottom tab bar (ADR-0035). Those two chromes stay
  * genuinely distinct — but they are rendered as SIBLINGS of the page region,
  * never as its parent.
@@ -31,6 +32,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isMobile = useFormFactor() === 'mobile'
+  // Held here, threaded down as a prop exactly like `isMobile`: `ShellContent`
+  // is called as a plain function by its tests, so it cannot own a hook (#1191).
+  const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -50,7 +54,13 @@ export default function Layout({ children }: { children: ReactNode }) {
       <InvitationWatcher />
 
       {isMobile ? <MobileHeader /> : <NavBar />}
-      <ShellContent isMobile={isMobile}>{children}</ShellContent>
+      <ShellContent
+        isMobile={isMobile}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={toggleSidebar}
+      >
+        {children}
+      </ShellContent>
       {isMobile ? <MobileTabBar /> : <SiteFooter />}
     </div>
     </BackdropProvider>

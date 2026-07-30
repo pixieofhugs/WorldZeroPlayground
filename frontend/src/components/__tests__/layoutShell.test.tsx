@@ -26,7 +26,12 @@ vi.mock('../NavBar', () => ({ default: () => <nav data-test="navbar" /> }))
 vi.mock('../layout/MobileHeader', () => ({ default: () => <header data-test="mobile-header" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-test="tabbar" /> }))
 vi.mock('../layout/SiteFooter', () => ({ default: () => <footer data-test="footer" /> }))
-vi.mock('../layout/Sidebar', () => ({ default: () => <aside data-test="sidebar" /> }))
+// `panelStyle` is a named export the fold-away handle borrows (#1191), so a
+// mock that supplies only `default` leaves the handle spreading `undefined`.
+vi.mock('../layout/Sidebar', () => ({
+  default: () => <aside data-test="sidebar" />,
+  panelStyle: {},
+}))
 
 // ShellContent is deliberately NOT mocked — it is the seam under test.
 import Layout from '../Layout'

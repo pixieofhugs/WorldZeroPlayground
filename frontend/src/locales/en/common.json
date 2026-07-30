@@ -325,6 +325,12 @@
     "awaitingSubmissionDuel": "Your turn — submit your duel"
   },
   "sidebar": {
+    "toggle": {
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar",
+      "expandWithPending_one": "Expand sidebar — {{count}} pending request",
+      "expandWithPending_other": "Expand sidebar — {{count}} pending requests"
+    },
     "characterCard": {
       "eyebrow": "Your Character",
       "edit": "edit",
