@@ -14,14 +14,17 @@
  *    decline, this scores as an ordinary solo praxis at 1.0×.
  *
  * Chrome mirrors `collab/CollabSuccess.tsx` exactly — fixed dim overlay,
- * role="dialog" + aria-modal, mobile full-screen / desktop centred panel via
- * useFormFactor(), primary action autofocuses, no focus trap. Mounted once from
- * the EditPraxis dispatcher, so all 16 composer surfaces inherit it.
+ * role="dialog" + aria-modal, mobile full-screen / desktop centred panel,
+ * primary action autofocuses, no focus trap. Mounted once from the EditPraxis
+ * dispatcher, so all 16 composer surfaces inherit it. That form-factor branch is
+ * no longer written here: it is `DuelSealSheet`, the one chassis every sheet
+ * hangs in (#1313).
  *
  * The Default skin below is the only one this issue ships; the manifest seam
  * exists so per-faction skins (#720 for Coven, one issue per faction after) are a
- * `duelSeal` / `mobileDuelSeal` row and nothing else. Skins own the FRAME only —
- * every figure and every branch lives in `duel/shared.tsx`.
+ * `duelSeal` row and nothing else — ONE responsive component per faction since
+ * #1313 retired the `mobileDuelSeal` twin. Skins own the FRAME only — every
+ * figure and every branch lives in `duel/shared.tsx`.
  *
  * TWO MODES, ONE SURFACE (#751)
  * -----------------------------
@@ -52,10 +55,10 @@
  */
 import type { } from 'react'
 import type { DuelDetailOut } from '../../api/duel'
-import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
+import DuelSealSheet from './DuelSealSheet'
 import {
   duelSides,
   RaceRoster,
@@ -91,8 +94,6 @@ export function DefaultDuelSealConfirm({
   busy,
   mode = 'submit',
 }: DuelSealConfirmProps) {
-  const formFactor = useFormFactor()
-  const isMobile = formFactor === 'mobile'
   const { me, foe } = duelSides(duel, viewerCharacterId)
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
@@ -102,27 +103,12 @@ export function DefaultDuelSealConfirm({
   const theme: DuelSlotTheme = { accent }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        background: isMobile
-          ? 'var(--color-bg-page)'
-          : 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))',
-      }}
+    <DuelSealSheet
+      label={copy.heading}
+      ground={{ background: 'var(--color-bg-page)' }}
+      card={{ border: `2px solid ${accent}`, borderRadius: 8 }}
     >
-      <div
-        className={`flex flex-col gap-3 p-6 ${
-          isMobile ? 'w-full h-full justify-center' : 'w-full max-w-[420px]'
-        }`}
-        style={{
-          background: 'var(--color-bg-page)',
-          border: isMobile ? 'none' : `2px solid ${accent}`,
-          borderRadius: isMobile ? 0 : 8,
-        }}
-      >
+      <div className="flex flex-col gap-3 p-6">
         <h2
           className="font-display"
           style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}
@@ -179,7 +165,7 @@ export function DefaultDuelSealConfirm({
           theme={theme}
         />
       </div>
-    </div>
+    </DuelSealSheet>
   )
 }
 
@@ -187,15 +173,15 @@ export function DefaultDuelSealConfirm({
  * The dispatcher the composer mounts. Skinned by the TASK's faction (the
  * composer's own archetype is chosen the same way), not the opponent's — the
  * dialog is a piece of the composer, and only its tokens are foreign.
+ *
+ * ONE dispatch, both form factors (#1313). This used to branch on
+ * `useFormFactor()` through a parallel `mobileDuelSeal` surface; the branch is
+ * `DuelSealSheet`'s now, and the slug is the whole story here.
  */
 export default function DuelSealConfirm({
   taskFactionSlug,
   ...props
 }: DuelSealConfirmProps & { taskFactionSlug: string | null | undefined }) {
-  const formFactor = useFormFactor()
-  const Skin =
-    formFactor === 'mobile'
-      ? pickVariant(surfaceMap('mobileDuelSeal'), taskFactionSlug, DefaultDuelSealConfirm)
-      : pickVariant(surfaceMap('duelSeal'), taskFactionSlug, DefaultDuelSealConfirm)
+  const Skin = pickVariant(surfaceMap('duelSeal'), taskFactionSlug, DefaultDuelSealConfirm)
   return <Skin {...props} />
 }
