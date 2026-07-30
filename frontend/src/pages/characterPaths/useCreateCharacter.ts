@@ -48,6 +48,12 @@ export interface CreateCharacterState {
   factionSlug: string
   setFactionSlug: (value: string) => void
   invited: string[]
+  /**
+   * The cropped portrait awaiting upload. Exposed (#1149) because it is the only
+   * honest answer to "has a photo been chosen?" — the file input is cleared as
+   * soon as it hands the file over, so its own `files` list always says no.
+   */
+  avatarFile: File | null
   avatarPreview: string | null
   avatarSource: File | null
   setAvatarSource: (file: File | null) => void
@@ -118,6 +124,7 @@ export function useCreateCharacter(): CreateCharacterState {
     factionSlug,
     setFactionSlug,
     invited,
+    avatarFile,
     avatarPreview,
     avatarSource,
     setAvatarSource,

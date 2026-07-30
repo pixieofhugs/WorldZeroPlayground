@@ -21,7 +21,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * Rows and their selection are the shared box's (ADR-0047 via `scoreBreakdown`);
  * the design files Coven under "the remaining box-pattern factions … follow the
- * Unaffiliated mechanism exactly". Only the presentation is Coven's.
+ * Unaffiliated mechanism exactly". Only the presentation is Coven's. That
+ * includes the base line dropping out when it would only repeat the sticker's
+ * bottom-line total (#1131).
  */
 export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -63,56 +65,62 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         />
       )}
 
-      {/* Base, with the highlighter chip pinned right and counter-rotated. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-xs)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span
+      {/* Base, with the highlighter chip pinned right and counter-rotated. The
+          line is only written when something moved the figure (#1131) — the
+          sticker's bottom line already carries it otherwise — and the chip rides
+          this line, which is safe: a live multiplier is one of the things that
+          keeps the line. */}
+      {base !== null && (
+        <div
           style={{
-            fontFamily: "var(--faction-coven-card-font)",
-            fontWeight: 700,
-            fontSize: "var(--text-xl)",
-            color: "var(--faction-coven-sticker-muted)",
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-xs)",
+            whiteSpace: "nowrap",
           }}
         >
-          {t("card.stamp.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--faction-coven-card-font)",
-            fontWeight: 700,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the sticker's base numeral, the design's 28 (§4a)
-            fontSize: 28,
-            lineHeight: 0.7,
-            color: "var(--faction-coven-card-text)",
-          }}
-        >
-          {base}
-        </span>
-        {mult !== null && (
           <span
             style={{
-              marginLeft: "auto",
               fontFamily: "var(--faction-coven-card-font)",
               fontWeight: 700,
               fontSize: "var(--text-xl)",
-              // Counter-rotation, so the chip reads level on the crooked sticker.
-              transform: "rotate(3deg)",
-              color: "var(--faction-coven-stamp-chip-text)",
-              background: "var(--faction-coven-stamp-chip-bg)",
-              borderRadius: 10,
-              padding: "0 var(--space-sm)",
+              color: "var(--faction-coven-sticker-muted)",
             }}
           >
-            {formatMult(mult)}
+            {t("card.stamp.base")}
           </span>
-        )}
-      </div>
+          <span
+            style={{
+              fontFamily: "var(--faction-coven-card-font)",
+              fontWeight: 700,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the sticker's base numeral, the design's 28 (§4a)
+              fontSize: 28,
+              lineHeight: 0.7,
+              color: "var(--faction-coven-card-text)",
+            }}
+          >
+            {base}
+          </span>
+          {mult !== null && (
+            <span
+              style={{
+                marginLeft: "auto",
+                fontFamily: "var(--faction-coven-card-font)",
+                fontWeight: 700,
+                fontSize: "var(--text-xl)",
+                // Counter-rotation, so the chip reads level on the crooked sticker.
+                transform: "rotate(3deg)",
+                color: "var(--faction-coven-stamp-chip-text)",
+                background: "var(--faction-coven-stamp-chip-bg)",
+                borderRadius: 10,
+                padding: "0 var(--space-sm)",
+              }}
+            >
+              {formatMult(mult)}
+            </span>
+          )}
+        </div>
+      )}
 
       {meta !== null && (
         <div style={workingStyle}>
@@ -120,7 +128,16 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
-      <div style={workingStyle}>{t("card.stamp.fromVotes", { votes })}</div>
+      {/* The tally, always. Its lead belongs to the line above it, so it goes
+          when the base line does (#1131) and the sticker keeps its own padding. */}
+      <div
+        style={{
+          ...workingStyle,
+          marginTop: base !== null ? workingStyle.marginTop : undefined,
+        }}
+      >
+        {t("card.stamp.fromVotes", { votes })}
+      </div>
 
       {/* The dashed rule — the sticker's own edge, run across the middle. */}
       <div

@@ -14,6 +14,7 @@ import {
   BIO_MAX,
   type CreateCharacterState,
 } from './characterPaths/useCreateCharacter'
+import PortraitPicker from './characterPaths/PortraitPicker'
 import DefaultCreateCharacter from './characterPaths/mobileArchetypes/DefaultCreateCharacter'
 
 /**
@@ -50,6 +51,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
     factionSlug,
     setFactionSlug,
     invited,
+    avatarFile,
     avatarPreview,
     avatarSource,
     setAvatarSource,
@@ -105,17 +107,17 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
             <span style={{ color: 'var(--color-text-tertiary)' }}>{t('createCharacter.charsLeft', { count: BIO_MAX - bio.length })}</span>
           </div>
 
-          {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar) */}
+          {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar).
+              The picker owns the hidden input and the "what's chosen" readout (#1149);
+              the credential card on the right opens the same input through fileInputRef. */}
           <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
+          <PortraitPicker
+            inputRef={fileInputRef}
             onChange={handleAvatarChange}
-            className="font-body text-sm"
+            chosenFile={avatarFile}
+            error={avatarError}
             style={{ marginTop: 'var(--space-sm)' }}
           />
-          {avatarError && <p className="font-body content-text text-red-600 mt-1">{avatarError}</p>}
 
           {/* Faction picker — only when the account holds invitations (ADR-0019) */}
           {showPicker && (
