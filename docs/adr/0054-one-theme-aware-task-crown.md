@@ -29,8 +29,17 @@ and glyph no longer follow the card — they follow the global light/dark theme.
   longer holds. There is one rainbow now, the brand palette retired into the na
   spectrum, and brand chrome flips with the theme — so the ring flips too. The rest
   of this decision is untouched: one canonical crown, theme-aware only, with no
-  per-faction recolour. Only the *ring's* theme behaviour changed, and the token
-  itself is re-pointed by #1213 rather than here.
+  per-faction recolour. Only the *ring's* theme behaviour changed.
+  **Carried out by #1213:** `--fdl-rainbow` **no longer exists.** It was the last
+  surviving declaration of the retired brand six — the same hexes as the deleted
+  `--underline-1…6`, resequenced and wrapped to close a ring — and the crown now
+  reads `--faction-default-rainbow-conic`, the site's one rainbow swept as a
+  seam-closed smooth conic. No replacement crown token was minted: the only thing
+  `--fdl-rainbow` added over the na conic was a `from 90deg` start, which placed
+  gold at 3 o'clock in a hue order that is gone, so it was dropped rather than
+  reproduced. Anywhere this ADR or ADR-0028 says `--fdl-rainbow`, read
+  `--faction-default-rainbow-conic`. `--fdl-disc` and `--fdl-glyph` are unaffected
+  and remain the crown's own tokens.
 - Two new theme-aware tokens in `index.css` carry the inner look, and are the ONLY
   thing that varies:
   - `--fdl-disc` — the disc fill: ivory/paper in light, near-black in dark.
@@ -54,3 +63,8 @@ monochrome-per-theme pair for everyone.
   chrome tokens used elsewhere.
 - `SpectrumLaurel` (the character-profile laurel wreath) is a different emblem with a
   different meaning and is untouched — it still recolours per skin.
+- **Since #1213 the crown has no private colour of its own beyond the inner pair.**
+  The ring is the site's shared spectrum, so a re-cut of `--faction-default-stop-*`
+  now repaints the crown along with the nav rule and the page titles. That is the
+  blast radius of one rainbow, and it is deliberate: the crown appears on every
+  faction card, so any stop change owes it a look in both themes.

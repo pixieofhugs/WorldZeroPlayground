@@ -2364,17 +2364,36 @@
      column on narrow viewports (rule below). Every faction skin reuses this. */
 
   /* ── Task Crown ── the per-task top-praxis mark (ADR-0028, amended by
-     ADR-0054). Fixed brand rainbow ring plus ONE canonical inner look: the
-     disc + glyph no longer follow the card, they follow the global theme, so
-     the "one praxis mark" reads as one mark on every faction card. Only the
-     light/dark pair below vary (see components/cards/TaskCrown.tsx). */
-  --fdl-rainbow: conic-gradient(from 90deg, #fbbf24, #f97316, #be185d, #4f46e5, #0e7490, #16a34a, #fbbf24);
+     ADR-0054 and — for the ring's theme behaviour only — by ADR-0066). ONE
+     canonical inner look: the disc + glyph do not follow the card, they follow
+     the global theme, so the "one praxis mark" reads as one mark on every
+     faction card. Only the light/dark pair below vary (see
+     components/cards/TaskCrown.tsx).
+
+     THE RING IS NOT A TOKEN HERE, and that is the point of #1213. It used to be
+     `--fdl-rainbow`, a conic carrying the retired brand six resequenced
+     1→6→2→3→4→5 and wrapped back to 1 — the last surviving declaration of that
+     palette once #1220 deleted `--underline-1…6`. The crown now reads
+     `--faction-default-rainbow-conic` directly: the seam-closed SMOOTH conic
+     added in #1038 for exactly this geometry (a full-circle ring whose last
+     stop is its first, so nothing shows an edge). A token whose entire content
+     is "that other token, turned" is a name pretending to be a value, so
+     nothing was left behind to hold the old `from 90deg` start — it pinned gold
+     to 3 o'clock in a hue sequence that no longer exists, and a plain circular
+     ramp has no feature at any angle for a start offset to place.
+
+     Two consequences. The ring FLIPS with the theme now, which ADR-0054's
+     "fixed brand constant in both themes" clause forbade — amended there, on
+     the #1219 ruling that brand chrome flips. And anything wanting HARD wedges
+     still wants --faction-default-ring; the crown is a prism, not a pinwheel. */
   --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
   --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
 }
 
 /* Task Crown, dark theme: the disc goes near-black, the fleur goes light ink.
-   The rainbow ring (--fdl-rainbow) is a fixed brand constant in both themes. */
+   The ring needs no entry — it reads --faction-default-rainbow-conic, composed
+   from stops this block rebinds, so it brightens on its own (#1220's rule: a
+   composed value needs no dark twin). */
 [data-theme="dark"] {
   --fdl-disc: #1a1712;
   --fdl-glyph: #f0e6d0;
@@ -3348,7 +3367,34 @@
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
    with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
-   faction, so this is a flourish LAYERED over Default, never a repaint. */
+   faction, so this is a flourish LAYERED over Default, never a repaint.
+
+   The wash reads --faction-default-rainbow-loop (#1213) — the spectrum's TILING
+   cut, whose last stop is its first, which is exactly what lets `alb-drift`
+   walk the background 220px and arrive back without a seam. `.alb-task-edge`
+   below already reads that token; this class hand-wrote its own copy of the
+   same idea: five of the seven hues at `rgba(…, .3)`, dropping orange and teal,
+   and in dark two of the five had drifted off the stops outright (#ff6054 for
+   red, #f7c14a for yellow).
+
+   THE INLINE ALPHA was the only thing keeping it off the token, and the alpha
+   does not have to live in the gradient. For an empty blended layer the two
+   places are exactly interchangeable, because the composite is linear in the
+   source alpha and the source alpha is the product of the two:
+
+     Co = αs·(1−αb)·Cs + αs·αb·B(Cb,Cs) + (1−αs)·αb·Cb ,  αs = stop-α × opacity
+
+   so a per-stop .3 under `opacity: .5` composites identically to opaque stops
+   under `opacity: .15`, whatever the sheet beneath it is doing, and .55 under
+   .45 is .2475. Those are the two values below: the product, not a re-tune by
+   eye. This works only because every stop carried the SAME alpha — a ramp whose
+   stops differ in alpha interpolates differently once you flatten it, and
+   moving that into `opacity` would be a repaint.
+
+   What did change, deliberately, is the hue SET: orange and teal rejoin the
+   wash, dark's red and yellow land back on their stops, and eight stops share
+   the same 220px tile where six did — a fuller spectrum in finer stripes. The
+   dark rule keeps only its compositing, since the token flips on its own. */
 @keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
 .alb-rainbow {
   position: absolute;
@@ -3359,16 +3405,15 @@
   transform: rotate(24deg);
   pointer-events: none;
   z-index: 0;
-  background-image: linear-gradient(90deg, rgba(193, 39, 45, 0.3), rgba(202, 138, 4, 0.3), rgba(22, 163, 74, 0.3), rgba(37, 99, 235, 0.3), rgba(190, 24, 93, 0.3), rgba(193, 39, 45, 0.3));
+  background-image: var(--faction-default-rainbow-loop);
   background-size: 220px 100%;
   background-repeat: repeat;
   mix-blend-mode: multiply;
-  opacity: 0.5;
+  opacity: 0.15;
 }
 [data-theme="dark"] .alb-rainbow {
-  background-image: linear-gradient(90deg, rgba(255, 96, 84, 0.55), rgba(247, 193, 74, 0.55), rgba(74, 222, 128, 0.55), rgba(96, 165, 250, 0.55), rgba(244, 114, 182, 0.55), rgba(255, 96, 84, 0.55));
   mix-blend-mode: screen;
-  opacity: 0.45;
+  opacity: 0.2475;
 }
 @media (prefers-reduced-motion: no-preference) {
   .alb-rainbow { animation: alb-drift 18s linear infinite; }

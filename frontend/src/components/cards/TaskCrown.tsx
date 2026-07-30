@@ -11,11 +11,17 @@ import i18n from "../../i18n";
  * glyph, new meaning.
  *
  * ONE canonical look on every faction card (ADR-0054 supersedes ADR-0028's
- * per-card recolour): the rainbow ring is a fixed brand constant
- * (--fdl-rainbow), and the inner disc (--fdl-disc) + glyph (--fdl-glyph) are
+ * per-card recolour): the inner disc (--fdl-disc) + glyph (--fdl-glyph) are
  * theme-aware tokens — identical on every faction, adapting only to light vs
  * dark mode. Callers no longer pass disc/glyph colours; that is the point, so
  * the "one praxis mark" reads as one mark.
+ *
+ * The ring reads --faction-default-rainbow-conic, the site's ONE rainbow swept
+ * as a seam-closed smooth conic (#1213, ADR-0066). It was `--fdl-rainbow`, a
+ * private third copy of the retired brand six; there is no crown-owned rainbow
+ * token any more, because its whole content would have been "the na conic,
+ * turned 90deg". So the ring flips with the theme now — ADR-0054's "fixed brand
+ * constant" clause is amended, and only that clause.
  */
 export interface TaskCrownProps {
   /** Overall medallion diameter, px. */
@@ -55,7 +61,7 @@ export function TaskCrown({
           position: "absolute",
           inset: 0,
           borderRadius: "50%",
-          background: "var(--fdl-rainbow)",
+          background: "var(--faction-default-rainbow-conic)",
           boxShadow: "inset 0 0 0 1px rgba(0,0,0,.2)",
         }}
       />
