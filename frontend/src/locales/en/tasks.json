@@ -2,6 +2,8 @@
   "listPage": {
     "loading": "Loading tasks...",
     "empty": "No tasks match your filters.",
+    "emptyEligible": "No tasks you can sign up for right now.",
+    "bankFull": "Your task bank is full ({{used}}/{{max}}). Finish or abandon a praxis to sign up for more.",
     "loadMore": "Load more",
     "filter": {
       "searchPlaceholder": "Search tasks or players...",
@@ -10,13 +12,15 @@
   },
   "browse": {
     "taskType": "Type",
+    "eligibility": "Show",
+    "allTasks": "All tasks",
+    "canSignUp": "I can sign up",
     "tasks": "Tasks",
     "metatasks": "Metatasks"
   },
   "mobile": {
     "count": "{{count}} shown",
     "allFactions": "All",
-    "anyLevel": "Any",
     "loadError": "Couldn't load tasks."
   },
   "detail": {

@@ -4,11 +4,12 @@ import TaskCard from '../../../components/TaskCard'
 import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import FactionSigilRow from '../../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
+import CanSignUpEmpty from '../CanSignUpEmpty'
 
 /**
  * Default MOBILE task-browse skin — a scannable single-column card list with
  * phone-native filter chips (horizontal-scroll rows for status / faction /
- * level), NOT the desktop sidebar. Consumes the shared `useTasks()` state so a
+ * eligibility), NOT the desktop sidebar. Consumes the shared `useTasks()` state so a
  * chip tap updates the same filter state that keys the task read, and the
  * rendered set changes. The page chrome is faction-agnostic; each card in the
  * results list picks its own skin from its task's faction slug (#565). Mirrors
@@ -33,15 +34,14 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     error,
     factions,
     statusFilters,
-    levelFilters,
     taskType,
     setTaskType,
     status,
     setStatus,
     faction,
     setFaction,
-    level,
-    setLevel,
+    canSignUp,
+    setCanSignUp,
     query,
     setQuery,
     hasMore,
@@ -105,19 +105,17 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         <FactionSigilRow factions={factions} value={faction} onChange={setFaction} />
       </div>
 
-      {/* Level chips — the range comes from the era's level ladder (#1046), so
-          the row is hidden until /game-config lands rather than showing a lone
-          "any level" chip with nothing to narrow to. */}
-      {levelFilters.length > 0 && (
-        <ChipRow label={tc('filters.level')}>
-          <Chip on={level === ''} onClick={() => setLevel('')}>
-            {t('mobile.anyLevel')}
+      {/* Eligibility chips (#1130), replacing the level row. Hidden when logged
+          out — the server answers `[]` for an anonymous viewer, so the chip
+          could only ever empty the page. */}
+      {user && (
+        <ChipRow label={t('browse.eligibility')}>
+          <Chip on={!canSignUp} onClick={() => setCanSignUp(false)}>
+            {t('browse.allTasks')}
           </Chip>
-          {levelFilters.map((lvl) => (
-            <Chip key={lvl} on={level === lvl} onClick={() => setLevel(level === lvl ? '' : lvl)}>
-              {tc('filters.levelAtLeast', { level: lvl })}
-            </Chip>
-          ))}
+          <Chip on={canSignUp} onClick={() => setCanSignUp(true)}>
+            {t('browse.canSignUp')}
+          </Chip>
         </ChipRow>
       )}
 
@@ -138,7 +136,13 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
             {t('mobile.loadError')}
           </p>
         ) : tasks.length === 0 ? (
-          <p className="font-body text-muted">{t('listPage.empty')}</p>
+          /* A full task bank empties the eligible list wholesale, so the empty
+             state has to name it rather than blame the filters. */
+          canSignUp ? (
+            <CanSignUpEmpty />
+          ) : (
+            <p className="font-body text-muted">{t('listPage.empty')}</p>
+          )
         ) : (
           <div className="flex flex-col gap-3">
             {isMetatask ? (

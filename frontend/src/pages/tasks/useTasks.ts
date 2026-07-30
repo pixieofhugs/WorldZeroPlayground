@@ -4,7 +4,7 @@
  * one source of truth (mirrors useTaskDetail for the detail page).
  *
  * The factions/factionConfigs reads (both app-wide cached hooks), the
- * status/faction/level filter
+ * status/faction/eligibility filter
  * state, the task read keyed on those filters + the viewer's character id, and
  * the signup → navigate-to-edit handler with its inline message. The free-text search (#661) rides
  * alongside them, debounced 200ms via `useDebouncedValue` — the idiom #644 set on
@@ -14,9 +14,12 @@
  * window (#645): filter setters (search included) reset the window and a full
  * page exposes "load more".
  *
- * The level filter's OPTIONS are not state — they are derived from the live
- * era's `level_thresholds` off the same `/game-config` payload the faction
- * modifiers ride on (#1046), never a hardcoded range. See `./levelFilters.ts`.
+ * The level filter is gone (#1130). It selected `level_required >= level` — the
+ * tasks you are locked OUT of — and no level number could express WOW's
+ * once-a-level jump or the Ephemerists' retired-task access, so both abilities
+ * were invisible in the browse. `canSignUp` asks the server the question the
+ * game actually answers; every rule stays backend-side, so nothing here reads
+ * an era value and #1046's "never hardcode an EraConfig value" is not reopened.
  */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -32,7 +35,6 @@ import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/poin
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
-import { levelFiltersFromThresholds } from './levelFilters'
 import type { CurrentUser } from '../../api/auth'
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
@@ -56,12 +58,6 @@ export interface TasksState {
   // Reference data
   factions: FactionOut[]
   factionConfigs: FactionConfigOut[]
-  /**
-   * The level values the filter offers, derived from the live era's
-   * `level_thresholds` rather than a literal (#1046). Empty until
-   * `/game-config` lands — callers hide the control while it is.
-   */
-  levelFilters: number[]
   statusFilters: string[]
 
   // Filter state (setters reset the growing window).
@@ -76,8 +72,15 @@ export interface TasksState {
   setStatus: (status: string) => void
   faction: string
   setFaction: (faction: string) => void
-  level: number | ''
-  setLevel: (level: number | '') => void
+  /**
+   * "Tasks I can sign up for" (#1130). Defaults OFF — the tasks page is a
+   * catalogue, and hiding most of it by default would make tasks look scarce
+   * and tie first paint to auth resolving (against #1229). Callers hide the
+   * control entirely when logged out: the server answers `[]` for an anonymous
+   * viewer, so it is a control that cannot work.
+   */
+  canSignUp: boolean
+  setCanSignUp: (canSignUp: boolean) => void
   /** Raw search box value (bind directly); the fetch reads a debounced copy (#661). */
   query: string
   setQuery: (query: string) => void
@@ -113,15 +116,14 @@ export function useTasks(): TasksState {
   // (#1141) — both from shared module caches, derived rather than mirrored into
   // local `useState`s.
   // Both slices are empty until it lands, which is what they were before: the
-  // faction modifier settles at 1.0 and the level filter stays hidden (#1046).
+  // faction modifier settles at 1.0.
   const factions: FactionOut[] = useFactions() ?? []
   const gameConfig = useGameConfig()
   const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
-  const levelThresholds = gameConfig?.level_thresholds ?? []
   const [taskType, setTaskTypeState] = useState<TaskType>('standard')
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
-  const [level, setLevelState] = useState<number | ''>('')
+  const [canSignUp, setCanSignUpState] = useState(false)
   const [query, setQueryState] = useSearchQueryParam()
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
 
@@ -138,14 +140,16 @@ export function useTasks(): TasksState {
         task_type: taskType === 'metatask' ? 'metatask' : undefined,
         status: status === 'All' ? undefined : status,
         faction: faction || undefined,
-        level: level === '' ? undefined : level,
+        // Omitted rather than sent as false so the query key stays the shape it
+        // had before the filter existed.
+        can_sign_up: canSignUp || undefined,
         q: trimmedQuery || undefined,
         // The server excludes the authenticated viewer's own started tasks by
         // default (#1229). Echoing the character id back here added an
         // auth-dependent dep that made the page fetch twice.
         limit,
       }),
-    [taskType, status, faction, level, trimmedQuery],
+    [taskType, status, faction, canSignUp, trimmedQuery],
     PAGE_LIMIT,
   )
   const tasks = data ?? []
@@ -155,7 +159,7 @@ export function useTasks(): TasksState {
   const setTaskType = (next: TaskType) => { setTaskTypeState(next); resetWindow() }
   const setStatus = (next: string) => { setStatusState(next); resetWindow() }
   const setFaction = (next: string) => { setFactionState(next); resetWindow() }
-  const setLevel = (next: number | '') => { setLevelState(next); resetWindow() }
+  const setCanSignUp = (next: boolean) => { setCanSignUpState(next); resetWindow() }
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
 
   const handleSignup = async (id: number) => {
@@ -196,7 +200,6 @@ export function useTasks(): TasksState {
 
     factions,
     factionConfigs,
-    levelFilters: levelFiltersFromThresholds(levelThresholds),
     statusFilters,
 
     taskType,
@@ -205,8 +208,8 @@ export function useTasks(): TasksState {
     setStatus,
     faction,
     setFaction,
-    level,
-    setLevel,
+    canSignUp,
+    setCanSignUp,
     query,
     setQuery,
 
