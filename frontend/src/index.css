@@ -67,18 +67,24 @@
      the half that mattered most: every hand-written rgba() used the light
      deep-red 220,38,38 (or, for warning, an amber 245,158,11 that is not even
      the token) in BOTH themes, so on the dark page a 5% deep red over near-black
-     was invisible. The dark veil also lifts to 0.14, because a bright red at 8%
-     over #13121a is a fainter signal than a deep red at 8% over #f7f4ee.
+     was invisible. The dark veil lifts to 0.14 for that reason — a bright hue at
+     5% over #13121a is a fainter signal than a deep one at 5% over #f7f4ee.
 
-     None of the three is a text pairing: the edge and the ring are drawn marks,
-     and the veil's ink is `--color-danger` / `--color-warning` themselves, whose
-     debt on the app's own page (4.40:1 light) is the pre-existing global-ink
-     failure §3 records — the veil moves it 0.5 and does not create it. */
+     None of the three is a text pairing: the edge and the ring are drawn marks
+     carrying no words. The VEIL does sit under text, and its ink is
+     `--color-danger` / `--color-warning` themselves — a pairing that fails in
+     LIGHT before any veil is laid (the red is 4.40:1 on the bare page), which is
+     the pre-existing global-ink debt §3 records and #694 routed per faction.
+     That is why the light alpha is 0.05 rather than a midpoint of the eleven:
+     it is the value six of the ten danger sites already carried, so the tightest
+     existing readings move by <= 0.13 and the debt is neither created nor
+     deepened here. Fixing it means routing those badges to a per-sheet notice
+     ink the way the seal dialogs were, which is a different issue. */
   --color-on-danger: #ffffff; /* #dc2626 — 4.83:1 */
-  --color-danger-veil: rgba(220, 38, 38, 0.08);
+  --color-danger-veil: rgba(220, 38, 38, 0.05);
   --color-danger-edge: rgba(220, 38, 38, 0.3);
   --color-danger-ring: rgba(220, 38, 38, 0.5);
-  --color-warning-veil: rgba(180, 83, 9, 0.08);
+  --color-warning-veil: rgba(180, 83, 9, 0.05);
   --color-warning-edge: rgba(180, 83, 9, 0.3);
   --color-warning-ring: rgba(180, 83, 9, 0.5);
 
