@@ -197,7 +197,12 @@ export default function DefaultPraxisDetail({
   if (!praxis) return null
 
   const members = orderedMembers(praxis)
-  const isCollab = members.length > 1
+  // A collab is a collab at ONE member (#1274). This used to read
+  // `members.length > 1`, which hid the whole Members section from a collab
+  // nobody had joined yet while the heading still counted them. Tested
+  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
+  // `!== 'solo'` would put a roster on every duel (#992).
+  const isCollab = praxis.type === 'collab'
   // The shared banners already draw the roster while a collab is still
   // resolving (`in_progress` / `pending`). The Members section below is the
   // PUBLISHED half of that same fact, so it takes the complement — one roster
@@ -649,6 +654,8 @@ export default function DefaultPraxisDetail({
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.members'))}
       <CollabRoster
+        praxisType={praxis.type}
+        invites={praxis.invites}
         members={praxis.members}
         currentCharacterId={state.user?.character?.id ?? null}
         factionSlug={praxis.task_faction_slug}

@@ -253,8 +253,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   if (!praxis) return null;
 
   const members = orderedMembers(praxis);
-  // `CollabRoster` returns null below two members, so this only gates the head.
-  const isCollab = members.length > 1;
+  // A collab is a collab at ONE member (#1274). This used to read
+  // `members.length > 1` under a note that it "only gates the head", because
+  // `CollabRoster` then returned null below two members and drew nothing inside
+  // the stock insert. Both halves are gone: the roster gates on TYPE now, so
+  // this gates the head AND a section with an `awaiting` roster in it. Tested
+  // POSITIVELY — a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
+  // `!== 'solo'` would put a roster on every duel (#992).
+  const isCollab = praxis.type === "collab";
 
   /** Special Elite, uppercase, wide — every micro-label on the wall. */
   const eyebrow: CSSProperties = {
@@ -774,6 +780,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         }}
       >
         <CollabRoster
+          praxisType={praxis.type}
+          invites={praxis.invites}
           members={praxis.members}
           currentCharacterId={state.user?.character?.id ?? null}
           factionSlug={praxis.task_faction_slug}

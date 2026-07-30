@@ -661,7 +661,9 @@ export default function PraxisWaitingSurface({
                lapsed window, where the roster would otherwise offer to hurry a
                member whose part is no longer wanted. */
             <CollabRoster
+              praxisType={praxis.type}
               members={praxis.members}
+              invites={praxis.invites}
               currentCharacterId={state.currentCharacterId}
               factionSlug={slug}
               taskPointValue={praxis.task_point_value}
