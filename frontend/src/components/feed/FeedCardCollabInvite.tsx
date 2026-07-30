@@ -13,7 +13,7 @@ import {
   leavePraxis,
 } from "../../api/praxis";
 import { extractError } from "../../utils/errors";
-import { factionColor, factionFill, isKnownFaction } from "../../utils/factions";
+import { factionFill } from "../../utils/factions";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
@@ -42,11 +42,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
     task_level_required,
     inviter_character_id,
   } = item.payload;
-  const actorColor = factionColor(item.actor_faction_slug);
-  // na actors get the spectrum, real factions keep their tinted disc (ADR-0039).
-  const actorAvatarFill = isKnownFaction(item.actor_faction_slug)
-    ? { background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)` }
-    : factionFill(item.actor_faction_slug, "dot");
+  // na actors get the spectrum, real factions their tinted disc (ADR-0039) —
+  // one call now, with the branch living on the shape rather than here (#1269).
+  const actorAvatarFill = factionFill(item.actor_faction_slug, "disc");
   const navigate = useNavigate();
 
   const { user } = useAuth();

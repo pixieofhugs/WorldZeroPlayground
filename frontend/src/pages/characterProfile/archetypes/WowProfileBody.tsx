@@ -132,7 +132,7 @@ const kit: ProfileKit = {
     </div>
   ),
   nameSize: 48,
-  playerEyebrow: 'Warriors of Whimsy · the Court',
+  playerEyebrow: (faction) => `${faction} · the Court`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: PLATE,

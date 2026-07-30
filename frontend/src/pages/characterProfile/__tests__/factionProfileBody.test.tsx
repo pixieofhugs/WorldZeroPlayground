@@ -15,6 +15,7 @@ import FactionProfileBody, {
   type ProfileBodyProps,
 } from "../FactionProfileBody";
 import { surfaceMap } from "../../../factions";
+import { factionName } from "../../../utils/factions";
 
 function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
   return {
@@ -111,6 +112,32 @@ describe("FactionProfileBody dispatch", () => {
         expect(html, `${slug} is not labelled faction-pending`).not.toContain(
           "faction pending",
         );
+      }
+    }
+  });
+
+  it("never names another faction in a bespoke profile skin (#1291)", () => {
+    // The seam is the rendered markup. Every one of these skins was ported from
+    // another faction's design template, and a template port carries CONTENT
+    // across as easily as it carries geometry — Coven's identity eyebrow read
+    // "Player · Warriors of Whimsy" for exactly that reason. A per-faction body
+    // that names a DIFFERENT faction is always a bug, so this is one loop over
+    // the registry rather than one assertion per skin: the next port is covered
+    // the moment its manifest row lands.
+    const slugs = Object.keys(surfaceMap("profileBody"));
+    const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    for (const slug of slugs) {
+      const text = renderBody({ faction_slug: slug }).replace(/<[^>]*>/g, " ");
+      for (const other of slugs) {
+        if (other === slug) continue;
+        const name = factionName(other);
+        // Letter boundaries, not a bare substring: `names.ua` is "UA", which
+        // would otherwise match inside any all-caps word containing it.
+        const mention = new RegExp(`(?<![A-Za-z])${escape(name)}(?![A-Za-z])`);
+        expect(
+          mention.test(text),
+          `${slug} profile names ${other} ("${name}")`,
+        ).toBe(false);
       }
     }
   });

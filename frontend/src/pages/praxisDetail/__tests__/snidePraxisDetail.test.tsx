@@ -382,6 +382,28 @@ describe("S.N.I.D.E. praxis detail — the dress traps", () => {
     expect(render(state()).text).toContain("Walked the whole ridge before dark.");
   });
 
+  it("heads sections with the censor rule and closes no box with it", () => {
+    // #1285, the praxis twin of #1145. The rule is a section-head ornament: it
+    // runs out of a slab headline and separates the head from what follows. A
+    // fifth used to hang off the FOOT of the write-up panel on `marginTop`,
+    // where it separated the last line of the body from the box's own edge a
+    // few pixels down — i.e. from nothing.
+    const { html } = render(state());
+    // One rule per non-plate section head on a solo, visible praxis: proof,
+    // write-up, who-voted, discussion. The score and vote heads sit ON the
+    // black plate and take the broken ACID rule instead, which is a different
+    // ornament and deliberately not counted here.
+    expect(html.split("snd-censor").length - 1).toBe(4);
+    // …and the count alone can be rebalanced. Pin the SHAPE too: the first rule
+    // after the body text must belong to the next section's head, so it has to
+    // trail that heading's label rather than sit between the body and the edge.
+    const body = "Walked the whole ridge before dark.";
+    const afterBody = html.slice(html.indexOf(body) + body.length);
+    expect(afterBody.indexOf("snd-censor")).toBeGreaterThan(
+      afterBody.indexOf("Who voted"),
+    );
+  });
+
   it("mounts ONE score readout and invents no arithmetic", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
