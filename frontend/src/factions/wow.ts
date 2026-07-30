@@ -32,6 +32,17 @@
  * chronicle: two chromes on one palette, deliberately unalike (#785's "the
  * praxis card mirrors the task card" clause is retired for WOW).
  *
+ * #1204 REDRESSES those last two on one sheet — "Warrior of Whimsy Comment +
+ * Update Cards" (epic #1192). Both rows are unchanged; the components behind
+ * them are not. `feedFrame` stopped being a `{ children }` wrapper and became
+ * THE CHRONICLE PROCLAMATION, a chassis drawing the kicker, the tag, the time
+ * and the archive control (`FeedFrameProps`, #1194); `comment` follows the same
+ * sheet, so the counsel now wears the proclamation's own chrome — barber ribbon,
+ * 2px gold frame, radius 9 — instead of v1's plum-ruled slip. The herald's-
+ * dispatch masthead is gone with it: `kicker` is a card's only kind label. Not a
+ * word of that sheet's dialect ships; the epic's copy spec is the Unaffiliated
+ * sheet and the faction carries identity in dress alone.
+ *
  * #1037 adds the desktop `taskDetail` — THE PARCHMENT FIELD: gold-and-plum
  * parchment under a dot texture, bunting across the head, a struck points
  * plaque, wavy gold→plum rules and a bunch of googly balloons. It is the first
