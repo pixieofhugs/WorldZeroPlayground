@@ -126,7 +126,7 @@ const BORDER = "var(--faction-default-border)";
 const HAIR = "var(--faction-default-composer-hair)";
 const ON_ACCENT = "var(--faction-default-on-accent)";
 /* The seven wedges, for both marks. */
-const RING = "var(--faction-default-ring)";
+const RING = "var(--faction-default-rainbow-conic)";
 /* The masthead band is the LOOP cut, not the seven-stop bar ramp the design
  * literal shows. `ep-edge` walks background-position across a 300%-wide band, so
  * the paint has to tile: the bar ramp's red-at-0% meets magenta-at-100% and

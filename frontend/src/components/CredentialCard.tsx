@@ -146,7 +146,7 @@ export default function CredentialCard({
             // Unaffiliated wears the spectrum ring (all paths open, ADR-0039);
             // themed factions keep their accent hoop. Conic ramp is the
             // round-ring geometry — NOT --faction-default-rainbow (a bar ramp).
-            background: skinned ? 'var(--fc-accent)' : 'var(--faction-default-ring)',
+            background: skinned ? 'var(--fc-accent)' : 'var(--faction-default-rainbow-conic)',
             border: 'none',
             cursor: onAvatarClick ? 'pointer' : 'default',
             boxShadow: '0 4px 14px rgba(0,0,0,0.18)',

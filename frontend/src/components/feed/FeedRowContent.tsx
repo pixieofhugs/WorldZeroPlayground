@@ -95,7 +95,7 @@ export default function FeedRowContent({
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  background: 'var(--faction-default-ring)',
+                  background: 'var(--faction-default-rainbow-conic)',
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the drawn ring stroke, not spacing
                   padding: 2,
                   boxSizing: 'border-box',

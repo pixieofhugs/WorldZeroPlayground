@@ -46,9 +46,23 @@ const RAINBOW = [
 /**
  * One wedge of the seal's ring, in degrees. Derived rather than written down:
  * the ring is a hard-wedge conic with one wedge per stop, so a stop added or
- * removed must not leave a gap. This is deliberately NOT
- * `--faction-default-ring` — that token is the same seven wedges, but #1127 is
- * collapsing it into the smooth conic, and the seal wants edges.
+ * removed must not leave a gap.
+ *
+ * The seal composes its wedges here rather than reading a token because there is
+ * no wedge token left to read: #1127 deleted the hard-wedge conic and pointed
+ * every circular na surface at the smooth `--faction-default-rainbow-conic`,
+ * after all seven light stops turned out to sit inside a 0.184 luminance band —
+ * hard edges between near-equal values merge, so the wedges read as one band.
+ *
+ * This seal keeps its edges anyway, and the difference is real rather than a
+ * grandfathering. The wedge boundaries here ARE landmarks, which is why the seal
+ * can legitimately start at `from -60deg` and place a hue deliberately; a
+ * seam-closed smooth ramp has no feature at any angle for an offset to place,
+ * which is the same reasoning that retired the Task Crown's `from 90deg`
+ * (#1213). A surface that genuinely wants wedges composes them from
+ * `--faction-default-stop-*`, as this one does — cheap since #1220 made the
+ * stops indexable, and better than the file carrying a second gradient token
+ * for a single caller.
  */
 const SEAL_WEDGE_DEGREES = 360 / RAINBOW.length
 

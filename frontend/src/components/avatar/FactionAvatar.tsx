@@ -10,8 +10,8 @@ import DefaultSigil from '../cards/DefaultSigil'
  * Per-faction avatar + membership-badge dispatcher (Tier-3 surface). Keyed by
  * the character's MEMBER faction (character.faction_slug). The default below is
  * the UNAFFILIATED / no-faction (`na`) skin (#418): the portrait/monogram inside
- * a thin spectrum ring, tagged with the seven-segment sigil — every path still
- * open. All colours via --faction-default-* tokens; flips light/dark.
+ * a thin spectrum ring, tagged with the spectrum sigil — every path still open.
+ * All colours via --faction-default-* tokens; flips light/dark.
  */
 export interface FactionAvatarProps {
   character: CharacterOut
@@ -32,7 +32,13 @@ function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
     <span style={{ position: 'relative', display: 'inline-block', width: dim, height: dim }}>
-      {/* spectrum ring around the portrait / monogram */}
+      {/*
+        Spectrum ring around the portrait / monogram. CONIC, not the 90deg linear
+        ramp: this is a disc, and a left-to-right ramp smears the spectrum across
+        it instead of sweeping it round. It read the linear ramp until #1127,
+        which was the one na circle in the app not taking a conic (the sigil, the
+        sidebar ring, the switcher and every profile ring all did).
+      */}
       <span
         style={{
           display: 'block',
@@ -42,7 +48,7 @@ function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
           // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the spectrum ring's drawn stroke width, not spacing; a rung doubles the ring.
           padding: 2,
           boxSizing: 'border-box',
-          background: 'var(--faction-default-rainbow)',
+          background: 'var(--faction-default-rainbow-conic)',
         }}
       >
         {character.avatar_url ? (

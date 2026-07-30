@@ -130,7 +130,9 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     <div className="py-8" style={{ maxWidth: 640, margin: '0 auto' }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
 
-        {/* ── Hero band — spectrum, always unaffiliated skin ── */}
+        {/* ── Hero band — spectrum, always unaffiliated skin. A rounded BAND, so
+             it keeps the 90deg linear ramp; only the circular portrait ring
+             below takes the conic (#1127). ── */}
         <div style={{ borderRadius: 12, padding: 'var(--space-xs)', background: 'var(--faction-default-rainbow)' }}>
           <div
             style={{
@@ -170,7 +172,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
                 borderRadius: '50%',
                 padding: 'var(--space-xs)',
                 boxSizing: 'border-box',
-                background: 'var(--faction-default-rainbow)',
+                background: 'var(--faction-default-rainbow-conic)',
                 flexShrink: 0,
               }}
             >

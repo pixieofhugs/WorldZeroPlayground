@@ -249,13 +249,13 @@
   --faction-default-stop-6: #2563eb; /* blue */
   --faction-default-stop-7: #be185d; /* magenta */
   --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-ring: conic-gradient(var(--faction-default-stop-1) 0 51deg, var(--faction-default-stop-2) 0 103deg, var(--faction-default-stop-3) 0 154deg, var(--faction-default-stop-4) 0 206deg, var(--faction-default-stop-5) 0 257deg, var(--faction-default-stop-6) 0 309deg, var(--faction-default-stop-7) 0 360deg);
   /* The bar ramp stood on end (#983), for a vertical RULE — the left-edge
      accent a feed row, a quoted block or a callout draws. Same seven stops,
      same cut, 180deg: a rule is ~3px wide and tens of px tall, so the 90deg
      ramp above would spend the whole spectrum across those 3px (≈0.4px a
-     stop) and read as one muddy smear, exactly the failure --faction-default-ring
-     exists to avoid on a 10px dot. Ramps are cut for their geometry. */
+     stop) and read as one muddy smear, exactly the failure
+     --faction-default-rainbow-conic exists to avoid on a 10px dot. Ramps are
+     cut for their geometry. */
   --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
   /* The same spectrum cut to TILE (#1023). Its last stop is its first, so a
      surface that scrolls its background-position loops without a seam — which
@@ -265,9 +265,38 @@
      card edge reads it today. */
   --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   /* The loop bent into a circle (#1038): the same seamless cut, swept as a
-     SMOOTH conic. Deliberately not --faction-default-ring above, which is the
-     vote widget's seven HARD wedges — a pinwheel, not a prism. Anything that
-     turns wants this one; anything that counts wants the wedges. */
+     SMOOTH conic. THE ONE na CONIC — every circular na surface reads this, from
+     the 8px avatar badge sigil to the 58px sidebar ring.
+
+     It used to have a hard-wedge twin, --faction-default-ring, and this comment
+     used to defend the split as "the vote widget's seven HARD wedges — a
+     pinwheel, not a prism". No vote component ever read that token, so the
+     defence named a consumer that did not exist; #1127 deleted the token and
+     pointed its twenty-odd consumers here.
+
+     What actually killed the wedges is the light palette, not the duplication.
+     All seven light stops sit inside a WCAG-luminance band of 0.184 (mean
+     adjacent ΔL 0.069): the hue varies, the value barely does, so seven
+     hard-edged wedges of near-equal value read as one dark band. Dark has
+     nearly double the spread (0.347) and the same ring read correctly there —
+     which is why this only ever got reported in light mode. A smooth sweep has
+     no edges to fail to distinguish, so the failure mode is gone rather than
+     tuned.
+
+     Two things that follow, and the second is easy to get backwards:
+
+     A smooth seam-closed ramp takes NO `from <angle>`. There is no landmark
+     anywhere on it for an offset to place — that is the same reasoning that
+     retired the Task Crown's `from 90deg` in #1213.
+
+     But hard wedges are NOT a mistake in general: their boundaries ARE
+     landmarks, so a wedge ring can legitimately be started at an angle. The one
+     surface that genuinely wants edges — the level-up seal — builds its own
+     conic inline from --faction-default-stop-*, with `from -60deg` and
+     `360 / 7` per wedge, and it is right to. Since #1220 made the stops
+     indexable that is the cheaper shape anyway: a surface that wants wedges
+     composes them, rather than the file carrying a second gradient token for
+     one caller. */
   --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
@@ -1849,7 +1878,6 @@
   --faction-default-stop-6: #60a5fa; /* blue */
   --faction-default-stop-7: #f472b6; /* magenta */
   --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-ring: conic-gradient(var(--faction-default-stop-1) 0 51deg, var(--faction-default-stop-2) 0 103deg, var(--faction-default-stop-3) 0 154deg, var(--faction-default-stop-4) 0 206deg, var(--faction-default-stop-5) 0 257deg, var(--faction-default-stop-6) 0 309deg, var(--faction-default-stop-7) 0 360deg);
   --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
   --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
@@ -2437,8 +2465,11 @@
 
      Two consequences. The ring FLIPS with the theme now, which ADR-0054's
      "fixed brand constant in both themes" clause forbade — amended there, on
-     the #1219 ruling that brand chrome flips. And anything wanting HARD wedges
-     still wants --faction-default-ring; the crown is a prism, not a pinwheel. */
+     the #1219 ruling that brand chrome flips. And the crown is a prism, not a
+     pinwheel — anything wanting HARD wedges now composes them from
+     --faction-default-stop-*, the way the level-up seal does. #1127 deleted the
+     wedge token this used to point at, once the light palette proved it could
+     not hold an edge; the reasoning is on --faction-default-rainbow-conic. */
   --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
   --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
 }

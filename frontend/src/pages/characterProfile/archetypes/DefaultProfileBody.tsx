@@ -77,7 +77,7 @@ function FdlLaurel() {
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
-          background: 'var(--faction-default-ring)',
+          background: 'var(--faction-default-rainbow-conic)',
         }}
       />
       <span
@@ -125,7 +125,7 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
           borderRadius: '50%',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
           padding: 2.5,
-          background: 'var(--faction-default-ring)',
+          background: 'var(--faction-default-rainbow-conic)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -306,7 +306,7 @@ export default function DefaultProfileBody({
                   height: 36,
                   borderRadius: '50%',
                   flex: 'none',
-                  background: 'var(--faction-default-ring)',
+                  background: 'var(--faction-default-rainbow-conic)',
                   WebkitMask: 'radial-gradient(circle, transparent 38%, #000 40%)',
                   mask: 'radial-gradient(circle, transparent 38%, #000 40%)',
                 }}
