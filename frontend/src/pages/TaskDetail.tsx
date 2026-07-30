@@ -1,7 +1,7 @@
 /**
  * Task detail dispatcher.
  *
- * Loads task + submissions + signups once via `useTaskDetail(id)` and selects
+ * Loads task + submissions once via `useTaskDetail(id)` and selects
  * the right faction-archetype page based on `task.primary_faction_slug`. Every
  * archetype consumes the same `TaskDetailState`; only the visual treatment
  * differs. Mirrors the EditPraxis dispatcher. Surface #10 in

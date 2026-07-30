@@ -122,7 +122,11 @@ const FIELD = "var(--faction-coven-ward-page)";
 const INK = "var(--faction-coven-slip-ink)";
 const SOFT = "var(--faction-coven-slip-soft)";
 const LABEL = "var(--faction-coven-slip-label)";
-const DEEP = "var(--faction-coven-slip-deep)"; /* the design's accentDeep */
+/* the design's accentDeep. ORNAMENT AND RULES ONLY on this surface: everything
+   painted on FIELD is on the ward PAGE ground, where `slip-deep` measures
+   4.44:1 — under the floor for anything below the 3:1 large-text size (#1295).
+   The composer's active-state ink is INK; see the tier note in covenSlip.tsx. */
+const DEEP = "var(--faction-coven-slip-deep)";
 const PINK = "var(--faction-coven-slip-pk)"; /* the design's accent */
 const GOLD = "var(--faction-coven-slip-gold)";
 const BORDER = "var(--faction-coven-slip-border)";
@@ -587,7 +591,12 @@ export default function CovenEditPraxis({ state }: Props) {
   );
 
   const dress: ComposerDress = {
-    accent: DEEP,
+    // INK, not DEEP (#1295). `PraxisWaitingSurface` paints `accent` as 12px
+    // LABEL text — the duel side's sealed/writing pill and the nudge button —
+    // on a panel this skin grounds in FIELD, i.e. the ward PAGE. That is the
+    // one ground `slip-deep` misses (4.44:1). The accent is also a border and a
+    // ring stroke there, and INK clears the 3:1 graphic floor just as easily.
+    accent: INK,
     pageStyle: { fontFamily: CHROME, color: INK },
     breadcrumbInk: LABEL,
     sheetStyle,
@@ -788,7 +797,9 @@ export default function CovenEditPraxis({ state }: Props) {
                     borderRadius: 999,
                     border: active ? RULE : "1.5px solid transparent",
                     background: active ? FIELD : "transparent",
-                    color: active ? DEEP : LABEL,
+                    // The active chip is filled with FIELD, i.e. the ward PAGE
+                    // ground, so its ink is INK rather than DEEP (#1295).
+                    color: active ? INK : LABEL,
                   }),
               }}
             />
@@ -813,7 +824,8 @@ export default function CovenEditPraxis({ state }: Props) {
                   },
                   toolbarButtonStyle: {
                     background: FIELD,
-                    color: DEEP,
+                    // Label-sized text on the ward PAGE ground — INK (#1295).
+                    color: INK,
                     border: RULE,
                     borderRadius: 8,
                   },

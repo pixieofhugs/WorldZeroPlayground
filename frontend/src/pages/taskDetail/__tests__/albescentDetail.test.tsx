@@ -27,7 +27,7 @@ import "../../../i18n";
 import AlbescentTaskDetail from "../archetypes/AlbescentTaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TITLE = "Sit with something until it turns pale";
 const BRIEF =
@@ -76,23 +76,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Ossuary Pete",
-  avatar_url: "",
-  faction_slug: "albescent",
-  level: 7,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -197,11 +186,8 @@ describe("Albescent task detail — Default plus the light", () => {
     expect(lifted).toContain("23");
   });
 
-  it("renders no in-progress roster — the header count is the whole story", () => {
-    const { text } = render(
-      <AlbescentTaskDetail state={baseState({ signups: [SIGNUP] })} />,
-    );
-    expect(text).not.toContain("Ossuary Pete");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<AlbescentTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("6");
   });

@@ -16,6 +16,27 @@ class MediaItemOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MediaUploadResultOut(BaseModel):
+    """One file in, one entry out — the per-file outcome of a batch media upload.
+
+    ``POST /praxes/{id}/media/batch`` is deliberately partial-success: a file the
+    pipeline rejects fails only itself, so the response cannot be a bare list of
+    survivors. Exactly one of ``media_item`` / ``error`` is populated.
+
+    ``filename`` is the *client-supplied* name, echoed verbatim and never
+    sanitized, because the composer reports upload failures by the name the
+    player recognises (``forms:editPraxis.errors.upload`` interpolates
+    ``{ name: file.name }``). ``status_code`` carries the status the single-file
+    route would have returned for that file (413 too large, 422 unsupported
+    type, 500 unwritable) so the client can branch without parsing prose.
+    """
+
+    filename: str
+    media_item: Optional[MediaItemOut] = None
+    error: Optional[str] = None
+    status_code: Optional[int] = None
+
+
 class PraxisMemberOut(BaseModel):
     id: int
     praxis_id: int

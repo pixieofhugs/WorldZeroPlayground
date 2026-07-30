@@ -1,5 +1,6 @@
 import api from './axios'
 import { notifyRequestsChanged } from '../utils/requestsBus'
+import { clearVoteOverrides } from '../components/vote/voteOverrides'
 
 // ---------------------------------------------------------------------------
 // Types — match backend schemas/duel.py exactly (ADR-0011)
@@ -72,6 +73,15 @@ export async function getDuel(duelId: number): Promise<DuelOut> {
 
 export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
   const { data } = await api.get<DuelDetailOut>(`/duels/${duelId}/detail`)
+  // Server truth for BOTH sides' `points_from_votes` — retire any local override
+  // so the duel merge can't double-count it (#1239). This payload is merged
+  // into, so it clears alongside the praxis and votes fetches; an override that
+  // outlived its payload would keep masking another player's vote.
+  clearVoteOverrides(
+    [data.challenger.praxis_id, data.opponent.praxis_id].filter(
+      (praxisId): praxisId is number => praxisId != null,
+    ),
+  )
   return data
 }
 
