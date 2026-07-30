@@ -47,7 +47,7 @@ settled law, not a trial.
 ## Consequences
 
 - Task cards are one responsive component per faction. Adding or changing a faction's
-  task card is one file under `components/cards/`, not two.
+  task card is one file under `components/taskCard/`, not two.
 - The `mobileTaskCard` surface no longer exists. A faction cannot register against it,
   and `SURFACE_KEYS` no longer advertises a surface nothing dispatches.
 - ADR-0035's reasoning still governs every OTHER mobile surface — task *detail*, praxis

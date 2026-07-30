@@ -2571,7 +2571,7 @@
      canonical inner look: the disc + glyph do not follow the card, they follow
      the global theme, so the "one praxis mark" reads as one mark on every
      faction card. Only the light/dark pair below vary (see
-     components/cards/TaskCrown.tsx).
+     components/factionMarks/TaskCrown.tsx).
 
      THE RING IS NOT A TOKEN HERE, and that is the point of #1213. It used to be
      `--fdl-rainbow`, a conic carrying the retired brand six resequenced
