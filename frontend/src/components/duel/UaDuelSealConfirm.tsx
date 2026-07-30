@@ -1,6 +1,13 @@
 /**
- * University of Asthmatics DESKTOP duel seal-confirm (#725) — the breath before
- * the stroke.
+ * University of Asthmatics duel seal-confirm (#725) — the breath before the
+ * stroke.
+ *
+ * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
+ * `DuelSealSheet` serves this sheet as a centred card on a laptop and full-bleed
+ * on a phone; the masthead, the opponent bar, the scrolling middle and the
+ * pinned action band are flex regions that behave as the twin did on a phone and
+ * as the card always did on a laptop. The twin's extra inner "practice sheet"
+ * plate around the body went with it — one sheet, not a sheet on a sheet.
  *
  * UA is the last core faction to get a duel dialog, and it arrives in the
  * practice's own register rather than the mock's. `UaDuel.dc.html` /
@@ -71,6 +78,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import DuelSealSheet from './DuelSealSheet'
 
 const SHEET = 'var(--faction-ua-card-bg)'
 const PANEL = 'var(--faction-ua-panel)'
@@ -105,233 +113,229 @@ export default function UaDuelSealConfirm({
   const relinquishing = copy.danger
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        padding: 'var(--space-lg)',
-        background: 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))',
+    <DuelSealSheet
+      label={copy.heading}
+      ground={{
+        position: 'relative',
+        background: SHEET,
+        color: INK,
+        fontFamily: UA_TEXT,
+      }}
+      card={{
+        overflow: 'hidden',
+        border: `1px solid ${RULE}`,
+        borderRadius: 'var(--radius-md)',
+        boxShadow: `0 22px 54px -26px ${uaShade(60)}`,
       }}
     >
-      <div
-        className="w-full max-w-[460px]"
+      {/* ── OPPONENT EDGE ── the foreign hue down the sheet's spine, as a
+          drawn fill so an unaffiliated opponent gets the vertical ramp. */}
+      <span
+        aria-hidden
         style={{
-          position: 'relative',
-          overflow: 'hidden',
-          background: SHEET,
-          color: INK,
-          fontFamily: UA_TEXT,
-          border: `1px solid ${RULE}`,
-          borderRadius: 'var(--radius-md)',
-          boxShadow: `0 22px 54px -26px ${uaShade(60)}`,
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: 4,
+          ...factionFill(foe.faction_slug, 'rule'),
+        }}
+      />
+
+      {/* ── Masthead: the mark, the beat, the foe ── */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: 'var(--space-lg) var(--space-xl)',
+          background: LIFT,
+          borderBottom: `1px solid ${HAIR}`,
         }}
       >
-        {/* ── OPPONENT EDGE ── the foreign hue down the sheet's spine, as a
-            drawn fill so an unaffiliated opponent gets the vertical ramp. */}
-        <span
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            width: 4,
-            ...factionFill(foe.faction_slug, 'rule'),
-          }}
-        />
-
-        {/* ── Masthead: the mark, the beat, the foe ── */}
         <div
           style={{
-            padding: 'var(--space-lg) var(--space-xl)',
-            background: LIFT,
-            borderBottom: `1px solid ${HAIR}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-md)',
+            minWidth: 0,
           }}
         >
-          <div
+          {/* The circle dims when the brush is being set down rather than
+              lifted. Ornament only — UaSigil is aria-hidden throughout. */}
+          <span style={{ display: 'flex', opacity: relinquishing ? 0.35 : 1 }}>
+            <UaSigil width={38} height={38} />
+          </span>
+          <h2
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
+              margin: 0,
               minWidth: 0,
+              fontFamily: UA_DISPLAY,
+              fontWeight: 600,
+              // The costly dialog speaks a tier quieter than the routine one.
+              // Both rungs are Content tier (§4a).
+              fontSize: relinquishing ? 'var(--text-title)' : 'var(--text-heading)',
+              lineHeight: 1.05,
+              letterSpacing: '-0.01em',
+              color: INK,
             }}
           >
-            {/* The circle dims when the brush is being set down rather than
-                lifted. Ornament only — UaSigil is aria-hidden throughout. */}
-            <span style={{ display: 'flex', opacity: relinquishing ? 0.35 : 1 }}>
-              <UaSigil width={38} height={38} />
-            </span>
-            <h2
-              style={{
-                margin: 0,
-                minWidth: 0,
-                fontFamily: UA_DISPLAY,
-                fontWeight: 600,
-                // The costly dialog speaks a tier quieter than the routine one.
-                // Both rungs are Content tier (§4a).
-                fontSize: relinquishing ? 'var(--text-title)' : 'var(--text-heading)',
-                lineHeight: 1.05,
-                letterSpacing: '-0.01em',
-                color: INK,
-              }}
-            >
-              {copy.heading}
-            </h2>
-          </div>
+            {copy.heading}
+          </h2>
+        </div>
 
-          {/* ── OPPONENT RING ── a drawn ring (outer fill, inner UA disc), so the
-              monogram sits on UA's own stock and never on the foreign hue. */}
-          <div
+        {/* ── OPPONENT RING ── a drawn ring (outer fill, inner UA disc), so the
+            monogram sits on UA's own stock and never on the foreign hue. */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            marginTop: 'var(--space-lg)',
+            minWidth: 0,
+          }}
+        >
+          <span
+            aria-hidden
             style={{
+              flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
-              gap: 'var(--space-sm)',
-              marginTop: 'var(--space-lg)',
-              minWidth: 0,
+              justifyContent: 'center',
+              width: 34,
+              height: 34,
+              borderRadius: '50%',
+              ...factionFill(foe.faction_slug, 'dot'),
             }}
           >
             <span
-              aria-hidden
               style={{
-                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 34,
-                height: 34,
+                width: 26,
+                height: 26,
                 borderRadius: '50%',
-                ...factionFill(foe.faction_slug, 'dot'),
+                background: LIFT,
+                color: INK,
+                fontFamily: UA_DISPLAY,
+                fontWeight: 600,
+                fontSize: 'var(--text-content)',
+                lineHeight: 1,
               }}
             >
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 26,
-                  height: 26,
-                  borderRadius: '50%',
-                  background: LIFT,
-                  color: INK,
-                  fontFamily: UA_DISPLAY,
-                  fontWeight: 600,
-                  fontSize: 'var(--text-content)',
-                  lineHeight: 1,
-                }}
-              >
-                {foe.display_name.slice(0, 1)}
-              </span>
+              {foe.display_name.slice(0, 1)}
             </span>
-            <span
-              className="content-text"
-              style={{ fontFamily: UA_DISPLAY, fontWeight: 600, color: INK, minWidth: 0 }}
-            >
-              {foe.display_name}
-            </span>
-          </div>
-        </div>
-
-        {/* ── OPPONENT BAR ── the hue laid across the sheet under the masthead. */}
-        <span
-          aria-hidden
-          style={{ display: 'block', height: 3, ...factionFill(foe.faction_slug, 'bar') }}
-        />
-
-        <div style={{ padding: 'var(--space-xl)' }}>
-          {/* The body line. In forfeit mode the ink is UA's notice ink on UA's
-              sheet — `--color-danger` measures 3.98:1 on this cream and is body
-              copy here — and the red survives as the rule beside it. */}
-          <p
+          </span>
+          <span
             className="content-text"
-            style={{
-              lineHeight: 1.6,
-              color: relinquishing ? NOTICE : INK,
-              ...(relinquishing
-                ? {
-                    fontWeight: 600,
-                    paddingLeft: 'var(--space-md)',
-                    borderLeft: '3px solid var(--color-danger)',
-                  }
-                : {}),
-            }}
+            style={{ fontFamily: UA_DISPLAY, fontWeight: 600, color: INK, minWidth: 0 }}
           >
-            {copy.body}
-          </p>
-
-          {/* The free-reopen half of the truth — the shared condition, not a UA
-              one. A forfeit has no such note and `copy.note` is null there. */}
-          {copy.note && (
-            <p
-              className="content-text"
-              style={{ marginTop: 'var(--space-sm)', lineHeight: 1.6, color: CREDIT }}
-            >
-              {copy.note}
-            </p>
-          )}
-
-          {/* ── The stakes well: an inset panel inside a hairline, the idiom
-              `UaEditPraxis` already wears. ── */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-sm)',
-              marginTop: 'var(--space-xl)',
-            }}
-          >
-            <span style={{ ...UA_EYEBROW, whiteSpace: 'nowrap' }}>
-              {t('duelStakes.heading')}
-            </span>
-            <span aria-hidden style={{ height: 1, flex: 1, background: HAIR }} />
-          </div>
-
-          <div
-            style={{
-              marginTop: 'var(--space-md)',
-              padding: 'var(--space-md)',
-              background: PANEL,
-              color: INK,
-              border: `1px solid ${RULE}`,
-              borderRadius: 'var(--radius-sm)',
-            }}
-          >
-            <StakesTiles
-              viewerFactionSlug={me.faction_slug}
-              opponentFactionSlug={foe.faction_slug}
-              opponentName={foe.display_name}
-              taskPointValue={taskPointValue}
-              status={duel.status}
-              theme={theme}
-            />
-            <RaceRoster me={me} foe={foe} theme={theme} />
-          </div>
-        </div>
-
-        {/* ── Footer band ── */}
-        <div
-          style={{
-            padding: 'var(--space-md) var(--space-xl)',
-            background: LIFT,
-            borderTop: `1px solid ${HAIR}`,
-          }}
-        >
-          {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-              pair rather than growing a UA seal-button slot. The global
-              [Cancel] … [Submit] order (#646) and the shared `danger` tone are
-              worth more than a sienna button, and adding a skin prop to the
-              shared component would be foundation work, not a skin change. */}
-          <SealActions
-            onConfirm={onConfirm}
-            onCancel={onCancel}
-            busy={busy}
-            confirmLabel={copy.confirmLabel}
-            danger={copy.danger}
-            theme={theme}
-          />
+            {foe.display_name}
+          </span>
         </div>
       </div>
-    </div>
+
+      {/* ── OPPONENT BAR ── the hue laid across the sheet under the masthead. */}
+      <span
+        aria-hidden
+        style={{ flexShrink: 0, display: 'block', height: 3, ...factionFill(foe.faction_slug, 'bar') }}
+      />
+
+      {/* The sheet's middle. `flex: 1` + its own scroll pins the masthead and
+          the footer band to the edges when the sheet IS the screen; on a
+          laptop the card is auto-height and neither fires. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-xl)' }}>
+        {/* The body line. In forfeit mode the ink is UA's notice ink on UA's
+            sheet — `--color-danger` measures 3.98:1 on this cream and is body
+            copy here — and the red survives as the rule beside it. */}
+        <p
+          className="content-text"
+          style={{
+            lineHeight: 1.6,
+            color: relinquishing ? NOTICE : INK,
+            ...(relinquishing
+              ? {
+                  fontWeight: 600,
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: '3px solid var(--color-danger)',
+                }
+              : {}),
+          }}
+        >
+          {copy.body}
+        </p>
+
+        {/* The free-reopen half of the truth — the shared condition, not a UA
+            one. A forfeit has no such note and `copy.note` is null there. */}
+        {copy.note && (
+          <p
+            className="content-text"
+            style={{ marginTop: 'var(--space-sm)', lineHeight: 1.6, color: CREDIT }}
+          >
+            {copy.note}
+          </p>
+        )}
+
+        {/* ── The stakes well: an inset panel inside a hairline, the idiom
+            `UaEditPraxis` already wears. ── */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            marginTop: 'var(--space-xl)',
+          }}
+        >
+          <span style={{ ...UA_EYEBROW, whiteSpace: 'nowrap' }}>
+            {t('duelStakes.heading')}
+          </span>
+          <span aria-hidden style={{ height: 1, flex: 1, background: HAIR }} />
+        </div>
+
+        <div
+          style={{
+            marginTop: 'var(--space-md)',
+            padding: 'var(--space-md)',
+            background: PANEL,
+            color: INK,
+            border: `1px solid ${RULE}`,
+            borderRadius: 'var(--radius-sm)',
+          }}
+        >
+          <StakesTiles
+            viewerFactionSlug={me.faction_slug}
+            opponentFactionSlug={foe.faction_slug}
+            opponentName={foe.display_name}
+            taskPointValue={taskPointValue}
+            status={duel.status}
+            theme={theme}
+          />
+          <RaceRoster me={me} foe={foe} theme={theme} />
+        </div>
+      </div>
+
+      {/* ── Footer band ── */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: 'var(--space-md) var(--space-xl)',
+          background: LIFT,
+          borderTop: `1px solid ${HAIR}`,
+        }}
+      >
+        {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
+            pair rather than growing a UA seal-button slot. The global
+            [Cancel] … [Submit] order (#646) and the shared `danger` tone are
+            worth more than a sienna button, and adding a skin prop to the
+            shared component would be foundation work, not a skin change. */}
+        <SealActions
+          onConfirm={onConfirm}
+          onCancel={onCancel}
+          busy={busy}
+          confirmLabel={copy.confirmLabel}
+          danger={copy.danger}
+          theme={theme}
+        />
+      </div>
+    </DuelSealSheet>
   )
 }
