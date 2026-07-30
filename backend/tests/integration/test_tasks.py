@@ -596,12 +596,21 @@ async def test_create_praxis_for_hidden_faction_task_rejected(
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_filter_by_level(
+async def test_list_tasks_filter_by_can_sign_up(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
+    auth_headers: dict,
 ):
-    """level filter returns only tasks with level_required >= the given value."""
+    """``?can_sign_up=true`` keeps only what this viewer could claim (#1130).
+
+    Route level — that the query param reaches the service and narrows the list.
+    Whether the narrowing AGREES with ``evaluate_signup`` is a different
+    question, asserted across a matrix in ``test_task_can_sign_up_filter.py``.
+    This replaces the old ``?level=`` filter, which selected
+    ``level_required >= level`` — the tasks you are locked out of — and could
+    not see either faction ability that bends the level bar.
+    """
     low_task = Task(
         title="Level 0 Task",
         description="",
@@ -624,15 +633,48 @@ async def test_list_tasks_filter_by_level(
     db_session.add(high_task)
     await db_session.commit()
 
-    resp = await client.get("/tasks", params={"level": 5})
+    # The `character` fixture is level 0 and 'ua' grants no level jump.
+    resp = await client.get(
+        "/tasks", params={"can_sign_up": "true"}, headers=auth_headers
+    )
     assert resp.status_code == 200
-    data = resp.json()
-    for task_data in data:
-        assert task_data["level_required"] >= 5
+    ids = [task["id"] for task in resp.json()]
+    assert low_task.id in ids
+    assert high_task.id not in ids
 
-    ids = [t["id"] for t in data]
-    assert high_task.id in ids
-    assert low_task.id not in ids
+    # Default off: the unfiltered browse is still the whole catalogue.
+    resp = await client.get("/tasks", headers=auth_headers)
+    unfiltered_ids = [task["id"] for task in resp.json()]
+    assert low_task.id in unfiltered_ids
+    assert high_task.id in unfiltered_ids
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_can_sign_up_is_empty_for_anonymous(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+):
+    """No viewer, no sign-up: the flag yields nothing rather than a stale list.
+
+    The control is hidden when logged out, so this is the backend refusing to
+    answer a question the caller cannot have meant.
+    """
+    task = Task(
+        title="Level 0 Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(task)
+    await db_session.commit()
+
+    resp = await client.get("/tasks", params={"can_sign_up": "true"})
+    assert resp.status_code == 200
+    assert resp.json() == []
 
 
 @pytest.mark.asyncio

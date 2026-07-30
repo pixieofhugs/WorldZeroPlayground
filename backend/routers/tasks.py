@@ -34,7 +34,7 @@ router = APIRouter()
 @router.get("", response_model=list[TaskOut])
 async def list_tasks(
     status: Optional[str] = None,
-    level: Optional[int] = None,
+    can_sign_up: bool = False,
     faction: Optional[str] = None,
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
@@ -62,7 +62,7 @@ async def list_tasks(
     tasks = await service_list_tasks(
         session,
         status=status,
-        level=level,
+        can_sign_up=can_sign_up,
         faction=faction,
         min_points=min_points,
         max_points=max_points,
