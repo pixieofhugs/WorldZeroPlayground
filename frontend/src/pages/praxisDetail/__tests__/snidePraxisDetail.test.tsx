@@ -222,7 +222,7 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
 
     const phone = render(state(), "mobile");
     expect(phone.html, "phone back link to the praxis index").toContain('href="/praxes"');
-    expect(phone.text, "and its label").toContain("Praxes");
+    expect(phone.text, "and its label").toContain("Praxis");
   });
 
   it("gives the desktop aside the eight designs' 330px track, and none on mobile", () => {

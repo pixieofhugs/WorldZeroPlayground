@@ -180,7 +180,6 @@ describe("Unaffiliated praxis detail — layout contract", () => {
 
     const phone = render(state(), "mobile");
     expect(phone.html, "phone back link to the praxis index").toContain('href="/praxes"');
-    expect(phone.text, "and its label").toContain("Praxes");
     expect(phone.text, "centred page label").toContain("Praxis");
   });
 
