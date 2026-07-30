@@ -123,6 +123,25 @@ describe("Coven task detail — the dress", () => {
     const painted = [...html.matchAll(/(?:style|fill|stroke)="([^"]*)"/g)].map((m) => m[1]);
     expect(painted.filter((value) => /#[0-9a-f]{3}/i.test(value))).toEqual([]);
   });
+
+  it("keeps slip-deep off body-sized text — it is a rule, a strand and a large numeral (#1295)", () => {
+    // The tier note lives in `components/cards/covenSlip.tsx`. `slip-deep`
+    // measures 4.44:1 on the ward PAGE (3.47:1 under the peak of the pink haze
+    // bloom) and 4.70:1 on the ward CARD, so it may carry words only at a size
+    // the 3:1 large-text floor covers. Neither guard above sees this: the token
+    // test measures declared values, and an ink-to-ground PAIRING exists only
+    // once rendered. The breadcrumb and the "level met" note both sit on the
+    // PAGE, and both wore it.
+    const { html } = render(<CovenTaskDetail state={baseState({ canSignUp: true })} />);
+    const inDeep = [...html.matchAll(/style="([^"]*)"/g)]
+      .map((match) => match[1])
+      .filter((style) => /(?:^|;)color:var\(--faction-coven-slip-deep\)/.test(style));
+    for (const style of inDeep) {
+      expect(style, "slip-deep carries only LARGE display type here").toMatch(
+        /font-size:var\(--text-(title|heading|display)\)/,
+      );
+    }
+  });
 });
 
 describe("Coven task detail — the copy", () => {
