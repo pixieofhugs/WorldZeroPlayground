@@ -1,72 +1,55 @@
 /**
- * EphemeristsProfileBody — antiquarian cartographer / lapis-and-gold codex
- * player-profile skin (#460). Ported from docs/design/profile/templates/
- * Ephemerists Profile.dc.html: a deep-blue lapis header framed by nested gold /
- * cream / ink rules, a faint graticule overlay, roman-numeral "GRADE" levels,
- * and foxed-parchment cards. Follows the global light/dark cascade via the
- * --eph-* / --faction-ephemerists-* tokens (the vellum surface flips in dark).
+ * EphemeristsProfileBody — the VALLEY PLATE player-profile skin (#460, swept off
+ * the illuminated codex by #1208). The night-band header ruled in brass over a
+ * ghost graticule, roman-numeral "GRADE" levels, and papyrus plates below.
  *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin. No hardcoded
- * hex — colours via --eph-* / --faction-ephemerists-* vars.
+ * Structure is DefaultProfileBody's locked spine via ProfileSkin. Two grounds
+ * carry ink: the band (`band-ink` 12.4:1, `gold` 9.4) and the plate under it
+ * (`ink` 11.3, `quiet` 5.6, `nile` 5.0). The page beneath is `-plate-page`,
+ * where only `ink`, `quiet` and `nile` clear — which is why the kit's `muted`
+ * is `quiet` and not `-plate-muted`.
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
+import {
+  BAND,
+  BAND_INK,
+  BRASS,
+  BRASS_LIGHT,
+  DECO,
+  DISC,
+  GOLD,
+  INK,
+  LINE,
+  MARGINALIA,
+  NILE,
+  PAGE,
+  PLATE,
+  QUIET,
+  READING,
+  RULE,
+  SHADOW,
+  SMALL_CAPS,
+} from '../../../components/cards/ephemeristsPlate'
+import { toRoman } from '../../../utils/roman'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
-const INK = 'var(--eph-ink)' // structure / kit spine (stays dark in both themes)
-const VELLUM_TEXT = 'var(--eph-vellum-text)' // text on the vellum surface (flips in dark)
-const MUTED = 'var(--eph-muted)'
-const GOLD = 'var(--eph-gold-light)'
-const GOLD_DEEP = 'var(--eph-gold)'
-const LAPIS = 'var(--eph-lapis)'
-const VELLUM = 'var(--eph-vellum)'
-const CREAM = 'var(--eph-parchment)'
-const DISPLAY = 'var(--eph-display)' // Cinzel
-const BODY = 'var(--eph-serif)' // EB Garamond
-const SCRIPT = 'var(--eph-script)' // Cormorant Garamond
-
-const ROMAN: readonly [number, string][] = [
-  [1000, 'M'],
-  [900, 'CM'],
-  [500, 'D'],
-  [400, 'CD'],
-  [100, 'C'],
-  [90, 'XC'],
-  [50, 'L'],
-  [40, 'XL'],
-  [10, 'X'],
-  [9, 'IX'],
-  [5, 'V'],
-  [4, 'IV'],
-  [1, 'I'],
-]
-
-function toRoman(value: number): string {
-  if (value <= 0) return '·'
-  let remaining = value
-  let out = ''
-  for (const [amount, symbol] of ROMAN) {
-    while (remaining >= amount) {
-      out += symbol
-      remaining -= amount
-    }
-  }
-  return out
-}
+/** Level 0 shows a mid-dot rather than a numeral — the codex's own convention. */
+const grade = (value: number): string => (value > 0 ? toRoman(value) : '\u00b7')
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
-      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: MUTED, marginBottom: 'var(--space-xs)' }}>
+      <div style={{ fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: QUIET, marginBottom: 'var(--space-xs)' }}>
         {eyebrow}
       </div>
       <h2
         style={{
-          fontFamily: DISPLAY,
+          fontFamily: DECO,
           fontSize: 'var(--text-heading)',
-          letterSpacing: '0.06em',
-          color: VELLUM_TEXT,
+          letterSpacing: '0.04em',
+          color: INK,
           margin: 0,
         }}
       >
@@ -78,20 +61,20 @@ function heading(title: string, eyebrow: string): ReactNode {
 
 const kit: ProfileKit = {
   slug: 'ephemerists',
-  pageBackground: 'var(--eph-vellum-deep)',
-  pageOverlay: 'radial-gradient(rgba(42,29,18,0.05) 1px, transparent 1px)',
+  pageBackground: PAGE,
+  pageOverlay: `radial-gradient(color-mix(in srgb, ${INK} 6%, transparent) 1px, transparent 1px)`,
   ink: INK,
-  muted: MUTED,
-  accent: GOLD,
-  surface: VELLUM,
-  border: GOLD_DEEP,
-  displayFont: DISPLAY,
-  eyebrowFont: BODY,
-  bodyFont: BODY,
+  muted: QUIET,
+  accent: NILE,
+  surface: PLATE,
+  border: BRASS,
+  displayFont: DECO,
+  eyebrowFont: MARGINALIA,
+  bodyFont: READING,
   headerStyle: {
-    background: `linear-gradient(160deg, ${LAPIS}, var(--eph-lapis-deep))`,
-    border: `2px solid ${GOLD}`,
-    boxShadow: `0 0 0 4px ${CREAM}, 0 0 0 6px var(--eph-ink), 0 18px 40px -20px rgba(0,0,0,0.6)`,
+    background: BAND,
+    border: `1px solid ${BRASS}`,
+    boxShadow: SHADOW,
     padding: 'var(--space-2xl) var(--space-3xl)',
     marginBottom: 'var(--space-4xl)',
     marginTop: 'var(--space-sm)',
@@ -100,7 +83,7 @@ const kit: ProfileKit = {
     <>
       <div
         aria-hidden
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: GOLD, zIndex: 3 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: BRASS, zIndex: 3 }}
       />
       <div
         aria-hidden
@@ -109,19 +92,18 @@ const kit: ProfileKit = {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(212,171,85,0.08) 22px, rgba(212,171,85,0.08) 23px), repeating-linear-gradient(90deg, transparent, transparent 22px, rgba(212,171,85,0.08) 22px, rgba(212,171,85,0.08) 23px)',
+            `repeating-linear-gradient(0deg, transparent, transparent 22px, color-mix(in srgb, ${BRASS_LIGHT} 12%, transparent) 22px, color-mix(in srgb, ${BRASS_LIGHT} 12%, transparent) 23px), repeating-linear-gradient(90deg, transparent, transparent 22px, color-mix(in srgb, ${BRASS_LIGHT} 12%, transparent) 22px, color-mix(in srgb, ${BRASS_LIGHT} 12%, transparent) 23px)`,
         }}
       />
     </>
   ),
   nameSize: 48,
-  nameExtra: { color: CREAM, textShadow: '0 2px 6px rgba(5,19,28,0.6)', letterSpacing: '0.02em' },
+  nameExtra: { color: BAND_INK, letterSpacing: '0.08em', textTransform: 'uppercase' },
   playerEyebrow: 'Player · The Ephemerists',
   progressionStyle: {
     marginTop: 'var(--space-xl)',
-    background: 'rgba(5,19,28,0.35)',
-    border: `1px solid ${GOLD}`,
-    boxShadow: `inset 0 0 0 3px rgba(5,19,28,0.25)`,
+    background: 'transparent',
+    border: `1px solid ${BRASS}`,
     padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
@@ -129,11 +111,11 @@ const kit: ProfileKit = {
     maxWidth: 440,
   },
   ringLabel: 'grade',
-  barFill: `linear-gradient(90deg, ${GOLD_DEEP}, ${GOLD})`,
-  barTrack: 'rgba(212,171,85,0.22)',
-  formatLevel: toRoman,
+  barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
+  barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
+  formatLevel: grade,
   levelUnitLabel: 'pvncta this grade',
-  nextLevelLabel: (next) => `next · grade ${toRoman(next)}`,
+  nextLevelLabel: (next) => `next · grade ${grade(next)}`,
   sectionHeading: heading,
   praxisEyebrow: (name) => `Filed to the codex by ${name}`,
   praxisEmpty: {
@@ -141,34 +123,33 @@ const kit: ProfileKit = {
     body: 'Walk a road, and set the first record down.',
   },
   emptyStateStyle: {
-    border: `1.5px dashed ${GOLD_DEEP}`,
+    border: `1.5px dashed ${BRASS}`,
     padding: 'var(--space-2xl)',
     textAlign: 'center',
-    background: VELLUM,
+    background: PLATE,
   },
-  laurel: <SpectrumLaurel centerBg={CREAM} glyphColor={LAPIS} />,
+  laurel: <SpectrumLaurel centerBg={DISC} glyphColor={BRASS} />,
   badgeTitle: 'Concordances',
   badgeBoardStyle: {
-    border: `1px solid ${GOLD_DEEP}`,
-    background: VELLUM,
+    border: `1px solid ${LINE}`,
+    background: PLATE,
     padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
-    fontFamily: DISPLAY,
+    ...SMALL_CAPS,
     fontSize: 'var(--text-sm)',
     letterSpacing: '0.14em',
-    textTransform: 'uppercase',
-    color: MUTED,
+    color: QUIET,
     marginLeft: 'auto',
-    border: `1px solid ${GOLD_DEEP}`,
+    border: `1px solid ${LINE}`,
     padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow
       badge={badge}
       last={last}
-      dividerColor="rgba(176,134,58,0.28)"
-      nameStyle={{ fontFamily: DISPLAY, color: VELLUM_TEXT, lineHeight: 1.2, letterSpacing: '0.03em' }}
+      dividerColor={RULE}
+      nameStyle={{ fontFamily: DECO, color: INK, lineHeight: 1.2, letterSpacing: '0.03em' }}
       medallion={(glyph) => (
         <span
           style={{
@@ -176,8 +157,8 @@ const kit: ProfileKit = {
             width: 32,
             height: 32,
             borderRadius: '50%',
-            background: LAPIS,
-            border: `1px solid ${GOLD}`,
+            background: BAND,
+            border: `1px solid ${BRASS}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

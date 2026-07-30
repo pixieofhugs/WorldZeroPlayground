@@ -208,7 +208,13 @@ export default function ConfirmDialog({
               fontSize: 'var(--text-md)',
               padding: 'var(--space-sm) var(--space-lg)',
               background: request.danger ? 'var(--color-danger)' : accent,
-              color: 'var(--color-bg-page)',
+              // One ink per fill (#1169). --color-bg-page was answering for
+              // both and is a claim about neither: 4.40:1 on the light danger
+              // red, and on a faction accent the legible ink is whatever
+              // -on-accent says it is (#924), not the page ground.
+              color: request.danger
+                ? 'var(--color-on-danger)'
+                : factionCssVar(factionSlug, 'on-accent'),
               border: 'none',
               borderRadius: 8,
               cursor: 'pointer',

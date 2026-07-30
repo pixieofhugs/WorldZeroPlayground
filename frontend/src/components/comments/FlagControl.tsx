@@ -62,7 +62,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       <button
         onClick={() => { setOpen(true); setError(null) }}
         className="btn-outline text-[8px] px-2 py-1"
-        style={{ borderColor: 'rgba(220,38,38,0.4)', color: 'var(--color-danger)' }}
+        style={{ borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}
       >
         {t('detail.flag.flag')}
       </button>
@@ -82,7 +82,11 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
             className="btn-outline text-[9px] px-2 py-1"
             style={
               reason === value
-                ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }
+                // --color-bg-surface was the ink here, and it is TRANSLUCENT:
+                // rgba(255,255,255,0.04) in dark, which composited over the red
+                // left the selected reason at 1.04:1 — a label you cannot read
+                // at all (#1169).
+                ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
                 : undefined
             }
           >
@@ -102,7 +106,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       )}
       <div className="flex items-center gap-2 mt-2">
         {reason !== null && (
-          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-3 py-1" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-3 py-1" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
             {submitting ? t('detail.flag.submitting') : t('detail.flag.submit')}
           </button>
         )}

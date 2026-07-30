@@ -11,7 +11,7 @@ import {
   DECO,
   stepClip,
 } from '../cards/ephemeristsPlate'
-import { toRoman } from '../cards/ephemeristsAtoms'
+import { toRoman } from '../../utils/roman'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'

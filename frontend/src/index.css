@@ -31,7 +31,62 @@
   --color-success: #14532d;
   --color-danger: #dc2626;
   --color-warning: #b45309;
-  --color-warning-light: #fef3c7;
+
+  /* ── The danger / warning FILL family (#1169, absorbing #1174) ────────────
+     `--color-danger` carries two roles. As an INK it is `color:` on error copy
+     in ~30 places, and the seal rows in factionContrast.test.ts measure it
+     there. As a FILL it backs the duel forfeit button, ConfirmDialog's
+     destructive half and the flag chips — and that role had no ink, no tint and
+     no rule of its own, so eight sites reached for whichever pale token was
+     nearby and twenty-seven more wrote `rgba(220,38,38,·)` out by hand at
+     eleven different alphas nobody chose.
+
+     --color-on-danger is the ink for the fill, the same shape as
+     --faction-{slug}-on-fill (#649) and -on-accent (#924): white where white
+     clears AA, near-black where it does not. The three inks it replaced each
+     failed somewhere —
+
+       --color-text-on-accent  #ffffff  4.83 light / 2.77 dark  (the report)
+       --color-bg-page                  4.40 light / 6.72 dark
+       --color-bg-surface               3.08 light / 1.04 dark  (it is ALPHA;
+                                        composited over the red in dark the
+                                        label all but vanishes)
+
+     — and the last two are the role abuse §3 names: neither token is a
+     statement about legibility on red, so the next repaint of the page ground
+     or the surface wash breaks a button silently. Measured by the "danger fill"
+     row in factionContrast.test.ts, in both themes.
+
+     There is deliberately no `--color-on-warning`: nothing fills with
+     `--color-warning`. It is an ink and a rule only. Mint one when a surface
+     needs it.
+
+     VEIL / EDGE / RING are the three roles the eleven hand-written alphas
+     collapse to — a tinted fill behind a banner, a 1–2px rule, and the stronger
+     outline an outline-button wears. Each takes the THEME'S OWN hue, which is
+     the half that mattered most: every hand-written rgba() used the light
+     deep-red 220,38,38 (or, for warning, an amber 245,158,11 that is not even
+     the token) in BOTH themes, so on the dark page a 5% deep red over near-black
+     was invisible. The dark veil lifts to 0.14 for that reason — a bright hue at
+     5% over #13121a is a fainter signal than a deep one at 5% over #f7f4ee.
+
+     None of the three is a text pairing: the edge and the ring are drawn marks
+     carrying no words. The VEIL does sit under text, and its ink is
+     `--color-danger` / `--color-warning` themselves — a pairing that fails in
+     LIGHT before any veil is laid (the red is 4.40:1 on the bare page), which is
+     the pre-existing global-ink debt §3 records and #694 routed per faction.
+     That is why the light alpha is 0.05 rather than a midpoint of the eleven:
+     it is the value six of the ten danger sites already carried, so the tightest
+     existing readings move by <= 0.13 and the debt is neither created nor
+     deepened here. Fixing it means routing those badges to a per-sheet notice
+     ink the way the seal dialogs were, which is a different issue. */
+  --color-on-danger: #ffffff; /* #dc2626 — 4.83:1 */
+  --color-danger-veil: rgba(220, 38, 38, 0.05);
+  --color-danger-edge: rgba(220, 38, 38, 0.3);
+  --color-danger-ring: rgba(220, 38, 38, 0.5);
+  --color-warning-veil: rgba(180, 83, 9, 0.05);
+  --color-warning-edge: rgba(180, 83, 9, 0.3);
+  --color-warning-ring: rgba(180, 83, 9, 0.5);
 
   /* ── Shared neutrals ── */
   --color-text-on-accent: #ffffff;
@@ -1249,9 +1304,13 @@
      Deco × Egypt: the deco-space card carried into a field journal out of the
      Valley. A papyrus plate under a cavetto-cornice masthead holding a winged
      sun disc between incised glyph registers; the points ride a stepped octagon
-     medallion. This is a full metaphor swap away from THE DISCORDANT MAP, whose
-     `--eph-*` illuminated-codex family stays declared — every other Ephemerists
-     surface still paints with it.
+     medallion. This is a full metaphor swap away from THE DISCORDANT MAP, and
+     since #1208 it is the faction's ONLY identity: no component paints
+     `--eph-*` any more, and `frontend/src/__tests__/ephemeristsSpeakOneIdentity`
+     is the guard that keeps it that way. The codex family stays DECLARED
+     because the `--faction-ephemerists-card-*` contract above still aliases six
+     of its members, and those are read through `factionCssVar` by surfaces that
+     are not Ephemerists skins at all.
 
      ONE VALUE IS WALKED DOWN. `-brass` is a FRAME AND RULE colour, never an ink:
      the design's #9A7A2E measures 2.97:1 on the plate, which is fine for a
@@ -1640,7 +1699,21 @@
   --color-success: #4ade80;
   --color-danger: #f87171;
   --color-warning: #fbbf24;
-  --color-warning-light: #1c0a00;
+
+  /* ── The danger / warning FILL family (dark, #1169) ── The dark red was
+     brightened to work as an INK on a dark page, which is right for the role it
+     mostly plays and is exactly what makes it a poor fill for white: 2.77:1.
+     Deepening it back was the rejected lever (it would sink the ~30 ink sites),
+     so the ink flips instead — the same near-black every faction -on-fill token
+     flips to. The tints take the dark hue rather than inheriting the light one,
+     for the reason the :root block states. */
+  --color-on-danger: #14110b; /* #f87171 — white only 2.77:1; ink 6.81:1 */
+  --color-danger-veil: rgba(248, 113, 113, 0.14);
+  --color-danger-edge: rgba(248, 113, 113, 0.3);
+  --color-danger-ring: rgba(248, 113, 113, 0.5);
+  --color-warning-veil: rgba(251, 191, 36, 0.14);
+  --color-warning-edge: rgba(251, 191, 36, 0.3);
+  --color-warning-ring: rgba(251, 191, 36, 0.5);
 
   /* ── Shared neutrals (dark) ── */
   --color-surface-scrim: rgba(19, 18, 26, 0.85);
@@ -3028,57 +3101,40 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EPHEMERISTS CODEX BACKDROP — the page as a sheet of the ephemeris:
-   aged vellum, faint foxing, two sets of astrolabe rings bleeding from
-   opposite corners, and ghost scribe-lines. Rendered behind the page
-   by the ephemerists FactionBackdrop variant. Theme-aware via --eph-*.
+   EPHEMERISTS BACKDROP — the page under the faction page and a
+   member's profile, rendered by the ephemerists FactionBackdrop
+   variant.
+
+   SWEPT OFF THE CODEX (#1208). This was the aged-vellum ephemeris
+   sheet — foxing, astrolabe rings, scribe-lines — and it was the
+   GROUND the two surfaces above it stand on, so leaving it in
+   `--eph-*` while their plates moved would have been the second
+   identity in its most visible form: papyrus floating on vellum.
+
+   It is now `-plate-page`, the same ground the task detail's sheet
+   sits on, wearing the plate's own marks: a gold bloom off the top
+   edge, two sets of surveyor's rings bleeding from opposite corners
+   in brass and nile, papyrus grain, and the journal's ruling. The
+   vignette follows `-plate-page` itself rather than a second sheet
+   colour, because the plate family has no "deep" twin — and it stays
+   a LIGHTENING wash at the top for the reason `.eph-plate-sheet`
+   records above: a darkening veil eats `-nile`'s measured margin.
    ══════════════════════════════════════════════════════════════ */
 .eph-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-color: var(--eph-vellum);
+  background-color: var(--faction-ephemerists-plate-page);
   background-image:
-    radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--eph-gold) 15%, transparent), transparent 72%),
-    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--eph-lapis) 13%, transparent), transparent 72%),
-    repeating-radial-gradient(circle at 90% 8%, transparent 0 33px, color-mix(in srgb, var(--eph-ink) 5%, transparent) 33px 34px),
-    repeating-radial-gradient(circle at 6% 96%, transparent 0 27px, color-mix(in srgb, var(--eph-lapis) 7%, transparent) 27px 28px),
-    radial-gradient(color-mix(in srgb, var(--eph-vellum-text) 5%, transparent) 0.6px, transparent 0.9px),
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--eph-vellum-text) 4%, transparent) 0 1px, transparent 1px 26px),
-    linear-gradient(170deg, var(--eph-vellum), var(--eph-vellum-deep));
+    radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--faction-ephemerists-plate-gold) 18%, transparent), transparent 72%),
+    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--faction-ephemerists-plate-nile) 12%, transparent), transparent 72%),
+    repeating-radial-gradient(circle at 90% 8%, transparent 0 33px, color-mix(in srgb, var(--faction-ephemerists-plate-brass) 12%, transparent) 33px 34px),
+    repeating-radial-gradient(circle at 6% 96%, transparent 0 27px, color-mix(in srgb, var(--faction-ephemerists-plate-nile) 10%, transparent) 27px 28px),
+    radial-gradient(var(--faction-ephemerists-plate-rule) 0.6px, transparent 0.9px),
+    repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-rule) 0 1px, transparent 1px 26px),
+    linear-gradient(170deg, var(--faction-ephemerists-plate-bg), var(--faction-ephemerists-plate-page));
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 5px 5px, 100% 100%, 100% 100%;
-}
-.eph-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 90% at 50% 6%, transparent 46%, color-mix(in srgb, var(--eph-vellum-deep) 58%, transparent));
-}
-
-/* ══════════════════════════════════════════════════════════════
-   EPHEMERISTS AGE-FOXING BLEND (#724) — the one Ephemerist ornament
-   that cannot be a colour token, because it is a *blend mode*.
-
-   Foxing is a stain: on light vellum it DARKENS the sheet, so `multiply`
-   is the physically right operator. On the dark-theme vellum
-   (--eph-vellum flips to a near-black tobacco) `multiply` has almost
-   nothing left to take away — the blotches vanish and, where they don't,
-   they read as mud. Dark-theme foxing is instead an age *bloom*: the
-   same four blotches lightening the sheet, so the operator flips to
-   `screen`.
-
-   This lives here rather than inline on the `Foxing` atom because a
-   `dark ? 'multiply' : 'screen'` ternary is exactly what §8 forbids;
-   the cascade owns the flip. (Only the MODE is set here — callers keep
-   passing their own `opacity` inline, which would win over any opacity
-   declared in this rule anyway.)
-   ══════════════════════════════════════════════════════════════ */
-.eph-foxing {
-  mix-blend-mode: multiply;
-}
-[data-theme="dark"] .eph-foxing {
-  mix-blend-mode: screen;
 }
 
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */
@@ -3089,16 +3145,11 @@
    by components, bypassing the reduced-motion guard. One keyframe, one guard. */
 @keyframes wz-blink { 50% { opacity: 0; } }
 
-/* Slow motion — rings turn, points breathe. Stilled for reduced-motion. */
-@keyframes eph-spin { to { transform: rotate(360deg); } }
+/* The codex's slow motion — turning astrolabe rings, breathing points — went
+   with the surfaces that used it (#1208). `eph-twinkle` is the survivor and is
+   no longer an Ephemerists keyframe at all: `.coven-moon-dust` is its only
+   consumer, and it carries the name it was written under. */
 @keyframes eph-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-@keyframes eph-depth { 0%, 100% { opacity: 0.92; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.03); } }
-@media (prefers-reduced-motion: no-preference) {
-  .eph-spin { animation: eph-spin 140s linear infinite; }
-  .eph-spin-rev { animation: eph-spin 100s linear infinite reverse; }
-  .eph-twinkle { animation: eph-twinkle 5s ease-in-out infinite; }
-  .eph-depth { animation: eph-depth 16s ease-in-out infinite; }
-}
 
 /* Unaffiliated spectrum-sweep vote widget (#820) — reached dots bob in a rising
    wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion
@@ -3358,9 +3409,10 @@
    `z-index: 0` child of it is a POSITIONED descendant of that stacking context
    and paints over the non-positioned sidebar beside it.
 
-   Deliberately NOT `.eph-backdrop` either — that is the illuminated-codex ground
-   (`--eph-*`) every OTHER Ephemerists surface still paints on. The v2 plate is a
-   full metaphor swap (ADR-0055) and the two grounds must not be confused.
+   Deliberately NOT `.eph-backdrop` either. That was the illuminated-codex ground
+   until #1208 repainted it onto `-plate-page`; the two are now the same colour
+   and still not the same thing — the backdrop is FIXED and belongs to the
+   faction page and the profile, this is the column's own surface.
 
    The wash only LIGHTENS (a gold bloom off the cornice) and never darkens. Both
    inks this ground carries were walked down to a measured margin over the FLAT

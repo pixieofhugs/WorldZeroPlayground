@@ -1,12 +1,33 @@
 import { Trans } from "react-i18next";
 import i18n from "../../i18n";
-import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
+import {
+  BAND,
+  BAND_INK,
+  BAND_QUIET,
+  BRASS,
+  BRASS_LIGHT,
+  Cornice,
+  DECO,
+  EmblemOctagon,
+  GOLD,
+  GlyphRegister,
+  MARGINALIA,
+  READING,
+  SMALL_CAPS,
+} from "./ephemeristsPlate";
 
 /**
- * The Ephemerists faction-page hero — a codex frontispiece. A lapis celestial
- * field behind ghost survey grids + astrolabe rings, the sigil seal, a Cinzel
- * wordmark with one word in the blue, the motto, a running gloss, and a
- * gold-ruled stat ledger on the side. Colors via the --eph-* tokens (theme-aware).
+ * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width
+ * (#1208, swept off the illuminated codex). The night band behind two incised
+ * glyph registers and a ghost survey graticule, the emblem struck in a stepped
+ * octagon, a letterspaced Poiret One wordmark, the motto on a ruled cartouche, a
+ * running gloss, and a brass-ruled stat ledger on the side. The cavetto cornice
+ * closes it, exactly as it closes the masthead on the task detail.
+ *
+ * Every ink is measured on the BAND, which is the only ground here: `band-ink`
+ * 12.4:1, `gold` 9.4, `band-quiet` 8.6, `brass-light` 6.1. `nile` and `ochre`
+ * are 2.3 and 2.6 on this ground and appear nowhere — the codex's lapis
+ * last-word tic went with them (see `EphemeristsCard`).
  *
  * Takes raw counts and labels them in the faction's own voice — the page stays
  * vocabulary-agnostic (see FactionHeroProps in FactionDetail).
@@ -18,24 +39,24 @@ function HeroGrids() {
         style={{
           position: "absolute",
           inset: 0,
-          opacity: 0.14,
+          opacity: 0.1,
           backgroundImage:
-            "repeating-linear-gradient(0deg, var(--eph-parchment) 0 1px, transparent 1px 26px), repeating-linear-gradient(90deg, var(--eph-parchment) 0 1px, transparent 1px 26px)",
+            `repeating-linear-gradient(0deg, ${BRASS_LIGHT} 0 1px, transparent 1px 26px), repeating-linear-gradient(90deg, ${BRASS_LIGHT} 0 1px, transparent 1px 26px)`,
         }}
       />
       <svg viewBox="0 0 1000 320" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.16 }}>
-        <g stroke="var(--eph-gold-light)" strokeWidth="0.6" fill="none">
+        <g stroke={BRASS_LIGHT} strokeWidth="0.6" fill="none">
           {Array.from({ length: 21 }).map((_, i) => (
             <line key={i} x1={i * 50} y1="320" x2="820" y2="20" />
           ))}
         </g>
       </svg>
-      <svg viewBox="0 0 1000 320" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.12 }}>
-        <g stroke="var(--eph-gold-light)" strokeWidth="0.7" fill="none">
-          {[60, 130, 210, 300].map((r, i) => (
-            <circle key={i} cx="820" cy="150" r={r} />
-          ))}
-        </g>
+      {/* The design's own register, marching the band rather than a card's. */}
+      <svg width="100%" height={26} viewBox="0 0 1000 26" preserveAspectRatio="xMidYMid slice" style={{ position: "absolute", left: 0, top: 8, opacity: 0.6 }}>
+        <GlyphRegister width={1000} y={13} strength={0.34} keyPrefix="hero-a" />
+      </svg>
+      <svg width="100%" height={26} viewBox="0 0 1000 26" preserveAspectRatio="xMidYMid slice" style={{ position: "absolute", left: 0, bottom: 6, opacity: 0.6 }}>
+        <GlyphRegister width={1000} y={13} strength={0.3} keyPrefix="hero-b" />
       </svg>
     </div>
   );
@@ -66,24 +87,19 @@ export default function EphemeristsFactionHero({
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",
-        border: "2px solid var(--eph-gold)",
-        background:
-          "radial-gradient(120% 140% at 82% 0%, var(--eph-lapis), var(--eph-field-deep) 60%, #05131c 100%)",
-        color: "var(--eph-parchment)",
-        boxShadow: "0 0 0 3px var(--eph-vellum), 0 0 0 4px var(--eph-ink)",
+        background: BAND,
+        color: BAND_INK,
       }}
     >
       <HeroGrids />
-      <div style={{ height: 5, background: "var(--eph-gold)", position: "relative", zIndex: 2 }} />
-      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-2xl)", padding: "var(--space-xl) var(--space-2xl)", flexWrap: "wrap" }}>
+      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-2xl)", padding: "var(--space-2xl)", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 300px", minWidth: 220 }}>
           <div
             style={{
-              fontFamily: "var(--eph-serif)",
+              ...SMALL_CAPS,
               fontSize: "var(--text-base)",
               letterSpacing: "0.28em",
-              textTransform: "uppercase",
-              color: "var(--eph-gold-light)",
+              color: GOLD,
               marginBottom: "var(--space-sm)",
             }}
           >
@@ -91,32 +107,29 @@ export default function EphemeristsFactionHero({
           </div>
           <h1
             style={{
-              fontFamily: "var(--eph-display)",
-              fontWeight: 800,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: codex wordmark — display serif at 0.88 leading with a letterpress shadow
-              fontSize: 52,
-              lineHeight: 0.88,
-              letterSpacing: "0.02em",
+              fontFamily: DECO,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the masthead wordmark — Poiret One letterspaced until the width is the mark
+              fontSize: 44,
+              lineHeight: 1.02,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
               margin: 0,
-              color: "var(--eph-parchment)",
-              textShadow: "2px 2px 0 var(--eph-field-deep)",
+              color: BAND_INK,
             }}
           >
-            <LapisLastWord text={name} />
+            {name}
           </h1>
           <div
             style={{
               display: "inline-block",
               marginTop: "var(--space-md)",
-              background: "var(--eph-ink)",
-              color: "var(--eph-gold-light)",
-              fontFamily: "var(--eph-display)",
-              fontWeight: 600,
+              ...SMALL_CAPS,
               fontSize: "var(--text-xl)",
               letterSpacing: "0.26em",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its letterpress plate; rounding reflows the plate.
+              color: GOLD,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the motto's inset inside its ruled cartouche; rounding reflows the rule.
               padding: "5px 16px",
-              border: "1px solid var(--eph-gold-deep)",
+              border: `1px solid ${BRASS}`,
             }}
           >
             {i18n.t("feed:factionHero.ephemerists.motto")}
@@ -124,23 +137,23 @@ export default function EphemeristsFactionHero({
           <p
             className="content-text"
             style={{
-              fontFamily: "var(--eph-serif)",
-              lineHeight: 1.6,
+              fontFamily: READING,
+              lineHeight: 1.7,
               maxWidth: 580,
               margin: "var(--space-lg) 0 0",
-              color: "color-mix(in srgb, var(--eph-parchment) 92%, transparent)",
+              color: BAND_INK,
             }}
           >
             {description ?? i18n.t("feed:factionHero.ephemerists.descriptionFallback")}
-            {/* Gloss is a full catalog sentence -> content floor; the script face and
-                the dimmed parchment carry the hierarchy instead of a smaller size. */}
+            {/* Gloss is a full catalog sentence -> content floor; the marginalia
+                face and the band's second ink carry the hierarchy, not a size. */}
             <span
               className="content-text"
               style={{
                 display: "block",
-                fontFamily: "var(--eph-script)",
+                fontFamily: MARGINALIA,
                 fontStyle: "italic",
-                color: "color-mix(in srgb, var(--eph-parchment) 62%, transparent)",
+                color: BAND_QUIET,
                 marginTop: "var(--space-sm)",
               }}
             >
@@ -148,17 +161,17 @@ export default function EphemeristsFactionHero({
               <Trans
                 ns="feed"
                 i18nKey="factionHero.ephemerists.gloss"
-                components={{ 1: <span style={{ color: "var(--eph-gold-light)" }} /> }}
+                components={{ 1: <span style={{ color: GOLD }} /> }}
               />
             </span>
           </p>
         </div>
 
-        {/* Right column: seal + a stat ledger on the side (standardization:
-            stats sit beside the seal, never a full-width band). */}
+        {/* Right column: emblem + a stat ledger on the side (standardization:
+            stats sit beside the emblem, never a full-width band). */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)", alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
-          <EphSeal size={112} bg="var(--eph-vellum)" eye="var(--eph-lapis)" />
-          <div style={{ alignSelf: "stretch", border: "1px solid color-mix(in srgb, var(--eph-gold-light) 40%, transparent)", background: "color-mix(in srgb, var(--eph-field-deep) 55%, transparent)" }}>
+          <EmblemOctagon size={112} />
+          <div style={{ alignSelf: "stretch", border: `1px solid ${BRASS}` }}>
             {stats.map((s, i) => (
               <div
                 key={s.label}
@@ -168,13 +181,13 @@ export default function EphemeristsFactionHero({
                   alignItems: "baseline",
                   gap: "var(--space-md)",
                   padding: "var(--space-sm) var(--space-lg)",
-                  borderTop: i > 0 ? "1px solid color-mix(in srgb, var(--eph-gold-light) 18%, transparent)" : undefined,
+                  borderTop: i > 0 ? `1px solid color-mix(in srgb, ${BRASS} 45%, transparent)` : undefined,
                 }}
               >
-                <span style={{ fontFamily: "var(--eph-serif)", fontSize: "var(--text-sm)", letterSpacing: "0.14em", textTransform: "uppercase", color: "color-mix(in srgb, var(--eph-parchment) 75%, transparent)" }}>
+                <span style={{ ...SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.14em", color: BAND_QUIET }}>
                   {s.label}
                 </span>
-                <span className="content-title" style={{ fontFamily: "var(--eph-display)", fontWeight: 700, lineHeight: 0.85, color: "var(--eph-gold-light)" }}>
+                <span className="content-title" style={{ fontFamily: DECO, lineHeight: 0.85, color: GOLD }}>
                   {s.value}
                 </span>
               </div>
@@ -182,6 +195,7 @@ export default function EphemeristsFactionHero({
           </div>
         </div>
       </div>
+      <Cornice />
     </header>
   );
 }
