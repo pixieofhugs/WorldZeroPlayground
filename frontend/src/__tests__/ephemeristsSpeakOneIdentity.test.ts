@@ -3,7 +3,7 @@
  *
  * The faction ran two visual languages at once. THE VALLEY PLATE
  * (`--faction-ephemerists-plate-*`, Poiret One / Cinzel / Spectral, the kit in
- * `components/cards/ephemeristsPlate.tsx`) is the live one, shipped by the v2
+ * `components/factionMarks/ephemeristsPlate.tsx`) is the live one, shipped by the v2
  * task card (#1023), the task detail (#1032), the praxis detail (#1120) and the
  * praxis card / score stamp / vote / metatask seal (#1207). THE CODEX — the
  * `--eph-*` illuminated-manuscript family: vellum, lapis, rubric, gold leaf,
@@ -66,18 +66,24 @@ describe('the Ephemerists wear one identity (#1208)', () => {
   })
 
   it('the plate family is what the sweep moved TO, so it is read', () => {
-    // Either directly, or through `components/cards/ephemeristsPlate.tsx`, which
+    // Either directly, or through `components/factionMarks/ephemeristsPlate.tsx`, which
     // is where a mark used by more than one Ephemerists surface is drawn.
     const readers = sourceFiles(SRC_DIR).filter((path) =>
-      /--faction-ephemerists-plate-|cards\/ephemeristsPlate/.test(
+      /--faction-ephemerists-plate-|factionMarks\/ephemeristsPlate/.test(
         stripComments(readFileSync(path, 'utf8')),
       ),
     )
     // The reference implementations (task card, task detail, praxis detail,
     // praxis card, score stamp, vote, seal, comment voice, feed frame) plus the
-    // swept surfaces and the kit itself — 18 files the day the sweep landed. A
-    // floor, not a census: it only has to fail if the sweep is reverted or the
-    // kit is orphaned, so it does not move when a surface is added or retired.
-    expect(readers.length).toBeGreaterThanOrEqual(18)
+    // swept surfaces and the kit itself — 18 files the day the sweep landed, 17
+    // since #1313. A floor, not a census: it only has to fail if the sweep is
+    // reverted or the kit is orphaned.
+    //
+    // It DOES move when a surface is RETIRED, which the previous wording denied:
+    // #1313 deleted `EphemeristsMobileDuelSealConfirm` along with the
+    // `mobileDuelSeal` surface, and that file was one of these readers. One file
+    // dresses the seal at both form factors now, so the floor drops by exactly
+    // the one that went, and by no more.
+    expect(readers.length).toBeGreaterThanOrEqual(17)
   })
 })

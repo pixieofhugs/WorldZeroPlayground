@@ -10,7 +10,7 @@
  * arrives as a `ConfirmRequest` from `composerConfirms.ts`, so the copy for each
  * case can be built and tested without a browser.
  *
- * CHROME — deliberately the same shape as `editPraxis/MetataskRemoveConfirm` and
+ * CHROME — deliberately the same shape as `metataskSeal/MetataskRemoveConfirm` and
  * `duel/DuelSealConfirm`, the two in-page confirms already mounted on this
  * surface: fixed dim overlay, desktop centred card / mobile bottom sheet via
  * `useFormFactor()`, `[dismiss] … [confirm]` footer order (#646). The panel's

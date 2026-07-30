@@ -1,6 +1,10 @@
 /**
- * Cozy Coven DESKTOP duel seal-confirm (#720, re-dressed by #1209) — the ward,
- * asking you to be sure.
+ * Cozy Coven duel seal-confirm (#720, re-dressed by #1209) — the ward, asking
+ * you to be sure. ONE responsive component since #1313 retired the
+ * `mobileDuelSeal` twin: `DuelSealSheet` hangs this ward in a centred card on a
+ * laptop and full-bleed on a phone, and the phone keeps the opponent's spine
+ * rather than the twin's rounded top edge and grab handle — a bottom sheet you
+ * cannot drag has no edge to advertise.
  *
  * The Default dialog's content, re-hung on the coven's own paper: a slip band
  * across the head carrying the pentagram badge and a braided thread, the
@@ -37,7 +41,8 @@
  * grounds are rows in `utils/__tests__/factionContrast.test.ts`.
  */
 import { factionCssVar } from '../../utils/factions'
-import { CovenSigil } from '../cards/CovenSigil'
+import DuelSealSheet from './DuelSealSheet'
+import { CovenSigil } from '../sigil/CovenSigil'
 import {
   Braid,
   BORDER,
@@ -51,7 +56,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
-} from '../cards/covenSlip'
+} from '../factionMarks/covenSlip'
 import {
   duelSides,
   RaceRoster,
@@ -64,6 +69,12 @@ import type { DuelSealConfirmProps } from './DuelSealConfirm'
 
 /** The sheet-measured warning ink (#694), which the global red is not (#1168). */
 const NOTICE = 'var(--faction-coven-card-notice)'
+
+/**
+ * The ward's own edge. Held as three longhands because the opponent's spine is
+ * `ground` and a `border` shorthand in `card` would reset it (#1313).
+ */
+const WARD_EDGE = `2px solid ${BORDER}`
 
 export default function CovenDuelSealConfirm({
   duel,
@@ -83,125 +94,120 @@ export default function CovenDuelSealConfirm({
   const theme: DuelSlotTheme = { accent, muted: SOFT, bodyFont: READING }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        padding: 'var(--space-lg)',
-        background: 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))',
+    <DuelSealSheet
+      label={copy.heading}
+      ground={{
+        color: INK,
+        fontFamily: READING,
+        borderLeft: `4px solid ${accent}`,
+      }}
+      card={{
+        borderRadius: 18,
+        overflow: 'hidden',
+        borderTop: WARD_EDGE,
+        borderRight: WARD_EDGE,
+        borderBottom: WARD_EDGE,
+        boxShadow: SHADOW,
       }}
     >
+      {/* the slip band — badge, heading, braid */}
       <div
-        className="w-full max-w-[460px]"
         style={{
-          borderRadius: 18,
-          overflow: 'hidden',
-          border: `2px solid ${BORDER}`,
-          borderLeft: `4px solid ${accent}`,
-          boxShadow: SHADOW,
+          flexShrink: 0,
+          padding: 'var(--space-md) var(--space-lg)',
+          background: SLIP_SHEET,
+          borderBottom: `2px solid ${BORDER}`,
           color: INK,
-          fontFamily: READING,
         }}
       >
-        {/* the slip band — badge, heading, braid */}
-        <div
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <SigilMark size={26} />
+          <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', fontWeight: 600, lineHeight: 1.06 }}>
+            {copy.heading}
+          </h2>
+        </div>
+        <Braid style={{ marginTop: 'var(--space-sm)' }} />
+      </div>
+
+      {/* the candlelit page — `flex: 1` so it runs to the bottom edge when the
+          sheet IS the screen, and lies at its own height on a laptop */}
+      <div style={{ flex: 1, padding: 'var(--space-lg)', background: PAGE }}>
+        {/* Notice ink, not the global red — see the contrast note above. */}
+        <p
           style={{
-            padding: 'var(--space-md) var(--space-lg)',
-            background: SLIP_SHEET,
-            borderBottom: `2px solid ${BORDER}`,
-            color: INK,
+            fontSize: 'var(--text-content)',
+            lineHeight: 1.5,
+            color: SOFT,
+            ...(copy.danger
+              ? {
+                  color: NOTICE,
+                  fontWeight: 700,
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: '3px solid var(--color-danger)',
+                }
+              : {}),
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <SigilMark size={26} />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', fontWeight: 600, lineHeight: 1.06 }}>
-              {copy.heading}
-            </h2>
-          </div>
-          <Braid style={{ marginTop: 'var(--space-sm)' }} />
-        </div>
+          {copy.body}
+        </p>
 
-        {/* the candlelit page */}
-        <div style={{ padding: 'var(--space-lg)', background: PAGE }}>
-          {/* Notice ink, not the global red — see the contrast note above. */}
+        {/* The free-reopen half of the truth — same condition as the Default
+            skin, because it is the same fact, not a Coven flourish. A forfeit
+            has no such note, and `copy.note` is null there. */}
+        {copy.note && (
           <p
             style={{
+              marginTop: 'var(--space-sm)',
               fontSize: 'var(--text-content)',
-              lineHeight: 1.5,
-              color: SOFT,
-              ...(copy.danger
-                ? {
-                    color: NOTICE,
-                    fontWeight: 700,
-                    paddingLeft: 'var(--space-md)',
-                    borderLeft: '3px solid var(--color-danger)',
-                  }
-                : {}),
+              color: 'var(--color-success)',
             }}
           >
-            {copy.body}
+            {copy.note}
           </p>
+        )}
 
-          {/* The free-reopen half of the truth — same condition as the Default
-              skin, because it is the same fact, not a Coven flourish. A forfeit
-              has no such note, and `copy.note` is null there. */}
-          {copy.note && (
-            <p
-              style={{
-                marginTop: 'var(--space-sm)',
-                fontSize: 'var(--text-content)',
-                color: 'var(--color-success)',
-              }}
-            >
-              {copy.note}
-            </p>
-          )}
-
-          {/* paper laid on the wash: the two-outcome tiles and the race roster */}
-          <div
-            style={{
-              marginTop: 'var(--space-md)',
-              background: CARD,
-              border: `1.5px solid ${BORDER}`,
-              borderRadius: 12,
-              padding: 'var(--space-md)',
-            }}
-          >
-            <StakesTiles
-              viewerFactionSlug={me.faction_slug}
-              opponentFactionSlug={foe.faction_slug}
-              opponentName={foe.display_name}
-              taskPointValue={taskPointValue}
-              status={duel.status}
-              theme={theme}
-            />
-            <RaceRoster me={me} foe={foe} theme={theme} />
-          </div>
-
-          <div style={{ marginTop: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <CovenSigil size={12} color={GOLD} />
-            <Braid style={{ flex: 1 }} />
-            <CovenSigil size={12} color={GOLD} />
-          </div>
-
-          <div style={{ marginTop: 'var(--space-md)' }}>
-            <SealActions
-              onConfirm={onConfirm}
-              onCancel={onCancel}
-              busy={busy}
-              confirmLabel={copy.confirmLabel}
-              danger={copy.danger}
-              theme={theme}
-            />
-          </div>
-          {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-              pair rather than growing a Coven gradient-button skin slot. The
-              global [Cancel] … [Submit] order (#646) is worth more here than a
-              pink button, and adding a skin prop would be foundation work. */}
+        {/* paper laid on the wash: the two-outcome tiles and the race roster */}
+        <div
+          style={{
+            marginTop: 'var(--space-md)',
+            background: CARD,
+            border: `1.5px solid ${BORDER}`,
+            borderRadius: 12,
+            padding: 'var(--space-md)',
+          }}
+        >
+          <StakesTiles
+            viewerFactionSlug={me.faction_slug}
+            opponentFactionSlug={foe.faction_slug}
+            opponentName={foe.display_name}
+            taskPointValue={taskPointValue}
+            status={duel.status}
+            theme={theme}
+          />
+          <RaceRoster me={me} foe={foe} theme={theme} />
         </div>
+
+        <div style={{ marginTop: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <CovenSigil size={12} color={GOLD} />
+          <Braid style={{ flex: 1 }} />
+          <CovenSigil size={12} color={GOLD} />
+        </div>
+
+        <div style={{ marginTop: 'var(--space-md)' }}>
+          <SealActions
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            busy={busy}
+            confirmLabel={copy.confirmLabel}
+            danger={copy.danger}
+            theme={theme}
+          />
+        </div>
+        {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
+            pair rather than growing a Coven gradient-button skin slot. The
+            global [Cancel] … [Submit] order (#646) is worth more here than a
+            pink button, and adding a skin prop would be foundation work. */}
       </div>
-    </div>
+    </DuelSealSheet>
   )
 }

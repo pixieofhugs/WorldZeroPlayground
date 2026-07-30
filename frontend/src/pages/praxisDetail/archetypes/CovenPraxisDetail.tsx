@@ -57,7 +57,7 @@
  * own `CovenVote` (the design's `WowVote` import is a bug) and additionally owns
  * the `viewer_can_vote` gate and the `VoteFactionContext` the logged-out gate
  * reads, neither of which the widget carries itself · `CollabRoster` ·
- * `MediaGallery` · `MetaTaskSeal`, read-only: `apply_metatask` requires
+ * `MediaGallery` · `MetataskSeal`, read-only: `apply_metatask` requires
  * `in_progress`, so an add chip would 422 on a published praxis · `DuelCard`,
  * which narrates all three readings (live / won by default / final) and draws
  * nothing on a declined challenge — the design draws only the live one, and is
@@ -78,7 +78,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
+import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
@@ -682,7 +682,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     </section>
   )
 
-  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
   // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
   // wears its ISSUING faction's dress (#927/#933). The design's add chips are
   // deliberately absent: `apply_metatask` requires `status == in_progress`, so
@@ -690,7 +690,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: sectionGap }}>
       {sectionHead(t('detail.metatasks.heading'))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   )
 

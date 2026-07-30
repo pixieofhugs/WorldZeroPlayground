@@ -49,17 +49,17 @@
  */
 import type { ComponentType } from 'react'
 
-import type { CardProps } from '../components/TaskCard'
-import type { SealSkinProps } from '../components/metaTaskSeal/types'
-import type { ArchetypeProps as PraxisCardProps } from '../components/PraxisCard'
+import type { CardProps } from '../components/taskCard/TaskCard'
+import type { SealSkinProps } from '../components/metataskSeal/types'
+import type { ArchetypeProps as PraxisCardProps } from '../components/praxisCard/PraxisCard'
 import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'
-import type { SigilVariantProps } from '../components/cards/FactionSigil'
+import type { SigilVariantProps } from '../components/sigil/FactionSigil'
 import type { CommentComponent } from '../components/comments/shared'
 import type { FeedFrameProps } from '../components/feed/feedFrameProps'
 import type { VoteUIProps } from '../components/vote/VoteUI'
 import type { ScoreStampProps } from '../components/praxisCard/scoreStamp/ScoreStamp'
-import type { FactionCardProps } from '../components/cards/FactionCard'
-import type { FactionSelectCardProps } from '../components/cards/FactionSelectCard'
+import type { FactionCardProps } from '../components/factionCard/FactionCard'
+import type { FactionSelectCardProps } from '../components/selectCard/FactionSelectCard'
 import type { DuelSealConfirmProps } from '../components/duel/DuelSealConfirm'
 import type { FactionHeroProps } from '../pages/FactionDetail'
 import type { ProfileBodyProps } from '../pages/characterProfile/FactionProfileBody'
@@ -120,7 +120,7 @@ export interface FactionManifest {
    * responsive component per faction — no mobile twin, the sticker renders
    * near-identical at 340px.
    */
-  readonly metaTaskSeal?: Lazy<ComponentType<SealSkinProps>>
+  readonly metataskSeal?: Lazy<ComponentType<SealSkinProps>>
 
   // ─── Pages (desktop) ───────────────────────────────────────────────────────
   readonly taskDetail?: Lazy<Stateful<TaskDetailState>>
@@ -130,8 +130,11 @@ export interface FactionManifest {
   readonly factionBody?: Lazy<Stateful<FactionDetailState>>
   readonly profileBody?: Lazy<ComponentType<ProfileBodyProps>>
 
-  // ─── Duel surfaces (desktop) ───────────────────────────────────────────────
-  // The duel SEAL is the only dispatched duel surface. `duelRail` /
+  // ─── Duel surfaces ─────────────────────────────────────────────────────────
+  // ONE responsive component per faction, both form factors (#1313): the seven
+  // skins hang their interior in `components/duel/DuelSealSheet`, which is the
+  // single place the seal reads `useFormFactor()`. The duel SEAL is the only
+  // dispatched duel surface. `duelRail` /
   // `mobileDuelRail` were retired outright in #1090: the duel stopped being a
   // dispatched surface at all. It is now a card INSIDE the praxis-detail
   // archetype (`pages/praxisDetail/DuelCard.tsx`), so a faction dresses it by
@@ -148,12 +151,23 @@ export interface FactionManifest {
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
   // Task cards, task detail, praxis detail, the EDIT-PRAXIS COMPOSER, the PRAXIS
-  // CARD and now the CHARACTER PROFILE have no mobile twin: ADR-0056, ADR-0058,
-  // ADR-0061/#1085, ADR-0065/#1181, ADR-0067 and #1319 each collapsed their
-  // surface to one responsive component per faction and retired it. Every one of
-  // those licences is scoped to its own surface — ADR-0035 still governs the
-  // twins below, and each record says in terms that it licenses no further
-  // collapse: the next surface needs its own record, the same way.
+  // CARD, the CHARACTER PROFILE and now the DUEL SEAL have no mobile twin:
+  // ADR-0056, ADR-0058, ADR-0061/#1085, ADR-0065/#1181, ADR-0067, #1319 and
+  // #1313 each collapsed their surface to one responsive component per faction
+  // and retired it. Every one of those licences is scoped to its own surface —
+  // ADR-0035 still governs the twins below, and each record says in terms that
+  // it licenses no further collapse: the next surface needs its own record, the
+  // same way.
+  //
+  // `mobileDuelSeal` is the seventh (#1313). It was the tightest pair in the
+  // set: SEVEN twins whose difference was the positioning shell — a centred
+  // 460px card over a scrim, or a full-bleed sheet — repeated seven times, with
+  // byte-identical slots, tokens, contrast-measured inks and copy modes on both
+  // sides of each pair. That shell is `DuelSealSheet` now: a skin declares its
+  // `ground` (paper, ink, face, the opponent's edge) and its `card` (border,
+  // radius, clip, shadow — the chrome that only means something while it floats)
+  // and the chassis picks. No skin lost its frame; the branch went from fourteen
+  // files to one.
   //
   // `mobileProfile` is the sixth (#1319). It was the clearest case for the
   // collapse and the weakest seam in the set: TWO of nine slugs ever filled it
@@ -188,7 +202,6 @@ export interface FactionManifest {
   // is not a seam, it is a lookup that always returns the same answer.
   readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
-  readonly mobileDuelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 }
 
 /** Every surface key except `slug`. */
@@ -214,7 +227,7 @@ export const SURFACE_KEYS = [
   'feedFrame',
   'vote',
   'scoreStamp',
-  'metaTaskSeal',
+  'metataskSeal',
   'taskDetail',
   'praxisDetail',
   'editPraxis',
@@ -224,7 +237,6 @@ export const SURFACE_KEYS = [
   'duelSeal',
   'mobileFactionPage',
   'mobileFieldDesk',
-  'mobileDuelSeal',
 ] as const satisfies readonly FactionSurface[]
 
 /**

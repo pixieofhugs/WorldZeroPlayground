@@ -17,7 +17,7 @@ import { pickVariant } from '../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../factions'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
-import UaHome from '../mobileArchetypes/UaHome'
+import UaFieldDesk from '../mobileArchetypes/UaFieldDesk'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import type { CharacterOut } from '../../../api/auth'
 import type { PraxisCardOut } from '../../../api/praxis'
@@ -82,7 +82,7 @@ function render(element: ReactElement): { html: string; text: string } {
 
 describe('mobile FieldDesk-home UA dispatch', () => {
   it('mobile + a UA life resolves to the bespoke UA home skin', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('mobileFieldDesk'), 'ua', DefaultFieldDesk))).toBe(UaHome)
+    expect(resolvedArchetype(pickVariant(surfaceMap('mobileFieldDesk'), 'ua', DefaultFieldDesk))).toBe(UaFieldDesk)
   })
 
   it('mobile + any other slug falls through to the Default home skin', () => {
@@ -94,21 +94,21 @@ describe('mobile FieldDesk-home UA dispatch', () => {
 
 describe('UA mobile home — what it draws', () => {
   it('heads the screen with the ensō', () => {
-    const { html } = render(<UaHome state={baseState()} />)
+    const { html } = render(<UaFieldDesk state={baseState()} />)
     // The one ensō (#908): the vendored brush drawing, painted through a mask.
     expect(html).toContain('/factionMarks/enso.webp')
     expect(html).toContain('var(--faction-ua-glow)')
   })
 
   it('runs the mandala behind the masthead only', () => {
-    const { html } = render(<UaHome state={baseState()} />)
+    const { html } = render(<UaFieldDesk state={baseState()} />)
     // The mandala's outer guide circle; the ensō draws no such hairline stroke.
     expect(html.match(/stroke-width="0\.6"/g)).toHaveLength(1)
     expect(html).toContain('opacity:0.14')
   })
 
   it('keeps its slots: name, points, stat tiles, active work and both actions', () => {
-    const { html, text } = render(<UaHome state={baseState()} />)
+    const { html, text } = render(<UaFieldDesk state={baseState()} />)
     expect(text).toContain('Ada Reed')
     expect(text).toContain('340')
     expect(text.toLowerCase()).toContain('era 1')
@@ -118,7 +118,7 @@ describe('UA mobile home — what it draws', () => {
   })
 
   it('carries no gold: the legacy --ua-* palette and Cinzel are gone here', () => {
-    const { html } = render(<UaHome state={baseState()} />)
+    const { html } = render(<UaFieldDesk state={baseState()} />)
     expect(html).not.toMatch(/--ua-(gold|gilt|paper|wall|line|ink|sub|muted|orange)/)
     expect(html).not.toMatch(/--font-faction-engraved/)
   })

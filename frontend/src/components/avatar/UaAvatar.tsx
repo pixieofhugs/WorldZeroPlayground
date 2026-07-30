@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
-import { UaSigil } from "../cards/UaSigil";
+import { UaSigil } from "../sigil/UaSigil";
 
 /**
  * UA avatar — the portrait ringed in the practice's own orange, with the ensō

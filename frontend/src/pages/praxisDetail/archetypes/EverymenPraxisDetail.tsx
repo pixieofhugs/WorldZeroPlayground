@@ -58,7 +58,7 @@
  * votes tally — so this file only mounts it and builds NO arithmetic of its own
  * (`scoreBreakdown()` is the single authority, ADR-0053) · `VoteUI`, which
  * dispatches to the gearworks widget on the task's faction · `CollabRoster` ·
- * `MediaGallery` · `MetaTaskSeal`, READ-ONLY: the design's add-chips would 422,
+ * `MediaGallery` · `MetataskSeal`, READ-ONLY: the design's add-chips would 422,
  * since `apply_metatask` requires `in_progress` · `DuelCard`, which already
  * narrates live / won-by-default / final and draws nothing on a declined
  * challenge, so the design's single "leads by" reading is not rebuilt here.
@@ -79,7 +79,7 @@ import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
@@ -775,7 +775,7 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
-  // READ-ONLY, by construction. `MetaTaskSeal` omits the peel control and the
+  // READ-ONLY, by construction. `MetataskSeal` omits the peel control and the
   // add slot when it gets neither `removable` nor `onAdd`, and each seal wears
   // its ISSUING faction's dress. The design's add-chips are deliberately absent:
   // `apply_metatask` requires `status == in_progress`, so every chip would 422.
@@ -784,7 +784,7 @@ export default function EverymenPraxisDetail({
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
     >
       {sectionHead(t("detail.metatasks.heading"))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   );
 

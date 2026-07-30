@@ -249,7 +249,7 @@ function inkOf(tag: string): string | null {
  * among them: it is a rule/strand/large-numeral pigment that clears on the
  * ward CARD (4.70:1) and misses on the ward PAGE (4.44:1 flat, 3.47:1 under
  * the peak of the pink haze bloom) — see the ink-tier note in
- * `components/cards/covenSlip.tsx`.
+ * `components/factionMarks/covenSlip.tsx`.
  */
 const WARD_PAGE_INKS = [
   'var(--faction-coven-slip-ink)',

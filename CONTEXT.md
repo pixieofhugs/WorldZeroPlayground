@@ -441,6 +441,19 @@ One-sided Foe, Secret Admirer, Targeted, **Blocked**, Unknown. Not stored; deriv
 _Avoid_: treating One-sided Foe / Targeted as duplicates to reconcile; storing the label;
 hiding a block from the blocked party; calling it "relationship".
 
+**Taunt** *(ADR-0031, ADR-0068)*:
+An automatic needle from one character's achievement into a rival's feed — never typed by a
+player. Three triggers: a **lead flip** (the sender is now ahead of the recipient on score,
+however that happened, including passively), a **level-up**, and a **praxis submission**.
+Delivery is subscription-shaped: **declaring a foe subscribes *you* to that rival's taunts** —
+a taunt reaches only recipients whose own active foe edge points at the sender, and a block on
+either edge silences the pair (Blocked wins, ADR-0009). The backend persists a structured
+reference (sender's send-time faction voice + trigger); the frontend catalog owns every word
+(ADR-0031). Era transitions are silent — taunts arise only from organic play.
+_Avoid_: message / DM (no player composes one); notification (it is feed content the recipient
+opted into by their own declaration); "foe taunt" as a distinct kind (every taunt is between
+foes — the feed item type `foe_taunt` names the one kind there is).
+
 ### Account & Character
 
 **Account**:

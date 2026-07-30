@@ -18,7 +18,7 @@ import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
-import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/cards/uaAtoms'
+import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/factionMarks/uaAtoms'
 
 const INK = 'var(--faction-ua-card-text)'
 const MUTED = 'var(--faction-ua-card-muted)'

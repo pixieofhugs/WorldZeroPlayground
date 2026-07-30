@@ -12,7 +12,7 @@ import {
 } from '../../../utils/factions'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
 import FactionAvatar from '../../../components/avatar/FactionAvatar'
-import FactionSigil from '../../../components/cards/FactionSigil'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import LevelGem from '../../../components/ui/LevelGem'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 import { type RankedPlayer } from '../Constellation'

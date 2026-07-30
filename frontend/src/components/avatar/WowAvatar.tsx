@@ -1,6 +1,6 @@
 import i18n from "../../i18n";
 import { mediaUrl } from "../../utils/media";
-import { WowSigil } from "../cards/WowSigil";
+import { WowSigil } from "../sigil/WowSigil";
 import { avatarDim, type FactionAvatarProps } from "./FactionAvatar";
 
 /**

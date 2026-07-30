@@ -51,7 +51,7 @@ import { listRelationships } from "../../api/relationships";
 import { getMyCharacters } from "../../api/me";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listCharacters, type CharacterOut } from "../../api/characters";
-import { listMetatasks } from "../../api/metaTasks";
+import { listMetatasks } from "../../api/metatasks";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import {
@@ -244,7 +244,7 @@ export interface EditPraxisState {
   dissolveDuel: () => Promise<void>;
 
   // Metatasks (seal stack + Section-D picker + Section-E remove, #933)
-  metaTasks: TaskOut[];
+  metatasks: TaskOut[];
   appliedMetatasks: Set<number>;
   /** The applied metatasks as full rows, rendered as the editable seal stack. */
   appliedMetataskList: TaskOut[];
@@ -508,7 +508,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Picked images awaiting the edit modal, oldest first (#514).
   const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
-  const [metaTasks, setMetaTasks] = useState<TaskOut[]>([]);
+  const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
   // The applied metatasks as full rows (source of truth for the seal stack);
   // `appliedMetatasks` (the id Set) is derived from it below.
   const [appliedMetataskList, setAppliedMetataskList] = useState<TaskOut[]>([]);
@@ -631,7 +631,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
             }),
           listMetatasks()
             .then((all) =>
-              setMetaTasks(all.filter((mt) => mt.eligible_for_current_user)),
+              setMetatasks(all.filter((mt) => mt.eligible_for_current_user)),
             )
             .catch(() => {
               /* non-fatal */
@@ -1525,14 +1525,14 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     !controlsLocked && !!praxis && (praxis.type === "collab" || duelMode);
   // Editable only for a still-open solo praxis with at least one metatask the
   // viewer is eligible to seal (backend ships `eligible_for_current_user`; the
-  // load effect already filters `metaTasks` to it — the level threshold never
+  // load effect already filters `metatasks` to it — the level threshold never
   // reaches the client).
   const canSealMetatask =
     !controlsLocked &&
     !!praxis &&
     praxis.type === "solo" &&
     !duelMode &&
-    metaTasks.length > 0;
+    metatasks.length > 0;
   // Legacy name, unchanged meaning (still gates the old per-archetype block).
   const showMetatasks = canSealMetatask;
   // Show the stack when the viewer can seal, OR when an ineligible viewer still
@@ -1592,7 +1592,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     cancelDuel,
     dissolveDuel,
 
-    metaTasks,
+    metatasks,
     appliedMetatasks,
     appliedMetataskList,
     applyingMetatask,

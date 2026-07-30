@@ -5,17 +5,17 @@ import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { Lotus } from "../../../components/factionMarks";
-import { UaSigil } from "../../../components/cards/UaSigil";
+import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
   UA_DISPLAY,
   UA_EYEBROW,
   UA_TEXT,
   UaInkColumn,
   uaShade,
-} from "../../../components/cards/uaAtoms";
+} from "../../../components/factionMarks/uaAtoms";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
@@ -137,7 +137,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  * the whole score rail and resolves UA's own ensō stamp — `scoreBreakdown()` is
  * the arithmetic authority (ADR-0053) and this file adds no second strip ·
  * `VoteUI`, which dispatches UA's growing mandala · `CollabRoster`, which paints
- * its own sheet and its own ink (#694) · `MediaGallery` · `MetaTaskSeal`,
+ * its own sheet and its own ink (#694) · `MediaGallery` · `MetataskSeal`,
  * READ-ONLY (no add-chips: `apply_metatask` requires `in_progress` and every one
  * would 422) · `DuelCard`, which owns all three duel readings and draws nothing
  * on a declined challenge — it paints its own `--faction-default-*` inks and
@@ -814,7 +814,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
     </section>
   );
 
-  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
   // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
   // wears its ISSUING faction's dress (#927/#933). No "available" chips:
   // `apply_metatask` (services/praxis.py) requires `status == in_progress`, so
@@ -822,7 +822,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead(t("detail.metatasks.heading"))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   );
 

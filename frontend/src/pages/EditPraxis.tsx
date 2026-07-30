@@ -18,8 +18,8 @@ import {
   useEditPraxis,
 } from "./editPraxis/useEditPraxis";
 import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
-import MetataskPicker from "./editPraxis/MetataskPicker";
-import MetataskRemoveConfirm from "./editPraxis/MetataskRemoveConfirm";
+import MetataskPicker from "../components/metataskSeal/MetataskPicker";
+import MetataskRemoveConfirm from "../components/metataskSeal/MetataskRemoveConfirm";
 
 export default function EditPraxis() {
   const { t } = useTranslation("forms");

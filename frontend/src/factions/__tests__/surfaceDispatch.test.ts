@@ -125,11 +125,12 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
 /* -------------------------------------------------------------------------- */
 
 // The bar, derived so a new core surface raises it automatically: every surface
-// the reference core factions all skin. Excludes the duel surfaces (ua leaves
-// them Default) by construction. It used to exclude `mobileProfile` the same
-// way — only wow ever filled it — and #1319 retired that surface outright, so
-// there is nothing left to exclude: the crested profile is now the mobile branch
-// of `profileBody`, which every reference faction already skins.
+// the reference core factions all skin — `duelSeal` included, since all five
+// register it. It used to exclude `mobileProfile` (only wow ever filled it) and
+// `mobileDuelSeal`; #1319 and #1313 retired both surfaces outright, so there is
+// nothing left to exclude. The crested profile is the mobile branch of
+// `profileBody` and every seal is one responsive component behind `duelSeal`,
+// and every reference faction already skins both.
 const REFERENCE_FACTIONS = ['snide', 'ephemerists', 'singularity', 'everymen', 'ua']
 const REQUIRED = SURFACE_KEYS.filter((surface) =>
   REFERENCE_FACTIONS.every((faction) => surfaceMap(surface)[faction] !== undefined),

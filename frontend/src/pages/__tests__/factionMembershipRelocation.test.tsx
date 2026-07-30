@@ -15,7 +15,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Link } from "react-router-dom";
 import { describe, it, expect } from "vitest";
-import FactionCard from "../../components/cards/FactionCard";
+import FactionCard from "../../components/factionCard/FactionCard";
 import EverymenFactionBody from "../factionDetail/archetypes/EverymenFactionBody";
 import type { FactionDetailState, Membership } from "../factionDetail/useFactionDetail";
 import type { FactionOut } from "../../api/factions";

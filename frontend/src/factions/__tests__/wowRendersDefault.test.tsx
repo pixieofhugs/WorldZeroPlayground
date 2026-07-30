@@ -58,10 +58,12 @@ function Sentinel() {
  * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
  * `profileBody`, `factionSelectCard`), and what is left of #895's four DUEL
- * surfaces — the Lists seal on both form factors. Its two rail skins went with
- * the `duelRail` / `mobileDuelRail` SURFACES themselves in #1090, which folded
+ * surfaces — the Lists seal, ONE responsive component serving both form factors
+ * since #1313 retired `mobileDuelSeal` (the kit's phone sheet is the chassis's
+ * full-bleed branch, not a deletion). Its two rail skins went with the
+ * `duelRail` / `mobileDuelRail` SURFACES themselves in #1090, which folded
  * the duel into a card inside praxis detail; that is a surface retirement, not
- * a WOW gap, so neither name appears above or below. And #901's two
+ * a WOW gap, so none of those three names appears above or below. And #901's two
  * surviving FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone
  * screen the kit drew, plus `mobileFactionPage` derived from that screen's
  * chrome and the matching desktop archetype — #901 skinned four
@@ -72,7 +74,7 @@ function Sentinel() {
  * `profileBody` now serve WOW on both form factors and praxis detail is ONE
  * shared page every faction dresses; the pavilion profile is the phone branch
  * inside `WowProfileBody`, not a deletion), and #931's
- * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
+ * `metataskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
  * and #1037's desktop `taskDetail` — THE PARCHMENT FIELD, the first of #951's
@@ -119,13 +121,12 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'profileBody',
   'factionSelectCard',
   'duelSeal',
-  'mobileDuelSeal',
   'mobileFieldDesk',
   'mobileFactionPage',
-  'metaTaskSeal',
+  'metataskSeal',
 ])
 
-describe('wow is partly skinned: twenty-one surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

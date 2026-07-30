@@ -313,7 +313,7 @@ export default function Sidebar({ pendingRequests, refetchPendingRequests }: Sid
                    fifth-width fill reveals the first fifth of one rainbow rather
                    than squeezing all seven stops into a fifth of the bar.
                    A PERCENTAGE is correct here, and this is not the px span
-                   UnaffiliatedVote's docstring (#842) argues for: that widget has
+                   DefaultVote's docstring (#842) argues for: that widget has
                    five separate dot elements, so a percentage gave each dot its own
                    restarted ramp. This is ONE fill, so the percentage resolves
                    against it alone — fill = slotPercent% × track, therefore

@@ -1,16 +1,16 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import PraxisCard from "../../../components/PraxisCard";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { Lotus } from "../../../components/factionMarks";
-import { UaSigil } from "../../../components/cards/UaSigil";
+import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
   UA_DISPLAY,
   UA_EYEBROW,
   UA_TEXT,
   UaEnsoScore,
   uaShade,
-} from "../../../components/cards/uaAtoms";
+} from "../../../components/factionMarks/uaAtoms";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";

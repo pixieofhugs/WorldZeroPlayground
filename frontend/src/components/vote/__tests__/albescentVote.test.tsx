@@ -1,7 +1,7 @@
 /**
  * AlbescentVote (#843) — the eighth vote widget, and the ONE thing this file
  * exists to stop from silently regressing: Albescent used to fall through to
- * `UnaffiliatedVote`, and because the fallback renders a plausible row of dots,
+ * `DefaultVote`, and because the fallback renders a plausible row of dots,
  * nothing looked broken. So the registration is pinned as hard as the geometry.
  *
  * The harness is SSR-only (renderToStaticMarkup, no DOM, effects never run), so
@@ -30,7 +30,7 @@ vi.mock('../../../api/votes', () => ({
 }))
 
 import AlbescentVote from '../AlbescentVote'
-import UnaffiliatedVote from '../UnaffiliatedVote'
+import DefaultVote from '../DefaultVote'
 import { surfaceMap } from '../../../factions'
 import { pickVariant } from '../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
@@ -75,14 +75,14 @@ function render(currentValue?: number): string {
 }
 
 describe('albescent claims the vote surface', () => {
-  it('registers its own widget instead of falling through to UnaffiliatedVote', () => {
+  it('registers its own widget instead of falling through to DefaultVote', () => {
     const map = surfaceMap('vote')
     expect(map['albescent']).toBeDefined()
     const Resolved = resolvedArchetype(
-      pickVariant(map as Record<string, typeof AlbescentVote>, 'albescent', UnaffiliatedVote),
+      pickVariant(map as Record<string, typeof AlbescentVote>, 'albescent', DefaultVote),
     )
     expect(Resolved).toBe(AlbescentVote)
-    expect(Resolved).not.toBe(UnaffiliatedVote)
+    expect(Resolved).not.toBe(DefaultVote)
   })
 })
 

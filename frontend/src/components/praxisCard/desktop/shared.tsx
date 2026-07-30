@@ -15,7 +15,7 @@ import {
   type PraxisCardFonts,
 } from "../shared";
 import ScoreStamp from "../scoreStamp/ScoreStamp";
-import MetaTaskSeal from "../../metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "../../metataskSeal/MetataskSeal";
 
 /**
  * Bespoke praxis-card shared pieces (#839).
@@ -23,7 +23,7 @@ import MetaTaskSeal from "../../metaTaskSeal/MetaTaskSeal";
  * Bespoke-frame + shared-slots: each faction's card owns a FRAME (chrome, fonts,
  * tokens) in its own module under `./`, and the CONTENT is the structural slots
  * from `../shared`, composed here by {@link PraxisBody}. Splitting the nine
- * archetypes out of the old 700-line `components/PraxisCard.tsx` gives each
+ * archetypes out of the old 700-line `components/praxisCard/PraxisCard.tsx` gives each
  * faction slice a disjoint footprint.
  *
  * The directory is still called `desktop/`, but these archetypes serve BOTH form
@@ -34,7 +34,7 @@ import MetaTaskSeal from "../../metaTaskSeal/MetaTaskSeal";
  */
 
 /**
- * The props every desktop archetype takes. `components/PraxisCard.tsx` (the
+ * The props every desktop archetype takes. `components/praxisCard/PraxisCard.tsx` (the
  * dispatcher) re-exports this so the faction manifests keep their import site.
  */
 export type ArchetypeProps = {
@@ -193,7 +193,7 @@ export function PraxisBody({
        * media. Each seal dispatches on its metatask's ISSUING faction, not this
        * card's — a WOW card can carry a Snide seal. Renders nothing when empty.
        */}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks ?? []} />
+      <MetataskSeal metatasks={praxis.applied_metatasks ?? []} />
       <PraxisStats
         praxis={praxis}
         style={{ color: muted, marginTop: "var(--space-sm)" }}

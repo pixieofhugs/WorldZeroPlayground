@@ -471,7 +471,7 @@
   --faction-default-aurora-filter: blur(56px) saturate(0.5);
   --faction-default-aurora-blend: normal;
   /* ── The vote row's per-dot GLOW cast (#842, #1214) ──
-     Read as `var(--spectrum-glow-${value})` by vote/UnaffiliatedVote and
+     Read as `var(--spectrum-glow-${value})` by vote/DefaultVote and
      vote/AlbescentVote for each reached dot's box-shadow.
 
      A FIVE-SAMPLE OF THE SEVEN-STOP RAMP, keyed to where each dot windows into
@@ -2571,7 +2571,7 @@
      canonical inner look: the disc + glyph do not follow the card, they follow
      the global theme, so the "one praxis mark" reads as one mark on every
      faction card. Only the light/dark pair below vary (see
-     components/cards/TaskCrown.tsx).
+     components/factionMarks/TaskCrown.tsx).
 
      THE RING IS NOT A TOKEN HERE, and that is the point of #1213. It used to be
      `--fdl-rainbow`, a conic carrying the retired brand six resequenced

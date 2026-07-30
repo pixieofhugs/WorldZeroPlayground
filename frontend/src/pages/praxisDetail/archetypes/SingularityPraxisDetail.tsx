@@ -5,7 +5,7 @@ import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
@@ -84,7 +84,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  * `TaskCrown` via the shared banners · `ScoreStamp`, which since #1091 owns the
  * whole score rail (disc, ruled rows, votes tally) and dispatches to this
  * faction's own terminal read-out · `VoteUI`, dispatching to `SingularityVote` ·
- * `CollabRoster` · `MediaGallery` · `MetaTaskSeal`, read-only (`apply_metatask`
+ * `CollabRoster` · `MediaGallery` · `MetataskSeal`, read-only (`apply_metatask`
  * requires `in_progress`, so the design's add-chips would 422 on every tap) ·
  * `DuelCard`, which already implements all three readings plus "no card at all
  * on declined" · `PraxisDetailComments` with the layout's own heading, so the
@@ -713,7 +713,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // READ-ONLY, by construction. `MetaTaskSeal` omits the peel control and the
+  // READ-ONLY, by construction. `MetataskSeal` omits the peel control and the
   // add slot when it gets neither `removable` nor `onAdd`, and each seal wears
   // its ISSUING faction's dress (#927/#933). The design's "Available" chips are
   // deliberately absent: `apply_metatask` requires `status == in_progress`, so
@@ -721,7 +721,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.metatasks.heading"))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   );
 

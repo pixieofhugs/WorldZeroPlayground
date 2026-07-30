@@ -17,22 +17,21 @@ const SingularityComment = lazyArchetype(() => import('../components/comments/vo
 const SingularityDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityDuelSealConfirm'))
 const SingularityEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SingularityEditPraxis'))
 const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SingularityFactionBody'))
-const SingularityFactionHero = lazyArchetype(() => import('../components/cards/SingularityFactionHero'))
+const SingularityFactionHero = lazyArchetype(() => import('../components/factionHero/SingularityFactionHero'))
 const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SingularityFactionPage'))
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
-const SingularityHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityHome'))
-const SingularityMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityMobileDuelSealConfirm'))
+const SingularityFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityFieldDesk'))
 const SingularityProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SingularityProfileBody'))
-const SingularityTaskCard = lazyArchetype(() => import('../components/cards/SingularityTaskCard'))
+const SingularityTaskCard = lazyArchetype(() => import('../components/taskCard/SingularityTaskCard'))
 const SingularityTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SingularityTaskDetail'))
 const SingularityVote = lazyArchetype(() => import('../components/vote/SingularityVote'))
 const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))
 const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SingularityPraxisDetail'))
 const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
-const SingularitySeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SingularitySeal'))
-const SingularitySigilAdapter = lazyArchetype(() => import('../components/cards/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
-const SingularityCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SingularityCard })))
-const SingularitySelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SingularitySelectCard })))
+const SingularitySeal = lazyArchetype(() => import('../components/metataskSeal/skins/SingularitySeal'))
+const SingularitySigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
+const SingularityCard = lazyArchetype(() => import('../components/factionCard/FactionCard').then((m) => ({ default: m.SingularityCard })))
+const SingularitySelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.SingularitySelectCard })))
 
 export const SINGULARITY_MANIFEST: FactionManifest = {
   slug: 'singularity',
@@ -42,7 +41,7 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   taskCard: () => SingularityTaskCard,
   praxisCard: () => SingularityPraxisCard,
   scoreStamp: () => SingularityScoreStamp,
-  metaTaskSeal: () => SingularitySeal,
+  metataskSeal: () => SingularitySeal,
   avatar: () => SingularityAvatar,
   backdrop: () => SingularityBackdrop,
   sigil: () => SingularitySigilAdapter,
@@ -57,6 +56,5 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
   mobileFactionPage: () => SingularityFactionPage,
-  mobileFieldDesk: () => SingularityHome,
-  mobileDuelSeal: () => SingularityMobileDuelSealConfirm,
+  mobileFieldDesk: () => SingularityFieldDesk,
 }

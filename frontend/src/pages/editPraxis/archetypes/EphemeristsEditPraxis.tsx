@@ -40,7 +40,7 @@
  * ## Marks: reused, not redrawn (WORLD_ZERO_STYLE §6, "one primitive")
  *
  * The winged disc, the cornice, the fluted rule, the incised signs and the
- * stepped octagon are all `components/cards/ephemeristsPlate` — the module
+ * stepped octagon are all `components/factionMarks/ephemeristsPlate` — the module
  * #1120 extracted so the plate's ornament is shared rather than copied. This
  * file draws no new SVG apart from the two marks' arrangement.
  *
@@ -115,7 +115,7 @@ import {
   WriteUpTabs,
   type ComposerTab,
 } from "./controls";
-import { MetataskSealStack } from "../MetataskSealStack";
+import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import {
   BAND_INK,
   BRASS,
@@ -140,7 +140,7 @@ import {
   SMALL_CAPS,
   Sign,
   WingedDisc,
-} from "../../../components/cards/ephemeristsPlate";
+} from "../../../components/factionMarks/ephemeristsPlate";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {

@@ -45,7 +45,7 @@ import {
   READING,
   SHADOW,
   SOFT,
-} from '../../../components/cards/covenSlip'
+} from '../../../components/factionMarks/covenSlip'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
 const CHROME = 'var(--font-faction-rounded)' // Quicksand

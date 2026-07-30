@@ -13,26 +13,25 @@ import { lazyArchetype } from './lazyArchetype'
 
 const SnideAvatar = lazyArchetype(() => import('../components/avatar/SnideAvatar'))
 const SnideDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideDuelSealConfirm'))
-const SnideMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideMobileDuelSealConfirm'))
 const SnideBackdrop = lazyArchetype(() => import('../components/backdrop/SnideBackdrop'))
 const SnideComment = lazyArchetype(() => import('../components/comments/voices/SnideComment'))
 const SnideEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SnideEditPraxis'))
 const SnideFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SnideFactionBody'))
-const SnideFactionHero = lazyArchetype(() => import('../components/cards/SnideFactionHero'))
+const SnideFactionHero = lazyArchetype(() => import('../components/factionHero/SnideFactionHero'))
 const SnideFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SnideFactionPage'))
 const SnideFeedFrame = lazyArchetype(() => import('../components/feed/SnideFeedFrame'))
-const SnideHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideHome'))
+const SnideFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideFieldDesk'))
 const SnidePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SnidePraxisDetail'))
 const SnideProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SnideProfileBody'))
-const SnideTaskCard = lazyArchetype(() => import('../components/cards/SnideTaskCard'))
+const SnideTaskCard = lazyArchetype(() => import('../components/taskCard/SnideTaskCard'))
 const SnideTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SnideTaskDetail'))
 const SnideVote = lazyArchetype(() => import('../components/vote/SnideVote'))
 const SnidePraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SnidePraxisCard'))
 const SnideScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SnideScoreStamp'))
-const SnideSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SnideSeal'))
-const SnideSigil = lazyArchetype(() => import('../components/cards/SnideSigil').then((m) => ({ default: m.SnideSigil })))
-const SnideCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SnideCard })))
-const SnideSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SnideSelectCard })))
+const SnideSeal = lazyArchetype(() => import('../components/metataskSeal/skins/SnideSeal'))
+const SnideSigil = lazyArchetype(() => import('../components/sigil/SnideSigil').then((m) => ({ default: m.SnideSigil })))
+const SnideCard = lazyArchetype(() => import('../components/factionCard/FactionCard').then((m) => ({ default: m.SnideCard })))
+const SnideSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.SnideSelectCard })))
 
 export const SNIDE_MANIFEST: FactionManifest = {
   slug: 'snide',
@@ -42,7 +41,7 @@ export const SNIDE_MANIFEST: FactionManifest = {
   taskCard: () => SnideTaskCard,
   praxisCard: () => SnidePraxisCard,
   scoreStamp: () => SnideScoreStamp,
-  metaTaskSeal: () => SnideSeal,
+  metataskSeal: () => SnideSeal,
   avatar: () => SnideAvatar,
   backdrop: () => SnideBackdrop,
   sigil: () => SnideSigil,
@@ -57,6 +56,5 @@ export const SNIDE_MANIFEST: FactionManifest = {
   profileBody: () => SnideProfileBody,
   duelSeal: () => SnideDuelSealConfirm,
   mobileFactionPage: () => SnideFactionPage,
-  mobileFieldDesk: () => SnideHome,
-  mobileDuelSeal: () => SnideMobileDuelSealConfirm,
+  mobileFieldDesk: () => SnideFieldDesk,
 }

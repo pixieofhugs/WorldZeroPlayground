@@ -17,22 +17,21 @@ const EphemeristsComment = lazyArchetype(() => import('../components/comments/vo
 const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
 const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
 const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EphemeristsFactionBody'))
-const EphemeristsFactionHero = lazyArchetype(() => import('../components/cards/EphemeristsFactionHero'))
+const EphemeristsFactionHero = lazyArchetype(() => import('../components/factionHero/EphemeristsFactionHero'))
 const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EphemeristsFactionPage'))
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
-const EphemeristsHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsHome'))
-const EphemeristsMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsMobileDuelSealConfirm'))
+const EphemeristsFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk'))
 const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
-const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/EphemeristsTaskCard'))
+const EphemeristsTaskCard = lazyArchetype(() => import('../components/taskCard/EphemeristsTaskCard'))
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
 const EphemeristsVote = lazyArchetype(() => import('../components/vote/EphemeristsVote'))
 const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EphemeristsPraxisCard'))
 const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
 const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
-const EphemeristsSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/EphemeristsSeal'))
-const EphemeristsSigil = lazyArchetype(() => import('../components/cards/EphemeristsSigil'))
-const EphemeristsCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.EphemeristsCard })))
-const EphemeristsSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.EphemeristsSelectCard })))
+const EphemeristsSeal = lazyArchetype(() => import('../components/metataskSeal/skins/EphemeristsSeal'))
+const EphemeristsSigil = lazyArchetype(() => import('../components/sigil/EphemeristsSigil'))
+const EphemeristsCard = lazyArchetype(() => import('../components/factionCard/FactionCard').then((m) => ({ default: m.EphemeristsCard })))
+const EphemeristsSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.EphemeristsSelectCard })))
 
 export const EPHEMERISTS_MANIFEST: FactionManifest = {
   slug: 'ephemerists',
@@ -46,7 +45,7 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   // contract, and dropping this line hands the surface straight back to it.
   praxisDetail: () => EphemeristsPraxisDetail,
   scoreStamp: () => EphemeristsScoreStamp,
-  metaTaskSeal: () => EphemeristsSeal,
+  metataskSeal: () => EphemeristsSeal,
   avatar: () => EphemeristsAvatar,
   backdrop: () => EphemeristsBackdrop,
   sigil: () => EphemeristsSigil,
@@ -60,6 +59,5 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   profileBody: () => EphemeristsProfileBody,
   duelSeal: () => EphemeristsDuelSealConfirm,
   mobileFactionPage: () => EphemeristsFactionPage,
-  mobileFieldDesk: () => EphemeristsHome,
-  mobileDuelSeal: () => EphemeristsMobileDuelSealConfirm,
+  mobileFieldDesk: () => EphemeristsFieldDesk,
 }

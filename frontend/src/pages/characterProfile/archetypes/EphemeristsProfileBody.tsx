@@ -31,7 +31,7 @@ import {
   RULE,
   SHADOW,
   SMALL_CAPS,
-} from '../../../components/cards/ephemeristsPlate'
+} from '../../../components/factionMarks/ephemeristsPlate'
 import { toRoman } from '../../../utils/roman'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 

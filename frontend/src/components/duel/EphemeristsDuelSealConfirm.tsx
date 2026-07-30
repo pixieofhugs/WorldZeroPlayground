@@ -1,8 +1,15 @@
 /**
- * Ephemerists DESKTOP duel seal-confirm (#724, swept onto the Valley plate by
- * #1208) — the seal beat as one plate off the field journal: papyrus inside a
- * hairline, an incised small-caps masthead over the brass/nile double rule, and
- * an italic hand for the body.
+ * Ephemerists duel seal-confirm (#724, swept onto the Valley plate by #1208) —
+ * the seal beat as one plate off the field journal: papyrus inside a hairline,
+ * an incised small-caps masthead over the brass/nile double rule, and an italic
+ * hand for the body.
+ *
+ * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
+ * `DuelSealSheet` holds the plate in a centred card on a laptop and lets it fill
+ * the screen on a phone. The papyrus and the opponent's edge are `ground`; the
+ * hairline that frames a floating plate is `card`. The twin's centred masthead
+ * went with it — the incised caps read left-aligned at both widths, as they do
+ * on every other Ephemerists surface.
  *
  * TWO MODES, ONE FILE (#751). `mode` is `'submit'` or `'forfeit'` and every
  * string for both comes from `useDuelSealCopy` — heading, body, note, confirm
@@ -55,6 +62,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import DuelSealSheet from './DuelSealSheet'
 
 import {
   BAND,
@@ -69,13 +77,17 @@ import {
   PLATE,
   QUIET,
   READING,
-} from '../cards/ephemeristsPlate'
+} from '../factionMarks/ephemeristsPlate'
 
 const HAIRLINE_FAINT = `1px solid ${LINE}`
 const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`
 
-/** The rubric mark — an incised sigil used as an icon. Not text. */
-export function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color?: string }) {
+/**
+ * The rubric mark — an incised sigil used as an icon. Not text. Local since
+ * #1313: it was exported for the retired phone twin, and nothing outside this
+ * file draws it.
+ */
+function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color?: string }) {
   return (
     <span
       aria-hidden
@@ -91,8 +103,11 @@ export function Rubric({ glyph = '✧', color = OCHRE }: { glyph?: string; color
   )
 }
 
-/** A lettered rubric: mark, letterspaced red caps, then the double rule. */
-export function RubricHeading({ children }: { children: ReactNode }) {
+/**
+ * A lettered rubric: mark, letterspaced red caps, then the double rule. Local
+ * since #1313, for the same reason as {@link Rubric}.
+ */
+function RubricHeading({ children }: { children: ReactNode }) {
   return (
     <div style={{ marginTop: 'var(--space-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
@@ -135,145 +150,138 @@ export default function EphemeristsDuelSealConfirm({
   const theme: DuelSlotTheme = { accent, muted: QUIET, bodyFont: READING }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        padding: 'var(--space-lg)',
-        background: 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))',
+    <DuelSealSheet
+      label={copy.heading}
+      ground={{
+        position: 'relative',
+        background: PLATE,
+        borderLeft: `4px solid ${accent}`,
+        fontFamily: READING,
+        color: INK,
+      }}
+      card={{
+        overflow: 'hidden',
+        borderTop: HAIRLINE_FAINT,
+        borderRight: HAIRLINE_FAINT,
+        borderBottom: HAIRLINE_FAINT,
       }}
     >
-      <div
-        className="w-full max-w-[440px]"
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          background: PLATE,
-          border: HAIRLINE_FAINT,
-          borderLeft: `4px solid ${accent}`,
-          fontFamily: READING,
-          color: INK,
-        }}
-      >
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          {/* Masthead — inscriptional caps over the manuscript double rule. */}
-          <div
+      <div style={{ position: 'relative', zIndex: 2, flex: 1 }}>
+        {/* Masthead — inscriptional caps over the manuscript double rule. */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 'var(--space-sm)',
+            padding: 'var(--space-md) var(--space-xl)',
+            background: `color-mix(in srgb, ${accent} 10%, transparent)`,
+            borderBottom: `1px solid color-mix(in srgb, ${BRASS} 60%, transparent)`,
+            boxShadow: DOUBLE_RULE,
+          }}
+        >
+          <Rubric />
+          <h2
             style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 'var(--space-sm)',
-              padding: 'var(--space-md) var(--space-xl)',
-              background: `color-mix(in srgb, ${accent} 10%, transparent)`,
-              borderBottom: `1px solid color-mix(in srgb, ${BRASS} 60%, transparent)`,
-              boxShadow: DOUBLE_RULE,
+              fontFamily: CAPS,
+              fontSize: 'var(--text-title)',
+              fontWeight: 600,
+              letterSpacing: '0.06em',
             }}
           >
-            <Rubric />
-            <h2
+            {copy.heading}
+          </h2>
+        </div>
+
+        <div style={{ padding: 'var(--space-xl)' }}>
+          {/* The body. In `forfeit` this is the cost panel — the one place a
+              skin this quiet is allowed weight: inked stock, a faded-red rule
+              and mark, and the warning set in parchment. The red carries the
+              panel rather than the sentence, because rubric-on-ink is a
+              ~2.5:1 pairing and the warning is the text a player must read. */}
+          {copy.danger ? (
+            <div
               style={{
-                fontFamily: CAPS,
-                fontSize: 'var(--text-title)',
-                fontWeight: 600,
-                letterSpacing: '0.06em',
+                display: 'flex',
+                gap: 'var(--space-sm)',
+                padding: 'var(--space-md)',
+                background: BAND,
+                border: `1px solid ${OCHRE}`,
+                borderLeft: `3px solid ${OCHRE}`,
+                color: BAND_INK,
               }}
             >
-              {copy.heading}
-            </h2>
-          </div>
-
-          <div style={{ padding: 'var(--space-xl)' }}>
-            {/* The body. In `forfeit` this is the cost panel — the one place a
-                skin this quiet is allowed weight: inked stock, a faded-red rule
-                and mark, and the warning set in parchment. The red carries the
-                panel rather than the sentence, because rubric-on-ink is a
-                ~2.5:1 pairing and the warning is the text a player must read. */}
-            {copy.danger ? (
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 'var(--space-sm)',
-                  padding: 'var(--space-md)',
-                  background: BAND,
-                  border: `1px solid ${OCHRE}`,
-                  borderLeft: `3px solid ${OCHRE}`,
-                  color: BAND_INK,
-                }}
-              >
-                <Rubric glyph="❦" />
-                <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
-                  {copy.body}
-                </p>
-              </div>
-            ) : (
+              <Rubric glyph="❦" />
               <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
                 {copy.body}
               </p>
-            )}
+            </div>
+          ) : (
+            <p className="content-text" style={{ fontStyle: 'italic', lineHeight: 1.55 }}>
+              {copy.body}
+            </p>
+          )}
 
-            {/* The free-reopen half of the truth, as a marginal gloss. Same
-                condition as every other skin, because it is the same fact — a
-                forfeit has none, and `copy.note` is null there. */}
-            {copy.note && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: 'var(--space-sm)',
-                  marginTop: 'var(--space-md)',
-                  padding: 'var(--space-xs) var(--space-md)',
-                  borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
-                  borderBottom: `1px solid color-mix(in srgb, ${NILE} 45%, transparent)`,
-                  color: QUIET,
-                  fontStyle: 'italic',
-                }}
-              >
-                <Rubric glyph="❧" />
-                <p className="content-text">{copy.note}</p>
-              </div>
-            )}
-
-            <RubricHeading>{t('duelStakes.heading')}</RubricHeading>
-
-            {/* The ledger band: what it is worth, and who has cast. */}
+          {/* The free-reopen half of the truth, as a marginal gloss. Same
+              condition as every other skin, because it is the same fact — a
+              forfeit has none, and `copy.note` is null there. */}
+          {copy.note && (
             <div
               style={{
-                marginTop: 'var(--space-sm)',
-                padding: 'var(--space-md)',
-                background: INNER,
-                border: HAIRLINE_FAINT,
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 'var(--space-sm)',
+                marginTop: 'var(--space-md)',
+                padding: 'var(--space-xs) var(--space-md)',
+                borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
+                borderBottom: `1px solid color-mix(in srgb, ${NILE} 45%, transparent)`,
+                color: QUIET,
+                fontStyle: 'italic',
               }}
             >
-              <StakesTiles
-                viewerFactionSlug={me.faction_slug}
-                opponentFactionSlug={foe.faction_slug}
-                opponentName={foe.display_name}
-                taskPointValue={taskPointValue}
-                status={duel.status}
-                theme={theme}
-              />
-              <RaceRoster me={me} foe={foe} theme={theme} />
+              <Rubric glyph="❧" />
+              <p className="content-text">{copy.note}</p>
             </div>
+          )}
 
-            {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-                pair. The mock wants ruled, unshadowed buttons; giving them an
-                Ephemerist face would mean a skin slot on the shared component,
-                which is foundation work, not a skin change — and the global
-                [Cancel] … [Submit] order (#646) matters more than the chrome. */}
-            <div style={{ marginTop: 'var(--space-xl)' }}>
-              <SealActions
-                onConfirm={onConfirm}
-                onCancel={onCancel}
-                busy={busy}
-                confirmLabel={copy.confirmLabel}
-                danger={copy.danger}
-                theme={theme}
-              />
-            </div>
+          <RubricHeading>{t('duelStakes.heading')}</RubricHeading>
+
+          {/* The ledger band: what it is worth, and who has cast. */}
+          <div
+            style={{
+              marginTop: 'var(--space-sm)',
+              padding: 'var(--space-md)',
+              background: INNER,
+              border: HAIRLINE_FAINT,
+            }}
+          >
+            <StakesTiles
+              viewerFactionSlug={me.faction_slug}
+              opponentFactionSlug={foe.faction_slug}
+              opponentName={foe.display_name}
+              taskPointValue={taskPointValue}
+              status={duel.status}
+              theme={theme}
+            />
+            <RaceRoster me={me} foe={foe} theme={theme} />
+          </div>
+
+          {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
+              pair. The mock wants ruled, unshadowed buttons; giving them an
+              Ephemerist face would mean a skin slot on the shared component,
+              which is foundation work, not a skin change — and the global
+              [Cancel] … [Submit] order (#646) matters more than the chrome. */}
+          <div style={{ marginTop: 'var(--space-xl)' }}>
+            <SealActions
+              onConfirm={onConfirm}
+              onCancel={onCancel}
+              busy={busy}
+              confirmLabel={copy.confirmLabel}
+              danger={copy.danger}
+              theme={theme}
+            />
           </div>
         </div>
       </div>
-    </div>
+    </DuelSealSheet>
   )
 }

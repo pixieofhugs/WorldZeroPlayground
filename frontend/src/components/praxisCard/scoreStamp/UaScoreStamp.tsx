@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { TaskCrown } from "../../cards/TaskCrown";
-import { UaEnsoScore } from "../../cards/uaAtoms";
+import { TaskCrown } from "../../factionMarks/TaskCrown";
+import { UaEnsoScore } from "../../factionMarks/uaAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import type { ScoreStampProps } from "./ScoreStamp";
 

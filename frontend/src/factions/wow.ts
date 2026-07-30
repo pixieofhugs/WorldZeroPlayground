@@ -61,7 +61,7 @@
  * `factionCard` and `factionBody` remain unclaimed on #951.
  *
  * The three ornaments those two pages share — the wavy rule, the balloon bunch
- * and the bunting — live in `components/cards/wowOrnament.tsx`, drawn once for
+ * and the bunting — live in `components/factionMarks/wowOrnament.tsx`, drawn once for
  * the whole faction (§6/#849).
  *
  * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
@@ -80,7 +80,7 @@
  * #1121 — and `profileBody` each serve WOW on both form factors. The pavilion
  * profile was not deleted with its surface: it is the phone branch inside
  * `WowProfileBody`, which is what "one responsive component" means here.)
- * The shared vocabulary lives in `components/cards/wowMobile.tsx`.
+ * The shared vocabulary lives in `components/factionMarks/wowMobile.tsx`.
  * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
  * `mobilePlayersDirectory` were unclaimed here on purpose — nothing in the kit
  * described them — and since no other faction claimed them either, the four
@@ -99,20 +99,19 @@ import { lazyArchetype } from './lazyArchetype'
 
 const WowAvatar = lazyArchetype(() => import('../components/avatar/WowAvatar'))
 const WowBackdrop = lazyArchetype(() => import('../components/backdrop/WowBackdrop'))
-const WOWSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
+const WOWSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
 const WowComment = lazyArchetype(() => import('../components/comments/voices/WowComment'))
 const WowFeedFrame = lazyArchetype(() => import('../components/feed/WowFeedFrame'))
-const WowFactionHero = lazyArchetype(() => import('../components/cards/WowFactionHero'))
-const WowSigil = lazyArchetype(() => import('../components/cards/WowSigil').then((m) => ({ default: m.WowSigil })))
-const WowTaskCard = lazyArchetype(() => import('../components/cards/WowTaskCard'))
+const WowFactionHero = lazyArchetype(() => import('../components/factionHero/WowFactionHero'))
+const WowSigil = lazyArchetype(() => import('../components/sigil/WowSigil').then((m) => ({ default: m.WowSigil })))
+const WowTaskCard = lazyArchetype(() => import('../components/taskCard/WowTaskCard'))
 const WowProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/WowProfileBody'))
 const WowVote = lazyArchetype(() => import('../components/vote/WowVote'))
 const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/WowPraxisCard'))
 const WowScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/WowScoreStamp'))
-const WowSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/WowSeal'))
+const WowSeal = lazyArchetype(() => import('../components/metataskSeal/skins/WowSeal'))
 const WowEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/WowEditPraxis'))
 const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDuelSealConfirm'))
-const WowMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowMobileDuelSealConfirm'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
@@ -138,7 +137,7 @@ export const WOW_MANIFEST: FactionManifest = {
   feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,
   scoreStamp: () => WowScoreStamp,
-  metaTaskSeal: () => WowSeal,
+  metataskSeal: () => WowSeal,
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
 
@@ -148,10 +147,11 @@ export const WOW_MANIFEST: FactionManifest = {
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WOWSelectCard,
 
-  // #895 — the lists: the duel seal, both form factors. Its rail skins went with
-  // the `duelRail` / `mobileDuelRail` SURFACES in #1090, not with WOW.
+  // #895 — the lists: the duel seal, both form factors from ONE component since
+  // #1313 retired the `mobileDuelSeal` twin (the Lists sheet is responsive now,
+  // not deleted). Its rail skins went with the `duelRail` / `mobileDuelRail`
+  // SURFACES in #1090, not with WOW.
   duelSeal: () => WowDuelSealConfirm,
-  mobileDuelSeal: () => WowMobileDuelSealConfirm,
 
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
   // phone screen, which is the `mobileFieldDesk`; `mobileFactionPage` is derived

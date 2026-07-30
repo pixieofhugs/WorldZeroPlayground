@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import PraxisCard from '../components/PraxisCard'
+import PraxisCard from '../components/praxisCard/PraxisCard'
 import PageTitle from '../components/ui/PageTitle'
 import FilterStamps from '../components/ui/FilterStamps'
 import FilterFactionTabs from '../components/ui/FilterFactionTabs'

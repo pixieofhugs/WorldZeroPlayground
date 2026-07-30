@@ -11,9 +11,9 @@
  * This module transitively imports every faction component, and several of those
  * components import a *dispatcher* module back:
  *
- *     components/TaskCard.tsx  →  factions/index.ts  →  factions/ua.ts
+ *     components/taskCard/TaskCard.tsx  →  factions/index.ts  →  factions/ua.ts
  *       →  pages/factionDetail/archetypes/UaFactionBody.tsx
- *       →  components/TaskCard.tsx        (default value import, not type-only)
+ *       →  components/taskCard/TaskCard.tsx  (default value import, not type-only)
  *
  * That is a genuine ES-module cycle. It is harmless *provided nothing reads
  * across it while the modules are still evaluating*. A dispatcher that did

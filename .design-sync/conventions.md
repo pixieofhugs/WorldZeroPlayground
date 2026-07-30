@@ -78,6 +78,6 @@ internally and stacks single-column on a phone):
 **Still split by form factor** — faction detail only: `*FactionBody` (responsive body) vs
 `*FactionPage` (mobile screen). Character profile is responsive-only (`*ProfileBody`).
 
-**Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaHome` / `SnideHome` …
+**Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaFieldDesk` / `SnideFieldDesk` …
 (`fielddesk`), plus the singletons `DefaultTasks`, `DefaultPlayers`, `DefaultSettings`,
 `DefaultCreateCharacter`, `DefaultEditCharacter`, `DefaultFactionsDirectory`.

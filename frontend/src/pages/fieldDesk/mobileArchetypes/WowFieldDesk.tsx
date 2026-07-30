@@ -6,7 +6,7 @@
  * Quests" over a stack of gold-framed cream quest cards each headed by the 6px
  * gold/plum checker, and the gilt call to action.
  *
- * The pavilion vocabulary lives in `components/cards/wowMobile.tsx` — the five
+ * The pavilion vocabulary lives in `components/factionMarks/wowMobile.tsx` — the five
  * later WOW mobile surfaces compose the same pieces, so the faction reads as one
  * faction across the phone (§6).
  *
@@ -47,7 +47,7 @@ import {
   wowGhostButton,
   wowGiltButton,
   wowMobilePage,
-} from "../../../components/cards/wowMobile";
+} from "../../../components/factionMarks/wowMobile";
 import { factionName } from "../../../utils/factions";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
 

@@ -66,7 +66,7 @@ import {
   SMALL_CAPS,
   WASH,
   WingedDisc,
-} from '../cards/ephemeristsPlate'
+} from '../factionMarks/ephemeristsPlate'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 

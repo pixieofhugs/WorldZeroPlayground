@@ -1,8 +1,8 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import PraxisCard from '../../../components/PraxisCard'
-import { CovenSigil } from '../../../components/cards/CovenSigil'
+import PraxisCard from '../../../components/praxisCard/PraxisCard'
+import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import {
   Braid,
   CAPTION,
@@ -24,7 +24,7 @@ import {
   SlipAvatar,
   SLIP_SHEET,
   SOFT,
-} from '../../../components/cards/covenSlip'
+} from '../../../components/factionMarks/covenSlip'
 import { factionName, factionDescription } from '../../../utils/factions'
 import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'
