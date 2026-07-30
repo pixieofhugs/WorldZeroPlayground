@@ -328,19 +328,24 @@ async def test_get_character_praxes_returns_list(
     active_task: Task,
 ):
     """GET /characters/{id}/praxes returns seeded praxis entries."""
-    from models.praxis import PraxisStatus, PraxisType
+    from models.praxis import PraxisMember, PraxisStatus, PraxisType
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
         type=PraxisType.solo,
-        # submitted so it's publicly visible on the profile grid (ADR-0024):
-        # in_progress praxes are member-only, and this ORM-seeded row has no
-        # PraxisMember, so it would be filtered out otherwise.
+        # submitted so it's publicly visible on the profile grid (ADR-0024), and
+        # because #1112 keeps in_progress off this record for every viewer.
         status=PraxisStatus.submitted,
         title="My Praxis",
         body_text="Proof here",
     )
     db_session.add(praxis)
+    await db_session.flush()
+    # The record is scoped by MEMBERSHIP (#1112), so an ORM-seeded praxis needs
+    # the creator's PraxisMember row that ``create_praxis`` always writes.
+    db_session.add(
+        PraxisMember(praxis_id=praxis.id, character_id=character.id, has_submitted=True)
+    )
     await db_session.commit()
 
     resp = await client.get(f"/characters/{character.id}/praxes")
@@ -358,18 +363,24 @@ async def test_get_character_praxes_pagination(
     active_task: Task,
 ):
     """GET /characters/{id}/praxes respects limit and offset."""
-    from models.praxis import PraxisStatus, PraxisType
+    from models.praxis import PraxisMember, PraxisStatus, PraxisType
     for index in range(3):
         praxis = Praxis(
             task_id=active_task.id,
             created_by_id=character.id,
             type=PraxisType.solo,
-            # submitted so it's publicly visible (ADR-0024); see returns_list test.
+            # submitted + a PraxisMember row: see returns_list test (ADR-0024, #1112).
             status=PraxisStatus.submitted,
             title=f"Praxis {index}",
             body_text="proof",
         )
         db_session.add(praxis)
+        await db_session.flush()
+        db_session.add(
+            PraxisMember(
+                praxis_id=praxis.id, character_id=character.id, has_submitted=True
+            )
+        )
     await db_session.commit()
 
     resp_limited = await client.get(

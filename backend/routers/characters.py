@@ -13,7 +13,7 @@ from dependencies import get_current_character, get_current_character_optional
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.relationship import Relationship
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisStatus
 from models.vote import Vote
 from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
 from schemas.relationship import RelationshipOut
@@ -31,7 +31,11 @@ from services.character import (
 )
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
-from services.praxis import build_praxis_out, praxis_visibility_condition
+from services.praxis import (
+    build_praxis_out,
+    praxis_membership_condition,
+    praxis_visibility_condition,
+)
 from services.vote_tally import crowned_praxis_ids
 
 router = APIRouter()
@@ -128,13 +132,25 @@ async def get_character_praxes(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
-    # ADR-0024: an in_progress praxis is member-only, so a profile grid shows
-    # another character's drafts only when the viewer is a member.
+    """A character's praxis record — the same contract as the profile grid (#1112).
+
+    Membership, not authorship: a finished collab is part of the record of every
+    member (ADR-0013 co-ownership), not only its creator's. Finished work only:
+    ``in_progress`` is excluded for every viewer, the character themselves
+    included — the record is public, and in-flight work is read from the sidebar
+    (``GET /praxes?member_id=..&status=in_progress``) instead.
+
+    Kept byte-for-byte in step with ``list_praxes(character_id=...)``, which is
+    what the profile page actually fetches; both AND the shared
+    :func:`praxis_membership_condition` onto the unchanged viewer gate
+    :func:`praxis_visibility_condition`, so the two spellings cannot drift.
+    """
     result = await session.execute(
         select(Praxis)
         .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
         .where(
-            Praxis.created_by_id == character_id,
+            praxis_membership_condition(character_id),
+            Praxis.status == PraxisStatus.submitted,
             praxis_visibility_condition(viewer.id if viewer else None),
         )
         .order_by(Praxis.created_at.desc())
@@ -189,7 +205,17 @@ async def get_votes_received_count(
     character_id: int,
     session: AsyncSession = Depends(get_db),
 ) -> dict[str, int]:
-    """Return the total number of votes received on all of a character's praxes."""
+    """Votes received on the praxes this character **authored**.
+
+    Deliberately still ``created_by_id`` after #1112 moved the praxis *record*
+    above to membership, for two reasons:
+
+    - It is not the grid's count. Nothing renders it beside the profile grid;
+      it feeds the Field Desk home "Votes" stat, so the two cannot disagree.
+    - Scoring is author-scoped (ADR-0053): a collab's votes bank to its one
+      author. Counting memberships would both credit co-members with votes they
+      did not earn and count a single vote once per member.
+    """
     result = await session.execute(
         select(func.count())
         .select_from(Vote)

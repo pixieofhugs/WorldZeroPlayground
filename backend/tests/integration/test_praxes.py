@@ -1854,7 +1854,14 @@ async def test_list_praxes_excludes_hidden(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """GET /praxes default listing does not include hidden praxes."""
+    """GET /praxes default listing does not include hidden praxes.
+
+    The praxis is **submitted** before it is hidden so the moderation filter is
+    the only thing that can keep it out: an unsubmitted one is already excluded
+    by ADR-0024 (member-only) and, since #1112, by the profile grid's
+    finished-work-only default — which would pass this test for the wrong
+    reason.
+    """
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo", "title": "Will Be Hidden"},
@@ -1862,6 +1869,13 @@ async def test_list_praxes_excludes_hidden(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    submit_resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    assert submit_resp.status_code == 200
+    assert submit_resp.json()["status"] == "submitted"
+
+    # Control: visible and listed before moderation touches it.
+    resp_before = await client.get("/praxes", params={"character_id": character.id})
+    assert praxis_id in [item["id"] for item in resp_before.json()]
 
     praxis = await db_session.get(Praxis, praxis_id)
     praxis.moderation_status = ModerationStatus.hidden

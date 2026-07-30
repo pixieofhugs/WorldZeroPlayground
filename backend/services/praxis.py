@@ -685,6 +685,29 @@ def _duel_side_hidden_condition(viewer_id: Optional[int]):
     return and_(is_live_incomplete_side, Praxis.created_by_id != viewer_id)
 
 
+def praxis_membership_condition(character_id: int):
+    """SQL predicate — TRUE when ``character_id`` holds a ``PraxisMember`` row on
+    the correlated ``Praxis``.
+
+    The single spelling of "is part of this praxis" in SQL. Membership is not
+    authorship (ADR-0013 co-ownership): an accepted collab invite makes you a
+    member of a praxis you did not create, while solo/duel praxes have exactly
+    one member — their creator — so for those the two coincide.
+
+    Shared by the viewer-scoped visibility gate (:func:`praxis_visibility_condition`)
+    and by the subject-scoped ``character_id``/``member_id`` filters in
+    :func:`list_praxes`, so a second membership join cannot drift from the first.
+
+    ``IN (subquery)`` rather than a join: a praxis yields exactly one row however
+    many of its members match.
+    """
+    return Praxis.id.in_(
+        select(PraxisMember.praxis_id).where(
+            PraxisMember.character_id == character_id
+        )
+    )
+
+
 def praxis_visibility_condition(viewer_id: Optional[int]):
     """SQL predicate for who may see a praxis (ADR-0024).
 
@@ -695,13 +718,15 @@ def praxis_visibility_condition(viewer_id: Optional[int]):
     Exception (#999): a ``submitted`` side of a live, incomplete duel stays
     author-only until the duel seals — see :func:`_duel_side_hidden_condition`,
     the same guard :func:`can_view_praxis` runs so the two doors can't drift.
+
+    This is the *viewer* gate and nothing else: it answers "may this reader see
+    the row", never "is this row part of character X's record". A caller that
+    wants the latter ANDs :func:`praxis_membership_condition` on top — see the
+    profile grid in :func:`list_praxes` and ``GET /characters/{id}/praxes``.
     """
     visible = Praxis.status == PraxisStatus.submitted
     if viewer_id is not None:
-        member_praxis_ids = select(PraxisMember.praxis_id).where(
-            PraxisMember.character_id == viewer_id
-        )
-        visible = or_(visible, Praxis.id.in_(member_praxis_ids))
+        visible = or_(visible, praxis_membership_condition(viewer_id))
     return and_(visible, not_(_duel_side_hidden_condition(viewer_id)))
 
 
@@ -759,10 +784,17 @@ async def list_praxes(
     ``in_progress`` praxes are member-only (ADR-0024): pass ``viewer_id`` to
     include the viewer's own drafts; everyone else sees only ``submitted``.
 
-    ``character_id`` filters by authorship (``created_by_id``); ``member_id``
-    filters by *membership* (``PraxisMember``), mirroring
-    :func:`_count_in_progress_praxes` so a membership-based list (the sidebar's
-    in-progress tasks) can never disagree with the slot count.
+    ``character_id`` is the **profile grid** filter (#1112): the praxes that make
+    up a character's public record — every praxis they are a *member* of
+    (``PraxisMember``, so accepted collab invites count, not just what they
+    authored), defaulting to ``submitted`` so no draft reaches any profile. Pass
+    an explicit ``status`` to override that default.
+
+    ``member_id`` is the raw membership filter with no status default, for
+    callers that want in-flight work (the sidebar's in-progress list). Both
+    spell membership via :func:`praxis_membership_condition`, which also backs
+    :func:`_count_in_progress_praxes`'s rule, so a membership-based list can
+    never disagree with the slot count.
 
     ``search`` is a free-text ``ilike`` over the praxis title, its body, the
     linked task's title, and **any member's** handle / display name. The player
@@ -866,31 +898,26 @@ async def list_praxes(
         query = query.where(Praxis.task_id == task_id)
 
     if character_id is not None:
-        if status == PraxisStatus.in_progress:
-            # ADR-0013: in-progress praxes are co-owned; surface any member's
-            # active draft, not just the creator's (bank cap already counts
-            # memberships — see _count_in_progress_praxes). Published/authored
-            # lists keep creator semantics below.
-            query = query.where(
-                Praxis.id.in_(
-                    select(PraxisMember.praxis_id).where(
-                        PraxisMember.character_id == character_id
-                    )
-                )
-            )
-        else:
-            query = query.where(Praxis.created_by_id == character_id)
+        # The profile grid (#1112). Membership, not authorship, for EVERY status
+        # — ADR-0013 co-ownership does not switch on whether the praxis shipped,
+        # so a finished collab belongs on each member's profile, not only its
+        # creator's. And with no explicit status this is a public record of
+        # FINISHED work: it defaults to ``submitted``, hiding drafts from every
+        # viewer including their own owner.
+        #
+        # Nothing is lost — in-flight work lives in the sidebar, which asks for
+        # it by membership already (``member_id`` + ``status=in_progress``), and
+        # an explicit ``status`` still wins here, which is how task detail finds
+        # the viewer's own draft for a task.
+        query = query.where(praxis_membership_condition(character_id))
+        if status is None:
+            status = PraxisStatus.submitted
 
     if member_id is not None:
-        # Membership filter: any praxis the character holds a PraxisMember row
-        # on, regardless of who created it (accepted collab invites included).
-        query = query.where(
-            Praxis.id.in_(
-                select(PraxisMember.praxis_id).where(
-                    PraxisMember.character_id == member_id
-                )
-            )
-        )
+        # Raw membership filter: any praxis the character holds a PraxisMember
+        # row on, at whatever status the caller asked for. Unlike ``character_id``
+        # above it defaults to nothing, so the sidebar can read drafts.
+        query = query.where(praxis_membership_condition(member_id))
 
     if status is not None:
         query = query.where(Praxis.status == status)
@@ -2038,6 +2065,7 @@ __all__ = [
     "kick_member",
     "leave_praxis",
     "list_praxes",
+    "praxis_membership_condition",
     "praxis_visibility_condition",
     "PraxisSort",
     "VotedFilter",
