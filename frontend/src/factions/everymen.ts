@@ -22,7 +22,7 @@ const EverymenFactionPage = lazyArchetype(() => import('../pages/factionDetail/m
 const EverymenFeedFrame = lazyArchetype(() => import('../components/feed/EverymenFeedFrame'))
 const EverymenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EverymenFieldDesk'))
 const EverymenProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EverymenProfileBody'))
-const EverymenTaskCard = lazyArchetype(() => import('../components/cards/EverymenTaskCard'))
+const EverymenTaskCard = lazyArchetype(() => import('../components/taskCard/EverymenTaskCard'))
 const EverymenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EverymenTaskDetail'))
 const EverymenVote = lazyArchetype(() => import('../components/vote/EverymenVote'))
 const EverymenPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EverymenPraxisCard'))

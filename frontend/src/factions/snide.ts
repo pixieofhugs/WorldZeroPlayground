@@ -23,7 +23,7 @@ const SnideFeedFrame = lazyArchetype(() => import('../components/feed/SnideFeedF
 const SnideFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideFieldDesk'))
 const SnidePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SnidePraxisDetail'))
 const SnideProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SnideProfileBody'))
-const SnideTaskCard = lazyArchetype(() => import('../components/cards/SnideTaskCard'))
+const SnideTaskCard = lazyArchetype(() => import('../components/taskCard/SnideTaskCard'))
 const SnideTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SnideTaskDetail'))
 const SnideVote = lazyArchetype(() => import('../components/vote/SnideVote'))
 const SnidePraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SnidePraxisCard'))

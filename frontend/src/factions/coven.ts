@@ -23,7 +23,7 @@ const CovenFeedFrame = lazyArchetype(() => import('../components/feed/CovenFeedF
 const CovenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/CovenFieldDesk'))
 const CovenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/CovenPraxisDetail'))
 const CovenProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/CovenProfileBody'))
-const CovenTaskCard = lazyArchetype(() => import('../components/cards/CovenTaskCard'))
+const CovenTaskCard = lazyArchetype(() => import('../components/taskCard/CovenTaskCard'))
 const CovenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/CovenTaskDetail'))
 const CovenVote = lazyArchetype(() => import('../components/vote/CovenVote'))
 const CovenPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/CovenPraxisCard'))

@@ -1,4 +1,4 @@
-import type { CardProps } from "../TaskCard";
+import type { CardProps } from "./TaskCard";
 import DefaultTaskCard from "./DefaultTaskCard";
 
 /**

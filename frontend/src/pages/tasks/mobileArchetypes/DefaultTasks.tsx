@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { TasksState } from '../useTasks'
-import TaskCard from '../../../components/TaskCard'
+import TaskCard from '../../../components/taskCard/TaskCard'
 import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import FactionSigilRow from '../../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'

@@ -49,7 +49,7 @@
  */
 import type { ComponentType } from 'react'
 
-import type { CardProps } from '../components/TaskCard'
+import type { CardProps } from '../components/taskCard/TaskCard'
 import type { SealSkinProps } from '../components/metataskSeal/types'
 import type { ArchetypeProps as PraxisCardProps } from '../components/PraxisCard'
 import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'

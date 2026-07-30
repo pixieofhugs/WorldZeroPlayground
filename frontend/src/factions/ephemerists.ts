@@ -22,7 +22,7 @@ const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetai
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
 const EphemeristsFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk'))
 const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
-const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/EphemeristsTaskCard'))
+const EphemeristsTaskCard = lazyArchetype(() => import('../components/taskCard/EphemeristsTaskCard'))
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
 const EphemeristsVote = lazyArchetype(() => import('../components/vote/EphemeristsVote'))
 const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EphemeristsPraxisCard'))

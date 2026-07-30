@@ -111,7 +111,7 @@ const BRIEF_LEADING = 32;
  * geometry on a 24-unit square, stroke-only so they read as incised rather than
  * illustrated.
  *
- * Duplicated from `components/cards/EphemeristsTaskCard.tsx`, which owns the
+ * Duplicated from `components/taskCard/EphemeristsTaskCard.tsx`, which owns the
  * same set for the card. Deliberate under this issue's two-file scope; the
  * extraction target is `components/cards/ephemeristsPlate.tsx`, and until the
  * two are merged a change to one sign has to be made twice.

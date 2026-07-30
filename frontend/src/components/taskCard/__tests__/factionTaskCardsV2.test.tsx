@@ -23,7 +23,7 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
 import type { TaskOut } from '../../../api/tasks'
-import type { CardProps } from '../../TaskCard'
+import type { CardProps } from '../TaskCard'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
 

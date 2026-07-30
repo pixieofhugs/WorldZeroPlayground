@@ -29,7 +29,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 
 // Imported after the mock is registered.
 import DefaultTaskCard from '../DefaultTaskCard'
-import TaskCard from '../../TaskCard'
+import TaskCard from '../TaskCard'
 
 const TASK: TaskOut = {
   id: 7,

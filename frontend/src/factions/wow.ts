@@ -104,7 +104,7 @@ const WowComment = lazyArchetype(() => import('../components/comments/voices/Wow
 const WowFeedFrame = lazyArchetype(() => import('../components/feed/WowFeedFrame'))
 const WowFactionHero = lazyArchetype(() => import('../components/cards/WowFactionHero'))
 const WowSigil = lazyArchetype(() => import('../components/sigil/WowSigil').then((m) => ({ default: m.WowSigil })))
-const WowTaskCard = lazyArchetype(() => import('../components/cards/WowTaskCard'))
+const WowTaskCard = lazyArchetype(() => import('../components/taskCard/WowTaskCard'))
 const WowProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/WowProfileBody'))
 const WowVote = lazyArchetype(() => import('../components/vote/WowVote'))
 const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/WowPraxisCard'))

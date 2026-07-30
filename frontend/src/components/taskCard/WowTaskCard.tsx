@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import type { CardProps } from "../TaskCard";
+import type { CardProps } from "./TaskCard";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import { BalloonBunch, Zig } from "./wowOrnament";
+import { BalloonBunch, Zig } from "../cards/wowOrnament";
 
 /**
  * Warriors of Whimsy — THE QUEST DECREE (task card v2, #1023).

@@ -22,7 +22,7 @@ const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetai
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
 const SingularityFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityFieldDesk'))
 const SingularityProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SingularityProfileBody'))
-const SingularityTaskCard = lazyArchetype(() => import('../components/cards/SingularityTaskCard'))
+const SingularityTaskCard = lazyArchetype(() => import('../components/taskCard/SingularityTaskCard'))
 const SingularityTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SingularityTaskDetail'))
 const SingularityVote = lazyArchetype(() => import('../components/vote/SingularityVote'))
 const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))

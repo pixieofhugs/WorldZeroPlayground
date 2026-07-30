@@ -47,7 +47,7 @@ import { useState, type ReactNode } from 'react'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
 import type { BadgeOut } from '../../../api/auth'
 import PraxisCard from '../../../components/PraxisCard'
-import TaskCard from '../../../components/TaskCard'
+import TaskCard from '../../../components/taskCard/TaskCard'
 import {
   WOW_BODY,
   WOW_DEEP,
