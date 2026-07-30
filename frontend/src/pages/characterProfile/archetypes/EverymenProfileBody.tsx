@@ -99,7 +99,7 @@ const kit: ProfileKit = {
   ),
   nameSize: 72,
   nameExtra: { color: CREAM, textShadow: '3px 3px 0 rgba(0,0,0,0.3)', letterSpacing: '0.02em' },
-  playerEyebrow: 'Player · The Everymen',
+  playerEyebrow: (faction) => `Player · The ${faction}`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: INK,
