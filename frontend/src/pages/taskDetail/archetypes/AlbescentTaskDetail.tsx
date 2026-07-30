@@ -30,6 +30,12 @@ import type { TaskDetailState } from "../useTaskDetail";
  * per-faction WORD is as identifying as a per-faction hue (WORLD_ZERO_STYLE §3).
  * Albescent keeps the light and loses the words; the copy is inherited whole.
  *
+ * The one number in that list outlived the words it travelled with: `№207` came
+ * back neutrally as the inherited breadcrumb's `Task №{id}` crumb. #1124 retired
+ * the task id from cards and this breadcrumb alike, so the trail this skin
+ * inherits is a single `Tasks` crumb and the design's ordinal is gone in both
+ * voices.
+ *
  * ### Why the light sits ON TOP
  *
  * `DefaultTaskDetail` paints an OPAQUE sheet on its own 1200 column, so an
