@@ -58,8 +58,14 @@ const stripModulePaths = (source: string) =>
 
 const routePaths = (source: string) => stripModulePaths(stripComments(source))
 
-/** This file spells the forbidden path in its own fixtures. */
-const SELF = '__tests__/praxisPlural.test.ts'
+/**
+ * These files spell the forbidden path in their own fixtures — they assert
+ * that `/praxes` is rejected, so they have to name it to do so.
+ */
+const FIXTURE_FILES = new Set([
+  '__tests__/praxisPlural.test.ts',
+  '__tests__/measureLoadRoutes.test.ts',
+])
 
 describe('the API keeps saying /praxes (#1136)', () => {
   /**
@@ -95,7 +101,9 @@ describe('the API keeps saying /praxes (#1136)', () => {
 describe('no router path says /praxes (#1136)', () => {
   it('has no /praxes left outside api/', () => {
     const offenders = sourceFiles(SRC_DIR)
-      .filter((path) => !toRelative(path).startsWith('api/') && toRelative(path) !== SELF)
+      .filter(
+        (path) => !toRelative(path).startsWith('api/') && !FIXTURE_FILES.has(toRelative(path)),
+      )
       .filter((path) => /\/praxes/.test(routePaths(readFileSync(path, 'utf8'))))
       .map(toRelative)
     expect(offenders).toEqual([])
