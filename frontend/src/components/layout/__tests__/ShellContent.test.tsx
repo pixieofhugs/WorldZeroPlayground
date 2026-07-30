@@ -146,10 +146,24 @@ describe('ShellContent chrome', () => {
  * round-trip are visual QA only.
  */
 describe('ShellContent sidebar handle', () => {
-  it('drops the rail entirely when collapsed, keeping only the handle', () => {
+  // #1343. Collapsing used to UNMOUNT the rail, so every hook inside it re-ran
+  // its fetch on reopen — a fold/unfold round trip cost three requests. The rail
+  // now stays mounted and is hidden, so reopening costs nothing.
+  //
+  // Rendered markup is the seam this harness can reach: it cannot observe a
+  // state change (renderToStaticMarkup, no DOM, effects never run), but it can
+  // prove the rail is PRESENT in the collapsed output — and while it is present
+  // there is no unmount for React to perform. A future `{!collapsed && <Sidebar/>}`
+  // fails here.
+  it('keeps the rail mounted when collapsed, hidden rather than removed', () => {
     const html = render(false, true)
-    expect(html).not.toContain('data-test="sidebar"')
+    expect(html).toContain('data-test="sidebar"')
     expect(html).toContain('aria-label="Expand sidebar"')
+  })
+
+  it('hides the collapsed rail with the hidden attribute, so nothing is drawn', () => {
+    expect(render(false, true)).toMatch(/<div hidden[^>]*><aside data-test="sidebar"/)
+    expect(render(false, false)).toMatch(/<div><aside data-test="sidebar"/)
   })
 
   it('names itself for the state it moves to, with a matching aria-expanded', () => {
@@ -158,16 +172,12 @@ describe('ShellContent sidebar handle', () => {
     expect(render(false, true)).toContain('aria-expanded="false"')
   })
 
-  it('points at the rail it controls while that rail exists', () => {
+  // The rail is on the page in both states now (#1343), so the handle is a
+  // textbook disclosure: `aria-controls` always resolves to a real id and
+  // `aria-expanded` says whether that region is showing.
+  it('points at the rail it controls in both states', () => {
     expect(render(false, false)).toContain('aria-controls="wz-sidebar"')
-  })
-
-  // Collapsed means the rail is UNMOUNTED, so keeping `aria-controls` would
-  // reference an id that is not on the page — an axe `aria-valid-attr-value`
-  // failure, and nothing useful for a screen reader to follow. `aria-expanded`
-  // carries the state on its own.
-  it('drops aria-controls once there is no rail to point at', () => {
-    expect(render(false, true)).not.toContain('aria-controls')
+    expect(render(false, true)).toContain('aria-controls="wz-sidebar"')
   })
 
   it('is a real button, so it is keyboard-reachable', () => {
