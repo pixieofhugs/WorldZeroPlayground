@@ -71,6 +71,12 @@ class ViewerVote:
     character who voted when the carried character did not: the account-scoped
     "voted by Alice" marker. The two are mutually exclusive by construction — the
     marker only fires when the carried character's own star is absent.
+
+    Since #1150 an account holds at most ONE vote per praxis, so the marker means
+    "your account's vote on this praxis was set by another of your lives"; rating
+    it as the carried character re-rates that row and moves the attribution to it,
+    retiring the marker. The two fields could not co-occur before either; now the
+    data cannot even represent it.
     """
 
     value: Optional[int]
@@ -112,7 +118,9 @@ async def viewer_votes_for(
         if voter_character_id == viewer_character_id:
             carried_value[praxis_id] = value
         else:
-            # First account-mate wins; a deterministic single name for the marker.
+            # One row per (praxis, account) since #1150, so there is only ever one
+            # mate to name. setdefault stays as defence for pre-#1150 rows: first
+            # account-mate wins, a deterministic single name for the marker.
             account_mate_name.setdefault(praxis_id, display_name)
 
     votes: dict[int, ViewerVote] = {}
