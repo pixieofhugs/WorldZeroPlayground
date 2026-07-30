@@ -2,86 +2,88 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
+import { CovenSigil } from '../../../components/cards/CovenSigil'
+import {
+  Braid,
+  CAPTION,
+  CARD,
+  BORDER,
+  CTA_FROM,
+  CTA_INK,
+  CTA_TO,
+  DEEP,
+  DISPLAY,
+  GLOW,
+  GOLD,
+  HAND,
+  HAIR,
+  INK,
+  READING,
+  SHADOW,
+  SigilMark,
+  SlipAvatar,
+  SLIP_SHEET,
+  SOFT,
+} from '../../../components/cards/covenSlip'
 import { factionName, factionDescription } from '../../../utils/factions'
 import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'
 
 /**
- * Cozy Coven MOBILE faction page (#531) — the coven, phone shaped. The
- * same single-column slots as the Default mobile faction page (a hero with real
- * member/task counts, top members, recent praxis, and the invite-gated Join model
- * via `state.membership`, ADR-0019) — only the dress changes: a pink scrapbook
- * "wow.exe" window hero on a dotted board, Caveat script, sparkle accents, rose
- * accent. Grounds on the `--faction-coven-*` window tokens already in index.css (the
- * set the COVEN pilots use); always-light. Reuses the shared `mobile.*` faction copy
- * so the slot contract holds. Presentation-only — all data + the join handler
- * arrive via {@link FactionDetailState}.
+ * Cozy Coven MOBILE faction page (#531, re-dressed by #1209) — the coven, phone
+ * shaped.
+ *
+ * The same single-column slots as the Default mobile faction page (a hero with
+ * real member/task counts, top members, recent praxis, and the invite-gated Join
+ * model via `state.membership`, ADR-0019) — only the dress changes. The
+ * `wow.exe` window hero on its dotted board is gone with the rest of the sweep:
+ * the slip band carries the badge and the name, the candlelit page is the ground,
+ * and every panel is ward paper inside the slip's pink edge.
+ *
+ * The member rows are the design's COMMENT ROW, which is the only list shape it
+ * draws — task and faction pages carry no roster in the design at all.
+ *
+ * Presentation-only — all data + the join handler arrive via
+ * {@link FactionDetailState}. No copy changed; the shared `mobile.*` keys still
+ * carry the slot contract.
  */
 
 const NA_SLUG = 'na'
+const CHROME = 'var(--font-faction-rounded)' // Quicksand
 
-const PINK = 'var(--faction-coven)'
-const PINK_DEEP = 'var(--faction-coven-card-accent)'
-const TITLE_TEXT = 'var(--faction-coven-title-text)'
-const CARD_TEXT = 'var(--faction-coven-card-text)'
-const CARD_MUTED = 'var(--faction-coven-card-muted)'
-const WIN_BORDER = 'var(--faction-coven-win-border)'
-const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
-const BODY_BG = 'var(--faction-coven-body-bg)'
-const DOT = 'var(--faction-coven-dot)'
-const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
-const BODY = 'var(--font-body)' // Courier Prime
-const ON_ACCENT = 'var(--color-text-on-accent)'
-
-/** The kit's four-point sparkle. */
-function Sparkle({ size, color, style }: { size: number; color: string; style?: CSSProperties }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} aria-hidden>
-      <path
-        d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
-        fill={color}
-      />
-    </svg>
-  )
+/** The reading voice — every prose line and empty state on the page. */
+const PROSE: CSSProperties = {
+  fontFamily: READING,
+  fontStyle: 'italic',
+  lineHeight: 1.55,
+  color: SOFT,
 }
 
-const initial = (name: string) => name.trim().charAt(0).toUpperCase() || '?'
-
-/** Circular initials sticker — pink→deep wash face, Caveat glyph. */
-function Avatar({ name, size }: { name: string; size: number }) {
-  return (
-    <span
-      style={{
-        flexShrink: 0,
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: `linear-gradient(150deg, var(--faction-coven-title-from), ${PINK})`,
-        border: `1.5px solid ${WIN_BORDER}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: SCRIPT,
-        // ornament: avatar monogram, sized from the sticker it sits in — geometry, not text.
-        fontSize: size * 0.5,
-        color: ON_ACCENT,
-      }}
-    >
-      {initial(name)}
-    </span>
-  )
+/** Paper laid on the candlelight. */
+const PANEL: CSSProperties = {
+  background: CARD,
+  border: `1.5px solid ${BORDER}`,
+  borderRadius: 12,
+  boxSizing: 'border-box',
 }
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: TITLE_TEXT }}>
-        <Sparkle size={13} color={PINK} />
+      <span
+        style={{
+          fontFamily: DISPLAY,
+          fontWeight: 600,
+          fontSize: 'var(--text-title)',
+          lineHeight: 1.06,
+          letterSpacing: '0.02em',
+          color: INK,
+        }}
+      >
         {children}
       </span>
-      <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${PINK} 0 8px, transparent 8px 14px)` }} />
+      <Braid style={{ flex: 1 }} />
     </div>
   )
 }
@@ -92,29 +94,25 @@ const joinButton: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 'var(--space-sm)',
-  fontFamily: BODY,
+  fontFamily: CHROME,
   fontSize: 'var(--text-xl)',
   fontWeight: 700,
-  letterSpacing: '0.1em',
+  letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  color: ON_ACCENT,
-  background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`,
-  border: `1.5px solid ${PINK_DEEP}`,
+  color: CTA_INK,
+  background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`,
+  border: `1.5px solid ${CTA_TO}`,
   borderRadius: 14,
   padding: 'var(--space-md) var(--space-lg)',
-  boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 30%, transparent)`,
+  boxShadow: `0 8px 18px -8px ${GLOW}`,
   cursor: 'pointer',
 }
 
 /** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
 const cancelButton: CSSProperties = {
-  fontFamily: BODY,
-  fontSize: 'var(--text-md)',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: CARD_MUTED,
+  ...CAPTION,
   background: 'transparent',
-  border: `1.5px solid ${NOTEPAD_BORDER}`,
+  border: `1.5px solid ${BORDER}`,
   borderRadius: 12,
   padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
@@ -135,13 +133,11 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
   return (
     <div
       data-skin="coven"
-      className="py-4"
+      className="py-4 coven-candle-backdrop"
       style={{
-        fontFamily: BODY,
-        color: CARD_TEXT,
-        background: BODY_BG,
-        backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
-        backgroundSize: '15px 15px',
+        position: 'relative',
+        fontFamily: CHROME,
+        color: INK,
         marginLeft: -16,
         marginRight: -16,
         paddingLeft: 'var(--space-lg)',
@@ -149,74 +145,63 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
       }}
       data-testid="mobile-faction-page"
     >
-      {/* Hero — wow.exe window wrapping a pink gradient panel */}
+      {/* The candlelight wash is the page ground — `.coven-candle-backdrop` owns
+          the blooms, the drift and the light/dark flip, and its `::before` is
+          positioned, so the content sits above it explicitly (#911). */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+      {/* Hero — the slip band over a candle-lit panel */}
       <section
         style={{
-          borderRadius: 16,
+          borderRadius: 18,
           overflow: 'hidden',
-          border: `2px solid ${WIN_BORDER}`,
-          boxShadow: `0 8px 22px color-mix(in srgb, ${PINK} 22%, transparent)`,
+          border: `2px solid ${BORDER}`,
+          boxShadow: SHADOW,
         }}
       >
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            padding: 'var(--space-sm) var(--space-md)',
-            background: 'linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))',
-            borderBottom: `2px solid ${WIN_BORDER}`,
+            padding: 'var(--space-xl) var(--space-lg)',
+            background: SLIP_SHEET,
+            borderBottom: `2px solid ${BORDER}`,
           }}
         >
-          {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((c) => (
-            <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }} />
-          ))}
-          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
-            <Sparkle size={11} color={TITLE_TEXT} />
-            {t('coven.mobile.eyebrow')}
-          </span>
-        </div>
-        <div
-          style={{
-            padding: 'var(--space-xl) var(--space-lg) var(--space-xl)',
-            background: 'linear-gradient(160deg, var(--faction-coven-title-from), var(--faction-coven-card-muted) 60%, var(--faction-coven))',
-            color: TITLE_TEXT,
-          }}
-        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <SigilMark size={26} />
+            <span style={CAPTION}>{t('coven.mobile.eyebrow')}</span>
+          </div>
           <h1
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--space-sm)',
-              fontFamily: SCRIPT,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the hand-lettered title is the skin's identity (§4/§270).
+              fontFamily: HAND,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the coven's name hand-lettered in Caveat — the slip's masthead.
               fontSize: 36,
+              fontWeight: 700,
               lineHeight: 0.95,
-              margin: 0,
+              color: INK,
+              margin: 'var(--space-xs) 0 0',
             }}
           >
-            <Sparkle size={18} color={TITLE_TEXT} />
             {name}
           </h1>
-          <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: PINK_DEEP, margin: 'var(--space-sm) 0 0' }}>
+          <Braid style={{ margin: 'var(--space-sm) 0' }} />
+          <p className="content-text" style={{ ...PROSE, margin: 0 }}>
             {factionDescription(faction.slug)}
           </p>
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
-            <HeroStat value={members.length} label={t('mobile.membersStat')} />
-            <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
-          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', padding: 'var(--space-lg)', background: CARD }}>
+          <HeroStat value={members.length} label={t('mobile.membersStat')} />
+          <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
         </div>
       </section>
 
       {membership.state === 'member' && (
-        <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: 'var(--space-md) 0 0' }}>{t('mobile.memberBadge')}</p>
+        <p className="content-text" style={{ ...PROSE, margin: 'var(--space-md) 0 0' }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ ...PROSE, margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -230,7 +215,7 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ ...PROSE, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -241,7 +226,7 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: BODY, color: CARD_MUTED, marginTop: 'var(--space-xl)', lineHeight: 1.6 }}>
+        <p className="content-text" style={{ ...PROSE, marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -250,16 +235,16 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p className="content-text" style={{ fontFamily: BODY, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: READING, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
-              <Sparkle size={13} color={ON_ACCENT} />
+              <CovenSigil size={13} color={CTA_INK} />
               {t('mobile.join', { faction: name })}
             </button>
           ) : (
             <>
-              <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: CARD_TEXT }}>
+              <p className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -286,15 +271,16 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
           )}
         </MobileStickyBar>
       )}
+      </div>
     </div>
   )
 }
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 12, padding: 'var(--space-md) var(--space-sm)' }}>
-      <b className="content-title" style={{ fontFamily: SCRIPT, display: 'block', lineHeight: 1, color: TITLE_TEXT }}>{value}</b>
-      <span style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginTop: 'var(--space-xs)', display: 'block' }}>
+    <div style={{ ...PANEL, flex: '1 1 0', textAlign: 'center', padding: 'var(--space-md) var(--space-sm)' }}>
+      <b className="content-title" style={{ fontFamily: READING, fontWeight: 600, display: 'block', lineHeight: 1, color: DEEP }}>{value}</b>
+      <span style={{ ...CAPTION, fontSize: 'var(--text-xs)', marginTop: 'var(--space-xs)', display: 'block' }}>
         {label}
       </span>
     </div>
@@ -307,25 +293,24 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
     <Link
       to={`/characters/${member.id}`}
       style={{
+        ...PANEL,
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--space-md)',
         padding: 'var(--space-md) var(--space-lg)',
-        background: NOTEPAD_BG,
-        border: `1.5px solid ${NOTEPAD_BORDER}`,
-        borderRadius: 12,
+        borderBottom: `1.5px solid ${HAIR}`,
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: SCRIPT, fontSize: 'var(--text-xl)', color: PINK, width: 16, flex: 'none' }}>{rank}</span>
-      <Avatar name={member.display_name} size={28} />
+      <span style={{ ...CAPTION, width: 16, flex: 'none' }}>{rank}</span>
+      <SlipAvatar name={member.display_name} size={28} />
       <span
         className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
-          fontFamily: SCRIPT,
-          color: TITLE_TEXT,
+          fontFamily: HAND,
+          color: INK,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
@@ -333,7 +318,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: BODY, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', color: PINK_DEEP, flex: 'none' }}>
+      <CovenSigil size={11} color={GOLD} />
+      <span style={{ ...CAPTION, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>
