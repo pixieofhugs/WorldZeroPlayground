@@ -91,7 +91,12 @@ const BESPOKE: Record<string, string[]> = {
   editPraxis: [...CORE_SIX, 'wow'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
-  mobilePraxisCard: [...CORE_SIX, 'wow', 'albescent'],
+  // Was `mobilePraxisCard` with this exact slug list until ADR-0067 collapsed
+  // the praxis card to one responsive component per faction. The row moved to
+  // the surviving surface rather than dying with the retired one: all eight
+  // slugs register `praxisCard`, and that card is now what a phone renders, so
+  // this proves the same dispatch it always did on the only card left.
+  praxisCard: [...CORE_SIX, 'wow', 'albescent'],
 }
 
 for (const [surface, bespoke] of Object.entries(BESPOKE)) {

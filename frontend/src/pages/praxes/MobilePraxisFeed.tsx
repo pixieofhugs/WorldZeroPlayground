@@ -1,18 +1,28 @@
 import { useTranslation } from 'react-i18next'
-import MobilePraxisCard from '../../components/praxisCard/mobile/MobilePraxisCard'
+import PraxisCard from '../../components/PraxisCard'
 import FactionSigilRow from '../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../components/ui/ChipRow'
 import type { PraxesFeedState, PraxisTypeFilter } from './usePraxes'
 
 /**
- * Mobile praxis feed (#499/#565/#573/#644) — a single-column vertical proof
- * stream with phone-native filter chips at the top. Each card picks its own
- * bespoke faction skin from its item's data (the per-item `MobilePraxisCard`
- * dispatch); the page chrome itself stays faction-agnostic. Solo + collab/duel
- * are one uniform, date-ordered stream.
+ * Mobile praxis feed (#499/#565/#573/#644) — a phone-native proof stream with
+ * filter chips at the top. What survives here is the PAGE chrome: the stacked
+ * header, the full-width search, the sigil row and the chip rows. The page
+ * itself stays faction-agnostic; each card picks its own bespoke skin from its
+ * item's data. Solo + collab/duel are one uniform, date-ordered stream.
+ *
+ * The results list renders the SHARED `<PraxisCard>` (ADR-0067) — the same
+ * component the desktop feed renders. There is no mobile twin: the
+ * `mobilePraxisCard` surface and its ten cards are deleted, so a faction's
+ * praxis card is one responsive file under `components/praxisCard/desktop/`.
+ *
+ * The list is a WRAPPING FLEX ROW, not a column, because that is what the
+ * card's `frameBase` geometry expects: `flex: 1 1 394px` with `minWidth: 280`
+ * resolves to exactly one full-width card per row on a phone, and to a grid on
+ * anything wider. A column container would apply that basis to the card's
+ * HEIGHT instead, which is the one arrangement the shared frame cannot take.
  *
  * Presentation-only: data + filter state arrive via {@link PraxesFeedState}.
- * Single-column, no fixed-px layout grid (SPEC-faction-ui-profile §1a).
  */
 const TYPE_OPTIONS: PraxisTypeFilter[] = ['all', 'solo', 'collab', 'duel']
 
@@ -139,9 +149,9 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
           {hasActiveFilters ? t('listPage.emptyFiltered') : t('listPage.empty')}
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <div className="flex flex-wrap gap-4 items-start">
           {items.map((p) => (
-            <MobilePraxisCard key={`praxis-${p.id}`} praxis={p} />
+            <PraxisCard key={`praxis-${p.id}`} praxis={p} />
           ))}
           {hasMore && (
             <button

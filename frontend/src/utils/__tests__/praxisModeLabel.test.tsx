@@ -13,10 +13,6 @@ import { describe, it, expect } from "vitest";
 import i18n from "../../i18n";
 import { isDuelPraxis, praxisModeLabel } from "../praxis";
 import { PraxisModeChip } from "../../components/praxisCard/shared";
-import {
-  MobileModeChip,
-  type MobileSlotTheme,
-} from "../../components/praxisCard/mobile/shared";
 import type { PraxisCardOut } from "../../api/praxis";
 
 const t = i18n.getFixedT(null, "common");
@@ -66,13 +62,6 @@ function card(overrides: Partial<PraxisCardOut>): PraxisCardOut {
   } as PraxisCardOut;
 }
 
-const THEME: MobileSlotTheme = {
-  ink: "#000",
-  muted: "#666",
-  accent: "#c00",
-  paper: "#fff",
-};
-
 const text = (element: React.ReactElement): string =>
   renderToStaticMarkup(element).replace(/<[^>]*>/g, "");
 
@@ -107,18 +96,8 @@ describe("card mode chips gate on duel presence (#992)", () => {
     ).toBe("");
   });
 
-  it("mobile MobileModeChip renders the Duel chip for a type='solo' duel side", () => {
-    const html = text(
-      <MobileModeChip praxis={card({ type: "solo", duel_id: 42 })} theme={THEME} />,
-    );
-    expect(html).toContain(DUEL_CHIP);
-  });
-
-  it("mobile MobileModeChip renders nothing for a plain solo", () => {
-    expect(
-      renderToStaticMarkup(
-        <MobileModeChip praxis={card({ type: "solo", duel_id: null })} theme={THEME} />,
-      ),
-    ).toBe("");
-  });
+  // The mobile twins of these two cases are gone with the `mobilePraxisCard`
+  // surface (ADR-0067): `MobileModeChip` was a second chip drawing the same
+  // `isDuelPraxis` verdict, and the desktop cases above now cover both form
+  // factors because `PraxisModeChip` is what a phone renders too.
 });

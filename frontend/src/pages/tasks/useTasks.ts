@@ -105,7 +105,6 @@ export interface TasksState {
 export function useTasks(): TasksState {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const characterId = user?.character?.id
 
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
@@ -144,10 +143,12 @@ export function useTasks(): TasksState {
         faction: faction || undefined,
         level: level === '' ? undefined : level,
         q: trimmedQuery || undefined,
-        exclude_character_id: characterId,
+        // The server excludes the authenticated viewer's own started tasks by
+        // default (#1229). Echoing the character id back here added an
+        // auth-dependent dep that made the page fetch twice.
         limit,
       }),
-    [taskType, status, faction, level, trimmedQuery, characterId],
+    [taskType, status, faction, level, trimmedQuery],
     PAGE_LIMIT,
   )
   const tasks = data ?? []

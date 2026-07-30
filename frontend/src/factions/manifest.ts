@@ -43,7 +43,6 @@ import type { ComponentType } from 'react'
 import type { CardProps } from '../components/TaskCard'
 import type { SealSkinProps } from '../components/metaTaskSeal/types'
 import type { ArchetypeProps as PraxisCardProps } from '../components/PraxisCard'
-import type { MobilePraxisCardProps } from '../components/praxisCard/mobile/MobilePraxisCard'
 import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'
 import type { SigilVariantProps } from '../components/cards/FactionSigil'
 import type { CommentComponent } from '../components/comments/shared'
@@ -139,13 +138,19 @@ export interface FactionManifest {
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  // Task cards, task detail, praxis detail and the EDIT-PRAXIS COMPOSER have no
-  // mobile twin: ADR-0056, ADR-0058, ADR-0061/#1085 and ADR-0065/#1181 each
-  // collapsed their surface to one responsive component per faction and retired
-  // it (#1044, #1068, #1089, #1181). All four licences are scoped to their own
-  // surface — ADR-0035 still governs every twin below, and ADR-0065 says in
-  // terms that it licenses no further collapse: the next surface needs its own
-  // record, the same way.
+  // Task cards, task detail, praxis detail, the EDIT-PRAXIS COMPOSER and now the
+  // PRAXIS CARD have no mobile twin: ADR-0056, ADR-0058, ADR-0061/#1085,
+  // ADR-0065/#1181 and ADR-0067 each collapsed their surface to one responsive
+  // component per faction and retired it. All five licences are scoped to their
+  // own surface — ADR-0035 still governs every twin below, and each of these
+  // records says in terms that it licenses no further collapse: the next surface
+  // needs its own record, the same way.
+  //
+  // `mobilePraxisCard` is the fifth (ADR-0067). It was the last CARD-level twin
+  // and the largest — ten skins and a 556-line slot library that re-derived the
+  // byline, task ref, title, excerpt, roster, mode chip, media gallery and vote
+  // footer the desktop slots already drew from the same fields. The mobile feed
+  // page survives; only its cards changed.
   //
   // `mobileEditPraxis` is gone rather than kept empty, which is the same choice
   // `duelRail` made and the OPPOSITE of what `praxisDetail` did (#1089 kept its
@@ -163,7 +168,6 @@ export interface FactionManifest {
   // render the Default directly. A future faction skin for one of them adds the
   // field back with a registration in the same commit — a slot no faction fills
   // is not a seam, it is a lookup that always returns the same answer.
-  readonly mobilePraxisCard?: Lazy<ComponentType<MobilePraxisCardProps>>
   readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
   readonly mobileProfile?: Lazy<ComponentType<ProfileBodyProps>>
@@ -201,7 +205,6 @@ export const SURFACE_KEYS = [
   'factionBody',
   'profileBody',
   'duelSeal',
-  'mobilePraxisCard',
   'mobileFactionPage',
   'mobileFieldDesk',
   'mobileProfile',
