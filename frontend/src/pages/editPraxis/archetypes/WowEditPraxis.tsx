@@ -60,7 +60,7 @@
  * - **Status mark.** A ✦ in the title face, at gold.
  * - **Submit.** An inline gold button with a trailing ✦.
  *
- * Every ornament comes from `components/cards/wowOrnament.tsx`, the faction's
+ * Every ornament comes from `components/factionMarks/wowOrnament.tsx`, the faction's
  * one primitive set (§6/#849). This file draws no balloon and no rule of its own.
  *
  * ## Two WOW rules that are load-bearing, not taste (§3)
@@ -109,7 +109,7 @@ import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
-import { BalloonBunch, Zig } from "../../../components/cards/wowOrnament";
+import { BalloonBunch, Zig } from "../../../components/factionMarks/wowOrnament";
 import {
   Breadcrumb,
   ComposerFooter,

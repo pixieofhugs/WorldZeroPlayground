@@ -12,7 +12,7 @@ import {
   HOLD_INK,
   INK,
   SHADOW,
-} from '../../cards/covenSlip'
+} from '../../factionMarks/covenSlip'
 import type { SealSkinProps } from '../types'
 
 /**

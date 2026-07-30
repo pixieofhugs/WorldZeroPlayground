@@ -12,7 +12,7 @@ import {
   READING,
   SHADOW,
   SOFT,
-} from "../../cards/covenSlip";
+} from "../../factionMarks/covenSlip";
 
 /**
  * Cozy Coven — THE SPELL SLIP, filed (#1209).

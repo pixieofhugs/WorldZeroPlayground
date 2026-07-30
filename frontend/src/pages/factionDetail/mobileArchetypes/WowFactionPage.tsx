@@ -5,8 +5,8 @@
  *
  *   • the pavilion chrome from the kit's one mobile screen — the crested header
  *     wash, the checker, the gold-framed cream panel
- *     (`components/cards/wowMobile.tsx`);
- *   • the desktop archetype `components/cards/WowFactionHero` (#900): the crest
+ *     (`components/factionMarks/wowMobile.tsx`);
+ *   • the desktop archetype `components/factionHero/WowFactionHero` (#900): the crest
  *     over the name, the motto in Lora italic, the charter's opening, and the
  *     MUSTER as burnt-gold figures. On the phone the muster's gold hairlines
  *     become framed plates, because three hairline-separated columns at 375px
@@ -30,7 +30,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import PraxisCard from "../../../components/PraxisCard";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { factionDescription, factionName } from "../../../utils/factions";
 import {
   WOW_BODY,
@@ -48,7 +48,7 @@ import {
   wowGhostButton,
   wowGiltButton,
   wowMobilePage,
-} from "../../../components/cards/wowMobile";
+} from "../../../components/factionMarks/wowMobile";
 import { MobileStickyBar } from "./shared";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";

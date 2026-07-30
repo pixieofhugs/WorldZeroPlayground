@@ -42,7 +42,7 @@
  */
 import { factionCssVar } from '../../utils/factions'
 import DuelSealSheet from './DuelSealSheet'
-import { CovenSigil } from '../cards/CovenSigil'
+import { CovenSigil } from '../sigil/CovenSigil'
 import {
   Braid,
   BORDER,
@@ -56,7 +56,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
-} from '../cards/covenSlip'
+} from '../factionMarks/covenSlip'
 import {
   duelSides,
   RaceRoster,

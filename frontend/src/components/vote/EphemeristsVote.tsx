@@ -10,7 +10,7 @@ import {
   READING,
   DECO,
   stepClip,
-} from '../cards/ephemeristsPlate'
+} from '../factionMarks/ephemeristsPlate'
 import { toRoman } from '../../utils/roman'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'

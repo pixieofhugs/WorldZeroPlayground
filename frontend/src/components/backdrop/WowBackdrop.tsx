@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 
-import { WowSigil } from '../cards/WowSigil'
+import { WowSigil } from '../sigil/WowSigil'
 
 /**
  * WOW page backdrop — the faction wallpaper (kit §14, #900).

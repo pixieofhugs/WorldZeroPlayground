@@ -1,8 +1,8 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import PraxisCard from "../../../components/PraxisCard";
-import { BalloonBunch, Bunting, Zig } from "../../../components/cards/wowOrnament";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -65,7 +65,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  * file.
  *
  * The wavy rule, the balloon bunch and the bunting moved OUT of this file into
- * `components/cards/wowOrnament.tsx` (#1121), where the praxis-detail skin reads
+ * `components/factionMarks/wowOrnament.tsx` (#1121), where the praxis-detail skin reads
  * the same three primitives. They were drawn here and, separately, in
  * `WowTaskCard`; a third hand-drawn copy is what WORLD_ZERO_STYLE §6 (#849)
  * forbids. Nothing about how they render changed.

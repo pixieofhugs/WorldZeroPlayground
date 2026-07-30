@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from './FactionAvatar'
-import { CARD, BORDER, INK, READING } from '../cards/covenSlip'
+import { CARD, BORDER, INK, READING } from '../factionMarks/covenSlip'
 
 /** Crescent-moon sigil. */
 function MoonGlyph({ size, color }: { size: number; color: string }) {

@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from './FactionAvatar'
-import { EverymenSigil } from '../cards/EverymenSigil'
+import { EverymenSigil } from '../sigil/EverymenSigil'
 
 /**
  * Everymen avatar — the standard circle plus a red union membership badge

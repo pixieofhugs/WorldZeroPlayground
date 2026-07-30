@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
-import { EphemeristsSigil } from '../../../components/cards/EphemeristsSigil'
+import { EphemeristsSigil } from '../../../components/sigil/EphemeristsSigil'
 import {
   BRASS,
   CAPTION,
@@ -25,7 +25,7 @@ import {
   SHADOW,
   SMALL_CAPS,
   PLATE as SHEET,
-} from '../../../components/cards/ephemeristsPlate'
+} from '../../../components/factionMarks/ephemeristsPlate'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**

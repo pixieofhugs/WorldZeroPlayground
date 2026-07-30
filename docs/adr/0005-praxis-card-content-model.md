@@ -48,7 +48,7 @@ Builds on ADR-0002 (a surface composes the fine-grained dispatchers; content slo
 - **Interim shipped:** all six faction cards now share an enriched content body
   (`PlaceholderPraxisBody` + `PraxisSeal`/`PraxisStats` slots) with a placeholder score "seal"
   hero and a faction-voiced label (`sealed` / `case` / `concord` / `verified`). `ponytail:`
-  tagged in `frontend/src/components/PraxisCard.tsx`.
+  tagged in `frontend/src/components/praxisCard/PraxisCard.tsx`.
 - **Designs for the missing three** (Everymen, WoW, UA): `docs/design-briefs/praxis-card-missing.md`.
 - **Backend data + the real vote-reframe hero:** GitHub #159
   (`task_level_required`, `average_stars`, `total_votes`, `submitted_at` column).

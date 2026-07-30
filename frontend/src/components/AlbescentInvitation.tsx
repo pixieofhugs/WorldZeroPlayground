@@ -5,7 +5,7 @@ import { setActiveCharacter } from '../api/me'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
 import { factionName } from '../utils/factions'
-import AlbescentSigil from './cards/AlbescentSigil'
+import AlbescentSigil from './sigil/AlbescentSigil'
 
 /**
  * AlbescentInvitation — the order's standing correspondence (#395).

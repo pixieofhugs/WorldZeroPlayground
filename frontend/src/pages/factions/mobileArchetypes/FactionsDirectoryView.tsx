@@ -7,7 +7,7 @@ import type {
 } from '../../../api/factions'
 import { factionCssVar, factionName, sortFactionsByRainbowOrder } from '../../../utils/factions'
 import { relativeTime } from '../../../utils/dates'
-import FactionSelectCard, { type SelectState } from '../../../components/cards/FactionSelectCard'
+import FactionSelectCard, { type SelectState } from '../../../components/selectCard/FactionSelectCard'
 
 const NA_SLUG = 'na'
 

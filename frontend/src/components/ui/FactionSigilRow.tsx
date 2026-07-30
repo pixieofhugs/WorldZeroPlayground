@@ -5,7 +5,7 @@ import {
   factionName,
   sortFactionsByRainbowOrder,
 } from "../../utils/factions";
-import FactionSigil from "../cards/FactionSigil";
+import FactionSigil from "../sigil/FactionSigil";
 
 /**
  * Faction filter — mobile sigil row (ADR-0040 §3, #659). The touch-native

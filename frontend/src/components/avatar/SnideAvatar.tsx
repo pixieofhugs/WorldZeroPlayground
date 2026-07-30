@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from './FactionAvatar'
-import { SnideSigil } from '../cards/SnideSigil'
+import { SnideSigil } from '../sigil/SnideSigil'
 
 /**
  * S.N.I.D.E. avatar — the standard circle on photocopier ink with an acid

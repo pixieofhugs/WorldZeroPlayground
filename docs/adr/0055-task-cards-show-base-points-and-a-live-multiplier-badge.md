@@ -26,7 +26,7 @@ that ships a non-1.0 modifier doesn't require touching every card again.
 Task cards show **base points plus a `×multiplier` badge**, computed and rendered
 separately rather than pre-multiplied.
 
-- `CardProps` (`components/TaskCard.tsx`) changes from `{ task, displayPoints, onSignup }`
+- `CardProps` (`components/taskCard/TaskCard.tsx`) changes from `{ task, displayPoints, onSignup }`
   to `{ task, basePoints, multiplier, inProgressCount, onSignup }`. `basePoints` is
   `task.point_value`.
 - A new `displayMultiplierFor(task)` helper sits beside `displayPointsFor` in

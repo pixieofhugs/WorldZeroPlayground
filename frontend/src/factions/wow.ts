@@ -61,7 +61,7 @@
  * `factionCard` and `factionBody` remain unclaimed on #951.
  *
  * The three ornaments those two pages share — the wavy rule, the balloon bunch
- * and the bunting — live in `components/cards/wowOrnament.tsx`, drawn once for
+ * and the bunting — live in `components/factionMarks/wowOrnament.tsx`, drawn once for
  * the whole faction (§6/#849).
  *
  * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
@@ -80,7 +80,7 @@
  * #1121 — and `profileBody` each serve WOW on both form factors. The pavilion
  * profile was not deleted with its surface: it is the phone branch inside
  * `WowProfileBody`, which is what "one responsive component" means here.)
- * The shared vocabulary lives in `components/cards/wowMobile.tsx`.
+ * The shared vocabulary lives in `components/factionMarks/wowMobile.tsx`.
  * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
  * `mobilePlayersDirectory` were unclaimed here on purpose — nothing in the kit
  * described them — and since no other faction claimed them either, the four
@@ -99,12 +99,12 @@ import { lazyArchetype } from './lazyArchetype'
 
 const WowAvatar = lazyArchetype(() => import('../components/avatar/WowAvatar'))
 const WowBackdrop = lazyArchetype(() => import('../components/backdrop/WowBackdrop'))
-const WOWSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
+const WOWSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
 const WowComment = lazyArchetype(() => import('../components/comments/voices/WowComment'))
 const WowFeedFrame = lazyArchetype(() => import('../components/feed/WowFeedFrame'))
-const WowFactionHero = lazyArchetype(() => import('../components/cards/WowFactionHero'))
-const WowSigil = lazyArchetype(() => import('../components/cards/WowSigil').then((m) => ({ default: m.WowSigil })))
-const WowTaskCard = lazyArchetype(() => import('../components/cards/WowTaskCard'))
+const WowFactionHero = lazyArchetype(() => import('../components/factionHero/WowFactionHero'))
+const WowSigil = lazyArchetype(() => import('../components/sigil/WowSigil').then((m) => ({ default: m.WowSigil })))
+const WowTaskCard = lazyArchetype(() => import('../components/taskCard/WowTaskCard'))
 const WowProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/WowProfileBody'))
 const WowVote = lazyArchetype(() => import('../components/vote/WowVote'))
 const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/WowPraxisCard'))

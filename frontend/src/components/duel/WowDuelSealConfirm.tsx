@@ -62,7 +62,7 @@
  * this skin's own kicker at 4.76:1.
  */
 import { factionCssVar } from '../../utils/factions'
-import { WowSigil } from '../cards/WowSigil'
+import { WowSigil } from '../sigil/WowSigil'
 import {
   duelSides,
   RaceRoster,

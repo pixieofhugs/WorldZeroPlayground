@@ -19,7 +19,7 @@ import {
   SMALL_CAPS,
   WASH,
   WingedDisc,
-} from "../../cards/ephemeristsPlate";
+} from "../../factionMarks/ephemeristsPlate";
 import { factionName } from "../../../utils/factions";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";

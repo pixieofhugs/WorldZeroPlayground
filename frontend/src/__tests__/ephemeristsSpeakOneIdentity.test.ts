@@ -3,7 +3,7 @@
  *
  * The faction ran two visual languages at once. THE VALLEY PLATE
  * (`--faction-ephemerists-plate-*`, Poiret One / Cinzel / Spectral, the kit in
- * `components/cards/ephemeristsPlate.tsx`) is the live one, shipped by the v2
+ * `components/factionMarks/ephemeristsPlate.tsx`) is the live one, shipped by the v2
  * task card (#1023), the task detail (#1032), the praxis detail (#1120) and the
  * praxis card / score stamp / vote / metatask seal (#1207). THE CODEX — the
  * `--eph-*` illuminated-manuscript family: vellum, lapis, rubric, gold leaf,
@@ -66,10 +66,10 @@ describe('the Ephemerists wear one identity (#1208)', () => {
   })
 
   it('the plate family is what the sweep moved TO, so it is read', () => {
-    // Either directly, or through `components/cards/ephemeristsPlate.tsx`, which
+    // Either directly, or through `components/factionMarks/ephemeristsPlate.tsx`, which
     // is where a mark used by more than one Ephemerists surface is drawn.
     const readers = sourceFiles(SRC_DIR).filter((path) =>
-      /--faction-ephemerists-plate-|cards\/ephemeristsPlate/.test(
+      /--faction-ephemerists-plate-|factionMarks\/ephemeristsPlate/.test(
         stripComments(readFileSync(path, 'utf8')),
       ),
     )

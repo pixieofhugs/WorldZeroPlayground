@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import PraxisCard from "../../../components/PraxisCard";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -111,9 +111,9 @@ const BRIEF_LEADING = 32;
  * geometry on a 24-unit square, stroke-only so they read as incised rather than
  * illustrated.
  *
- * Duplicated from `components/cards/EphemeristsTaskCard.tsx`, which owns the
+ * Duplicated from `components/taskCard/EphemeristsTaskCard.tsx`, which owns the
  * same set for the card. Deliberate under this issue's two-file scope; the
- * extraction target is `components/cards/ephemeristsPlate.tsx`, and until the
+ * extraction target is `components/factionMarks/ephemeristsPlate.tsx`, and until the
  * two are merged a change to one sign has to be made twice.
  */
 const GLYPHS: Record<string, string> = {

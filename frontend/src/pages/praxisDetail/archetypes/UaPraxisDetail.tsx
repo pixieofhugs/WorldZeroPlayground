@@ -8,14 +8,14 @@ import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { Lotus } from "../../../components/factionMarks";
-import { UaSigil } from "../../../components/cards/UaSigil";
+import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
   UA_DISPLAY,
   UA_EYEBROW,
   UA_TEXT,
   UaInkColumn,
   uaShade,
-} from "../../../components/cards/uaAtoms";
+} from "../../../components/factionMarks/uaAtoms";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";

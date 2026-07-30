@@ -286,7 +286,7 @@ const TAILWIND_WEIGHTS: Record<string, number> = {
  * Every faction surface routes its family through one (`const CHROME =
  * "var(--font-faction-rounded)"`, then `fontFamily: CHROME`), and the shared
  * ones are imported rather than redeclared — UA's whole skin reads its two cuts
- * off `cards/uaAtoms`. Resolving only local bindings misses those entirely.
+ * off `factionMarks/uaAtoms`. Resolving only local bindings misses those entirely.
  */
 const bindingCache = new Map<string, Map<string, string>>();
 function stringConstants(file: string, depth = 0): Map<string, string> {

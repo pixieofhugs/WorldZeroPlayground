@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { TaskCrown } from "../../cards/TaskCrown";
+import { TaskCrown } from "../../factionMarks/TaskCrown";
 import {
   BRASS,
   BRASS_LIGHT,
@@ -16,7 +16,7 @@ import {
   SMALL_CAPS,
   WASH,
   stepClip,
-} from "../../cards/ephemeristsPlate";
+} from "../../factionMarks/ephemeristsPlate";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import type { ScoreStampProps } from "./ScoreStamp";
 

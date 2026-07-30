@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import TaskCard from '../components/TaskCard'
+import TaskCard from '../components/taskCard/TaskCard'
 import PageTitle from '../components/ui/PageTitle'
 import FilterStamps from '../components/ui/FilterStamps'
 import FilterFactionTabs from '../components/ui/FilterFactionTabs'

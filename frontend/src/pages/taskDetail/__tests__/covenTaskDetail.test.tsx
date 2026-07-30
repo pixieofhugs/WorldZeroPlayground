@@ -115,7 +115,7 @@ describe("Coven task detail — the dress", () => {
   });
 
   it("keeps slip-deep off body-sized text — it is a rule, a strand and a large numeral (#1295)", () => {
-    // The tier note lives in `components/cards/covenSlip.tsx`. `slip-deep`
+    // The tier note lives in `components/factionMarks/covenSlip.tsx`. `slip-deep`
     // measures 4.44:1 on the ward PAGE (3.47:1 under the peak of the pink haze
     // bloom) and 4.70:1 on the ward CARD, so it may carry words only at a size
     // the 3:1 large-text floor covers. Neither guard above sees this: the token
