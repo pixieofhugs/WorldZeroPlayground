@@ -5,10 +5,16 @@
  * who has cast, who is still weaving, and the gate progress.
  *
  * State machine (derived from `members[]` — see docs/design/collab-submission):
+ *   member_count < 2                    → awaiting  (S0) a crew of one
  *   cast_count === 0                    → writing   (S1) nobody cast yet
  *   0 < cast_count < member_count, I cast → waiting  (S2) my part is in, others aren't
  *   0 < cast_count < member_count, I didn't → holdout (S3) the circle waits on me
  *   cast_count === member_count         → published (S4) every part woven
+ *
+ * S0 is #1274's. Below two members every consensus reading is degenerate —
+ * `cast_count >= member_count` makes a lone author "published", and the bar can
+ * only read 0% or 100% — so `awaiting` draws neither: just the author's row and
+ * a line naming whoever was invited and has not answered.
  *
  * Pure display everywhere (#646): the cast / pull-back action lives in the
  * composer footer's PublishButton, not the roster, so both the composer and the
@@ -21,13 +27,22 @@
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { PraxisMemberOut } from '../../api/praxis'
+import type {
+  PraxisInviteOut,
+  PraxisMemberOut,
+  PraxisType,
+} from '../../api/praxis'
 import { factionCssVar } from '../../utils/factions'
 import ConfirmDialog from '../confirm/ConfirmDialog'
 import { kickMemberConfirm } from '../confirm/composerConfirms'
 import { collabCopy } from './collabCopy'
 
-export type CollabState = 'writing' | 'waiting' | 'holdout' | 'published'
+export type CollabState =
+  | 'awaiting'
+  | 'writing'
+  | 'waiting'
+  | 'holdout'
+  | 'published'
 
 export interface CollabGate {
   memberCount: number
@@ -47,21 +62,44 @@ export function deriveCollabGate(
     (m) => m.character_id === currentCharacterId && m.has_submitted,
   )
   let state: CollabState
-  if (castCount === 0) state = 'writing'
+  // First, because every test below it lies at one member (#1274).
+  if (memberCount < 2) state = 'awaiting'
+  else if (castCount === 0) state = 'writing'
   else if (castCount >= memberCount) state = 'published'
   else state = iCast ? 'waiting' : 'holdout'
   return { memberCount, castCount, iCast, state }
 }
 
 export function CollabRoster({
+  praxisType,
   members,
+  invites,
   currentCharacterId,
   factionSlug,
   taskPointValue,
   onKick,
   onNudge,
 }: {
+  /**
+   * `PraxisOut.type` — the ONLY thing that decides whether this block belongs on
+   * the page (#1274). It used to be inferred from `members.length > 1`, which
+   * made a collab nobody had joined yet render nothing while its heading still
+   * announced "Collaborators · 1".
+   *
+   * It must be tested POSITIVELY against `'collab'`. A duel side is stored
+   * `type='solo'` with a non-null `duel_id` (ADR-0011), so `type === 'duel'`
+   * never fires (#992) and a `!== 'solo'` gate would grow a roster on every
+   * duel while still missing the collab this fixes.
+   */
+  praxisType: PraxisType
   members: readonly PraxisMemberOut[]
+  /**
+   * `PraxisOut.invites`, for the `awaiting` line only: a crew of one is only
+   * legible next to who has been asked. Optional because the backend serialises
+   * invites to MEMBERS ONLY (`build_praxis_out`), so a stranger reading the
+   * detail page legitimately has none and gets the neutral fallback line.
+   */
+  invites?: readonly PraxisInviteOut[]
   currentCharacterId: number | null | undefined
   factionSlug: string | null | undefined
   taskPointValue?: number | null
@@ -90,7 +128,7 @@ export function CollabRoster({
   // the solo early-return so the hook order never changes.
   const [pendingKick, setPendingKick] = useState<PraxisMemberOut | null>(null)
   const gate = deriveCollabGate(members, currentCharacterId)
-  if (gate.memberCount < 2) return null // solo/duel render nothing
+  if (praxisType !== 'collab') return null // solo/duel render nothing
 
   const accent = factionCssVar(factionSlug, 'card-accent')
   // The roster is one block mounted on eight different faction sheets, so every
@@ -104,7 +142,11 @@ export function CollabRoster({
   const notice = factionCssVar(factionSlug, 'card-notice')
   const credit = factionCssVar(factionSlug, 'card-credit')
   const quiet = factionCssVar(factionSlug, 'card-muted')
-  const pct = Math.round((gate.castCount / gate.memberCount) * 100)
+  // A crew of one has no consensus to report, so the tally chip and the bar are
+  // both withheld rather than printed at their degenerate readings (#1274) —
+  // which also keeps `pct` off a zero denominator on an empty roster.
+  const awaiting = gate.state === 'awaiting'
+  const pct = awaiting ? 0 : Math.round((gate.castCount / gate.memberCount) * 100)
 
   // Mirror the backend: only a member may kick, never themselves, and only
   // while the praxis is still open (#1076). `published` is that last condition
@@ -132,8 +174,26 @@ export function CollabRoster({
     void onKick(member.character_id)
   }
 
+  // Who has been asked and has not answered — the whole content of `awaiting`
+  // beyond the author's own row. Filtered HERE rather than at eleven call sites,
+  // for the same reason the state machine lives here.
+  const pendingInvitees = (invites ?? [])
+    .filter((invite) => invite.status === 'pending')
+    .map((invite) => invite.invitee_display_name)
+
   const banner =
-    gate.state === 'waiting'
+    gate.state === 'awaiting'
+      ? {
+          text:
+            pendingInvitees.length > 0
+              ? collabCopy(factionSlug, 'rosterAwaitingInvited', {
+                  names: pendingInvitees.join(', '),
+                })
+              : collabCopy(factionSlug, 'rosterAwaitingAlone'),
+          tone: quiet,
+          warn: false,
+        }
+      : gate.state === 'waiting'
       ? { text: collabCopy(factionSlug, 'bannerWaiting'), tone: accent, warn: false }
       : gate.state === 'holdout'
         ? { text: collabCopy(factionSlug, 'bannerHoldout'), tone: notice, warn: true }
@@ -143,24 +203,30 @@ export function CollabRoster({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Header: label + cast progress chip */}
-      <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
-        <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
-          {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
-        </span>
-      </div>
+      {/* Header: label + cast progress chip. Both this and the bar below are the
+          consensus reading, which `awaiting` has nothing true to say — a tally
+          of one over one is not a gate anybody is waiting on. */}
+      {!awaiting && (
+        <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
+          <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+            {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
+          </span>
+        </div>
+      )}
 
       {/* Progress bar */}
-      <div
-        role="progressbar"
-        aria-valuenow={gate.castCount}
-        aria-valuemin={0}
-        aria-valuemax={gate.memberCount}
-        aria-label={collabCopy(factionSlug, 'progressAria', { cast: gate.castCount, total: gate.memberCount })}
-        style={{ height: 4, borderRadius: 2, background: 'var(--color-border)', overflow: 'hidden' }}
-      >
-        <div style={{ width: `${pct}%`, height: '100%', background: accent, transition: 'width 200ms' }} />
-      </div>
+      {!awaiting && (
+        <div
+          role="progressbar"
+          aria-valuenow={gate.castCount}
+          aria-valuemin={0}
+          aria-valuemax={gate.memberCount}
+          aria-label={collabCopy(factionSlug, 'progressAria', { cast: gate.castCount, total: gate.memberCount })}
+          style={{ height: 4, borderRadius: 2, background: 'var(--color-border)', overflow: 'hidden' }}
+        >
+          <div style={{ width: `${pct}%`, height: '100%', background: accent, transition: 'width 200ms' }} />
+        </div>
+      )}
 
       {/* Roster rows */}
       <div className="flex flex-col gap-1">
