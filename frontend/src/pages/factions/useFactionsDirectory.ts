@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  getFactions,
   getFactionStatus,
   getInvitations,
   type FactionOut,
@@ -8,9 +7,15 @@ import {
   type InvitationLetterOut,
 } from '../../api/factions'
 import { useAuth } from '../../auth/AuthContext'
+import { useFactions } from '../../hooks/useFactions'
 
 /**
- * The `/factions` directory fetch, shared by both form factors (#1116).
+ * The factions-directory read, shared by both form factors (#1116).
+ *
+ * `/factions` itself is no longer fetched here: it comes from the app-wide
+ * `useFactions` cache (#1284), so arriving from any other surface costs nothing.
+ * What this hook still owns is the viewer's membership status + invitations,
+ * which are per-character and not cacheable app-wide.
  *
  * The desktop grid and the phone directory used to own a private copy of this
  * effect, which made `/factions` the one page dispatcher whose data lived BELOW
@@ -35,21 +40,20 @@ export function useFactionsDirectory(): FactionsDirectoryState {
   const { user } = useAuth()
   const characterId = user?.character?.id ?? null
 
-  const [factions, setFactions] = useState<FactionOut[]>([])
+  // The directory list itself is app-wide cached (#1284) — this page no longer
+  // owns the request, it derives from the shared hook.
+  const factions = useFactions()
   const [factionPage, setFactionPage] = useState<FactionPageOut | null>(null)
   const [invitations, setInvitations] = useState<InvitationLetterOut[]>([])
-  const [loading, setLoading] = useState(true)
+  const [membershipLoading, setMembershipLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
+    setMembershipLoading(true)
     setError(null)
 
     const load = async () => {
-      const factionsData = await getFactions()
-      if (cancelled) return
-      setFactions(factionsData)
       if (characterId == null) return
       // The invitations feed backs the letters PANEL only — never card state.
       const [statusData, invitesData] = await Promise.all([getFactionStatus(), getInvitations()])
@@ -63,7 +67,7 @@ export function useFactionsDirectory(): FactionsDirectoryState {
         if (!cancelled) setError(err)
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setMembershipLoading(false)
       })
 
     return () => {
@@ -71,5 +75,14 @@ export function useFactionsDirectory(): FactionsDirectoryState {
     }
   }, [characterId])
 
-  return { factions, factionPage, invitations, loading, error }
+  return {
+    factions: factions ?? [],
+    factionPage,
+    invitations,
+    // Still one flag, and it still means "nothing to draw yet": the grid needs
+    // the faction list, so a settled membership read with `factions` still null
+    // is not loaded. Keeping the two apart would flash an empty grid.
+    loading: membershipLoading || factions === null,
+    error,
+  }
 }
