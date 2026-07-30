@@ -18,6 +18,10 @@ from services.era import (
 )
 from services.faction_service import hidden_faction_slugs
 from services.praxis import (
+    # Private, but the bank-cap count has exactly one correct implementation and
+    # services.duel already imports it the same way. A second COUNT here is how
+    # the filter and the sign-up predicate would start disagreeing.
+    _count_in_progress_praxes,
     active_member_task_ids_subquery,
     allowed_praxis_modes,
     can_submit_praxis_for_task,
@@ -397,7 +401,7 @@ async def list_tasks(
     session: AsyncSession,
     *,
     status: Optional[str] = None,
-    level: Optional[int] = None,
+    can_sign_up: bool = False,
     faction: Optional[str] = None,
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
@@ -432,8 +436,15 @@ async def list_tasks(
     Metatasks are deliberately NOT excluded: whatever the type filter and the
     ``level_to_see_metatasks`` gate already let this viewer see stays
     searchable. It composes with every other filter as one more AND clause —
-    no special interaction with ``exclude_character_id``, faction, level, or
-    status.
+    no special interaction with ``exclude_character_id``, faction, or status.
+
+    ``can_sign_up`` (#1130) narrows the list to the tasks ``viewer`` could claim
+    right now — the SQL half of :func:`services.praxis.evaluate_signup`, the
+    single sign-up predicate (ADR-0008). It replaces the old ``level`` filter,
+    which could not express either of the live faction abilities that bend the
+    level bar (WOW's once-a-level jump, Ephemerists' retired-task access) and so
+    made them invisible. Anonymous viewers get ``[]``: ``evaluate_signup``
+    refuses them, so there is no honest list to return.
 
     ``sort='newest'`` orders by creation time (newest first); the default
     ordering surfaces the easiest, highest-value tasks first.
@@ -475,19 +486,66 @@ async def list_tasks(
     else:
         query = query.where(Task.task_type == TaskType.standard)
 
+    # The viewer's current-era stats, read ONCE for the whole request: the
+    # metatask visibility gate wants the level and the can_sign_up filter wants
+    # the level plus the level-jump stamp. Two consumers, one query — the admin
+    # browse with the filter off still reads nothing.
+    viewer_stats: Optional[CharacterStats] = None
+    if viewer is not None and (can_sign_up or not skip_level_check):
+        era_row = await get_current_era_row(session)
+        viewer_stats = await get_or_create_stats(session, viewer.id, era_row.id)
+
     # Metatask visibility gate (#453): the metatask list only opens at
     # era.level_to_see_metatasks. Anonymous viewers are always below the gate.
     if not skip_level_check:
-        viewer_sees_metatasks = False
-        if viewer is not None:
-            era_row = await get_current_era_row(session)
-            stats = await get_or_create_stats(session, viewer.id, era_row.id)
-            viewer_sees_metatasks = stats.level >= era.level_to_see_metatasks
+        viewer_sees_metatasks = (
+            viewer_stats is not None
+            and viewer_stats.level >= era.level_to_see_metatasks
+        )
         if not viewer_sees_metatasks:
             query = query.where(Task.task_type != TaskType.metatask)
 
-    if level is not None:
-        query = query.where(Task.level_required >= level)
+    # "Tasks I can sign up for" (#1130) — evaluate_signup's six gates, re-stated
+    # as SQL. The predicate itself is async and hits the DB, so calling it per
+    # row would be an N+1 on the page #1218 exists to speed up; instead the
+    # per-character facts are hoisted above and only the per-task ones become
+    # WHERE clauses. tests/integration/test_task_can_sign_up_filter.py is the
+    # standing check that the two never disagree — that drift is the whole risk.
+    if can_sign_up:
+        # Gate 0 — evaluate_signup returns allowed=False for anonymous viewers.
+        if viewer is None or viewer_stats is None:
+            return []
+        # Gate 6 — the bank cap is a gate on the character, not on any task, so
+        # it cannot be a predicate. When it is what emptied the list, EVERY row
+        # is ineligible and the honest answer is nothing at all.
+        in_progress_count = await _count_in_progress_praxes(viewer.id, session)
+        if in_progress_count >= era.max_task_signups:
+            return []
+        # Gate 1 — metatasks are applied to a praxis, never signed up for.
+        query = query.where(Task.task_type != TaskType.metatask)
+        # Gate 2 — the task-level bar plus whatever the faction's once-a-level
+        # jump currently reaches. available_level_reach is the only thing that
+        # may compute that number (#811), which is what makes WOW's level-4 rows
+        # show up for a level-3 member here without a slug branch.
+        level_reach = available_level_reach(
+            viewer.faction_slug,
+            viewer_stats.level,
+            viewer_stats.level_jump_used_at_level,
+            era,
+        )
+        query = query.where(Task.level_required <= viewer_stats.level + level_reach)
+        # Gates 3 and 4 — written as exclusions rather than an allow-list of
+        # statuses so a status added to the enum later is not silently opted in.
+        if viewer.faction_slug not in era.allow_praxis_on_retired_task_factions:
+            query = query.where(Task.status != TaskStatus.retired)
+        if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:
+            query = query.where(Task.status != TaskStatus.pending)
+        # Gate 5 is the exclude_character_id clause below — reused, not rewritten.
+        # The route already defaults it to the viewer (#1229); this only arms it
+        # for a direct service caller that did not.
+        if exclude_character_id is None:
+            exclude_character_id = viewer.id
+
     if faction:
         query = query.where(Task.primary_faction_slug == faction)
     if min_points is not None:

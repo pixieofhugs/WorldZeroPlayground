@@ -268,7 +268,12 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   if (!praxis) return null
 
   const members = orderedMembers(praxis)
-  const isCollab = members.length > 1
+  // A collab is a collab at ONE member (#1274). This used to read
+  // `members.length > 1`, which hid the whole Members section from a collab
+  // nobody had joined yet while the heading still counted them. Tested
+  // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
+  // `!== 'solo'` would put a roster on every duel (#992).
+  const isCollab = praxis.type === 'collab'
 
   /** A cream plate in a gold frame — the chronicle's one container. */
   const plate: CSSProperties = {
@@ -714,6 +719,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead('crew', t('detail.sections.members'))}
       <CollabRoster
+        praxisType={praxis.type}
+        invites={praxis.invites}
         members={praxis.members}
         currentCharacterId={state.user?.character?.id ?? null}
         factionSlug={praxis.task_faction_slug}

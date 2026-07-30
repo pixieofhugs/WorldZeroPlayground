@@ -59,7 +59,15 @@ export interface TaskCreate {
 export interface TaskFilters {
   status?: string
   faction?: string
-  level?: number
+  /**
+   * Narrow the list to tasks the authenticated viewer could claim right now
+   * (#1130). The server evaluates its own sign-up predicate, so a faction
+   * ability that bends the level bar (WOW's once-a-level jump, the Ephemerists'
+   * retired-task access) is honoured without the client knowing any rule.
+   * Replaces the old `level` filter, which asked a question the game does not
+   * answer. Anonymous callers get an empty list — hence the hidden control.
+   */
+  can_sign_up?: boolean
   created_by?: number
   task_type?: TaskType
   /**
