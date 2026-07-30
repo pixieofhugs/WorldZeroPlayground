@@ -865,10 +865,11 @@ def _nudge_query(ctx: FeedContext) -> Select:
     predicate below is ``_awaiting_submission_query``'s, read through the
     recipient's own member row (#1301). Both halves are load-bearing and neither
     subsumes the other — a collab stays ``in_progress`` while the group waits on
-    somebody else, which is precisely when this member's nudge stops applying;
-    and a member row stays unfiled forever on a praxis that was abandoned. It is
-    also the read-time mirror of what ``send_nudge`` checked at write time, so a
-    nudge that could not be sent today cannot still be showing from yesterday.
+    somebody else, which is precisely when *this* member's nudge stops applying;
+    and a member row can sit unfiled on a praxis that has since been published,
+    which owes nobody anything. It is also the read-time mirror of what
+    ``send_nudge`` checks at write time, so a nudge that could not be sent today
+    cannot still be on screen from yesterday.
     """
     sender = aliased(Character)
     query = (
