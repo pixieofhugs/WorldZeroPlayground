@@ -163,6 +163,15 @@ const FIELD = "var(--faction-wow-chronicle-panel)";
 const INK = "var(--faction-wow-card-text)";
 /** Quiet ink — CREAM ONLY. See the pairing note in the header. */
 const MUTED = "var(--faction-wow-card-muted)";
+/**
+ * The same quiet register on the PLATE. `--faction-wow-card-muted` is measured
+ * against the cream card and is 4.24:1 on the inset parchment — which is why
+ * #1173 minted this sibling for the duel seal's stakes panel (4.86:1 there).
+ * Every slot below that lands on {@link FIELD} takes it: `bodyStyle` and
+ * `quietStyle` render INSIDE `panelStyle` on the waiting surface, so the plate
+ * is their ground, not the cream. Found by #1232's contrast rows.
+ */
+const PANEL_QUIET = "var(--faction-wow-chronicle-quiet)";
 /** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
 const LABEL = "var(--faction-wow-accent-deep)";
 /** Plum as INK — the one member of this palette that flips with the theme. */
@@ -206,7 +215,11 @@ const QUIET_STYLE: CSSProperties = {
   fontStyle: "italic",
   textTransform: "none",
   letterSpacing: "0.02em",
-  color: MUTED,
+  /* The plate's quiet ink rather than the cream's: this style is `quietStyle`,
+     which the waiting surface sets inside `panelStyle`. It also serves
+     `metaStyle` on the cream, where it reads 5.45:1 — one ink for both grounds
+     beats two that have to be kept apart by slot. */
+  color: PANEL_QUIET,
 };
 
 export default function WowEditPraxis({ state }: Props) {
@@ -338,7 +351,8 @@ export default function WowEditPraxis({ state }: Props) {
       borderRadius: 6,
     },
     headingStyle: { fontFamily: MED, color: INK },
-    bodyStyle: { fontFamily: LORA, color: MUTED },
+    /* On the PLATE, not the cream — `panelStyle` above is its ground. */
+    bodyStyle: { fontFamily: LORA, color: PANEL_QUIET },
     quietStyle: QUIET_STYLE,
     primaryStyle,
     quietButtonStyle: QUIET_STYLE,
