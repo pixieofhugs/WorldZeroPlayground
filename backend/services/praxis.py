@@ -7,9 +7,9 @@ Replaces the old services/submission.py and services/collaboration.py.
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from sqlalchemy import and_, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -35,6 +35,7 @@ from models.vote import Vote
 from schemas.task import TaskOut
 from schemas.praxis import (
     MediaItemOut,
+    MediaUploadResultOut,
     PraxisCardOut,
     PraxisInviteOut,
     PraxisMemberOut,
@@ -45,6 +46,7 @@ from services import collab_consensus
 from services.character_stats import recalculate_character_stats
 from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
+from services.media import process_and_save_media
 from services.meta_task import metatask_cap_for_level
 from services.era import get_current_era_row, get_or_create_stats
 from services.nudge import nudged_at_map
@@ -1361,6 +1363,90 @@ async def delete_praxis(
         )
     await session.delete(praxis)
     await session.flush()
+
+
+# ---------------------------------------------------------------------------
+# Media
+# ---------------------------------------------------------------------------
+
+
+async def _next_media_display_order(praxis_id: int, session: AsyncSession) -> int:
+    """One past the highest ``display_order`` already on the praxis (0 if empty).
+
+    So a second batch appends to the gallery instead of interleaving with the
+    first. Gaps are harmless — the relationship orders by ``display_order``, not
+    by contiguity.
+    """
+    highest = await session.scalar(
+        select(func.max(MediaItem.display_order)).where(MediaItem.praxis_id == praxis_id)
+    )
+    return 0 if highest is None else highest + 1
+
+
+async def add_media_batch(
+    praxis: Praxis,
+    uploads: list[UploadFile],
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> List[MediaUploadResultOut]:
+    """Save N uploads onto one praxis, returning a per-file outcome per upload.
+
+    Caller contract: the praxis has been fetched and ``_require_member`` has
+    already passed — those are batch-wide verdicts and must be settled before a
+    single byte is written.
+
+    **Partial success is the point.** Each upload is validated and stored on its
+    own; a file the pipeline rejects (unsupported type, over the byte cap,
+    unwritable) yields an error entry and the batch carries on. Results come back
+    in *request order*, one entry per upload, so the caller can match outcomes to
+    the files it sent positionally or by ``filename``.
+
+    ``display_order`` is derived from request position (appended after any media
+    already attached) — unlike the single-file route, this endpoint does not
+    accept an explicit ``display_order``, because a multi-file selection *is* its
+    own order.
+
+    ADR-0012: media is part of the shared document, so a successful batch cancels
+    a pending publish — once for the whole batch, and not at all if every file
+    was rejected (nothing was edited).
+    """
+    display_order = await _next_media_display_order(praxis.id, session)
+    results: List[MediaUploadResultOut] = []
+    saved_count = 0
+
+    for upload in uploads:
+        # The *client-supplied* name, unsanitized: the composer reports failures
+        # by the name the player picked, not by the name we chose to store.
+        filename = upload.filename or ""
+        try:
+            media_item = await process_and_save_media(
+                upload, praxis.id, character_id, display_order
+            )
+            session.add(media_item)
+            await session.flush()
+            await session.refresh(media_item)
+        except HTTPException as exception:
+            results.append(
+                MediaUploadResultOut(
+                    filename=filename,
+                    error=str(exception.detail),
+                    status_code=exception.status_code,
+                )
+            )
+            continue
+        results.append(
+            MediaUploadResultOut(
+                filename=filename,
+                media_item=MediaItemOut.model_validate(media_item),
+            )
+        )
+        display_order += 1
+        saved_count += 1
+
+    if saved_count:
+        await cancel_pending_publish_on_edit(praxis, session, era)
+    return results
 
 
 async def can_view_praxis(
