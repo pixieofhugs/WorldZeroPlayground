@@ -104,8 +104,43 @@ function namedFamilies(source: string): string[] {
   );
 }
 
+/**
+ * Every `--font-*` token index.css declares, and the ones nothing reads (#1293).
+ *
+ * A token's own declaration carries the quoted family name and index.css is in
+ * the corpus the family check searches, so before this every token vouched for
+ * itself: declare `--font-faction-blackletter: "UnifrakturCook", …`, read it
+ * nowhere, and the family stayed on the render-blocking request forever with the
+ * guard green. The honest question is whether anything *reads* `var(--font-…)`.
+ *
+ * Still deliberately permissive in the other direction — a read counts wherever
+ * it appears, including in a comment or a dead branch. Keeping a live token is
+ * cheap; dropping one costs a silently-unstyled surface.
+ */
+function declaredFontTokens(): string[] {
+  const css = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  return [...new Set([...css.matchAll(/(--font-[a-z0-9-]+)\s*:/g)].map((match) => match[1]))];
+}
+
+function unreadFontTokens(sources: string[]): string[] {
+  return declaredFontTokens()
+    .filter((token) => !sources.some((source) => source.includes(`var(${token})`)))
+    .sort();
+}
+
+/** That source with the given tokens' declarations cut out of it. */
+function withoutDeclarations(source: string, tokens: string[]): string {
+  return tokens.reduce(
+    (text, token) => text.replace(new RegExp(`${token}\\s*:[^;]*;`, "g"), ""),
+    source,
+  );
+}
+
 describe("font families are loaded (#839)", () => {
   const loaded = loadedFamilies();
+  const sources = collectSourceFiles(SRC_DIR).map((file) =>
+    readFileSync(file, "utf-8").toLowerCase(),
+  );
 
   it("requests fonts at all (sanity check on the parse)", () => {
     expect(loaded.size).toBeGreaterThan(5);
@@ -124,17 +159,37 @@ describe("font families are loaded (#839)", () => {
     expect([...missing]).toEqual([]);
   });
 
+  it("declares no --font-* token that nothing reads", () => {
+    const unread = unreadFontTokens(sources);
+
+    expect(
+      unread,
+      `index.css declares ${unread.join(", ")}, which no source file reads.
+` +
+        `An unread family token is not inert: it names a family, index.css is in
+` +
+        `the corpus the family check searches, so the declaration vouches for
+` +
+        `itself and holds the family on the render-blocking Google Fonts request.
+` +
+        `Delete the token — and if it was the family's last reader, the family
+` +
+        `too (#1293).`,
+    ).toEqual([]);
+  });
+
   it("requests no family that nothing names", () => {
     // Deliberately a plain text search, not `namedFamilies`. That helper only
     // reads `font-family` declarations, but most families reach the page through
     // a custom property (`--font-faction-engraved: "Cinzel", serif`), which is
     // not one. For "is this family used at all?", any mention counts — and being
     // too permissive here only risks keeping a font, never dropping a live one.
-    const sources = collectSourceFiles(SRC_DIR).map((file) =>
-      readFileSync(file, "utf-8").toLowerCase(),
-    );
+    // The one mention that must NOT count is an unread token's own declaration:
+    // that is the family naming itself (#1293), so those lines are cut first.
+    const unread = unreadFontTokens(sources);
+    const named = sources.map((source) => withoutDeclarations(source, unread));
     const unused = [...loaded]
-      .filter((family) => !sources.some((source) => source.includes(family)))
+      .filter((family) => !named.some((source) => source.includes(family)))
       .sort();
 
     expect(
