@@ -225,12 +225,19 @@ export function PraxisDetailComments({
   heading?: ReactNode
   style?: CSSProperties
 }) {
-  const { praxis } = state
+  const { praxis, comments } = state
   if (!praxis || praxis.moderation_status !== 'visible') return null
   return (
     <section style={style}>
       {heading}
-      <CommentThread target="praxes" targetId={praxis.id} showHeading={heading === undefined} />
+      {/* Seeded from the page's own batch (#1281) — the gate above means the
+          thread's effect could never have started this early on its own. */}
+      <CommentThread
+        target="praxes"
+        targetId={praxis.id}
+        showHeading={heading === undefined}
+        seed={comments}
+      />
     </section>
   )
 }

@@ -11,8 +11,8 @@
  * the avatar that mounts it, #899 the three repeating desktop surfaces (the
  * decree task card, the comment voice, the feed frame), and #900 the four
  * page-level desktop surfaces (hero, backdrop, profile body, select card), and
- * #901 the FIELD PAVILION mobile surfaces (six as built, four that outlived the
- * ADR-0056/0058 surface retirements). Every OTHER surface
+ * #901 the FIELD PAVILION mobile surfaces (six as built, two that outlived the
+ * ADR-0056/0058/0061 and #1319 surface retirements). Every OTHER surface
  * still falls through to `Default*` — WOW is themed-and-partly-skinned, and
  * definitely not "broken faction".
  *
@@ -61,15 +61,17 @@ function Sentinel() {
  * surfaces — the Lists seal on both form factors. Its two rail skins went with
  * the `duelRail` / `mobileDuelRail` SURFACES themselves in #1090, which folded
  * the duel into a card inside praxis detail; that is a surface retirement, not
- * a WOW gap, so neither name appears above or below. And #901's three
+ * a WOW gap, so neither name appears above or below. And #901's two
  * surviving FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone
- * screen the kit drew, plus `mobileFactionPage` and `mobileProfile` derived from
- * that screen's chrome and the matching desktop archetype — #901 skinned three
+ * screen the kit drew, plus `mobileFactionPage` derived from that screen's
+ * chrome and the matching desktop archetype — #901 skinned four
  * further surfaces off that screen which no longer exist, its task card, its
- * task detail and its praxis detail, because ADR-0056 (#1044), ADR-0058 (#1068)
- * and ADR-0061 (#1089) retired all three surfaces outright, so the decree
- * `taskCard` and the parchment `taskDetail` now serve WOW on both form factors
- * and praxis detail is ONE shared page every faction dresses), and #931's
+ * task detail, its praxis detail and its PROFILE, because ADR-0056 (#1044),
+ * ADR-0058 (#1068), ADR-0061 (#1089) and #1319 retired all four surfaces
+ * outright, so the decree `taskCard`, the parchment `taskDetail` and the crested
+ * `profileBody` now serve WOW on both form factors and praxis detail is ONE
+ * shared page every faction dresses; the pavilion profile is the phone branch
+ * inside `WowProfileBody`, not a deletion), and #931's
  * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
@@ -120,11 +122,10 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'mobileDuelSeal',
   'mobileFieldDesk',
   'mobileFactionPage',
-  'mobileProfile',
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-two surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-one surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

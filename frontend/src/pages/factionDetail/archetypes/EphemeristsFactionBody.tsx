@@ -120,6 +120,12 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
   if (!faction) return null;
 
+  // The burn (#1305) — this viewer left this faction this era, so
+  // `can_join_faction` refuses the join for the rest of it. It reuses the
+  // gate's chassis below: only the words change, and they are neutral
+  // platform copy (ADR-0061) because this is the platform speaking.
+  const burned = membership.state === "burned";
+
   // ② apparatus paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
@@ -318,7 +324,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   </div>
                 )}
 
-                {membership.state === "gate" && (
+                {(membership.state === "gate" || burned) && (
                   <div>
                     <div
                       style={{
@@ -330,7 +336,9 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         marginBottom: "var(--space-xs)",
                       }}
                     >
-                      {t("ephemerists.road.gateKicker")}
+                      {burned
+                        ? t("detail.burned.kicker")
+                        : t("ephemerists.road.gateKicker")}
                     </div>
                     <div
                       style={{
@@ -343,10 +351,14 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         marginBottom: "var(--space-md)",
                       }}
                     >
-                      {t("ephemerists.road.gateTitle")}
+                      {burned
+                        ? t("detail.burned.title", { faction: factionName(faction.slug) })
+                        : t("ephemerists.road.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.65, color: INK }}>
-                      {t("ephemerists.road.gateBody", { faction: factionName(faction.slug) })}
+                      {burned
+                        ? t("detail.burned.body", { faction: factionName(faction.slug) })
+                        : t("ephemerists.road.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

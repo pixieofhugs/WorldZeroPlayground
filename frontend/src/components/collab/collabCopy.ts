@@ -53,6 +53,11 @@ export type CollabCopyKey =
   | 'bannerWaiting'
   | 'bannerHoldout'
   | 'bannerPublished'
+  // The roster's fifth state (#1274): a collab whose crew is still one person.
+  // It replaces the banner AND the consensus readings, which are degenerate at
+  // one member, so it is not a `banner*` key.
+  | 'rosterAwaitingAlone'
+  | 'rosterAwaitingInvited'
   | 'castAction'
   | 'castFinalAction'
   | 'pullBackAction'
@@ -173,6 +178,14 @@ export type CollabCopyKey =
  * still override any of them; per-faction frames for this surface are a
  * follow-up wave, not a debt this one incurs.
  *
+ * The two `rosterAwaiting*` lines (#1274) join them as well. They state a fact
+ * about the praxis rather than address the player — nobody else is on this
+ * collab yet, and here is who was invited and has not answered — which is the
+ * same register as the invite chips they sit under, and the same tier as the
+ * other mechanics lines here. They are also read on the PUBLIC detail page by
+ * non-members, for whom the backend serialises no invites at all, so the
+ * fallback line has to work as a neutral statement to a stranger.
+ *
  * The `holdout*` and `completed*` blocks (#1164) are the same block finished.
  * The first says what the ADR-0012 window does to the member who has not
  * submitted — a deadline and its escape, stated once; the second is the reading
@@ -194,6 +207,8 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'kickConfirm',
   'kickAction',
   'duelPullBackAction',
+  'rosterAwaitingAlone',
+  'rosterAwaitingInvited',
   'awaitingStatusMeta',
   'awaitingHeading',
   'awaitingBody',

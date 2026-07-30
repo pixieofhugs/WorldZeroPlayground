@@ -129,6 +129,7 @@ function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
     loading: false,
     praxis: PRAXIS,
     fetchError: null,
+    comments: null,
     votes: { praxis_id: 1, total_votes: 2, total_score: 18 },
     voters: [],
     duel: duel(),

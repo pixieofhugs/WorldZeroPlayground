@@ -193,9 +193,11 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
         )}
       </section>
 
-      {membership.state === 'gate' && (
+      {(membership.state === 'gate' || membership.state === 'burned') && (
         <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, marginTop: 'var(--space-xl)' }}>
-          {t('mobile.gateHint', { faction: name })}
+          {membership.state === 'burned'
+            ? t('mobile.burnedHint', { faction: name })
+            : t('mobile.gateHint', { faction: name })}
         </p>
       )}
 

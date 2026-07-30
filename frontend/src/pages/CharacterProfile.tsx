@@ -6,6 +6,10 @@
  * faction's bespoke body lands, #460). This page owns data fetching and the
  * friend/foe relationship state; all rendering lives in the profile bodies.
  *
+ * There is no form-factor branch here (#1319). Each profile body is ONE
+ * responsive component that reads `useFormFactor()` itself — the same shape
+ * `<Faction>TaskDetail` uses — so this page dispatches on slug alone.
+ *
  * Public view: no self-edit affordance here (the credential card is the
  * identity header; editing moves to the account's own surfaces).
  */
@@ -25,9 +29,6 @@ import {
 } from "../api/relationships";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
-import { useFormFactor } from "../hooks/useFormFactor";
-import { pickVariant } from "../utils/factionDispatch";
-import { surfaceMap } from "../factions";
 import { extractError } from "../utils/errors";
 import { factionFill } from "../utils/factions";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
@@ -35,14 +36,12 @@ import FactionProfileBody, {
   type ProfileBodyProps,
   type ProfileProgression,
 } from "./characterProfile/FactionProfileBody";
-import DefaultProfile from "./characterProfile/mobileArchetypes/DefaultProfile";
 
 export default function CharacterProfile() {
   const { t } = useTranslation("common");
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const gameConfig = useGameConfig();
-  const formFactor = useFormFactor();
   const { data, loading, error } = useResource(
     () => {
       const cid = Number(id);
@@ -334,16 +333,9 @@ export default function CharacterProfile() {
     identityActions,
   };
 
-  // Phone → the mobile-native profile skin (Default fallback until a faction
-  // registers its own); desktop → the existing faction-dispatched body.
-  if (formFactor === "mobile") {
-    const Mobile = pickVariant(
-      surfaceMap("mobileProfile"),
-      character.faction_slug,
-      DefaultProfile,
-    );
-    return <Mobile {...bodyProps} />;
-  }
-
+  // ONE dispatch, both form factors (#1319). The page used to branch on
+  // `useFormFactor()` through a `mobileProfile` surface only WOW ever filled,
+  // which meant every OTHER faction wore the na spectrum skin on a phone. Each
+  // profile body is responsive now, so the slug dispatch is the whole story.
   return <FactionProfileBody {...bodyProps} />;
 }

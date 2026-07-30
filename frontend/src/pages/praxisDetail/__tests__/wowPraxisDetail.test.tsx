@@ -125,6 +125,7 @@ function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
     loading: false,
     praxis: PRAXIS,
     fetchError: null,
+    comments: null,
     votes: { praxis_id: 1, total_votes: 2, total_score: 4 },
     voters: [
       { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
@@ -238,6 +239,10 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
       state({
         praxis: {
           ...PRAXIS,
+          // A two-member praxis is a COLLAB. The fixture left `type` at the
+          // base `solo` and leaned on the old count proxy; the Members
+          // section is gated on the type now (#1274).
+          type: "collab",
           members: [MEMBER, CO_MEMBER],
           applied_metatasks: [
             {

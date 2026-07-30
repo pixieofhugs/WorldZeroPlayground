@@ -118,6 +118,22 @@ describe('mobile faction-page content-slot invariant', () => {
       expect(memberView.text, 'member badge').toContain('re a member')
       expect(memberView.text, 'no CTA for member').not.toContain('Join Everymen')
     })
+
+    it(`${slug} tells a burned viewer the era is closed, not to keep tasking`, () => {
+      // "burned" = left this faction this era; the join is refused for the rest
+      // of it (#1305). The soft "keep completing tasks" gate is the RIGHT
+      // message for the not-yet-invited viewer (#454) and a lie here.
+      const burned = render(<Archetype state={baseState({ membership: membership({ state: 'burned' }) })} />)
+      expect(burned.text, 'no soft gate for a burned viewer').not.toContain('Keep completing tasks')
+      expect(burned.text, 'no CTA for a burned viewer').not.toContain('Join Everymen')
+      // UA is graduation-gated: the hook resolves it to "none" before any
+      // status is read (#200/#243), so it must not grow a burned notice.
+      if (slug === 'ua') {
+        expect(burned.text, 'UA never burns').not.toContain('next era begins')
+      } else {
+        expect(burned.text, 'era notice').toContain('next era begins')
+      }
+    })
   }
 })
 

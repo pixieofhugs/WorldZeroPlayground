@@ -143,6 +143,7 @@ function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
     loading: false,
     praxis: PRAXIS,
     fetchError: null,
+    comments: null,
     votes: { praxis_id: 1, total_votes: 2, total_score: 4 },
     voters: [
       { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
