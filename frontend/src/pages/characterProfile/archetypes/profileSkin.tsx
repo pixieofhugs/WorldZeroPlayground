@@ -14,9 +14,21 @@
  * always-dark) scopes `dataTheme` to the skin container and NEVER mutates the
  * global [data-theme]. UA used to pin itself light; it dims with the app now
  * (#848, #851) and sets no `dataTheme` at all.
+ *
+ * RESPONSIVE (#1319). Until the form-factor collapse this renderer only ever
+ * saw a laptop: `CharacterProfile` branched on `useFormFactor()` and sent every
+ * phone to the na mobile skin, so the six factions that delegate here never
+ * reached their own dress on a phone. Now they do, and the three places this
+ * layout was sized for a wide viewport stack instead — a 300px badge rail and a
+ * 300px identity floor do not fit beside a 266px credential card at 375px, and
+ * would have scrolled sideways (CLAUDE.md: the mobile path stacks single-column,
+ * never a fixed-px inline grid). Structure only: no kit token, font or copy
+ * changes at either width, and the desktop rendering is byte-identical.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { useFormFactor } from '../../../hooks/useFormFactor'
 
 import type { BadgeOut } from '../../../api/auth'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
@@ -251,6 +263,7 @@ export function ProfileSkin({
   kit: ProfileKit
 }) {
   const { t } = useTranslation('common')
+  const mobile = useFormFactor() === 'mobile'
   const { character, submissions, proposedTasks, progression, identityActions } = props
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
@@ -362,7 +375,8 @@ export function ProfileSkin({
         background: kit.pageBackground,
         // asymmetric inset: the 28px side rounds DOWN so the page frame keeps
         // its taller-than-wide shape instead of flattening to a uniform box.
-        padding: 'var(--space-2xl) var(--space-xl)',
+        // A phone gives one rung of that back on both axes.
+        padding: mobile ? 'var(--space-xl) var(--space-lg)' : 'var(--space-2xl) var(--space-xl)',
         borderRadius: 16,
         overflow: 'hidden',
       }}
@@ -396,7 +410,10 @@ export function ProfileSkin({
               {kit.credentialFrame ? kit.credentialFrame(credential) : credential}
             </div>
 
-            <div style={{ flex: 1, minWidth: 300 }}>
+            {/* On a phone the 300px floor is wider than what is left beside the
+                266px credential, so it becomes a full-row basis and the header
+                wraps to one column instead of squeezing. */}
+            <div style={{ flex: 1, minWidth: mobile ? '100%' : 300 }}>
               <div
                 style={{
                   fontFamily: kit.eyebrowFont,
@@ -569,7 +586,10 @@ export function ProfileSkin({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) 300px',
+              // The badge rail is a fixed 300px column on a laptop; on a phone
+              // it stacks under the main column rather than forcing a
+              // sideways-scrolling 300px sibling.
+              gridTemplateColumns: mobile ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 300px',
               gap: 'var(--space-2xl)',
               alignItems: 'start',
             }}
