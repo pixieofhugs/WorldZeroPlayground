@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
@@ -91,13 +90,9 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
 };
 
-/** The decree's label voice — MedievalSharp small caps, in plum. */
-const EYEBROW: CSSProperties = {
-  fontFamily: MED,
-  letterSpacing: "0.14em",
-  textTransform: "uppercase",
-  color: PLUM,
-};
+/* The decree's label voice (MedievalSharp small caps in plum) lived here. Its one
+   reader was the eyebrow carrying the uniform "Task {id}" ordinal, which #1124
+   retired, so the voice went with it. */
 
 /** The sword-and-shield that marks the muster. */
 function SwordAndShield({ size }: { size: number }) {
@@ -163,11 +158,9 @@ export default function WowTaskCard({
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: decree lettering, set to the ribbon above it rather than the label ramp (§4a). */}
-            <div style={{ ...EYEBROW, fontSize: 10, marginBottom: "var(--space-md)" }}>
-              {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-            </div>
-
+            {/* The decree-lettered eyebrow held the uniform "Task {id}" ordinal and
+              nothing else, so #1124's retirement of the id takes the line with
+              it. The barber ribbon above is now the card's top note. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span

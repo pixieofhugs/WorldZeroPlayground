@@ -8,12 +8,17 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 /**
  * Singularity — THE TERMINAL SESSION (task card v2, #1023).
  *
- * A windowed terminal: a chrome bar carrying three LEDs, the process name and
- * the task's ordinal; a boot line echoing the query; a LEVEL + POINTS readout
- * with the total in a lit blue well; a standing raster over the whole chassis
- * and a slow scan sweep travelling down it. Share Tech Mono throughout — the
- * faction has one face and this card uses it for everything, chrome and copy
- * alike.
+ * A windowed terminal: a chrome bar carrying three LEDs and the process name; a
+ * LEVEL + POINTS readout with the total in a lit blue well; a standing raster
+ * over the whole chassis and a slow scan sweep travelling down it. Share Tech
+ * Mono throughout — the faction has one face and this card uses it for
+ * everything, chrome and copy alike.
+ *
+ * The chrome bar's right-hand slug and the boot line beneath it both read the
+ * task's id ("Task {id}", and in the design a hex twin of it). #1124 retired the
+ * id from every card, and neither element carried anything else — the boot line
+ * was a `> query` with only the ordinal to query — so both are gone and the bar
+ * is LEDs plus process name.
  *
  * This replaces the sprocket-holed "Terminal Printout" wholesale (ADR-0055 /
  * ADR-0056 — a metaphor swap, not a tweak): the perforated fanfold paper is
@@ -104,7 +109,6 @@ export default function SingularityTaskCard({
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
   const showMultiplier = !isNeutralMultiplier(multiplier);
-  const ordinal = i18n.t("feed:taskCard.ordinal", { id: task.id });
 
   return (
     <div
@@ -154,7 +158,7 @@ export default function SingularityTaskCard({
           }}
         />
 
-        {/* Window chrome — lamps, the process name, the task's ordinal. */}
+        {/* Window chrome — lamps and the process name. */}
         <div
           style={{
             position: "relative",
@@ -176,26 +180,12 @@ export default function SingularityTaskCard({
           <span style={{ ...LABEL, fontSize: 10.5 }}>
             {i18n.t("feed:taskCard.singularity.windowTitle")}
           </span>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the window bar's right-hand slug, set to its neighbour. */}
-          <span style={{ ...LABEL, fontSize: 10.5, color: BLUE, marginLeft: "auto" }}>
-            {ordinal}
-          </span>
         </div>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* The boot line — the terminal's echo of the query, and this card's
-                eyebrow. The design put a hex id here and in the window bar; the
-                ordinal is uniform across all nine cards (#1020), so the hex is
-                gone and both slots read the same "Task {id}" the rest do. */}
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: command echo, set to the window bar it answers. */}
-            <div style={{ ...LABEL, fontSize: 10.5, color: BLUE, marginBottom: "var(--space-md)" }}>
-              {i18n.t("feed:taskCard.singularity.bootPrefix")}{" "}
-              <span style={{ color: BRIGHT }}>{ordinal}</span>
-            </div>
-
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span style={{ ...LABEL, fontSize: "var(--text-sm)", marginBottom: "var(--space-xs)" }}>

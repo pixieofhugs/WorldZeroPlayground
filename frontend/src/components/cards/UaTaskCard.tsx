@@ -23,10 +23,11 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "./uaAtoms";
  * `mobileTaskCard` surface retired, so this file serves both form factors.
  *
  * TWO MARKS, AND THE COUNT IS THE POINT (WORLD_ZERO_STYLE §6). The design draws
- * the ensō three times — beside the ordinal, behind the score, and again on the
+ * the ensō three times — in the eyebrow, behind the score, and again on the
  * sign-up button. The third is the mark spent as decoration, so it is dropped:
  * the ensō is reserved for the SCORE and the FACTION MARK, and a seal on a
- * button is neither.
+ * button is neither. The eyebrow mark stood beside the uniform "Task {id}"
+ * ordinal until #1124 retired the id; it keeps its line alone.
  *
  * THE LOTUS COMES BACK, and that reverses a line in this file's old docstring.
  * #851 read the kit's corner-bleed as something "the brief's strength ruling
@@ -123,12 +124,11 @@ export default function UaTaskCard({
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* The eyebrow — the faction mark, then the uniform ordinal. */}
+            {/* The eyebrow — the faction mark alone. The uniform "Task {id}"
+                ordinal sat beside it until #1124 retired the id from every card;
+                the mark stays because it is the ensō, not the number. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
               <UaSigil width={16} height={16} />
-              <span style={{ ...UA_EYEBROW, fontSize: "var(--text-base)" }}>
-                {i18n.t("feed:taskCard.ordinal", { id: task.id })}
-              </span>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
