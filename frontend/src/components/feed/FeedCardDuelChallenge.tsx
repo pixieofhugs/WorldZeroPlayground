@@ -9,7 +9,7 @@ import { useGameConfig } from "../../hooks/useGameConfig";
 import { useAuth } from "../../auth/AuthContext";
 import { deletePraxis, leavePraxis } from "../../api/praxis";
 import { cancelChallenge, respondToChallenge } from "../../api/duel";
-import { factionColor, factionFill, isKnownFaction } from "../../utils/factions";
+import { factionFill } from "../../utils/factions";
 import { extractError } from "../../utils/errors";
 import FeedBadge from "./FeedBadge";
 
@@ -48,11 +48,9 @@ export default function FeedCardDuelChallenge({ item }: Props) {
     task_faction_slug,
     challenger_character_id,
   } = item.payload;
-  const actorColor = factionColor(item.actor_faction_slug);
-  // na actors get the spectrum, real factions keep their tinted disc (ADR-0039).
-  const actorAvatarFill = isKnownFaction(item.actor_faction_slug)
-    ? { background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)` }
-    : factionFill(item.actor_faction_slug, "dot");
+  // na actors get the spectrum, real factions their tinted disc (ADR-0039) —
+  // one call now, with the branch living on the shape rather than here (#1269).
+  const actorAvatarFill = factionFill(item.actor_faction_slug, "disc");
   const navigate = useNavigate();
 
   const { user } = useAuth();
