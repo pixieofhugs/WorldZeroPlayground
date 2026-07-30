@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
 import i18n from "../../i18n";
-import { factionColor, factionName } from "../../utils/factions";
+import { factionCssVar, factionName } from "../../utils/factions";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
@@ -19,7 +19,9 @@ interface Props {
  */
 export default function FeedCardInvitationLetter({ item }: Props) {
   const { faction_slug } = item.payload;
-  const color = factionColor(faction_slug);
+  // Scalar ink for both the highlighted name and the link — `na` stays neutral
+  // there on purpose (ADR-0039 §2), and the cascade owns the dark half.
+  const color = factionCssVar(faction_slug);
 
   return (
     <div style={{ padding: "var(--space-lg) var(--space-xl)", position: "relative" }}>

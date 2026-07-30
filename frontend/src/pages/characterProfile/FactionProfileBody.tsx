@@ -12,15 +12,10 @@
  * the top entry) — plus the two kept features: proposed tasks (faction
  * TaskCard) and friend/foe (faction-skinned, folded into the identity area).
  *
- * The default / unaffiliated skin is fully built; register a faction's row
- * below and its players adopt the bespoke skin with no other change (#460):
- *
- *   ua:          UaProfileBody,
- *   wow:         CovenProfileBody,
- *   snide:       SnideProfileBody,
- *   ephemerists: EphemeristsProfileBody,
- *   singularity: SingularityProfileBody,
- *   everymen:    EverymenProfileBody,
+ * The default / unaffiliated skin is fully built; a faction adopts its bespoke
+ * skin by declaring a `profileBody` row in its own manifest (#460, #782) —
+ * `factions/coven.ts` names `CovenProfileBody`, and so on for ua, wow, snide,
+ * ephemerists, singularity and everymen. No dispatcher is touched.
  *
  * Albescent claims no profile skin (#783): a member's profile is the default
  * one, because a profile is exactly where a secret society would give itself
