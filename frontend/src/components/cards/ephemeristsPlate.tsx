@@ -270,6 +270,32 @@ export function FlutedRule() {
 }
 
 /**
+ * The lotus — the plate's closing mark, drawn on its own 18×13 field. It sits
+ * under the total's medallion (the octagon's base) and closes the vote section's
+ * head; the design draws the same three strokes in both places.
+ */
+export function LotusSign({ width, color }: { width: number; color: string }) {
+  return (
+    <svg
+      width={width}
+      height={(width * 13) / 18}
+      viewBox="0 0 18 13"
+      aria-hidden="true"
+      style={{ display: "block", flex: "0 0 auto" }}
+    >
+      <path
+        d="M9 13 V6 M9 6 C9 2.4 11.6 0.8 14.4 0.6 C14.4 4 12 6 9 6 M9 6 C9 2.4 6.4 0.8 3.6 0.6 C3.6 4 6 6 9 6"
+        fill="none"
+        stroke={color}
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
  * The winged sun disc at SIGN scale — the same emblem {@link WingedDisc} draws
  * across a masthead, redrawn on the plate's 24-unit square so it can sit in a
  * badge. Not a scaled-down copy: the masthead's is 176 units wide and would

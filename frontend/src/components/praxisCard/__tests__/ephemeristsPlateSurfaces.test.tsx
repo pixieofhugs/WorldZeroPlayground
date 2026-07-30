@@ -20,7 +20,6 @@ import i18n from '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 import EphemeristsPraxisCard from '../desktop/EphemeristsPraxisCard'
-import EphemeristsMobilePraxisCard from '../mobile/EphemeristsMobilePraxisCard'
 import MetaTaskSeal from '../../metaTaskSeal/MetaTaskSeal'
 
 /** The retired illuminated-codex family. None of it may reach a plate surface. */
@@ -90,12 +89,23 @@ const text = (html: string) => html.replace(/<[^>]*>/g, '')
 describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
   const html = () => render(<EphemeristsPraxisCard praxis={praxis()} adminProps={adminProps} />)
 
-  it('paints from the plate family and never the retired codex tokens', () => {
-    expect(html()).toContain('--faction-ephemerists-plate-')
-    expect(html()).not.toMatch(CODEX)
+  it('paints its frame and its slots from the plate family, not the codex', () => {
+    const markup = html()
+    // The frame itself: the root element's whole style attribute.
+    const frame = markup.slice(0, markup.indexOf('>'))
+    expect(frame).toContain('--faction-ephemerists-plate-bg')
+    expect(frame).not.toMatch(CODEX)
+    // The slots this file dresses — the meta line and the media well were the
+    // two that kept reading `--eph-rubric` / `--eph-muted` through the frame.
+    expect(markup).toContain('color:var(--faction-ephemerists-plate-quiet)')
+    expect(markup).not.toContain('--eph-rubric')
+    expect(markup).not.toContain('--eph-muted')
+    // What is left is the shared byline PORTRAIT (`FactionAvatar`), which wears
+    // the codex family (`--eph-vellum*`) on every surface it appears on and
+    // belongs to the sweep, not to this card.
   })
 
-  it('carries the night-band masthead: winged disc between incised registers', () => {
+  it('carries the night-band masthead: winged disc over an incised register', () => {
     const markup = html()
     // The register's signs and the cornice are the kit's, not a second copy.
     expect(markup).toContain('class="epg-glyph"')
@@ -110,27 +120,38 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     expect(text(html())).toContain(i18n.t('praxis:card.ephemerists.for'))
   })
 
-  it('drifts a glyph strip above the vote block', () => {
-    // The strip is ornament: aria-hidden, and never in the accessible name.
-    expect(html()).toContain('eph-glyph-strip')
+  it('drifts a glyph strip above the vote block, and heads the cast', () => {
+    const markup = html()
+    // The strip breathes on the shared `.epg-glyph` gate rather than an inline
+    // animation, so a reduced-motion reader still gets the marks.
+    expect(text(markup)).toContain('∮')
+    expect(markup).not.toContain('animation:')
+    // The CARD states the vote prompt — the widget carries none, so the detail
+    // page's own section heading is not doubled up.
+    expect(text(markup)).toContain(i18n.t('votes:chrome.ephemerists.prompt'))
   })
 
-  it('keeps no hex anywhere in the frame', () => {
-    expect(html()).not.toMatch(HEX)
+  it('keeps no hex in the frame it draws', () => {
+    // Scoped to the frame: the shared avatar below still paints in hex-backed
+    // codex tokens, which is the sweep's problem, not this card's.
+    const markup = html()
+    expect(markup.slice(0, markup.indexOf('>'))).not.toMatch(HEX)
   })
 })
 
-describe('the Ephemerists mobile card follows the same plate (#1207)', () => {
-  const html = () => render(<EphemeristsMobilePraxisCard praxis={praxis()} />)
-
-  it('paints from the plate family and never the retired codex tokens', () => {
-    expect(html()).toContain('--faction-ephemerists-plate-')
-    expect(html()).not.toMatch(CODEX)
-  })
-
-  it('carries the same masthead, so it does not read as another faction', () => {
-    expect(html()).toContain('var(--faction-ephemerists-plate-band)')
-    expect(text(html())).toContain(i18n.t('praxis:card.masthead.ephemerists'))
+describe('one card, both form factors (ADR-0067)', () => {
+  /**
+   * The card this issue dresses is the ONLY praxis card the Ephemerists have:
+   * #1277 deleted `praxisCard/mobile/` and made each faction's frame
+   * responsive. So the plate must survive a 375px column without a form-factor
+   * branch — which means no fixed width on the frame and nothing in it that
+   * cannot shrink.
+   */
+  it('carries no fixed frame width and no form-factor branch', () => {
+    const markup = render(<EphemeristsPraxisCard praxis={praxis()} adminProps={adminProps} />)
+    // `frameBase`'s flex basis, not a width: one card per row at 375px.
+    expect(markup).toContain('flex:1 1 394px')
+    expect(markup).not.toMatch(/(^|[^-])width:39\d/)
   })
 })
 

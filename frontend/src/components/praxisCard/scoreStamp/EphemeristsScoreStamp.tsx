@@ -8,6 +8,7 @@ import {
   DISC,
   INK,
   INNER,
+  LotusSign,
   OCHRE,
   Octagon,
   QUIET,
@@ -227,16 +228,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
           </div>
         </div>
         {/* The lotus itself, closing the cell. */}
-        <svg width={18} height={13} viewBox="0 0 18 13" aria-hidden="true" style={{ display: "block" }}>
-          <path
-            d="M9 13 V6 M9 6 C9 2.4 11.6 0.8 14.4 0.6 C14.4 4 12 6 9 6 M9 6 C9 2.4 6.4 0.8 3.6 0.6 C3.6 4 6 6 9 6"
-            fill="none"
-            stroke={BRASS_LIGHT}
-            strokeWidth={1.1}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        </svg>
+        <LotusSign width={18} color={BRASS_LIGHT} />
       </div>
     </div>
   );
