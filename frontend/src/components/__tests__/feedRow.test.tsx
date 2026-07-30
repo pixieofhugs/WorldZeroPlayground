@@ -4,14 +4,19 @@
  * This guards (a) the normalizer maps each faction event to the right slots and
  * leaves the four companions alone, and (b) the row renders its invariant slots.
  */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import { normalizeFeedItem, FACTION_ROW_TYPES } from '../feed/normalizeFeedItem'
 import FeedRowContent from '../feed/FeedRowContent'
+import { FeedRowSkinContext, type FeedRowSkin } from '../feed/feedRowSkin'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import '../../i18n'
 import { collabCopy } from '../collab/collabCopy'
+import { AA_NORMAL, contrastRatio, formatRatio, parseColor, requiredRatio } from '../../utils/contrast'
+import { readThemes, resolveVar } from '../../utils/__tests__/cssVars'
 
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
   return {
@@ -349,6 +354,114 @@ describe('FeedRowContent', () => {
     // neutral a dark half (#8b8aa0) that a pinned literal could never see.
     expect(html).toContain('color:var(--faction-default)')
     expect(html).not.toContain('background-clip:text')
+  })
+})
+
+/**
+ * THE CHASSIS → BODY SEAM (#1252).
+ *
+ * Two claims, and the first is the one worth pinning hardest: a frame that
+ * publishes nothing must render byte-for-byte what the body renders outside any
+ * provider. Eight chassis publish nothing today, so a seam that is not inert is
+ * a silent redress of the whole feed.
+ */
+describe('FeedRowContent skin seam', () => {
+  const skinned = (skin: FeedRowSkin, slug = 'coven') =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <FeedRowSkinContext.Provider value={skin}>
+          <FeedRowContent row={completionRow(slug)} avatarUrl={null} />
+        </FeedRowSkinContext.Provider>
+      </MemoryRouter>,
+    )
+  const bare = (slug: string) =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <FeedRowContent row={completionRow(slug)} avatarUrl={null} />
+      </MemoryRouter>,
+    )
+
+  it('renders identically inside an empty provider and outside any provider', () => {
+    for (const slug of ['coven', 'wow', 'singularity', 'na', 'albescent']) {
+      expect(skinned({}, slug), slug).toBe(bare(slug))
+    }
+  })
+
+  it('lets a chassis repoint the actor ink and the monogram glyph', () => {
+    const html = skinned({ ink: { actor: 'var(--faction-coven-card-text)', monogram: 'var(--faction-coven-ward-card)' } })
+    expect(html).toContain('color:var(--faction-coven-card-text)')
+    expect(html).toContain('color:var(--faction-coven-ward-card)')
+    // …and only the fields it named: the headline rule is a FILL and stays the
+    // faction's own, which is ADR-0039's half of this row.
+    expect(html).toContain('background:var(--faction-coven)')
+  })
+
+  it('lets a chassis draw the points figure as an object, with the row values', () => {
+    const html = skinned({
+      points: (figure) => <b data-plaque>{`${figure.points}/${figure.level}`}</b>,
+    })
+    expect(html).toContain('<b data-plaque="true">40 pts/null</b>')
+    // The shared eyebrow line is REPLACED, never printed twice — drawing the
+    // figure beside the skin's own is the duplication the seam exists to avoid.
+    expect(html).not.toContain('class="eyebrow"')
+  })
+
+  it('never calls the points renderer for a row with no figure', () => {
+    // The gate is shared, so a skin gets no empty plaque to guard against.
+    const taunt = normalizeFeedItem(
+      item('foe_taunt', { from_character_id: 9, taunt_id: 2, faction_slug: 'coven', trigger_type: 'level_up', from_name: 'Ada', to_name: 'Bo' }),
+    )!
+    let calls = 0
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <FeedRowSkinContext.Provider value={{ points: () => { calls += 1; return null } }}>
+          <FeedRowContent row={taunt} avatarUrl={null} />
+        </FeedRowSkinContext.Provider>
+      </MemoryRouter>,
+    )
+    expect(calls).toBe(0)
+  })
+})
+
+/**
+ * The monogram glyph's ink, measured as the PAIRING the row actually emits
+ * (#1252). `factionContrast.test.ts` can only ask whether a token clears AA on
+ * the surface its documentation names; this asks which token the component put
+ * on the disc, and measures that one.
+ *
+ * The disc read the global `--color-text-on-accent` (#ffffff) until #1252 —
+ * white being a statement about the app's accent buttons, not about legibility
+ * on a faction hue. It failed 4.5:1 on twelve of these fourteen pairs.
+ */
+describe('the monogram disc is inked with the faction pair, not a global neutral', () => {
+  const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../index.css', import.meta.url)), 'utf8'))
+  const FILL_SLUGS = ['ua', 'wow', 'everymen', 'coven', 'snide', 'ephemerists', 'singularity']
+
+  it.each(FILL_SLUGS)('%s: the emitted glyph ink clears AA on the disc fill in both themes', (slug) => {
+    const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow(slug)} avatarUrl={null} /></MemoryRouter>)
+    // Scoped to the disc's own element: `FeedBadge` paints the SAME global
+    // neutral on its own fills, which is a different pairing and #1252 does not
+    // touch it. Measured, because "the same token must be wrong there too" is a
+    // guess: the badge fills are theme-invariant and all three clear white —
+    // `--badge-friend` 9.11:1, `--badge-collab` 5.02:1, `--badge-duel` 4.83:1.
+    const disc = html.match(/<div style="width:28px[^"]*"/)?.[0] ?? ''
+    expect(disc, `${slug} monogram disc`).toContain(`color:var(--faction-${slug}-on-fill)`)
+    expect(disc).not.toContain('var(--color-text-on-accent)')
+
+    for (const theme of ['light', 'dark'] as const) {
+      const glyph = parseColor(resolveVar(`--faction-${slug}-on-fill`, theme, THEMES) ?? '')
+      const fill = parseColor(resolveVar(`--faction-${slug}`, theme, THEMES) ?? '')
+      expect(glyph, `${slug} on-fill (${theme})`).not.toBeNull()
+      expect(fill, `${slug} fill (${theme})`).not.toBeNull()
+      const ratio = contrastRatio(glyph!, fill!)
+      expect(ratio, `${slug} monogram on its disc (${theme}) = ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+  })
+
+  // The 12px bold glyph owes the 4.5:1 normal floor, not the 3:1 large one —
+  // "check the size before the threshold" (WORLD_ZERO_STYLE §3).
+  it('measures the glyph at the normal-text floor', () => {
+    expect(requiredRatio(12, 700)).toBe(AA_NORMAL)
   })
 })
 
