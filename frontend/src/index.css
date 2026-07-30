@@ -492,6 +492,15 @@
      on `#f4f1e8` paper under [data-theme="dark"] — 1.10:1, the headline of every
      S.N.I.D.E. feed card invisible at night, with the actor line at 2.92:1.
 
+     ONE PAIRING STILL DOES NOT CLEAR AA, and it is not reachable from here:
+     `--color-danger` measures 4.28:1 on this stock (it is 4.75 on the na sheet,
+     3.98 on UA's cream, and was 3.90 on the invariant black card this replaces,
+     so the move is an improvement rather than a regression). It is painted by
+     `OwnerControls`, `ComposerControls` and `CommentFlagControl`, none of which
+     takes an ink prop — §3's #1153 case: a missing seam, not a missing
+     measurement. If that seam is ever added, the slip needs its own
+     `-slip-alarm`; `-card-notice`/`-card-credit` are measured on `-card-bg`.
+
      So this is a THIRD flipping S.N.I.D.E. stock beside `-note-*` (the task
      card's clipping) and `-composer-*` (the edit-praxis sheet), declared rather
      than borrowed for #1181's reason: same values today, a different surface's
@@ -500,8 +509,8 @@
 
      WHAT IS NOT HERE, deliberately. Type on the intake bar and type on an acid
      ground both read THE PRESS's theme-invariant constants at the head of this
-     faction's block — `--faction-snide-paper` on the bar (16.7:1 in both
-     themes) and `--faction-snide-ink` on acid (15.5:1) — exactly as
+     faction's block — `--faction-snide-paper` on the bar (16.68:1 light,
+     17.82:1 dark) and `--faction-snide-ink` on acid (15.55:1) — exactly as
      SnideEditPraxis's PRESS_PAPER / PRESS_INK do. Minting slip-local synonyms
      for those would be a second name for one pigment.
 
@@ -511,9 +520,9 @@
      value everywhere they are a DRAWN THING — the sprocket stripe, the rule
      under the bar, the filled submit button, the ransom letter tiles. */
   --faction-snide-slip-paper: #f4f1e8; /* the slip's stock (FLIPS) */
-  --faction-snide-slip-ink: #14110b; /* type on that stock (FLIPS) — 16.7:1 */
-  --faction-snide-slip-muted: #5f5c50; /* byline, timestamp, meta — 5.94:1 */
-  --faction-snide-slip-faint: #6e6b5d; /* character count, hint — 4.80:1 */
+  --faction-snide-slip-ink: #14110b; /* type on that stock (FLIPS) — 16.68:1 */
+  --faction-snide-slip-muted: #5f5c50; /* byline, timestamp, meta — 5.93:1 */
+  --faction-snide-slip-faint: #6e6b5d; /* character count, hint — 4.74:1 */
   --faction-snide-slip-field: #eae6d8; /* an input, a shade off the stock */
   --faction-snide-slip-rule: rgba(20, 17, 11, 0.28); /* a drawn hairline */
   --faction-snide-slip-grain: rgba(20, 17, 11, 0.06); /* the xerox raster */
@@ -521,7 +530,7 @@
      the stock — which is why it needs the acid rule at its foot to read as a
      band at all once the stock goes dark too. */
   --faction-snide-slip-bar: #14110b;
-  --faction-snide-slip-acid-ink: #457000; /* acid that is TEXT — 5.20:1 */
+  --faction-snide-slip-acid-ink: #457000; /* acid that is TEXT — 5.21:1 */
   --faction-snide-slip-pink-ink: #be185d; /* pink that is TEXT — 5.35:1 */
   --faction-snide-slip-shadow: 3px 4px 0 rgba(20, 17, 11, 0.3); /* printed, no blur */
   /* The drop under a single cut-out ransom scrap — a colour, not a whole shadow,
@@ -1565,10 +1574,10 @@
      highlighter. That leaves the bar only 1.4:1 against the stock, so the acid
      rule at its foot is what draws the band here; it is structure, not garnish.
      Acid and pink become text-safe on this ground and both take their bright
-     pigment back. Measured on the dark stock: ink 15.2:1, muted 11.8:1,
-     faint 5.96:1, acid-ink 15.5:1, pink-ink 7.06:1. The shared body's global
-     inks land at primary 15.2:1, secondary 5.70:1, tertiary 6.31:1 — the
-     pairings the previous invariant stock broke. */
+     pigment back. Measured on the dark stock: ink 16.68:1, muted 11.79:1,
+     faint 5.93:1, acid-ink 15.55:1, pink-ink 7.06:1. The shared body's global
+     inks land at primary 15.19:1, secondary 5.70:1, tertiary 6.29:1 — the
+     pairings the previous invariant stock broke (1.10:1 and 2.92:1). */
   --faction-snide-slip-paper: #14110b;
   --faction-snide-slip-ink: #f4f1e8;
   --faction-snide-slip-muted: #cfcdbf;

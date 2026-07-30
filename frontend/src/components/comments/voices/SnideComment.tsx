@@ -44,8 +44,10 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * the slots this voice does not write — `OwnerControls`, `CommentFlagControl`,
  * the shared editor — all paint the app's global inks, and on the invariant
  * black card in the LIGHT theme `--color-text-tertiary` was 3.20:1 on the owner
- * row and `--color-danger` 3.90:1 on Withdraw. On the flipping stock they land
- * at 5.22:1 and 6.82:1 respectively, the same pairings the na sheet has.
+ * row. On the flipping stock it lands at 5.22:1. `--color-danger` moves 3.90 →
+ * 4.28:1, which is better and still under AA — it is painted by three shared
+ * controls that take no ink prop, so it is §3's #1153 missing-seam case rather
+ * than something this voice can route. See the token block's note.
  *
  * Moving to paper is also what forces the three walk-downs, and this is the
  * #1224 trap the design notes name outright: acid is a DRAWN thing, not an ink.
