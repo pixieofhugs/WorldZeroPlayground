@@ -1,6 +1,6 @@
 # ADR-0054 — One theme-aware Task Crown (the flur is one mark)
 
-**Status:** Accepted
+**Status:** Accepted (amended 2026-07-29 by [ADR-0066](0066-one-rainbow-the-brand-palette-retires-into-the-na-spectrum.md) — the ring's theme behaviour only)
 **Date:** 2026-07-24
 **Amends:** [ADR-0028](0028-task-crown-replaces-faction-distinction-laurel.md) — the per-card recolour of the crown's inner disc + glyph
 **Relates to:** #826
@@ -25,6 +25,12 @@ job: a viewer scanning the feed cannot learn one emblem and recognise it everywh
 and glyph no longer follow the card — they follow the global light/dark theme.
 
 - The rainbow ring (`--fdl-rainbow`) stays a fixed brand constant, unchanged.
+  **Amended by ADR-0066 (2026-07-29):** "a fixed brand constant in both themes" no
+  longer holds. There is one rainbow now, the brand palette retired into the na
+  spectrum, and brand chrome flips with the theme — so the ring flips too. The rest
+  of this decision is untouched: one canonical crown, theme-aware only, with no
+  per-faction recolour. Only the *ring's* theme behaviour changed, and the token
+  itself is re-pointed by #1213 rather than here.
 - Two new theme-aware tokens in `index.css` carry the inner look, and are the ONLY
   thing that varies:
   - `--fdl-disc` — the disc fill: ivory/paper in light, near-black in dark.

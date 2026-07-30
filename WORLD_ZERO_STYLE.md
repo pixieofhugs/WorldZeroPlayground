@@ -64,6 +64,7 @@ All color values are CSS custom properties defined in `index.css`. See that file
 - **Faction cards:** `--faction-{slug}-card-bg`, `--faction-{slug}-card-text`, `--faction-{slug}-card-accent`, `--faction-{slug}-card-font`
 - **Functional:** `--color-success`, `--color-danger`, `--color-warning` (each with `-light` and `-border` variants)
 - **Votes:** `--vote-1` through `--vote-5` (orange → yellow → green → blue → magenta, increasing intensity)
+- **The rainbow:** `--faction-default-stop-1` through `-stop-7` (red → orange → yellow → green → teal → blue → magenta) as scalars, plus the nine gradient cuts composed from them. This is the site's only rainbow — see below.
 
 **Dark mode** is handled by `[data-theme="dark"]` overrides in `index.css`. Components should use `var(--faction-everymen-card-bg)` — never `dark ? '#1e1a10' : '#fffef5'`.
 
@@ -100,6 +101,24 @@ The second is a **global functional ink on faction paper**. `--color-warning` an
 **And where a shared slot hardcodes the ink, "route it per skin" is not available — that is a missing seam, not a missing measurement.** `StakesTiles` and `RaceRoster` painted the win figure and the "sealed" mark in `--color-success` with no prop, so no skin could reach them however carefully it measured: 2.07:1 on S.N.I.D.E.'s photocopier ink, 1.99:1 on Singularity's terminal glass, 1.88:1 on Everymen's *forfeit* panel — the last of which is the sharpest version of the rule, because that panel inverts to ink on a **mode** branch while the token flips on the **theme**, so the two polarities disagree inside one render. `DuelSlotTheme` now takes `credit` and `alarm`, defaulting to exactly what the slots painted before. This is `DuelCardInk` (#1153) again, and the same two details carry over: **default every field to today's value** so a skin passing nothing is byte-identical, and **resolve field-by-field rather than by spread**, which Everymen relies on directly — it passes `credit` only on the ink branch and `undefined` otherwise, and a spread would let that `undefined` erase the default. Nothing new was minted; `-card-notice` and `-card-credit` already existed for all eight, and Everymen's inverted panel took the faction's own gold.
 
 Two calibrations worth keeping. **Check the size before the threshold**: the roster's "sealed" mark is 18px regular and owes 4.5:1, while the win figure beside it is 24px bold and owes 3:1 — the *smaller* text is what gates a shared ink, and the zero figure in `--color-danger` clears 3:1 on all nine grounds and is therefore left red on every one of them. And **a pairing that passes is left alone and written down anyway**: Ephemerists needed no change at all, and its zero figure at 3.01:1 is now a row precisely because that margin would vanish under any darkening of its ledger band.
+
+### There is one rainbow, and `na` is it (#1219, ADR-0066)
+
+> **The brand and N/A should be the same rainbow. N/A is essentially the neutral site look.** — owner, 2026-07-29
+
+The site ran **two** rainbows for a long time without either knowing about the other: the na spectrum (`--faction-default-*`, seven hues, nine cuts, both themes) and a six-hue brand palette (`--underline-1…6`, a resequenced near-copy, **no dark form at all**) that dressed the nav wordmark, every page title, the Home hero, the field desk and the level-up popup. A census turned up nineteen multi-hue definitions across six hue sets; two of the six were this one duplication, and a third copy of the same hexes sat in `--fdl-rainbow`. The brand palette is retired; the na spectrum is the site's rainbow, and the unaffiliated player's identity is one *use* of it rather than the whole of it.
+
+**The spectrum is now scalars first and gradients second, because a gradient token cannot be indexed.** `--faction-default-stop-1…7` are the source; every cut composes from them with `var()`. That inversion is what the duplication was hiding: the surfaces that reached for a second palette were all cycling stops *by position* — a per-letter title bar, an ability row's dingbat, a confetti flake, a hard-wedge seal — and a `linear-gradient()` cannot answer "give me stop 3". If you find yourself copying hues out of a ramp, you want the stops.
+
+**Retiring a palette is three migrations, not a find-and-replace.** Its consumers were three different shapes wearing one set of hues, and each shape lands somewhere different: index-cycling consumers take the seven stops; narrow marks (a 2px wordmark rule, a 6px progress fill) take the **short cuts that already exist** — `--faction-default-total-rainbow` (4 stops) and `-eyebrow-rainbow` (3) — because a mark that narrow cannot spend seven stops legibly; and a surface using one stop alone as a gold was never a rainbow use at all and takes `--faction-default-gold`. Nothing new was minted for the second and third shapes. **Before replacing a rainbow reference, ask what it was drawing.**
+
+**The cycle length is not a constant.** Going six stops to seven broke the one place that had written the number down: the level-up seal's wedges were `idx * 60deg`. They are `360 / stops` now. A cycling consumer that hardcodes its count is a bug waiting for the next re-cut.
+
+**Brand chrome flips with the theme — one palette, one behaviour, no exceptions.** This is the owner's ruling and it is the part that changed rendered output rather than moving values around: the nav wordmark, the page titles and the level-up popup rendered identical hexes in both themes, and now inherit the brightened dark stops. Those stops were tuned to sit on a **dark faction card**, not behind nav text, so the chrome that inherited them is the pairing to re-check whenever a stop moves. It amends ADR-0054, which called the Task Crown ring a fixed brand constant in both themes.
+
+**Three hues are still restated on purpose, and each says so at its own declaration.** `--badge-victor-stop-*` and `--spectrum-glow-*` are theme-invariant *identities*; `--faction-default-chip` is a fixed green→blue pill whose white ink is measured on its two exact values, so composing it from stops 4 and 6 would flip it and put white on a brightened green. That is the shape of a legitimate exception: **a hue restated deliberately carries its reason at the declaration**, or the next sweep tokenizes it and breaks something.
+
+And one thing the merge cost, worth knowing before the next re-cut: **a stop is load-bearing across surfaces that never used to share one.** Moving the dark yellow now moves the na card's POINTS caption, the Singularity credits accent, every page title's third letter and the level-up rule together. That is the point of one source, and it is also the new blast radius.
 
 ### Unaffiliated grey is usually a FILL written as a border (#983, #805)
 
@@ -428,13 +447,13 @@ Where a mark ships as an inline SVG and where as a masked `public/` asset is a *
 ### Nav Bar
 
 - Frosted glass: `var(--color-nav-bg)` with backdrop blur
-- Wordmark: Lora italic with rainbow gradient underline
+- Wordmark: Lora italic over a 2px rule in `var(--faction-default-total-rainbow)` — the spectrum's four-stop cut, drawn as the second layer of a two-layer `backgroundImage` that the page ground masks down to the bottom 2px
 - Links: Courier Prime, `--text-base`, uppercase
 
 ### Page Title
 
 - Lora italic, `--text-display`
-- Per-letter colored underline bars cycling through `--underline-1` to `--underline-6`
+- Per-letter colored underline bars cycling through `--faction-default-stop-1` to `--faction-default-stop-7` — the site's one rainbow, **seven** long (#1220, ADR-0066)
 
 ### Filter Controls
 
