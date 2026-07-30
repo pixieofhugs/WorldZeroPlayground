@@ -90,7 +90,11 @@ function RainbowText({ text, fontSize = 34 }: { text: string; fontSize?: number 
     >
       {[...text].map((ch, idx) => {
         if (ch === ' ') {
-          return <span key={idx} style={{ display: 'inline-block', width: '0.3em' }} />
+          // A REAL space, not an empty fixed-width box (#1043) — the same fix
+          // PageTitle takes, which slices its heading the same way. LATENT
+          // here: every rank in progression.json is a single word, so this
+          // branch does not run today. It runs the day one isn't.
+          return <span key={idx}>{' '}</span>
         }
         const color = RAINBOW[i++ % RAINBOW.length]
         return (
