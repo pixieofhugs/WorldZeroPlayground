@@ -91,7 +91,7 @@ import { reframeLabel } from "../../../components/vote/voteReframes";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
-import { toRoman } from "../../../components/cards/ephemeristsAtoms";
+import { toRoman } from "../../../utils/roman";
 import {
   BRASS,
   CAPS,

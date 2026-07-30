@@ -112,7 +112,7 @@ const BRIEF_LEADING = 32;
  *
  * Duplicated from `components/cards/EphemeristsTaskCard.tsx`, which owns the
  * same set for the card. Deliberate under this issue's two-file scope; the
- * extraction target is `components/cards/ephemeristsAtoms.tsx`, and until the
+ * extraction target is `components/cards/ephemeristsPlate.tsx`, and until the
  * two are merged a change to one sign has to be made twice.
  */
 const GLYPHS: Record<string, string> = {

@@ -18,9 +18,9 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * Spectral for the reading copy.
  *
  * This REPLACES "The Discordant Map" wholesale (ADR-0055 / ADR-0056 — a full
- * metaphor swap). The `--eph-*` illuminated-codex family stays declared: every
- * other Ephemerists surface still paints with it, and so does
- * `ephemeristsAtoms`.
+ * metaphor swap). The `--eph-*` illuminated-codex family stays DECLARED but is
+ * no longer painted: #1208 swept the last surface off it, so the only readers
+ * left are the `--faction-ephemerists-card-*` aliases in `index.css`.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
  * different card. There is no mobile twin: ADR-0056 was accepted and the

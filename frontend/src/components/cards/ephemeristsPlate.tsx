@@ -6,13 +6,14 @@
  * (#1032); this module is the first time its ornament is shared rather than
  * copied, extracted for the praxis-detail skin (#1120).
  *
- * NOT the illuminated codex. `ephemeristsAtoms.tsx` beside this file holds the
- * OTHER Ephemerists vocabulary — the sigil, the foxing, the wax seal, the
- * concordance — and it paints in the `--eph-*` family. The plate is a full
- * metaphor swap (ADR-0055) on `--faction-ephemerists-plate-*`, and the two
- * grounds must not be mixed on one surface: `--eph-lapis` has no dark override
- * tuned for the plate's night-blue, and the plate's brass is a rule colour that
- * is never an ink.
+ * NOT the illuminated codex. `ephemeristsAtoms.tsx` used to sit beside this file
+ * holding the OTHER Ephemerists vocabulary — the foxing, the wax seal, the
+ * concordance — painted in the `--eph-*` family; #1208 swept the last surface
+ * off it and deleted the module. This is now the faction's only vocabulary. The
+ * plate is a full metaphor swap (ADR-0055) on `--faction-ephemerists-plate-*`,
+ * and it must not be mixed with `--eph-*` on one surface: those tokens have no
+ * dark override tuned for the plate's night-blue, and the plate's brass is a
+ * rule colour that is never an ink.
  *
  * `EphemeristsTaskCard` and `EphemeristsTaskDetail` still carry their own copies
  * of the glyph library and the cornice; both are migration targets for a
@@ -348,6 +349,89 @@ export function Sign({ name, size, color, weight }: {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+/**
+ * The level, struck as TALLY MARKS — every fifth stroke in ochre. The design
+ * draws it under the level numeral in the header and again at the end of every
+ * roster row, which is what makes it kit rather than page furniture.
+ */
+export function Tally({ level }: { level: number }) {
+  const strokes = Math.min(9, Math.max(1, Math.round(level)));
+  return (
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: the pitch of the tally strokes, drawn 1.6px wide.
+    <span aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 2.5, height: 11 }}>
+      {Array.from({ length: strokes }).map((_, index) => (
+        <span
+          key={index}
+          style={{
+            width: 1.6,
+            height: 11 - (index % 3) * 2,
+            opacity: 0.85,
+            background: index === 4 ? OCHRE : BRASS,
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+/** Initials for a player with no uploaded avatar. */
+export function initialsOf(name: string): string {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => word[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "·"
+  );
+}
+
+/**
+ * One player's monogram, struck in a stepped octagon cartouche — the design's
+ * ONLY drawing of a person in a list. The roster row, the comment row and the
+ * byline all take it, at three sizes, so the Ephemerists never show a circle
+ * where the plate's geometry is a cut corner.
+ *
+ * `fontSize` is the monogram's optical size inside the cartouche: it scales with
+ * the drawn octagon rather than with the type ramp, so it is geometry.
+ */
+export function AuthorOctagon({ name, size, fontSize }: {
+  name: string
+  size: number
+  fontSize: number
+}) {
+  return (
+    <span
+      aria-hidden
+      style={{ position: "relative", display: "block", width: size, height: size, flexShrink: 0 }}
+    >
+      <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ position: "absolute", inset: 0 }}>
+        <Octagon inset={0} stroke={BRASS} width={2} fill={DISC} />
+        <Octagon inset={7} stroke={BRASS_LIGHT} width={0.8} />
+      </svg>
+      <span
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: CAPS,
+          fontWeight: 500,
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the monogram is sized from the octagon it is cut into, not from the type ramp.
+          fontSize,
+          letterSpacing: "0.08em",
+          color: INK,
+        }}
+      >
+        {initialsOf(name)}
+      </span>
+    </span>
   );
 }
 
