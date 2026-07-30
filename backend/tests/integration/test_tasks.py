@@ -849,7 +849,8 @@ async def test_my_tasks_with_status_filter(
 ):
     """GET /praxes?character_id=X with status filter returns the right subset.
 
-    Covers the two statuses exposed by PraxisStatus: in_progress and submitted.
+    Covers the two statuses exposed by PraxisStatus: in_progress and submitted,
+    plus the no-status default — which since #1112 is ``submitted``, not "all".
     """
     from models.task import TaskStatus
 
@@ -914,7 +915,9 @@ async def test_my_tasks_with_status_filter(
     assert praxis_ids[1] in ip_ids
     assert praxis_ids[2] in ip_ids
 
-    # No status filter returns all three (read as the owner so in_progress shows).
+    # No status filter is the profile-grid default (#1112): the character's
+    # public record, so only the submitted one — and the two drafts stay hidden
+    # even though this is the owner reading their own praxes.
     resp_all = await client.get(
         "/praxes",
         params={"character_id": character2.id},
@@ -922,8 +925,7 @@ async def test_my_tasks_with_status_filter(
     )
     assert resp_all.status_code == 200
     all_ids = [p["id"] for p in resp_all.json()]
-    for praxis_id in praxis_ids:
-        assert praxis_id in all_ids
+    assert all_ids == [praxis_ids[0]]
 
 
 # ---------------------------------------------------------------------------
