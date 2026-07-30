@@ -5,7 +5,7 @@ import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import SnideMasthead from "./SnideMasthead";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
-import { CovenSigil } from "./CovenSigil";
+import * as coven from "./covenSlip";
 
 /**
  * FactionCard — faction-archetype switcher.
@@ -181,31 +181,25 @@ export function UaCard({
   );
 }
 
-// ─── Warriors of Whimsy ".exe" window atoms ──────────────────────────────────────────────
+// ─── Cozy Coven — the candlelit spell slip ────────────────────────
 
-/** A tiny white die-cut ivy sticker peeking off the window corner. */
-function CovenIvySticker({
-  stem,
-  leaf,
-}: {
-  stem: string;
-  leaf: string;
-}) {
-  return (
-    <svg width="22" height="26" viewBox="0 0 20 22" aria-hidden="true">
-      <path
-        d="M5 22C5 14 4 8 6 2"
-        stroke={stem}
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <path d="M5 12c-5-1-5-6-5-6 4 0 6 3 5 6Z" fill={leaf} />
-      <path d="M6 7c4-1 5-5 5-5-3 0-5 2-5 5Z" fill={leaf} />
-    </svg>
-  );
-}
-
+/**
+ * Cozy Coven faction PREVIEW card (#1209) — a slip of the coven's own paper.
+ *
+ * The lo-fi `coven.exe` window is gone: the title bar, its three traffic-light
+ * dots (the last hardcoded hexes on this card), the `▭ ✕` chrome glyphs, the
+ * dotted body and the die-cut ivy sticker were all furniture of a metaphor this
+ * faction retired with the v2 task card (#1023). What replaces them is the slip
+ * the task card already draws: the pink→lavender sheet, the pentagram badge, a
+ * braided thread, and the coven's name hand-lettered on a candle-lit panel.
+ *
+ * Structure is untouched — status badge, name, truncated description, and the
+ * invitation note above them — because #1209 swaps the dress, not the layout.
+ *
+ * `feed:identity.coven.windowTitle` ("coven.exe") is left in the catalog and no
+ * longer rendered: copy is out of scope for the sweep and an unused key is
+ * cheap. A slip has no window to title.
+ */
 export function CovenCard({
   faction,
   status,
@@ -213,164 +207,51 @@ export function CovenCard({
 }: FactionCardProps) {
   const fullDesc = factionDescription(faction.slug);
   const desc = fullDesc.slice(0, 100) + (fullDesc.length > 100 ? "…" : "");
-  const titleText = "var(--faction-coven-title-text)";
   return (
     <div
-      style={
-        {
-          position: "relative",
-          width: "100%",
-          fontFamily: "var(--font-body)",
-          boxSizing: "border-box",
-        } as React.CSSProperties
-      }
+      style={{
+        position: "relative",
+        width: "100%",
+        fontFamily: coven.CHROME,
+        boxSizing: "border-box",
+      }}
     >
-      {/* the .exe window frame */}
       <div
-        style={
-          {
-            position: "relative",
-            borderRadius: 12,
-            overflow: "hidden",
-            border: "2px solid var(--faction-coven-win-border)",
-            transition: "background 150ms, color 150ms",
-            boxSizing: "border-box",
-          } as React.CSSProperties
-        }
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          borderRadius: 18,
+          border: `2px solid ${coven.BORDER}`,
+          background: coven.SLIP_SHEET,
+          boxShadow: coven.SHADOW,
+          color: coven.INK,
+          transition: "background 150ms, color 150ms",
+        }}
       >
-        {/* title bar */}
-        <div
-          style={
-            {
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-sm)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the drawn window title bar; rounding reflows the chrome.
-              padding: "7px 11px",
-              background:
-                "linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))",
-              borderBottom: "2px solid var(--faction-coven-win-border)",
-            } as React.CSSProperties
-          }
-        >
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: gutter between the 11px traffic-light dots; in register with that raw geometry. */}
-          <span style={{ display: "flex", gap: 5 }}>
-            <span
-              style={{
-                width: 11,
-                height: 11,
-                borderRadius: "50%",
-                background: "#fb7aa8",
-                border: "1.5px solid rgba(255,255,255,0.7)",
-              }}
-            />
-            <span
-              style={{
-                width: 11,
-                height: 11,
-                borderRadius: "50%",
-                background: "#f6c75e",
-                border: "1.5px solid rgba(255,255,255,0.7)",
-              }}
-            />
-            <span
-              style={{
-                width: 11,
-                height: 11,
-                borderRadius: "50%",
-                background: "#86cfa6",
-                border: "1.5px solid rgba(255,255,255,0.7)",
-              }}
-            />
-          </span>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "var(--space-xs)",
-              fontSize: "var(--text-md)",
-              color: titleText,
-              letterSpacing: "0.03em",
-            }}
-          >
-            <CovenSigil size={10} color={titleText} /> {i18n.t("feed:identity.coven.windowTitle")}
-          </span>
-          <span
-            style={{
-              marginLeft: "auto",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: ▭ ✕ are drawn window-chrome glyphs used as icons, not text
-              fontSize: 11,
-              color: titleText,
-              opacity: 0.75,
-              letterSpacing: "1.5px",
-            }}
-          >
-            ▭ ✕
-          </span>
+        {/* masthead — the pentagram badge over a braided thread */}
+        <div style={{ padding: "var(--space-md) var(--space-lg) var(--space-sm)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <coven.SigilMark size={30} />
+          <coven.Braid style={{ alignSelf: "stretch", marginTop: "var(--space-sm)" }} />
         </div>
-        {/* dotted body */}
-        <div
-          style={
-            {
-              position: "relative",
-              padding: "var(--space-lg) var(--space-lg) var(--space-md)",
-              background: "var(--faction-coven-body-bg)",
-              backgroundImage:
-                "radial-gradient(var(--faction-coven-dot) 1.4px, transparent 1.4px)",
-              backgroundSize: "13px 13px",
-            } as React.CSSProperties
-          }
-        >
-          {/* ivy sticker peeking off the body's lower-left corner */}
-          <span
-            style={{
-              position: "absolute",
-              bottom: -2,
-              left: 6,
-              filter: "drop-shadow(0 2px 2px rgba(120,40,80,0.28))",
-              zIndex: 3,
-              pointerEvents: "none",
-            }}
-          >
-            <CovenIvySticker
-              stem="var(--faction-coven-ivy)"
-              leaf="var(--faction-coven-ivy-leaf)"
-            />
-          </span>
+
+        <div style={{ padding: "0 var(--space-lg) var(--space-lg)" }}>
           {invitationNote && (
             <InvitationNote slug={faction.slug} note={invitationNote} />
           )}
-          {/* notepad panel */}
-          <div
-            style={
-              {
-                position: "relative",
-                zIndex: 2,
-                background: "var(--faction-coven-notepad-bg)",
-                border: "1.5px solid var(--faction-coven-notepad-border)",
-                borderRadius: 7,
-                padding: "var(--space-md)",
-                marginBottom: "var(--space-md)",
-              } as React.CSSProperties
-            }
-          >
-            <div
-              className="card-meta"
-              style={{
-                color: factionCssVar("coven", "card-accent"),
-                marginBottom: "var(--space-xs)",
-              }}
-            >
+          {/* the written face — paper laid on the wash */}
+          <div style={{ ...coven.SLIP_PANEL, padding: "var(--space-md)" }}>
+            <div className="card-meta" style={{ marginBottom: "var(--space-xs)" }}>
               <StatusBadge status={status} slug="coven" />
             </div>
             <div
               style={{
-                fontFamily: factionCssVar("coven", "card-font"),
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: faction name in Caveat at notepad-headline size — the archetype's voice
+                fontFamily: coven.HAND,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the faction name hand-lettered in Caveat — the slip's own voice.
                 fontSize: 26,
                 fontWeight: 700,
                 lineHeight: 1.05,
-                color: factionCssVar("coven", "card-text"),
+                color: coven.INK,
                 marginBottom: "var(--space-xs)",
               }}
             >
@@ -380,8 +261,10 @@ export function CovenCard({
               <div
                 className="card-description"
                 style={{
-                  lineHeight: 1.5,
-                  color: factionCssVar("coven", "card-muted"),
+                  fontFamily: coven.READING,
+                  fontStyle: "italic",
+                  lineHeight: 1.45,
+                  color: coven.SOFT,
                 }}
               >
                 {desc}
