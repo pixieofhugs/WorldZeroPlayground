@@ -411,7 +411,7 @@ A file only moves to phase 2 when it is clean on **both** axes — no un-annotat
 
 **Enforcement.** The `local/no-raw-style-values` ESLint rule fails the build on a raw numeric `fontSize`/`padding`/`margin`/`gap` in an inline style. Files not yet migrated are grandfathered in `frontend/.eslint-legacy-raw-styles.txt`. **That list only ever shrinks** — migrating a file means deleting its line; no file may ever be added to it. The hatch above is what keeps that literally true: ornament is not a permanent residue on the list, it is a per-line directive on a delisted file. The list reaches **empty** when #750 (the spacing sweep) closes and the last file moves to phase 2. **It is empty now** — so a newly-flagged violation is fixed in place or hatched per-line, never grandfathered.
 
-**What the rule sees.** A raw value is a raw value whichever notation carries it, so the rule covers three shapes: a numeric inline style (`padding: 6`), a length string including `rem`/`em` (`padding: '0.6rem 1.2rem'`), and an **arbitrary Tailwind spacing utility** (`mt-[6px]`, `px-[10px]`) — the last of these leaves the style object entirely and so needs a separate `className` check (#763). It walks ternaries, `&&` chains and template literals, because the recurring lesson of #770/#789 is that *any* indirection hid the value from a literal-only check.
+**What the rule sees.** A raw value is a raw value whichever notation carries it, so the rule covers three shapes: a numeric inline style (`padding: 6`), a length string including `rem`/`em` (`padding: '0.6rem 1.2rem'`), and an **arbitrary Tailwind spacing utility** (`mt-[6px]`, `px-[10px]`) — the last of these leaves the style object entirely and so needs a separate `className` check (#763). It walks ternaries, `&&` chains and template literals, because the recurring lesson of #770/#789 is that *any* indirection hid the value from a literal-only check. **A sign is an indirection too**: `marginLeft: -3.5` is a `UnaryExpression` wrapping a literal, not a literal, so for four issues the ratchet caught `3.5` and waved the negative through — and negative margins are common in exactly the place this section cares about, pulling ornament back over a padded edge. The rule unwraps `-`/`+` before judging the operand (#1233), which leaves `-0` reading as `0` and staying exempt. **A negated token is spelled `calc(-1 * var(--space-lg))`** — the one calc composition §4a's warning above does not cover, because it names a rung rather than routing around one.
 
 **What it deliberately does not see**, each a judgement rather than an oversight:
 
@@ -421,6 +421,7 @@ A file only moves to phase 2 when it is clean on **both** axes — no un-annotat
 | `text-[13px]` | A `--text-*` token names a **tier**. Flagging arbitrary type mechanically would pin ornament to a tier it was never part of — the coupling this section forbids. |
 | `calc(...)` | Named above; composing around the scale is a review rule, not a regex. |
 | `w-`/`h-`/`top-`/`inset-` | Ornament geometry, already carved out above. |
+| `marginLeft: -bleed` | A minus sign over an **identifier** or inside a template literal. Reading it needs flow analysis; the sign itself is closed (#1233), the indirection under it is not. |
 
 ---
 
