@@ -6,7 +6,7 @@ Replaces the old submissions, collaborations, and praxes routers.
 
 import logging
 import os
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlalchemy import select
@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from schemas.comment import FlagIn
 from schemas.praxis import (
     MediaItemOut,
+    MediaUploadResultOut,
     PraxisCardOut,
     PraxisCreate,
     PraxisInviteCreate,
@@ -44,6 +45,7 @@ from schemas.vote import VoteOut
 from services.praxis import (
     _build_invite_out,
     _require_member,
+    add_media_batch,
     apply_metatask,
     applied_metatasks_for,
     author_contributions_for,
@@ -341,6 +343,61 @@ async def upload_media_route(
     # Media is part of the shared document — adding it cancels a pending publish (ADR-0012).
     await cancel_pending_publish_on_edit(praxis, session)
     return MediaItemOut.model_validate(media_item)
+
+
+@router.post(
+    "/{praxis_id}/media/batch",
+    response_model=List[MediaUploadResultOut],
+    status_code=201,
+)
+async def upload_media_batch_route(
+    praxis_id: int,
+    files: List[UploadFile] = File(...),
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Upload N media files in one multipart request (#1298).
+
+    Returns one entry per submitted file, **in request order**, each carrying
+    either the created ``MediaItemOut`` or an error naming that file. The 201 says
+    "the request was processed", not "everything succeeded": one rejected file
+    fails only itself, so read every entry. The praxis 404 and the membership 403
+    are batch-wide and are settled before any file is touched.
+
+    ``display_order`` is derived from request position and appended after any
+    media already on the praxis; this route takes no ``display_order`` field. The
+    single-file ``POST /{praxis_id}/media`` is unchanged and still owns the
+    crop/rotate path, which uploads one file at a time by design (#514).
+
+    **Body-size ceiling** — what is verifiable from this codebase:
+
+    * **Per file: 100 MB** (``services.media.MEDIA_MAX_BYTES``), enforced per file
+      and reported as a per-file 413 entry. Never a batch-wide failure.
+    * **Per request: 1000 files** — Starlette's ``max_files`` default, which
+      FastAPI does not override. Exceeding it fails the *whole* request with a
+      bare 400 before this handler runs, so clients must chunk below it.
+    * **Total request bytes: no application-level cap.** Uvicorn serves the app
+      directly (``backend/Dockerfile`` → ``start.sh``); there is no nginx or
+      body-size middleware in front of it. Starlette spools each file part to a
+      temp file above 1 MB, so a batch's whole payload transits the container's
+      ephemeral filesystem before this handler sees it.
+    * Render's edge proxy limit is **not discoverable from this repository** and
+      is deliberately not guessed here — see the note on issue #1298. Until it is
+      measured against the deployed service, clients should chunk a large
+      selection into several batched requests rather than assume any single
+      figure holds.
+    """
+    praxis = await session.get(Praxis, praxis_id)
+    if praxis is None:
+        raise HTTPException(status_code=404, detail="Praxis not found.")
+    _require_member(praxis, character.id, "add media to")
+    return await add_media_batch(
+        praxis=praxis,
+        uploads=files,
+        character_id=character.id,
+        session=session,
+        era=CURRENT_ERA,
+    )
 
 
 @router.delete("/{praxis_id}/media/{media_id}", status_code=204)

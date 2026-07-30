@@ -28,7 +28,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import CovenTaskDetail from "../archetypes/CovenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TASK: TaskOut = {
   id: 305,
@@ -52,23 +52,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Maeve Thornbramble",
-  avatar_url: "",
-  faction_slug: "coven",
-  level: 5,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -122,6 +111,25 @@ describe("Coven task detail — the dress", () => {
     const { html } = render(<CovenTaskDetail state={baseState({ canSignUp: true })} />);
     const painted = [...html.matchAll(/(?:style|fill|stroke)="([^"]*)"/g)].map((m) => m[1]);
     expect(painted.filter((value) => /#[0-9a-f]{3}/i.test(value))).toEqual([]);
+  });
+
+  it("keeps slip-deep off body-sized text — it is a rule, a strand and a large numeral (#1295)", () => {
+    // The tier note lives in `components/cards/covenSlip.tsx`. `slip-deep`
+    // measures 4.44:1 on the ward PAGE (3.47:1 under the peak of the pink haze
+    // bloom) and 4.70:1 on the ward CARD, so it may carry words only at a size
+    // the 3:1 large-text floor covers. Neither guard above sees this: the token
+    // test measures declared values, and an ink-to-ground PAIRING exists only
+    // once rendered. The breadcrumb and the "level met" note both sit on the
+    // PAGE, and both wore it.
+    const { html } = render(<CovenTaskDetail state={baseState({ canSignUp: true })} />);
+    const inDeep = [...html.matchAll(/style="([^"]*)"/g)]
+      .map((match) => match[1])
+      .filter((style) => /(?:^|;)color:var\(--faction-coven-slip-deep\)/.test(style));
+    for (const style of inDeep) {
+      expect(style, "slip-deep carries only LARGE display type here").toMatch(
+        /font-size:var\(--text-(title|heading|display)\)/,
+      );
+    }
   });
 });
 
@@ -180,9 +188,8 @@ describe("Coven task detail — the contract", () => {
     expect(text, "the ward carries the total").toContain("180");
   });
 
-  it("renders no in-progress roster — only the header count", () => {
-    const { text } = render(<CovenTaskDetail state={baseState({ signups: [SIGNUP] })} />);
-    expect(text).not.toContain("Maeve Thornbramble");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<CovenTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("9");
   });

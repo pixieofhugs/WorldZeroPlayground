@@ -10,12 +10,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  getTask,
-  getTaskSignups,
-  type TaskOut,
-  type TaskSignupOut,
-} from "../../api/tasks";
+import { getTask, type TaskOut } from "../../api/tasks";
 import {
   listPraxes,
   createPraxis,
@@ -37,9 +32,17 @@ export interface TaskDetailState {
   task: TaskOut | null;
   fetchError: string | null;
 
-  // Entities
+  // Entities.
+  //
+  // There is deliberately no `signups` here. `GET /tasks/{id}/signups` survives
+  // as a route, but nothing on task detail consumes a roster — the population is
+  // a header count (`inProgressCount`) and nothing more (owner ruling
+  // 2026-07-28, reversing epic #1028 decision 3). The hook used to fetch, parse
+  // and store that response on every page load and discard it; #1262 deleted the
+  // request. Re-adding the slot means re-adding the round trip, so it needs a
+  // `needs-design` issue for the surface that would read it, not just a state
+  // field. `detailContract.test.tsx` pins the absence.
   submissions: PraxisCardOut[];
-  signups: TaskSignupOut[];
   friends: Set<number>;
   foes: Set<number>;
 
@@ -112,7 +115,6 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
 
   const [task, setTask] = useState<TaskOut | null>(null);
   const [submissions, setSubmissions] = useState<PraxisCardOut[]>([]);
-  const [signups, setSignups] = useState<TaskSignupOut[]>([]);
   const [isInProgress, setIsInProgress] = useState(false);
   const [inProgressPraxisId, setInProgressPraxisId] = useState<number | null>(
     null,
@@ -144,7 +146,6 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     const fetches: Promise<unknown>[] = [
       getTask(taskId),
       listPraxes({ task_id: taskId, status: "submitted" }),
-      getTaskSignups(taskId),
     ];
     if (user) {
       fetches.push(
@@ -177,10 +178,9 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     }
 
     Promise.all(fetches)
-      .then(([t, s, sg, myTasks, friendSet, foeSet]) => {
+      .then(([t, s, myTasks, friendSet, foeSet]) => {
         setTask(t as TaskOut);
         setSubmissions(s as PraxisCardOut[]);
-        setSignups(sg as TaskSignupOut[]);
         if (myTasks) {
           const praxes = myTasks as PraxisCardOut[];
           const activeForThisTask = praxes.find(
@@ -303,7 +303,6 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     fetchError,
 
     submissions,
-    signups,
     friends,
     foes,
 

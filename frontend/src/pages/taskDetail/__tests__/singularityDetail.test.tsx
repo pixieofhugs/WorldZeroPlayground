@@ -31,7 +31,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import SingularityTaskDetail from "../archetypes/SingularityTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TASK: TaskOut = {
   id: 208,
@@ -55,23 +55,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Ossuary Pete",
-  avatar_url: "",
-  faction_slug: "snide",
-  level: 7,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -184,11 +173,8 @@ describe("Singularity task detail — the shared anatomy", () => {
     expect(html).toContain("border-radius:50%");
   });
 
-  it("renders no in-progress roster, only the header count", () => {
-    const { text } = render(
-      <SingularityTaskDetail state={baseState({ signups: [SIGNUP] })} />,
-    );
-    expect(text).not.toContain("Ossuary Pete");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<SingularityTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("17");
   });
