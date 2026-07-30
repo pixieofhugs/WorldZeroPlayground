@@ -17,7 +17,8 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * Row SELECTION stays in `scoreBreakdown` (ADR-0047) — this file is presentation
  * only. Each optional row is its own line so the tag stays legible across all
  * five conditional states; nothing here is positioned relative to a row that
- * may not exist.
+ * may not exist. Since #1131 the BASE line is optional too: with nothing to
+ * multiply, add or vote, the tag types the tally and the numeral says the rest.
  */
 export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -50,49 +51,54 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         />
       )}
 
-      {/* Base, with the pink multiplier chip stuck on at the right. */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--text-sm)",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--faction-snide-vote-off)",
-          }}
-        >
-          {t("card.stamp.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--faction-snide-font-impact)",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: Anton figure struck at the design's 27, a poster face rather than text (§4a)
-            fontSize: 27,
-            lineHeight: 0.8,
-            color: "var(--faction-snide-acid)",
-          }}
-        >
-          {base}
-        </span>
-        {mult !== null && (
+      {/* Base, with the pink multiplier chip stuck on at the right. The line is
+          typed only when something moved the figure (#1131) — the Anton total
+          below the perforation is already saying it — and the chip leaves with
+          the line, which is safe: a live multiplier keeps the line. */}
+      {base !== null && (
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", whiteSpace: "nowrap" }}>
           <span
             style={{
-              marginLeft: "auto",
-              fontFamily: "var(--faction-snide-font-black)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the stuck-on multiplier chip, the design's 11 (§4a)
-              fontSize: 11,
-              color: "var(--faction-snide-ink)",
-              background: "var(--faction-snide-pink)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the chip's drawn inset; rounding to a rung swells a sticker into a button (§4a)
-              padding: "2px 5px",
-              transform: "rotate(3deg)",
-              whiteSpace: "nowrap",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-sm)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--faction-snide-vote-off)",
             }}
           >
-            {formatMult(mult)}
+            {t("card.stamp.base")}
           </span>
-        )}
-      </div>
+          <span
+            style={{
+              fontFamily: "var(--faction-snide-font-impact)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: Anton figure struck at the design's 27, a poster face rather than text (§4a)
+              fontSize: 27,
+              lineHeight: 0.8,
+              color: "var(--faction-snide-acid)",
+            }}
+          >
+            {base}
+          </span>
+          {mult !== null && (
+            <span
+              style={{
+                marginLeft: "auto",
+                fontFamily: "var(--faction-snide-font-black)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the stuck-on multiplier chip, the design's 11 (§4a)
+                fontSize: 11,
+                color: "var(--faction-snide-ink)",
+                background: "var(--faction-snide-pink)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the chip's drawn inset; rounding to a rung swells a sticker into a button (§4a)
+                padding: "2px 5px",
+                transform: "rotate(3deg)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {formatMult(mult)}
+            </span>
+          )}
+        </div>
+      )}
 
       {meta !== null && (
         <div
@@ -120,7 +126,9 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           letterSpacing: "0.06em",
           textTransform: "uppercase",
           color: "var(--faction-snide-acid)",
-          marginTop: "var(--space-xs)",
+          // The lead is between typed LINES: none when the tally is the first
+          // one on the tag (#1131).
+          marginTop: base !== null ? "var(--space-xs)" : undefined,
         }}
       >
         {t("card.stamp.fromVotes", { votes })}
