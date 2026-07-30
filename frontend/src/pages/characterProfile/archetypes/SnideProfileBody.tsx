@@ -101,7 +101,7 @@ const kit: ProfileKit = {
   ),
   nameSize: 60,
   nameExtra: { transform: 'skewX(-5deg)', textShadow: `3px 3px 0 ${PINK}`, textTransform: 'uppercase' },
-  playerEyebrow: 'Player · S.N.I.D.E.',
+  playerEyebrow: (faction) => `Player · ${faction}`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: INK,
