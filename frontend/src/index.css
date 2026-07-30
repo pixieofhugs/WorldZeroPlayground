@@ -1036,6 +1036,13 @@
   --faction-ephemerists-plate-gold: #e3c56a; /* glyphs + the winged disc */
   --faction-ephemerists-plate-band: #1e2233; /* the cornice masthead */
   --faction-ephemerists-plate-band-ink: #efe4c4;
+  /* Quiet ink ON THE NIGHT BAND (feed chassis v2, #1199) — the masthead's
+     second tier, for a timestamp beside the kicker. A measured token rather
+     than `band-ink` at an opacity: a translucent ink takes its tint from the
+     band under it, which is exactly the failure #669/#677 chased down, and the
+     dark cascade repoints `band-ink` to the GOLD, so an opacity there would
+     have collapsed both tiers onto one colour. 8.6:1 light, 8.9:1 dark. */
+  --faction-ephemerists-plate-band-quiet: #c9bfa4;
   --faction-ephemerists-plate-disc: #f6eed6; /* the medallion's field */
   --faction-ephemerists-plate-ochre: #a6432b; /* the fifth tally stroke */
   --faction-ephemerists-plate-cta-bg: #1e2233;
@@ -1680,6 +1687,10 @@
   --faction-ephemerists-plate-gold: #f2d98a;
   --faction-ephemerists-plate-band: #0a0c15;
   --faction-ephemerists-plate-band-ink: #f2d98a;
+  /* Muted gold, not the parchment grey of the light band: the dark band is
+     nearly black and its primary ink is already the gold, so the second tier
+     steps DOWN the same hue instead of introducing a cool one. */
+  --faction-ephemerists-plate-band-quiet: #c2ae7e;
   --faction-ephemerists-plate-disc: #12151f;
   --faction-ephemerists-plate-ochre: #d9744c;
   --faction-ephemerists-plate-cta-bg: #c9a24b;
