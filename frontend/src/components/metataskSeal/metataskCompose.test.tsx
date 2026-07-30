@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../i18n";
 import i18n from "../../i18n";
-import type { EditPraxisState } from "./useEditPraxis";
+import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 import type { TaskOut } from "../../api/tasks";
 import { MetataskSealStack } from "./MetataskSealStack";
 import MetataskPicker from "./MetataskPicker";

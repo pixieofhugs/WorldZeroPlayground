@@ -28,7 +28,7 @@ const SnideTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetyp
 const SnideVote = lazyArchetype(() => import('../components/vote/SnideVote'))
 const SnidePraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SnidePraxisCard'))
 const SnideScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SnideScoreStamp'))
-const SnideSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SnideSeal'))
+const SnideSeal = lazyArchetype(() => import('../components/metataskSeal/skins/SnideSeal'))
 const SnideSigil = lazyArchetype(() => import('../components/cards/SnideSigil').then((m) => ({ default: m.SnideSigil })))
 const SnideCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SnideCard })))
 const SnideSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SnideSelectCard })))
@@ -41,7 +41,7 @@ export const SNIDE_MANIFEST: FactionManifest = {
   taskCard: () => SnideTaskCard,
   praxisCard: () => SnidePraxisCard,
   scoreStamp: () => SnideScoreStamp,
-  metaTaskSeal: () => SnideSeal,
+  metataskSeal: () => SnideSeal,
   avatar: () => SnideAvatar,
   backdrop: () => SnideBackdrop,
   sigil: () => SnideSigil,

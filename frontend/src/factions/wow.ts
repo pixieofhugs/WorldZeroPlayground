@@ -109,7 +109,7 @@ const WowProfileBody = lazyArchetype(() => import('../pages/characterProfile/arc
 const WowVote = lazyArchetype(() => import('../components/vote/WowVote'))
 const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/WowPraxisCard'))
 const WowScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/WowScoreStamp'))
-const WowSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/WowSeal'))
+const WowSeal = lazyArchetype(() => import('../components/metataskSeal/skins/WowSeal'))
 const WowEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/WowEditPraxis'))
 const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDuelSealConfirm'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
@@ -137,7 +137,7 @@ export const WOW_MANIFEST: FactionManifest = {
   feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,
   scoreStamp: () => WowScoreStamp,
-  metaTaskSeal: () => WowSeal,
+  metataskSeal: () => WowSeal,
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
 

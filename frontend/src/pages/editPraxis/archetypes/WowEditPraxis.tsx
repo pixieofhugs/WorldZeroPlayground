@@ -141,7 +141,7 @@ import {
   WriteUpTabs,
   type ComposerTab,
 } from "./controls";
-import { MetataskSealStack } from "../MetataskSealStack";
+import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {

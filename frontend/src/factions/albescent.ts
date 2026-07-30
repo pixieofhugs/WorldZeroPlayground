@@ -36,7 +36,7 @@ const AlbescentSelectCard = lazyArchetype(() => import('../components/cards/Fact
 const AlbescentTaskCard = lazyArchetype(() => import('../components/cards/AlbescentTaskCard'))
 const AlbescentVote = lazyArchetype(() => import('../components/vote/AlbescentVote'))
 const AlbescentPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/AlbescentPraxisCard'))
-const AlbescentSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/AlbescentSeal'))
+const AlbescentSeal = lazyArchetype(() => import('../components/metataskSeal/skins/AlbescentSeal'))
 // #1038 — the task-detail unfreeze. Lazy like its siblings (#1063): a wrapper
 // that pulls in the whole na anatomy is exactly the weight route-splitting exists
 // to keep off the initial load.
@@ -160,5 +160,5 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * invitation letter and sigil), never a `--faction-albescent-*` theme, so the
    * society shows its pale face only where it is doing the sealing.
    */
-  metaTaskSeal: () => AlbescentSeal,
+  metataskSeal: () => AlbescentSeal,
 }

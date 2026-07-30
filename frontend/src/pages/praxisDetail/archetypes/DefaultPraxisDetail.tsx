@@ -63,7 +63,7 @@
  * carries the whole score rail — disc, ruled rows and votes tally — so this file
  * only mounts it · `VoteUI`, which dispatches the vote surface on the
  * TASK's faction so an unskinned faction still votes in its own voice ·
- * `CollabRoster` for the members · `MediaGallery` · `MetaTaskSeal`, read-only:
+ * `CollabRoster` for the members · `MediaGallery` · `MetataskSeal`, read-only:
  * `apply_metatask` requires `in_progress`, so the design's "Available" chips
  * would 422 on every tap (#1093 removed the dead wiring behind them).
  *
@@ -100,7 +100,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
+import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
@@ -665,7 +665,7 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
   // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
   // wears its ISSUING faction's dress (#927/#933). The design's "Available"
   // chips are deliberately absent: `apply_metatask` (services/praxis.py)
@@ -674,7 +674,7 @@ export default function DefaultPraxisDetail({
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.metatasks.heading'))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   )
 

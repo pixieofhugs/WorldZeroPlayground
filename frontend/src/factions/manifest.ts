@@ -50,7 +50,7 @@
 import type { ComponentType } from 'react'
 
 import type { CardProps } from '../components/TaskCard'
-import type { SealSkinProps } from '../components/metaTaskSeal/types'
+import type { SealSkinProps } from '../components/metataskSeal/types'
 import type { ArchetypeProps as PraxisCardProps } from '../components/PraxisCard'
 import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'
 import type { SigilVariantProps } from '../components/cards/FactionSigil'
@@ -120,7 +120,7 @@ export interface FactionManifest {
    * responsive component per faction — no mobile twin, the sticker renders
    * near-identical at 340px.
    */
-  readonly metaTaskSeal?: Lazy<ComponentType<SealSkinProps>>
+  readonly metataskSeal?: Lazy<ComponentType<SealSkinProps>>
 
   // ─── Pages (desktop) ───────────────────────────────────────────────────────
   readonly taskDetail?: Lazy<Stateful<TaskDetailState>>
@@ -227,7 +227,7 @@ export const SURFACE_KEYS = [
   'feedFrame',
   'vote',
   'scoreStamp',
-  'metaTaskSeal',
+  'metataskSeal',
   'taskDetail',
   'praxisDetail',
   'editPraxis',

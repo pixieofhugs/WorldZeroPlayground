@@ -57,7 +57,7 @@
  * the ruled rows, the votes tally), so this file only mounts it and never
  * re-derives a term; `scoreBreakdown()` is the single authority (ADR-0053) and
  * the design's own arithmetic is not built · `VoteUI`, dispatching to
- * `SnideVote`'s amp meter · `CollabRoster` · `MediaGallery` · `MetaTaskSeal`,
+ * `SnideVote`'s amp meter · `CollabRoster` · `MediaGallery` · `MetataskSeal`,
  * READ-ONLY (`apply_metatask` requires `in_progress`, so an add chip would 422)
  * · `DuelCard`, which already implements three readings — live / won by default
  * / final — and draws nothing at all on `declined`; it is mounted, not
@@ -105,7 +105,7 @@ import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
@@ -792,7 +792,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
     </section>
   );
 
-  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
   // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
   // wears its ISSUING faction's dress (#927/#933). The design's add chips are
   // deliberately absent: `apply_metatask` requires `status == in_progress`, so
@@ -800,7 +800,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.metatasks.heading"), { big: true })}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   );
 

@@ -499,8 +499,8 @@ export function SaveDraftButton({
   );
 }
 
-/* The editable seal stack (#933) lives in `../MetataskSealStack` — deliberately
- * OUTSIDE this module so `controls.tsx` never imports MetaTaskSeal (and through
+/* The editable seal stack (#933) lives in `../../../components/metataskSeal/MetataskSealStack` — deliberately
+ * OUTSIDE this module so `controls.tsx` never imports MetataskSeal (and through
  * it the faction registry). See that file's header for why the cycle matters. */
 
 /* -------------------------------------------------------------------------- */

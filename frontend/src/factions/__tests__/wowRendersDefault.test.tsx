@@ -74,7 +74,7 @@ function Sentinel() {
  * `profileBody` now serve WOW on both form factors and praxis detail is ONE
  * shared page every faction dresses; the pavilion profile is the phone branch
  * inside `WowProfileBody`, not a deletion), and #931's
- * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
+ * `metataskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
  * and #1037's desktop `taskDetail` — THE PARCHMENT FIELD, the first of #951's
@@ -123,7 +123,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'duelSeal',
   'mobileFieldDesk',
   'mobileFactionPage',
-  'metaTaskSeal',
+  'metataskSeal',
 ])
 
 describe('wow is partly skinned: twenty surfaces claimed, the rest fall back', () => {

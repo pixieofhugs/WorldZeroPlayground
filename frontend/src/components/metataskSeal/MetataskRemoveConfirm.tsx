@@ -14,7 +14,7 @@
 import { useTranslation } from "react-i18next";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionName } from "../../utils/factions";
-import type { EditPraxisState } from "./useEditPraxis";
+import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 export default function MetataskRemoveConfirm({
   state,

@@ -20,7 +20,7 @@ import i18n from '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 import EphemeristsPraxisCard from '../desktop/EphemeristsPraxisCard'
-import MetaTaskSeal from '../../metaTaskSeal/MetaTaskSeal'
+import MetataskSeal from '../../metataskSeal/MetataskSeal'
 
 /** The retired illuminated-codex family. None of it may reach a plate surface. */
 const CODEX = /--eph-[a-z]/
@@ -160,7 +160,7 @@ describe('one card, both form factors (ADR-0067)', () => {
 })
 
 describe('the Ephemerists metatask seal is a margin note on papyrus (#1207)', () => {
-  const html = () => render(<MetaTaskSeal metatasks={[metatask()]} />)
+  const html = () => render(<MetataskSeal metatasks={[metatask()]} />)
 
   it('paints from the plate family and never the retired codex tokens', () => {
     expect(html()).toContain('--faction-ephemerists-plate-')
@@ -181,7 +181,7 @@ describe('the Ephemerists metatask seal is a margin note on papyrus (#1207)', ()
   it('renders the peel control only where a surface asks for one', () => {
     expect(html()).not.toContain(i18n.t('praxis:detail.seal.remove'))
     const removable = render(
-      <MetaTaskSeal metatasks={[metatask()]} removable onRemove={() => {}} />,
+      <MetataskSeal metatasks={[metatask()]} removable onRemove={() => {}} />,
     )
     expect(removable).toContain(i18n.t('praxis:detail.seal.remove'))
   })

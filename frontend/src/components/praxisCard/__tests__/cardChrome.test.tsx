@@ -148,7 +148,7 @@ describe('the applied-metatask seal stack (#932)', () => {
 
   // The two `MobilePraxisBody` cases are gone with the `mobilePraxisCard`
   // surface (ADR-0067). They asserted the same seal placement against a second
-  // body that composed the same `MetaTaskSeal` from the same field; `PraxisBody`
+  // body that composed the same `MetataskSeal` from the same field; `PraxisBody`
   // above is now the only anatomy, on both form factors.
 })
 

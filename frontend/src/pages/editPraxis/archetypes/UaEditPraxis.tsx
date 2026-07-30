@@ -127,7 +127,7 @@ import {
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/cards/UaSigil";
 import { UA_DISPLAY, UA_TEXT, UaEnsoScore } from "../../../components/cards/uaAtoms";
-import { MetataskSealStack } from "../MetataskSealStack";
+import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {

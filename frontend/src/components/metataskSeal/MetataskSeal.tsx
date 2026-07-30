@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../api/tasks'
 import { surfaceMap } from '../../factions'
 import { pickVariant } from '../../utils/factionDispatch'
-import DefaultSeal from './DefaultSeal'
+import DefaultSeal from './skins/DefaultSeal'
 
-export interface MetaTaskSealProps {
+export interface MetataskSealProps {
   /**
    * The praxis's applied metatasks (`PraxisOut.applied_metatasks`). One seal is
    * rendered per entry, stacked in order.
@@ -32,12 +32,12 @@ export interface MetaTaskSealProps {
  * slot below. Read-only surfaces pass just `metatasks`; the compose surface
  * wires `removable`/`onRemove`/`onAdd`.
  */
-export default function MetaTaskSeal({
+export default function MetataskSeal({
   metatasks,
   removable,
   onRemove,
   onAdd,
-}: MetaTaskSealProps) {
+}: MetataskSealProps) {
   const { t } = useTranslation('praxis')
 
   // Nothing sealed and no way to add one — render nothing.
@@ -47,7 +47,7 @@ export default function MetaTaskSeal({
     <div className="flex flex-col" style={{ gap: 'var(--space-sm)' }}>
       {metatasks.map((metatask) => {
         const Skin = pickVariant(
-          surfaceMap('metaTaskSeal'),
+          surfaceMap('metataskSeal'),
           metatask.metatask_faction_slug,
           DefaultSeal,
         )

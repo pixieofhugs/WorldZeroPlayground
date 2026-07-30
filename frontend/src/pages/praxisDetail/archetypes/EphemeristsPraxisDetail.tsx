@@ -69,7 +69,7 @@
  * `TaskCrown` (via the shared banners) · `ScoreStamp` · `DuelCard`, which
  * narrates outcomes only and draws nothing on a declined challenge · the
  * Ephemerists' own `VoteUI` widget · `CollabRoster` · `MediaGallery` ·
- * `MetaTaskSeal`, read-only: `apply_metatask` requires `in_progress`, so the
+ * `MetataskSeal`, read-only: `apply_metatask` requires `in_progress`, so the
  * design's add-chips would 422 on every tap · `CommentThread` via
  * `PraxisDetailComments` with the heading handed in, so one list carries one
  * heading (the #1029 trap).
@@ -89,7 +89,7 @@ import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI from "../../../components/vote/VoteUI";
 import { reframeLabel } from "../../../components/vote/voteReframes";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
+import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { toRoman } from "../../../utils/roman";
 import {
@@ -800,7 +800,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // READ-ONLY, by construction. `MetaTaskSeal` omits the peel control and the add
+  // READ-ONLY, by construction. `MetataskSeal` omits the peel control and the add
   // slot when it gets neither `removable` nor `onAdd`, and each seal wears its
   // ISSUING faction's dress (#927/#933). The design's add-chips are deliberately
   // absent: `apply_metatask` requires `status == in_progress`, so every chip
@@ -808,7 +808,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead(t("detail.metatasks.heading"))}
-      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+      <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
   );
 
