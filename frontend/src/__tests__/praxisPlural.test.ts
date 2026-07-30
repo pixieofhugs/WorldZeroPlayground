@@ -1,0 +1,116 @@
+/**
+ * #1136 — the plural of *praxis* is *praxis*, and the rename must not have
+ * touched the API.
+ *
+ * THE TRAP THIS GUARD EXISTS FOR
+ * ------------------------------
+ * `/praxes/{id}` is spelled identically as the **frontend route** and as the
+ * **backend API path**. #1136 renamed the route to `/praxis/{id}` and left the
+ * API alone. A find/replace that does not tell them apart renames the endpoints
+ * too — and then every request 404s while the app still builds, still
+ * typechecks, and still passes every test that does not hit the network. The
+ * repo's harness is `renderToStaticMarkup` only, so *nothing else here can see
+ * that failure*. Hence a source scan.
+ *
+ * The discriminator is the directory: everything under `api/` is an API path
+ * and stays `/praxes`; a `/praxes` anywhere else is a router path and is a
+ * regression. Comments are stripped first, because prose that documents a
+ * backend endpoint (`GET /praxes/{id}/voters`) is describing the API correctly
+ * and is not a finding. Import specifiers are stripped too — `pages/praxes/` is
+ * a real directory, and renaming directories is out of scope for #1136.
+ */
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { describe, it, expect } from 'vitest'
+
+const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
+const LOCALES_DIR = join(SRC_DIR, 'locales', 'en')
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((entry: string) => {
+    const path = join(dir, entry)
+    if (statSync(path).isDirectory()) return sourceFiles(path)
+    return /\.tsx?$/.test(entry) ? [path] : []
+  })
+}
+
+const toRelative = (path: string) => relative(SRC_DIR, path).split('\\').join('/')
+
+const stripComments = (source: string) =>
+  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+
+/** `from './praxes/usePraxes'` / `import('../pages/praxes/x')` — a directory, not a URL. */
+const stripImportSpecifiers = (source: string) =>
+  source
+    .replace(/from\s*['"][^'"]+['"]/g, 'from ""')
+    .replace(/import\s*\(\s*['"][^'"]+['"]\s*\)/g, 'import("")')
+
+const routePaths = (source: string) => stripImportSpecifiers(stripComments(source))
+
+/** This file spells the forbidden path in its own fixtures. */
+const SELF = '__tests__/praxisPlural.test.ts'
+
+describe('the API keeps saying /praxes (#1136)', () => {
+  const apiFiles = sourceFiles(join(SRC_DIR, 'api'))
+
+  it('never requests the frontend route path /praxis', () => {
+    // If this fails, a rename crossed the seam: the client is now calling an
+    // endpoint the backend does not serve. Put `/praxes` back.
+    const offenders = apiFiles
+      .filter((path) => /\/praxis(?=[/'"`?])/.test(routePaths(readFileSync(path, 'utf8'))))
+      .map(toRelative)
+    expect(offenders).toEqual([])
+  })
+
+  it('still holds the API paths it is supposed to hold', () => {
+    // Guards the guard: were api/ emptied of /praxes, the assertion above would
+    // pass by finding nothing at all.
+    const occurrences = apiFiles
+      .map((path) => readFileSync(path, 'utf8').match(/\/praxes/g)?.length ?? 0)
+      .reduce((total, n) => total + n, 0)
+    expect(occurrences).toBeGreaterThanOrEqual(30)
+  })
+})
+
+describe('no router path says /praxes (#1136)', () => {
+  it('has no /praxes left outside api/', () => {
+    const offenders = sourceFiles(SRC_DIR)
+      .filter((path) => !toRelative(path).startsWith('api/') && toRelative(path) !== SELF)
+      .filter((path) => /\/praxes/.test(routePaths(readFileSync(path, 'utf8'))))
+      .map(toRelative)
+    expect(offenders).toEqual([])
+  })
+})
+
+describe('no user-visible string says "praxes" (#1136)', () => {
+  /** Values only — `praxes` is a live i18n KEY in admin.json and feed.json. */
+  function stringValues(node: unknown): string[] {
+    if (typeof node === 'string') return [node]
+    if (node && typeof node === 'object') return Object.values(node).flatMap(stringValues)
+    return []
+  }
+
+  const catalogs = readdirSync(LOCALES_DIR).filter((entry) => entry.endsWith('.json'))
+
+  it.each(catalogs)('%s', (catalog) => {
+    const values = stringValues(JSON.parse(readFileSync(join(LOCALES_DIR, catalog), 'utf8')))
+    expect(values.filter((value) => /praxes/i.test(value))).toEqual([])
+  })
+
+  it('reads catalogs that actually contain copy', () => {
+    expect(catalogs.length).toBeGreaterThan(5)
+  })
+})
+
+describe('the scan sees the codebase', () => {
+  it('reads a non-empty file set', () => {
+    expect(sourceFiles(SRC_DIR).length).toBeGreaterThan(100)
+  })
+
+  it('strips comments and import paths, but not real route literals', () => {
+    expect(routePaths('// GET /praxes/{id}/voters')).not.toContain('/praxes')
+    expect(routePaths("import x from './praxes/usePraxes'")).not.toContain('/praxes')
+    expect(routePaths('navigate(`/praxes/${id}/edit`)')).toContain('/praxes')
+  })
+})

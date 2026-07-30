@@ -196,7 +196,7 @@ describe('duel card — the three readings', () => {
     )
     expect(text, 'nothing is final yet').not.toContain('frozen at era close')
     // The rival's row is the cross-link, and it points AWAY from this page.
-    expect(html).toContain('href="/praxes/2"')
+    expect(html).toContain('href="/praxis/2"')
     expect(text).toContain('Read their praxis')
   })
 
@@ -220,7 +220,7 @@ describe('duel card — the three readings', () => {
     expect(text, "the forfeiter's total is gone").not.toContain('15.4')
     // The thrown side is back to `in_progress`, so this 404s. It stays a plain
     // link on purpose — it degrades, it does not break the page.
-    expect(html).toContain('href="/praxes/2"')
+    expect(html).toContain('href="/praxis/2"')
   })
 
   it('forfeited by THIS side: the dimmed row is whoever threw it', () => {

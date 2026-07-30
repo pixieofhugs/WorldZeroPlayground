@@ -23,7 +23,7 @@ const SOURCE_DIRECTORY = path.dirname(fileURLToPath(import.meta.url))
 /** The feed hooks #660 requires to bind their search box to `?q=`. */
 const FEED_HOOKS = [
   { name: 'useTasks', relativePath: '../../pages/tasks/useTasks.ts' },
-  { name: 'usePraxes', relativePath: '../../pages/praxes/usePraxes.ts' },
+  { name: 'usePraxes', relativePath: '../../pages/praxis/usePraxes.ts' },
 ] as const
 
 function readFeedHookSource(relativePath: string): string {

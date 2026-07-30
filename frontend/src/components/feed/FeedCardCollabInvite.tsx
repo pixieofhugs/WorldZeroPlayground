@@ -68,7 +68,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
     if (result.ok) {
       // New members land on the editor so they can contribute; the editor
       // self-locks if the collab is already submitted (controlsLocked). (#298)
-      navigate(`/praxes/${result.praxisId ?? praxis_id}/edit`);
+      navigate(`/praxis/${result.praxisId ?? praxis_id}/edit`);
       return;
     }
     // The hook swallowed the failure into `error` (rendered below) but doesn't
@@ -80,7 +80,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
     try {
       await respondToInvite(praxis_id, invite_id, true);
       // Raced free between the two calls — land on the collab like happy path.
-      navigate(`/praxes/${praxis_id}/edit`);
+      navigate(`/praxis/${praxis_id}/edit`);
     } catch (err) {
       const detail = (err as { response?: { data?: { detail?: unknown } } })
         ?.response?.data?.detail;
@@ -108,7 +108,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
       }
       await respondToInvite(praxis_id, invite_id, true);
       setShowDropModal(false);
-      navigate(`/praxes/${praxis_id}`);
+      navigate(`/praxis/${praxis_id}`);
     } catch (err) {
       setDropError(
         extractError(err, i18n.t("feed:collabInvite.bankFull.dropError")),
@@ -277,7 +277,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
         {status === "accepted" && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
-              to={`/praxes/${praxis_id}`}
+              to={`/praxis/${praxis_id}`}
               className="eyebrow"
               style={{ color: "var(--badge-collab)", textDecoration: "none" }}
             >

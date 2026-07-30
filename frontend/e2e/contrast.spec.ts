@@ -62,7 +62,7 @@ type ViewportName = keyof typeof VIEWPORTS
  * is why its ROSTER_PAIRS block measures a pairing rather than a documented
  * role — read that block's header before assuming a token is covered here.
  */
-const SHARED_ROUTES = ['/', '/tasks', '/praxes', '/leaderboard', '/factions']
+const SHARED_ROUTES = ['/', '/tasks', '/praxis', '/leaderboard', '/factions']
 
 // This spec opts out of the shared bot's saved cookie: it re-logs per faction
 // against its own dev account so it can't leave other specs' bot in Snide.

@@ -143,7 +143,7 @@ function initialsOf(name: string): string {
  *   `modifiedPoints / basePoints`, which is ADR-0053's dead-arithmetic trap.
  *   `era_1` neutralises every faction, so it is invisible today.
  * - **The gallery expands in place.** It does NOT link out to
- *   `/praxes?task_id=N` — the reader stays on the task. The old Everymen build
+ *   `/praxis?task_id=N` — the reader stays on the task. The old Everymen build
  *   carried that link back when the feed read no such param and silently showed
  *   everything; the URL filters properly since #1050.
  * - **Copy is the shared neutral `detail.*` set** (ADR-0057). The union voice
@@ -691,7 +691,7 @@ export default function EverymenTaskDetail({
               {t("detail.submitted.text")}
             </span>
           </div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryBar}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={primaryBar}>
             {t("detail.submitted.edit")}
           </Link>
         </div>
@@ -718,7 +718,7 @@ export default function EverymenTaskDetail({
               {t("detail.inProgress.text")}
             </span>
           </div>
-          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={primaryBar}>
+          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={primaryBar}>
             {t("detail.inProgress.continue")}
           </Link>
           <button

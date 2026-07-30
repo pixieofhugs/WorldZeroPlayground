@@ -320,7 +320,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
-        <Link to={`/praxes/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
+        <Link to={`/praxis/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('detail.owner.edit')}
         </Link>
         <PraxisSubmitControls state={state} />

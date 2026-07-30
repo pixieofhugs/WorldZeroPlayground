@@ -1,5 +1,5 @@
 /**
- * #1050 — `/praxes?task_id=N` showed the whole feed. The link was built by every
+ * #1050 — `/praxis?task_id=N` showed the whole feed. The link was built by every
  * task surface, the API accepted the param, and `usePraxes` read no params at
  * all, so the filter died on arrival.
  *
@@ -90,7 +90,7 @@ describe('usePraxes sends the task filter it reads', () => {
     expect(USE_PRAXES_SOURCE).toMatch(/\[taskId, type, faction, voted, sort, trimmedQuery\]/)
   })
 
-  it('leaves it optional — a bare /praxes is still the whole feed', () => {
+  it('leaves it optional — a bare /praxis is still the whole feed', () => {
     // `?? undefined` (above) rather than a required argument, and nothing
     // bails out early when the param is missing.
     expect(USE_PRAXES_SOURCE).not.toMatch(/if \(!taskId\) return/)

@@ -359,7 +359,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         marginBottom: 'var(--space-md)',
       }}
     >
-      <Link to="/praxes" style={{ ...EYEBROW, color: PLUM, textDecoration: 'none' }}>
+      <Link to="/praxis" style={{ ...EYEBROW, color: PLUM, textDecoration: 'none' }}>
         <span aria-hidden>‹ </span>
         {t('detail.back')}
       </Link>

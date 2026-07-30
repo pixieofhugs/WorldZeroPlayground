@@ -16,7 +16,7 @@
  * The second URL-borne axis is `?task_id=` (#1050): task surfaces have always
  * linked "view all praxis" here with it, and the API has always accepted it, but
  * this hook read no params so the filter was dropped on arrival. It is optional
- * — a bare `/praxes` is still the whole feed — and the pages announce it when
+ * — a bare `/praxis` is still the whole feed — and the pages announce it when
  * set, so a narrowed feed never looks like the whole register. See
  * `./taskFilterParam.ts`.
  */

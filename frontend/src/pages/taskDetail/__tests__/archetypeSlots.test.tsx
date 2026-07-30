@@ -11,7 +11,7 @@
  *
  * We render to static markup (no DOM, no context) and assert on the structural
  * anchors each slot leaves behind: slot text and the stable hrefs
- * (`/tasks`, `/praxes/:id/edit`). Distinctive fixture values keep the substring
+ * (`/tasks`, `/praxis/:id/edit`). Distinctive fixture values keep the substring
  * checks from colliding with incidental markup. Submissions are left empty so
  * the test never has to mount the context-bound <PraxisCard> wrapper — the
  * praxis section is anchored instead by its always-present sort toggle, and
@@ -148,7 +148,7 @@ describe("task-detail content-slot invariant", () => {
       const { html } = render(
         <Archetype state={baseState({ mySubmission: MY_PRAXIS })} />,
       );
-      expect(html, "edit-submission slot").toContain('href="/praxes/55/edit"');
+      expect(html, "edit-submission slot").toContain('href="/praxis/55/edit"');
     });
 
     it(`${slug} renders the continue control while in progress`, () => {
@@ -158,7 +158,7 @@ describe("task-detail content-slot invariant", () => {
         />,
       );
       expect(html, "continue-in-progress slot").toContain(
-        'href="/praxes/99/edit"',
+        'href="/praxis/99/edit"',
       );
     });
   }

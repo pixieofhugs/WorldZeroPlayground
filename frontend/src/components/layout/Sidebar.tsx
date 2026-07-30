@@ -251,7 +251,7 @@ export default function Sidebar() {
             {activeTasks.map((praxis) => (
               <div key={praxis.id} className="flex items-start justify-between gap-3">
                 <Link
-                  to={`/praxes/${praxis.id}/edit`}
+                  to={`/praxis/${praxis.id}/edit`}
                   className="font-display min-w-0"
                   style={{ fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
                 >
@@ -478,7 +478,7 @@ function AwaitingSubmissionRow({
         />
         <div className="flex-1 min-w-0">
           <Link
-            to={`/praxes/${praxisId}/edit`}
+            to={`/praxis/${praxisId}/edit`}
             className="font-body block truncate"
             style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
           >
@@ -491,7 +491,7 @@ function AwaitingSubmissionRow({
       </div>
       <div className="flex items-center gap-1.5" style={{ marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}>
         <Link
-          to={`/praxes/${praxisId}/edit`}
+          to={`/praxis/${praxisId}/edit`}
           style={{
             ...REQUEST_BUTTON_BASE,
             background: isDuel ? 'var(--badge-duel)' : 'var(--badge-collab)',

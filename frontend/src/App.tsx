@@ -68,10 +68,10 @@ export default function App() {
           <Route path="/" element={<RootLanding />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<TaskDetail />} />
-          <Route path="/praxes" element={<Praxes />} />
-          <Route path="/praxes/:id" element={<PraxisDetail />} />
+          <Route path="/praxis" element={<Praxes />} />
+          <Route path="/praxis/:id" element={<PraxisDetail />} />
           <Route
-            path="/praxes/:id/edit"
+            path="/praxis/:id/edit"
             element={
               <ProtectedRoute>
                 <EditPraxis />

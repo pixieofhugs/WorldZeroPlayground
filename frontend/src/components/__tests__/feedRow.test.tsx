@@ -34,7 +34,7 @@ describe('normalizeFeedItem', () => {
     expect(row.action).toBe('completed a task')
     expect(row.actorHref).toBe('/characters/3')
     expect(row.headline).toBe('Reforest')
-    expect(row.headlineHref).toBe('/praxes/7')
+    expect(row.headlineHref).toBe('/praxis/7')
     expect(row.points).toBe('40 pts')
     expect(row.badge?.label).toBe('Friend')
   })
@@ -52,7 +52,7 @@ describe('normalizeFeedItem', () => {
     expect(row.action).toBe('submitted their part of')
     expect(row.actorHref).toBe('/characters/8')
     expect(row.headline).toBe('Plant a tree')
-    expect(row.headlineHref).toBe('/praxes/12')
+    expect(row.headlineHref).toBe('/praxis/12')
     expect(row.points).toBe('25 pts')
     expect(row.badge?.label).toBe('Your Stuff')
   })
@@ -78,7 +78,7 @@ describe('normalizeFeedItem', () => {
     expect(row.action).toBe(collabCopy('coven', 'nudgeFeedAction'))
     expect(row.actorHref).toBe('/characters/8')
     expect(row.headline).toBe('Plant a tree')
-    expect(row.headlineHref).toBe('/praxes/12/edit')
+    expect(row.headlineHref).toBe('/praxis/12/edit')
     expect(row.badge?.label).toBe('Collab')
   })
 
@@ -95,7 +95,7 @@ describe('normalizeFeedItem', () => {
       }),
     )!
     expect(row.badge?.label).toBe('Duel')
-    expect(row.headlineHref).toBe('/praxes/13/edit')
+    expect(row.headlineHref).toBe('/praxis/13/edit')
   })
 
   it('resolves a taunt from the catalog, quotes it, and drops points', () => {
@@ -174,7 +174,7 @@ describe('normalizeFeedItem', () => {
     expect(row.headline).toBe('the second half is yours @ada')
     // Speech, so it is quoted like a taunt rather than titled like a task.
     expect(row.headlineQuoted).toBe(true)
-    expect(row.headlineHref).toBe('/praxes/12')
+    expect(row.headlineHref).toBe('/praxis/12')
     expect(row.points).toBeNull()
     expect(row.level).toBeNull()
   })
@@ -205,7 +205,7 @@ describe('normalizeFeedItem', () => {
       item('comment_mention', { comment_id: 11, praxis_id: 12, excerpt: 'hi' }),
     )!
     expect(row.actions.map((action) => action.id)).toEqual(['reply'])
-    expect(row.actions[0].href).toBe('/praxes/12')
+    expect(row.actions[0].href).toBe('/praxis/12')
     expect(row.actions[0].call).toBeUndefined()
   })
 
@@ -246,7 +246,7 @@ describe('FeedRowContent', () => {
     expect(html).toContain('Ada')
     expect(html).toContain('completed a task')
     expect(html).toContain('Reforest')
-    expect(html).toContain('href="/praxes/7"')
+    expect(html).toContain('href="/praxis/7"')
   })
 
   // ADR-0039: an unaffiliated (na) actor's monogram avatar is the rainbow ring,
@@ -303,7 +303,7 @@ describe('FeedRowContent', () => {
     )
     // Quoted (curly quotes from the catalog) AND clickable.
     expect(mentionHtml).toContain('“over to you”')
-    expect(mentionHtml).toContain('href="/praxes/12"')
+    expect(mentionHtml).toContain('href="/praxis/12"')
     // The CTA is the second route to the same page, not a second destination.
     expect(mentionHtml).toContain('Reply')
 
@@ -323,7 +323,7 @@ describe('FeedRowContent', () => {
     // Its only destination is the actor — the quote itself goes nowhere.
     expect(tauntHtml).toContain('href="/characters/9"')
     expect(tauntHtml, 'the quote is a paragraph, not a link').toContain('<p class="font-body"')
-    for (const route of ['href="/praxes', 'href="/tasks']) {
+    for (const route of ['href="/praxis', 'href="/tasks']) {
       expect(tauntHtml, `${route} must not appear on a taunt`).not.toContain(route)
     }
   })

@@ -81,7 +81,7 @@ export async function createSoloDraft(
 
 /**
  * Issue a challenge through the composer UI. `page` must already be at the
- * challenger's /praxes/:id/edit. Flips to duel mode via the mode chip, searches
+ * challenger's /praxis/:id/edit. Flips to duel mode via the mode chip, searches
  * the opponent, and picks them from the dropdown — picking is what issues the
  * challenge (controls.tsx onPick = state.sendChallenge). Asserts the attached
  * opponent chip so the challenge is confirmed before returning.
@@ -114,14 +114,14 @@ export async function challengeViaUi(page: Page, opponentName: string): Promise<
 /**
  * Accept a pending challenge through the opponent's updates feed. Lands the
  * opponent on their freshly-created opponent-praxis composer (feed card
- * landOnPraxis → /praxes/:id/edit). Accept/Decline live only on /updates.
+ * landOnPraxis → /praxis/:id/edit). Accept/Decline live only on /updates.
  */
 export async function acceptDuelViaUi(page: Page): Promise<void> {
   await page.goto('/updates')
   const accept = page.getByRole('button', { name: 'Accept Duel' })
   await expect(accept).toBeVisible()
   await accept.click()
-  await page.waitForURL(/\/praxes\/\d+\/edit/)
+  await page.waitForURL(/\/praxis\/\d+\/edit/)
 }
 
 /**

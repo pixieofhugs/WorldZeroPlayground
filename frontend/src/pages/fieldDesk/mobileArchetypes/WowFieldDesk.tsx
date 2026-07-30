@@ -225,7 +225,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               {activeTasks.map((praxis) => (
                 <WowQuestFrame key={praxis.id}>
                   <Link
-                    to={`/praxes/${praxis.id}/edit`}
+                    to={`/praxis/${praxis.id}/edit`}
                     style={{
                       display: "block",
                       minHeight: TAP,

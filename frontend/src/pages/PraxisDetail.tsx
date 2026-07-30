@@ -60,7 +60,7 @@ export default function PraxisDetail() {
   // (praxis_visibility_condition), and #1071's waiting surface gives every one
   // of them somewhere to land, so this redirect cannot strand a viewer.
   if (state.praxis.status === 'in_progress' || state.praxis.status === 'pending') {
-    return <Navigate to={`/praxes/${state.praxis.id}/edit`} replace />
+    return <Navigate to={`/praxis/${state.praxis.id}/edit`} replace />
   }
 
   const Archetype = pickVariant(

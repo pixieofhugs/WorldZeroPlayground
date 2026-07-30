@@ -63,7 +63,7 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
         const alicePraxisId = await createSoloDraft(alice, task.id, `Duel resolved ${RUN}`)
 
         const alicePage = await alice.ctx.newPage()
-        await alicePage.goto(`/praxes/${alicePraxisId}/edit`)
+        await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
         await challengeViaUi(alicePage, bob.name)
 
         const bobPage = await bob.ctx.newPage()
@@ -71,7 +71,7 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
         await waitForDuelAttached(bobPage, alice.name)
         await sealViaUi(bobPage)
 
-        await alicePage.goto(`/praxes/${alicePraxisId}/edit`)
+        await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
         await waitForDuelAttached(alicePage, bob.name)
         await sealViaUi(alicePage) // → settled
 
@@ -89,7 +89,7 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
         // with the votes" tally the settled reading renders. `DuelCard` (#1090)
         // has an explicit `resolved` reading, so this is a live contract now — it
         // stays fixme only because the era reset above needs admin auth.
-        await alicePage.goto(`/praxes/${alicePraxisId}`)
+        await alicePage.goto(`/praxis/${alicePraxisId}`)
         const main = alicePage.getByRole('main')
         await expect(main.getByText(/floats with the votes/i)).toBeHidden()
         await expect(main.getByText(/winner|won|final/i)).toBeVisible()

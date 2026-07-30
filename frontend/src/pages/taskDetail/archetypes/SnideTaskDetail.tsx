@@ -56,7 +56,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   `status === "active"` gate and suppresses the thread's own heading so this
  *   page carries one dressed section head, not two (ADR-0006).
  * - The gallery expands **in place**. It deliberately does not link out to
- *   `/praxes?task_id=N` — the reader stays on the task. That URL does filter
+ *   `/praxis?task_id=N` — the reader stays on the task. That URL does filter
  *   properly since #1050; before it, it silently showed the whole feed.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
@@ -465,7 +465,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxes/${mySubmission.id}/edit`} style={plateButton(true)}>
+          <Link to={`/praxis/${mySubmission.id}/edit`} style={plateButton(true)}>
             <XMark size={17} />
             <span style={plateLabel}>{t("detail.submitted.edit")}</span>
             <XMark size={17} />
@@ -489,7 +489,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.text")}
           </div>
-          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={plateButton(true)}>
+          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={plateButton(true)}>
             <XMark size={17} />
             <span style={plateLabel}>{t("detail.inProgress.continue")}</span>
             <XMark size={17} />
