@@ -269,6 +269,41 @@ export function FlutedRule() {
   );
 }
 
+/**
+ * The winged sun disc at SIGN scale — the same emblem {@link WingedDisc} draws
+ * across a masthead, redrawn on the plate's 24-unit square so it can sit in a
+ * badge. Not a scaled-down copy: the masthead's is 176 units wide and would
+ * come out a hairline at 24, so the wings are cut to three stepped bars a side.
+ *
+ * Its one reader today is the metatask seal's indigo disc (#1207).
+ */
+export function WingedDiscSign({ size, color }: { size: number; color: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+      {[
+        { x: 13.4, mirror: 8.0, y: 10.2, width: 2.6, height: 3.4, opacity: 0.95 },
+        { x: 16.5, mirror: 4.9, y: 10.7, width: 2.6, height: 2.5, opacity: 0.77 },
+        { x: 19.6, mirror: 1.8, y: 11.2, width: 2.6, height: 1.6, opacity: 0.59 },
+      ].flatMap((bar, index) =>
+        [bar.x, bar.mirror].map((x, side) => (
+          <rect
+            key={`${index}-${side}`}
+            x={x}
+            y={bar.y}
+            width={bar.width}
+            height={bar.height}
+            rx={0.7}
+            fill={color}
+            opacity={bar.opacity}
+          />
+        )),
+      )}
+      <circle cx={12} cy={12} r={3.4} fill="none" stroke={color} strokeWidth={1.4} />
+      <circle cx={12} cy={12} r={1.6} fill={color} />
+    </svg>
+  );
+}
+
 /** One incised sign at label scale, set beside a line of type. */
 export function Sign({ name, size, color, weight }: {
   name: string
