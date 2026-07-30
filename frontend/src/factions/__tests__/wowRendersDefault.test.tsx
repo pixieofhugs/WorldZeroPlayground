@@ -94,10 +94,11 @@ function Sentinel() {
  * allowlists in the same commit as its skin.
  *
  * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
- * and `mobilePlayersDirectory`: nothing in the kit describes them, #901 scoped
- * them out, and NO faction skins them — Default-for-everyone, not a WOW gap. If
- * a later slice registers any surface, this list is where that decision has to
- * be written down.
+ * and `mobilePlayersDirectory` used to be listed here as Default-for-everyone
+ * rather than a WOW gap. Since NO faction ever skinned them, the four slots were
+ * retired: those pages render their `Default*` skin with no dispatch at all, so
+ * there is nothing left for this list to pin. If a later slice wants a skin for
+ * one of them, it adds the manifest field back together with a registration.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',

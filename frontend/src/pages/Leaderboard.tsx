@@ -7,16 +7,13 @@ import { extractError } from '../utils/errors'
 import { FACTION_RAINBOW_ORDER, factionCssVar } from '../utils/factions'
 import type { CharacterOut, CurrentUser } from '../api/auth'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { pickVariant } from '../utils/factionDispatch'
-import { surfaceMap } from '../factions'
 import { useTheme } from '../hooks/useTheme'
 import Constellation, { type RankedPlayer } from './players/Constellation'
 import Meadow from './players/Meadow'
 import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from './players/SkyCanvas'
 import SkyLegend from './players/SkyLegend'
 import RosterTable from './players/RosterTable'
-import DefaultPlayers, {
-} from './players/mobileArchetypes/DefaultPlayers'
+import DefaultPlayers from './players/mobileArchetypes/DefaultPlayers'
 
 type ScoreMode = 'era' | 'alltime'
 
@@ -34,10 +31,11 @@ export default function Leaderboard() {
   const formFactor = useFormFactor()
   const characters = data ?? []
 
+  // No faction ever claimed `mobilePlayersDirectory`, so the slot and its
+  // dispatch are gone: mobile renders the Default skin directly.
   if (formFactor === 'mobile') {
-    const Mobile = pickVariant(surfaceMap('mobilePlayersDirectory'), null, DefaultPlayers)
     return (
-      <Mobile
+      <DefaultPlayers
         characters={characters}
         loading={loading}
         error={error}

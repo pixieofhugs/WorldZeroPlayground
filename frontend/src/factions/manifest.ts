@@ -55,15 +55,11 @@ import type { FactionSelectCardProps } from '../components/cards/FactionSelectCa
 import type { DuelSealConfirmProps } from '../components/duel/DuelSealConfirm'
 import type { FactionHeroProps } from '../pages/FactionDetail'
 import type { ProfileBodyProps } from '../pages/characterProfile/FactionProfileBody'
-import type { PlayersDirectoryProps } from '../pages/players/mobileArchetypes/DefaultPlayers'
 import type { TaskDetailState } from '../pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../pages/editPraxis/useEditPraxis'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
-import type { FactionsDirectoryState } from '../pages/factions/useFactionsDirectory'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
-import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
-import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
 
 /**
  * A deferred reference to a component. See the thunk note above: manifest
@@ -159,14 +155,18 @@ export interface FactionManifest {
   // the mobile skins are superseded by a committed design rather than held open
   // pending one. There is no partial-registration story for a surface that no
   // longer exists, and no future issue should try to re-register it.
+  //
+  // `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory`
+  // and `mobilePlayersDirectory` are gone the same way. They were declared by
+  // #516/#901 and never claimed by a single faction, so all four dispatchers
+  // resolved to their `Default*` skin on every render. Those four pages now
+  // render the Default directly. A future faction skin for one of them adds the
+  // field back with a registration in the same commit — a slot no faction fills
+  // is not a seam, it is a lookup that always returns the same answer.
   readonly mobilePraxisCard?: Lazy<ComponentType<MobilePraxisCardProps>>
   readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
-  readonly mobileCreateCharacter?: Lazy<Stateful<CreateCharacterState>>
-  readonly mobileEditCharacter?: Lazy<Stateful<EditCharacterState>>
   readonly mobileProfile?: Lazy<ComponentType<ProfileBodyProps>>
-  readonly mobileFactionsDirectory?: Lazy<Stateful<FactionsDirectoryState>>
-  readonly mobilePlayersDirectory?: Lazy<ComponentType<PlayersDirectoryProps>>
   readonly mobileDuelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 }
 
@@ -204,11 +204,7 @@ export const SURFACE_KEYS = [
   'mobilePraxisCard',
   'mobileFactionPage',
   'mobileFieldDesk',
-  'mobileCreateCharacter',
-  'mobileEditCharacter',
   'mobileProfile',
-  'mobileFactionsDirectory',
-  'mobilePlayersDirectory',
   'mobileDuelSeal',
 ] as const satisfies readonly FactionSurface[]
 
