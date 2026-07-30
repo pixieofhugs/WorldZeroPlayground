@@ -19,14 +19,38 @@ function tKey(t: TFunction<'progression'>, key: string): string {
  * Self-contained inline-styled modal, matching EverymenVote / the feed modals.
  */
 
+/**
+ * The site's one rainbow, as scalars — the na spectrum's seven stops (#1220,
+ * ADR-0066). Five surfaces in this file index it: the rank text's per-letter
+ * bars, the rule, the seal's hard wedges, the ability-row dingbats and the
+ * confetti. A gradient token cannot be indexed, which is why these are stops
+ * and not `--faction-default-rainbow`.
+ *
+ * It cycled `underline-1…6` — a separate six-hue brand palette — until #1219
+ * collapsed the two. Two things changed with the move: the cycle is SEVEN long
+ * (the seal's wedge is `360 / RAINBOW.length`, not a hardcoded 60deg), and the
+ * popup now flips with the theme, where the brand palette had no dark form. The
+ * comments below are the hues as declared; the old set's were wrong — it
+ * labelled its last stop "red" over `#f97316` orange.
+ */
 const RAINBOW = [
-  'var(--underline-1)', // amber
-  'var(--underline-2)', // magenta
-  'var(--underline-3)', // indigo
-  'var(--underline-4)', // teal
-  'var(--underline-5)', // green
-  'var(--underline-6)', // red
+  'var(--faction-default-stop-1)', // red
+  'var(--faction-default-stop-2)', // orange
+  'var(--faction-default-stop-3)', // yellow
+  'var(--faction-default-stop-4)', // green
+  'var(--faction-default-stop-5)', // teal
+  'var(--faction-default-stop-6)', // blue
+  'var(--faction-default-stop-7)', // magenta
 ]
+
+/**
+ * One wedge of the seal's ring, in degrees. Derived rather than written down:
+ * the ring is a hard-wedge conic with one wedge per stop, so a stop added or
+ * removed must not leave a gap. This is deliberately NOT
+ * `--faction-default-ring` — that token is the same seven wedges, but #1127 is
+ * collapsing it into the smooth conic, and the seal wants edges.
+ */
+const SEAL_WEDGE_DEGREES = 360 / RAINBOW.length
 
 const INK = 'var(--color-text-primary)'
 const PAPER = 'var(--color-bg-page)'
@@ -84,7 +108,10 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
     sealRing === 'ink'
       ? INK
       : 'conic-gradient(from -60deg,' +
-        RAINBOW.map((c, idx) => `${c} ${idx * 60}deg ${(idx + 1) * 60}deg`).join(',') +
+        RAINBOW.map(
+          (c, idx) =>
+            `${c} ${(idx * SEAL_WEDGE_DEGREES).toFixed(2)}deg ${((idx + 1) * SEAL_WEDGE_DEGREES).toFixed(2)}deg`,
+        ).join(',') +
         ')'
   return (
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>

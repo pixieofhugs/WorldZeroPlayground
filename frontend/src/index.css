@@ -209,27 +209,60 @@
   --faction-default: #6b6a7a;
   --faction-default-light: rgba(107, 106, 122, 0.1);
   --faction-default-border: rgba(0, 0, 0, 0.12);
-  --faction-default-rainbow: linear-gradient(90deg, #c1272d 0%, #c2541f 17%, #ca8a04 33%, #16a34a 50%, #1d6e72 67%, #2563eb 83%, #be185d 100%);
-  --faction-default-ring: conic-gradient(#c1272d 0 51deg, #c2541f 0 103deg, #ca8a04 0 154deg, #16a34a 0 206deg, #1d6e72 0 257deg, #2563eb 0 309deg, #be185d 0 360deg);
+  /* ── THE SEVEN STOPS · the site's one rainbow (#1220, ADR-0066) ──
+     The spectrum as SCALARS, and the single source every ramp below composes
+     from. Two things arrive with them.
+
+     They exist because a gradient token cannot be INDEXED. The spectrum was
+     gradients only, so every surface that wanted stop N — a per-letter title
+     bar, an ability row's dingbat, a confetti flake, a hard-wedge seal — reached
+     instead for the retired `underline-1…6` family — a SECOND six-hue brand
+     palette carrying its own near-copy of these hues. #1219 collapsed the two:
+     the brand six are deleted and their consumers cycle these. A cycling
+     consumer therefore has SEVEN stops now, not six — anything that hardcoded
+     `60deg` a wedge wants `360 / 7`.
+
+     And they FLIP with the theme, which is the part that changed behaviour
+     rather than merely moving it. That family had no dark override at all, so
+     the nav wordmark, the page titles and the level-up popup rendered identical
+     hexes in both themes; on these stops they take the brightened dark twin.
+     That is the #1219 ruling — one palette, one behaviour, no exceptions — and
+     it amends ADR-0054's "fixed brand constant in both themes" clause.
+
+     Not every spectrum in this file is one of these, and the exceptions are
+     exceptions on purpose: `--badge-victor-stop-*` and `--spectrum-glow-*` are
+     theme-INVARIANT identities (each says so at its own declaration), and
+     `--faction-default-chip` is a fixed green→blue pill whose white ink is
+     measured on these two exact hues. Those three restate a hue deliberately.
+     Everything else cut from the spectrum reads a stop. */
+  --faction-default-stop-1: #c1272d; /* red */
+  --faction-default-stop-2: #c2541f; /* orange */
+  --faction-default-stop-3: #ca8a04; /* yellow */
+  --faction-default-stop-4: #16a34a; /* green */
+  --faction-default-stop-5: #1d6e72; /* teal */
+  --faction-default-stop-6: #2563eb; /* blue */
+  --faction-default-stop-7: #be185d; /* magenta */
+  --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
+  --faction-default-ring: conic-gradient(var(--faction-default-stop-1) 0 51deg, var(--faction-default-stop-2) 0 103deg, var(--faction-default-stop-3) 0 154deg, var(--faction-default-stop-4) 0 206deg, var(--faction-default-stop-5) 0 257deg, var(--faction-default-stop-6) 0 309deg, var(--faction-default-stop-7) 0 360deg);
   /* The bar ramp stood on end (#983), for a vertical RULE — the left-edge
      accent a feed row, a quoted block or a callout draws. Same seven stops,
      same cut, 180deg: a rule is ~3px wide and tens of px tall, so the 90deg
      ramp above would spend the whole spectrum across those 3px (≈0.4px a
      stop) and read as one muddy smear, exactly the failure --faction-default-ring
      exists to avoid on a 10px dot. Ramps are cut for their geometry. */
-  --faction-default-rainbow-vertical: linear-gradient(180deg, #c1272d 0%, #c2541f 17%, #ca8a04 33%, #16a34a 50%, #1d6e72 67%, #2563eb 83%, #be185d 100%);
+  --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
   /* The same spectrum cut to TILE (#1023). Its last stop is its first, so a
      surface that scrolls its background-position loops without a seam — which
      the bar ramp above cannot do: red at 0% meets magenta at 100% and shows a
      hard edge every cycle. Same argument as the two shorter ramps below; the
      spectrum comes in ramps cut for their geometry. Only Albescent's drifting
      card edge reads it today. */
-  --faction-default-rainbow-loop: linear-gradient(90deg, #c1272d 0%, #c2541f 14%, #ca8a04 28%, #16a34a 43%, #1d6e72 57%, #2563eb 72%, #be185d 86%, #c1272d 100%);
+  --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   /* The loop bent into a circle (#1038): the same seamless cut, swept as a
      SMOOTH conic. Deliberately not --faction-default-ring above, which is the
      vote widget's seven HARD wedges — a pinwheel, not a prism. Anything that
      turns wants this one; anything that counts wants the wedges. */
-  --faction-default-rainbow-conic: conic-gradient(#c1272d 0%, #c2541f 14%, #ca8a04 28%, #16a34a 43%, #1d6e72 57%, #2563eb 72%, #be185d 86%, #c1272d 100%);
+  --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
@@ -254,16 +287,35 @@
      `gold` the POINTS caption. The last two gradients are deliberately NOT the
      seven-stop spectrum: the design draws the chip and the total with their own
      shorter ramps, and substituting --faction-default-rainbow would flatten a
-     green→blue chip into a full spectrum smear at 40px wide. */
+     green→blue chip into a full spectrum smear at 40px wide.
+
+     They are SHORT CUTS of the same spectrum, not a palette of their own —
+     `-total-rainbow` is stops 1·3·4·6 and `-eyebrow-rainbow` is 4·6·7, which is
+     why #1220 could land the retired brand palette's narrow marks (the nav
+     wordmark rule, the Home hero rule, the field-desk title rule and its
+     progress fill) on these two rather than mint a third short ramp. A mark
+     narrow enough to need fewer stops reads one of these; the count is a
+     geometry decision, the hues are not. */
   --faction-default-card-line: #e6ddc8;
   --faction-default-stamp-bg: #ffffff;
-  --faction-default-gold: #ca8a04;
+  /* Stop 3 as an INK. Same value as the yellow stop in light, and it tracks the
+     stop through the theme, but it is named for the caption it paints (and for
+     the Singularity credits accent that #1220 pointed here) rather than for a
+     position in a ramp — a gradient must not read it back, or a ramp ends up
+     composed from a text colour. */
+  --faction-default-gold: var(--faction-default-stop-3);
+  /* The chip restates its two hues, and this is the one place in the family
+     where that is correct. It has NO dark override: the pill is a saturated
+     green→blue in either theme, and --faction-default-chip-text is white
+     measured on these two exact values. Composing it from stops 4 and 6 would
+     make it flip with them and put white on the brightened #4ade80/#60a5fa,
+     which fails. Theme-invariance is the design, so the hues are literal. */
   --faction-default-chip: linear-gradient(90deg, #16a34a, #2563eb);
   /* White in BOTH themes: the chip is a saturated green→blue pill in either,
      and the ink has to answer to the pill, not to the page. */
   --faction-default-chip-text: #ffffff;
-  --faction-default-total-rainbow: linear-gradient(90deg, #c1272d, #ca8a04 40%, #16a34a 60%, #2563eb);
-  --faction-default-eyebrow-rainbow: linear-gradient(90deg, #16a34a, #2563eb, #be185d);
+  --faction-default-total-rainbow: linear-gradient(90deg, var(--faction-default-stop-1), var(--faction-default-stop-3) 40%, var(--faction-default-stop-4) 60%, var(--faction-default-stop-6));
+  --faction-default-eyebrow-rainbow: linear-gradient(90deg, var(--faction-default-stop-4), var(--faction-default-stop-6), var(--faction-default-stop-7));
   /* ── The edit-praxis COMPOSER's own tiers (#1181, epic #1179, ADR-0065) ──
      The card set above gives the composer its SHEET (--faction-default-card-bg),
      its ink and its muted ink. Three tiers it does not give, all of which the v2
@@ -299,13 +351,13 @@
      are tokens for the same reason the hues are — so the component reads a
      var() and never branches on a `dark` boolean (WORLD_ZERO_STYLE §2). */
   --faction-default-aurora:
-    radial-gradient(62% 78% at 8% 16%, #c1272d, transparent 70%),
-    radial-gradient(58% 72% at 34% 4%, #c2541f, transparent 70%),
-    radial-gradient(60% 74% at 56% 18%, #ca8a04, transparent 70%),
-    radial-gradient(64% 78% at 84% 12%, #16a34a, transparent 70%),
-    radial-gradient(66% 80% at 98% 62%, #2563eb, transparent 70%),
-    radial-gradient(64% 78% at 62% 96%, #be185d, transparent 70%),
-    radial-gradient(60% 74% at 22% 92%, #1d6e72, transparent 70%);
+    radial-gradient(62% 78% at 8% 16%, var(--faction-default-stop-1), transparent 70%),
+    radial-gradient(58% 72% at 34% 4%, var(--faction-default-stop-2), transparent 70%),
+    radial-gradient(60% 74% at 56% 18%, var(--faction-default-stop-3), transparent 70%),
+    radial-gradient(64% 78% at 84% 12%, var(--faction-default-stop-4), transparent 70%),
+    radial-gradient(66% 80% at 98% 62%, var(--faction-default-stop-6), transparent 70%),
+    radial-gradient(64% 78% at 62% 96%, var(--faction-default-stop-7), transparent 70%),
+    radial-gradient(60% 74% at 22% 92%, var(--faction-default-stop-5), transparent 70%);
   --faction-default-aurora-opacity: 0.2;
   --faction-default-aurora-filter: blur(56px) saturate(0.5);
   --faction-default-aurora-blend: normal;
@@ -1337,13 +1389,15 @@
   --vote-4: #2563eb;
   --vote-5: #be185d;
 
-  /* ── Title underline colors (cycling) ── */
-  --underline-1: #fbbf24;
-  --underline-2: #be185d;
-  --underline-3: #4f46e5;
-  --underline-4: #0e7490;
-  --underline-5: #16a34a;
-  --underline-6: #f97316;
+  /* The `underline-1…6` cycling title/wordmark palette lived here. It was a
+     SECOND six-hue rainbow — a resequenced near-copy of the na spectrum, with no
+     dark override — and #1220 retired it into --faction-default-stop-1…7
+     (ADR-0066). Its consumers moved by shape, not by find-and-replace: the two
+     index-cycling ones (PageTitle's per-letter bars, LevelUpPopup's rank text /
+     rule / ability rows / confetti / seal) took the seven stops; the four narrow
+     marks took --faction-default-total-rainbow / -eyebrow-rainbow, which are cut
+     for exactly that width; and the three Singularity credit accents took
+     --faction-default-gold, which is what they were actually asking for. */
 
   /* ── Watercolor splash opacities ── */
   --wc-opacity-blob: 0.3;
@@ -1727,11 +1781,25 @@
   --faction-default: #8b8aa0;
   --faction-default-light: rgba(255, 255, 255, 0.06);
   --faction-default-border: rgba(255, 255, 255, 0.12);
-  --faction-default-rainbow: linear-gradient(90deg, #e2433f 0%, #e07a3a 17%, #e6b94f 33%, #4ade80 50%, #3aa0a4 67%, #60a5fa 83%, #f472b6 100%);
-  --faction-default-ring: conic-gradient(#e2433f 0 51deg, #e07a3a 0 103deg, #e6b94f 0 154deg, #4ade80 0 206deg, #3aa0a4 0 257deg, #60a5fa 0 309deg, #f472b6 0 360deg);
-  --faction-default-rainbow-vertical: linear-gradient(180deg, #e2433f 0%, #e07a3a 17%, #e6b94f 33%, #4ade80 50%, #3aa0a4 67%, #60a5fa 83%, #f472b6 100%);
-  --faction-default-rainbow-loop: linear-gradient(90deg, #e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
-  --faction-default-rainbow-conic: conic-gradient(#e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
+  /* The seven stops, brightened — the twin the light block's docstring points
+     at. Every ramp below is the same composition as its light counterpart, so
+     re-cutting the spectrum for dark means editing these seven lines and
+     nothing else. Since #1220 these also carry the retired brand chrome (nav
+     wordmark, page titles, the level-up popup), which had no dark form at all
+     before; they were tuned for a dark faction CARD, so that chrome is the
+     pairing to re-check when a stop moves. */
+  --faction-default-stop-1: #e2433f; /* red */
+  --faction-default-stop-2: #e07a3a; /* orange */
+  --faction-default-stop-3: #e6b94f; /* yellow */
+  --faction-default-stop-4: #4ade80; /* green */
+  --faction-default-stop-5: #3aa0a4; /* teal */
+  --faction-default-stop-6: #60a5fa; /* blue */
+  --faction-default-stop-7: #f472b6; /* magenta */
+  --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
+  --faction-default-ring: conic-gradient(var(--faction-default-stop-1) 0 51deg, var(--faction-default-stop-2) 0 103deg, var(--faction-default-stop-3) 0 154deg, var(--faction-default-stop-4) 0 206deg, var(--faction-default-stop-5) 0 257deg, var(--faction-default-stop-6) 0 309deg, var(--faction-default-stop-7) 0 360deg);
+  --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
+  --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
+  --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   --faction-default-card-bg: #1c1b24;
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
@@ -1741,14 +1809,24 @@
   --faction-default-vote-on: #e07a3a;
   --faction-default-vote-off: #b0925f;
   /* The cream sheet, lights out (#842) — the design's own dark card, not an
-     inversion: the hairline becomes a white scrim, the stamp plate lifts off
-     the sheet rather than sinking into it, and both narrow rainbows swap their
-     stops for the brightened spectrum's. */
+     inversion: the hairline becomes a white scrim and the stamp plate lifts off
+     the sheet rather than sinking into it. Both narrow rainbows still swap their
+     stops for the brightened spectrum's; since #1220 they do it by composition
+     rather than by a second declaration (see below). */
   --faction-default-card-line: rgba(255, 255, 255, 0.14);
   --faction-default-stamp-bg: #26252f;
-  --faction-default-gold: #e6b34a;
-  --faction-default-total-rainbow: linear-gradient(90deg, #e2433f, #e6b34a 40%, #4ade80 60%, #60a5fa);
-  --faction-default-eyebrow-rainbow: linear-gradient(90deg, #4ade80, #60a5fa, #f472b6);
+  /* --faction-default-gold, -total-rainbow and -eyebrow-rainbow need no dark
+     entry any more: since #1220 all three compose from --faction-default-stop-*,
+     which this block rebinds above, so the `:root` declarations re-resolve to
+     the brightened spectrum on their own. Same argument the UA parchment
+     gradient makes further up. Restating them here would be three lines that
+     have to be remembered whenever the light cut changes.
+
+     #1220 corrected one drift on the way: the dark gold and the dark total's
+     yellow were both #e6b34a, a hair off the dark yellow STOP (#e6b94f) the
+     comment above claimed they took. One hue, one source — the delta is ~6/255
+     on one channel and lifts the POINTS caption's contrast on the dark sheet
+     rather than lowering it. */
   /* The composer's three tiers, lights out (#1181). The field LIFTS off the
      sheet here rather than sinking into it — the same inversion --faction-
      default-stamp-bg already makes one block up — and both hairlines become
@@ -1756,17 +1834,11 @@
   --faction-default-composer-field: #1f1e2b;
   --faction-default-composer-faint: #4a4860;
   --faction-default-composer-hair: rgba(255, 255, 255, 0.06);
-  /* The aurora on the brightened spectrum, screen-blended so it lifts off the
-     dark sheet instead of muddying into it, and blurred less hard because a lit
-     wash spreads further on a dark ground than a dark one does on a light. */
-  --faction-default-aurora:
-    radial-gradient(62% 78% at 8% 16%, #e2433f, transparent 70%),
-    radial-gradient(58% 72% at 34% 4%, #e07a3a, transparent 70%),
-    radial-gradient(60% 74% at 56% 18%, #e6b94f, transparent 70%),
-    radial-gradient(64% 78% at 84% 12%, #4ade80, transparent 70%),
-    radial-gradient(66% 80% at 98% 62%, #60a5fa, transparent 70%),
-    radial-gradient(64% 78% at 62% 96%, #f472b6, transparent 70%),
-    radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 70%);
+  /* The aurora needs no dark hue list either — the `:root` wash reads the seven
+     stops, so it arrives on the brightened spectrum by itself. What still flips
+     is the wash's COMPOSITING: screen-blended so it lifts off the dark sheet
+     instead of muddying into it, and blurred less hard because a lit wash
+     spreads further on a dark ground than a dark one does on a light. */
   --faction-default-aurora-opacity: 0.22;
   --faction-default-aurora-filter: blur(48px) saturate(0.8);
   --faction-default-aurora-blend: screen;

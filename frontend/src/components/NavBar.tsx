@@ -47,7 +47,12 @@ export default function NavBar() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               borderBottom: '2px solid transparent',
-              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
+              // The page ground masks all but the bottom 2px, so the second
+              // layer IS the wordmark's rule. It reads the spectrum's four-stop
+              // cut (#1220, ADR-0066) rather than a ramp of its own: a 2px band
+              // under a short word cannot spend seven stops legibly, which is
+              // what --faction-default-total-rainbow exists for.
+              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), var(--faction-default-total-rainbow)',
               backgroundSize: '100% calc(100% - 2px), 100% 2px',
               backgroundPosition: 'top, bottom',
               backgroundRepeat: 'no-repeat',
