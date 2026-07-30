@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import i18n from '../../i18n'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
@@ -97,9 +98,14 @@ const NOTICE = 'var(--faction-singularity-card-notice)'
  * `--color-text-on-accent` is deliberately NOT repointed. The companions' accept
  * buttons paint it on `--badge-duel` (#dc2626), where white is 4.83:1 and the
  * near-black `-on-accent` would be 3.92:1 — repointing it to fix one pairing
- * would break the other. The one place it is genuinely wrong on this chassis is
- * `FeedRowContent`'s monogram disc (white on the phosphor fill, 1.74:1), and
- * that needs an ink seam on the shared body, which is outside this footprint.
+ * would break the other. The place it was genuinely wrong on this chassis was
+ * `FeedRowContent`'s monogram disc, which is why that repoint could never have
+ * been the fix: one token, two pairings, and a cascade override cannot tell them
+ * apart. #1252 settled it in the body instead — the disc is a faction FILL, so
+ * its glyph takes `--faction-singularity-on-fill` (5.17:1 light, 7.41:1 dark)
+ * rather than a global neutral (5.17:1 light but 2.54:1 dark). The 1.74:1 this
+ * note used to quote was white on `--faction-singularity-card-accent`, the
+ * phosphor; the disc is painted from `--faction-singularity`, the blue.
  */
 const ON_CHASSIS_INK = {
   '--color-text-primary': BRIGHT,
@@ -110,6 +116,16 @@ const ON_CHASSIS_INK = {
   '--color-bg-surface': PANEL,
   '--color-bg-surface-alt': READOUT,
 } as CSSProperties
+
+/**
+ * The one body ink the cascade repoint above cannot reach (#1252). The actor's
+ * name is `--faction-singularity` — the BLUE, a `--faction-*` token rather than
+ * a `--color-*` one, so `ON_CHASSIS_INK` never sees it — and blue on the
+ * terminal is 3.67:1 in light against the 4.5:1 an 18px/700 name owes. The
+ * phosphor this whole chassis speaks in clears it twice over (10.88:1 light,
+ * 11.18:1 dark).
+ */
+const ROW_SKIN = { ink: { actor: 'var(--faction-singularity-card-accent)' } } satisfies FeedRowSkin
 
 /** Terminal label voice — every small mark on the chrome speaks in it. */
 const LABEL: CSSProperties = {
@@ -290,8 +306,12 @@ export default function SingularityFeedFrame({
         {archive}
       </div>
 
-      {/* The printout — the shared body, unchanged, on repointed ink. */}
-      <div style={{ position: 'relative', zIndex: 2, ...ON_CHASSIS_INK }}>{children}</div>
+      {/* The printout — the shared body, unchanged, on repointed ink. The
+          cascade carries the `--color-*` half; `ROW_SKIN` carries the one ink
+          that is a `--faction-*` token and so cannot ride it. */}
+      <div style={{ position: 'relative', zIndex: 2, ...ON_CHASSIS_INK }}>
+        <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
+      </div>
     </article>
   )
 }

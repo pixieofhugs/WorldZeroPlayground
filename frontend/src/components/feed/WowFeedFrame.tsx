@@ -1,4 +1,5 @@
 import { useFormFactor } from '../../hooks/useFormFactor'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
@@ -38,15 +39,20 @@ import type { FeedFrameProps } from './feedFrameProps'
  * reason it always was: it belongs to the row SENTENCE, which the shared body
  * composes generically and a chassis cannot see.
  *
- * THE SHEET'S CROOKED POINTS PLAQUE IS NOT DRAWN HERE, and cannot be from this
- * seam. Points live on the shared, faction-blind body (`FeedRowContent` sets
- * them beside the level), and the chassis only ever sees `children` — it has no
- * points value to strike a plaque with, and reaching into the body's markup to
- * restyle one would be the chassis special-casing a payload, which the seam
- * forbids. Drawing its own plaque would print the figure twice, exactly as
- * re-drawing the kit's wax seal would have put two crests on one row (the actor's
- * portrait already IS the crest, `WowAvatar` #897). It stays undrawn until the
- * shared body grows a slot for it.
+ * THE SHEET'S CROOKED POINTS PLAQUE IS STILL NOT DRAWN HERE — but it is no
+ * longer unreachable. Points live on the shared, faction-blind body
+ * (`FeedRowContent` sets them beside the level), and a chassis used to see only
+ * `children`: no points value to strike a plaque with, and reaching into the
+ * body's markup to restyle one would be the chassis special-casing a payload,
+ * which the seam forbids. Drawing its own plaque would print the figure twice,
+ * exactly as re-drawing the kit's wax seal would have put two crests on one row
+ * (the actor's portrait already IS the crest, `WowAvatar` #897).
+ *
+ * #1252 grew the body the slot this note asked for: publish a
+ * {@link FeedRowSkin} with a `points` renderer and it draws the figure INSTEAD
+ * of the shared eyebrow line, with the row's own values. Striking the plaque is
+ * dress and belongs to #1204's own follow-up; what this file claims today is
+ * the ink half of that seam, below.
  *
  * WHERE THE SHEET'S LITERALS LANDED. Every one maps onto a shipped
  * `--faction-wow-*` token; nothing is ported and nothing new is minted:
@@ -95,6 +101,17 @@ const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
   desktop: { head: 'var(--space-sm) var(--space-lg)', kicker: 'var(--text-lg)' },
   mobile: { head: 'var(--space-xs) var(--space-md)', kicker: 'var(--text-md)' },
 }
+
+/**
+ * The ink half of the body seam (#1252), and the sharpest instance of it in the
+ * feed. The shared row paints the actor's name in `--faction-wow` — the gold,
+ * measured against the app's neutral page — and on this cream sheet that is
+ * **1.96:1**, against the 4.5:1 the name owes at 18px/700. The gold is a fill
+ * and a frame here and never type, which is exactly the constraint
+ * WORLD_ZERO_STYLE §3 records for it; the plum this card already speaks in is
+ * the accent that carries text (5.79:1 light, 7.94:1 dark).
+ */
+const ROW_SKIN: FeedRowSkin = { ink: { actor: PLUM } }
 
 export default function WowFeedFrame({
   kicker,
@@ -213,7 +230,7 @@ export default function WowFeedFrame({
           their own `var(--space-md) var(--space-lg)` — so the chassis adds none.
           The v1 frame wrapped children in another `--space-md` and double-padded
           every card. */}
-      {children}
+      <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
     </article>
   )
 }

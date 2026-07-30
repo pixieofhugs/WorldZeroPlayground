@@ -1,6 +1,7 @@
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { UaSigil } from '../cards/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UaInkColumn } from '../cards/uaAtoms'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
@@ -46,6 +47,16 @@ import type { FeedFrameProps } from './feedFrameProps'
  * is fluid, and `useFormFactor` only trims the gutter where a phone column has
  * none to spare.
  */
+/**
+ * The shared body's one ink that is wrong on this leaf (#1252). The row paints
+ * the actor's name in the faction's raw hue, which was measured against the
+ * app's neutral page: `--faction-ua` is 4.04:1 on this parchment in light, and
+ * the name is 18px/700, so it owes 4.5:1. The practice's own accent — the ink
+ * this card already sets on its band — clears both halves (5.18:1 light,
+ * 6.58:1 dark). A repoint, not a new token.
+ */
+const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--faction-ua-card-accent)' } }
+
 export default function UaFeedFrame({
   kicker,
   time,
@@ -134,7 +145,7 @@ export default function UaFeedFrame({
         {archive}
       </div>
 
-      {children}
+      <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
     </div>
   )
 }
