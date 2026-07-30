@@ -1,9 +1,16 @@
 /**
- * Cozy Coven DESKTOP duel seal-confirm (#720) — design panel 2b.
+ * Cozy Coven DESKTOP duel seal-confirm (#720, re-dressed by #1209) — the ward,
+ * asking you to be sure.
  *
- * The Default dialog's content, re-hung inside a centred `wow.exe` window:
- * traffic-light title bar, dotted board, notepad scrap for the stakes and the
- * roster, lo-fi pink confirm. Same beat, Coven's hand.
+ * The Default dialog's content, re-hung on the coven's own paper: a slip band
+ * across the head carrying the pentagram badge and a braided thread, the
+ * candlelit page beneath it, and the stakes + roster on a panel laid on that
+ * wash. Same beat, Coven's hand.
+ *
+ * THIS REPLACES THE `wow.exe` WINDOW. The traffic-light title bar, the dotted
+ * board and the notepad scrap were the lo-fi metaphor the v2 task card retired
+ * (#1023); the frame is `--faction-coven-slip-*` / `--faction-coven-ward-*` now,
+ * so it flips through the same cascade as every other Coven surface.
  *
  * Pure frame. `StakesTiles` computes the win/lose figures from `useGameConfig()`
  * and the viewer's own faction (Snide's 0.0× lose falls out by construction),
@@ -15,20 +22,36 @@
  * duel runs" — during `active` the reopen is free, and #718's `reopenNote` says so.
  *
  * Copy is faction-neutral by decision (#718): the design's witch voice is tone
- * reference, not strings. No new locale keys.
+ * reference, not strings. No new locale keys, and #1209 changed none.
  *
- * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes. The dotted
- * board is a warm pink sheet and `--color-danger` reads **4.31:1** on it in
- * light — under the 4.5:1 this 18px body owes — so the forfeit body takes
- * `--faction-coven-card-notice` (6.33 / 10.73) and the red stays as the rule
- * beside it, carrying no text. That is `UaDuelSealConfirm`'s shape from #1167.
- * Everything else clears as shipped and is left alone: the reopen note in
- * `--color-success` at 8.13 / 10.28 on the board, and on the notepad scrap the
- * win figure plus the roster's "sealed" mark at 8.97 / 9.17 and the Snide zero
- * figure in `--color-danger` at 4.76 / 5.77 (24px bold, a 3:1 floor). Both
+ * CONTRAST — RE-MEASURED, because the grounds moved (WORLD_ZERO_STYLE §3: a new
+ * ground invalidates every contrast claim measured on the old one). The forfeit
+ * body still takes `--faction-coven-card-notice` rather than `--color-danger`:
+ * on the candlelit page the red is **4.31:1** in light, the identical reading it
+ * had on the dotted board, and the notice ink clears at 6.32 / 11.37. The red
+ * survives as the 3px rule beside the paragraph, carrying no text (#1168).
+ * Everything else clears on the new pair and is left alone: the reopen note in
+ * `--color-success` at 8.12 / 10.89 on the page, and on the ward panel the win
+ * figure plus the roster's 18px "sealed" mark at 8.60 / 10.17 and the Snide zero
+ * figure in `--color-danger` at 4.56 / 6.40 (24px bold, a 3:1 floor). Both
  * grounds are rows in `utils/__tests__/factionContrast.test.ts`.
  */
 import { factionCssVar } from '../../utils/factions'
+import { CovenSigil } from '../cards/CovenSigil'
+import {
+  Braid,
+  BORDER,
+  CARD,
+  DISPLAY,
+  GOLD,
+  INK,
+  PAGE,
+  READING,
+  SHADOW,
+  SigilMark,
+  SLIP_SHEET,
+  SOFT,
+} from '../cards/covenSlip'
 import {
   duelSides,
   RaceRoster,
@@ -39,30 +62,8 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 
-const WIN_BORDER = 'var(--faction-coven-win-border)'
-const TITLE_FROM = 'var(--faction-coven-title-from)'
-const TITLE_TO = 'var(--faction-coven-title-to)'
-const TITLE_TEXT = 'var(--faction-coven-title-text)'
-const BODY_BG = 'var(--faction-coven-body-bg)'
-const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
-const DOT = 'var(--faction-coven-dot)'
-const CARD_TEXT = 'var(--faction-coven-card-text)'
-const CARD_MUTED = 'var(--faction-coven-card-muted)'
 /** The sheet-measured warning ink (#694), which the global red is not (#1168). */
 const NOTICE = 'var(--faction-coven-card-notice)'
-const SCRIPT = 'var(--faction-coven-card-font)'
-
-function Sparkle({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M12 1c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8z"
-        fill={color}
-      />
-    </svg>
-  )
-}
 
 export default function CovenDuelSealConfirm({
   duel,
@@ -77,9 +78,9 @@ export default function CovenDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   // Opponent tokens, same rule as the Default dialog and the rail: the foreign
-  // duelist looks foreign even inside Coven's window.
+  // duelist looks foreign even on the coven's paper.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: CARD_MUTED, bodyFont: 'var(--font-body)' }
+  const theme: DuelSlotTheme = { accent, muted: SOFT, bodyFont: READING }
 
   return (
     <div
@@ -95,47 +96,41 @@ export default function CovenDuelSealConfirm({
       <div
         className="w-full max-w-[460px]"
         style={{
-          borderRadius: 12,
+          borderRadius: 18,
           overflow: 'hidden',
-          border: `2px solid ${WIN_BORDER}`,
+          border: `2px solid ${BORDER}`,
           borderLeft: `4px solid ${accent}`,
-          boxShadow: `0 14px 34px color-mix(in srgb, ${accent} 30%, transparent)`,
-          color: CARD_TEXT,
-          fontFamily: 'var(--font-body)',
+          boxShadow: SHADOW,
+          color: INK,
+          fontFamily: READING,
         }}
       >
-        {/* title bar */}
+        {/* the slip band — badge, heading, braid */}
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            padding: 'var(--space-sm) var(--space-md)',
-            background: `linear-gradient(180deg, ${TITLE_FROM}, ${TITLE_TO})`,
-            borderBottom: `2px solid ${WIN_BORDER}`,
-            color: TITLE_TEXT,
+            padding: 'var(--space-md) var(--space-lg)',
+            background: SLIP_SHEET,
+            borderBottom: `2px solid ${BORDER}`,
+            color: INK,
           }}
         >
-          <Sparkle size={12} color={TITLE_TEXT} />
-          <h2 style={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', fontWeight: 700 }}>
-            {copy.heading}
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <SigilMark size={26} />
+            <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', fontWeight: 600, lineHeight: 1.06 }}>
+              {copy.heading}
+            </h2>
+          </div>
+          <Braid style={{ marginTop: 'var(--space-sm)' }} />
         </div>
 
-        {/* dotted board */}
-        <div
-          style={{
-            padding: 'var(--space-lg)',
-            background: BODY_BG,
-            backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
-            backgroundSize: '13px 13px',
-          }}
-        >
+        {/* the candlelit page */}
+        <div style={{ padding: 'var(--space-lg)', background: PAGE }}>
           {/* Notice ink, not the global red — see the contrast note above. */}
           <p
             style={{
               fontSize: 'var(--text-content)',
               lineHeight: 1.5,
+              color: SOFT,
               ...(copy.danger
                 ? {
                     color: NOTICE,
@@ -164,13 +159,13 @@ export default function CovenDuelSealConfirm({
             </p>
           )}
 
-          {/* notepad scrap: the two-outcome tiles and the race roster */}
+          {/* paper laid on the wash: the two-outcome tiles and the race roster */}
           <div
             style={{
               marginTop: 'var(--space-md)',
-              background: NOTEPAD_BG,
-              border: `1.5px solid ${NOTEPAD_BORDER}`,
-              borderRadius: 8,
+              background: CARD,
+              border: `1.5px solid ${BORDER}`,
+              borderRadius: 12,
               padding: 'var(--space-md)',
             }}
           >
@@ -185,7 +180,13 @@ export default function CovenDuelSealConfirm({
             <RaceRoster me={me} foe={foe} theme={theme} />
           </div>
 
-          <div style={{ marginTop: 'var(--space-lg)' }}>
+          <div style={{ marginTop: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <CovenSigil size={12} color={GOLD} />
+            <Braid style={{ flex: 1 }} />
+            <CovenSigil size={12} color={GOLD} />
+          </div>
+
+          <div style={{ marginTop: 'var(--space-md)' }}>
             <SealActions
               onConfirm={onConfirm}
               onCancel={onCancel}

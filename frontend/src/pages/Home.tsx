@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { listPraxes, createPraxis, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
-import { getGameConfig, type FactionConfigOut } from '../api/gameConfig'
+import { useGameConfig } from '../hooks/useGameConfig'
 import { loginWithGoogle, devLogin } from '../api/auth'
 import { computeFactionMultiplier } from '../utils/points'
 import { extractError } from '../utils/errors'
@@ -56,11 +56,13 @@ export default function Home() {
 
   const [feed, setFeed] = useState<PraxisCardOut[]>([])
   const [newestTask, setNewestTask] = useState<TaskOut | null>(null)
-  const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
   const [signupMsg, setSignupMsg] = useState<string | null>(null)
+  // The shared cache, not a second `/game-config` request (#1141). Derived, not
+  // mirrored into state: empty until the payload lands, exactly as the old
+  // `useState([])` was, so the featured task's multiplier settles at 1.0 first.
+  const factionConfigs = useGameConfig()?.factions ?? []
 
   useEffect(() => {
-    getGameConfig().then((c) => setFactionConfigs(c.factions)).catch(() => {})
     listPraxes({ status: 'submitted', limit: 8 }).then(setFeed).catch(() => setFeed([]))
     listTasks({ status: 'active', sort: 'newest', limit: 1 })
       .then((tasks) => setNewestTask(tasks[0] ?? null))

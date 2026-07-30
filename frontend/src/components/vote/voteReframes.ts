@@ -19,14 +19,19 @@ export interface VoteReframe {
  * initialized synchronously, and the app is single-locale (ADR-0032).
  */
 export const VOTE_REFRAMES: Record<string, VoteReframe> = {
+  // The metals ladder (#1207): the vote is a transmutation, lead → platinum,
+  // and the discs carry I–V. The archive vocabulary this replaces
+  // (apocryphal → canonical) is gone from the catalog rather than left behind
+  // as keys holding words they no longer say. Faction vote vocabulary is
+  // ADR-0061's sanctioned carve-out.
   ephemerists: {
     numeral: 'roman',
     tiers: [
-      { value: 1, label: i18n.t('votes:ephemerists.apocryphal') },
-      { value: 2, label: i18n.t('votes:ephemerists.disputed') },
-      { value: 3, label: i18n.t('votes:ephemerists.plausible') },
-      { value: 4, label: i18n.t('votes:ephemerists.corroborated') },
-      { value: 5, label: i18n.t('votes:ephemerists.canonical') },
+      { value: 1, label: i18n.t('votes:ephemerists.lead') },
+      { value: 2, label: i18n.t('votes:ephemerists.copper') },
+      { value: 3, label: i18n.t('votes:ephemerists.silver') },
+      { value: 4, label: i18n.t('votes:ephemerists.gold') },
+      { value: 5, label: i18n.t('votes:ephemerists.platinum') },
     ],
   },
   everymen: {

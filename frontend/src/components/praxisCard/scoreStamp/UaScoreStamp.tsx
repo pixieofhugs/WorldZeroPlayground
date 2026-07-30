@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../cards/TaskCrown";
-import { Enso } from "../../factionMarks";
+import { UaEnsoScore } from "../../cards/uaAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import type { ScoreStampProps } from "./ScoreStamp";
 
@@ -227,12 +227,18 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       </div>
 
-      {/* The total mark — the ensō, holding the figure in its ring. */}
+      {/*
+       * The total mark — the ensō, holding the figure in its ring.
+       *
+       * This used to be a second, hand-rolled copy of `UaEnsoScore`: the same
+       * circle with the same numeral-over-caption stack, typed out again with
+       * a tighter crop. That is why #1147's overlap could be fixed on the task
+       * card and still be live here. One component now, dressed by props — the
+       * warm `--faction-ua-card-*` block this surface runs on.
+       */}
       <div
         style={{
-          position: "relative",
-          width: ENSO_SIZE,
-          height: ENSO_SIZE,
+          display: "flex",
           // ornament: the ring overlaps the plate's foot; that overlap IS the
           // drawing. No directive — a unary minus is not a Literal, so the rule
           // never sees it (one of the #750 laundering shapes) and the directive
@@ -240,44 +246,21 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
           marginTop: -6,
         }}
       >
-        <Enso size={ENSO_SIZE} color="var(--faction-ua-card-enso)" />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: hairline lead between figure and caption.
-            gap: 1,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--faction-ua-card-font)",
-              fontWeight: 600,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the total, set to fill the brush ring.
-              fontSize: 38,
-              lineHeight: 0.8,
-              color: "var(--faction-ua-card-total)",
-            }}
-          >
-            {total.toFixed(1)}
-          </span>
-          <span
-            style={{
-              fontFamily: "var(--faction-ua-body-font)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the caption inside the ring.
-              fontSize: 8.5,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "var(--faction-ua-card-points)",
-            }}
-          >
-            {t("card.stamp.points")}
-          </span>
-        </div>
+        <UaEnsoScore
+          size={ENSO_SIZE}
+          value={total.toFixed(1)}
+          unit={t("card.stamp.points")}
+          ringColor="var(--faction-ua-card-enso)"
+          valueColor="var(--faction-ua-card-total)"
+          unitColor="var(--faction-ua-card-points)"
+          /*
+           * The display tier is the CEILING; the ring picks the rendered size
+           * from it (see `UaEnsoScore`). At this diameter a four-glyph total
+           * lands on the 38px the design struck, and a four-DIGIT one steps
+           * down until it clears the brush.
+           */
+          valueSize="var(--text-display)"
+        />
       </div>
     </div>
   );

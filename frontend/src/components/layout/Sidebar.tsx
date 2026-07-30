@@ -14,8 +14,9 @@ import { useGameConfig } from '../../hooks/useGameConfig'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
-/** Shared panel shell for the redesigned sidebar (unaffiliated rainbow style). */
-const panelStyle: CSSProperties = {
+/** Shared panel shell for the redesigned sidebar (unaffiliated rainbow style).
+ *  Exported so the fold-away handle (#1191) reads as part of the rail. */
+export const panelStyle: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',
   background: 'var(--color-bg-surface)',
@@ -76,7 +77,8 @@ export default function Sidebar() {
   const slotPercent = Math.min((slotCount / maxTaskSlots) * 100, 100)
 
   return (
-    <aside className="flex flex-col gap-4 w-full">
+    // `id` is the target of the fold-away handle's `aria-controls` (#1191).
+    <aside id="wz-sidebar" className="flex flex-col gap-4 w-full">
       {/* ── Character Card ── */}
       {character ? (
         <section style={panelStyle}>

@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import Sidebar from './Sidebar'
+import SidebarHandle from './SidebarHandle'
 
 /**
  * The page region — the ONE place the routed page is mounted, in both form
@@ -26,10 +27,29 @@ import Sidebar from './Sidebar'
  * The chrome AROUND this region is still two genuinely different trees
  * (ADR-0035): the desktop NavBar + Sidebar + footer, or the mobile header +
  * bottom tab bar. Those may remount freely — they hold no page state.
+ *
+ * WHY THE RAIL IS PLACED BY GRID COLUMN, NOT BY SOURCE ORDER
+ * ----------------------------------------------------------
+ * The rail sits on the LEFT (#1191), but `<main>` is still written FIRST and is
+ * moved into column 2 by `lg:col-start-2`. Reordering the source instead would
+ * make every keyboard and screen-reader user traverse the character card, six
+ * task links, five activity links and "Propose a Task" before reaching page
+ * content — on EVERY route, since this is app-shell chrome. Two utility classes
+ * buy the visual order without paying that.
+ *
+ * `lg:row-start-1` on both cells is load-bearing. `<main>` is source-first with
+ * an explicit `col-start-2`, so grid auto-placement leaves the cursor past
+ * column 1; without an explicit row the source-second rail lands on row 2 and
+ * the whole rail appears BELOW the page. `col-start-*` is inert with no grid
+ * active, so the signed-out and mobile branches are untouched.
  */
 export interface ShellContentProps {
   /** Straight from `useFormFactor()`; the region only re-dresses itself. */
   readonly isMobile: boolean
+  /** Held by `Layout`, not here — `ShellContent` is called as a plain function
+   *  by its tests, so it must stay a pure function of its props (no hooks). */
+  readonly sidebarCollapsed: boolean
+  readonly onToggleSidebar: () => void
   readonly children: ReactNode
 }
 
@@ -44,13 +64,30 @@ const MOBILE_REGION_STYLE: CSSProperties = {
 }
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 
-/** Desktop content + sidebar grid; single column while signed out or on a phone. */
-const SIDEBAR_GRID = 'gap-4 items-start lg:grid lg:grid-cols-[1fr_minmax(280px,340px)]'
+/** Desktop rail + content grid; single column while signed out or on a phone. */
+const SIDEBAR_GRID_EXPANDED = 'gap-4 items-start lg:grid lg:grid-cols-[minmax(280px,340px)_1fr]'
+/** Folded away: the column shrinks to just the handle and the page takes the rest. */
+const SIDEBAR_GRID_COLLAPSED = 'gap-4 items-start lg:grid lg:grid-cols-[auto_1fr]'
 
-export default function ShellContent({ isMobile, children }: ShellContentProps) {
+/**
+ * The handle is the only way back from a collapsed rail, so the column is
+ * sticky — otherwise a player deep in a long `/tasks` list would have to scroll
+ * back to the top to recover it. `top-14` matches `NavBar`'s `sticky top-0 h-14`.
+ */
+const SIDEBAR_COLUMN =
+  'hidden lg:block lg:col-start-1 lg:row-start-1 lg:sticky lg:top-14 lg:max-h-[calc(100vh-3.5rem)] lg:overflow-y-auto'
+
+export default function ShellContent({
+  isMobile,
+  sidebarCollapsed,
+  onToggleSidebar,
+  children,
+}: ShellContentProps) {
   const { user } = useAuth()
   // The sidebar is desktop-only chrome and only meaningful signed in; the phone
-  // reaches the same material through the tab bar and the header bell.
+  // reaches the same material through the tab bar and the header bell. The
+  // handle inherits this gate and the `lg:` one below — a lone chevron toggling
+  // an invisible rail in the 768–1023px band would be nonsense.
   const showSidebar = !isMobile && Boolean(user)
 
   return (
@@ -58,11 +95,22 @@ export default function ShellContent({ isMobile, children }: ShellContentProps) 
       className={isMobile ? MOBILE_REGION : DESKTOP_REGION}
       style={isMobile ? MOBILE_REGION_STYLE : DESKTOP_REGION_STYLE}
     >
-      <div className={showSidebar ? SIDEBAR_GRID : ''}>
-        <main className="min-w-0">{children}</main>
+      <div
+        className={
+          showSidebar
+            ? sidebarCollapsed
+              ? SIDEBAR_GRID_COLLAPSED
+              : SIDEBAR_GRID_EXPANDED
+            : ''
+        }
+      >
+        <main className="min-w-0 lg:col-start-2 lg:row-start-1">{children}</main>
         {showSidebar && (
-          <div className="hidden lg:block">
-            <Sidebar />
+          <div className={SIDEBAR_COLUMN}>
+            <SidebarHandle collapsed={sidebarCollapsed} onToggle={onToggleSidebar} />
+            {/* Collapsed means GONE, not an icon rail: the rail's whole value is
+                glanceable TEXT, and an icon strip throws that away. */}
+            {!sidebarCollapsed && <Sidebar />}
           </div>
         )}
       </div>

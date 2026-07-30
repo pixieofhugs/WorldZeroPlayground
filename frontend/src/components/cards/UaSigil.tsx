@@ -34,25 +34,32 @@ import { Enso } from "../factionMarks";
  * The asset stays out of the JS bundle, is cached after first paint, and is
  * non-blocking — the page renders whether or not the mask has arrived. Colour
  * is unchanged from the arcs: `--faction-ua-glow`, which carries both themes,
- * so the mark follows the `[data-theme="dark"]` cascade with no ternary.
+ * so the mark follows the `[data-theme="dark"]` cascade with no ternary. The
+ * praxis handoff overrides it with `--faction-ua-card-enso` — that surface runs
+ * the warm `--faction-ua-card-*` block on purpose (see `UaScoreStamp`) — which
+ * is a TOKEN swap, not a theme branch, so the cascade rule still holds.
  *
  * The ensō is reserved for the SCORE and the FACTION MARK. It is never a
  * container border — a card outlined in an ensō is the mark spent as decoration.
  *
- * The drawing is square. Callers that pass a non-square width/height (e.g. the
- * mobile praxis card's 16x19) get the circle centred and letterboxed by
- * `mask-size: contain` + `mask-position: center`, which is the correct read and
- * matches what the old `preserveAspectRatio` did.
+ * The drawing is square. Callers that pass a non-square width/height get the
+ * circle centred and letterboxed by `mask-size: contain` + `mask-position:
+ * center`, which is the correct read and matches what the old
+ * `preserveAspectRatio` did. (The example that used to stand here was the
+ * mobile praxis card's 16x19 slot; ADR-0067 folded that surface into the one
+ * responsive card, so no caller is non-square today.)
  */
-export function UaSigil({ width, height }: { width: number; height: number }) {
-  return (
-    <Enso
-      size={width}
-      height={height}
-      color="var(--faction-ua-glow)"
-      style={{ flexShrink: 0 }}
-    />
-  );
+export function UaSigil({
+  width,
+  height,
+  color = "var(--faction-ua-glow)",
+}: {
+  width: number;
+  height: number;
+  /** The ring's ink. A token, always — the default carries both themes. */
+  color?: string;
+}) {
+  return <Enso size={width} height={height} color={color} style={{ flexShrink: 0 }} />;
 }
 
 /**

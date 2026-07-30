@@ -1,10 +1,10 @@
 {
   "ephemerists": {
-    "apocryphal": "apocryphal",
-    "disputed": "disputed",
-    "plausible": "plausible",
-    "corroborated": "corroborated",
-    "canonical": "canonical"
+    "lead": "lead",
+    "copper": "copper",
+    "silver": "silver",
+    "gold": "gold",
+    "platinum": "platinum"
   },
   "everymen": {
     "fair": "fair",
@@ -67,9 +67,10 @@
       "rateAria": "Rate {{value}} of 5"
     },
     "ephemerists": {
-      "rateAria": "Mark {{value}} — {{label}}",
-      "idle": "attest the record",
-      "tag": "sealed"
+      "rateAria": "Cast {{label}}",
+      "prompt": "Cast your metal",
+      "idle": "cast your metal — lead to platinum",
+      "tag": "cast"
     },
     "everymen": {
       "rateAria": "Rate {{value}} — {{label}}",

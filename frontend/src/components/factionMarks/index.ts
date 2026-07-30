@@ -17,4 +17,3 @@
 export { default as Lotus, type FactionMarkProps } from "./Lotus";
 export { default as Enso } from "./Enso";
 export { default as PointsRoundel, type PointsRoundelProps } from "./PointsRoundel";
-export { default as Rubric, type RubricProps } from "./Rubric";

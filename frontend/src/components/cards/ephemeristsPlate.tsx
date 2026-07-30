@@ -59,6 +59,16 @@ export const LINE = "var(--faction-ephemerists-plate-line)";
 export const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 export const WASH = "var(--faction-ephemerists-plate-wash)";
 
+/**
+ * The plate's STEPPED CORNER — top-left and bottom-right chamfered, so a cell
+ * reads as cut from stone rather than rounded. The design draws it on the score
+ * box (7), the ratio chip inside it (5), the byline cartouche (7) and the vote
+ * plate (7); `step` is the chamfer's leg in px, which is ornament geometry.
+ */
+export function stepClip(step: number): string {
+  return `polygon(${step}px 0, 100% 0, 100% calc(100% - ${step}px), calc(100% - ${step}px) 100%, 0 100%, 0 ${step}px)`;
+}
+
 /** Incised small caps — the plate's label voice, everywhere. */
 export const SMALL_CAPS: CSSProperties = {
   fontFamily: CAPS,
@@ -256,6 +266,67 @@ export function FlutedRule() {
         />
       ))}
     </div>
+  );
+}
+
+/**
+ * The lotus — the plate's closing mark, drawn on its own 18×13 field. It sits
+ * under the total's medallion (the octagon's base) and closes the vote section's
+ * head; the design draws the same three strokes in both places.
+ */
+export function LotusSign({ width, color }: { width: number; color: string }) {
+  return (
+    <svg
+      width={width}
+      height={(width * 13) / 18}
+      viewBox="0 0 18 13"
+      aria-hidden="true"
+      style={{ display: "block", flex: "0 0 auto" }}
+    >
+      <path
+        d="M9 13 V6 M9 6 C9 2.4 11.6 0.8 14.4 0.6 C14.4 4 12 6 9 6 M9 6 C9 2.4 6.4 0.8 3.6 0.6 C3.6 4 6 6 9 6"
+        fill="none"
+        stroke={color}
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * The winged sun disc at SIGN scale — the same emblem {@link WingedDisc} draws
+ * across a masthead, redrawn on the plate's 24-unit square so it can sit in a
+ * badge. Not a scaled-down copy: the masthead's is 176 units wide and would
+ * come out a hairline at 24, so the wings are cut to three stepped bars a side.
+ *
+ * Its one reader today is the metatask seal's indigo disc (#1207).
+ */
+export function WingedDiscSign({ size, color }: { size: number; color: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+      {[
+        { x: 13.4, mirror: 8.0, y: 10.2, width: 2.6, height: 3.4, opacity: 0.95 },
+        { x: 16.5, mirror: 4.9, y: 10.7, width: 2.6, height: 2.5, opacity: 0.77 },
+        { x: 19.6, mirror: 1.8, y: 11.2, width: 2.6, height: 1.6, opacity: 0.59 },
+      ].flatMap((bar, index) =>
+        [bar.x, bar.mirror].map((x, side) => (
+          <rect
+            key={`${index}-${side}`}
+            x={x}
+            y={bar.y}
+            width={bar.width}
+            height={bar.height}
+            rx={0.7}
+            fill={color}
+            opacity={bar.opacity}
+          />
+        )),
+      )}
+      <circle cx={12} cy={12} r={3.4} fill="none" stroke={color} strokeWidth={1.4} />
+      <circle cx={12} cy={12} r={1.6} fill={color} />
+    </svg>
   );
 }
 

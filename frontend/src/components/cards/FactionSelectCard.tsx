@@ -4,7 +4,7 @@ import { surfaceMap } from "../../factions";
 import { UaSigil } from "./UaSigil";
 import UaMandala from "./UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from "./uaAtoms";
-import { CovenSigil } from "./CovenSigil";
+import * as coven from "./covenSlip";
 import { SnideSigil } from "../snide/snideAtoms";
 import { EphemeristsSigil } from "./ephemeristsAtoms";
 import { SingularitySigil } from "./SingularitySigil";
@@ -16,7 +16,7 @@ import DefaultSelectCard from "./DefaultSelectCard";
 /**
  * FactionSelectCard — the faction-DIRECTORY tile, one per faction. The compact
  * card a player meets when browsing "Choose your faction": each renders in its
- * faction's full archetype (gilt placard, whimsy.exe window, ransom dispatch,
+ * faction's full archetype (gilt placard, candlelit spell slip, ransom dispatch,
  * codex leaf, terminal printout, union poster, vellum letter) at a UNIFORM
  * 360×300 ceiling so the desktop grid stays tidy. The box is FLUID, not fixed:
  * `width: 100%` up to a 360 max, `minHeight` rather than a hard height, so the
@@ -117,46 +117,52 @@ export function UaSelectCard({ state = "locked", members, onVisit }: Omit<Factio
   );
 }
 
+/**
+ * Cozy Coven directory tile (#1209) — the spell slip at tile scale.
+ *
+ * The `whimsy.exe` window is gone with the rest of the sweep: the title bar and
+ * its three RAW-HEX traffic-light dots, the `▢ ✕` chrome, the rotated status
+ * sticker and the whole `--gestalt-*` alias family this tile was the only reader
+ * of. The slip's own tokens replace them, so the tile now flips through the same
+ * cascade as the task card instead of through a private palette.
+ *
+ * `feed:identity.coven.windowTitle` ("coven.exe") is no longer rendered here and
+ * is left in the catalog: copy is out of scope for this sweep.
+ */
 export function COVENSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.coven.status.${state}` as const);
   return (
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--gestalt-card-bg)", color: "var(--gestalt-ink)", fontFamily: "var(--font-body)",
-      border: "1.5px solid var(--gestalt-win-border)", borderRadius: 10,
-      boxShadow: "0 10px 30px var(--gestalt-glow)", display: "flex", flexDirection: "column",
+      background: coven.SLIP_SHEET, color: coven.INK, fontFamily: coven.CHROME,
+      border: `2px solid ${coven.BORDER}`, borderRadius: 18,
+      boxShadow: coven.SHADOW, display: "flex", flexDirection: "column",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-sm) var(--space-md)",
-        background: "linear-gradient(var(--gestalt-title-from), var(--gestalt-title-to))",
-        borderBottom: "1.5px solid var(--gestalt-win-border)" }}>
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: gutter between the 11px window traffic-light dots; in register with that raw geometry. */}
-        <span style={{ display: "flex", gap: 6 }}>
-          {["#f6c75e", "#7fc59e", "#ec5f99"].map((color) => <i key={color} style={{ width: 11, height: 11, borderRadius: "50%", background: color, border: "1px solid rgba(0,0,0,0.15)" }} />)}
-        </span>
-        <span style={{ fontSize: "var(--text-lg)", color: "var(--gestalt-title-text)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.coven.windowTitle")}</span>
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ▢ ✕ are drawn window-chrome glyphs used as icons, not text */}
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--gestalt-title-text)", opacity: 0.7 }}>▢ ✕</span>
+      {/* masthead — the pentagram badge over a braided thread */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-md) var(--space-xl) 0" }}>
+        <coven.SigilMark size={34} />
+        <coven.Braid style={{ alignSelf: "stretch", marginTop: "var(--space-sm)" }} />
       </div>
-      <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", position: "relative" }}>
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-script faction name, the whimsy.exe window's display type */}
-        <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><CovenSigil size={18} color="var(--faction-coven)" /></span>{i18n.t("feed:factionSelect.coven.name")}
+      <div style={{ flex: 1, padding: "var(--space-md) var(--space-xl) 0", position: "relative" }}>
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the coven's name hand-lettered in Caveat — the slip's masthead voice */}
+        <div style={{ fontFamily: coven.HAND, fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: coven.INK, whiteSpace: "nowrap" }}>
+          {i18n.t("feed:factionSelect.coven.name")}
         </div>
-        <p className="content-text" style={{ margin: "var(--space-md) 0 0", lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
+        <p className="content-text" style={{ margin: "var(--space-sm) 0 0", fontFamily: coven.READING, fontStyle: "italic", lineHeight: 1.5, color: coven.SOFT }}>
           {i18n.t("feed:factionSelect.coven.blurb")}
         </p>
       </div>
-      <div style={{ padding: "0 var(--space-xl) var(--space-lg)" }}>
+      <div style={{ padding: "var(--space-lg) var(--space-xl) var(--space-lg)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the rotated status sticker; rounding reflows the sticker. */}
-          <div style={{ transform: "rotate(-1.5deg)", background: "var(--gestalt-pink-lt)", color: "var(--gestalt-ink)", fontSize: "var(--text-md)", padding: "5px 10px", borderRadius: 4 }}>{status}</div>
-          {members != null && <div style={{ flexShrink: 0, fontSize: "var(--text-sm)", letterSpacing: "0.04em", color: "var(--gestalt-label)" }}>{i18n.t("feed:factionSelect.coven.members", { count: members })}</div>}
+          <div style={{ ...coven.SLIP_PANEL, boxShadow: "none", borderWidth: 1.5, borderRadius: 10, fontFamily: coven.READING, fontStyle: "italic", fontSize: "var(--text-content)", color: coven.SOFT, padding: "var(--space-xs) var(--space-sm)" }}>{status}</div>
+          {members != null && <div style={{ ...coven.CAPTION, flexShrink: 0 }}>{i18n.t("feed:factionSelect.coven.members", { count: members })}</div>}
         </div>
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer",
-          border: "1.5px solid var(--gestalt-pink)", borderRadius: 7, background: "var(--gestalt-pink)", color: "#fff",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is set in the faction's hand-script at display size; a label token would flatten the archetype (§270)
-          fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 21, padding: "var(--space-sm) var(--space-lg)",
+          width: "100%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-sm)",
+          border: `1.5px solid ${coven.CTA_TO}`, borderRadius: 12,
+          background: `linear-gradient(180deg, ${coven.CTA_FROM}, ${coven.CTA_TO})`, color: coven.CTA_INK,
+          fontFamily: coven.CHROME, fontWeight: 700, fontSize: "var(--text-lg)", letterSpacing: "0.12em", textTransform: "uppercase",
+          padding: "var(--space-md) var(--space-lg)", boxShadow: `0 8px 18px -8px ${coven.GLOW}`,
         }}>{i18n.t("feed:factionSelect.coven.cta")}</button>
       </div>
     </div>
