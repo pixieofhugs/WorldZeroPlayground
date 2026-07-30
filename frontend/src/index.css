@@ -2364,17 +2364,36 @@
      column on narrow viewports (rule below). Every faction skin reuses this. */
 
   /* ── Task Crown ── the per-task top-praxis mark (ADR-0028, amended by
-     ADR-0054). Fixed brand rainbow ring plus ONE canonical inner look: the
-     disc + glyph no longer follow the card, they follow the global theme, so
-     the "one praxis mark" reads as one mark on every faction card. Only the
-     light/dark pair below vary (see components/cards/TaskCrown.tsx). */
-  --fdl-rainbow: conic-gradient(from 90deg, #fbbf24, #f97316, #be185d, #4f46e5, #0e7490, #16a34a, #fbbf24);
+     ADR-0054 and — for the ring's theme behaviour only — by ADR-0066). ONE
+     canonical inner look: the disc + glyph do not follow the card, they follow
+     the global theme, so the "one praxis mark" reads as one mark on every
+     faction card. Only the light/dark pair below vary (see
+     components/cards/TaskCrown.tsx).
+
+     THE RING IS NOT A TOKEN HERE, and that is the point of #1213. It used to be
+     `--fdl-rainbow`, a conic carrying the retired brand six resequenced
+     1→6→2→3→4→5 and wrapped back to 1 — the last surviving declaration of that
+     palette once #1220 deleted `--underline-1…6`. The crown now reads
+     `--faction-default-rainbow-conic` directly: the seam-closed SMOOTH conic
+     added in #1038 for exactly this geometry (a full-circle ring whose last
+     stop is its first, so nothing shows an edge). A token whose entire content
+     is "that other token, turned" is a name pretending to be a value, so
+     nothing was left behind to hold the old `from 90deg` start — it pinned gold
+     to 3 o'clock in a hue sequence that no longer exists, and a plain circular
+     ramp has no feature at any angle for a start offset to place.
+
+     Two consequences. The ring FLIPS with the theme now, which ADR-0054's
+     "fixed brand constant in both themes" clause forbade — amended there, on
+     the #1219 ruling that brand chrome flips. And anything wanting HARD wedges
+     still wants --faction-default-ring; the crown is a prism, not a pinwheel. */
   --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
   --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
 }
 
 /* Task Crown, dark theme: the disc goes near-black, the fleur goes light ink.
-   The rainbow ring (--fdl-rainbow) is a fixed brand constant in both themes. */
+   The ring needs no entry — it reads --faction-default-rainbow-conic, composed
+   from stops this block rebinds, so it brightens on its own (#1220's rule: a
+   composed value needs no dark twin). */
 [data-theme="dark"] {
   --fdl-disc: #1a1712;
   --fdl-glyph: #f0e6d0;
