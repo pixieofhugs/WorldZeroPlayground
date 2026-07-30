@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import PraxisCard from '../../../components/PraxisCard'
+import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import UaMandala from '../../../components/factionMarks/UaMandala'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { factionName, factionDescription } from '../../../utils/factions'

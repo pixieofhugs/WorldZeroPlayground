@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import PraxisCard from '../../components/PraxisCard'
+import PraxisCard from '../../components/praxisCard/PraxisCard'
 import FactionSigilRow from '../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../components/ui/ChipRow'
 import type { PraxesFeedState, PraxisTypeFilter } from './usePraxes'

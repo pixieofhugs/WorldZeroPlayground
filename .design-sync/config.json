@@ -53,7 +53,7 @@
     "MediaGallery": "src/components/MediaGallery.tsx",
     "NavBar": "src/components/NavBar.tsx",
     "PageTitle": "src/components/ui/PageTitle.tsx",
-    "PraxisCard": "src/components/PraxisCard.tsx",
+    "PraxisCard": "src/components/praxisCard/PraxisCard.tsx",
     "SingularityAvatar": "src/components/avatar/SingularityAvatar.tsx",
     "SingularityBackdrop": "src/components/backdrop/SingularityBackdrop.tsx",
     "SingularityComment": "src/components/comments/voices/SingularityComment.tsx",

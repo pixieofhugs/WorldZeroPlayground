@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
-import PraxisCard from "../../../components/PraxisCard";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { toRoman } from "../../../utils/roman";
 import {

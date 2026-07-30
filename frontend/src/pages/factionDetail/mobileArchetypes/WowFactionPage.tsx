@@ -30,7 +30,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import PraxisCard from "../../../components/PraxisCard";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { factionDescription, factionName } from "../../../utils/factions";
 import {
   WOW_BODY,

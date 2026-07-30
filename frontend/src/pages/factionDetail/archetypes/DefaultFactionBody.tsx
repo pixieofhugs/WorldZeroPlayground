@@ -1,7 +1,7 @@
 import { type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/taskCard/TaskCard";
-import PraxisCard from "../../../components/PraxisCard";
+import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";

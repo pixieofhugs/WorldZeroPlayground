@@ -1,9 +1,9 @@
-import type { PraxisCardOut } from "../api/praxis";
-import { pickVariant } from "../utils/factionDispatch";
-import { surfaceMap } from "../factions";
-import { useVotedPraxis } from "./vote/useVotedPraxis";
-import { usePraxisCard } from "./praxisCard/usePraxisCard";
-import DefaultPraxisCard from "./praxisCard/desktop/DefaultPraxisCard";
+import type { PraxisCardOut } from "../../api/praxis";
+import { pickVariant } from "../../utils/factionDispatch";
+import { surfaceMap } from "../../factions";
+import { useVotedPraxis } from "../vote/useVotedPraxis";
+import { usePraxisCard } from "./usePraxisCard";
+import DefaultPraxisCard from "./desktop/DefaultPraxisCard";
 
 /**
  * Each faction's praxis card owns a bespoke frame. The nine archetypes live one
@@ -14,7 +14,7 @@ import DefaultPraxisCard from "./praxisCard/desktop/DefaultPraxisCard";
  * local praxis come from usePraxisCard; the frame is selected by task faction
  * via pickVariant.
  */
-export type { ArchetypeProps } from "./praxisCard/desktop/shared";
+export type { ArchetypeProps } from "./desktop/shared";
 
 interface Props {
   praxis: PraxisCardOut;

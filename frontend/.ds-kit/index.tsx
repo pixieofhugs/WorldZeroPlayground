@@ -44,7 +44,7 @@ export { default as LevelUpPopup } from "../src/components/LevelUpPopup";
 export { default as MediaGallery } from "../src/components/MediaGallery";
 export { default as NavBar } from "../src/components/NavBar";
 export { default as PageTitle } from "../src/components/ui/PageTitle";
-export { default as PraxisCard } from "../src/components/PraxisCard";
+export { default as PraxisCard } from "../src/components/praxisCard/PraxisCard";
 export { default as SingularityAvatar } from "../src/components/avatar/SingularityAvatar";
 export { default as SingularityBackdrop } from "../src/components/backdrop/SingularityBackdrop";
 export { default as SingularityComment } from "../src/components/comments/voices/SingularityComment";
