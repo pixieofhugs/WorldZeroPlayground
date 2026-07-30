@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getActivityFeed, type ActivityFeedItem } from '../../api/activityFeed'
-import { factionCssVar } from '../../utils/factions'
+import { getActivityFeed, type ActivityFeedItem } from '../api/activityFeed'
+import { factionCssVar } from '../utils/factions'
 
 /**
  * Live activity marquee for the homepage hero area.

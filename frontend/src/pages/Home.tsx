@@ -10,7 +10,7 @@ import { computeFactionMultiplier } from '../utils/points'
 import { extractError } from '../utils/errors'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
-import ActivityTicker from '../components/home/ActivityTicker'
+import ActivityTicker from '../components/ActivityTicker'
 
 /** "Featured Praxis" / "Newest Task" header — marker title + rule + see-all link. */
 function SectionHeader({ title, href, linkLabel }: { title: string; href: string; linkLabel: string }) {

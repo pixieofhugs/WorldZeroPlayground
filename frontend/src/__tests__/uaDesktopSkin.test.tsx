@@ -20,19 +20,19 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 
 // Initialize the catalog so copy keys resolve to English text.
-import '../../../i18n'
-import type { CommentOut } from '../../../api/comments'
-import type { CharacterOut } from '../../../api/auth'
-import type { TaskOut } from '../../../api/tasks'
-import UaTaskCard from '../../taskCard/UaTaskCard'
-import UaFactionHero from '../../factionHero/UaFactionHero'
-import { UaSelectCard } from '../../selectCard/FactionSelectCard'
-import UaFeedFrame from '../../feed/UaFeedFrame'
-import UaAvatar from '../../avatar/UaAvatar'
-import UaBackdrop from '../../backdrop/UaBackdrop'
-import UaComment from '../../comments/voices/UaComment'
+import '../i18n'
+import type { CommentOut } from '../api/comments'
+import type { CharacterOut } from '../api/auth'
+import type { TaskOut } from '../api/tasks'
+import UaTaskCard from '../components/taskCard/UaTaskCard'
+import UaFactionHero from '../components/factionHero/UaFactionHero'
+import { UaSelectCard } from '../components/selectCard/FactionSelectCard'
+import UaFeedFrame from '../components/feed/UaFeedFrame'
+import UaAvatar from '../components/avatar/UaAvatar'
+import UaBackdrop from '../components/backdrop/UaBackdrop'
+import UaComment from '../components/comments/voices/UaComment'
 
-const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '..')
+const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 
 /**
  * The masked brush asset — the one string that proves the mark is on a surface.
