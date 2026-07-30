@@ -42,10 +42,12 @@ import { Enso } from "../factionMarks";
  * The ensō is reserved for the SCORE and the FACTION MARK. It is never a
  * container border — a card outlined in an ensō is the mark spent as decoration.
  *
- * The drawing is square. Callers that pass a non-square width/height (e.g. the
- * mobile praxis card's 16x19) get the circle centred and letterboxed by
- * `mask-size: contain` + `mask-position: center`, which is the correct read and
- * matches what the old `preserveAspectRatio` did.
+ * The drawing is square. Callers that pass a non-square width/height get the
+ * circle centred and letterboxed by `mask-size: contain` + `mask-position:
+ * center`, which is the correct read and matches what the old
+ * `preserveAspectRatio` did. (The example that used to stand here was the
+ * mobile praxis card's 16x19 slot; ADR-0067 folded that surface into the one
+ * responsive card, so no caller is non-square today.)
  */
 export function UaSigil({
   width,
