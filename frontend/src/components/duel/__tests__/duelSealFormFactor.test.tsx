@@ -154,6 +154,18 @@ describe('the shared chassis switches, and nothing else does', () => {
     expect(html, 'the desktop scrim').not.toContain('rgba(0,0,0,0.')
   })
 
+  // The `ground` / `card` split, asserted rather than trusted: a skin that put
+  // its radius or its drop shadow in `ground` would wear a floating card's
+  // chrome at the viewport edge, which is the one thing the chassis exists to
+  // decide. Only the ROOT is read — the panels INSIDE a sheet keep their own
+  // radii at both widths, and always did.
+  it.each(EVERY_SLUG)('%s wears no card chrome on a phone', (slug) => {
+    mocks.formFactor = 'mobile'
+    const root = dispatch(slug).slice(0, dispatch(slug).indexOf('>') + 1)
+    expect(root, 'radius on the phone shell').not.toContain('border-radius')
+    expect(root, 'drop shadow on the phone shell').not.toContain('box-shadow')
+  })
+
   it.each(EVERY_SLUG)('%s keeps the dialog contract on both form factors', (slug) => {
     for (const formFactor of ['desktop', 'mobile'] as const) {
       mocks.formFactor = formFactor
