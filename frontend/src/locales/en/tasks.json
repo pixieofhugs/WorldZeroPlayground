@@ -30,8 +30,7 @@
       "note": "Requires level {{level}}, one rung above you — your faction's once-a-level leap covers it."
     },
     "breadcrumb": {
-      "tasks": "Tasks",
-      "current": "Task №{{number}}"
+      "tasks": "Tasks"
     },
     "meta": "META",
     "metataskFor": "Metatask for {{faction}}",
