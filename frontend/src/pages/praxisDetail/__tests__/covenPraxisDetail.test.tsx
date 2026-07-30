@@ -231,6 +231,31 @@ function indexOf(html: string, needle: string): number {
   return at
 }
 
+/** Every opening `<a>` tag in the markup, attributes and all. */
+function anchors(html: string): string[] {
+  return [...html.matchAll(/<a\b[^>]*>/g)].map((match) => match[0])
+}
+
+/** The inline `color:` custom property on one opening tag, if it sets one. */
+function inkOf(tag: string): string | null {
+  const found = /(?:^|[;"])color:(var\(--[^)]+\))/.exec(tag)
+  return found === null ? null : found[1]
+}
+
+/**
+ * The three Coven inks measured against `--faction-coven-ward-page` in
+ * `utils/__tests__/factionContrast.test.ts`. `slip-deep` is deliberately NOT
+ * among them: it is a rule/strand/large-numeral pigment that clears on the
+ * ward CARD (4.70:1) and misses on the ward PAGE (4.44:1 flat, 3.47:1 under
+ * the peak of the pink haze bloom) — see the ink-tier note in
+ * `components/cards/covenSlip.tsx`.
+ */
+const WARD_PAGE_INKS = [
+  'var(--faction-coven-slip-ink)',
+  'var(--faction-coven-slip-soft)',
+  'var(--faction-coven-slip-label)',
+]
+
 describe('Coven praxis detail — the shared layout contract', () => {
   it('draws the breadcrumb on desktop and the back link on mobile', () => {
     const wide = render(state())
@@ -241,6 +266,25 @@ describe('Coven praxis detail — the shared layout contract', () => {
     const phone = render(state(), 'mobile')
     expect(phone.html, 'phone back link to the praxis index').toContain('href="/praxis"')
     expect(phone.text, 'and its label').toContain('Praxis')
+  })
+
+  it('paints every navigation link in an ink measured for the ward PAGE (#1295)', () => {
+    // The seam this guards is the PAIRING, not the token: `slip-deep` is a
+    // correct pigment everywhere it sits on the ward CARD, and the token test
+    // measures declared values, so neither guard can see an ink laid on the one
+    // ground it does not clear. The breadcrumb, the phone back link and the
+    // task reference all sit directly on the wash — nothing here may reach for
+    // an ink the ward page has not been measured against.
+    for (const factor of ['desktop', 'mobile'] as const) {
+      const { html } = render(state(), factor)
+      const onTheWash = anchors(html).filter((tag) => /href="\/(tasks|praxis)/.test(tag))
+      expect(onTheWash.length, `${factor}: found the ward-page links`).toBeGreaterThan(0)
+      for (const tag of onTheWash) {
+        const ink = inkOf(tag)
+        expect(ink, `${factor}: this link sets no ink of its own — ${tag}`).not.toBeNull()
+        expect(WARD_PAGE_INKS, `${factor}: ${tag}`).toContain(ink)
+      }
+    }
   })
 
   it('gives the desktop aside the eight designs 330px track, and none on mobile', () => {
