@@ -2,19 +2,49 @@
   <!--
     World Zero site icon: the "Rainbow WoZero" mark (design ca218fc4,
     "Rainbow W0 Icon"). A rounded tile carrying the WO-stroke wordmark
-    glyph in Lora italic, filled with the unaffiliated rainbow spectrum.
+    glyph in Lora italic, filled with the unaffiliated (na) rainbow spectrum.
     Primary is the dark tile; the light tile (a design alternate) shows
     under a dark color scheme so the icon always contrasts the tab bar.
+
+    EVERY COLOUR IN THIS FILE IS A HAND-COPY OF THE LIGHT (`:root`) BLOCK OF
+    frontend/src/index.css:
+
+      glyph ramp  --faction-default-stop-1 .. -stop-7  (the na spectrum,
+                  ADR-0039), at the offsets --faction-default-rainbow uses
+      .tile       --color-text-primary   (the light theme's ink)
+      dark .tile  --color-bg-page        (the light theme's paper)
+
+    The copy is not laziness and not drift: this file is served from `public/`,
+    outside the bundle and outside the cascade. A favicon is a standalone
+    document fetched by browser chrome, so it cannot reach a CSS custom
+    property. Hardcoding is correct here. Hardcoding something *adjacent* to
+    the palette is what let three of these seven stops drift for months
+    (#1215) behind a comment that merely claimed they were the spectrum.
+
+    It tracks the LIGHT stops on BOTH tiles, deliberately. Browser chrome
+    gives us no theme signal -- the `prefers-color-scheme` query below reads
+    the OS scheme, not the site's `[data-theme]` -- and this asset's flip runs
+    *opposite* to the site's, since an OS dark scheme swaps in the LIGHT tile.
+    Borrowing the `[data-theme="dark"]` stops would therefore lay colours
+    brightened for dark grounds onto the pale tile. The dark block is a
+    per-ground override, and this asset carries its own ground.
+
+    KEPT HONEST BY A TEST, not by this comment:
+    frontend/src/__tests__/faviconSpectrum.test.ts parses this file and
+    index.css and fails CI the moment a hex or an offset here stops matching
+    the token it copies. Repoint the na spectrum and that test sends you back
+    to this file. The x1/y1 -> x2/y2 diagonal is a design choice about the
+    glyph rather than a palette question, so the test leaves it alone.
   -->
   <defs>
     <linearGradient id="wzRainbow" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#c1272d" />
-      <stop offset="0.16" stop-color="#ea580c" />
+      <stop offset="0.17" stop-color="#c2541f" />
       <stop offset="0.33" stop-color="#ca8a04" />
       <stop offset="0.5" stop-color="#16a34a" />
-      <stop offset="0.66" stop-color="#2563eb" />
-      <stop offset="0.83" stop-color="#6d28d9" />
-      <stop offset="1" stop-color="#a21caf" />
+      <stop offset="0.67" stop-color="#1d6e72" />
+      <stop offset="0.83" stop-color="#2563eb" />
+      <stop offset="1" stop-color="#be185d" />
     </linearGradient>
   </defs>
   <style>
