@@ -121,11 +121,9 @@ describe('mobile faction-page content-slot invariant', () => {
   }
 })
 
-describe('mobile faction directory dispatch', () => {
-  it('registry is an object (bespoke directory skins register here)', () => {
-    expect(typeof surfaceMap('mobileFactionsDirectory')).toBe('object')
-  })
-
+describe('mobile faction directory', () => {
+  // The `mobileFactionsDirectory` slot is gone: no faction ever registered one,
+  // so Factions renders `DefaultFactionsDirectory` on mobile with no dispatch.
   it('Default directory skin renders the heading + unaffiliated banner', () => {
     // The directory fetch lives in the page dispatcher now (#1116), so the skin
     // takes the same still-loading state it used to produce for itself.

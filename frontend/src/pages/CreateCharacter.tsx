@@ -6,8 +6,6 @@ import CredentialCard from '../components/CredentialCard'
 import ImageEditModal from '../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { pickVariant } from '../utils/factionDispatch'
-import { surfaceMap } from '../factions'
 import {
   useCreateCharacter,
   NAME_MAX,
@@ -23,18 +21,16 @@ import DefaultCreateCharacter from './characterPaths/mobileArchetypes/DefaultCre
  * account creates a born-unaffiliated ("na") life. One submit path either way.
  *
  * On a phone (#516) the same {@link useCreateCharacter} state drives a mobile
- * skin (full-column form + sticky Create), dispatched through the parallel
- * registry; every faction falls through to the Default skin. Desktop unchanged.
+ * skin (full-column form + sticky Create). No faction ever claimed the
+ * `mobileCreateCharacter` surface, so the dispatch was retired with the slot:
+ * mobile renders the Default skin directly. Desktop unchanged.
  */
 
 export default function CreateCharacter() {
   const state = useCreateCharacter()
   const formFactor = useFormFactor()
 
-  if (formFactor === 'mobile') {
-    const Mobile = pickVariant(surfaceMap('mobileCreateCharacter'), null, DefaultCreateCharacter)
-    return <Mobile state={state} />
-  }
+  if (formFactor === 'mobile') return <DefaultCreateCharacter state={state} />
 
   return <DesktopCreateCharacter state={state} />
 }
