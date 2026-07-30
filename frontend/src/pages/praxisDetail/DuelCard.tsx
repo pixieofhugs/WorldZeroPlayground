@@ -98,10 +98,17 @@ const AVATAR_SIZE = 30
  * hostile hue sit inside cream-and-gold chrome with no contrast fix. `name`,
  * `total` and `muted` are all `color:`, and `plate` sits directly behind a
  * duellist's disc; none of them is a legal home for `accent`/`soft` off a duel
- * payload, or for `factionCssVar(rival.faction_slug, …)`. The structural guard
- * that used to assert this died with the duel rail (#1090/#1115), so this
- * comment is the whole of it — a call site that passes a foreign hue here will
- * fail nothing.
+ * payload, or for `factionCssVar(rival.faction_slug, …)`.
+ *
+ * The structural guard that used to assert this died with the duel rail (#1090);
+ * #1115 restored it on the seal skins and #1308 restored it HERE, where it
+ * belongs — `__tests__/duelCardOpponentInk.test.tsx` walks the whole
+ * `surfaceMap('praxisDetail')` registry with a foreign rival and fails any
+ * archetype that lands one of the opponent's tokens in a `color:` or a
+ * `background:`. `line` is the exception the rule already grants: a hairline or a
+ * disc outline IS the "plate edge", so an edge in the rival's hue is legal and
+ * the guard only reads inks and grounds. Nothing else about this comment is
+ * advisory any more.
  */
 export interface DuelCardInk {
   /** The duellist's name. Default `--faction-default-card-text`. */
