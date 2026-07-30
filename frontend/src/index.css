@@ -3166,12 +3166,6 @@
   .ev-duel-pulse { animation: ev-duel-pulse 1.1s ease-in-out infinite; }
 }
 
-/* Character-sidebar progress bar — rainbow fill drifts left→right. Stilled for reduced-motion. */
-@keyframes cs-shimmer { to { background-position: 200% 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  .cs-shimmer { animation: cs-shimmer 4s linear infinite; }
-}
-
 /* ══ Praxis-card redesign vote widgets (#821) ══
    Every animation is gated on reduced-motion and driven by a class, never an
    inline `animation:` (the widgets would bypass the gate otherwise). Meaning is
