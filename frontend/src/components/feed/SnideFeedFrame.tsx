@@ -1,24 +1,55 @@
-import FeedChassisBand from './FeedChassisBand'
+import type { CSSProperties } from 'react'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
- * S.N.I.D.E. activity-feed FRAME (surface #12, SPEC-faction-ui-profile.md).
+ * S.N.I.D.E. activity-feed CHASSIS (surface #12, SPEC-faction-ui-profile.md §12).
  *
- * A thin presentational WRAPPER — not a card. It dresses the neutral feed card
- * (`children`) in SNIDE's outer chrome: an "intercepted ransom-note slip" cut
- * from warm xerox paper, bound in a photocopier-ink border, taped down at the
- * top, tilted on the wall, dusted with halftone, with an acid-green margin
- * stripe running its left edge. The card body itself stays exactly as passed in
- * — this only adds the skin around `{children}`.
+ * Design: `Snide Comment + Update Cards.dc.html` (+ its `- Dark` companion),
+ * epic #1192 / #1198. An INTERCEPTED SLIP: a xerox photocopy flyposted on the
+ * wall, taped down at the head, half a degree off true, dusted with the halftone
+ * raster, with an acid sprocket stripe ruled down its left edge and a near-black
+ * intake bar typed across its top.
  *
- * #1194: the slip gains a CHASSIS BAND above the body — a typed intake line
- * carrying the kicker, the tag, the time and the dismiss control in photocopier
- * ink. The skin is otherwise unchanged; SNIDE's dress issue restyles it.
+ * ── WHAT THIS LAYER OWNS ────────────────────────────────────────────────────
+ * The outside of the card and the four chrome slots of {@link FeedFrameProps},
+ * and nothing else. The archive itself — the ✕'s behaviour, swipe-to-archive,
+ * the immediate write, the six-second undo strip — lives OUTSIDE in
+ * `FeedItemSlot` and is inherited free; `archive` arrives here as a finished
+ * node and is PLACED, never rebuilt. The payload (`FeedRowContent` or one of the
+ * three companions) arrives as `children` and is faction-blind: it self-pads and
+ * paints its own inks, so this frame gives it a stock and stays out of its way.
  *
- * Always-dark by intent: SNIDE is the ransom/xerox dossier. We scope the
- * theme-stable --faction-snide-card-* / -paper / -ink / -acid tokens to this
- * frame's own container only; we never mutate the document theme, and we avoid
- * the --faction-snide-*-wall-text tokens that flip between light/dark.
+ * All fifteen feed types therefore ride this one chassis unchanged, including
+ * the nine the design sheet never drew — the drawing is a style sheet, not a
+ * screenshot. `era_announcement` is the deliberate exception and never reaches
+ * here (epic decision 6). `awaiting_submission` arrives with `archive === null`,
+ * which is the whole of "not archivable" on this side of the seam: the slot
+ * refuses to hand out a control the backend would 400, and the bar simply has
+ * one fewer thing in it. Nothing here draws a disabled stand-in.
+ *
+ * ── WHY THE STOCK FLIPS ─────────────────────────────────────────────────────
+ * `--faction-snide-slip-*` is a FLIPPING family, unlike the theme-invariant
+ * `--faction-snide-paper`/`-ink` this frame used to paint. That is a contrast
+ * fix, not a taste call: the body is shared payload written in the app's global
+ * inks (`--color-text-primary`/`-secondary`/`-tertiary`), those flip with the
+ * theme, and §3's #1118 rule — a block whose ink you do not control gets the
+ * stock that ink was measured on — makes a flipping stock mandatory. The old
+ * invariant paper put `#f0e6d0` headline copy on `#f4f1e8` at night: 1.10:1.
+ *
+ * ── ACID IS A DRAWN THING, NOT AN INK ───────────────────────────────────────
+ * The sprocket stripe, the rule under the bar and the tag chip's edge take the
+ * bright `--faction-snide-acid`, which measures 1.35:1 as type on the light
+ * stock (#1224). The kicker is TYPE, so on the near-black bar it reads the
+ * PRESS's paper — and the bar exists partly so that it can: a kicker typed
+ * straight onto the stock would have to be walked down to
+ * `--faction-snide-slip-acid-ink`, which is quieter than this card's loudest
+ * line should be.
+ *
+ * One responsive component, no mobile twin (ADR-0056 / 0058 / 0063): the tilt
+ * and the hard offset shadow are desktop-only — in a single narrow column a
+ * rotated card fouls its neighbours' edges and the shadow eats the gutter — and
+ * the stripe narrows. Everything else is identical.
  */
 export default function SnideFeedFrame({
   kicker,
@@ -27,64 +58,134 @@ export default function SnideFeedFrame({
   archive,
   children,
 }: FeedFrameProps) {
-  const ink = 'var(--faction-snide-ink)'
-  const paper = 'var(--faction-snide-paper)'
-  const acid = 'var(--faction-snide-acid)'
+  const mobile = useFormFactor() === 'mobile'
+
+  const slip: CSSProperties = {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'stretch',
+    marginBottom: 'var(--space-lg)',
+    background: 'var(--faction-snide-slip-paper)',
+    color: 'var(--faction-snide-slip-ink)',
+    border: '1.5px solid var(--faction-snide-slip-ink)',
+    // The xerox raster: two offset dot screens in the stock's own ink, so the
+    // grain inverts with the sheet instead of staying a light-mode smudge.
+    backgroundImage:
+      'radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px),' +
+      'radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px)',
+    backgroundSize: '3px 3px, 4px 4px',
+    backgroundPosition: '0 0, 2px 1px',
+    // Printed, not floating — a hard offset with no blur.
+    boxShadow: mobile ? undefined : 'var(--faction-snide-slip-shadow)',
+    transform: mobile ? undefined : 'rotate(-0.6deg)',
+    // Clips the tape to a half-strip, as if it were applied from behind.
+    overflow: 'hidden',
+  }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        background: paper,
-        border: `1.5px solid ${ink}`,
-        // halftone dust over the xerox slab — ink at low opacity, theme-stable.
-        backgroundImage:
-          'radial-gradient(color-mix(in srgb, var(--faction-snide-ink) 6%, transparent) 1px, transparent 1px),' +
-          'radial-gradient(color-mix(in srgb, var(--faction-snide-ink) 4%, transparent) 1px, transparent 1px)',
-        backgroundSize: '3px 3px, 4px 4px',
-        backgroundPosition: '0 0, 2px 1px',
-        boxShadow: '3px 4px 0 rgba(0,0,0,0.22)',
-        transform: 'rotate(-0.6deg)',
-        padding: 'var(--space-lg) var(--space-lg) var(--space-lg) var(--space-xl)',
-        marginBottom: 'var(--space-lg)',
-        overflow: 'hidden',
-      }}
-    >
-      {/* acid margin stripe — sprocket-ruled, hugging the left edge */}
-      <div
+    <div style={slip}>
+      {/* The acid sprocket stripe ruled down the left edge. A drawn thing, so it
+          keeps the bright pigment; a flex child rather than an absolute overlay
+          so the column beside it needs no inset to keep clear of it. */}
+      <span
         aria-hidden="true"
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 8,
-          background: acid,
+          // Ornament geometry — the drawn stripe's own width, not layout spacing.
+          width: mobile ? 5 : 8,
+          flexShrink: 0,
+          background: 'var(--faction-snide-acid)',
           backgroundImage:
-            'repeating-linear-gradient(180deg, transparent 0 13px, rgba(0,0,0,0.25) 13px 14px)',
+            'repeating-linear-gradient(180deg, transparent 0 13px, var(--faction-snide-slip-bar) 13px 14px)',
         }}
       />
-      {/* a strip of tape pinning the slip to the wall */}
-      <div
-        className="snide-tape"
-        aria-hidden="true"
-        style={{ top: -9, right: 40, width: 64, height: 20, transform: 'rotate(5deg)' }}
-      />
-      {/* chassis band — the intake line typed across the head of the slip */}
-      <div
-        style={{
-          position: 'relative',
-          color: ink,
-          borderBottom: `1px solid color-mix(in srgb, ${ink} 35%, transparent)`,
-          paddingBottom: 'var(--space-xs)',
-          marginBottom: 'var(--space-sm)',
-        }}
-      >
-        <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
-      </div>
 
-      {/* the slip body — the neutral feed card, untouched */}
-      <div style={{ position: 'relative' }}>{children}</div>
+      <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+        {/* A strip of tape pinning the slip to the wall. */}
+        <div
+          className="snide-tape"
+          aria-hidden="true"
+          style={{ top: -9, right: 40, width: 64, height: 20, transform: 'rotate(5deg)' }}
+        />
+
+        {/* ── THE INTAKE BAR ── the kicker band, over-inked across the head of
+            the slip. It carries three of the four chrome slots and tints the
+            fourth: `archive` paints in `currentColor`, so setting `color` here
+            is what makes the ✕ read paper-white on the bar in both themes. */}
+        <div
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            minWidth: 0,
+            padding: mobile
+              ? 'var(--space-xs) var(--space-sm)'
+              : 'var(--space-xs) var(--space-md)',
+            background: 'var(--faction-snide-slip-bar)',
+            color: 'var(--faction-snide-paper)',
+            // The bar is only 1.4:1 against the dark stock, so this rule is what
+            // draws the band's foot at night. Structure, not garnish.
+            borderBottom: '2px solid var(--faction-snide-acid)',
+          }}
+        >
+          {/* The card's kind, cut in the condensed poster face. */}
+          <span
+            style={{
+              fontFamily: 'var(--faction-snide-font-cond)',
+              fontSize: 'var(--text-xl)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              lineHeight: 1.1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {kicker}
+          </span>
+
+          {/* The status chip — nullable, and today only ever "Still waiting". */}
+          {tag && (
+            <span
+              style={{
+                flexShrink: 0,
+                fontFamily: 'var(--faction-snide-font-type)',
+                fontSize: 'var(--text-base)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                lineHeight: 1.2,
+                color: 'var(--faction-snide-acid)',
+                border: '1px solid var(--faction-snide-acid)',
+                padding: '0 var(--space-xs)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tag}
+            </span>
+          )}
+
+          {/* The timestamp, typed. Right-aligned on the bar's own line. */}
+          <span
+            style={{
+              marginLeft: 'auto',
+              flexShrink: 0,
+              fontFamily: 'var(--faction-snide-font-type)',
+              fontSize: 'var(--text-lg)',
+              letterSpacing: '0.04em',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {time}
+          </span>
+
+          {archive}
+        </div>
+
+        {/* The slip's body — the shared payload, which self-pads and paints its
+            own inks. It gets a stock and nothing else. */}
+        <div style={{ position: 'relative' }}>{children}</div>
+      </div>
     </div>
   )
 }
