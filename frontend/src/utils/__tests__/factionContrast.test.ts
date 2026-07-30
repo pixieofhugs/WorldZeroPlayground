@@ -68,19 +68,37 @@ type Pair = {
   text: string;
   /**
    * A translucent layer sitting BETWEEN the surface and the text — a banner
-   * wash, a scrim, a tint (#694). Given as a literal CSS colour rather than a
-   * var name because it is a component's own wash, not a declared token; if it
-   * ever becomes a token, name the token here instead.
+   * wash, a scrim, a tint (#694). A literal CSS colour where the wash is a
+   * component's own and not a declared token; a `--var` name where it IS one
+   * (#1169 minted `--color-danger-veil` / `--color-warning-veil`, so the two
+   * moderation badges name their tokens rather than restating their rgba).
    *
    * Without this the manifest can only ask "is this ink legible on that sheet",
    * which is the wrong question the moment anything is laid over the sheet —
    * and "the pair measured is not the pair on screen" is precisely the shape of
    * bug that got past both guards in #694.
    */
-  veil?: string;
+  veil?: Veil;
   /** AA floor. Defaults to 4.5; set AA_LARGE only where the role is large display type. */
   floor?: number;
 };
+
+/**
+ * A veil is either a literal (see above) or A DECLARED TOKEN AT AN ALPHA (#1302).
+ *
+ * The literal form cannot express `color-mix(in srgb, var(--faction-x-card-notice)
+ * 8%, transparent)`, because the colour it names is per-faction — and writing the
+ * resolved hex here is exactly the raw-`rgba()`-of-a-token's-own-hue costume #1169
+ * named. So the wash gives its token and its alpha, and the resolver composites
+ * `alpha x token` over the ground, which is what `color-mix(… N%, transparent)`
+ * computes.
+ *
+ * It matters that the wash is a MIX OF THE INK ITSELF: such a veil always pulls
+ * the ground toward the ink, so it can only ever tighten the reading. That is how
+ * the mode chip's shipped 12% wash was caught at 4.41:1 on the Ephemerists plate
+ * while the same ink cleared 5.20:1 on the bare sheet.
+ */
+type Veil = string | { token: string; alpha: number };
 
 const CARD_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
   { what: `${key} card body text`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-text` },
@@ -192,6 +210,117 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
   // that pair is BASELINE debt owned by #651. #694 does not make it worse (the
   // fill it replaced measured 1.05:1) and does not fix it either.
 ]);
+
+/**
+ * #1302 — THE PRAXIS CARD'S ADMIN OVERLAY AND MODE CHIP, on all eight sheets.
+ *
+ * The third instance of the shape #694 and #1168 already fixed twice, and the
+ * one nobody had measured: `components/praxisCard/shared.tsx` is a SHARED
+ * component mounted inside every faction's praxis-card frame, and it painted the
+ * app's global `--color-danger` / `--color-warning` / `--color-success` — inks
+ * chosen against a near-white page — straight onto cream, vellum, papyrus, a
+ * pink ward slip and two near-black plates. Every one of those pairings failed
+ * AA in light; see the PR table.
+ *
+ * THE SURFACE COLUMN IS THE SHEET THE CARD ACTUALLY PAINTS, not
+ * `--faction-{key}-card-bg`, and for half the set those differ:
+ *
+ *   ua           `--faction-ua-panel`            the parchment ramp's DARKEST stop
+ *                                                (`--faction-ua-card-parchment` is a
+ *                                                gradient; `parseColor` cannot read
+ *                                                one, and the tightest stop is the
+ *                                                only honest scalar reading — the
+ *                                                same call `ua leaf darkest stop` makes)
+ *   coven        `--faction-coven-ward-card`     the ward panel, not the slip
+ *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate (a WHOLE shade off
+ *                                                `-card-bg` in dark: #171a26 vs #211a10)
+ *   wow          `--faction-wow-chronicle-bg`    same value as `-card-bg` today, a
+ *                                                different token tomorrow (the reason
+ *                                                the snide composer block gives)
+ *
+ * That is WORLD_ZERO_STYLE §3's "when a surface gains a sheet, re-measure the
+ * inks it already had" — `ROSTER_PAIRS` gates these same inks on `-card-bg`, and
+ * for those four factions that is not the sheet in question.
+ */
+const PRAXIS_CARD_SHEET: Record<(typeof CARD_KEYS)[number], string> = {
+  default: "--faction-default-card-bg",
+  ua: "--faction-ua-panel",
+  everymen: "--faction-everymen-card-bg",
+  coven: "--faction-coven-ward-card",
+  snide: "--faction-snide-card-bg",
+  wow: "--faction-wow-chronicle-bg",
+  ephemerists: "--faction-ephemerists-plate-bg",
+  singularity: "--faction-singularity-card-bg",
+};
+
+/** The four whose sheet is a different TOKEN from `--faction-{key}-card-bg`. */
+const OWN_SHEET_KEYS = ["ua", "coven", "wow", "ephemerists"] as const;
+
+/**
+ * The chip's own wash, as a fraction of the ink printed on it. 8%, not the 12%
+ * that shipped: a mix of the ink's own hue only ever pulls the ground toward the
+ * ink, and 12% took the Ephemerists plate to 4.41:1 (8% reads 4.66:1, and the
+ * tightest in the family). See `Veil`.
+ */
+const CHIP_WASH = 0.12; // RED (#1302): the shipped 12%
+
+const PRAXIS_CARD_PAIRS: Pair[] = [
+  ...CARD_KEYS.flatMap((key) => {
+    const surface = PRAXIS_CARD_SHEET[key];
+    const notice = "--color-danger"; // RED (#1302): what the component paints today
+    return [
+      // The moderation badges. Both veils are measured because which of the two
+      // gates FLIPS with the theme: the danger veil is the tighter reading in
+      // light (it is 5% there against warning's 5%, on a red rather than an
+      // amber), the warning veil in dark (both jump to 14%).
+      {
+        what: `${key} praxis card flagged badge, notice ink under the danger veil`,
+        surface,
+        veil: "--color-danger-veil",
+        text: notice,
+      },
+      {
+        what: `${key} praxis card failed badge, notice ink under the warning veil`,
+        surface,
+        veil: "--color-warning-veil",
+        text: "--color-warning", // RED (#1302)
+      },
+      // The mode chip — "Duel" / "Collaboration · N" / "still open". Ink, wash
+      // and rule all come off ONE faction ink now, which is what #694 means by
+      // "a row that paints its own ground must paint its own ink".
+      {
+        what: `${key} praxis card mode chip, notice ink on its own wash`,
+        surface,
+        veil: { token: notice, alpha: CHIP_WASH },
+        text: notice,
+      },
+      {
+        what: `${key} praxis card mode chip, credit ink on its own wash`,
+        surface,
+        veil: { token: "--color-success", alpha: CHIP_WASH }, // RED (#1302)
+        text: "--color-success", // RED (#1302)
+      },
+    ];
+  }),
+  // The two BARE-sheet readings, for the four sheets `-card-bg` does not stand
+  // in for. `moderateError` sets the notice ink straight on the sheet, and the
+  // `hidden` badge sets the muted ink there (its 5% wash is gone — see the
+  // component). For the other four keys these are `{key} roster notice ink` and
+  // `{key} card muted text`, and a second name for one measurement is what this
+  // file keeps warning about.
+  ...OWN_SHEET_KEYS.flatMap((key) => [
+    {
+      what: `${key} praxis card sheet, notice ink`,
+      surface: PRAXIS_CARD_SHEET[key],
+      text: "--color-danger", // RED (#1302)
+    },
+    {
+      what: `${key} praxis card sheet, muted ink`,
+      surface: PRAXIS_CARD_SHEET[key],
+      text: "--color-text-secondary", // RED (#1302)
+    },
+  ]),
+];
 
 /**
  * The Singularity seal's inner panel — the accent phosphor at 5% over the
@@ -940,7 +1069,14 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
 ];
 
-const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ACCENT_PAIRS, ...ROSTER_PAIRS, ...ARCHETYPE_PAIRS];
+const PAIRS: Pair[] = [
+  ...CARD_PAIRS,
+  ...FILL_PAIRS,
+  ...ACCENT_PAIRS,
+  ...ROSTER_PAIRS,
+  ...PRAXIS_CARD_PAIRS,
+  ...ARCHETYPE_PAIRS,
+];
 
 /**
  * Part C — the baseline allowlist (the ratchet).
@@ -1007,9 +1143,15 @@ describe("faction token contrast (WCAG AA)", () => {
           // the ink is measured against is what a viewer actually sees.
           let ground = surface.color!;
           if (pair.veil) {
-            const veil = parseColor(pair.veil);
-            expect(veil, `veil "${pair.veil}" (${pair.what}) is not a solid color`).not.toBeNull();
-            ground = compositeOver(veil!, ground);
+            // A token-at-an-alpha wash resolves the token, then scales its alpha
+            // — which is what `color-mix(in srgb, <token> N%, transparent)`
+            // computes. A literal parses as-is. See `Veil`.
+            const name = typeof pair.veil === "string" ? pair.veil : pair.veil.token;
+            const alpha = typeof pair.veil === "string" ? 1 : pair.veil.alpha;
+            const spec = name.startsWith("--") ? resolveColor(name, theme).raw : name;
+            const parsed = spec === null ? null : parseColor(spec);
+            expect(parsed, `veil "${name}" (${pair.what}) is not a solid color`).not.toBeNull();
+            ground = compositeOver({ ...parsed!, a: parsed!.a * alpha }, ground);
           }
 
           const floor = pair.floor ?? AA_NORMAL;
