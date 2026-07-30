@@ -1,5 +1,12 @@
 /**
- * Everymen DESKTOP duel seal-confirm (#721) — the design's `EvDuelDialog.dc.html`.
+ * Everymen duel seal-confirm (#721) — the design's `EvDuelDialog.dc.html`.
+ *
+ * ONE responsive component since #1313 retired the `mobileDuelSeal` twin. The
+ * form is the same document at both widths: `DuelSealSheet` serves it as a
+ * bordered card over a scrim on a laptop and full-bleed on a phone, and the
+ * masthead / scrolling middle / pinned action band the twin introduced survive
+ * here as plain flex regions — they cost nothing on an auto-height card and are
+ * what puts the actions under a thumb on a phone.
  *
  * Everymen files everything as paperwork, so the one irreversible beat in the
  * duel becomes a stamped form served over the composer: red masthead with a
@@ -64,6 +71,7 @@ import {
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import DuelSealSheet from './DuelSealSheet'
 
 const PAPER = 'var(--everymen-paper)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
@@ -129,210 +137,203 @@ export default function EverymenDuelSealConfirm({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={copy.heading}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        padding: 'var(--space-lg)',
-        background: 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))',
+    <DuelSealSheet
+      label={copy.heading}
+      ground={{ background: PAPER, color: PAPER_TEXT, fontFamily: BODY }}
+      card={{
+        border: `3px solid ${INK}`,
+        // Exaggerated hard offset, zero blur — the dialog is a document
+        // physically laid on top of the composer. On a phone there is nothing
+        // to lie on top of, so the chassis drops both this and the border.
+        boxShadow: `14px 14px 0 color-mix(in srgb, ${INK} 30%, transparent)`,
       }}
     >
+      {/* ── Stamped red masthead ── */}
       <div
-        className="w-full max-w-[460px]"
         style={{
-          background: PAPER,
-          color: PAPER_TEXT,
-          fontFamily: BODY,
-          border: `3px solid ${INK}`,
-          // Exaggerated hard offset, zero blur — the dialog is a document
-          // physically laid on top of the composer.
-          boxShadow: `14px 14px 0 color-mix(in srgb, ${INK} 30%, transparent)`,
+          position: 'relative',
+          overflow: 'hidden',
+          flexShrink: 0,
+          padding: 'var(--space-lg) var(--space-xl)',
+          background: RED,
+          backgroundImage: GUILLOCHE,
+          color: CREAM,
         }}
       >
-        {/* ── Stamped red masthead ── */}
-        <div
+        {/* Duel-division seal: a rotated dashed medallion, pure ornament. */}
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: -14,
+            right: -14,
+            width: 92,
+            height: 92,
+            borderRadius: '50%',
+            border: `2px dashed ${CREAM}`,
+            opacity: 0.45,
+            transform: 'rotate(-12deg)',
+          }}
+        />
+        {/* Gold rule standing in for the mock's form-reference eyebrow, which
+            was invented copy with no catalog key. */}
+        <span
+          aria-hidden
+          style={{ display: 'block', width: 56, height: 3, background: GOLD, marginBottom: 'var(--space-sm)' }}
+        />
+        <h2
           style={{
             position: 'relative',
-            overflow: 'hidden',
-            padding: 'var(--space-lg) var(--space-xl)',
-            background: RED,
-            backgroundImage: GUILLOCHE,
-            color: CREAM,
+            margin: 0,
+            fontFamily: POSTER,
+            fontWeight: 400,
+            // The forfeit dialog speaks quieter than the routine one — a tier
+            // down, not a raw number. Both sit in the Content ramp (§4a).
+            fontSize: onInk ? 'var(--text-heading)' : 'var(--text-display)',
+            lineHeight: 1,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            textShadow: `3px 3px 0 color-mix(in srgb, ${INK} 55%, transparent)`,
           }}
         >
-          {/* Duel-division seal: a rotated dashed medallion, pure ornament. */}
-          <span
-            aria-hidden
-            style={{
-              position: 'absolute',
-              top: -14,
-              right: -14,
-              width: 92,
-              height: 92,
-              borderRadius: '50%',
-              border: `2px dashed ${CREAM}`,
-              opacity: 0.45,
-              transform: 'rotate(-12deg)',
-            }}
-          />
-          {/* Gold rule standing in for the mock's form-reference eyebrow, which
-              was invented copy with no catalog key. */}
-          <span
-            aria-hidden
-            style={{ display: 'block', width: 56, height: 3, background: GOLD, marginBottom: 'var(--space-sm)' }}
-          />
-          <h2
-            style={{
-              position: 'relative',
-              margin: 0,
-              fontFamily: POSTER,
-              fontWeight: 400,
-              // The forfeit dialog speaks quieter than the routine one — a tier
-              // down, not a raw number. Both sit in the Content ramp (§4a).
-              fontSize: onInk ? 'var(--text-heading)' : 'var(--text-display)',
-              lineHeight: 1,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              textShadow: `3px 3px 0 color-mix(in srgb, ${INK} 55%, transparent)`,
-            }}
-          >
-            {copy.heading}
-          </h2>
-        </div>
+          {copy.heading}
+        </h2>
+      </div>
 
-        {/* red→gold stripe rule */}
-        <div
-          aria-hidden
-          style={{ height: 7, background: `linear-gradient(90deg, ${RED} 0 50%, ${GOLD} 50% 100%)` }}
-        />
+      {/* red→gold stripe rule */}
+      <div
+        aria-hidden
+        style={{ flexShrink: 0, height: 7, background: `linear-gradient(90deg, ${RED} 0 50%, ${GOLD} 50% 100%)` }}
+      />
 
-        <div style={{ padding: 'var(--space-xl)' }}>
-          {/* ── Opponent card: ink monogram disc on tan stock ── */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
-              padding: 'var(--space-sm) var(--space-md)',
-              background: PAPER_DEEP,
-              border: `2px solid ${INK}`,
-              borderLeft: `5px solid ${accent}`,
-            }}
-          >
-            <span
-              aria-hidden
-              style={{
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 38,
-                height: 38,
-                borderRadius: '50%',
-                background: INK,
-                color: CREAM,
-                fontFamily: POSTER,
-                fontSize: 'var(--text-title)',
-                lineHeight: 1,
-                boxShadow: `inset 0 0 0 2px ${PAPER_DEEP}, inset 0 0 0 3px ${accent}`,
-              }}
-            >
-              {foe.display_name.slice(0, 1)}
-            </span>
-            <span className="content-text" style={{ fontFamily: POSTER, letterSpacing: '0.05em', minWidth: 0 }}>
-              {foe.display_name}
-            </span>
-          </div>
-
-          {/* ── The body line. Forfeit mode is the destructive one and says so —
-              in NOTICE, with the red as the rule beside it. Red-as-prose was
-              4.49 / 4.16 here, which is the pairing §3 already warned about. ── */}
-          <p
-            className="content-text"
-            style={{
-              marginTop: 'var(--space-lg)',
-              lineHeight: 1.6,
-              ...(copy.danger
-                ? {
-                    color: NOTICE,
-                    fontWeight: 700,
-                    paddingLeft: 'var(--space-md)',
-                    borderLeft: `3px solid ${RED}`,
-                  }
-                : {}),
-            }}
-          >
-            {copy.body}
-          </p>
-
-          {/* The free-reopen half of the truth — the shared condition, not an
-              Everymen one. A forfeit has no such note and `copy.note` is null. */}
-          {copy.note && (
-            <p
-              className="content-text"
-              style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)' }}
-            >
-              {copy.note}
-            </p>
-          )}
-
-          {/* dashed divider — the mock's rubric rule, minus its invented words */}
-          <div
-            aria-hidden
-            style={{ marginTop: 'var(--space-lg)', borderTop: `2px dashed color-mix(in srgb, ${INK} 45%, transparent)` }}
-          />
-
-          {/* ── Stakes + roster panel. Tan stock normally; ink with a red-tinted
-              shadow in forfeit mode, where the figures are the cost. ── */}
-          <div
-            style={{
-              marginTop: 'var(--space-lg)',
-              padding: 'var(--space-md)',
-              background: onInk ? INK : PAPER_DEEP,
-              color: onInk ? CREAM : PAPER_TEXT,
-              border: `2px solid ${INK}`,
-              boxShadow: onInk
-                ? `4px 4px 0 color-mix(in srgb, ${RED} 45%, transparent)`
-                : `3px 3px 0 color-mix(in srgb, ${INK} 18%, transparent)`,
-            }}
-          >
-            <StakesTiles
-              viewerFactionSlug={me.faction_slug}
-              opponentFactionSlug={foe.faction_slug}
-              opponentName={foe.display_name}
-              taskPointValue={taskPointValue}
-              status={duel.status}
-              theme={theme}
-            />
-            <RaceRoster me={me} foe={foe} theme={theme} />
-          </div>
-        </div>
-
-        {/* ── Footer band ── */}
+      {/* The document's middle. `flex: 1` + its own scroll is what pins the
+          masthead and the action band to the edges when the sheet IS the
+          screen; on a laptop the card is auto-height and neither fires. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-xl)' }}>
+        {/* ── Opponent card: ink monogram disc on tan stock ── */}
         <div
           style={{
-            padding: 'var(--space-md) var(--space-xl)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-md)',
+            padding: 'var(--space-sm) var(--space-md)',
             background: PAPER_DEEP,
-            borderTop: `2px solid ${INK}`,
+            border: `2px solid ${INK}`,
+            borderLeft: `5px solid ${accent}`,
           }}
         >
-          {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-              pair rather than growing an Everymen stamped-button slot. The
-              global [Cancel] … [Submit] order (#646) and the shared `danger`
-              tone are worth more than a poster button, and adding a skin prop
-              to the shared component would be foundation work. */}
-          <SealActions
-            onConfirm={onConfirm}
-            onCancel={onCancel}
-            busy={busy}
-            confirmLabel={copy.confirmLabel}
-            danger={copy.danger}
+          <span
+            aria-hidden
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              background: INK,
+              color: CREAM,
+              fontFamily: POSTER,
+              fontSize: 'var(--text-title)',
+              lineHeight: 1,
+              boxShadow: `inset 0 0 0 2px ${PAPER_DEEP}, inset 0 0 0 3px ${accent}`,
+            }}
+          >
+            {foe.display_name.slice(0, 1)}
+          </span>
+          <span className="content-text" style={{ fontFamily: POSTER, letterSpacing: '0.05em', minWidth: 0 }}>
+            {foe.display_name}
+          </span>
+        </div>
+
+        {/* ── The body line. Forfeit mode is the destructive one and says so —
+            in NOTICE, with the red as the rule beside it. Red-as-prose was
+            4.49 / 4.16 here, which is the pairing §3 already warned about. ── */}
+        <p
+          className="content-text"
+          style={{
+            marginTop: 'var(--space-lg)',
+            lineHeight: 1.6,
+            ...(copy.danger
+              ? {
+                  color: NOTICE,
+                  fontWeight: 700,
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: `3px solid ${RED}`,
+                }
+              : {}),
+          }}
+        >
+          {copy.body}
+        </p>
+
+        {/* The free-reopen half of the truth — the shared condition, not an
+            Everymen one. A forfeit has no such note and `copy.note` is null. */}
+        {copy.note && (
+          <p
+            className="content-text"
+            style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)' }}
+          >
+            {copy.note}
+          </p>
+        )}
+
+        {/* dashed divider — the mock's rubric rule, minus its invented words */}
+        <div
+          aria-hidden
+          style={{ marginTop: 'var(--space-lg)', borderTop: `2px dashed color-mix(in srgb, ${INK} 45%, transparent)` }}
+        />
+
+        {/* ── Stakes + roster panel. Tan stock normally; ink with a red-tinted
+            shadow in forfeit mode, where the figures are the cost. ── */}
+        <div
+          style={{
+            marginTop: 'var(--space-lg)',
+            padding: 'var(--space-md)',
+            background: onInk ? INK : PAPER_DEEP,
+            color: onInk ? CREAM : PAPER_TEXT,
+            border: `2px solid ${INK}`,
+            boxShadow: onInk
+              ? `4px 4px 0 color-mix(in srgb, ${RED} 45%, transparent)`
+              : `3px 3px 0 color-mix(in srgb, ${INK} 18%, transparent)`,
+          }}
+        >
+          <StakesTiles
+            viewerFactionSlug={me.faction_slug}
+            opponentFactionSlug={foe.faction_slug}
+            opponentName={foe.display_name}
+            taskPointValue={taskPointValue}
+            status={duel.status}
             theme={theme}
           />
+          <RaceRoster me={me} foe={foe} theme={theme} />
         </div>
       </div>
-    </div>
+
+      {/* ── Footer band ── */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: 'var(--space-md) var(--space-xl)',
+          background: PAPER_DEEP,
+          borderTop: `2px solid ${INK}`,
+        }}
+      >
+        {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
+            pair rather than growing an Everymen stamped-button slot. The
+            global [Cancel] … [Submit] order (#646) and the shared `danger`
+            tone are worth more than a poster button, and adding a skin prop
+            to the shared component would be foundation work. */}
+        <SealActions
+          onConfirm={onConfirm}
+          onCancel={onCancel}
+          busy={busy}
+          confirmLabel={copy.confirmLabel}
+          danger={copy.danger}
+          theme={theme}
+        />
+      </div>
+    </DuelSealSheet>
   )
 }
