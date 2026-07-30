@@ -91,6 +91,7 @@ function state(): PraxisDetailState {
     loading: false,
     praxis: PRAXIS,
     fetchError: null,
+    comments: null,
     votes: VOTES,
     voters: [],
     duel: null,
