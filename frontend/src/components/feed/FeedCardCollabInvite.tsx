@@ -15,6 +15,7 @@ import {
 import { extractError } from "../../utils/errors";
 import { factionFill } from "../../utils/factions";
 import FeedBadge from "./FeedBadge";
+import FeedBankFullModal from "./FeedBankFullModal";
 
 interface Props {
   item: ActivityFeedItem;
@@ -295,104 +296,25 @@ export default function FeedCardCollabInvite({ item }: Props) {
         )}
       </div>
 
-      {/* Task-bank-full drop-to-accept modal (#322) */}
+      {/* Task-bank-full drop-to-accept modal (#322). Mounted on document.body
+          by the shared modal — inside this card it was clipped to the card
+          (#1273). */}
       {showDropModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 1000,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "var(--space-xl)",
-          }}
-          onClick={() => setShowDropModal(false)}
-        >
-          <div
-            style={{
-              background: "var(--color-bg-surface)",
-              border: "1px solid var(--color-border)",
-              padding: "var(--space-xl)",
-              maxWidth: 420,
-              width: "100%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="eyebrow" style={{ marginBottom: "var(--space-sm)" }}>
-              {i18n.t("feed:collabInvite.bankFull.title")}
-            </p>
-            <p
-              className="font-body"
-              style={{
-                fontSize: "var(--text-content)",
-                marginBottom: "var(--space-lg)",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              {i18n.t("feed:collabInvite.bankFull.body", { max: maxTaskSlots })}
-            </p>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-sm)",
-                maxHeight: 260,
-                overflowY: "auto",
-              }}
-            >
-              {activeTasks.map((praxis) => (
-                <button
-                  key={praxis.id}
-                  onClick={() =>
-                    handleDrop(praxis.id, praxis.created_by_id)
-                  }
-                  disabled={dropping}
-                  style={{
-                    background: "var(--color-bg-surface-alt)",
-                    border: "1px solid var(--color-border)",
-                    padding: "var(--space-sm) var(--space-md)",
-                    cursor: dropping ? "not-allowed" : "pointer",
-                    textAlign: "left",
-                    fontFamily: "'Courier Prime', monospace",
-                    fontSize: "var(--text-content)",
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  {i18n.t("feed:collabInvite.bankFull.dropOption", {
-                    title: praxis.title || praxis.task_title,
-                  })}
-                </button>
-              ))}
-            </div>
-            {dropError && (
-              <p
-                className="eyebrow"
-                style={{ color: "var(--color-danger)", marginTop: "var(--space-md)" }}
-              >
-                {dropError}
-              </p>
-            )}
-            <button
-              onClick={() => setShowDropModal(false)}
-              style={{
-                marginTop: "var(--space-lg)",
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-sm)",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                background: "transparent",
-                border: "1px solid var(--color-border)",
-                padding: "var(--space-xs) var(--space-lg)",
-                cursor: "pointer",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              {i18n.t("feed:collabInvite.bankFull.cancel")}
-            </button>
-          </div>
-        </div>
+        <FeedBankFullModal
+          title={i18n.t("feed:collabInvite.bankFull.title")}
+          body={i18n.t("feed:collabInvite.bankFull.body", { max: maxTaskSlots })}
+          cancelLabel={i18n.t("feed:collabInvite.bankFull.cancel")}
+          options={activeTasks.map((praxis) => ({
+            id: praxis.id,
+            label: i18n.t("feed:collabInvite.bankFull.dropOption", {
+              title: praxis.title || praxis.task_title,
+            }),
+            onSelect: () => handleDrop(praxis.id, praxis.created_by_id),
+          }))}
+          busy={dropping}
+          error={dropError}
+          onDismiss={() => setShowDropModal(false)}
+        />
       )}
     </>
   );
