@@ -34,7 +34,7 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import UaTaskDetail from "../archetypes/UaTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TASK: TaskOut = {
   id: 207,
@@ -58,23 +58,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Halden Voss",
-  avatar_url: "",
-  faction_slug: "ua",
-  level: 6,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -186,9 +175,8 @@ describe("UA task detail — the shared contract in UA's dress", () => {
     expect(text).toContain("UA");
   });
 
-  it("renders no in-progress roster — the header count is the only tally", () => {
-    const { text } = render(<UaTaskDetail state={baseState({ signups: [SIGNUP] })} />);
-    expect(text).not.toContain("Halden Voss");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<UaTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("17");
   });

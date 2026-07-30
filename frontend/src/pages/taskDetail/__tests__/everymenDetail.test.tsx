@@ -12,7 +12,9 @@
  *     for. ADR-0057: this surface speaks the shared neutral `detail.*` copy.
  *  2. No in-progress roster — owner ruling 2026-07-28. The 785-line predecessor
  *     drew a "Hands On The Job" avatar row off `signups`; this asserts the row
- *     did not survive the rebuild.
+ *     did not survive the rebuild, and its retired copy did not either. Since
+ *     #1262 the state carries no `signups` at all, so the structural half of the
+ *     guard lives in `detailContract.test.tsx`.
  *  3. The `×mult` badge exists only off a non-identity factor (ADR-0055), and
  *     base and total stay separately legible either way (ADR-0053's
  *     dead-arithmetic trap is reconstructing one from the other).
@@ -31,7 +33,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import EverymenTaskDetail from "../archetypes/EverymenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 import type { PraxisCardOut } from "../../../api/praxis";
 
 const TASK: TaskOut = {
@@ -54,16 +56,6 @@ const TASK: TaskOut = {
   can_submit_praxis: true,
   allowed_modes: ["solo"],
   eligible_for_current_user: true,
-};
-
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Halden Voss",
-  avatar_url: "",
-  faction_slug: "everymen",
-  level: 7,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
 };
 
 /** Four filed praxis — one more than the gallery preview, so "view all" shows. */
@@ -98,7 +90,6 @@ function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -145,11 +136,8 @@ describe("Everymen task detail — the broadsheet", () => {
     expect(text).not.toContain("BEST IN HALL");
   });
 
-  it("renders no in-progress roster, only the header count", () => {
-    const { text } = render(
-      <EverymenTaskDetail state={baseState({ signups: [SIGNUP] })} />,
-    );
-    expect(text).not.toContain("Halden Voss");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<EverymenTaskDetail state={baseState()} />);
     expect(text).not.toContain("on the job");
     expect(text).toContain("In progress");
     expect(text).toContain("23");

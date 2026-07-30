@@ -111,6 +111,16 @@ export interface TaskSignupOut {
   joined_at: string
 }
 
+/**
+ * No callers as of #1262, deliberately.
+ *
+ * `useTaskDetail` used to call this on every task-detail load and discard the
+ * result — no skin rendered a roster (owner ruling 2026-07-28, reversing epic
+ * #1028 decision 3) and it was the slowest request in its wave. The route,
+ * `TaskSignupOut` and this client survive because "who signed up for this task"
+ * is a plausible future surface and they cost nothing at rest. Calling it again
+ * means adding a round trip, so it wants a designed consumer, not a re-wire.
+ */
 export async function getTaskSignups(taskId: number): Promise<TaskSignupOut[]> {
   const { data } = await api.get<TaskSignupOut[]>(`/tasks/${taskId}/signups`)
   return data

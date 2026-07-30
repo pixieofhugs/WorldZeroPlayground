@@ -28,7 +28,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import CovenTaskDetail from "../archetypes/CovenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
+import type { TaskOut } from "../../../api/tasks";
 
 const TASK: TaskOut = {
   id: 305,
@@ -52,23 +52,12 @@ const TASK: TaskOut = {
   eligible_for_current_user: true,
 };
 
-const SIGNUP: TaskSignupOut = {
-  character_id: 88,
-  display_name: "Maeve Thornbramble",
-  avatar_url: "",
-  faction_slug: "coven",
-  level: 5,
-  praxis_type: "solo",
-  joined_at: "2026-01-03T00:00:00Z",
-};
-
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {
     loading: false,
     task: TASK,
     fetchError: null,
     submissions: [],
-    signups: [],
     friends: new Set(),
     foes: new Set(),
     mySubmission: undefined,
@@ -180,9 +169,8 @@ describe("Coven task detail — the contract", () => {
     expect(text, "the ward carries the total").toContain("180");
   });
 
-  it("renders no in-progress roster — only the header count", () => {
-    const { text } = render(<CovenTaskDetail state={baseState({ signups: [SIGNUP] })} />);
-    expect(text).not.toContain("Maeve Thornbramble");
+  it("renders the in-progress population as a header count", () => {
+    const { text } = render(<CovenTaskDetail state={baseState()} />);
     expect(text).toContain("In progress");
     expect(text).toContain("9");
   });
