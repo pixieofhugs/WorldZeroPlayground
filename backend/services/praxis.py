@@ -2065,6 +2065,7 @@ __all__ = [
     "kick_member",
     "leave_praxis",
     "list_praxes",
+    "praxis_membership_condition",
     "praxis_visibility_condition",
     "PraxisSort",
     "VotedFilter",

@@ -86,7 +86,7 @@ async def test_list_hides_others_in_progress_shows_own(
 
 
 @pytest.mark.asyncio
-async def test_profile_praxes_hide_others_in_progress_show_own(
+async def test_profile_praxes_hide_in_progress_from_every_viewer(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -94,7 +94,13 @@ async def test_profile_praxes_hide_others_in_progress_show_own(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """GET /characters/{id}/praxes omits the character's in_progress drafts for non-members."""
+    """GET /characters/{id}/praxes omits in_progress drafts — the owner included.
+
+    This test used to assert the opposite for the owner's own view
+    (``..._hide_others_in_progress_show_own``). #1112 reversed that half
+    deliberately: the profile is a public record of finished work, and a draft
+    is read from the sidebar instead. The non-member half is unchanged.
+    """
     praxis_id = await _create_solo(client, active_task, auth_headers)
     path = f"/characters/{character.id}/praxes"
 
@@ -102,7 +108,10 @@ async def test_profile_praxes_hide_others_in_progress_show_own(
     assert praxis_id not in {p["id"] for p in others_view.json()}
 
     own_view = await client.get(path, headers=auth_headers)
-    assert praxis_id in {p["id"] for p in own_view.json()}
+    assert praxis_id not in {p["id"] for p in own_view.json()}
+
+    anonymous_view = await client.get(path)
+    assert praxis_id not in {p["id"] for p in anonymous_view.json()}
 
 
 # ---------------------------------------------------------------------------
