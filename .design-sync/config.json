@@ -90,7 +90,7 @@
     "WowVote": "src/components/vote/WowVote.tsx",
     "DefaultCreateCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx",
     "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
-    "DefaultProfile": "src/pages/characterProfile/mobileArchetypes/DefaultProfile.tsx",
+    "DefaultProfileBody": "src/pages/characterProfile/archetypes/DefaultProfileBody.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis.tsx",
     "EphemeristsComposer": "src/pages/editPraxis/mobileArchetypes/EphemeristsComposer.tsx",
     "EverymenComposer": "src/pages/editPraxis/mobileArchetypes/EverymenComposer.tsx",
@@ -198,7 +198,7 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "DefaultProfile": {
+    "DefaultProfileBody": {
       "cardMode": "single",
       "viewport": "390x760"
     },

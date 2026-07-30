@@ -125,4 +125,25 @@ describe('a faction with no mobile twin reaches its OWN skin on a phone', () => 
     expect(html).not.toContain('data-testid="mobile-profile"')
     expect(html, 'coven kit copy').toContain('Coven')
   })
+
+  // ...and the shared ProfileSkin stacks for it. Both of these are fixed pixel
+  // columns that do not fit a 375px viewport beside the 266px credential card,
+  // so a phone must not see either. This is the guard on the collapse's real
+  // fallout: six factions now reach a layout that had only ever been sized for
+  // a laptop.
+  it.each(['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua'])(
+    'drops the fixed-px badge rail and identity floor for %s',
+    (slug) => {
+      mocks.formFactor = 'mobile'
+      const html = renderBody({ faction_slug: slug })
+      expect(html, 'badge rail stacks').not.toContain('minmax(0, 1fr) 300px')
+      expect(html, 'identity column stacks').not.toContain('min-width:300px')
+    },
+  )
+
+  it('keeps both fixed columns on a laptop', () => {
+    const html = renderBody({ faction_slug: 'coven' })
+    expect(html).toContain('minmax(0, 1fr) 300px')
+    expect(html).toContain('min-width:300px')
+  })
 })
