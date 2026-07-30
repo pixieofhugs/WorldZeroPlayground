@@ -8,7 +8,6 @@ import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
 import { praxisModeLabel } from '../../utils/praxis'
-import { usePendingRequests } from '../../hooks/usePendingRequests'
 import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
 
@@ -53,14 +52,22 @@ function SectionHeader({ label }: { label: string }) {
  * Always-on right sidebar (Style Guide §4.2), redesigned into the unaffiliated
  * "all paths" rainbow-spectrum identity: character card + pending requests +
  * in-progress tasks + recent global activity + propose CTA.
+ *
+ * The pending-requests read is owned by `SidebarColumn` and handed down, because
+ * the collapsed handle badges the same count — see that component for why one
+ * read rather than one per consumer (#1343).
  */
-export default function Sidebar() {
+export interface SidebarProps {
+  readonly pendingRequests: ActivityFeedItem[]
+  readonly refetchPendingRequests: () => void
+}
+
+export default function Sidebar({ pendingRequests, refetchPendingRequests }: SidebarProps) {
   const { t } = useTranslation('common')
   const { user } = useAuth()
   const character = user?.character
 
   const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks()
-  const { pendingRequests, refetch: refetchPendingRequests } = usePendingRequests()
   const gameConfig = useGameConfig()
   const [globalActivity, setGlobalActivity] = useState<ActivityFeedItem[]>([])
 
