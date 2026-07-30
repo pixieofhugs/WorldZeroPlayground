@@ -82,8 +82,10 @@ async def test_sidebar_returns_all_three_panels(
     data = response.json()
 
     assert [item["type"] for item in data["pending_requests"]] == ["collab_invite"]
-    # `active_task` is active in the current era, so it is global news.
-    assert [item["type"] for item in data["global_activity"]] == ["global_task"]
+    # `active_task` is active in the current era, so it is global news. The
+    # global panel also carries the era announcement — the rail renders that
+    # type too — so this asserts membership, not the whole list.
+    assert "global_task" in [item["type"] for item in data["global_activity"]]
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
 
 
