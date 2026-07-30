@@ -552,7 +552,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
                   fontSize: 'var(--text-sm)',
                   padding: 'var(--space-xs) var(--space-md)',
                   ...(flagReason === value
-                    ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }
+                    ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
                     : {}),
                 }}
               >
@@ -579,7 +579,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           )}
           <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
             {flagReason !== null && (
-              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
                 {flagging ? t('detail.flag.submitting') : t('detail.flag.submit')}
               </button>
             )}

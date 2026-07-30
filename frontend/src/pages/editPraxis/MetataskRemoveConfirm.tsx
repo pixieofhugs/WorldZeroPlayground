@@ -104,7 +104,7 @@ export default function MetataskRemoveConfirm({
               fontSize: "var(--text-md)",
               padding: "var(--space-sm) var(--space-lg)",
               background: "var(--color-danger)",
-              color: "var(--color-bg-page)",
+              color: "var(--color-on-danger)",
               border: "none",
               borderRadius: 8,
               cursor: busy ? "wait" : "pointer",
