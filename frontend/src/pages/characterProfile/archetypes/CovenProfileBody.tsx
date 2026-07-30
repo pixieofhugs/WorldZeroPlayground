@@ -1,108 +1,129 @@
 /**
- * CovenProfileBody — Cozy Coven scrapbook player-profile skin (#460).
- * Ported from docs/design/profile/templates/Warriors of Whimsy Profile.dc.html:
- * a cork-board mat with push-pin dots, slight tilts, washi-tape strips, and an
- * ".exe window" progression panel. COVEN follows the global light/dark cascade —
- * it reads --faction-coven-* / --faction-coven-card-* tokens (which flip with the
- * theme) and never pins a fixed data-theme.
+ * CovenProfileBody — the Cozy Coven player profile, on the coven's own paper
+ * (#460, re-dressed by #1209).
  *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin. No hardcoded
- * hex — colours via --faction-coven-* vars.
+ * The candlelit page under a turning pentagram watermark, every block a panel of
+ * ward paper inside the slip's pink edge, braided thread heading each section,
+ * and the player's name hand-lettered in Caveat.
+ *
+ * THIS REPLACES THE CORK-BOARD SCRAPBOOK. The push-pin dots, the washi-taped
+ * headings, the `.exe`-window progression panel, the dotted-grid page overlay
+ * and the tilted pinned-paper frames were the lo-fi identity; so were the
+ * `--faction-coven-notepad-*` / `-win-*` / `-tape` / `-scrap-*` / `-dot` tokens
+ * they were painted in. Structure is DefaultProfileBody's locked spine via
+ * `ProfileSkin`, unchanged — #1209 swaps the dress, not the layout.
+ *
+ * Two things kept on purpose. The **watermark** is `.cvn-wheel`, the same
+ * slow-turning pentagram the task card and both detail pages draw, mounted as
+ * the header's decoration where the pushpins were; index.css owns its motion and
+ * its reduced-motion guard. And the **spectrum laurel** stays the shared
+ * `SpectrumLaurel` — the top-praxis mark is site furniture (ADR-0028), not
+ * faction ornament, and only its medallion is tinted.
+ *
+ * INK. `INK` / `SOFT` / `LABEL` clear AA on both grounds this page runs (the
+ * ward page and the ward panel). `DEEP` is 4.44:1 on the page and 4.70:1 on the
+ * panel, so `accent` is only ever painted on `surface` — which is where
+ * `ProfileSkin` puts it, inside the progression ring's disc.
+ *
+ * The page background is the ward page rather than a translucent tint, and the
+ * viewport candle wash (`.coven-backdrop`) shows around the column — the same
+ * relationship every Coven detail page has with the site ground.
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
+import {
+  Braid,
+  CAPTION,
+  CARD,
+  BORDER,
+  DEEP,
+  DISPLAY,
+  HAND,
+  INK,
+  PAGE,
+  READING,
+  SHADOW,
+  SOFT,
+} from '../../../components/cards/covenSlip'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
-const INK = 'var(--faction-coven-card-text)'
-const MUTED = 'var(--faction-coven-card-muted)'
-const ACCENT = 'var(--faction-coven-card-accent)'
-const SURFACE = 'var(--faction-coven-notepad-bg)'
-const BORDER = 'var(--faction-coven-win-border)'
-const MAT = 'var(--faction-coven-light)'
-const DISPLAY = 'var(--font-faction-script)' // Caveat
-const EYEBROW = 'var(--font-body)'
-const BAR = 'linear-gradient(90deg, var(--faction-coven-title-from), var(--faction-coven-card-accent))'
+const CHROME = 'var(--font-faction-rounded)' // Quicksand
+const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
 
-function Pin({ left, right }: { left?: number; right?: number }) {
+/** The slow-turning pentagram, watermarking the identity banner. */
+function Watermark() {
   return (
-    <span
-      aria-hidden
-      style={{
-        position: 'absolute',
-        top: 10,
-        left,
-        right,
-        width: 9,
-        height: 9,
-        borderRadius: '50%',
-        background: ACCENT,
-        boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-        zIndex: 4,
-      }}
-    />
+    <svg
+      className="cvn-wheel"
+      width={420}
+      height={420}
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+      style={{ position: 'absolute', right: -140, top: -80, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }}
+    >
+      <circle cx="50" cy="50" r="44" fill="none" stroke={DEEP} strokeWidth="0.8" />
+      <path
+        d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
+        fill="none"
+        stroke={DEEP}
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 
+/** Section heading — the display face, a braid, then the gloss. */
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 'var(--space-lg)', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)', flexWrap: 'wrap' }}>
       <span
         style={{
           fontFamily: DISPLAY,
+          fontWeight: 600,
           fontSize: 'var(--text-heading)',
-          color: ACCENT,
-          background: 'var(--faction-coven-tape)',
-          padding: 'var(--space-xs) var(--space-md)',
-          transform: 'rotate(-1.5deg)',
-          display: 'inline-block',
+          lineHeight: 1.06,
+          letterSpacing: '0.02em',
+          color: INK,
         }}
       >
         {title}
       </span>
-      <span style={{ fontFamily: EYEBROW, fontSize: 'var(--text-base)', color: MUTED }}>{eyebrow}</span>
+      <Braid style={{ flex: 1 }} />
+      <span style={{ ...CAPTION, flex: '0 0 auto' }}>{eyebrow}</span>
     </div>
   )
 }
 
 const kit: ProfileKit = {
   slug: 'coven',
-  pageBackground: MAT,
-  pageOverlay: 'radial-gradient(var(--faction-coven-dot) 1px, transparent 1px)',
+  pageBackground: PAGE,
   ink: INK,
-  muted: MUTED,
-  accent: ACCENT,
-  surface: SURFACE,
+  muted: SOFT,
+  accent: DEEP,
+  surface: CARD,
   border: BORDER,
   displayFont: DISPLAY,
-  eyebrowFont: EYEBROW,
+  eyebrowFont: CHROME,
+  bodyFont: READING,
   headerStyle: {
-    background: 'var(--faction-coven-notepad-bg)',
-    border: `1px solid ${BORDER}`,
+    background: CARD,
+    border: `2px solid ${BORDER}`,
     borderRadius: 16,
     padding: 'var(--space-2xl)',
     marginBottom: 'var(--space-2xl)',
-    transform: 'rotate(-0.4deg)',
-    boxShadow: '0 12px 30px -18px rgba(0,0,0,0.4)',
+    boxShadow: SHADOW,
   },
-  headerDecoration: (
-    <>
-      <Pin left={12} />
-      <Pin right={12} />
-    </>
-  ),
-  credentialFrame: (card) => (
-    <div style={{ transform: 'rotate(-1.4deg)', filter: 'drop-shadow(0 8px 14px rgba(0,0,0,0.2))' }}>
-      {card}
-    </div>
-  ),
+  headerDecoration: <Watermark />,
   nameSize: 56,
+  nameExtra: { fontFamily: HAND },
   playerEyebrow: 'Player · Warriors of Whimsy',
   progressionStyle: {
     marginTop: 'var(--space-xl)',
-    background: SURFACE,
-    border: `1px solid ${BORDER}`,
-    borderRadius: 10,
+    background: CARD,
+    border: `1.5px solid ${BORDER}`,
+    borderRadius: 12,
     padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
@@ -111,7 +132,7 @@ const kit: ProfileKit = {
   },
   ringLabel: 'lvl',
   barFill: BAR,
-  barTrack: 'var(--faction-coven-notepad-border)',
+  barTrack: BORDER,
   nextLevelLabel: (next) => `next · lvl ${next}`,
   sectionHeading: heading,
   praxisEyebrow: (name) => `sealed by ${name}`,
@@ -120,28 +141,24 @@ const kit: ProfileKit = {
     body: 'The first bit of mischief is always the hardest ✦',
   },
   emptyStateStyle: {
-    border: `1.5px dashed ${ACCENT}`,
+    border: `1.5px dashed ${BORDER}`,
     borderRadius: 14,
     padding: 'var(--space-2xl)',
     textAlign: 'center',
-    background: SURFACE,
+    background: CARD,
   },
-  laurel: <SpectrumLaurel centerBg={SURFACE} glyphColor={ACCENT} rotate={-8} />,
+  laurel: <SpectrumLaurel centerBg={CARD} glyphColor={DEEP} rotate={-8} />,
   badgeTitle: 'Charms earned',
   badgeBoardStyle: {
-    border: `1px solid ${BORDER}`,
-    borderRadius: 12,
-    background: SURFACE,
+    border: `2px solid ${BORDER}`,
+    borderRadius: 14,
+    background: CARD,
     padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
-    fontFamily: EYEBROW,
-    fontSize: 'var(--text-sm)',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    color: MUTED,
+    ...CAPTION,
     marginLeft: 'auto',
-    border: `1px solid ${BORDER}`,
+    border: `1.5px solid ${BORDER}`,
     borderRadius: 20,
     padding: 'var(--space-xs) var(--space-sm)',
   },
@@ -149,8 +166,8 @@ const kit: ProfileKit = {
     <BadgeRow
       badge={badge}
       last={last}
-      dividerColor="var(--faction-coven-notepad-border)"
-      nameStyle={{ fontFamily: DISPLAY, color: INK, lineHeight: 1.15 }}
+      dividerColor={BORDER}
+      nameStyle={{ fontFamily: HAND, color: INK, lineHeight: 1.15 }}
       medallion={(glyph) => (
         <span
           style={{
@@ -158,12 +175,13 @@ const kit: ProfileKit = {
             width: 34,
             height: 34,
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 30% 30%, var(--faction-coven-scrap-mid), var(--faction-coven-scrap-deep))',
+            background:
+              'linear-gradient(150deg, var(--faction-coven-slip-from), var(--faction-coven-slip-lav))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: ACCENT,
-            border: `1px solid ${BORDER}`,
+            color: DEEP,
+            border: `1.5px solid ${BORDER}`,
           }}
         >
           {glyph}

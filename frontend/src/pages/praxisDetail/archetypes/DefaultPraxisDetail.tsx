@@ -119,6 +119,19 @@ import type { PraxisDetailState } from '../usePraxisDetail'
 /** The na spectrum — the one ornament this whole page is built out of. */
 const SPECTRUM = 'var(--faction-default-rainbow)'
 
+/**
+ * Who-voted rung geometry (#1143). Ornament, not layout (§10) — these size a
+ * drawn mark, and the row span is the ruler the gradient windowing below is
+ * measured against, so it has to be a number rather than a --space-* token.
+ * Roughly a third of the interactive caster's dots: this is a readout.
+ */
+const RUNG_DOTS = [1, 2, 3, 4, 5]
+const RUNG_DOT = 10
+const RUNG_GAP = 5
+/** Pitch between dot left edges, and the total width one rainbow covers. */
+const RUNG_PITCH = RUNG_DOT + RUNG_GAP
+const RUNG_SPAN = (RUNG_DOTS.length - 1) * RUNG_PITCH + RUNG_DOT
+
 /** Initials fallback for a member with no uploaded avatar. */
 function initials(name: string): string {
   return (
@@ -510,10 +523,23 @@ export default function DefaultPraxisDetail({
   )
 
   // Per-voter values come straight off `GET /praxes/{id}/voters`, already
-  // fetched by `usePraxisDetail`. Each voter's own rung is a spectrum bar
-  // (value / 5). NO AVERAGE anywhere (ADR-0014): the standing is the sum and
-  // the count, never the mean — and there is no per-voter points figure in the
-  // payload, so none is invented.
+  // fetched by `usePraxisDetail`. Each voter's own rung is five dots, the first
+  // `value` of them filled and the rest hollow rings — the read-only twin of
+  // the caster in `UnaffiliatedVote`, minus everything that made that an input
+  // (touch targets, hover, glow, the tier caption, the rising-wave bob).
+  //
+  // THE ROW IS ONE GRADIENT, WINDOWED (#842). A single rainbow is stretched
+  // across the whole rung and each dot shows the slice that falls where the dot
+  // actually sits — `backgroundSize: <row span>` plus a negative
+  // `backgroundPositionX`. Four filled dots therefore read red · orange ·
+  // green · teal, not four identical dots and not four little rainbows. A
+  // per-dot gradient looks plausible and is the mistake #842 exists about.
+  //
+  // The dots are the reading, so there is no numeral: `role="img"` plus the
+  // value as the accessible name is what carries the figure to a screen reader
+  // now that no text node does. NO AVERAGE anywhere (ADR-0014): the standing is
+  // the sum and the count, never the mean — and there is no per-voter points
+  // figure in the payload, so none is invented.
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {sectionHead(
@@ -545,36 +571,36 @@ export default function DefaultPraxisDetail({
               {voter.display_name}
             </Link>
             <span
-              aria-hidden
+              role="img"
+              aria-label={t('detail.voters.valueAria', { value: voter.value })}
               style={{
-                width: 84,
-                height: 9,
-                borderRadius: 5,
-                background: 'var(--faction-default-card-line)',
-                position: 'relative',
-                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
                 flexShrink: 0,
+                // ornament: the rung's own pitch, and the ruler the gradient
+                // windowing is measured against (§10).
+                gap: RUNG_GAP,
               }}
             >
-              <span
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  width: `${(voter.value / 5) * 100}%`,
-                  background: SPECTRUM,
-                }}
-              />
-            </span>
-            <span
-              className="font-body"
-              style={{
-                width: 20,
-                textAlign: 'right',
-                fontSize: 'var(--text-content)',
-                color: 'var(--faction-default-card-text)',
-              }}
-            >
-              {voter.value}
+              {RUNG_DOTS.map((rung) => (
+                <span
+                  key={rung}
+                  style={{
+                    width: RUNG_DOT,
+                    height: RUNG_DOT,
+                    borderRadius: '50%',
+                    backgroundImage: rung <= voter.value ? SPECTRUM : 'none',
+                    backgroundRepeat: 'no-repeat',
+                    // One rainbow across the rung, windowed to this dot.
+                    backgroundSize: `${RUNG_SPAN}px ${RUNG_DOT}px`,
+                    backgroundPositionX: `${-((rung - 1) * RUNG_PITCH)}px`,
+                    boxShadow:
+                      rung <= voter.value
+                        ? 'none'
+                        : 'inset 0 0 0 1.5px var(--faction-default-dot-ring)',
+                  }}
+                />
+              ))}
             </span>
           </div>
         ))}

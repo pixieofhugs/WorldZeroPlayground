@@ -1,30 +1,43 @@
 import { useTranslation } from "react-i18next";
-import { factionCssVar } from "../../../utils/factions";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
+import {
+  Braid,
+  CAPTION,
+  CARD,
+  BORDER,
+  DEEP,
+  DISPLAY,
+  INK,
+  READING,
+  SHADOW,
+  SOFT,
+} from "../../cards/covenSlip";
 
 /**
- * Cozy Coven — THE PINK STICKER (#840, ADR-0050).
+ * Cozy Coven — THE SPELL SLIP, filed (#1209).
  *
- * A near-white card with a 1px pink hairline and a 16px radius, hand-written in
- * Caveat end to end: "dispatch no. 663 · all done! ✿", "Drop a happy little
- * photo ✿". Warm and soft, and — the part that matters — NOT a chronicle. Until
- * this issue Coven rendered through the gold/plum chronicle frame with pink
- * tokens poured in, which is the shape of the ADR-0050 mix-up: the two factions
- * had swapped identities and the recovery was done in colour only.
+ * The praxis card is the coven's proof written onto the same candle-lit paper
+ * the task slip is issued on: the ward's panel ground inside the slip's pink
+ * edge, a braided thread under the dispatch line, Grenze Gotisch for the title
+ * and Cormorant Garamond for the reading voice.
  *
- * So the frame is Coven's own now, and the borrowed structure is gone with it:
+ * THIS REPLACES THE PINK MARKER STICKER (ADR-0050 → #1209). The blush sticker
+ * stock, its `--faction-coven-sticker-*` family and the all-Caveat setting were
+ * the last of the lo-fi identity on this surface. What survives is the sticker's
+ * geometry, and deliberately: the 16px die-cut radius and the soft pink bloom
+ * are the card's silhouette, and the slip is drawn with exactly the same corner
+ * (`CovenTaskCard` is 18 on a wider sheet).
  *
- *  • no running-head band. A sticker has no masthead — the dispatch line is the
- *    first thing written ON it, an eyebrow inside the text column;
- *  • the border is a 1px HAIRLINE, not the chronicle's 2px binding, and the
- *    shadow is a soft pink bloom rather than a hard parchment drop;
- *  • the media slot is a ROUNDED WINDOW ringed in pink (radius 12, a 2px ring
- *    drawn as a shadow so the image can sit flush), not a dashed box.
+ * ONE RESPONSIVE COMPONENT (ADR-0067). There is no mobile twin any more — this
+ * file serves both form factors, and `frameBase`'s `flex: 1 1 394px` /
+ * `minWidth: 280` resolves to one full-width card per row on a 375px phone. It
+ * therefore carries no form-factor branch and no fixed pixel layout.
  *
- * The dark variant is built explicitly, not inherited: the design draws a deep
- * plum-black ground with the sticker's dashes lifted to a dusty rose, and none
- * of it falls out of the light values by substitution.
+ * Coven answers "display" and "body" with two DIFFERENT faces now, where the
+ * sticker answered both with Caveat (#888): the slip's own pairing is the witch
+ * display over the reading serif, and Caveat is the HAND — it letters a masthead
+ * and a name, not a card's whole content.
  */
 export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -32,13 +45,13 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
     <div
       style={{
         ...frameBase,
-        borderRadius: 16, // the sticker's die-cut corner
+        borderRadius: 16, // the slip's die-cut corner — see frameBase's note
         position: "relative",
-        background: "var(--faction-coven-sticker-bg)",
-        color: factionCssVar("coven", "card-text"),
-        border: "1px solid var(--faction-coven-sticker-border)",
-        boxShadow: "0 4px 18px var(--faction-coven-sticker-shadow)",
-        fontFamily: "var(--faction-coven-card-font)",
+        background: CARD,
+        color: INK,
+        border: `2px solid ${BORDER}`,
+        boxShadow: SHADOW,
+        fontFamily: READING,
         padding: "var(--space-xl)",
         transition: "background 150ms, color 150ms",
       }}
@@ -46,33 +59,24 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
-        tint="var(--faction-coven-sticker-accent)"
-        muted="var(--faction-coven-sticker-muted)"
-        paper="var(--faction-coven-sticker-bg)"
+        tint={DEEP}
+        muted={SOFT}
+        paper={CARD}
         titleStyle={{
-          fontFamily: "var(--faction-coven-card-font)",
-          fontWeight: 700,
-          color: factionCssVar("coven", "card-text"),
+          fontFamily: DISPLAY,
+          fontWeight: 600,
+          letterSpacing: "0.005em",
+          color: INK,
         }}
         showCrown={showCrown}
-        // Coven answers both questions with Caveat (#888). The sticker's voice
-        // IS the handwriting — the pair does not force a second face on a
-        // faction that only has one, it just stops asking `font-body` instead.
         fonts={{
-          display: "var(--faction-coven-card-font)",
-          body: "var(--faction-coven-card-font)",
+          display: DISPLAY,
+          body: READING,
         }}
         eyebrow={
-          <div
-            style={{
-              fontFamily: "var(--faction-coven-card-font)",
-              fontWeight: 700,
-              fontSize: "var(--text-content)",
-              color: "var(--faction-coven-sticker-accent)",
-              marginBottom: "var(--space-xs)",
-            }}
-          >
-            {t("card.masthead.coven", { id: praxis.id })}
+          <div style={{ marginBottom: "var(--space-sm)" }}>
+            <div style={CAPTION}>{t("card.masthead.coven", { id: praxis.id })}</div>
+            <Braid style={{ marginTop: "var(--space-xs)" }} />
           </div>
         }
         mediaEmptyLabel={t("card.coven.mediaEmpty")}
@@ -82,9 +86,11 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           border: "none",
           // A ring rather than a border: the filled gallery draws the same 2px
           // pink edge as a shadow, so an empty and a full slot sit identically.
-          boxShadow: "0 0 0 2px var(--faction-coven-sticker-border)",
+          boxShadow: `0 0 0 2px ${BORDER}`,
           background: "transparent",
-          color: "var(--faction-coven-sticker-muted)",
+          color: SOFT,
+          fontFamily: READING,
+          fontStyle: "italic",
           textTransform: "none",
           letterSpacing: "0.02em",
           fontSize: "var(--text-content)",

@@ -46,7 +46,7 @@ import {
   reopenForEditConfirm,
   type ConfirmRequest,
 } from "../../components/confirm/composerConfirms";
-import { getGameConfig } from "../../api/gameConfig";
+import { useGameConfig } from "../../hooks/useGameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listCharacters, type CharacterOut } from "../../api/characters";
@@ -508,10 +508,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Duel challenge (#311)
   const [duelPaneOpen, setDuelPaneOpen] = useState(false);
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
-  const [duelLevelRequired, setDuelLevelRequired] = useState<number | null>(null);
-  // The ADR-0012 window length (#1164). Same fetch as the duel gate — one
-  // `/game-config` read already in flight, two era values off it.
-  const [autoSubmitDays, setAutoSubmitDays] = useState<number | null>(null);
+  // The duel gate and the ADR-0012 window length (#1164) are two era values off
+  // one payload — since #1141 the app-wide cached one, rather than a third
+  // `/game-config` request. `null` until it lands, and on a failed read, so the
+  // duel chip stays hidden and the holdout's countdown undrawn either way.
+  const gameConfig = useGameConfig();
+  const duelLevelRequired = gameConfig?.duel_level_required ?? null;
+  const autoSubmitDays = gameConfig?.collab_auto_submit_days ?? null;
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
   // Seal confirmation (#718) — opened by PublishButton in duel mode.
   const [duelSealOpen, setDuelSealOpen] = useState(false);
@@ -609,21 +612,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       .catch(() => setError(i18n.t("forms:editPraxis.errors.load")))
       .finally(() => setLoading(false));
   }, [idParam, user, authLoading, navigate]);
-
-  // ---- Era values the composer needs: the duel gate + the publish window ----
-  // Both are `EraConfig` fields and neither is ever assumed. A failed read
-  // leaves the duel chip hidden and the holdout's countdown undrawn — a blank
-  // slot beats a confidently wrong number.
-  useEffect(() => {
-    getGameConfig()
-      .then((cfg) => {
-        setDuelLevelRequired(cfg.duel_level_required);
-        setAutoSubmitDays(cfg.collab_auto_submit_days);
-      })
-      .catch(() => {
-        /* non-fatal; chip stays hidden until known */
-      });
-  }, []);
 
   useEffect(() => {
     if (!user?.character) return;
