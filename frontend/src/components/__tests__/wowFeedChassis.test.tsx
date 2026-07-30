@@ -200,8 +200,13 @@ describe('every type the backend emits, inside this chassis', () => {
     }
   })
 
-  it('leaves the two exempt types alone', () => {
-    expect(card('comment_mention'), 'no body yet (#1196)').toBe('')
+  it('dresses the mention and leaves the one exempt type alone', () => {
+    // #1196 landed while this branch was open and gave `comment_mention` a body,
+    // so the old assertion here (`toBe('')`) had pinned a BUG as a rule. The
+    // mention is an ordinary row now: it takes the chassis like any other.
+    // `era_announcement` is the only genuinely exempt type — deliberately, since
+    // an era turn can strip a player of their faction (epic #1192 decision 6).
+    expect(card('comment_mention'), 'the mention is proclaimed like any row').toContain(RIBBON)
     expect(card('era_announcement'), 'keeps its own neutral chrome').not.toContain(RIBBON)
   })
 
