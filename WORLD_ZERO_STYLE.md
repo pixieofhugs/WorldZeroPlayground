@@ -288,6 +288,16 @@ Classify every string against these three roles. This is the vocabulary the swee
 
 Both of the floor's original exceptions came from treating a fixed container as immovable. It is not.
 
+**One container really is immovable: a drawn one (#1147).** When ornament type sits *inside a mark* — a
+figure in UA's ensō, a total in Everymen's roundel — the container is an illustration, and widening it
+is not a layout decision but a redrawing. There the numeral takes a **ceiling**: the `--text-*` tier is
+the largest it may be, and the mark's own clear width caps it once the string grows. Two consequences
+worth stating, because both have been got wrong: the ceiling must be a no-op at the values the site
+actually shows today — a mark whose figure shrinks on a routine score has been mis-tuned, not fitted —
+and a caption sharing the mark keeps its own full line box, so the figure can never come to rest on the
+word. A cropped `line-height` under a figure is the bug, every time. This carve-out is for **marks
+only**: a card, a panel or a rail is not a drawing, and there the doctrine above stands unchanged.
+
 **Role classes.** Two classes carry the content tier, next to `.eyebrow`:
 
 | Class            | Token                   | Role                                                                     |

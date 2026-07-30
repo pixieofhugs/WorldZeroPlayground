@@ -1,10 +1,16 @@
 /**
- * Cozy Coven MOBILE duel seal-confirm (#720) — design panel 1b.
+ * Cozy Coven MOBILE duel seal-confirm (#720, re-dressed by #1209) — the ward as
+ * a bottom sheet.
  *
- * The same content as the desktop window (2b is explicitly "the mobile sheet laid
+ * The same content as the desktop dialog (2b is explicitly "the mobile sheet laid
  * out for the wider frame"), rebuilt as a bottom sheet: full-bleed on the page
- * background, chrome pinned to a rounded top edge, actions last so the thumb
- * lands on them. Single-column — no grid, per SPEC-faction-ui-profile §1a.
+ * background, the slip band pinned to a rounded top edge, actions last so the
+ * thumb lands on them. Single-column — no grid, per SPEC-faction-ui-profile §1a.
+ *
+ * The `wow.exe` chrome is gone with the desktop skin's: no traffic lights, no
+ * dotted board, no notepad scrap. The grab handle survives, because it is a
+ * PHONE affordance rather than a lo-fi mark — it tells a thumb which edge to
+ * pull, and the slip has no opinion about that.
  *
  * Pure frame, same as the desktop skin: `StakesTiles` and `RaceRoster` own every
  * figure and the `pending`/`active` copy branch is the shared one. No new locale
@@ -16,6 +22,18 @@
  */
 import { factionCssVar } from '../../utils/factions'
 import {
+  Braid,
+  BORDER,
+  CARD,
+  DISPLAY,
+  INK,
+  PAGE,
+  READING,
+  SigilMark,
+  SLIP_SHEET,
+  SOFT,
+} from '../cards/covenSlip'
+import {
   duelSides,
   RaceRoster,
   SealActions,
@@ -25,21 +43,10 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 
-const WIN_BORDER = 'var(--faction-coven-win-border)'
-const TITLE_FROM = 'var(--faction-coven-title-from)'
-const TITLE_TO = 'var(--faction-coven-title-to)'
-const TITLE_TEXT = 'var(--faction-coven-title-text)'
-const BODY_BG = 'var(--faction-coven-body-bg)'
-const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
-const DOT = 'var(--faction-coven-dot)'
-const CARD_TEXT = 'var(--faction-coven-card-text)'
-const CARD_MUTED = 'var(--faction-coven-card-muted)'
 /** The sheet-measured warning ink (#694), which the global red is not (#1168). */
 const NOTICE = 'var(--faction-coven-card-notice)'
-const SCRIPT = 'var(--faction-coven-card-font)'
 
-/** The sheet's grab handle, standing in for the desktop window's traffic lights. */
+/** The sheet's grab handle — a phone affordance, not a `coven.exe` mark. */
 function SheetHandle({ color }: { color: string }) {
   return (
     <span
@@ -70,7 +77,7 @@ export default function CovenMobileDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: CARD_MUTED, bodyFont: 'var(--font-body)' }
+  const theme: DuelSlotTheme = { accent, muted: SOFT, bodyFont: READING }
 
   return (
     <div
@@ -82,51 +89,49 @@ export default function CovenMobileDuelSealConfirm({
     >
       <div
         style={{
-          borderTop: `2px solid ${WIN_BORDER}`,
+          borderTop: `2px solid ${BORDER}`,
           borderTopLeftRadius: 18,
           borderTopRightRadius: 18,
           overflow: 'hidden',
           boxShadow: `0 -8px 26px color-mix(in srgb, ${accent} 24%, transparent)`,
-          color: CARD_TEXT,
-          fontFamily: 'var(--font-body)',
+          color: INK,
+          fontFamily: READING,
         }}
       >
-        {/* sheet header */}
+        {/* the slip band */}
         <div
           style={{
             padding: 'var(--space-sm) var(--space-lg) var(--space-md)',
-            background: `linear-gradient(180deg, ${TITLE_FROM}, ${TITLE_TO})`,
-            borderBottom: `2px solid ${WIN_BORDER}`,
-            color: TITLE_TEXT,
+            background: SLIP_SHEET,
+            borderBottom: `2px solid ${BORDER}`,
+            color: INK,
           }}
         >
-          <SheetHandle color={TITLE_TEXT} />
-          <h2
+          <SheetHandle color={INK} />
+          <div
             style={{
               marginTop: 'var(--space-sm)',
-              fontFamily: SCRIPT,
-              fontSize: 'var(--text-title)',
-              fontWeight: 700,
-              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'var(--space-sm)',
             }}
           >
-            {copy.heading}
-          </h2>
+            <SigilMark size={24} />
+            <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', fontWeight: 600, lineHeight: 1.06 }}>
+              {copy.heading}
+            </h2>
+          </div>
+          <Braid style={{ marginTop: 'var(--space-sm)' }} />
         </div>
 
-        <div
-          style={{
-            padding: 'var(--space-lg)',
-            background: BODY_BG,
-            backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
-            backgroundSize: '13px 13px',
-          }}
-        >
+        <div style={{ padding: 'var(--space-lg)', background: PAGE }}>
           {/* Notice ink, not the global red — see the desktop skin's note. */}
           <p
             style={{
               fontSize: 'var(--text-content)',
               lineHeight: 1.5,
+              color: SOFT,
               ...(copy.danger
                 ? {
                     color: NOTICE,
@@ -155,9 +160,9 @@ export default function CovenMobileDuelSealConfirm({
           <div
             style={{
               marginTop: 'var(--space-md)',
-              background: NOTEPAD_BG,
-              border: `1.5px solid ${NOTEPAD_BORDER}`,
-              borderRadius: 10,
+              background: CARD,
+              border: `1.5px solid ${BORDER}`,
+              borderRadius: 12,
               padding: 'var(--space-md)',
             }}
           >

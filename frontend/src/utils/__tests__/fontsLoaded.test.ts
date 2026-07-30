@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -146,6 +146,344 @@ describe("font families are loaded (#839)", () => {
         `every visitor pays before first paint. Drop it from the URL — if a surface
 ` +
         `needs it later, adding it back is one edit.`,
+    ).toEqual([]);
+  });
+});
+
+/**
+ * The same guard one level down, at the axis spec (#1230).
+ *
+ * `loadedFamilies` parses `family=([^&"':]+)`, which stops at the colon — so
+ * `Cinzel:wght@400;500;600;700;800` passed it identically whether five weights
+ * were used or one. The families were honest and the request was still 46 faces
+ * across 19 families; eight families accounted for 34 of them.
+ *
+ * A face is a separate download, so this is the same load-time bug as an unused
+ * family, just finer-grained. It is also the same *rendering* bug in reverse:
+ * drop a weight something actually sets and the browser does not fail, it
+ * synthesises — a fake-bold that looks approximately right. So the evidence bar
+ * here is higher than the family check's deliberately-permissive substring
+ * search. A weight counts as used only when some brace-delimited scope pins both
+ * the family and the weight; a mention in a comment or a dead branch does not.
+ */
+
+/** One downloadable face: a family at a weight, upright or italic. */
+interface Face {
+  family: string;
+  weight: number;
+  italic: boolean;
+}
+
+const faceKey = (face: Face): string =>
+  `${face.family}:${face.weight}${face.italic ? "i" : ""}`;
+
+/**
+ * Every face the `<link>` requests, parsed out of the `axes@values` spec.
+ *
+ * `Cinzel:wght@400;500` is two faces; `Lora:ital,wght@0,500;1,400` is an upright
+ * 500 and an italic 400; `IM Fell English:ital@1` is one italic face at the
+ * default weight; a bare `Anton` is one upright 400.
+ */
+function loadedFaces(): Face[] {
+  const html = readFileSync(join(FRONTEND_DIR, "index.html"), "utf-8");
+  const link = html.match(/fonts\.googleapis\.com\/css2\?([^"']+)/)?.[1] ?? "";
+  return link.split("&").flatMap((parameter) => {
+    const value = parameter.startsWith("family=") ? parameter.slice(7) : "";
+    if (!value) return [];
+    const [rawFamily, spec] = value.split(":");
+    const family = decodeURIComponent(rawFamily).replace(/\+/g, " ").trim().toLowerCase();
+    if (!spec) return [{ family, weight: 400, italic: false }];
+    const [axisNames, axisValues] = spec.split("@");
+    const axes = axisNames.split(",");
+    return axisValues.split(";").map((tuple) => {
+      const values = tuple.split(",");
+      const weightAxis = axes.indexOf("wght");
+      const italicAxis = axes.indexOf("ital");
+      return {
+        family,
+        weight: weightAxis === -1 ? 400 : Number(values[weightAxis]),
+        italic: italicAxis !== -1 && values[italicAxis] === "1",
+      };
+    });
+  });
+}
+
+/** Tailwind's three family utilities (tailwind.config.ts) and its weight scale. */
+const TAILWIND_FAMILIES: Record<string, string> = {
+  "font-display": "lora",
+  "font-body": "courier prime",
+  "font-accent": "bebas neue",
+};
+const TAILWIND_WEIGHTS: Record<string, number> = {
+  "font-thin": 100,
+  "font-extralight": 200,
+  "font-light": 300,
+  "font-normal": 400,
+  "font-medium": 500,
+  "font-semibold": 600,
+  "font-bold": 700,
+  "font-extrabold": 800,
+  "font-black": 900,
+};
+
+/**
+ * String `const` bindings a file can see: its own, plus the ones it imports.
+ *
+ * Every faction surface routes its family through one (`const CHROME =
+ * "var(--font-faction-rounded)"`, then `fontFamily: CHROME`), and the shared
+ * ones are imported rather than redeclared — UA's whole skin reads its two cuts
+ * off `cards/uaAtoms`. Resolving only local bindings misses those entirely.
+ */
+const bindingCache = new Map<string, Map<string, string>>();
+function stringConstants(file: string, depth = 0): Map<string, string> {
+  const cached = bindingCache.get(file);
+  if (cached) return cached;
+  const bindings = new Map<string, string>();
+  bindingCache.set(file, bindings); // set first: import cycles are legal
+  if (depth > 3 || !existsSync(file)) return bindings;
+  const source = readFileSync(file, "utf-8");
+  for (const match of source.matchAll(
+    /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(["'`])((?:(?!\2).)*)\2/g,
+  )) {
+    bindings.set(match[1], match[3]);
+  }
+  for (const match of source.matchAll(/import\s*\{([^}]+)\}\s*from\s*["'](\.[^"']+)["']/g)) {
+    const names = match[1]
+      .split(",")
+      .map((name) => name.trim().split(/\s+as\s+/).pop()?.trim() ?? "");
+    for (const extension of [".ts", ".tsx", "/index.ts", "/index.tsx"]) {
+      const target = resolvePath(dirname(file), match[2] + extension);
+      if (!existsSync(target)) continue;
+      const exported = stringConstants(target, depth + 1);
+      for (const name of names) {
+        const value = exported.get(name);
+        if (value !== undefined && !bindings.has(name)) bindings.set(name, value);
+      }
+      break;
+    }
+  }
+  return bindings;
+}
+
+/** That file's source with every such binding inlined at its use sites. */
+function inlineConstants(file: string, source: string): string {
+  const bindings = stringConstants(file);
+  return source.replace(/\b([A-Za-z_$][\w$]*)\b/g, (name) => bindings.get(name) ?? name);
+}
+
+/** The innermost `{...}` around `index`, with nested blocks stripped out. */
+function enclosingScope(source: string, index: number): string {
+  let depth = 0;
+  let start = -1;
+  for (let cursor = index; cursor >= 0; cursor--) {
+    if (source[cursor] === "}") depth++;
+    else if (source[cursor] === "{") {
+      if (depth === 0) {
+        start = cursor;
+        break;
+      }
+      depth--;
+    }
+  }
+  if (start === -1) return source.slice(index, index + 200);
+  depth = 0;
+  let end = source.length;
+  for (let cursor = start; cursor < source.length; cursor++) {
+    if (source[cursor] === "{") depth++;
+    else if (source[cursor] === "}") {
+      depth--;
+      if (depth === 0) {
+        end = cursor;
+        break;
+      }
+    }
+  }
+  // A child's weight must not count as the parent's, so keep depth-0 text only.
+  let flat = "";
+  depth = 0;
+  for (const character of source.slice(start + 1, end)) {
+    if (character === "{") depth++;
+    else if (character === "}") depth--;
+    else if (depth === 0) flat += character;
+  }
+  return flat;
+}
+
+/**
+ * Every face a source file actually sets: each scope that pins a family, paired
+ * with the weight and slant pinned alongside it. A scope that names a family and
+ * no weight renders at the inherited default, which is 400 everywhere here — no
+ * rule in the codebase sets a weight without also setting a family, bar
+ * `.markdown-preview strong`, whose family is Lora via `@apply font-display`.
+ */
+function declaredFaces(loadedFamilyNames: Set<string>): Face[] {
+  const declared: Face[] = [];
+  const record = (families: Iterable<string>, weights: number[], italic: boolean) => {
+    for (const family of families) {
+      for (const weight of weights.length > 0 ? weights : [400]) {
+        declared.push({ family, weight, italic });
+      }
+    }
+  };
+
+  for (const file of collectSourceFiles(SRC_DIR)) {
+    const raw = readFileSync(file, "utf-8");
+    const source = file.endsWith(".css") ? raw : inlineConstants(file, raw);
+
+    for (const match of source.matchAll(/font-?[fF]amily\s*[:=]/g)) {
+      const scope = enclosingScope(source, match.index);
+      const families = new Set<string>();
+      // Quoted in a stack, or bare before a comma in a JSX attribute
+      // (`fontFamily="IM Fell English, serif"`).
+      for (const quoted of scope.matchAll(/["']\s*([A-Za-z][A-Za-z0-9 ]+)\s*["',]/g)) {
+        const family = quoted[1].trim().toLowerCase();
+        if (loadedFamilyNames.has(family)) families.add(family);
+      }
+      for (const reference of scope.matchAll(/var\((--[a-z0-9-]+)\)/g)) {
+        for (const family of familiesBehindToken(reference[1], loadedFamilyNames)) {
+          families.add(family);
+        }
+      }
+      if (families.size === 0) continue;
+
+      const weights = [
+        ...new Set(
+          [...scope.matchAll(/font-?[wW]eight\s*[:=][^;\n]*/g)].flatMap((declaration) =>
+            [...declaration[0].matchAll(/\b(\d{3})\b/g)].map((digits) => Number(digits[1])),
+          ),
+        ),
+      ];
+      record(families, weights, /font-?[sS]tyle\s*[:=]\s*\{?\s*["']?\s*italic/.test(scope));
+    }
+
+    // `className="font-display italic font-medium"` sets all three at once.
+    for (const match of raw.matchAll(/(?:className\s*=\s*|@apply\s+)["'`]?([^"'`\n;]*)/g)) {
+      const classes = match[1];
+      const family = Object.entries(TAILWIND_FAMILIES).find(([utility]) =>
+        new RegExp(`\\b${utility}\\b`).test(classes),
+      )?.[1];
+      if (!family) continue;
+      const weight = Object.entries(TAILWIND_WEIGHTS).find(([utility]) =>
+        new RegExp(`\\b${utility}\\b`).test(classes),
+      )?.[1];
+      record([family], weight === undefined ? [] : [weight], /\bitalic\b/.test(classes));
+    }
+  }
+  return declared;
+}
+
+/** The loaded families a `var(--token)` resolves to, following alias chains. */
+function familiesBehindToken(
+  token: string,
+  loadedFamilyNames: Set<string>,
+  seen = new Set<string>(),
+): string[] {
+  if (seen.has(token)) return [];
+  seen.add(token);
+  const value = tokenValues().get(token);
+  if (value === undefined) return [];
+  const families = [...value.matchAll(/["']([^"']+)["']/g)]
+    .map((match) => match[1].trim().toLowerCase())
+    .filter((family) => loadedFamilyNames.has(family));
+  for (const alias of value.matchAll(/var\((--[a-z0-9-]+)\)/g)) {
+    families.push(...familiesBehindToken(alias[1], loadedFamilyNames, seen));
+  }
+  return families;
+}
+
+let tokenValueCache: Map<string, string> | undefined;
+function tokenValues(): Map<string, string> {
+  if (tokenValueCache) return tokenValueCache;
+  const css = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  tokenValueCache = new Map();
+  for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
+    // Light theme wins; the dark cascade never repoints a family token.
+    if (!tokenValueCache.has(match[1])) tokenValueCache.set(match[1], match[2].trim());
+  }
+  return tokenValueCache;
+}
+
+/**
+ * Which available weight a desired one actually renders as — CSS Fonts 4 §5.2.
+ *
+ * Not a nicety: a declared weight need not be requested to keep a face alive.
+ * 22 `font-display` sites set no weight at all, so they ask for 400, and Lora is
+ * requested at 500/600 — under this rule they render in the 500 face. Compare
+ * requested against declared by equality and Lora 500 looks dead; drop it and
+ * all 22 jump to 600. The guard has to resolve the way the browser does, or it
+ * recommends deleting the very face a surface is rendering in.
+ */
+function matchedWeight(desired: number, available: number[]): number | undefined {
+  if (available.includes(desired)) return desired;
+  const descending = available.filter((w) => w < desired).sort((a, b) => b - a);
+  const ascending = available.filter((w) => w > desired).sort((a, b) => a - b);
+  if (desired < 400) return descending[0] ?? ascending[0];
+  if (desired > 500) return ascending[0] ?? descending[0];
+  // 400–500 inclusive: up to 500 first, then down, then past 500.
+  const upToFiveHundred = ascending.filter((w) => w <= 500);
+  return upToFiveHundred[0] ?? descending[0] ?? ascending[0];
+}
+
+describe("font weights are used (#1230)", () => {
+  const faces = loadedFaces();
+  const families = new Set(faces.map((face) => face.family));
+
+  it("parses the axis spec, not just the family (sanity check)", () => {
+    expect(faces.length).toBeGreaterThan(families.size);
+    // A bare family is one upright face; `IM Fell English:ital@1` is one italic.
+    expect(faces).toContainEqual({ family: "anton", weight: 400, italic: false });
+    expect(faces).toContainEqual({ family: "im fell english", weight: 400, italic: true });
+  });
+
+  it("resolves a desired weight the way the browser does", () => {
+    expect(matchedWeight(400, [500, 600])).toBe(500); // the Lora case
+    expect(matchedWeight(700, [500, 600])).toBe(600);
+    expect(matchedWeight(600, [400, 600])).toBe(600);
+    expect(matchedWeight(500, [400, 700])).toBe(400);
+  });
+
+  it("requests no weight that nothing renders in", () => {
+    const declared = declaredFaces(families);
+    // Every face some declaration actually resolves to.
+    const rendered = new Set<string>();
+    for (const face of declared) {
+      const available = faces
+        .filter((candidate) => candidate.family === face.family && candidate.italic === face.italic)
+        .map((candidate) => candidate.weight);
+      const weight = matchedWeight(face.weight, available);
+      if (weight !== undefined) rendered.add(faceKey({ ...face, weight }));
+    }
+
+    // A family with one face has no weight to get wrong — whatever the app sets,
+    // that face is what renders. Redundant *faces within a family* are this
+    // guard's business; a whole unused family is the family check's, above.
+    const multiFace = new Set(
+      [...families].filter(
+        (family) => faces.filter((face) => face.family === family).length > 1,
+      ),
+    );
+    const unused = faces
+      .filter((face) => multiFace.has(face.family) && !rendered.has(faceKey(face)))
+      .map((face) => `${face.family} ${face.weight}${face.italic ? " italic" : ""}`)
+      .sort();
+
+    expect(
+      unused,
+      `index.html requests ${unused.join(", ")}, which nothing renders in.
+` +
+        `Each is a separate download blocking first paint. Drop the axis value
+` +
+        `from the URL — the family stays, only the weight goes.
+` +
+        `No declaration resolves to it under CSS font matching, so removing it
+` +
+        `changes nothing on screen. If a surface really does use one, this guard
+` +
+        `could not see where: it counts a weight only when a single brace-scope
+` +
+        `pins both the family and the weight. Pin them together rather than
+` +
+        `widening the guard, or the fake-bold it exists to catch walks back in.`,
     ).toEqual([]);
   });
 });
