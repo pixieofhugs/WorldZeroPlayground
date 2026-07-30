@@ -1,4 +1,5 @@
 import api from './axios'
+import type { PraxisType } from './praxis'
 
 export type TaskType = 'standard' | 'metatask'
 
@@ -88,6 +89,15 @@ export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
   return data
 }
 
+/**
+ * One row of GET /tasks/{id}/signups.
+ *
+ * This mirrors the backend `TaskSignupOut`, which is now the route's real
+ * `response_model` — it was `list[dict]`, so this type described a schema the
+ * route did not actually return (#1051). The two fields that were wrong:
+ * `status` was never emitted (the route sends the praxis's *type*), and
+ * `signed_up_at` is really `joined_at`.
+ */
 export interface TaskSignupOut {
   character_id: number
   display_name: string
@@ -96,8 +106,10 @@ export interface TaskSignupOut {
   // Current-era level, for the roster row's "lvl N" (#1029). Always present on
   // a live backend response; optional here so pre-#1029 mocks stay valid.
   level?: number
-  status: string
-  signed_up_at: string
+  /** Which kind of praxis the character is working the task through. */
+  praxis_type: PraxisType
+  /** When the character joined the praxis (`PraxisMember.joined_at`). */
+  joined_at: string
 }
 
 export async function getTaskSignups(taskId: number): Promise<TaskSignupOut[]> {
