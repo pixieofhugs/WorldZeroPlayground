@@ -44,7 +44,7 @@ const asyncNoop = async () => {};
 
 function mkState(partial: Partial<EditPraxisState>): EditPraxisState {
   return {
-    metaTasks: [],
+    metatasks: [],
     appliedMetatasks: new Set<number>(),
     appliedMetataskList: [],
     applyingMetatask: null,
@@ -117,7 +117,7 @@ describe("MetataskPicker", () => {
   it("renders the neutral header, both eligible rows, and the All filter", () => {
     const html = renderToStaticMarkup(
       <MetataskPicker
-        state={mkState({ metaTasks: rows, metataskPickerOpen: true })}
+        state={mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
     );
     expect(html).toContain(i18n.t("editPraxis.seal.pickerTitle", { ns: "forms" }));
@@ -130,7 +130,7 @@ describe("MetataskPicker", () => {
     const html = renderToStaticMarkup(
       <MetataskPicker
         state={mkState({
-          metaTasks: rows,
+          metatasks: rows,
           appliedMetatasks: new Set([1]),
           metataskPickerOpen: true,
         })}

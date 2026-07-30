@@ -37,16 +37,16 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
   // Distinct issuing factions present in the eligible set — the filter chips.
   const factionSlugs = useMemo(() => {
     const seen: string[] = [];
-    for (const mt of state.metaTasks) {
+    for (const mt of state.metatasks) {
       const slug = mt.metatask_faction_slug;
       if (slug && !seen.includes(slug)) seen.push(slug);
     }
     return seen;
-  }, [state.metaTasks]);
+  }, [state.metatasks]);
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return state.metaTasks.filter((mt) => {
+    return state.metatasks.filter((mt) => {
       if (factionFilter !== ALL_FILTER && mt.metatask_faction_slug !== factionFilter) {
         return false;
       }
@@ -54,7 +54,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
       const haystack = `${mt.title} ${mt.description ?? ""}`.toLowerCase();
       return haystack.includes(needle);
     });
-  }, [state.metaTasks, query, factionFilter]);
+  }, [state.metatasks, query, factionFilter]);
 
   const chipStyle = (active: boolean, slug: string | null) => ({
     padding: "var(--space-xs) var(--space-md)",
