@@ -274,6 +274,152 @@ async def test_mention_notifies_via_activity_feed(
     assert mention_items[0]["actor_display_name"] == character2.display_name
 
 
+# ── The mention CARD (#1196) ──────────────────────────────────────────────────
+#
+# `comment_mention` had a correct query and a complete payload from the day it
+# shipped and no frontend case, so every mention ever sent rendered as nothing.
+# The fix is frontend, but it leans on three backend facts. These pin them, so a
+# change here fails loudly instead of quietly blanking the card again.
+
+
+@pytest.mark.asyncio
+async def test_mention_payload_carries_what_the_card_draws(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Actor link, exactly one target, and the quoted excerpt."""
+    await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "this bit is yours @testcharacter"},
+        headers=auth_headers2,
+    )
+    feed = await client.get(
+        "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
+    )
+    payload = [i for i in feed.json()["items"] if i["type"] == "comment_mention"][0][
+        "payload"
+    ]
+    # The commenter, so the card's actor can link to their character page.
+    assert payload["character_id"] == character2.id
+    # Exactly one target — the CHECK constraint, seen from the client's side. The
+    # card reads praxis_id then task_id and needs no tie-break.
+    assert payload["praxis_id"] == praxis_solo.id
+    assert payload["task_id"] is None
+    # The card quotes this verbatim and does not re-truncate.
+    assert payload["excerpt"] == "this bit is yours @testcharacter"
+
+
+@pytest.mark.asyncio
+async def test_mention_counts_under_your_stuff_not_requests(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A mention is news about you, not a request of you.
+
+    Nothing is being asked — there is no accept, decline or answer — so it counts
+    under Your stuff and must NOT inflate the Requests badge, which exists to say
+    "someone is waiting on a decision from you".
+    """
+    await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "over to you @testcharacter"},
+        headers=auth_headers2,
+    )
+
+    def mentions(body: dict) -> list[dict]:
+        return [i for i in body["items"] if i["type"] == "comment_mention"]
+
+    for tab in ("all", "your_stuff"):
+        feed = await client.get(
+            "/activity-feed", params={"filter": tab}, headers=auth_headers
+        )
+        assert len(mentions(feed.json())) == 1, (tab, feed.json()["items"])
+    assert feed.json()["counts"]["your_stuff"] >= 1
+
+    requests_feed = await client.get(
+        "/activity-feed", params={"filter": "requests"}, headers=auth_headers
+    )
+    assert mentions(requests_feed.json()) == []
+
+
+@pytest.mark.asyncio
+async def test_withdrawn_mention_leaves_no_card(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Withdrawing the comment withdraws the mention card with it.
+
+    The card quotes the comment's own words, so a withdrawn comment that still had
+    a feed card would keep publishing text its author had retracted — to the one
+    person it named.
+    """
+    create = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "ignore this @testcharacter"},
+        headers=auth_headers2,
+    )
+    comment_id = create.json()["id"]
+    delete = await client.delete(f"/comments/{comment_id}", headers=auth_headers2)
+    assert delete.status_code == 204
+
+    feed = await client.get(
+        "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
+    )
+    assert [i for i in feed.json()["items"] if i["type"] == "comment_mention"] == []
+
+
+@pytest.mark.asyncio
+async def test_hidden_mention_leaves_no_card(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    era: Era,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A comment hidden by moderation loses its card too.
+
+    The mention query asks for ``moderation_status == visible``, so the card and
+    the public thread hide the same comment at the same moment. A card that
+    outlived the hiding would republish flagged text straight into the feed of the
+    person it was aimed at.
+    """
+    create = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "rude thing @testcharacter"},
+        headers=auth_headers2,
+    )
+    comment_id = create.json()["id"]
+    # comment_flag_review_threshold is 1, so one flag from an eligible flagger
+    # (flag_level_required=4) moves it out of `visible`.
+    await _set_level(db_session, character, era, 5)
+    flag = await client.post(
+        f"/comments/{comment_id}/flag",
+        json={"reason": "spam"},
+        headers=auth_headers,
+    )
+    assert flag.status_code == 200, flag.text
+
+    feed = await client.get(
+        "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
+    )
+    assert [i for i in feed.json()["items"] if i["type"] == "comment_mention"] == []
+
+
 # Exactly-one-target is a DB CHECK (num_nonnulls(praxis_id, task_id) = 1, in
 # migration 0005). The service guards it first with a clean 422; testing the guard
 # here keeps us clear of the conftest's SAVEPOINT machinery, which an IntegrityError

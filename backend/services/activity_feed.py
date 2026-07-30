@@ -138,6 +138,11 @@ SUB_QUERY_LIMIT = 50
 ERA_ANNOUNCEMENT_LIMIT = 5
 ADMIN_ACTOR_NAME = "Admin"
 
+# How much of a mentioning comment the feed card quotes. The card shows the
+# excerpt verbatim and does not re-truncate, so this number is the whole of what
+# a reader sees before they open the thread.
+COMMENT_EXCERPT_LENGTH = 140
+
 
 @dataclass(frozen=True)
 class FeedContext:
@@ -674,6 +679,7 @@ def _comment_mentions_query(ctx: FeedContext) -> Select:
             Comment.created_at,
             Comment.praxis_id,
             Comment.task_id,
+            Character.id.label("author_character_id"),
             Character.display_name.label("author_display_name"),
             Character.faction_slug.label("author_faction_slug"),
             Character.avatar_url.label("author_avatar_url"),
@@ -701,9 +707,18 @@ def _comment_mention_item(row: Any) -> ActivityFeedItemDC:
         actor_avatar_url=row.author_avatar_url,
         payload={
             "comment_id": row.id,
+            # The commenter, so the card's actor can link to their character page
+            # like every other actor-bearing type (#1196). Keyed "character_id"
+            # to match friend_completion / friend_signup / friend_defection /
+            # collaborator_submitted — the frontend reads one payload key for
+            # "whose name is this", not a per-type spelling.
+            "character_id": row.author_character_id,
+            # Exactly one of these is set: num_nonnulls(praxis_id, task_id) = 1 is
+            # a DB CHECK (migration 0005), so the client can read them in order
+            # without a tie-break.
             "praxis_id": row.praxis_id,
             "task_id": row.task_id,
-            "excerpt": row.body_text[:140],
+            "excerpt": row.body_text[:COMMENT_EXCERPT_LENGTH],
         },
     )
 
