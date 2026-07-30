@@ -77,7 +77,7 @@ import {
   PLATE,
   QUIET,
   READING,
-} from '../cards/ephemeristsPlate'
+} from '../factionMarks/ephemeristsPlate'
 
 const HAIRLINE_FAINT = `1px solid ${LINE}`
 const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`

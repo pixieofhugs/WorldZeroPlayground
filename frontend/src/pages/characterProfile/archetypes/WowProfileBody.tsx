@@ -29,7 +29,7 @@
  * `mobileProfile` manifest surface (`mobileArchetypes/WowProfile`). That surface
  * is retired and the pavilion is the `MobileProfile` branch below, unchanged:
  * the crested header wash and checker from the kit's one phone screen
- * (`components/cards/wowMobile`), over this archetype's own three marks — burnt-
+ * (`components/factionMarks/wowMobile`), over this archetype's own three marks — burnt-
  * gold figures on near-white plates, honours struck on gilt lozenges, and every
  * row led by a plum rule. Those marks are what make the two form factors read as
  * one page, and they are why the merge folds the pavilion in rather than letting
@@ -62,7 +62,7 @@ import {
   WowSpark,
   wowChecker,
   wowMobilePage,
-} from '../../../components/cards/wowMobile'
+} from '../../../components/factionMarks/wowMobile'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'

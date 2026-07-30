@@ -25,7 +25,7 @@ import {
   SHADOW,
   SMALL_CAPS,
   PLATE as SHEET,
-} from '../../../components/cards/ephemeristsPlate'
+} from '../../../components/factionMarks/ephemeristsPlate'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**

@@ -7,7 +7,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
 import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
-import { BalloonBunch, Bunting, Zig } from '../../../components/cards/wowOrnament'
+import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
@@ -52,7 +52,7 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * to a surface rather than to a faction (§4), and repointing Coven's card font
  * from here would restyle a dozen Coven surfaces by accident.
  *
- * Every ornament comes from `components/cards/wowOrnament.tsx`, the faction's
+ * Every ornament comes from `components/factionMarks/wowOrnament.tsx`, the faction's
  * one primitive set (§6/#849) — this file draws no balloon of its own.
  *
  * ## Two WOW rules that are load-bearing, not taste (§3)

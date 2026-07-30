@@ -56,7 +56,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
-} from '../cards/covenSlip'
+} from '../factionMarks/covenSlip'
 import {
   duelSides,
   RaceRoster,

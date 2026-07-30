@@ -1,4 +1,4 @@
-import { SnideSigil } from "../snide/snideAtoms";
+import { SnideSigil } from "../factionMarks/snideAtoms";
 import i18n from "../../i18n";
 
 /**

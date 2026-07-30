@@ -25,7 +25,7 @@ import {
   SMALL_CAPS,
   Tally,
   PLATE as SHEET,
-} from '../../../components/cards/ephemeristsPlate'
+} from '../../../components/factionMarks/ephemeristsPlate'
 import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'

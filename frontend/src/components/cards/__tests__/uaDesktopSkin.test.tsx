@@ -293,7 +293,7 @@ describe('the eleven rebuilt surfaces carry no salon left-overs', () => {
   const REBUILT = [
     'components/taskCard/UaTaskCard.tsx',
     'components/factionHero/UaFactionHero.tsx',
-    'components/cards/uaAtoms.tsx',
+    'components/factionMarks/uaAtoms.tsx',
     'components/feed/UaFeedFrame.tsx',
     'components/avatar/UaAvatar.tsx',
     'components/backdrop/UaBackdrop.tsx',

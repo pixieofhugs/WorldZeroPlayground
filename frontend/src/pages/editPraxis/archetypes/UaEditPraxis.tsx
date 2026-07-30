@@ -126,7 +126,7 @@ import {
 } from "./controls";
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/sigil/UaSigil";
-import { UA_DISPLAY, UA_TEXT, UaEnsoScore } from "../../../components/cards/uaAtoms";
+import { UA_DISPLAY, UA_TEXT, UaEnsoScore } from "../../../components/factionMarks/uaAtoms";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 

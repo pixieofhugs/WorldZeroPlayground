@@ -88,10 +88,10 @@ describe('Cozy Coven wears one identity (#1209)', () => {
   })
 
   it('the slip and ward families are what the sweep moved TO, so they are read', () => {
-    // Either directly, or through `components/cards/covenSlip.tsx`, which is
+    // Either directly, or through `components/factionMarks/covenSlip.tsx`, which is
     // where the marks used by more than one Coven surface are drawn.
     const readers = sourceFiles(SRC_DIR).filter((path) =>
-      /--faction-coven-(slip|ward)-|cards\/covenSlip/.test(stripComments(readFileSync(path, 'utf8'))),
+      /--faction-coven-(slip|ward)-|factionMarks\/covenSlip/.test(stripComments(readFileSync(path, 'utf8'))),
     )
     // The reference implementations (task card, task detail, praxis detail,
     // comment voice, feed frame, composer) plus the swept surfaces and the kit

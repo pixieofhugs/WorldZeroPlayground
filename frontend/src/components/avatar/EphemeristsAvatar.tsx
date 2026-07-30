@@ -1,6 +1,6 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
-import { BAND, BRASS, CAPS, DISC, GOLD, INK, PLATE } from "../cards/ephemeristsPlate";
+import { BAND, BRASS, CAPS, DISC, GOLD, INK, PLATE } from "../factionMarks/ephemeristsPlate";
 
 /**
  * The Ephemerists avatar — the plate's medallion field ruled in brass, with the

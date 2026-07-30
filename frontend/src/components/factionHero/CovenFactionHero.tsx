@@ -16,7 +16,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
-} from "../cards/covenSlip";
+} from "../factionMarks/covenSlip";
 
 /**
  * Cozy Coven faction-page hero — the spell slip, opened out (#1209).

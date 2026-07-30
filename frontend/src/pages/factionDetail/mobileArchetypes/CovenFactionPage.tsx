@@ -24,7 +24,7 @@ import {
   SlipAvatar,
   SLIP_SHEET,
   SOFT,
-} from '../../../components/cards/covenSlip'
+} from '../../../components/factionMarks/covenSlip'
 import { factionName, factionDescription } from '../../../utils/factions'
 import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'

@@ -119,7 +119,7 @@ import {
   BAND,
   BAND_INK,
   BRASS_LIGHT,
-} from "../../../components/cards/ephemeristsPlate";
+} from "../../../components/factionMarks/ephemeristsPlate";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";

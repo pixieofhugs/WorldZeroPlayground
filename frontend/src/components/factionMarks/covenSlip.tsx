@@ -9,7 +9,7 @@ import type { CSSProperties } from "react";
  * and thirteen private copies of a pentagram badge is how a faction acquires a
  * second identity again. So the marks every swept surface needs — and only
  * those — are drawn once here, in the shape `components/duel/wowLists.tsx` and
- * `components/cards/wowMobile.tsx` already established for WOW.
+ * `components/factionMarks/wowMobile.tsx` already established for WOW.
  *
  * NOTHING HERE IS NEW. Every mark is lifted verbatim from the shipped
  * references, and every colour is a `--faction-coven-slip-*` /

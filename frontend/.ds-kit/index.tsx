@@ -61,7 +61,7 @@ export { default as SnideMasthead } from "../src/components/factionCard/SnideMas
 export { default as SNIDETaskCard } from "../src/components/cards/SNIDETaskCard";
 export { default as SnideVote } from "../src/components/vote/SnideVote";
 export { default as TaskCard } from "../src/components/taskCard/TaskCard";
-export { TaskCrown } from "../src/components/cards/TaskCrown";
+export { TaskCrown } from "../src/components/factionMarks/TaskCrown";
 export { default as UAAvatar } from "../src/components/avatar/UAAvatar";
 export { default as UABackdrop } from "../src/components/backdrop/UABackdrop";
 export { default as UAComment } from "../src/components/comments/voices/UAComment";

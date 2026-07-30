@@ -14,7 +14,7 @@ import {
   MARGINALIA,
   READING,
   SMALL_CAPS,
-} from "../cards/ephemeristsPlate";
+} from "../factionMarks/ephemeristsPlate";
 
 /**
  * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width

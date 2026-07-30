@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { TaskCrown } from "../../cards/TaskCrown";
+import { TaskCrown } from "../../factionMarks/TaskCrown";
 import {
   Braid,
   CAPTION,
@@ -12,7 +12,7 @@ import {
   INK,
   READING,
   SHADOW,
-} from "../../cards/covenSlip";
+} from "../../factionMarks/covenSlip";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import type { ScoreStampProps } from "./ScoreStamp";
 

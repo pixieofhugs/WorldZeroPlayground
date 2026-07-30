@@ -3,7 +3,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
-import { TaskCrown } from "../../../components/cards/TaskCrown";
+import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { EphemeristsSigil } from "../../../components/sigil/EphemeristsSigil";
 import {
   AuthorOctagon,
@@ -30,7 +30,7 @@ import {
   SMALL_CAPS,
   Tally,
   PLATE as SHEET,
-} from "../../../components/cards/ephemeristsPlate";
+} from "../../../components/factionMarks/ephemeristsPlate";
 import { toRoman } from "../../../utils/roman";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";

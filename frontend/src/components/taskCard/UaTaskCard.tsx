@@ -5,7 +5,7 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { Lotus } from "../factionMarks";
 import { UaSigil } from "../sigil/UaSigil";
-import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../cards/uaAtoms";
+import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/uaAtoms";
 
 /**
  * UA — THE VELLUM LEAF (task card v2, #1023).

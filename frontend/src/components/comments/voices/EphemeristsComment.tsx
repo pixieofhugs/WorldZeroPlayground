@@ -75,7 +75,7 @@ import {
   SHADOW,
   SMALL_CAPS,
   WASH,
-} from '../../cards/ephemeristsPlate'
+} from '../../factionMarks/ephemeristsPlate'
 
 /**
  * The plate's affirmative button pair. Declared here rather than beside its

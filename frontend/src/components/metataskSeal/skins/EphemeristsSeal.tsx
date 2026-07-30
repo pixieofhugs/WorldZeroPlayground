@@ -15,7 +15,7 @@ import {
   RULE,
   SMALL_CAPS,
   WingedDiscSign,
-} from '../../cards/ephemeristsPlate'
+} from '../../factionMarks/ephemeristsPlate'
 import type { SealSkinProps } from '../types'
 
 /**

@@ -22,7 +22,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
-} from '../../../components/cards/covenSlip'
+} from '../../../components/factionMarks/covenSlip'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'

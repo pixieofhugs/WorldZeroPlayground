@@ -1,8 +1,8 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { UaSigil } from "../sigil/UaSigil";
-import UaMandala from "../cards/UaMandala";
-import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "../cards/uaAtoms";
+import UaMandala from "../factionMarks/UaMandala";
+import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "../factionMarks/uaAtoms";
 
 /**
  * UA faction-page hero (kit §13, #851).

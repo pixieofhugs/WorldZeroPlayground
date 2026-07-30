@@ -4,8 +4,8 @@ import { factionCssVar, factionName, factionDescription } from "../../utils/fact
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import SnideMasthead from "./SnideMasthead";
-import * as eph from "../cards/ephemeristsPlate";
-import * as coven from "../cards/covenSlip";
+import * as eph from "../factionMarks/ephemeristsPlate";
+import * as coven from "../factionMarks/covenSlip";
 
 /**
  * FactionCard — faction-archetype switcher.

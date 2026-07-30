@@ -70,7 +70,7 @@
     "SNIDETaskCard": "src/components/cards/SNIDETaskCard.tsx",
     "SnideVote": "src/components/vote/SnideVote.tsx",
     "TaskCard": "src/components/taskCard/TaskCard.tsx",
-    "TaskCrown": "src/components/cards/TaskCrown.tsx",
+    "TaskCrown": "src/components/factionMarks/TaskCrown.tsx",
     "UAAvatar": "src/components/avatar/UAAvatar.tsx",
     "UABackdrop": "src/components/backdrop/UABackdrop.tsx",
     "UAComment": "src/components/comments/voices/UAComment.tsx",

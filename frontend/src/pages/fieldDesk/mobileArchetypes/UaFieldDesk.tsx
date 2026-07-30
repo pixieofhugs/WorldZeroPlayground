@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import UaMandala from '../../../components/cards/UaMandala'
+import UaMandala from '../../../components/factionMarks/UaMandala'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'

@@ -20,7 +20,7 @@ import type { CSSProperties, ReactNode } from "react";
  * pennant strip are exactly what those two files drew.
  *
  * Sibling to `components/duel/wowLists.tsx` (the tourney vocabulary) and
- * `components/cards/wowMobile.tsx` (the field-pavilion vocabulary), and named
+ * `components/factionMarks/wowMobile.tsx` (the field-pavilion vocabulary), and named
  * the same way.
  *
  * Every colour is a shipped `--faction-wow-*` token, so all three flip through

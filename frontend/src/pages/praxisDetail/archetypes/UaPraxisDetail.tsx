@@ -15,7 +15,7 @@ import {
   UA_TEXT,
   UaInkColumn,
   uaShade,
-} from "../../../components/cards/uaAtoms";
+} from "../../../components/factionMarks/uaAtoms";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";

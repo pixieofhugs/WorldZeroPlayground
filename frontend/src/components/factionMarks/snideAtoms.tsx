@@ -1,7 +1,7 @@
 /**
  * Shared S.N.I.D.E. craft atoms — the struck-through circle-S sigil reused
  * across SNIDE surfaces (task detail, faction hero). Mirrors
- * components/cards/ephemeristsPlate.tsx. Colors come from the namespaced
+ * components/factionMarks/ephemeristsPlate.tsx. Colors come from the namespaced
  * --faction-snide-* tokens in index.css. Filter-free (matches the faction's
  * CSS-only craft layers — no SVG feTurbulence).
  */

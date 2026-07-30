@@ -10,7 +10,7 @@ import {
   UA_TEXT,
   UaEnsoScore,
   uaShade,
-} from "../../../components/cards/uaAtoms";
+} from "../../../components/factionMarks/uaAtoms";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";

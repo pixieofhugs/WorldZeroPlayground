@@ -1,4 +1,4 @@
-import UaMandala from '../cards/UaMandala'
+import UaMandala from '../factionMarks/UaMandala'
 import { UaSigil } from '../sigil/UaSigil'
 
 /**
