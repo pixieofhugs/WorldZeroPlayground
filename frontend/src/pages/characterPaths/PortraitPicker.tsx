@@ -88,7 +88,10 @@ export default function PortraitPicker({
   // Always called, then discarded when the caller supplied its own (hooks order).
   const ownRef = useRef<HTMLInputElement>(null)
   const ref = inputRef ?? ownRef
-  const statusId = `portrait-status-${useId()}`
+  // The button's aria-describedby has to point at the status line by id, and two
+  // pickers could in principle share a page, so the id is generated.
+  const generatedId = useId()
+  const statusId = `portrait-status-${generatedId}`
 
   // One expression, two consumers: the visible line and the button's description.
   const statusText = chosenFile
@@ -114,7 +117,6 @@ export default function PortraitPicker({
         <span
           id={statusId}
           role="status"
-          data-testid="portrait-status"
           className="content-text"
           style={{ ...defaultStatusStyle, ...statusStyle }}
         >
