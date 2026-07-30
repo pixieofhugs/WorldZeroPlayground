@@ -170,7 +170,7 @@ export default function AccountsTab() {
                           color: "var(--color-success)",
                         }
                       : {
-                          borderColor: "rgba(220,38,38,0.5)",
+                          borderColor: "var(--color-danger-ring)",
                           color: "var(--color-danger)",
                         }
                   }
@@ -243,7 +243,7 @@ export default function AccountsTab() {
                                     padding: "var(--space-xs) var(--space-sm)",
                                   }
                                 : {
-                                    borderColor: "rgba(220,38,38,0.5)",
+                                    borderColor: "var(--color-danger-ring)",
                                     color: "var(--color-danger)",
                                     fontSize: "var(--text-sm)",
                                     padding: "var(--space-xs) var(--space-sm)",

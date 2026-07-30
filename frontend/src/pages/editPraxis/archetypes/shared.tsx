@@ -110,8 +110,8 @@ export function ErrorBanner({ message }: ErrorBannerProps) {
         color: "var(--color-danger)",
         marginTop: "var(--space-sm)",
         padding: "var(--space-sm) var(--space-md)",
-        background: "rgba(220,38,38,0.08)",
-        border: "1px solid rgba(220,38,38,0.25)",
+        background: "var(--color-danger-veil)",
+        border: "1px solid var(--color-danger-edge)",
       }}
     >
       {message}

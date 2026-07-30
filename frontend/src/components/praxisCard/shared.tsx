@@ -681,9 +681,9 @@ export function AdminOverlay({
             top: 8,
             right: 8,
             padding: "0 var(--space-xs)",
-            border: "1px solid rgba(220,38,38,0.4)",
+            border: "1px solid var(--color-danger-edge)",
             color: "var(--color-danger)",
-            background: "rgba(220,38,38,0.05)",
+            background: "var(--color-danger-veil)",
           }}
         >
           {t("card.adminStatus.underReview")}
@@ -697,9 +697,9 @@ export function AdminOverlay({
             top: 8,
             right: 8,
             padding: "0 var(--space-xs)",
-            border: "1px solid rgba(245,158,11,0.4)",
+            border: "1px solid var(--color-warning-edge)",
             color: "var(--color-warning)",
-            background: "rgba(245,158,11,0.05)",
+            background: "var(--color-warning-veil)",
           }}
         >
           {t("card.adminStatus.failed")}
@@ -747,9 +747,9 @@ export function AdminOverlay({
             className="eyebrow"
             style={{
               padding: "0 var(--space-xs)",
-              border: "1px solid rgba(220,38,38,0.3)",
+              border: "1px solid var(--color-danger-edge)",
               color: "var(--color-danger)",
-              background: "rgba(220,38,38,0.05)",
+              background: "var(--color-danger-veil)",
               cursor: "pointer",
             }}
           >
@@ -760,9 +760,9 @@ export function AdminOverlay({
             className="eyebrow"
             style={{
               padding: "0 var(--space-xs)",
-              border: "1px solid rgba(245,158,11,0.3)",
+              border: "1px solid var(--color-warning-edge)",
               color: "var(--color-warning)",
-              background: "rgba(245,158,11,0.05)",
+              background: "var(--color-warning-veil)",
               cursor: "pointer",
             }}
           >

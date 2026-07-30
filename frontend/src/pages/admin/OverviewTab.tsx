@@ -34,7 +34,7 @@ export default function OverviewTab() {
         <div
           key={label}
           className="card px-4 py-3 text-center"
-          style={highlight ? { borderColor: 'rgba(220,38,38,0.4)' } : {}}
+          style={highlight ? { borderColor: 'var(--color-danger-edge)' } : {}}
         >
           <p
             className="font-display text-3xl font-bold"
