@@ -345,7 +345,9 @@ describe('FeedRowContent', () => {
   // (#649), so `na` keeps the neutral grey. Deliberate, not a fallback.
   it('leaves an na actor name neutral grey', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
-    expect(html).toContain('color:#6b6a7a')
+    // The token, not the hex it happens to hold: #1269 gave the unaffiliated
+    // neutral a dark half (#8b8aa0) that a pinned literal could never see.
+    expect(html).toContain('color:var(--faction-default)')
     expect(html).not.toContain('background-clip:text')
   })
 })

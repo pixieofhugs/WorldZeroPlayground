@@ -1,19 +1,24 @@
 /**
- * Shared faction configuration — single source of truth for faction display data (JS side).
+ * Shared faction configuration — the JS side of faction identity.
  *
- * CSS variables in index.css are the parallel source of truth for the cascade.
- * These two files MUST stay in sync. If you change a faction color here,
- * update the matching --faction-* variable in index.css (and vice versa).
+ * It holds NO colour. index.css is the only source of a faction hue, and this
+ * module hands out `var()` references into it (factionCssVar / factionFill), so
+ * dark mode arrives free via the [data-theme="dark"] cascade and there is no
+ * second table to keep in sync.
  *
- * CSS variables handle dark mode automatically via [data-theme="dark"] overrides.
- * Use factionCssVar() when you need the CSS variable reference (preferred for styles).
- * Use factionColor() when you need the raw hex value in JS (canvas, SVG generation, etc.).
+ * There used to be one. The docblock here asked humans to mirror every
+ * --faction-* value by hand, and it drifted: `ua` sat at #c2541f in JS against
+ * #c24a18 in CSS, and #c2541f is verbatim --faction-default-stop-2 — the
+ * unaffiliated spectrum's orange. Every JS-sourced surface painted UA in na's
+ * hue. Worse, a hex literal has no dark half by construction, so no amount of
+ * mirroring could have reached the dark lift. Deleting the table is what makes
+ * the drift impossible rather than merely tested (#1269).
  *
- * The faction registry is a color-only runtime table, seeded from index.css
- * --faction-* values. Faction NAMES and DESCRIPTIONS are no longer backend-
- * emitted: the frozen English words live in the factions.json catalog, keyed by
- * slug (ADR-0031, same split as taunts/ranks), and are resolved via
- * factionName() / factionDescription().
+ * What is left is the slug→theme mapping (CSS_KEY), which is about identity,
+ * not colour: which slugs have a theme at all, and which resolve to `default`.
+ * Faction NAMES and DESCRIPTIONS live in the factions.json catalog, keyed by
+ * slug (ADR-0031, same split as taunts/ranks), resolved via factionName() /
+ * factionDescription().
  */
 import type { CSSProperties } from "react";
 import i18n from "../i18n";
@@ -38,35 +43,10 @@ const tString = i18n.t as unknown as (key: string) => string;
  */
 export const UNAFFILIATED_FACTION_SLUG = "na";
 
+/** What getAllFactions() hands back. Slug only — colour comes from the cascade. */
 export interface FactionConfig {
   slug: string;
-  /** Primary faction color (light mode value — use factionCssVar for theme-aware styles) */
-  color: string;
 }
-
-/** Hardcoded color table — matches index.css --faction-* values exactly. The
- *  API never sends color (ADR-0003: the frontend owns faction color), so this is
- *  the single source of the JS-side hex. Do not use directly; call factionColor(). */
-const FACTION_FALLBACKS: Record<string, FactionConfig> = {
-  ua: { slug: "ua", color: "#c2541f" },
-  everymen: { slug: "everymen", color: "#c1272d" },
-  coven: { slug: "coven", color: "#ec5f99" },
-  snide: { slug: "snide", color: "#6fae00" },
-  // `wow` returns (#812) with the yellow the owner settled on — NOT the pink it
-  // lost to `coven` in #784. Must equal --faction-wow in :root (§4 item 7 of
-  // SPEC-faction-ui-profile.md) so JS and CSS agree before the API hydrates.
-  // This is the RAINBOW SPINE hue only. WOW's skin is the cream/gold/plum
-  // chronicle and never appears here; #838 / ADR-0050 keep the two apart.
-  wow: { slug: "wow", color: "#e0a800" },
-  ephemerists: { slug: "ephemerists", color: "#1d6e72" },
-  singularity: { slug: "singularity", color: "#2563eb" },
-  // `albescent` is deliberately absent (#783). It was first-class here (#232)
-  // with a near-black #1c1c1a; it now has no colour at all, so factionColor()
-  // hands it the same neutral grey as `na`. See that function's docblock.
-};
-
-/** Live registry — color-only, static (nothing hydrates it from the API). */
-const factionRegistry: Record<string, FactionConfig> = { ...FACTION_FALLBACKS };
 
 /**
  * Faction-identity aliases: a derived/retired slug renders with its canonical
@@ -152,6 +132,15 @@ function resolveCssKey(slug: string | null | undefined): string {
  * the theme, which is exactly why a global token could not cover it. Both are
  * measured against `--faction-{key}-card-bg` in both themes by
  * `utils/__tests__/factionContrast.test.ts`.
+ *
+ * With no suffix this is also the answer for genuine SCALAR ink on a dynamic
+ * slug — the feed actor's name, the invitation letter's link. `na` and
+ * `albescent` land on the neutral `--faction-default` there rather than the
+ * spectrum, and that is ADR-0039 §2's decision, not a fallback: no single stop
+ * of seven is legible as text (#649), and a `background-clip: text` rainbow
+ * would cost text selection and high-contrast modes. Both slugs must keep
+ * resolving identically or Albescent becomes conspicuous (#783); a FILL still
+ * belongs to {@link factionFill}.
  */
 export function factionCssVar(
   slug: string | null | undefined,
@@ -177,8 +166,17 @@ export function factionCssVar(
  * and the spectrum lands ~0.4px a stop, which is the same mud `"dot"` exists to
  * avoid. Every faction returns the identical value for `"bar"` and `"rule"`;
  * only na's ramp turns.
+ *
+ * `"disc"` is `"dot"` grown large enough to hold depth (#1269): the 28px avatar
+ * circle a feed row or companion card paints behind a monogram. A real faction
+ * gets a 135° two-stop ramp of its own hue rather than the flat fill a 10px dot
+ * takes, because at that size a flat disc reads as a sticker. It exists as a
+ * shape because three feed cards had each written that ramp by hand out of an
+ * interpolated hex — which is how the JS hue drifted from the CSS one in the
+ * first place. na is identical to `"dot"`: the conic spectrum, already the right
+ * answer at 28px.
  */
-export type FactionFillShape = "bar" | "dot" | "pill" | "frame" | "rule";
+export type FactionFillShape = "bar" | "dot" | "disc" | "pill" | "frame" | "rule";
 
 /**
  * A faction FILL as a style object to spread onto the filled element.
@@ -261,13 +259,22 @@ export function factionFill(
   }
 
   if (isDefault) {
-    // bar / rule / dot: one spectrum, three cuts, picked by the geometry the
-    // fill lands on rather than by the caller remembering to rotate it.
-    if (shape === "dot") return { background: "var(--faction-default-rainbow-conic)" };
+    // bar / rule / dot / disc: one spectrum, three cuts, picked by the geometry
+    // the fill lands on rather than by the caller remembering to rotate it.
+    if (shape === "dot" || shape === "disc") {
+      return { background: "var(--faction-default-rainbow-conic)" };
+    }
     if (shape === "rule") {
       return { background: "var(--faction-default-rainbow-vertical)" };
     }
     return { background: "var(--faction-default-rainbow)" };
+  }
+  if (shape === "disc") {
+    // 53% is the `88` alpha suffix the three hand-written copies carried, said
+    // about a token instead of about a hex.
+    return {
+      background: `linear-gradient(135deg, var(--faction-${key}), color-mix(in srgb, var(--faction-${key}) 53%, transparent))`,
+    };
   }
   return { background: `var(--faction-${key})` };
 }
@@ -302,38 +309,6 @@ export function isKnownFaction(slug: string | null | undefined): boolean {
 }
 
 /**
- * Get faction color by slug, with fallback (raw hex — light mode only).
- *
- * Unlike the CSS path this has NO rainbow branch: every slug without a registry
- * entry — `na`, null, an unregistered slug, and `albescent` (#783) — returns the
- * same neutral grey. For Albescent that is the point, not a gap: grey is
- * precisely what an unaffiliated player already gets, so the two are
- * indistinguishable at every call site. `factionAlbescentHidesInPlainSight`
- * asserts that equality directly.
- *
- * The remaining call sites are all feed cards (`FeedRowContent`,
- * `FeedCardInvitationLetter`, `FeedCardCollabInvite`, `FeedCardDuelChallenge`),
- * and what survives there is deliberate rather than debt (#983). Every FILL in
- * those cards — the monogram disc, the actor disc, the task dot, the headline
- * rule — now goes through `factionFill`, so `na` and `albescent` carry the
- * spectrum. What still reads this function is genuine SCALAR ink: the actor's
- * name, the invitation letter's kicker and link. ADR-0039 §2 keeps those grey,
- * because no single stop is legible across seven (#649), and a
- * `background-clip: text` rainbow would cost text selection and high-contrast
- * modes. **Grey unaffiliated actor text is the decision, not a fallback.**
- *
- * Whatever changes here must change for both slugs at once, or the two stop
- * matching and Albescent becomes conspicuous again.
- *
- * Prefer {@link factionFill} for any `background:` that renders a dynamic slug.
- * This function survives for raw-hex contexts (canvas, SVG, `${hex}88` alpha
- * suffixes) where a `var()` reference will not do.
- */
-export function factionColor(slug: string | null | undefined): string {
-  return factionRegistry[slug ?? ""]?.color ?? "#6b6a7a";
-}
-
-/**
  * Get a faction's display name by slug from the factions.json catalog
  * (`names.<slug>`). A null / unrecognized slug falls back to the "Unaffiliated"
  * copy under `names.na`. The backend emits only slugs now — never name prose.
@@ -359,9 +334,18 @@ export function factionDescription(slug: string | null | undefined): string {
   return i18n.t("factions:detail.descriptionEmpty");
 }
 
-/** Get all factions from the live registry (populated from API after useGameConfig loads) */
+/**
+ * Every slug that has a theme of its own, in declaration order.
+ *
+ * Derived from CSS_KEY rather than kept as a second list: the colour table this
+ * used to read was a parallel registry, and a parallel registry is what #1269
+ * was. `albescent` and `na` are excluded for free — they map to `default`, and
+ * "has a resolvable theme" is exactly what isKnownFaction means.
+ */
 export function getAllFactions(): FactionConfig[] {
-  return Object.values(factionRegistry);
+  return Object.keys(CSS_KEY)
+    .filter(isKnownFaction)
+    .map((slug) => ({ slug }));
 }
 
 /**

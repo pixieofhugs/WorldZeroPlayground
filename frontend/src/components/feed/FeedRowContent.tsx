@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import i18n from '../../i18n'
-import { factionColor, factionFill, isKnownFaction } from '../../utils/factions'
+import { factionCssVar, factionFill, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
 import FeedRowActions from './FeedRowActions'
@@ -31,9 +31,9 @@ export default function FeedRowContent({
   row: FeedRow
   avatarUrl: string | null
 }) {
-  // Scalar ink only — the actor's name and the real-faction monogram gradient.
-  // Never a fill: those go through factionFill so `na` reaches the spectrum.
-  const accent = factionColor(row.slug)
+  // Scalar ink only — the actor's name. Never a fill: those go through
+  // factionFill so `na` reaches the spectrum.
+  const accent = factionCssVar(row.slug)
   const known = isKnownFaction(row.slug)
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
 
@@ -71,7 +71,7 @@ export default function FeedRowContent({
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
+                  ...factionFill(row.slug, 'disc'),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

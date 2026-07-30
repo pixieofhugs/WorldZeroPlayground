@@ -38,7 +38,6 @@ import type { FactionSurface } from '..'
 import { pickVariant } from '../../utils/factionDispatch'
 import {
   factionCssVar,
-  factionColor,
   factionDescription,
   factionFill,
   factionName,
@@ -166,7 +165,10 @@ describe('wow is partly skinned: twenty-two surfaces claimed, the rest fall back
     // The predicate reads the mapped VALUE, not key presence (#749) — this is
     // the single assertion that separates #812's state from #784's.
     expect(isKnownFaction('wow')).toBe(true)
-    expect(factionColor('wow')).not.toBe(factionColor('na'))
+    // Its ornament ink is its own token, not the unaffiliated neutral. (This
+    // read factionColor() until #1269 deleted the JS hex table; the statement
+    // is the same one, made about the cascade reference that replaced it.)
+    expect(factionCssVar('wow')).not.toBe(factionCssVar('na'))
   })
 
   it('has a solid fill, not the unaffiliated spectrum', () => {
