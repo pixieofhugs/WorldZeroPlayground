@@ -47,6 +47,16 @@ export const MUTED = 'var(--faction-wow-card-muted)'
 export const PLUM = 'var(--faction-wow-card-accent)'
 export const EYEBROW_INK = 'var(--faction-wow-accent-deep)'
 export const PANEL = 'var(--faction-wow-chronicle-panel)'
+/**
+ * `MUTED`, walked down for `PANEL` (#1173). The metadata olive is measured on
+ * the CREAM — 4.76:1 on `LISTS_BG`, which is why it stays the ink for the seal's
+ * kicker and the rail's metadata — but the parchment plate inset into it is a
+ * second sheet, and the same olive reads **4.24:1** there, under the 4.5:1 the
+ * 18px stakes copy owes (WORLD_ZERO_STYLE §3, the `-plate-quiet` shape). This is
+ * 4.86 / 5.94. Anything the skins mount ON the plate takes it; anything on the
+ * lists ground keeps `MUTED`.
+ */
+export const PANEL_QUIET = 'var(--faction-wow-chronicle-quiet)'
 export const PANEL_BORDER = 'var(--faction-wow-border)'
 export const SHADOW = 'var(--faction-wow-chronicle-shadow)'
 /**

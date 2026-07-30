@@ -623,8 +623,17 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // cast, `duelStakes.tieLine` + `duelStakes.beforeVotes`, and — while the duel
   // is `pending` — `duelStakes.soloFallback`, i.e. the whole stakes block. It
   // also sets the two tile captions at label size. Normal floor throughout.
-  { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-muted" },
-  { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-muted" },
+  //
+  // Two factions, not three. WOW's `-card-muted` read 4.24:1 on the chronicle
+  // panel and Everymen's `-muted` 4.25:1 on the deep stock, so each grew a
+  // `-quiet` sibling for its own panel; the ink itself is untouched and keeps
+  // clearing on the body ground (CARD_PAIRS still measures it there). The
+  // EPHEMERISTS panel needed nothing: #1208 moved that band off the codex onto
+  // the Valley plate's inner cell, whose quiet ink `ephemerists panel cell,
+  // quiet ink` above already measures at 6.21 / 5.52 — the same pairing, so a
+  // second row here would be a second name for one measurement.
+  { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-chronicle-quiet" },
+  { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
 
   // The ZERO figure — `--color-danger` on every stakes panel, which is what a
   // S.N.I.D.E. duelist sees in the lose tile (0.0×, `eras/era_1.py`). 24px/700,
