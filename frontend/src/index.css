@@ -704,6 +704,28 @@
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
   --faction-ua-rule: #dbcbb3; /* neutral hairline / divider (cf. -border, orange) */
   --faction-ua-hair: #e4d8c3; /* faintest divider, below -rule */
+  /* THE PAPER STOCK — the three-stop sheet UA's design sheets draw as
+     `--cardGrad`, never a flat fill: lift at the top edge, the sheet through the
+     middle, panel at the foot. Composed from the three surface primitives above
+     instead of repeating their hex, so it needs NO dark half — the var()s
+     re-resolve under [data-theme="dark"] and the stock dims with the faction.
+
+     WHY NOT `--faction-ua-card-parchment`, which is the same gradient. That name
+     lives inside the PRAXIS-CARD-ONLY exception block below (#857), which asks
+     in writing not to be widened; a second surface reading it would quietly turn
+     the exception into the rule. So the stock is named once out here, where any
+     UA surface may take it — #1201's feed chassis and comment note are the first
+     two — and the exception keeps its own private copy.
+
+     Every ink UA already measures is measured on all three stops (see
+     --faction-ua-card-muted's note: 4.87/5.13/5.45 light, 4.55/5.10/5.64 dark),
+     so painting on the ramp introduces no new pairing. */
+  --faction-ua-parchment: linear-gradient(
+    158deg,
+    var(--faction-ua-lift),
+    var(--faction-ua-card-bg) 46%,
+    var(--faction-ua-panel)
+  );
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
@@ -1098,6 +1120,13 @@
   --faction-ephemerists-plate-gold: #e3c56a; /* glyphs + the winged disc */
   --faction-ephemerists-plate-band: #1e2233; /* the cornice masthead */
   --faction-ephemerists-plate-band-ink: #efe4c4;
+  /* Quiet ink ON THE NIGHT BAND (feed chassis v2, #1199) — the masthead's
+     second tier, for a timestamp beside the kicker. A measured token rather
+     than `band-ink` at an opacity: a translucent ink takes its tint from the
+     band under it, which is exactly the failure #669/#677 chased down, and the
+     dark cascade repoints `band-ink` to the GOLD, so an opacity there would
+     have collapsed both tiers onto one colour. 8.6:1 light, 8.9:1 dark. */
+  --faction-ephemerists-plate-band-quiet: #c9bfa4;
   --faction-ephemerists-plate-disc: #f6eed6; /* the medallion's field */
   --faction-ephemerists-plate-ochre: #a6432b; /* the fifth tally stroke */
   --faction-ephemerists-plate-cta-bg: #1e2233;
@@ -1253,6 +1282,31 @@
      paper is a frame in the same sense WOW's gilt is (§3), so every field inside
      the sheet keeps `--everymen-frame` and no form boundary rests on this. */
   --faction-everymen-composer-frame: var(--everymen-gold);
+
+  /* ══ Everymen — THE DISPATCH SLIP (feed card + comment voice v2, #1200) ══
+     A press slip run off in the union shop: `--everymen-paper` stock inside a
+     DOUBLE FRAME (a 2px `--everymen-frame` rule, a 4px pad, then a 1px hairline),
+     with the card's kind set in a centred red masthead band whose bottom edge is
+     a 3px double rule the ground shows through.
+
+     ONE token, for the reason the three blocks above are short — every colour
+     this surface needs already has a home in the `--everymen-*` family, and a
+     second name for the same value is a second place for it to drift:
+       · the band is `--everymen-red` as a FILL, inked in
+         `--everymen-masthead-text` (5.24:1 light / 4.59:1 dark) — the pairing
+         the broadsheet chrome already measured;
+       · the 1px inner rule and the panel hairlines reuse
+         `--faction-everymen-sheet-hair`, which is exactly this role (the ink at
+         22%, flipping to cream in dark) under a name minted for the broadsheet;
+       · the comment's typed area is `--faction-everymen-sheet-panel`, chosen
+         rather than the paper deliberately: §3 records that
+         `--faction-everymen-sheet-accent` pays 4.95:1 on that stock and only
+         4.49:1 on `--everymen-paper`, so red as @mention INK is legible on the
+         panel and is not on the paper. On the paper red stays a rule or a fill.
+
+     What had no home is the slip's shadow, which the frame was carrying as raw
+     rgba inline. */
+  --faction-everymen-slip-shadow: 0 1px 0 rgba(34, 26, 18, 0.05), 0 6px 16px -12px rgba(34, 26, 18, 0.5);
 
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
@@ -1767,6 +1821,10 @@
   --faction-ephemerists-plate-gold: #f2d98a;
   --faction-ephemerists-plate-band: #0a0c15;
   --faction-ephemerists-plate-band-ink: #f2d98a;
+  /* Muted gold, not the parchment grey of the light band: the dark band is
+     nearly black and its primary ink is already the gold, so the second tier
+     steps DOWN the same hue instead of introducing a cool one. */
+  --faction-ephemerists-plate-band-quiet: #c2ae7e;
   --faction-ephemerists-plate-disc: #12151f;
   --faction-ephemerists-plate-ochre: #d9744c;
   --faction-ephemerists-plate-cta-bg: #c9a24b;
@@ -1966,6 +2024,10 @@
      deep accent, which is the one edge on the sheet that does NOT lift with the
      paper — a printed poster frame stays the colour it was printed in (#1187). */
   --faction-everymen-composer-frame: var(--everymen-red-deep);
+  /* The dispatch slip at night (#1200): the drop shadow goes to the near-black
+     of the dark ground rather than the ink brown, and deepens — a slip on a dark
+     press bench lifts off it more than one on a lit paper page. */
+  --faction-everymen-slip-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 6px 16px -10px rgba(0, 0, 0, 0.8);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;

@@ -1,163 +1,281 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
+import { useAuth } from '../../../auth/AuthContext'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
-import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
-import { CommentFlagControl } from '../FlagControl'
+import {
+  CommentEditor,
+  OwnerControls,
+  ownerRevealStyle,
+  useOwnerEdit,
+  useOwnerReveal,
+} from '../OwnerControls'
+import { CommentFlagControl, canFlagComment } from '../FlagControl'
 
 /**
- * Warriors of Whimsy — COUNSEL IN THE MARGIN (kit §06, #899).
+ * Warriors of Whimsy — COUNSEL IN THE PROCLAMATION (comment voice v2, #1204).
  *
- * A knight speaks beside the chronicle, not on it: a slip of the same cream
- * parchment, ruled down its left edge in plum, with the crest avatar set at the
- * head and the name lettered in MedievalSharp. It follows the decree's chrome
- * (the task card is the archetype the other surfaces mirror) — same parchment,
- * same gold hairline, same plum ink — and adds no ornament of its own.
+ * A knight speaks on the same instrument the Court proclaims on: the comment
+ * card is the update card's chrome exactly (`WowFeedFrame`, this issue's other
+ * half) — a 6px gold/plum barber ribbon crowning a cream sheet in a 2px gold
+ * frame at radius 9, the crest set in the margin, the name lettered in
+ * MedievalSharp, the quiet register in Lora italic, and the ribbon repeating as
+ * a 3px section rule where the sheet divides. One sheet draws both halves and
+ * they now match; v1's plum-ruled slip at radius 12 predated it.
  *
  * The three invariant slots are unchanged (ADR-0016): author identity · body ·
  * timestamp+edited. A posted row takes the AUTHOR's faction; the composer takes
  * the current character's, which is why both ends carry the crest avatar rather
  * than the bare sigil — `WowAvatar` (#897) is already the crest in a gilt ring.
  *
- * THE HUZZAH IS NOT BUILT. The kit draws a "✦ Huzzah · 12" reaction pill on this
- * row, and #898 shipped the word for it (`comments.wow.react`). There is no
- * reaction anywhere in the product — no endpoint, no column, no count on
- * `CommentOut` — so rendering the pill would be a control that no-ops, which UX
- * principle 5 forbids outright ("no dead buttons"). The copy key is left in
- * place for whoever builds reactions; the pill arrives with the feature, not
- * before it. The kit's "Reply" affordance is absent for the same reason:
- * comments are flat (ADR-0006).
+ * SEVEN STATES, ONE COMPONENT (ADR-0056 / 0058 / 0063 — no mobile twin):
+ *   row · default | row · with a mention | row · edited | row · yours (hover) |
+ *   row · editing | composer · empty | composer · submitting
  *
- * Both themes come from the `[data-theme="dark"]` cascade.
+ * BEHAVIOUR IS INHERITED, NOT REBUILT. Edit, withdraw, flag, @mention
+ * autocomplete, the live character count and the submitting state all live in
+ * the shared helpers, and #1195 put the owner's edit/withdraw row behind a
+ * hover-OR-focus gate: this voice opts into that gate with the two lines it was
+ * designed for (`useOwnerReveal` + spreading `containerProps` on the card root)
+ * and re-implements none of it. The foot, its rule and the gate's exact
+ * conditions follow `DefaultComment`, which is the copy and behaviour spec for
+ * every voice (epic #1192) — including the detail that on your OWN comment the
+ * rule fades with the row, since a hairline over empty space is a state the
+ * sheet never draws.
+ *
+ * NO STRING FROM THE SHEET SHIPS. Its dialect is discarded (epic #1192); the
+ * words here are the ones already in `praxis.json`. `comments.wow.*` (#898) is
+ * pre-existing per-voice copy from WOW's own kit, not lifted off this design —
+ * the epic's neutral-copy rule governs the FEED catalog, and whether the nine
+ * comment voices should also be neutralised is a call for the owner, not for a
+ * dress issue holding a shared locale file eight agents are queued on.
+ *
+ * THE HUZZAH IS STILL NOT BUILT. The kit draws a "✦ Huzzah · 12" reaction pill
+ * and #898 shipped the word (`comments.wow.react`), but there is no reaction
+ * anywhere in the product — no endpoint, no column, no count on `CommentOut` —
+ * so the pill would be a control that no-ops, which UX principle 5 forbids. The
+ * key waits for the feature. "Reply" is absent for the same reason: comments are
+ * flat (ADR-0006).
+ *
+ * Every colour is a shipped `--faction-wow-*` token and both themes come from
+ * the `[data-theme="dark"]` cascade. The one AA trap on this palette is avoided
+ * rather than re-measured: `--faction-wow-card-muted` is a CREAM-only ink
+ * (4.77:1 on `-card-bg`, 4.25:1 on `-chronicle-panel`, #1221), so every muted
+ * mark here sits on the cream sheet, and only the composer's inset FIELD — whose
+ * ink is `-card-text` at 13:1 — uses the parchment plate.
  */
+
+const MED = 'var(--faction-wow-card-font)' /* MedievalSharp */
+const LORA = 'var(--faction-wow-body-font)' /* Lora */
+const GOLD = 'var(--faction-wow-chronicle-gold)'
+const GILT = 'var(--faction-wow-stamp-total)'
+const INK = 'var(--faction-wow-card-text)'
+const MUTED = 'var(--faction-wow-card-muted)'
+const PLUM = 'var(--faction-wow-card-accent)'
+const RIBBON = 'var(--faction-wow-quest-ribbon)'
 
 /**
  * The kit sets the crest beside the counsel at 44px, wider than the shared
  * `sm` (24px) — a seal that small stops reading as a seal. Below #897's 56px
  * motto floor, so the band drops its lettering and keeps its ring, which is
- * exactly what the kit draws here.
+ * exactly what the kit draws here. Ornament geometry, so a raw number (§4a).
  */
 const CREST_AVATAR = 44
 
-/** The parchment slip: gold hairline all round, plum rule down the margin. */
-const SLIP: CSSProperties = {
-  display: 'flex',
-  gap: 'var(--space-md)',
-  alignItems: 'flex-start',
-  padding: 'var(--space-lg) var(--space-xl)',
-  borderRadius: 12,
-  background: 'var(--faction-wow-chronicle-bg)',
-  color: 'var(--faction-wow-card-text)',
-  border: '1px solid var(--faction-wow-chronicle-rule)',
-  borderLeft: '4px solid var(--faction-wow-card-accent)',
-  fontFamily: 'var(--faction-wow-body-font)',
+/** The barber ribbon's two weights — the crown and the section rule (§4a). */
+const CROWN_HEIGHT = 6
+const RULE_HEIGHT = 3
+const RULE_OPACITY = 0.75
+
+/** The quiet register: Lora italic, the face WOW says everything small in. */
+const QUIET: CSSProperties = {
+  fontFamily: LORA,
+  fontStyle: 'italic',
+  fontSize: 'var(--text-lg)',
+  color: MUTED,
+}
+
+/**
+ * The sheet both modes sit on — the proclamation card, crest in the margin.
+ * One shape for a row and for the composer, so a thread reads as one stack
+ * rather than a list plus a form.
+ */
+function Sheet({
+  avatar,
+  children,
+  containerProps,
+}: {
+  avatar: ReactNode
+  children: ReactNode
+  containerProps?: React.ComponentPropsWithoutRef<'div'>
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+      {avatar}
+      <div
+        {...containerProps}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          borderRadius: 9,
+          overflow: 'hidden',
+          background: 'var(--faction-wow-card-bg)',
+          color: INK,
+          border: `2px solid ${GOLD}`,
+          boxShadow: 'var(--faction-wow-quest-shadow)',
+          fontFamily: LORA,
+        }}
+      >
+        {/* The crown — a stripe carrying NO text, which is the only reason the
+            undimmed gold/plum ships as drawn (§3, #840). */}
+        <div aria-hidden style={{ height: CROWN_HEIGHT, background: RIBBON }} />
+        <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>{children}</div>
+      </div>
+    </div>
+  )
+}
+
+/** The ribbon again, thinner and held back: the sheet's section divider. */
+function RibbonRule({ style }: { style?: CSSProperties }) {
+  return (
+    <div
+      aria-hidden
+      style={{ height: RULE_HEIGHT, background: RIBBON, opacity: RULE_OPACITY, ...style }}
+    />
+  )
 }
 
 export default function WowComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const { user } = useAuth()
+  const reveal = useOwnerReveal()
 
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
-      <div style={SLIP}>
-        <FactionAvatar character={character} size={CREST_AVATAR} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontStyle: 'italic',
-              fontSize: 'var(--text-content)',
-              color: 'var(--faction-wow-card-muted)',
-              marginBottom: 'var(--space-md)',
-            }}
-          >
+      <Sheet avatar={<FactionAvatar character={character} size={CREST_AVATAR} />}>
+        {/* `.content-text` rides the wrapper: the one slot inside without a size
+            of its own is the textarea (`font: inherit`), and a comment draft is
+            content-tier text (§4). Every other slot names its own size. */}
+        <div className="content-text" aria-busy={submitting}>
+          <div style={{ ...QUIET, marginBottom: 'var(--space-sm)' }}>
+            <span className="wow-tw" aria-hidden style={{ color: GILT, marginRight: 'var(--space-xs)' }}>
+              ✦
+            </span>
             {t('comments.wow.prompt')}
           </div>
+          <RibbonRule style={{ marginBottom: 'var(--space-md)' }} />
           <ComposerControls
             value={value}
             onChange={onChange}
             onSubmit={onSubmit}
             submitting={submitting}
-            accent="var(--faction-wow-card-accent)"
+            accent={PLUM}
             onAccent="var(--faction-wow-on-accent)"
+            // The field tier, not the sheet: an inset plate reads as written ON
+            // rather than painted over. Its ink is `-card-text` at 13:1 — the
+            // one WOW ink measured against the parchment plate.
             bg="var(--faction-wow-chronicle-panel)"
-            text="var(--faction-wow-card-text)"
+            text={INK}
             submitLabel={t('comments.wow.post')}
+            // The shared string in the decree's own quiet register — an OVERRIDE
+            // of ComposerControls' neutral default, not a new hint.
+            hint={<span style={QUIET}>{t('comments.mentionHint')}</span>}
           />
         </div>
-      </div>
+      </Sheet>
     )
   }
 
   const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
+  const canFlag = canFlagComment(comment, user?.character?.id)
+  // The foot exists only when it holds something: the author's edit/withdraw or
+  // a flag affordance. Hidden while editing — the inline editor owns Save/Cancel.
+  const showControls = !owner.editing && (owner.isOwner || canFlag)
+  // On your OWN comment the foot holds nothing but the gated owner row, so the
+  // rule above it fades with the row. A flaggable (someone else's) comment keeps
+  // its foot always. Same condition as `DefaultComment`, the behaviour spec.
+  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
 
   return (
-    <div style={SLIP}>
-      <FactionAvatar character={authorToCharacter(comment.author)} size={CREST_AVATAR} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
+    <Sheet
+      avatar={<FactionAvatar character={authorToCharacter(comment.author)} size={CREST_AVATAR} />}
+      containerProps={reveal.containerProps}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          flexWrap: 'wrap',
+          gap: 'var(--space-sm)',
+        }}
+      >
+        <Link
+          to={`/characters/${comment.author.id}`}
           style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            flexWrap: 'wrap',
-            gap: 'var(--space-sm)',
-          }}
-        >
-          <Link
-            to={`/characters/${comment.author.id}`}
-            style={{
-              fontFamily: 'var(--faction-wow-card-font)',
-              fontSize: 'var(--text-content)',
-              color: 'var(--faction-wow-card-text)',
-              textDecoration: 'none',
-            }}
-          >
-            {comment.author.display_name}
-          </Link>
-          <span
-            style={{
-              fontStyle: 'italic',
-              fontSize: 'var(--text-lg)',
-              color: 'var(--faction-wow-card-muted)',
-              display: 'inline-flex',
-              alignItems: 'baseline',
-              gap: 'var(--space-sm)',
-            }}
-          >
-            {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ` · ${t('comments.wow.edited')}` : ''}
-            <OwnerControls owner={owner} />
-            <CommentFlagControl comment={comment} />
-          </span>
-        </div>
-        <div
-          style={{
+            fontFamily: MED,
             fontSize: 'var(--text-content)',
-            lineHeight: 1.55,
-            color: 'var(--faction-wow-card-text)',
-            marginTop: 'var(--space-sm)',
+            color: INK,
+            textDecoration: 'none',
           }}
         >
-          {owner.editing ? (
-            <CommentEditor
-              owner={owner}
-              accent="var(--faction-wow-card-accent)"
-              onAccent="var(--faction-wow-on-accent)"
-              bg="var(--faction-wow-chronicle-panel)"
-              text="var(--faction-wow-card-text)"
-            />
-          ) : (
-            <MentionText
-              body={comment.body_text}
-              mentions={comment.mentions}
-              accent="var(--faction-wow-card-accent)"
-            />
-          )}
-        </div>
+          {comment.author.display_name}
+        </Link>
+        <span style={QUIET}>{formatCommentTime(slug, comment.created_at)}</span>
+        {comment.is_edited && (
+          <span style={QUIET}>
+            <span aria-hidden="true">· </span>
+            {t('comments.wow.edited')}
+          </span>
+        )}
       </div>
-    </div>
+
+      {/* The body is user-authored free text — the content floor, resting and
+          editing alike (the editor's textarea inherits it). */}
+      <div
+        className="content-text"
+        style={{
+          marginTop: 'var(--space-sm)',
+          fontFamily: LORA,
+          color: INK,
+          lineHeight: 1.55,
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {owner.editing ? (
+          <CommentEditor
+            owner={owner}
+            accent={PLUM}
+            onAccent="var(--faction-wow-on-accent)"
+            bg="var(--faction-wow-chronicle-panel)"
+            text={INK}
+          />
+        ) : (
+          <MentionText body={comment.body_text} mentions={comment.mentions} accent={PLUM} />
+        )}
+      </div>
+
+      {showControls && (
+        <div style={footGate ?? undefined}>
+          <RibbonRule style={{ marginTop: 'var(--space-md)' }} />
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              flexWrap: 'wrap',
+              gap: 'var(--space-md)',
+              marginTop: 'var(--space-sm)',
+            }}
+          >
+            <OwnerControls owner={owner} reveal={reveal} />
+            <CommentFlagControl comment={comment} />
+          </div>
+        </div>
+      )}
+    </Sheet>
   )
 }
