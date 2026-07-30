@@ -16,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../../api/praxis";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
-import { moderatePraxis } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import type { AdminProps } from "./shared";
 
@@ -42,12 +41,20 @@ export function usePraxisCard(
     setLocalPraxis((prev) => ({ ...prev, moderation_status: status }));
   };
 
+  // `api/admin` is loaded per action rather than at module scope (#1141). A
+  // praxis card renders for every visitor, so a static import shipped the admin
+  // chunk to readers who can never reach these two handlers.
+  const moderate = async (status: "hidden" | "failed") => {
+    const { moderatePraxis } = await import("../../api/admin");
+    return moderatePraxis(localPraxis.id, status);
+  };
+
   const handleHide = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setModerateError(null);
     try {
-      const updated = await moderatePraxis(localPraxis.id, "hidden");
+      const updated = await moderate("hidden");
       applyModeration(updated.moderation_status);
       onModerated?.();
     } catch (err) {
@@ -60,7 +67,7 @@ export function usePraxisCard(
     e.stopPropagation();
     setModerateError(null);
     try {
-      const updated = await moderatePraxis(localPraxis.id, "failed");
+      const updated = await moderate("failed");
       applyModeration(updated.moderation_status);
       onModerated?.();
     } catch (err) {

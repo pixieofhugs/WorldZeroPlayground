@@ -22,7 +22,8 @@ import { useNavigate } from 'react-router-dom'
 import { listTasks, type TaskOut, type TaskType } from '../../api/tasks'
 import { createPraxis } from '../../api/praxis'
 import { getFactions, type FactionOut } from '../../api/factions'
-import { getGameConfig, type FactionConfigOut } from '../../api/gameConfig'
+import type { FactionConfigOut } from '../../api/gameConfig'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import { extractError } from '../../utils/errors'
 import { useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
@@ -105,11 +106,15 @@ export interface TasksState {
 export function useTasks(): TasksState {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const characterId = user?.character?.id
 
   const [factions, setFactions] = useState<FactionOut[]>([])
-  const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
-  const [levelThresholds, setLevelThresholds] = useState<number[]>([])
+  // One `/game-config` read for the whole app (#1141) — the shared cache in
+  // `useGameConfig`, derived rather than mirrored into two more `useState`s.
+  // Both slices are empty until it lands, which is what they were before: the
+  // faction modifier settles at 1.0 and the level filter stays hidden (#1046).
+  const gameConfig = useGameConfig()
+  const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
+  const levelThresholds = gameConfig?.level_thresholds ?? []
   const [taskType, setTaskTypeState] = useState<TaskType>('standard')
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
@@ -123,14 +128,6 @@ export function useTasks(): TasksState {
 
   useEffect(() => {
     getFactions().then(setFactions).catch(() => {})
-    getGameConfig()
-      .then((config) => {
-        setFactionConfigs(config.factions)
-        // The level filter is bounded by the era's own ladder (#1046), which
-        // arrives on the same payload the faction modifiers do — no second call.
-        setLevelThresholds(config.level_thresholds ?? [])
-      })
-      .catch(() => {})
   }, [])
 
   const trimmedQuery = debouncedQuery.trim()
@@ -144,10 +141,12 @@ export function useTasks(): TasksState {
         faction: faction || undefined,
         level: level === '' ? undefined : level,
         q: trimmedQuery || undefined,
-        exclude_character_id: characterId,
+        // The server excludes the authenticated viewer's own started tasks by
+        // default (#1229). Echoing the character id back here added an
+        // auth-dependent dep that made the page fetch twice.
         limit,
       }),
-    [taskType, status, faction, level, trimmedQuery, characterId],
+    [taskType, status, faction, level, trimmedQuery],
     PAGE_LIMIT,
   )
   const tasks = data ?? []

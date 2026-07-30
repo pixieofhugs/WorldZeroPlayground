@@ -361,3 +361,98 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(render(unvoted).text, "no empty voter panel").not.toContain("Who voted");
   });
 });
+
+// ─── The Who-voted rungs (#1143) ────────────────────────────────────────────
+//
+// Seam: the markup `DefaultPraxisDetail` emits for the Who-voted panel. The
+// rung is five dots now, and the assertions below are aimed squarely at the
+// mistake #842 already caught once in the interactive caster: a PER-DOT
+// gradient looks right in a screenshot and is wrong. Counting five dots would
+// pass against it, so what is asserted is the RELATIONSHIP — one shared
+// `background-size` spanning the whole row, and a `background-position-x` that
+// windows each dot to where it actually sits.
+
+/** The Who-voted panel, sliced out of the page it shares with the flag card. */
+function votersPanel(html: string): string {
+  const start = html.indexOf("Who voted");
+  expect(start, "the panel renders").toBeGreaterThan(-1);
+  // Stop at the panel's own closing tag: the neutral flag card follows it in
+  // the rail (ADR-0061) and its "FLAG" pip is text that would leak in. The
+  // panel nests no <section> of its own, so the first close is the right one.
+  const end = html.indexOf("</section>", start);
+  expect(end, "the panel closes").toBeGreaterThan(-1);
+  return html.slice(start, end);
+}
+
+/** Each voter row's five dot `style` payloads, in row order. */
+function voterRows(html: string): string[][] {
+  return votersPanel(html)
+    .split(/href="\/characters\//)
+    .slice(1)
+    .map((row) => [...row.matchAll(/style="([^"]*background-size[^"]*)"/g)].map((hit) => hit[1]));
+}
+
+function styleValue(style: string, property: string): number {
+  const hit = new RegExp(`(?:^|;)${property}:([^;]*)`).exec(style);
+  expect(hit, `${property} missing from ${style}`).not.toBeNull();
+  return Number.parseFloat(hit![1]);
+}
+
+describe("Unaffiliated praxis detail — the Who-voted rung", () => {
+  it("windows ONE rainbow across the row rather than painting each dot (#842)", () => {
+    for (const dots of voterRows(render(state()).html)) {
+      expect(dots.length, "five rungs, reached or not").toBe(5);
+
+      const spans = dots.map((dot) => /background-size:([^;"]*)/.exec(dot)![1]);
+      expect(new Set(spans).size, "one gradient means one size on every dot").toBe(1);
+
+      const rowSpan = Number.parseFloat(spans[0]);
+      const dotWidth = styleValue(dots[0], "width");
+      expect(rowSpan, "the gradient is stretched over the ROW, not the dot").toBeGreaterThan(
+        dotWidth,
+      );
+
+      const offsets = dots.map((dot) => styleValue(dot, "background-position-x"));
+      const pitch = -offsets[1];
+      expect(pitch, "dots are spaced apart").toBeGreaterThan(0);
+      expect(offsets, "each dot shows the slice that falls where it sits").toEqual([
+        0,
+        -pitch,
+        -pitch * 2,
+        -pitch * 3,
+        -pitch * 4,
+      ]);
+      expect(
+        pitch * 4 + dotWidth,
+        "and the rainbow ends exactly on the last dot's right edge",
+      ).toBe(rowSpan);
+    }
+  });
+
+  it("fills to the voter's own value and leaves the rest as hollow rings", () => {
+    const rows = voterRows(render(state()).html);
+    const reached = rows.map(
+      (dots) => dots.filter((dot) => dot.includes("var(--faction-default-rainbow)")).length,
+    );
+    expect(reached, "Cy voted 5, Dov voted 3").toEqual([5, 3]);
+
+    const hollow = rows[1][4];
+    expect(hollow, "the unreached dot is the shared ring token").toContain(
+      "var(--faction-default-dot-ring)",
+    );
+    expect(hollow, "and carries no rainbow").toContain("background-image:none");
+    expect(hollow, "the caster's glow is an input affordance, not a readout").not.toContain(
+      "spectrum-glow",
+    );
+  });
+
+  it("drops the numeral but keeps the value in the accessible name", () => {
+    const html = render(state()).html;
+    expect(html, "the dot row names the value it draws").toContain('aria-label="3 of 5"');
+    expect(html, "for every voter").toContain('aria-label="5 of 5"');
+
+    const text = votersPanel(html).replace(/<[^>]*>/g, "");
+    const rowsOnly = text.slice(text.indexOf("Cy"));
+    expect(rowsOnly.replace(/\s+/g, ""), "names only — the dots are the reading").toBe("CyDov");
+  });
+});

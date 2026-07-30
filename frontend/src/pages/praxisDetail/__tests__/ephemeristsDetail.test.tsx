@@ -322,8 +322,10 @@ describe("Ephemerists praxis detail — the state axes", () => {
   it("reads each vote back in the faction's own tier word and numeral", () => {
     const { text } = render(state());
     // `reframeLabel` + `toRoman`, both already shipped — no invented copy.
-    expect(text, "the concordance tier for 5").toContain("canonical");
-    expect(text, "the tier for 3").toContain("plausible");
+    // The metals ladder (#1207) renamed the tiers; the page reads whatever
+    // `reframeLabel` says, which is the point of asserting through it.
+    expect(text, "the tier for 5").toContain("platinum");
+    expect(text, "the tier for 3").toContain("silver");
     expect(text, "roman numerals, as VOTE_REFRAMES declares").toContain("V");
     expect(text, "and III for the second voter").toContain("III");
   });
