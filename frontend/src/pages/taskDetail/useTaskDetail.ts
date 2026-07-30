@@ -18,6 +18,7 @@ import {
   type PraxisCardOut,
 } from "../../api/praxis";
 import { listRelationships } from "../../api/relationships";
+import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import { computeDisplayPoints, computeFactionMultiplier } from "../../utils/points";
@@ -43,6 +44,23 @@ export interface TaskDetailState {
   // `needs-design` issue for the surface that would read it, not just a state
   // field. `detailContract.test.tsx` pins the absence.
   submissions: PraxisCardOut[];
+  /**
+   * The comment rows for this task, fetched in the batch below off the route
+   * param and handed to `CommentThread` as its seed (#1281).
+   *
+   * The thread cannot fetch these itself in time: `TaskDetailComments` gates on
+   * `status === "active"`, so the component is unmounted — its effect cannot
+   * run at all — until the task has landed. That put comments a full round trip
+   * behind everything else on the page. The gate stays exactly where it is; the
+   * request just no longer waits behind it. The accepted cost is one discarded
+   * request on a non-active task (owner decision, #1281). Null while in flight,
+   * or if that fetch failed — the thread then falls back to its own request,
+   * which is also the bare-mount path.
+   *
+   * This is NOT a second `signups` (see the note above): these rows are read by
+   * a surface that renders on every active task, not fetched and discarded.
+   */
+  comments: CommentOut[] | null;
   friends: Set<number>;
   foes: Set<number>;
 
@@ -115,6 +133,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
 
   const [task, setTask] = useState<TaskOut | null>(null);
   const [submissions, setSubmissions] = useState<PraxisCardOut[]>([]);
+  const [comments, setComments] = useState<CommentOut[] | null>(null);
   const [isInProgress, setIsInProgress] = useState(false);
   const [inProgressPraxisId, setInProgressPraxisId] = useState<number | null>(
     null,
@@ -146,6 +165,13 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     const fetches: Promise<unknown>[] = [
       getTask(taskId),
       listPraxes({ task_id: taskId, status: "submitted" }),
+      // Off the ROUTE PARAM, in this wave, and unconditionally — comments are
+      // public, so this member does not move with `user` and keeps the
+      // destructure below positional. See the `comments` field above for why
+      // the thread cannot start this fetch itself (#1281). A failed comments
+      // fetch must not fail the page, hence the local catch: the thread falls
+      // back to its own request when the seed is null.
+      listComments("tasks", taskId).catch(() => null),
     ];
     if (user) {
       fetches.push(
@@ -178,9 +204,10 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     }
 
     Promise.all(fetches)
-      .then(([t, s, myTasks, friendSet, foeSet]) => {
+      .then(([t, s, c, myTasks, friendSet, foeSet]) => {
         setTask(t as TaskOut);
         setSubmissions(s as PraxisCardOut[]);
+        setComments(c as CommentOut[] | null);
         if (myTasks) {
           const praxes = myTasks as PraxisCardOut[];
           const activeForThisTask = praxes.find(
@@ -303,6 +330,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     fetchError,
 
     submissions,
+    comments,
     friends,
     foes,
 

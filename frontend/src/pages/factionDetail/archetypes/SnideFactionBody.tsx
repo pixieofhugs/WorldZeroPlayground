@@ -186,6 +186,12 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
   if (!faction) return null;
 
+  // The burn (#1305) — this viewer left this faction this era, so
+  // `can_join_faction` refuses the join for the rest of it. It reuses the
+  // gate's chassis below: only the words change, and they are neutral
+  // platform copy (ADR-0061) because this is the platform speaking.
+  const burned = membership.state === "burned";
+
   // ② about paragraphs — split the single description on blank lines.
   const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
@@ -448,7 +454,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   </div>
                 )}
 
-                {membership.state === "gate" && (
+                {(membership.state === "gate" || burned) && (
                   <div>
                     <div
                       style={{
@@ -460,7 +466,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         marginBottom: "var(--space-sm)",
                       }}
                     >
-                      {t("snide.dispatch.gateKicker")}
+                      {burned
+                        ? t("detail.burned.kicker")
+                        : t("snide.dispatch.gateKicker")}
                     </div>
                     <div
                       style={{
@@ -473,10 +481,14 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         marginBottom: "var(--space-md)",
                       }}
                     >
-                      {t("snide.dispatch.gateTitle")}
+                      {burned
+                        ? t("detail.burned.title", { faction: factionName(faction.slug) })
+                        : t("snide.dispatch.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#d8d6c8" }}>
-                      {t("snide.dispatch.gateBody", { faction: factionName(faction.slug) })}
+                      {burned
+                        ? t("detail.burned.body", { faction: factionName(faction.slug) })
+                        : t("snide.dispatch.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

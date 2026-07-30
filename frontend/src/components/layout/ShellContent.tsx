@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useAuth } from '../../auth/AuthContext'
-import Sidebar from './Sidebar'
-import SidebarHandle from './SidebarHandle'
+import SidebarColumn from './SidebarColumn'
 
 /**
  * The page region — the ONE place the routed page is mounted, in both form
@@ -69,14 +68,6 @@ const SIDEBAR_GRID_EXPANDED = 'gap-4 items-start lg:grid lg:grid-cols-[minmax(28
 /** Folded away: the column shrinks to just the handle and the page takes the rest. */
 const SIDEBAR_GRID_COLLAPSED = 'gap-4 items-start lg:grid lg:grid-cols-[auto_1fr]'
 
-/**
- * The handle is the only way back from a collapsed rail, so the column is
- * sticky — otherwise a player deep in a long `/tasks` list would have to scroll
- * back to the top to recover it. `top-14` matches `NavBar`'s `sticky top-0 h-14`.
- */
-const SIDEBAR_COLUMN =
-  'hidden lg:block lg:col-start-1 lg:row-start-1 lg:sticky lg:top-14 lg:max-h-[calc(100vh-3.5rem)] lg:overflow-y-auto'
-
 export default function ShellContent({
   isMobile,
   sidebarCollapsed,
@@ -105,13 +96,12 @@ export default function ShellContent({
         }
       >
         <main className="min-w-0 lg:col-start-2 lg:row-start-1">{children}</main>
+        {/* Collapsed means GONE, not an icon rail: the rail's whole value is
+            glanceable TEXT, and an icon strip throws that away. `SidebarColumn`
+            delivers that by HIDING the rail rather than unmounting it (#1343),
+            so reopening costs no requests. */}
         {showSidebar && (
-          <div className={SIDEBAR_COLUMN}>
-            <SidebarHandle collapsed={sidebarCollapsed} onToggle={onToggleSidebar} />
-            {/* Collapsed means GONE, not an icon rail: the rail's whole value is
-                glanceable TEXT, and an icon strip throws that away. */}
-            {!sidebarCollapsed && <Sidebar />}
-          </div>
+          <SidebarColumn collapsed={sidebarCollapsed} onToggle={onToggleSidebar} />
         )}
       </div>
     </div>
