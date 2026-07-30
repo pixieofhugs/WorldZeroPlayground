@@ -15,7 +15,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * total. #821 had neither — one upright rectangle stood in for both.
  *
  * ROW SELECTION IS NOT OURS. `scoreBreakdown` decides which rows exist
- * (ADR-0047); this file only decides what a row looks like. The one row this
+ * (ADR-0047) — including the BASE row, which drops out when the roundel already
+ * states that figure (#1131); the tally then holds `VOTES +0` alone, which is
+ * still a completed form. This file only decides what a row looks like. The one row this
  * stamp adds on its own is GROUP — `(base + meta)`, drawn under a rule — and it
  * appears only when a metatask AND a multiplier are both in play, which is
  * exactly the design's "full formula" column. Without a multiplier the subtotal
@@ -37,12 +39,16 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** Rows in working order. `ruled` draws the subtotal rule above the row. */
-  const rows: { key: string; label: string; value: string; gold?: boolean; ruled?: boolean }[] = [
-    { key: "base", label: t("card.stamp.base"), value: `${base}` },
-  ];
+  const rows: { key: string; label: string; value: string; gold?: boolean; ruled?: boolean }[] = [];
+  if (base !== null) {
+    rows.push({ key: "base", label: t("card.stamp.base"), value: `${base}` });
+  }
   if (meta !== null) {
     rows.push({ key: "meta", label: t("card.stamp.meta"), value: `+${meta}` });
-    if (mult !== null) {
+    // `base` is non-null whenever a metatask is in play (the #1131 rule hides it
+    // only when nothing else exists), so the subtotal always has both terms;
+    // the guard is what tells the compiler so.
+    if (mult !== null && base !== null) {
       rows.push({ key: "group", label: t("card.stamp.group"), value: `${base + meta}`, ruled: true });
     }
   }
