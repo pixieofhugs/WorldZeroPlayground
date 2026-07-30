@@ -77,8 +77,17 @@ every shape. The helper picks the token by the *shape of the surface*:
 | shape | `na` gets | everyone else |
 |---|---|---|
 | `"bar"` | `--faction-default-rainbow` (linear) | `--faction-{key}` |
-| `"dot"` | `--faction-default-ring` (conic) | `--faction-{key}` |
+| `"dot"` | `--faction-default-rainbow-conic` (conic) | `--faction-{key}` |
 | `"pill"` | rainbow frame + paper interior + ink | `--faction-{key}` + white |
+
+The `"dot"` row named `--faction-default-ring` — a *hard-wedge* conic — until
+#1127 (epic #1219) deleted that token and pointed every na circle at the smooth
+`--faction-default-rainbow-conic`. This decision is unchanged: a dot still takes
+a conic, because a 7-stop linear is mud at 10–12px. Only the cut changed, and
+for a reason outside this ADR's scope — all seven light stops sit inside a
+WCAG-luminance band of 0.184, so hard wedges of near-equal value merged into one
+dark band in light mode. `"rule"` was added to the helper later (#983) and is
+not in the table above.
 
 **4. Text-bearing pills frame the rainbow rather than fill with it.** The
 rainbow becomes the pill's border via `border-box`, with the label on a

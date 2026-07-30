@@ -37,7 +37,8 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
 }
 
 function DefaultSigilAdapter({ size }: SigilVariantProps) {
-  // The default ring has no color prop — it draws --faction-default-ring.
+  // The default ring has no color prop — it draws
+  // --faction-default-rainbow-conic.
   return <DefaultSigil size={size} />;
 }
 

@@ -179,7 +179,7 @@ const ringBtn: CSSProperties = {
   // eslint-disable-next-line local/no-raw-style-values -- ornament: rainbow ring thickness drawn around the 104px photo well; the nearest rung (4px) thickens the band by a third.
   padding: 3,
   cursor: 'pointer',
-  border: 'none', background: 'var(--faction-default-rainbow)',
+  border: 'none', background: 'var(--faction-default-rainbow-conic)',
 }
 const ringInner: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -72,7 +72,7 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
       "var(--faction-default-rainbow)",
     );
     expect(factionFill("albescent", "dot").background).toBe(
-      "var(--faction-default-ring)",
+      "var(--faction-default-rainbow-conic)",
     );
   });
 

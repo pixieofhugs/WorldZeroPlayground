@@ -143,7 +143,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
               height: 56,
               // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness drawn around a 56px avatar; the nearest rung (4px) thickens the band by a third.
               padding: 3,
-              background: 'var(--faction-default-ring)',
+              background: 'var(--faction-default-rainbow-conic)',
             }}
           >
             {character.avatar_url ? (

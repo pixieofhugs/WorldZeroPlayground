@@ -53,7 +53,7 @@ describe("FactionSigil dispatcher (#659)", () => {
 
   it("falls back to the unaffiliated ring for an unknown slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="totally-unknown" />);
-    expect(html).toContain("var(--faction-default-ring)");
+    expect(html).toContain("var(--faction-default-rainbow-conic)");
     expect(html).not.toContain("var(--faction-snide-acid)");
     expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
     expect(html).not.toContain("var(--everymen-red)");
@@ -61,7 +61,7 @@ describe("FactionSigil dispatcher (#659)", () => {
 
   it("falls back to the unaffiliated ring for a null slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug={null} />);
-    expect(html).toContain("var(--faction-default-ring)");
+    expect(html).toContain("var(--faction-default-rainbow-conic)");
   });
 });
 

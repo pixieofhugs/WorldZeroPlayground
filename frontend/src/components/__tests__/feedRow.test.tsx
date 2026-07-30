@@ -255,11 +255,11 @@ describe('FeedRowContent', () => {
   it('gives an na actor the rainbow-ring avatar, a real faction a tinted disc', () => {
     const naRow = normalizeFeedItem({ ...item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }), context_faction_slug: 'na' })!
     const naHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={naRow} avatarUrl={null} /></MemoryRouter>)
-    expect(naHtml).toContain('--faction-default-ring')
+    expect(naHtml).toContain('var(--faction-default-rainbow-conic)')
 
     const covenRow = normalizeFeedItem(item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }))!
     const covenHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={covenRow} avatarUrl={null} /></MemoryRouter>)
-    expect(covenHtml).not.toContain('--faction-default-ring')
+    expect(covenHtml).not.toContain('var(--faction-default-rainbow-conic)')
   })
 
   // #983: the headline rule read grey for `na` only because it was written as a

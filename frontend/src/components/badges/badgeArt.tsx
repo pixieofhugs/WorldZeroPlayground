@@ -154,7 +154,7 @@ const COMPACT_PLACEMENT = { fleur: 'translate(49,40) scale(1.42)', crown: 'trans
  *
  * Degrading a spectrum by geometry rather than shrinking it is ADR-0039's own
  * move: `factionFill` takes a shape for exactly this reason, and the spectrum
- * at 16px is already shipped elsewhere as `--faction-default-ring`.
+ * at 16px is already shipped elsewhere as `--faction-default-rainbow-conic`.
  */
 const LEGEND_MIN_SIZE = 72
 

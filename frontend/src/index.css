@@ -78,7 +78,13 @@
   --faction-wow-on-accent: #ffffff; /* #7a4a9e plum — ink only 2.96:1; white 6.36:1 */
   --faction-ephemerists-on-accent: #ffffff; /* #9c3622 rubric — 7.08:1 */
   --faction-singularity-on-accent: #14110b; /* #4ade80 green — white only 1.74:1; ink 10.81:1 */
-  --faction-default-on-accent: #ffffff; /* #1a1209 — 18.51:1 (na has no on-fill; this is its own) */
+  /* The hex in every comment on this block is the SURFACE measured against, not
+     a competing value for the token. Spelt out here because na's surface is a
+     bare near-black with no colour name beside it to give the game away — the
+     other seven rows all say "plum", "green", "(snide-pink)" — so a white token
+     annotated with a near-black hex read at a glance as a contradiction (#1214).
+     The surface is --faction-default-card-accent, na's card ink. */
+  --faction-default-on-accent: #ffffff; /* on #1a1209 (na card-accent ink) — 18.51:1; na has no on-fill, so this is its own */
 
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: #f2e0cb; /* sand tint — opaque, same stock as -panel */
@@ -243,13 +249,13 @@
   --faction-default-stop-6: #2563eb; /* blue */
   --faction-default-stop-7: #be185d; /* magenta */
   --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-ring: conic-gradient(var(--faction-default-stop-1) 0 51deg, var(--faction-default-stop-2) 0 103deg, var(--faction-default-stop-3) 0 154deg, var(--faction-default-stop-4) 0 206deg, var(--faction-default-stop-5) 0 257deg, var(--faction-default-stop-6) 0 309deg, var(--faction-default-stop-7) 0 360deg);
   /* The bar ramp stood on end (#983), for a vertical RULE — the left-edge
      accent a feed row, a quoted block or a callout draws. Same seven stops,
      same cut, 180deg: a rule is ~3px wide and tens of px tall, so the 90deg
      ramp above would spend the whole spectrum across those 3px (≈0.4px a
-     stop) and read as one muddy smear, exactly the failure --faction-default-ring
-     exists to avoid on a 10px dot. Ramps are cut for their geometry. */
+     stop) and read as one muddy smear, exactly the failure
+     --faction-default-rainbow-conic exists to avoid on a 10px dot. Ramps are
+     cut for their geometry. */
   --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
   /* The same spectrum cut to TILE (#1023). Its last stop is its first, so a
      surface that scrolls its background-position loops without a seam — which
@@ -259,9 +265,38 @@
      card edge reads it today. */
   --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   /* The loop bent into a circle (#1038): the same seamless cut, swept as a
-     SMOOTH conic. Deliberately not --faction-default-ring above, which is the
-     vote widget's seven HARD wedges — a pinwheel, not a prism. Anything that
-     turns wants this one; anything that counts wants the wedges. */
+     SMOOTH conic. THE ONE na CONIC — every circular na surface reads this, from
+     the 8px avatar badge sigil to the 58px sidebar ring.
+
+     It used to have a hard-wedge twin, --faction-default-ring, and this comment
+     used to defend the split as "the vote widget's seven HARD wedges — a
+     pinwheel, not a prism". No vote component ever read that token, so the
+     defence named a consumer that did not exist; #1127 deleted the token and
+     pointed its twenty-odd consumers here.
+
+     What actually killed the wedges is the light palette, not the duplication.
+     All seven light stops sit inside a WCAG-luminance band of 0.184 (mean
+     adjacent ΔL 0.069): the hue varies, the value barely does, so seven
+     hard-edged wedges of near-equal value read as one dark band. Dark has
+     nearly double the spread (0.347) and the same ring read correctly there —
+     which is why this only ever got reported in light mode. A smooth sweep has
+     no edges to fail to distinguish, so the failure mode is gone rather than
+     tuned.
+
+     Two things that follow, and the second is easy to get backwards:
+
+     A smooth seam-closed ramp takes NO `from <angle>`. There is no landmark
+     anywhere on it for an offset to place — that is the same reasoning that
+     retired the Task Crown's `from 90deg` in #1213.
+
+     But hard wedges are NOT a mistake in general: their boundaries ARE
+     landmarks, so a wedge ring can legitimately be started at an angle. The one
+     surface that genuinely wants edges — the level-up seal — builds its own
+     conic inline from --faction-default-stop-*, with `from -60deg` and
+     `360 / 7` per wedge, and it is right to. Since #1220 made the stops
+     indexable that is the cheaper shape anyway: a surface that wants wedges
+     composes them, rather than the file carrying a second gradient token for
+     one caller. */
   --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
@@ -273,8 +308,9 @@
   /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
      ring; the reached dots fill with --faction-default-rainbow. The two caption
      colours are the widget's warm on/off text — flipped in dark below, so the
-     widget never branches on a `dark` boolean. The five glow hues are the
-     community rainbow's per-dot cast; identity colours, so theme-independent. */
+     widget never branches on a `dark` boolean. The widget's third piece, the
+     per-dot glow cast, is --spectrum-glow-1…5 further down; it carries its own
+     derivation at its declarations rather than a summary here (#1214). */
   --faction-default-dot-ring: #d6cfbf;
   --faction-default-vote-on: #c2541f;
   --faction-default-vote-off: #a8895a;
@@ -361,6 +397,34 @@
   --faction-default-aurora-opacity: 0.2;
   --faction-default-aurora-filter: blur(56px) saturate(0.5);
   --faction-default-aurora-blend: normal;
+  /* ── The vote row's per-dot GLOW cast (#842, #1214) ──
+     Read as `var(--spectrum-glow-${value})` by vote/UnaffiliatedVote and
+     vote/AlbescentVote for each reached dot's box-shadow.
+
+     A FIVE-SAMPLE OF THE SEVEN-STOP RAMP, keyed to where each dot windows into
+     it. The row is one --faction-default-rainbow stretched across
+     ROW_SPAN = 5×44 + 4×9 = 256px, and each dot shows only its own slice, so the
+     glow a dot casts has to be the hue that dot is actually painted with. Dot
+     centres fall at 22 / 75 / 128 / 181 / 234px — 8.6 / 29 / 50 / 71 / 91% along
+     the ramp — derived from DOT_SIZES, HIT_SIZE and ROW_GAP in the component and
+     written down nowhere else, which is why this note exists.
+
+     Glow 3 is stop 4 exactly (dead centre of the row). The other four are NOT
+     the exact interpolation at their position: each is walked lighter and more
+     saturated, because the value is blurred into
+     `color-mix(… 60%, transparent)` at 8px (16px on the top dot), where the
+     literal hue reads as a grey smudge rather than as the dot's colour.
+
+     THEY CANNOT BE COLLAPSED INTO --faction-default-stop-*, and this is the
+     clause to read before running a dedupe pass over this file. Four of the five
+     positions fall BETWEEN stops — 4 and 5 most plainly, sitting in the teal→blue
+     and blue→magenta blends where there is no stop of any kind. There is no
+     token for "71% along the ramp", and #1220 adding the scalar stops did not
+     create one.
+
+     Theme-INVARIANT on purpose: a cast identity, not chrome, so there is no dark
+     entry. The seven-stops docstring above and the --badge-victor-* note below
+     both point here for that. */
   --spectrum-glow-1: #c1352a;
   --spectrum-glow-2: #cf861a;
   --spectrum-glow-3: #16a34a;
@@ -1074,7 +1138,25 @@
     rgba(150, 95, 205, 0.3),
     transparent
   );
-  /* Rank-5 confetti — the six community-rainbow stops, reused as flecks. */
+  /* Rank-5 confetti — WOW's OWN celebration pigments, NOT the spectrum reused.
+     This comment used to call them the community rainbow's own stops reused as
+     flecks, and not one of the six is a stop, in either theme (#1214). They are
+     a deliberately LIGHTENED set, built to pop as flecks on the parchment plate:
+     five are pale analogues of a stop's hue (orange, gold, green, teal, pink)
+     and -5 is a violet at ~274°, an angle the spectrum never visits — it steps
+     straight from blue (~221°) to magenta (~335°). So there is no stop any of
+     these could be a copy of, and they must NOT be repointed at
+     --faction-default-stop-*: that would darken rank 5's celebration and drop
+     the violet the set is built around. A pastel reads as confetti where a
+     saturated spectrum stop reads as ornament.
+
+     Two near-misses that are NOT invitations to compose. -5 is byte-identical
+     to the chronicle plum's LIGHT value (--faction-wow-card-accent) and -2 lands
+     within 1/255 of the DARK yellow stop. But this whole set is THEME-INVARIANT
+     — it has no [data-theme="dark"] entry, because confetti is confetti with the
+     lights out — and both of those tokens flip, so reading either would make one
+     fleck change colour in dark while its five siblings held. Restated on
+     purpose, same rule as --faction-default-chip. Sole consumer: vote/WowVote. */
   --faction-wow-confetti-1: #e0562e;
   --faction-wow-confetti-2: #e7b94e;
   --faction-wow-confetti-3: #6fbf73;
@@ -1796,7 +1878,6 @@
   --faction-default-stop-6: #60a5fa; /* blue */
   --faction-default-stop-7: #f472b6; /* magenta */
   --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-ring: conic-gradient(var(--faction-default-stop-1) 0 51deg, var(--faction-default-stop-2) 0 103deg, var(--faction-default-stop-3) 0 154deg, var(--faction-default-stop-4) 0 206deg, var(--faction-default-stop-5) 0 257deg, var(--faction-default-stop-6) 0 309deg, var(--faction-default-stop-7) 0 360deg);
   --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
   --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
   --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
@@ -2384,8 +2465,11 @@
 
      Two consequences. The ring FLIPS with the theme now, which ADR-0054's
      "fixed brand constant in both themes" clause forbade — amended there, on
-     the #1219 ruling that brand chrome flips. And anything wanting HARD wedges
-     still wants --faction-default-ring; the crown is a prism, not a pinwheel. */
+     the #1219 ruling that brand chrome flips. And the crown is a prism, not a
+     pinwheel — anything wanting HARD wedges now composes them from
+     --faction-default-stop-*, the way the level-up seal does. #1127 deleted the
+     wedge token this used to point at, once the light palette proved it could
+     not hold an edge; the reasoning is on --faction-default-rainbow-conic. */
   --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
   --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
 }
@@ -3080,12 +3164,6 @@
 @keyframes ev-duel-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.82); } }
 @media (prefers-reduced-motion: no-preference) {
   .ev-duel-pulse { animation: ev-duel-pulse 1.1s ease-in-out infinite; }
-}
-
-/* Character-sidebar progress bar — rainbow fill drifts left→right. Stilled for reduced-motion. */
-@keyframes cs-shimmer { to { background-position: 200% 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  .cs-shimmer { animation: cs-shimmer 4s linear infinite; }
 }
 
 /* ══ Praxis-card redesign vote widgets (#821) ══

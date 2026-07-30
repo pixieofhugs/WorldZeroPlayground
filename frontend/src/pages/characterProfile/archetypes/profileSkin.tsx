@@ -127,7 +127,7 @@ export interface ProfileKit {
  *  colorless ones supply their own ink-outline variant). `ringBg` defaults to
  *  the spectrum default ring; `centerBg`/`glyphColor` skin the medallion. */
 export function SpectrumLaurel({
-  ringBg = 'var(--faction-default-ring)',
+  ringBg = 'var(--faction-default-rainbow-conic)',
   centerBg = 'var(--color-bg-surface-alt)',
   glyphColor = 'var(--color-text-primary)',
   rotate = 0,

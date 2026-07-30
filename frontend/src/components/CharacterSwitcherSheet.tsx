@@ -113,7 +113,7 @@ export function CharacterSwitcherRows({
             data-active={isActive ? 'true' : 'false'}
             style={switchRow}
           >
-            <span style={{ ...miniRing, background: 'var(--faction-default-ring)' }}>
+            <span style={{ ...miniRing, background: 'var(--faction-default-rainbow-conic)' }}>
               {life.avatar_url ? (
                 <img src={mediaUrl(life.avatar_url)} alt={life.display_name} style={miniAvatarImg} />
               ) : (

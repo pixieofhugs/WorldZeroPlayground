@@ -191,8 +191,11 @@ export type FactionFillShape = "bar" | "dot" | "pill" | "frame" | "rule";
  *   - `"rule"` → the same ramp turned 180deg (`--faction-default-rainbow-vertical`)
  *                for a vertical rule, where the horizontal ramp would compress
  *                seven stops into the rule's ~3px width
- *   - `"dot"`  → the conic rainbow (`--faction-default-ring`; a 7-stop linear is
- *                mud at 10–12px)
+ *   - `"dot"`  → the conic rainbow (`--faction-default-rainbow-conic`; a 7-stop
+ *                linear is mud at 10–12px). SMOOTH, not wedged: the hard-wedge
+ *                conic this used to name was deleted in #1127, because its seven
+ *                light stops sit inside a 0.184 luminance band and the wedge
+ *                edges merged into one dark band
  *   - `"pill"` → the rainbow as a *frame* (border-box) around a neutral paper
  *                interior with ink text — no single ink is legible across the
  *                spectrum, so the label never sits on it.
@@ -260,7 +263,7 @@ export function factionFill(
   if (isDefault) {
     // bar / rule / dot: one spectrum, three cuts, picked by the geometry the
     // fill lands on rather than by the caller remembering to rotate it.
-    if (shape === "dot") return { background: "var(--faction-default-ring)" };
+    if (shape === "dot") return { background: "var(--faction-default-rainbow-conic)" };
     if (shape === "rule") {
       return { background: "var(--faction-default-rainbow-vertical)" };
     }
@@ -276,7 +279,8 @@ export function factionFill(
  * `na` and null — to the `default` key, whose scalars are neutral grey. Surfaces
  * that owe the unaffiliated player the spectrum (ADR-0039) must branch *before*
  * asking for a faction variable, then reach for the rainbow themselves
- * (`--faction-default-rainbow` / `--faction-default-ring`, or factionFill()).
+ * (`--faction-default-rainbow` / `--faction-default-rainbow-conic`, or
+ * factionFill()).
  *
  * `na` IS a key in CSS_KEY (it maps to `default`, #418) but is deliberately not
  * "known" here: membership means "has a resolvable theme", and `default` is the

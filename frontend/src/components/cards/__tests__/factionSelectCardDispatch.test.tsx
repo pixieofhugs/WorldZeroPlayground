@@ -69,9 +69,13 @@ describe("FactionSelectCard fallback", () => {
   it("carries the spectrum rather than degrading to grey (ADR-0039)", () => {
     const html = markup(<DefaultSelectCard {...REST} />);
     // The frame's fill and the sigil's conic ring — both via factionFill /
-    // --faction-default-*, never the neutral scalar.
-    expect(html).toContain("--faction-default-rainbow");
-    expect(html).toContain("--faction-default-ring");
+    // --faction-default-*, never the neutral scalar. Both names are asserted in
+    // full: since #1127 pointed the sigil at --faction-default-rainbow-conic,
+    // "--faction-default-rainbow" is a PREFIX of the conic's name, so a bare
+    // toContain on it would pass on the sigil alone and stop proving the frame
+    // is painted at all.
+    expect(html).toContain("var(--faction-default-rainbow)");
+    expect(html).toContain("var(--faction-default-rainbow-conic)");
   });
 
   it("renders the na copy slots", () => {

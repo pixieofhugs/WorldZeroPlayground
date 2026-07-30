@@ -161,7 +161,7 @@ export default function DefaultTaskCard({
                 height: size.ringSize,
                 borderRadius: "50%",
                 padding: "var(--space-xs)",
-                background: "var(--faction-default-ring)",
+                background: "var(--faction-default-rainbow-conic)",
               }}
             >
               <div

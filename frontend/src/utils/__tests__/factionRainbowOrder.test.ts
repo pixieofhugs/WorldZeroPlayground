@@ -83,7 +83,7 @@ describe("factionFill (#636 / ADR-0039)", () => {
 
   it("gives na the conic rainbow for a dot (linear reads as mud at 10-12px)", () => {
     expect(factionFill("na", "dot")).toEqual({
-      background: "var(--faction-default-ring)",
+      background: "var(--faction-default-rainbow-conic)",
     });
   });
 
@@ -100,7 +100,7 @@ describe("factionFill (#636 / ADR-0039)", () => {
       background: "var(--faction-default-rainbow)",
     });
     expect(factionFill(null, "dot")).toEqual({
-      background: "var(--faction-default-ring)",
+      background: "var(--faction-default-rainbow-conic)",
     });
   });
 
@@ -191,7 +191,7 @@ describe("factionFill (#636 / ADR-0039)", () => {
       background: "var(--faction-default-rainbow)",
     });
     expect(factionFill("na", "dot")).toEqual({
-      background: "var(--faction-default-ring)",
+      background: "var(--faction-default-rainbow-conic)",
     });
     expect(factionFill("na", "pill")).toEqual({
       background:

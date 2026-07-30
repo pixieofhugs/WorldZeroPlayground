@@ -118,7 +118,7 @@ export default function Sidebar() {
             {/* avatar in a rainbow ring (unaffiliated / all-paths mark) */}
             <div
               className="shrink-0 rounded-full"
-              style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--faction-default-ring)' }}
+              style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--faction-default-rainbow-conic)' }}
             >
               {character.avatar_url ? (
                 <img
