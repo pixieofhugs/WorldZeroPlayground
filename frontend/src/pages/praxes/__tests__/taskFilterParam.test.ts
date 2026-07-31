@@ -87,7 +87,9 @@ describe('usePraxes sends the task filter it reads', () => {
   })
 
   it('rekeys the fetch on it, so clearing the filter refetches', () => {
-    expect(USE_PRAXES_SOURCE).toMatch(/\[taskId, type, faction, voted, sort, trimmedQuery\]/)
+    // First entry of the `usePagedResource` dep key. The rest of that key is
+    // #1366's business; that `taskId` leads it is #1050's.
+    expect(USE_PRAXES_SOURCE).toMatch(/\[taskId, factionKey,/)
   })
 
   it('leaves it optional — a bare /praxis is still the whole feed', () => {
@@ -97,7 +99,11 @@ describe('usePraxes sends the task filter it reads', () => {
   })
 
   it('counts as an active filter, so an empty result reads as filtered', () => {
-    expect(USE_PRAXES_SOURCE).toMatch(/hasActiveFilters\s*=\s*\n?\s*taskId !== null/)
+    // The count itself moved to `narrowingFilterCount` (#1366, guarded in
+    // `feedFilterParams.test.ts`); what stays #1050's is that the hook FEEDS the
+    // task id into it. Drop the argument and a one-task feed with no proof yet
+    // goes back to claiming the whole register is empty.
+    expect(USE_PRAXES_SOURCE).toMatch(/narrowingFilterCount\([\s\S]*?taskId\s*\}/)
   })
 })
 
