@@ -11,7 +11,13 @@ class FactionDefectionHistory(Base):
 
     Used to enforce the rule that players cannot rejoin factions they have
     defected from (with exceptions for factions where can_always_rejoin is True).
-    All rows for an era are deleted on era reset.
+
+    Rows are **retained** across an era reset — nothing is ever deleted here.
+    The reset's fresh start on the join gate comes from era scoping, not from a
+    purge: every reader filters on the era in hand
+    (:func:`services.faction_service.can_join_faction`,
+    :func:`services.faction_service.get_defection_history`, and the
+    activity feed), so a prior era's rows can never gate a new-era join (#1372).
     """
 
     __tablename__ = "faction_defection_history"

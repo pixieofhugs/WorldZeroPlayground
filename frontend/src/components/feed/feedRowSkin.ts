@@ -46,10 +46,21 @@ import { factionCssVar } from '../../utils/factions'
  *
  * ## What a frame may put here
  *
- * Tokens it already owns. This is a place to REPOINT existing inks, never a
- * reason to mint one, and never a home for a hue measured on some other ground:
- * the whole failure it exists to fix is an ink measured against the app's page
- * being painted on a faction's sheet.
+ * Tokens it already owns. This is a place to REPOINT existing inks and never a
+ * home for a hue measured on some other ground: the whole failure it exists to
+ * fix is an ink measured against the app's page being painted on a faction's
+ * sheet.
+ *
+ * It used to say "never a reason to mint one", and #1341 is the exception that
+ * had to be written down. Repointing needs a rung that already survives the
+ * chassis's ground, and three of the four chassis #1252 left had one — the acid
+ * S.N.I.D.E. had already walked down for type on the slip, the pink Coven strikes
+ * its numerals in, the nile Ephemerists sets its links in. Everymen had none: its
+ * red misses in light on `--everymen-paper`, `-red-deep` misses in dark, and
+ * `-sheet-accent` is the same red measured on the lighter sheet PANEL. So the
+ * rule is about ORDER, not prohibition — look for the existing (role, ground)
+ * ink first, and mint the sibling only once the family is shown not to have one.
+ * `--everymen-paper-accent` is #1173's split applied to the accent role.
  */
 export interface FeedRowInk {
   /**
@@ -57,12 +68,17 @@ export interface FeedRowInk {
    *
    * Default `factionCssVar(slug)` — the faction's raw hue, which is what the row
    * has always painted. That default is legible on the app's neutral page and
-   * MEASURABLY IS NOT on most faction chassis: at 18px/700 it owes 4.5:1 and
+   * MEASURABLY IS NOT on ANY of the seven bespoke chassis: at 18px/700 it owes
+   * 4.5:1 (700 weight reaches the large-text 3:1 exemption only at 18.66px) and
    * pays 1.96:1 on WOW's cream, 2.41:1 on the S.N.I.D.E. slip, 2.98:1 on the
    * Coven ward, 3.67:1 on the Singularity terminal, 4.04:1 on UA's parchment,
-   * 4.15:1 on the Ephemerists plate and 4.49:1 on Everymen's paper (light
-   * theme; #1252 measured all sixteen). A chassis whose ground fails passes the
-   * accent it measured instead.
+   * 4.15:1 on the Ephemerists plate under its gold wash and 4.49:1 on Everymen's
+   * paper. All seven are LIGHT-theme misses and the raw hue clears in dark on
+   * every one of them — #1252's "Ephemerists 3.16:1 dark" was the light wash
+   * composited over the dark plate, where `-plate-wash` resolves to `none`.
+   * A chassis whose ground fails passes the accent it measured instead; all
+   * seven now do (#1252, then #1341), and `feedRowInk.test.tsx` renders each
+   * frame around the shared body and re-measures the pairing it publishes.
    *
    * It stays the default rather than becoming `-card-accent` globally because
    * `card-accent` is measured against `-card-bg`, and only three of the eight

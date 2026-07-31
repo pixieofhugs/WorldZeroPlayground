@@ -28,9 +28,13 @@ import { describe, it, expect } from 'vitest'
 import UaFeedFrame from '../UaFeedFrame'
 import WowFeedFrame from '../WowFeedFrame'
 import SingularityFeedFrame from '../SingularityFeedFrame'
+import SnideFeedFrame from '../SnideFeedFrame'
+import CovenFeedFrame from '../CovenFeedFrame'
+import EphemeristsFeedFrame from '../EphemeristsFeedFrame'
+import EverymenFeedFrame from '../EverymenFeedFrame'
 import FeedRowContent from '../FeedRowContent'
 import { normalizeFeedItem } from '../normalizeFeedItem'
-import { AA_NORMAL, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
+import { AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import '../../../i18n'
 
@@ -58,18 +62,70 @@ function row(slug: string) {
   })!
 }
 
+/**
+ * A wash the chassis lays over its own ground before the body lands on it
+ * (#1341). Resolved per theme and composited when it yields a colour, which is
+ * what makes it theme-correct for free: `--faction-ephemerists-plate-wash` is a
+ * gradient by day and the keyword `none` at night, so the dark plate is measured
+ * bare — exactly as it is painted. Measuring the LIGHT wash over the DARK plate
+ * is how #1252 recorded a 3.16:1 dark failure that no surface has.
+ *
+ * The tightest stop is the one that gates: a top-anchored ramp fading to
+ * transparent is at full strength where the row's first line sits.
+ */
+function veiledGround(stop: string, veil: string | null, theme: Theme) {
+  const surface = parseColor(stop)
+  expect(surface, `ground stop ${stop}`).not.toBeNull()
+  if (!veil) return surface!
+  const raw = resolveVar(veil, theme, THEMES)
+  const first = raw?.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/)?.[0]
+  const wash = first ? parseColor(first) : null
+  return wash ? compositeOver(wash, surface!) : surface!
+}
+
 const CASES = [
-  { slug: 'ua', Frame: UaFeedFrame, ink: '--faction-ua-card-accent', ground: '--faction-ua-parchment' },
-  { slug: 'wow', Frame: WowFeedFrame, ink: '--faction-wow-card-accent', ground: '--faction-wow-card-bg' },
+  { slug: 'ua', Frame: UaFeedFrame, ink: '--faction-ua-card-accent', ground: '--faction-ua-parchment', veil: null },
+  { slug: 'wow', Frame: WowFeedFrame, ink: '--faction-wow-card-accent', ground: '--faction-wow-card-bg', veil: null },
   {
     slug: 'singularity',
     Frame: SingularityFeedFrame,
     ink: '--faction-singularity-card-accent',
     ground: '--faction-singularity-term-bg',
+    veil: null,
+  },
+  // The four #1252 left, fixed by #1341. Three repoint to an ink their own
+  // family already declares for type on this exact stock; only Everymen mints.
+  {
+    slug: 'snide',
+    Frame: SnideFeedFrame,
+    ink: '--faction-snide-slip-acid-ink',
+    ground: '--faction-snide-slip-paper',
+    veil: null,
+  },
+  {
+    slug: 'coven',
+    Frame: CovenFeedFrame,
+    ink: '--faction-coven-slip-deep',
+    ground: '--faction-coven-ward-card',
+    veil: null,
+  },
+  {
+    slug: 'ephemerists',
+    Frame: EphemeristsFeedFrame,
+    ink: '--faction-ephemerists-plate-nile',
+    ground: '--faction-ephemerists-plate-bg',
+    veil: '--faction-ephemerists-plate-wash',
+  },
+  {
+    slug: 'everymen',
+    Frame: EverymenFeedFrame,
+    ink: '--everymen-paper-accent',
+    ground: '--everymen-paper',
+    veil: null,
   },
 ] as const
 
-describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Frame, ink, ground }) => {
+describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Frame, ink, ground, veil }) => {
   it('reaches the actor name inside children it did not mount', () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
@@ -89,9 +145,8 @@ describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Fram
     const text = parseColor(resolveVar(ink, theme, THEMES) ?? '')
     expect(text, `${ink} (${theme})`).not.toBeNull()
     for (const stop of groundStops(ground, theme)) {
-      const surface = parseColor(stop)
-      expect(surface, `${ground} stop ${stop}`).not.toBeNull()
-      const ratio = contrastRatio(text!, surface!)
+      const surface = veiledGround(stop, veil, theme)
+      const ratio = contrastRatio(text!, surface)
       expect(ratio, `${ink} on ${stop} (${theme}) = ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
     }
   })

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 
 /**
  * Cozy Coven — THE CANDLELIT SLIP, as a feed card (dress issue #1197, epic
@@ -48,6 +49,20 @@ import type { FeedFrameProps } from './feedFrameProps'
  * gradient's worst stop — see the slip block in index.css (#1023) and the ward
  * block (#1031).
  */
+
+/**
+ * The one ink on the SLIP the head's measurements never covered (#1341). The
+ * shared body paints the actor's name in the raw `--faction-coven` — a hue
+ * measured against the app's neutral page — and on this near-white ward stock
+ * that is 2.98:1, where 18px/700 owes 4.5:1 (700 weight only reaches the
+ * large-text 3:1 exemption at 18.66px).
+ *
+ * `-slip-deep` is the same pink taken down for exactly this: it is already what
+ * this card's points numeral and braid strands are struck in, and it is already
+ * measured on this ground — 4.70:1 light / 9.77:1 dark. A repoint, not a mint.
+ * The bright `-slip-pk` is ornament only and stays so; it is 3.25:1 as type.
+ */
+const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--faction-coven-slip-deep)' } }
 
 const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
@@ -270,7 +285,9 @@ export default function CovenFeedFrame({ kicker, time, tag, archive, children }:
 
       {/* THE SLIP — the shared payload body. No padding and no ink of ours: every
           body already pads itself, and the body is faction-blind by contract. */}
-      <div style={{ position: 'relative' }}>{children}</div>
+      <div style={{ position: 'relative' }}>
+        <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
+      </div>
     </article>
   )
 }
