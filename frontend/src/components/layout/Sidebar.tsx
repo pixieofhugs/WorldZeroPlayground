@@ -65,10 +65,9 @@ function SectionHeader({ label }: { label: string }) {
  * `REQUESTS_QUEUE_ANCHOR` on `/updates`. This panel was the surface it
  * replaced, so it is gone rather than duplicated.
  *
- * The response's `pending_requests` is still fetched and still read — but only
- * for its LENGTH now, by the collapsed handle's badge (`SidebarColumn`), the
- * mobile bell (`MobileHeader`) and the mobile FieldDesk. Nothing renders the
- * items.
+ * The response no longer carries the request items at all (#1456) — only
+ * `pending_requests_count`, read by the collapsed handle's badge
+ * (`SidebarColumn`), the mobile bell (`MobileHeader`) and the mobile FieldDesk.
  */
 export default function Sidebar() {
   const { t } = useTranslation('common')

@@ -18,9 +18,9 @@ export default function MobileHeader() {
   // The same pending-request count the desktop rail surfaces, from the same
   // response; drives the bell badge so the Updates page is reachable from the
   // phone header (#572). Reading it here costs no request (#1344) — it used to
-  // be a second, byte-identical limit-100 feed call.
-  const { pending_requests: pendingRequests } = useSidebarPanels()
-  const pendingCount = pendingRequests.length
+  // be a second, byte-identical limit-100 feed call, and until #1456 it was
+  // still a list of items this only ever measured.
+  const { pending_requests_count: pendingCount } = useSidebarPanels()
 
   return (
     <header
