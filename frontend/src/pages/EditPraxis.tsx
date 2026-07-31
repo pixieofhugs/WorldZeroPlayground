@@ -14,6 +14,7 @@ import ConfirmDialog from "../components/confirm/ConfirmDialog";
 import DuelSealConfirm from "../components/duel/DuelSealConfirm";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
+import { preloadArchetype } from "../factions/lazyArchetype";
 import {
   useEditPraxis,
 } from "./editPraxis/useEditPraxis";
@@ -27,6 +28,22 @@ export default function EditPraxis() {
   const state = useEditPraxis(id);
 
   if (state.loading) {
+    // Start the faction composer's chunk while the rest of the load finishes
+    // (#1379) — the move `RootLanding` makes for its landing chunk, for the
+    // same reason. The praxis names the task's faction (`task_faction_slug` is
+    // `Task.primary_faction_slug`, off one builder server-side), and it lands a
+    // round trip before `getTask` — which is what `loading` is still waiting
+    // on. Without this the chunk is not even REQUESTED until that answer
+    // arrives, so the composer's last wave is a download that could have
+    // travelled with the one before it. It cannot change what renders: the
+    // dispatch below still reads the task.
+    preloadArchetype(
+      pickVariant(
+        surfaceMap("editPraxis"),
+        state.praxis?.task_faction_slug,
+        DefaultEditPraxis,
+      ),
+    );
     return (
       <div className="py-8 font-body text-muted">
         <PageTitle title={t("editPraxis.loadingPageTitle")} />
