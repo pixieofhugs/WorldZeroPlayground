@@ -29,6 +29,21 @@ export interface FeedCounts {
   your_stuff: number
   global_count: number
   requests: number
+  /**
+   * The type facet's counts (#1420, epic #1419 decision 4) — one entry per feed
+   * type the CURRENT view could show, zeros included.
+   *
+   * It answers a different question from the six scalars above. Those are the
+   * sidebar's "what is waiting for you" numbers and always describe the LIVE
+   * feed, even while the archive is on screen; `by_type` describes the list the
+   * caller is actually looking at, so on Archived it counts the archive.
+   *
+   * Computed under every active axis EXCEPT its own (decision 19), so ticking
+   * one type never zeroes the rest and strands the player with no way back.
+   * The zero rows are the client's to hide (decision 20) — they arrive so the
+   * facet can tell "this view has no nudges" from "this view cannot have any".
+   */
+  by_type: Record<string, number>
 }
 
 export interface ActivityFeedResponse {
@@ -51,6 +66,21 @@ export interface FeedBulkArchiveResult {
   archived: boolean
 }
 
+/**
+ * How this client writes a repeated query param — the same `{ indexes: null }`
+ * `api/tasks.ts` and `api/praxis.ts` set, and for the same reason.
+ *
+ * `GET /activity-feed` reads `types: Optional[list[str]] = Query(None)`, which
+ * FastAPI fills from REPEATED bare keys (`types=nudge&types=global_task`).
+ * Axios' default serializer writes `types[]=nudge` instead, and FastAPI reads
+ * nothing at all from that key: the endpoint answers 200 with a completely
+ * unfiltered list. Nothing else in the app catches it — the types line up, the
+ * request succeeds, tsc and the suite stay green, and the page quietly shows
+ * every update with type chips sitting on top of it. Hence the test that pins
+ * the serialised string rather than the config object.
+ */
+export const FEED_PARAMS_SERIALIZER = { indexes: null } as const
+
 export async function getActivityFeed(params?: {
   filter?: string
   before?: string
@@ -58,8 +88,18 @@ export async function getActivityFeed(params?: {
   /** Read the archive instead of the live feed. Crossed WITH `filter`, never a
    *  member of it: archived-ness is state, the filter is a type-set. */
   archived?: boolean
+  /**
+   * The type facet's selection (#1420) — repeated `?types=`, INTERSECTED with
+   * `filter`'s own set. Values the registry does not know are ignored server
+   * side and an empty selection means "no type constraint", so a stale
+   * bookmark degrades instead of 4xx-ing or matching nothing.
+   */
+  types?: string[]
 }): Promise<ActivityFeedResponse> {
-  const { data } = await api.get<ActivityFeedResponse>('/activity-feed', { params })
+  const { data } = await api.get<ActivityFeedResponse>('/activity-feed', {
+    params,
+    paramsSerializer: FEED_PARAMS_SERIALIZER,
+  })
   return data
 }
 
