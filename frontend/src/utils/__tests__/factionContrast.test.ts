@@ -1180,6 +1180,68 @@ const ARCHETYPE_PAIRS: Pair[] = [
     },
   ]),
 
+  // ── THE PRAXIS DETAIL'S NEUTRAL CHROME, over the frost (#1413) ───────────
+  //
+  // The other ten of #1451's fifteen alarm sites, plus the quiet inks beside
+  // them. `PraxisAdminBar` and `PraxisFlagBlock` do NOT sit on a faction wall:
+  // they are `.sidebar-card`, mounted bare by all nine skins because ADR-0061
+  // keeps moderation and system chrome out of a faction's voice. So their inks
+  // are the global `--color-*` set and they are the RIGHT inks — the faction
+  // ones are actively wrong there (`--faction-singularity-card-alarm` reads
+  // 1.00:1 on this composite). What is wrong is the GROUND.
+  //
+  // `--color-bg-surface` IS ALPHA — rgba(255,255,255,0.72) light, 0.04 dark —
+  // so `.sidebar-card` has no ground of its own. It composites against whatever
+  // it happens to be mounted on, which on this page is nine different walls,
+  // and `parseColor` cannot read a browser composite. That is why this file
+  // could measure every one of these inks and stay green: the pairing was not
+  // merely missing from the manifest, the surface had no value to name.
+  //
+  // The frost is modelled here as a VEIL, which is exactly what it is — a
+  // translucent layer laid over the ground before the ink lands (#694). That
+  // costs nothing new: `Veil` already resolves a declared token and composites
+  // it at its own alpha.
+  //
+  // NINE ROWS BECAME ONE, and the collapse IS the fix. Written against the nine
+  // walls these read, in light: danger 2.54 (singularity) / 4.37 (ephemerists) /
+  // 4.45 (ua, snide deep) / 4.55 (wow) / 4.61 (snide) / 4.62 (everymen) / 4.68
+  // (coven) / 4.81 (na); warning, tertiary and secondary all under AA on the
+  // terminal at 2.65 / 3.11 / 3.24; and in dark, everymen secondary at 4.15.
+  // Eight assertions red. `.sidebar-card` now paints the frost over a declared
+  // `--card-ground` and its neutral-chrome mounts wear `.card-on-page`, so the
+  // stock is the app's page on every skin and the wall is no longer part of the
+  // pairing — there is one ground to measure because there is one ground.
+  //
+  // The structural half of that claim is asserted separately, at the bottom of
+  // this file: a ratio row on a fixed ground cannot notice the ground going
+  // back to being the mount's business.
+  //
+  // THE REST OF THE PAGE'S NEUTRAL CHROME WAS AUDITED AND ADDS NO ROW, which is
+  // a finding rather than an omission. `.btn-outline` is the same shape — it
+  // fills with `--color-bg-surface` too — and every one of its praxis-detail
+  // mounts but one is INSIDE these cards, where it lays a second frost over a
+  // ground that is now fixed. The exception is the withdraw-confirm's Cancel,
+  // which sits on the bare wall; it prints `--color-text-primary`, and that ink
+  // over the frost runs 9.76:1 (Singularity, light — the tightest of the
+  // eighteen) to 18.43. Nothing there is close, so `.btn-outline` keeps its
+  // translucent fill and `--card-ground` stays a one-consumer property.
+  ...[
+    // The five global inks `PraxisAdminBar` / `PraxisFlagBlock` paint on the
+    // card's own stock. `--color-text-primary` is left out on purpose: it only
+    // reaches this surface through `.btn-outline`, which lays a SECOND
+    // `--color-bg-surface` frost of its own before it prints.
+    ["danger", "--color-danger"],
+    ["warning", "--color-warning"],
+    ["success", "--color-success"],
+    ["tertiary", "--color-text-tertiary"],
+    ["secondary", "--color-text-secondary"],
+  ].map(([role, text]) => ({
+    what: `neutral card on the page ground, ${role} ink over the frost`,
+    surface: "--color-bg-page",
+    veil: "--color-bg-surface" as Veil,
+    text,
+  })),
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
@@ -1414,4 +1476,70 @@ describe("the card sheet's alarm and notice inks stay apart (#1449)", () => {
       ).not.toBe(notice.raw);
     });
   }
+});
+
+/**
+ * #1413 — A TRANSLUCENT SURFACE IS NOT A GROUND.
+ *
+ * The ratios above are the symptom; this is the shape. `--color-bg-surface` is
+ * alpha in both themes, so a card filled with it has no value of its own — what
+ * the ink is measured against is decided by the page it lands on, which for
+ * `.sidebar-card` is nine faction walls on the praxis detail alone. No `Pair`
+ * can name "72% white over whatever this happens to be mounted on", so the
+ * whole family was unassertable and stayed green while `--color-danger` sat at
+ * 2.54:1 on Singularity's terminal.
+ *
+ * The fix is to stop leaving it to the mount: the frost becomes a background
+ * IMAGE and the stock under it becomes a declared property, `--card-ground`.
+ * Unset it is `transparent`, which composites to exactly today's render — so
+ * every card in the app that genuinely wants to frost what is behind it keeps
+ * doing so, and only chrome that names a ground gets a fixed one.
+ *
+ * This is a source assertion rather than a ratio because the bug is structural:
+ * every ratio in this file was green throughout. It is the same reason #1449's
+ * alarm-is-not-notice row exists — a guard that measures an ink against a
+ * ground is blind to the ground not being one.
+ *
+ * ponytail: it reads the declaration text, so it pins the MECHANISM and not the
+ * rendering. A `.sidebar-card` whose ground resolved to a translucent token
+ * would still pass here; `e2e/contrast.spec.ts` measures the real composite.
+ */
+describe("the frost is a layer, not a ground (#1413)", () => {
+  const CSS = readFileSync(CSS_PATH, "utf8");
+
+  function ruleBody(selector: string): string {
+    const at = CSS.indexOf(`${selector} {`);
+    expect(at, `index.css declares no \`${selector}\` rule`).toBeGreaterThan(-1);
+    return CSS.slice(at, CSS.indexOf("}", at));
+  }
+
+  for (const theme of BOTH_THEMES) {
+    it(`--color-bg-surface is alpha in ${theme}, which is why it cannot be a Pair surface`, () => {
+      const surface = resolveColor("--color-bg-surface", theme);
+      expect(surface.color, `--color-bg-surface (${theme}) is "${surface.raw}"`).not.toBeNull();
+      expect(
+        surface.color!.a,
+        "if this token ever goes opaque, the two-layer shape below can collapse back to a plain `background`.",
+      ).toBeLessThan(1);
+    });
+  }
+
+  it(".sidebar-card paints the frost over a named ground", () => {
+    const body = ruleBody(".sidebar-card");
+    expect(
+      body,
+      ".sidebar-card must name the stock it composites onto — `background: var(--color-bg-surface)` leaves that to the mount, which is #1413.",
+    ).toContain("background-color: var(--card-ground");
+    expect(
+      body,
+      "the frost has to be a background IMAGE, or the ground declaration replaces it instead of sitting under it.",
+    ).toContain("background-image: linear-gradient(var(--color-bg-surface)");
+  });
+
+  it("the neutral-chrome ground is the app's page, the one its inks were measured on", () => {
+    expect(
+      ruleBody(".card-on-page"),
+      "`.card-on-page` is what the praxis detail's steward bar and report card wear (#1118: a block whose ink you do not control gets the stock that ink was measured on).",
+    ).toContain("--card-ground: var(--color-bg-page)");
+  });
 });

@@ -208,14 +208,20 @@ describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
     expect(markup).toContain('color:var(--faction-wow-card-notice)')
   })
 
-  it('leaves the neutral-chrome cards alone — that ground is #1413', () => {
-    // `PraxisAdminBar` and `PraxisFlagBlock` sit on `.sidebar-card`, whose
-    // translucent `--color-bg-surface` composites to a near-white lift on every
-    // skin in light. The global inks are correct against THAT stock; the faction
-    // inks are not (`--faction-singularity-card-alarm` reads 1.00:1 on it). The
-    // ground is what is broken there, and it belongs to #1413.
+  it('leaves the neutral-chrome cards on the global inks — #1413 moved their GROUND', () => {
+    // `PraxisAdminBar` and `PraxisFlagBlock` sit on `.sidebar-card`. Its
+    // translucent `--color-bg-surface` composites to a near-white lift on most
+    // skins in light, so the global inks are correct against that stock and the
+    // faction inks are not (`--faction-singularity-card-alarm` reads 1.00:1 on
+    // it). What was broken was the ground, which is why this expectation now
+    // reads `card-on-page`: #1413 gave `.sidebar-card` a declared
+    // `--card-ground` and pointed the neutral chrome at the app's page — the
+    // stock these inks were chosen on — so the wall is out of the pairing on all
+    // nine skins. The INK claim is unchanged and is the half that matters here:
+    // a later skin reaching for `wallInk` in these two blocks would be undoing
+    // both issues at once.
     expect(SHARED_SOURCE).toContain(
-      "className=\"sidebar-card mb-4\" style={{ padding: 'var(--space-md) var(--space-lg)' }}",
+      "className=\"sidebar-card card-on-page mb-4\" style={{ padding: 'var(--space-md) var(--space-lg)' }}",
     )
     for (const block of ['PraxisAdminBar', 'PraxisFlagBlock']) {
       const body = SHARED_SOURCE.slice(SHARED_SOURCE.indexOf(`export function ${block}`))
