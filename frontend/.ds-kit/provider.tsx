@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import api from "../src/api/axios";
 import { AuthProvider } from "../src/auth/AuthContext";
+import { ThemeProvider } from "../src/hooks/useTheme";
 import type { CurrentUser } from "../src/api/auth";
 
 const MOCK_USER: CurrentUser = {
@@ -73,9 +74,13 @@ function installPreviewAuth(): void {
 export function DSProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof window !== "undefined" && (window as any).__dsPreview) installPreviewAuth();
+  // ThemeProvider backs useTheme() — NavBar and the shell chrome throw without
+  // it. It also owns the [data-theme] cascade the whole kit styles against.
   return (
-    <AuthProvider>
-      <MemoryRouter>{children}</MemoryRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MemoryRouter>{children}</MemoryRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

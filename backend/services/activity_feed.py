@@ -1258,6 +1258,101 @@ async def _compute_counts(
     )
 
 
+async def _build_fetch_context(
+    character_id: int,
+    session: AsyncSession,
+    before_cursor: Optional[datetime],
+    archived: bool,
+) -> tuple[FeedContext, FeedArchiveView]:
+    """The pre-fetch phase: everything a source's query needs, resolved once.
+
+    Five sequential round trips — archive, friends, foes, my tasks, era — before
+    a single feed row is read. That cost is per *call*, not per filter, which is
+    why the rail's two panels share one call to this (#1344) rather than paying
+    it twice for two slices of the same fan-out.
+
+    ``pending_invites_only`` follows the live/archived axis and nothing else.
+    The pending window on invites and duel challenges is a live-feed rule, on
+    every tab and not just ``requests`` (#1301): an answered request is no
+    longer news anywhere. Only the Archived view sets it False — an archived
+    invite that was since declined is still archived, and hiding it there would
+    strand it, because nothing else lists it.
+    """
+    archive_view = await get_archive_view(character_id, session, archived_only=archived)
+    friend_ids = tuple(await _get_related_ids(character_id, RelationshipType.friend, session))
+    foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
+    my_task_ids = tuple(await _get_my_task_ids(character_id, session))
+    era_row = await get_current_era_row(session)
+
+    return (
+        FeedContext(
+            character_id=character_id,
+            friend_ids=friend_ids,
+            foe_ids=foe_ids,
+            my_task_ids=my_task_ids,
+            era_id=era_row.id,
+            before=before_cursor,
+            pending_invites_only=not archived,
+        ),
+        archive_view,
+    )
+
+
+# The two feed panels on the desktop rail (#1344). The requests panel wants
+# every unresolved invite and challenge — inherently a small set, and already
+# bounded far below this by SUB_QUERY_LIMIT per source; the global panel is a
+# glance, not a list.
+SIDEBAR_REQUESTS_LIMIT = 100
+SIDEBAR_GLOBAL_LIMIT = 5
+
+
+async def get_sidebar_feed(
+    character_id: int,
+    session: AsyncSession,
+    session_factory: Callable,
+) -> tuple[list[ActivityFeedItemDC], list[ActivityFeedItemDC]]:
+    """The rail's ``requests`` and ``global`` panels, from ONE fan-out (#1344).
+
+    The rail used to ask ``/activity-feed`` twice, once per filter, and each ask
+    paid the full five-round-trip pre-fetch *and* the fifteen badge COUNT
+    queries. Both panels are slices of the same registry, so this runs the
+    fan-out once over the union of their sources and partitions the result by
+    which panel each source belongs to.
+
+    No counts: the rail draws no badges. That is the whole reason this does not
+    simply call :func:`get_activity_feed` twice — the counts are more than half
+    the queries and none of them are looked at.
+
+    Returns ``(pending_requests, global_activity)``, each newest-first.
+    """
+    fetch_ctx, archive_view = await _build_fetch_context(
+        character_id, session, before_cursor=None, archived=False
+    )
+    panel_filters = frozenset({FILTER_REQUESTS, FILTER_GLOBAL})
+    sources = [
+        source for source in FEED_SOURCES if not source.filters.isdisjoint(panel_filters)
+    ]
+    results = await asyncio.gather(*(
+        _run_source_fetch(source, fetch_ctx, archive_view, session_factory)
+        for source in sources
+    ))
+
+    def panel(feed_filter: str, limit: int) -> list[ActivityFeedItemDC]:
+        items = [
+            item
+            for source, source_items in zip(sources, results)
+            if feed_filter in source.filters
+            for item in source_items
+        ]
+        items.sort(key=lambda item: item.timestamp, reverse=True)
+        return items[:limit]
+
+    return (
+        panel(FILTER_REQUESTS, SIDEBAR_REQUESTS_LIMIT),
+        panel(FILTER_GLOBAL, SIDEBAR_GLOBAL_LIMIT),
+    )
+
+
 async def get_activity_feed(
     character_id: int,
     session: AsyncSession,
@@ -1293,29 +1388,8 @@ async def get_activity_feed(
         if archived
         else FILTER_QUERIES.get(active_filter, FILTER_QUERIES[FILTER_ALL])
     )
-    # The pending window (invites / duel challenges) is a live-feed rule, on
-    # every tab and not just ``requests`` (#1301): a request that has been
-    # answered is no longer news anywhere. An archived invite that was since
-    # declined is still archived, and hiding it would strand it — nothing else
-    # lists it — so the Archived view alone keeps showing every status.
-    live_feed = not archived
-
-    # Pre-fetch relationship / task / era context. Badge counts span every tab
-    # regardless of the active filter, so all context is loaded up front.
-    archive_view = await get_archive_view(character_id, session, archived_only=archived)
-    friend_ids = tuple(await _get_related_ids(character_id, RelationshipType.friend, session))
-    foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
-    my_task_ids = tuple(await _get_my_task_ids(character_id, session))
-    era_row = await get_current_era_row(session)
-
-    fetch_ctx = FeedContext(
-        character_id=character_id,
-        friend_ids=friend_ids,
-        foe_ids=foe_ids,
-        my_task_ids=my_task_ids,
-        era_id=era_row.id,
-        before=before_cursor,
-        pending_invites_only=live_feed,
+    fetch_ctx, archive_view = await _build_fetch_context(
+        character_id, session, before_cursor=before_cursor, archived=archived
     )
     # Counts always report every tab, and always describe the LIVE feed — which
     # is pending-only whatever the caller is looking at, so this context is the

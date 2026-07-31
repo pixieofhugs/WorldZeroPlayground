@@ -31,3 +31,5 @@ ds-bundle/
 frontend/.ds-kit/_srcmap.json
 frontend/.ds-kit/kit.css
 frontend/.ds-kit/index.compiled.css
+frontend/ds-types/
+frontend/index.d.ts

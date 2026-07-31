@@ -15,9 +15,9 @@ export function FactionSpread() {
   const singularity = taskFor('singularity')
   return (
     <div style={wrap}>
-      <TaskCard task={wow} displayPoints={wow.point_value} />
-      <TaskCard task={snide} displayPoints={snide.point_value} />
-      <TaskCard task={singularity} displayPoints={singularity.point_value} />
+      <TaskCard task={wow} basePoints={wow.point_value} />
+      <TaskCard task={snide} basePoints={snide.point_value} />
+      <TaskCard task={singularity} basePoints={singularity.point_value} />
     </div>
   )
 }
@@ -29,9 +29,9 @@ export function MoreFactions() {
   const albescent = taskFor('albescent')
   return (
     <div style={wrap}>
-      <TaskCard task={ephemerists} displayPoints={ephemerists.point_value} />
-      <TaskCard task={everymen} displayPoints={everymen.point_value} />
-      <TaskCard task={albescent} displayPoints={albescent.point_value} />
+      <TaskCard task={ephemerists} basePoints={ephemerists.point_value} />
+      <TaskCard task={everymen} basePoints={everymen.point_value} />
+      <TaskCard task={albescent} basePoints={albescent.point_value} />
     </div>
   )
 }
@@ -41,7 +41,7 @@ export function DefaultSkinWithSignup() {
   const task = taskFor('na')
   return (
     <div style={wrap}>
-      <TaskCard task={task} displayPoints={task.point_value} onSignup={noop} />
+      <TaskCard task={task} basePoints={task.point_value} onSignup={noop} />
     </div>
   )
 }
@@ -61,7 +61,7 @@ export function Metatask() {
   })
   return (
     <div style={wrap}>
-      <TaskCard task={task} displayPoints={task.point_value} />
+      <TaskCard task={task} basePoints={task.point_value} />
     </div>
   )
 }

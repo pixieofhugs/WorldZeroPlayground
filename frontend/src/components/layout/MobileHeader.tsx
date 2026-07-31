@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
-import { usePendingRequests } from '../../hooks/usePendingRequests'
+import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 
 /**
  * Mobile shell chrome, top half: a minimal sticky wordmark bar with the bell +
@@ -15,9 +15,11 @@ import { usePendingRequests } from '../../hooks/usePendingRequests'
 export default function MobileHeader() {
   const { t } = useTranslation('common')
   const { user } = useAuth()
-  // Same pending-request count the desktop sidebar surfaces; drives the bell
-  // badge so the Updates page is reachable from the phone header (#572).
-  const { pendingRequests } = usePendingRequests()
+  // The same pending-request count the desktop rail surfaces, from the same
+  // response; drives the bell badge so the Updates page is reachable from the
+  // phone header (#572). Reading it here costs no request (#1344) — it used to
+  // be a second, byte-identical limit-100 feed call.
+  const { pending_requests: pendingRequests } = useSidebarPanels()
   const pendingCount = pendingRequests.length
 
   return (

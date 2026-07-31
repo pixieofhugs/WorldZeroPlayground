@@ -11,7 +11,7 @@ export function Default() {
   const task = taskFor('wow')
   return (
     <div style={wrap}>
-      <WowTaskCard task={task} displayPoints={task.point_value} />
+      <WowTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }
@@ -21,7 +21,7 @@ export function WithSignup() {
   const task = taskFor('wow')
   return (
     <div style={wrap}>
-      <WowTaskCard task={task} displayPoints={task.point_value} onSignup={noop} />
+      <WowTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} onSignup={noop} />
     </div>
   )
 }
@@ -38,7 +38,7 @@ export function HighLevelNoDescription() {
   })
   return (
     <div style={wrap}>
-      <WowTaskCard task={task} displayPoints={task.point_value} />
+      <WowTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }

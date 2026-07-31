@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
 import type { PraxisCardOut } from "../../api/praxis";
-import { factionName } from "../../utils/factions";
+import { factionCssVar, factionName } from "../../utils/factions";
 import { isDuelPraxis } from "../../utils/praxis";
 import { mediaUrl } from "../../utils/media";
 import FactionAvatar from "../avatar/FactionAvatar";
@@ -51,6 +51,69 @@ export interface PraxisCardFonts {
   display?: string;
   /** The reading face — task line, excerpt, meta line. */
   body?: string;
+}
+
+/**
+ * THE SHEET'S FUNCTIONAL INKS (#1302) — what a state colour is on faction paper.
+ *
+ * Everything in this module renders INSIDE a faction's praxis-card frame, so
+ * every state colour it sets lands on cream, vellum, papyrus, a pink ward panel
+ * or one of two near-black plates — never on the app's near-white page, which is
+ * the ground `--color-danger` / `--color-warning` / `--color-success` were chosen
+ * against. Painted here they failed AA on all eight sheets in light, at their
+ * worst 1.96:1 (the green collab chip on S.N.I.D.E.'s plate).
+ *
+ * This is the third instance of the shape #694 and #1168 already fixed twice —
+ * for the collab roster and for the duel seal dialogs — and the answer is theirs,
+ * not a new one: the card ink family already carries a per-sheet ink for each
+ * role, measured against the faction's own stock in both themes, and
+ * `factionCssVar` dispatches it off the same slug `PraxisCard` dispatches the
+ * archetype off (`task_faction_slug`). `na`, `albescent` and any unregistered
+ * slug land on the `default` block, which is the sheet `DefaultPraxisCard`
+ * paints, so the fallback is the right answer rather than a near miss.
+ *
+ * Deepening the global tokens was the rejected lever, twice over: they are read
+ * as inks in ~30 places against the neutral page (#1169), and it cannot work
+ * anyway — six sheets flip with the theme while S.N.I.D.E.'s and Singularity's
+ * are dark in BOTH, so no single light-theme value clears #fbf4e0 and #050f08.
+ * A colour that must differ between two factions inside one theme is a faction
+ * token however functional the word for it sounds (WORLD_ZERO_STYLE §3).
+ *
+ * ponytail: DANGER AND WARNING COLLAPSE TO ONE INK HERE. `-card-notice` is the
+ * family's whole attention role, so the flagged badge and the failed badge print
+ * the same colour, as do the moderator's hide and fail controls sitting side by
+ * side. Nothing is lost to a screen reader or to WCAG 1.4.1 — each of the four
+ * carries its own word, and the two badges are mutually exclusive states — but
+ * the red/amber severity cue is gone from this surface. The upgrade path is a
+ * `-card-alarm` sibling (eight keys, two themes, measured on `-card-bg` exactly
+ * as `-notice` and `-credit` are); mint it when a design asks for the two hues
+ * apart on a sheet, not to keep a distinction that was never legible.
+ */
+function sheetInk(slug: string | null | undefined): {
+  notice: string;
+  credit: string;
+  muted: string;
+} {
+  return {
+    notice: factionCssVar(slug, "card-notice"),
+    credit: factionCssVar(slug, "card-credit"),
+    muted: factionCssVar(slug, "card-muted"),
+  };
+}
+
+/**
+ * A badge's own wash or rule, mixed from the ink printed on it (#1302).
+ *
+ * The alphas are #1169's `-veil` / `-edge` rungs said about a per-faction ink
+ * instead of a global one, and 8% is deliberately BELOW the 12% the mode chip
+ * shipped: a wash made of the ink's own hue only ever pulls the ground toward
+ * the ink, so it can only tighten the reading, and 12% cost the Ephemerists
+ * plate its margin (4.41:1, against 4.66:1 at 8% and 5.20:1 on the bare sheet).
+ * If you raise it, re-run `factionContrast.test.ts` — that plate is the row that
+ * moves first.
+ */
+function inkWash(ink: string, percent: number): string {
+  return `color-mix(in srgb, ${ink} ${percent}%, transparent)`;
 }
 
 export function rosterNames(
@@ -439,6 +502,12 @@ export function PraxisModeChip({
   const isCollab = praxis.type === "collab";
   const isPending = praxis.submit_proposed_at != null;
   if (!isDuel && !isCollab && !isPending) return null;
+  // The chip paints its own ground, so it paints its own ink (#694) — and the
+  // ground is the faction's sheet, so the ink is the sheet's (#1302). A duel
+  // reads in the attention ink and a collaboration in the credit one; the
+  // pending marker is attention too, and never renders beside the duel chip
+  // (`submit_proposed_at` is the collab submit window).
+  const { notice, credit } = sheetInk(praxis.task_faction_slug);
   const chip: CSSProperties = {
     // A chip is a LABEL, not running text: it keeps the label tier (#888 leaves
     // `.eyebrow`/`--text-sm` alone by design), but at the 9px step rather than
@@ -459,15 +528,9 @@ export function PraxisModeChip({
         <span
           style={{
             ...chip,
-            color: isDuel ? "var(--color-danger)" : "var(--color-success)",
-            background: isDuel
-              ? "color-mix(in srgb, var(--color-danger) 12%, transparent)"
-              : "color-mix(in srgb, var(--color-success) 12%, transparent)",
-            border: `1px solid ${
-              isDuel
-                ? "color-mix(in srgb, var(--color-danger) 30%, transparent)"
-                : "color-mix(in srgb, var(--color-success) 30%, transparent)"
-            }`,
+            color: isDuel ? notice : credit,
+            background: inkWash(isDuel ? notice : credit, 8),
+            border: `1px solid ${inkWash(isDuel ? notice : credit, 30)}`,
           }}
         >
           {isDuel
@@ -479,9 +542,9 @@ export function PraxisModeChip({
         <span
           style={{
             ...chip,
-            color: "var(--color-warning)",
-            background: "color-mix(in srgb, var(--color-warning) 12%, transparent)",
-            border: "1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)",
+            color: notice,
+            background: inkWash(notice, 8),
+            border: `1px solid ${inkWash(notice, 30)}`,
           }}
         >
           {t("collaborationCard.pending")}
@@ -662,7 +725,25 @@ export interface AdminProps {
   moderateError: string | null;
 }
 
-/** Moderation status badge + hide/fail controls, shared by every archetype. */
+/**
+ * Moderation status badge + hide/fail controls, shared by every archetype.
+ *
+ * Every mark here is a PLATFORM state written on a FACTION sheet, so the words
+ * stay neutral (they are the shared `card.adminStatus.*` / `card.adminAction.*`
+ * copy on all nine cards) and the ink is the sheet's — see `sheetInk`. The two
+ * status badges keep #1169's `-veil` / `-edge` rungs behind and around them: a
+ * 5% wash and a 30% rule are fills, the role that family names, and the veiled
+ * reading is the one the manifest gates.
+ *
+ * The `hidden` badge used to be the exception, and it was the plainer bug of the
+ * two: a raw `rgba(107,114,128, …)` at two alphas, a grey matching no token in
+ * either theme, which `local/no-raw-style-values` cannot see because that rule
+ * does not cover colour. It reads 2.94:1 on S.N.I.D.E.'s plate. It is the faction's
+ * own muted ink now, and its 5% wash is GONE rather than restated in the ink's
+ * hue: a wash of the ink's own colour only pulls the ground toward the ink, and
+ * at 5% it is imperceptible on every sheet while costing WOW (4.48:1) and the
+ * Ephemerists plate (4.43:1) their margin. The rule stays, at the alpha it had.
+ */
 export function AdminOverlay({
   praxis,
   showAdminControls,
@@ -671,18 +752,22 @@ export function AdminOverlay({
   moderateError,
 }: AdminProps) {
   const { t } = useTranslation("praxis");
+  const { notice, muted } = sheetInk(praxis.task_faction_slug);
+  const badge: CSSProperties = {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    padding: "0 var(--space-xs)",
+  };
   return (
     <>
       {praxis.moderation_status === "flagged" && (
         <span
           className="eyebrow"
           style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            padding: "0 var(--space-xs)",
+            ...badge,
             border: "1px solid var(--color-danger-edge)",
-            color: "var(--color-danger)",
+            color: notice,
             background: "var(--color-danger-veil)",
           }}
         >
@@ -693,12 +778,9 @@ export function AdminOverlay({
         <span
           className="eyebrow"
           style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            padding: "0 var(--space-xs)",
+            ...badge,
             border: "1px solid var(--color-warning-edge)",
-            color: "var(--color-warning)",
+            color: notice,
             background: "var(--color-warning-veil)",
           }}
         >
@@ -709,13 +791,9 @@ export function AdminOverlay({
         <span
           className="eyebrow"
           style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            padding: "0 var(--space-xs)",
-            border: "1px solid rgba(107,114,128,0.4)",
-            color: "var(--color-text-secondary)",
-            background: "rgba(107,114,128,0.05)",
+            ...badge,
+            border: `1px solid ${inkWash(muted, 40)}`,
+            color: muted,
           }}
         >
           {t("card.adminStatus.hidden")}
@@ -725,7 +803,7 @@ export function AdminOverlay({
         <p
           className="content-text font-body"
           style={{
-            color: "var(--color-danger)",
+            color: notice,
             marginBottom: "var(--space-xs)",
           }}
         >
@@ -748,7 +826,7 @@ export function AdminOverlay({
             style={{
               padding: "0 var(--space-xs)",
               border: "1px solid var(--color-danger-edge)",
-              color: "var(--color-danger)",
+              color: notice,
               background: "var(--color-danger-veil)",
               cursor: "pointer",
             }}
@@ -761,7 +839,7 @@ export function AdminOverlay({
             style={{
               padding: "0 var(--space-xs)",
               border: "1px solid var(--color-warning-edge)",
-              color: "var(--color-warning)",
+              color: notice,
               background: "var(--color-warning-veil)",
               cursor: "pointer",
             }}
