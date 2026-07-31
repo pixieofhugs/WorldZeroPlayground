@@ -25,7 +25,9 @@ from services.praxis import (
     active_member_task_ids_subquery,
     allowed_praxis_modes,
     can_submit_praxis_for_task,
+    gather_signup_facts,
     is_task_eligible_for_character,
+    SignupFacts,
 )
 from services.level_jump import available_level_reach
 
@@ -257,6 +259,7 @@ async def build_task_out_for_viewer(
     *,
     in_progress_count: Optional[int] = None,
     author: Optional[TaskAuthor] = None,
+    signup_facts: Optional[SignupFacts] = None,
 ) -> TaskOut:
     """Build a :class:`TaskOut` with viewer-relative capability flags.
 
@@ -270,6 +273,14 @@ async def build_task_out_for_viewer(
     both once per page (via :func:`in_progress_counts_for_tasks` and
     :func:`authors_for_tasks`); single-task routes may leave them to
     self-compute.
+
+    ``signup_facts`` is the third precompute and follows the same rule (#1377):
+    every viewer-relative flag below reads the era row, the viewer's stats,
+    their bank count and their membership on this task, and all four are
+    identical for every task on a page. List routes gather them once via
+    :func:`services.praxis.gather_signup_facts` for the whole page — without
+    that, a 50-row page paid six queries per row. Single-task routes may leave
+    the default and let this builder gather facts for the one task.
     """
     base = await build_task_out(
         task, session, in_progress_count=in_progress_count, author=author
@@ -278,10 +289,13 @@ async def build_task_out_for_viewer(
     if viewer is None:
         return base
 
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, viewer.id, era_row.id)
+    if signup_facts is None:
+        signup_facts = await gather_signup_facts(viewer, [task.id], session)
+    stats = signup_facts.stats
 
-    base.can_submit_praxis = await can_submit_praxis_for_task(viewer, task, session, era)
+    base.can_submit_praxis = await can_submit_praxis_for_task(
+        viewer, task, session, era, facts=signup_facts
+    )
     base.allowed_modes = [m.value for m in allowed_praxis_modes(viewer, stats.level, era)]
     base.eligible_for_current_user = is_task_eligible_for_character(
         viewer,
