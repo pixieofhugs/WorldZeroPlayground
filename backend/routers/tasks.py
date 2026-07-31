@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
@@ -35,7 +35,9 @@ router = APIRouter()
 async def list_tasks(
     status: Optional[str] = None,
     can_sign_up: bool = False,
-    faction: Optional[str] = None,
+    # Repeated ``?faction=everymen&faction=ua`` is a union (#1364); one value
+    # still narrows to one faction, and none at all filters nothing.
+    faction: Optional[list[str]] = Query(None),
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     exclude_character_id: Optional[int] = None,
