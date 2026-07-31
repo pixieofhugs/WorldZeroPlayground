@@ -68,6 +68,17 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
     clearFilters,
   } = state
 
+  // Keyed by the raw status the API expects, with the keys written out rather
+  // than interpolated: the catalog types its keys as a union, so a template
+  // literal does not typecheck — and a computed key is invisible to the
+  // unused-key sweep either way.
+  const statusLabels: Record<string, string> = {
+    [TASK_STATUS_DEFAULT]: t('browse.status.all'),
+    active: t('browse.status.active'),
+    retired: t('browse.status.retired'),
+    pending: t('browse.status.pending'),
+  }
+
   const rails: FilterRail[] = [
     {
       key: 'type',
@@ -100,11 +111,14 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
       defaultValue: TASK_STATUS_DEFAULT,
       // 2 segments logged out, 3 or 4 for a viewer allowed the extra states —
       // `statusFilters` is the permission boundary and the rail takes it whole.
-      // ponytail: the segment text is the raw status value, which is what the
-      // stamps showed (uppercased by CSS). There is no localized label for a
-      // task status anywhere in the catalogs, and authoring one is F1's remit,
-      // not this issue's.
-      segments: statusFilters.map((option) => ({ value: option, label: option })),
+      // The value stays the raw status the API expects; only the label is
+      // localized. `FilterStamps` uppercased its options in CSS, so rendering
+      // the bare value on a rail that does not would have shipped a mixed-case
+      // row ("All active retired pending").
+      segments: statusFilters.map((option) => ({
+        value: option,
+        label: statusLabels[option] ?? option,
+      })),
       onChange: setStatus,
     },
   ]

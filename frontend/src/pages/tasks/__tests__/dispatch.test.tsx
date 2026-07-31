@@ -264,8 +264,12 @@ describe('the task rails', () => {
     dispatch.formFactor = 'desktop'
     state.current = { ...CANNED, user: null, statusFilters: ['All', 'active'] }
     const out = html()
-    expect(out, 'no retired segment').not.toContain('>retired<')
-    expect(out, 'no pending segment').not.toContain('>pending<')
+    expect(out, 'no retired segment').not.toContain(
+      `>${i18n.t('tasks:browse.status.retired')}<`,
+    )
+    expect(out, 'no pending segment').not.toContain(
+      `>${i18n.t('tasks:browse.status.pending')}<`,
+    )
     expect(out, 'no rail is four segments wide').not.toContain(
       'width:calc((100% - 2 * var(--filter-rail-pad)) / 4)',
     )
@@ -279,8 +283,10 @@ describe('the task rails', () => {
       statusFilters: ['All', 'active', 'retired', 'pending'],
     }
     const out = html()
-    expect(out).toContain('>retired<')
-    expect(out).toContain('>pending<')
+    // The segment shows the localized label; the VALUE stays the raw status
+    // the API expects, which is what `statusFilters` above carries.
+    expect(out).toContain(`>${i18n.t('tasks:browse.status.retired')}<`)
+    expect(out).toContain(`>${i18n.t('tasks:browse.status.pending')}<`)
     expect(out, 'a 4-segment thumb').toContain(
       'width:calc((100% - 2 * var(--filter-rail-pad)) / 4)',
     )
