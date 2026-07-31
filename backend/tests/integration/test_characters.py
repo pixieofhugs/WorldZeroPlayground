@@ -733,50 +733,39 @@ async def test_delete_character_wrong_owner(
 
 
 # ---------------------------------------------------------------------------
-# Relationships endpoint
+# Relationships endpoint — deleted, see below
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_get_character_relationships_empty(
-    client: AsyncClient, character: Character
-):
-    """GET /characters/{id}/relationships returns empty list when none exist."""
-    resp = await client.get(f"/characters/{character.id}/relationships")
-    assert resp.status_code == 200
-    assert resp.json() == []
-
-
-@pytest.mark.asyncio
-async def test_get_character_relationships_with_data(
+async def test_character_relationships_endpoint_is_gone(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
     character2: Character,
 ):
-    """GET /characters/{id}/relationships returns seeded relationships."""
+    """``GET /characters/{id}/relationships`` must not exist.
+
+    It served any character's complete friend/foe graph to *unauthenticated*
+    callers, so integer ids could be walked to enumerate the whole social
+    graph. It had no consumer — the profile page reads the viewer-scoped
+    ``GET /relationships``. Deletion is the fix, so this pins 404: asserting
+    "requires auth" instead would let the endpoint come back.
+    """
     from models.relationship import Relationship, RelationshipStatus, RelationshipType
 
-    rel = Relationship(
-        from_character_id=character.id,
-        to_character_id=character2.id,
-        type=RelationshipType.friend,
-        status=RelationshipStatus.active,
+    db_session.add(
+        Relationship(
+            from_character_id=character.id,
+            to_character_id=character2.id,
+            type=RelationshipType.friend,
+            status=RelationshipStatus.active,
+        )
     )
-    db_session.add(rel)
     await db_session.commit()
 
     resp = await client.get(f"/characters/{character.id}/relationships")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert len(data) == 1
-    assert data[0]["from_character_id"] == character.id
-    assert data[0]["to_character_id"] == character2.id
-
-    # Also visible from the other side
-    resp2 = await client.get(f"/characters/{character2.id}/relationships")
-    assert resp2.status_code == 200
-    assert len(resp2.json()) == 1
+    assert resp.status_code == 404
 
 
 # ---------------------------------------------------------------------------
