@@ -27,6 +27,7 @@ import {
   PLATE as SHEET,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /**
  * The Ephemerists MOBILE FieldDesk home (#527, swept onto the Valley plate by
@@ -176,7 +177,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
       {/* ── Pending requests ── */}
       {pendingCount > 0 && (
         <Link
-          to="/updates?filter=requests"
+          to={REQUESTS_QUEUE_LINK}
           className="flex items-center justify-between"
           style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
         >

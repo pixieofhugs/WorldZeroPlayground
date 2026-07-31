@@ -27,6 +27,7 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /**
  * Cozy Coven MOBILE FieldDesk home (#500, re-dressed by #1209) — the coven's
@@ -261,7 +262,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         {/* ── Pending requests ── */}
         {pendingCount > 0 && (
           <Link
-            to="/updates?filter=requests"
+            to={REQUESTS_QUEUE_LINK}
             className="flex items-center justify-between"
             style={{
               background: CARD,

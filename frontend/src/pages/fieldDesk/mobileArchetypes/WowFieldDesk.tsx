@@ -50,6 +50,7 @@ import {
 } from "../../../components/factionMarks/wowMobile";
 import { factionName } from "../../../utils/factions";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /** Every tappable row clears the faction's 46px thumb target. */
 const TAP = 46;
@@ -170,7 +171,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         {/* ── the herald's pending dispatches ── */}
         {pendingCount > 0 && (
           <Link
-            to="/updates?filter=requests"
+            to={REQUESTS_QUEUE_LINK}
             style={{
               minHeight: TAP,
               display: "flex",

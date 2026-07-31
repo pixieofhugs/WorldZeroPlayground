@@ -6,6 +6,7 @@ import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /**
  * Default (na) MOBILE FieldDesk home — the account's carried life at a glance,
@@ -233,7 +234,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
       {/* ── Pending requests pill (only when there are any) ── */}
       {pendingCount > 0 && (
         <Link
-          to="/updates?filter=requests"
+          to={REQUESTS_QUEUE_LINK}
           className="font-body flex items-center justify-between content-text"
           style={pendingPillStyle}
         >

@@ -1,17 +1,42 @@
 /**
- * Mobile Updates = a MIXED, multi-faction stream (#532), not seven per-faction
- * screens. Renders MobileUpdates with a feed whose items carry DIFFERENT
- * `context_faction_slug` values and proves each card keeps its OWN faction frame
- * (distinct COVEN / UA / SNIDE chrome coexisting in one render) — never one
- * uniform tint. Reuses the shared FeedCardRouter + normalizeFeedItem path.
+ * The Updates feed is a MIXED, multi-faction stream — not seven per-faction
+ * screens. Renders the page with items carrying DIFFERENT
+ * `context_faction_slug` values and proves each card keeps its OWN faction
+ * frame (distinct COVEN / UA / SNIDE chrome coexisting in one render), never
+ * one uniform tint. Reuses the shared `FeedCardRouter` + `normalizeFeedItem`
+ * path.
+ *
+ * Retargeted from `MobileUpdates` onto `Updates` in #1421: the mobile twin is
+ * deleted and there is one responsive page, so the guarantee this file has
+ * always carried now belongs to that page. `useUpdates` is mocked because it
+ * self-fetches and this harness runs no effects — the subject here is what the
+ * page DRAWS for a given state, which is exactly what an injected state pins.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
-import MobileUpdates from '../MobileUpdates'
+import type { ActivityFeedItem, FeedCounts } from '../../../api/activityFeed'
 import type { UpdatesState } from '../useUpdates'
-import type { ActivityFeedItem } from '../../../api/activityFeed'
+import { CLEARED_FILTERS, type UpdatesFilters } from '../updatesFilters'
+
+const mocks = vi.hoisted(() => ({ state: null as unknown }))
+
+vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+vi.mock('../useUpdates', () => ({ useUpdates: () => mocks.state }))
+
+// Imported after the mocks are registered.
+import Updates from '../../Updates'
+
+const COUNTS: FeedCounts = {
+  all: 3,
+  friends: 3,
+  foes: 0,
+  your_stuff: 0,
+  global_count: 0,
+  requests: 0,
+  by_type: { friend_completion: 3 },
+}
 
 function completion(slug: string, id: number, title: string): ActivityFeedItem {
   return {
@@ -26,51 +51,50 @@ function completion(slug: string, id: number, title: string): ActivityFeedItem {
   }
 }
 
-function baseState(overrides: Partial<UpdatesState>): UpdatesState {
+function baseState(overrides: Partial<UpdatesState> = {}): UpdatesState {
+  const filters: UpdatesFilters = overrides.filters ?? CLEARED_FILTERS
   return {
     items: [],
-    counts: { all: 3, friends: 3, foes: 0, your_stuff: 0, global_count: 0, requests: 0 },
-    filter: 'All',
-    setFilter: () => {},
+    counts: COUNTS,
+    filters,
+    setFilters: () => {},
+    clearFilters: () => {},
     loading: false,
     loadingMore: false,
     nextCursor: null,
     fetchError: null,
     loadMoreError: null,
     loadMore: async () => {},
-    archivedView: false,
+    archivedView: filters.archived,
     refreshCounts: () => {},
     archiveAll: async () => {},
     restoreAll: async () => {},
     bulkPending: false,
     bulkError: null,
+    bulkArchiveAvailable: filters.types.length === 0,
     ...overrides,
   }
 }
 
 function render(state: UpdatesState): { html: string; text: string } {
+  mocks.state = state
   const html = renderToStaticMarkup(
     <MemoryRouter>
-      <MobileUpdates state={state} />
+      <Updates />
     </MemoryRouter>,
   )
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
-describe('mobile Updates mixed multi-faction stream', () => {
+describe('the Updates mixed multi-faction stream', () => {
   const items = [
     completion('coven', 1, 'Cast a small spell'),
     completion('ua', 2, 'Hang the canvas'),
     completion('snide', 3, 'Map the boring'),
   ]
 
-  it('renders a single-column stream marked as the mobile surface', () => {
-    const { html } = render(baseState({ items }))
-    expect(html).toContain('data-feed="mobile"')
-  })
-
   it('keeps each card in its OWN faction frame — COVEN + UA chrome coexist', () => {
-    const { text, html } = render(baseState({ items }))
+    const { html, text } = render(baseState({ items }))
     // Distinct per-faction frame markers appearing TOGETHER in one render
     // prove a mixed stream, not one uniform tint.
     // COVEN's frame prints no house line any more (#1197): the `coven.exe`
@@ -79,10 +103,9 @@ describe('mobile Updates mixed multi-faction stream', () => {
     // — the same move #851 made for UA one line down.
     expect(html, 'COVEN candlelit-slip chrome').toContain('--faction-coven-slip-mid')
     expect(text, 'and no faction name survives on the card').not.toContain('coven.exe')
-    // UA's frame is dress only (#851), and #1201 restated that dress: the flat
-    // 3px orange border became the kit's own ink column and the ground became
-    // the three-stop paper stock. The stock is the marker — unique to the UA
-    // chassis, and still a token rather than a house line.
+    // UA's frame is dress only (#851), restated by #1201: the flat 3px orange
+    // border became the kit's own ink column and the ground became the
+    // three-stop paper stock. The stock is the marker.
     expect(html, 'UA parchment chassis').toContain('var(--faction-ua-parchment)')
     expect(html, 'SNIDE dossier tokens').toContain('--faction-snide')
     expect(html, 'COVEN scrapbook tokens').toContain('--faction-coven')
@@ -95,20 +118,75 @@ describe('mobile Updates mixed multi-faction stream', () => {
     expect(text).toContain('Map the boring')
   })
 
-  it('shows the FEED empty state when the stream is empty (#1194)', () => {
+  it('states how many updates are showing, and pluralizes it', () => {
+    // `[data-showing]` — one of the two controls the design's script writes and
+    // its markup never contains. It ships anyway: with four axes cut from the
+    // design, saying how much is on screen is the honest counterweight.
+    expect(render(baseState({ items })).text).toContain('Showing 3 updates')
+    expect(render(baseState({ items: items.slice(0, 1) })).text).toContain(
+      'Showing 1 update',
+    )
+  })
+
+  it('says nothing about a count while the feed is still loading', () => {
+    expect(render(baseState({ loading: true })).text).not.toContain('Showing')
+  })
+})
+
+describe('the three empty states are never collapsed into one', () => {
+  it('an empty INBOX invites you to go and do something', () => {
     const { text } = render(baseState({ items: [] }))
     expect(text).toContain('Nothing left to read.')
     expect(text).toContain('The city is quiet.')
   })
 
-  it('shows the ARCHIVE empty state on the Archived tab, never the feed one', () => {
-    // Two empty states, never collapsed into one: an empty feed is an invitation
-    // to go and do something, an empty archive is a statement that you have
-    // thrown nothing away.
+  it('an empty ARCHIVE states that you have thrown nothing away', () => {
     const { text } = render(
-      baseState({ items: [], filter: 'Archived', archivedView: true }),
+      baseState({ items: [], filters: { ...CLEARED_FILTERS, archived: true } }),
     )
     expect(text).toContain('The archive is empty.')
     expect(text).not.toContain('Nothing left to read.')
+  })
+
+  it('a view FILTERED to nothing says so, and offers a way out', () => {
+    // Newly reachable in #1421. Every tab used to be a fixed set, so an empty
+    // list only ever meant "no friends yet" or "the archive is empty"; with a
+    // type multi-select any view can be filtered to zero, and the register line
+    // ("The city is quiet") is simply a lie when four boxes are ticked.
+    const { text } = render(
+      baseState({ items: [], filters: { ...CLEARED_FILTERS, types: ['nudge'] } }),
+    )
+    expect(text).toContain('No updates match these filters.')
+    expect(text).not.toContain('The city is quiet.')
+    expect(text).toContain('Clear all filters')
+  })
+
+  it('an empty archive with a type filter on is FILTERED, not "empty archive"', () => {
+    const { text } = render(
+      baseState({
+        items: [],
+        filters: { ...CLEARED_FILTERS, archived: true, types: ['nudge'] },
+      }),
+    )
+    expect(text).toContain('No updates match these filters.')
+    expect(text).not.toContain('The archive is empty.')
+  })
+})
+
+describe('bulk archive is withheld when its scope would exceed the list', () => {
+  const items = [completion('coven', 1, 'Cast a small spell')]
+
+  it('offers "Archive all" on an unfiltered inbox', () => {
+    expect(render(baseState({ items })).text).toContain('Archive all')
+  })
+
+  it('withholds it once a type is selected', () => {
+    // `dismiss-all` is scoped by `filter` and takes no type selection, so it
+    // would archive strictly MORE than what is on screen — tick "Nudge", press
+    // the button, lose the inbox. Hidden, never disabled.
+    const { text } = render(
+      baseState({ items, filters: { ...CLEARED_FILTERS, types: ['friend_completion'] } }),
+    )
+    expect(text).not.toContain('Archive all')
   })
 })
