@@ -50,7 +50,11 @@ from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
 from services.media import process_and_save_media
 from services.meta_task import metatask_cap_for_level
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import (
+    get_current_era_row,
+    get_current_era_row_safe,
+    get_or_create_stats,
+)
 from services.nudge import nudged_at_map
 from services.level_jump import available_level_reach, consume_level_jump
 from models.duel import Duel, DuelStatus
@@ -797,14 +801,47 @@ def praxis_visibility_condition(viewer_id: Optional[int]):
 class PraxisSort(str, Enum):
     """Feed orderings for the ``status=submitted`` praxis feed (#658).
 
-    Both sort on ``Praxis.submitted_at`` — when the praxis was *filed* — not
-    ``created_at``, which is merely when the draft was started (i.e. when the
-    author signed up for the task). A praxis begun three weeks ago and filed
-    this morning is news, and belongs at the top of ``newest``.
+    ``newest``/``oldest`` sort on ``Praxis.submitted_at`` — when the praxis was
+    *filed* — not ``created_at``, which is merely when the draft was started
+    (i.e. when the author signed up for the task). A praxis begun three weeks
+    ago and filed this morning is news, and belongs at the top of ``newest``.
+
+    ``most_voted``/``least_voted`` (#1362) order on how many votes a praxis has
+    drawn. ``voter_count`` on the card is computed in Python by
+    :func:`services.vote_tally.tally_votes` *after* the fetch, so it cannot
+    order the query — the ORDER BY uses a correlated ``COUNT`` over ``Vote``
+    counting exactly the same rows. Both carry a mandatory ``submitted_at DESC``
+    tiebreak: most praxes have zero votes, so ties are the common case, and the
+    feed's growing window (``usePagedResource`` refetches a wider ``limit``)
+    would shuffle rows between pages under an untied ordering.
     """
 
     newest = "newest"
     oldest = "oldest"
+    most_voted = "most_voted"
+    least_voted = "least_voted"
+
+
+class PraxisEraScope(str, Enum):
+    """Which era's praxes a praxis list shows (#1362).
+
+    Neither ``Praxis`` nor ``Task`` carries an ``era_id``, and an era reset
+    (:func:`services.era.apply_era_reset`) never touches praxes — so a praxis
+    list is an all-eras-forever list unless it is bounded by seal time.
+    ``this_era`` (the default) is ``Praxis.submitted_at >= Era.started_at`` for
+    the live era row; ``all_eras`` is the opt-out that restores the unbounded
+    list. No column and no migration: the seal time already carries the fact.
+
+    An *unsealed* praxis (``submitted_at IS NULL``, which by definition is every
+    ``in_progress`` draft) is in-flight work and passes both scopes — it belongs
+    to no past era, and excluding it would empty the sidebar's draft list.
+
+    Read-side only. Past-era praxes remain votable and the score recalc still
+    re-sums every era — that is #1345, deliberately not this scope.
+    """
+
+    this_era = "this_era"
+    all_eras = "all_eras"
 
 
 class VotedFilter(str, Enum):
@@ -833,9 +870,10 @@ async def list_praxes(
     praxis_type: Optional[PraxisType] = None,
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[str] = None,
-    faction: Optional[str] = None,
+    faction: Optional[List[str]] = None,
     search: Optional[str] = None,
     sort: Optional[PraxisSort] = None,
+    era_scope: PraxisEraScope = PraxisEraScope.this_era,
     voted: Optional[VotedFilter] = None,
     viewer_id: Optional[int] = None,
     viewer_account_id: Optional[int] = None,
@@ -870,8 +908,15 @@ async def list_praxes(
     already surfaces for its own duelist. A leading ``@`` is a sigil and is
     dropped for the player axis only, matching the character search (#624).
 
+    ``faction`` is a multi-select (#1362): a list of task faction slugs, ORed.
+    An empty list is a no-op, not "match nothing".
+
     ``sort`` only applies to the ``status=submitted`` feed and is ignored
     otherwise; every caller that passes no ``sort`` keeps ``created_at DESC``.
+
+    ``era_scope`` defaults to ``this_era`` — praxes sealed since the live era
+    began, plus every unsealed draft. See :class:`PraxisEraScope` for why that
+    is a seal-time bound and not a column.
 
     ``voted`` (needs ``viewer_account_id``) is the account-scoped vote filter
     (#644 §6): ``yes`` = my account has voted this praxis; ``no`` = *needs my
@@ -884,9 +929,11 @@ async def list_praxes(
     # need it, and joining once keeps ``?faction=x&q=y`` from double-joining.
     query = query.join(Task, Praxis.task_id == Task.id)
 
-    if faction is not None:
-        # Praxis has no faction of its own; it inherits the linked task's faction.
-        query = query.where(Task.primary_faction_slug == faction)
+    if faction:
+        # Praxis has no faction of its own; it inherits the linked task's
+        # faction. Multi-select (#1362): an EMPTY list means "no faction filter",
+        # never "match nothing" — clearing every checkbox shows everything.
+        query = query.where(Task.primary_faction_slug.in_(faction))
 
     if search:
         term = search.strip()
@@ -997,16 +1044,46 @@ async def list_praxes(
         # That invariant is also what lets the sort below be a plain ORDER BY
         # with no coalesce and no NULLS-FIRST-on-DESC trap.
 
+    if era_scope == PraxisEraScope.this_era:
+        era_row = await get_current_era_row_safe(session)
+        # None = the era is unseeded. Fall through UNSCOPED rather than
+        # returning nothing: an install with no era row is not an install where
+        # nobody has done anything.
+        if era_row is not None:
+            query = query.where(
+                or_(
+                    Praxis.submitted_at.is_(None),
+                    Praxis.submitted_at >= era_row.started_at,
+                )
+            )
+
     query = query.options(selectinload(Praxis.media_items))
     if sort is not None and status == PraxisStatus.submitted:
-        order = (
-            Praxis.submitted_at.asc()
-            if sort == PraxisSort.oldest
-            else Praxis.submitted_at.desc()
-        )
+        if sort in (PraxisSort.most_voted, PraxisSort.least_voted):
+            # Correlated COUNT — the same rows tally_votes counts for
+            # ``voter_count``, which is computed after the fetch and so cannot
+            # order the query. The submitted_at tiebreak is mandatory; see
+            # PraxisSort.
+            vote_count = (
+                select(func.count(Vote.id))
+                .where(Vote.praxis_id == Praxis.id)
+                .scalar_subquery()
+            )
+            order = (
+                vote_count.desc()
+                if sort == PraxisSort.most_voted
+                else vote_count.asc(),
+                Praxis.submitted_at.desc(),
+            )
+        else:
+            order = (
+                Praxis.submitted_at.asc()
+                if sort == PraxisSort.oldest
+                else Praxis.submitted_at.desc(),
+            )
     else:
-        order = Praxis.created_at.desc()
-    query = query.order_by(order).limit(limit).offset(offset)
+        order = (Praxis.created_at.desc(),)
+    query = query.order_by(*order).limit(limit).offset(offset)
     result = await session.execute(query)
     praxes = list(result.scalars().all())
     for praxis in praxes:
@@ -2223,6 +2300,7 @@ __all__ = [
     "list_praxes",
     "praxis_membership_condition",
     "praxis_visibility_condition",
+    "PraxisEraScope",
     "PraxisSort",
     "VotedFilter",
     "moderate_praxis",

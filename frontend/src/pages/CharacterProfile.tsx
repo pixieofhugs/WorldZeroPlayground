@@ -47,7 +47,12 @@ export default function CharacterProfile() {
       const cid = Number(id);
       return Promise.all([
         getCharacter(cid),
-        listPraxes({ character_id: cid }),
+        // A profile is a career record, not a feed of current activity: it shows
+        // what this player has done regardless of era (owner ruling, #1362).
+        // Without this the grid inherits the new `this_era` default and reads
+        // empty for everyone the morning after an era reset — and it disagrees
+        // with GET /characters/{id}/praxes, which stays all-eras.
+        listPraxes({ character_id: cid, era_scope: "all_eras" }),
         listTasks({ created_by: cid }),
       ]);
     },

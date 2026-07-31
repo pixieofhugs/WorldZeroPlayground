@@ -337,15 +337,19 @@ async def test_feed_sort_orders_by_submitted_at_not_created_at(
             )
         )
 
+    # all_eras: these seal times are days old, and the feed now defaults to
+    # this-era-only (#1362). The subject here is the ordering, not the scope.
     newest = await client.get(
-        "/praxes", params={"status": "submitted", "sort": "newest"}
+        "/praxes",
+        params={"status": "submitted", "sort": "newest", "era_scope": "all_eras"},
     )
     assert newest.status_code == 200
     newest_ids = [item["id"] for item in newest.json() if item["id"] in ids]
     assert newest_ids == ids  # praxis 0 sealed most recently
 
     oldest = await client.get(
-        "/praxes", params={"status": "submitted", "sort": "oldest"}
+        "/praxes",
+        params={"status": "submitted", "sort": "oldest", "era_scope": "all_eras"},
     )
     assert oldest.status_code == 200
     oldest_ids = [item["id"] for item in oldest.json() if item["id"] in ids]
@@ -382,7 +386,9 @@ async def test_list_praxes_without_sort_keeps_created_at_desc(
             )
         )
 
-    resp = await client.get("/praxes", params={"status": "submitted"})
+    resp = await client.get(
+        "/praxes", params={"status": "submitted", "era_scope": "all_eras"}
+    )
     assert resp.status_code == 200
     got = [item["id"] for item in resp.json() if item["id"] in ids]
     # created_at DESC — last created first, i.e. the reverse of `ids`.
