@@ -1,12 +1,12 @@
 /**
- * The duel fetch retires the overrides it just told the truth about (#1239).
+ * The duel fetch retires the cast tallies it just told the truth about (#1239).
  *
- * The other half of the duel merge. An override lives only until the server
- * catches up, and `DuelDetailOut` is now something a reader merges into — so if
- * this fetch did not clear, a pending cast would be added on top of a payload
- * that already contained it, and would keep masking another player's vote for as
- * long as the page stayed open. `getPraxis` and `getVotes` have cleared for the
- * same reason since #626; the duel fetch is the third and was the gap.
+ * The other half of the duel merge. A cast tally is authoritative only for the
+ * instant it was minted, and `DuelDetailOut` is something a reader merges into —
+ * so if this fetch did not clear, a stored tally would keep overwriting a fresher
+ * payload and mask another player's vote for as long as the page stayed open.
+ * `getPraxis` and `listPraxes` clear for the same reason (#626); the duel fetch
+ * was the gap. (`getVotes` used to be a third clearer; #1382 deleted it.)
  *
  * Both sides, not just this page's: the duel payload carries a
  * `points_from_votes` for the rival too, and the rival is the side a spectator's
@@ -21,10 +21,10 @@ import api from '../axios'
 import type { DuelDetailOut, DuelSideOut } from '../duel'
 import { getDuelDetail } from '../duel'
 import {
-  __resetVoteOverrides,
-  recordVote,
-  tallyDelta,
-} from '../../components/vote/voteOverrides'
+  __resetCastTallies,
+  castTally,
+  recordCastTally,
+} from '../../components/vote/castTallies'
 
 const MINE_PRAXIS = 7
 const RIVAL_PRAXIS = 8
@@ -62,41 +62,41 @@ function respondWith(payload: DuelDetailOut): void {
   vi.mocked(api.get).mockResolvedValue({ data: payload })
 }
 
-describe('getDuelDetail clears vote overrides (#1239)', () => {
+describe('getDuelDetail clears cast tallies (#1239)', () => {
   beforeEach(() => {
-    __resetVoteOverrides()
+    __resetCastTallies()
     vi.mocked(api.get).mockReset()
   })
 
-  it('retires an override on EITHER side once the duel payload lands', async () => {
-    recordVote(MINE_PRAXIS, 4, null)
-    recordVote(RIVAL_PRAXIS, 5, null)
+  it('retires a cast tally on EITHER side once the duel payload lands', async () => {
+    recordCastTally(MINE_PRAXIS, { points_from_votes: 4, voter_count: 1 })
+    recordCastTally(RIVAL_PRAXIS, { points_from_votes: 5, voter_count: 1 })
     respondWith(detail())
 
     await getDuelDetail(5)
 
-    // Without this the merged card would count both casts a second time on top
-    // of totals that already include them.
-    expect(tallyDelta(MINE_PRAXIS)).toBeNull()
-    expect(tallyDelta(RIVAL_PRAXIS)).toBeNull()
+    // Without this the merged card would keep printing both stored tallies over
+    // a payload that already reflects them — and over anyone else's later vote.
+    expect(castTally(MINE_PRAXIS)).toBeNull()
+    expect(castTally(RIVAL_PRAXIS)).toBeNull()
   })
 
   it('leaves praxes this payload says nothing about alone', async () => {
-    recordVote(UNRELATED_PRAXIS, 5, null)
+    recordCastTally(UNRELATED_PRAXIS, { points_from_votes: 5, voter_count: 1 })
     respondWith(detail())
 
     await getDuelDetail(5)
 
-    expect(tallyDelta(UNRELATED_PRAXIS)).toEqual({ score: 5, voters: 1 })
+    expect(castTally(UNRELATED_PRAXIS)).toEqual({ points_from_votes: 5, voter_count: 1 })
   })
 
   it('survives a side with no praxis of its own', async () => {
     // A forfeiter's thrown side is back to `in_progress` and its `praxis_id` can
     // be null; there is nothing to clear there and nothing to blow up on.
-    recordVote(MINE_PRAXIS, 4, null)
+    recordCastTally(MINE_PRAXIS, { points_from_votes: 4, voter_count: 1 })
     respondWith(detail({ opponent: side(null, 4) }))
 
     await expect(getDuelDetail(5)).resolves.toBeTruthy()
-    expect(tallyDelta(MINE_PRAXIS)).toBeNull()
+    expect(castTally(MINE_PRAXIS)).toBeNull()
   })
 })

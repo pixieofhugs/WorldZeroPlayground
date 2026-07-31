@@ -1,5 +1,4 @@
 import api from './axios'
-import { clearVoteOverrides } from '../components/vote/voteOverrides'
 
 export interface VoteOut {
   id: number
@@ -10,10 +9,39 @@ export interface VoteOut {
   updated_at: string
 }
 
-export interface VoteSummary {
-  praxis_id: number
-  total_votes: number
-  total_score: number
+/**
+ * A praxis's vote aggregate, in the field names every praxis payload uses
+ * (schemas/vote.py VoteTallyOut).
+ *
+ * Deliberately the same two names `PraxisOut` / `PraxisCardOut` carry. The
+ * retired `VoteSummary` spelled the same numbers `total_score` / `total_votes`,
+ * and that second vocabulary is precisely why the client needed a *second*
+ * merge function for them (#1382).
+ */
+export interface VoteTallyOut {
+  points_from_votes: number
+  voter_count: number
+}
+
+/** The voter's own stats immediately after their cast (schemas/vote.py). */
+export interface ViewerStatsOut {
+  score: number
+  level: number
+  votes_available: number
+}
+
+/**
+ * Everything a cast changed — the client's SOLE source of post-cast truth (#1382).
+ *
+ * Before this, the POST answered a bare `VoteOut` and the client reconstructed
+ * the rest: a delta-arithmetic overlay store for the tally (stale-bugged twice,
+ * #1142 and #1239) and a full `/auth/me` reload per star for the stats.
+ */
+export interface VoteCastOut extends VoteOut {
+  tally: VoteTallyOut
+  /** The star that now stands for the viewer's carried character. */
+  viewer_vote: number
+  viewer_stats: ViewerStatsOut
 }
 
 /** One voter + the value they cast (schemas/vote.py VoterDetail). */
@@ -25,15 +53,8 @@ export interface VoterDetail {
   value: number
 }
 
-export async function castVote(praxisId: number, value: number): Promise<VoteOut> {
-  const { data } = await api.post<VoteOut>(`/praxes/${praxisId}/vote`, { value })
-  return data
-}
-
-export async function getVotes(praxisId: number): Promise<VoteSummary> {
-  const { data } = await api.get<VoteSummary>(`/praxes/${praxisId}/votes`)
-  // Server truth — retire any local override so it can't double-count (#626).
-  clearVoteOverrides([praxisId])
+export async function castVote(praxisId: number, value: number): Promise<VoteCastOut> {
+  const { data } = await api.post<VoteCastOut>(`/praxes/${praxisId}/vote`, { value })
   return data
 }
 

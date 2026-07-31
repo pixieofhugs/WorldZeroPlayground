@@ -33,7 +33,6 @@ import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut } from "../../../api/praxis";
 import type { TaskOut } from "../../../api/tasks";
-import type { VoteSummary } from "../../../api/votes";
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -78,21 +77,15 @@ const PRAXIS: PraxisOut = {
   applied_metatasks: [],
 };
 
-const VOTES: VoteSummary = {
-  praxis_id: 1,
-  total_votes: 4,
-  total_score: 16,
-};
-
-/** Minimal state — the read archetypes consume praxis + votes for presentation;
- *  behavior-slot state is left in its default (anonymous, non-owner) shape. */
+/** Minimal state — the read archetypes take every number they show off the
+ *  praxis payload (`scoreBreakdown`, ADR-0053); behavior-slot state is left in
+ *  its default (anonymous, non-owner) shape. */
 function state(): PraxisDetailState {
   return {
     loading: false,
     praxis: PRAXIS,
     fetchError: null,
     comments: null,
-    votes: VOTES,
     voters: [],
     duel: null,
     isOwner: false,
@@ -165,7 +158,6 @@ describe("praxis-read Task Crown hero", () => {
 function multiplierState(): PraxisDetailState {
   const s = state();
   s.praxis = { ...PRAXIS, task_point_value: 10, score: 25, display_multiplier: 1.1, points_from_votes: 14 };
-  s.votes = { praxis_id: 1, total_votes: 4, total_score: 14 };
   return s;
 }
 

@@ -117,7 +117,6 @@ function state(user: CurrentUser | null, viewerCanVote: boolean): PraxisDetailSt
     praxis: { ...PRAXIS, viewer_can_vote: viewerCanVote },
     fetchError: null,
     comments: null,
-    votes: { praxis_id: 1, total_votes: 4, total_score: 16 },
     voters: [],
     duel: null,
     isOwner: false,

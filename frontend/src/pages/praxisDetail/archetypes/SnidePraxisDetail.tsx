@@ -653,6 +653,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       <VoteUI
         factionSlug={praxis.task_faction_slug}
         praxisId={praxis.id}
+        currentValue={praxis.viewer_vote ?? undefined}
         viewerCanVote={praxis.viewer_can_vote}
       />
     </section>
