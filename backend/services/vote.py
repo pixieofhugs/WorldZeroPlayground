@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Optional
 
 from fastapi import HTTPException
@@ -6,12 +7,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.scoring import compute_votes_available
+from services.vote_tally import VoteTally, tally_votes
+
+
+@dataclasses.dataclass(frozen=True)
+class VoteCast:
+    """A completed cast plus the state the client would otherwise go fetch (#1382).
+
+    The tally is computed here rather than left to the caller because this
+    function has just changed it: returning the vote alone is what forced the
+    client to keep a delta-arithmetic overlay store and reconstruct the new
+    numbers by hand (#626, stale-bugged as #1142 and #1239).
+
+    ``voter_stats`` is the *voter's* row, not the author's. Casting cannot move
+    the voter's score or level — ``recalculate_members_stats`` recalculates the
+    praxis MEMBERS and anti-self-vote guarantees the voter is never one — so the
+    only field a cast actually moves here is the on-read vote budget.
+    """
+
+    vote: Vote
+    tally: VoteTally
+    voter_stats: CharacterStats
 
 
 async def cast_vote_on_praxis(
@@ -20,7 +43,7 @@ async def cast_vote_on_praxis(
     value: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-) -> Vote:
+) -> VoteCast:
     """Cast or update a vote on any praxis (solo, collab, or duel side).
 
     Duel sides are standalone solo praxes — no special dispatch needed.
@@ -38,7 +61,7 @@ async def cast_or_update_vote(
     value: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-) -> Vote:
+) -> VoteCast:
     """Cast or update a vote on a solo or collab praxis.
 
     Every rule here is account-level (ADR-0041): alt characters on one account
@@ -62,6 +85,10 @@ async def cast_or_update_vote(
     ``created_by_id`` (#1465). On a collab the starter is only one co-owner
     (ADR-0013) and the whole tally lands on each of them; on a solo or duel
     praxis the member set is exactly the author, so one call covers every type.
+
+    Returns a :class:`VoteCast`, not a bare ``Vote`` (#1382): this function has
+    just moved the praxis's tally and the voter's budget, and handing back only
+    the row made the client rebuild both by hand.
     """
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
@@ -93,6 +120,14 @@ async def cast_or_update_vote(
     )
     existing = result.scalar_one_or_none()
 
+    # The voter's own stats row, resolved for BOTH branches (#1382). The new-cast
+    # path needs it to charge the budget; the re-rate path needs it only to
+    # report the budget back, which is why this used to live inside the else.
+    # The budget is always the *voter's current* era, whatever era the praxis is
+    # from: voting on old work still costs a vote today (#1345).
+    era_row = await get_current_era_row(session)
+    stats = await get_or_create_stats(session, voter.id, era_row.id)
+
     if existing is not None:
         # Update is free — no budget deduction, whichever life re-rates. The
         # account holds one vote; ``voter_character_id`` follows the life that
@@ -103,11 +138,6 @@ async def cast_or_update_vote(
         cast = existing
     else:
         # New vote — deduct from budget via CharacterStats (on-read recomputation).
-        # The budget is always the *voter's current* era, whatever era the praxis
-        # is from: voting on old work still costs a vote today (#1345).
-        era_row = await get_current_era_row(session)
-        stats = await get_or_create_stats(session, voter.id, era_row.id)
-
         if compute_votes_available(stats, era) <= 0:
             raise HTTPException(
                 status_code=403, detail="No votes remaining in your budget."
@@ -130,7 +160,13 @@ async def cast_or_update_vote(
     await recalculate_members_stats(praxis, session, era)
     await session.flush()
     await session.refresh(cast)
-    return cast
+
+    # The tally AFTER the write — the whole point of #1382. One extra aggregate
+    # query, and it retires a client-side overlay store plus a `/auth/me` reload
+    # per star. ``tally_votes`` answers for every id it is given, so the praxis
+    # is always present even when this cast is somehow the only row (#1378).
+    tallies = await tally_votes([praxis.id], session)
+    return VoteCast(vote=cast, tally=tallies[praxis.id], voter_stats=stats)
 
 
 # ---------------------------------------------------------------------------

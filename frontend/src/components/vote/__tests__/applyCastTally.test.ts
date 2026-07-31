@@ -1,33 +1,33 @@
 /**
- * The merge arithmetic, exercised on EVERY payload shape a tally reaches
- * (#1142, #1239).
+ * The merge, exercised on EVERY payload shape a tally reaches (#1142, #1239).
  *
  * The bug was a detail page merging the viewer's cast into its `VoteSummary`
- * while its score panel read the praxis object — so the guard has to be that one
- * delta reaches both, and that the praxis arm is read back through
- * `scoreBreakdown()`, the single row-selection authority (ADR-0053). Asserting
- * the merged fields alone would pass even if the resolver stopped reading them.
+ * while its score panel read the praxis object — so the guard has to be that the
+ * praxis arm is read back through `scoreBreakdown()`, the single row-selection
+ * authority (ADR-0053). Asserting the merged fields alone would pass even if the
+ * resolver stopped reading them. (The `VoteSummary` arm itself is gone: #1382
+ * deleted the endpoint behind it, and nothing ever rendered it.)
  *
  * #1239 was the same gap one payload over: the duel card reads both sides'
- * `points_from_votes` off `DuelDetailOut`, a third payload on a third fetch, so
- * a spectator's cast left the tally AND the margin derived from the pair stale.
+ * `points_from_votes` off `DuelDetailOut`, a separate fetch, so a spectator's
+ * cast left the tally AND the margin derived from the pair stale.
+ *
+ * Since #1382 the merge SWAPS the votes term for the tally the server returned
+ * rather than adding a client-computed delta — so the guards below include
+ * idempotence, which a delta could never satisfy.
  *
  * Deliberately not a click test: the harness is `renderToStaticMarkup` with no
  * jsdom, effects never run, and `useSyncExternalStore`'s server snapshot is
- * always null (see voteOverrides.ts), so a rendered component can never observe
- * an active override. The resolver is what's testable, and it's what broke.
+ * always null (see castTallies.ts), so a rendered component can never observe a
+ * live cast. The resolver is what's testable, and it's what broke.
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { PraxisCardOut, PraxisOut } from '../../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
-import type { VoteSummary } from '../../../api/votes'
+import type { VoteTallyOut } from '../../../api/votes'
 import { scoreBreakdown } from '../../praxisCard/scoreStamp/scoreBreakdown'
-import {
-  applyDuelVoteDelta,
-  applyVoteDelta,
-  applyVoteSummaryDelta,
-} from '../useVotedPraxis'
-import { __resetVoteOverrides, recordVote, tallyDelta } from '../voteOverrides'
+import { applyCastTally, applyDuelCastTally } from '../useVotedPraxis'
+import { __resetCastTallies, castTally, recordCastTally } from '../castTallies'
 
 const PRAXIS_ID = 7
 
@@ -92,8 +92,6 @@ const CARD: PraxisCardOut = {
   task_faction_slug: null,
 }
 
-const SUMMARY: VoteSummary = { praxis_id: PRAXIS_ID, total_votes: 2, total_score: 4 }
-
 /** The other side of the duel — the one a spectator's cast used to leave stale. */
 const RIVAL_PRAXIS_ID = 8
 
@@ -130,24 +128,28 @@ const DUEL: DuelDetailOut = {
   opponent_final_points: null,
 }
 
-/** The delta a first cast of 5 publishes: +5 points, +1 voter. */
-function firstCastOfFive() {
-  recordVote(PRAXIS_ID, 5, null)
-  const delta = tallyDelta(PRAXIS_ID)
-  if (!delta) throw new Error('expected an active override')
-  return delta
+/**
+ * The tally the server returns when a first cast of 5 lands on a praxis that
+ * already held 4 points from 2 voters. Published through the real store so the
+ * test exercises the path the app does.
+ */
+function firstCastOfFive(): VoteTallyOut {
+  recordCastTally(PRAXIS_ID, { points_from_votes: 9, voter_count: 3 })
+  const tally = castTally(PRAXIS_ID)
+  if (!tally) throw new Error('expected a published cast tally')
+  return tally
 }
 
-describe('applyVoteDelta on a detail payload (#1142)', () => {
+describe('applyCastTally on a detail payload (#1142)', () => {
   beforeEach(() => {
-    __resetVoteOverrides()
+    __resetCastTallies()
   })
 
   it('moves the score panel the archetypes render, not just the vote line', () => {
     // The regression: every praxis-detail archetype mounts ScoreStamp, which
     // resolves its rows from the praxis object. Before the fix this stayed at
     // "+ 4 from votes" / total 16 until a refresh.
-    const voted = applyVoteDelta(DETAIL, firstCastOfFive())
+    const voted = applyCastTally(DETAIL, firstCastOfFive())
     expect(scoreBreakdown(voted)).toEqual({
       base: 12,
       mult: null,
@@ -158,76 +160,59 @@ describe('applyVoteDelta on a detail payload (#1142)', () => {
   })
 
   it('leaves the server payload untouched, so a re-render cannot compound it', () => {
-    applyVoteDelta(DETAIL, firstCastOfFive())
+    applyCastTally(DETAIL, firstCastOfFive())
     expect(scoreBreakdown(DETAIL)).toEqual(
       expect.objectContaining({ votes: 4, total: 16 }),
     )
   })
 
   it('invents no voter count on a payload that has none', () => {
-    const voted = applyVoteDelta(DETAIL, firstCastOfFive())
+    const voted = applyCastTally(DETAIL, firstCastOfFive())
     expect('voter_count' in voted).toBe(false)
+  })
+
+  it('applies the same tally twice without compounding', () => {
+    // The property a swap has and a delta never did: an entry is server truth,
+    // so re-applying it on a re-render is a no-op. #1142 and #1239 were both
+    // this assumption failing for a delta.
+    const tally = firstCastOfFive()
+    const once = applyCastTally(DETAIL, tally)
+    expect(scoreBreakdown(applyCastTally(once, tally))).toEqual(scoreBreakdown(once))
   })
 
   it('reads the same numbers off a card as off a detail payload', () => {
     // One arithmetic for both shapes is the point: the card's stamp and the
     // detail page's stamp must never disagree about the same cast.
-    const delta = firstCastOfFive()
-    expect(scoreBreakdown(applyVoteDelta(CARD, delta))).toEqual(
-      scoreBreakdown(applyVoteDelta(DETAIL, delta)),
+    const tally = firstCastOfFive()
+    expect(scoreBreakdown(applyCastTally(CARD, tally))).toEqual(
+      scoreBreakdown(applyCastTally(DETAIL, tally)),
     )
-    expect(applyVoteDelta(CARD, delta).voter_count).toBe(3)
-  })
-})
-
-describe('applyVoteSummaryDelta (#1142)', () => {
-  beforeEach(() => {
-    __resetVoteOverrides()
-  })
-
-  it('moves the votes-only summary by the same delta', () => {
-    expect(applyVoteSummaryDelta(SUMMARY, firstCastOfFive())).toEqual({
-      praxis_id: PRAXIS_ID,
-      total_votes: 3,
-      total_score: 9,
-    })
-  })
-
-  it('agrees with the praxis merge about the vote points', () => {
-    // Different baselines (a summary is votes-only, a praxis total is the lot),
-    // so the check is that the MOVEMENT matches, not the absolute numbers.
-    const delta = firstCastOfFive()
-    const summaryMoved =
-      applyVoteSummaryDelta(SUMMARY, delta).total_score - SUMMARY.total_score
-    const praxisMoved =
-      scoreBreakdown(applyVoteDelta(DETAIL, delta)).votes - scoreBreakdown(DETAIL).votes
-    expect(summaryMoved).toBe(praxisMoved)
+    expect(applyCastTally(CARD, tally).voter_count).toBe(3)
   })
 
   it('re-vote: moves the score with no new voter', () => {
-    recordVote(PRAXIS_ID, 5, 3)
-    const delta = tallyDelta(PRAXIS_ID)
-    if (!delta) throw new Error('expected an active override')
-    expect(applyVoteSummaryDelta(SUMMARY, delta)).toEqual({
-      praxis_id: PRAXIS_ID,
-      total_votes: 2,
-      total_score: 6,
-    })
-    expect(scoreBreakdown(applyVoteDelta(DETAIL, delta)).total).toBe(18)
+    // 3 -> 5, on a praxis whose only vote was the viewer's own.
+    recordCastTally(PRAXIS_ID, { points_from_votes: 6, voter_count: 2 })
+    const tally = castTally(PRAXIS_ID)
+    if (!tally) throw new Error('expected a published cast tally')
+    expect(applyCastTally(CARD, tally).voter_count).toBe(2)
+    expect(scoreBreakdown(applyCastTally(DETAIL, tally)).total).toBe(18)
   })
 })
 
-describe('applyDuelVoteDelta (#1239)', () => {
+describe('applyDuelCastTally (#1239)', () => {
   beforeEach(() => {
-    __resetVoteOverrides()
+    __resetCastTallies()
   })
 
-  /** A first cast of 5 on whichever side is being voted. */
-  function firstCastOfFiveOn(praxisId: number) {
-    recordVote(praxisId, 5, null)
-    const delta = tallyDelta(praxisId)
-    if (!delta) throw new Error('expected an active override')
-    return delta
+  /** The tally after a first cast of 5 on whichever side is being voted. */
+  function firstCastOfFiveOn(praxisId: number): VoteTallyOut {
+    const before =
+      praxisId === PRAXIS_ID ? MINE_SIDE.points_from_votes : RIVAL_SIDE.points_from_votes
+    recordCastTally(praxisId, { points_from_votes: before + 5, voter_count: 3 })
+    const tally = castTally(praxisId)
+    if (!tally) throw new Error('expected a published cast tally')
+    return tally
   }
 
   /** What `DuelCard` derives its verdict line from: the difference of the pair. */
@@ -239,7 +224,7 @@ describe('applyDuelVoteDelta (#1239)', () => {
     // The reported case, and the one no praxis payload can cover: the rival
     // side has none on this page. Rax led by 2; a spectator's 5 for Rax has to
     // widen that to 7 the moment it lands, not on the next refetch.
-    const merged = applyDuelVoteDelta(DUEL, {
+    const merged = applyDuelCastTally(DUEL, {
       challenger: null,
       opponent: firstCastOfFiveOn(RIVAL_PRAXIS_ID),
     })
@@ -249,7 +234,7 @@ describe('applyDuelVoteDelta (#1239)', () => {
   })
 
   it('a cast on THIS page\'s side moves that row instead', () => {
-    const merged = applyDuelVoteDelta(DUEL, {
+    const merged = applyDuelCastTally(DUEL, {
       challenger: firstCastOfFiveOn(PRAXIS_ID),
       opponent: null,
     })
@@ -262,17 +247,17 @@ describe('applyDuelVoteDelta (#1239)', () => {
     // One arithmetic across the three payloads is the whole point: the score
     // panel and the duel card sit on the same page and must never disagree
     // about the same cast.
-    const delta = firstCastOfFiveOn(PRAXIS_ID)
+    const tally = firstCastOfFiveOn(PRAXIS_ID)
     const duelMoved =
-      applyDuelVoteDelta(DUEL, { challenger: delta, opponent: null }).challenger
+      applyDuelCastTally(DUEL, { challenger: tally, opponent: null }).challenger
         .points_from_votes - DUEL.challenger.points_from_votes
     const praxisMoved =
-      scoreBreakdown(applyVoteDelta(DETAIL, delta)).votes - scoreBreakdown(DETAIL).votes
+      scoreBreakdown(applyCastTally(DETAIL, tally)).votes - scoreBreakdown(DETAIL).votes
     expect(duelMoved).toBe(praxisMoved)
   })
 
   it('leaves the server payload untouched, so a re-render cannot compound it', () => {
-    applyDuelVoteDelta(DUEL, {
+    applyDuelCastTally(DUEL, {
       challenger: null,
       opponent: firstCastOfFiveOn(RIVAL_PRAXIS_ID),
     })
@@ -281,19 +266,19 @@ describe('applyDuelVoteDelta (#1239)', () => {
 
   it('hands back the same object when nobody has voted', () => {
     // Identity, not a clone: the duel card re-renders for nothing otherwise.
-    expect(applyDuelVoteDelta(DUEL, { challenger: null, opponent: null })).toBe(DUEL)
+    expect(applyDuelCastTally(DUEL, { challenger: null, opponent: null })).toBe(DUEL)
   })
 
   it('never touches the frozen pair a resolved duel prints', () => {
     // Era close froze those figures (ADR-0052) and voting is over; a live
-    // override must not reach them even if one is somehow still around.
+    // cast tally must not reach them even if one is somehow still around.
     const resolved: DuelDetailOut = {
       ...DUEL,
       status: 'resolved',
       challenger_final_points: 21,
       opponent_final_points: 24.5,
     }
-    const merged = applyDuelVoteDelta(resolved, {
+    const merged = applyDuelCastTally(resolved, {
       challenger: firstCastOfFiveOn(PRAXIS_ID),
       opponent: null,
     })

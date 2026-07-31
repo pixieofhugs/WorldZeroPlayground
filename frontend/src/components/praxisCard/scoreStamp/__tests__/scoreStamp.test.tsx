@@ -19,8 +19,8 @@ import { pickVariant } from '../../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
-import { applyVoteDelta } from '../../../vote/useVotedPraxis'
-import { recordVote, tallyDelta, __resetVoteOverrides } from '../../../vote/voteOverrides'
+import { applyCastTally } from '../../../vote/useVotedPraxis'
+import { recordCastTally, castTally, __resetCastTallies } from '../../../vote/castTallies'
 import DefaultScoreStamp from '../DefaultScoreStamp'
 import EverymenScoreStamp from '../EverymenScoreStamp'
 import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
@@ -151,15 +151,16 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
 
 describe('useVotedPraxis merge feeds the stamp breakdown (#912)', () => {
   beforeEach(() => {
-    __resetVoteOverrides()
+    __resetCastTallies()
   })
 
-  it('moves both the votes row and the total on an active override, before any refetch', () => {
+  it('moves both the votes row and the total on a fresh cast, before any refetch', () => {
     const base = praxis({ id: 1, voter_count: 2, points_from_votes: 4, score: 13.6 })
-    recordVote(1, 5, null)
-    const delta = tallyDelta(1)
-    if (!delta) throw new Error('expected an active override')
-    const voted = applyVoteDelta(base, delta)
+    // What the POST returns for a first cast of 5 here (#1382).
+    recordCastTally(1, { points_from_votes: 9, voter_count: 3 })
+    const tally = castTally(1)
+    if (!tally) throw new Error('expected a published cast tally')
+    const voted = applyCastTally(base, tally)
     expect(scoreBreakdown(voted)).toEqual(
       expect.objectContaining({ votes: 9, total: 18.6 }),
     )

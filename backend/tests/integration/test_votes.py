@@ -887,10 +887,10 @@ async def test_anti_self_vote_fallback_allows_unrelated_voter(
     assert praxis_unloaded.created_by is None
 
     # character2 (different account) casts a vote — must succeed
-    vote = await cast_or_update_vote(character2, praxis_unloaded, 3, db_session)
-    assert vote.value == 3
-    assert vote.voter_character_id == character2.id
-    assert vote.praxis_id == praxis_solo.id
+    cast = await cast_or_update_vote(character2, praxis_unloaded, 3, db_session)
+    assert cast.vote.value == 3
+    assert cast.vote.voter_character_id == character2.id
+    assert cast.vote.praxis_id == praxis_solo.id
 
 
 # ---------------------------------------------------------------------------
@@ -1355,3 +1355,143 @@ async def test_duel_detail_frozen_fields_null_on_live_duel(
     assert body["winner_character_id"] is None
     assert body["challenger_final_points"] is None
     assert body["opponent_final_points"] is None
+
+
+# ---------------------------------------------------------------------------
+# The vote write boundary (#1382) — the POST response is the client's SOLE
+# source of post-cast truth. Before this, it returned a bare VoteOut and the
+# client faked the new tally in a client-side overlay store.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_vote_post_returns_the_tally_it_computed(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """The cast response carries the tally, and it EQUALS ``tally_votes`` for
+    that praxis alone — the number the client used to reconstruct by arithmetic.
+    """
+    from services.vote_tally import tally_votes
+
+    praxis_id = await _create_and_submit_solo(client, active_task, auth_headers2)
+
+    body = (
+        await client.post(
+            f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers
+        )
+    ).json()
+
+    truth = (await tally_votes([praxis_id], db_session))[praxis_id]
+    assert truth.points_from_votes == 4
+    assert truth.voter_count == 1
+    assert body["tally"] == {
+        "points_from_votes": truth.points_from_votes,
+        "voter_count": truth.voter_count,
+    }
+
+
+@pytest.mark.asyncio
+async def test_vote_post_tally_tracks_a_re_rate(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Re-rating moves the points and NOT the voter count — the case the
+    overlay store's `prior` bookkeeping existed to get right (#626)."""
+    from services.vote_tally import tally_votes
+
+    praxis_id = await _create_and_submit_solo(client, active_task, auth_headers2)
+
+    await client.post(f"/praxes/{praxis_id}/vote", json={"value": 2}, headers=auth_headers)
+    body = (
+        await client.post(
+            f"/praxes/{praxis_id}/vote", json={"value": 5}, headers=auth_headers
+        )
+    ).json()
+
+    truth = (await tally_votes([praxis_id], db_session))[praxis_id]
+    assert body["tally"] == {
+        "points_from_votes": truth.points_from_votes,
+        "voter_count": truth.voter_count,
+    }
+    assert body["tally"] == {"points_from_votes": 5, "voter_count": 1}
+
+
+@pytest.mark.asyncio
+async def test_vote_post_returns_viewer_vote_and_stats(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """``viewer_vote`` is the star that now stands, and ``viewer_stats`` carries
+    the budget the client would otherwise refetch ``/auth/me`` for."""
+    praxis_id = await _create_and_submit_solo(client, active_task, auth_headers2)
+
+    before = (await client.get("/auth/me", headers=auth_headers)).json()
+    budget_before = before["character"]["votes_available"]
+
+    body = (
+        await client.post(
+            f"/praxes/{praxis_id}/vote", json={"value": 3}, headers=auth_headers
+        )
+    ).json()
+
+    assert body["viewer_vote"] == 3
+    assert body["viewer_stats"]["votes_available"] == budget_before - 1
+    # The voter's OWN score/level cannot move by casting: a vote recalculates the
+    # praxis MEMBERS and anti-self-vote guarantees the voter is never one.
+    assert body["viewer_stats"]["score"] == before["character"]["score"]
+    assert body["viewer_stats"]["level"] == before["character"]["level"]
+
+
+@pytest.mark.asyncio
+async def test_vote_summary_route_is_gone(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """``GET /praxes/{id}/votes`` is retired — PraxisOut already carries
+    ``points_from_votes`` / ``voter_count`` (#1382)."""
+    praxis_id = await _create_and_submit_solo(client, active_task, auth_headers)
+    assert (await client.get(f"/praxes/{praxis_id}/votes")).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_praxis_out_carries_viewer_vote(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """The detail payload knows the viewer's own cast, so the client stops
+    recovering it from the voters list via a seeded overlay (#1382)."""
+    praxis_id = await _create_and_submit_solo(client, active_task, auth_headers2)
+
+    unvoted = (await client.get(f"/praxes/{praxis_id}", headers=auth_headers)).json()
+    assert unvoted["viewer_vote"] is None
+
+    await client.post(f"/praxes/{praxis_id}/vote", json={"value": 5}, headers=auth_headers)
+
+    voted = (await client.get(f"/praxes/{praxis_id}", headers=auth_headers)).json()
+    assert voted["viewer_vote"] == 5
+    # The author sees no star of their own, and neither does an anonymous reader.
+    assert (await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)).json()["viewer_vote"] is None
+    assert (await client.get(f"/praxes/{praxis_id}")).json()["viewer_vote"] is None

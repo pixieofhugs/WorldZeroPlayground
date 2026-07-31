@@ -18,17 +18,16 @@ import {
   kickMember,
   type PraxisOut,
 } from "../../api/praxis";
-import { getVotes, getVoters, type VoteSummary, type VoterDetail } from "../../api/votes";
+import { getVoters, type VoterDetail } from "../../api/votes";
 import { getDuelDetail, type DuelDetailOut } from "../../api/duel";
 import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
 import { extractError } from "../../utils/errors";
-import { seedViewerVote, useVoteOverride } from "../../components/vote/voteOverrides";
+import { useCastTally } from "../../components/vote/castTallies";
 import {
-  applyDuelVoteDelta,
-  applyVoteDelta,
-  applyVoteSummaryDelta,
+  applyCastTally,
+  applyDuelCastTally,
 } from "../../components/vote/useVotedPraxis";
 import type { CurrentUser } from "../../api/auth";
 import { FLAG_REASON_OTHER, type FlagReason } from "../../utils/flagReasons";
@@ -40,7 +39,6 @@ export interface PraxisDetailState {
   fetchError: string | null;
 
   // Entities
-  votes: VoteSummary | null;
   voters: VoterDetail[];
   /** Duel detail when this praxis is one side of a duel (#313); null otherwise. */
   duel: DuelDetailOut | null;
@@ -144,7 +142,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const { adminMode } = useAdminMode();
 
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
-  const [votes, setVotes] = useState<VoteSummary | null>(null);
   const [voters, setVoters] = useState<VoterDetail[]>([]);
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
   const [comments, setComments] = useState<CommentOut[] | null>(null);
@@ -191,7 +188,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     const pid = parseInt(idParam, 10);
     Promise.all([
       getPraxis(pid),
-      getVotes(pid),
       getVoters(pid),
       // Off the ROUTE PARAM, in this wave — see the `comments` field above for
       // why the thread cannot start its own fetch this early (#1281). A failed
@@ -199,9 +195,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       // thread falls back to its own request when the seed is null.
       listComments("praxes", pid).catch(() => null),
     ])
-      .then(([p, v, vr, c]) => {
+      .then(([p, vr, c]) => {
         setPraxis(p);
-        setVotes(v);
         setVoters(vr);
         setComments(c);
       })
@@ -286,47 +281,28 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     }
   };
 
-  const viewerCharacterId = user?.character?.id ?? null;
-
-  // PraxisOut carries no viewer_vote, but the voters list does — seed it so
-  // VoteUI pre-highlights the viewer's existing cast, and so a re-vote here
-  // counts as a re-vote rather than a first vote (#626). Its own effect because
-  // auth can resolve after the fetch does.
-  //
-  // `duel` is a dependency because the duel fetch CLEARS this praxis's override
-  // when it lands (#1239), and it lands after this effect has already run — so
-  // without the re-seed the page would forget the viewer's existing vote and
-  // charge their next cast as a first vote, +1 voter and all. `seedViewerVote`
-  // returns early on an occupied slot, so re-running it is free.
-  useEffect(() => {
-    if (viewerCharacterId == null || praxis == null) return;
-    const own = voters.find((voter) => voter.character_id === viewerCharacterId);
-    if (own) seedViewerVote(praxis.id, own.value);
-  }, [voters, viewerCharacterId, praxis?.id, duel]);
-
   // Merge the viewer's own just-cast vote into everything this page renders
-  // (#626). It has to land on the PRAXIS, not only on the vote summary (#1142):
-  // every archetype's score panel is the mounted `ScoreStamp`, which resolves
-  // its rows from `scoreBreakdown(praxis)` (ADR-0053) — so a delta that stops at
-  // `votes` leaves the panel reading "+ 0 from votes" until a refresh, which is
-  // exactly the bug. `votes` gets the same delta through its own sibling helper;
-  // both are one `VoteDelta`, and neither recomputes a total here.
-  const voteDelta = useVoteOverride(praxis?.id ?? -1);
-  const displayPraxis = praxis && voteDelta ? applyVoteDelta(praxis, voteDelta) : praxis;
-  const displayVotes = votes && voteDelta ? applyVoteSummaryDelta(votes, voteDelta) : votes;
+  // (#626). It lands on the PRAXIS (#1142): every archetype's score panel is the
+  // mounted `ScoreStamp`, which resolves its rows from `scoreBreakdown(praxis)`
+  // (ADR-0053), so a merge that stopped short of the praxis left the panel
+  // reading "+ 0 from votes" until a refresh — exactly the bug. There is no
+  // second votes-summary payload to keep in step any more: `GET /praxes/{id}/votes`
+  // carried numbers this praxis already has, and nothing rendered it (#1382).
+  const castTally = useCastTally(praxis?.id ?? -1);
+  const displayPraxis = praxis && castTally ? applyCastTally(praxis, castTally) : praxis;
 
-  // The duel card is a THIRD payload with the same number in it (#1239): both
+  // The duel card is a SECOND payload with the same number in it (#1239): both
   // rows' totals, and the margin its verdict line subtracts out of them, come
   // off `DuelDetailOut` and nothing merged into that. Looked up per SIDE rather
-  // than reusing `voteDelta`, because a spectator voting the RIVAL is the
+  // than reusing `castTally`, because a spectator voting the RIVAL is the
   // reported case and the rival's praxis is not this page's — there is no
   // praxis payload here to read it off.
-  const challengerDelta = useVoteOverride(duel?.challenger.praxis_id ?? -1);
-  const opponentDelta = useVoteOverride(duel?.opponent.praxis_id ?? -1);
+  const challengerTally = useCastTally(duel?.challenger.praxis_id ?? -1);
+  const opponentTally = useCastTally(duel?.opponent.praxis_id ?? -1);
   const displayDuel = duel
-    ? applyDuelVoteDelta(duel, {
-        challenger: challengerDelta,
-        opponent: opponentDelta,
+    ? applyDuelCastTally(duel, {
+        challenger: challengerTally,
+        opponent: opponentTally,
       })
     : duel;
 
@@ -337,7 +313,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     praxis: displayPraxis,
     fetchError,
 
-    votes: displayVotes,
     voters,
     duel: displayDuel,
     comments,

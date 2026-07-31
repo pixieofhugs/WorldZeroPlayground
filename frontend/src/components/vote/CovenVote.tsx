@@ -15,7 +15,7 @@ import { VOTE_REFRAMES } from './voteReframes'
  * its inner colours do not flip — only the caption ink does.
  *
  * Plugs into the vote dispatcher via the shared {@link useVote} hook so the
- * cast/refetch logic lives in exactly one place. All motion is a reduced-motion-
+ * cast logic lives in exactly one place. All motion is a reduced-motion-
  * gated CSS class (never inline `animation:`); a stilled plate still fills.
  *
  * #840 restored two things from the source: the PROMPT the design writes above

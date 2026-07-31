@@ -37,7 +37,7 @@ import { VOTE_REFRAMES } from './voteReframes'
  *
  * Every motion is a reduced-motion-gated CSS class (`.eph-metal-*`, index.css),
  * so the stilled state is a fully lit ladder — motion is decoration, never
- * meaning. Cast/refetch/tally logic stays in the shared {@link useVote} hook.
+ * meaning. Cast/tally logic stays in the shared {@link useVote} hook.
  */
 
 /** The touch target, and the haloed top rank. Never shrink either (WCAG ≥44). */

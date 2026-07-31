@@ -1,24 +1,30 @@
 /**
- * #1390 — the star-cast amplifier ratchet.
+ * #1390 — the refetch amplifier ratchet.
  *
- * `/auth/me` returns a fresh `CurrentUser` object on every `refetch()`, and
- * `useVote` refetches after every cast. So an effect that lists the whole
- * `user` object in its dependency array re-runs — and re-requests — every time
- * the viewer moves a single star. Five such effects turned one cast into a
- * fan-out of unrelated reads.
+ * `/auth/me` returns a fresh `CurrentUser` object on every `refetch()`. So an
+ * effect that lists the whole `user` object in its dependency array re-runs —
+ * and re-requests — every time anything calls it. Five such effects turned one
+ * refetch into a fan-out of unrelated reads.
+ *
+ * The amplifier this was FILED against was the star cast, which refetched per
+ * star. #1382 deleted that particular refetch (the vote POST now returns what
+ * the client needed, and a cast never moved the voter's score or level anyway),
+ * but the rule is not thereby retired: joining a faction, switching character,
+ * creating or editing one, signing out, and submitting or withdrawing a praxis
+ * all still refetch, and each still mints a new object. The rule is about the
+ * dependency, not about any one caller.
  *
  * WHY THIS IS A SOURCE TEST, AND WHAT IT DOES NOT PROVE
  * ----------------------------------------------------
  * Vitest runs in the `node` environment here with no jsdom, so the harness is
  * `renderToStaticMarkup` and effects never run. This test therefore CANNOT
- * assert "one cast fires one request" — nothing in this repo can. What it pins
- * is the property the fix actually turns on: these effects key on a value that
- * survives a `/auth/me` refetch instead of one that never does. Same posture as
- * `searchQueryParamAdoption.test.ts`, which reads source for the same reason.
+ * assert "one refetch fires one request" — nothing in this repo can. What it
+ * pins is the property the fix actually turns on: these effects key on a value
+ * that survives a `/auth/me` refetch instead of one that never does. Same
+ * posture as `searchQueryParamAdoption.test.ts`, which reads source likewise.
  *
- * Note the fix could NOT be made upstream in `AuthProvider`. A star cast
- * changes the payload for real — `votes_available` is computed from spent votes
- * (`schemas/character.py`) — so the new object is legitimately new, and no
+ * Note the fix could NOT be made upstream in `AuthProvider`. A refetch that
+ * follows a real change returns a legitimately different payload, so no
  * memoisation or deep-equality check at the provider would suppress it.
  */
 import { describe, it, expect } from 'vitest'

@@ -1,5 +1,5 @@
 import api from './axios'
-import { clearVoteOverrides } from '../components/vote/voteOverrides'
+import { clearCastTallies } from '../components/vote/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { TaskOut } from './tasks'
 import type { FlagReason } from '../utils/flagReasons'
@@ -103,6 +103,13 @@ export interface PraxisOut {
    * its own login gate). Optional so a stale payload degrades to showing it.
    */
   viewer_can_vote?: boolean
+  /**
+   * The viewer's own star (1-5); `null` when unvoted or anonymous (#1382). Same
+   * field and meaning as `PraxisCardOut.viewer_vote`. Detail used to be the one
+   * surface without it, which is why the client recovered the viewer's cast
+   * from the voters list and parked it in an overlay store.
+   */
+  viewer_vote?: number | null
 }
 
 export interface PraxisCardOut {
@@ -262,14 +269,15 @@ export async function listPraxes(filters?: {
     // had no faction filter (LIST_PARAMS_SERIALIZER, asserted in tests).
     paramsSerializer: LIST_PARAMS_SERIALIZER,
   })
-  // Server truth — retire any local vote overrides so they can't double-count (#626).
-  clearVoteOverrides(data.map((praxis) => praxis.id))
+  // Server truth — drop any cast tally it supersedes, so a stale one can't
+  // mask another player's later vote (#626, #1382).
+  clearCastTallies(data.map((praxis) => praxis.id))
   return data
 }
 
 export async function getPraxis(id: number): Promise<PraxisOut> {
   const { data } = await api.get<PraxisOut>(`/praxes/${id}`)
-  clearVoteOverrides([id])
+  clearCastTallies([id])
   return data
 }
 

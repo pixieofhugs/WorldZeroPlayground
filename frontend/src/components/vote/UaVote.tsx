@@ -24,7 +24,7 @@ import { VOTE_REFRAMES } from './voteReframes'
  * ternary here because the tokens already carry both themes.
  *
  * Same 1-5 data model as every faction; a pure visual reskin driven by the shared
- * {@link useVote} hook so cast/refetch/tally-override logic lives in one place.
+ * {@link useVote} hook so cast/tally logic lives in one place.
  * Every motion is a reduced-motion-gated CSS class (never inline `animation:`);
  * the mandala's fullness and the reading word carry the meaning when stilled.
  */

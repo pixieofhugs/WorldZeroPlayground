@@ -160,14 +160,20 @@ async def test_resubmit_preserves_vote_tally(
         f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers2
     )
     assert vote.status_code == 200
-    before = await client.get(f"/praxes/{praxis_id}/votes")
-    assert before.json()["total_votes"] == 1
+    # Read the tally off PraxisOut: GET /praxes/{id}/votes was retired in #1382
+    # because it re-tallied numbers this payload already carries. Both the count
+    # AND the points are asserted now — the retired probe could only see the
+    # count, so a resubmit that kept the voter but dropped their points was green.
+    before = (await client.get(f"/praxes/{praxis_id}")).json()
+    assert before["voter_count"] == 1
+    assert before["points_from_votes"] == 4
 
     assert (await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)).status_code == 200
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
-    after = await client.get(f"/praxes/{praxis_id}/votes")
-    assert after.json()["total_votes"] == 1
+    after = (await client.get(f"/praxes/{praxis_id}")).json()
+    assert after["voter_count"] == 1
+    assert after["points_from_votes"] == 4
 
 
 @pytest.mark.asyncio

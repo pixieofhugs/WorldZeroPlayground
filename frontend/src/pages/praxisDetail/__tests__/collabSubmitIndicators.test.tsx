@@ -140,7 +140,6 @@ function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
     praxis: null,
     fetchError: null,
     comments: null,
-    votes: null,
     voters: [],
     duel: null,
     isOwner: false,

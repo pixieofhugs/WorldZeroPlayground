@@ -239,6 +239,17 @@ async def build_praxis_out(
 
     can_vote = await _viewer_can_vote(viewer, praxis, session)
 
+    # The viewer's own star (#1382) — the same account-scoped resolver the card
+    # path uses, so detail and card report one ``viewer_vote`` rather than two.
+    # Only the carried character's own value is taken: the account-mate
+    # "voted by Alice" marker is a card affordance and detail has no slot for it.
+    viewer_vote: Optional[int] = None
+    if viewer is not None:
+        own_vote = (
+            await viewer_votes_for([praxis.id], viewer.id, viewer.account_id, session)
+        ).get(praxis.id)
+        viewer_vote = own_vote.value if own_vote is not None else None
+
     # Task Crown (ADR-0028): top submitted praxis for this task, computed live.
     if crowned_ids is None:
         crowned_ids = await crowned_praxis_ids([praxis.task_id], session)
@@ -291,6 +302,7 @@ async def build_praxis_out(
         can_flag=can_flag,
         applied_metatasks=applied_metatasks,
         viewer_can_vote=can_vote,
+        viewer_vote=viewer_vote,
     )
 
 
