@@ -7,10 +7,9 @@
  * locked-once-published rules, debounced 2s autosave on title/body, immediate save
  * for mode/metatask).
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  applyMetatask,
   changePraxisType,
   deletePraxis,
   cancelInvite as cancelInviteApi,
@@ -18,7 +17,6 @@ import {
   inviteToPraxis,
   kickMember as kickMemberApi,
   leavePraxis,
-  removeMetatask,
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
@@ -46,6 +44,7 @@ import {
 import { useComposerConfirm } from "./useComposerConfirm";
 import { useComposerDraft } from "./useComposerDraft";
 import { useComposerMedia } from "./useComposerMedia";
+import { useMetataskApply } from "./useMetataskApply";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getMyCharacters } from "../../api/me";
@@ -149,18 +148,27 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     cancelImageEdit,
   } = useComposerMedia(idParam, setError);
 
+  // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
+  // stays here beside the composer's other loads. The APPLIED set is the other
+  // concern, and lives in `useMetataskApply` below.
   const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
-  // The applied metatasks as full rows (source of truth for the seal stack);
-  // `appliedMetatasks` (the id Set) is derived from it below.
-  const [appliedMetataskList, setAppliedMetataskList] = useState<TaskOut[]>([]);
-  const appliedMetatasks = useMemo(
-    () => new Set(appliedMetataskList.map((mt) => mt.id)),
-    [appliedMetataskList],
-  );
-  const [applyingMetatask, setApplyingMetatask] = useState<number | null>(null);
-  const [metataskPickerOpen, setMetataskPickerOpen] = useState(false);
-  const [metataskRemovalTarget, setMetataskRemovalTarget] =
-    useState<TaskOut | null>(null);
+
+  // ---- Metatask seals (#933) ----
+  const {
+    appliedMetatasks,
+    appliedMetataskList,
+    applyingMetatask,
+    toggleMetatask,
+    addMetatask,
+    metataskPickerOpen,
+    openMetataskPicker,
+    closeMetataskPicker,
+    metataskRemovalTarget,
+    requestRemoveMetatask,
+    confirmRemoveMetatask,
+    cancelRemoveMetatask,
+    seedApplied: seedAppliedMetatasks,
+  } = useMetataskApply(praxis, setError);
 
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteResults, setInviteResults] = useState<CharacterOut[]>([]);
@@ -253,7 +261,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setMedia(loaded.media_items);
         // Seed the seal stack from the persisted seals so a reloaded draft shows
         // what's already sealed (the picker's "already sealed" check reads this).
-        setAppliedMetataskList(loaded.applied_metatasks ?? []);
+        seedAppliedMetatasks(loaded.applied_metatasks ?? []);
         await getTask(loaded.task_id)
           .then(setTask)
           .catch(() => {
@@ -883,97 +891,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     await cancelDuel();
   }, [praxis?.duel_id, cancelDuel, askConfirm]);
 
-  // ---- Metatasks (#933) ----
-  // Legacy toggle (apply when absent, remove when present) kept on the state
-  // shape; the new compose flow adds through the picker and removes through the
-  // confirm below. All three keep `appliedMetataskList` in sync.
-  const toggleMetatask = useCallback(
-    async (mt: TaskOut) => {
-      if (!praxis) return;
-      if (applyingMetatask !== null) return;
-      setApplyingMetatask(mt.id);
-      setError("");
-      try {
-        if (appliedMetatasks.has(mt.id)) {
-          await removeMetatask(praxis.id, mt.id);
-          setAppliedMetataskList((previous) =>
-            previous.filter((m) => m.id !== mt.id),
-          );
-        } else {
-          await applyMetatask(praxis.id, mt.id);
-          setAppliedMetataskList((previous) => [...previous, mt]);
-        }
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-        );
-      } finally {
-        setApplyingMetatask(null);
-      }
-    },
-    [praxis, applyingMetatask, appliedMetatasks],
-  );
-
-  // Section D: the picker seals one metatask at a time, then closes.
-  const addMetatask = useCallback(
-    async (mt: TaskOut) => {
-      if (!praxis || applyingMetatask !== null) return;
-      if (appliedMetatasks.has(mt.id)) {
-        setMetataskPickerOpen(false);
-        return;
-      }
-      setApplyingMetatask(mt.id);
-      setError("");
-      try {
-        await applyMetatask(praxis.id, mt.id);
-        setAppliedMetataskList((previous) => [...previous, mt]);
-        setMetataskPickerOpen(false);
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-        );
-      } finally {
-        setApplyingMetatask(null);
-      }
-    },
-    [praxis, applyingMetatask, appliedMetatasks],
-  );
-
-  // Section E: the seal's × asks first — open the confirm for that metatask.
-  const requestRemoveMetatask = useCallback(
-    (taskId: number) => {
-      setMetataskRemovalTarget(
-        appliedMetataskList.find((mt) => mt.id === taskId) ?? null,
-      );
-    },
-    [appliedMetataskList],
-  );
-
-  const cancelRemoveMetatask = useCallback(
-    () => setMetataskRemovalTarget(null),
-    [],
-  );
-
-  const confirmRemoveMetatask = useCallback(async () => {
-    const target = metataskRemovalTarget;
-    if (!praxis || !target) return;
-    setApplyingMetatask(target.id);
-    setError("");
-    try {
-      await removeMetatask(praxis.id, target.id);
-      setAppliedMetataskList((previous) =>
-        previous.filter((mt) => mt.id !== target.id),
-      );
-      setMetataskRemovalTarget(null);
-    } catch (err) {
-      setError(
-        extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-      );
-    } finally {
-      setApplyingMetatask(null);
-    }
-  }, [praxis, metataskRemovalTarget]);
-
   // ---- Derived ----
   const isPublished = praxis?.status === "submitted";
   const isModerated =
@@ -1073,8 +990,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     addMetatask,
 
     metataskPickerOpen,
-    openMetataskPicker: () => setMetataskPickerOpen(true),
-    closeMetataskPicker: () => setMetataskPickerOpen(false),
+    openMetataskPicker,
+    closeMetataskPicker,
 
     metataskRemovalTarget,
     requestRemoveMetatask,
