@@ -52,6 +52,46 @@ export interface ActivityFeedResponse {
   next_cursor: string | null
 }
 
+/** What every field of `FeedCounts` means when the server did not send it. */
+const ABSENT_COUNTS: FeedCounts = {
+  all: 0,
+  friends: 0,
+  foes: 0,
+  your_stuff: 0,
+  global_count: 0,
+  requests: 0,
+  by_type: {},
+}
+
+/**
+ * Make the wire shape match what `FeedCounts` promises, because the server does
+ * not always keep that promise.
+ *
+ * `by_type` arrived with #1420. A frontend built after it, talking to a backend
+ * from before it, gets a `counts` object without the field — and a `uvicorn`
+ * that was not restarted is enough to be in that state. `typeFacetOptions` then
+ * spreads `Object.keys(by_type)` to build its row list, `Object.keys` throws on
+ * `undefined`, and the throw happens during render, so React unmounts the tree:
+ * the whole page goes white rather than one widget breaking.
+ *
+ * `useUpdates` seeds its state with defaults and then replaces the object
+ * wholesale on load, so the safe value only ever covers the loading frame. That
+ * is exactly how it was reported: fine while the updates load, blank when they
+ * arrive.
+ *
+ * Normalising here rather than at the crash site keeps `FeedCounts` honest for
+ * every consumer, including ones not written yet — a guard inside
+ * `typeFacetOptions` would fix this page and leave the next reader of
+ * `by_type` to rediscover it.
+ *
+ * A missing count degrades to zero. A wrong number is worth far less than a
+ * lost page, and the zero is visible: the badge reads 0 instead of the app
+ * disappearing.
+ */
+export function normalizeFeedCounts(raw: Partial<FeedCounts> | undefined | null): FeedCounts {
+  return { ...ABSENT_COUNTS, ...(raw ?? {}) }
+}
+
 /** Result of archiving/restoring one item. `archived` is the state AFTER the
  *  call (both endpoints are idempotent); `changed` says whether a row moved. */
 export interface FeedItemArchiveResult {
@@ -100,7 +140,9 @@ export async function getActivityFeed(params?: {
     params,
     paramsSerializer: FEED_PARAMS_SERIALIZER,
   })
-  return data
+  // The one place a `FeedCounts` enters the app, so the one place it has to be
+  // made true. See `normalizeFeedCounts`.
+  return { ...data, counts: normalizeFeedCounts(data?.counts) }
 }
 
 /**
