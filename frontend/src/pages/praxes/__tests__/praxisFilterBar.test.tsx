@@ -42,7 +42,10 @@ const ERA_THIS = i18n.t('common:filters.bar.era.current')
 const ERA_ALL = i18n.t('common:filters.bar.era.all')
 const FILTERING_BY = i18n.t('common:filters.bar.filteringBy')
 const NEEDS_MY_VOTE = i18n.t('praxis:listPage.filter.needsMyVote')
-const TYPE_LABEL = i18n.t('praxis:listPage.filter.typeLabel')
+// The retired type rail's eyebrow, spelled out rather than read from the
+// catalog: its key went with the rail (#1368), and a `t()` on a deleted key
+// would return the key string and pass this guard vacuously.
+const TYPE_LABEL = 'type:'
 const SEARCH_LABEL = i18n.t('praxis:listPage.filter.searchLabel')
 
 function markup(entry: string): string {

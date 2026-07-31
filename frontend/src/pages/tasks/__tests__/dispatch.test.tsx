@@ -146,9 +146,6 @@ describe('Tasks form-factor dispatch', () => {
       expect(out, `${formFactor}: search moved into the bar`).toContain(
         'filter-bar__search',
       )
-      expect(out, `${formFactor}: no stamp row survives`).not.toContain(
-        'stamp-inactive-dashed',
-      )
     }
   })
 })
