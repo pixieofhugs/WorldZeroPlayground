@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
 import { useGameConfig } from '../../hooks/useGameConfig'
+import { FilterBarEmpty } from '../../components/ui/FilterBar'
 
 /** Fallback bank size before `/game-config` lands, matching the Sidebar meter. */
 const DEFAULT_MAX_TASK_SLOTS = 20
@@ -29,7 +30,12 @@ const DEFAULT_MAX_TASK_SLOTS = 20
  * envelope or header on GET /tasks — which is a bigger change than the sentence
  * is worth today.
  */
-export default function CanSignUpEmpty() {
+export default function CanSignUpEmpty({
+  onClearAll,
+}: {
+  /** Present once the filter bar owns the axis (#1367) — the way back out. */
+  onClearAll?: () => void
+}) {
   const { t } = useTranslation('tasks')
   const { activeTasks } = useMyActiveTasks()
   const gameConfig = useGameConfig()
@@ -38,10 +44,14 @@ export default function CanSignUpEmpty() {
   const bankFull = activeTasks.length >= maxTaskSlots
 
   return (
-    <p className="font-body text-muted">
-      {bankFull
-        ? t('listPage.bankFull', { used: activeTasks.length, max: maxTaskSlots })
-        : t('listPage.emptyEligible')}
-    </p>
+    <FilterBarEmpty
+      title={t('listPage.emptyCaughtUp')}
+      hint={
+        bankFull
+          ? t('listPage.bankFull', { used: activeTasks.length, max: maxTaskSlots })
+          : t('listPage.emptyEligible')
+      }
+      onClearAll={onClearAll}
+    />
   )
 }

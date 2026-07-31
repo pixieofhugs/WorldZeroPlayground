@@ -56,9 +56,21 @@ export interface TaskCreate {
   metatask_faction_slug?: string
 }
 
+/**
+ * The orderings `GET /tasks` accepts (#1364). An ABSENT sort still means
+ * `level` — `level_required ASC, point_value DESC`, the browse ordering the
+ * page has always had. `level` is ascending only; there is no descending twin.
+ */
+export type TaskSort = 'newest' | 'oldest' | 'level'
+
 export interface TaskFilters {
   status?: string
-  faction?: string
+  /**
+   * Repeated `?faction=` — a UNION, not an intersection (#1364). One slug
+   * narrows to one faction; none at all filters nothing. See
+   * {@link REPEATED_QUERY_PARAMS} for why the serializer is not the default.
+   */
+  faction?: string[]
   /**
    * Narrow the list to tasks the authenticated viewer could claim right now
    * (#1130). The server evaluates its own sign-up predicate, so a faction
@@ -75,14 +87,25 @@ export interface TaskFilters {
    * (#661; author axis added in #681).
    */
   q?: string
-  /** 'newest' orders by creation time (newest first); default sorts by level/points. */
-  sort?: string
+  sort?: TaskSort
   limit?: number
   offset?: number
 }
 
+/**
+ * Axios renders an array param as `faction[]=a&faction[]=b` by default. FastAPI
+ * reads a repeated `faction: list[str] = Query(None)` — the bracketed key is
+ * simply not the parameter, so the union filter would silently do NOTHING and
+ * the page would show an unfiltered list with faction chips on it.
+ * `indexes: null` is axios's "repeat the bare key" mode.
+ */
+export const REPEATED_QUERY_PARAMS = { indexes: null } as const
+
 export async function listTasks(filters?: TaskFilters): Promise<TaskOut[]> {
-  const { data } = await api.get<TaskOut[]>('/tasks', { params: filters })
+  const { data } = await api.get<TaskOut[]>('/tasks', {
+    params: filters,
+    paramsSerializer: REPEATED_QUERY_PARAMS,
+  })
   return data
 }
 

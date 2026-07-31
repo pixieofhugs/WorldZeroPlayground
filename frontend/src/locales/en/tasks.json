@@ -19,7 +19,13 @@
     "allTasks": "All tasks",
     "canSignUp": "I can sign up",
     "tasks": "Tasks",
-    "metatasks": "Metatasks"
+    "metatasks": "Metatasks",
+    "status": {
+      "all": "All",
+      "active": "Active",
+      "retired": "Retired",
+      "pending": "Pending"
+    }
   },
   "mobile": {
     "count": "{{count}} shown",
