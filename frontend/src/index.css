@@ -553,6 +553,26 @@
   --faction-snide-wall: #efece3; /* flyposted xerox-paper wall (FLIP in dark) */
   --faction-snide-wall-deep: #e0ddd1;
   --faction-snide-wall-text: #14110b;
+  /* THE WALL'S TWO ALARM INKS, and the ONE mint #1451 needed — the third time
+     this faction has been the lone exception to "reuse `-card-alarm`" (#1302,
+     #1231), and always for the §6 reason rather than a hue: its CARD is
+     photocopier-black in BOTH themes, so `-card-alarm` (#fca5a5) and
+     `-card-notice` (#fbbf24) are pinned bright and read 1.61:1 / 1.41:1 on the
+     light wall, while this ground FLIPS.
+     Nor is the clipping's walked pink enough. `--faction-snide-note-pink-ink`
+     (#be185d) was measured on the note stock (#f4f1e8), and `.snd-detail-sheet`
+     runs a 180deg ramp from `-wall` down to `-wall-deep`, a shade under it:
+     4.44:1 bare and 4.14:1 veiled at that end. #1028 again — a second ground
+     invalidates the reading, and the ramp means this surface HAS a second
+     ground. So the pair is walked until it clears the deep end too. Measured
+     under `--color-danger-veil`, the wash the praxis detail's failed banner and
+     its pull-back button both wear:
+       alarm  6.21:1 wall / 5.41:1 deep (light), 5.73 / 6.27 (dark)
+       notice 5.58:1 wall / 4.86:1 deep (light), 9.17 / 10.03 (dark)
+     Dark keeps the faction's night pink and amber unchanged; light was the only
+     miss, exactly as in #1449 and #1231. */
+  --faction-snide-wall-alarm: #9d174d;
+  --faction-snide-wall-notice: #92400e;
   /* SNIDE font set — a ransom note mixes many faces in one surface */
   --faction-snide-font-impact: "Anton", Impact, sans-serif;
   --faction-snide-font-cond: var(--font-accent); /* Bebas Neue */
@@ -714,6 +734,12 @@
      are measured on `-card-bg`, which for S.N.I.D.E. is photocopier-black in
      BOTH themes (§6), so `--faction-snide-card-alarm` is pinned bright and
      reads 1.56:1 here. Reach for the walked pink, not the card family.
+
+     ONE GROUND WHERE THE WALKED PINK IS STILL NOT DEEP ENOUGH (#1451): the
+     flyposted WALL, whose 180deg ramp bottoms out a shade below every stock in
+     this family. `--faction-snide-wall-alarm` / `-wall-notice` are declared up
+     beside `--faction-snide-wall` for that end of the ramp; the reading here is
+     about this stock and does not travel to that one.
 
      So this is a THIRD flipping S.N.I.D.E. stock beside `-note-*` (the task
      card's clipping) and `-composer-*` (the edit-praxis sheet), declared rather
@@ -1872,6 +1898,10 @@
   --faction-snide-wall: #141310;
   --faction-snide-wall-deep: #0b0a08;
   --faction-snide-wall-text: #e9e6da;
+  /* The night pair: the faction's own bright pink and amber, unwalked — on a
+     near-black wall the light values would be the miss, so only light moved. */
+  --faction-snide-wall-alarm: #ff69ac;
+  --faction-snide-wall-notice: #fbbf24;
   /* The evidence slab, lights out (#842): the plate itself is already ink, so
      only its printed shadow and the score well deepen. */
   --faction-snide-slab-shadow: rgba(0, 0, 0, 0.5);
