@@ -41,7 +41,7 @@ async def test_admin_endpoints_require_admin_role(
 
 
 # ---------------------------------------------------------------------------
-# Tasks — list, approve, retire, reactivate, create, task-vision
+# Tasks — list, approve, retire, reactivate, create
 # ---------------------------------------------------------------------------
 
 
