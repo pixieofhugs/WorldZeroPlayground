@@ -13,25 +13,13 @@ from schemas.duel import DuelChallengeIn, DuelDetailOut, DuelOut, DuelRespondIn
 from schemas.praxis import PraxisOut
 from services.duel import (
     cancel_duel_challenge,
-    get_duel,
     get_duel_detail,
     issue_duel_challenge,
-    list_pending_duel_challenges_for_character,
     respond_to_duel_challenge,
 )
 from services.praxis import build_praxis_out
 
 router = APIRouter()
-
-
-@router.get("/pending", response_model=list[DuelOut])
-async def list_pending_challenges_route(
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    """Return pending duel challenges where the current character is the opponent."""
-    duels = await list_pending_duel_challenges_for_character(character.id, session)
-    return [DuelOut.model_validate(duel) for duel in duels]
 
 
 @router.post("/challenge", response_model=DuelOut, status_code=201)
@@ -60,15 +48,6 @@ async def get_duel_detail_route(
     """Read-oriented duel view for the praxis read page: both sides' display
     info + live vote points + ``viewer_is_participant`` in one round trip (#308)."""
     return await get_duel_detail(duel_id, viewer, session)
-
-
-@router.get("/{duel_id}", response_model=DuelOut)
-async def get_duel_route(
-    duel_id: int,
-    session: AsyncSession = Depends(get_db),
-):
-    duel = await get_duel(duel_id, session)
-    return DuelOut.model_validate(duel)
 
 
 @router.post("/{duel_id}/respond", response_model=DuelOut)

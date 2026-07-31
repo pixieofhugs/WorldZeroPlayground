@@ -461,17 +461,3 @@ async def maybe_settle_duel(praxis_id: int, session: AsyncSession) -> None:
     ):
         duel.status = DuelStatus.settled
         await session.flush()
-
-
-async def list_pending_duel_challenges_for_character(
-    character_id: int,
-    session: AsyncSession,
-) -> list[Duel]:
-    """Return pending duel challenges where character_id is the opponent."""
-    result = await session.execute(
-        select(Duel).where(
-            Duel.opponent_character_id == character_id,
-            Duel.status == DuelStatus.pending,
-        )
-    )
-    return list(result.scalars().all())
