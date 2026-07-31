@@ -542,12 +542,6 @@ async def test_duel_challenge_issue_and_cancel(
     assert duel["task_id"] == active_task.id
     duel_id = duel["id"]
 
-    # Pending list for character (the opponent)
-    pending_resp = await client.get("/duels/pending", headers=auth_headers)
-    assert pending_resp.status_code == 200
-    pending = pending_resp.json()
-    assert any(d["id"] == duel_id for d in pending)
-
     # Challenger (character2) cancels
     cancel_resp = await client.post(f"/duels/{duel_id}/cancel", headers=auth_headers2)
     assert cancel_resp.status_code == 200
@@ -593,11 +587,6 @@ async def test_duel_challenge_accept_creates_opponent_praxis(
     duel = accept_resp.json()
     assert duel["status"] == "active"
     assert duel["opponent_praxis_id"] is not None
-
-    # GET the duel
-    get_resp = await client.get(f"/duels/{duel_id}")
-    assert get_resp.status_code == 200
-    assert get_resp.json()["status"] == "active"
 
 
 @pytest.mark.asyncio

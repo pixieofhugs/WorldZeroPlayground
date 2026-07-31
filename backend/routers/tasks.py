@@ -15,6 +15,7 @@ from models.character import Character
 from models.task import Task
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
+from services.praxis import gather_signup_facts
 from services.task import (
     UNKNOWN_TASK_AUTHOR,
     authors_for_tasks,
@@ -84,6 +85,13 @@ async def list_tasks(
     )
     # One join for the whole page (#1029) — never a per-task author lookup.
     authors = await authors_for_tasks(tasks, session)
+    # The viewer's sign-up facts for the whole page (#1377) — era row, stats,
+    # bank count and page memberships, four queries once instead of six per row.
+    signup_facts = (
+        await gather_signup_facts(viewer, [task.id for task in tasks], session)
+        if viewer is not None
+        else None
+    )
     return [
         await build_task_out_for_viewer(
             task,
@@ -94,6 +102,7 @@ async def list_tasks(
             # builder resolve that one author itself, i.e. reintroduce the very
             # per-task query this precompute exists to avoid.
             author=authors.get(task.created_by, UNKNOWN_TASK_AUTHOR),
+            signup_facts=signup_facts,
         )
         for task in tasks
     ]

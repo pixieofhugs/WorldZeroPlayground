@@ -12,11 +12,9 @@ from db import get_db
 from dependencies import get_current_character, get_current_character_optional
 from models.account import Account
 from models.character import Character, CharacterStatus
-from models.relationship import Relationship
 from models.praxis import Praxis, PraxisStatus
 from models.vote import Vote
 from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
-from schemas.relationship import RelationshipOut
 from schemas.praxis import PraxisOut
 from services.auth import get_current_account
 from services.badge import list_badges_for_character
@@ -189,21 +187,6 @@ async def upload_avatar(
     await session.refresh(character)
     stats = await load_current_era_stats(character_id, session)
     return build_character_out(character, stats)
-
-
-@router.get("/{character_id}/relationships", response_model=list[RelationshipOut])
-async def get_character_relationships(
-    character_id: int,
-    session: AsyncSession = Depends(get_db),
-):
-    result = await session.execute(
-        select(Relationship).where(
-            (Relationship.from_character_id == character_id)
-            | (Relationship.to_character_id == character_id)
-        )
-    )
-    relationships = result.scalars().all()
-    return [RelationshipOut.model_validate(relationship) for relationship in relationships]
 
 
 @router.get("/{character_id}/stats/votes-received")

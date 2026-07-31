@@ -7,7 +7,7 @@ Replaces the old services/submission.py and services/collaboration.py.
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import List, Optional
+from typing import Collection, List, Optional
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import and_, exists, func, not_, or_, select
@@ -1145,11 +1145,53 @@ class SignupEligibility:
     reason: Optional[SignupDenialReason] = None
 
 
+@dataclass(frozen=True)
+class SignupFacts:
+    """The character-scoped DB facts :func:`evaluate_signup` needs, read once.
+
+    Every gate in that predicate except the task's own columns comes from three
+    reads that are identical for every task a single request asks about: the
+    viewer's current-era stats, their in-progress praxis count (the bank cap),
+    and which of the tasks in hand they already hold a membership on. Gathered
+    per page by :func:`gather_signup_facts`, a 50-row browse pays for them once
+    instead of 50 times (#1377).
+
+    ``task_ids`` is the page these facts were gathered for.
+    ``active_member_task_ids`` is only meaningful within it, so
+    :func:`evaluate_signup` falls back to its own query for a task outside the
+    set rather than reading absence as "not a member".
+    """
+
+    stats: CharacterStats
+    in_progress_praxis_count: int
+    task_ids: frozenset[int]
+    active_member_task_ids: frozenset[int]
+
+
+async def gather_signup_facts(
+    character: Character,
+    task_ids: Collection[int],
+    session: AsyncSession,
+) -> SignupFacts:
+    """Read one page's worth of :class:`SignupFacts` in four queries, not four per row."""
+    era_row = await get_current_era_row(session)
+    return SignupFacts(
+        stats=await get_or_create_stats(session, character.id, era_row.id),
+        in_progress_praxis_count=await _count_in_progress_praxes(character.id, session),
+        task_ids=frozenset(task_ids),
+        active_member_task_ids=await active_member_task_ids(
+            character, task_ids, session
+        ),
+    )
+
+
 async def evaluate_signup(
     character: Optional[Character],
     task: Task,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    facts: Optional[SignupFacts] = None,
 ) -> SignupEligibility:
     """The single sign-up predicate — true iff ``create_praxis``'s **type-agnostic**
     gates would accept (ADR-0008). Owns the gates every claim shares: the task is
@@ -1159,6 +1201,11 @@ async def evaluate_signup(
     :func:`allowed_praxis_modes` and are applied by :func:`_check_create_preconditions`.
 
     Anonymous viewers are never eligible (``allowed=False``, no ``reason``).
+
+    ``facts`` is the page-wide precompute (:func:`gather_signup_facts`) a list
+    route passes in so this predicate stops being an N+1 (#1377). It must have
+    been gathered for ``character``; omitting it makes every read here, exactly
+    as before. It changes no answer — only how many queries the answer costs.
     """
     if character is None:
         return SignupEligibility(allowed=False)
@@ -1168,8 +1215,11 @@ async def evaluate_signup(
     if task.task_type == TaskType.metatask:
         return SignupEligibility(False, SignupDenialReason.is_metatask)
 
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, character.id, era_row.id)
+    if facts is not None:
+        stats = facts.stats
+    else:
+        era_row = await get_current_era_row(session)
+        stats = await get_or_create_stats(session, character.id, era_row.id)
 
     level_reach = available_level_reach(
         character.faction_slug, stats.level, stats.level_jump_used_at_level, era
@@ -1182,10 +1232,18 @@ async def evaluate_signup(
     if task.status == TaskStatus.pending and character.faction_slug not in era.allow_praxis_on_pending_task_factions:
         return SignupEligibility(False, SignupDenialReason.task_status_closed)
 
-    if await is_active_member_of_task(character, task, session):
+    if facts is not None and task.id in facts.task_ids:
+        already_member = task.id in facts.active_member_task_ids
+    else:
+        already_member = await is_active_member_of_task(character, task, session)
+    if already_member:
         return SignupEligibility(False, SignupDenialReason.already_active_member)
 
-    in_progress_count = await _count_in_progress_praxes(character.id, session)
+    in_progress_count = (
+        facts.in_progress_praxis_count
+        if facts is not None
+        else await _count_in_progress_praxes(character.id, session)
+    )
     if in_progress_count >= era.max_task_signups:
         return SignupEligibility(False, SignupDenialReason.bank_full)
 
@@ -1708,6 +1766,32 @@ def active_member_task_ids_subquery(character_id: int):
     )
 
 
+async def active_member_task_ids(
+    character: Character,
+    task_ids: Collection[int],
+    session: AsyncSession,
+) -> frozenset[int]:
+    """Which of ``task_ids`` ``character`` already holds an active membership on — ONE query.
+
+    "Active" is the same population as :func:`active_member_task_ids_subquery`
+    (in_progress, pending or submitted). Everymen (Double Dipper perk) get the
+    empty set: they may hold multiple memberships per task, so the gate never
+    closes for them.
+
+    The batch form of :func:`is_active_member_of_task`, which now delegates here
+    — one implementation, so the page-wide answer and the single-task answer
+    cannot drift (#1377).
+    """
+    if character.faction_slug == EVERYMEN_FACTION_SLUG or not task_ids:
+        return frozenset()
+    result = await session.execute(
+        active_member_task_ids_subquery(character.id).where(
+            Praxis.task_id.in_(task_ids)
+        )
+    )
+    return frozenset(result.scalars().all())
+
+
 async def is_active_member_of_task(
     character: Character,
     task: Task,
@@ -1717,20 +1801,7 @@ async def is_active_member_of_task(
 
     Everymen (Double Dipper perk) always returns False — they may hold multiple memberships per task.
     """
-    if character.faction_slug == EVERYMEN_FACTION_SLUG:
-        return False
-    result = await session.execute(
-        select(PraxisMember.id)
-        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
-        .where(
-            PraxisMember.character_id == character.id,
-            Praxis.task_id == task.id,
-            Praxis.status.in_(
-                [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
-            ),
-        )
-    )
-    return result.scalar_one_or_none() is not None
+    return task.id in await active_member_task_ids(character, [task.id], session)
 
 
 async def can_submit_praxis_for_task(
@@ -1738,6 +1809,8 @@ async def can_submit_praxis_for_task(
     task: Task,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    facts: Optional[SignupFacts] = None,
 ) -> bool:
     """Return True iff ``create_praxis``'s type-agnostic gates would accept — the
     truthful ``can_submit_praxis`` flag on ``TaskOut`` (ADR-0008).
@@ -1746,8 +1819,10 @@ async def can_submit_praxis_for_task(
     retired/pending faction carve-out, active-member (Everymen Double-Dipper
     exempt), **and the task-bank cap** — the last was previously omitted here,
     which made the sign-up button lie once a character's bank was full.
+
+    ``facts`` is passed straight through — see :func:`evaluate_signup`.
     """
-    return (await evaluate_signup(character, task, session, era)).allowed
+    return (await evaluate_signup(character, task, session, era, facts=facts)).allowed
 
 
 def allowed_praxis_modes(
@@ -2299,6 +2374,7 @@ async def remove_metatask(
 
 
 __all__ = [
+    "active_member_task_ids",
     "active_member_task_ids_subquery",
     "allowed_praxis_modes",
     "apply_metatask",
@@ -2314,6 +2390,7 @@ __all__ = [
     "duel_id_map",
     "evaluate_signup",
     "flag_praxis",
+    "gather_signup_facts",
     "get_praxis",
     "invite_to_praxis",
     "is_active_member_of_task",
@@ -2331,6 +2408,7 @@ __all__ = [
     "respond_to_invite",
     "SignupDenialReason",
     "SignupEligibility",
+    "SignupFacts",
     "submit_praxis",
     "update_praxis",
     "unsubmit_praxis",
