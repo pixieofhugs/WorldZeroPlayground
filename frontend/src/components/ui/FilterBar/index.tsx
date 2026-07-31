@@ -1,0 +1,211 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { FactionOut } from '../../../api/factions'
+import FactionSigil from '../../sigil/FactionSigil'
+import { factionCssVar } from '../../../utils/factions'
+import { useFormFactor } from '../../../hooks/useFormFactor'
+import FactionPicker from './FactionPicker'
+import SegmentedRail from './SegmentedRail'
+import { deriveChips, type FilterRail } from './filterState'
+
+export * from './filterState'
+export { default as SegmentedRail } from './SegmentedRail'
+export { default as FactionPicker } from './FactionPicker'
+
+const CHIP_SIGIL_SIZE = 14
+const REMOVE_GLYPH = '×'
+const CARET_GLYPH = '▾'
+
+export interface FilterBarProps {
+  /** 2–4 segments each, one value per rail, one `ORDER BY` per rail. */
+  rails: FilterRail[]
+  /** `GET /factions` — visible factions only. `na` is appended internally. */
+  factions: FactionOut[]
+  selectedFactions: string[]
+  onFactionsChange: (slugs: string[]) => void
+  /** Reset every axis to its default. The page owns the state and the URL. */
+  onClearAll: () => void
+  /** "Showing N tasks" — the page owns the count, the bar only states it. */
+  summary?: string
+  search?: {
+    value: string
+    onChange: (value: string) => void
+    placeholder: string
+    label: string
+  }
+}
+
+/**
+ * FilterBar — one responsive filter surface for tasks and praxes (#1365,
+ * epic #1361). Presentation-only: it takes values and setters and owns no
+ * fetch, no URL and no list.
+ *
+ * **No mobile twin.** The `MOBILE_ARCHETYPE_BY_SLUG` rule in CLAUDE.md governs
+ * faction-dressed surfaces; the bar is chrome, is not skinned per faction, and
+ * stays outside that seam. It runs with the grain of kit-hygiene epic #1312.
+ *
+ * Three things the design draws that are deliberately absent, so the next
+ * editor does not "restore" them:
+ *   - the **type rail** (Tasks / Metatasks) — deleted on purpose, #1361 ruling 2
+ *   - **per-faction counts** — cut, #1361 ruling 3
+ *   - the **Snide-lime accent** — a faction hue used as global chrome. The bar
+ *     is authored in tokens and neutral; the one spectrum it keeps is the rail
+ *     ring, which is `na`'s and the site default's shared identity (ruling 1).
+ *
+ * The page TITLE is not drawn here either, though the design puts it in the
+ * bar: every mounting page already renders `PageTitle`, and two headings is a
+ * regression, not fidelity.
+ *
+ * Search and the applied-chip row sit OUTSIDE the collapse; the rails and the
+ * faction picker fold away.
+ */
+export default function FilterBar({
+  rails,
+  factions,
+  selectedFactions,
+  onFactionsChange,
+  onClearAll,
+  summary,
+  search,
+}: FilterBarProps) {
+  const { t } = useTranslation('common')
+  const formFactor = useFormFactor()
+  // ponytail: the initial value is read once, at mount. Open on desktop,
+  // collapsed on the phone — a rotation mid-session does not re-collapse a bar
+  // the player just opened, which is the behaviour we want anyway.
+  const [open, setOpen] = useState(formFactor === 'desktop')
+  const chips = deriveChips({ rails, selectedFactions, onFactionsChange })
+
+  return (
+    <section className="filter-bar" aria-label={t('filters.bar.region')}>
+      <div className="filter-bar__spectrum" aria-hidden="true" />
+      <div className="filter-bar__body">
+        <div className="filter-bar__head">
+          {summary && <span className="filter-bar__summary">{summary}</span>}
+          <button
+            type="button"
+            className="filter-bar__toggle"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            <span>
+              {open ? t('filters.bar.hide') : t('filters.bar.show')}
+            </span>
+            {chips.length > 0 && (
+              <span className="filter-bar__badge">{chips.length}</span>
+            )}
+            <span
+              className="filter-bar__caret"
+              aria-hidden="true"
+              data-open={open ? 'true' : undefined}
+            >
+              {CARET_GLYPH}
+            </span>
+          </button>
+        </div>
+
+        {search && (
+          <input
+            type="search"
+            className="filter-bar__search"
+            value={search.value}
+            onChange={(event) => search.onChange(event.target.value)}
+            placeholder={search.placeholder}
+            aria-label={search.label}
+          />
+        )}
+
+        {open && (
+          <div className="filter-bar__controls">
+            {/* `rail` is passed whole rather than spread: FilterRail carries a
+                `key` field of its own, and spreading it hands React a `key`
+                inside props, which it warns about and ignores. */}
+            {rails.map((rail) => (
+              <SegmentedRail key={rail.key} rail={rail} />
+            ))}
+            <FactionPicker
+              factions={factions}
+              selected={selectedFactions}
+              onChange={onFactionsChange}
+            />
+          </div>
+        )}
+
+        {chips.length > 0 && (
+          <div className="filter-bar__applied">
+            <span className="eyebrow">{t('filters.bar.filteringBy')}</span>
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                className="filter-bar__chip"
+                aria-label={t('filters.bar.removeFilter', { label: chip.label })}
+                onClick={chip.remove}
+              >
+                {chip.slug && (
+                  <span className="filter-bar__chip-sigil" aria-hidden="true">
+                    <FactionSigil
+                      slug={chip.slug}
+                      size={CHIP_SIGIL_SIZE}
+                      color={factionCssVar(chip.slug)}
+                    />
+                  </span>
+                )}
+                <span>{chip.label}</span>
+                <span className="filter-bar__chip-x" aria-hidden="true">
+                  {REMOVE_GLYPH}
+                </span>
+              </button>
+            ))}
+            <button
+              type="button"
+              className="filter-bar__link"
+              onClick={onClearAll}
+            >
+              {t('filters.bar.clearAll')}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * The empty state the bar's three kinds share (#1361 ruling 9). Which of the
+ * three a page shows is `selectEmptyState`'s call; the words are the page's,
+ * because "register empty" reads differently for tasks and for praxes.
+ *
+ * The design's "Clear all filters" button is kept — it is a real improvement
+ * over an empty state that names a problem and offers no way out. It is hidden
+ * on the `register` kind, where there is nothing to clear (STYLE §1.4: if you
+ * can't use it, you can't see it).
+ */
+export function FilterBarEmpty({
+  title,
+  hint,
+  onClearAll,
+}: {
+  title: string
+  hint?: string
+  onClearAll?: () => void
+}) {
+  const { t } = useTranslation('common')
+  return (
+    <div className="filter-empty">
+      <div className="filter-empty__copy">
+        <span className="filter-empty__title">{title}</span>
+        {hint && <span className="filter-empty__hint">{hint}</span>}
+      </div>
+      {onClearAll && (
+        <button
+          type="button"
+          className="filter-empty__action"
+          onClick={onClearAll}
+        >
+          {t('filters.bar.clearAllFilters')}
+        </button>
+      )}
+    </div>
+  )
+}

@@ -305,7 +305,32 @@
     "level": "level:",
     "status": "status:",
     "sort": "sort:",
-    "levelAtLeast": "{{level}}+"
+    "levelAtLeast": "{{level}}+",
+    "bar": {
+      "region": "Filters",
+      "show": "Filters",
+      "hide": "Hide filters",
+      "filteringBy": "Filtering by",
+      "clearAll": "Clear all",
+      "clearAllFilters": "Clear all filters",
+      "removeFilter": "Remove filter: {{label}}",
+      "factions": "Factions",
+      "clear": "Clear",
+      "done": "Done",
+      "sortLabel": "Sort",
+      "eraLabel": "Era",
+      "sort": {
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "mostVoted": "Most voted",
+        "leastVoted": "Least voted",
+        "level": "Level"
+      },
+      "era": {
+        "current": "This era",
+        "all": "All eras"
+      }
+    }
   },
   "level": {
     "caption": "lvl"
