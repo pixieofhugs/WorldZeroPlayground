@@ -66,8 +66,13 @@ export default function FeedItemSlot({
    *  the undo strip is standing in. */
   onArchiveChange?: () => void
   /** Draws the card, given the finished archive control (or `null` when this
-   *  item offers none). */
-  children: (archive: ReactNode) => ReactNode
+   *  item offers none) and the bare action behind it (likewise `null`).
+   *
+   *  The second argument is for a body that needs the SAME write under its own
+   *  label — the invitation letter's "Not now" (#1424). It is deliberately the
+   *  action and not a second button: dismissing lives here, once, so the undo
+   *  strip still stands in this slot and no card reimplements the write. */
+  children: (archive: ReactNode, act: (() => void) | null) => ReactNode
 }) {
   const [phase, setPhase] = useState<Phase>('card')
   const [undoPhase, setUndoPhase] = useState<FeedUndoPhase>('undo')
@@ -228,6 +233,7 @@ export default function FeedItemSlot({
         offersControl ? (
           <FeedArchiveButton onAct={act} variant={archivedView ? 'restore' : 'archive'} />
         ) : null,
+        offersControl ? act : null,
       )}
     </div>
   )
