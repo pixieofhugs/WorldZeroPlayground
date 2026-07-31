@@ -13,7 +13,7 @@ import { VoteLoginGate, VoteSummary } from './VoteShell'
  * colour comes from the neutral `--faction-default-*` / `--spectrum-*` tokens
  * and flips light/dark through the [data-theme] cascade (never a `dark`
  * ternary). Same 1-5 data model as every faction; drives the shared
- * {@link useVote} hook so cast/refetch/tally-override logic lives in one place.
+ * {@link useVote} hook so cast/tally logic lives in one place.
  *
  * THE ROW IS ONE GRADIENT, WINDOWED (#842). A single rainbow is stretched across
  * the whole row and each dot shows the slice that falls where the dot actually

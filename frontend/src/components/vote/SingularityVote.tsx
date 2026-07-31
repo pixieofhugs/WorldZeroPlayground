@@ -14,7 +14,7 @@ import { VOTE_REFRAMES } from './voteReframes'
  * how confidently a sealed output holds up to scrutiny.
  *
  * Same 1-5 data model as every other faction — a pure terminal reskin driven by the
- * shared {@link useVote} hook so cast/refetch/tally-override logic lives in one place.
+ * shared {@link useVote} hook so cast/tally logic lives in one place.
  * Singularity is ALWAYS-DARK: its tokens hold identical terminal values in both
  * themes, so this never touches the [data-theme] cascade.
  *

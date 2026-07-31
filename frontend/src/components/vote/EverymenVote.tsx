@@ -14,7 +14,7 @@ import { VOTE_REFRAMES } from './voteReframes'
  * Replaces the retired approval-stamp drawer.
  *
  * Plugs into the vote dispatcher via the shared {@link useVote} hook so the
- * cast/refetch logic lives in exactly one place. All colour flips light/dark
+ * cast logic lives in exactly one place. All colour flips light/dark
  * through the [data-theme] cascade (the edge tone and the rank-5 glow), never a
  * `dark` ternary in TS. Every motion is a reduced-motion-gated CSS class (never
  * an inline `animation:`); stilled, the gears keep their heat/glow — which is
