@@ -4,6 +4,7 @@ import FeedCardRouter from '../components/feed/FeedCardRouter'
 import FeedDateDivider, { getDateLabel } from '../components/feed/FeedDateDivider'
 import FeedBulkArchiveButton from '../components/feed/FeedBulkArchiveButton'
 import UpdatesFilterBar, { UpdatesListEmpty } from './updates/UpdatesFilterBar'
+import RequestsQueue from './updates/RequestsQueue'
 import { useUpdates, type UpdatesState } from './updates/useUpdates'
 
 /**
@@ -50,6 +51,13 @@ export default function Updates() {
   return (
     <div className="py-8">
       <PageTitle title={t('page.title')} eyebrow={t('page.eyebrow')} />
+
+      {/* Above the filters and above the stream, and NOT subject to either.
+          ADR-0070 took the four request types out of the live feed, so this is
+          the only place an unanswered obligation is reachable — including while
+          the player is reading the archive, where the filter bar below applies
+          to the stream and says nothing about what is owed. */}
+      <RequestsQueue />
 
       <UpdatesFilterBar state={state} />
 

@@ -5091,7 +5091,12 @@
   color: var(--color-text-secondary);
 }
 
-.filter-bar__toggle {
+/* `.requests-queue__toggle` rides along here rather than re-deriving the pill:
+   it is the SAME control — a collapse toggle carrying a count — in a different
+   panel, and #1361 exists because this recipe was written four times. Editing
+   these rules restyles the Requests queue too, which is the trade. */
+.filter-bar__toggle,
+.requests-queue__toggle {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -5108,14 +5113,17 @@
 }
 
 .filter-bar__toggle:hover,
-.filter-bar__toggle:focus-visible {
+.filter-bar__toggle:focus-visible,
+.requests-queue__toggle:hover,
+.requests-queue__toggle:focus-visible {
   border-color: var(--color-text-primary);
 }
 
 /* The applied count. The design fills this with a gold-to-lime gradient and
    prints near-black on it; the neutral treatment is the repo's
    inverted-selection pairing, AA-clear in both themes by construction. */
-.filter-bar__badge {
+.filter-bar__badge,
+.requests-queue__badge {
   min-width: var(--space-xl);
   height: var(--space-xl);
   display: inline-flex;
@@ -5409,7 +5417,10 @@
   border-top: 1px solid var(--color-border);
 }
 
-.filter-bar__chip {
+/* The queue's tray chip is this same object — a sigil, a readable label and a
+   44px target — so it rides along rather than being written a fifth time. */
+.filter-bar__chip,
+.requests-queue__chip {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -5426,11 +5437,14 @@
 }
 
 .filter-bar__chip:hover,
-.filter-bar__chip:focus-visible {
+.filter-bar__chip:focus-visible,
+.requests-queue__chip:hover,
+.requests-queue__chip:focus-visible {
   border-color: var(--color-text-primary);
 }
 
-.filter-bar__chip-sigil {
+.filter-bar__chip-sigil,
+.requests-queue__chip-sigil {
   width: var(--space-lg);
   height: var(--space-lg);
   flex: none;
@@ -5443,7 +5457,8 @@
   color: var(--color-text-secondary);
 }
 
-.filter-bar__link {
+.filter-bar__link,
+.requests-queue__more {
   border: 0;
   background: none;
   padding: 0 var(--space-xs);
@@ -5456,7 +5471,9 @@
 }
 
 .filter-bar__link:hover,
-.filter-bar__link:focus-visible {
+.filter-bar__link:focus-visible,
+.requests-queue__more:hover,
+.requests-queue__more:focus-visible {
   color: var(--color-text-primary);
 }
 
@@ -5534,6 +5551,92 @@
 .feed-load-more:disabled {
   cursor: not-allowed;
   color: var(--color-text-tertiary);
+}
+
+/* ── The Requests queue (#1422, ADR-0070) ──
+   A frame around the SHIPPED faction chassis and nothing else. The seven
+   bespoke faction cards the design hand-draws all exist already (epic #1192),
+   so there is no card CSS here — only the panel, the footer band and the done
+   state.
+
+   The design accents this block with `var(--faction-snide-acid)` throughout; a
+   faction colour cannot be site chrome, so the count badge takes the neutral
+   inverted-selection pairing the filter bar's badge already uses. */
+.requests-queue {
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-md);
+  overflow: hidden;
+  background: var(--color-bg-surface);
+  margin-bottom: var(--space-xl);
+}
+
+.requests-queue__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.requests-queue__title {
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.requests-queue__body {
+  padding: var(--space-lg) var(--space-xl);
+}
+
+.requests-queue__error {
+  color: var(--color-danger);
+}
+
+.requests-queue__done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--space-md);
+}
+
+/* The one navigator (epic decision 16) — chips, the expander, and the skip. The
+   design's 10-segment dot bar is cut: a 4px bar whose only affordance is a
+   `title` tooltip is invisible on touch and near-useless to a screen reader. */
+.requests-queue__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  padding: var(--space-md) var(--space-xl);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-surface-alt);
+}
+
+.requests-queue__tray {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Phone: the panel keeps its padding tight and the tray takes the full width so
+   chips wrap under the skip rather than squeezing beside it. One component in
+   both form factors — a media query, not a mobile twin (ADR-0056/0069). */
+@media (max-width: 767px) {
+  .requests-queue__head,
+  .requests-queue__body,
+  .requests-queue__foot {
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+  }
+
+  .requests-queue__tray {
+    flex: 1 0 100%;
+  }
 }
 
 /* Phone: the rails stack full-width. The bar is one component in both form

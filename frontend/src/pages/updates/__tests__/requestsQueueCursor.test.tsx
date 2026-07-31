@@ -29,7 +29,7 @@ import {
   queueItems,
   selectQueueIndex,
   selectQueueTray,
-} from '../requestsQueue'
+} from '../requestsQueueCursor'
 import type { RequestsQueueState } from '../useRequestsQueue'
 
 const mocks = vi.hoisted(() => ({ state: null as unknown }))
@@ -203,6 +203,7 @@ function state(overrides: Partial<RequestsQueueState> = {}): RequestsQueueState 
     items: [],
     loading: false,
     error: null,
+    refresh: () => {},
     ...overrides,
   }
 }
