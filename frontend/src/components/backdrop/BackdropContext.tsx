@@ -18,7 +18,14 @@ interface BackdropContextValue {
   setSlug: (slug: string | null) => void
 }
 
-const BackdropContext = createContext<BackdropContextValue>({
+/**
+ * Exported so a test can render a dispatcher at a chosen slug. `useFactionBackdrop`
+ * sets the slug from an EFFECT, and the suite renders with `renderToStaticMarkup`
+ * where effects never run — so a provider is the only way to reach any slug but
+ * `null`. Same reason `AuthContext`, `VoteFactionContext` and `FeedRowSkinContext`
+ * are exported. Pages use the two hooks below, never this.
+ */
+export const BackdropContext = createContext<BackdropContextValue>({
   slug: null,
   setSlug: () => {},
 })
