@@ -102,16 +102,6 @@ async def _patch(path: str, body: dict) -> Any:
         return response.json()
 
 
-async def _delete(path: str) -> None:
-    token = await _get_token()
-    async with httpx.AsyncClient() as client:
-        response = await client.delete(
-            f"{API_URL}{path}",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        response.raise_for_status()
-
-
 # ---------------------------------------------------------------------------
 # Read / Inspect tools
 # ---------------------------------------------------------------------------
@@ -119,7 +109,7 @@ async def _delete(path: str) -> None:
 
 @mcp.tool()
 async def wz_overview() -> dict:
-    """Get a game-wide stats overview: counts of accounts, characters, active tasks, submissions, and votes."""
+    """Get a game-wide stats overview: counts of accounts, characters, active tasks, praxes, and votes."""
     return await _get("/admin/overview")
 
 
@@ -319,15 +309,18 @@ async def wz_suspend_account(account_id: int, suspended: bool) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Submission tools
+# Praxis tools
 # ---------------------------------------------------------------------------
 
 
 @mcp.tool()
-async def wz_delete_submission(submission_id: int) -> str:
-    """Permanently delete a submission."""
-    await _delete(f"/admin/submissions/{submission_id}")
-    return f"Submission {submission_id} deleted."
+async def wz_hide_praxis(praxis_id: int) -> dict:
+    """Hide a praxis from public view.
+
+    Args:
+        praxis_id: The praxis's ID.
+    """
+    return await _patch(f"/admin/praxes/{praxis_id}/moderate", {"status": "hidden"})
 
 
 # ---------------------------------------------------------------------------
