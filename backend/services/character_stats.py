@@ -22,6 +22,16 @@ from services.scoring import compute_level
 # Factions that never receive invitation letters (ADR-0022 / ADR-0019 sentinels).
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
 
+# Moderation states that earn nobody points (#1373). ``hidden`` is off the site
+# entirely; ``failed`` is an admin ruling that the work was not done, so it keeps
+# its banner and its place in the feed but banks nothing. Both praxis gathers
+# below read this one set so they cannot drift apart. It mirrors the accepted set
+# in ``services.character.py``'s Albescent-unlock query, which has always counted
+# only ``visible`` + ``flagged`` — a flagged praxis is merely *awaiting* a ruling.
+_UNSCORED_MODERATION_STATUSES: frozenset[ModerationStatus] = frozenset(
+    {ModerationStatus.hidden, ModerationStatus.failed}
+)
+
 
 async def _deliver_earned_invitations(
     character_id: int,
@@ -95,7 +105,9 @@ async def recalculate_character_stats(
 
     Gathers all submitted praxes the character has a stake in — solo/duel praxes
     they authored, plus collab praxes they are a member of — then delegates all
-    scoring arithmetic to ``compute_contributions`` (ADR-0014).
+    scoring arithmetic to ``compute_contributions`` (ADR-0014). Praxes in an
+    ``_UNSCORED_MODERATION_STATUSES`` state are left out of the gather entirely,
+    so they also stop counting toward faction invitations (ADR-0022).
 
     Safe to call on praxis creation (0 votes → base points only) or after any
     vote change.
@@ -121,7 +133,7 @@ async def recalculate_character_stats(
             Praxis.created_by_id == character_id,
             Praxis.type == PraxisType.solo,
             Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status != ModerationStatus.hidden,
+            Praxis.moderation_status.notin_(list(_UNSCORED_MODERATION_STATUSES)),
         )
     )
     solo_praxes = list(solo_result.scalars().all())
@@ -134,7 +146,7 @@ async def recalculate_character_stats(
             PraxisMember.character_id == character_id,
             Praxis.type == PraxisType.collab,
             Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status != ModerationStatus.hidden,
+            Praxis.moderation_status.notin_(list(_UNSCORED_MODERATION_STATUSES)),
         )
     )
     collab_praxes = list(collab_result.scalars().all())

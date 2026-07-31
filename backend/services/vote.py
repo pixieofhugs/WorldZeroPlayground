@@ -41,7 +41,13 @@ async def cast_or_update_vote(
 ) -> Vote:
     """Cast or update a vote on a solo or collab praxis.
 
-    Every rule here is account-level (ADR-0041): alt characters on one account
+    Rule (0) — a ``failed`` praxis is closed to voting (#1373) — is the one
+    praxis-level block: it holds for every viewer. Since #1373 a failed praxis
+    banks no points, so a vote on one could only burn a voter's finite budget
+    (ADR-0043) for nothing. It stays listed and keeps its banner; only the
+    ratings module closes.
+
+    Every other rule here is account-level (ADR-0041): alt characters on one account
     cannot vote on each other's praxes, cannot rate a duel any of them is in,
     and — since #1150 — cannot hold more than one vote on the same praxis. The
     third is not an extra rejection: an alt's second rating *updates* the
@@ -54,6 +60,11 @@ async def cast_or_update_vote(
     """
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
+
+    if _voting_closed(praxis):
+        raise HTTPException(
+            status_code=403, detail="Voting is closed on a praxis marked failed."
+        )
 
     # Account-level anti-self-vote (A) and duel anti-participation (B) are the two
     # PERMANENT ineligibility rules. They are factored into helpers so this
@@ -124,6 +135,16 @@ async def cast_or_update_vote(
 # ---------------------------------------------------------------------------
 
 
+def _voting_closed(praxis: Praxis) -> bool:
+    """0. The praxis itself is closed to voting — it was marked ``failed`` (#1373).
+
+    Viewer-independent, so it needs no session and the page-wide map can apply it
+    from the rows it already holds. ``hidden`` is not listed here: a hidden praxis
+    404s at the door (:func:`cast_vote_on_praxis`) before voting is ever asked.
+    """
+    return praxis.moderation_status == ModerationStatus.failed
+
+
 async def _voter_account_owns_praxis(
     voter: Character, praxis: Praxis, session: AsyncSession
 ) -> bool:
@@ -182,9 +203,12 @@ async def viewer_can_vote(
 ) -> bool:
     """Whether ``voter`` may vote on ``praxis`` under the PERMANENT rules (#998).
 
-    Returns ``False`` only when account-level ownership (A) or duel
-    participation (B) applies — the same two blocks ``cast_or_update_vote``
-    enforces. Budget exhaustion is NOT considered: it is temporary and
+    Returns ``False`` when the praxis is closed to voting (0), or when
+    account-level ownership (A) or duel participation (B) applies — the same
+    three blocks ``cast_or_update_vote`` enforces. Rule 0 is the only one that
+    also applies to an anonymous viewer: a failed praxis is closed to everyone,
+    so logging in would not open it. Budget exhaustion is NOT considered: it is
+    temporary and
     re-rating an existing vote is free, so the module stays visible for
     out-of-budget viewers. One-vote-per-account (#1150) is not considered
     either, for the same reason: an account that has already voted may still
@@ -192,6 +216,8 @@ async def viewer_can_vote(
     (``voter is None``) get ``True`` — the client shows its own login gate
     regardless.
     """
+    if _voting_closed(praxis):
+        return False
     if voter is None:
         return True
     if await _voter_account_owns_praxis(voter, praxis, session):
@@ -209,10 +235,11 @@ async def viewer_can_vote_map(
     Mirrors how crowned_ids / viewer_votes / applied_metatasks are precomputed
     by the card-list route: one ownership query and one duel query for the whole
     page, rather than the per-praxis predicate per card. Anonymous viewer → all
-    ``True``.
+    ``True`` except the failed cards, which are closed to everyone (#1373).
     """
+    closed_ids = {praxis.id for praxis in praxes if _voting_closed(praxis)}
     if voter is None:
-        return {praxis.id: True for praxis in praxes}
+        return {praxis.id: praxis.id not in closed_ids for praxis in praxes}
 
     praxis_ids = {praxis.id for praxis in praxes}
     if not praxis_ids:
@@ -228,7 +255,7 @@ async def viewer_can_vote_map(
             Character.account_id == account_id,
         )
     )
-    blocked_ids = set(owned_result.scalars().all())
+    blocked_ids = set(owned_result.scalars().all()) | closed_ids
 
     # B. Duel participation — for every active duel touching a page praxis, block
     # BOTH of its sides (that are on this page) when the viewer's account is a

@@ -994,7 +994,14 @@ async def list_praxes(
                 )
                 .exists()
             )
-            query = query.where(~account_voted, ~account_member)
+            query = query.where(
+                ~account_voted,
+                ~account_member,
+                # Same "votable" half, for the other permanent block: a failed
+                # praxis is closed to voting (#1373, ``services.vote``). It stays
+                # in the unfiltered feed; it just cannot need anyone's vote.
+                Praxis.moderation_status != ModerationStatus.failed,
+            )
 
     if moderation_status is not None:
         try:
@@ -2100,8 +2107,18 @@ async def moderate_praxis(
     new_status: str,
     admin_note: Optional[str],
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
-    """Admin moderation: update moderation_status and admin_note."""
+    """Admin moderation: update moderation_status and admin_note.
+
+    Every transition recalculates each member's stats (#1373). ``hidden`` and
+    ``failed`` are unscored (see ``services.character_stats``), so both marking
+    and *un*marking moves the members' scores — and a score that only corrects
+    itself on the author's next unrelated vote is the bug this closes. The
+    recalc is unconditional rather than gated on "did the scored-ness change":
+    it is the same handful of queries the vote path already runs per vote, and
+    an admin action is rare.
+    """
     praxis = await get_praxis(praxis_id, session)
 
     try:
@@ -2119,6 +2136,7 @@ async def moderate_praxis(
         praxis.admin_note = None
 
     await session.flush()
+    await recalculate_members_stats(praxis, session, era)
     return await get_praxis(praxis_id, session)
 
 
