@@ -92,8 +92,14 @@ backend aggregation and it is not the story this page tells — the page is abou
 earned*, not *how the rating is spread*. The faction reframe ramp still appears as the
 **interactive caster** (`<VoteUI>` in cast mode); it just isn't rendered as a distribution.
 
-**Backend impact: none for scoring** — both numbers already exist on `PraxisOut` /
-`VoteSummary`.
+**Backend impact: none for scoring** — both numbers already exist on `PraxisOut`.
+
+> Amended 2026-07-31 (#1382): this sentence used to read "`PraxisOut` / `VoteSummary`".
+> `VoteSummary` and its `GET /praxes/{id}/votes` endpoint were retired when the vote
+> POST began returning the tally it had already computed. Nothing about the decision
+> above changes — the numbers were always on `PraxisOut` too, which is why the probe
+> turned out to be redundant. Note `VoteSummary` is *also* the name of an unrelated
+> React component in `VoteShell.tsx`, which is untouched and still exists.
 
 ### 4. Evidence reuses `MediaGallery`; archetype owns only the framing
 

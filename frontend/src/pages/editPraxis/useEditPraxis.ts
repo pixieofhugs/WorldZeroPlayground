@@ -267,8 +267,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       .finally(() => setLoading(false));
     // The membership guard above reads only `user?.character?.id`, so that is
     // the whole dependency (#1390). Depending on `user` reloaded the praxis and
-    // its task every time `/auth/me` refetched — which a star cast does — and
-    // flashed the editor back to its loading state.
+    // its task every time `/auth/me` refetched, flashing the editor back to its
+    // loading state — that endpoint mints a new object on every answer, so the
+    // object identity is never a safe dependency, changed or not.
+    //
+    // Casting a star used to be the loudest trigger; #1382 retired that refetch
+    // by returning the tally from the vote POST. The narrowing stands without
+    // it — every other refetch mints the same new object.
   }, [idParam, user?.character?.id, authLoading, navigate]);
 
   // The seals this viewer may apply (#933). It sat inside the praxis `.then()`
