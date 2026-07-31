@@ -277,8 +277,41 @@ export async function getPraxis(id: number): Promise<PraxisOut> {
 // Create / update / delete
 // ---------------------------------------------------------------------------
 
+/**
+ * The praxis a signup just created, held for the composer it is about to land
+ * on (#1379).
+ *
+ * Every signup path — the task list, the task detail page and the home
+ * FieldDesk — does `createPraxis(...)` then `navigate('/praxis/{id}/edit')`,
+ * and the composer's first act was `getPraxis(id)`: a full round trip to read
+ * back a row the client had been handed milliseconds earlier. `POST /praxes`
+ * and `GET /praxes/{id}` both return `build_praxis_out(praxis, viewer=...)`
+ * with the same viewer, so the two payloads are the same object — the read was
+ * pure latency, and on the deepest waterfall in the app.
+ *
+ * ONE SLOT, CONSUMED ONCE. It lives in module memory rather than in router
+ * state deliberately: history state survives Back/Forward, so a carried praxis
+ * would be replayed — stale — onto a composer the player returns to after
+ * editing. This slot is cleared by the first read and by any reload, so the
+ * only thing that can ever consume it is the navigation that follows the
+ * create. A miss is free: the composer falls back to `getPraxis`.
+ */
+let justCreatedPraxis: PraxisOut | null = null
+
+/**
+ * Take the just-created praxis if it is the one being asked for. Always clears
+ * the slot, match or not — a carried payload nobody claimed immediately is a
+ * payload that has had time to go stale.
+ */
+export function takeJustCreatedPraxis(praxisId: number): PraxisOut | null {
+  const carried = justCreatedPraxis
+  justCreatedPraxis = null
+  return carried?.id === praxisId ? carried : null
+}
+
 export async function createPraxis(data: PraxisCreate): Promise<PraxisOut> {
   const { data: result } = await api.post<PraxisOut>('/praxes', data)
+  justCreatedPraxis = result
   return result
 }
 

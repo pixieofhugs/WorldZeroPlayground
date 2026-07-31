@@ -122,6 +122,23 @@ export async function preloadAllArchetypes(): Promise<void> {
 }
 
 /**
+ * Start a dispatched archetype's chunk without rendering it.
+ *
+ * The wrapper requests its chunk from an effect, so the download cannot begin
+ * until the archetype is on screen — and a page that knows which faction it
+ * will wear before it is ready to draw (the composer: the praxis payload names
+ * the task's faction a round trip before `getTask` answers) would otherwise
+ * spend that whole round trip not downloading it (#1379).
+ *
+ * A plain component passes through as a no-op, which is what the `Default*`
+ * fall-through needs: it is in the caller's chunk already.
+ */
+export function preloadArchetype(component: AnyArchetype): void {
+  const deferred = component as Partial<LazyArchetype<AnyArchetype>>
+  void deferred.preload?.()
+}
+
+/**
  * The component a dispatched archetype actually resolves to.
  *
  * A manifest entry is now a loader, so `surfaceMap()` hands back the deferred
