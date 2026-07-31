@@ -152,78 +152,79 @@ export default function RequestsQueue() {
         {announcement}
       </p>
 
-      {!collapsed && (
-        <div id={BODY_ID}>
-          <div className="requests-queue__body">
-            {loading ? null : error ? (
-              <p className="font-body content-text requests-queue__error">{error}</p>
-            ) : current ? (
-              <FeedCardRouter item={current} onArchiveChange={refresh} />
-            ) : (
-              <div className="requests-queue__done">
-                <p className="font-display content-text">{t('queue.doneTitle')}</p>
-                {/* #1421 authored this line already fixed: the design says
-                    "No invitations, duels, mentions or submissions owed" and
-                    a mention is not an obligation (decision 8). */}
-                <p className="eyebrow">{t('queue.doneBody')}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Hidden outright when there is nowhere to go: a tray with no chips
-              and a skip that skips to the same card are controls that cannot
-              work (STYLE §1.4). */}
-          {navigable && !loading && !error && (
-            <div className="requests-queue__foot" onKeyDown={onBandKeyDown}>
-              <div
-                className="requests-queue__tray"
-                role="group"
-                aria-label={t('queue.trayLabel')}
-              >
-                {tray.chips.map((chip) => (
-                  <button
-                    key={chip.item_key}
-                    type="button"
-                    className="requests-queue__chip"
-                    onClick={() => setActiveKey(chip.item_key)}
-                  >
-                    <span className="requests-queue__chip-sigil">
-                      <FactionSigil
-                        slug={chip.context_faction_slug}
-                        size={CHIP_SIGIL_SIZE}
-                      />
-                    </span>
-                    {feedTypeLabel(chip.type)}
-                  </button>
-                ))}
-                {tray.expandable && (
-                  <button
-                    type="button"
-                    className="requests-queue__more"
-                    onClick={() => setTrayExpanded((was) => !was)}
-                    aria-expanded={trayExpanded}
-                  >
-                    {trayExpanded
-                      ? tc('actions.showFewer')
-                      : tc('actions.showMore', { count: tray.hidden })}
-                  </button>
-                )}
-              </div>
-              {/* Persists nothing (decision 17). It moves the cursor and writes
-                  no snooze row anywhere, because the obligation really is still
-                  outstanding — so the card stays in the tray, stays in the
-                  count, and comes back round. */}
-              <button
-                type="button"
-                className="requests-queue__more"
-                onClick={() => setActiveKey(nextQueueKey(items, activeKey))}
-              >
-                {t('queue.skip')}
-              </button>
+      {/* `hidden` rather than unmounted: `aria-controls` above must resolve to a
+          real element in both states, and collapsing then reopening the queue
+          should not remount the card and restart its own pending state. */}
+      <div id={BODY_ID} hidden={collapsed}>
+        <div className="requests-queue__body">
+          {loading ? null : error ? (
+            <p className="font-body content-text requests-queue__error">{error}</p>
+          ) : current ? (
+            <FeedCardRouter item={current} onArchiveChange={refresh} />
+          ) : (
+            <div className="requests-queue__done">
+              <p className="font-display content-text">{t('queue.doneTitle')}</p>
+              {/* #1421 authored this line already fixed: the design says
+                  "No invitations, duels, mentions or submissions owed" and
+                  a mention is not an obligation (decision 8). */}
+              <p className="eyebrow">{t('queue.doneBody')}</p>
             </div>
           )}
         </div>
-      )}
+
+        {/* Hidden outright when there is nowhere to go: a tray with no chips
+            and a skip that skips to the same card are controls that cannot
+            work (STYLE §1.4). */}
+        {navigable && !loading && !error && (
+          <div className="requests-queue__foot" onKeyDown={onBandKeyDown}>
+            <div
+              className="requests-queue__tray"
+              role="group"
+              aria-label={t('queue.trayLabel')}
+            >
+              {tray.chips.map((chip) => (
+                <button
+                  key={chip.item_key}
+                  type="button"
+                  className="requests-queue__chip"
+                  onClick={() => setActiveKey(chip.item_key)}
+                >
+                  <span className="requests-queue__chip-sigil">
+                    <FactionSigil
+                      slug={chip.context_faction_slug}
+                      size={CHIP_SIGIL_SIZE}
+                    />
+                  </span>
+                  {feedTypeLabel(chip.type)}
+                </button>
+              ))}
+              {tray.expandable && (
+                <button
+                  type="button"
+                  className="requests-queue__more"
+                  onClick={() => setTrayExpanded((was) => !was)}
+                  aria-expanded={trayExpanded}
+                >
+                  {trayExpanded
+                    ? tc('actions.showFewer')
+                    : tc('actions.showMore', { count: tray.hidden })}
+                </button>
+              )}
+            </div>
+            {/* Persists nothing (decision 17). It moves the cursor and writes
+                no snooze row anywhere, because the obligation really is still
+                outstanding — so the card stays in the tray, stays in the
+                count, and comes back round. */}
+            <button
+              type="button"
+              className="requests-queue__more"
+              onClick={() => setActiveKey(nextQueueKey(items, activeKey))}
+            >
+              {t('queue.skip')}
+            </button>
+          </div>
+        )}
+      </div>
     </section>
   )
 }
