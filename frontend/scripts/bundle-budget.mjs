@@ -50,10 +50,31 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  * WARN sits just above today's number so any real growth speaks up immediately,
  * while the build stays green. Ratchet WARN downward each time a chunk moves
  * off the entry path — the budget is a ledger of progress, not a fixed wall.
+ *
+ * CSS ledger (#1325): the CSS warn line sat at 20,000 while the stylesheet was
+ * 20.7 KB, so every build printed the loud WARN block and the check stopped
+ * carrying information — three separate agents in one batch each reported it as
+ * "not mine", which is the tell. A check that warns unconditionally has been
+ * turned off without anyone deciding to turn it off.
+ *
+ * Raised to 23,000 against a measured 22,362 (21.84 KiB gzipped) on `main` at
+ * 7ce689b4, after epic #1361. That epic was the honest moment to re-price this:
+ * it ADDED `components/ui/FilterBar/` (~518 lines, ~60 selectors) and then
+ * DELETED three filter components — and the deletion moved nothing, because
+ * Vite had already tree-shaken them (verified: identical bundle content hashes
+ * across #1368). The stylesheet grew because a shared component replaced four
+ * bespoke ones, which is the trade the epic was for.
+ *
+ * The alternative — shed ~700 bytes to fit the old line — was rejected: the
+ * growth is real and paid for, and fitting a line the code has outgrown just
+ * moves the lie. FAIL stays at 25,000, which is now only 2.6 KB away, so this
+ * is a genuine wall rather than a formality. TARGET stays at 20,000 and is now
+ * BELOW warn, giving CSS the same shape JS has: a number to ratchet back down
+ * to, not a restatement of the warn line.
  */
 const BUDGETS = {
   js: { warn: 150_000, fail: 180_000, target: 120_000 },
-  css: { warn: 20_000, fail: 25_000, target: 20_000 },
+  css: { warn: 23_000, fail: 25_000, target: 20_000 },
 }
 
 /** Asset paths the entry HTML forces the browser to fetch before first render. */
