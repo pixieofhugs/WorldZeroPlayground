@@ -4984,3 +4984,521 @@
   }
   .ep-blink { animation: epBlink 1s step-end infinite; }
 }
+
+/* ══════════════════════════════════════════
+   FILTER BAR (#1365, epic #1361)
+   One responsive filter surface for tasks and praxes. Chrome, not a faction
+   skin — it is deliberately outside the MOBILE_ARCHETYPE_BY_SLUG seam.
+
+   THE DESIGN WAS AUTHORED DARK-ONLY IN RAW HEX (#1b1a24, #f5c542, #b6ff2e,
+   #13121a, #14110b) and used var(--faction-snide) — a faction hue — as a
+   global accent. Neither ships. The lime is replaced by the repo's existing
+   inverted-selection idiom (--color-text-primary fill, --color-bg-page ink),
+   the same pairing FilterStamps has drawn since it was written, so the bar
+   carries no faction's identity but one.
+
+   That one is the SPECTRUM RING on every rail, and it stays (#1361 ruling 1).
+   --faction-default-rainbow is na's identity AND the site's default chrome
+   because na is the site default — one identity (ADR-0066). The collision is
+   deliberate; do not "fix" it to a neutral border.
+   ══════════════════════════════════════════ */
+:root {
+  /* An opaque, slightly-lifted well for filter chrome: rail tracks, chips, the
+     popover, the sheet, the search field.
+
+     It has to be OPAQUE, and that is why it is a token rather than
+     --color-bg-surface. The rail paints its ring with the padding-box /
+     border-box gradient trick, so a translucent interior lets the spectrum
+     show straight through the middle of the track — the same constraint
+     factionFill's `pill` / `frame` shapes document. Both --color-bg-surface
+     and --color-bg-surface-alt are alpha in dark, so neither could hold the
+     job.
+
+     Composed from the page ground rather than declared twice: 6% of the ink
+     over the page is a lift in light (#eae6e0) and in dark (#202025, within a
+     shade of the design's #1b1a24), so one declaration covers both themes and
+     nothing drifts when the page ground moves. --color-text-secondary reads
+     4.82:1 on the light well and 5.04:1 on the dark one. */
+  --filter-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
+
+  /* The sliding thumb: a neutral highlight, never a hue. Same reasoning — one
+     declaration, both themes, because the ink it mixes flips with the theme.
+     The design's rgba(240,230,208,.12) / .18 IS this pair, said in dark only. */
+  --filter-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --filter-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+
+  /* The rail's inner padding. Read by SegmentedRail's thumb maths as well as by
+     .filter-rail, because the design writes that maths as
+     `calc(i * (100% - 6px) / n + 3px)` — the 6 and the 3 ARE this value, and a
+     number restated in a stylesheet and a module is a number that drifts. */
+  --filter-rail-pad: 3px;
+
+  --filter-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] {
+  /* A cast shadow on a near-black page needs far more of it to read at all. */
+  --filter-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.8);
+}
+
+.filter-bar {
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-md);
+  overflow: hidden;
+  background: var(--color-bg-surface);
+}
+
+/* The spectrum edge along the top of the bar — ruling 1's ring, laid flat. */
+.filter-bar__spectrum {
+  height: var(--filter-rail-pad);
+  background: var(--faction-default-rainbow);
+}
+
+.filter-bar__body {
+  padding: var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.filter-bar__head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.filter-bar__summary {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+}
+
+.filter-bar__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--filter-well);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  cursor: pointer;
+  transition: border-color 180ms;
+}
+
+.filter-bar__toggle:hover,
+.filter-bar__toggle:focus-visible {
+  border-color: var(--color-text-primary);
+}
+
+/* The applied count. The design fills this with a gold-to-lime gradient and
+   prints near-black on it; the neutral treatment is the repo's
+   inverted-selection pairing, AA-clear in both themes by construction. */
+.filter-bar__badge {
+  min-width: var(--space-xl);
+  height: var(--space-xl);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 var(--space-xs);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+}
+
+.filter-bar__caret {
+  color: var(--color-text-secondary);
+  transition: transform 200ms;
+}
+
+.filter-bar__caret[data-open] {
+  transform: rotate(180deg);
+}
+
+.filter-bar__search {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--filter-well);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+}
+
+.filter-bar__controls {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* ── The segmented rail ── */
+.filter-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 248px;
+  min-width: 220px;
+  padding: var(--filter-rail-pad);
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  /* Opaque well on padding-box, the spectrum on border-box: the ring reads as a
+     1.5px rainbow edge without a second element. See --filter-well on why the
+     interior may not be translucent here. */
+  background:
+    linear-gradient(var(--filter-well), var(--filter-well)) padding-box,
+    var(--faction-default-rainbow) border-box;
+}
+
+.filter-rail__thumb {
+  position: absolute;
+  top: var(--filter-rail-pad);
+  bottom: var(--filter-rail-pad);
+  border-radius: 999px;
+  background: var(--filter-thumb);
+  box-shadow: inset 0 0 0 1px var(--filter-thumb-edge);
+  transition: left 220ms cubic-bezier(0.4, 1.4, 0.5, 1);
+  pointer-events: none;
+}
+
+.filter-rail__segment {
+  position: relative;
+  flex: 1;
+  min-height: 38px;
+  padding: var(--space-sm) 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  transition: color 180ms;
+}
+
+.filter-rail__segment[data-on] {
+  color: var(--color-text-primary);
+}
+
+/* ── The faction multi-select ── */
+.filter-factions {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.filter-factions__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--filter-well);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  cursor: pointer;
+  transition: border-color 180ms;
+}
+
+.filter-factions__trigger:hover,
+.filter-factions__trigger:focus-visible,
+.filter-factions__trigger[data-on] {
+  border-color: var(--color-text-primary);
+}
+
+.filter-factions__stack {
+  display: flex;
+  align-items: center;
+}
+
+.filter-factions__stack-sigil {
+  width: var(--space-xl);
+  height: var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-page);
+  margin-left: calc(-1 * var(--space-xs));
+}
+
+.filter-factions__popover {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  left: 0;
+  z-index: 20;
+  width: 320px;
+  max-width: 90vw;
+  padding: var(--space-sm);
+  border-radius: var(--space-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--filter-well);
+  box-shadow: var(--filter-popover-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Same panel, anchored to the viewport instead of the trigger. One conditional
+   in FactionPicker picks between these two classes; there is no second
+   component (#1313's precedent). */
+.filter-factions__sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  max-height: 70vh;
+  overflow: auto;
+  padding: var(--space-lg);
+  border-top: 1px solid var(--color-border-strong);
+  border-radius: var(--space-lg) var(--space-lg) 0 0;
+  background: var(--filter-well);
+  box-shadow: var(--filter-popover-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.filter-factions__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.filter-factions__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.filter-factions__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-factions__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  /* 44px minimum touch target — the phone requirement, applied everywhere
+     rather than branched, because a large target is never wrong on a mouse. */
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  border: 0;
+  border-radius: var(--space-sm);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.filter-factions__row:hover,
+.filter-factions__row:focus-visible,
+.filter-factions__row[data-on] {
+  background: var(--filter-thumb);
+}
+
+.filter-factions__box {
+  width: var(--space-lg);
+  height: var(--space-lg);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--space-xs);
+  border: 1px solid var(--color-border-strong);
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.filter-factions__row[data-on] .filter-factions__box {
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-bg-page);
+}
+
+.filter-factions__sigil {
+  width: var(--space-xl);
+  height: var(--space-xl);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-factions__name {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.filter-factions__done {
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+}
+
+/* ── The applied-chip row ── */
+.filter-bar__applied {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.filter-bar__chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--filter-well);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  cursor: pointer;
+  transition: border-color 180ms;
+}
+
+.filter-bar__chip:hover,
+.filter-bar__chip:focus-visible {
+  border-color: var(--color-text-primary);
+}
+
+.filter-bar__chip-sigil {
+  width: var(--space-lg);
+  height: var(--space-lg);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-bar__chip-x {
+  color: var(--color-text-secondary);
+}
+
+.filter-bar__link {
+  border: 0;
+  background: none;
+  padding: 0 var(--space-xs);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.filter-bar__link:hover,
+.filter-bar__link:focus-visible {
+  color: var(--color-text-primary);
+}
+
+/* ── The shared empty state (three kinds, one frame — #1361 ruling 9) ── */
+.filter-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+  padding: var(--space-xl);
+  border-radius: var(--space-md);
+  border: 1px dashed var(--color-border-strong);
+  background: var(--filter-well);
+}
+
+.filter-empty__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.filter-empty__title {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.filter-empty__hint {
+  font-family: var(--font-body);
+  font-size: var(--text-content);
+  color: var(--color-text-secondary);
+}
+
+.filter-empty__action {
+  min-height: 44px;
+  padding: var(--space-md) var(--space-lg);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  white-space: nowrap;
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+}
+
+/* Phone: the rails stack full-width. The bar is one component in both form
+   factors — this is a media query, not a mobile twin. */
+@media (max-width: 767px) {
+  .filter-bar__body {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .filter-bar__controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-rail {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filter-rail__segment {
+    min-height: 44px;
+    font-size: var(--text-lg);
+  }
+
+  .filter-factions__trigger {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .filter-empty {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+}

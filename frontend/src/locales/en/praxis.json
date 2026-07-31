@@ -9,6 +9,8 @@
     "loading": "Loading praxis...",
     "empty": "No praxis yet. Be the first.",
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
+    "emptyCaughtUp": "All caught up",
+    "emptyCaughtUpHint": "Nothing is waiting on your vote.",
     "count": "{{count}} shown",
     "loadMore": "Load more",
     "taskFilter": {
