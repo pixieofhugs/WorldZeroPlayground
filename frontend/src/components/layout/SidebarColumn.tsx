@@ -26,8 +26,8 @@ import SidebarHandle from './SidebarHandle'
  * reopen; how long stale rail data may be trusted is deliberately left open
  * (#1346).
  *
- * WHY THIS READS `pending_requests` AT ALL
- * ----------------------------------------
+ * WHY THIS READS `pending_requests_count` AT ALL
+ * ----------------------------------------------
  * For one number, for one child. The rail used to LIST the requests and the
  * handle badged their count, so #1343 hoisted a single `usePendingRequests()`
  * here and passed it down — that hook held per-instance state with no shared
@@ -37,10 +37,9 @@ import SidebarHandle from './SidebarHandle'
  * is left is the collapsed handle's badge, which is the only thing that tells a
  * folded-away desktop something is waiting, and it takes the count as a prop.
  *
- * Reading the array only to take its `.length` is now true of EVERY consumer —
- * here, the mobile bell and the mobile FieldDesk. Serving them a count instead
- * of up to 100 serialized feed items is a backend change to `/me/sidebar`, and
- * is filed rather than faked here.
+ * Every consumer wanted only that number — here, the mobile bell and the mobile
+ * FieldDesk — so since #1456 the response carries the count itself rather than
+ * up to 100 serialized feed items for three callers to run `.length` over.
  */
 export interface SidebarColumnProps {
   readonly collapsed: boolean
@@ -61,7 +60,7 @@ export interface SidebarColumnProps {
 const SIDEBAR_COLUMN = 'hidden lg:block lg:col-start-1 lg:row-start-1 lg:self-stretch'
 
 export default function SidebarColumn({ collapsed, onToggle }: SidebarColumnProps) {
-  const { pending_requests: pendingRequests } = useSidebarPanels()
+  const { pending_requests_count: pendingCount } = useSidebarPanels()
 
   return (
     <div className={SIDEBAR_COLUMN}>
@@ -69,7 +68,7 @@ export default function SidebarColumn({ collapsed, onToggle }: SidebarColumnProp
         <SidebarHandle
           collapsed={collapsed}
           onToggle={onToggle}
-          pendingCount={pendingRequests.length}
+          pendingCount={pendingCount}
         />
       </div>
       <div hidden={collapsed}>

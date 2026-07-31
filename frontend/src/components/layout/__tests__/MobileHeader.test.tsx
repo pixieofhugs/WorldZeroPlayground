@@ -4,7 +4,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Initialize the i18n catalog so nav/settings copy keys resolve to English text.
 import '../../../i18n'
 import type { CurrentUser } from '../../../api/auth'
-import type { ActivityFeedItem } from '../../../api/activityFeed'
 
 // useAuth reads from context whose value is populated by an async effect that
 // never runs under renderToStaticMarkup — mock it to control signed-in state.
@@ -36,7 +35,7 @@ const signedOut = { user: null }
 
 beforeEach(() => {
   pendingMock.mockReturnValue({
-    pending_requests: [],
+    pending_requests_count: 0,
     global_activity: [],
     active_praxes: [],
     refetch: vi.fn(),
@@ -64,7 +63,7 @@ describe('MobileHeader bell', () => {
 
     // Three pending requests → badge count is rendered.
     pendingMock.mockReturnValue({
-      pending_requests: [{}, {}, {}] as ActivityFeedItem[],
+      pending_requests_count: 3,
       global_activity: [],
       active_praxes: [],
       refetch: vi.fn(),

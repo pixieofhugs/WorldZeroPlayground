@@ -82,9 +82,11 @@ async def my_sidebar(
     """
     character = await resolve_active_character(account, session)
     if character is None:
-        return SidebarOut(pending_requests=[], global_activity=[], active_praxes=[])
+        return SidebarOut(
+            pending_requests_count=0, global_activity=[], active_praxes=[]
+        )
 
-    pending_requests, global_activity = await get_sidebar_feed(
+    pending_requests_count, global_activity = await get_sidebar_feed(
         character_id=character.id,
         session=session,
         session_factory=session_factory,
@@ -99,9 +101,7 @@ async def my_sidebar(
         viewer_account_id=character.account_id,
     )
     return SidebarOut(
-        pending_requests=[
-            ActivityFeedItem.model_validate(asdict(item)) for item in pending_requests
-        ],
+        pending_requests_count=pending_requests_count,
         global_activity=[
             ActivityFeedItem.model_validate(asdict(item)) for item in global_activity
         ],

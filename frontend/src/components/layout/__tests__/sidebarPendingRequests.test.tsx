@@ -1,12 +1,13 @@
 /**
  * #1423 — the rail stops LISTING pending requests, but keeps COUNTING them.
  *
- * The seam is `SidebarColumn`: the one place the provider's `pending_requests`
- * array meets both of its consumers. Under ADR-0070 the actionable pile lives
- * in the Requests queue on `/updates` and nowhere else, so the rail must render
- * no accept/decline control — while the collapsed handle's badge, which is the
+ * The seam is `SidebarColumn`: the one place the provider's request data meets
+ * both of its consumers. Under ADR-0070 the actionable pile lives in the
+ * Requests queue on `/updates` and nowhere else, so the rail must render no
+ * accept/decline control — while the collapsed handle's badge, which is the
  * only thing telling a folded-away desktop that something is waiting, must
- * still read the same array's length.
+ * still show the number. Since #1456 that number arrives AS a number:
+ * `pending_requests_count`, with no items behind it to measure.
  *
  * A count that silently reads 0 looks like "nothing pending" rather than like a
  * bug, which is why it is pinned here rather than left to the deletion's
@@ -17,7 +18,6 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
-import type { ActivityFeedItem } from '../../../api/activityFeed'
 import type { CurrentUser } from '../../../api/auth'
 
 const panelsMock = vi.fn()
@@ -36,30 +36,10 @@ vi.mock('../../../hooks/useGameConfig', () => ({
 
 import SidebarColumn from '../SidebarColumn'
 
-const pendingRequest = (type: string): ActivityFeedItem =>
-  ({
-    type,
-    item_key: `${type}:1`,
-    timestamp: new Date().toISOString(),
-    actor_display_name: 'Wren',
-    actor_faction_slug: 'ua',
-    actor_avatar_url: null,
-    context_faction_slug: 'ua',
-    payload: {
-      inviter_character_id: 7,
-      challenger_character_id: 7,
-      praxis_id: 3,
-      praxis_type: 'collab',
-      task_title: 'Mend the orrery',
-      task_faction_slug: 'ua',
-    },
-  }) as ActivityFeedItem
-
-const THREE_PENDING = [
-  pendingRequest('collab_invite'),
-  pendingRequest('duel_challenge'),
-  pendingRequest('awaiting_submission'),
-]
+// The rail has nothing to list any more, so this fixture is just the number
+// the badge is meant to show (#1456). It used to be three hydrated feed items
+// that only ever had `.length` taken off them.
+const PENDING_COUNT = 3
 
 function render(collapsed: boolean): string {
   return renderToStaticMarkup(
@@ -71,7 +51,7 @@ function render(collapsed: boolean): string {
 
 beforeEach(() => {
   panelsMock.mockReturnValue({
-    pending_requests: THREE_PENDING,
+    pending_requests_count: PENDING_COUNT,
     global_activity: [],
     active_praxes: [],
     refetch: vi.fn(),
@@ -108,9 +88,9 @@ describe('the rail and its pending requests', () => {
     expect(html).toContain('>3<')
   })
 
-  it('badges nothing when the array is empty — 0 is not a silent failure', () => {
+  it('badges nothing when the count is 0 — 0 is not a silent failure', () => {
     panelsMock.mockReturnValue({
-      pending_requests: [],
+      pending_requests_count: 0,
       global_activity: [],
       active_praxes: [],
       refetch: vi.fn(),

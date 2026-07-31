@@ -34,7 +34,7 @@ export interface FieldDeskHomeState {
   votesReceived: number
   /** In-progress praxes (membership-scoped) — the active-tasks list. */
   activeTasks: PraxisCardOut[]
-  /** Count of pending collab invites + duel challenges. */
+  /** Count of unanswered requests, straight from `/me/sidebar` (#1456). */
   pendingCount: number
   /** Whether the active-tasks list is still loading. */
   loadingTasks: boolean
@@ -50,7 +50,7 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
   // downstream values are their empty defaults and we return null below.
   const {
     active_praxes: activeTasks,
-    pending_requests: pendingRequests,
+    pending_requests_count: pendingCount,
     loading: loadingTasks,
   } = useSidebarPanels()
   const { votesReceived } = useMyCharacterStats(character?.id)
@@ -62,7 +62,7 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
     eraName: user?.era_name ?? '',
     votesReceived,
     activeTasks,
-    pendingCount: pendingRequests.length,
+    pendingCount,
     loadingTasks,
     canProposeTask: user?.can_propose_task ?? false,
   }
