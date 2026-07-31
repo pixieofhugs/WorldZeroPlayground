@@ -341,3 +341,82 @@ async def test_collab_batch_cancels_pending_publish_for_real(
     detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
     assert detail.json()["submit_proposed_at"] is None
     assert detail.json()["status"] == "in_progress"
+
+
+@pytest.mark.asyncio
+async def test_same_named_files_in_one_batch_keep_their_own_bytes(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    media_root,
+):
+    """Two files called ``proof.jpg`` both survive, each with its own bytes (#1336).
+
+    Distinct paths alone would not prove the fix — the bug was two rows over
+    one clobbered file — so this reads back what each row actually points at.
+    """
+    praxis_id = await _in_progress_solo(client, active_task, auth_headers)
+    first_bytes = _jpeg_bytes(32, 32)
+    second_bytes = _jpeg_bytes(64, 48)
+    assert first_bytes != second_bytes
+
+    response = await client.post(
+        f"/praxes/{praxis_id}/media/batch",
+        files=[
+            ("files", ("proof.jpg", first_bytes, "image/jpeg")),
+            ("files", ("proof.jpg", second_bytes, "image/jpeg")),
+        ],
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 201, response.text
+    results = response.json()
+    assert [entry["error"] for entry in results] == [None, None]
+    # The client-supplied name is still what the composer is told about.
+    assert [entry["filename"] for entry in results] == ["proof.jpg", "proof.jpg"]
+
+    paths = [entry["media_item"]["file_path"] for entry in results]
+    assert paths[0] != paths[1]
+    # The player-visible basename survives — the uniqueness is a directory.
+    assert [os.path.basename(path) for path in paths] == ["proof.jpg", "proof.jpg"]
+    for path, expected in zip(paths, (first_bytes, second_bytes)):
+        with open(os.path.join(str(media_root), path), "rb") as handle:
+            assert handle.read() == expected
+
+    detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    assert len(detail.json()["media_items"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_deleting_one_same_named_file_leaves_the_other_readable(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    media_root,
+):
+    """Removing one attachment must not 404 its same-named sibling (#1336)."""
+    praxis_id = await _in_progress_solo(client, active_task, auth_headers)
+    second_bytes = _jpeg_bytes(64, 48)
+
+    upload = await client.post(
+        f"/praxes/{praxis_id}/media/batch",
+        files=[
+            ("files", ("proof.jpg", _jpeg_bytes(32, 32), "image/jpeg")),
+            ("files", ("proof.jpg", second_bytes, "image/jpeg")),
+        ],
+        headers=auth_headers,
+    )
+    assert upload.status_code == 201, upload.text
+    first_item, second_item = (entry["media_item"] for entry in upload.json())
+
+    deletion = await client.delete(
+        f"/praxes/{praxis_id}/media/{first_item['id']}", headers=auth_headers
+    )
+    assert deletion.status_code == 204, deletion.text
+
+    survivor = os.path.join(str(media_root), second_item["file_path"])
+    with open(survivor, "rb") as handle:
+        assert handle.read() == second_bytes
+    assert not os.path.exists(os.path.join(str(media_root), first_item["file_path"]))
