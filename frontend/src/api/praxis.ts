@@ -230,6 +230,12 @@ export async function listPraxes(filters?: {
   voted?: 'yes' | 'no'
   /** Seal-date order (#644 §2). Defaults server-side to `newest`. */
   sort?: 'newest' | 'oldest'
+  /**
+   * Era scope (#1362). Defaults server-side to `this_era` — praxes sealed since
+   * the live era began, plus every unsealed draft. Pass `all_eras` on a surface
+   * that is a career record rather than a feed of current activity.
+   */
+  era_scope?: 'this_era' | 'all_eras'
   limit?: number
   offset?: number
 }): Promise<PraxisCardOut[]> {
