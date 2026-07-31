@@ -103,7 +103,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
-import VoteUI from "../../../components/vote/VoteUI";
+import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
@@ -633,7 +633,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   //
   // The amp meter is bolted to the plate: `SnideVote` paints acid and vote-off
   // captions that measure 2.6:1 on cream and 15.7:1 on ink.
-  const voteBlock = (
+  // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
+  // its heading and its prompt are the promise of a control, so they may not
+  // outlive the control. The author of a praxis can never vote on it, and used
+  // to get this section drawn empty.
+  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
     <section style={plate}>
       {sectionHead(t("detail.vote.heading"), { onPlate: true })}
       <p
