@@ -5,6 +5,7 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /**
  * Singularity MOBILE FieldDesk home (#526) — the dark terminal on a phone. The
@@ -182,7 +183,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
       {/* ── Pending requests ── */}
       {pendingCount > 0 && (
         <Link
-          to="/updates?filter=requests"
+          to={REQUESTS_QUEUE_LINK}
           className="flex items-center justify-between"
           style={{ background: VOID, border: `1px solid ${signal(42)}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: FONT, fontSize: 'var(--text-content)', color: PHOSPHOR, textDecoration: 'none' }}
         >

@@ -5,6 +5,7 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
@@ -157,7 +158,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
       {/* ── Pending requests ── */}
       {pendingCount > 0 && (
         <Link
-          to="/updates?filter=requests"
+          to={REQUESTS_QUEUE_LINK}
           className="flex items-center justify-between"
           style={{ background: INK, color: TEXT, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.03em', textDecoration: 'none' }}
         >

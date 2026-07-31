@@ -5368,6 +5368,26 @@
   white-space: nowrap;
 }
 
+/* The per-row facet count (#1421). `OptionPicker` has always rendered this slot
+   but nothing filled it until now — faction counts are cut (#1361 ruling 3) and
+   Updates' type counts are the first to ship (#1419 decision 4), so this is the
+   rule's first consumer. Undressed it inherited the row's --text-xl primary ink
+   and sat flush right at full strength, reading as a second label rather than
+   an annotation on the one beside it. Tertiary and one step down: the count is
+   information about the option, not a peer of it. */
+.filter-factions__count {
+  flex: none;
+  font-size: var(--text-lg);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A selected row inverts to the thumb fill, which the tertiary ink is too faint
+   against — the count follows the label up to secondary there. */
+.filter-factions__row[data-on] .filter-factions__count {
+  color: var(--color-text-secondary);
+}
+
 .filter-factions__done {
   min-height: 44px;
   border: 0;
@@ -5482,6 +5502,38 @@
   white-space: nowrap;
   background: var(--color-text-primary);
   color: var(--color-bg-page);
+}
+
+/* The activity feed's "load older updates" (#1421). One rule for both form
+   factors, where the collapsed pair had two: the desktop half was a bare gold
+   text link hardcoding `#c49a3a` — a raw hex in a component, which STYLE §1.3
+   forbids and which no token ever backed — and the phone half was a full-width
+   bordered slab. The slab survives, because it is the one that already met the
+   44px touch minimum and was already authored in tokens. */
+.feed-load-more {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.feed-load-more:hover,
+.feed-load-more:focus-visible {
+  border-color: var(--color-text-primary);
+}
+
+.feed-load-more:disabled {
+  cursor: not-allowed;
+  color: var(--color-text-tertiary);
 }
 
 /* Phone: the rails stack full-width. The bar is one component in both form

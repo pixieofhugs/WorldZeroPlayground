@@ -5,6 +5,7 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 
 /**
  * Everymen MOBILE FieldDesk home (#529) — the union broadsheet on a phone. The
@@ -214,7 +215,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
       {/* ── Pending requests ── */}
       {pendingCount > 0 && (
         <Link
-          to="/updates?filter=requests"
+          to={REQUESTS_QUEUE_LINK}
           className="flex items-center justify-between"
           style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
         >

@@ -10,6 +10,7 @@ import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import { praxisModeLabel } from '../../utils/praxis'
 import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
+import { REQUESTS_QUEUE_LINK } from '../../pages/updates/requestsQueueAnchor'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
@@ -558,7 +559,7 @@ function PendingRequestRow({
             {item.actor_display_name}
           </Link>
           <Link
-            to="/updates?filter=requests"
+            to={REQUESTS_QUEUE_LINK}
             className="eyebrow block"
             style={{ color: 'var(--color-text-tertiary)', textDecoration: 'none' }}
           >
