@@ -2,8 +2,11 @@
 
 A character earns faction X's InvitationLetter once it has >= invitation_task_threshold
 (2) completed distinct tasks for X AND >= invitation_point_threshold (50) points from X's
-tasks. Delivery runs inside recalculate_character_stats. ua has modifier 1.0 in Era 1, so
-point_value maps 1:1 to points here.
+tasks. Delivery runs inside recalculate_character_stats. Every Era 1 solo-task modifier is
+1.0, so point_value maps 1:1 to points here.
+
+The shared ``character`` fixture is a member of ``ua``, and #1425 excludes a character's own
+faction from delivery — so the positive cases below qualify ``snide`` instead.
 """
 import pytest
 from sqlalchemy import select
@@ -63,14 +66,15 @@ async def _seed_faction(db_session: AsyncSession, slug: str) -> None:
 async def test_two_tasks_and_fifty_points_delivers_letter(
     db_session, character: Character, era: Era, faction_ua: Faction
 ):
-    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
-    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await _seed_faction(db_session, "snide")
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
     await db_session.commit()
 
     await recalculate_character_stats(character.id, db_session)
     await db_session.commit()
 
-    assert "ua" in await _letters(db_session, character)
+    assert "snide" in await _letters(db_session, character)
 
 
 @pytest.mark.asyncio
@@ -78,7 +82,8 @@ async def test_one_task_no_letter(
     db_session, character: Character, era: Era, faction_ua: Faction
 ):
     # 60 points but only ONE distinct task → task threshold (2) not met.
-    task = await _task(db_session, character, "ua", 30)
+    await _seed_faction(db_session, "snide")
+    task = await _task(db_session, character, "snide", 30)
     await _submit(db_session, character, task)
     await _submit(db_session, character, task)
     await db_session.commit()
@@ -94,8 +99,9 @@ async def test_below_points_threshold_no_letter(
     db_session, character: Character, era: Era, faction_ua: Faction
 ):
     # 2 distinct tasks but only 40 points (< 50).
-    await _submit(db_session, character, await _task(db_session, character, "ua", 20))
-    await _submit(db_session, character, await _task(db_session, character, "ua", 20))
+    await _seed_faction(db_session, "snide")
+    await _submit(db_session, character, await _task(db_session, character, "snide", 20))
+    await _submit(db_session, character, await _task(db_session, character, "snide", 20))
     await db_session.commit()
 
     await recalculate_character_stats(character.id, db_session)
@@ -108,8 +114,9 @@ async def test_below_points_threshold_no_letter(
 async def test_delivery_is_idempotent(
     db_session, character: Character, era: Era, faction_ua: Faction
 ):
-    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
-    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await _seed_faction(db_session, "snide")
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
     await db_session.commit()
 
     await recalculate_character_stats(character.id, db_session)
@@ -128,18 +135,64 @@ async def test_faction_scoped_no_bleed(
     db_session, character: Character, era: Era, faction_ua: Faction
 ):
     await _seed_faction(db_session, "snide")
-    # Qualify ua (2 tasks, 60 pts); only 1 snide task (no bleed of ua progress into snide).
-    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
-    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await _seed_faction(db_session, "wow")
+    # Qualify snide (2 tasks, 60 pts); only 1 wow task (no bleed of snide progress into wow).
     await _submit(db_session, character, await _task(db_session, character, "snide", 30))
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
+    await _submit(db_session, character, await _task(db_session, character, "wow", 30))
     await db_session.commit()
 
     await recalculate_character_stats(character.id, db_session)
     await db_session.commit()
 
     letters = await _letters(db_session, character)
-    assert "ua" in letters
-    assert "snide" not in letters
+    assert "snide" in letters
+    assert "wow" not in letters
+
+
+@pytest.mark.asyncio
+async def test_own_faction_never_delivers(
+    db_session, character: Character, era: Era, faction_ua: Faction
+):
+    # #1425: the `character` fixture is IN ua. Doing ua tasks — the most ordinary
+    # thing a player does — must not invite them to the faction they already hold,
+    # while an *other* faction they also qualify for still delivers.
+    await _seed_faction(db_session, "snide")
+    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
+    await _submit(db_session, character, await _task(db_session, character, "snide", 30))
+    await db_session.commit()
+
+    await recalculate_character_stats(character.id, db_session)
+    await db_session.commit()
+
+    assert await _letters(db_session, character) == {"snide"}
+
+
+@pytest.mark.asyncio
+async def test_defection_reopens_former_faction_invite(
+    db_session, character: Character, era: Era, faction_ua: Faction
+):
+    # #1425: the guard keys on the faction held at DELIVERY time, not on history.
+    # Qualify ua while in ua (no letter), then defect to snide — ua's letter is now
+    # a legitimate re-invitation and must arrive on the next recalc.
+    await _seed_faction(db_session, "snide")
+    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await _submit(db_session, character, await _task(db_session, character, "ua", 30))
+    await db_session.commit()
+
+    await recalculate_character_stats(character.id, db_session)
+    await db_session.commit()
+    assert "ua" not in await _letters(db_session, character)
+
+    character.faction_slug = "snide"
+    await db_session.commit()
+
+    await recalculate_character_stats(character.id, db_session)
+    await db_session.commit()
+
+    assert "ua" in await _letters(db_session, character)
 
 
 @pytest.mark.asyncio
