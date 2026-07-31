@@ -115,7 +115,8 @@ function resolveCssKey(slug: string | null | undefined): string {
  *   'card-text'   — card text
  *   'card-accent' — card accent (meta text, decorations)
  *   'card-muted'  — card secondary/description text
- *   'card-notice' — attention / not-yet-done ink ON the card sheet (#694)
+ *   'card-notice' — cautionary / not-yet-done ink ON the card sheet (#694)
+ *   'card-alarm'  — destructive ink ON the card sheet (#1449)
  *   'card-credit' — points-earned ink ON the card sheet (#694)
  *
  * Exactly one of those is a SURFACE. `card-bg` is the sheet; `light` is a tint
@@ -124,14 +125,21 @@ function resolveCssKey(slug: string | null | undefined): string {
  * with the faction's muted TEXT ink and printed the accent pill on it at
  * 1.05:1.
  *
- * `card-notice` / `card-credit` exist because a shared, faction-themed
- * component paints state colours on eight different sheets, and the global
- * `--color-warning` / `--color-success` were measured against the app's
- * near-white surface, never against a warm cream (4.14:1 on UA) or a near-black
- * one (2.07:1 on S.N.I.D.E.). They flip on the SHEET's polarity rather than on
- * the theme, which is exactly why a global token could not cover it. Both are
- * measured against `--faction-{key}-card-bg` in both themes by
- * `utils/__tests__/factionContrast.test.ts`.
+ * `card-notice` / `card-alarm` / `card-credit` exist because a shared,
+ * faction-themed component paints state colours on eight different sheets, and
+ * the global `--color-warning` / `--color-danger` / `--color-success` were
+ * measured against the app's near-white surface, never against a warm cream
+ * (4.14:1 on UA) or a near-black one (2.07:1 on S.N.I.D.E.). They flip on the
+ * SHEET's polarity rather than on the theme, which is exactly why a global
+ * token could not cover it. All three are measured in both themes by
+ * `utils/__tests__/factionContrast.test.ts` — the first two against
+ * `--faction-{key}-card-bg`, and `card-alarm` against the sheet the praxis card
+ * actually paints, which for four factions is a different token (#1302).
+ *
+ * `card-notice` and `card-alarm` are ONE role split in two: cautionary and
+ * destructive. They existed as a single ink until #1449, which is why anything
+ * reading `card-notice` for a red meaning is a site to re-check rather than a
+ * precedent to copy.
  *
  * With no suffix this is also the answer for genuine SCALAR ink on a dynamic
  * slug — the feed actor's name, the invitation letter's link. `na` and

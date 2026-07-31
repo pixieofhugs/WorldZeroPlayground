@@ -79,23 +79,38 @@ export interface PraxisCardFonts {
  * A colour that must differ between two factions inside one theme is a faction
  * token however functional the word for it sounds (WORLD_ZERO_STYLE §3).
  *
- * ponytail: DANGER AND WARNING COLLAPSE TO ONE INK HERE. `-card-notice` is the
- * family's whole attention role, so the flagged badge and the failed badge print
- * the same colour, as do the moderator's hide and fail controls sitting side by
- * side. Nothing is lost to a screen reader or to WCAG 1.4.1 — each of the four
- * carries its own word, and the two badges are mutually exclusive states — but
- * the red/amber severity cue is gone from this surface. The upgrade path is a
- * `-card-alarm` sibling (eight keys, two themes, measured on `-card-bg` exactly
- * as `-notice` and `-credit` are); mint it when a design asks for the two hues
- * apart on a sheet, not to keep a distinction that was never legible.
+ * TWO ATTENTION INKS, NOT ONE (#1449). `-card-notice` used to be the family's
+ * whole attention role, so danger and warning printed the same colour here: the
+ * flagged and failed badges (mutually exclusive) and the hide/fail controls
+ * (side by side) lost their red/amber severity cue. That flattening shipped
+ * with a `ponytail:` naming the upgrade path, and the owner took it — nothing
+ * was owed to WCAG 1.4.1, since each of the four carries its own word, but an
+ * admin scanning a moderation queue is doing exactly the at-a-glance triage
+ * colour exists for, and this is the one surface in the app where two alarm
+ * states sit adjacent. Compliance was never the problem; misclicking
+ * hide-versus-fail at speed was.
+ *
+ * WHICH MARK TAKES WHICH IS NOT A FRESH JUDGEMENT, and that is worth saying
+ * because the two words could be argued either way. Every mark below already
+ * wears #1169's `-veil` and `-edge` rungs — `--color-danger-*` behind the
+ * flagged badge and the `hide` button, `--color-warning-*` behind the failed
+ * badge and `fail` — and that split is the exact red/amber assignment their INK
+ * carried before #1302 routed it through one token. So `alarm` goes where the
+ * danger veil already is and `notice` stays where the warning veil is: the ink
+ * rejoins its own wash rather than crossing it, and no mark ends up a red fill
+ * under an amber ink. Change one of these and change its veil in the same edit.
  */
 function sheetInk(slug: string | null | undefined): {
+  /** Cautionary — the failed badge, the `fail` control, the mode chip's duel/pending marks. */
   notice: string;
+  /** Destructive — the flagged badge, the `hide` control, a failed moderation call. */
+  alarm: string;
   credit: string;
   muted: string;
 } {
   return {
     notice: factionCssVar(slug, "card-notice"),
+    alarm: factionCssVar(slug, "card-alarm"),
     credit: factionCssVar(slug, "card-credit"),
     muted: factionCssVar(slug, "card-muted"),
   };
@@ -735,6 +750,12 @@ export interface AdminProps {
  * 5% wash and a 30% rule are fills, the role that family names, and the veiled
  * reading is the one the manifest gates.
  *
+ * FOUR MARKS, TWO SEVERITIES (#1449). `flagged` / `hide` are the destructive
+ * pair and take the alarm ink on the danger veil; `failed` / `fail` are the
+ * cautionary pair and keep the notice ink on the warning veil. The pairing is
+ * the point — an ink and the wash under it always come from the same half —
+ * so these are edited together or not at all.
+ *
  * The `hidden` badge used to be the exception, and it was the plainer bug of the
  * two: a raw `rgba(107,114,128, …)` at two alphas, a grey matching no token in
  * either theme, which `local/no-raw-style-values` cannot see because that rule
@@ -752,7 +773,7 @@ export function AdminOverlay({
   moderateError,
 }: AdminProps) {
   const { t } = useTranslation("praxis");
-  const { notice, muted } = sheetInk(praxis.task_faction_slug);
+  const { notice, alarm, muted } = sheetInk(praxis.task_faction_slug);
   const badge: CSSProperties = {
     position: "absolute",
     top: 8,
@@ -767,7 +788,7 @@ export function AdminOverlay({
           style={{
             ...badge,
             border: "1px solid var(--color-danger-edge)",
-            color: notice,
+            color: alarm,
             background: "var(--color-danger-veil)",
           }}
         >
@@ -803,7 +824,10 @@ export function AdminOverlay({
         <p
           className="content-text font-body"
           style={{
-            color: notice,
+            // An error, so the alarm ink — bare on the sheet, with no veil over
+            // it. Left on `notice` this paragraph would read amber beside the
+            // red `hide` button that produced it.
+            color: alarm,
             marginBottom: "var(--space-xs)",
           }}
         >
@@ -826,7 +850,7 @@ export function AdminOverlay({
             style={{
               padding: "0 var(--space-xs)",
               border: "1px solid var(--color-danger-edge)",
-              color: notice,
+              color: alarm,
               background: "var(--color-danger-veil)",
               cursor: "pointer",
             }}
