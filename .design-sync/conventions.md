@@ -5,6 +5,11 @@ distinct visual identity, and every surface (task card, vote UI, avatar, feed fr
 comment, faction hero) is rendered as a per-faction skin. The kit gives you both the
 **dispatchers** (pick the skin from a faction slug) and every **per-faction leaf**.
 
+The seven themed slugs are `ua`, `everymen`, `coven`, `snide`, `wow`, `ephemerists`,
+`singularity`. Unaffiliated players are `na` — a real identity, not a blank, and the one
+every `Default*` component dresses. `albescent` is a themed archetype with **no palette
+of its own**: it ships its own components but resolves to the neutral `default` colors.
+
 ### Setup — wrap your screen once
 Components use `react-router-dom` v6 (`<Link>`, `useNavigate`) — they throw outside a
 Router — and `react-i18next` for copy. Render inside a Router; the kit's styles and
@@ -16,9 +21,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { TaskCard } from 'worldzero-frontend'
 
 <MemoryRouter>
-  {/* task.primary_faction_slug drives the skin: 'ua' | 'wow' | 'snide' |
-      'ephemerists' | 'singularity' | 'everymen' | 'albescent' | null (default) */}
-  <TaskCard task={task} displayPoints={task.point_value} />
+  {/* task.primary_faction_slug drives the skin: 'ua' | 'wow' | 'coven' | 'snide' |
+      'ephemerists' | 'singularity' | 'everymen' | 'na' (unaffiliated / default) */}
+  {/* basePoints is task.point_value — never base × multiplier. A card draws the
+      ×badge only when multiplier is non-neutral, which at era_1 is never. */}
+  <TaskCard task={task} basePoints={task.point_value} />
 </MemoryRouter>
 ```
 
@@ -39,31 +46,38 @@ Do NOT invent colors. Two systems are in play, both shipped in `styles.css`:
    for color/type.
 
 Each faction has its OWN card archetype (UA = gilt salon/Cinzel; SNIDE = redacted
-ransom-note; Ephemerists = vellum codex; Singularity = dark terminal; Wow = whimsy;
-Everymen = union broadsheet; Albescent = hushed vellum). Don't unify them — compose the
-faction's own component and let it carry its identity.
+ransom-note; Ephemerists = vellum codex; Singularity = dark terminal; Wow = cream/gold/plum
+chronicle; Everymen = union broadsheet; Coven = handwritten/Caveat; Albescent = hushed
+vellum on the neutral palette). Don't unify them — compose the faction's own component and
+let it carry its identity.
 
 ### Where the truth is
 - Read `styles.css` and its `@import` (`_ds_bundle.css`) for the full token set before
   styling — it's the authoritative list of `--faction-*` / `--color-*` names.
 - Each component ships `<Name>.d.ts` (its props) and `<Name>.prompt.md` (usage). Prefer
   a **dispatcher** (`TaskCard`, `VoteUI`, `FactionAvatar`, `FactionFeedFrame`,
-  `FactionCard`) and pass a faction slug when you want "the right skin for this faction";
-  reach for a named leaf (`UATaskCard`, `SnideVote`, …) only to pin one faction.
+  `FactionCard`, `FactionSigil`, `MetataskSeal`, `ScoreStamp`) and pass a faction slug when
+  you want "the right skin for this faction"; reach for a named leaf (`UaTaskCard`,
+  `SnideVote`, `CovenSeal`, …) only to pin one faction.
 
-### Mobile page archetypes (full-screen, not atoms)
-The kit also ships **mobile full-screen page skins** — compose the whole screen,
-don't cherry-pick pieces. Nine surfaces, each faction-skinned with a `Default`
-(na) fallback: **FieldDesk** (home — `DefaultFieldDesk`, `WowFieldDesk`, `UaFieldDesk`…),
-**Tasks** (browse — `DefaultTasks`, `UaTaskList`…), **TaskDetail**, **PraxisDetail**
-(reading), **EditPraxis** (composer — `WowEditPraxis`, `UaComposer`…), **FactionPage**,
-plus singletons `DefaultPlayers`, `DefaultProfile`, `DefaultSettings`,
+### Faction page skins (full-screen, not atoms)
+The kit ships whole **page skins**, one per faction per surface — compose the whole
+screen, don't cherry-pick pieces. Each takes a single hook-shaped `state` prop
+(`TaskDetailState`, `EditPraxisState`, `FieldDeskHomeState`, …): the screen is
+presentation-only, so assemble the state object (character, tasks, praxis, handlers)
+and pass it. Every surface has a `Default*` skin — that is the `na` / unaffiliated
+dress, not a placeholder. In the component picker they're grouped by surface.
+
+**Responsive — one component covers both form factors** (it calls `useFormFactor()`
+internally and stacks single-column on a phone):
+- `taskdetail` — `DefaultTaskDetail`, `UaTaskDetail`, `CovenTaskDetail`, …
+- `praxisdetail` — `DefaultPraxisDetail`, `WowPraxisDetail`, …
+- `editpraxis` — the composer: `DefaultEditPraxis`, `UaEditPraxis`, `WowEditPraxis`, …
+- `characterprofile` `*ProfileBody` and `factiondetail` `*FactionBody` — the page bodies.
+
+**Still split by form factor** — faction detail only: `*FactionBody` (responsive body) vs
+`*FactionPage` (mobile screen). Character profile is responsive-only (`*ProfileBody`).
+
+**Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaFieldDesk` / `SnideFieldDesk` …
+(`fielddesk`), plus the singletons `DefaultTasks`, `DefaultPlayers`, `DefaultSettings`,
 `DefaultCreateCharacter`, `DefaultEditCharacter`, `DefaultFactionsDirectory`.
-
-Each takes a single hook-shaped `state` prop (`FieldDeskHomeState`, `TasksState`,
-`TaskDetailState`, …) — the screen is presentation-only; assemble the state object
-(character, tasks, praxis, handlers) and pass it. They wear the same faction dress
-as the desktop cards (UA gilt salon, SNIDE ransom, Ephemerists codex, Singularity
-terminal, Wow whimsy, Everymen broadsheet, Albescent vellum) and stack single-column
-for one-hand use. In the component picker they're grouped by surface
-(`fielddesk`, `tasks`, `taskdetail`, `praxisdetail`, `editpraxis`, `factiondetail`).

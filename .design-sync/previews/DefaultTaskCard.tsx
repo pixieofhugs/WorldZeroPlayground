@@ -12,7 +12,7 @@ export function Default() {
   const task = taskFor('na')
   return (
     <div style={wrap}>
-      <DefaultTaskCard task={task} displayPoints={task.point_value} />
+      <DefaultTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }
@@ -22,7 +22,7 @@ export function WithSignup() {
   const task = taskFor('na')
   return (
     <div style={wrap}>
-      <DefaultTaskCard task={task} displayPoints={task.point_value} onSignup={noop} />
+      <DefaultTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} onSignup={noop} />
     </div>
   )
 }
@@ -40,7 +40,7 @@ export function HighLevelNoDescription() {
   })
   return (
     <div style={wrap}>
-      <DefaultTaskCard task={task} displayPoints={task.point_value} />
+      <DefaultTaskCard task={task} basePoints={task.point_value} multiplier={1} inProgressCount={0} />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 // masthead spine, manila stock, halftone wash, gold trim). Pure wrapper; the
 // feed ROW arrives as children. We compose realistic Everymen rows so the
 // dispatch slip reads as a populated feed.
-import { EverymenFeedFrame } from 'worldzero-frontend'
+import { EverymenFeedFrame, FeedArchiveButton } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 24, maxWidth: 400 }
 
@@ -122,7 +122,12 @@ const ACCENT = 'var(--faction-everymen)'
 export function FriendCompletion() {
   return (
     <div style={wrap}>
-      <EverymenFeedFrame>
+      <EverymenFeedFrame
+        kicker="Praxis"
+        time="2h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="S"
@@ -142,7 +147,12 @@ export function FriendCompletion() {
 export function CollabInvite() {
   return (
     <div style={wrap}>
-      <EverymenFeedFrame>
+      <EverymenFeedFrame
+        kicker="Vote"
+        time="5h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="S"

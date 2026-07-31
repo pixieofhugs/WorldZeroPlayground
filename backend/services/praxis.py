@@ -43,6 +43,8 @@ from schemas.praxis import (
     PraxisUpdate,
 )
 from services import collab_consensus
+from services.vote import viewer_can_vote_map
+from services.vote_tally import crowned_praxis_ids, viewer_votes_for
 from services.character_stats import recalculate_character_stats
 from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
@@ -613,6 +615,66 @@ async def build_praxis_card_out(
         ),
         duel_id=praxis_duel_id,
     )
+
+
+async def build_praxis_cards(
+    praxes: list[Praxis],
+    session: AsyncSession,
+    viewer: Optional[Character],
+) -> list[PraxisCardOut]:
+    """Enrich a whole page of praxes into cards, six PAGE-WIDE queries deep.
+
+    Every lookup here is deliberately one query for the list rather than one per
+    card, and they are listed together so that stays true — a seventh per-card
+    query added inside :func:`build_praxis_card_out` would be invisible at the
+    call site but would multiply by the page size.
+
+    Lifted out of the ``/praxes`` route body so a second caller (the rail's
+    compound read, #1344) gets an identical card rather than a near-miss
+    reimplementation. Routes stay thin; this is the page's read model.
+    """
+    # Task Crown (ADR-0028): one windowed query for the whole page — not per card.
+    crowned = await crowned_praxis_ids({praxis.task_id for praxis in praxes}, session)
+    # Viewer's votes (#573, #644): one batched query for the whole page — not per
+    # card. Account-scoped so both the own-star highlight and the account-mate
+    # "voted by" marker come from the same fetch.
+    viewer_votes = (
+        await viewer_votes_for(
+            {praxis.id for praxis in praxes}, viewer.id, viewer.account_id, session
+        )
+        if viewer
+        else {}
+    )
+    # Score breakdown (ADR-0047): one scoring pass per distinct author for the
+    # whole page — not per card. Grouped by author because the breakdown is the
+    # AUTHOR's banked points, not the viewer's.
+    author_contributions = await author_contributions_for(praxes, session)
+    # Applied metatasks for the seal stack (#932): one page-wide join for every
+    # praxis id — not a per-card query. The card's seal dispatches on each
+    # metatask's issuing faction, so it needs the TaskOut rows, not just the
+    # summed metatask_points the card already carries.
+    applied_metatasks = await applied_metatasks_for(praxes, session)
+    # Vote eligibility (#998): one ownership query + one duel query for the whole
+    # page — not the per-praxis predicate per card. Hides the vote module for a
+    # logged-in viewer who owns the praxis or is a participant in its duel.
+    viewer_can_vote = await viewer_can_vote_map(praxes, viewer, session)
+    # Duel sides (#992): one duel query for the whole page — not the per-praxis
+    # duel lookup per card. A duel side is stored type='solo' + a non-null
+    # duel_id (ADR-0011), so the card mode label/chip gates on this, not type.
+    duel_ids = await duel_id_map(praxes, session)
+    return [
+        await build_praxis_card_out(
+            praxis,
+            session,
+            crowned_ids=crowned,
+            viewer_votes=viewer_votes,
+            author_contributions=author_contributions,
+            applied_metatasks=applied_metatasks,
+            viewer_can_vote=viewer_can_vote,
+            duel_ids=duel_ids,
+        )
+        for praxis in praxes
+    ]
 
 
 # ---------------------------------------------------------------------------

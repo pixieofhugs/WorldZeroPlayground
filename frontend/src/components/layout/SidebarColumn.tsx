@@ -1,4 +1,4 @@
-import { usePendingRequests } from '../../hooks/usePendingRequests'
+import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import Sidebar from './Sidebar'
 import SidebarHandle from './SidebarHandle'
 
@@ -8,31 +8,33 @@ import SidebarHandle from './SidebarHandle'
  * WHY COLLAPSING HIDES RATHER THAN UNMOUNTS (#1343)
  * -------------------------------------------------
  * `{!collapsed && <Sidebar />}` used to live in `ShellContent`. Unmounting the
- * rail tears down every hook inside it, so reopening re-ran all three fetches —
+ * rail tore down every hook inside it, so reopening re-ran all three fetches —
  * a fold/unfold round trip cost three requests and a visible repopulate. The
- * rail now stays mounted and is hidden with the `hidden` attribute, so reopening
- * costs nothing.
+ * rail now stays mounted and is hidden with the `hidden` attribute.
+ *
+ * Since #1344 the panels are read by `SidebarProvider`, above this component and
+ * above `ShellContent`'s `showSidebar` gate, so folding could not cost a request
+ * even if this did unmount. Staying mounted is still what stops the panels
+ * blinking on reopen.
  *
  * "Collapsed means GONE, not an icon rail" still holds exactly: `hidden` draws
  * nothing, contributes no box, and takes the subtree out of the accessibility
  * tree, so there is no sliver, no icon strip and no residual spacing. The
  * collapsed grid column resolves to the handle's width either way.
  *
- * The panels' data now AGES while collapsed instead of being refetched on
- * reopen. That is the trade, and it is strictly better than refetching on every
- * single reopen; how long stale rail data may be trusted is deliberately left
- * open (#1346).
+ * The panels' data still AGES while collapsed rather than being refetched on
+ * reopen; how long stale rail data may be trusted is deliberately left open
+ * (#1346).
  *
- * WHY THE PENDING-REQUESTS READ LIVES HERE
- * ----------------------------------------
+ * WHY THE COUNT IS READ HERE AND NOT DRILLED
+ * ------------------------------------------
  * Both children need it — the rail lists the requests, and the collapsed handle
  * badges their count, since the rail is the only desktop surface for collab
- * invites and duel challenges. `usePendingRequests` holds per-instance state
- * with no shared cache, so one call per consumer would be one REQUEST per
- * consumer. Reading it once here, above both, keeps that at one request and
- * keeps it alive across the toggle: this component is mounted for as long as the
- * rail is shown at all, so its `requestsBus` subscription survives folding and
- * the badge stays live while collapsed.
+ * invites and duel challenges. #1343 hoisted a single `usePendingRequests()`
+ * here and passed it down, because that hook held per-instance state with no
+ * shared cache: one call per consumer was one REQUEST per consumer. The
+ * provider IS that shared cache, so the drilling is gone — `Sidebar` reads the
+ * context itself, and this component reads only the number it draws.
  */
 export interface SidebarColumnProps {
   readonly collapsed: boolean
@@ -53,7 +55,7 @@ export interface SidebarColumnProps {
 const SIDEBAR_COLUMN = 'hidden lg:block lg:col-start-1 lg:row-start-1 lg:self-stretch'
 
 export default function SidebarColumn({ collapsed, onToggle }: SidebarColumnProps) {
-  const { pendingRequests, refetch } = usePendingRequests()
+  const { pending_requests: pendingRequests } = useSidebarPanels()
 
   return (
     <div className={SIDEBAR_COLUMN}>
@@ -65,7 +67,7 @@ export default function SidebarColumn({ collapsed, onToggle }: SidebarColumnProp
         />
       </div>
       <div hidden={collapsed}>
-        <Sidebar pendingRequests={pendingRequests} refetchPendingRequests={refetch} />
+        <Sidebar />
       </div>
     </div>
   )

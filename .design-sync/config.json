@@ -10,175 +10,485 @@
     "component": "DSProvider"
   },
   "componentSrcMap": {
+    "ActivityTicker": "src/components/ActivityTicker.tsx",
+    "AlbescentFeedFrame": "src/components/feed/AlbescentFeedFrame.tsx",
     "AlbescentInvitation": "src/components/AlbescentInvitation.tsx",
+    "AlbescentPraxisCard": "src/components/praxisCard/desktop/AlbescentPraxisCard.tsx",
+    "AlbescentPraxisDetail": "src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx",
+    "AlbescentSeal": "src/components/metataskSeal/skins/AlbescentSeal.tsx",
+    "AlbescentSigil": "src/components/sigil/AlbescentSigil.tsx",
+    "AlbescentTaskCard": "src/components/taskCard/AlbescentTaskCard.tsx",
+    "AlbescentTaskDetail": "src/pages/taskDetail/archetypes/AlbescentTaskDetail.tsx",
+    "AlbescentVote": "src/components/vote/AlbescentVote.tsx",
+    "BackdropProvider": "src/components/backdrop/BackdropContext.tsx",
     "CharacterBadge": "src/components/CharacterBadge.tsx",
-    "CollaborationCard": "src/components/CollaborationCard.tsx",
+    "CharacterSwitcherSheet": "src/components/CharacterSwitcherSheet.tsx",
+    "ChipRow": "src/components/ui/ChipRow.tsx",
+    "CollabRoster": "src/components/collab/CollabRoster.tsx",
+    "CollabSuccess": "src/components/collab/CollabSuccess.tsx",
+    "CommentFlagControl": "src/components/comments/FlagControl.tsx",
     "CommentThread": "src/components/comments/CommentThread.tsx",
+    "ConfirmDialog": "src/components/confirm/ConfirmDialog.tsx",
+    "Constellation": "src/pages/players/Constellation.tsx",
+    "CovenAvatar": "src/components/avatar/CovenAvatar.tsx",
+    "CovenBackdrop": "src/components/backdrop/CovenBackdrop.tsx",
+    "CovenComment": "src/components/comments/voices/CovenComment.tsx",
+    "CovenDuelSealConfirm": "src/components/duel/CovenDuelSealConfirm.tsx",
+    "CovenEditPraxis": "src/pages/editPraxis/archetypes/CovenEditPraxis.tsx",
+    "CovenFactionBody": "src/pages/factionDetail/archetypes/CovenFactionBody.tsx",
+    "CovenFactionHero": "src/components/factionHero/CovenFactionHero.tsx",
+    "CovenFactionPage": "src/pages/factionDetail/mobileArchetypes/CovenFactionPage.tsx",
+    "CovenFeedFrame": "src/components/feed/CovenFeedFrame.tsx",
+    "CovenFieldDesk": "src/pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx",
+    "CovenPraxisCard": "src/components/praxisCard/desktop/CovenPraxisCard.tsx",
+    "CovenPraxisDetail": "src/pages/praxisDetail/archetypes/CovenPraxisDetail.tsx",
+    "CovenProfileBody": "src/pages/characterProfile/archetypes/CovenProfileBody.tsx",
+    "CovenScoreStamp": "src/components/praxisCard/scoreStamp/CovenScoreStamp.tsx",
+    "CovenSeal": "src/components/metataskSeal/skins/CovenSeal.tsx",
+    "CovenSigil": "src/components/sigil/CovenSigil.tsx",
+    "CovenTaskCard": "src/components/taskCard/CovenTaskCard.tsx",
+    "CovenTaskDetail": "src/pages/taskDetail/archetypes/CovenTaskDetail.tsx",
+    "CovenVote": "src/components/vote/CovenVote.tsx",
     "CredentialCard": "src/components/CredentialCard.tsx",
+    "DefaultCreateCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx",
+    "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
+    "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
+    "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
+    "DefaultFactionPage": "src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx",
+    "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
+    "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
+    "DefaultPlayers": "src/pages/players/mobileArchetypes/DefaultPlayers.tsx",
+    "DefaultPraxisCard": "src/components/praxisCard/desktop/DefaultPraxisCard.tsx",
+    "DefaultPraxisDetail": "src/pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx",
+    "DefaultProfileBody": "src/pages/characterProfile/archetypes/DefaultProfileBody.tsx",
+    "DefaultProposeTask": "src/pages/proposeTask/archetypes/DefaultProposeTask.tsx",
+    "DefaultScoreStamp": "src/components/praxisCard/scoreStamp/DefaultScoreStamp.tsx",
+    "DefaultSeal": "src/components/metataskSeal/skins/DefaultSeal.tsx",
+    "DefaultSelectCard": "src/components/selectCard/DefaultSelectCard.tsx",
+    "DefaultSettings": "src/pages/settings/mobileArchetypes/DefaultSettings.tsx",
     "DefaultSigil": "src/components/sigil/DefaultSigil.tsx",
     "DefaultTaskCard": "src/components/taskCard/DefaultTaskCard.tsx",
+    "DefaultTaskDetail": "src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
+    "DefaultTasks": "src/pages/tasks/mobileArchetypes/DefaultTasks.tsx",
+    "DuelCard": "src/pages/praxisDetail/DuelCard.tsx",
+    "DuelSealConfirm": "src/components/duel/DuelSealConfirm.tsx",
+    "Enso": "src/components/factionMarks/Enso.tsx",
     "EphemeristsAvatar": "src/components/avatar/EphemeristsAvatar.tsx",
     "EphemeristsBackdrop": "src/components/backdrop/EphemeristsBackdrop.tsx",
     "EphemeristsComment": "src/components/comments/voices/EphemeristsComment.tsx",
+    "EphemeristsDuelSealConfirm": "src/components/duel/EphemeristsDuelSealConfirm.tsx",
+    "EphemeristsEditPraxis": "src/pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
+    "EphemeristsFactionBody": "src/pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
     "EphemeristsFactionHero": "src/components/factionHero/EphemeristsFactionHero.tsx",
+    "EphemeristsFactionPage": "src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx",
     "EphemeristsFeedFrame": "src/components/feed/EphemeristsFeedFrame.tsx",
+    "EphemeristsPraxisCard": "src/components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
+    "EphemeristsPraxisDetail": "src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail.tsx",
+    "EphemeristsProfileBody": "src/pages/characterProfile/archetypes/EphemeristsProfileBody.tsx",
+    "EphemeristsScoreStamp": "src/components/praxisCard/scoreStamp/EphemeristsScoreStamp.tsx",
+    "EphemeristsSeal": "src/components/metataskSeal/skins/EphemeristsSeal.tsx",
+    "EphemeristsSigil": "src/components/sigil/EphemeristsSigil.tsx",
     "EphemeristsTaskCard": "src/components/taskCard/EphemeristsTaskCard.tsx",
+    "EphemeristsTaskDetail": "src/pages/taskDetail/archetypes/EphemeristsTaskDetail.tsx",
     "EphemeristsVote": "src/components/vote/EphemeristsVote.tsx",
     "EverymenAvatar": "src/components/avatar/EverymenAvatar.tsx",
     "EverymenBackdrop": "src/components/backdrop/EverymenBackdrop.tsx",
     "EverymenCard": "src/components/factionCard/EverymenFactionCard.tsx",
     "EverymenComment": "src/components/comments/voices/EverymenComment.tsx",
+    "EverymenDuelSealConfirm": "src/components/duel/EverymenDuelSealConfirm.tsx",
+    "EverymenEditPraxis": "src/pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
+    "EverymenFactionBody": "src/pages/factionDetail/archetypes/EverymenFactionBody.tsx",
     "EverymenFactionHero": "src/components/factionHero/EverymenFactionHero.tsx",
+    "EverymenFactionPage": "src/pages/factionDetail/mobileArchetypes/EverymenFactionPage.tsx",
     "EverymenFeedFrame": "src/components/feed/EverymenFeedFrame.tsx",
+    "EverymenPraxisCard": "src/components/praxisCard/desktop/EverymenPraxisCard.tsx",
+    "EverymenPraxisDetail": "src/pages/praxisDetail/archetypes/EverymenPraxisDetail.tsx",
+    "EverymenProfileBody": "src/pages/characterProfile/archetypes/EverymenProfileBody.tsx",
+    "EverymenScoreStamp": "src/components/praxisCard/scoreStamp/EverymenScoreStamp.tsx",
+    "EverymenSeal": "src/components/metataskSeal/skins/EverymenSeal.tsx",
+    "EverymenSigil": "src/components/sigil/EverymenSigil.tsx",
     "EverymenTaskCard": "src/components/taskCard/EverymenTaskCard.tsx",
+    "EverymenTaskDetail": "src/pages/taskDetail/archetypes/EverymenTaskDetail.tsx",
     "EverymenVote": "src/components/vote/EverymenVote.tsx",
     "FactionAvatar": "src/components/avatar/FactionAvatar.tsx",
     "FactionBackdrop": "src/components/backdrop/FactionBackdrop.tsx",
     "FactionCard": "src/components/factionCard/FactionCard.tsx",
     "FactionFeedFrame": "src/components/feed/FactionFeedFrame.tsx",
+    "FactionProfileBody": "src/pages/characterProfile/FactionProfileBody.tsx",
     "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
+    "FactionSigil": "src/components/sigil/FactionSigil.tsx",
+    "FactionSigilRow": "src/components/ui/FactionSigilRow.tsx",
+    "FactionsDirectoryView": "src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx",
+    "FeedArchiveButton": "src/components/feed/FeedArchiveButton.tsx",
     "FeedBadge": "src/components/feed/FeedBadge.tsx",
+    "FeedBulkArchiveButton": "src/components/feed/FeedBulkArchiveButton.tsx",
     "FeedCardCollabInvite": "src/components/feed/FeedCardCollabInvite.tsx",
     "FeedCardDuelChallenge": "src/components/feed/FeedCardDuelChallenge.tsx",
     "FeedCardEraAnnouncement": "src/components/feed/FeedCardEraAnnouncement.tsx",
     "FeedCardInvitationLetter": "src/components/feed/FeedCardInvitationLetter.tsx",
     "FeedCardRouter": "src/components/feed/FeedCardRouter.tsx",
+    "FeedChassisBand": "src/components/feed/FeedChassisBand.tsx",
     "FeedDateDivider": "src/components/feed/FeedDateDivider.tsx",
+    "FeedEmptyState": "src/components/feed/FeedEmptyState.tsx",
+    "FeedItemSlot": "src/components/feed/FeedItemSlot.tsx",
+    "FeedRowActions": "src/components/feed/FeedRowActions.tsx",
+    "FeedRowContent": "src/components/feed/FeedRowContent.tsx",
+    "FeedUndoStrip": "src/components/feed/FeedUndoStrip.tsx",
     "FilterFactionTabs": "src/components/ui/FilterFactionTabs.tsx",
     "FilterLevelNodes": "src/components/ui/FilterLevelNodes.tsx",
     "FilterStamps": "src/components/ui/FilterStamps.tsx",
+    "HoldoutPublishNotice": "src/pages/editPraxis/blocks/HoldoutPublishNotice.tsx",
+    "ImageEditModal": "src/components/imageEdit/ImageEditModal.tsx",
     "InvitationLetterPopup": "src/components/InvitationLetterPopup.tsx",
-    "LevelPill": "src/components/ui/LevelPill.tsx",
+    "InvitationWatcher": "src/components/InvitationWatcher.tsx",
+    "Layout": "src/components/Layout.tsx",
+    "LevelGem": "src/components/ui/LevelGem.tsx",
     "LevelUpPopup": "src/components/LevelUpPopup.tsx",
+    "LevelUpWatcher": "src/components/LevelUpWatcher.tsx",
+    "Lotus": "src/components/factionMarks/Lotus.tsx",
+    "MarkdownPreview": "src/pages/editPraxis/blocks/MarkdownPreview.tsx",
+    "Meadow": "src/pages/players/Meadow.tsx",
+    "MediaArt": "src/pages/editPraxis/blocks/MediaArt.tsx",
     "MediaGallery": "src/components/MediaGallery.tsx",
+    "MetataskPicker": "src/components/metataskSeal/MetataskPicker.tsx",
+    "MetataskRemoveConfirm": "src/components/metataskSeal/MetataskRemoveConfirm.tsx",
+    "MetataskSealStack": "src/components/metataskSeal/MetataskSealStack.tsx",
+    "MobileHeader": "src/components/layout/MobileHeader.tsx",
+    "MobilePraxisFeed": "src/pages/praxes/MobilePraxisFeed.tsx",
+    "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
+    "MobileUpdates": "src/pages/updates/MobileUpdates.tsx",
     "NavBar": "src/components/NavBar.tsx",
+    "OwnerControls": "src/components/comments/OwnerControls.tsx",
     "PageTitle": "src/components/ui/PageTitle.tsx",
+    "PointsRoundel": "src/components/factionMarks/PointsRoundel.tsx",
+    "PortraitPicker": "src/pages/characterPaths/PortraitPicker.tsx",
     "PraxisCard": "src/components/praxisCard/PraxisCard.tsx",
+    "PraxisWaitingSurface": "src/pages/editPraxis/waiting/PraxisWaitingSurface.tsx",
+    "RosterTable": "src/pages/players/RosterTable.tsx",
+    "ScoreStamp": "src/components/praxisCard/scoreStamp/ScoreStamp.tsx",
+    "ShellContent": "src/components/layout/ShellContent.tsx",
+    "Sidebar": "src/components/layout/Sidebar.tsx",
+    "SidebarHandle": "src/components/layout/SidebarHandle.tsx",
     "SingularityAvatar": "src/components/avatar/SingularityAvatar.tsx",
     "SingularityBackdrop": "src/components/backdrop/SingularityBackdrop.tsx",
     "SingularityComment": "src/components/comments/voices/SingularityComment.tsx",
+    "SingularityDuelSealConfirm": "src/components/duel/SingularityDuelSealConfirm.tsx",
+    "SingularityEditPraxis": "src/pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
+    "SingularityFactionBody": "src/pages/factionDetail/archetypes/SingularityFactionBody.tsx",
     "SingularityFactionHero": "src/components/factionHero/SingularityFactionHero.tsx",
+    "SingularityFactionPage": "src/pages/factionDetail/mobileArchetypes/SingularityFactionPage.tsx",
     "SingularityFeedFrame": "src/components/feed/SingularityFeedFrame.tsx",
+    "SingularityPraxisCard": "src/components/praxisCard/desktop/SingularityPraxisCard.tsx",
+    "SingularityPraxisDetail": "src/pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
+    "SingularityProfileBody": "src/pages/characterProfile/archetypes/SingularityProfileBody.tsx",
+    "SingularityScoreStamp": "src/components/praxisCard/scoreStamp/SingularityScoreStamp.tsx",
+    "SingularitySeal": "src/components/metataskSeal/skins/SingularitySeal.tsx",
+    "SingularitySigil": "src/components/sigil/SingularitySigil.tsx",
     "SingularityTaskCard": "src/components/taskCard/SingularityTaskCard.tsx",
+    "SingularityTaskDetail": "src/pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
     "SingularityVote": "src/components/vote/SingularityVote.tsx",
+    "SiteFooter": "src/components/layout/SiteFooter.tsx",
+    "SkyCanvas": "src/pages/players/SkyCanvas.tsx",
+    "SkyLegend": "src/pages/players/SkyLegend.tsx",
     "SnideAvatar": "src/components/avatar/SnideAvatar.tsx",
     "SnideBackdrop": "src/components/backdrop/SnideBackdrop.tsx",
     "SnideComment": "src/components/comments/voices/SnideComment.tsx",
+    "SnideDuelSealConfirm": "src/components/duel/SnideDuelSealConfirm.tsx",
+    "SnideEditPraxis": "src/pages/editPraxis/archetypes/SnideEditPraxis.tsx",
+    "SnideFactionBody": "src/pages/factionDetail/archetypes/SnideFactionBody.tsx",
     "SnideFactionHero": "src/components/factionHero/SnideFactionHero.tsx",
+    "SnideFactionPage": "src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx",
     "SnideFeedFrame": "src/components/feed/SnideFeedFrame.tsx",
     "SnideMasthead": "src/components/factionCard/SnideMasthead.tsx",
-    "SNIDETaskCard": "src/components/cards/SNIDETaskCard.tsx",
+    "SnidePraxisCard": "src/components/praxisCard/desktop/SnidePraxisCard.tsx",
+    "SnidePraxisDetail": "src/pages/praxisDetail/archetypes/SnidePraxisDetail.tsx",
+    "SnideProfileBody": "src/pages/characterProfile/archetypes/SnideProfileBody.tsx",
+    "SnideScoreStamp": "src/components/praxisCard/scoreStamp/SnideScoreStamp.tsx",
+    "SnideSeal": "src/components/metataskSeal/skins/SnideSeal.tsx",
+    "SnideSigil": "src/components/sigil/SnideSigil.tsx",
+    "SnideTaskCard": "src/components/taskCard/SnideTaskCard.tsx",
+    "SnideTaskDetail": "src/pages/taskDetail/archetypes/SnideTaskDetail.tsx",
     "SnideVote": "src/components/vote/SnideVote.tsx",
     "TaskCard": "src/components/taskCard/TaskCard.tsx",
     "TaskCrown": "src/components/factionMarks/TaskCrown.tsx",
-    "UAAvatar": "src/components/avatar/UAAvatar.tsx",
-    "UABackdrop": "src/components/backdrop/UABackdrop.tsx",
-    "UAComment": "src/components/comments/voices/UAComment.tsx",
-    "UACrest": "src/components/cards/UACrest.tsx",
-    "UAFactionHero": "src/components/cards/UAFactionHero.tsx",
-    "UAFeedFrame": "src/components/feed/UAFeedFrame.tsx",
-    "UATaskCard": "src/components/cards/UATaskCard.tsx",
-    "UAVote": "src/components/vote/UAVote.tsx",
-    "VoteStamps": "src/components/ui/VoteStamps.tsx",
+    "UaAvatar": "src/components/avatar/UaAvatar.tsx",
+    "UaBackdrop": "src/components/backdrop/UaBackdrop.tsx",
+    "UaComment": "src/components/comments/voices/UaComment.tsx",
+    "UaDuelSealConfirm": "src/components/duel/UaDuelSealConfirm.tsx",
+    "UaEditPraxis": "src/pages/editPraxis/archetypes/UaEditPraxis.tsx",
+    "UaFactionBody": "src/pages/factionDetail/archetypes/UaFactionBody.tsx",
+    "UaFactionHero": "src/components/factionHero/UaFactionHero.tsx",
+    "UaFactionPage": "src/pages/factionDetail/mobileArchetypes/UaFactionPage.tsx",
+    "UaFeedFrame": "src/components/feed/UaFeedFrame.tsx",
+    "UaMandala": "src/components/factionMarks/UaMandala.tsx",
+    "UaPraxisCard": "src/components/praxisCard/desktop/UaPraxisCard.tsx",
+    "UaPraxisDetail": "src/pages/praxisDetail/archetypes/UaPraxisDetail.tsx",
+    "UaProfileBody": "src/pages/characterProfile/archetypes/UaProfileBody.tsx",
+    "UaScoreStamp": "src/components/praxisCard/scoreStamp/UaScoreStamp.tsx",
+    "UaSeal": "src/components/metataskSeal/skins/UaSeal.tsx",
+    "UaSigil": "src/components/sigil/UaSigil.tsx",
+    "UaTaskCard": "src/components/taskCard/UaTaskCard.tsx",
+    "UaTaskDetail": "src/pages/taskDetail/archetypes/UaTaskDetail.tsx",
+    "UaVote": "src/components/vote/UaVote.tsx",
+    "VoteLoginGate": "src/components/vote/VoteShell.tsx",
+    "VoteSummary": "src/components/vote/VoteShell.tsx",
     "VoteUI": "src/components/vote/VoteUI.tsx",
+    "WatercolorBackground": "src/components/layout/WatercolorBackground.tsx",
     "WowAvatar": "src/components/avatar/WowAvatar.tsx",
     "WowBackdrop": "src/components/backdrop/WowBackdrop.tsx",
     "WowComment": "src/components/comments/voices/WowComment.tsx",
+    "WowDuelSealConfirm": "src/components/duel/WowDuelSealConfirm.tsx",
+    "WowEditPraxis": "src/pages/editPraxis/archetypes/WowEditPraxis.tsx",
     "WowFactionHero": "src/components/factionHero/WowFactionHero.tsx",
-    "WowFeedFrame": "src/components/feed/WowFeedFrame.tsx",
-    "WowTaskCard": "src/components/taskCard/WowTaskCard.tsx",
-    "WowVote": "src/components/vote/WowVote.tsx",
-    "DefaultCreateCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx",
-    "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
-    "DefaultProfileBody": "src/pages/characterProfile/archetypes/DefaultProfileBody.tsx",
-    "DefaultEditPraxis": "src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis.tsx",
-    "EphemeristsComposer": "src/pages/editPraxis/mobileArchetypes/EphemeristsComposer.tsx",
-    "EverymenComposer": "src/pages/editPraxis/mobileArchetypes/EverymenComposer.tsx",
-    "SingularityComposer": "src/pages/editPraxis/mobileArchetypes/SingularityComposer.tsx",
-    "SnideComposer": "src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx",
-    "UaComposer": "src/pages/editPraxis/mobileArchetypes/UaComposer.tsx",
-    "WowEditPraxis": "src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx",
-    "DefaultFactionPage": "src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx",
-    "EphemeristsFactionPage": "src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx",
-    "EverymenFactionPage": "src/pages/factionDetail/mobileArchetypes/EverymenFactionPage.tsx",
-    "SingularityFactionPage": "src/pages/factionDetail/mobileArchetypes/SingularityFactionPage.tsx",
-    "SnideFactionPage": "src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx",
-    "UaFactionPage": "src/pages/factionDetail/mobileArchetypes/UaFactionPage.tsx",
     "WowFactionPage": "src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx",
-    "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
-    "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
+    "WowFeedFrame": "src/components/feed/WowFeedFrame.tsx",
+    "WowFieldDesk": "src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx",
+    "WowPraxisCard": "src/components/praxisCard/desktop/WowPraxisCard.tsx",
+    "WowPraxisDetail": "src/pages/praxisDetail/archetypes/WowPraxisDetail.tsx",
+    "WowProfileBody": "src/pages/characterProfile/archetypes/WowProfileBody.tsx",
+    "WowScoreStamp": "src/components/praxisCard/scoreStamp/WowScoreStamp.tsx",
+    "WowSeal": "src/components/metataskSeal/skins/WowSeal.tsx",
+    "WowSigil": "src/components/sigil/WowSigil.tsx",
+    "WowTaskCard": "src/components/taskCard/WowTaskCard.tsx",
+    "WowTaskDetail": "src/pages/taskDetail/archetypes/WowTaskDetail.tsx",
+    "WowVote": "src/components/vote/WowVote.tsx",
+    "FeedBankFullModal": "src/components/feed/FeedBankFullModal.tsx",
+    "SidebarColumn": "src/components/layout/SidebarColumn.tsx",
+    "CanSignUpEmpty": "src/pages/tasks/CanSignUpEmpty.tsx",
     "EphemeristsFieldDesk": "src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx",
     "EverymenFieldDesk": "src/pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx",
     "SingularityFieldDesk": "src/pages/fieldDesk/mobileArchetypes/SingularityFieldDesk.tsx",
     "SnideFieldDesk": "src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx",
     "UaFieldDesk": "src/pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx",
-    "WowFieldDesk": "src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx",
-    "DefaultPlayers": "src/pages/players/mobileArchetypes/DefaultPlayers.tsx",
-    "DefaultPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail.tsx",
-    "EphemeristsPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail.tsx",
-    "EverymenPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail.tsx",
-    "SingularityPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail.tsx",
-    "SnidePraxisDetail": "src/pages/praxisDetail/mobileArchetypes/SnidePraxisDetail.tsx",
-    "UaPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/UaPraxisDetail.tsx",
-    "WowPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/WowPraxisDetail.tsx",
-    "DefaultSettings": "src/pages/settings/mobileArchetypes/DefaultSettings.tsx",
-    "DefaultTaskDetail": "src/pages/taskDetail/mobileArchetypes/DefaultTaskDetail.tsx",
-    "EphemeristsTaskDetail": "src/pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail.tsx",
-    "EverymenTaskDetail": "src/pages/taskDetail/mobileArchetypes/EverymenTaskDetail.tsx",
-    "SingularityTaskDetail": "src/pages/taskDetail/mobileArchetypes/SingularityTaskDetail.tsx",
-    "SnideTaskDetail": "src/pages/taskDetail/mobileArchetypes/SnideTaskDetail.tsx",
-    "UaTaskDetail": "src/pages/taskDetail/mobileArchetypes/UaTaskDetail.tsx",
-    "WowTaskDetail": "src/pages/taskDetail/mobileArchetypes/WowTaskDetail.tsx",
-    "DefaultTasks": "src/pages/tasks/mobileArchetypes/DefaultTasks.tsx",
-    "EphemeristsTaskList": "src/pages/tasks/mobileArchetypes/EphemeristsTaskList.tsx",
-    "EverymenTaskList": "src/pages/tasks/mobileArchetypes/EverymenTaskList.tsx",
-    "SingularityTaskList": "src/pages/tasks/mobileArchetypes/SingularityTaskList.tsx",
-    "SnideTaskList": "src/pages/tasks/mobileArchetypes/SnideTaskList.tsx",
-    "UaTaskList": "src/pages/tasks/mobileArchetypes/UaTaskList.tsx",
-    "WowTaskList": "src/pages/tasks/mobileArchetypes/WowTaskList.tsx"
+    "DefaultVote": "src/components/vote/DefaultVote.tsx",
+    "MetataskSeal": "src/components/metataskSeal/MetataskSeal.tsx",
+    "DuelSealSheet": "src/components/duel/DuelSealSheet.tsx"
   },
   "overrides": {
-    "FactionBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "UABackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "WowBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "SnideBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "EphemeristsBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "SingularityBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "EverymenBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "LevelUpPopup": {
-      "cardMode": "single",
-      "viewport": "460x600"
-    },
-    "InvitationLetterPopup": {
-      "cardMode": "single",
-      "viewport": "460x600"
+    "ActivityTicker": {
+      "cardMode": "column"
     },
     "AlbescentInvitation": {
       "cardMode": "single",
       "viewport": "460x600"
     },
-    "NavBar": {
+    "AlbescentPraxisCard": {
+      "cardMode": "column"
+    },
+    "AlbescentPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "AlbescentTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "CharacterSwitcherSheet": {
+      "cardMode": "single",
+      "viewport": "560x520"
+    },
+    "ChipRow": {
+      "cardMode": "column"
+    },
+    "CollabSuccess": {
+      "cardMode": "single",
+      "viewport": "560x520"
+    },
+    "ConfirmDialog": {
+      "cardMode": "single",
+      "viewport": "560x520"
+    },
+    "Constellation": {
+      "cardMode": "column"
+    },
+    "CovenBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "CovenDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "CovenEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "CovenFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "CovenFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "CovenFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "CovenPraxisCard": {
+      "cardMode": "column"
+    },
+    "CovenPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "CovenProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "CovenTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultEditCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultFactionsDirectory": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultPlayers": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultPraxisCard": {
+      "cardMode": "column"
+    },
+    "DefaultPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultProposeTask": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultSettings": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "DefaultTasks": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "EphemeristsBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "EphemeristsDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "EphemeristsEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EphemeristsFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EphemeristsFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsPraxisCard": {
+      "cardMode": "column"
+    },
+    "EphemeristsPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EphemeristsProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EphemeristsTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EverymenBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "EverymenDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "EverymenEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EverymenFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EverymenFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenPraxisCard": {
+      "cardMode": "column"
+    },
+    "EverymenPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EverymenProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "EverymenTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "FactionBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "FactionProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "FactionSigilRow": {
+      "cardMode": "column"
+    },
+    "FactionsDirectoryView": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "FeedChassisBand": {
       "cardMode": "column"
     },
     "FilterFactionTabs": {
@@ -190,81 +500,221 @@
     "FilterStamps": {
       "cardMode": "column"
     },
-    "DefaultCreateCharacter": {
+    "ImageEditModal": {
+      "cardMode": "single",
+      "viewport": "560x520"
+    },
+    "InvitationLetterPopup": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "Layout": {
+      "cardMode": "column"
+    },
+    "LevelUpPopup": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "Meadow": {
+      "cardMode": "column"
+    },
+    "MetataskPicker": {
+      "cardMode": "single",
+      "viewport": "560x520"
+    },
+    "MetataskRemoveConfirm": {
+      "cardMode": "single",
+      "viewport": "560x520"
+    },
+    "MobileHeader": {
+      "cardMode": "column"
+    },
+    "MobilePraxisFeed": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "DefaultEditCharacter": {
+    "MobileTabBar": {
+      "cardMode": "column"
+    },
+    "MobileUpdates": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "DefaultProfileBody": {
-      "cardMode": "single",
-      "viewport": "390x760"
+    "NavBar": {
+      "cardMode": "column"
     },
-    "DefaultEditPraxis": {
+    "PraxisWaitingSurface": {
       "cardMode": "single",
-      "viewport": "390x760"
+      "viewport": "1200x900"
     },
-    "EphemeristsComposer": {
-      "cardMode": "single",
-      "viewport": "390x760"
+    "RosterTable": {
+      "cardMode": "column"
     },
-    "EverymenComposer": {
-      "cardMode": "single",
-      "viewport": "390x760"
+    "ShellContent": {
+      "cardMode": "column"
     },
-    "SingularityComposer": {
-      "cardMode": "single",
-      "viewport": "390x760"
+    "Sidebar": {
+      "cardMode": "column"
     },
-    "SnideComposer": {
+    "SingularityBackdrop": {
       "cardMode": "single",
-      "viewport": "390x760"
+      "viewport": "480x320"
     },
-    "UaComposer": {
+    "SingularityDuelSealConfirm": {
       "cardMode": "single",
-      "viewport": "390x760"
+      "viewport": "700x680"
     },
-    "WowEditPraxis": {
+    "SingularityEditPraxis": {
       "cardMode": "single",
-      "viewport": "390x760"
+      "viewport": "1200x900"
     },
-    "DefaultFactionPage": {
+    "SingularityFactionBody": {
       "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EphemeristsFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EverymenFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
+      "viewport": "1200x900"
     },
     "SingularityFactionPage": {
       "cardMode": "single",
       "viewport": "390x760"
     },
+    "SingularityPraxisCard": {
+      "cardMode": "column"
+    },
+    "SingularityPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "SingularityProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "SingularityTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "SiteFooter": {
+      "cardMode": "column"
+    },
+    "SkyCanvas": {
+      "cardMode": "column"
+    },
+    "SnideBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "SnideDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "SnideEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "SnideFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
     "SnideFactionPage": {
       "cardMode": "single",
       "viewport": "390x760"
+    },
+    "SnidePraxisCard": {
+      "cardMode": "column"
+    },
+    "SnidePraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "SnideProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "SnideTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "TaskCard": {
+      "cardMode": "column"
+    },
+    "UaBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "UaDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "UaEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "UaFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
     },
     "UaFactionPage": {
       "cardMode": "single",
       "viewport": "390x760"
     },
+    "UaPraxisCard": {
+      "cardMode": "column"
+    },
+    "UaPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "UaProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "UaTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "WatercolorBackground": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "WowBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "WowDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "WowEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
     "WowFactionPage": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "DefaultFactionsDirectory": {
+    "WowFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "DefaultFieldDesk": {
+    "WowPraxisCard": {
+      "cardMode": "column"
+    },
+    "WowPraxisDetail": {
       "cardMode": "single",
-      "viewport": "390x760"
+      "viewport": "1200x900"
+    },
+    "WowProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "WowTaskDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "FeedBankFullModal": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "SidebarColumn": {
+      "cardMode": "column"
     },
     "EphemeristsFieldDesk": {
       "cardMode": "single",
@@ -285,106 +735,10 @@
     "UaFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
-    },
-    "WowFieldDesk": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "DefaultPlayers": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "DefaultPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EphemeristsPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EverymenPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SingularityPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SnidePraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "UaPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "WowPraxisDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "DefaultSettings": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "DefaultTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EphemeristsTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EverymenTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SingularityTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SnideTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "UaTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "WowTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "DefaultTasks": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EphemeristsTaskList": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EverymenTaskList": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SingularityTaskList": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SnideTaskList": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "UaTaskList": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "WowTaskList": {
-      "cardMode": "single",
-      "viewport": "390x760"
     }
   },
   "readmeHeader": ".design-sync/conventions.md",
   "libOverrides": {
-    "source-kit.mjs": "GENERIC_DIR += pages,mobileArchetypes → mobile page-archetypes group by surface"
+    "source-kit.mjs": "GENERIC_DIR += pages,archetypes,mobileArchetypes,desktop,mobile,skins,blocks,waiting → page skins and card families group by surface"
   }
 }
