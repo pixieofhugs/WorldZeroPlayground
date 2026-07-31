@@ -469,9 +469,14 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxis/${mySubmission.id}/edit`} style={plateButton(true)}>
+          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
+              the submitted-only gallery fetch, and `/edit` redirects a
+              submitted praxis straight back to `/praxis/:id` (#1164) — so this
+              button used to change nothing at all. Reopening for editing lives
+              on the praxis page, one honest hop away. */}
+          <Link to={`/praxis/${mySubmission.id}`} style={plateButton(true)}>
             <XMark size={17} />
-            <span style={plateLabel}>{t("detail.submitted.edit")}</span>
+            <span style={plateLabel}>{t("detail.submitted.view")}</span>
             <XMark size={17} />
           </Link>
         </div>

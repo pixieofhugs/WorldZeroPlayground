@@ -692,8 +692,13 @@ export default function EverymenTaskDetail({
               {t("detail.submitted.text")}
             </span>
           </div>
-          <Link to={`/praxis/${mySubmission.id}/edit`} style={primaryBar}>
-            {t("detail.submitted.edit")}
+          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
+              the submitted-only gallery fetch, and `/edit` redirects a
+              submitted praxis straight back to `/praxis/:id` (#1164) — so this
+              button used to change nothing at all. Reopening for editing lives
+              on the praxis page, one honest hop away. */}
+          <Link to={`/praxis/${mySubmission.id}`} style={primaryBar}>
+            {t("detail.submitted.view")}
           </Link>
         </div>
       )}
