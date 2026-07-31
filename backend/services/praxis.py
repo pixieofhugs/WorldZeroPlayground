@@ -45,7 +45,10 @@ from schemas.praxis import (
 from services import collab_consensus
 from services.vote import viewer_can_vote_map
 from services.vote_tally import crowned_praxis_ids, viewer_votes_for
-from services.character_stats import recalculate_character_stats
+from services.character_stats import (
+    recalculate_character_stats,
+    recalculate_members_stats,
+)
 from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
 from services.media import process_and_save_media
@@ -147,35 +150,6 @@ async def _count_in_progress_praxes(character_id: int, session: AsyncSession) ->
         )
     )
     return result.scalar_one()
-
-
-async def recalculate_members_stats(
-    praxis: Praxis,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-    *,
-    era_row: Optional[Era] = None,
-) -> None:
-    """Recalculate stats for every member of ``praxis``, then flush (#492).
-
-    Lifts the per-member recalc loop copy-pasted across ``submit_praxis``,
-    ``unsubmit_praxis``, ``apply_metatask``, and ``remove_metatask``. Callers
-    that already hold an ``era_row`` (e.g. a duel-forfeit recalc that reuses it)
-    pass it in to avoid a re-fetch. ``leave_praxis`` deliberately does NOT use
-    this — it recalcs only the single leaver, not all members.
-
-    The era defaulted to is **the praxis's**, not the live one (#1345): scores
-    are per-era, so a change to a closed era's praxis — a moderation ruling, a
-    metatask, an unsubmit — has to move that era's row or it moves nothing at
-    all. For a praxis sealed in the era in progress the two are the same row.
-    """
-    if era_row is None:
-        era_row = await get_era_row_for_praxis(praxis, session)
-    for member in praxis.members:
-        await recalculate_character_stats(
-            member.character_id, session, era, era_row=era_row
-        )
-    await session.flush()
 
 
 # ---------------------------------------------------------------------------
