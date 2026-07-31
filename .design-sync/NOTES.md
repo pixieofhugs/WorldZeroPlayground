@@ -269,3 +269,16 @@ What this pass changed:
   the known FeedArchiveButton 4.8KB icon (blank-threshold artifact).
 - Uploaded via atomic full-writes (1,203 files), sentinel-fenced, anchor written last.
   Remote now byte-mirrors the build; fresh anchor makes the next sync incremental.
+
+## [2026-07-30, fourth pass] The rename/organize wave (#1395-#1407), same day
+Main moved again mid-session: #1404 renamed *Home->*FieldDesk, UnaffiliatedVote->DefaultVote,
+MetaTaskSeal->MetataskSeal (CASE-ONLY - existsSync cannot see it, the readdir check in
+.design-sync/.cache/apply-renames.mjs can); #1399/#1403 collapsed the 14 duel-seal files to 8
+responsive ones (7 *MobileDuelSealConfirm deleted, DuelSealSheet created); #1407 split
+components/cards/ into taskCard/factionHero/sigil/factionCard/selectCard (+factionMarks moves)
+and moved the metatask pickers under components/metataskSeal/. Map 253 now. #1404/#1407 also
+maintained .design-sync ON MAIN against the stale 126 map - merged here, kept the 258-line
+config, re-applied their renames. Diff verdict: 8 added / 14 removed / 0 renderHash-changed;
+5 FieldDesk renames + 2 render-churn canaries re-graded good. Upload 2: full writes (1,172),
+232 regroup deletePaths (216 deleted, 16 _preview/*.css not-found - expected), fresh anchor.
+Remote verified as an exact mirror both directions.

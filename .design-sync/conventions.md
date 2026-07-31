@@ -56,7 +56,7 @@ let it carry its identity.
   styling — it's the authoritative list of `--faction-*` / `--color-*` names.
 - Each component ships `<Name>.d.ts` (its props) and `<Name>.prompt.md` (usage). Prefer
   a **dispatcher** (`TaskCard`, `VoteUI`, `FactionAvatar`, `FactionFeedFrame`,
-  `FactionCard`, `FactionSigil`, `MetaTaskSeal`, `ScoreStamp`) and pass a faction slug when
+  `FactionCard`, `FactionSigil`, `MetataskSeal`, `ScoreStamp`) and pass a faction slug when
   you want "the right skin for this faction"; reach for a named leaf (`UaTaskCard`,
   `SnideVote`, `CovenSeal`, …) only to pin one faction.
 
