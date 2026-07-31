@@ -38,6 +38,11 @@ const AUTH_KEYED_FETCHERS = [
   { name: 'useSidebarPanels', relativePath: '../useSidebarPanels.tsx' },
   { name: 'CharacterProfile', relativePath: '../../pages/CharacterProfile.tsx' },
   { name: 'useEditPraxis', relativePath: '../../pages/editPraxis/useEditPraxis.ts' },
+  // The composer's invite/opponent search and its two supporting reads moved
+  // here when the hook was split into sub-hooks (#1392). Three of the five
+  // effects #1390 narrowed live in this file now, so the guard follows them —
+  // that is what the standing-rule note above is for.
+  { name: 'useComposerRoster', relativePath: '../../pages/editPraxis/useComposerRoster.ts' },
   { name: 'useTaskDetail', relativePath: '../../pages/taskDetail/useTaskDetail.ts' },
 ] as const
 
