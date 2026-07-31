@@ -395,6 +395,11 @@ async def in_progress_counts_for_tasks(
 
 #: ``sort`` value that orders the task list by creation time, newest first.
 SORT_NEWEST = "newest"
+#: ``sort`` value that orders the task list by creation time, oldest first.
+SORT_OLDEST = "oldest"
+#: ``sort`` value naming the browse default — easiest first, richest within a
+#: level. Ascending only: there is no level-descending option (#1364).
+SORT_LEVEL = "level"
 
 
 async def list_tasks(
@@ -402,7 +407,7 @@ async def list_tasks(
     *,
     status: Optional[str] = None,
     can_sign_up: bool = False,
-    faction: Optional[str] = None,
+    faction: Optional[list[str]] = None,
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     exclude_character_id: Optional[int] = None,
@@ -446,8 +451,14 @@ async def list_tasks(
     made them invisible. Anonymous viewers get ``[]``: ``evaluate_signup``
     refuses them, so there is no honest list to return.
 
-    ``sort='newest'`` orders by creation time (newest first); the default
-    ordering surfaces the easiest, highest-value tasks first.
+    ``faction`` is a list of slugs matched as a union (#1364), so the browse
+    filter can hold several factions at once; an empty list is no filter.
+
+    ``sort`` is one of :data:`SORT_NEWEST`, :data:`SORT_OLDEST` or
+    :data:`SORT_LEVEL`, the latter being the default when ``sort`` is absent —
+    easiest first, richest within a level. Level *ascending* is the only level
+    ordering there is. The two chronological sorts tiebreak on ``id`` so a
+    paged read stays stable when rows share a ``created_at``.
     """
     # Collect hidden faction slugs to exclude their tasks (faction-rules seam, #171)
     hidden_slugs = await hidden_faction_slugs(session)
@@ -546,8 +557,12 @@ async def list_tasks(
         if exclude_character_id is None:
             exclude_character_id = viewer.id
 
-    if faction:
-        query = query.where(Task.primary_faction_slug == faction)
+    # Multi-select faction (#1364): an empty list — or one holding only blanks,
+    # which is what a cleared client-side filter sends — means "no faction
+    # filter", never "match nothing".
+    faction_slugs = [slug for slug in (faction or []) if slug]
+    if faction_slugs:
+        query = query.where(Task.primary_faction_slug.in_(faction_slugs))
     if min_points is not None:
         query = query.where(Task.point_value >= min_points)
     if max_points is not None:
@@ -593,7 +608,11 @@ async def list_tasks(
 
     if sort == SORT_NEWEST:
         query = query.order_by(Task.created_at.desc(), Task.id.desc())
+    elif sort == SORT_OLDEST:
+        query = query.order_by(Task.created_at.asc(), Task.id.asc())
     else:
+        # SORT_LEVEL, and the fall-through for an absent or unrecognised sort:
+        # the browse ordering Tasks.tsx gets by sending no ``sort`` at all.
         query = query.order_by(Task.level_required.asc(), Task.point_value.desc())
     query = query.limit(limit).offset(offset)
     result = await session.execute(query)

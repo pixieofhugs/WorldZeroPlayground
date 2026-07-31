@@ -232,6 +232,163 @@ async def test_list_tasks_filter_by_faction(
 
 
 @pytest.mark.asyncio
+async def test_list_tasks_filter_by_multiple_factions(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    faction_ephemerists: Faction,
+):
+    """Repeated ?faction= returns the union; one slug still narrows to one; an
+    absent or empty faction filters nothing at all (#1364)."""
+    unaffiliated_task = Task(
+        title="Cross-Faction Sort Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=UNAFFILIATED_FACTION_SLUG,
+    )
+    ephemerist_task = Task(
+        title="Ephemerist Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ephemerists",
+    )
+    db_session.add_all([unaffiliated_task, ephemerist_task])
+    await db_session.commit()
+
+    both = await client.get(
+        "/tasks", params={"faction": ["ua", UNAFFILIATED_FACTION_SLUG]}
+    )
+    assert both.status_code == 200
+    both_ids = {t["id"] for t in both.json()}
+    assert {active_task.id, unaffiliated_task.id} <= both_ids
+    assert ephemerist_task.id not in both_ids
+    assert {t["primary_faction_slug"] for t in both.json()} == {
+        "ua",
+        UNAFFILIATED_FACTION_SLUG,
+    }
+
+    one = await client.get("/tasks", params={"faction": "ua"})
+    assert one.status_code == 200
+    assert {t["primary_faction_slug"] for t in one.json()} == {"ua"}
+
+    # No faction axis at all, and a cleared one, are both "no filter" — never
+    # "match nothing".
+    for params in ({}, {"faction": ""}):
+        unfiltered = await client.get("/tasks", params=params)
+        assert unfiltered.status_code == 200
+        unfiltered_ids = {t["id"] for t in unfiltered.json()}
+        assert {
+            active_task.id,
+            unaffiliated_task.id,
+            ephemerist_task.id,
+        } <= unfiltered_ids
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_sort_oldest_reverses_newest(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+):
+    """?sort=oldest is ?sort=newest reversed, and the id tiebreak keeps both
+    stable across limits — rows written in one transaction share created_at.
+
+    The point values rise with creation order so the level default (point value
+    DESC) cannot masquerade as chronological order.
+    """
+    for index in range(3):
+        db_session.add(
+            Task(
+                title=f"Chronology Task {index}",
+                description="",
+                point_value=5 + index,
+                level_required=0,
+                status=TaskStatus.active,
+                created_by=character.id,
+                primary_faction_slug="ua",
+            )
+        )
+    await db_session.commit()
+
+    newest = await client.get("/tasks", params={"sort": "newest"})
+    oldest = await client.get("/tasks", params={"sort": "oldest"})
+    assert newest.status_code == 200
+    assert oldest.status_code == 200
+    newest_ids = [t["id"] for t in newest.json()]
+    oldest_ids = [t["id"] for t in oldest.json()]
+    assert len(oldest_ids) == 4
+    assert oldest_ids == sorted(oldest_ids)
+    assert oldest_ids == list(reversed(newest_ids))
+
+    for limit in (2, 3):
+        page = await client.get("/tasks", params={"sort": "oldest", "limit": limit})
+        assert [t["id"] for t in page.json()] == oldest_ids[:limit]
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_default_sort_is_level_then_point_value(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+):
+    """No ?sort= keeps today's browse ordering — level ascending, point value
+    descending. Tasks.tsx sends no sort at all, so this is the regression guard;
+    ?sort=level names that same default explicitly (#1364)."""
+    high_level = Task(
+        title="High Level Task",
+        description="",
+        point_value=30,
+        level_required=2,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    cheap = Task(
+        title="Cheap Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    rich = Task(
+        title="Rich Task",
+        description="",
+        point_value=20,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([high_level, cheap, rich])
+    await db_session.commit()
+
+    default = await client.get("/tasks")
+    assert default.status_code == 200
+    # active_task is level 0 / 10 points, so it lands between rich and cheap.
+    assert [t["id"] for t in default.json()] == [
+        rich.id,
+        active_task.id,
+        cheap.id,
+        high_level.id,
+    ]
+
+    named = await client.get("/tasks", params={"sort": "level"})
+    assert named.status_code == 200
+    assert named.json() == default.json()
+
+
+@pytest.mark.asyncio
 async def test_list_tasks_exclude_character_id(
     client: AsyncClient,
     character: Character,
