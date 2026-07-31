@@ -61,6 +61,9 @@ const CAPTION = {
   textTransform: 'uppercase',
 } as const
 
+/** The sheet's corner. Named because the hairline has to round to the same arc. */
+const SHEET_RADIUS = 10
+
 /**
  * The sheet both modes sit on: avatar in the margin, a cream card carrying the
  * spectrum hairline. One shape for a row and for the composer, so the thread
@@ -87,15 +90,27 @@ function Sheet({
           minWidth: 0,
           background: factionCssVar(slug, 'card-bg'),
           border: `1px solid ${factionCssVar(slug, 'border')}`,
-          borderRadius: 10,
-          overflow: 'hidden',
+          borderRadius: SHEET_RADIUS,
+          // NO `overflow: hidden` here (#1255) — the composer this wraps owns
+          // the @mention listbox, an absolutely positioned child, and a
+          // clipping ancestor cuts it off. The hairline below rounds its own
+          // ends instead, which is all the clip was ever doing.
           boxShadow: '0 4px 14px -10px rgba(0,0,0,0.4)',
         }}
       >
         {/* The spectrum hairline — the na tell. A rainbow for default/na via
             factionFill; a themed slug would land here only if it registered no
-            voice, and then it gets its own solid hue, not a borrowed one. */}
-        <div style={{ height: 3, ...factionFill(slug, 'bar') }} />
+            voice, and then it gets its own solid hue, not a borrowed one. It
+            carries the sheet's top corners itself: an element's background is
+            clipped by its OWN border-radius, so the stripe stays inside the
+            card's curve with nothing clipping it from above. */}
+        <div
+          style={{
+            height: 3,
+            borderRadius: `${SHEET_RADIUS}px ${SHEET_RADIUS}px 0 0`,
+            ...factionFill(slug, 'bar'),
+          }}
+        />
         <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>{children}</div>
       </div>
     </div>

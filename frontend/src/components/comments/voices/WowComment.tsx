@@ -97,6 +97,9 @@ const QUIET: CSSProperties = {
   color: MUTED,
 }
 
+/** The sheet's corner. Named because the crown rounds to the same arc. */
+const SHEET_RADIUS = 9
+
 /**
  * The sheet both modes sit on — the proclamation card, crest in the margin.
  * One shape for a row and for the composer, so a thread reads as one stack
@@ -119,8 +122,11 @@ function Sheet({
         style={{
           flex: 1,
           minWidth: 0,
-          borderRadius: 9,
-          overflow: 'hidden',
+          borderRadius: SHEET_RADIUS,
+          // NO `overflow: hidden` here (#1255) — the composer this wraps owns
+          // the @mention listbox, an absolutely positioned child, and a
+          // clipping ancestor cuts it off. The crown below rounds its own ends
+          // instead, which is all the clip was ever doing.
           background: 'var(--faction-wow-card-bg)',
           color: INK,
           border: `2px solid ${GOLD}`,
@@ -129,8 +135,18 @@ function Sheet({
         }}
       >
         {/* The crown — a stripe carrying NO text, which is the only reason the
-            undimmed gold/plum ships as drawn (§3, #840). */}
-        <div aria-hidden style={{ height: CROWN_HEIGHT, background: RIBBON }} />
+            undimmed gold/plum ships as drawn (§3, #840). It carries the sheet's
+            top corners itself: an element's background is clipped by its OWN
+            border-radius, so the crown stays inside the curve with nothing
+            clipping it from above. */}
+        <div
+          aria-hidden
+          style={{
+            height: CROWN_HEIGHT,
+            borderRadius: `${SHEET_RADIUS}px ${SHEET_RADIUS}px 0 0`,
+            background: RIBBON,
+          }}
+        />
         <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>{children}</div>
       </div>
     </div>

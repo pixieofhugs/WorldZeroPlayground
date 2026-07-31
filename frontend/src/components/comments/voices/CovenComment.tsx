@@ -73,6 +73,9 @@ const CAPTION: CSSProperties = {
   color: LABEL,
 }
 
+/** The slip's corner. Named because the candle glow rounds to the same arc. */
+const SLIP_RADIUS = 14
+
 /**
  * The slip both modes sit on: avatar in the margin, a near-white sheet under a
  * candle-glow edge. One shape for a row and for the composer, so the thread
@@ -97,16 +100,23 @@ function Slip({
           minWidth: 0,
           background: 'var(--faction-coven-ward-card)',
           border: '1.5px solid var(--faction-coven-slip-border)',
-          borderRadius: 14,
-          overflow: 'hidden',
+          borderRadius: SLIP_RADIUS,
+          // NO `overflow: hidden` here (#1255) — the composer this wraps owns
+          // the @mention listbox, an absolutely positioned child, and a
+          // clipping ancestor cuts it off. The glow below rounds its own ends
+          // instead, which is all the clip was ever doing.
           boxShadow: 'var(--faction-coven-slip-shadow)',
         }}
       >
-        {/* the candle glow along the top edge — the slip's gradient, at 4px */}
+        {/* the candle glow along the top edge — the slip's gradient, at 4px. It
+            carries the slip's top corners itself: an element's background is
+            clipped by its OWN border-radius, so the glow stays inside the
+            curve with nothing clipping it from above. */}
         <div
           aria-hidden="true"
           style={{
             height: 4,
+            borderRadius: `${SLIP_RADIUS}px ${SLIP_RADIUS}px 0 0`,
             background:
               'linear-gradient(90deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 38%, var(--faction-coven-slip-lav) 78%, var(--faction-coven-slip-vio))',
           }}

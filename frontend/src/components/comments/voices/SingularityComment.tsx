@@ -154,7 +154,11 @@ function Pane({
           position: 'relative',
           flex: 1,
           minWidth: 0,
-          overflow: 'hidden',
+          // NO `overflow: hidden` here (#1255) — the composer this wraps owns
+          // the @mention listbox, an absolutely positioned child, and a
+          // clipping ancestor cuts it off. Nothing on this pane needed the
+          // clip: it takes no corner radius, the scrim is `inset: 0` and the
+          // brackets sit 3px in, so every child was already inside the frame.
           background: BG,
           border: `1px solid ${BORDER}`,
           color: INK,
