@@ -1,19 +1,25 @@
 import { useAuth } from '../../auth/AuthContext'
-import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
 import { useMyCharacterStats } from '../../hooks/useMyCharacterStats'
-import { usePendingRequests } from '../../hooks/usePendingRequests'
+import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
 
 /**
  * Composed read-model for the MOBILE FieldDesk home (#500).
  *
- * Pure composition over the existing home hooks — the same three the desktop
- * Sidebar consumes (`useMyActiveTasks` / `useMyCharacterStats` /
- * `usePendingRequests`) plus the carried character from auth. No new data
- * logic: it only bundles what those hooks already return so the mobile skins
- * can stay presentation-only and slot-invariant (mirrors `useTaskDetail`, whose
- * `state` every TaskDetail archetype renders).
+ * Pure composition over the same reads the desktop rail draws from:
+ * `useSidebarPanels` for the in-progress tasks and the pending-request count,
+ * `useMyCharacterStats` for the votes tile, and the carried character from
+ * auth. No new data logic — it only bundles what those already return, so the
+ * mobile skins stay presentation-only and slot-invariant (mirrors
+ * `useTaskDetail`, whose `state` every TaskDetail archetype renders).
+ *
+ * It used to compose two hooks of its OWN (`useMyActiveTasks` /
+ * `usePendingRequests`) that fetched the same two things the rail was fetching,
+ * with no cache between them. This hook runs unconditionally while only the
+ * mobile skin consumes it, so that put two byte-identical requests on every
+ * desktop home load as well. Sharing the rail's one response costs nothing
+ * (#1344).
  *
  * Returns `null` when there is no active character — the caller falls back to
  * the desktop roster ("whose shoes today?") so a brand-new account still lands
@@ -42,9 +48,12 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
 
   // Hooks run unconditionally (React rules); a null character just means the
   // downstream values are their empty defaults and we return null below.
-  const { activeTasks, loading: loadingTasks } = useMyActiveTasks()
+  const {
+    active_praxes: activeTasks,
+    pending_requests: pendingRequests,
+    loading: loadingTasks,
+  } = useSidebarPanels()
   const { votesReceived } = useMyCharacterStats(character?.id)
-  const { pendingRequests } = usePendingRequests()
 
   if (!character) return null
 
