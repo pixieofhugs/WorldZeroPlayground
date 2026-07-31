@@ -7,25 +7,31 @@ import { useAuth } from '../auth/AuthContext'
  *
  * Filters by membership (`member_id`), not authorship, so accepted collab
  * invites appear too — matching the slot count, which also counts memberships.
- * Re-fetches when the authenticated user changes.
+ *
+ * Re-fetches when the CHARACTER changes, not when the auth object does (#1390).
+ * `/auth/me` mints a fresh `CurrentUser` on every `refetch()`, and its payload
+ * genuinely differs after a star cast (`votes_available` is computed from spent
+ * votes), so no memo upstream can make that object stable. The character id is
+ * the only thing this request is actually keyed on, and it survives a cast.
  */
 export function useMyActiveTasks() {
   const { user } = useAuth()
+  const characterId = user?.character?.id
   const [activeTasks, setActiveTasks] = useState<PraxisCardOut[]>([])
   const [loading, setLoading] = useState(true)
 
   const refetch = useCallback(() => {
-    if (!user?.character) {
+    if (characterId == null) {
       setActiveTasks([])
       setLoading(false)
       return
     }
     setLoading(true)
-    listPraxes({ member_id: user.character.id, status: 'in_progress' })
+    listPraxes({ member_id: characterId, status: 'in_progress' })
       .then((praxes) => setActiveTasks(praxes))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [user])
+  }, [characterId])
 
   useEffect(() => {
     refetch()
