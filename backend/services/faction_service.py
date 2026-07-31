@@ -244,14 +244,23 @@ async def get_invitation_status(
     era_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-) -> dict[str, str]:
-    """Return a dict mapping faction slug to relationship status.
+) -> tuple[dict[str, str], list[InvitationLetter]]:
+    """Return the per-faction relationship status **and** the letters behind it.
 
-    Possible values: "member", "invited", "not_invited", "defected", "can_return".
+    The status map keys every faction slug in the era to one of "member",
+    "invited", "not_invited", "defected", "can_return".
+
+    The letters come back alongside it because ``GET /factions/invitations`` used
+    to re-run this function's exact ``InvitationLetter`` select — same character,
+    same era row — and callers paired the two requests (#1384). Handing back the
+    rows already read is what lets one response serve both, so the *status* view
+    (a slug's state) and the *letter* view (when it arrived) never cost two
+    queries again. Only the slugs are needed here; the caller wants
+    ``delivered_at`` too, so the rows are not reduced before returning.
     """
     character = await session.get(Character, character_id)
     if character is None:
-        return {}
+        return {}, []
 
     current_faction = character.faction_slug
 
@@ -264,9 +273,8 @@ async def get_invitation_status(
             InvitationLetter.era_id == era_id,
         )
     )
-    invited_slugs = {
-        letter.faction_slug for letter in invitation_result.scalars().all()
-    }
+    letters = list(invitation_result.scalars().all())
+    invited_slugs = {letter.faction_slug for letter in letters}
 
     status_map: dict[str, str] = {}
     for slug, faction_config in era.factions.items():
@@ -281,4 +289,4 @@ async def get_invitation_status(
         else:
             status_map[slug] = "not_invited"
 
-    return status_map
+    return status_map, letters

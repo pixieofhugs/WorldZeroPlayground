@@ -28,13 +28,19 @@ class FactionStatusOut(BaseModel):
     status: FactionMembershipStatus
 
 
-class FactionPageOut(BaseModel):
-    current_faction_slug: str
-    all_factions: list[FactionStatusOut]
-
-
 class InvitationLetterOut(BaseModel):
     faction_slug: str
     delivered_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class FactionPageOut(BaseModel):
+    current_faction_slug: str
+    all_factions: list[FactionStatusOut]
+    # #1384: the letters themselves, not just the "invited" status they imply.
+    # A per-faction status row is the wrong home for a timestamp — delivered_at
+    # is meaningless on a row reading "defected" — so the letters stay their own
+    # list. They ride here because the query behind `all_factions` had already
+    # read them; the deleted GET /factions/invitations re-ran it verbatim.
+    invitations: list[InvitationLetterOut]
