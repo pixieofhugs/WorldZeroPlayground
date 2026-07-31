@@ -10,7 +10,7 @@ from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis, ModerationStatus
+from models.praxis import Praxis
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
 
@@ -219,25 +219,6 @@ async def test_admin_create_task(
     assert data["title"] == "Admin-created"
     assert data["status"] == "active"
     assert data["point_value"] == 50
-
-
-@pytest.mark.asyncio
-async def test_admin_toggle_task_vision(
-    client: AsyncClient,
-    account: Account,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await _make_admin(account, db_session)
-
-    resp = await client.patch(
-        f"/admin/tasks/{active_task.id}/task-vision",
-        json={"is_task_vision_eligible": True},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["is_task_vision_eligible"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -635,28 +616,8 @@ async def test_admin_messages(
 
 
 # ---------------------------------------------------------------------------
-# Hide / unhide praxis via DELETE and moderate endpoints
+# Hide / unhide praxis via the moderate endpoint
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_admin_delete_praxis_hides_it(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    praxis_solo: Praxis,
-):
-    """DELETE /admin/praxes/{id} sets moderation_status to hidden (soft-delete)."""
-    await _make_admin(account, db_session)
-
-    resp = await client.delete(f"/admin/praxes/{praxis_solo.id}", headers=auth_headers)
-    assert resp.status_code == 204
-
-    # Verify the row is still in the DB but now hidden
-    result = await db_session.execute(select(Praxis).where(Praxis.id == praxis_solo.id))
-    updated = result.scalar_one()
-    assert updated.moderation_status == ModerationStatus.hidden
 
 
 @pytest.mark.asyncio
@@ -749,20 +710,6 @@ async def test_admin_moderate_nonexistent_praxis_returns_404(
     assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_admin_delete_nonexistent_praxis_returns_404(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """DELETE on a praxis that does not exist returns 404."""
-    await _make_admin(account, db_session)
-
-    resp = await client.delete("/admin/praxes/999999", headers=auth_headers)
-    assert resp.status_code == 404
-
-
 # ---------------------------------------------------------------------------
 # Additional 403 coverage — multiple admin endpoints
 # ---------------------------------------------------------------------------
@@ -809,12 +756,21 @@ async def test_non_admin_cannot_patch_task(
 
 
 @pytest.mark.asyncio
-async def test_non_admin_cannot_delete_praxis(
+async def test_non_admin_cannot_moderate_praxis(
     client: AsyncClient,
     auth_headers: dict,
 ):
-    """Non-admin account receives 403 on DELETE /admin/praxes/{id}."""
-    resp = await client.delete("/admin/praxes/1", headers=auth_headers)
+    """Non-admin account receives 403 on PATCH /admin/praxes/{id}/moderate.
+
+    This guard used to point at ``DELETE /admin/praxes/{id}``, deleted in #1386.
+    It is repointed rather than dropped so the surviving hide path keeps its
+    only non-admin 403 assertion.
+    """
+    resp = await client.patch(
+        "/admin/praxes/1/moderate",
+        json={"status": "hidden"},
+        headers=auth_headers,
+    )
     assert resp.status_code == 403
 
 

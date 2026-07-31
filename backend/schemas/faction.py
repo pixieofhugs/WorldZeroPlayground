@@ -38,10 +38,3 @@ class InvitationLetterOut(BaseModel):
     delivered_at: datetime
 
     model_config = {"from_attributes": True}
-
-
-class DefectionHistoryOut(BaseModel):
-    faction_slug: str
-    defected_at: datetime
-
-    model_config = {"from_attributes": True}
