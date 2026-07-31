@@ -159,7 +159,9 @@ export function useFactionDetail(
     setFetchError(null);
     Promise.all([
       listCharacters({ faction: slug }),
-      listTasks({ faction: slug, status: "active" }),
+      // `faction` is a repeated union param since #1364; one slug is a
+      // one-element union, not a scalar.
+      listTasks({ faction: [slug], status: "active" }),
       listPraxes({ faction: slug, status: "submitted", limit: 12 }),
     ])
       .then(([mems, tsks, praxis]) => {
