@@ -1215,6 +1215,16 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // The structural half of that claim is asserted separately, at the bottom of
   // this file: a ratio row on a fixed ground cannot notice the ground going
   // back to being the mount's business.
+  //
+  // THE REST OF THE PAGE'S NEUTRAL CHROME WAS AUDITED AND ADDS NO ROW, which is
+  // a finding rather than an omission. `.btn-outline` is the same shape — it
+  // fills with `--color-bg-surface` too — and every one of its praxis-detail
+  // mounts but one is INSIDE these cards, where it lays a second frost over a
+  // ground that is now fixed. The exception is the withdraw-confirm's Cancel,
+  // which sits on the bare wall; it prints `--color-text-primary`, and that ink
+  // over the frost runs 9.76:1 (Singularity, light — the tightest of the
+  // eighteen) to 18.43. Nothing there is close, so `.btn-outline` keeps its
+  // translucent fill and `--card-ground` stays a one-consumer property.
   ...[
     // The five global inks `PraxisAdminBar` / `PraxisFlagBlock` paint on the
     // card's own stock. `--color-text-primary` is left out on purpose: it only
