@@ -10,8 +10,14 @@ import { useAuth } from './auth/AuthContext'
  * the auth guards render on every route, so deferring them would only add a
  * round trip before the first pixel.
  */
-const Home = lazy(() => import('./pages/Home'))
-const FieldDesk = lazy(() => import('./pages/FieldDesk'))
+/** The two `/` landings, as callable loaders — `RootLanding` starts both before
+ *  it knows which one it needs (#1380). Dynamic `import()` is memoised by the
+ *  module registry, so calling these is idempotent and costs one request each. */
+const importHome = () => import('./pages/Home')
+const importFieldDesk = () => import('./pages/FieldDesk')
+
+const Home = lazy(importHome)
+const FieldDesk = lazy(importFieldDesk)
 const Tasks = lazy(() => import('./pages/Tasks'))
 const TaskDetail = lazy(() => import('./pages/TaskDetail'))
 const PraxisDetail = lazy(() => import('./pages/PraxisDetail'))
@@ -40,10 +46,24 @@ function PageLoading() {
   return <div className="page font-body text-muted">{t('loading')}</div>
 }
 
-/** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise. */
-function RootLanding() {
+/** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise.
+ *  Exported for `__tests__/rootLandingChunks.test.tsx` — App's other routes are
+ *  plain elements, but this one holds a gate worth pinning. */
+export function RootLanding() {
   const { user, loading } = useAuth()
-  if (loading) return <PageLoading />
+  if (loading) {
+    // Which component renders needs the auth answer; the chunk downloads do
+    // not. Every other route fetches its chunk in parallel with `/auth/me`;
+    // before this, `/` — the most-visited URL — waited for it, so a guest paid
+    // the two costs end to end instead of overlapped (#1380).
+    //
+    // This is a bounded exception to "preloading can make things much worse"
+    // in docs/agents/load-time.md: two small route chunks on one route, one of
+    // which is needed within the same tick, not ~180 speculative ones.
+    void importHome()
+    void importFieldDesk()
+    return <PageLoading />
+  }
   return user ? <FieldDesk /> : <Home />
 }
 
