@@ -2621,8 +2621,8 @@
   --fdl-glyph: #f0e6d0;
 }
 
-/* ── Functional inks re-cut for the faction card sheet (#694) ──────────────
-   Two more members of the standard `--faction-{key}-card-*` ink family, and
+/* ── Functional inks re-cut for the faction card sheet (#694, #1449) ───────
+   Three more members of the standard `--faction-{key}-card-*` ink family, and
    they exist for the reason §3 already states about `--faction-everymen-sheet-
    accent`: a colour that clears AA on the APP's surfaces can fail as ink the
    moment it is painted on a faction's paper, and "remember not to use the
@@ -2671,6 +2671,48 @@
   --faction-snide-card-notice: #fbbf24;
   --faction-singularity-card-notice: #fbbf24;
 
+  /* ── The DESTRUCTIVE half of the attention role (#1449) ──────────────────
+     `-card-notice` above was the card family's ENTIRE attention role, so the
+     praxis card's flagged badge and its failed badge printed one colour, as did
+     the moderator's `hide` and `fail` controls sitting side by side. #1302 was
+     right to route all four off the global inks — `--color-danger` measures
+     3.31:1 on the Ephemerists plate and never clears 4.5 on any light sheet —
+     and it flattened red onto amber doing it. Nothing was owed to WCAG 1.4.1
+     (each mark carries its own word) and nothing here is a contrast fix; the
+     owner's ruling on #1449 is that misclicking hide-versus-fail at speed is
+     the cost, and at-a-glance triage is what colour is for.
+
+     WHICH MARK TAKES WHICH is not a fresh judgement. The badges and controls
+     already wear #1169's `-veil` and `-edge` rungs — `--color-danger-*` on the
+     flagged badge and `hide`, `--color-warning-*` on the failed badge and
+     `fail` — which is the exact red/amber split their INK carried before #1302
+     flattened it. So the ink simply rejoins its own wash: alarm where the
+     danger veil is, notice where the warning veil is, and a mark's ink, fill
+     and rule agree again (§3, "a row that paints its own ground must paint its
+     own ink").
+
+     The values are `--color-danger` walked to where it clears on paper, exactly
+     as `-card-notice` walked `--color-warning` down from #b45309. Both obvious
+     first choices were measured and both fail: red-700 `#b91c1c` reads 4.44:1
+     on the Ephemerists plate under the danger veil, and dark's own
+     `--color-danger` (#f87171) reads 4.33:1 on the UA panel, where that veil is
+     14% and lifts the ground. Worst shipped reading is the Ephemerists plate at
+     5.70:1 veiled / 6.10:1 bare. Measured on the sheet the praxis card actually
+     paints (`PRAXIS_CARD_SHEET` in `factionContrast.test.ts`), which for four
+     factions is NOT `--faction-{key}-card-bg` — though the light ink clears
+     there too (worst 5.71:1), so a future consumer on the plain sheet is safe.
+
+     Polarity, not theme, again: the two always-dark sheets take the bright red
+     in LIGHT. */
+  --faction-ua-card-alarm: #991b1b;
+  --faction-everymen-card-alarm: #991b1b;
+  --faction-coven-card-alarm: #991b1b;
+  --faction-wow-card-alarm: #991b1b;
+  --faction-ephemerists-card-alarm: #991b1b;
+  --faction-default-card-alarm: #991b1b;
+  --faction-snide-card-alarm: #fca5a5;
+  --faction-singularity-card-alarm: #fca5a5;
+
   /* Points credited. The global success green, kept as-is where the sheet is
      light, and flipped on the two dark sheets for the same reason. */
   --faction-ua-card-credit: #14532d;
@@ -2683,9 +2725,9 @@
   --faction-singularity-card-credit: #4ade80;
 }
 
-/* Every card sheet is dark here, so both inks are the bright pair across the
-   board — the two always-dark factions simply keep the values they already
-   carried in light. */
+/* Every card sheet is dark here, so all three inks take their bright value
+   across the board — the two always-dark factions simply keep the values they
+   already carried in light. */
 [data-theme="dark"] {
   --faction-ua-card-notice: #fbbf24;
   --faction-everymen-card-notice: #fbbf24;
@@ -2695,6 +2737,15 @@
   --faction-default-card-notice: #fbbf24;
   --faction-snide-card-notice: #fbbf24;
   --faction-singularity-card-notice: #fbbf24;
+
+  --faction-ua-card-alarm: #fca5a5;
+  --faction-everymen-card-alarm: #fca5a5;
+  --faction-coven-card-alarm: #fca5a5;
+  --faction-wow-card-alarm: #fca5a5;
+  --faction-ephemerists-card-alarm: #fca5a5;
+  --faction-default-card-alarm: #fca5a5;
+  --faction-snide-card-alarm: #fca5a5;
+  --faction-singularity-card-alarm: #fca5a5;
 
   --faction-ua-card-credit: #4ade80;
   --faction-everymen-card-credit: #4ade80;
