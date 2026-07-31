@@ -279,11 +279,15 @@ describe("Ephemerists praxis detail — copy is neutral (ADR-0061)", () => {
     // The design labels this cluster ("Amend the record"). That label was the
     // one voiced slot with no neutral twin, so it is gone rather than restated
     // — the other seven skins mount the cluster unlabelled too.
-    expect(render(state()).html, "visitor gets no owner controls").not.toContain(
-      "/praxis/1/edit",
+    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
+    // submitted solo `/edit` redirects straight back to this page, so the edit
+    // link is hidden and unsubmitting is the way into the composer.
+    expect(render(state()).text, "visitor gets no owner controls").not.toContain(
+      "unsubmit",
     );
     const owner = render(state({ isOwner: true }));
-    expect(owner.html, "the shared invariant controls").toContain("/praxis/1/edit");
+    expect(owner.text, "the shared invariant controls").toContain("unsubmit");
+    expect(owner.html, "and nothing that round-trips").not.toContain("/praxis/1/edit");
     expect(owner.text, "and no label over them").not.toContain("Amend the record");
   });
 

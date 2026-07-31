@@ -375,11 +375,17 @@ describe("Everymen praxis detail — the state axes", () => {
   });
 
   it("shows owner controls to a member and nothing to a visitor", () => {
-    expect(render(state()).html, "a visitor gets no edit link").not.toContain(
-      'href="/praxis/1/edit"',
+    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
+    // submitted solo `/edit` redirects straight back to this page, so the edit
+    // link is hidden and unsubmitting is the way into the composer.
+    expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
+      "unsubmit",
     );
     const owner = state({ isOwner: true, user: VIEWER });
-    expect(render(owner).html).toContain('href="/praxis/1/edit"');
+    expect(render(owner).text).toContain("unsubmit");
+    expect(render(owner).html, "and nothing that round-trips").not.toContain(
+      'href="/praxis/1/edit"',
+    );
   });
 
   it("lists who voted and each voter's own rung, never an average", () => {

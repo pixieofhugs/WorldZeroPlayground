@@ -230,10 +230,30 @@ describe('unsubmitCase — the branch, straight off the backend', () => {
 })
 
 describe('unsubmit confirm copy (#1094)', () => {
-  it('solo: the shipped prompt is unchanged', () => {
+  it('solo: the prompt names both real costs of reopening (#1397)', () => {
+    // Unsubmit is the way to edit a published praxis now that the dead `/edit`
+    // link is gone, so the prompt owes the player the two things it costs that
+    // are NOT free — both read straight off the backend:
+    //  - visibility: `praxis_visibility_condition` (ADR-0024) shows an
+    //    `in_progress` praxis to its members only, and a solo has one member.
+    //  - the date: `_apply_seal` is the only writer of `submitted_at` and sets
+    //    it to `now` on EVERY seal, and the feed sorts on it — so a resubmitted
+    //    praxis reappears at the top with a new date.
+    // Everything else really is cheap (votes, comments, media and
+    // `all_time_score` all survive; no cooldown, no cap), so the copy must not
+    // invent a third warning.
     const rendered = text(<PraxisSubmitControls state={state({})} />)
-    expect(rendered).toMatch(/Sure\? Points & votes will pause\./)
+    expect(rendered, 'members-only while editing').toMatch(/Only you can see it/)
+    expect(rendered, 'the publish date is overwritten').toMatch(/new date/)
+    expect(rendered, 'and the original promise survives').toMatch(/points & votes pause/)
     expect(rendered).toMatch(/Yes, unsubmit/)
+  })
+
+  it('solo: the trigger reads as the way to edit (#1397)', () => {
+    const rendered = text(
+      <PraxisSubmitControls state={state({ showWithdrawConfirm: false })} />,
+    )
+    expect(rendered).toMatch(/unsubmit to edit/)
   })
 
   it('collab: the prompt says the whole group reopens, not just your part', () => {
@@ -243,8 +263,9 @@ describe('unsubmit confirm copy (#1094)', () => {
     expect(rendered).toMatch(/whole group/i)
     expect(rendered).toMatch(/every member's part is uncast/i)
     expect(rendered).toMatch(/Yes, reopen for everyone/i)
-    // The solo promise must not be the thing a co-author reads.
-    expect(rendered).not.toMatch(/Sure\? Points & votes will pause\./)
+    // The solo promise must not be the thing a co-author reads. Anchored on the
+    // SHIPPED solo string (#1397) — quoting the retired one would pass vacuously.
+    expect(rendered).not.toMatch(/Only you can see it/)
   })
 
   it('collab mid-consensus: only your part comes back, and no scoring promise', () => {
@@ -272,8 +293,8 @@ describe('unsubmit confirm copy (#1094)', () => {
       expect(rendered).toMatch(/Yes, pull my entry back/i)
       expect(rendered).not.toMatch(/forfeit/i)
       expect(rendered).not.toMatch(/wins by default/i)
-      // Nor the solo prompt it used to fall through to.
-      expect(rendered).not.toMatch(/Sure\? Points & votes will pause\./)
+      // Nor the solo prompt it used to fall through to (shipped string, #1397).
+      expect(rendered).not.toMatch(/Only you can see it/)
     },
   )
 

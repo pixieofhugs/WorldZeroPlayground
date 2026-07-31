@@ -36,39 +36,13 @@ import { factionCssVar } from '../../utils/factions'
 import ConfirmDialog from '../confirm/ConfirmDialog'
 import { kickMemberConfirm } from '../confirm/composerConfirms'
 import { collabCopy } from './collabCopy'
+import { deriveCollabGate } from './collabGate'
 
-export type CollabState =
-  | 'awaiting'
-  | 'writing'
-  | 'waiting'
-  | 'holdout'
-  | 'published'
-
-export interface CollabGate {
-  memberCount: number
-  castCount: number
-  iCast: boolean
-  state: CollabState
-}
-
-/** Pure derivation of the consensus gate from the member list. */
-export function deriveCollabGate(
-  members: readonly PraxisMemberOut[],
-  currentCharacterId: number | null | undefined,
-): CollabGate {
-  const memberCount = members.length
-  const castCount = members.filter((m) => m.has_submitted).length
-  const iCast = members.some(
-    (m) => m.character_id === currentCharacterId && m.has_submitted,
-  )
-  let state: CollabState
-  // First, because every test below it lies at one member (#1274).
-  if (memberCount < 2) state = 'awaiting'
-  else if (castCount === 0) state = 'writing'
-  else if (castCount >= memberCount) state = 'published'
-  else state = iCast ? 'waiting' : 'holdout'
-  return { memberCount, castCount, iCast, state }
-}
+// The consensus state machine moved to `collabGate.ts` (#1397) — it is pure, and
+// keeping it here billed every caller for this component's dialog and copy.
+// Re-exported so every existing importer still reaches it by this path.
+export { deriveCollabGate } from './collabGate'
+export type { CollabGate, CollabState } from './collabGate'
 
 export function CollabRoster({
   praxisType,

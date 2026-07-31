@@ -463,9 +463,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {mySubmission && (
         <div>
           <div style={plateHeading}>{t("detail.submitted.text")}</div>
-          <Link to={`/praxis/${mySubmission.id}/edit`} style={ctaStyle(true)}>
+          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
+              the submitted-only gallery fetch, and `/edit` redirects a
+              submitted praxis straight back to `/praxis/:id` (#1164) — so this
+              button used to change nothing at all. Reopening for editing lives
+              on the praxis page, one honest hop away. */}
+          <Link to={`/praxis/${mySubmission.id}`} style={ctaStyle(true)}>
             <Star size={13} color={GOLD} />
-            {t("detail.submitted.edit")}
+            {t("detail.submitted.view")}
           </Link>
         </div>
       )}

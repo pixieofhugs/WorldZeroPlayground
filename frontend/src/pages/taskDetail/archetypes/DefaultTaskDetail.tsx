@@ -322,8 +322,13 @@ export default function DefaultTaskDetail({
           >
             {t("detail.submitted.text")}
           </div>
-          <Link to={`/praxis/${mySubmission.id}/edit`} style={primaryButton}>
-            {t("detail.submitted.edit")}
+          {/* The READ page, not `/edit` (#1397). `mySubmission` comes out of
+              the submitted-only gallery fetch, and `/edit` redirects a
+              submitted praxis straight back to `/praxis/:id` (#1164) — so this
+              button used to change nothing at all. Reopening for editing lives
+              on the praxis page, one honest hop away. */}
+          <Link to={`/praxis/${mySubmission.id}`} style={primaryButton}>
+            {t("detail.submitted.view")}
           </Link>
         </div>
       )}
