@@ -21,6 +21,7 @@ import {
   leavePraxis,
   removeMetatask,
   submitPraxis,
+  takeJustCreatedPraxis,
   unsubmitPraxis,
   updatePraxis,
   uploadPraxisMedia,
@@ -505,10 +506,25 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     // Wait for auth to resolve before the membership guard — otherwise a
     // still-loading `user` would bounce to the read page, which redirects
     // in_progress praxes right back here (infinite loop).
+    //
+    // This costs nothing and delays nothing (#1379): `/praxis/:id/edit` is
+    // wrapped in `<ProtectedRoute>`, which renders a spinner instead of its
+    // children while `/auth/me` is in flight — so this hook is not mounted, and
+    // this effect not run, until auth has already resolved. `refetch()` never
+    // sets `loading` back to true. The guard is the floor if the route is ever
+    // unwrapped, not a gate anything waits on.
     if (authLoading) return;
     const praxisId = parseInt(idParam, 10);
     setLoading(true);
-    getPraxis(praxisId)
+    // A signup that just created this praxis was handed the whole row; take it
+    // rather than spending a round trip reading it back (#1379). Same builder,
+    // same viewer, server-side — see `takeJustCreatedPraxis`. A miss (any other
+    // way of arriving here) falls through to the read.
+    const carried = takeJustCreatedPraxis(praxisId);
+    const loadPraxis = carried
+      ? Promise.resolve(carried)
+      : getPraxis(praxisId);
+    loadPraxis
       .then(async (loaded) => {
         // A collab is co-owned — any member may edit (ADR-0013), not just the
         // creator. Gating on created_by_id looped non-creator members between
@@ -532,28 +548,35 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setAppliedMetataskList(loaded.applied_metatasks ?? []);
         lastSavedTitleRef.current = initialTitle;
         lastSavedBodyRef.current = initialBody;
-        await Promise.all([
-          getTask(loaded.task_id)
-            .then(setTask)
-            .catch(() => {
-              /* non-fatal */
-            }),
-          listMetatasks()
-            .then((all) =>
-              setMetatasks(all.filter((mt) => mt.eligible_for_current_user)),
-            )
-            .catch(() => {
-              /* non-fatal */
-            }),
-        ]);
+        await getTask(loaded.task_id)
+          .then(setTask)
+          .catch(() => {
+            /* non-fatal */
+          });
       })
       .catch(() => setError(i18n.t("forms:editPraxis.errors.load")))
       .finally(() => setLoading(false));
     // The membership guard above reads only `user?.character?.id`, so that is
-    // the whole dependency (#1390). Depending on `user` reloaded the praxis,
-    // its task and the metatask list every time `/auth/me` refetched — which a
-    // star cast does — and flashed the editor back to its loading state.
+    // the whole dependency (#1390). Depending on `user` reloaded the praxis and
+    // its task every time `/auth/me` refetched — which a star cast does — and
+    // flashed the editor back to its loading state.
   }, [idParam, user?.character?.id, authLoading, navigate]);
+
+  // The seals this viewer may apply (#933). It sat inside the praxis `.then()`
+  // above, which made it wait a whole round trip on a payload it reads nothing
+  // from — the list is keyed on the VIEWER (`eligible_for_current_user`), not
+  // on the praxis (#1379). Fired here it leaves at mount, beside the praxis
+  // read, and no longer holds `loading` open either.
+  useEffect(() => {
+    if (!user?.character) return;
+    listMetatasks()
+      .then((all) =>
+        setMetatasks(all.filter((mt) => mt.eligible_for_current_user)),
+      )
+      .catch(() => {
+        /* the seal picker stays empty; the composer is unaffected */
+      });
+  }, [user?.character?.id]);
 
   useEffect(() => {
     if (!user?.character) return;
