@@ -1,17 +1,25 @@
 /**
- * FilterBar — the pure half (#1365).
+ * FilterBar — the pure half (#1365, generalised in #1446).
  *
- * The seam under test is `filterState.ts`: every derivation the chrome reads,
- * with no DOM in sight. The frontend harness is renderToStaticMarkup only —
- * no jsdom, no click, no effects — so the parts worth guarding are the ones
- * that are functions of state rather than of a pointer:
+ * The seam under test is `filterState.ts` plus its one shipped configuration,
+ * `factionFacet.ts`: every derivation the chrome reads, with no DOM in sight.
+ * The frontend harness is renderToStaticMarkup only — no jsdom, no click, no
+ * effects — so the parts worth guarding are the ones that are functions of
+ * state rather than of a pointer:
  *
- *   - thumbOffset / thumbWidth for each (index, segment count) pair, 2..4
- *   - deriveChips from a filter-state object, faction chips first
+ *   - thumbOffset / thumbWidth for each (index, segment count) pair, 2..6
+ *   - deriveChips from a filter-state object, facet chips first, with and
+ *     without an ornament
  *   - the applied-count badge, which is chips.length rendered
  *   - selectEmptyState — which of the three empty states a state picks
  *   - filterRoster — `GET /factions` plus the explicit `na` sentinel, never a
  *     hardcoded roster (#1361 ruling 4)
+ *   - factionFacet — the faction axis expressed in the generic shape: rows in
+ *     roster order, selected first, named, and NO counts (#1361 ruling 3)
+ *
+ * The picker's rows are not reachable here: the panel is behind `open`, which
+ * only a click sets. The option list they render is what `factionFacet` and
+ * `FilterOption` say it is, and that is what these tests pin.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -20,14 +28,15 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../../i18n'
 
 import FilterBar from '..'
+import { factionFacet, filterRoster } from '../factionFacet'
 import {
   deriveChips,
-  filterRoster,
   selectEmptyState,
   selectedFirst,
   thumbOffset,
   thumbWidth,
-  toggleFaction,
+  toggleOption,
+  type FilterFacet,
   type FilterRail,
 } from '../filterState'
 import type { FactionOut } from '../../../../api/factions'
@@ -60,6 +69,21 @@ const eraRail = (value: string, onChange = () => {}): FilterRail => ({
   onChange,
 })
 
+/** A facet with no ornament and no counts — the plainest legal configuration. */
+const typeFacet = (
+  selected: string[],
+  onChange = () => {},
+): FilterFacet => ({
+  key: 'type',
+  label: 'Type',
+  options: [
+    { value: 'praxis', label: 'Praxis' },
+    { value: 'comment', label: 'Comment' },
+  ],
+  selected,
+  onChange,
+})
+
 describe('thumbOffset / thumbWidth — the sliding thumb geometry', () => {
   // The design's maths is `calc(i * (100% - 6px) / n + 3px)`; the 3px rail
   // padding is a token here so the CSS and the JS cannot drift.
@@ -82,10 +106,28 @@ describe('thumbOffset / thumbWidth — the sliding thumb geometry', () => {
     }
   })
 
-  it('sizes the thumb to one nth of the track for 2, 3 and 4 segments', () => {
-    expect(thumbWidth(2)).toBe(`calc((100% - 2 * ${PAD}) / 2)`)
-    expect(thumbWidth(3)).toBe(`calc((100% - 2 * ${PAD}) / 3)`)
-    expect(thumbWidth(4)).toBe(`calc((100% - 2 * ${PAD}) / 4)`)
+  // #1446 widened RAIL_SEGMENTS_MAX to 6 for Updates' relationship rail
+  // (All / Your Stuff / Friends / Foes / Global).
+  it('places a 5-segment thumb (the relationship rail)', () => {
+    for (const index of [0, 1, 2, 3, 4]) {
+      expect(thumbOffset(index, 5)).toBe(
+        `calc(${index} * (100% - 2 * ${PAD}) / 5 + ${PAD})`,
+      )
+    }
+  })
+
+  it('places a 6-segment thumb — the widened ceiling', () => {
+    for (const index of [0, 1, 2, 3, 4, 5]) {
+      expect(thumbOffset(index, 6)).toBe(
+        `calc(${index} * (100% - 2 * ${PAD}) / 6 + ${PAD})`,
+      )
+    }
+  })
+
+  it('sizes the thumb to one nth of the track for 2 through 6 segments', () => {
+    for (const count of [2, 3, 4, 5, 6]) {
+      expect(thumbWidth(count)).toBe(`calc((100% - 2 * ${PAD}) / ${count})`)
+    }
   })
 })
 
@@ -93,8 +135,7 @@ describe('deriveChips — one removable chip per active filter', () => {
   it('raises no chip for a rail sitting on its default', () => {
     const chips = deriveChips({
       rails: [sortRail('newest'), eraRail('current')],
-      selectedFactions: [],
-      onFactionsChange: () => {},
+      facets: [],
     })
     expect(chips).toEqual([])
   })
@@ -102,52 +143,64 @@ describe('deriveChips — one removable chip per active filter', () => {
   it('labels a rail chip with the SELECTED segment, not the rail', () => {
     const chips = deriveChips({
       rails: [sortRail('least_voted'), eraRail('current')],
-      selectedFactions: [],
-      onFactionsChange: () => {},
+      facets: [],
     })
     expect(chips.map((chip) => chip.label)).toEqual(['Least voted'])
   })
 
-  it('puts faction chips first and carries the slug so the chip can wear a sigil', () => {
+  it('puts facet chips first and carries the ornament the facet draws', () => {
     const chips = deriveChips({
       rails: [sortRail('oldest'), eraRail('all')],
-      selectedFactions: ['ua', 'coven'],
-      onFactionsChange: () => {},
+      facets: [factionFacet([{ slug: 'ua' }, { slug: 'coven' }], ['ua', 'coven'], () => {})],
     })
-    expect(chips.map((chip) => chip.slug)).toEqual([
-      'ua',
-      'coven',
-      undefined,
-      undefined,
-    ])
     expect(chips.map((chip) => chip.label)).toEqual([
       'UA',
       'Cozy Coven',
       'Oldest',
       'All eras',
     ])
+    // Faction chips wear a sigil; rail chips wear nothing.
+    expect(chips.map((chip) => chip.ornament !== undefined)).toEqual([
+      true,
+      true,
+      false,
+      false,
+    ])
+  })
+
+  it('leaves the ornament unset for a facet that draws none', () => {
+    const chips = deriveChips({ rails: [], facets: [typeFacet(['praxis'])] })
+    expect(chips).toHaveLength(1)
+    expect(chips[0].label).toBe('Praxis')
+    expect(chips[0].key).toBe('type:praxis')
+    expect(chips[0].ornament).toBeUndefined()
+  })
+
+  it('names a selected faction even before GET /factions has answered', () => {
+    // `useFactions()` is null until its response lands, so the deep-linked
+    // chip has to be nameable from an empty roster.
+    const [chip] = deriveChips({
+      rails: [],
+      facets: [factionFacet([], ['ua'], () => {})],
+    })
+    expect(chip.label).toBe('UA')
   })
 
   it('removing a rail chip returns the rail to its default, not to empty', () => {
     const onChange = vi.fn()
-    const [chip] = deriveChips({
-      rails: [eraRail('all', onChange)],
-      selectedFactions: [],
-      onFactionsChange: () => {},
-    })
+    const [chip] = deriveChips({ rails: [eraRail('all', onChange)], facets: [] })
     chip.remove()
     expect(onChange).toHaveBeenCalledWith('current')
   })
 
-  it('removing a faction chip drops only that slug', () => {
-    const onFactionsChange = vi.fn()
+  it('removing a facet chip drops only that option', () => {
+    const onChange = vi.fn()
     const [chip] = deriveChips({
       rails: [],
-      selectedFactions: ['ua', 'coven'],
-      onFactionsChange,
+      facets: [typeFacet(['praxis', 'comment'], onChange)],
     })
     chip.remove()
-    expect(onFactionsChange).toHaveBeenCalledWith(['coven'])
+    expect(onChange).toHaveBeenCalledWith(['comment'])
   })
 })
 
@@ -156,9 +209,7 @@ describe('the applied-count badge', () => {
     renderToStaticMarkup(
       <FilterBar
         rails={[eraRail(eraValue)]}
-        factions={[{ slug: 'ua' }]}
-        selectedFactions={selectedFactions}
-        onFactionsChange={() => {}}
+        facets={[factionFacet([{ slug: 'ua' }], selectedFactions, () => {})]}
         onClearAll={() => {}}
       />,
     )
@@ -167,7 +218,7 @@ describe('the applied-count badge', () => {
     expect(render([], 'current')).not.toContain('filter-bar__badge')
   })
 
-  it('counts faction chips and rail chips together', () => {
+  it('counts facet chips and rail chips together', () => {
     const html = render(['ua', 'coven'], 'all')
     expect(html).toContain('>3<')
   })
@@ -215,22 +266,55 @@ describe('filterRoster — GET /factions plus the na sentinel (#1361 ruling 4)',
   })
 
   it('appends the na sentinel exactly once even if the API ever emits it', () => {
-    expect(filterRoster([...VISIBLE, { slug: 'na' }]).filter((s) => s === 'na'))
-      .toHaveLength(1)
+    expect(
+      filterRoster([...VISIBLE, { slug: 'na' }]).filter(
+        (slug: string) => slug === 'na',
+      ),
+    ).toHaveLength(1)
   })
 })
 
-describe('selectedFirst / toggleFaction', () => {
-  it('sorts selected rows to the top, keeping roster order inside each group', () => {
+describe('factionFacet — the faction axis as one configuration of the widget', () => {
+  const VISIBLE: FactionOut[] = [{ slug: 'singularity' }, { slug: 'ua' }]
+
+  it('offers the roster in order, named, with the selected rows first', () => {
+    const facet = factionFacet(VISIBLE, ['na'], () => {})
+    expect(facet.options.map((option) => option.value)).toEqual([
+      'na',
+      'ua',
+      'singularity',
+    ])
+    expect(facet.options.map((option) => option.label)).toEqual([
+      'Unaffiliated',
+      'UA',
+      'Singularity',
+    ])
+  })
+
+  it('carries NO counts — cut by #1361 ruling 3, and the slot is opt-in', () => {
+    const facet = factionFacet(VISIBLE, [], () => {})
+    expect(facet.options.every((option) => option.count === undefined)).toBe(true)
+  })
+
+  it('draws an ornament in all three places', () => {
+    const facet = factionFacet(VISIBLE, [], () => {})
+    for (const place of ['row', 'trigger', 'chip'] as const) {
+      expect(facet.renderOrnament?.('ua', place)).toBeTruthy()
+    }
+  })
+})
+
+describe('selectedFirst / toggleOption', () => {
+  it('sorts selected rows to the top, keeping list order inside each group', () => {
     expect(
       selectedFirst(['everymen', 'ua', 'singularity', 'na'], ['singularity', 'na']),
     ).toEqual(['singularity', 'na', 'everymen', 'ua'])
   })
 
-  it('toggles a slug in and out without mutating the input', () => {
+  it('toggles a value in and out without mutating the input', () => {
     const selected = ['ua']
-    expect(toggleFaction(selected, 'coven')).toEqual(['ua', 'coven'])
-    expect(toggleFaction(selected, 'ua')).toEqual([])
+    expect(toggleOption(selected, 'coven')).toEqual(['ua', 'coven'])
+    expect(toggleOption(selected, 'ua')).toEqual([])
     expect(selected).toEqual(['ua'])
   })
 })

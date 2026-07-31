@@ -1,16 +1,14 @@
 /**
- * FilterBar — the pure half (#1365, epic #1361).
+ * FilterBar — the pure half (#1365, generalised in #1446).
  *
  * Everything the bar's chrome reads that is a function of state rather than of
  * a pointer lives here, so it can be guarded by a harness that has no DOM.
  * The components in this folder hold no derivation of their own.
+ *
+ * Nothing here knows what a faction is. The faction facet is one configuration
+ * of the generic multi-select and lives in `factionFacet.ts` (#1446).
  */
-import type { FactionOut } from '../../../api/factions'
-import {
-  factionName,
-  sortFactionsByRainbowOrder,
-  UNAFFILIATED_FACTION_SLUG,
-} from '../../../utils/factions'
+import type { ReactNode } from 'react'
 
 /** One choice on a rail. `value` is what the page stores and puts in the URL. */
 export interface FilterSegment {
@@ -19,9 +17,9 @@ export interface FilterSegment {
 }
 
 /**
- * A segmented rail: one value, one `ORDER BY`, 2 to 4 segments (#1361 ruling 5).
- * Rails never compose — two rails are two independent axes, not two halves of
- * one sort key.
+ * A segmented rail: one value, one `ORDER BY`, 2 to 6 segments (#1361 ruling 5,
+ * widened in #1446). Rails never compose — two rails are two independent axes,
+ * not two halves of one sort key.
  *
  * `defaultValue` is what "not filtering" means for this axis, and it is not
  * always the first segment: the era rail defaults to *this era* and the tasks
@@ -38,27 +36,77 @@ export interface FilterRail {
   onChange: (value: string) => void
 }
 
+/** Where a facet's optional ornament is being drawn. Sizes differ per place. */
+export type OrnamentPlace = 'row' | 'trigger' | 'chip'
+
+/** One row of a multi-select facet. */
+export interface FilterOption {
+  value: string
+  label: string
+  /**
+   * Optional trailing count. Absent by default and deliberately not uniform
+   * across facets (#1446): faction counts are CUT (#1361 ruling 3 — a windowed
+   * page cannot derive them), type counts on Updates SHIP (#1419 decision 4 —
+   * the backend already builds the dict and discards it). Do not "correct" one
+   * against the other.
+   */
+  count?: number
+}
+
+/**
+ * A multi-select facet: an option list, the selection, and an optional leading
+ * ornament. Rows arrive in display order — sorting (selected-first, rainbow
+ * order, whatever the axis means by it) is the caller's, not the widget's.
+ */
+export interface FilterFacet {
+  /** Namespaces this facet's chips. `faction`, `type`, … */
+  key: string
+  /** The facet's name — the trigger's text and the panel's accessible name. */
+  label: string
+  options: FilterOption[]
+  selected: string[]
+  onChange: (values: string[]) => void
+  /**
+   * Optional leading ornament — a faction sigil, a colour dot, nothing. Called
+   * for each of the three places it can appear, which want different sizes.
+   * A facet without one renders as checkbox + label.
+   */
+  renderOrnament?: (value: string, place: OrnamentPlace) => ReactNode
+}
+
 /** A removable statement of one applied filter. */
 export interface AppliedChip {
   key: string
   label: string
-  /** Set only for faction chips — the chip wears that faction's sigil. */
-  slug?: string
+  /** Set only when the chip's facet draws one — see `FilterFacet`. */
+  ornament?: ReactNode
   remove: () => void
 }
 
 /**
- * A rail takes 2 to 4 segments. Stated as constants rather than enforced with a
- * throw: the praxis sort rail is 4 (newest / oldest / most voted / least voted)
- * and the task sort rail is 3 (level / newest / oldest), so the range is the
+ * A rail takes 2 to 6 segments. Stated as constants rather than enforced with a
+ * throw: the praxis sort rail is 4 (newest / oldest / most voted / least voted),
+ * the task sort rail is 3 (level / newest / oldest) and Updates' relationship
+ * rail is 5 (all / your stuff / friends / foes / global), so the range is the
  * shipped spread and not a guess.
  *
- * ponytail: no runtime guard. A 5-segment rail renders — narrowly, but it
- * renders. If a fifth axis ever wants one, widen the number here and re-measure
- * the label ellipsis rather than adding a throw a page can only hit in prod.
+ * ponytail: no runtime guard, and 6 is a measurement rather than a limit the
+ * code enforces. There is no ellipsis on `.filter-rail__segment` — it is
+ * `white-space: nowrap` with no `overflow`/`text-overflow`, and a flex item's
+ * `min-width` is `auto`, so a segment never shrinks below its label. The
+ * failure mode past the ceiling is therefore clipping (`.filter-bar` is
+ * `overflow: hidden`), not an ellipsis. Courier Prime advances 0.6em, segments
+ * carry no horizontal padding, and the rail costs 9px of pad and border, so a
+ * rail of C characters is `0.6 * fontSize * C + 9` wide at its narrowest.
+ * The 5-segment relationship rail is 30 characters: 261px at the desktop
+ * `--text-xl` (14px), 225px at the phone's `--text-lg` (12px) against a 240px
+ * content box at a 320px viewport (`.page` is `px-4`, `.filter-bar__body` is
+ * `--space-xl`). It fits, with ~15px to spare at 320px and ~70px at 375px.
+ * Widening past 6 — or past ~32 characters on a five-up — means re-running that
+ * arithmetic, not deleting this comment.
  */
 export const RAIL_SEGMENTS_MIN = 2
-export const RAIL_SEGMENTS_MAX = 4
+export const RAIL_SEGMENTS_MAX = 6
 
 // The rail's inner padding, as the token `.filter-rail` is drawn with. The
 // design writes this maths as `calc(i * (100% - 6px) / n + 3px)`; the literal
@@ -77,59 +125,41 @@ export function thumbWidth(segmentCount: number): string {
   return `calc(${TRACK} / ${segmentCount})`
 }
 
-/**
- * The faction roster the picker offers: `GET /factions` in rainbow order plus
- * the explicit `na` sentinel, appended last (#1361 ruling 4).
- *
- * This is `FilterFactionTabs`' rationale, unchanged. `na` is a state rather
- * than a faction (ADR-0030 / ADR-0039), so it is deliberately absent from
- * `GET /factions` and from `FACTION_RAINBOW_ORDER`; cross-faction is the
- * commonest kind of task and the one slice you could not otherwise isolate, so
- * the filter supplies it by hand. The design's hardcoded nine is the thing this
- * must not be: `/factions` returns visible factions only, so `albescent` is
- * absent pre-reveal (ADR-0027) and a literal list would leak it.
- */
-export function filterRoster(factions: FactionOut[]): string[] {
-  const visible = sortFactionsByRainbowOrder(factions)
-    .map((faction) => faction.slug)
-    .filter((slug) => slug !== UNAFFILIATED_FACTION_SLUG)
-  return [...visible, UNAFFILIATED_FACTION_SLUG]
-}
-
-/** Selected rows to the top, roster order preserved inside each group. */
-export function selectedFirst(roster: string[], selected: string[]): string[] {
+/** Selected rows to the top, list order preserved inside each group. */
+export function selectedFirst(values: string[], selected: string[]): string[] {
   return [
-    ...roster.filter((slug) => selected.includes(slug)),
-    ...roster.filter((slug) => !selected.includes(slug)),
+    ...values.filter((value) => selected.includes(value)),
+    ...values.filter((value) => !selected.includes(value)),
   ]
 }
 
 /** Multi-select toggle. Never mutates. */
-export function toggleFaction(selected: string[], slug: string): string[] {
-  return selected.includes(slug)
-    ? selected.filter((each) => each !== slug)
-    : [...selected, slug]
+export function toggleOption(selected: string[], value: string): string[] {
+  return selected.includes(value)
+    ? selected.filter((each) => each !== value)
+    : [...selected, value]
 }
 
 /**
- * One chip per active filter — faction chips first, then rails in mount order,
+ * One chip per active filter — facet chips first, then rails in mount order,
  * matching the design. A rail on its `defaultValue` is not an active filter.
  */
 export function deriveChips({
   rails,
-  selectedFactions,
-  onFactionsChange,
+  facets,
 }: {
   rails: FilterRail[]
-  selectedFactions: string[]
-  onFactionsChange: (slugs: string[]) => void
+  facets: FilterFacet[]
 }): AppliedChip[] {
-  const factionChips: AppliedChip[] = selectedFactions.map((slug) => ({
-    key: `faction:${slug}`,
-    label: factionName(slug),
-    slug,
-    remove: () => onFactionsChange(toggleFaction(selectedFactions, slug)),
-  }))
+  const facetChips: AppliedChip[] = facets.flatMap((facet) =>
+    facet.selected.map((value) => ({
+      key: `${facet.key}:${value}`,
+      label:
+        facet.options.find((option) => option.value === value)?.label ?? value,
+      ornament: facet.renderOrnament?.(value, 'chip'),
+      remove: () => facet.onChange(toggleOption(facet.selected, value)),
+    })),
+  )
   const railChips: AppliedChip[] = rails
     .filter((rail) => rail.value !== rail.defaultValue)
     .map((rail) => ({
@@ -139,7 +169,7 @@ export function deriveChips({
         rail.value,
       remove: () => rail.onChange(rail.defaultValue),
     }))
-  return [...factionChips, ...railChips]
+  return [...facetChips, ...railChips]
 }
 
 /** Which of the three empty states a list should show (#1361 ruling 9). */

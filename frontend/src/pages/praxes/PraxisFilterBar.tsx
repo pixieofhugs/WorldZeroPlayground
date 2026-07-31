@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import FilterBar, { type FilterRail } from '../../components/ui/FilterBar'
+import FilterBar, { factionFacet, type FilterRail } from '../../components/ui/FilterBar'
 import { UNFILTERED_ERA_SCOPE } from './feedFilterParams'
 import type { PraxesFeedState, SortOrder, VotedFilter, EraScope } from './usePraxes'
 
@@ -80,9 +80,11 @@ export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
   return (
     <FilterBar
       rails={rails}
-      factions={factions}
-      selectedFactions={filters.factions}
-      onFactionsChange={(slugs) => setFilters({ factions: slugs })}
+      facets={[
+        factionFacet(factions, filters.factions, (slugs) =>
+          setFilters({ factions: slugs }),
+        ),
+      ]}
       onClearAll={clearAllFilters}
       search={{
         value: state.query,
