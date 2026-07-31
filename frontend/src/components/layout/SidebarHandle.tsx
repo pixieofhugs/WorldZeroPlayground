@@ -57,11 +57,14 @@ function HandleButton({
 }
 
 /**
- * The collapsed handle carries the pending-request count, because folding the
- * rail away would otherwise silently hide incoming collab invites and duel
- * challenges — the sidebar panel is their only desktop surface. The count
- * reaches assistive tech through the BUTTON's accessible name; the badge itself
- * is decorative and `aria-hidden`, exactly as the mobile bell's is.
+ * The collapsed handle carries the pending-request count. It was put here
+ * because folding the rail away would otherwise hide the rail's own list of
+ * incoming collab invites and duel challenges; since #1423 there is no such
+ * list — requests are answered in the queue on `/updates` (ADR-0070) — so what
+ * the badge now does is tell a folded-away desktop that the queue has something
+ * in it. The count reaches assistive tech through the BUTTON's accessible name;
+ * the badge itself is decorative and `aria-hidden`, exactly as the mobile
+ * bell's is.
  *
  * The count is a PROP, not a read of its own. It is one number and the parent
  * already has it; since #1344 the panels have a single owner above the whole
@@ -118,7 +121,16 @@ export default function SidebarHandle({
 }: {
   readonly collapsed: boolean
   readonly onToggle: () => void
-  /** Pending collab invites + duel challenges; badged only while collapsed. */
+  /**
+   * Pending collab invites + duel challenges; badged only while collapsed.
+   *
+   * "Only while collapsed" was decided when the expanded rail listed them in
+   * full, so a badge on top of the list would have been noise. #1423 deleted
+   * that list and did not widen this: an expanded desktop rail now shows no
+   * pending-request count at all, and reaches the queue through NavBar's
+   * unbadged `Updates` link. Whether the badge should follow the count into the
+   * expanded state is an owner call, not a silent one.
+   */
   readonly pendingCount: number
 }) {
   const { t } = useTranslation('common')

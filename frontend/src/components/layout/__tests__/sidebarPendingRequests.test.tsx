@@ -84,17 +84,20 @@ describe('the rail and its pending requests', () => {
     const html = render(false)
 
     // The panel's heading and its two row kinds, by the copy they rendered.
+    //
+    // These four are LITERALS on purpose. Their catalog keys
+    // (`common:sidebar.pendingRequests.heading`, `common:requests.*`) went with
+    // the markup, and a negative assertion phrased as `i18n.t('<deleted key>')`
+    // compares against the key string itself — which the page never contains,
+    // so the guard would pass without looking at anything. `actions.accept` and
+    // `actions.decline` below survive and have other readers, so those stay
+    // catalog-driven.
     expect(html, 'panel heading').not.toContain('Pending Requests')
-    expect(html, 'PendingRequestRow kicker').not.toContain(
-      i18n.t('common:requests.collabInvite'),
-    )
-    expect(html, 'PendingRequestRow kicker').not.toContain(
-      i18n.t('common:requests.duelChallenge'),
-    )
-    expect(html, 'AwaitingSubmissionRow kicker').not.toContain(
-      i18n.t('common:requests.awaitingSubmissionCollab'),
-    )
+    expect(html, 'PendingRequestRow kicker').not.toContain('Collab Invite')
+    expect(html, 'PendingRequestRow kicker').not.toContain('Duel Challenge')
+    expect(html, 'AwaitingSubmissionRow kicker').not.toContain('Your turn')
     // Answering happens in the queue now, never here (ADR-0070).
+    expect(i18n.t('common:actions.accept'), 'guard: key resolves').toBe('Accept')
     expect(html, 'accept').not.toContain(i18n.t('common:actions.accept'))
     expect(html, 'decline').not.toContain(i18n.t('common:actions.decline'))
   })
