@@ -994,14 +994,7 @@ async def list_praxes(
                 )
                 .exists()
             )
-            query = query.where(
-                ~account_voted,
-                ~account_member,
-                # Same "votable" half, for the other permanent block: a failed
-                # praxis is closed to voting (#1373, ``services.vote``). It stays
-                # in the unfiltered feed; it just cannot need anyone's vote.
-                Praxis.moderation_status != ModerationStatus.failed,
-            )
+            query = query.where(~account_voted, ~account_member)
 
     if moderation_status is not None:
         try:

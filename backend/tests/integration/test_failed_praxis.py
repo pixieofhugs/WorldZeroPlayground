@@ -1,4 +1,4 @@
-"""A praxis an admin marks ``failed`` earns nobody points, and closes to voting (#1373).
+"""A praxis an admin marks ``failed`` earns nobody points — and that is ALL it changes (#1373).
 
 Seams under test:
 
@@ -8,9 +8,11 @@ Seams under test:
 2. ``services.praxis.moderate_praxis`` (reached via ``PATCH
    /admin/praxes/{id}/moderate``) — the moderation transition must *trigger* the
    recompute, so a score corrected only on the next unrelated vote is a bug.
-3. ``services.vote`` — voting closes on a failed praxis (owner-unruled
-   sub-question; see the PR description). Listing deliberately does NOT change:
-   a failed praxis stays in the feed wearing its banner.
+3. Listing and voting deliberately do NOT change. Owner ruling (Molly,
+   2026-07-30): only points change. A failed praxis stays in the feed wearing its
+   banner, and stays votable. The last two tests pin that, because "a vote that
+   cannot move a score should be blocked" is a tempting tidy-up that has already
+   been proposed once and ruled against.
 """
 
 import pytest
@@ -154,17 +156,24 @@ async def test_restoring_a_failed_praxis_restores_the_score(
 
 
 @pytest.mark.asyncio
-async def test_failed_praxis_closes_to_voting(
+async def test_failed_praxis_stays_votable(
     client: AsyncClient,
     db_session: AsyncSession,
     auth_headers2: dict,
     character2: Character,
     praxis_solo: Praxis,
 ):
-    """Voting closes: the budget must not be spent on a praxis that cannot score.
+    """Voting stays OPEN on a failed praxis — owner ruling (Molly, 2026-07-30).
+
+    `failed` changes exactly one thing: the praxis banks no points. It keeps its
+    place in the feed, it keeps its banner, and it keeps its ratings module. The
+    argument for closing voting was that a vote costs the voter finite budget
+    (ADR-0043) and can no longer move any score; the ruling is that only the
+    scoring changes, so this test exists to stop that reasoning being re-applied
+    later as an obvious tidy-up.
 
     ``character2`` is requested so the voter really exists — without it the POST
-    403s on "no active character" and the test would pass for the wrong reason.
+    403s on "no active character" and this would pass for the wrong reason.
     """
     praxis_solo.moderation_status = ModerationStatus.failed
     await db_session.commit()
@@ -172,11 +181,11 @@ async def test_failed_praxis_closes_to_voting(
     response = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 200, response.text
 
     detail = await client.get(f"/praxes/{praxis_solo.id}", headers=auth_headers2)
     assert detail.status_code == 200
-    assert detail.json()["viewer_can_vote"] is False
+    assert detail.json()["viewer_can_vote"] is True
 
 
 @pytest.mark.asyncio
