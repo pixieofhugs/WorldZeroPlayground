@@ -86,7 +86,7 @@ async def test_sidebar_returns_all_three_panels(
     assert response.status_code == 200
     data = response.json()
 
-    assert [item["type"] for item in data["pending_requests"]] == ["collab_invite"]
+    assert data["pending_requests_count"] == 1  # the collab invite
     # `active_task` is active in the current era, so it is global news. The
     # global panel also carries the era announcement — the rail renders that
     # type too — so this asserts membership, not the whole list.
@@ -175,7 +175,7 @@ async def test_sidebar_without_a_character_is_empty(
     response = await client.get("/me/sidebar", headers=auth_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "pending_requests": [],
+        "pending_requests_count": 0,
         "global_activity": [],
         "active_praxes": [],
     }

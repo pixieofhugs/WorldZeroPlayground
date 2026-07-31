@@ -12,7 +12,7 @@ import { useAuth } from '../auth/AuthContext'
 import { onRequestsChanged } from '../utils/requestsBus'
 
 const EMPTY_PANELS: SidebarPanels = {
-  pending_requests: [],
+  pending_requests_count: 0,
   global_activity: [],
   active_praxes: [],
 }

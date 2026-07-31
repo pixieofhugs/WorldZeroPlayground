@@ -1406,11 +1406,8 @@ async def _build_fetch_context(
     )
 
 
-# The two feed panels on the desktop rail (#1344). The requests panel wants
-# every unresolved invite and challenge — inherently a small set, and already
-# bounded far below this by SUB_QUERY_LIMIT per source; the global panel is a
-# glance, not a list.
-SIDEBAR_REQUESTS_LIMIT = 100
+# The rail's global panel is a glance, not a list. The requests side has no
+# limit constant any more: it is a COUNT, and a number has nothing to truncate.
 SIDEBAR_GLOBAL_LIMIT = 5
 
 
@@ -1418,47 +1415,58 @@ async def get_sidebar_feed(
     character_id: int,
     session: AsyncSession,
     session_factory: Callable,
-) -> tuple[list[ActivityFeedItemDC], list[ActivityFeedItemDC]]:
-    """The rail's ``requests`` and ``global`` panels, from ONE fan-out (#1344).
+) -> tuple[int, list[ActivityFeedItemDC]]:
+    """The rail's pending-request COUNT and its ``global`` panel, in one pass.
 
-    The rail used to ask ``/activity-feed`` twice, once per filter, and each ask
-    paid the full five-round-trip pre-fetch *and* the fifteen badge COUNT
-    queries. Both panels are slices of the same registry, so this runs the
-    fan-out once over the union of their sources and partitions the result by
-    which panel each source belongs to.
+    Returns ``(pending_requests_count, global_activity)``, the list newest-first.
 
-    No counts: the rail draws no badges. That is the whole reason this does not
-    simply call :func:`get_activity_feed` twice — the counts are more than half
-    the queries and none of them are looked at.
+    WHY A COUNT AND NOT A LIST (#1456)
+    ----------------------------------
+    This used to hand back up to a hundred fully-hydrated request items so that
+    three consumers — the collapsed rail handle, the mobile bell and the mobile
+    FieldDesk — could each read ``.length``. Since #1423 nothing renders them:
+    the Requests queue on ``/updates`` is the only surface a request can be
+    answered on (ADR-0070). One integer is the whole of what is left.
 
-    Returns ``(pending_requests, global_activity)``, each newest-first.
+    The two sides do not share a fan-out, because they no longer overlap: the
+    four request sources and the two global sources are disjoint in the
+    registry. Requests are counted with :func:`_run_source_count`, global news
+    is fetched with :func:`_run_source_fetch`, and all six queries still go out
+    concurrently — the same six round trips as before, four of them now COUNTs
+    over the identical windowed Select instead of row hydration.
+
+    WHY THE NUMBER CANNOT DRIFT FROM THE QUEUE
+    ------------------------------------------
+    It is the same computation ``counts.requests`` runs, from the same
+    ``_visible_types`` authority and the same live context (ADR-0036): one COUNT
+    per source, wrapping that source's own query so it inherits the same WHERE,
+    the same ``SUB_QUERY_LIMIT`` window and the same archive filter. A badge that
+    disagreed with the list under it is precisely what that ADR exists to
+    prevent, and the equality is pinned by
+    ``test_sidebar_badge_equals_the_requests_queue_card_count``.
     """
     fetch_ctx, archive_view = await _build_fetch_context(
         character_id, session, before_cursor=None, archived=False
     )
-    panel_filters = frozenset({FILTER_REQUESTS, FILTER_GLOBAL})
-    sources = [
-        source for source in FEED_SOURCES if not source.filters.isdisjoint(panel_filters)
-    ]
-    results = await asyncio.gather(*(
-        _run_source_fetch(source, fetch_ctx, archive_view, session_factory)
-        for source in sources
-    ))
 
-    def panel(feed_filter: str, limit: int) -> list[ActivityFeedItemDC]:
-        items = [
-            item
-            for source, source_items in zip(sources, results)
-            if feed_filter in source.filters
-            for item in source_items
-        ]
-        items.sort(key=lambda item: item.timestamp, reverse=True)
-        return items[:limit]
+    def sources_for(feed_filter: str) -> list[FeedSource]:
+        visible = _visible_types(feed_filter, archived=False)
+        return [source for source in FEED_SOURCES if source.item_type in visible]
 
-    return (
-        panel(FILTER_REQUESTS, SIDEBAR_REQUESTS_LIMIT),
-        panel(FILTER_GLOBAL, SIDEBAR_GLOBAL_LIMIT),
+    request_counts, global_results = await asyncio.gather(
+        asyncio.gather(*(
+            _run_source_count(source, fetch_ctx, archive_view, session_factory)
+            for source in sources_for(FILTER_REQUESTS)
+        )),
+        asyncio.gather(*(
+            _run_source_fetch(source, fetch_ctx, archive_view, session_factory)
+            for source in sources_for(FILTER_GLOBAL)
+        )),
     )
+
+    global_activity = [item for items in global_results for item in items]
+    global_activity.sort(key=lambda item: item.timestamp, reverse=True)
+    return sum(request_counts), global_activity[:SIDEBAR_GLOBAL_LIMIT]
 
 
 async def get_activity_feed(

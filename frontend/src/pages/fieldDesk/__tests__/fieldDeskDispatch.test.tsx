@@ -30,7 +30,7 @@ vi.mock('../../../hooks/useMyCharacterStats', () => ({
 }))
 vi.mock('../../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => ({
-    pending_requests: [],
+    pending_requests_count: 0,
     global_activity: [],
     active_praxes: [],
     loading: false,
