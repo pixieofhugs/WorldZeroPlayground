@@ -24,7 +24,6 @@ from services.faction_service import (
     defect_to_faction,
     get_invitation_status,
 )
-from models.invitation_letter import InvitationLetter
 
 router = APIRouter()
 
@@ -76,13 +75,21 @@ async def get_faction_status(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Return faction page data: current faction and status of all factions.
+    """Return faction page data: current faction, per-faction status, and letters.
 
     Albescent (ADR-0027, #390) is omitted from ``all_factions`` unless this
     account has been revealed to the secret society.
+
+    ``invitations`` is not filtered the same way, and does not need to be:
+    ``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no
+    Albescent letter is ever delivered, so there is nothing here to leak. This
+    array replaces ``GET /factions/invitations`` (#1384), which re-ran the same
+    ``InvitationLetter`` select against the same character and era row that
+    ``get_invitation_status`` already runs — and whose only caller paired the
+    two requests anyway.
     """
     era_row = await get_current_era_row(session)
-    status_map = await get_invitation_status(
+    status_map, letters = await get_invitation_status(
         character.id, era_row.id, session
     )
     all_factions = [
@@ -96,27 +103,5 @@ async def get_faction_status(
     return FactionPageOut(
         current_faction_slug=character.faction_slug,
         all_factions=all_factions,
+        invitations=[InvitationLetterOut.model_validate(letter) for letter in letters],
     )
-
-
-@router.get("/invitations", response_model=list[InvitationLetterOut])
-async def list_invitations(
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    """Return all invitation letters delivered to the current character."""
-    era_row = await get_current_era_row(session)
-    result = await session.execute(
-        select(InvitationLetter).where(
-            InvitationLetter.character_id == character.id,
-            InvitationLetter.era_id == era_row.id,
-        )
-    )
-    letters = result.scalars().all()
-    return [
-        InvitationLetterOut(
-            faction_slug=letter.faction_slug,
-            delivered_at=letter.delivered_at,
-        )
-        for letter in letters
-    ]

@@ -78,6 +78,69 @@ async def test_faction_status_unauthenticated(client: AsyncClient):
     assert resp.status_code == 401
 
 
+@pytest.mark.asyncio
+async def test_faction_status_carries_invitation_letters(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    faction_ua: Faction,
+    era: Era,
+    db_session: AsyncSession,
+):
+    """The letters the deleted /factions/invitations returned now ride on /status (#1384).
+
+    Asserts the VALUE, not merely the field's presence: the ``delivered_at`` the
+    fold emits must be the stored letter's own timestamp, because the two routes
+    always read the exact same rows.
+    """
+    from datetime import datetime
+
+    from sqlalchemy import select
+
+    from models.invitation_letter import InvitationLetter
+
+    db_session.add(InvitationLetter(
+        character_id=character.id,
+        faction_slug="ua",
+        era_id=era.id,
+    ))
+    await db_session.commit()
+
+    stored = (await db_session.execute(
+        select(InvitationLetter).where(InvitationLetter.character_id == character.id)
+    )).scalars().one()
+
+    resp = await client.get("/factions/status", headers=auth_headers)
+    assert resp.status_code == 200
+    letters = resp.json()["invitations"]
+    assert [letter["faction_slug"] for letter in letters] == ["ua"]
+    assert datetime.fromisoformat(letters[0]["delivered_at"]) == stored.delivered_at
+
+
+@pytest.mark.asyncio
+async def test_faction_status_invitations_empty_without_letters(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    faction_ua: Faction,
+    era: Era,
+):
+    """Holding no letters, the folded array is present and empty — never absent."""
+    resp = await client.get("/factions/status", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["invitations"] == []
+
+
+@pytest.mark.asyncio
+async def test_invitations_endpoint_is_gone(
+    client: AsyncClient,
+    auth_headers: dict,
+):
+    """GET /factions/invitations is deleted — it ran /status's exact query (#1384)."""
+    resp = await client.get("/factions/invitations", headers=auth_headers)
+    assert resp.status_code == 404
+
+
 # ---------------------------------------------------------------------------
 # Defection history
 # ---------------------------------------------------------------------------

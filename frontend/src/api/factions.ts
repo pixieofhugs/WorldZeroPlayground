@@ -13,14 +13,18 @@ export interface FactionStatusOut {
   status: string // member, invited, not_invited, defected, can_return
 }
 
-export interface FactionPageOut {
-  current_faction_slug: string
-  all_factions: FactionStatusOut[]
-}
-
 export interface InvitationLetterOut {
   faction_slug: string
   delivered_at: string
+}
+
+export interface FactionPageOut {
+  current_faction_slug: string
+  all_factions: FactionStatusOut[]
+  // #1384: the letters arrive with the status map. `GET /factions/invitations`
+  // ran the same query the status map was already built from, and every caller
+  // requested the pair, so there is no longer a second endpoint to call.
+  invitations: InvitationLetterOut[]
 }
 
 export async function getFactions(): Promise<FactionOut[]> {
@@ -30,11 +34,6 @@ export async function getFactions(): Promise<FactionOut[]> {
 
 export async function getFactionStatus(): Promise<FactionPageOut> {
   const res = await api.get<FactionPageOut>('/factions/status')
-  return res.data
-}
-
-export async function getInvitations(): Promise<InvitationLetterOut[]> {
-  const res = await api.get<InvitationLetterOut[]>('/factions/invitations')
   return res.data
 }
 
