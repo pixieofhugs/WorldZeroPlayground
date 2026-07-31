@@ -461,39 +461,6 @@ async def retire_task(
     return await build_task_out(task, session)
 
 
-class TaskVisionToggle(BaseModel):
-    is_task_vision_eligible: bool
-
-
-@router.patch("/tasks/{task_id}/task-vision", response_model=TaskOut)
-async def admin_toggle_task_vision(
-    task_id: int,
-    data: TaskVisionToggle,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-):
-    """Admin-only: toggle whether Ephemerists/Albescent can access a retired task."""
-    task = await session.get(Task, task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found.")
-    task.is_task_vision_eligible = data.is_task_vision_eligible
-    await session.flush()
-    await session.refresh(task)
-    return await build_task_out(task, session)
-
-
-@router.delete("/praxes/{praxis_id}", status_code=204)
-async def admin_delete_praxis(
-    praxis_id: int,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-):
-    # Soft-delete is a moderation transition spelled a second way, so it routes
-    # through the same service — which is what recalculates the members' stats
-    # (#1373). Hiding a praxis in the route used to leave its points banked.
-    await moderate_praxis(praxis_id, ModerationStatus.hidden.value, None, session)
-
-
 @router.post("/characters/{character_id}/ban", status_code=200)
 async def ban_character(
     character_id: int,

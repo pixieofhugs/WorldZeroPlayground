@@ -66,11 +66,6 @@ export async function issueChallenge(data: DuelChallengeIn): Promise<DuelOut> {
   return result
 }
 
-export async function getDuel(duelId: number): Promise<DuelOut> {
-  const { data } = await api.get<DuelOut>(`/duels/${duelId}`)
-  return data
-}
-
 export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
   const { data } = await api.get<DuelDetailOut>(`/duels/${duelId}/detail`)
   // Server truth for BOTH sides' `points_from_votes` — retire any local override
@@ -95,10 +90,5 @@ export async function respondToChallenge(duelId: number, data: DuelRespondIn): P
 
 export async function cancelChallenge(duelId: number): Promise<DuelOut> {
   const { data } = await api.post<DuelOut>(`/duels/${duelId}/cancel`)
-  return data
-}
-
-export async function listPendingChallenges(): Promise<DuelOut[]> {
-  const { data } = await api.get<DuelOut[]>('/duels/pending')
   return data
 }

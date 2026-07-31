@@ -83,19 +83,6 @@ async def test_faction_status_unauthenticated(client: AsyncClient):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_defection_history_empty(
-    client: AsyncClient,
-    character: Character,
-    auth_headers: dict,
-    era: Era,
-):
-    """A fresh character has no defection history."""
-    resp = await client.get("/factions/defection-history", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json() == []
-
-
 # ---------------------------------------------------------------------------
 # Choose faction (defection)
 # ---------------------------------------------------------------------------

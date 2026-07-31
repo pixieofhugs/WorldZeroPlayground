@@ -11,7 +11,6 @@ from models.account import Account
 from models.character import Character
 from models.faction import Faction, FactionStatus
 from schemas.faction import (
-    DefectionHistoryOut,
     FactionChoiceRequest,
     FactionOut,
     FactionPageOut,
@@ -23,7 +22,6 @@ from services.character import ALBESCENT_FACTION_SLUG
 from services.era import get_current_era_row
 from services.faction_service import (
     defect_to_faction,
-    get_defection_history,
     get_invitation_status,
 )
 from models.invitation_letter import InvitationLetter
@@ -121,21 +119,4 @@ async def list_invitations(
             delivered_at=letter.delivered_at,
         )
         for letter in letters
-    ]
-
-
-@router.get("/defection-history", response_model=list[DefectionHistoryOut])
-async def list_defection_history(
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    """Return defection history for the current character in the current era."""
-    era_row = await get_current_era_row(session)
-    records = await get_defection_history(character.id, era_row.id, session)
-    return [
-        DefectionHistoryOut(
-            faction_slug=record.faction_slug,
-            defected_at=record.defected_at,
-        )
-        for record in records
     ]
