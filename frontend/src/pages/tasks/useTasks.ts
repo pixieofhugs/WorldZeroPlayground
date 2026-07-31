@@ -1,18 +1,24 @@
 /**
- * useTasks — the shared task-browse data + filter state, extracted verbatim from
- * the legacy Tasks.tsx so the desktop list and the mobile browse skin consume
- * one source of truth (mirrors useTaskDetail for the detail page).
+ * useTasks — the shared task-browse data + filter state, so the desktop list and
+ * the mobile browse skin consume one source of truth (mirrors useTaskDetail for
+ * the detail page).
  *
- * The factions/factionConfigs reads (both app-wide cached hooks), the
- * status/faction/eligibility filter
- * state, the task read keyed on those filters + the viewer's character id, and
- * the signup → navigate-to-edit handler with its inline message. The free-text search (#661) rides
- * alongside them, debounced 200ms via `useDebouncedValue` — the idiom #644 set on
- * the praxis feed — but its value lives in the URL (`?q=`, via
- * `useSearchQueryParam`, #660) rather than local state, so a pasted or refreshed
- * link restores it. The read runs through the shared `usePagedResource` growing
- * window (#645): filter setters (search included) reset the window and a full
- * page exposes "load more".
+ * The factions/factionConfigs reads (both app-wide cached hooks), the filter
+ * state, the task read keyed on those filters, and the signup →
+ * navigate-to-edit handler with its inline message.
+ *
+ * EVERY axis lives in the URL (#1367, epic #1361 ruling 7) — type, sort, status,
+ * faction and eligibility joined `?q=`, which `useSearchQueryParam` has owned
+ * since #660. There is no mirrored `useState` for any of them: the URL is the
+ * single source of truth, so a pasted or refreshed link restores the whole
+ * filter set, and "clear all" is one param write rather than five setter calls.
+ * Writes replace rather than push, for the reason `useSearchQueryParam` gives:
+ * Back should leave the page, not walk the filters one at a time.
+ *
+ * The free-text search is debounced 200ms via `useDebouncedValue` — the idiom
+ * #644 set on the praxis feed. The read runs through the shared
+ * `usePagedResource` growing window (#645): filter setters (search included)
+ * reset the window and a full page exposes "load more".
  *
  * The level filter is gone (#1130). It selected `level_required >= level` — the
  * tasks you are locked OUT of — and no level number could express WOW's
@@ -22,8 +28,13 @@
  * an era value and #1046's "never hardcode an EraConfig value" is not reopened.
  */
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { listTasks, type TaskOut, type TaskType } from '../../api/tasks'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  listTasks,
+  type TaskOut,
+  type TaskSort,
+  type TaskType,
+} from '../../api/tasks'
 import { createPraxis } from '../../api/praxis'
 import type { FactionOut } from '../../api/factions'
 import type { FactionConfigOut } from '../../api/gameConfig'
@@ -34,11 +45,91 @@ import { useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
-import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
+import {
+  SEARCH_QUERY_PARAM,
+  useSearchQueryParam,
+} from '../../hooks/useSearchQueryParam'
 import type { CurrentUser } from '../../api/auth'
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
+
+/**
+ * The URL params the task browse owns, beside `useSearchQueryParam`'s `?q=`.
+ * Named here rather than inline so a typo can't silently drop an axis, and so
+ * "clear all" can enumerate them.
+ */
+export const TASK_FILTER_PARAMS = {
+  taskType: 'type',
+  sort: 'sort',
+  status: 'status',
+  faction: 'faction',
+  canSignUp: 'can_sign_up',
+} as const
+
+/** Browse mode default: ordinary tasks, metatasks excluded backend-side. */
+export const TASK_TYPE_DEFAULT: TaskType = 'standard'
+/**
+ * Sort default (#1361 ruling 6). NOT the first segment and NOT `newest`: the
+ * page has always been `level_required ASC, point_value DESC`, which it got by
+ * sending no `sort` at all. Naming that ordering is what stops a bare
+ * newest/oldest pair from silently deleting it.
+ */
+export const TASK_SORT_DEFAULT: TaskSort = 'level'
+export const TASK_STATUS_DEFAULT = 'All'
+/** The eligibility axis is a flag; this is its one non-default value. */
+export const CAN_SIGN_UP_ON = '1'
+
+/** Navigation options for every filter write: replace, never push. */
+const FILTER_NAV_OPTIONS = { replace: true } as const
+
+/** Read one single-valued axis. A missing or blank param IS the default. */
+export function readFilterParam(
+  params: URLSearchParams,
+  key: string,
+  defaultValue: string,
+): string {
+  return params.get(key) || defaultValue
+}
+
+/**
+ * The next param set for one axis. Non-default values only: an axis sitting on
+ * its default is REMOVED from the URL rather than spelled out, so a clean
+ * browse has a clean address. Every other param carries through untouched.
+ */
+export function nextFilterParams(
+  previous: URLSearchParams,
+  key: string,
+  value: string,
+  defaultValue: string,
+): URLSearchParams {
+  const next = new URLSearchParams(previous)
+  if (value === defaultValue) next.delete(key)
+  else next.set(key, value)
+  return next
+}
+
+/** Multi-select faction as the repeated `?faction=` union B2 (#1364) accepts. */
+export function nextFactionParams(
+  previous: URLSearchParams,
+  slugs: string[],
+): URLSearchParams {
+  const next = new URLSearchParams(previous)
+  next.delete(TASK_FILTER_PARAMS.faction)
+  for (const slug of slugs) next.append(TASK_FILTER_PARAMS.faction, slug)
+  return next
+}
+
+/**
+ * Every axis back to its default, search included — what "clear all filters"
+ * means. Params this page does not own are left alone.
+ */
+export function clearedFilterParams(previous: URLSearchParams): URLSearchParams {
+  const next = new URLSearchParams(previous)
+  for (const key of Object.values(TASK_FILTER_PARAMS)) next.delete(key)
+  next.delete(SEARCH_QUERY_PARAM)
+  return next
+}
 
 export interface SignupMessage {
   id: number
@@ -58,9 +149,10 @@ export interface TasksState {
   // Reference data
   factions: FactionOut[]
   factionConfigs: FactionConfigOut[]
+  /** Viewer-gated: `retired` / `pending` only for a viewer allowed to see them. */
   statusFilters: string[]
 
-  // Filter state (setters reset the growing window).
+  // Filter state. Every setter writes the URL and resets the growing window.
   /**
    * Browse mode (#934): 'standard' lists ordinary tasks (the default, metatasks
    * excluded backend-side), 'metatask' lists issuing-faction metatask rows —
@@ -68,10 +160,14 @@ export interface TasksState {
    */
   taskType: TaskType
   setTaskType: (taskType: TaskType) => void
+  /** Ordering (#1364). Defaults to `level`; see {@link TASK_SORT_DEFAULT}. */
+  sort: TaskSort
+  setSort: (sort: TaskSort) => void
   status: string
   setStatus: (status: string) => void
-  faction: string
-  setFaction: (faction: string) => void
+  /** Faction multi-select — a union, empty meaning "every faction". */
+  selectedFactions: string[]
+  setSelectedFactions: (slugs: string[]) => void
   /**
    * "Tasks I can sign up for" (#1130). Defaults OFF — the tasks page is a
    * catalogue, and hiding most of it by default would make tasks look scarce
@@ -84,6 +180,8 @@ export interface TasksState {
   /** Raw search box value (bind directly); the fetch reads a debounced copy (#661). */
   query: string
   setQuery: (query: string) => void
+  /** Every axis back to its default, search included. */
+  clearFilters: () => void
 
   // Growing window (#645).
   hasMore: boolean
@@ -120,10 +218,26 @@ export function useTasks(): TasksState {
   const factions: FactionOut[] = useFactions() ?? []
   const gameConfig = useGameConfig()
   const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
-  const [taskType, setTaskTypeState] = useState<TaskType>('standard')
-  const [status, setStatusState] = useState('All')
-  const [faction, setFactionState] = useState('')
-  const [canSignUp, setCanSignUpState] = useState(false)
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  const taskType = readFilterParam(
+    searchParams,
+    TASK_FILTER_PARAMS.taskType,
+    TASK_TYPE_DEFAULT,
+  ) as TaskType
+  const sort = readFilterParam(
+    searchParams,
+    TASK_FILTER_PARAMS.sort,
+    TASK_SORT_DEFAULT,
+  ) as TaskSort
+  const status = readFilterParam(
+    searchParams,
+    TASK_FILTER_PARAMS.status,
+    TASK_STATUS_DEFAULT,
+  )
+  const selectedFactions = searchParams.getAll(TASK_FILTER_PARAMS.faction)
+  const canSignUp =
+    searchParams.get(TASK_FILTER_PARAMS.canSignUp) === CAN_SIGN_UP_ON
   const [query, setQueryState] = useSearchQueryParam()
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
 
@@ -132,16 +246,21 @@ export function useTasks(): TasksState {
   const debouncedQuery = useDebouncedValue(query, 200)
 
   const trimmedQuery = debouncedQuery.trim()
+  // `getAll` hands back a fresh array every render, so the dep key is the joined
+  // string; the array itself only reaches the request body.
+  const factionKey = selectedFactions.join(',')
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
     (limit) =>
       listTasks({
         // 'standard' → omit task_type so the backend applies its default
         // (metatasks excluded); 'metatask' → list only metatask rows.
         task_type: taskType === 'metatask' ? 'metatask' : undefined,
-        status: status === 'All' ? undefined : status,
-        faction: faction || undefined,
-        // Omitted rather than sent as false so the query key stays the shape it
-        // had before the filter existed.
+        status: status === TASK_STATUS_DEFAULT ? undefined : status,
+        faction: selectedFactions.length > 0 ? selectedFactions : undefined,
+        // Every default is omitted rather than spelled out, so the common
+        // request keeps the exact shape it had before the axis existed. An
+        // absent `sort` already means level-ascending server-side.
+        sort: sort === TASK_SORT_DEFAULT ? undefined : sort,
         can_sign_up: canSignUp || undefined,
         q: trimmedQuery || undefined,
         // The server excludes the authenticated viewer's own started tasks by
@@ -149,18 +268,34 @@ export function useTasks(): TasksState {
         // auth-dependent dep that made the page fetch twice.
         limit,
       }),
-    [taskType, status, faction, canSignUp, trimmedQuery],
+    [taskType, sort, status, factionKey, canSignUp, trimmedQuery],
     PAGE_LIMIT,
   )
   const tasks = data ?? []
 
   // Every filter change resets the window so "load more" can't strand a grown
   // page against a freshly-narrowed result set.
-  const setTaskType = (next: TaskType) => { setTaskTypeState(next); resetWindow() }
-  const setStatus = (next: string) => { setStatusState(next); resetWindow() }
-  const setFaction = (next: string) => { setFactionState(next); resetWindow() }
-  const setCanSignUp = (next: boolean) => { setCanSignUpState(next); resetWindow() }
+  const writeParams = (
+    build: (previous: URLSearchParams) => URLSearchParams,
+  ): void => {
+    setSearchParams(build, FILTER_NAV_OPTIONS)
+    resetWindow()
+  }
+  const setAxis = (key: string, value: string, defaultValue: string): void =>
+    writeParams((previous) => nextFilterParams(previous, key, value, defaultValue))
+
+  const setTaskType = (next: TaskType) =>
+    setAxis(TASK_FILTER_PARAMS.taskType, next, TASK_TYPE_DEFAULT)
+  const setSort = (next: TaskSort) =>
+    setAxis(TASK_FILTER_PARAMS.sort, next, TASK_SORT_DEFAULT)
+  const setStatus = (next: string) =>
+    setAxis(TASK_FILTER_PARAMS.status, next, TASK_STATUS_DEFAULT)
+  const setSelectedFactions = (slugs: string[]) =>
+    writeParams((previous) => nextFactionParams(previous, slugs))
+  const setCanSignUp = (next: boolean) =>
+    setAxis(TASK_FILTER_PARAMS.canSignUp, next ? CAN_SIGN_UP_ON : '', '')
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
+  const clearFilters = () => writeParams(clearedFilterParams)
 
   const handleSignup = async (id: number) => {
     setSignupMsg(null)
@@ -172,7 +307,7 @@ export function useTasks(): TasksState {
     }
   }
 
-  const statusFilters = ['All', 'active']
+  const statusFilters = [TASK_STATUS_DEFAULT, 'active']
   if (user?.can_see_retired_tasks) statusFilters.push('retired')
   if (user?.can_see_pending_tasks) statusFilters.push('pending')
 
@@ -204,14 +339,17 @@ export function useTasks(): TasksState {
 
     taskType,
     setTaskType,
+    sort,
+    setSort,
     status,
     setStatus,
-    faction,
-    setFaction,
+    selectedFactions,
+    setSelectedFactions,
     canSignUp,
     setCanSignUp,
     query,
     setQuery,
+    clearFilters,
 
     hasMore,
     loadMore,
