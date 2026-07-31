@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from game_config import CURRENT_ERA, EraConfig
 from models.praxis import Praxis, PraxisInviteStatus, PraxisStatus, PraxisType
 from services.character_stats import recalculate_character_stats
-from services.era import get_current_era_row
+from services.era import get_era_row_for_praxis
 
 
 def _apply_seal(praxis: Praxis) -> None:
@@ -58,7 +58,7 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
     """
     _apply_seal(praxis)
     await session.flush()
-    era_row = await get_current_era_row(session)
+    era_row = await get_era_row_for_praxis(praxis, session)
     for member in praxis.members:
         await recalculate_character_stats(member.character_id, session, era, era_row=era_row)
     await session.flush()
@@ -110,7 +110,7 @@ async def on_member_edit(
     await session.flush()
     if was_live:
         # Leaving Live changes scoring — recompute every member's stats.
-        era_row = await get_current_era_row(session)
+        era_row = await get_era_row_for_praxis(praxis, session)
         for member in praxis.members:
             await recalculate_character_stats(member.character_id, session, era, era_row=era_row)
         await session.flush()
@@ -232,7 +232,7 @@ async def on_member_leave(
             # Unlike the takeover path, this fires on scored praxes: the
             # collab_own/other_modifier pair gives way to own/other_task_modifier
             # under an already-published praxis, so the survivor is repriced.
-            era_row = await get_current_era_row(session)
+            era_row = await get_era_row_for_praxis(praxis, session)
             await recalculate_character_stats(
                 survivor_character_id, session, era, era_row=era_row
             )

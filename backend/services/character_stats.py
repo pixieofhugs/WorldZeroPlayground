@@ -1,10 +1,11 @@
 """Service for recomputing and persisting CharacterStats from current vote data."""
 
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.era import Era
 from models.invitation_letter import InvitationLetter
 from models.praxis import (
@@ -15,7 +16,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import get_current_era_row, get_next_era_row, get_or_create_stats
 from services.praxis_scoring import Contribution, compute_contributions
 from services.scoring import compute_level
 
@@ -31,6 +32,72 @@ _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
 _UNSCORED_MODERATION_STATUSES: frozenset[ModerationStatus] = frozenset(
     {ModerationStatus.hidden, ModerationStatus.failed}
 )
+
+
+def _era_window_condition(
+    era_row: Era, next_era_row: Era | None
+) -> ColumnElement[bool]:
+    """The seal-time bound that puts a praxis inside ``era_row``'s era (#1345).
+
+    ``CharacterStats`` is one row per (character, era), so a gather that summed
+    every praxis ever filed was crediting one era's row with another era's work
+    — which is how an era reset silently undid itself on the next recalc.
+
+    ``Praxis`` carries no ``era_id``, so era membership is a **seal-time** fact:
+    ``[era.started_at, next_era.started_at)``, the same bound
+    :class:`services.praxis.PraxisEraScope` reads (#1362). Both gathers below
+    compose this with ``_UNSCORED_MODERATION_STATUSES`` so they cannot drift.
+
+    A NULL ``submitted_at`` counts for the **live** era only.
+    ``services.collab_consensus._apply_seal`` establishes
+    ``status == submitted ⟹ submitted_at IS NOT NULL``, so no honest row lands
+    in that branch; it exists so corrupt data cannot silently zero a score, and
+    confining it to the open era stops one such row scoring once per era that
+    ever ran.
+
+    ponytail: seal time is the bound because there is no column to read. #1398
+    adds ``praxis.era_id`` stamped at submit — when it lands, this collapses to
+    ``Praxis.era_id == era_row.id`` and both callers below simplify with it.
+    """
+    if next_era_row is None:
+        return or_(
+            Praxis.submitted_at.is_(None),
+            Praxis.submitted_at >= era_row.started_at,
+        )
+    return and_(
+        Praxis.submitted_at >= era_row.started_at,
+        Praxis.submitted_at < next_era_row.started_at,
+    )
+
+
+async def _credit_all_time_score(
+    character_id: int, from_era_id: int, delta: int, session: AsyncSession
+) -> None:
+    """Move ``all_time_score`` by ``delta`` on ``from_era_id``'s row and every later one.
+
+    ``all_time_score`` is LIFETIME CUMULATIVE — a sum across eras, so era 1's 500
+    plus era 2's 30 is 530 (#1345). Before the gather was era-bounded this fell
+    out of ``max(all_time_score, total_score)`` by accident, because
+    ``total_score`` *was* the lifetime sum; bounding the gather turns that same
+    line into "your best single era".
+
+    It is applied as a delta rather than re-derived as ``SUM(score)`` because
+    ``EraConfig.reset_all_time_score`` lets an era declare a fresh lifetime, and
+    that zero baseline lives in the row ``services.era.apply_era_reset`` wrote —
+    a re-derivation would undo it exactly the way the unbounded gather undid a
+    score reset. Crediting *forward* is what lets a vote on a closed era's
+    praxis raise the author's lifetime figure without moving the ladder they are
+    climbing today. In an ordinary live-era recalc there are no later rows, so
+    this touches only the row the caller already holds.
+    """
+    result = await session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character_id,
+            CharacterStats.era_id >= from_era_id,
+        )
+    )
+    for stats in result.scalars():
+        stats.all_time_score += delta
 
 
 async def _deliver_earned_invitations(
@@ -110,11 +177,26 @@ async def recalculate_character_stats(
 ) -> None:
     """Recompute and persist score, level, and vote budget for a character.
 
-    Gathers all submitted praxes the character has a stake in — solo/duel praxes
-    they authored, plus collab praxes they are a member of — then delegates all
-    scoring arithmetic to ``compute_contributions`` (ADR-0014). Praxes in an
+    Gathers the submitted praxes the character has a stake in **that belong to
+    ``era_row``'s era** — solo/duel praxes they authored, plus collab praxes they
+    are a member of — then delegates all scoring arithmetic to
+    ``compute_contributions`` (ADR-0014). Praxes in an
     ``_UNSCORED_MODERATION_STATUSES`` state are left out of the gather entirely,
     so they also stop counting toward faction invitations (ADR-0022).
+
+    The era bound is the fix for #1345: the row being written is one era's
+    (ADR-0042/ADR-0044), so summing every praxis ever filed made an era reset
+    undo itself the next time anything triggered a recalc. See
+    ``_era_window_condition`` for why it is a seal-time bound.
+
+    ``era_row`` may be a **past** era — the vote path passes the era a praxis was
+    sealed in, so a vote on closed-era work credits that era's row. In that case
+    no faction invitation is delivered: the letters carry an ``era_id`` and an
+    invite is a thing you receive in the era you are playing, not one recomputing
+    history hands you now.
+
+    ``score`` and ``level`` are per-era; ``all_time_score`` stays lifetime — see
+    ``_credit_all_time_score``.
 
     Safe to call on praxis creation (0 votes → base points only) or after any
     vote change.
@@ -134,6 +216,10 @@ async def recalculate_character_stats(
     stats = await get_or_create_stats(session, character_id, era_row.id)
     author_level = stats.level
 
+    # None ⟹ era_row is the live era: no upper bound, and invitations may land.
+    next_era_row = await get_next_era_row(era_row, session)
+    within_era = _era_window_condition(era_row, next_era_row)
+
     # Gather solo praxes (including duel sides) authored by this character.
     solo_result = await session.execute(
         select(Praxis).where(
@@ -141,6 +227,7 @@ async def recalculate_character_stats(
             Praxis.type == PraxisType.solo,
             Praxis.status == PraxisStatus.submitted,
             Praxis.moderation_status.notin_(list(_UNSCORED_MODERATION_STATUSES)),
+            within_era,
         )
     )
     solo_praxes = list(solo_result.scalars().all())
@@ -154,6 +241,7 @@ async def recalculate_character_stats(
             Praxis.type == PraxisType.collab,
             Praxis.status == PraxisStatus.submitted,
             Praxis.moderation_status.notin_(list(_UNSCORED_MODERATION_STATUSES)),
+            within_era,
         )
     )
     collab_praxes = list(collab_result.scalars().all())
@@ -168,9 +256,15 @@ async def recalculate_character_stats(
 
     # Vote budget is computed on read (services.scoring.compute_votes_available)
     # from stats.score and stats.votes_spent_this_era, so no bookkeeping needed here.
+    score_delta = total_score - stats.score
     stats.score = total_score
-    stats.all_time_score = max(stats.all_time_score, total_score)
     stats.level = compute_level(total_score, era)
+    if score_delta:
+        await _credit_all_time_score(character_id, era_row.id, score_delta, session)
+
+    if next_era_row is not None:
+        # Recomputing a closed era. ADR-0022 invitations are current-era mail.
+        return
 
     # ADR-0022: deliver any faction invitations this submitted-praxis set now earns.
     await _deliver_earned_invitations(

@@ -109,6 +109,48 @@ async def get_closing_era_id(new_era_row: Era, session: AsyncSession) -> int | N
     return result.scalar_one_or_none()
 
 
+async def get_next_era_row(era_row: Era, session: AsyncSession) -> Era | None:
+    """The era that succeeded ``era_row``, or None when ``era_row`` is the live one.
+
+    Mirror of :func:`get_closing_era_id`, and the upper half of an era's window.
+    ``Era`` rows are only ever appended, one per reset, so "the next era" is the
+    next id. Together with ``era_row.started_at`` this bounds an era to
+    ``[started_at, next.started_at)`` — the seal-time window
+    :func:`services.character_stats.recalculate_character_stats` scores against
+    (#1345). ``None`` doubles as "this era is still open", which is why the same
+    call also answers *may this recalc deliver invitations?*
+    """
+    result = await session.execute(
+        select(Era).where(Era.id > era_row.id).order_by(Era.id).limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_era_row_for_praxis(praxis: Praxis, session: AsyncSession) -> Era:
+    """The era a praxis belongs to — the latest era that started at or before its seal.
+
+    ``Praxis`` carries no ``era_id``; era membership is a **seal-time** fact, the
+    same bound :class:`services.praxis.PraxisEraScope` reads (#1362). An unsealed
+    praxis (``submitted_at IS NULL``) is in-flight work and belongs to the era in
+    progress, so it resolves to the current era — as does any praxis somehow
+    sealed before the first ``Era`` row existed.
+
+    Used by the vote path: a vote on a closed era's praxis credits *that* era's
+    stats row, not the ladder the author is climbing today (#1345).
+    """
+    if praxis.submitted_at is not None:
+        result = await session.execute(
+            select(Era)
+            .where(Era.started_at <= praxis.submitted_at)
+            .order_by(Era.id.desc())
+            .limit(1)
+        )
+        era_row = result.scalar_one_or_none()
+        if era_row is not None:
+            return era_row
+    return await get_current_era_row(session)
+
+
 async def resolve_duels_at_era_close(
     session: AsyncSession,
     resolved_at: datetime | None = None,

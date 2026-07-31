@@ -53,6 +53,7 @@ from services.meta_task import metatask_cap_for_level
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
+    get_era_row_for_praxis,
     get_or_create_stats,
 )
 from services.nudge import nudged_at_map
@@ -156,9 +157,14 @@ async def recalculate_members_stats(
     that already hold an ``era_row`` (e.g. a duel-forfeit recalc that reuses it)
     pass it in to avoid a re-fetch. ``leave_praxis`` deliberately does NOT use
     this — it recalcs only the single leaver, not all members.
+
+    The era defaulted to is **the praxis's**, not the live one (#1345): scores
+    are per-era, so a change to a closed era's praxis — a moderation ruling, a
+    metatask, an unsubmit — has to move that era's row or it moves nothing at
+    all. For a praxis sealed in the era in progress the two are the same row.
     """
     if era_row is None:
-        era_row = await get_current_era_row(session)
+        era_row = await get_era_row_for_praxis(praxis, session)
     for member in praxis.members:
         await recalculate_character_stats(
             member.character_id, session, era, era_row=era_row
@@ -1409,7 +1415,10 @@ async def unsubmit_praxis(
     # Recalc *every* member: on a collab, co-authors' scores also counted this
     # praxis while it was submitted, so all of them must drop (the submit paths
     # already recalc all members — this fixes the prior single-actor under-recalc).
-    era_row = await get_current_era_row(session)
+    # The era is the one the praxis was sealed in — the seal time survives the
+    # status flip above, and it is that era's row the points came out of (#1345).
+    # The forfeit winner's duel side is the same praxis's era by construction.
+    era_row = await get_era_row_for_praxis(praxis, session)
     await recalculate_members_stats(praxis, session, era, era_row=era_row)
     if forfeit_winner_character_id is not None:
         await recalculate_character_stats(
@@ -2059,8 +2068,11 @@ async def leave_praxis(
     # A departure can complete the consensus among those who stayed.
     await collab_consensus.on_member_leave(praxis, session, era)
 
-    # The leaver's stake is gone — recompute their stats regardless.
-    await recalculate_character_stats(character_id, session, era)
+    # The leaver's stake is gone — recompute their stats regardless, against the
+    # era the praxis belongs to, since that is the row their stake was in (#1345).
+    await recalculate_character_stats(
+        character_id, session, era, era_row=await get_era_row_for_praxis(praxis, session)
+    )
     await session.flush()
     return await get_praxis(praxis_id, session)
 

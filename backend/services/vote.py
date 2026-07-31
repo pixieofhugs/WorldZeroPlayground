@@ -10,7 +10,11 @@ from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import (
+    get_current_era_row,
+    get_era_row_for_praxis,
+    get_or_create_stats,
+)
 from services.scoring import compute_votes_available
 
 
@@ -51,6 +55,12 @@ async def cast_or_update_vote(
     ``CharacterStats`` row per (character, era). An account with several
     characters deliberately carries several budgets; it just cannot spend them
     twice on one praxis.
+
+    There is deliberately **no era gate**: a closed era's praxis stays votable
+    (#1345). The vote spends *this* era's budget, but it is credited to the era
+    the praxis was sealed in — so it makes the historical record and the
+    author's lifetime ``all_time_score`` more accurate without moving the ladder
+    anyone is climbing today.
     """
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
@@ -90,12 +100,19 @@ async def cast_or_update_vote(
         existing.voter_character_id = voter.id
         existing.value = value
         await session.flush()
-        await recalculate_character_stats(praxis.created_by_id, session, era)
+        await recalculate_character_stats(
+            praxis.created_by_id,
+            session,
+            era,
+            era_row=await get_era_row_for_praxis(praxis, session),
+        )
         await session.flush()
         await session.refresh(existing)
         return existing
 
-    # New vote — deduct from budget via CharacterStats (on-read recomputation)
+    # New vote — deduct from budget via CharacterStats (on-read recomputation).
+    # The budget is always the *voter's current* era, whatever era the praxis is
+    # from: voting on old work still costs a vote today (#1345).
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, voter.id, era_row.id)
 
@@ -111,7 +128,12 @@ async def cast_or_update_vote(
     stats.votes_spent_this_era += 1
     session.add(vote)
     await session.flush()
-    await recalculate_character_stats(praxis.created_by_id, session, era, era_row=era_row)
+    await recalculate_character_stats(
+        praxis.created_by_id,
+        session,
+        era,
+        era_row=await get_era_row_for_praxis(praxis, session),
+    )
     await session.flush()
     await session.refresh(vote)
     return vote
