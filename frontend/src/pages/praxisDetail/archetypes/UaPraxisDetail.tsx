@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
-import VoteUI from "../../../components/vote/VoteUI";
+import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
@@ -622,7 +622,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // The widget is UA's growing mandala, dispatched on the TASK's faction. Its
   // cores punch to `--faction-ua-card-bg`, which is why this panel is that stock
   // and not the lift: on any other sheet the mandala stops being an aperture.
-  const voteBlock = (
+  // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
+  // its heading and its prompt are the promise of a control, so they may not
+  // outlive the control. The author of a praxis can never vote on it, and used
+  // to get this section drawn empty.
+  const voteBlock = voteRegionVisible(state.user, praxis.viewer_can_vote) && (
     <section style={panel}>
       {panelHead(t("detail.vote.heading"))}
       <p
