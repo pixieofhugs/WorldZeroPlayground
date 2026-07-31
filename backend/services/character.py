@@ -82,29 +82,96 @@ ALBESCENT_FACTION_SLUG = "albescent"
 _ALBESCENT_SENTINEL_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
 
 
-async def _account_has_character_at_level(
+async def account_peak_character_level(
     account_id: int,
-    min_level: int,
+    era_id: int,
     session: AsyncSession,
-) -> bool:
-    """True when the account has at least one active character with stats.level >= min_level
-    in the current era."""
-    era_row = await get_current_era_row(session)
-    result = await session.execute(
-        select(Character.id)
+) -> int:
+    """Highest level among the account's active characters in ``era_id`` (0 if none).
+
+    One query answers every account-collective level gate at once: the two /auth/me
+    flags below used to ask "is anyone at level N?" twice with different N (#1381).
+    """
+    peak = await session.scalar(
+        select(func.max(CharacterStats.level))
+        .select_from(Character)
         .join(
             CharacterStats,
             (CharacterStats.character_id == Character.id)
-            & (CharacterStats.era_id == era_row.id),
+            & (CharacterStats.era_id == era_id),
         )
         .where(
             Character.account_id == account_id,
             Character.status == CharacterStatus.active,
-            CharacterStats.level >= min_level,
         )
-        .limit(1)
     )
-    return result.scalar_one_or_none() is not None
+    return peak or 0
+
+
+async def _account_covers_every_faction(
+    account_id: int,
+    session: AsyncSession,
+    era: EraConfig,
+) -> bool:
+    """Coverage half of the Albescent gate — see :func:`can_start_as_albescent`."""
+    required_faction_slugs = frozenset(
+        slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS
+    )
+    if not required_faction_slugs:
+        return True
+
+    covered_result = await session.execute(
+        select(Task.primary_faction_slug)
+        .distinct()
+        .join(Praxis, Praxis.task_id == Task.id)
+        .join(Character, Character.id == Praxis.created_by_id)
+        .where(
+            Character.account_id == account_id,
+            Character.status.in_(list(_ROSTER_STATUSES)),
+            Praxis.status == PraxisStatus.submitted,
+            Praxis.moderation_status.in_(
+                [ModerationStatus.visible, ModerationStatus.flagged]
+            ),
+            Task.primary_faction_slug.in_(list(required_faction_slugs)),
+        )
+    )
+    covered_slugs = frozenset(row[0] for row in covered_result.all())
+    return covered_slugs >= required_faction_slugs
+
+
+@dataclasses.dataclass(frozen=True)
+class AccountEligibility:
+    """The two account-collective unlock flags /auth/me dresses the site with.
+
+    Defaults are the "era not seeded yet" answer: no unlocks.
+    """
+
+    can_create_additional_character: bool = False
+    can_start_as_albescent: bool = False
+
+
+async def load_account_eligibility(
+    account_id: int,
+    era_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> AccountEligibility:
+    """Both unlock flags off a single level query (plus coverage when it can matter).
+
+    Both gates read the same account-collective level, so asking for the peak once
+    answers both — and the Albescent coverage query is only worth issuing when the
+    level half already passed.
+    """
+    peak_level = await account_peak_character_level(account_id, era_id, session)
+    return AccountEligibility(
+        can_create_additional_character=(
+            peak_level >= era.second_character_level_required
+        ),
+        can_start_as_albescent=(
+            peak_level >= era.albescent_level_required
+            and await _account_covers_every_faction(account_id, session, era)
+        ),
+    )
 
 
 async def can_create_additional_character(
@@ -117,9 +184,9 @@ async def can_create_additional_character(
     Requires at least one existing active character at level
     ``era.second_character_level_required`` or above in the current era.
     """
-    return await _account_has_character_at_level(
-        account_id, era.second_character_level_required, session
-    )
+    era_row = await get_current_era_row(session)
+    eligibility = await load_account_eligibility(account_id, era_row.id, session, era)
+    return eligibility.can_create_additional_character
 
 
 async def can_start_as_albescent(
@@ -145,34 +212,9 @@ async def can_start_as_albescent(
     the same "a player's own lives" set as :data:`_ROSTER_STATUSES`. A banned
     life's work does not carry the account through the gate.
     """
-    if not await _account_has_character_at_level(
-        account_id, era.albescent_level_required, session
-    ):
-        return False
-
-    required_faction_slugs = frozenset(
-        slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS
-    )
-    if not required_faction_slugs:
-        return True
-
-    covered_result = await session.execute(
-        select(Task.primary_faction_slug)
-        .distinct()
-        .join(Praxis, Praxis.task_id == Task.id)
-        .join(Character, Character.id == Praxis.created_by_id)
-        .where(
-            Character.account_id == account_id,
-            Character.status.in_(list(_ROSTER_STATUSES)),
-            Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status.in_(
-                [ModerationStatus.visible, ModerationStatus.flagged]
-            ),
-            Task.primary_faction_slug.in_(list(required_faction_slugs)),
-        )
-    )
-    covered_slugs = frozenset(row[0] for row in covered_result.all())
-    return covered_slugs >= required_faction_slugs
+    era_row = await get_current_era_row(session)
+    eligibility = await load_account_eligibility(account_id, era_row.id, session, era)
+    return eligibility.can_start_as_albescent
 
 
 async def get_account_invited_faction_slugs(
@@ -203,29 +245,29 @@ async def get_account_invited_faction_slugs(
     return sorted(row[0] for row in result.all())
 
 
-async def list_current_era_invitations_for_character(
+async def list_era_invitations_for_character(
     character_id: int,
+    era_id: int,
     session: AsyncSession,
 ) -> list[str]:
-    """Faction slugs THIS character holds a current-era invitation letter for (#243).
+    """Faction slugs THIS character holds an invitation letter for in ``era_id`` (#243).
 
     Unlike :func:`get_account_invited_faction_slugs` (account-pooled, used to gate
     creation/join), this is per-character: it powers the /auth/me invitation
     watcher, which diffs the active life's own earned invites. ``Character.account``
     is ``lazy="raise"``, so the letter rows are queried explicitly by character_id
     (mirroring how #459 badges do sibling queries). The ``na`` sentinel and
-    ``albescent`` are excluded — never invite-joinable. Returns ``[]`` when the era
-    is unseeded or no invites exist.
+    ``albescent`` are excluded — never invite-joinable.
+
+    Takes the era id rather than resolving it: /auth/me — the only caller — needs
+    the same era row for three other reads, so it resolves it once (#1381).
     """
-    era_row = await get_current_era_row_safe(session)
-    if era_row is None:
-        return []
     result = await session.execute(
         select(InvitationLetter.faction_slug)
         .distinct()
         .where(
             InvitationLetter.character_id == character_id,
-            InvitationLetter.era_id == era_row.id,
+            InvitationLetter.era_id == era_id,
             InvitationLetter.faction_slug.notin_(list(_ALBESCENT_SENTINEL_SLUGS)),
         )
     )
