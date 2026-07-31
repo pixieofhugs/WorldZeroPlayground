@@ -234,6 +234,7 @@ export default function SnideFactionHero({
                 position: "absolute",
                 top: -9,
                 left: "50%",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: half the 52px tape strip, centring it on the sigil disc's crown. The offset IS the drawn strip's width; a rung slides the tape off-centre.
                 marginLeft: -26,
                 width: 52,
                 height: 18,

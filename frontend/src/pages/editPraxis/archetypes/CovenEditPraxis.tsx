@@ -382,9 +382,11 @@ function PointsWard({ size, points }: { size: number; points: number }) {
       {WARD_STARS.map(([x, y, delay]) => (
         // Two nodes, not one: the outer span is CENTRED on the point by
         // transform (a negative half-pixel margin would be spacing wearing
-        // ornament's clothes, and the ratchet's Literal-only check waves a
-        // unary minus through), and `epTwinkle` animates `transform` — so the
+        // ornament's clothes), and `epTwinkle` animates `transform` — so the
         // keyframe would overwrite that centring if they shared an element.
+        // This is where the ratchet's blind spot to a unary minus was found;
+        // that hole is closed now (#1233), and the two nodes still stand on
+        // the animation argument alone.
         <span
           key={`${x}-${y}`}
           aria-hidden
