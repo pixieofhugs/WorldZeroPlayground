@@ -122,6 +122,12 @@ const BAR = "var(--faction-snide-composer-bar)";
 const GRAIN = "var(--faction-snide-composer-grain)";
 /* Acid as TEXT: deep in the light half, bright on the dark stock. */
 const ACID_INK = "var(--faction-snide-composer-acid-ink)";
+/* The error banner's ink (#1231), and the one skin in the set that could not
+ * take `--faction-snide-card-alarm`: the CARD is photocopier-black in both
+ * themes (§6) so that rung is pinned bright and reads 1.56:1 on the light
+ * xerox stock, while THIS sheet flips. 4.97:1 light / 5.83:1 dark under the
+ * neutral veil, which — per ADR-0061 — stays neutral. */
+const ALARM = "var(--faction-snide-composer-alarm)";
 
 /* THE PRESS — theme-invariant pigments. `ACID` is acid as a DRAWN THING (the
  * masthead rule, the blobs, the submit bar), and `PRESS_INK` is the near-black
@@ -360,6 +366,7 @@ export default function SnideEditPraxis({ state }: Props) {
 
   const dress: ComposerDress = {
     accent: ACID_INK,
+    alarm: ALARM,
     pageStyle: { fontFamily: BODY_FACE, color: INK },
     sheetStyle,
     masthead,
@@ -713,7 +720,7 @@ export default function SnideEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         {/* [Cancel] … [Submit] — the global order from #646, stacked rather than
             ranged because SNIDE's cast is a bar and not a button. The exits keep

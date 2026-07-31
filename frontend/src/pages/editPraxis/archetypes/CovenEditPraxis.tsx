@@ -118,6 +118,11 @@ const CHROME = "var(--font-faction-rounded)"; /* Quicksand — body + label */
 
 /* The slip's pigments, named for the ROLE each plays in the design's skin row. */
 const SHEET = "var(--faction-coven-ward-card)";
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (4.23:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-coven-card-alarm)";
 const FIELD = "var(--faction-coven-ward-page)";
 const INK = "var(--faction-coven-slip-ink)";
 const SOFT = "var(--faction-coven-slip-soft)";
@@ -599,6 +604,7 @@ export default function CovenEditPraxis({ state }: Props) {
     // one ground `slip-deep` misses (4.44:1). The accent is also a border and a
     // ring stroke there, and INK clears the 3:1 graphic floor just as easily.
     accent: INK,
+    alarm: ALARM,
     pageStyle: { fontFamily: CHROME, color: INK },
     breadcrumbInk: LABEL,
     sheetStyle,
@@ -944,7 +950,7 @@ export default function CovenEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         {/* [Cancel] … [Submit] — the global order from #646, stacked here
             because Coven's cast is a full-bleed band rather than an inline

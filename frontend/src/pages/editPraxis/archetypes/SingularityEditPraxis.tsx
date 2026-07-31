@@ -151,6 +151,11 @@ interface Props {
  * plays in this design's skin row rather than for its colour. Both halves are
  * near-black and the cascade flips the phosphor — see the header. */
 const CHASSIS = "var(--faction-singularity-term-bg)";
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (3.85:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-singularity-card-alarm)";
 const CHROME = "var(--faction-singularity-term-chrome)";
 /** The raised box: fields, the task slip, proof tiles. */
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -370,6 +375,7 @@ export default function SingularityEditPraxis({ state }: Props) {
 
   const dress: ComposerDress = {
     accent: ACCENT,
+    alarm: ALARM,
     pageStyle: { fontFamily: FACE, color: INK },
     sheetStyle,
     masthead,
@@ -738,7 +744,7 @@ export default function SingularityEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         <ComposerRule
           style={{
