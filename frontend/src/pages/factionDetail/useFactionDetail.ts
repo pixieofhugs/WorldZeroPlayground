@@ -14,7 +14,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getFactionStatus,
-  getInvitations,
   chooseFaction,
   type FactionOut,
 } from "../../api/factions";
@@ -191,13 +190,15 @@ export function useFactionDetail(
       return;
     }
     let cancelled = false;
-    Promise.all([getFactionStatus(), getInvitations()])
-      .then(([page, invites]) => {
+    // One request, not two: the letters ride on the status payload (#1384),
+    // which is the same query the status map was derived from anyway.
+    getFactionStatus()
+      .then((page) => {
         if (cancelled) return;
         setRawStatus(
           page.all_factions.find((f) => f.slug === slug)?.status ?? "not_invited",
         );
-        setHasInvite(invites.some((inv) => inv.faction_slug === slug));
+        setHasInvite(page.invitations.some((inv) => inv.faction_slug === slug));
       })
       .catch(() => {
         if (!cancelled) {

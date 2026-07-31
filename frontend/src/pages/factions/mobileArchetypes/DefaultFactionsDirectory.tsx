@@ -24,9 +24,10 @@ const NA_SLUG = 'na'
  * code: `_NON_INVITE_FACTION_SLUGS = {"na", "albescent"}` (backend
  * services/character_stats.py) means no letter is ever written for those two,
  * and `get_account_invited_faction_slugs` excludes the same pair while being
- * ACCOUNT-pooled — strictly broader than the character-scoped
- * /factions/invitations. So every slug this feed can return already reports
- * `invited` in /factions/status. The view's selectState stays as-is (#733).
+ * ACCOUNT-pooled — strictly broader than the character-scoped letters. So every
+ * slug this feed can return already reports `invited` in the same payload's
+ * status map: since #1384 the letters and that map are one `/factions/status`
+ * response, built from one query. The view's selectState stays as-is (#733).
  */
 export default function DefaultFactionsDirectory({ state }: { state: FactionsDirectoryState }) {
   const { t } = useTranslation('factions')
