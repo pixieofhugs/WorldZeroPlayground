@@ -84,6 +84,11 @@ const pinned = Object.entries(componentSrcMap).filter(
   (entry): entry is [string, string] => entry[1] !== null,
 )
 
+/** Per-component render settings (`cardMode`, `viewport`), keyed by the same names. */
+const overrides: Record<string, unknown> = JSON.parse(
+  readFileSync(CONFIG_PATH, 'utf8'),
+).overrides
+
 describe('componentSrcMap stays in sync with the tree (#1405)', () => {
   it('pins every published component at a path that exists, case-exactly', () => {
     // A failure here means a rename or a surface collapse moved a file and left
@@ -92,6 +97,14 @@ describe('componentSrcMap stays in sync with the tree (#1405)', () => {
       .filter(([, path]) => !realPaths.has(path))
       .map(([name, path]) => `${name} -> ${path}`)
     expect(unresolved).toEqual([])
+  })
+
+  it('carries no render override for a component the kit does not publish', () => {
+    // `overrides` is keyed by the same names, so deleting an entry from one map
+    // orphans the other. Dead settings here are silently ignored by the sync —
+    // the same invisible rot, one keystroke away.
+    const names = new Set(pinned.map(([name]) => name))
+    expect(Object.keys(overrides).filter((name) => !names.has(name))).toEqual([])
   })
 })
 
