@@ -141,10 +141,26 @@ export function relativeLuminance(color: Rgba): number {
 
 /**
  * Contrast ratio of `text` against `surface`. The text is composited over the
- * surface first; the surface itself must already be opaque (resolve it against
- * whatever is behind it before calling).
+ * surface first; the surface itself must already be opaque.
+ *
+ * A TRANSLUCENT SURFACE THROWS (#1413). It used to be a doc comment — "resolve
+ * it against whatever is behind it before calling" — and a doc comment is not a
+ * guard. `--color-bg-surface` is `rgba(255,255,255,0.72)`, so `.sidebar-card`
+ * has no ground of its own; measured as if the alpha were not there it reads
+ * near-white and every ink on it passes, while over Singularity's always-dark
+ * praxis-detail wall the same 72% white resolves to a mid-grey and
+ * `--color-danger` is 2.54:1. That bug survived both guards and was reported by
+ * eye. `compositeOver` is right there; a caller that has not decided what is
+ * behind the surface has not finished asking the question.
  */
 export function contrastRatio(text: Rgba, surface: Rgba): number {
+  if (surface.a !== 1) {
+    throw new Error(
+      `contrastRatio: the surface is translucent (alpha ${surface.a}). ` +
+        "A translucent surface has no single value to measure — composite it " +
+        "over the ground it is mounted on first (compositeOver).",
+    );
+  }
   const composited = compositeOver(text, surface);
   const lighter = Math.max(relativeLuminance(composited), relativeLuminance(surface));
   const darker = Math.min(relativeLuminance(composited), relativeLuminance(surface));
