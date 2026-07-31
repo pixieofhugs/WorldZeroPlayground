@@ -813,45 +813,6 @@ export function ComposerFooter({ start, end, style }: ComposerFooterProps) {
   );
 }
 
-/**
- * The fixed MobileTabBar plus its safe-area padding, as a length (mirrors
- * MobileLayout's <main> bottom padding). Promoted here from the retired
- * `mobileArchetypes/shared.tsx` (#1181): the composer is one responsive
- * component now, so the phone's viewport plumbing has to live where that one
- * component can reach it.
- */
-export const MOBILE_TABBAR_CLEARANCE =
-  "calc(3.5rem + env(safe-area-inset-bottom))";
-
-/**
- * Submit bar pinned above the fixed tab bar on a phone.
- *
- * Sticky (in-flow), not fixed, so it never overlaps content — it flows at the
- * end of the scroll and pins while the body scrolls under it. When the keyboard
- * opens, the layout viewport shrinks and the bar rides up with it, keeping the
- * cast reachable.
- */
-export function ComposerStickyFooter({
-  children,
-  style,
-}: {
-  children: ReactNode;
-  style?: CSSProperties;
-}) {
-  return (
-    <div
-      style={{
-        position: "sticky",
-        bottom: MOBILE_TABBAR_CLEARANCE,
-        zIndex: 8,
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 interface ComposerPageProps {
   sizes: ComposerSizes;
   /** The skin's root: its body face and its ink. */
