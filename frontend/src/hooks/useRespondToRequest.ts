@@ -29,12 +29,18 @@ export function normalizeRequestStatus(
   return 'accepted'
 }
 
-/** Read the item's current status from the right payload field per type. */
+/**
+ * Read the item's current status from the right payload field per type.
+ *
+ * `payload` is an untyped `Record<string, any>` off the wire, so read it
+ * optionally: a malformed item falls through to 'pending' rather than throwing
+ * inside a render.
+ */
 export function requestStatusOf(item: ActivityFeedItem): RequestResponseStatus {
   const raw =
     item.type === 'duel_challenge'
-      ? item.payload.duel_status
-      : item.payload.invite_status
+      ? item.payload?.duel_status
+      : item.payload?.invite_status
   return normalizeRequestStatus(raw)
 }
 

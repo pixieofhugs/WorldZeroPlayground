@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
@@ -9,25 +9,12 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
-from models.faction_defection_history import FactionDefectionHistory
 from models.praxis import Praxis
 from services.duel_outcome import duel_winner
 from services.scoring import snide_tie_winner_id
 from services.vote_tally import get_tally, tally_votes
 
 ERA_RESET_DEFAULT_FACTION: str = "na"
-
-
-async def clear_defection_history_for_era(
-    era_id: int,
-    session: AsyncSession,
-) -> None:
-    """Delete all defection records for a given era. Called during era reset."""
-    await session.execute(
-        delete(FactionDefectionHistory).where(
-            FactionDefectionHistory.era_id == era_id,
-        )
-    )
 
 
 async def get_current_era_row(session: AsyncSession) -> Era:
@@ -239,7 +226,7 @@ async def resolve_duels_at_era_close(
 
 
 async def apply_era_reset(
-    characters: list,
+    characters: list[Character],
     new_era_row: Era,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
@@ -249,6 +236,13 @@ async def apply_era_reset(
     Preserves historical stats rows for prior eras. Also freezes every unresolved
     duel outcome — era close is the moment a duel acquires a definitive winner
     (ADR-0011 / ADR-0052).
+
+    Defection history is **not** purged. ``reset_faction`` returns everyone to
+    ``na``, and a fresh start on the join gate falls out of era scoping alone:
+    every reader of ``FactionDefectionHistory`` filters on the era in hand
+    (``services.faction_service.can_join_faction``, ``get_defection_history``,
+    ``services.activity_feed``), so prior-era rows can never gate a new-era join.
+    The rows stay as history (#1372).
     """
     # Freeze duels first: the outcome must be computed against the closing era's
     # tallies, before any stats row for the new era exists. The closing era is the
@@ -286,9 +280,5 @@ async def apply_era_reset(
 
         if era.reset_faction:
             character.faction_slug = ERA_RESET_DEFAULT_FACTION
-
-    # Clear defection history so players can join any faction fresh
-    if era.reset_faction:
-        await clear_defection_history_for_era(new_era_row.id, session)
 
     await session.flush()

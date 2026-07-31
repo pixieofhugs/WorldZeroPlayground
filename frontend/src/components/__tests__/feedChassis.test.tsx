@@ -223,6 +223,33 @@ describe('archiving never answers anything (ADR-0066)', () => {
       stillWaiting,
     )
   })
+
+  it('keeps the tag while the request is genuinely pending (ADR-0070)', () => {
+    const pending = [
+      ['collab_invite', { ...FAT_PAYLOAD, invite_status: 'pending' }],
+      ['duel_challenge', { ...FAT_PAYLOAD, duel_status: 'pending' }],
+    ] as const
+    for (const [type, payload] of pending) {
+      expect(render(item(type, payload), true), `${type} pending`).toContain(stillWaiting)
+    }
+  })
+
+  it('drops the tag once the request WAS answered (#1342)', () => {
+    // Archiving still is not an answer — but an answer is. The tag reads the
+    // source row's status off the per-type payload key, never the card's
+    // session-local response state, which is empty on a fresh archive load.
+    const answered = [
+      ['collab_invite', 'invite_status', 'accepted'],
+      ['collab_invite', 'invite_status', 'declined'],
+      // A duel reports 'active' rather than 'accepted' once taken up.
+      ['duel_challenge', 'duel_status', 'active'],
+      ['duel_challenge', 'duel_status', 'declined'],
+    ] as const
+    for (const [type, key, status] of answered) {
+      const html = render(item(type, { ...FAT_PAYLOAD, [key]: status }), true)
+      expect(html, `${type} ${status}`).not.toContain(stillWaiting)
+    }
+  })
 })
 
 describe('the undo strip degrades rather than vanishing', () => {
