@@ -2842,12 +2842,53 @@
 @layer components {
   /* ── Shared card patterns ── */
 
+  /* ── THE FROST IS A LAYER OVER A GROUND, NOT A GROUND (#1413) ────────────
+     `--color-bg-surface` is ALPHA in both themes — rgba(255,255,255,0.72) light,
+     0.04 dark — so a card filled with it has no colour of its own. What its inks
+     are measured against is decided by whatever it happens to be mounted on, and
+     `.sidebar-card` is the app's neutral chrome: it lands on the page, on eight
+     faction backdrops, and (ADR-0061) on all nine praxis-detail walls, wearing
+     the global `--color-*` inks the whole way. Over Singularity's always-dark
+     terminal the same 72% white resolves to a mid-grey and `--color-danger` is
+     2.54:1, `--color-warning` 2.65, `--color-text-tertiary` 3.11.
+
+     Nothing could catch it. `parseColor` cannot read a browser composite, so no
+     contrast row can name "72% white over whatever this is mounted on" — the
+     pairing was unassertable rather than merely unmeasured, which is why it was
+     reported by eye. (The dark half of the same hazard is already written down
+     at --faction-wow-court-glow: a 4% fill lets the ground through undimmed, and
+     WOW paid for it by dialling its own backdrop glow down.)
+
+     So the frost becomes a background IMAGE and the stock beneath it becomes a
+     declared property. `--card-ground` unset is `transparent`, which composites
+     to exactly today's render — every card that genuinely wants to frost what is
+     behind it, and the blur that goes with it, is byte-identical. A SHEET that
+     paints its own wall may name the stock its cards frost; the app's own
+     neutral chrome takes `.card-on-page` below.
+
+     Do NOT reach for `backdrop-filter: none` on the grounded case just because
+     the blur is now invisible under an opaque fill: the filter is what makes
+     this card a containing block, which #1148 relies on for the `position:
+     fixed` modals its feed bodies open. */
   .sidebar-card {
-    background: var(--color-bg-surface);
+    background-color: var(--card-ground, transparent);
+    background-image: linear-gradient(var(--color-bg-surface), var(--color-bg-surface));
     border-radius: var(--radius-xl);
     padding: 0.9rem;
     border: 1px solid var(--color-border);
     backdrop-filter: blur(var(--card-blur));
+  }
+
+  /* Neutral chrome that must keep the app's own stock wherever it is mounted.
+     #1118: a block whose ink you do not control gets the stock that ink was
+     measured on — and these inks are the global set, chosen on the page ground,
+     flipping with the theme. The praxis detail's steward bar and report card are
+     the case that forced it: ADR-0061 mounts them BARE on nine faction walls
+     precisely so moderation chrome reads the same everywhere, which is a promise
+     the frost was quietly breaking. Worst reading on this ground is 4.71:1
+     (danger, light), against 2.54 on the terminal. */
+  .card-on-page {
+    --card-ground: var(--color-bg-page);
   }
 
   .card {

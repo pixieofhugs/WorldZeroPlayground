@@ -78,13 +78,23 @@ import { factionCssVar } from '../../utils/factions'
 // (0.72 white in light, 0.04 in dark). Composited, that is a near-white lift in
 // light on EVERY skin, so the global inks are the right ones there and the
 // faction inks are the wrong ones: `--faction-singularity-card-alarm` on that
-// composite reads 1.00:1. What is actually broken is the GROUND — the same
-// 0.72 white over Singularity's near-black terminal leaves `--color-danger` at
+// composite reads 1.00:1. What was actually broken is the GROUND — the same
+// 0.72 white over Singularity's near-black terminal left `--color-danger` at
 // 2.54:1, and at 4.37 / 4.45 / 4.45 on the Ephemerists, UA and deep-S.N.I.D.E.
-// pages. That is #1413 ("`.sidebar-card` grounds on a translucent surface"),
-// whose blast radius is every neutral-chrome card on this page, and it is a
-// stock question rather than an ink one. Repointing these ten first would have
-// to be undone by it.
+// pages. That was #1413, a stock question rather than an ink one, and repointing
+// these ten would have had to be undone by it.
+//
+// #1413 FIXED THE STOCK, which is why the four `.sidebar-card` mounts below also
+// carry `.card-on-page`. `--color-bg-surface` is alpha, so the card had no
+// ground of its own and took whatever wall it landed on; it now paints that
+// frost as a layer over a DECLARED `--card-ground`, and neutral chrome names the
+// app's page ground — the stock these global inks were chosen on (#1118). Every
+// reading above is now 4.71:1 or better on all nine skins in both themes,
+// independent of the wall, which is exactly the promise ADR-0061 makes by
+// mounting moderation chrome bare in the first place.
+//
+// So do NOT dress these two, and do not reach for `wallInk` in them: their inks
+// are correct because their stock no longer moves.
 const WALL_INK: Record<string, { alarm: string; notice: string }> = {
   snide: {
     alarm: 'var(--faction-snide-wall-alarm)',
@@ -188,7 +198,7 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
   if (!showAdminBar || !praxis) return null
 
   return (
-    <div className="sidebar-card mb-4" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+    <div className="sidebar-card card-on-page mb-4" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
       <div className="flex items-center gap-3 flex-wrap">
         <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('detail.admin.eyebrow')}
@@ -607,7 +617,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
 
   if (flagSubmitted) {
     return (
-      <div className="sidebar-card flex items-center gap-3" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+      <div className="sidebar-card card-on-page flex items-center gap-3" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <span className="eyebrow" style={{ color: 'var(--color-success)' }}>{t('detail.flag.flaggedOk')}</span>
         </div>
@@ -622,7 +632,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
   if (!praxis.can_flag || praxis.moderation_status === 'flagged') return null
 
   return (
-    <div className="sidebar-card" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+    <div className="sidebar-card card-on-page" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
       <div className="flex items-center gap-3">
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-danger-edge)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <span className="eyebrow">{t('detail.flag.badge')}</span>
@@ -707,7 +717,7 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
   if (!praxis || voters.length === 0) return null
 
   return (
-    <div className="sidebar-card mb-4" style={{ padding: 'var(--space-lg) var(--space-lg)' }}>
+    <div className="sidebar-card card-on-page mb-4" style={{ padding: 'var(--space-lg) var(--space-lg)' }}>
       <div className="flex items-baseline justify-between mb-3">
         <span className="eyebrow">{t('detail.voters.heading')}</span>
         <span className="eyebrow">{t('detail.voters.count', { count: voters.length })}</span>

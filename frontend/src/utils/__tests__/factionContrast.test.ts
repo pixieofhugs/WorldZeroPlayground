@@ -1201,36 +1201,36 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // translucent layer laid over the ground before the ink lands (#694). That
   // costs nothing new: `Veil` already resolves a declared token and composites
   // it at its own alpha.
-  ...(
-    [
-      ["na", "--faction-default-card-bg"],
-      ["coven", "--faction-coven-ward-page"],
-      ["ephemerists", "--faction-ephemerists-plate-page"],
-      ["everymen", "--faction-everymen-sheet-panel"],
-      ["singularity", "--faction-singularity-term-bg"],
-      ["snide", "--faction-snide-wall"],
-      ["snide deep", "--faction-snide-wall-deep"],
-      ["ua", "--faction-ua-page"],
-      ["wow", "--faction-wow-detail-field"],
-    ] as const
-  ).flatMap(([key, surface]) =>
+  //
+  // NINE ROWS BECAME ONE, and the collapse IS the fix. Written against the nine
+  // walls these read, in light: danger 2.54 (singularity) / 4.37 (ephemerists) /
+  // 4.45 (ua, snide deep) / 4.55 (wow) / 4.61 (snide) / 4.62 (everymen) / 4.68
+  // (coven) / 4.81 (na); warning, tertiary and secondary all under AA on the
+  // terminal at 2.65 / 3.11 / 3.24; and in dark, everymen secondary at 4.15.
+  // Eight assertions red. `.sidebar-card` now paints the frost over a declared
+  // `--card-ground` and its neutral-chrome mounts wear `.card-on-page`, so the
+  // stock is the app's page on every skin and the wall is no longer part of the
+  // pairing — there is one ground to measure because there is one ground.
+  //
+  // The structural half of that claim is asserted separately, at the bottom of
+  // this file: a ratio row on a fixed ground cannot notice the ground going
+  // back to being the mount's business.
+  ...[
     // The five global inks `PraxisAdminBar` / `PraxisFlagBlock` paint on the
     // card's own stock. `--color-text-primary` is left out on purpose: it only
     // reaches this surface through `.btn-outline`, which lays a SECOND
     // `--color-bg-surface` frost of its own before it prints.
-    [
-      ["danger", "--color-danger"],
-      ["warning", "--color-warning"],
-      ["success", "--color-success"],
-      ["tertiary", "--color-text-tertiary"],
-      ["secondary", "--color-text-secondary"],
-    ].map(([role, text]) => ({
-      what: `${key} praxis detail neutral card, ${role} ink over the frost`,
-      surface,
-      veil: "--color-bg-surface" as Veil,
-      text,
-    })),
-  ),
+    ["danger", "--color-danger"],
+    ["warning", "--color-warning"],
+    ["success", "--color-success"],
+    ["tertiary", "--color-text-tertiary"],
+    ["secondary", "--color-text-secondary"],
+  ].map(([role, text]) => ({
+    what: `neutral card on the page ground, ${role} ink over the frost`,
+    surface: "--color-bg-page",
+    veil: "--color-bg-surface" as Veil,
+    text,
+  })),
 
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
