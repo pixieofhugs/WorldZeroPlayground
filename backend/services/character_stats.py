@@ -16,7 +16,12 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task
-from services.era import get_current_era_row, get_next_era_row, get_or_create_stats
+from services.era import (
+    get_current_era_row,
+    get_era_row_for_praxis,
+    get_next_era_row,
+    get_or_create_stats,
+)
 from services.praxis_scoring import Contribution, compute_contributions
 from services.scoring import compute_level
 
@@ -270,3 +275,47 @@ async def recalculate_character_stats(
     await _deliver_earned_invitations(
         author, all_praxes, contributions, session, era, era_row
     )
+
+
+async def recalculate_members_stats(
+    praxis: Praxis,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    *,
+    era_row: Era | None = None,
+) -> None:
+    """Recalculate stats for every member of ``praxis``, then flush (#492).
+
+    **The member set is the unit of recalculation for anything that changes what
+    a praxis is worth** — a seal, an unsubmit, a metatask, a moderation ruling,
+    a vote. A collab is co-owned by all its members (ADR-0013) and the gather in
+    :func:`recalculate_character_stats` picks collabs up by *membership*, so the
+    whole tally lands on every member; recalculating ``created_by_id`` alone
+    moves the starter and silently strands everyone else (#1465). A solo or duel
+    praxis has exactly one member — its author — so this is the right call for
+    every praxis type and there is no branch to get wrong.
+
+    It lives here rather than in ``services.praxis`` because two of its three
+    callers are *upstream* of that module in the import graph:
+    ``services.praxis`` imports both ``services.vote`` and
+    ``services.collab_consensus``, so neither could reach it there without a
+    cycle (#1465). ``services.character_stats`` is imported by all three.
+
+    Callers that already hold an ``era_row`` (e.g. a duel-forfeit recalc that
+    reuses it) pass it in to avoid a re-fetch. ``leave_praxis`` deliberately does
+    NOT use this — it recalcs only the single leaver, who is by then no longer a
+    member.
+
+    The era defaulted to is **the praxis's**, not the live one (#1345): scores
+    are per-era, so a change to a closed era's praxis — a moderation ruling, a
+    metatask, an unsubmit, a vote — has to move that era's row or it moves
+    nothing at all. For a praxis sealed in the era in progress the two are the
+    same row.
+    """
+    if era_row is None:
+        era_row = await get_era_row_for_praxis(praxis, session)
+    for member in praxis.members:
+        await recalculate_character_stats(
+            member.character_id, session, era, era_row=era_row
+        )
+    await session.flush()

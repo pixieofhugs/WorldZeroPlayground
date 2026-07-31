@@ -9,12 +9,8 @@ from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember
 from models.vote import Vote
-from services.character_stats import recalculate_character_stats
-from services.era import (
-    get_current_era_row,
-    get_era_row_for_praxis,
-    get_or_create_stats,
-)
+from services.character_stats import recalculate_members_stats
+from services.era import get_current_era_row, get_or_create_stats
 from services.scoring import compute_votes_available
 
 
@@ -61,6 +57,11 @@ async def cast_or_update_vote(
     the praxis was sealed in — so it makes the historical record and the
     author's lifetime ``all_time_score`` more accurate without moving the ladder
     anyone is climbing today.
+
+    A vote is credited to every **member** of the praxis, not to its
+    ``created_by_id`` (#1465). On a collab the starter is only one co-owner
+    (ADR-0013) and the whole tally lands on each of them; on a solo or duel
+    praxis the member set is exactly the author, so one call covers every type.
     """
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
@@ -99,44 +100,37 @@ async def cast_or_update_vote(
         # the character-scoped ``viewer_vote`` star all name the same character.
         existing.voter_character_id = voter.id
         existing.value = value
-        await session.flush()
-        await recalculate_character_stats(
-            praxis.created_by_id,
-            session,
-            era,
-            era_row=await get_era_row_for_praxis(praxis, session),
+        cast = existing
+    else:
+        # New vote — deduct from budget via CharacterStats (on-read recomputation).
+        # The budget is always the *voter's current* era, whatever era the praxis
+        # is from: voting on old work still costs a vote today (#1345).
+        era_row = await get_current_era_row(session)
+        stats = await get_or_create_stats(session, voter.id, era_row.id)
+
+        if compute_votes_available(stats, era) <= 0:
+            raise HTTPException(
+                status_code=403, detail="No votes remaining in your budget."
+            )
+
+        cast = Vote(
+            praxis_id=praxis.id,
+            voter_character_id=voter.id,
+            voter_account_id=voter.account_id,
+            value=value,
         )
-        await session.flush()
-        await session.refresh(existing)
-        return existing
+        stats.votes_spent_this_era += 1
+        session.add(cast)
 
-    # New vote — deduct from budget via CharacterStats (on-read recomputation).
-    # The budget is always the *voter's current* era, whatever era the praxis is
-    # from: voting on old work still costs a vote today (#1345).
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, voter.id, era_row.id)
-
-    if compute_votes_available(stats, era) <= 0:
-        raise HTTPException(status_code=403, detail="No votes remaining in your budget.")
-
-    vote = Vote(
-        praxis_id=praxis.id,
-        voter_character_id=voter.id,
-        voter_account_id=voter.account_id,
-        value=value,
-    )
-    stats.votes_spent_this_era += 1
-    session.add(vote)
+    # ONE recalc for both branches (#1465). Keeping a copy inside each is how the
+    # two drifted before: the new-cast path and the re-rate path each recalculated
+    # ``created_by_id`` alone, so a collab's co-members were stranded on the way up
+    # *and* left holding unsupported points on the way down.
     await session.flush()
-    await recalculate_character_stats(
-        praxis.created_by_id,
-        session,
-        era,
-        era_row=await get_era_row_for_praxis(praxis, session),
-    )
+    await recalculate_members_stats(praxis, session, era)
     await session.flush()
-    await session.refresh(vote)
-    return vote
+    await session.refresh(cast)
+    return cast
 
 
 # ---------------------------------------------------------------------------
