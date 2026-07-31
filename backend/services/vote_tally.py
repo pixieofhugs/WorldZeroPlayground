@@ -31,13 +31,21 @@ _EMPTY_TALLY = VoteTally(points_from_votes=0, voter_count=0)
 
 
 async def tally_votes(
-    praxis_ids: list[int],
+    praxis_ids: Collection[int],
     session: AsyncSession,
 ) -> dict[int, VoteTally]:
-    """Return a ``VoteTally`` for each requested praxis id.
+    """Return a ``VoteTally`` for **every** requested praxis id — ONE query.
 
-    Praxes with no votes are not included in the result; callers should use
-    the helper :func:`get_tally`.
+    The result covers exactly ``praxis_ids``: a praxis with no votes gets an
+    empty tally instead of being omitted, so ``praxis_id in result`` means "this
+    id was in the batch" and never "this id has no votes" (#1378). Page-wide
+    callers such as :func:`services.praxis.build_praxis_cards` use that
+    membership to decide whether the precomputed map answers for a card or the
+    card must fall back to its own query — with a sparse map, a praxis outside
+    the batch would silently read as zero votes.
+
+    :func:`get_tally` remains the safe reader for callers holding a map that was
+    gathered for a *different* id set (scoring's opponent lookups).
     """
     if not praxis_ids:
         return {}
@@ -47,13 +55,15 @@ async def tally_votes(
         .where(Vote.praxis_id.in_(praxis_ids))
         .group_by(Vote.praxis_id)
     )
-    return {
-        pid: VoteTally(
+    tallies: dict[int, VoteTally] = {
+        praxis_id: _EMPTY_TALLY for praxis_id in praxis_ids
+    }
+    for pid, total, count in agg_result.all():
+        tallies[pid] = VoteTally(
             points_from_votes=int(total or 0),
             voter_count=int(count or 0),
         )
-        for pid, total, count in agg_result.all()
-    }
+    return tallies
 
 
 def get_tally(tallies: dict[int, VoteTally], praxis_id: int) -> VoteTally:
