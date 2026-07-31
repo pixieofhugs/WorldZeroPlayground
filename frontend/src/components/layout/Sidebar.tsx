@@ -2,15 +2,12 @@ import { type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
-import { type ActivityFeedItem } from '../../api/activityFeed'
 import { relativeTime } from '../../utils/dates'
 import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import { praxisModeLabel } from '../../utils/praxis'
-import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
-import { REQUESTS_QUEUE_LINK } from '../../pages/updates/requestsQueueAnchor'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
@@ -51,13 +48,27 @@ function SectionHeader({ label }: { label: string }) {
 
 /**
  * Always-on right sidebar (Style Guide §4.2), redesigned into the unaffiliated
- * "all paths" rainbow-spectrum identity: character card + pending requests +
- * in-progress tasks + recent global activity + propose CTA.
+ * "all paths" rainbow-spectrum identity: character card + in-progress tasks +
+ * recent global activity + propose CTA.
  *
- * Three of those four panels used to be three separate fetches made here, each
- * one waiting on `/auth/me`. They are one request now, made before this
- * component exists — see `hooks/useSidebarPanels` (#1344). Identity is still
- * read from auth: the character card is `/auth/me`'s payload, not the rail's.
+ * Those panels used to be three separate fetches made here, each one waiting on
+ * `/auth/me`. They are one request now, made before this component exists — see
+ * `hooks/useSidebarPanels` (#1344). Identity is still read from auth: the
+ * character card is `/auth/me`'s payload, not the rail's.
+ *
+ * IT NO LONGER LISTS PENDING REQUESTS (#1423, ADR-0070)
+ * -----------------------------------------------------
+ * A fourth panel used to render collab invites, duel challenges and your own
+ * outstanding submissions with inline accept/decline. Under "an unanswered
+ * obligation lives in the queue, never in the stream" there is exactly one
+ * surface a request can be answered on, and it is the Requests queue at
+ * `REQUESTS_QUEUE_ANCHOR` on `/updates`. This panel was the surface it
+ * replaced, so it is gone rather than duplicated.
+ *
+ * The response's `pending_requests` is still fetched and still read — but only
+ * for its LENGTH now, by the collapsed handle's badge (`SidebarColumn`), the
+ * mobile bell (`MobileHeader`) and the mobile FieldDesk. Nothing renders the
+ * items.
  */
 export default function Sidebar() {
   const { t } = useTranslation('common')
@@ -65,10 +76,8 @@ export default function Sidebar() {
   const character = user?.character
 
   const {
-    pending_requests: pendingRequests,
     global_activity: globalActivity,
     active_praxes: activeTasks,
-    refetch: refetchPanels,
   } = useSidebarPanels()
   const gameConfig = useGameConfig()
 
@@ -203,36 +212,6 @@ export default function Sidebar() {
       ) : (
         <section style={panelStyle}>
           <p className="eyebrow text-center">{t('sidebar.characterCard.noCharacter')}</p>
-        </section>
-      )}
-
-      {/* ── Pending Requests Panel ── */}
-      {pendingRequests.length > 0 && (
-        <section style={panelStyle}>
-          <SectionHeader label={t('sidebar.pendingRequests.heading', { count: pendingRequests.length })} />
-          <div className="flex flex-col gap-1.5">
-            {pendingRequests.map((item, index) =>
-              // "Waiting on you to submit" — a collab/duel already in your court.
-              // No accept/decline; a single link to the editor (#updates-badge).
-              item.type === 'awaiting_submission' ? (
-                <AwaitingSubmissionRow
-                  key={`${item.type}-${index}`}
-                  item={item}
-                  isFirst={index === 0}
-                />
-              ) : (
-                <PendingRequestRow
-                  key={`${item.type}-${index}`}
-                  item={item}
-                  isFirst={index === 0}
-                  // An accepted collab/duel becomes an in-progress praxis, so
-                  // the request has to move bars (#346). Both panels come from
-                  // one response now, so that is one refetch, not two.
-                  onResolved={refetchPanels}
-                />
-              ),
-            )}
-          </div>
         </section>
       )}
 
@@ -432,177 +411,5 @@ export default function Sidebar() {
         <span>{t('actions.proposeTask')}</span>
       </Link>
     </aside>
-  )
-}
-
-const REQUEST_BUTTON_BASE: CSSProperties = {
-  fontFamily: "'Courier Prime', monospace",
-  fontSize: 'var(--text-xs)',
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  padding: 'var(--space-xs) var(--space-sm)',
-}
-
-/**
- * A "waiting on you to submit" row: a collab/duel praxis already in the
- * viewer's court (#updates-badge). Unlike PendingRequestRow there's no
- * accept/decline — just a link into the editor to post your part.
- */
-function AwaitingSubmissionRow({
-  item,
-  isFirst,
-}: {
-  item: ActivityFeedItem
-  isFirst: boolean
-}) {
-  const { t } = useTranslation('common')
-  const praxisId = item.payload.praxis_id
-  const isDuel = item.payload.praxis_type === 'duel'
-  return (
-    <div
-      className="py-1.5"
-      style={{ borderTop: !isFirst ? '1px dashed var(--color-border)' : undefined }}
-    >
-      <div className="flex items-center gap-2">
-        {/* task-faction dot in place of an actor avatar */}
-        <span
-          className="shrink-0 rounded-full"
-          style={{
-            width: 24,
-            height: 24,
-            background: `linear-gradient(135deg, ${factionCssVar(item.payload.task_faction_slug, 'light')}, ${factionCssVar(item.payload.task_faction_slug)})`,
-          }}
-        />
-        <div className="flex-1 min-w-0">
-          <Link
-            to={`/praxis/${praxisId}/edit`}
-            className="font-body block truncate"
-            style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
-          >
-            {item.payload.task_title}
-          </Link>
-          <span className="eyebrow block" style={{ color: 'var(--color-text-tertiary)' }}>
-            {isDuel ? t('requests.awaitingSubmissionDuel') : t('requests.awaitingSubmissionCollab')}
-          </span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5" style={{ marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}>
-        <Link
-          to={`/praxis/${praxisId}/edit`}
-          style={{
-            ...REQUEST_BUTTON_BASE,
-            background: isDuel ? 'var(--badge-duel)' : 'var(--badge-collab)',
-            color: 'var(--color-text-on-accent)',
-            border: 'none',
-            textDecoration: 'none',
-          }}
-        >
-          {t('actions.submit')}
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-/**
- * One actionable row in the Pending Requests panel: accept/decline inline via
- * the shared request hook (#346) — same logic the feed cards use.
- */
-function PendingRequestRow({
-  item,
-  isFirst,
-  onResolved,
-}: {
-  item: ActivityFeedItem
-  isFirst: boolean
-  onResolved: () => void
-}) {
-  const { t } = useTranslation('common')
-  const isCollab = item.type === 'collab_invite'
-  const actorId = isCollab
-    ? item.payload.inviter_character_id
-    : item.payload.challenger_character_id
-  const badgeVar = isCollab ? 'var(--badge-collab)' : 'var(--badge-duel)'
-  const { accept, decline, loading, error } = useRespondToRequest(item)
-
-  const respond = async (action: typeof accept) => {
-    const result = await action()
-    if (result.ok) onResolved()
-  }
-
-  return (
-    <div
-      className="py-1.5"
-      style={{ borderTop: !isFirst ? '1px dashed var(--color-border)' : undefined }}
-    >
-      <div className="flex items-center gap-2">
-        <Link to={`/characters/${actorId}`} className="shrink-0">
-          <div
-            className="rounded-full"
-            style={{
-              width: 24,
-              height: 24,
-              background: `linear-gradient(135deg, ${factionCssVar(item.actor_faction_slug, 'light')}, ${factionCssVar(item.actor_faction_slug)})`,
-            }}
-          />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <Link
-            to={`/characters/${actorId}`}
-            className="font-body block truncate"
-            /* An actor byline in a dense 24px-avatar notification row —
-               scanned, not read. Label tier by the role vocabulary (§4), not
-               an exception to the content floor. */
-            style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
-          >
-            {item.actor_display_name}
-          </Link>
-          <Link
-            to={REQUESTS_QUEUE_LINK}
-            className="eyebrow block"
-            style={{ color: 'var(--color-text-tertiary)', textDecoration: 'none' }}
-          >
-            {isCollab ? t('requests.collabInvite') : t('requests.duelChallenge')}
-          </Link>
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5" style={{ marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}>
-        <button
-          onClick={() => respond(accept)}
-          disabled={loading}
-          style={{
-            ...REQUEST_BUTTON_BASE,
-            background: badgeVar,
-            color: 'var(--color-text-on-accent)',
-            border: 'none',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {t('actions.accept')}
-        </button>
-        <button
-          onClick={() => respond(decline)}
-          disabled={loading}
-          style={{
-            ...REQUEST_BUTTON_BASE,
-            background: 'transparent',
-            color: 'var(--color-text-secondary)',
-            border: '1px solid var(--color-border)',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {t('actions.decline')}
-        </button>
-      </div>
-      {error && (
-        <span
-          className="eyebrow block"
-          style={{ color: 'var(--color-danger)', marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}
-        >
-          {error}
-        </span>
-      )}
-    </div>
   )
 }
