@@ -82,7 +82,10 @@ export default function CharacterProfile() {
         setRelationship(match ?? null);
       })
       .catch(() => {});
-  }, [id, user]);
+    // Keyed on the viewer's character id, not the whole auth object (#1390):
+    // `/auth/me` returns a new object on every refetch, so `[user]` re-read the
+    // whole relationship list every time the viewer cast a star.
+  }, [id, user?.character?.id]);
 
   const [relationshipError, setRelationshipError] = useState<string | null>(
     null,

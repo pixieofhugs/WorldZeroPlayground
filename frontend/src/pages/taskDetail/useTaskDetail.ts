@@ -177,34 +177,36 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
       fetches.push(
         listPraxes({ character_id: user.character?.id, status: "in_progress" }),
       );
+      // ONE relationship read, split by type here (#1390). The list response
+      // carries `type`, and the endpoint's filter is the only thing that
+      // differed, so asking twice bought nothing but a second round trip —
+      // `CharacterProfile` has always read it unfiltered.
       fetches.push(
-        listRelationships({ type: "friend" })
-          .then(
-            (rels) =>
-              new Set(
-                rels
-                  .filter((r) => r.status === "active")
+        listRelationships()
+          .then((rels) => {
+            const active = rels.filter((r) => r.status === "active");
+            return {
+              friends: new Set(
+                active
+                  .filter((r) => r.type === "friend")
                   .map((r) => r.to_character_id),
               ),
-          )
-          .catch(() => new Set<number>()),
-      );
-      fetches.push(
-        listRelationships({ type: "foe" })
-          .then(
-            (rels) =>
-              new Set(
-                rels
-                  .filter((r) => r.status === "active")
+              foes: new Set(
+                active
+                  .filter((r) => r.type === "foe")
                   .map((r) => r.to_character_id),
               ),
-          )
-          .catch(() => new Set<number>()),
+            };
+          })
+          .catch(() => ({
+            friends: new Set<number>(),
+            foes: new Set<number>(),
+          })),
       );
     }
 
     Promise.all(fetches)
-      .then(([t, s, c, myTasks, friendSet, foeSet]) => {
+      .then(([t, s, c, myTasks, relationships]) => {
         setTask(t as TaskOut);
         setSubmissions(s as PraxisCardOut[]);
         setComments(c as CommentOut[] | null);
@@ -217,8 +219,14 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
           setInProgressPraxisId(activeForThisTask?.id ?? null);
           setTaskSlotCount(praxes.length);
         }
-        if (friendSet) setFriends(friendSet as Set<number>);
-        if (foeSet) setFoes(foeSet as Set<number>);
+        if (relationships) {
+          const { friends, foes } = relationships as {
+            friends: Set<number>;
+            foes: Set<number>;
+          };
+          setFriends(friends);
+          setFoes(foes);
+        }
       })
       .catch((err) =>
         setFetchError(extractError(err, "Couldn't load this task.")),
