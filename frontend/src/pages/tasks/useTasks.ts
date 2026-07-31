@@ -131,6 +131,26 @@ export function clearedFilterParams(previous: URLSearchParams): URLSearchParams 
   return next
 }
 
+/**
+ * How many axes are narrowing the list — the input to `selectEmptyState`.
+ *
+ * It counts the SEARCH box, which raises no chip in the bar but absolutely
+ * narrows the list. Without it, "search for xyzzy with eligibility on" would
+ * pick the caught-up empty state and claim nothing is open to you, when the
+ * search is what emptied the page — the same unchecked claim `selectEmptyState`
+ * exists to avoid.
+ */
+export function appliedFilterCount(state: TasksState): number {
+  return (
+    state.selectedFactions.length +
+    (state.taskType === TASK_TYPE_DEFAULT ? 0 : 1) +
+    (state.sort === TASK_SORT_DEFAULT ? 0 : 1) +
+    (state.status === TASK_STATUS_DEFAULT ? 0 : 1) +
+    (state.canSignUp ? 1 : 0) +
+    (state.query.trim() ? 1 : 0)
+  )
+}
+
 export interface SignupMessage {
   id: number
   msg: string

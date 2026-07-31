@@ -1,18 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import TaskCard from '../components/taskCard/TaskCard'
 import PageTitle from '../components/ui/PageTitle'
-import FilterStamps from '../components/ui/FilterStamps'
-import FilterFactionTabs from '../components/ui/FilterFactionTabs'
 import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
-import CanSignUpEmpty from './tasks/CanSignUpEmpty'
+import TaskFilterBar, { TaskListEmpty } from './tasks/TaskFilterBar'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
-import type { TaskType } from '../api/tasks'
-
-/** The eligibility filter's two stamps: everything, or only what I can claim. */
-const ELIGIBILITY_OPTIONS = ['all', 'canSignUp']
 
 export default function Tasks() {
   const state = useTasks()
@@ -36,18 +30,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
     tasks,
     loading,
     error,
-    factions,
-    statusFilters,
     taskType,
-    setTaskType,
-    status,
-    setStatus,
-    faction,
-    setFaction,
-    canSignUp,
-    setCanSignUp,
-    query,
-    setQuery,
     hasMore,
     loadMore,
     signupMsg,
@@ -61,46 +44,12 @@ function DesktopTasks({ state }: { state: TasksState }) {
     <div className="py-8">
       <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
 
-      {/* Filters (Style Guide §5.3) */}
-      <div className="flex flex-col gap-2.5 mb-6">
-        <TaskTypeToggle value={taskType} onChange={setTaskType} />
-        <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
-        <FilterFactionTabs factions={factions} value={faction} onChange={setFaction} />
-        {/* "Tasks I can sign up for" (#1130), in the slot the level filter
-            used to hold. Hidden when logged out: the server answers `[]` for an
-            anonymous viewer, so it is a control that cannot work — and this page
-            hides unusable controls rather than disabling them. Anonymous browse
-            keeps search, faction, type and points; the default ordering is still
-            level-ascending, so the ladder stays legible without it. */}
-        {user && (
-          <FilterStamps
-            label={t('browse.eligibility')}
-            options={ELIGIBILITY_OPTIONS}
-            optionLabels={{
-              all: t('browse.allTasks'),
-              canSignUp: t('browse.canSignUp'),
-            }}
-            value={canSignUp ? 'canSignUp' : 'all'}
-            onChange={(next) => setCanSignUp(next === 'canSignUp')}
-          />
-        )}
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('listPage.filter.searchPlaceholder')}
-          aria-label={t('listPage.filter.searchLabel')}
-          className="font-body"
-          style={{
-            fontSize: 'var(--text-sm)',
-            padding: 'var(--space-sm) var(--space-md)',
-            maxWidth: 320,
-            background: 'var(--color-bg-surface)',
-            border: '1px solid var(--color-border-strong)',
-            color: 'var(--color-text-primary)',
-            borderRadius: 4,
-          }}
-        />
+      {/* One filter surface for both form factors (#1367, epic #1361). The
+          stamp stack, the faction tabs and the inline search input that used to
+          sit here are gone — every axis they held is a rail in the bar, and
+          every axis now rides in the URL. */}
+      <div className="mb-6">
+        <TaskFilterBar state={state} />
       </div>
 
       {signupMsg && (
@@ -117,13 +66,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : tasks.length === 0 ? (
-        /* An empty eligible list has a reason worth naming — most often a full
-           task bank, which is a gate on the player, not on the catalogue. */
-        canSignUp ? (
-          <CanSignUpEmpty />
-        ) : (
-          <p className="font-body text-muted">{t('listPage.empty')}</p>
-        )
+        <TaskListEmpty state={state} />
       ) : (
         <>
           {isMetatask ? (
@@ -170,54 +113,6 @@ function DesktopTasks({ state }: { state: TasksState }) {
           )}
         </>
       )}
-    </div>
-  )
-}
-
-/**
- * Task / Metatask browse toggle (#934) — rubber-stamp pair, sharing the status
- * filter's stamp voice. Switching mode resets the growing window (setter side).
- */
-function TaskTypeToggle({
-  value,
-  onChange,
-}: {
-  value: TaskType
-  onChange: (value: TaskType) => void
-}) {
-  const { t } = useTranslation('tasks')
-  const options: ReadonlyArray<{ key: TaskType; label: string }> = [
-    { key: 'standard', label: t('browse.tasks') },
-    { key: 'metatask', label: t('browse.metatasks') },
-  ]
-  return (
-    <div className="flex gap-1.5 items-center">
-      <span className="eyebrow">{t('browse.taskType')}</span>
-      {options.map((option) => {
-        const active = value === option.key
-        return (
-          <button
-            key={option.key}
-            type="button"
-            onClick={() => onChange(option.key)}
-            className="font-body uppercase"
-            style={{
-              border: `2px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border-strong)'}`,
-              borderRadius: 0,
-              background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
-              color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
-              fontSize: 'var(--text-base)',
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              padding: 'var(--space-xs) var(--space-sm)',
-              cursor: 'pointer',
-              transition: 'all 120ms',
-            }}
-          >
-            {option.label}
-          </button>
-        )
-      })}
     </div>
   )
 }

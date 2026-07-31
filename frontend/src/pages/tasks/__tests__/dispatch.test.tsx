@@ -75,14 +75,17 @@ const CANNED: TasksState = {
   statusFilters: ['All', 'active'],
   taskType: 'standard',
   setTaskType: () => {},
+  sort: 'level',
+  setSort: () => {},
   status: 'All',
   setStatus: () => {},
-  faction: '',
-  setFaction: () => {},
+  selectedFactions: [],
+  setSelectedFactions: () => {},
   canSignUp: false,
   setCanSignUp: () => {},
   query: '',
   setQuery: () => {},
+  clearFilters: () => {},
   hasMore: false,
   loadMore: () => {},
   signupMsg: null,
@@ -94,7 +97,10 @@ const CANNED: TasksState = {
 // What the mocked hook hands back; each test replaces it before rendering.
 const state: { current: TasksState } = { current: CANNED }
 
-vi.mock('../useTasks', () => ({
+// PARTIAL: only the hook is canned. The module also exports the filter defaults
+// and the pure param helpers, which `TaskFilterBar` reads for real.
+vi.mock('../useTasks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../useTasks')>()),
   useTasks: () => state.current,
 }))
 
@@ -126,8 +132,24 @@ describe('Tasks form-factor dispatch', () => {
     state.current = CANNED
     const out = html()
     expect(out, 'no mobile skin').not.toContain('mobile-tasks-browse')
-    // The desktop rubber-stamp status filter (FilterStamps) is desktop-only chrome.
-    expect(out.toLowerCase(), 'desktop status filter').toContain('status:')
+    // The desktop page title; the filter bar itself is now shared chrome and so
+    // is no longer a form-factor discriminator (#1367).
+    expect(out, 'desktop page title').toContain('Tasks')
+  })
+
+  it('mounts the shared filter bar on BOTH form factors (#1367)', () => {
+    for (const formFactor of ['mobile', 'desktop'] as const) {
+      dispatch.formFactor = formFactor
+      state.current = CANNED
+      const out = html()
+      expect(out, formFactor).toContain('filter-bar')
+      expect(out, `${formFactor}: search moved into the bar`).toContain(
+        'filter-bar__search',
+      )
+      expect(out, `${formFactor}: no stamp row survives`).not.toContain(
+        'stamp-inactive-dashed',
+      )
+    }
   })
 })
 
@@ -191,15 +213,13 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
 describe('can-sign-up filter (#1130)', () => {
   const CAN_SIGN_UP = i18n.t('tasks:browse.canSignUp')
 
-  it('offers the filter on both form factors when signed in', () => {
-    for (const formFactor of ['mobile', 'desktop'] as const) {
-      dispatch.formFactor = formFactor
-      state.current = { ...CANNED, user: VIEWER }
-      expect(text().toLowerCase(), formFactor).toContain(CAN_SIGN_UP.toLowerCase())
-    }
+  it('offers the rail when signed in', () => {
+    dispatch.formFactor = 'desktop'
+    state.current = { ...CANNED, user: VIEWER }
+    expect(text().toLowerCase()).toContain(CAN_SIGN_UP.toLowerCase())
   })
 
-  it('hides the filter on both when logged out', () => {
+  it('hides the rail on both form factors when logged out', () => {
     for (const formFactor of ['mobile', 'desktop'] as const) {
       dispatch.formFactor = formFactor
       state.current = { ...CANNED, user: null }
@@ -221,5 +241,60 @@ describe('can-sign-up filter (#1130)', () => {
     dispatch.formFactor = 'desktop'
     state.current = { ...CANNED, user: VIEWER, canSignUp: false, tasks: [] }
     expect(text()).toContain(i18n.t('tasks:listPage.empty'))
+  })
+})
+
+/**
+ * The two rails the bar mount had to get right (#1367).
+ *
+ * The status rail is a PERMISSION boundary, not decoration: `retired` and
+ * `pending` are the viewer's to see or not, so the rail takes a variable
+ * segment count rather than a fixed four. And the sort rail defaults to
+ * `level` — the ordering the page already had by sending no `sort` at all —
+ * so it must sit on its default and raise no chip on a fresh load.
+ */
+describe('the task rails', () => {
+  const SEES_EVERYTHING: CurrentUser = {
+    ...VIEWER,
+    can_see_retired_tasks: true,
+    can_see_pending_tasks: true,
+  }
+
+  it('gives a logged-out viewer two status segments, not four', () => {
+    dispatch.formFactor = 'desktop'
+    state.current = { ...CANNED, user: null, statusFilters: ['All', 'active'] }
+    const out = html()
+    expect(out, 'no retired segment').not.toContain('>retired<')
+    expect(out, 'no pending segment').not.toContain('>pending<')
+    expect(out, 'no rail is four segments wide').not.toContain(
+      'width:calc((100% - 2 * var(--filter-rail-pad)) / 4)',
+    )
+  })
+
+  it('widens the status rail to four for a viewer allowed the extra states', () => {
+    dispatch.formFactor = 'desktop'
+    state.current = {
+      ...CANNED,
+      user: SEES_EVERYTHING,
+      statusFilters: ['All', 'active', 'retired', 'pending'],
+    }
+    const out = html()
+    expect(out).toContain('>retired<')
+    expect(out).toContain('>pending<')
+    expect(out, 'a 4-segment thumb').toContain(
+      'width:calc((100% - 2 * var(--filter-rail-pad)) / 4)',
+    )
+  })
+
+  it('opens on `level`, raising no applied chip', () => {
+    dispatch.formFactor = 'desktop'
+    state.current = { ...CANNED, user: VIEWER }
+    const out = html()
+    expect(out, 'the level segment is the selected one').toContain(
+      `aria-pressed="true">${i18n.t('common:filters.bar.sort.level')}<`,
+    )
+    expect(out, 'a default rail is not an applied filter').not.toContain(
+      'filter-bar__applied',
+    )
   })
 })
