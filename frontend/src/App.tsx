@@ -3,15 +3,23 @@ import { Routes, Route } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
-import { useAuth } from './auth/AuthContext'
+import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 
 /**
  * Every page is code-split (#1045). The chrome above stays eager — Layout and
  * the auth guards render on every route, so deferring them would only add a
  * round trip before the first pixel.
+ *
+ * `/`'s two landings get named loaders rather than inline arrows so that
+ * `RootLanding` can start one before it knows which it needs (#1380). Dynamic
+ * `import()` is memoised by the module registry, so calling one of these is
+ * idempotent: the warm call and the render that follows share a request.
  */
-const Home = lazy(() => import('./pages/Home'))
-const FieldDesk = lazy(() => import('./pages/FieldDesk'))
+const importHome = () => import('./pages/Home')
+const importFieldDesk = () => import('./pages/FieldDesk')
+
+const Home = lazy(importHome)
+const FieldDesk = lazy(importFieldDesk)
 const Tasks = lazy(() => import('./pages/Tasks'))
 const TaskDetail = lazy(() => import('./pages/TaskDetail'))
 const PraxisDetail = lazy(() => import('./pages/PraxisDetail'))
@@ -40,10 +48,31 @@ function PageLoading() {
   return <div className="page font-body text-muted">{t('loading')}</div>
 }
 
-/** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise. */
-function RootLanding() {
+/** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise.
+ *  Exported for `__tests__/rootLandingChunks.test.tsx` — App's other routes are
+ *  plain elements, but this one holds a gate worth pinning. */
+export function RootLanding() {
   const { user, loading } = useAuth()
-  if (loading) return <PageLoading />
+  if (loading) {
+    // WHICH component renders needs the auth answer; the chunk download does
+    // not. Every other route fetches its chunk in parallel with `/auth/me`;
+    // `/` — the most-visited URL — used to wait for it, so a visitor paid the
+    // two costs end to end instead of overlapped (#1380).
+    //
+    // One chunk, not both. Warming both is the obvious version and it was
+    // measured on Slow 4G: the guest gained ~280ms and the signed-in viewer
+    // LOST ~270ms, because FieldDesk then arrives behind Home's twenty-odd
+    // chunks over a shared link — "preloading can make things much worse"
+    // (docs/agents/load-time.md) in miniature. The stored hint picks the likely
+    // landing instead, so both viewers gain and neither downloads a chunk it
+    // will not use.
+    //
+    // A wrong hint — the load right after signing in, or a session that expired
+    // since — lands back on the warm-both numbers for that one load, and
+    // corrects itself as soon as `/auth/me` answers.
+    void (hadSessionLastVisit() ? importFieldDesk() : importHome())
+    return <PageLoading />
+  }
   return user ? <FieldDesk /> : <Home />
 }
 
