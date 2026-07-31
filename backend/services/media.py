@@ -10,6 +10,7 @@ import io
 import logging
 import os
 import re
+import uuid
 
 from fastapi import HTTPException, UploadFile
 from PIL import Image
@@ -32,10 +33,24 @@ MEDIA_FILENAME_MAX_LEN = 100
 
 
 def _sanitize_filename(raw: str) -> str:
-    """Strip path components and replace unsafe chars; cap at 100 chars."""
+    """Strip path components and replace unsafe chars; cap at 100 chars.
+
+    Trust boundary: ``raw`` is a client-supplied filename on its way to the
+    filesystem. Separators and NUL bytes are outside ``[\\w.\\-]`` and become
+    underscores, so nothing here can introduce a new path segment; ``.`` and
+    ``..`` survive the character class, though, and are rejected by name — a
+    relative path ending in ``..`` points at a directory, not a file.
+
+    This is deliberately lossy (``my photo.jpg`` and ``my_photo.jpg`` collapse
+    to one name, as do two names differing only past character 100). Uniqueness
+    is not its job: ``process_and_save_media`` gives every upload its own
+    directory, so a collapsed basename never means a collided path.
+    """
     basename = os.path.basename(raw or "upload")
     cleaned = re.sub(r"[^\w.\-]", "_", basename)[:MEDIA_FILENAME_MAX_LEN]
-    return cleaned or "upload"
+    if cleaned in ("", ".", ".."):
+        return "upload"
+    return cleaned
 
 
 def _detect_media_type(content_type: str) -> MediaType:
@@ -102,13 +117,27 @@ async def process_and_save_media(
 
     Router contract: the caller has already validated the praxis exists and
     is owned by the current character. This function writes the file under
-    ``MEDIA_ROOT/<character_id>/<praxis_id>/`` and returns an unattached
-    ``MediaItem``; the caller is responsible for ``session.add`` + commit.
+    ``MEDIA_ROOT/<character_id>/<praxis_id>/<unique>/`` and returns an
+    unattached ``MediaItem``; the caller is responsible for ``session.add`` +
+    commit.
+
+    **Every upload gets its own directory** (#1336). Uploading ``photo.jpg``
+    twice used to write both to one path: the second overwrote the first while
+    both rows survived, so one row served someone else's bytes — and deleting
+    either row removed the only file, 404-ing the survivor. Uniquifying the
+    *directory* rather than the basename keeps ``file_path``'s last segment
+    exactly what the player picked, which the composer renders as the
+    attachment caption and as the remove button's accessible name.
+
+    Paths stay relative (CLAUDE.md): the returned value is joined onto
+    ``MEDIA_ROOT`` to read or delete, and onto ``MEDIA_BASE_URL`` to serve.
     """
     content_type = upload.content_type or ""
     media_type = _detect_media_type(content_type)
 
-    relative_directory = os.path.join(str(character_id), str(praxis_id))
+    relative_directory = os.path.join(
+        str(character_id), str(praxis_id), uuid.uuid4().hex
+    )
     absolute_directory = os.path.join(settings.MEDIA_ROOT, relative_directory)
     filename = _sanitize_filename(upload.filename or "upload")
     absolute_path = os.path.join(absolute_directory, filename)

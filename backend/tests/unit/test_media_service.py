@@ -111,6 +111,70 @@ async def test_process_and_save_media_image_writes_and_returns_unattached(tmp_pa
 
 
 @pytest.mark.asyncio
+async def test_same_filename_uploads_keep_their_own_bytes(tmp_path, monkeypatch):
+    """Two uploads named the same must not clobber each other (#1336).
+
+    Seam: ``process_and_save_media`` is the single naming seam both the
+    single-file and the batch route go through, so the collision is provable
+    here without HTTP. Distinct paths alone would not prove it — the bug was
+    two rows over one file — so this asserts the *contents* behind each row.
+    """
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+
+    first = await media.process_and_save_media(
+        _make_upload("proof.jpg", b"FIRST-UPLOAD-BYTES", "image/jpeg"),
+        praxis_id=11,
+        character_id=3,
+        display_order=0,
+    )
+    second = await media.process_and_save_media(
+        _make_upload("proof.jpg", b"SECOND-UPLOAD-BYTES", "image/jpeg"),
+        praxis_id=11,
+        character_id=3,
+        display_order=1,
+    )
+
+    assert first.file_path != second.file_path
+    with open(os.path.join(str(tmp_path), first.file_path), "rb") as handle:
+        assert handle.read() == b"FIRST-UPLOAD-BYTES"
+    with open(os.path.join(str(tmp_path), second.file_path), "rb") as handle:
+        assert handle.read() == b"SECOND-UPLOAD-BYTES"
+
+
+@pytest.mark.asyncio
+async def test_stored_path_keeps_the_player_visible_basename(tmp_path, monkeypatch):
+    """The composer renders ``file_path.split("/").pop()`` — keep it readable."""
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+
+    media_item = await media.process_and_save_media(
+        _make_upload("my cool video!.mp4", b"video bytes", "video/mp4"),
+        praxis_id=11,
+        character_id=3,
+        display_order=0,
+    )
+
+    assert os.path.basename(media_item.file_path) == "my_cool_video_.mp4"
+
+
+@pytest.mark.asyncio
+async def test_stored_path_is_relative_and_stays_under_media_root(tmp_path, monkeypatch):
+    """A hostile filename cannot escape MEDIA_ROOT and never lands absolute."""
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+
+    for hostile in ("../../../../etc/passwd", "..", "/etc/passwd", "nul\x00.jpg"):
+        media_item = await media.process_and_save_media(
+            _make_upload(hostile, b"bytes", "image/jpeg"),
+            praxis_id=11,
+            character_id=3,
+            display_order=0,
+        )
+        assert not os.path.isabs(media_item.file_path)
+        resolved = os.path.realpath(os.path.join(str(tmp_path), media_item.file_path))
+        assert resolved.startswith(os.path.realpath(str(tmp_path)) + os.sep)
+        assert os.path.isfile(resolved)
+
+
+@pytest.mark.asyncio
 async def test_process_and_save_media_unsupported_type_rejected(tmp_path, monkeypatch):
     """A non-image/video/audio upload raises 422 and writes nothing."""
     monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
