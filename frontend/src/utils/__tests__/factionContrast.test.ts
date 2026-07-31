@@ -268,16 +268,25 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
   ...CARD_KEYS.flatMap((key) => {
     const surface = PRAXIS_CARD_SHEET[key];
     const notice = `--faction-${key}-card-notice`;
+    const alarm = `--faction-${key}-card-alarm`;
     return [
-      // The moderation badges. Both veils are measured because which of the two
-      // gates FLIPS with the theme: the danger veil is the tighter reading in
-      // light (it is 5% there against warning's 5%, on a red rather than an
-      // amber), the warning veil in dark (both jump to 14%).
+      // The two moderation badges, and the two moderator controls that sit side
+      // by side above them (#1449). Each mark is measured under THE VEIL IT IS
+      // PAINTED ON, and after the alarm ink lands that is one veil per mark:
+      // the flagged badge and the `hide` control take the alarm ink on the
+      // danger veil, the failed badge and the `fail` control the notice ink on
+      // the warning veil.
+      //
+      // Both marks used to read the notice ink, so both veils had to be
+      // measured against that one token — which of the two gated FLIPPED with
+      // the theme (danger is 5% in light against warning's 5%, on a red rather
+      // than an amber; both jump to 14% in dark). One ink per veil retires that
+      // question rather than answering it.
       {
-        what: `${key} praxis card flagged badge, notice ink under the danger veil`,
+        what: `${key} praxis card flagged badge, alarm ink under the danger veil`,
         surface,
         veil: "--color-danger-veil",
-        text: notice,
+        text: alarm,
       },
       {
         what: `${key} praxis card failed badge, notice ink under the warning veil`,
@@ -285,6 +294,14 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
         veil: "--color-warning-veil",
         text: notice,
       },
+      // `moderateError` — the paragraph a failed hide/fail call writes — sets
+      // the alarm ink straight on the sheet, with nothing over it. The veiled
+      // row above is the tighter reading on all eight sheets in both themes
+      // today, because a veil made of the mark's own polarity always pulls the
+      // ground toward the ink; that is a property of two alpha values rather
+      // than of the family, so the bare pairing is NAMED rather than inferred
+      // from the veiled one.
+      { what: `${key} praxis card error text, alarm ink`, surface, text: alarm },
       // The mode chip — "Duel" / "Collaboration · N" / "still open". Ink, wash
       // and rule all come off ONE faction ink now, which is what #694 means by
       // "a row that paints its own ground must paint its own ink".
@@ -302,18 +319,18 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
       },
     ];
   }),
-  // The two BARE-sheet readings, for the four sheets `-card-bg` does not stand
-  // in for. `moderateError` sets the notice ink straight on the sheet, and the
-  // `hidden` badge sets the muted ink there (its 5% wash is gone — see the
-  // component). For the other four keys these are `{key} roster notice ink` and
-  // `{key} card muted text`, and a second name for one measurement is what this
-  // file keeps warning about.
+  // The BARE-sheet muted reading, for the four sheets `-card-bg` does not stand
+  // in for: the `hidden` badge sets the muted ink there (its 5% wash is gone —
+  // see the component). For the other four keys that is `{key} card muted
+  // text`, and a second name for one measurement is what this file keeps
+  // warning about.
+  //
+  // A bare NOTICE row used to sit beside it, for `moderateError`. That
+  // paragraph reads the alarm ink now (#1449) and nothing on this card paints
+  // the notice ink bare any more, so the row lost its consumer and went — the
+  // notice ink is still measured on these four sheets, under the warning veil,
+  // which is the tighter of the two readings anyway.
   ...OWN_SHEET_KEYS.flatMap((key) => [
-    {
-      what: `${key} praxis card sheet, notice ink`,
-      surface: PRAXIS_CARD_SHEET[key],
-      text: `--faction-${key}-card-notice`,
-    },
     {
       what: `${key} praxis card sheet, muted ink`,
       surface: PRAXIS_CARD_SHEET[key],
@@ -1221,4 +1238,47 @@ describe("faction token contrast (WCAG AA)", () => {
     const large = PAIRS.filter((pair) => pair.floor === AA_LARGE);
     expect(large.every((pair) => pair.what.includes("display"))).toBe(true);
   });
+});
+
+/**
+ * #1449 — THE ALARM AND NOTICE ROLES ARE TWO HUES, ON EVERY SHEET.
+ *
+ * The bug this file exists for is a ratio; the bug #1449 fixed is not, and the
+ * distinction is worth keeping visible. `-card-notice` was the card family's
+ * whole attention role, so `sheetInk` handed it to the flagged badge AND the
+ * failed badge, and to the moderator's `hide` and `fail` controls sitting side
+ * by side — four marks, two meanings, one colour. Every one of those pairings
+ * measured well clear of AA the entire time, because contrast maths knows what
+ * an ink sits on and never what it sits BESIDE.
+ *
+ * So the family carries a second ink and this is the assertion that keeps it a
+ * second ink. Without it, `--faction-{key}-card-alarm: var(--faction-{key}-card-
+ * notice)` would restore the collapse with every row above still green.
+ *
+ * ponytail: this only catches the collapse it was written for — one value doing
+ * both roles. It cannot see two reds a viewer could not tell apart, because
+ * "distinguishable hue" is not something a hex inequality knows. The upgrade
+ * path is a hue-distance floor between the two, and the time to mint it is when
+ * a repaint walks them together, not now: the shipped pair differs by ~22° of
+ * hue in light (red-800 against amber-900) and is a salmon against an amber in
+ * dark.
+ */
+describe("the card sheet's alarm and notice inks stay apart (#1449)", () => {
+  for (const theme of BOTH_THEMES) {
+    for (const cardKey of CARD_KEYS) {
+      it(`${cardKey} card alarm is not card notice (${theme})`, () => {
+        const alarm = resolveColor(`--faction-${cardKey}-card-alarm`, theme);
+        const notice = resolveColor(`--faction-${cardKey}-card-notice`, theme);
+        expect(
+          alarm.color,
+          `--faction-${cardKey}-card-alarm (${theme}) resolved to "${alarm.raw}" — the alarm role needs a declared ink on every sheet.`,
+        ).not.toBeNull();
+        expect(notice.color, `--faction-${cardKey}-card-notice (${theme}) resolved to "${notice.raw}"`).not.toBeNull();
+        expect(
+          alarm.raw,
+          `${cardKey} (${theme}) prints the destructive and the cautionary mark in one colour — that is the collapse #1449 undid.`,
+        ).not.toBe(notice.raw);
+      });
+    }
+  }
 });
