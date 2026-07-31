@@ -1,28 +1,26 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { FactionOut } from '../../../api/factions'
-import FactionSigil from '../../sigil/FactionSigil'
-import { factionCssVar } from '../../../utils/factions'
 import { useFormFactor } from '../../../hooks/useFormFactor'
-import FactionPicker from './FactionPicker'
+import OptionPicker from './OptionPicker'
 import SegmentedRail from './SegmentedRail'
-import { deriveChips, type FilterRail } from './filterState'
+import { deriveChips, type FilterFacet, type FilterRail } from './filterState'
 
 export * from './filterState'
+export * from './factionFacet'
 export { default as SegmentedRail } from './SegmentedRail'
-export { default as FactionPicker } from './FactionPicker'
+export { default as OptionPicker } from './OptionPicker'
 
-const CHIP_SIGIL_SIZE = 14
 const REMOVE_GLYPH = '×'
 const CARET_GLYPH = '▾'
 
 export interface FilterBarProps {
-  /** 2–4 segments each, one value per rail, one `ORDER BY` per rail. */
+  /** 2–6 segments each, one value per rail, one `ORDER BY` per rail. */
   rails: FilterRail[]
-  /** `GET /factions` — visible factions only. `na` is appended internally. */
-  factions: FactionOut[]
-  selectedFactions: string[]
-  onFactionsChange: (slugs: string[]) => void
+  /**
+   * Multi-select axes, in mount order. Faction is one of these rather than a
+   * prop of its own since #1446 — see `factionFacet`.
+   */
+  facets: FilterFacet[]
   /** Reset every axis to its default. The page owns the state and the URL. */
   onClearAll: () => void
   /** "Showing N tasks" — the page owns the count, the bar only states it. */
@@ -57,13 +55,11 @@ export interface FilterBarProps {
  * regression, not fidelity.
  *
  * Search and the applied-chip row sit OUTSIDE the collapse; the rails and the
- * faction picker fold away.
+ * facet pickers fold away.
  */
 export default function FilterBar({
   rails,
-  factions,
-  selectedFactions,
-  onFactionsChange,
+  facets,
   onClearAll,
   summary,
   search,
@@ -74,7 +70,7 @@ export default function FilterBar({
   // collapsed on the phone — a rotation mid-session does not re-collapse a bar
   // the player just opened, which is the behaviour we want anyway.
   const [open, setOpen] = useState(formFactor === 'desktop')
-  const chips = deriveChips({ rails, selectedFactions, onFactionsChange })
+  const chips = deriveChips({ rails, facets })
 
   return (
     <section className="filter-bar" aria-label={t('filters.bar.region')}>
@@ -123,11 +119,9 @@ export default function FilterBar({
             {rails.map((rail) => (
               <SegmentedRail key={rail.key} rail={rail} />
             ))}
-            <FactionPicker
-              factions={factions}
-              selected={selectedFactions}
-              onChange={onFactionsChange}
-            />
+            {facets.map((facet) => (
+              <OptionPicker key={facet.key} facet={facet} />
+            ))}
           </div>
         )}
 
@@ -142,13 +136,9 @@ export default function FilterBar({
                 aria-label={t('filters.bar.removeFilter', { label: chip.label })}
                 onClick={chip.remove}
               >
-                {chip.slug && (
+                {chip.ornament && (
                   <span className="filter-bar__chip-sigil" aria-hidden="true">
-                    <FactionSigil
-                      slug={chip.slug}
-                      size={CHIP_SIGIL_SIZE}
-                      color={factionCssVar(chip.slug)}
-                    />
+                    {chip.ornament}
                   </span>
                 )}
                 <span>{chip.label}</span>

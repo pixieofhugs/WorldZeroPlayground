@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import FilterBar, {
+  factionFacet,
   FilterBarEmpty,
   selectEmptyState,
   type FilterRail,
@@ -140,9 +141,7 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
   return (
     <FilterBar
       rails={rails}
-      factions={factions}
-      selectedFactions={selectedFactions}
-      onFactionsChange={setSelectedFactions}
+      facets={[factionFacet(factions, selectedFactions, setSelectedFactions)]}
       onClearAll={clearFilters}
       search={{
         value: query,
