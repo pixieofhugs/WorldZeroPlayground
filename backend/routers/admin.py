@@ -212,7 +212,19 @@ async def backfill_all_character_stats(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
-    """Recompute CharacterStats for every character using current vote data."""
+    """Recompute CharacterStats for every character using current vote data.
+
+    **Consumer-less on purpose — do not delete it (owner ruling, 2026-07-31).**
+    Nothing in the frontend or the admin MCP calls this, so a dead-endpoint sweep
+    finds it and proposes removal; #1386 did exactly that and was told to keep it.
+    It is a break-glass operations tool, and the value of one is that it is there
+    on the day you need it rather than on the day someone thought to add it.
+
+    It earns that standing: scoring is recomputed rather than stored as a running
+    total, so a bug in the recalc path leaves every score wrong until something
+    recomputes them. #1345 (the era bound) and #1373 (failed praxes score zero)
+    are both changes whose backfill this is.
+    """
     characters = await list_active_characters(session)
     era_row = await get_current_era_row(session)
     for character in characters:
