@@ -13,7 +13,6 @@ import {
   applyMetatask,
   changePraxisType,
   deletePraxis,
-  deletePraxisMedia,
   cancelInvite as cancelInviteApi,
   getPraxis,
   inviteToPraxis,
@@ -23,8 +22,6 @@ import {
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
-  uploadPraxisMedia,
-  type MediaItemOut,
   type PraxisOut,
   type PraxisType,
 } from "../../api/praxis";
@@ -48,6 +45,7 @@ import {
 } from "../../components/confirm/composerConfirms";
 import { useComposerConfirm } from "./useComposerConfirm";
 import { useComposerDraft } from "./useComposerDraft";
+import { useComposerMedia } from "./useComposerMedia";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getMyCharacters } from "../../api/me";
@@ -56,14 +54,14 @@ import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listMetatasks } from "../../api/metatasks";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
-import {
-  blobToFile,
-  partitionByEditability,
-} from "../../components/imageEdit/imageEditHelpers";
-import { uploadMediaInChunks } from "./mediaBatchUpload";
 import i18n from "../../i18n";
 
-export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+/**
+ * The media tray — the 50 MB ceiling, the picker, the image-edit queue and the
+ * batch upload — moved to `useComposerMedia.ts` (#1392). `MAX_FILE_SIZE` stays
+ * exported from here because it has always been part of this module's surface.
+ */
+export { MAX_FILE_SIZE } from "./useComposerMedia";
 
 /**
  * The state object every archetype reads moved to `editPraxisState.ts` (#1392)
@@ -135,13 +133,21 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
   const [task, setTask] = useState<TaskOut | null>(null);
-  const [media, setMedia] = useState<MediaItemOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [fileError, setFileError] = useState("");
-  // Picked images awaiting the edit modal, oldest first (#514).
-  const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
+
+  // ---- Media tray (#297, #514, #1286) ----
+  const {
+    media,
+    setMedia,
+    fileError,
+    handleFileChange,
+    removeMedia,
+    pendingImage,
+    confirmImageEdit,
+    cancelImageEdit,
+  } = useComposerMedia(idParam, setError);
 
   const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
   // The applied metatasks as full rows (source of truth for the seal stack);
@@ -324,98 +330,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       cancelled = true;
     };
   }, [praxis?.duel_id]);
-
-  // ---- Files ----
-  const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!event.target.files) return;
-      const incoming = Array.from(event.target.files);
-      const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
-      if (tooLarge.length > 0) {
-        setFileError(
-          i18n.t("forms:editPraxis.errors.fileTooLarge", {
-            count: tooLarge.length,
-            names: tooLarge.map((f) => f.name).join(", "),
-          }),
-        );
-      } else {
-        setFileError("");
-      }
-      const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
-      event.target.value = "";
-      if (!idParam || valid.length === 0) return;
-      // Images get the crop/rotate edit stage first (#514); video/audio upload
-      // straight through. Uploading immediately keeps a draft's media persisted
-      // without a manual save (autosave covers title/body only; #297).
-      const { toEdit, toUploadDirect } = partitionByEditability(valid);
-      const praxisId = parseInt(idParam, 10);
-      if (toUploadDirect.length > 0) {
-        // One request for the whole selection instead of one per file (#1286).
-        // Tiles now appear together rather than trickling in — that is the
-        // accepted cost of the single round trip, so no artificial staggering.
-        const { uploaded, errors } = await uploadMediaInChunks(
-          praxisId,
-          toUploadDirect,
-        );
-        if (uploaded.length > 0) {
-          setMedia((previous) => [...previous, ...uploaded]);
-        }
-        // One error slot, so the last failure wins — exactly what the old
-        // per-file loop left on screen when several files failed.
-        if (errors.length > 0) setError(errors[errors.length - 1]);
-      }
-      // Queue images for the modal; they're edited + uploaded one at a time.
-      if (toEdit.length > 0) {
-        setImageEditQueue((previous) => [...previous, ...toEdit]);
-      }
-    },
-    [idParam],
-  );
-
-  // ---- Image edit stage (#514): edit → upload → advance the queue ----
-  const pendingImage = imageEditQueue[0] ?? null;
-
-  const confirmImageEdit = useCallback(
-    async (blob: Blob) => {
-      const current = imageEditQueue[0];
-      if (!idParam || !current) return;
-      const praxisId = parseInt(idParam, 10);
-      const file = blobToFile(blob, current.name);
-      try {
-        const uploaded = await uploadPraxisMedia(praxisId, file);
-        setMedia((previous) => [...previous, uploaded]);
-      } catch (err) {
-        setError(
-          extractError(
-            err,
-            i18n.t("forms:editPraxis.errors.upload", { name: current.name }),
-          ),
-        );
-      } finally {
-        setImageEditQueue((previous) => previous.slice(1));
-      }
-    },
-    [idParam, imageEditQueue],
-  );
-
-  const cancelImageEdit = useCallback(() => {
-    setImageEditQueue((previous) => previous.slice(1));
-  }, []);
-
-  const removeMedia = useCallback(
-    async (item: MediaItemOut) => {
-      if (!idParam) return;
-      try {
-        await deletePraxisMedia(parseInt(idParam, 10), item.id);
-        setMedia((previous) => previous.filter((m) => m.id !== item.id));
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.removeMedia")),
-        );
-      }
-    },
-    [idParam],
-  );
 
   // ---- Save / publish ----
   const publish = useCallback(async () => {
