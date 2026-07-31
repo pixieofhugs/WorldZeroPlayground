@@ -25,9 +25,16 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.invitation_letter import InvitationLetter
-from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.task import Task, TaskStatus
 from services.character_stats import recalculate_character_stats
+from services.praxis import moderate_praxis
 from services.vote import cast_vote_on_praxis
 
 # Read the modifier from the era config rather than hardcoding it (ADR-0042).
@@ -282,6 +289,40 @@ async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     assert current_stats.score == before_score
     assert current_stats.level == before_level
     assert current_stats.all_time_score == before_all_time + gain
+
+
+@pytest.mark.asyncio
+async def test_failing_a_past_era_praxis_debits_that_era(
+    db_session: AsyncSession,
+    character: Character,
+    prior_era: Era,
+    current_era: Era,
+    faction_ua: Faction,
+):
+    """Every praxis-scoped recalc asks the same question as the vote path. A
+    moderation ruling on closed-era work has to reach the closed era's row —
+    #1373's "a failed praxis loses its points" must not become a no-op there."""
+    old = await _seed_both_eras(db_session, character, prior_era, current_era)
+
+    await recalculate_character_stats(character.id, db_session)
+    await recalculate_character_stats(character.id, db_session, era_row=prior_era)
+    await db_session.commit()
+
+    before_current = await _stats(db_session, character, current_era)
+    before_score = before_current.score
+    before_all_time = before_current.all_time_score
+    before_prior_score = (await _stats(db_session, character, prior_era)).score
+
+    await moderate_praxis(
+        old.id, ModerationStatus.failed.value, "Not actually done", db_session
+    )
+    await db_session.commit()
+
+    prior_stats = await _stats(db_session, character, prior_era)
+    current_stats = await _stats(db_session, character, current_era)
+    assert prior_stats.score == 0
+    assert current_stats.score == before_score
+    assert current_stats.all_time_score == before_all_time - before_prior_score
 
 
 # ---------------------------------------------------------------------------
