@@ -19,12 +19,12 @@
     },
     "filter": {
       "typeLabel": "type:",
-      "showLabel": "show:",
+      "showLabel": "Show",
       "searchPlaceholder": "Search proof, task, or player…",
       "searchLabel": "Search praxis",
-      "all": "All",
-      "needsMyVote": "needs my vote",
-      "voted": "voted",
+      "all": "Every praxis",
+      "needsMyVote": "Needs my vote",
+      "voted": "Voted",
       "sortNewest": "newest",
       "sortOldest": "oldest"
     }
