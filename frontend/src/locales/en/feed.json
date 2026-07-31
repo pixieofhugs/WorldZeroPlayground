@@ -1,23 +1,48 @@
 {
   "page": {
-    "show": "show",
-    "loading": "Loading..."
-  },
-  "mobile": {
     "title": "Updates",
     "eyebrow": "Activity Feed",
+    "loading": "Loading...",
     "loadMore": "Load older updates",
     "loadingMore": "Loading…",
     "loadMoreError": "Couldn't load more updates.",
-    "filter": {
+    "showing_one": "Showing {{count}} update",
+    "showing_other": "Showing {{count}} updates"
+  },
+  "filter": {
+    "type": "Type",
+    "relationshipLabel": "Relationship",
+    "stateLabel": "Inbox or archive",
+    "relationship": {
       "all": "All",
+      "yourStuff": "Your Stuff",
       "friends": "Friends",
       "foes": "Foes",
-      "yourStuff": "Yours",
-      "global": "Global",
-      "requests": "Requests",
+      "global": "Global"
+    },
+    "state": {
+      "inbox": "Inbox",
       "archived": "Archived"
-    }
+    },
+    "typeName": {
+      "friendCompletion": "Friend completed",
+      "foeCompletion": "Foe completed"
+    },
+    "emptyFiltered": "No updates match these filters.",
+    "emptyFilteredHint": "Loosen a filter, or clear them all."
+  },
+  "queue": {
+    "eyebrow": "Waiting on you",
+    "title": "Requests",
+    "expand": "Show requests",
+    "collapse": "Hide requests",
+    "trayLabel": "Requests waiting on you",
+    "skip": "Still waiting",
+    "remaining_one": "{{count}} left",
+    "remaining_other": "{{count}} left",
+    "doneTitle": "Nothing is waiting on you.",
+    "doneBody": "Answer what arrives and this stays clear.",
+    "error": "That didn't go through."
   },
   "kicker": {
     "friend_completion": "Task completed",
@@ -142,7 +167,18 @@
     "kicker": "Faction Invitation",
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
     "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
-    "viewFactions": "View Factions →"
+    "viewFactions": "View Factions →",
+    "accept": "Accept",
+    "notNow": "Not now",
+    "accepted": "Joined {{faction}}",
+    "setAside": "Set aside — the invitation still stands",
+    "error": "Couldn't answer that invitation.",
+    "confirm": {
+      "title": "Leave {{current}} for {{faction}}?",
+      "body": "Defecting closes {{current}} to you for the rest of this era.",
+      "confirm": "Yes, defect",
+      "cancel": "Cancel"
+    }
   },
   "frame": {
     "albescent": {
