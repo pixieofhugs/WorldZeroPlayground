@@ -5,6 +5,7 @@ import { I18nextProvider } from 'react-i18next'
 import App from './App'
 import { AuthProvider } from './auth/AuthContext'
 import { AdminModeProvider } from './auth/AdminModeContext'
+import { SidebarProvider } from './hooks/useSidebarPanels'
 import { ThemeProvider } from './hooks/useTheme'
 import i18n from './i18n'
 import './index.css'
@@ -17,9 +18,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
-            <AdminModeProvider>
-              <App />
-            </AdminModeProvider>
+            {/* Inside AuthProvider so it can notice the session changing, but
+                NOT waiting on it: its fetch goes out in the first wave beside
+                `/auth/me`, not behind it (#1344). */}
+            <SidebarProvider>
+              <AdminModeProvider>
+                <App />
+              </AdminModeProvider>
+            </SidebarProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

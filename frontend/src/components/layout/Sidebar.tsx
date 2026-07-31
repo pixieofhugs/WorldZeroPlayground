@@ -1,12 +1,12 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
-import { getActivityFeed, type ActivityFeedItem } from '../../api/activityFeed'
+import { type ActivityFeedItem } from '../../api/activityFeed'
 import { relativeTime } from '../../utils/dates'
 import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
-import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
+import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import { praxisModeLabel } from '../../utils/praxis'
 import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
@@ -53,31 +53,23 @@ function SectionHeader({ label }: { label: string }) {
  * "all paths" rainbow-spectrum identity: character card + pending requests +
  * in-progress tasks + recent global activity + propose CTA.
  *
- * The pending-requests read is owned by `SidebarColumn` and handed down, because
- * the collapsed handle badges the same count — see that component for why one
- * read rather than one per consumer (#1343).
+ * Three of those four panels used to be three separate fetches made here, each
+ * one waiting on `/auth/me`. They are one request now, made before this
+ * component exists — see `hooks/useSidebarPanels` (#1344). Identity is still
+ * read from auth: the character card is `/auth/me`'s payload, not the rail's.
  */
-export interface SidebarProps {
-  readonly pendingRequests: ActivityFeedItem[]
-  readonly refetchPendingRequests: () => void
-}
-
-export default function Sidebar({ pendingRequests, refetchPendingRequests }: SidebarProps) {
+export default function Sidebar() {
   const { t } = useTranslation('common')
   const { user } = useAuth()
   const character = user?.character
 
-  const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks()
+  const {
+    pending_requests: pendingRequests,
+    global_activity: globalActivity,
+    active_praxes: activeTasks,
+    refetch: refetchPanels,
+  } = useSidebarPanels()
   const gameConfig = useGameConfig()
-  const [globalActivity, setGlobalActivity] = useState<ActivityFeedItem[]>([])
-
-  useEffect(() => {
-    if (!user) return
-    // Global activity from the unified feed API
-    getActivityFeed({ filter: 'global', limit: 5 })
-      .then((response) => setGlobalActivity(response.items))
-      .catch(() => {})
-  }, [user])
 
   const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS
   const slotCount = activeTasks.length
@@ -232,12 +224,10 @@ export default function Sidebar({ pendingRequests, refetchPendingRequests }: Sid
                   key={`${item.type}-${index}`}
                   item={item}
                   isFirst={index === 0}
-                  onResolved={() => {
-                    // An accepted collab/duel becomes an in-progress praxis —
-                    // refresh both panels so the request moves bars (#346).
-                    refetchPendingRequests()
-                    refetchActiveTasks()
-                  }}
+                  // An accepted collab/duel becomes an in-progress praxis, so
+                  // the request has to move bars (#346). Both panels come from
+                  // one response now, so that is one refetch, not two.
+                  onResolved={refetchPanels}
                 />
               ),
             )}

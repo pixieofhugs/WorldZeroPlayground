@@ -13,10 +13,12 @@ vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => authMock(),
 }))
 
-// usePendingRequests fetches over the network; mock it to control the badge.
+// The rail's panels come over the network (#1344); mock the read to control
+// the badge. The bell shares the desktop rail's ONE response — it no longer
+// makes a second, byte-identical limit-100 feed call of its own.
 const pendingMock = vi.fn()
-vi.mock('../../../hooks/usePendingRequests', () => ({
-  usePendingRequests: () => pendingMock(),
+vi.mock('../../../hooks/useSidebarPanels', () => ({
+  useSidebarPanels: () => pendingMock(),
 }))
 
 import MobileHeader from '../MobileHeader'
@@ -33,7 +35,13 @@ const signedIn = { user: { character: null } as unknown as CurrentUser }
 const signedOut = { user: null }
 
 beforeEach(() => {
-  pendingMock.mockReturnValue({ pendingRequests: [], refetch: vi.fn(), loading: false })
+  pendingMock.mockReturnValue({
+    pending_requests: [],
+    global_activity: [],
+    active_praxes: [],
+    refetch: vi.fn(),
+    loading: false,
+  })
 })
 
 describe('MobileHeader bell', () => {
@@ -56,7 +64,9 @@ describe('MobileHeader bell', () => {
 
     // Three pending requests → badge count is rendered.
     pendingMock.mockReturnValue({
-      pendingRequests: [{}, {}, {}] as ActivityFeedItem[],
+      pending_requests: [{}, {}, {}] as ActivityFeedItem[],
+      global_activity: [],
+      active_praxes: [],
       refetch: vi.fn(),
       loading: false,
     })

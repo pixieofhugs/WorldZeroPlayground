@@ -1,10 +1,11 @@
 // ponytail: a ~12-line pub-sub so an accept/decline/submit anywhere refreshes
 // the requests count, the mobile bell badge, and the sidebar panel — cheaper
 // than threading a refetch callback through every feed card and detail page.
-// The activity-feed counts live in independent hook instances (useUpdates,
-// usePendingRequests) with no shared cache; without this, only the component
-// that made the request would see the change. Upgrade to a query cache
-// (react-query) if the app grows more of these cross-component invalidations.
+// The activity feed is read by independent hook instances (useUpdates,
+// useSidebarPanels) with no shared cache between them; without this, only the
+// component that made the request would see the change. Upgrade to a query
+// cache (react-query) if the app grows more of these cross-component
+// invalidations.
 
 type Listener = () => void
 

@@ -63,9 +63,10 @@ function HandleButton({
  * reaches assistive tech through the BUTTON's accessible name; the badge itself
  * is decorative and `aria-hidden`, exactly as the mobile bell's is.
  *
- * The count is a PROP, read once by `SidebarColumn` and shared with the rail
- * (#1343): a second `usePendingRequests()` here would be a second `limit: 100`
- * fetch racing the rail's own, now that the rail stays mounted while collapsed.
+ * The count is a PROP, not a read of its own. It is one number and the parent
+ * already has it; since #1344 the panels have a single owner above the whole
+ * shell (`SidebarProvider`), so reading it here would cost no request either —
+ * it would just be a second subscription to say the same thing.
  */
 function CollapsedHandle({
   onToggle,

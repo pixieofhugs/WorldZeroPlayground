@@ -25,14 +25,17 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: mocks.user, refetch: async () => {} }),
 }))
-vi.mock('../../../hooks/useMyActiveTasks', () => ({
-  useMyActiveTasks: () => ({ activeTasks: [], loading: false, refetch: () => {} }),
-}))
 vi.mock('../../../hooks/useMyCharacterStats', () => ({
   useMyCharacterStats: () => ({ votesReceived: 0, loading: false }),
 }))
-vi.mock('../../../hooks/usePendingRequests', () => ({
-  usePendingRequests: () => ({ pendingRequests: [], loading: false, refetch: () => {} }),
+vi.mock('../../../hooks/useSidebarPanels', () => ({
+  useSidebarPanels: () => ({
+    pending_requests: [],
+    global_activity: [],
+    active_praxes: [],
+    loading: false,
+    refetch: () => {},
+  }),
 }))
 vi.mock('../../../api/me', () => ({
   getMyCharacters: async () => [],

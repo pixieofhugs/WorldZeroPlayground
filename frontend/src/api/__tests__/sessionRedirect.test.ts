@@ -27,6 +27,39 @@ describe('401 handling', () => {
     }
   })
 
+  /**
+   * `/me/sidebar` is the rail's compound read (#1344). It goes out in the FIRST
+   * wave, before `/auth/me` has said whether anyone is signed in — the JWT is an
+   * httpOnly cookie, so the client cannot know synchronously and asking is the
+   * only way to find out. A guest's answer is 401, exactly like `/auth/me`'s.
+   *
+   * So it is a session probe too, and the exclusion had to stop being a single
+   * URL. Without this, the endpoint would re-create the bug documented above on
+   * every guest deep link — and this time from chrome that mounts on every
+   * route, so there would be no URL a guest could open.
+   */
+  it('leaves a guest on the page they asked for when the rail probe 401s', () => {
+    for (const pathname of ['/tasks/46', '/praxis/2', '/factions/coven', '/about']) {
+      expect(shouldReturnToLanding(401, '/me/sidebar', pathname)).toBe(false)
+    }
+  })
+
+  it('excludes every session probe, not just the first one', () => {
+    for (const probe of ['/auth/me', '/me/sidebar']) {
+      expect(shouldReturnToLanding(401, probe, '/tasks/46')).toBe(false)
+    }
+  })
+
+  /**
+   * `/me/sidebar` is excluded; its siblings under `/me` are not. A 401 from
+   * `/me/characters` is a session that expired while the app was in use and must
+   * still bounce — a prefix match on `/me` would have swallowed those.
+   */
+  it('does not extend the exclusion to the rest of /me', () => {
+    expect(shouldReturnToLanding(401, '/me/characters', '/settings')).toBe(true)
+    expect(shouldReturnToLanding(401, '/me/active-character', '/settings')).toBe(true)
+  })
+
   it('still returns to landing when a real request 401s mid-session', () => {
     expect(shouldReturnToLanding(401, '/praxes/2/votes', '/praxis/2')).toBe(true)
     expect(shouldReturnToLanding(401, '/tasks/46/signup', '/tasks/46')).toBe(true)

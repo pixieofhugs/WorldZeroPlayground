@@ -3,21 +3,30 @@
 Distinct from /characters (public roster): these read the authenticated account's
 own characters and which life it is currently carrying.
 """
+from dataclasses import asdict
+from typing import Callable
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db import get_db
+from db import get_db, get_session_factory
 from models.account import Account
+from models.praxis import PraxisStatus
+from schemas.activity_feed import ActivityFeedItem
 from schemas.auth import CurrentUser
 from schemas.character import ActiveCharacterIn, CharacterOut
+from schemas.sidebar import SidebarOut
+from services.activity_feed import get_sidebar_feed
 from services.auth import get_current_account
 from services.character import (
     build_character_out,
     get_account_invited_faction_slugs,
     list_account_roster,
+    resolve_active_character,
     set_active_character,
 )
 from services.current_user import build_current_user
+from services.praxis import build_praxis_cards, list_praxes
 
 router = APIRouter()
 
@@ -50,3 +59,51 @@ async def my_invited_factions(
 ):
     """Faction slugs the account holds a current-era invitation for (empty until #272)."""
     return await get_account_invited_faction_slugs(account.id, session)
+
+
+@router.get("/sidebar", response_model=SidebarOut)
+async def my_sidebar(
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db),
+    session_factory: Callable = Depends(get_session_factory),
+) -> SidebarOut:
+    """Everything the desktop rail's three data panels draw, in one request (#1344).
+
+    The rail used to make three, and every one of them waited on ``/auth/me``
+    resolving first — for no reason: none of the three needed anything from the
+    client, since this route resolves the viewer from the JWT itself. The client
+    now fires this in the first wave, before it knows whether anyone is signed
+    in, which is why a guest's answer here is a plain 401 and why the frontend
+    excludes this URL from its expired-session redirect.
+
+    An account with no character yet gets 200 and three empty panels, not 403:
+    the rail renders for them — it draws the "no character" card — so empty is
+    the answer, not an error.
+    """
+    character = await resolve_active_character(account, session)
+    if character is None:
+        return SidebarOut(pending_requests=[], global_activity=[], active_praxes=[])
+
+    pending_requests, global_activity = await get_sidebar_feed(
+        character_id=character.id,
+        session=session,
+        session_factory=session_factory,
+    )
+    # Membership-scoped, not authorship: an accepted collab invite is in-flight
+    # work too, and the slot count it sits under counts memberships.
+    active_praxes = await list_praxes(
+        session=session,
+        member_id=character.id,
+        status=PraxisStatus.in_progress,
+        viewer_id=character.id,
+        viewer_account_id=character.account_id,
+    )
+    return SidebarOut(
+        pending_requests=[
+            ActivityFeedItem.model_validate(asdict(item)) for item in pending_requests
+        ],
+        global_activity=[
+            ActivityFeedItem.model_validate(asdict(item)) for item in global_activity
+        ],
+        active_praxes=await build_praxis_cards(active_praxes, session, character),
+    )
