@@ -29,7 +29,6 @@
   },
   "mobile": {
     "count": "{{count}} shown",
-    "allFactions": "All",
     "loadError": "Couldn't load tasks."
   },
   "detail": {

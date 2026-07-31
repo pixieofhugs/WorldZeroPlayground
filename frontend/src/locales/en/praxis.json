@@ -18,15 +18,12 @@
       "clear": "Show all praxis"
     },
     "filter": {
-      "typeLabel": "type:",
       "showLabel": "Show",
       "searchPlaceholder": "Search proof, task, or player…",
       "searchLabel": "Search praxis",
       "all": "Every praxis",
       "needsMyVote": "Needs my vote",
-      "voted": "Voted",
-      "sortNewest": "newest",
-      "sortOldest": "oldest"
+      "voted": "Voted"
     }
   },
   "mobileFeed": {

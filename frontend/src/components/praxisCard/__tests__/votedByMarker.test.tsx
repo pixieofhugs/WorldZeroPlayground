@@ -1,14 +1,17 @@
 /**
- * #644 §7 — the "voted by {name}" marker + the FilterStamps `label`/`optionLabels`
- * widening. SSR-renders each in isolation (no effects needed) with the real i18n
- * catalog, so the copy and the account-mate name are pinned.
+ * #644 §7 — the "voted by {name}" marker. SSR-renders it in isolation (no
+ * effects needed) with the real i18n catalog, so the copy and the account-mate
+ * name are pinned.
+ *
+ * The `FilterStamps` half of #644 §7 (the `label`/`optionLabels` widening) is
+ * gone with the component itself (#1368): the show/voted axis it drew is now a
+ * `FilterBar` rail, covered by `praxes/__tests__/praxisFilterBar.test.tsx`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import { PraxisVotedByMarker } from '../shared'
-import FilterStamps from '../../ui/FilterStamps'
 
 function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
   return { id: 1, ...overrides } as PraxisCardOut
@@ -33,23 +36,4 @@ describe('voted-by marker', () => {
   // The two `MobileVotedByMarker` cases are gone with the `mobilePraxisCard`
   // surface (ADR-0067). The marker read the same `voted_by_name` field through
   // the same catalog key; the desktop cases above now pin both form factors.
-})
-
-describe('FilterStamps widening', () => {
-  it('shows the custom group label and maps option keys to display labels', () => {
-    const html = renderToStaticMarkup(
-      <FilterStamps
-        label="show:"
-        options={['all', 'no']}
-        value="no"
-        onChange={() => {}}
-        optionLabels={{ all: 'All', no: 'needs my vote' }}
-      />,
-    )
-    const body = text(html)
-    expect(body).toContain('show:')
-    expect(body).toContain('needs my vote')
-    // The raw option key is never shown when an optionLabels entry exists.
-    expect(body).not.toContain('>no<')
-  })
 })
