@@ -1,11 +1,28 @@
 /**
- * useEditPraxis — extracts every piece of state and async behavior from the
- * legacy EditPraxis.tsx so that the seven faction archetypes can each own their
- * own visual treatment without re-implementing the data plumbing.
+ * useEditPraxis — every piece of state and async behaviour behind the composer,
+ * so the faction archetypes can each own their visual treatment without
+ * re-implementing the data plumbing.
  *
- * Behaviour preserved 1:1 from the original page (mode-switch deletes + recreates,
- * locked-once-published rules, debounced 2s autosave on title/body, immediate save
- * for mode/metatask).
+ * This file is now the **assembler** (#1392). Six concerns own themselves in
+ * their own modules and this one composes them into the single
+ * `EditPraxisState` all nine archetypes, the waiting surface and the dispatcher
+ * read:
+ *
+ *   `useComposerDraft`   — title, body, the 2s autosave, the flush
+ *   `useComposerMedia`   — the tray: pick, edit, upload, remove
+ *   `useMetataskApply`   — the applied seal stack, picker and peel-off
+ *   `useComposerRoster`  — the search box, invites, challenge, kick, nudge
+ *   `useComposerDuel`    — the challenge pane, duel detail, seal dialog
+ *   `useComposerConfirm` — the one in-page confirm slot
+ *
+ * What stays here is what nothing else can own: the initial load and the
+ * viewer's seal catalogue, the lifecycle writes (publish, save draft, pull
+ * back, leave, drop, mode switch), and the derived flags that read across two
+ * or more of the concerns above.
+ *
+ * The split is pure restructuring — the interface, the request count and the
+ * mount-time request ORDER are all unchanged, and the existing suite that
+ * proves it was not edited to accommodate it.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -270,11 +287,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       });
   }, [user?.character?.id]);
 
+  // ---- The other players (#311, #421, #959, #1083, #1257) ----
   // Declared AFTER the two loads above on purpose. Effects register in call
   // order, and this hook opens the mount-time foes read (#1390); keeping it
   // below leaves getPraxis and listMetatasks first in the queue, which is the
   // order #1379 settled on.
-  // ---- The other players (#311, #421, #959, #1083, #1257) ----
   const {
     inviteQuery,
     setInviteQuery,
