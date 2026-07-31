@@ -37,7 +37,7 @@ const FACTIONS: FactionOut[] = [
 
 function status(rows: Array<[string, string]>): FactionPageOut {
   const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status }))
-  return { current_faction_slug: 'coven', all_factions }
+  return { current_faction_slug: 'coven', all_factions, invitations: [] }
 }
 
 // A viewer who is a Coven member, recruited by S.N.I.D.E., and not invited by

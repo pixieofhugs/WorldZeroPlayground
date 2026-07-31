@@ -92,19 +92,27 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
    *
    * The mount fetch is never *wrong* — the server read the cookie, not our idea
    * of who is signed in — so it must not be repeated when `/auth/me` merely
-   * lands. `settledUser` records the identity the app settled on the first time
-   * auth resolved; only a CHANGE after that is a refetch. Without the guard,
-   * every signed-in load would fire this twice and the issue's whole saving
-   * would be handed straight back.
+   * lands. `settledCharacterId` records the life the app settled on the first
+   * time auth resolved; only a CHANGE after that is a refetch. Without the
+   * guard, every signed-in load would fire this twice and the issue's whole
+   * saving would be handed straight back.
+   *
+   * The settled value is the CHARACTER ID, not the `user` object (#1390). The
+   * object is a fresh one on every `refetch()` of `/auth/me`, so an identity
+   * comparison never matched and this fired the rail's three-panel read — the
+   * widest server fan-out on the page — every time the viewer cast a star.
+   * Sign-in, sign-out and a character switch all move the id, which is what
+   * "the session changed under us" was always reaching for.
    */
-  const settledUser = useRef<unknown>(UNSETTLED)
+  const settledCharacterId = useRef<unknown>(UNSETTLED)
+  const characterId = user?.character?.id
   useEffect(() => {
     if (authLoading) return
-    if (settledUser.current === user) return
-    const first = settledUser.current === UNSETTLED
-    settledUser.current = user
+    if (settledCharacterId.current === characterId) return
+    const first = settledCharacterId.current === UNSETTLED
+    settledCharacterId.current = characterId
     if (!first) refetch()
-  }, [authLoading, user, refetch])
+  }, [authLoading, characterId, refetch])
 
   return (
     <SidebarContext.Provider value={{ ...panels, loading, refetch }}>
