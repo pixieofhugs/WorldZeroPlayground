@@ -8,7 +8,16 @@ import logging
 import os
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -61,6 +70,7 @@ from services.praxis import (
     kick_member,
     leave_praxis,
     list_praxes,
+    PraxisEraScope,
     PraxisSort,
     VotedFilter,
     remove_metatask,
@@ -91,9 +101,10 @@ async def list_praxes_route(
     type: Optional[str] = None,
     status: Optional[str] = None,
     moderation_status: Optional[str] = None,
-    faction: Optional[str] = None,
+    faction: Optional[List[str]] = Query(None),
     q: Optional[str] = None,
     sort: Optional[str] = None,
+    era_scope: str = PraxisEraScope.this_era.value,
     voted: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
@@ -106,6 +117,13 @@ async def list_praxes_route(
             praxis_sort = PraxisSort(sort)
         except ValueError:
             raise HTTPException(status_code=422, detail=f"Invalid praxis sort: {sort}")
+
+    try:
+        era_scope_value = PraxisEraScope(era_scope)
+    except ValueError:
+        raise HTTPException(
+            status_code=422, detail=f"Invalid praxis era scope: {era_scope}"
+        )
 
     voted_filter: Optional[VotedFilter] = None
     if voted is not None:
@@ -140,6 +158,7 @@ async def list_praxes_route(
         faction=faction,
         search=q,
         sort=praxis_sort,
+        era_scope=era_scope_value,
         voted=voted_filter,
         viewer_id=viewer.id if viewer else None,
         viewer_account_id=viewer.account_id if viewer else None,
