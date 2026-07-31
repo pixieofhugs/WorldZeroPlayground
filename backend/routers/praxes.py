@@ -394,6 +394,13 @@ async def delete_media_route(
         os.remove(abs_path)
     except OSError:
         pass
+    # Each upload owns its directory (#1336), so removing the file leaves that
+    # directory empty. rmdir refuses a non-empty one, which is exactly the guard
+    # we want for pre-#1336 rows that still share a per-praxis directory.
+    try:
+        os.rmdir(os.path.dirname(abs_path))
+    except OSError:
+        pass
 
     await session.delete(media_item)
     await session.flush()

@@ -2,6 +2,7 @@ import type { } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { useAuth } from '../../auth/AuthContext'
+import type { CurrentUser } from '../../api/auth'
 import DefaultVote from './DefaultVote'
 import { VoteFactionContext } from './VoteShell'
 
@@ -27,16 +28,36 @@ export interface VoteUIProps {
   viewerCanVote?: boolean
 }
 
+/**
+ * Should the vote region exist at all for this viewer? (#998, #1429)
+ *
+ * `false` only for a logged-in viewer the backend says can never vote here —
+ * account ownership or duel participation, the two PERMANENT blocks. Anonymous
+ * viewers are always `true`: they fall through to the per-widget login gate, and
+ * that CTA is deliberate (#855). The backend never sends `viewer_can_vote:false`
+ * to a logged-out visitor either (`services/vote.viewer_can_vote`), so the `user`
+ * half is the client's belt-and-braces.
+ *
+ * THE ONE PREDICATE. `VoteUI` applies it to itself, and every caller that draws
+ * chrome AROUND the widget — heading, prompt, plate — applies the same call to
+ * that chrome. #1429 is what happens when the two halves are derived separately:
+ * the widget hid itself and eight archetypes kept drawing an empty "Cast your
+ * vote" plate over the hole.
+ */
+export function voteRegionVisible(
+  user: CurrentUser | null,
+  viewerCanVote?: boolean,
+): boolean {
+  return !(user && viewerCanVote === false)
+}
+
 export default function VoteUI({
   factionSlug,
   viewerCanVote,
   ...props
 }: VoteUIProps & { factionSlug?: string | null }) {
   const { user } = useAuth()
-  // Hide the whole module for a logged-in viewer the backend says can never
-  // vote here (ownership / duel participation, #998). Anonymous viewers fall
-  // through to the per-widget login gate — the login CTA is deliberate.
-  if (user && viewerCanVote === false) {
+  if (!voteRegionVisible(user, viewerCanVote)) {
     return null
   }
   const Variant = pickVariant(surfaceMap('vote'), factionSlug, DefaultVote)
