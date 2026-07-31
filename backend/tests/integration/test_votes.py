@@ -887,10 +887,10 @@ async def test_anti_self_vote_fallback_allows_unrelated_voter(
     assert praxis_unloaded.created_by is None
 
     # character2 (different account) casts a vote — must succeed
-    vote = await cast_or_update_vote(character2, praxis_unloaded, 3, db_session)
-    assert vote.value == 3
-    assert vote.voter_character_id == character2.id
-    assert vote.praxis_id == praxis_solo.id
+    cast = await cast_or_update_vote(character2, praxis_unloaded, 3, db_session)
+    assert cast.vote.value == 3
+    assert cast.vote.voter_character_id == character2.id
+    assert cast.vote.praxis_id == praxis_solo.id
 
 
 # ---------------------------------------------------------------------------

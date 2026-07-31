@@ -113,6 +113,11 @@ class PraxisOut(BaseModel):
     # module stays visible). Anonymous → True (client shows the login gate).
     # Drives hiding the whole vote module for logged-in-but-ineligible viewers.
     viewer_can_vote: bool = True
+    # The viewer's own star (1-5); None if unvoted or anonymous — the same field
+    # and the same meaning as ``PraxisCardOut.viewer_vote`` (#1382). Detail used
+    # to be the ONE surface without it, which is why the client recovered the
+    # viewer's cast from the voters list and parked it in an overlay store.
+    viewer_vote: Optional[int] = None
 
     model_config = {"from_attributes": True}
 

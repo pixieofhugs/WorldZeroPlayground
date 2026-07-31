@@ -50,7 +50,8 @@ class InviteResponse(BaseModel):
 class MetataskApply(BaseModel):
     task_id: int
 from schemas.nudge import NudgeOut
-from schemas.vote import VoteOut
+from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
+from services.scoring import compute_votes_available
 from services.praxis import (
     _build_invite_out,
     _require_member,
@@ -567,17 +568,36 @@ async def flag_praxis_route(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/{praxis_id}/vote", response_model=VoteOut)
+@router.post("/{praxis_id}/vote", response_model=VoteCastOut)
 async def cast_vote_route(
     praxis_id: int,
     data: PraxisVoteIn,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    vote = await cast_vote_on_praxis(
+    """Cast or re-rate a star, and hand back everything the cast changed (#1382).
+
+    The response is the client's SOLE source of post-cast truth: the praxis's new
+    tally, the star that now stands, and the voter's budget. Returning a bare
+    ``VoteOut`` here is what made the client keep a delta-arithmetic overlay
+    store and reload ``/auth/me`` once per star.
+    """
+    cast = await cast_vote_on_praxis(
         character, praxis_id, data.value, session, era=CURRENT_ERA,
     )
-    return VoteOut.model_validate(vote)
+    return VoteCastOut(
+        **VoteOut.model_validate(cast.vote).model_dump(),
+        tally=VoteTallyOut(
+            points_from_votes=cast.tally.points_from_votes,
+            voter_count=cast.tally.voter_count,
+        ),
+        viewer_vote=cast.vote.value,
+        viewer_stats=ViewerStatsOut(
+            score=cast.voter_stats.score,
+            level=cast.voter_stats.level,
+            votes_available=compute_votes_available(cast.voter_stats, CURRENT_ERA),
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
