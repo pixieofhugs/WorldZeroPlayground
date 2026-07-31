@@ -7,7 +7,7 @@
  * locked-once-published rules, debounced 2s autosave on title/body, immediate save
  * for mode/metatask).
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   applyMetatask,
@@ -23,7 +23,6 @@ import {
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
-  updatePraxis,
   uploadPraxisMedia,
   type MediaItemOut,
   type PraxisOut,
@@ -48,6 +47,7 @@ import {
   reopenForEditConfirm,
 } from "../../components/confirm/composerConfirms";
 import { useComposerConfirm } from "./useComposerConfirm";
+import { useComposerDraft } from "./useComposerDraft";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getMyCharacters } from "../../api/me";
@@ -73,7 +73,7 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
  * components, the dispatcher — reaches for both names by this path.
  */
 export type { EditPraxisState, SaveStatus } from "./editPraxisState";
-import type { EditPraxisState, SaveStatus } from "./editPraxisState";
+import type { EditPraxisState } from "./editPraxisState";
 
 /**
  * The phase predicate moved to `editPraxisPhase.ts` (#1397) so the praxis-detail
@@ -87,96 +87,23 @@ export {
   type EditPraxisPhase,
 } from "./editPraxisPhase";
 
-const AUTOSAVE_DEBOUNCE_MS = 2000;
-
 /* `modeSwitchPrompt` moved to `components/confirm/composerConfirms.ts` as
  * `modeSwitchConfirm` (#1082): it now returns a whole ConfirmRequest rather than
  * one string for `window.confirm`, and it belongs beside the other six confirms
  * the composer asks for. */
 
 /**
- * Dirty-check gate for the pre-submit save (#360).
- *
- * On a collab, ANY praxis PUT hard-resets every member's has_submitted
- * (ADR-0012 — "an edit means we're not done"). If Submit always fired a PUT,
- * the last member's submit would reset everyone else's, so
- * all(has_submitted) could never be reached through the UI. Only persist
- * when the form actually differs from the last-persisted values; a genuine
- * edit still resets consensus, which is correct per ADR-0012.
+ * The draft's own machinery — the 2s debounced autosave, the cancel-then-write
+ * flush, and the three predicates that decide whether a write is owed — moved
+ * to `useComposerDraft.ts` (#1392). Re-exported here because
+ * `useEditPraxis.test.ts` calls all three directly: the harness runs no
+ * effects, so calling them is the only way the ordering is provable.
  */
-export function hasUnsavedEdits(
-  title: string,
-  body: string,
-  lastSavedTitle: string | null,
-  lastSavedBody: string | null,
-): boolean {
-  return title !== lastSavedTitle || body !== lastSavedBody;
-}
-
-/**
- * The composer's one manual write: **cancel the queued autosave first, then
- * persist the text in hand** — in that order, and never one without the other.
- *
- * The ordering is the whole correctness of a manual save (#1081). A queued
- * debounce holds a *stale* closure over title/body; leaving it armed lets it
- * land after the manual PUT and re-write older text, while cancelling without
- * writing drops every keystroke typed inside the 2s window. Publish has always
- * done both (#360); Save draft needs exactly the same two steps, so they live
- * here once rather than being re-typed at each call site.
- *
- * Exported (and dependency-injected on `cancelQueuedAutosave`) so the ordering
- * is provable in a test that calls it directly — the frontend harness runs no
- * effects, so the debounce timer can't be exercised through the component.
- *
- * Returns whether a PUT actually went out: nothing changed since the last save
- * → no request at all (#360; on a collab a PUT would reset every member's
- * `has_submitted`, ADR-0012).
- */
-export async function flushEdits(options: {
-  praxisId: number;
-  title: string;
-  body: string;
-  lastSavedTitle: string | null;
-  lastSavedBody: string | null;
-  cancelQueuedAutosave: () => void;
-}): Promise<boolean> {
-  const {
-    praxisId,
-    title,
-    body,
-    lastSavedTitle,
-    lastSavedBody,
-    cancelQueuedAutosave,
-  } = options;
-  // First, always — even on the clean path, where the queued write would be a
-  // no-op PUT the collab consensus rules can't afford.
-  cancelQueuedAutosave();
-  if (!hasUnsavedEdits(title, body, lastSavedTitle, lastSavedBody)) return false;
-  await updatePraxis(praxisId, { title, body_text: body || undefined });
-  return true;
-}
-
-/**
- * Save draft can't leave when the flush it's about to run would be rejected.
- *
- * The backend requires a title, which is why the autosave effect sits out a
- * blank one. That's harmless while the player stays on the page — but Save
- * draft *navigates away*, so a blank title with unsaved body text would strand
- * the writing with nowhere to land. Refuse the exit and say why instead (#1081).
- *
- * A blank title with nothing unsaved is not this case: there is no pending
- * write to reject, so leaving is free.
- */
-export function draftNeedsTitle(
-  title: string,
-  body: string,
-  lastSavedTitle: string | null,
-  lastSavedBody: string | null,
-): boolean {
-  return (
-    hasUnsavedEdits(title, body, lastSavedTitle, lastSavedBody) && !title.trim()
-  );
-}
+export {
+  draftNeedsTitle,
+  flushEdits,
+  hasUnsavedEdits,
+} from "./useComposerDraft";
 
 /**
  * Which of the viewer's own lives the invite/opponent picker withholds (#1257).
@@ -208,8 +135,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
   const [task, setTask] = useState<TaskOut | null>(null);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const [media, setMedia] = useState<MediaItemOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -258,14 +183,23 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Seal confirmation (#718) — opened by PublishButton in duel mode.
   const [duelSealOpen, setDuelSealOpen] = useState(false);
 
-  const [autosaveAt, setAutosaveAt] = useState<Date | null>(null);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-
-  // Track last-persisted title/body so the autosave effect can detect
-  // genuine user edits and skip the initial hydration round-trip.
-  const lastSavedTitleRef = useRef<string | null>(null);
-  const lastSavedBodyRef = useRef<string | null>(null);
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ---- Draft text + autosave (#360, #1081, #1164) ----
+  const {
+    title,
+    setTitle,
+    body,
+    setBody,
+    wordCount,
+    autosaveAt,
+    setAutosaveAt,
+    saveStatus,
+    setSaveStatus,
+    hydrate: hydrateDraft,
+    cancelQueuedAutosave,
+    persistEdits,
+    isDirty,
+    needsTitle,
+  } = useComposerDraft(praxis, setPraxis);
 
   // ---- Confirms (#1082) ----
   const { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm } =
@@ -309,16 +243,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           return;
         }
         setPraxis(loaded);
-        const initialTitle = loaded.title ?? "";
-        const initialBody = loaded.body_text ?? "";
-        setTitle(initialTitle);
-        setBody(initialBody);
+        hydrateDraft(loaded.title ?? "", loaded.body_text ?? "");
         setMedia(loaded.media_items);
         // Seed the seal stack from the persisted seals so a reloaded draft shows
         // what's already sealed (the picker's "already sealed" check reads this).
         setAppliedMetataskList(loaded.applied_metatasks ?? []);
-        lastSavedTitleRef.current = initialTitle;
-        lastSavedBodyRef.current = initialBody;
         await getTask(loaded.task_id)
           .then(setTask)
           .catch(() => {
@@ -395,60 +324,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       cancelled = true;
     };
   }, [praxis?.duel_id]);
-
-  // ---- Debounced autosave for title + body ----
-  useEffect(() => {
-    if (!praxis) return;
-    if (lastSavedTitleRef.current === null) return; // not yet hydrated
-    const titleChanged = title !== lastSavedTitleRef.current;
-    const bodyChanged = body !== lastSavedBodyRef.current;
-    if (!titleChanged && !bodyChanged) return;
-    if (!title.trim()) return; // backend rejects empty titles; wait for input
-
-    if (
-      praxis.status === "submitted" ||
-      praxis.moderation_status === "hidden" ||
-      praxis.moderation_status === "failed"
-    ) {
-      return;
-    }
-
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    autosaveTimerRef.current = setTimeout(() => {
-      void (async () => {
-        setSaveStatus("saving");
-        try {
-          const updated = await updatePraxis(praxis.id, {
-            title,
-            body_text: body || undefined,
-          });
-          lastSavedTitleRef.current = title;
-          lastSavedBodyRef.current = body;
-          // Take the payload, don't discard it (#1164). A PUT is exactly what
-          // `cancel_pending_publish_on_edit` reacts to: the pending-publish
-          // window is cancelled and every member's submission cleared
-          // (ADR-0012), so the `submit_proposed_at` this hook is holding is
-          // stale the instant a save lands. The holdout's countdown reads that
-          // field, and a countdown still ticking against a window that no
-          // longer exists is worse than no countdown at all. Costs nothing:
-          // `updatePraxis` already returns the fresh praxis.
-          //
-          // Safe against a loop — the effect's first act is to compare title
-          // and body against the refs just written, so the re-render it causes
-          // returns immediately.
-          setPraxis(updated);
-          setAutosaveAt(new Date());
-          setSaveStatus("saved");
-        } catch {
-          setSaveStatus("error");
-        }
-      })();
-    }, AUTOSAVE_DEBOUNCE_MS);
-
-    return () => {
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    };
-  }, [title, body, praxis]);
 
   // ---- Files ----
   const handleFileChange = useCallback(
@@ -543,34 +418,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   );
 
   // ---- Save / publish ----
-  const cancelQueuedAutosave = useCallback(() => {
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
-  }, []);
-
-  /** Cancel-then-write, then remember what was written. Resolves to whether a
-   * PUT went out — see `flushEdits` for why the order matters. */
-  const persistEdits = useCallback(
-    async (praxisId: number) => {
-      const wrote = await flushEdits({
-        praxisId,
-        title,
-        body,
-        lastSavedTitle: lastSavedTitleRef.current,
-        lastSavedBody: lastSavedBodyRef.current,
-        cancelQueuedAutosave,
-      });
-      if (wrote) {
-        lastSavedTitleRef.current = title;
-        lastSavedBodyRef.current = body;
-      }
-      return wrote;
-    },
-    [title, body, cancelQueuedAutosave],
-  );
-
   const publish = useCallback(async () => {
     // Any cast dismisses the seal dialog first, so a validation error or a
     // failed submit lands on the composer in plain sight rather than behind an
@@ -655,24 +502,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // member praxes) — i.e. the draft they just saved, waiting where they left it.
   const saveDraft = useCallback(async () => {
     if (!idParam) return;
-    if (
-      draftNeedsTitle(
-        title,
-        body,
-        lastSavedTitleRef.current,
-        lastSavedBodyRef.current,
-      )
-    ) {
+    if (needsTitle()) {
       // Stay put: the body is still in the box, and leaving would strand it.
       setError(i18n.t("forms:editPraxis.errors.titleRequired"));
       return;
     }
-    const dirty = hasUnsavedEdits(
-      title,
-      body,
-      lastSavedTitleRef.current,
-      lastSavedBodyRef.current,
-    );
+    const dirty = isDirty();
     setError("");
     if (dirty) setSaveStatus("saving");
     try {
@@ -691,7 +526,16 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
     const characterId = user?.character?.id;
     navigate(characterId != null ? `/characters/${characterId}` : "/tasks");
-  }, [idParam, title, body, persistEdits, navigate, user?.character?.id]);
+  }, [
+    idParam,
+    needsTitle,
+    isDirty,
+    persistEdits,
+    setAutosaveAt,
+    setSaveStatus,
+    navigate,
+    user?.character?.id,
+  ]);
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
@@ -1260,8 +1104,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     praxis.type === "solo" &&
     !duelMode &&
     (canSealMetatask || appliedMetataskList.length > 0);
-
-  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
 
   // Derived every render from the praxis + duel already in hand (ADR-0059), so
   // a cast, a pull-back and a cold re-entry all land on the same answer.
