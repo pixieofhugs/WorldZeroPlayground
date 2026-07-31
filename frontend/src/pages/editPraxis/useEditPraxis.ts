@@ -1,74 +1,86 @@
 /**
- * useEditPraxis — extracts every piece of state and async behavior from the
- * legacy EditPraxis.tsx so that the seven faction archetypes can each own their
- * own visual treatment without re-implementing the data plumbing.
+ * useEditPraxis — every piece of state and async behaviour behind the composer,
+ * so the faction archetypes can each own their visual treatment without
+ * re-implementing the data plumbing.
  *
- * Behaviour preserved 1:1 from the original page (mode-switch deletes + recreates,
- * locked-once-published rules, debounced 2s autosave on title/body, immediate save
- * for mode/metatask).
+ * This file is now the **assembler** (#1392). Six concerns own themselves in
+ * their own modules and this one composes them into the single
+ * `EditPraxisState` all nine archetypes, the waiting surface and the dispatcher
+ * read:
+ *
+ *   `useComposerDraft`   — title, body, the 2s autosave, the flush
+ *   `useComposerMedia`   — the tray: pick, edit, upload, remove
+ *   `useMetataskApply`   — the applied seal stack, picker and peel-off
+ *   `useComposerRoster`  — the search box, invites, challenge, kick, nudge
+ *   `useComposerDuel`    — the challenge pane, duel detail, seal dialog
+ *   `useComposerConfirm` — the one in-page confirm slot
+ *
+ * What stays here is what nothing else can own: the initial load and the
+ * viewer's seal catalogue, the lifecycle writes (publish, save draft, pull
+ * back, leave, drop, mode switch), and the derived flags that read across two
+ * or more of the concerns above.
+ *
+ * The split is pure restructuring — the interface, the request count and the
+ * mount-time request ORDER are all unchanged, and the existing suite that
+ * proves it was not edited to accommodate it.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  applyMetatask,
   changePraxisType,
   deletePraxis,
-  deletePraxisMedia,
-  cancelInvite as cancelInviteApi,
   getPraxis,
-  inviteToPraxis,
-  kickMember as kickMemberApi,
   leavePraxis,
-  removeMetatask,
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
-  updatePraxis,
-  uploadPraxisMedia,
-  type MediaItemOut,
   type PraxisOut,
   type PraxisType,
 } from "../../api/praxis";
 import {
   cancelChallenge,
   getDuelDetail,
-  issueChallenge,
   type DuelDetailOut,
 } from "../../api/duel";
-import { sendNudge } from "../../api/nudge";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
-import {
-  deriveEditPraxisPhase,
-  type EditPraxisPhase,
-} from "./editPraxisPhase";
+import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import {
   deleteCollabConfirm,
-  dissolveDuelConfirm,
   dropTaskConfirm,
   duelDropsCoauthorsConfirm,
   leaveCollabConfirm,
   modeSwitchConfirm,
   reopenForEditConfirm,
-  type ConfirmRequest,
 } from "../../components/confirm/composerConfirms";
+import { useComposerConfirm } from "./useComposerConfirm";
+import { useComposerDraft } from "./useComposerDraft";
+import { useComposerMedia } from "./useComposerMedia";
+import { useMetataskApply } from "./useMetataskApply";
+import { useComposerRoster } from "./useComposerRoster";
+import { useComposerDuel } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
-import { listRelationships } from "../../api/relationships";
-import { getMyCharacters } from "../../api/me";
 import { getTask, type TaskOut } from "../../api/tasks";
-import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listMetatasks } from "../../api/metatasks";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
-import {
-  blobToFile,
-  partitionByEditability,
-} from "../../components/imageEdit/imageEditHelpers";
-import { uploadMediaInChunks } from "./mediaBatchUpload";
 import i18n from "../../i18n";
 
-export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+/**
+ * The media tray — the 50 MB ceiling, the picker, the image-edit queue and the
+ * batch upload — moved to `useComposerMedia.ts` (#1392). `MAX_FILE_SIZE` stays
+ * exported from here because it has always been part of this module's surface.
+ */
+export { MAX_FILE_SIZE } from "./useComposerMedia";
 
-export type SaveStatus = "idle" | "saving" | "saved" | "error";
+/**
+ * The state object every archetype reads moved to `editPraxisState.ts` (#1392)
+ * so this file can be an assembler rather than a 200-line interface followed by
+ * its implementation. Type-only, so the move costs no bytes; re-exported
+ * because every importer — nine archetypes, the waiting surface, the seal
+ * components, the dispatcher — reaches for both names by this path.
+ */
+export type { EditPraxisState, SaveStatus } from "./editPraxisState";
+import type { EditPraxisState } from "./editPraxisState";
 
 /**
  * The phase predicate moved to `editPraxisPhase.ts` (#1397) so the praxis-detail
@@ -82,324 +94,32 @@ export {
   type EditPraxisPhase,
 } from "./editPraxisPhase";
 
-export interface EditPraxisState {
-  // Routing / loading
-  loading: boolean;
-  /**
-   * Which face the composer wears (ADR-0059). `EditPraxis.tsx` renders the
-   * shared waiting surface in place of the faction archetype at `waiting`.
-   */
-  phase: EditPraxisPhase;
-  praxis: PraxisOut | null;
-  task: TaskOut | null;
-  error: string;
-  setError: (value: string) => void;
-
-  // Title / body
-  title: string;
-  setTitle: (value: string) => void;
-  body: string;
-  setBody: (value: string) => void;
-  wordCount: number;
-
-  // Media
-  media: MediaItemOut[];
-  fileError: string;
-  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  removeMedia: (item: MediaItemOut) => Promise<void>;
-
-  // Image edit stage (#514) — picked images pass through ImageEditModal one at a
-  // time before upload; video/audio skip it. `pendingImage` is the file the modal
-  // is currently editing (null when the queue is empty).
-  pendingImage: File | null;
-  confirmImageEdit: (blob: Blob) => Promise<void>;
-  cancelImageEdit: () => void;
-
-  // Mode switching
-  switchingMode: PraxisType | null;
-  changeMode: (next: PraxisType) => Promise<void>;
-
-  // Invites (collab) / challenge (duel) — shared search box
-  inviteQuery: string;
-  setInviteQuery: (value: string) => void;
-  inviteResults: CharacterOut[];
-  inviteOpen: boolean;
-  setInviteOpen: (value: boolean) => void;
-  inviting: boolean;
-  sendInvite: (character: CharacterOut) => Promise<void>;
-  cancelInvite: (inviteId: number) => Promise<void>;
-  /** Remove another member from the collab (#959) — target is a character id. */
-  kickMember: (memberId: number) => Promise<void>;
-  /**
-   * Poke the player this praxis is still waiting on (#1083) — target is a
-   * character id. For a collab that is a member who has not cast; for a duel it
-   * is the rival, and the write is aimed at THEIR side's praxis, not yours.
-   * Refreshes afterwards so the button's disabled state comes back from the
-   * server rather than being remembered here.
-   */
-  nudge: (characterId: number) => Promise<void>;
-
-  // Duel challenge (#311) — selecting duel attaches a challenge to this praxis;
-  // the praxis stays type='solo' and gains a duel_id.
-  duel: DuelDetailOut | null;
-  sendChallenge: (character: CharacterOut) => Promise<void>;
-  /** Withdraw a still-pending challenge (challenger's composer chip ×). */
-  cancelDuel: () => Promise<void>;
-  /**
-   * Dissolve an already-accepted (active) duel (#956). Either participant may do
-   * it; the backend recalculates both sides back to plain-solo scoring with no
-   * forfeit penalty. Asks first (it ends the duel for both) — otherwise the same
-   * neutral cancel as `cancelDuel`.
-   */
-  dissolveDuel: () => Promise<void>;
-
-  // Metatasks (seal stack + Section-D picker + Section-E remove, #933)
-  metatasks: TaskOut[];
-  appliedMetatasks: Set<number>;
-  /** The applied metatasks as full rows, rendered as the editable seal stack. */
-  appliedMetataskList: TaskOut[];
-  applyingMetatask: number | null;
-  toggleMetatask: (mt: TaskOut) => Promise<void>;
-  /** Seal a not-yet-applied metatask onto the praxis; closes the picker. */
-  addMetatask: (mt: TaskOut) => Promise<void>;
-
-  /** The neutral Section-D seal picker is open. */
-  metataskPickerOpen: boolean;
-  openMetataskPicker: () => void;
-  closeMetataskPicker: () => void;
-
-  /** The metatask awaiting peel-off confirmation (Section E), or null. */
-  metataskRemovalTarget: TaskOut | null;
-  /** A seal's × asks first: this opens the confirm for that metatask. */
-  requestRemoveMetatask: (taskId: number) => void;
-  /** Confirm the peel — removes the metatask and drops it from the stack. */
-  confirmRemoveMetatask: () => Promise<void>;
-  cancelRemoveMetatask: () => void;
-
-  // Save / publish / drop
-  submitting: boolean;
-  publish: () => Promise<void>;
-  /**
-   * The composer's third exit (#1081): keep the draft and leave.
-   *
-   * Flushes the queued autosave — cancel, then write the text in hand, the same
-   * two steps publish runs — and navigates to the player's own profile, where
-   * their `in_progress` praxes are listed. Refuses to leave (and says so) if the
-   * flush can't be written, so no keystroke is lost on the way out.
-   */
-  saveDraft: () => Promise<void>;
-  /** Pull my own cast back on a pending collab (#591). */
-  pullBack: () => Promise<void>;
-  /**
-   * The waiting surface's authoring re-entry (ADR-0059) — "edit my write-up".
-   *
-   * Routes through `pullBack`, never a PUT: on a collab any praxis PUT hard-
-   * resets every member's `has_submitted` (ADR-0012), whereas unsubmit re-opens
-   * only the caller's membership (#590). On a collab it asks first, because the
-   * edit this exists for *will* cancel the pending-publish window the surface
-   * was showing a countdown for.
-   */
-  reopenForEdit: () => Promise<void>;
-  /**
-   * Drop my own membership from a collab without the bank-full drop-to-accept
-   * modal (#958). Open to every member, the creator included — a collab is
-   * co-owned and `created_by_id` grants no powers (ADR-0013, #1074). Distinct
-   * from `cancel`, which deletes the praxis for everyone.
-   */
-  leaveCollab: () => Promise<void>;
-  cancel: () => Promise<void>;
-
-  /**
-   * My cast just closed the consensus gate on a multi-member collab, so the
-   * one-shot success screen is up (#591). Transient client state — never
-   * persisted, and only ever true for the member who cast last.
-   */
-  collabSuccess: boolean;
-  /** Manual continue from the success screen → the praxis detail page. */
-  continueFromCollabSuccess: () => void;
-
-  /**
-   * The duel seal confirmation is up (#718). A duel is the only mode whose cast
-   * carries consequences the player can't fully undo, so it's the only mode that
-   * asks first. Transient client state; confirming calls `publish()` untouched.
-   */
-  duelSealOpen: boolean;
-  /** PublishButton's duel-mode action: open the dialog instead of publishing. */
-  requestDuelSeal: () => void;
-  /** Dismiss the dialog without casting. */
-  cancelDuelSeal: () => void;
-
-  /**
-   * The confirm the composer is currently waiting on, or null (#1082).
-   *
-   * `EditPraxis.tsx` mounts one `ConfirmDialog` for this, beside the duel seal
-   * and the metatask peel-off, so a single mount covers all 16 composer
-   * surfaces, the waiting surface and both form factors. Every handler that
-   * used to call `window.confirm` now awaits this instead, so they still read
-   * as "ask, then act" — see `askConfirm` in the hook body.
-   */
-  pendingConfirm: ConfirmRequest | null;
-  /** The dialog's affirmative button — resumes the handler that asked. */
-  acceptConfirm: () => void;
-  /** Escape, backdrop, or "Never mind" — the handler returns without acting. */
-  dismissConfirm: () => void;
-
-  // Autosave
-  autosaveAt: Date | null;
-  saveStatus: SaveStatus;
-
-  /**
-   * The ADR-0012 pending-publish window length, in days, from `/game-config`
-   * (`collab_auto_submit_days`). `null` until it lands — it is an `EraConfig`
-   * value a future era may change, so nothing may assume today's number.
-   *
-   * The composer needs it for exactly one player: the **holdout**, the member
-   * who has not submitted and the only one the deadline threatens (#1164). The
-   * waiting surface reads the same field through `useGameConfig`.
-   */
-  autoSubmitDays: number | null;
-
-  // Derived locked-state flags
-  isPublished: boolean;
-  /**
-   * The composer is read-only. Since #1164 this means **"hand off"** rather than
-   * "render the composer, disabled": a published praxis no longer reaches an
-   * archetype at all (`phase` is `completed` or `handoff`), so the one state
-   * that still renders a locked composer is a moderated (hidden/failed) one.
-   * Every `!controlsLocked` gate below and in the archetypes is what keeps that
-   * one honest.
-   */
-  controlsLocked: boolean;
-  modeIsLocked: boolean;
-  /** Show the invite/challenge box: collab members, or an open duel pane. */
-  showInviteBox: boolean;
-  showMetatasks: boolean;
-  /** The viewer can add/remove seals (eligible + solo + still editable). */
-  canSealMetatask: boolean;
-  /** Render the seal stack at all: can seal, or read-only applied seals exist. */
-  showSealStack: boolean;
-  /** The duel chip is selected (a challenge is attached or the pane is open). */
-  duelMode: boolean;
-  /** The duel chip is available to this viewer (level ≥ duel_level_required). */
-  duelChipVisible: boolean;
-
-  // Identity helpers
-  currentCharacterId: number | null;
-}
-
-const AUTOSAVE_DEBOUNCE_MS = 2000;
-
 /* `modeSwitchPrompt` moved to `components/confirm/composerConfirms.ts` as
  * `modeSwitchConfirm` (#1082): it now returns a whole ConfirmRequest rather than
  * one string for `window.confirm`, and it belongs beside the other six confirms
  * the composer asks for. */
 
 /**
- * Dirty-check gate for the pre-submit save (#360).
- *
- * On a collab, ANY praxis PUT hard-resets every member's has_submitted
- * (ADR-0012 — "an edit means we're not done"). If Submit always fired a PUT,
- * the last member's submit would reset everyone else's, so
- * all(has_submitted) could never be reached through the UI. Only persist
- * when the form actually differs from the last-persisted values; a genuine
- * edit still resets consensus, which is correct per ADR-0012.
+ * The draft's own machinery — the 2s debounced autosave, the cancel-then-write
+ * flush, and the three predicates that decide whether a write is owed — moved
+ * to `useComposerDraft.ts` (#1392). Re-exported here because
+ * `useEditPraxis.test.ts` calls all three directly: the harness runs no
+ * effects, so calling them is the only way the ordering is provable.
  */
-export function hasUnsavedEdits(
-  title: string,
-  body: string,
-  lastSavedTitle: string | null,
-  lastSavedBody: string | null,
-): boolean {
-  return title !== lastSavedTitle || body !== lastSavedBody;
-}
+export {
+  draftNeedsTitle,
+  flushEdits,
+  hasUnsavedEdits,
+} from "./useComposerDraft";
 
 /**
- * The composer's one manual write: **cancel the queued autosave first, then
- * persist the text in hand** — in that order, and never one without the other.
- *
- * The ordering is the whole correctness of a manual save (#1081). A queued
- * debounce holds a *stale* closure over title/body; leaving it armed lets it
- * land after the manual PUT and re-write older text, while cancelling without
- * writing drops every keystroke typed inside the 2s window. Publish has always
- * done both (#360); Save draft needs exactly the same two steps, so they live
- * here once rather than being re-typed at each call site.
- *
- * Exported (and dependency-injected on `cancelQueuedAutosave`) so the ordering
- * is provable in a test that calls it directly — the frontend harness runs no
- * effects, so the debounce timer can't be exercised through the component.
- *
- * Returns whether a PUT actually went out: nothing changed since the last save
- * → no request at all (#360; on a collab a PUT would reset every member's
- * `has_submitted`, ADR-0012).
+ * The invite/opponent search box, the two sends that clear it, and the roster
+ * writes that follow (kick, rescind, nudge) moved to `useComposerRoster.ts`
+ * (#1392). `selfExcludedPickIds` is re-exported: `useEditPraxis.test.ts` calls
+ * it directly, which is the only way to prove the #1257 rule with no effects in
+ * the harness.
  */
-export async function flushEdits(options: {
-  praxisId: number;
-  title: string;
-  body: string;
-  lastSavedTitle: string | null;
-  lastSavedBody: string | null;
-  cancelQueuedAutosave: () => void;
-}): Promise<boolean> {
-  const {
-    praxisId,
-    title,
-    body,
-    lastSavedTitle,
-    lastSavedBody,
-    cancelQueuedAutosave,
-  } = options;
-  // First, always — even on the clean path, where the queued write would be a
-  // no-op PUT the collab consensus rules can't afford.
-  cancelQueuedAutosave();
-  if (!hasUnsavedEdits(title, body, lastSavedTitle, lastSavedBody)) return false;
-  await updatePraxis(praxisId, { title, body_text: body || undefined });
-  return true;
-}
-
-/**
- * Save draft can't leave when the flush it's about to run would be rejected.
- *
- * The backend requires a title, which is why the autosave effect sits out a
- * blank one. That's harmless while the player stays on the page — but Save
- * draft *navigates away*, so a blank title with unsaved body text would strand
- * the writing with nowhere to land. Refuse the exit and say why instead (#1081).
- *
- * A blank title with nothing unsaved is not this case: there is no pending
- * write to reject, so leaving is free.
- */
-export function draftNeedsTitle(
-  title: string,
-  body: string,
-  lastSavedTitle: string | null,
-  lastSavedBody: string | null,
-): boolean {
-  return (
-    hasUnsavedEdits(title, body, lastSavedTitle, lastSavedBody) && !title.trim()
-  );
-}
-
-/**
- * Which of the viewer's own lives the invite/opponent picker withholds (#1257).
- *
- * Collab invites withhold only the life you are carrying — inviting your own alt
- * to a collab is doing a task with yourself, which splits no points unfairly and
- * which the backend allows. Duel mode withholds the whole account roster: #1237
- * blocked both sides of a duel landing on one account, so offering an alt as an
- * opponent could only ever earn a 400 on Challenge.
- *
- * `ownCharacterIds` is empty until the lazy `/me/characters` read lands (and
- * stays empty if it fails), so the carried life is unioned in rather than
- * assumed present — the narrow old rule remains the floor.
- */
-export function selfExcludedPickIds(
-  carriedCharacterId: number | undefined,
-  ownCharacterIds: Set<number>,
-  duelMode: boolean,
-): Set<number> {
-  const excluded = new Set<number>(duelMode ? ownCharacterIds : []);
-  if (carriedCharacterId != null) excluded.add(carriedCharacterId);
-  return excluded;
-}
+export { selfExcludedPickIds } from "./useComposerRoster";
 
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
@@ -408,41 +128,66 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
   const [task, setTask] = useState<TaskOut | null>(null);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [media, setMedia] = useState<MediaItemOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [fileError, setFileError] = useState("");
-  // Picked images awaiting the edit modal, oldest first (#514).
-  const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
+  // ---- Media tray (#297, #514, #1286) ----
+  const {
+    media,
+    setMedia,
+    fileError,
+    handleFileChange,
+    removeMedia,
+    pendingImage,
+    confirmImageEdit,
+    cancelImageEdit,
+  } = useComposerMedia(idParam, setError);
+
+  // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
+  // stays here beside the composer's other loads. The APPLIED set is the other
+  // concern, and lives in `useMetataskApply` below.
   const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
-  // The applied metatasks as full rows (source of truth for the seal stack);
-  // `appliedMetatasks` (the id Set) is derived from it below.
-  const [appliedMetataskList, setAppliedMetataskList] = useState<TaskOut[]>([]);
-  const appliedMetatasks = useMemo(
-    () => new Set(appliedMetataskList.map((mt) => mt.id)),
-    [appliedMetataskList],
-  );
-  const [applyingMetatask, setApplyingMetatask] = useState<number | null>(null);
-  const [metataskPickerOpen, setMetataskPickerOpen] = useState(false);
-  const [metataskRemovalTarget, setMetataskRemovalTarget] =
-    useState<TaskOut | null>(null);
 
-  const [inviteQuery, setInviteQuery] = useState("");
-  const [inviteResults, setInviteResults] = useState<CharacterOut[]>([]);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [inviting, setInviting] = useState(false);
+  // ---- Metatask seals (#933) ----
+  const {
+    appliedMetatasks,
+    appliedMetataskList,
+    applyingMetatask,
+    toggleMetatask,
+    addMetatask,
+    metataskPickerOpen,
+    openMetataskPicker,
+    closeMetataskPicker,
+    metataskRemovalTarget,
+    requestRemoveMetatask,
+    confirmRemoveMetatask,
+    cancelRemoveMetatask,
+    seedApplied: seedAppliedMetatasks,
+  } = useMetataskApply(praxis, setError);
 
   const [switchingMode, setSwitchingMode] = useState<PraxisType | null>(null);
   // One-shot post-publish beat for the member whose cast closed the gate (#591).
   const [collabSuccess, setCollabSuccess] = useState(false);
 
-  // Duel challenge (#311)
-  const [duelPaneOpen, setDuelPaneOpen] = useState(false);
-  const [duel, setDuel] = useState<DuelDetailOut | null>(null);
+  // ---- Confirms (#1082) ----
+  const { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm } =
+    useComposerConfirm();
+
+  // ---- Duel challenge (#311, #718, #956) ----
+  const {
+    duel,
+    setDuel,
+    duelPaneOpen,
+    setDuelPaneOpen,
+    duelSealOpen,
+    setDuelSealOpen,
+    requestDuelSeal,
+    cancelDuelSeal,
+    cancelDuel,
+    dissolveDuel,
+  } = useComposerDuel({ praxis, setPraxis, askConfirm, setError });
+
   // The duel gate and the ADR-0012 window length (#1164) are two era values off
   // one payload — since #1141 the app-wide cached one, rather than a third
   // `/game-config` request. `null` until it lands, and on a failed read, so the
@@ -450,55 +195,24 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const gameConfig = useGameConfig();
   const duelLevelRequired = gameConfig?.duel_level_required ?? null;
   const autoSubmitDays = gameConfig?.collab_auto_submit_days ?? null;
-  const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
-  // Every life on the viewer's account (#1257) — read lazily when the duel pane
-  // opens, since only duel mode withholds them and there is no app-wide cache of
-  // the roster to read. Empty until it lands, and on failure.
-  const [ownCharacterIds, setOwnCharacterIds] = useState<Set<number>>(new Set());
-  // Seal confirmation (#718) — opened by PublishButton in duel mode.
-  const [duelSealOpen, setDuelSealOpen] = useState(false);
 
-  // The in-page confirm (#1082) — one slot, because only one handler can be
-  // waiting on an answer at a time.
-  const [pendingConfirm, setPendingConfirm] = useState<ConfirmRequest | null>(
-    null,
-  );
-  const confirmResolverRef = useRef<((accepted: boolean) => void) | null>(null);
-
-  const [autosaveAt, setAutosaveAt] = useState<Date | null>(null);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-
-  // Track last-persisted title/body so the autosave effect can detect
-  // genuine user edits and skip the initial hydration round-trip.
-  const lastSavedTitleRef = useRef<string | null>(null);
-  const lastSavedBodyRef = useRef<string | null>(null);
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ---- Confirms (#1082) ----
-  // `window.confirm` used to block the handler until the player answered; these
-  // three restore that shape without the OS dialog. `askConfirm` puts the
-  // request on screen and returns a promise the handler awaits, so each caller
-  // still reads `if (!(await askConfirm(...))) return;` — one line, in the same
-  // place, with the same control flow.
-  //
-  // The resolver lives in a ref rather than in state: it is not rendered, and
-  // storing a function in state would need the lazy-setter dance for no gain.
-  const settleConfirm = useCallback((accepted: boolean) => {
-    const resolve = confirmResolverRef.current;
-    confirmResolverRef.current = null;
-    setPendingConfirm(null);
-    resolve?.(accepted);
-  }, []);
-
-  const askConfirm = useCallback((request: ConfirmRequest) => {
-    // A second ask while one is open declines the first, so no handler is left
-    // awaiting a promise that can never settle.
-    confirmResolverRef.current?.(false);
-    setPendingConfirm(request);
-    return new Promise<boolean>((resolve) => {
-      confirmResolverRef.current = resolve;
-    });
-  }, []);
+  // ---- Draft text + autosave (#360, #1081, #1164) ----
+  const {
+    title,
+    setTitle,
+    body,
+    setBody,
+    wordCount,
+    autosaveAt,
+    setAutosaveAt,
+    saveStatus,
+    setSaveStatus,
+    hydrate: hydrateDraft,
+    cancelQueuedAutosave,
+    persistEdits,
+    isDirty,
+    needsTitle,
+  } = useComposerDraft(praxis, setPraxis);
 
   // ---- Initial load ----
   useEffect(() => {
@@ -538,16 +252,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           return;
         }
         setPraxis(loaded);
-        const initialTitle = loaded.title ?? "";
-        const initialBody = loaded.body_text ?? "";
-        setTitle(initialTitle);
-        setBody(initialBody);
+        hydrateDraft(loaded.title ?? "", loaded.body_text ?? "");
         setMedia(loaded.media_items);
         // Seed the seal stack from the persisted seals so a reloaded draft shows
         // what's already sealed (the picker's "already sealed" check reads this).
-        setAppliedMetataskList(loaded.applied_metatasks ?? []);
-        lastSavedTitleRef.current = initialTitle;
-        lastSavedBodyRef.current = initialBody;
+        seedAppliedMetatasks(loaded.applied_metatasks ?? []);
         await getTask(loaded.task_id)
           .then(setTask)
           .catch(() => {
@@ -578,228 +287,33 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       });
   }, [user?.character?.id]);
 
-  useEffect(() => {
-    if (!user?.character) return;
-    listRelationships({ type: "foe", status: "active" })
-      .then((rels) => setFoeIds(new Set(rels.map((r) => r.to_character_id))))
-      .catch(() => {
-        /* foes-first ordering is a nicety; ignore failures */
-      });
-  }, [user?.character?.id]);
-
-  // The account's own roster, for the duel opponent picker only (#1257). The
-  // picker already fetches per keystroke, so one read on a pane the player has
-  // just opened costs nothing on mount.
-  useEffect(() => {
-    if (!duelPaneOpen || !user?.character) return;
-    let cancelled = false;
-    getMyCharacters()
-      .then((roster) => {
-        if (!cancelled) setOwnCharacterIds(new Set(roster.map((c) => c.id)));
-      })
-      .catch(() => {
-        /* the carried life stays withheld either way — see selfExcludedPickIds */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [duelPaneOpen, user?.character?.id]);
-
-  // ---- Duel detail (opponent chip + status) whenever this praxis is a duel side ----
-  useEffect(() => {
-    const duelId = praxis?.duel_id ?? null;
-    if (duelId == null) {
-      setDuel(null);
-      return;
-    }
-    let cancelled = false;
-    getDuelDetail(duelId)
-      .then((d) => {
-        if (!cancelled) setDuel(d);
-      })
-      .catch(() => {
-        /* non-fatal */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [praxis?.duel_id]);
-
-  // ---- Debounced autosave for title + body ----
-  useEffect(() => {
-    if (!praxis) return;
-    if (lastSavedTitleRef.current === null) return; // not yet hydrated
-    const titleChanged = title !== lastSavedTitleRef.current;
-    const bodyChanged = body !== lastSavedBodyRef.current;
-    if (!titleChanged && !bodyChanged) return;
-    if (!title.trim()) return; // backend rejects empty titles; wait for input
-
-    if (
-      praxis.status === "submitted" ||
-      praxis.moderation_status === "hidden" ||
-      praxis.moderation_status === "failed"
-    ) {
-      return;
-    }
-
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    autosaveTimerRef.current = setTimeout(() => {
-      void (async () => {
-        setSaveStatus("saving");
-        try {
-          const updated = await updatePraxis(praxis.id, {
-            title,
-            body_text: body || undefined,
-          });
-          lastSavedTitleRef.current = title;
-          lastSavedBodyRef.current = body;
-          // Take the payload, don't discard it (#1164). A PUT is exactly what
-          // `cancel_pending_publish_on_edit` reacts to: the pending-publish
-          // window is cancelled and every member's submission cleared
-          // (ADR-0012), so the `submit_proposed_at` this hook is holding is
-          // stale the instant a save lands. The holdout's countdown reads that
-          // field, and a countdown still ticking against a window that no
-          // longer exists is worse than no countdown at all. Costs nothing:
-          // `updatePraxis` already returns the fresh praxis.
-          //
-          // Safe against a loop — the effect's first act is to compare title
-          // and body against the refs just written, so the re-render it causes
-          // returns immediately.
-          setPraxis(updated);
-          setAutosaveAt(new Date());
-          setSaveStatus("saved");
-        } catch {
-          setSaveStatus("error");
-        }
-      })();
-    }, AUTOSAVE_DEBOUNCE_MS);
-
-    return () => {
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    };
-  }, [title, body, praxis]);
-
-  // ---- Files ----
-  const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!event.target.files) return;
-      const incoming = Array.from(event.target.files);
-      const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
-      if (tooLarge.length > 0) {
-        setFileError(
-          i18n.t("forms:editPraxis.errors.fileTooLarge", {
-            count: tooLarge.length,
-            names: tooLarge.map((f) => f.name).join(", "),
-          }),
-        );
-      } else {
-        setFileError("");
-      }
-      const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
-      event.target.value = "";
-      if (!idParam || valid.length === 0) return;
-      // Images get the crop/rotate edit stage first (#514); video/audio upload
-      // straight through. Uploading immediately keeps a draft's media persisted
-      // without a manual save (autosave covers title/body only; #297).
-      const { toEdit, toUploadDirect } = partitionByEditability(valid);
-      const praxisId = parseInt(idParam, 10);
-      if (toUploadDirect.length > 0) {
-        // One request for the whole selection instead of one per file (#1286).
-        // Tiles now appear together rather than trickling in — that is the
-        // accepted cost of the single round trip, so no artificial staggering.
-        const { uploaded, errors } = await uploadMediaInChunks(
-          praxisId,
-          toUploadDirect,
-        );
-        if (uploaded.length > 0) {
-          setMedia((previous) => [...previous, ...uploaded]);
-        }
-        // One error slot, so the last failure wins — exactly what the old
-        // per-file loop left on screen when several files failed.
-        if (errors.length > 0) setError(errors[errors.length - 1]);
-      }
-      // Queue images for the modal; they're edited + uploaded one at a time.
-      if (toEdit.length > 0) {
-        setImageEditQueue((previous) => [...previous, ...toEdit]);
-      }
-    },
-    [idParam],
-  );
-
-  // ---- Image edit stage (#514): edit → upload → advance the queue ----
-  const pendingImage = imageEditQueue[0] ?? null;
-
-  const confirmImageEdit = useCallback(
-    async (blob: Blob) => {
-      const current = imageEditQueue[0];
-      if (!idParam || !current) return;
-      const praxisId = parseInt(idParam, 10);
-      const file = blobToFile(blob, current.name);
-      try {
-        const uploaded = await uploadPraxisMedia(praxisId, file);
-        setMedia((previous) => [...previous, uploaded]);
-      } catch (err) {
-        setError(
-          extractError(
-            err,
-            i18n.t("forms:editPraxis.errors.upload", { name: current.name }),
-          ),
-        );
-      } finally {
-        setImageEditQueue((previous) => previous.slice(1));
-      }
-    },
-    [idParam, imageEditQueue],
-  );
-
-  const cancelImageEdit = useCallback(() => {
-    setImageEditQueue((previous) => previous.slice(1));
-  }, []);
-
-  const removeMedia = useCallback(
-    async (item: MediaItemOut) => {
-      if (!idParam) return;
-      try {
-        await deletePraxisMedia(parseInt(idParam, 10), item.id);
-        setMedia((previous) => previous.filter((m) => m.id !== item.id));
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.removeMedia")),
-        );
-      }
-    },
-    [idParam],
-  );
+  // ---- The other players (#311, #421, #959, #1083, #1257) ----
+  // Declared AFTER the two loads above on purpose. Effects register in call
+  // order, and this hook opens the mount-time foes read (#1390); keeping it
+  // below leaves getPraxis and listMetatasks first in the queue, which is the
+  // order #1379 settled on.
+  const {
+    inviteQuery,
+    setInviteQuery,
+    inviteResults,
+    inviteOpen,
+    setInviteOpen,
+    inviting,
+    sendInvite,
+    cancelInvite,
+    kickMember,
+    nudge,
+    sendChallenge,
+  } = useComposerRoster({
+    praxis,
+    setPraxis,
+    duel,
+    setDuel,
+    duelPaneOpen,
+    setError,
+  });
 
   // ---- Save / publish ----
-  const cancelQueuedAutosave = useCallback(() => {
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
-  }, []);
-
-  /** Cancel-then-write, then remember what was written. Resolves to whether a
-   * PUT went out — see `flushEdits` for why the order matters. */
-  const persistEdits = useCallback(
-    async (praxisId: number) => {
-      const wrote = await flushEdits({
-        praxisId,
-        title,
-        body,
-        lastSavedTitle: lastSavedTitleRef.current,
-        lastSavedBody: lastSavedBodyRef.current,
-        cancelQueuedAutosave,
-      });
-      if (wrote) {
-        lastSavedTitleRef.current = title;
-        lastSavedBodyRef.current = body;
-      }
-      return wrote;
-    },
-    [title, body, cancelQueuedAutosave],
-  );
-
   const publish = useCallback(async () => {
     // Any cast dismisses the seal dialog first, so a validation error or a
     // failed submit lands on the composer in plain sight rather than behind an
@@ -884,24 +398,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // member praxes) — i.e. the draft they just saved, waiting where they left it.
   const saveDraft = useCallback(async () => {
     if (!idParam) return;
-    if (
-      draftNeedsTitle(
-        title,
-        body,
-        lastSavedTitleRef.current,
-        lastSavedBodyRef.current,
-      )
-    ) {
+    if (needsTitle()) {
       // Stay put: the body is still in the box, and leaving would strand it.
       setError(i18n.t("forms:editPraxis.errors.titleRequired"));
       return;
     }
-    const dirty = hasUnsavedEdits(
-      title,
-      body,
-      lastSavedTitleRef.current,
-      lastSavedBodyRef.current,
-    );
+    const dirty = isDirty();
     setError("");
     if (dirty) setSaveStatus("saving");
     try {
@@ -920,7 +422,16 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
     const characterId = user?.character?.id;
     navigate(characterId != null ? `/characters/${characterId}` : "/tasks");
-  }, [idParam, title, body, persistEdits, navigate, user?.character?.id]);
+  }, [
+    idParam,
+    needsTitle,
+    isDirty,
+    persistEdits,
+    setAutosaveAt,
+    setSaveStatus,
+    navigate,
+    user?.character?.id,
+  ]);
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
@@ -1114,337 +625,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
-  // ---- Invite search (debounced via input change handler in caller, but
-  // we keep the actual fetch here so archetypes can wire the input directly) ----
-  useEffect(() => {
-    if (!praxis) return;
-    if (inviteQuery.length < 2) {
-      setInviteResults([]);
-      setInviteOpen(false);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const results = await listCharacters({
-          search: inviteQuery,
-          exclude_active_task_id: praxis.task_id,
-          limit: 8,
-        });
-        if (cancelled) return;
-        const memberIds = new Set(praxis.members.map((m) => m.character_id));
-        const pendingInviteIds = new Set(
-          praxis.invites
-            .filter((i) => i.status === "pending")
-            .map((i) => i.invitee_id),
-        );
-        // The picker is choosing an *opponent* only while a duel is being set up;
-        // with a challenge already attached it is hidden, and otherwise it is
-        // choosing collab invitees.
-        const pickingOpponent = praxis.duel_id == null && duelPaneOpen;
-        const selfExcluded = selfExcludedPickIds(
-          user?.character?.id,
-          ownCharacterIds,
-          pickingOpponent,
-        );
-        const filtered = results.filter(
-          (c) =>
-            !selfExcluded.has(c.id) &&
-            !memberIds.has(c.id) &&
-            !pendingInviteIds.has(c.id),
-        );
-        // In duel mode, surface the viewer's foes first (soft ordering; anyone
-        // eligible can still be challenged).
-        if (pickingOpponent && foeIds.size > 0) {
-          filtered.sort(
-            (a, b) => Number(foeIds.has(b.id)) - Number(foeIds.has(a.id)),
-          );
-        }
-        setInviteResults(filtered);
-        setInviteOpen(filtered.length > 0);
-      } catch {
-        if (!cancelled) {
-          setInviteResults([]);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // `user` narrowed to the id the filter actually reads (#1390) — otherwise
-    // every `/auth/me` refetch re-ran the character search behind an open
-    // invite box.
-  }, [
-    inviteQuery,
-    praxis,
-    user?.character?.id,
-    duelPaneOpen,
-    foeIds,
-    ownCharacterIds,
-  ]);
-
-  const sendInvite = useCallback(
-    async (character: CharacterOut) => {
-      if (!praxis) return;
-      setInviting(true);
-      setError("");
-      setInviteQuery("");
-      setInviteOpen(false);
-      setInviteResults([]);
-      try {
-        await inviteToPraxis(praxis.id, character.id);
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
-      } catch (err) {
-        setError(
-          extractError(
-            err,
-            i18n.t("forms:editPraxis.errors.invite", {
-              name: character.display_name,
-            }),
-          ),
-        );
-      } finally {
-        setInviting(false);
-      }
-    },
-    [praxis],
-  );
-
-  // Inviter rescinds a still-pending invite (#421).
-  const cancelInvite = useCallback(
-    async (inviteId: number) => {
-      if (!praxis) return;
-      setError("");
-      try {
-        await cancelInviteApi(praxis.id, inviteId);
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.rescindInvite")),
-        );
-      }
-    },
-    [praxis],
-  );
-
-  // Remove another member from the collab (#959). Any member may kick any other
-  // (mirrors the backend guard); the confirm step lives in CollabRoster, so this
-  // just fires the call and reloads — the kick resets the group to editing, so
-  // the refreshed praxis carries the reset roster + cast state (ADR-0013).
-  const kickMember = useCallback(
-    async (memberId: number) => {
-      if (!praxis) return;
-      setError("");
-      try {
-        const updated = await kickMemberApi(praxis.id, memberId);
-        setPraxis(updated);
-      } catch (err) {
-        const kicked = praxis.members.find(
-          (member) => member.character_id === memberId,
-        );
-        setError(
-          extractError(
-            err,
-            i18n.t("forms:editPraxis.errors.kick", {
-              name: kicked?.character_display_name ?? "",
-            }),
-          ),
-        );
-      }
-    },
-    [praxis],
-  );
-
-  // Poke whoever this praxis is waiting on (#1083). Every rule lives on the
-  // server — who may nudge, and the one-per-24h limit — so this fires and then
-  // RE-READS. It deliberately keeps no local "nudged" flag: the design's version
-  // did exactly that, which made the button read as sent when nothing had been,
-  // and let a reload clear it. `nudged_at` on the refreshed roster row / duel
-  // side is the only thing the button believes.
-  const nudge = useCallback(
-    async (characterId: number) => {
-      if (!praxis) return;
-      setError("");
-      // A duel is two linked solo praxes (ADR-0011): the praxis the rival owes
-      // is THEIR side, not the one this composer is holding.
-      const duelSide =
-        duel != null
-          ? [duel.challenger, duel.opponent].find(
-              (side) => side.character_id === characterId,
-            )
-          : undefined;
-      const targetPraxisId = duelSide?.praxis_id ?? praxis.id;
-      const name =
-        duelSide?.display_name ??
-        praxis.members.find((member) => member.character_id === characterId)
-          ?.character_display_name ??
-        "";
-      try {
-        await sendNudge(targetPraxisId, characterId);
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
-        if (refreshed.duel_id != null) {
-          setDuel(await getDuelDetail(refreshed.duel_id));
-        }
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.nudge", { name })),
-        );
-      }
-    },
-    [praxis, duel],
-  );
-
-  // ---- Duel challenge (#311): pick an opponent, cancel a pending challenge ----
-  const sendChallenge = useCallback(
-    async (character: CharacterOut) => {
-      if (!praxis) return;
-      setInviting(true);
-      setError("");
-      setInviteQuery("");
-      setInviteOpen(false);
-      setInviteResults([]);
-      try {
-        await issueChallenge({
-          challenger_praxis_id: praxis.id,
-          opponent_character_id: character.id,
-        });
-        // Reload so the praxis carries its new duel_id; the effect fetches detail.
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
-      } catch (err) {
-        setError(
-          extractError(
-            err,
-            i18n.t("forms:editPraxis.errors.challenge", {
-              name: character.display_name,
-            }),
-          ),
-        );
-      } finally {
-        setInviting(false);
-      }
-    },
-    [praxis],
-  );
-
-  const cancelDuel = useCallback(async () => {
-    if (!praxis?.duel_id) return;
-    setError("");
-    try {
-      await cancelChallenge(praxis.duel_id);
-      const refreshed = await getPraxis(praxis.id);
-      setPraxis(refreshed);
-      setDuel(null);
-      setDuelPaneOpen(false);
-    } catch (err) {
-      setError(
-        extractError(err, i18n.t("forms:editPraxis.errors.cancelChallenge")),
-      );
-    }
-  }, [praxis]);
-
-  // Dissolve an *active* duel (#956). Same neutral cancel as `cancelDuel`, but
-  // gated behind a confirm because it ends an accepted duel for both sides.
-  const dissolveDuel = useCallback(async () => {
-    if (!praxis?.duel_id) return;
-    if (!(await askConfirm(dissolveDuelConfirm()))) return;
-    await cancelDuel();
-  }, [praxis?.duel_id, cancelDuel, askConfirm]);
-
-  // ---- Metatasks (#933) ----
-  // Legacy toggle (apply when absent, remove when present) kept on the state
-  // shape; the new compose flow adds through the picker and removes through the
-  // confirm below. All three keep `appliedMetataskList` in sync.
-  const toggleMetatask = useCallback(
-    async (mt: TaskOut) => {
-      if (!praxis) return;
-      if (applyingMetatask !== null) return;
-      setApplyingMetatask(mt.id);
-      setError("");
-      try {
-        if (appliedMetatasks.has(mt.id)) {
-          await removeMetatask(praxis.id, mt.id);
-          setAppliedMetataskList((previous) =>
-            previous.filter((m) => m.id !== mt.id),
-          );
-        } else {
-          await applyMetatask(praxis.id, mt.id);
-          setAppliedMetataskList((previous) => [...previous, mt]);
-        }
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-        );
-      } finally {
-        setApplyingMetatask(null);
-      }
-    },
-    [praxis, applyingMetatask, appliedMetatasks],
-  );
-
-  // Section D: the picker seals one metatask at a time, then closes.
-  const addMetatask = useCallback(
-    async (mt: TaskOut) => {
-      if (!praxis || applyingMetatask !== null) return;
-      if (appliedMetatasks.has(mt.id)) {
-        setMetataskPickerOpen(false);
-        return;
-      }
-      setApplyingMetatask(mt.id);
-      setError("");
-      try {
-        await applyMetatask(praxis.id, mt.id);
-        setAppliedMetataskList((previous) => [...previous, mt]);
-        setMetataskPickerOpen(false);
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-        );
-      } finally {
-        setApplyingMetatask(null);
-      }
-    },
-    [praxis, applyingMetatask, appliedMetatasks],
-  );
-
-  // Section E: the seal's × asks first — open the confirm for that metatask.
-  const requestRemoveMetatask = useCallback(
-    (taskId: number) => {
-      setMetataskRemovalTarget(
-        appliedMetataskList.find((mt) => mt.id === taskId) ?? null,
-      );
-    },
-    [appliedMetataskList],
-  );
-
-  const cancelRemoveMetatask = useCallback(
-    () => setMetataskRemovalTarget(null),
-    [],
-  );
-
-  const confirmRemoveMetatask = useCallback(async () => {
-    const target = metataskRemovalTarget;
-    if (!praxis || !target) return;
-    setApplyingMetatask(target.id);
-    setError("");
-    try {
-      await removeMetatask(praxis.id, target.id);
-      setAppliedMetataskList((previous) =>
-        previous.filter((mt) => mt.id !== target.id),
-      );
-      setMetataskRemovalTarget(null);
-    } catch (err) {
-      setError(
-        extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-      );
-    } finally {
-      setApplyingMetatask(null);
-    }
-  }, [praxis, metataskRemovalTarget]);
-
   // ---- Derived ----
   const isPublished = praxis?.status === "submitted";
   const isModerated =
@@ -1489,8 +669,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     praxis.type === "solo" &&
     !duelMode &&
     (canSealMetatask || appliedMetataskList.length > 0);
-
-  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
 
   // Derived every render from the praxis + duel already in hand (ADR-0059), so
   // a cast, a pull-back and a cold re-entry all land on the same answer.
@@ -1546,8 +724,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     addMetatask,
 
     metataskPickerOpen,
-    openMetataskPicker: () => setMetataskPickerOpen(true),
-    closeMetataskPicker: () => setMetataskPickerOpen(false),
+    openMetataskPicker,
+    closeMetataskPicker,
 
     metataskRemovalTarget,
     requestRemoveMetatask,
@@ -1565,12 +743,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     continueFromCollabSuccess,
 
     duelSealOpen,
-    requestDuelSeal: () => setDuelSealOpen(true),
-    cancelDuelSeal: () => setDuelSealOpen(false),
+    requestDuelSeal,
+    cancelDuelSeal,
 
     pendingConfirm,
-    acceptConfirm: () => settleConfirm(true),
-    dismissConfirm: () => settleConfirm(false),
+    acceptConfirm,
+    dismissConfirm,
 
     autosaveAt,
     saveStatus,
