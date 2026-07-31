@@ -150,6 +150,11 @@ interface Props {
 /* The cast's own pair. Not exported by the plate module because no other
  * surface has a primary button; declared in `index.css` in both themes. */
 const CTA = "var(--faction-ephemerists-plate-cta-bg)";
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (3.31:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-ephemerists-card-alarm)";
 const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 
 /* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ──
@@ -427,6 +432,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
   const dress: ComposerDress = {
     accent: BRASS,
+    alarm: ALARM,
     pageStyle: { fontFamily: DECO, color: INK },
     breadcrumbInk: QUIET,
     sheetStyle,
@@ -763,7 +769,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         {/* The footer's own divider. `ComposerRule` hands its whole box over
             when it is given children, so the flute replaces the hairline. */}

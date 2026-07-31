@@ -137,6 +137,11 @@ interface Props {
 /* The practice's inks, named for the ROLE each plays in the design's skin row.
  * Every one carries both themes in `index.css`. */
 const SHEET = "var(--faction-ua-card-bg)"; /* the sun-bleached sheet */
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (3.71:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-ua-card-alarm)";
 const FIELD = "var(--faction-ua-panel)"; /* inset panel — fields, wells */
 const INK = "var(--faction-ua-card-text)";
 const BODY = "var(--faction-ua-card-body)";
@@ -256,6 +261,7 @@ export default function UaEditPraxis({ state }: Props) {
 
   const dress: ComposerDress = {
     accent: ACCENT,
+    alarm: ALARM,
     pageStyle: { fontFamily: UA_TEXT, color: INK },
     sheetStyle,
     ground: groundLayer,
@@ -601,7 +607,7 @@ export default function UaEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         <ComposerRule style={{ background: HAIR }} />
 

@@ -725,7 +725,12 @@ export default function PraxisWaitingSurface({
           </ComposerSection>
         )}
 
-        <ErrorBanner message={state.error} />
+        {/* Same banner, same stock, same ink — the dress carries the alarm so
+            the pairing cannot change the moment you press Submit (#1231). */}
+        <ErrorBanner
+          message={state.error}
+          style={dress.alarm ? { color: dress.alarm } : undefined}
+        />
 
         {rule("footer")}
 

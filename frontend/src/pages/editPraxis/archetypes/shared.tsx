@@ -98,9 +98,32 @@ export function TitleCounter({ length, color }: TitleCounterProps) {
 
 interface ErrorBannerProps {
   message: string;
+  /**
+   * The skin's dress for the banner — in practice its alarm INK (#1231).
+   *
+   * The danger hues themselves stay neutral: ADR-0061 says danger is the
+   * platform speaking, not a faction, so the `-veil` wash and the `-edge` rule
+   * are #1169's global rungs on every skin. What is faction-aware is the GROUND
+   * the banner is drawn against — this banner sits in the composer's content
+   * column, i.e. straight on the skin's sheet — and therefore which ink clears
+   * on it. That is §3's "same ink, second ground", not a faction danger colour.
+   *
+   * It matters because the neutral ink misses AA on ALL EIGHT composer sheets
+   * in light: `--color-danger` under its own veil measures 3.31:1 (Ephemerists)
+   * to 4.41:1 (na). Dark was never the miss (4.80–5.97). Seven skins pass their
+   * existing `--faction-{key}-card-alarm` (#1449) and mint nothing; S.N.I.D.E.
+   * is the one exception and the reason is §6 — its CARD is photocopier-black
+   * in both themes, so `--faction-snide-card-alarm` is pinned bright and reads
+   * 1.56:1 on the composer's light xerox stock, while the composer's sheet
+   * flips. It passes `--faction-snide-composer-alarm` instead.
+   *
+   * Optional, and a skin that passes nothing renders byte-identically to what
+   * this banner painted before (#1153's rule).
+   */
+  style?: CSSProperties;
 }
 
-export function ErrorBanner({ message }: ErrorBannerProps) {
+export function ErrorBanner({ message, style }: ErrorBannerProps) {
   if (!message) return null;
   return (
     <div
@@ -112,6 +135,7 @@ export function ErrorBanner({ message }: ErrorBannerProps) {
         padding: "var(--space-sm) var(--space-md)",
         background: "var(--color-danger-veil)",
         border: "1px solid var(--color-danger-edge)",
+        ...style,
       }}
     >
       {message}
@@ -903,6 +927,14 @@ export function ComposerPage({
 export interface ComposerDress {
   /** The one colour the surface leans on for marks, rings and headings. */
   accent: string;
+  /**
+   * The skin's alarm ink, measured on ITS OWN sheet under `--color-danger-veil`
+   * (#1231). Carried on the dress for the same reason the masthead and the
+   * ground are: the waiting surface mounts the same {@link ErrorBanner} on the
+   * same stock, so the pairing must not change the moment you press Submit.
+   * Omit it and the banner keeps the neutral `--color-danger`.
+   */
+  alarm?: string;
   /** The skin's root style — its body face and ink. */
   pageStyle?: CSSProperties;
   /** The breadcrumb's ink, where the skin tints it. */

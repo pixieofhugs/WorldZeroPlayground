@@ -157,6 +157,11 @@ const LORA = "var(--faction-wow-body-font)";
 /* ── The chronicle palette. Every one a shipped --faction-wow-* token. ── */
 /** The sheet: cream parchment by day, the deep ground by night. */
 const SHEET = "var(--faction-wow-card-bg)";
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (4.08:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-wow-card-alarm)";
 /** The inset parchment plate every editable field is set on. */
 const FIELD = "var(--faction-wow-chronicle-panel)";
 /** Body ink. 14:1 on both grounds. */
@@ -334,6 +339,7 @@ export default function WowEditPraxis({ state }: Props) {
 
   const dress: ComposerDress = {
     accent: PLUM,
+    alarm: ALARM,
     pageStyle: { fontFamily: LORA, color: INK },
     breadcrumbInk: LABEL,
     sheetStyle,
@@ -681,7 +687,7 @@ export default function WowEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         <Zig id="footer" />
 

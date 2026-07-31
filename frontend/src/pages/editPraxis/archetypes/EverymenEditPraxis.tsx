@@ -128,6 +128,11 @@ interface Props {
  *    See the header for which reds may be ink and on what. ── */
 /** The newsprint the order is printed on — the faction's own card ground. */
 const PAPER = "var(--everymen-paper)";
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (3.47:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-everymen-card-alarm)";
 /** The pasted-on plate: the task slip, every field, every proof tile. */
 const PANEL = "var(--faction-everymen-sheet-panel)";
 /** Text ink. FLIPS with the paper — deliberately not `--everymen-ink`. */
@@ -377,6 +382,7 @@ export default function EverymenEditPraxis({ state }: Props) {
 
   const dress: ComposerDress = {
     accent: ACCENT,
+    alarm: ALARM,
     pageStyle: { fontFamily: COURIER, color: INK },
     breadcrumbInk: MUTED,
     sheetStyle,
@@ -760,7 +766,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         {dashRule}
 

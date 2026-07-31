@@ -118,6 +118,11 @@ interface Props {
  * skin row rather than for its colour — `ink` is the design's `ink` and its
  * `accent`, which are the same value in both themes. */
 const SHEET = "var(--faction-default-card-bg)";
+/* The error banner's ink (#1231). The banner sits straight on the sheet, and
+ * the neutral `--color-danger` under its own veil misses AA there in light
+ * (4.41:1 on this ground); this is #1449's alarm rung, already measured
+ * on paper. The veil and the edge stay neutral — ADR-0061. */
+const ALARM = "var(--faction-default-card-alarm)";
 const FIELD = "var(--faction-default-composer-field)";
 const INK = "var(--faction-default-card-text)";
 const MUTED = "var(--faction-default-card-muted)";
@@ -199,6 +204,7 @@ const slip = {
  */
 export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   accent: INK,
+  alarm: ALARM,
   pageStyle: { fontFamily: TITLE_FACE, color: INK },
   sheetStyle,
   masthead,
@@ -561,7 +567,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           </div>
         </ComposerSection>
 
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         <ComposerRule style={{ background: HAIR }} />
 

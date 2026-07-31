@@ -669,6 +669,14 @@
   --faction-snide-composer-bar: #14110b; /* masthead bar + the censor stripe */
   --faction-snide-composer-grain: rgba(20, 17, 11, 0.09); /* the raster */
   --faction-snide-composer-acid-ink: #457000; /* acid that is TEXT, not a line */
+  /* The error banner's ink, and the ONE mint #1231 needed (§3, "same ink,
+     second ground"). Seven skins hand that banner their existing
+     `--faction-{key}-card-alarm`; this faction cannot, because its CARD is
+     photocopier-black in BOTH themes (§6) so `-card-alarm` is pinned bright and
+     reads 1.56:1 on the light xerox stock, while this sheet FLIPS. Same hue as
+     `-slip-pink-ink` today and declared rather than borrowed for #1181's
+     reason. Measured under `--color-danger-veil`: 4.97:1 light, 5.83:1 dark. */
+  --faction-snide-composer-alarm: #be185d;
 
   /* ══ S.N.I.D.E. — THE INTERCEPTED SLIP (feed chassis + comment sheet, #1198) ══
      Design: `Snide Comment + Update Cards.dc.html` — a flyposted xerox slip
@@ -688,13 +696,24 @@
      S.N.I.D.E. feed card invisible at night, with the actor line at 2.92:1.
 
      ONE PAIRING STILL DOES NOT CLEAR AA, and it is not reachable from here:
-     `--color-danger` measures 4.28:1 on this stock (it is 4.75 on the na sheet,
+     `--color-danger` measures 4.28:1 on this stock bare, and 3.97:1 once
+     #1169's `--color-danger-veil` is laid over it (it is 4.75 on the na sheet,
      3.98 on UA's cream, and was 3.90 on the invariant black card this replaces,
      so the move is an improvement rather than a regression). It is painted by
      `OwnerControls`, `ComposerControls` and `CommentFlagControl`, none of which
      takes an ink prop — §3's #1153 case: a missing seam, not a missing
-     measurement. If that seam is ever added, the slip needs its own
-     `-slip-alarm`; `-card-notice`/`-card-credit` are measured on `-card-bg`.
+     measurement.
+
+     WHAT THAT SEAM WILL NOT NEED IS A NEW TOKEN (#1231, correcting this
+     paragraph). It used to end "the slip needs its own `-slip-alarm`", and that
+     was already wrong when written: `--faction-snide-slip-pink-ink` three
+     declarations below is this faction's alarm hue walked for exactly this
+     flipping stock, and it measures 5.35:1 bare / 4.97:1 veiled in light and
+     7.06:1 / 5.83:1 in dark. The caution the sentence was really carrying still
+     holds and is the useful half — `-card-notice`/`-card-credit`/`-card-alarm`
+     are measured on `-card-bg`, which for S.N.I.D.E. is photocopier-black in
+     BOTH themes (§6), so `--faction-snide-card-alarm` is pinned bright and
+     reads 1.56:1 here. Reach for the walked pink, not the card family.
 
      So this is a THIRD flipping S.N.I.D.E. stock beside `-note-*` (the task
      card's clipping) and `-composer-*` (the edit-praxis sheet), declared rather
@@ -1892,6 +1911,7 @@
   --faction-snide-composer-bar: #080706;
   --faction-snide-composer-grain: rgba(244, 241, 232, 0.07);
   --faction-snide-composer-acid-ink: #b6ff2e;
+  --faction-snide-composer-alarm: #ff69ac;
 
   /* ── The intercepted slip, lights out (#1198) ──
      The stock and its type SWAP, as the clipping's and the sheet's do. The intake

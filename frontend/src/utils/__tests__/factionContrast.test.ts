@@ -1063,6 +1063,55 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // print at FULL ink and separate themselves by face rather than by opacity.
   { what: "everymen masthead band, ink", surface: "--everymen-red", text: "--everymen-masthead-text" },
 
+  // ── THE COMPOSER'S ERROR BANNER, on all eight sheets (#1231) ─────────────
+  //
+  // `ErrorBanner` took no props, so every composer painted the neutral
+  // `--color-danger` on its own faction stock and no skin could reach it —
+  // #1153's missing seam, not a missing measurement. ADR-0061 keeps the hues
+  // neutral (the `-veil` wash and the `-edge` rule are #1169's global rungs on
+  // every skin); what is faction-aware is THE GROUND, and therefore the ink.
+  //
+  // The neutral ink missed AA on ALL EIGHT sheets in light under its own veil —
+  // 3.31 (ephemerists), 3.47 (everymen), 3.71 (ua), 3.85 (singularity), 3.97
+  // (snide), 4.08 (wow), 4.23 (coven), 4.41 (na) — and cleared on all eight in
+  // dark (4.80-5.97). That asymmetry is #1449's finding restated: the light hue
+  // was chosen against the app's near-white page, and six of these sheets are
+  // warm paper while two are near-black in both themes.
+  //
+  // SEVEN SKINS MINT NOTHING. `--faction-{key}-card-alarm` already exists for
+  // all eight keys in both cascades, and it clears every composer ground it is
+  // asked for here (5.70 worst, on the Ephemerists plate). That is #1302's
+  // shape: a shared component inside a faction frame takes the faction's card
+  // ink family rather than a global functional one.
+  //
+  // S.N.I.D.E. IS THE ONE MINT, and the reason is §6 rather than a hue: its
+  // CARD is photocopier-black in BOTH themes, so `-card-alarm` is pinned bright
+  // and reads 1.56:1 on the composer's light xerox stock — while the composer
+  // sheet flips. `--faction-snide-composer-alarm` is that walked pink, declared
+  // in the composer block rather than borrowed from `-slip-pink-ink`, which is
+  // #1181's rule (same value today, a different surface's contract tomorrow).
+  //
+  // The veiled reading is the one on screen, and it is the tighter one on the
+  // six paper stocks (a wash of the ink's own polarity) while it LIFTS the two
+  // near-black grounds toward the ink. Either way it is what gates (§3, #1302).
+  ...(
+    [
+      ["na", "--faction-default-card-bg", "--faction-default-card-alarm"],
+      ["coven", "--faction-coven-ward-card", "--faction-coven-card-alarm"],
+      ["ephemerists", "--faction-ephemerists-plate-bg", "--faction-ephemerists-card-alarm"],
+      ["everymen", "--everymen-paper", "--faction-everymen-card-alarm"],
+      ["singularity", "--faction-singularity-term-bg", "--faction-singularity-card-alarm"],
+      ["snide", "--faction-snide-composer-sheet", "--faction-snide-composer-alarm"],
+      ["ua", "--faction-ua-card-bg", "--faction-ua-card-alarm"],
+      ["wow", "--faction-wow-card-bg", "--faction-wow-card-alarm"],
+    ] as const
+  ).map(([key, surface, text]) => ({
+    what: `${key} composer error banner, alarm ink under the danger veil`,
+    surface,
+    veil: "--color-danger-veil" as Veil,
+    text,
+  })),
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
