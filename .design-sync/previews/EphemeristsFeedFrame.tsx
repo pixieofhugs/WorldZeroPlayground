@@ -2,7 +2,7 @@
 // (foxed vellum, iron-gall hairline, gold running edge, rubric sigil). Pure
 // wrapper; the feed ROW arrives as children. We compose realistic Ephemerists
 // rows so the vellum leaf reads as a populated feed.
-import { EphemeristsFeedFrame } from 'worldzero-frontend'
+import { EphemeristsFeedFrame, FeedArchiveButton } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 24, maxWidth: 400 }
 
@@ -122,7 +122,12 @@ const ACCENT = 'var(--faction-ephemerists)'
 export function FriendCompletion() {
   return (
     <div style={wrap}>
-      <EphemeristsFeedFrame>
+      <EphemeristsFeedFrame
+        kicker="Praxis"
+        time="2h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="I"
@@ -142,7 +147,12 @@ export function FriendCompletion() {
 export function VoteOnMine() {
   return (
     <div style={wrap}>
-      <EphemeristsFeedFrame>
+      <EphemeristsFeedFrame
+        kicker="Vote"
+        time="5h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent={ACCENT}
           initial="A"

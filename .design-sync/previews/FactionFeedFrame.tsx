@@ -2,7 +2,7 @@
 // that faction's bespoke feed chrome (UA salon, SNIDE ransom slip, Singularity
 // terminal, …); a null slug is a true passthrough. Same feed ROW children, three
 // different faction skins, plus the neutral fallback — showing the dispatch.
-import { FactionFeedFrame } from 'worldzero-frontend'
+import { FactionFeedFrame, FeedArchiveButton } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 24, maxWidth: 400 }
 
@@ -120,7 +120,12 @@ function FeedRow({
 export function UaBranch() {
   return (
     <div style={wrap}>
-      <FactionFeedFrame slug="ua">
+      <FactionFeedFrame slug="ua"
+        kicker="Praxis"
+        time="2h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent="var(--faction-ua)"
           initial="A"
@@ -140,7 +145,12 @@ export function UaBranch() {
 export function SnideBranch() {
   return (
     <div style={wrap}>
-      <FactionFeedFrame slug="snide">
+      <FactionFeedFrame slug="snide"
+        kicker="Vote"
+        time="5h ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           accent="var(--faction-snide)"
           initial="R"
@@ -160,7 +170,12 @@ export function SnideBranch() {
 export function SingularityBranch() {
   return (
     <div style={wrap}>
-      <FactionFeedFrame slug="singularity">
+      <FactionFeedFrame slug="singularity"
+        kicker="Duel challenge"
+        time="Yesterday"
+        tag={"Still waiting"}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <FeedRow
           dark
           accent="var(--faction-singularity)"
@@ -182,7 +197,12 @@ export function SingularityBranch() {
 export function NeutralPassthrough() {
   return (
     <div style={wrap}>
-      <FactionFeedFrame slug={null}>
+      <FactionFeedFrame slug={null}
+        kicker="Collab invite"
+        time="3d ago"
+        tag={null}
+        archive={<FeedArchiveButton onAct={() => {}} />}
+      >
         <div
           className="sidebar-card"
           style={{ padding: 4, border: '1px solid var(--color-border)', borderRadius: 8 }}
