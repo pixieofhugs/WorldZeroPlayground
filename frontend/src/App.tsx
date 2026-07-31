@@ -14,30 +14,44 @@ import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
  * `RootLanding` can start one before it knows which it needs (#1380). Dynamic
  * `import()` is memoised by the module registry, so calling one of these is
  * idempotent: the warm call and the render that follows share a request.
+ *
+ * Every page behind `ProtectedRoute` gets a named loader for the same reason
+ * (#1483): the guard renders a loading surface *instead of* its children while
+ * `/auth/me` is in flight, so without the loader in hand the chunk could not
+ * start until the session answered. Each `warm` must name the loader for the
+ * page in that route's children — `auth/__tests__/protectedRoute.test.tsx`
+ * scans this file to keep the pairs honest.
  */
 const importHome = () => import('./pages/Home')
 const importFieldDesk = () => import('./pages/FieldDesk')
+const importEditPraxis = () => import('./pages/EditPraxis')
+const importEditCharacter = () => import('./pages/EditCharacter')
+const importUpdates = () => import('./pages/Updates')
+const importSettings = () => import('./pages/Settings')
+const importAdmin = () => import('./pages/Admin')
+const importCreateCharacter = () => import('./pages/CreateCharacter')
+const importProposeTask = () => import('./pages/ProposeTask')
 
 const Home = lazy(importHome)
 const FieldDesk = lazy(importFieldDesk)
 const Tasks = lazy(() => import('./pages/Tasks'))
 const TaskDetail = lazy(() => import('./pages/TaskDetail'))
 const PraxisDetail = lazy(() => import('./pages/PraxisDetail'))
-const EditPraxis = lazy(() => import('./pages/EditPraxis'))
+const EditPraxis = lazy(importEditPraxis)
 const CharacterProfile = lazy(() => import('./pages/CharacterProfile'))
 const Leaderboard = lazy(() => import('./pages/Leaderboard'))
 const Factions = lazy(() => import('./pages/Factions'))
 const FactionDetail = lazy(() => import('./pages/FactionDetail'))
 const AlbescentSecretPlaceholder = lazy(() => import('./pages/AlbescentSecretPlaceholder'))
-const Updates = lazy(() => import('./pages/Updates'))
+const Updates = lazy(importUpdates)
 const Praxes = lazy(() => import('./pages/Praxes'))
-const Settings = lazy(() => import('./pages/Settings'))
-const Admin = lazy(() => import('./pages/Admin'))
-const CreateCharacter = lazy(() => import('./pages/CreateCharacter'))
-const EditCharacter = lazy(() => import('./pages/EditCharacter'))
+const Settings = lazy(importSettings)
+const Admin = lazy(importAdmin)
+const CreateCharacter = lazy(importCreateCharacter)
+const EditCharacter = lazy(importEditCharacter)
 const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
-const ProposeTask = lazy(() => import('./pages/ProposeTask'))
+const ProposeTask = lazy(importProposeTask)
 const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
@@ -102,7 +116,7 @@ export default function App() {
           <Route
             path="/praxis/:id/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute warm={importEditPraxis}>
                 <EditPraxis />
               </ProtectedRoute>
             }
@@ -111,7 +125,7 @@ export default function App() {
           <Route
             path="/characters/:id/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute warm={importEditCharacter}>
                 <EditCharacter />
               </ProtectedRoute>
             }
@@ -127,7 +141,7 @@ export default function App() {
           <Route
             path="/updates"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute warm={importUpdates}>
                 <Updates />
               </ProtectedRoute>
             }
@@ -137,7 +151,7 @@ export default function App() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute warm={importSettings}>
                 <Settings />
               </ProtectedRoute>
             }
@@ -145,7 +159,7 @@ export default function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute adminOnly warm={importAdmin}>
                 <Admin />
               </ProtectedRoute>
             }
@@ -153,7 +167,7 @@ export default function App() {
           <Route
             path="/characters/create"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute warm={importCreateCharacter}>
                 <CreateCharacter />
               </ProtectedRoute>
             }
@@ -163,7 +177,7 @@ export default function App() {
           <Route
             path="/propose-task"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute warm={importProposeTask}>
                 <ProposeTask />
               </ProtectedRoute>
             }
