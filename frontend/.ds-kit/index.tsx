@@ -114,7 +114,6 @@ export { default as FactionFeedFrame } from "../src/components/feed/FactionFeedF
 export { default as FactionProfileBody } from "../src/pages/characterProfile/FactionProfileBody";
 export { default as FactionSelectCard } from "../src/components/selectCard/FactionSelectCard";
 export { default as FactionSigil } from "../src/components/sigil/FactionSigil";
-export { default as FactionSigilRow } from "../src/components/ui/FactionSigilRow";
 export { default as FactionsDirectoryView } from "../src/pages/factions/mobileArchetypes/FactionsDirectoryView";
 export { default as FeedArchiveButton } from "../src/components/feed/FeedArchiveButton";
 export { default as FeedBadge } from "../src/components/feed/FeedBadge";
@@ -132,9 +131,7 @@ export { default as FeedItemSlot } from "../src/components/feed/FeedItemSlot";
 export { default as FeedRowActions } from "../src/components/feed/FeedRowActions";
 export { default as FeedRowContent } from "../src/components/feed/FeedRowContent";
 export { default as FeedUndoStrip } from "../src/components/feed/FeedUndoStrip";
-export { default as FilterFactionTabs } from "../src/components/ui/FilterFactionTabs";
 export { default as FilterLevelNodes } from "../src/components/ui/FilterLevelNodes";
-export { default as FilterStamps } from "../src/components/ui/FilterStamps";
 export { default as HoldoutPublishNotice } from "../src/pages/editPraxis/blocks/HoldoutPublishNotice";
 export { default as ImageEditModal } from "../src/components/imageEdit/ImageEditModal";
 export { default as InvitationLetterPopup } from "../src/components/InvitationLetterPopup";
@@ -155,7 +152,6 @@ export { default as MetataskSealStack } from "../src/components/metataskSeal/Met
 export { default as MobileHeader } from "../src/components/layout/MobileHeader";
 export { default as MobilePraxisFeed } from "../src/pages/praxes/MobilePraxisFeed";
 export { default as MobileTabBar } from "../src/components/layout/MobileTabBar";
-export { default as MobileUpdates } from "../src/pages/updates/MobileUpdates";
 export { default as NavBar } from "../src/components/NavBar";
 export { OwnerControls } from "../src/components/comments/OwnerControls";
 export { default as PageTitle } from "../src/components/ui/PageTitle";

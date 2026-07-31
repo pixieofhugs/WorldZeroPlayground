@@ -99,6 +99,24 @@ describe('componentSrcMap stays in sync with the tree (#1405)', () => {
     expect(unresolved).toEqual([])
   })
 
+  it('re-exports only real files from the committed barrel', () => {
+    // `.ds-kit/index.tsx` is generated from componentSrcMap by
+    // `.design-sync/gen-barrel.mjs` — but it is COMMITTED, so it drifts with
+    // the map and holds the same dead paths as genuine broken imports. Its own
+    // header calls it gitignored; it is not. Nothing catches that today:
+    // `.ds-kit/` is outside `tsconfig`'s `include: ["src"]` so tsc skips it,
+    // and no app module imports it so `vite build` never resolves it either.
+    // Regenerate with `node .design-sync/gen-barrel.mjs` when this fails.
+    const barrel = readFileSync(join(FRONTEND_DIR, '.ds-kit', 'index.tsx'), 'utf8')
+    const unresolved = [...barrel.matchAll(/from\s+'([^']+)'|from\s+"([^"]+)"/g)]
+      .map(([, single, double]) => single ?? double)
+      // `./provider` is hand-written and sits beside the barrel, not under src/.
+      .filter((specifier) => specifier.startsWith('../'))
+      .map((specifier) => `${specifier.replace(/^\.\.\//, '')}.tsx`)
+      .filter((path) => !realPaths.has(path))
+    expect(unresolved).toEqual([])
+  })
+
   it('carries no render override for a component the kit does not publish', () => {
     // `overrides` is keyed by the same names, so deleting an entry from one map
     // orphans the other. Dead settings here are silently ignored by the sync —
