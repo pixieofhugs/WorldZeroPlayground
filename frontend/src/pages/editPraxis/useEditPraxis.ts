@@ -46,8 +46,8 @@ import {
   leaveCollabConfirm,
   modeSwitchConfirm,
   reopenForEditConfirm,
-  type ConfirmRequest,
 } from "../../components/confirm/composerConfirms";
+import { useComposerConfirm } from "./useComposerConfirm";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getMyCharacters } from "../../api/me";
@@ -258,13 +258,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Seal confirmation (#718) — opened by PublishButton in duel mode.
   const [duelSealOpen, setDuelSealOpen] = useState(false);
 
-  // The in-page confirm (#1082) — one slot, because only one handler can be
-  // waiting on an answer at a time.
-  const [pendingConfirm, setPendingConfirm] = useState<ConfirmRequest | null>(
-    null,
-  );
-  const confirmResolverRef = useRef<((accepted: boolean) => void) | null>(null);
-
   const [autosaveAt, setAutosaveAt] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
@@ -275,30 +268,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---- Confirms (#1082) ----
-  // `window.confirm` used to block the handler until the player answered; these
-  // three restore that shape without the OS dialog. `askConfirm` puts the
-  // request on screen and returns a promise the handler awaits, so each caller
-  // still reads `if (!(await askConfirm(...))) return;` — one line, in the same
-  // place, with the same control flow.
-  //
-  // The resolver lives in a ref rather than in state: it is not rendered, and
-  // storing a function in state would need the lazy-setter dance for no gain.
-  const settleConfirm = useCallback((accepted: boolean) => {
-    const resolve = confirmResolverRef.current;
-    confirmResolverRef.current = null;
-    setPendingConfirm(null);
-    resolve?.(accepted);
-  }, []);
-
-  const askConfirm = useCallback((request: ConfirmRequest) => {
-    // A second ask while one is open declines the first, so no handler is left
-    // awaiting a promise that can never settle.
-    confirmResolverRef.current?.(false);
-    setPendingConfirm(request);
-    return new Promise<boolean>((resolve) => {
-      confirmResolverRef.current = resolve;
-    });
-  }, []);
+  const { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm } =
+    useComposerConfirm();
 
   // ---- Initial load ----
   useEffect(() => {
@@ -1369,8 +1340,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     cancelDuelSeal: () => setDuelSealOpen(false),
 
     pendingConfirm,
-    acceptConfirm: () => settleConfirm(true),
-    dismissConfirm: () => settleConfirm(false),
+    acceptConfirm,
+    dismissConfirm,
 
     autosaveAt,
     saveStatus,
