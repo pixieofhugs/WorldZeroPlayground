@@ -221,8 +221,8 @@ async def test_badge_count_equals_windowed_fetch_length_per_tab(
             f"len(items) {len(data['items'])}"
         )
 
-    # Bug 1 & 2 made observable: the pending duel must be counted in BOTH the
-    # your_stuff and requests badges (old code counted it in neither).
+    # ADR-0070: the pending duel and the pending invite are obligations, so they
+    # left `your_stuff` for the queue — and the badge left with them.
     your_stuff = (
         await client.get(
             "/activity-feed",
@@ -230,8 +230,8 @@ async def test_badge_count_equals_windowed_fetch_length_per_tab(
             headers=auth_headers,
         )
     ).json()
-    assert any(i["type"] == "duel_challenge" for i in your_stuff["items"])
-    assert your_stuff["counts"]["your_stuff"] == 3  # vote + collab invite + duel
+    assert not any(i["type"] == "duel_challenge" for i in your_stuff["items"])
+    assert your_stuff["counts"]["your_stuff"] == 1  # the vote, and nothing else
 
     requests = (
         await client.get(
@@ -346,3 +346,170 @@ async def test_activity_feed_awaiting_submission_in_requests(
         )
     ).json()
     assert not [i for i in after["items"] if i["type"] == "awaiting_submission"]
+
+
+# ---------------------------------------------------------------------------
+# The type axis and the cursor, at the HTTP seam (#1420 part 2)
+#
+# These exercise the *wire* deliberately: `types` is a repeated bare key, which
+# is the one shape a naive client serialiser gets wrong (`types[]=a`) and the
+# one shape FastAPI reads as nothing at all — 200, unfiltered list, green CI.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_types_intersects_with_the_filter_rather_than_replacing_it(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """``filter=friends&types=friend_signup`` is friend signups only."""
+    from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+    from models.relationship import Relationship, RelationshipStatus, RelationshipType
+
+    db_session.add(
+        Relationship(
+            from_character_id=character.id,
+            to_character_id=character2.id,
+            type=RelationshipType.friend,
+            status=RelationshipStatus.active,
+        )
+    )
+    # friend_completion: the friend submitted something of their own.
+    db_session.add(
+        Praxis(
+            task_id=active_task.id,
+            created_by_id=character2.id,
+            type=PraxisType.solo,
+            status=PraxisStatus.submitted,
+            title="Friend did it",
+            body_text="proof",
+        )
+    )
+    # friend_signup: both of them are on the same in-progress task.
+    mine = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Mine",
+        body_text="proof",
+    )
+    theirs = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Theirs",
+        body_text="proof",
+    )
+    db_session.add_all([mine, theirs])
+    await db_session.flush()
+    db_session.add_all(
+        [
+            PraxisMember(praxis_id=mine.id, character_id=character.id),
+            PraxisMember(praxis_id=theirs.id, character_id=character2.id),
+        ]
+    )
+    await db_session.commit()
+
+    unfiltered = await client.get(
+        "/activity-feed",
+        params={"filter": "friends", "limit": 100},
+        headers=auth_headers,
+    )
+    assert {i["type"] for i in unfiltered.json()["items"]} == {
+        "friend_completion",
+        "friend_signup",
+    }
+
+    narrowed = await client.get(
+        "/activity-feed",
+        params={"filter": "friends", "limit": 100, "types": ["friend_signup"]},
+        headers=auth_headers,
+    )
+    assert narrowed.status_code == 200, narrowed.text
+    assert [i["type"] for i in narrowed.json()["items"]] == ["friend_signup"]
+
+    # A type outside the rail is an intersection, not a replacement: the rail
+    # still wins, so this is empty rather than "every vote on your praxis".
+    outside = await client.get(
+        "/activity-feed",
+        params={"filter": "friends", "limit": 100, "types": ["vote_on_mine"]},
+        headers=auth_headers,
+    )
+    assert outside.json()["items"] == []
+
+
+@pytest.mark.asyncio
+async def test_types_accepts_more_than_one_value(
+    client: AsyncClient, character: Character, active_task: Task, auth_headers: dict
+):
+    """A repeated bare key, which is what a correctly-configured axios sends.
+
+    ``{types: ['a','b']}`` serialises to ``types[]=a&types[]=b`` by default and
+    FastAPI reads the bracketed key as *nothing* — 200, unfiltered, tests green.
+    #1421 must set ``paramsSerializer: { indexes: null }``.
+    """
+    response = await client.get(
+        "/activity-feed",
+        params={"limit": 100, "types": ["global_task", "era_announcement"]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    types = {item["type"] for item in response.json()["items"]}
+    assert types == {"global_task", "era_announcement"}
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_type_is_ignored_and_an_empty_list_filters_nothing(
+    client: AsyncClient, character: Character, active_task: Task, auth_headers: dict
+):
+    """The feed is a read projection: a stale bookmark must not hard-fail, and
+    an empty selection can never mean "match nothing"."""
+    baseline = await client.get(
+        "/activity-feed", params={"limit": 100}, headers=auth_headers
+    )
+    baseline_types = {item["type"] for item in baseline.json()["items"]}
+    assert baseline_types, "the fixture must put something in the feed"
+
+    for params in (
+        {"limit": 100, "types": ["no_such_type"]},
+        {"limit": 100, "types": []},
+        {"limit": 100, "types": [""]},
+    ):
+        response = await client.get(
+            "/activity-feed", params=params, headers=auth_headers
+        )
+        assert response.status_code == 200, (params, response.text)
+        assert {
+            item["type"] for item in response.json()["items"]
+        } == baseline_types, params
+
+    # A known value alongside an unknown one still filters on the known one.
+    mixed = await client.get(
+        "/activity-feed",
+        params={"limit": 100, "types": ["no_such_type", "global_task"]},
+        headers=auth_headers,
+    )
+    assert {item["type"] for item in mixed.json()["items"]} == {"global_task"}
+
+
+@pytest.mark.asyncio
+async def test_a_malformed_before_cursor_is_a_422_not_a_500(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """``before`` is a client-supplied cursor, so it is a trust boundary."""
+    response = await client.get(
+        "/activity-feed", params={"before": "not-a-date"}, headers=auth_headers
+    )
+    assert response.status_code == 422, response.text
+
+    good = await client.get(
+        "/activity-feed",
+        params={"before": "2999-01-01T00:00:00+00:00"},
+        headers=auth_headers,
+    )
+    assert good.status_code == 200, good.text

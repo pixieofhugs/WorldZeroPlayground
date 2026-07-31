@@ -43,12 +43,15 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
     FEED_ITEM_TYPE_COMMENT_MENTION,
     FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    FEED_ITEM_TYPE_FOE_TAUNT,
     FEED_ITEM_TYPE_FRIEND_COMPLETION,
     FEED_ITEM_TYPE_FRIEND_SIGNUP,
     FEED_ITEM_TYPE_GLOBAL_TASK,
+    FEED_ITEM_TYPE_INVITATION_LETTER,
     FEED_ITEM_TYPE_NUDGE,
     FEED_ITEM_TYPES,
     ITEM_KEY_SEPARATOR,
+    REQUEST_ITEM_TYPES,
 )
 
 ALL_FILTER = "all"
@@ -61,13 +64,18 @@ REQUESTS_FILTER = "requests"
 # Item counts per tab for the ``full_feed`` seed, derived by hand from the
 # registry's filter membership. Asserting the numbers (not just "non-empty")
 # is what makes "the counts drop" a real check.
+#
+# ADR-0070: the four request types are in the registry under ALL and YOUR_STUFF
+# but leave the *live* stream, so those two tabs read four short of their
+# registry membership. Archived is unaffected — see
+# ``test_archived_still_shows_the_requests_the_stream_hides``.
 SEEDED_ITEM_COUNTS = {
-    ALL_FILTER: 15,
+    ALL_FILTER: 11,
     FRIENDS_FILTER: 3,
     FOES_FILTER: 2,
-    YOUR_STUFF_FILTER: 8,
+    YOUR_STUFF_FILTER: 4,
     GLOBAL_FILTER: 2,
-    REQUESTS_FILTER: 3,
+    REQUESTS_FILTER: 4,
 }
 
 # Which key in ``counts`` carries which tab's badge — ``global`` is the one the
@@ -90,6 +98,7 @@ async def full_feed(
     character3: Character,
     era: Era,
     active_task: Task,
+    faction_ephemerists,
 ) -> dict:
     """Seed exactly one feed item of every one of the 15 types for ``character``.
 
@@ -245,11 +254,15 @@ async def full_feed(
     db_session.add(duel)
 
     # --- invitation_letter + friend_defection --------------------------------
+    # The letter is for a faction the viewer is NOT in (they are `ua`), so it is
+    # unanswered per ADR-0070 and belongs in the queue. The already-joined case
+    # gets its own test.
+    letter = InvitationLetter(
+        character_id=character.id, faction_slug="ephemerists", era_id=era.id
+    )
     db_session.add_all(
         [
-            InvitationLetter(
-                character_id=character.id, faction_slug="ua", era_id=era.id
-            ),
+            letter,
             FactionDefectionHistory(
                 character_id=character2.id, faction_slug="na", era_id=era.id
             ),
@@ -266,6 +279,7 @@ async def full_feed(
         "friend_member_id": friend_member.id,
         "duel_id": duel.id,
         "task_id": active_task.id,
+        "letter_id": letter.id,
     }
 
 
@@ -283,6 +297,28 @@ async def _feed(
     return response.json()
 
 
+def _observed_type_counts(feed: dict) -> dict[str, int]:
+    """How many items of each type this response actually returned."""
+    observed: dict[str, int] = {}
+    for item in feed["items"]:
+        observed[item["type"]] = observed.get(item["type"], 0) + 1
+    return observed
+
+
+def _published_type_counts(feed: dict) -> dict[str, int]:
+    """The non-zero half of ``counts.by_type``.
+
+    ``by_type`` publishes every type the current view *could* show, so it
+    carries zeros for the facet rows the frontend hides (epic #1419 decision
+    20). Dropping them is what makes it comparable with the item list.
+    """
+    return {
+        item_type: count
+        for item_type, count in feed["counts"]["by_type"].items()
+        if count
+    }
+
+
 def _key_of(feed: dict, item_type: str) -> str:
     matches = [item["item_key"] for item in feed["items"] if item["type"] == item_type]
     assert len(matches) == 1, f"expected exactly one {item_type}: {matches}"
@@ -297,12 +333,22 @@ def _key_of(feed: dict, item_type: str) -> str:
 async def test_every_feed_type_yields_a_stable_item_key(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """All 15 types are present, keyed, and identical across two requests."""
+    """All 15 types are present, keyed, and identical across two requests.
+
+    ADR-0070 split the live surface in two: the eleven news types live in the
+    stream, the four request types live in the queue. Between them the registry
+    is still fully covered.
+    """
     first = await _feed(client, auth_headers)
     second = await _feed(client, auth_headers)
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
 
-    assert {item["type"] for item in first["items"]} == FEED_ITEM_TYPES
+    stream_types = {item["type"] for item in first["items"]}
+    queue_types = {item["type"] for item in queue["items"]}
+    assert stream_types | queue_types == FEED_ITEM_TYPES
+    assert stream_types.isdisjoint(queue_types)
     assert len(first["items"]) == SEEDED_ITEM_COUNTS[ALL_FILTER]
+    assert len(queue["items"]) == SEEDED_ITEM_COUNTS[REQUESTS_FILTER]
 
     first_keys = [item["item_key"] for item in first["items"]]
     second_keys = [item["item_key"] for item in second["items"]]
@@ -496,8 +542,9 @@ async def test_dismiss_all_skips_awaiting_submission(
         headers=auth_headers,
     )
     assert response.status_code == 200, response.text
-    # collab_invite + duel_challenge archived; awaiting_submission left alone.
-    assert response.json() == {"count": 2, "archived": True}
+    # collab_invite + duel_challenge + invitation_letter archived;
+    # awaiting_submission left alone.
+    assert response.json() == {"count": 3, "archived": True}
 
     after = await _feed(client, auth_headers, REQUESTS_FILTER)
     assert [item["type"] for item in after["items"]] == [
@@ -530,7 +577,7 @@ async def test_archiving_a_collab_invite_leaves_it_pending(
 ):
     """ADR-0065: the archive is a view state, never a decision. The invite is
     still open and still unanswered — F2 tags it 'still waiting'."""
-    feed = await _feed(client, auth_headers)
+    feed = await _feed(client, auth_headers, REQUESTS_FILTER)
     target = _key_of(feed, FEED_ITEM_TYPE_COLLAB_INVITE)
 
     response = await client.post(
@@ -633,15 +680,17 @@ async def test_restore_all_empties_the_archive(
     dismissed = await client.post(
         "/activity-feed/dismiss-all", json={}, headers=auth_headers
     )
-    # Everything except the one unarchivable type.
-    assert dismissed.json()["count"] == SEEDED_ITEM_COUNTS[ALL_FILTER] - 1
+    # Everything the ALL stream shows. The one unarchivable type
+    # (``awaiting_submission``) is no longer in that stream at all — ADR-0070
+    # moved it to the queue, and bulk archive is scoped to the active filter.
+    assert dismissed.json()["count"] == SEEDED_ITEM_COUNTS[ALL_FILTER]
 
     emptied = await client.post(
         "/activity-feed/restore-all", json={}, headers=auth_headers
     )
     assert emptied.status_code == 200, emptied.text
     assert emptied.json() == {
-        "count": SEEDED_ITEM_COUNTS[ALL_FILTER] - 1,
+        "count": SEEDED_ITEM_COUNTS[ALL_FILTER],
         "archived": False,
     }
 
@@ -734,10 +783,15 @@ async def test_a_nudge_retires_when_the_recipient_files(
     after = await _feed(client, auth_headers)
     types = [item["type"] for item in after["items"]]
     assert FEED_ITEM_TYPE_NUDGE not in types
-    assert FEED_ITEM_TYPE_AWAITING_SUBMISSION not in types
+    # The obligation itself clears out of the queue (its only live home now).
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    assert FEED_ITEM_TYPE_AWAITING_SUBMISSION not in {
+        item["type"] for item in queue["items"]
+    }
     # The badge is a separate path; a stale nudge inflates a number too.
-    assert after["counts"]["all"] == before["counts"]["all"] - 2
-    assert after["counts"]["your_stuff"] == before["counts"]["your_stuff"] - 2
+    assert after["counts"]["all"] == before["counts"]["all"] - 1
+    assert after["counts"]["your_stuff"] == before["counts"]["your_stuff"] - 1
+    assert after["counts"]["requests"] == before["counts"]["requests"] - 1
 
 
 @pytest.mark.asyncio
@@ -771,7 +825,7 @@ async def test_a_resolved_request_leaves_every_live_tab(
     full_feed: dict,
     auth_headers: dict,
 ):
-    """`pending_invites_only` is a live-feed axis, not a per-tab one.
+    """`unanswered_requests_only` is a live-feed axis, not a per-tab one.
 
     Knowingly: the duel challenge moves with the invite — one flag governs both
     queries, and a resolved challenge is as stale as a resolved invite.
@@ -803,10 +857,13 @@ async def test_badge_counts_match_the_list_on_every_tab(
         feed = await _feed(client, auth_headers, tab)
         assert feed["counts"][count_key] == len(feed["items"]), tab
 
-    # ...and the badges keep describing the LIVE feed from inside the archive.
+    # ...and the six tab badges keep describing the LIVE feed from inside the
+    # archive. ``by_type`` deliberately does NOT — it describes the list it sits
+    # above, which on this tab is the archive (issue #1420 part 1).
     live = await _feed(client, auth_headers)
     archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
-    assert archived["counts"] == live["counts"]
+    for badge in COUNT_KEYS.values():
+        assert archived["counts"][badge] == live["counts"][badge], badge
 
 
 @pytest.mark.asyncio
@@ -821,7 +878,7 @@ async def test_an_archived_request_stays_archived_after_it_is_answered(
     A player archives a pending invite, then answers it elsewhere. Nothing else
     lists it, so the archive must not window itself to pending.
     """
-    before = await _feed(client, auth_headers)
+    before = await _feed(client, auth_headers, REQUESTS_FILTER)
     invite_key = _key_of(before, FEED_ITEM_TYPE_COLLAB_INVITE)
     duel_key = _key_of(before, FEED_ITEM_TYPE_DUEL_CHALLENGE)
     for key in (invite_key, duel_key):
@@ -836,3 +893,194 @@ async def test_an_archived_request_stays_archived_after_it_is_answered(
     archived_keys = [item["item_key"] for item in archived["items"]]
     assert invite_key in archived_keys
     assert duel_key in archived_keys
+
+
+# ---------------------------------------------------------------------------
+# 7. An unanswered obligation lives in the queue, never in the stream (ADR-0070)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_unanswered_requests_are_absent_from_the_live_stream(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """The four request types leave ``all`` and ``your_stuff`` for the queue.
+
+    They are still registry members of both tabs — ``FEED_SOURCES`` is untouched
+    — so this can only be the separate context axis ADR-0070 asks for.
+    """
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = {item["type"] for item in feed["items"]}
+        assert types.isdisjoint(REQUEST_ITEM_TYPES), tab
+
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    assert {item["type"] for item in queue["items"]} == REQUEST_ITEM_TYPES
+
+
+@pytest.mark.asyncio
+async def test_the_stream_badges_drop_with_the_stream(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """ADR-0070 consequence 2: ``all`` and ``your_stuff`` drop, ``requests``
+    does not. The badges come off the identical windowed subquery (ADR-0036),
+    so a badge still counting the requests would be the drift that rule exists
+    to prevent."""
+    feed = await _feed(client, auth_headers)
+    assert feed["counts"]["all"] == SEEDED_ITEM_COUNTS[ALL_FILTER]
+    assert feed["counts"]["your_stuff"] == SEEDED_ITEM_COUNTS[YOUR_STUFF_FILTER]
+    # The queue's own badge is untouched — it is what the bell reads.
+    assert feed["counts"]["requests"] == SEEDED_ITEM_COUNTS[REQUESTS_FILTER]
+
+
+@pytest.mark.asyncio
+async def test_bulk_archive_on_the_stream_cannot_sweep_up_an_obligation(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """ADR-0065 at its sharpest: you cannot answer forty obligations in one
+    click, because "Archive all" on ``all`` no longer reaches them."""
+    response = await client.post(
+        "/activity-feed/dismiss-all", json={"filter": ALL_FILTER}, headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["count"] == SEEDED_ITEM_COUNTS[ALL_FILTER]
+
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    assert {item["type"] for item in queue["items"]} == REQUEST_ITEM_TYPES
+    assert queue["counts"]["requests"] == SEEDED_ITEM_COUNTS[REQUESTS_FILTER]
+
+
+@pytest.mark.asyncio
+async def test_archived_still_shows_the_requests_the_stream_hides(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """The trap the ADR calls out: Archived reads ``filter=all``, so dropping the
+    four types out of the ALL source-set would have taken them out of the
+    archive too."""
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    archived_keys = []
+    for item_type in sorted(REQUEST_ITEM_TYPES - {FEED_ITEM_TYPE_AWAITING_SUBMISSION}):
+        key = _key_of(queue, item_type)
+        response = await client.post(
+            "/activity-feed/dismiss", json={"item_key": key}, headers=auth_headers
+        )
+        assert response.status_code == 200, response.text
+        archived_keys.append(key)
+
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    listed = [item["item_key"] for item in archived["items"]]
+    for key in archived_keys:
+        assert key in listed
+
+
+@pytest.mark.asyncio
+async def test_a_letter_for_the_faction_you_already_joined_is_not_a_request(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    character: Character,
+    auth_headers: dict,
+    era: Era,
+):
+    """ADR-0070's awkward case. ``invitation_letter`` has no status column, so
+    "answered" is read off the character: they are already in ``ua``, so a ``ua``
+    letter asks them for nothing and must not sit in the queue."""
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id, faction_slug=character.faction_slug, era_id=era.id
+        )
+    )
+    await db_session.commit()
+
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    letters = [
+        item
+        for item in queue["items"]
+        if item["type"] == FEED_ITEM_TYPE_INVITATION_LETTER
+    ]
+    assert [item["payload"]["faction_slug"] for item in letters] == ["ephemerists"]
+    assert queue["counts"]["requests"] == SEEDED_ITEM_COUNTS[REQUESTS_FILTER]
+
+
+# ---------------------------------------------------------------------------
+# 8. Per-type facet counts (#1420 part 1)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_per_type_counts_match_the_items_on_every_rail(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """ADR-0036 for the facet: the published number is the list's own length."""
+    for tab in COUNT_KEYS:
+        feed = await _feed(client, auth_headers, tab)
+        assert _published_type_counts(feed) == _observed_type_counts(feed), tab
+        # ...and the tab badge is still the sum of them.
+        assert feed["counts"][COUNT_KEYS[tab]] == sum(
+            feed["counts"]["by_type"].values()
+        ), tab
+
+
+@pytest.mark.asyncio
+async def test_selecting_one_type_does_not_shrink_the_other_types_counts(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """The classic facet trap, and the whole reason for epic #1419 decision 19.
+
+    ``full_feed`` puts one item of eleven types in the live stream. If the type
+    axis were applied to its own counts, ticking ``nudge`` would zero the other
+    ten and the player would have no way back.
+    """
+    unfiltered = await _feed(client, auth_headers)
+    assert len(unfiltered["counts"]["by_type"]) == SEEDED_ITEM_COUNTS[ALL_FILTER]
+
+    response = await client.get(
+        "/activity-feed",
+        params={"filter": ALL_FILTER, "limit": 100, "types": [FEED_ITEM_TYPE_NUDGE]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    narrowed = response.json()
+
+    assert [item["type"] for item in narrowed["items"]] == [FEED_ITEM_TYPE_NUDGE]
+    assert narrowed["counts"]["by_type"] == unfiltered["counts"]["by_type"]
+    assert narrowed["counts"]["all"] == unfiltered["counts"]["all"]
+
+
+@pytest.mark.asyncio
+async def test_per_type_counts_respect_the_rail_they_sit_under(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """The other half of decision 19: the type facet *does* respect the rail."""
+    friends = await _feed(client, auth_headers, FRIENDS_FILTER)
+    assert set(friends["counts"]["by_type"]) == {
+        FEED_ITEM_TYPE_FRIEND_COMPLETION,
+        FEED_ITEM_TYPE_FRIEND_SIGNUP,
+        "friend_defection",
+    }
+    assert FEED_ITEM_TYPE_FOE_TAUNT not in friends["counts"]["by_type"]
+
+
+@pytest.mark.asyncio
+async def test_archived_facet_counts_describe_the_archive(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """A second 15-source fan-out, on this tab only (#1419 decision 21).
+
+    The six tab badges keep describing the live feed — that is a sidebar number
+    and it must stay truthful while the archive is on screen. But the facet
+    counts sit directly above the archived list, and a count that disagrees with
+    the list under it is exactly the drift ADR-0036 exists to prevent.
+    """
+    live = await _feed(client, auth_headers)
+    await client.post(
+        "/activity-feed/dismiss-all", json={"filter": FOES_FILTER}, headers=auth_headers
+    )
+
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    assert _published_type_counts(archived) == _observed_type_counts(archived)
+    assert _published_type_counts(archived) == {FEED_ITEM_TYPE_FOE_TAUNT: 1,
+                                                "foe_completion": 1}
+    # The facet is emphatically NOT the live one it would have been.
+    assert archived["counts"]["by_type"] != live["counts"]["by_type"]
+    # ...while the six badges still are.
+    assert archived["counts"]["foes"] == 0
+    assert archived["counts"]["all"] == live["counts"]["all"] - 2

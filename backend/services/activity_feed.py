@@ -14,7 +14,7 @@ counts are ``COUNT`` over the *same* windowed query, so a source's ``WHERE`` is
 authored exactly once and the counts can never drift from the fan-out.
 """
 import asyncio
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
@@ -64,6 +64,10 @@ class FeedCountsDC:
     your_stuff: int = 0
     global_count: int = 0
     requests: int = 0
+    # The per-type facet: every type the *current* view could show, with the
+    # number it would show. Already computed for the six badges above — this
+    # publishes the numbers instead of throwing them away.
+    by_type: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -148,14 +152,20 @@ COMMENT_EXCERPT_LENGTH = 140
 class FeedContext:
     """Everything a source's query needs, resolved once in the pre-fetch phase.
 
-    ``pending_invites_only`` is the sole per-request axis, and it is a
-    **live-feed** axis, not a per-tab one (#1301): every live tab windows collab
-    invites / duel challenges to pending, because an answered request is not
-    news — it is a thing that already happened, and leaving it on a live tab
-    draws a card about a decision nobody has to make. Only the Archived view
-    sets it False, so an item a player put away while it was pending is still
-    listed after it resolves; nothing else lists it, so hiding it there would
-    strand it.
+    ``unanswered_requests_only`` is the sole per-request axis, and it is a
+    **live-feed** axis, not a per-tab one (#1301): every live tab windows the
+    request types to the ones still awaiting an answer, because an answered
+    request is not news — it is a thing that already happened, and leaving it on
+    a live tab draws a card about a decision nobody has to make. Only the
+    Archived view sets it False, so an item a player put away while it was
+    pending is still listed after it resolves; nothing else lists it, so hiding
+    it there would strand it.
+
+    "Answered" is per type, because the four have four different notions of
+    doneness (ADR-0070): a ``collab_invite`` / ``duel_challenge`` leaves
+    ``pending``; an ``awaiting_submission`` is *state* and self-clears when the
+    viewer files; an ``invitation_letter`` has no status column at all, so it is
+    answered once the viewer is standing in that faction.
     """
     character_id: int
     friend_ids: tuple[int, ...]
@@ -163,7 +173,7 @@ class FeedContext:
     my_task_ids: tuple[int, ...]
     era_id: int
     before: Optional[datetime]
-    pending_invites_only: bool
+    unanswered_requests_only: bool
 
 
 @dataclass(frozen=True)
@@ -479,7 +489,7 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
             Praxis.type == PraxisType.collab,
         )
     )
-    if ctx.pending_invites_only:
+    if ctx.unanswered_requests_only:
         query = query.where(PraxisInvite.status == PraxisInviteStatus.pending)
     if ctx.before is not None:
         query = query.where(PraxisInvite.created_at < ctx.before)
@@ -529,7 +539,7 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
         .join(Character, Praxis.created_by_id == Character.id)
         .where(Duel.opponent_character_id == ctx.character_id)
     )
-    if ctx.pending_invites_only:
+    if ctx.unanswered_requests_only:
         query = query.where(Duel.status == DuelStatus.pending)
     if ctx.before is not None:
         query = query.where(Duel.created_at < ctx.before)
@@ -604,11 +614,26 @@ def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
 
 
 def _invitation_letters_query(ctx: FeedContext) -> Select:
-    """Faction invitation letters delivered to the current character (this era)."""
+    """Faction invitation letters delivered to the current character (this era).
+
+    A letter is the one request type with no status column, because until #1419
+    it was never a thing you answered. ADR-0070 reads "answered" off the
+    character instead: standing in that faction *is* the acceptance, so on the
+    live feed a letter for the faction you already hold asks you for nothing.
+    The viewer's slug rides as a scalar subquery rather than a sixth pre-fetch
+    round trip — one column, one row, resolved by the same statement.
+    """
     query: Select = select(InvitationLetter).where(
         InvitationLetter.character_id == ctx.character_id,
         InvitationLetter.era_id == ctx.era_id,
     )
+    if ctx.unanswered_requests_only:
+        query = query.where(
+            InvitationLetter.faction_slug
+            != select(Character.faction_slug)
+            .where(Character.id == ctx.character_id)
+            .scalar_subquery()
+        )
     if ctx.before is not None:
         query = query.where(InvitationLetter.delivered_at < ctx.before)
     return query.order_by(InvitationLetter.delivered_at.desc()).limit(SUB_QUERY_LIMIT)
@@ -1038,8 +1063,11 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=Nudge.id,
     ),
     FeedSource(
+        # A faction letter is answered, not read (#1419 decision 9), so it joins
+        # the other three request types in FILTER_REQUESTS — one edit here, and
+        # FILTER_QUERIES / REQUEST_ITEM_TYPES both follow.
         item_type=FEED_ITEM_TYPE_INVITATION_LETTER,
-        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF, FILTER_REQUESTS}),
         needs=frozenset(),
         query=_invitation_letters_query,
         to_item=_invitation_letter_item,
@@ -1072,8 +1100,8 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
 )
 
 # Which sub-queries each filter includes — derived from the registry so it can
-# never drift from FEED_SOURCES. FILTER_QUERIES.get(filter, all) keeps the
-# "unknown filter falls back to all" contract.
+# never drift from FEED_SOURCES. This is *registry* membership; what a given
+# view actually shows is ``_visible_types``, which layers ADR-0070 on top.
 FILTER_QUERIES: dict[str, set[str]] = {
     tab: {source.item_type for source in FEED_SOURCES if tab in source.filters}
     for tab in (
@@ -1090,6 +1118,47 @@ FILTER_QUERIES: dict[str, set[str]] = {
 # Derived from FEED_SOURCES so neither can drift from the registry.
 FEED_ITEM_TYPES: frozenset[str] = frozenset(source.item_type for source in FEED_SOURCES)
 ARCHIVABLE_ITEM_TYPES: frozenset[str] = FEED_ITEM_TYPES - NON_ARCHIVABLE_ITEM_TYPES
+
+# The four *obligations* among the fifteen: someone is waiting on an answer.
+# Derived from the registry, so joining FILTER_REQUESTS is the only edit needed
+# to make a type an obligation.
+REQUEST_ITEM_TYPES: frozenset[str] = frozenset(FILTER_QUERIES[FILTER_REQUESTS])
+
+# The two tabs that are a *stream* — a river of news you read and archive, as
+# opposed to a pile you clear.
+STREAM_FILTERS: frozenset[str] = frozenset({FILTER_ALL, FILTER_YOUR_STUFF})
+
+
+def _visible_types(active_filter: str, archived: bool) -> set[str]:
+    """Which feed types this view may return — the one authority for both.
+
+    ADR-0070: **an unanswered obligation lives in the queue, never in the
+    stream.** The four request types are dropped from the live ``all`` and
+    ``your_stuff`` views here, as an explicitly-named axis *on top of* the
+    registry — not by editing ``FEED_SOURCES``. That distinction is the whole
+    subtlety: the Archived view reads ``filter=all`` with ``archived=true``, so
+    a registry edit would take the four types out of the archive as well, where
+    ADR-0065 says a request a player put away must still be findable.
+
+    Anyone reading ``FEED_SOURCES`` alone will see the four types listed under
+    ALL and conclude they belong there. They belong to the queue. Read ADR-0070
+    before "fixing" this.
+
+    Both the item fan-out and ``_sum_counts_for_tab`` call this, so the badge
+    over a list can never disagree with the list (ADR-0036).
+    """
+    if archived:
+        return set(FILTER_QUERIES[FILTER_ALL])
+    types = set(FILTER_QUERIES[active_filter])
+    if active_filter in STREAM_FILTERS:
+        types -= REQUEST_ITEM_TYPES
+    return types
+
+
+def _normalise_filter(feed_filter: Optional[str]) -> str:
+    """An unknown or absent tab falls back to ``all`` — a stale bookmark is not
+    an error on a read projection."""
+    return feed_filter if feed_filter in FILTER_QUERIES else FILTER_ALL
 
 
 def parse_item_key(item_key: str) -> tuple[str, int]:
@@ -1213,48 +1282,87 @@ async def _run_source_count(
 
 
 def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
-    """Sum the per-source counts of every source belonging to ``tab``."""
+    """Sum the per-source counts of every type the live ``tab`` would show.
+
+    Membership comes from ``_visible_types``, the same function the item fan-out
+    uses, so the ADR-0070 exclusion lands on the badge and the list together.
+    """
     return sum(
-        counts_by_type.get(source.item_type, 0)
-        for source in FEED_SOURCES
-        if tab in source.filters
+        counts_by_type.get(item_type, 0)
+        for item_type in _visible_types(tab, archived=False)
     )
 
 
-async def _compute_counts(
-    count_ctx: FeedContext,
+async def _count_by_type(
+    ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
-) -> FeedCountsDC:
-    """Badge counts, each derived from its source's own query (ADR-0036).
-
-    The six badges always count the **live** feed, never the archive: they are
-    the sidebar's "what's waiting for you" numbers, and they stay truthful while
-    the player is reading the Archived tab. Hence the forced
-    ``archived_only=False`` — the caller's view flips the item fan-out, not the
-    badges — and hence the single context: the live feed windows requests to
-    pending on *every* tab (#1301), so one fan-out now answers all six badges.
-    Counting all statuses here while the tabs showed only pending is precisely
-    the drift ADR-0036 exists to prevent: a badge reading 5 over a list of 3.
-    """
-    live_view = replace(archive_view, archived_only=False)
-
+) -> dict[str, int]:
+    """One COUNT per registry source, all fifteen concurrently (ADR-0036)."""
     results = await asyncio.gather(*(
-        _run_source_count(source, count_ctx, live_view, session_factory)
+        _run_source_count(source, ctx, archive_view, session_factory)
         for source in FEED_SOURCES
     ))
-    counts_by_type = {
+    return {
         source.item_type: count
         for source, count in zip(FEED_SOURCES, results)
     }
 
+
+async def _compute_counts(
+    fetch_ctx: FeedContext,
+    archive_view: FeedArchiveView,
+    session_factory: Callable,
+    active_filter: str,
+) -> FeedCountsDC:
+    """Badge counts, each derived from its source's own query (ADR-0036).
+
+    The six tab badges always count the **live** feed, never the archive: they
+    are the sidebar's "what's waiting for you" numbers, and they stay truthful
+    while the player is reading the Archived tab. Hence the forced
+    ``archived_only=False`` — the caller's view flips the item fan-out, not the
+    badges — and hence the single context: the live feed windows requests to
+    unanswered on *every* tab (#1301), so one fan-out answers all six.
+    Counting all statuses here while the tabs showed only pending is precisely
+    the drift ADR-0036 exists to prevent: a badge reading 5 over a list of 3.
+
+    ``by_type`` is the type **facet**, and it obeys a different rule, because it
+    is drawn directly above the list rather than off in the sidebar. It counts
+    whatever the caller is actually looking at — which on the Archived tab is
+    the archive, and so costs a **second fifteen-source fan-out on that tab
+    only** (#1419 decision 21). The two fan-outs deliberately disagree; do not
+    collapse them and do not "optimise" this away. A facet number that
+    contradicted the list under it is the same drift, one surface closer.
+
+    Both are computed **without** the caller's type selection: a facet respects
+    every axis except its own, which is what stops the trap where ticking one
+    type zeroes the rest and leaves no way back (#1419 decision 19).
+    """
+    live_ctx = replace(fetch_ctx, unanswered_requests_only=True)
+    live_view = replace(archive_view, archived_only=False)
+
+    if archive_view.archived_only:
+        live_counts, facet_counts = await asyncio.gather(
+            _count_by_type(live_ctx, live_view, session_factory),
+            _count_by_type(fetch_ctx, archive_view, session_factory),
+        )
+    else:
+        live_counts = await _count_by_type(live_ctx, live_view, session_factory)
+        facet_counts = live_counts
+
     return FeedCountsDC(
-        all=_sum_counts_for_tab(FILTER_ALL, counts_by_type),
-        friends=_sum_counts_for_tab(FILTER_FRIENDS, counts_by_type),
-        foes=_sum_counts_for_tab(FILTER_FOES, counts_by_type),
-        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, counts_by_type),
-        global_count=_sum_counts_for_tab(FILTER_GLOBAL, counts_by_type),
-        requests=_sum_counts_for_tab(FILTER_REQUESTS, counts_by_type),
+        all=_sum_counts_for_tab(FILTER_ALL, live_counts),
+        friends=_sum_counts_for_tab(FILTER_FRIENDS, live_counts),
+        foes=_sum_counts_for_tab(FILTER_FOES, live_counts),
+        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, live_counts),
+        global_count=_sum_counts_for_tab(FILTER_GLOBAL, live_counts),
+        requests=_sum_counts_for_tab(FILTER_REQUESTS, live_counts),
+        by_type={
+            item_type: facet_counts.get(item_type, 0)
+            for item_type in sorted(
+                _visible_types(active_filter, archive_view.archived_only)
+            )
+        },
     )
 
 
@@ -1271,7 +1379,7 @@ async def _build_fetch_context(
     why the rail's two panels share one call to this (#1344) rather than paying
     it twice for two slices of the same fan-out.
 
-    ``pending_invites_only`` follows the live/archived axis and nothing else.
+    ``unanswered_requests_only`` follows the live/archived axis and nothing else.
     The pending window on invites and duel challenges is a live-feed rule, on
     every tab and not just ``requests`` (#1301): an answered request is no
     longer news anywhere. Only the Archived view sets it False — an archived
@@ -1292,7 +1400,7 @@ async def _build_fetch_context(
             my_task_ids=my_task_ids,
             era_id=era_row.id,
             before=before_cursor,
-            pending_invites_only=not archived,
+            unanswered_requests_only=not archived,
         ),
         archive_view,
     )
@@ -1361,6 +1469,7 @@ async def get_activity_feed(
     before_cursor: Optional[datetime] = None,
     limit: int = 20,
     archived: bool = False,
+    item_types: Optional[list[str]] = None,
 ) -> ActivityFeedResponseDC:
     """Fetch a unified activity feed for the given character.
 
@@ -1381,20 +1490,25 @@ async def get_activity_feed(
             The archive deliberately ignores the friend/foe/global type slicing
             and returns everything archived: a player looking for something they
             put away should not have to remember which tab they put it away from.
+        item_types: Narrow the fan-out to these feed types, intersected with the
+            filter's own set — ``filter=friends`` + ``friend_signup`` is friend
+            signups only. Values the registry does not know are **ignored**, and
+            an empty selection means "no type constraint": this is a read
+            projection, so a stale bookmark must degrade, never 4xx, and an
+            empty multi-select can never mean "match nothing". Counts are
+            computed without it (facet semantics — see ``_compute_counts``).
     """
-    active_filter = feed_filter or FILTER_ALL
-    allowed_types = (
-        FILTER_QUERIES[FILTER_ALL]
-        if archived
-        else FILTER_QUERIES.get(active_filter, FILTER_QUERIES[FILTER_ALL])
-    )
+    active_filter = _normalise_filter(feed_filter)
+    allowed_types = _visible_types(active_filter, archived)
+    requested_types = {
+        item_type for item_type in (item_types or []) if item_type in FEED_ITEM_TYPES
+    }
+    if requested_types:
+        allowed_types &= requested_types
+
     fetch_ctx, archive_view = await _build_fetch_context(
         character_id, session, before_cursor=before_cursor, archived=archived
     )
-    # Counts always report every tab, and always describe the LIVE feed — which
-    # is pending-only whatever the caller is looking at, so this context is the
-    # fetch one with the archive axis pinned rather than a third predicate.
-    count_ctx = replace(fetch_ctx, pending_invites_only=True)
 
     allowed_sources = [s for s in FEED_SOURCES if s.item_type in allowed_types]
 
@@ -1405,7 +1519,7 @@ async def get_activity_feed(
     ]
     gather_results = await asyncio.gather(
         *fetch_coros,
-        _compute_counts(count_ctx, archive_view, session_factory),
+        _compute_counts(fetch_ctx, archive_view, session_factory, active_filter),
     )
     counts: FeedCountsDC = gather_results[-1]
 
