@@ -42,6 +42,61 @@ import { deriveEditPraxisPhase } from '../editPraxis/editPraxisPhase'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'
+import { factionCssVar } from '../../utils/factions'
+
+// ── The detail WALL's alarm inks (#1451) ─────────────────────────────────────
+//
+// Praxis detail is one shared page every faction dresses (ADR-0061), so the
+// slots below paint onto NINE different grounds. `--color-danger` and
+// `--color-warning` were chosen against the app's near-white page, and measured
+// on the walls those skins actually paint they miss AA on every one of them in
+// light — 3.11:1 on the Ephemerists papyrus up to 4.41:1 on the na sheet, with
+// Everymen also short at 4.47:1 in dark. That is #1302's shape, third instance:
+// a shared component inside a faction frame takes the faction's own card ink
+// family rather than a global functional one, resolved off the SAME slug the
+// archetype was dispatched on (`task_faction_slug`, see `pages/PraxisDetail`).
+//
+// THIS IS NOT A DRESS SEAM, which is why it does not reopen ADR-0061. No skin
+// supplies anything and no prop exists to supply it through; the ink is a
+// function of the ground, the ground is a function of the slug, and the slug is
+// already in `state`. The wash and the rule stay the neutral `--color-danger-*`
+// rungs (#1169) on every skin — danger is the platform speaking, and only the
+// paper under it is the faction's.
+//
+// SEVEN SKINS MINT NOTHING: `--faction-{key}-card-alarm` (#1449) and
+// `-card-notice` (#694) already exist for all eight keys in both cascades and
+// clear every wall they are asked for here (worst 4.56:1, the notice ink under
+// the danger veil on the Ephemerists page). S.N.I.D.E. is the exception for the
+// third time (#1302, #1231) and for the same §6 reason: its CARD is
+// photocopier-black in both themes so both card inks are pinned bright, while
+// its wall FLIPS. See `--faction-snide-wall-alarm` in index.css.
+//
+// WHAT IS DELIBERATELY NOT ROUTED, and the measurement that decides it. Ten of
+// the fifteen alarm sites on this page are inside `PraxisAdminBar` and
+// `PraxisFlagBlock`, and those do NOT sit on a faction wall — they sit on
+// `.sidebar-card`, which fills with the translucent `--color-bg-surface`
+// (0.72 white in light, 0.04 in dark). Composited, that is a near-white lift in
+// light on EVERY skin, so the global inks are the right ones there and the
+// faction inks are the wrong ones: `--faction-singularity-card-alarm` on that
+// composite reads 1.00:1. What is actually broken is the GROUND — the same
+// 0.72 white over Singularity's near-black terminal leaves `--color-danger` at
+// 2.54:1, and at 4.37 / 4.45 / 4.45 on the Ephemerists, UA and deep-S.N.I.D.E.
+// pages. That is #1413 ("`.sidebar-card` grounds on a translucent surface"),
+// whose blast radius is every neutral-chrome card on this page, and it is a
+// stock question rather than an ink one. Repointing these ten first would have
+// to be undone by it.
+const WALL_INK: Record<string, { alarm: string; notice: string }> = {
+  snide: {
+    alarm: 'var(--faction-snide-wall-alarm)',
+    notice: 'var(--faction-snide-wall-notice)',
+  },
+}
+
+/** The destructive / cautionary ink measured on this praxis's detail wall. */
+function wallInk(praxis: PraxisOut, role: 'alarm' | 'notice'): string {
+  const slug = praxis.task_faction_slug ?? ''
+  return WALL_INK[slug]?.[role] ?? factionCssVar(slug, `card-${role}`)
+}
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
 //
@@ -295,11 +350,16 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
               from the label tier (nearest token to its old 16px), never the
               content floor — see WORLD_ZERO_STYLE.md §4, ornament role. */}
           <span style={{ fontSize: 'var(--text-xl)' }}>&#10007;</span>
+          {/* Both inks are measured on THIS skin's wall under the veil above
+              (#1451). The title's 24px/700 already cleared the 3:1 large-text
+              floor on all nine (3.11:1 worst) and moves anyway: the alarm and
+              notice roles are the banner's own `-veil`/`-edge` rungs rejoining
+              their washes, which is #1449's rule for which mark takes which. */}
           <div>
-            <span className="font-body content-title" style={{ color: 'var(--color-danger)', fontWeight: 700, display: 'block' }}>
+            <span className="font-body content-title" style={{ color: wallInk(praxis, 'alarm'), fontWeight: 700, display: 'block' }}>
               {t('detail.banners.failedTitle')}
             </span>
-            <span className="font-body content-text" style={{ color: 'var(--color-warning)' }}>
+            <span className="font-body content-text" style={{ color: wallInk(praxis, 'notice') }}>
               {praxis.admin_note}
             </span>
           </div>
@@ -363,7 +423,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
         )}
         <PraxisSubmitControls state={state} />
       </div>
-      {withdrawError && <p className="font-body content-text mb-3" style={{ color: 'var(--color-danger)' }}>{withdrawError}</p>}
+      {withdrawError && <p className="font-body content-text mb-3" style={{ color: wallInk(praxis, 'alarm') }}>{withdrawError}</p>}
     </div>
   )
 }
@@ -482,7 +542,7 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
        dialog mounts over it as a fixed overlay. Skinned by the TASK's
        faction, matching the composer's own dispatch. */
     <>
-      <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }}>
+      <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: wallInk(praxis, 'alarm') }}>
         {t('duelForfeit.action')}
       </button>
       {showWithdrawConfirm && (
@@ -508,7 +568,10 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
       <button
         onClick={handleWithdraw}
         disabled={withdrawing}
-        style={{ background: 'var(--color-danger-veil)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
+        // The LABEL takes the wall's alarm ink (#1451); the fill and the rule
+        // stay the neutral rungs. `--color-danger` as a 1.5px rule owes 3:1
+        // (WCAG 1.4.11) and clears it on all nine walls — 3.31:1 worst.
+        style={{ background: 'var(--color-danger-veil)', border: '1.5px solid var(--color-danger)', color: wallInk(praxis, 'alarm'), fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
       >
         {withdrawing ? t('detail.owner.submitting') : t(unsubmitCopy.confirm)}
       </button>

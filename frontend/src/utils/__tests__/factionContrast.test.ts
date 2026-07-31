@@ -1112,6 +1112,74 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text,
   })),
 
+  // ── THE PRAXIS DETAIL'S OWN ALARM MARKS, on all nine walls (#1451) ───────
+  //
+  // `praxisDetail/shared.tsx` owns five slots that every skin mounts on its own
+  // page ground: the failed banner's title and admin note, the withdraw error,
+  // the forfeit trigger and the pull-back confirm. All five painted the neutral
+  // `--color-danger` / `--color-warning`, and ADR-0061 makes this ONE shared
+  // page that nine factions dress — so those are global functional inks landing
+  // on nine different stocks. #1302's third instance, on a fourth surface.
+  //
+  // THE WALL IS NOT `-card-bg`, and for six of the nine it is not even the token
+  // the composer rows above measure (#1302's warning, restated). Four skins put
+  // the page on a class in this file — `.eph-plate-sheet`, `.em-dispatch`,
+  // `.snd-detail-sheet`, `.wow-detail-field` — and the surface column is read
+  // off those rules rather than generated from the key. S.N.I.D.E. contributes
+  // TWO grounds because its sheet is a 180deg ramp from `-wall` to `-wall-deep`,
+  // and the deep end is what gates the light hue. `na` covers Albescent, which
+  // renders `DefaultPraxisDetail` plus an ornament layer (#1140).
+  //
+  // WHAT FAILED, measured before the fix: 25 of these 54 assertions in light and
+  // one in dark. Bare on the wall, `--color-danger` ran 3.32 (ephemerists) to
+  // 4.75 (na); under its own veil — the banner's and the confirm button's fill —
+  // 3.11 to 4.41, i.e. every one of the nine. `--color-warning` under that same
+  // veil ran 3.23 to 4.62. Dark cleared everywhere except Everymen at 4.47.
+  //
+  // SEVEN SKINS MINT NOTHING. `-card-alarm` (#1449) and `-card-notice` (#694)
+  // exist for all eight keys in both cascades and clear every wall asked of them
+  // here — worst 4.56:1, the notice ink under the danger veil on the Ephemerists
+  // page. S.N.I.D.E. is the one mint for the third time (#1302, #1231) and for
+  // the same §6 reason its card gives every time: photocopier-black in BOTH
+  // themes, so both card inks are pinned bright and read 1.61 / 1.41 on the
+  // light wall. Its own walked pink is not enough either — `-note-pink-ink` was
+  // measured on the note stock and reads 4.14:1 veiled at the ramp's deep end —
+  // so `--faction-snide-wall-alarm` / `-wall-notice` are declared for this
+  // ground, and the deep-end row below is the one that pins them.
+  ...(
+    [
+      ["na", "--faction-default-card-bg", "--faction-default-card"],
+      ["coven", "--faction-coven-ward-page", "--faction-coven-card"],
+      ["ephemerists", "--faction-ephemerists-plate-page", "--faction-ephemerists-card"],
+      ["everymen", "--faction-everymen-sheet-panel", "--faction-everymen-card"],
+      ["singularity", "--faction-singularity-term-bg", "--faction-singularity-card"],
+      // Both ends of `.snd-detail-sheet`'s ramp, against the wall-scoped mint.
+      ["snide", "--faction-snide-wall", "--faction-snide-wall"],
+      ["snide deep", "--faction-snide-wall-deep", "--faction-snide-wall"],
+      ["ua", "--faction-ua-page", "--faction-ua-card"],
+      ["wow", "--faction-wow-detail-field", "--faction-wow-card"],
+    ] as const
+  ).flatMap(([key, surface, family]) => [
+    // The withdraw error and the forfeit trigger — bare on the wall.
+    { what: `${key} praxis detail wall, alarm ink`, surface, text: `${family}-alarm` },
+    // The failed banner's title and the pull-back confirm's label, both of
+    // which fill with `--color-danger-veil` before the ink lands. The rule and
+    // the wash stay #1169's neutral rungs on every skin (ADR-0061).
+    {
+      what: `${key} praxis detail wall, alarm ink under the danger veil`,
+      surface,
+      veil: "--color-danger-veil" as Veil,
+      text: `${family}-alarm`,
+    },
+    // The moderator's fail note, inside that same banner.
+    {
+      what: `${key} praxis detail wall, notice ink under the danger veil`,
+      surface,
+      veil: "--color-danger-veil" as Veil,
+      text: `${family}-notice`,
+    },
+  ]),
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
@@ -1329,5 +1397,21 @@ describe("the card sheet's alarm and notice inks stay apart (#1449)", () => {
         ).not.toBe(notice.raw);
       });
     }
+  }
+
+  // The S.N.I.D.E. WALL pair (#1451) is the same two roles on a ground the card
+  // family cannot reach, so it owes the same non-ratio assertion: a `var()`
+  // alias between them would leave every ratio above green.
+  for (const theme of BOTH_THEMES) {
+    it(`snide wall alarm is not wall notice (${theme})`, () => {
+      const alarm = resolveColor("--faction-snide-wall-alarm", theme);
+      const notice = resolveColor("--faction-snide-wall-notice", theme);
+      expect(alarm.color, `--faction-snide-wall-alarm (${theme}) resolved to "${alarm.raw}"`).not.toBeNull();
+      expect(notice.color, `--faction-snide-wall-notice (${theme}) resolved to "${notice.raw}"`).not.toBeNull();
+      expect(
+        alarm.raw,
+        `snide (${theme}) prints the destructive and the cautionary mark on the wall in one colour.`,
+      ).not.toBe(notice.raw);
+    });
   }
 });
