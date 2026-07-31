@@ -13,7 +13,11 @@
  * what keeps its three effects inside the #1390 ratchet
  * (`hooks/__tests__/authDepNarrowing.test.ts`): they key on
  * `user?.character?.id`, a value a `/auth/me` refetch cannot disturb, never on
- * the auth object a star cast replaces.
+ * the auth object itself — which that endpoint replaces on every answer,
+ * changed or not.
+ *
+ * A star cast was the loudest source of those refetches until #1382 returned
+ * the tally from the vote POST and retired it. The rule outlives the example.
  */
 import { useCallback, useEffect, useState } from "react";
 import {
