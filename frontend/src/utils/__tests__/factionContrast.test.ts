@@ -1112,6 +1112,39 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text,
   })),
 
+  // ── THE PRAXIS DETAIL'S OWN ALARM MARKS, on all nine walls (#1451) ───────
+  //
+  // RED FIRST: these rows name `--color-danger` / `--color-warning`, the inks
+  // `praxisDetail/shared.tsx` ships today, so the manifest states the failure
+  // before the fix moves it.
+  ...(
+    [
+      ["na", "--faction-default-card-bg"],
+      ["coven", "--faction-coven-ward-page"],
+      ["ephemerists", "--faction-ephemerists-plate-page"],
+      ["everymen", "--faction-everymen-sheet-panel"],
+      ["singularity", "--faction-singularity-term-bg"],
+      ["snide", "--faction-snide-wall"],
+      ["snide deep", "--faction-snide-wall-deep"],
+      ["ua", "--faction-ua-page"],
+      ["wow", "--faction-wow-detail-field"],
+    ] as const
+  ).flatMap(([key, surface]) => [
+    { what: `${key} praxis detail wall, alarm ink`, surface, text: "--color-danger" },
+    {
+      what: `${key} praxis detail wall, alarm ink under the danger veil`,
+      surface,
+      veil: "--color-danger-veil" as Veil,
+      text: "--color-danger",
+    },
+    {
+      what: `${key} praxis detail wall, notice ink under the danger veil`,
+      surface,
+      veil: "--color-danger-veil" as Veil,
+      text: "--color-warning",
+    },
+  ]),
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
