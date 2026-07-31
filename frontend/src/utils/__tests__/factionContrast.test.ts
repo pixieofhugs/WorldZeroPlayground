@@ -1046,6 +1046,17 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // print at FULL ink and separate themselves by face rather than by opacity.
   { what: "everymen masthead band, ink", surface: "--everymen-red", text: "--everymen-masthead-text" },
 
+  // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
+  // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
+  // spine hue — at 18px/700, which owes 4.5:1 (700 weight only reaches the
+  // large-text exemption at 18.66px). #1252 repointed UA, WOW and Singularity to
+  // an accent that already cleared their own ground; these four had no such
+  // accent under the name the seam reaches for.
+  { what: "snide slip, actor name", surface: "--faction-snide-slip-paper", text: "--faction-snide" },
+  { what: "coven ward card, actor name", surface: "--faction-coven-ward-card", text: "--faction-coven" },
+  { what: "ephemerists plate, actor name", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists" },
+  { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--faction-everymen" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It
