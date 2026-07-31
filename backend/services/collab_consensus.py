@@ -24,7 +24,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.praxis import Praxis, PraxisInviteStatus, PraxisStatus, PraxisType
-from services.character_stats import recalculate_character_stats
+from services.character_stats import (
+    recalculate_character_stats,
+    recalculate_members_stats,
+)
 from services.era import get_era_row_for_praxis
 
 
@@ -58,10 +61,7 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
     """
     _apply_seal(praxis)
     await session.flush()
-    era_row = await get_era_row_for_praxis(praxis, session)
-    for member in praxis.members:
-        await recalculate_character_stats(member.character_id, session, era, era_row=era_row)
-    await session.flush()
+    await recalculate_members_stats(praxis, session, era)
 
 
 async def settle_if_window_lapsed(
@@ -110,10 +110,7 @@ async def on_member_edit(
     await session.flush()
     if was_live:
         # Leaving Live changes scoring — recompute every member's stats.
-        era_row = await get_era_row_for_praxis(praxis, session)
-        for member in praxis.members:
-            await recalculate_character_stats(member.character_id, session, era, era_row=era_row)
-        await session.flush()
+        await recalculate_members_stats(praxis, session, era)
 
 
 async def on_submit(
