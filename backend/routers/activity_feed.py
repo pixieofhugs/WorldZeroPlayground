@@ -30,7 +30,8 @@ router = APIRouter()
 @router.get("", response_model=ActivityFeedResponse)
 async def activity_feed(
     filter: Optional[str] = Query(None, alias="filter"),
-    before: Optional[str] = Query(None),
+    types: Optional[list[str]] = Query(None),
+    before: Optional[datetime] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     archived: bool = Query(False),
     character: Character = Depends(get_current_character),
@@ -42,20 +43,27 @@ async def activity_feed(
     ``archived=true`` returns the archive instead — same cursor, same page size,
     but it ignores the friend/foe/global type slicing and returns everything the
     character has put away.
-    """
-    # Unknown filters fall back to "all" in the service (FILTER_QUERIES.get default).
-    before_cursor: Optional[datetime] = None
-    if before:
-        before_cursor = datetime.fromisoformat(before)
 
+    ``types`` is a **repeated bare key** — ``?types=nudge&types=global_task`` —
+    intersected with ``filter``'s own set. Clients must serialise it that way:
+    axios' default ``types[]=nudge`` arrives as a key FastAPI does not read, and
+    the endpoint answers 200 with an unfiltered list, so nothing anywhere fails.
+    ``frontend/src/api/`` sets ``paramsSerializer: { indexes: null }`` for this.
+
+    Both ``filter`` and ``types`` are tolerant of values the registry does not
+    know — this is a read projection and a stale bookmark should degrade, not
+    4xx. ``before`` is not: it is a cursor, and a cursor that does not parse is
+    a malformed request rather than an empty page (FastAPI answers 422).
+    """
     dc_response = await get_activity_feed(
         character_id=character.id,
         session=session,
         session_factory=session_factory,
         feed_filter=filter,
-        before_cursor=before_cursor,
+        before_cursor=before,
         limit=limit,
         archived=archived,
+        item_types=types,
     )
     return ActivityFeedResponse.model_validate(asdict(dc_response))
 

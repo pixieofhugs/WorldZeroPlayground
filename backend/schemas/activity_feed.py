@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field
 
 
 class ActivityFeedItem(BaseModel):
@@ -47,7 +47,17 @@ class ActivityFeedItem(BaseModel):
 
 
 class FeedCounts(BaseModel):
-    """Badge counts for each filter tab."""
+    """Badge counts for each filter tab, plus the per-type facet.
+
+    The six scalars are **sidebar** numbers: they always describe the live feed,
+    on every tab, including while the player is reading the Archived one.
+
+    ``by_type`` is a **facet** and answers a different question: how many of
+    each type are in the list currently on screen. It carries every type the
+    current view could show — including zeros, which the client hides (epic
+    #1419 decision 20) — and it is computed under every active axis *except*
+    its own, so ticking one type never zeroes the rest.
+    """
 
     all: int = 0
     friends: int = 0
@@ -55,6 +65,7 @@ class FeedCounts(BaseModel):
     your_stuff: int = 0
     global_count: int = 0
     requests: int = 0
+    by_type: dict[str, int] = Field(default_factory=dict)
 
 
 class ActivityFeedResponse(BaseModel):
