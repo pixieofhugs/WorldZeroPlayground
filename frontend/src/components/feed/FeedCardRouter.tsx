@@ -6,7 +6,7 @@ import FactionFeedFrame from './FactionFeedFrame'
 import FeedItemSlot from './FeedItemSlot'
 import FeedRowContent from './FeedRowContent'
 import { normalizeFeedItem } from './normalizeFeedItem'
-import { feedKicker, STILL_WAITING_TYPES } from './feedItemLabels'
+import { feedKicker, isStillWaiting } from './feedItemLabels'
 import FeedCardEraAnnouncement from './FeedCardEraAnnouncement'
 import FeedCardCollabInvite from './FeedCardCollabInvite'
 import FeedCardDuelChallenge from './FeedCardDuelChallenge'
@@ -72,14 +72,13 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
   // fault that hid every @mention ever sent.
   if (!row && !Companion && !isEraAnnouncement) return null
 
-  // "Still waiting" only in the archive, and only where there is something to
-  // wait for: archiving never answers anything (ADR-0066), so an archived duel
-  // challenge or collab invite is still open and says so. In the live feed the
-  // card's own buttons already make that plain.
+  // "Still waiting" only in the archive, and only where something really is
+  // still waiting: archiving never answers anything (ADR-0065), so an archived
+  // duel challenge or collab invite that is STILL PENDING is open and says so —
+  // one accepted or declined after it was archived is not, and must not (#1342).
+  // In the live feed the card's own buttons already make that plain.
   const tag =
-    archivedView && STILL_WAITING_TYPES.has(item.type)
-      ? i18n.t('feed:archive.stillWaiting')
-      : null
+    archivedView && isStillWaiting(item) ? i18n.t('feed:archive.stillWaiting') : null
 
   const renderBody = (): ReactNode => {
     if (row) return <FeedRowContent row={row} avatarUrl={item.actor_avatar_url} />
