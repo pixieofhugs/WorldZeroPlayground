@@ -1,33 +1,45 @@
 /**
  * usePraxes — the praxis-feed data lift shared by the desktop list and the
- * mobile stream (#499, rewritten for #644).
+ * mobile stream (#499, rewritten for #644, filters moved to the URL in #1366).
  *
  * The old three-call (solo / collab / duel) fetch is collapsed into ONE
- * `listPraxes` call so filter/search/sort can sit on top of a single date-ordered
- * stream (§1). Filter state (type / faction / voted / sort) lives here via
- * `useState` and is keyed into the fetch, so a chip tap rekeys it — mirroring
- * `pages/tasks/useTasks.ts`. The search query is the one axis that rides in the
- * URL instead (`?q=`, via `useSearchQueryParam`, #660), so a pasted or refreshed
- * link restores it. The growing window (§8) lives in the shared
- * `usePagedResource` hook (#645); filter setters call its `resetWindow`. Filter
- * values + setters ride on the returned state so `MobilePraxisFeed` and the
- * desktop page stay presentation-only.
+ * `listPraxes` call so filter/search/sort sit on top of a single date-ordered
+ * stream (§1). The growing window (§8) lives in the shared `usePagedResource`
+ * hook (#645); every filter setter calls its `resetWindow`.
  *
- * The second URL-borne axis is `?task_id=` (#1050): task surfaces have always
- * linked "view all praxis" here with it, and the API has always accepted it, but
- * this hook read no params so the filter was dropped on arrival. It is optional
- * — a bare `/praxis` is still the whole feed — and the pages announce it when
- * set, so a narrowed feed never looks like the whole register. See
- * `./taskFilterParam.ts`.
+ * EVERY filter axis rides in the URL (#1361 ruling 7) — faction, voted, sort and
+ * era scope joined `?q=` (#660) and `?task_id=` (#1050) there. There is no
+ * mirrored `useState`: the URL is the state, so a filtered feed is a link you
+ * can share and reload, and the two pages plus the filter bar all read one copy.
+ * The derivations live in `./feedFilterParams.ts` where a DOM-less harness can
+ * reach them.
+ *
+ * `?task_id=` (#1050) stays a special case: it is set by task surfaces rather
+ * than by the bar, it is optional (a bare `/praxis` is the whole feed), and both
+ * pages announce it, so a narrowed feed never looks like the whole register.
+ * See `./taskFilterParam.ts`.
  */
-import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { listPraxes, type PraxisCardOut, type PraxisType } from '../../api/praxis'
+import { listPraxes, type PraxisCardOut } from '../../api/praxis'
 import type { FactionOut } from '../../api/factions'
+import { useAuth } from '../../auth/AuthContext'
 import { useFactions } from '../../hooks/useFactions'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
+import {
+  selectEmptyState,
+  type EmptyStateKind,
+} from '../../components/ui/FilterBar'
+import {
+  readFeedFilters,
+  nextFeedFilterParams,
+  clearedFeedParams,
+  narrowingFilterCount,
+  LANDING_FILTERS,
+  FEED_FILTER_NAV_OPTIONS,
+  type PraxisFeedFilters,
+} from './feedFilterParams'
 import {
   readTaskIdParam,
   withoutTaskIdParam,
@@ -37,9 +49,7 @@ import {
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
 
-export type PraxisTypeFilter = 'all' | PraxisType
-export type VotedFilter = '' | 'yes' | 'no'
-export type SortOrder = 'newest' | 'oldest'
+export type { PraxisFeedFilters, VotedFilter, SortOrder, EraScope } from './feedFilterParams'
 
 export interface PraxesFeedState {
   /** The single date-ordered proof stream (§1). */
@@ -48,22 +58,29 @@ export interface PraxesFeedState {
   error: Error | null
   /** No results came back. */
   isEmpty: boolean
-  /** True when a filter/search is narrowing the feed — lets the page tell a
-   *  filtered-to-nothing result apart from a genuinely empty register. */
-  hasActiveFilters: boolean
+  /**
+   * Which of the three empty states to show when `isEmpty` (#1361 ruling 9) —
+   * decided by `selectEmptyState`, so the "All caught up" claim is only made
+   * where it is checkable.
+   */
+  emptyState: EmptyStateKind
 
-  /** Reference data for the faction filter. */
+  /** Reference data for the faction picker. */
   factions: FactionOut[]
 
-  // Filter state (setters reset the growing window).
-  type: PraxisTypeFilter
-  setType: (type: PraxisTypeFilter) => void
-  faction: string
-  setFaction: (faction: string) => void
-  voted: VotedFilter
-  setVoted: (voted: VotedFilter) => void
-  sort: SortOrder
-  setSort: (sort: SortOrder) => void
+  /** Every filter axis, read from the URL. */
+  filters: PraxisFeedFilters
+  /** Patch one or more axes (resets the growing window). */
+  setFilters: (patch: Partial<PraxisFeedFilters>) => void
+  /** Every axis back to its unfiltered value, search and task filter included. */
+  clearAllFilters: () => void
+  /**
+   * Whether the voted rail may be shown (#1361 ruling 8). `list_praxes` ignores
+   * `voted` for an anonymous viewer, so logged out the control did nothing —
+   * hide it rather than render it dead (STYLE §1.4).
+   */
+  canFilterByVote: boolean
+
   /** Raw search box value (bind directly); the fetch reads a debounced copy. */
   query: string
   setQuery: (query: string) => void
@@ -86,42 +103,50 @@ export interface PraxesFeedState {
 export function usePraxes(): PraxesFeedState {
   // App-wide cached, one request per page load across all five consumers (#1284).
   const factions: FactionOut[] = useFactions() ?? []
-  const [type, setTypeState] = useState<PraxisTypeFilter>('all')
-  const [faction, setFactionState] = useState('')
-  const [voted, setVotedState] = useState<VotedFilter>('')
-  const [sort, setSortState] = useState<SortOrder>('newest')
+  const { user } = useAuth()
   const [query, setQueryState] = useSearchQueryParam()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // The URL owns the task filter, so a shared or refreshed link keeps it.
+  const filters = readFeedFilters(searchParams)
   const taskId = readTaskIdParam(searchParams)
+  const canFilterByVote = user !== null
 
   const debouncedQuery = useDebouncedValue(query, 200)
-
   const trimmedQuery = debouncedQuery.trim()
+  // Arrays are compared by identity in a dep list, so the union travels as a key.
+  const factionKey = filters.factions.join(',')
+
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
     (limit) =>
       listPraxes({
         status: 'submitted',
         // Optional by design (#1050): absent → the whole feed, exactly as before.
         task_id: taskId ?? undefined,
-        type: type === 'all' ? undefined : type,
-        faction: faction || undefined,
-        voted: voted || undefined,
-        sort,
+        // An empty union must be absent, not `[]` — see `listPraxes`.
+        faction: filters.factions.length > 0 ? filters.factions : undefined,
+        voted: filters.voted === 'all' ? undefined : filters.voted,
+        sort: filters.sort,
+        era_scope: filters.eraScope,
         q: trimmedQuery || undefined,
         limit,
       }),
-    [taskId, type, faction, voted, sort, trimmedQuery],
+    [taskId, factionKey, filters.voted, filters.sort, filters.eraScope, trimmedQuery],
     PAGE_LIMIT,
   )
 
   // Every filter/search change resets the window so "load more" can't strand a
   // grown page against a freshly-narrowed result set.
-  const setType = (next: PraxisTypeFilter) => { setTypeState(next); resetWindow() }
-  const setFaction = (next: string) => { setFactionState(next); resetWindow() }
-  const setVoted = (next: VotedFilter) => { setVotedState(next); resetWindow() }
-  const setSort = (next: SortOrder) => { setSortState(next); resetWindow() }
+  const setFilters = (patch: Partial<PraxisFeedFilters>) => {
+    setSearchParams(
+      (previous) => nextFeedFilterParams(previous, patch),
+      FEED_FILTER_NAV_OPTIONS,
+    )
+    resetWindow()
+  }
+  const clearAllFilters = () => {
+    setSearchParams(clearedFeedParams, FEED_FILTER_NAV_OPTIONS)
+    resetWindow()
+  }
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
   const clearTaskFilter = () => {
     setSearchParams(withoutTaskIdParam, TASK_FILTER_NAV_OPTIONS)
@@ -129,28 +154,28 @@ export function usePraxes(): PraxesFeedState {
   }
 
   const items = data ?? []
-  // The task filter counts: without it, a task with no proof yet would read as
-  // "no praxes yet. Be the first." for the whole register.
-  const hasActiveFilters =
-    taskId !== null || type !== 'all' || faction !== '' || voted !== '' || trimmedQuery !== ''
+  // A vote filter the viewer cannot use is not narrowing anything — the server
+  // drops it for anonymous readers, so it must not colour the empty state either.
+  const votedApplied = canFilterByVote && filters.voted !== LANDING_FILTERS.voted
+  const appliedCount = narrowingFilterCount(
+    { ...filters, voted: votedApplied ? filters.voted : LANDING_FILTERS.voted },
+    { query: trimmedQuery, taskId },
+  )
 
   return {
     items,
     loading,
     error,
     isEmpty: items.length === 0,
-    hasActiveFilters,
+    emptyState: selectEmptyState(appliedCount, votedApplied && filters.voted === 'no'),
 
     factions,
 
-    type,
-    setType,
-    faction,
-    setFaction,
-    voted,
-    setVoted,
-    sort,
-    setSort,
+    filters,
+    setFilters,
+    clearAllFilters,
+    canFilterByVote,
+
     query,
     setQuery,
     taskId,
