@@ -1,15 +1,22 @@
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../components/praxisCard/PraxisCard'
-import FactionSigilRow from '../../components/ui/FactionSigilRow'
-import { ChipRow, Chip } from '../../components/ui/ChipRow'
-import type { PraxesFeedState, PraxisTypeFilter } from './usePraxes'
+import PraxisFilterBar from './PraxisFilterBar'
+import PraxisFeedEmpty from './PraxisFeedEmpty'
+import type { PraxesFeedState } from './usePraxes'
 
 /**
- * Mobile praxis feed (#499/#565/#573/#644) — a phone-native proof stream with
- * filter chips at the top. What survives here is the PAGE chrome: the stacked
- * header, the full-width search, the sigil row and the chip rows. The page
- * itself stays faction-agnostic; each card picks its own bespoke skin from its
- * item's data. Solo + collab/duel are one uniform, date-ordered stream.
+ * Mobile praxis feed (#499/#565/#573/#644) — a phone-native proof stream. What
+ * survives here is the PAGE chrome: the stacked header and the results list. The
+ * page itself stays faction-agnostic; each card picks its own bespoke skin from
+ * its item's data. Solo + collab/duel are one uniform, date-ordered stream.
+ *
+ * The filter row is no longer hand-rolled here. `ChipRow`/`Chip` ×3, the
+ * `FactionSigilRow` and the inline-styled search box are replaced by the shared
+ * `<PraxisFilterBar>` (#1366) — the same one the desktop feed mounts, which is
+ * responsive by itself and needs no mobile twin. That also settles a drift: the
+ * chips let you deselect "needs my vote" back to "all", which the desktop stamps
+ * did not. A rail always has exactly one segment selected, so "every praxis" is
+ * now an explicit choice on both surfaces (or the chip's ×).
  *
  * The results list renders the SHARED `<PraxisCard>` (ADR-0067) — the same
  * component the desktop feed renders. There is no mobile twin: the
@@ -24,8 +31,6 @@ import type { PraxesFeedState, PraxisTypeFilter } from './usePraxes'
  *
  * Presentation-only: data + filter state arrive via {@link PraxesFeedState}.
  */
-const TYPE_OPTIONS: PraxisTypeFilter[] = ['all', 'solo', 'collab', 'duel']
-
 export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) {
   const { t } = useTranslation('praxis')
   const { t: tc } = useTranslation('common')
@@ -34,26 +39,13 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
     loading,
     error,
     isEmpty,
-    hasActiveFilters,
-    factions,
-    type,
-    setType,
-    faction,
-    setFaction,
-    voted,
-    setVoted,
-    sort,
-    setSort,
-    query,
-    setQuery,
+    emptyState,
+    clearAllFilters,
     taskId,
     clearTaskFilter,
     hasMore,
     loadMore,
   } = state
-
-  const typeLabel = (option: PraxisTypeFilter) =>
-    option === 'all' ? t('listPage.filter.all') : tc(`praxisType.${option}`)
 
   return (
     <div data-feed="mobile" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
@@ -71,7 +63,8 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
           {t('listPage.count', { count: items.length })}
         </p>
         {/* A `?task_id=` feed is a subset (#1050) — say so, and offer the way
-            out, so a narrowed stream can't read as the whole register. */}
+            out, so a narrowed stream can't read as the whole register. The
+            filter bar's chip row does not speak for it. */}
         {taskId !== null && (
           <p className="font-body content-text text-muted" style={{ marginTop: 'var(--space-xs)' }}>
             {t('listPage.taskFilter.notice')}{' '}
@@ -82,58 +75,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         )}
       </header>
 
-      {/* Search */}
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={t('listPage.filter.searchPlaceholder')}
-        aria-label={t('listPage.filter.searchLabel')}
-        className="font-body w-full"
-        style={{
-          fontSize: 'var(--text-md)',
-          padding: 'var(--space-sm) var(--space-md)',
-          background: 'var(--color-bg-surface)',
-          border: '1px solid var(--color-border-strong)',
-          color: 'var(--color-text-primary)',
-          borderRadius: 6,
-        }}
-      />
-
-      {/* Faction sigils */}
-      <FactionSigilRow factions={factions} value={faction} onChange={setFaction} />
-
-      {/* Type chips */}
-      <ChipRow label={t('listPage.filter.typeLabel')}>
-        {TYPE_OPTIONS.map((option) => (
-          <Chip key={option} on={type === option} onClick={() => setType(option)}>
-            {typeLabel(option)}
-          </Chip>
-        ))}
-      </ChipRow>
-
-      {/* Voted chips — "needs my vote" is account-scoped (§6). */}
-      <ChipRow label={t('listPage.filter.showLabel')}>
-        <Chip on={voted === ''} onClick={() => setVoted('')}>
-          {t('listPage.filter.all')}
-        </Chip>
-        <Chip on={voted === 'no'} onClick={() => setVoted(voted === 'no' ? '' : 'no')}>
-          {t('listPage.filter.needsMyVote')}
-        </Chip>
-        <Chip on={voted === 'yes'} onClick={() => setVoted(voted === 'yes' ? '' : 'yes')}>
-          {t('listPage.filter.voted')}
-        </Chip>
-      </ChipRow>
-
-      {/* Sort chips */}
-      <ChipRow label={tc('filters.sort')}>
-        <Chip on={sort === 'newest'} onClick={() => setSort('newest')}>
-          {t('listPage.filter.sortNewest')}
-        </Chip>
-        <Chip on={sort === 'oldest'} onClick={() => setSort('oldest')}>
-          {t('listPage.filter.sortOldest')}
-        </Chip>
-      </ChipRow>
+      <PraxisFilterBar state={state} />
 
       {loading && items.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
@@ -145,9 +87,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
           </button>
         </p>
       ) : isEmpty ? (
-        <p className="font-body text-muted">
-          {hasActiveFilters ? t('listPage.emptyFiltered') : t('listPage.empty')}
-        </p>
+        <PraxisFeedEmpty kind={emptyState} onClearAll={clearAllFilters} />
       ) : (
         <div className="flex flex-wrap gap-4 items-start">
           {items.map((p) => (

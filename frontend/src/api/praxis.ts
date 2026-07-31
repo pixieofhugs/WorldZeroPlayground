@@ -210,13 +210,24 @@ export interface PraxisUpdate {
 // List / detail
 // ---------------------------------------------------------------------------
 
+/**
+ * How repeated query params are written. Exported so the wire shape the feed's
+ * faction union depends on is assertable without a running server.
+ */
+export const LIST_PARAMS_SERIALIZER = { indexes: null } as const
+
 export async function listPraxes(filters?: {
   task_id?: number
   character_id?: number
   member_id?: number
   type?: PraxisType
   status?: PraxisStatus
-  faction?: string
+  /**
+   * Faction union (#1362) — repeated `?faction=`, OR-ed server-side. An empty
+   * array must be sent as `undefined`, not `[]`, or the request asks for praxes
+   * from no faction at all.
+   */
+  faction?: string[]
   /**
    * Free-text search over praxis title, praxis body, task title, and member
    * name/handle (#644 §4; member axis added in #681).
@@ -228,8 +239,12 @@ export async function listPraxes(filters?: {
    * any of my characters. The two are deliberately not complements.
    */
   voted?: 'yes' | 'no'
-  /** Seal-date order (#644 §2). Defaults server-side to `newest`. */
-  sort?: 'newest' | 'oldest'
+  /**
+   * Feed order (#644 §2, widened in #1362). `newest`/`oldest` are seal-date;
+   * `most_voted`/`least_voted` order on vote count. Defaults server-side to
+   * `newest`. Anything else is a 422, so never forward an unvalidated string.
+   */
+  sort?: 'newest' | 'oldest' | 'most_voted' | 'least_voted'
   /**
    * Era scope (#1362). Defaults server-side to `this_era` — praxes sealed since
    * the live era began, plus every unsealed draft. Pass `all_eras` on a surface
@@ -239,7 +254,14 @@ export async function listPraxes(filters?: {
   limit?: number
   offset?: number
 }): Promise<PraxisCardOut[]> {
-  const { data } = await api.get<PraxisCardOut[]>('/praxes', { params: filters })
+  const { data } = await api.get<PraxisCardOut[]>('/praxes', {
+    params: filters,
+    // `indexes: null` = repeated `faction=a&faction=b`. Axios' default writes
+    // `faction[]=a`, which FastAPI's `List[str] = Query(None)` does not read at
+    // all — the union would be dropped silently and the feed would look like it
+    // had no faction filter (LIST_PARAMS_SERIALIZER, asserted in tests).
+    paramsSerializer: LIST_PARAMS_SERIALIZER,
+  })
   // Server truth — retire any local vote overrides so they can't double-count (#626).
   clearVoteOverrides(data.map((praxis) => praxis.id))
   return data

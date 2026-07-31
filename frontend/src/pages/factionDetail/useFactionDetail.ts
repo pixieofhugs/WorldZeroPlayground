@@ -160,7 +160,8 @@ export function useFactionDetail(
     Promise.all([
       listCharacters({ faction: slug }),
       listTasks({ faction: slug, status: "active" }),
-      listPraxes({ faction: slug, status: "submitted", limit: 12 }),
+      // A union of one — `faction` became repeatable in #1362.
+      listPraxes({ faction: [slug], status: "submitted", limit: 12 }),
     ])
       .then(([mems, tsks, praxis]) => {
         if (cancelled) return;
