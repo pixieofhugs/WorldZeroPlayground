@@ -1047,15 +1047,34 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen masthead band, ink", surface: "--everymen-red", text: "--everymen-masthead-text" },
 
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
+  //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
-  // spine hue — at 18px/700, which owes 4.5:1 (700 weight only reaches the
-  // large-text exemption at 18.66px). #1252 repointed UA, WOW and Singularity to
-  // an accent that already cleared their own ground; these four had no such
-  // accent under the name the seam reaches for.
-  { what: "snide slip, actor name", surface: "--faction-snide-slip-paper", text: "--faction-snide" },
-  { what: "coven ward card, actor name", surface: "--faction-coven-ward-card", text: "--faction-coven" },
-  { what: "ephemerists plate, actor name", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists" },
-  { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--faction-everymen" },
+  // spine hue — at 18px/700, which owes 4.5:1 because 700 weight only reaches
+  // the large-text exemption at 18.66px. #1252 repointed UA, WOW and Singularity
+  // to an accent that already cleared their own ground and left these four,
+  // which failed in LIGHT at 2.41 (snide), 2.98 (coven), 4.37 (ephemerists, and
+  // 4.15 with the plate wash composited) and 4.49 (everymen). All four clear
+  // dark on the raw hue; #1252's "ephemerists 3.16:1 dark" was the LIGHT wash
+  // measured over the DARK plate, and `--faction-ephemerists-plate-wash` is
+  // `none` in dark, so that composite is not a surface anything paints.
+  //
+  // THREE OF THE FOUR ADD NO ROW, which is a finding rather than an omission —
+  // each fix repoints to an ink whose pairing with that exact ground is already
+  // asserted above, and a second `what` for two identical tokens measures
+  // nothing new (the same call the four "checked and deliberately NOT written"
+  // pairings make further up):
+  //   snide       -slip-acid-ink on -slip-paper   = `snide slip, mention ink`
+  //   coven       -slip-deep     on -ward-card    = `coven ward panel, accent ink`
+  //   ephemerists -plate-nile    on -plate-bg     = `ephemerists plate, links`
+  //
+  // Everymen is the one mint, and the one new row. Its red has no rung that
+  // survives this stock in both themes: `--everymen-red` is the 4.49 above,
+  // `-red-deep` is 2.67:1 at night, and `--faction-everymen-sheet-accent` is the
+  // same red measured on the lighter sheet PANEL, so it carries the light miss
+  // with it. `--everymen-paper-accent` is #1173's (role, ground) split applied
+  // to the ACCENT role instead of the muted one — the shape the family already
+  // uses for `-sheet-accent`, one stock further down.
+  { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--everymen-paper-accent" },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
