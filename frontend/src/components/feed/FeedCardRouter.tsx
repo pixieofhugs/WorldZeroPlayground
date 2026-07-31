@@ -43,9 +43,19 @@ import FeedCardInvitationLetter from './FeedCardInvitationLetter'
  * backend types now render.
  */
 
+/**
+ * What every companion body is handed. `onNotNow` is the slot's archive write
+ * under the body's own label — only the invitation letter takes it (#1424); the
+ * other two answer their request outright and archiving is not their deferral.
+ */
+interface CompanionProps {
+  item: ActivityFeedItem
+  onNotNow?: () => void
+}
+
 /** The three interactive companions — payload BODIES inside the chassis since
  *  #1194, keeping their own accept/decline handlers (epic decision 9). */
-const COMPANION_BODIES: Record<string, React.ComponentType<{ item: ActivityFeedItem }>> = {
+const COMPANION_BODIES: Record<string, React.ComponentType<CompanionProps>> = {
   invitation_letter: FeedCardInvitationLetter,
   duel_challenge: FeedCardDuelChallenge,
   collab_invite: FeedCardCollabInvite,
@@ -80,14 +90,17 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
   const tag =
     archivedView && isStillWaiting(item) ? i18n.t('feed:archive.stillWaiting') : null
 
-  const renderBody = (): ReactNode => {
+  // "Not now" is the archive write, so it is only offered where the slot's
+  // action IS archiving. In the Archived tab that action is restore, and a
+  // "Not now" that un-archived the card would mean the opposite of its label.
+  const renderBody = (act: (() => void) | null): ReactNode => {
     if (row) return <FeedRowContent row={row} avatarUrl={item.actor_avatar_url} />
-    return <Companion item={item} />
+    return <Companion item={item} onNotNow={archivedView ? undefined : (act ?? undefined)} />
   }
 
   return (
     <FeedItemSlot item={item} archivedView={archivedView} onArchiveChange={onArchiveChange}>
-      {(archive) =>
+      {(archive, act) =>
         isEraAnnouncement ? (
           <FeedCardEraAnnouncement item={item} archive={archive} />
         ) : (
@@ -98,7 +111,7 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
             tag={tag}
             archive={archive}
           >
-            {renderBody()}
+            {renderBody(act)}
           </FactionFeedFrame>
         )
       }

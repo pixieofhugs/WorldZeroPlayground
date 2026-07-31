@@ -7,7 +7,10 @@ interface AuthState {
   refetch: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthState>({
+/** Exported for tests only: the harness is `renderToStaticMarkup`, so a
+ *  component that reads the signed-in character has no other way to be given
+ *  one — `AuthProvider` fetches, and effects never run there. */
+export const AuthContext = createContext<AuthState>({
   user: null,
   loading: true,
   refetch: async () => {},
