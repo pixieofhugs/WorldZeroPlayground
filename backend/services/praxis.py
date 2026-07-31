@@ -59,7 +59,13 @@ from services.era import (
 from services.nudge import nudged_at_map
 from services.level_jump import available_level_reach, consume_level_jump
 from models.duel import Duel, DuelStatus
-from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes, ViewerVote
+from services.vote_tally import (
+    crowned_praxis_ids,
+    get_tally,
+    tally_votes,
+    ViewerVote,
+    VoteTally,
+)
 
 
 EVERYMEN_FACTION_SLUG = "everymen"
@@ -497,6 +503,7 @@ async def build_praxis_card_out(
     applied_metatasks: Optional[dict[int, list[TaskOut]]] = None,
     viewer_can_vote: Optional[dict[int, bool]] = None,
     duel_ids: Optional[dict[int, int]] = None,
+    tallies: Optional[dict[int, VoteTally]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
@@ -537,6 +544,13 @@ async def build_praxis_card_out(
     the duel lookup is not a per-card query (N+1). When absent, this builder
     loads the single praxis's duel id itself (single-card callers). A missing
     entry means the praxis is not a duel side (``duel_id=None``).
+
+    ``tallies`` maps praxis id → its :class:`~services.vote_tally.VoteTally`;
+    list routes precompute it once via :func:`~services.vote_tally.tally_votes`
+    so the vote sum is not a per-card query (#1378). That map covers every id it
+    was gathered for, zero-vote praxes included, so a *missing* entry means "not
+    in the batch" and this builder falls back to tallying the single praxis
+    itself (single-card callers) rather than reading absence as no votes.
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -551,8 +565,12 @@ async def build_praxis_card_out(
 
     viewer_vote_info = viewer_votes.get(praxis.id) if viewer_votes else None
 
-    tally_map = await tally_votes([praxis.id], session)
-    tally = get_tally(tally_map, praxis.id)
+    # Votes. Reuse the precomputed page-wide map when the list route supplies it
+    # (#1378); otherwise tally this praxis alone. Membership is the coverage
+    # test, not truthiness: a zero-vote praxis IS in the map, with an empty tally.
+    tally = tallies.get(praxis.id) if tallies is not None else None
+    if tally is None:
+        tally = get_tally(await tally_votes([praxis.id], session), praxis.id)
 
     # Score (ADR-0053), computed for the AUTHOR. Reuse the precomputed map when
     # the list route supplies it; otherwise score this praxis alone.
@@ -632,12 +650,14 @@ async def build_praxis_cards(
     session: AsyncSession,
     viewer: Optional[Character],
 ) -> list[PraxisCardOut]:
-    """Enrich a whole page of praxes into cards, six PAGE-WIDE queries deep.
+    """Enrich a whole page of praxes into cards, seven PAGE-WIDE queries deep.
 
     Every lookup here is deliberately one query for the list rather than one per
-    card, and they are listed together so that stays true — a seventh per-card
+    card, and they are listed together so that stays true — an eighth per-card
     query added inside :func:`build_praxis_card_out` would be invisible at the
     call site but would multiply by the page size.
+    ``tests/integration/test_praxis_list_query_count.py`` asserts a small page
+    and a large one cost the same, which is what stops that happening again.
 
     Lifted out of the ``/praxes`` route body so a second caller (the rail's
     compound read, #1344) gets an identical card rather than a near-miss
@@ -672,6 +692,11 @@ async def build_praxis_cards(
     # duel lookup per card. A duel side is stored type='solo' + a non-null
     # duel_id (ADR-0011), so the card mode label/chip gates on this, not type.
     duel_ids = await duel_id_map(praxes, session)
+    # Vote tallies (#1378): one grouped aggregate for the whole page — this was
+    # the last per-card query here, a one-element ``tally_votes`` call inside the
+    # builder, costing +1 SELECT per row on every list and doubling on each
+    # "load more" refetch.
+    tallies = await tally_votes([praxis.id for praxis in praxes], session)
     return [
         await build_praxis_card_out(
             praxis,
@@ -682,6 +707,7 @@ async def build_praxis_cards(
             applied_metatasks=applied_metatasks,
             viewer_can_vote=viewer_can_vote,
             duel_ids=duel_ids,
+            tallies=tallies,
         )
         for praxis in praxes
     ]
