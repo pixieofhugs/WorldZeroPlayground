@@ -345,12 +345,6 @@
     "collab": "Collab",
     "duel": "Duel"
   },
-  "requests": {
-    "collabInvite": "Collab Invite",
-    "duelChallenge": "Duel Challenge",
-    "awaitingSubmissionCollab": "Your turn — submit your collab",
-    "awaitingSubmissionDuel": "Your turn — submit your duel"
-  },
   "sidebar": {
     "toggle": {
       "collapse": "Collapse sidebar",
@@ -368,10 +362,6 @@
       "score": "Score",
       "allTime": "All-Time",
       "current": "Current"
-    },
-    "pendingRequests": {
-      "heading_one": "Pending Requests · {{count}}",
-      "heading_other": "Pending Requests · {{count}}"
     },
     "activeTasks": {
       "heading": "In progress tasks",

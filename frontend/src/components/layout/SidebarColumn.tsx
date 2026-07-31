@@ -26,15 +26,21 @@ import SidebarHandle from './SidebarHandle'
  * reopen; how long stale rail data may be trusted is deliberately left open
  * (#1346).
  *
- * WHY THE COUNT IS READ HERE AND NOT DRILLED
- * ------------------------------------------
- * Both children need it — the rail lists the requests, and the collapsed handle
- * badges their count, since the rail is the only desktop surface for collab
- * invites and duel challenges. #1343 hoisted a single `usePendingRequests()`
- * here and passed it down, because that hook held per-instance state with no
- * shared cache: one call per consumer was one REQUEST per consumer. The
- * provider IS that shared cache, so the drilling is gone — `Sidebar` reads the
- * context itself, and this component reads only the number it draws.
+ * WHY THIS READS `pending_requests` AT ALL
+ * ----------------------------------------
+ * For one number, for one child. The rail used to LIST the requests and the
+ * handle badged their count, so #1343 hoisted a single `usePendingRequests()`
+ * here and passed it down — that hook held per-instance state with no shared
+ * cache, so one call per consumer was one REQUEST per consumer. The provider is
+ * that shared cache now, and since #1423 the rail lists nothing: the queue on
+ * `/updates` is the only surface a request can be answered on (ADR-0070). What
+ * is left is the collapsed handle's badge, which is the only thing that tells a
+ * folded-away desktop something is waiting, and it takes the count as a prop.
+ *
+ * Reading the array only to take its `.length` is now true of EVERY consumer —
+ * here, the mobile bell and the mobile FieldDesk. Serving them a count instead
+ * of up to 100 serialized feed items is a backend change to `/me/sidebar`, and
+ * is filed rather than faked here.
  */
 export interface SidebarColumnProps {
   readonly collapsed: boolean

@@ -1,14 +1,17 @@
 /**
  * #1191 — folding the rail away must not silently hide incoming requests.
  *
- * The sidebar's pending-requests panel is the ONLY desktop surface for collab
- * invites and duel challenges, so the collapsed handle carries their count. The
- * badge is decorative (`aria-hidden`, and colour alone), so the count has to
- * reach assistive tech through the button's accessible name — that is what is
- * pinned here.
+ * The collapsed handle carries the count of pending collab invites and duel
+ * challenges. The badge is decorative (`aria-hidden`, and colour alone), so the
+ * count has to reach assistive tech through the button's accessible name — that
+ * is what is pinned here.
  *
- * The count arrives as a prop: `SidebarColumn` reads it once and shares it with
- * the rail, so folding does not cost a second `limit: 100` fetch (#1343).
+ * The count arrives as a prop: `SidebarColumn` reads it once, so folding does
+ * not cost a second fetch (#1343/#1344).
+ *
+ * The rail itself no longer lists the requests (#1423, ADR-0070) — the queue on
+ * `/updates` does — so the expanded state's silence is now a deliberate gap
+ * rather than a redundancy. See `SidebarHandle`'s `pendingCount` docstring.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -43,7 +46,7 @@ describe('SidebarHandle — collapsed pending badge', () => {
     expect(html).toContain('aria-expanded="false"')
   })
 
-  it('never shows a badge while expanded — the rail lists them itself', () => {
+  it('never shows a badge while expanded — unchanged by #1423, pending an owner call', () => {
     const html = render(false, 3)
     expect(html).toContain('aria-label="Collapse sidebar"')
     expect(html).not.toContain('>3<')
