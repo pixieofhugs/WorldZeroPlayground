@@ -262,12 +262,12 @@ const OWN_SHEET_KEYS = ["ua", "coven", "wow", "ephemerists"] as const;
  * ink, and 12% took the Ephemerists plate to 4.41:1 (8% reads 4.66:1, and the
  * tightest in the family). See `Veil`.
  */
-const CHIP_WASH = 0.12; // RED (#1302): the shipped 12%
+const CHIP_WASH = 0.08;
 
 const PRAXIS_CARD_PAIRS: Pair[] = [
   ...CARD_KEYS.flatMap((key) => {
     const surface = PRAXIS_CARD_SHEET[key];
-    const notice = "--color-danger"; // RED (#1302): what the component paints today
+    const notice = `--faction-${key}-card-notice`;
     return [
       // The moderation badges. Both veils are measured because which of the two
       // gates FLIPS with the theme: the danger veil is the tighter reading in
@@ -283,7 +283,7 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
         what: `${key} praxis card failed badge, notice ink under the warning veil`,
         surface,
         veil: "--color-warning-veil",
-        text: "--color-warning", // RED (#1302)
+        text: notice,
       },
       // The mode chip — "Duel" / "Collaboration · N" / "still open". Ink, wash
       // and rule all come off ONE faction ink now, which is what #694 means by
@@ -297,8 +297,8 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
       {
         what: `${key} praxis card mode chip, credit ink on its own wash`,
         surface,
-        veil: { token: "--color-success", alpha: CHIP_WASH }, // RED (#1302)
-        text: "--color-success", // RED (#1302)
+        veil: { token: `--faction-${key}-card-credit`, alpha: CHIP_WASH },
+        text: `--faction-${key}-card-credit`,
       },
     ];
   }),
@@ -312,12 +312,12 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
     {
       what: `${key} praxis card sheet, notice ink`,
       surface: PRAXIS_CARD_SHEET[key],
-      text: "--color-danger", // RED (#1302)
+      text: `--faction-${key}-card-notice`,
     },
     {
       what: `${key} praxis card sheet, muted ink`,
       surface: PRAXIS_CARD_SHEET[key],
-      text: "--color-text-secondary", // RED (#1302)
+      text: `--faction-${key}-card-muted`,
     },
   ]),
 ];
