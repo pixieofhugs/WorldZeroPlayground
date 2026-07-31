@@ -10,8 +10,17 @@ import type { PraxisCardOut } from './praxis'
  * into that payload would make every one of those refetches heavier (#1349).
  */
 export interface SidebarPanels {
-  /** Unresolved collab invites + duel challenges, and your own outstanding submissions. */
-  pending_requests: ActivityFeedItem[]
+  /**
+   * How many unanswered requests are waiting — collab invites, duel challenges,
+   * your own outstanding submissions and faction invitation letters.
+   *
+   * A number, not a list (#1456). The rail listed these until #1423; the queue
+   * on `/updates` owns the cards now (ADR-0070), so every consumer left — the
+   * collapsed handle's badge, the mobile bell, the mobile FieldDesk — wanted
+   * only `.length`. It is the same number the queue's own `counts.requests`
+   * reports, so the badge and the card list cannot disagree.
+   */
+  pending_requests_count: number
   /** Recent site-wide news — new tasks and era announcements. */
   global_activity: ActivityFeedItem[]
   /** In-progress praxes the carried character is a MEMBER of (so accepted
