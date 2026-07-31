@@ -117,6 +117,20 @@ describe('the Updates mixed multi-faction stream', () => {
     expect(text).toContain('Hang the canvas')
     expect(text).toContain('Map the boring')
   })
+
+  it('states how many updates are showing, and pluralizes it', () => {
+    // `[data-showing]` — one of the two controls the design's script writes and
+    // its markup never contains. It ships anyway: with four axes cut from the
+    // design, saying how much is on screen is the honest counterweight.
+    expect(render(baseState({ items })).text).toContain('Showing 3 updates')
+    expect(render(baseState({ items: items.slice(0, 1) })).text).toContain(
+      'Showing 1 update',
+    )
+  })
+
+  it('says nothing about a count while the feed is still loading', () => {
+    expect(render(baseState({ loading: true })).text).not.toContain('Showing')
+  })
 })
 
 describe('the three empty states are never collapsed into one', () => {
