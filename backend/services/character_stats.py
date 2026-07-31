@@ -34,7 +34,7 @@ _UNSCORED_MODERATION_STATUSES: frozenset[ModerationStatus] = frozenset(
 
 
 async def _deliver_earned_invitations(
-    character_id: int,
+    character: Character,
     praxes: list[Praxis],
     contributions: dict[int, Contribution],
     session: AsyncSession,
@@ -48,9 +48,16 @@ async def _deliver_earned_invitations(
     from X's tasks — both from this same submitted-praxis set recalc already scored, so
     vote-driven point gains trigger delivery too. Idempotent on the
     (character, faction, era) unique key.
+
+    The character's *current* faction is excluded (#1425): you cannot be invited to
+    join the faction you are already in, and doing your own faction's tasks is the
+    most ordinary thing a player does. Keyed on membership at delivery time, not on
+    history — defect away from X and re-cross X's thresholds and X re-invites you.
     """
     if not praxes:
         return
+
+    uninvitable = _NON_INVITE_FACTION_SLUGS | {character.faction_slug}
 
     task_rows = await session.execute(
         select(Task.id, Task.primary_faction_slug).where(
@@ -63,7 +70,7 @@ async def _deliver_earned_invitations(
     points_by_faction: dict[str, float] = {}
     for praxis in praxes:
         slug = faction_by_task.get(praxis.task_id) or "na"
-        if slug in _NON_INVITE_FACTION_SLUGS:
+        if slug in uninvitable:
             continue
         task_ids_by_faction.setdefault(slug, set()).add(praxis.task_id)
         contribution = contributions.get(praxis.id)
@@ -81,7 +88,7 @@ async def _deliver_earned_invitations(
 
     already = await session.execute(
         select(InvitationLetter.faction_slug).where(
-            InvitationLetter.character_id == character_id,
+            InvitationLetter.character_id == character.id,
             InvitationLetter.era_id == era_row.id,
         )
     )
@@ -91,7 +98,7 @@ async def _deliver_earned_invitations(
         # backstop against a concurrent double-deliver; the held-set check avoids
         # the common case.
         session.add(
-            InvitationLetter(character_id=character_id, faction_slug=slug, era_id=era_row.id)
+            InvitationLetter(character_id=character.id, faction_slug=slug, era_id=era_row.id)
         )
 
 
@@ -167,5 +174,5 @@ async def recalculate_character_stats(
 
     # ADR-0022: deliver any faction invitations this submitted-praxis set now earns.
     await _deliver_earned_invitations(
-        character_id, all_praxes, contributions, session, era, era_row
+        author, all_praxes, contributions, session, era, era_row
     )
