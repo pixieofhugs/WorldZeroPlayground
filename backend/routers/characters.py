@@ -144,6 +144,12 @@ async def get_character_praxes(
     what the profile page actually fetches; both AND the shared
     :func:`praxis_membership_condition` onto the unchanged viewer gate
     :func:`praxis_visibility_condition`, so the two spellings cannot drift.
+
+    One deliberate difference since #1362: this route is **all eras**, while
+    ``GET /praxes`` now defaults to
+    :class:`services.praxis.PraxisEraScope.this_era` (opt out with
+    ``?era_scope=all_eras``). A whole-career record has no era rail to set, so
+    it keeps the unbounded list.
     """
     result = await session.execute(
         select(Praxis)
