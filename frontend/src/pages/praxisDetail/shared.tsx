@@ -36,7 +36,9 @@ import { TaskCrown } from '../../components/factionMarks/TaskCrown'
 import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
-import { deriveEditPraxisPhase } from '../editPraxis/useEditPraxis'
+// The LEAF module, not `useEditPraxis` — reaching for the hook's barrel would
+// drag the composer's api and upload plumbing onto every praxis-detail load.
+import { deriveEditPraxisPhase } from '../editPraxis/editPraxisPhase'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'

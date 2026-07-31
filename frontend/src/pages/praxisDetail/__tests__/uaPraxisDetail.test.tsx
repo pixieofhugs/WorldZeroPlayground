@@ -488,12 +488,19 @@ describe("UA praxis detail — the state axes", () => {
   });
 
   it("renders as visitor, owner and steward", () => {
+    // #1397: the cluster is anchored on the UNSUBMIT control now. On a
+    // submitted solo `/edit` redirects straight back to this page, so the edit
+    // link is hidden and unsubmitting is the way into the composer.
     expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
-      "edit this praxis",
+      "unsubmit",
     );
     expect(render(state({ isOwner: true, user: VIEWER })).text, "the owner does").toContain(
-      "edit this praxis",
+      "unsubmit",
     );
+    expect(
+      render(state({ isOwner: true, user: VIEWER })).text,
+      "and no link that would round-trip",
+    ).not.toContain("edit this praxis");
     expect(render(state({ showAdminBar: true })).text, "a steward gets the bar").toContain(
       "ADMIN",
     );
