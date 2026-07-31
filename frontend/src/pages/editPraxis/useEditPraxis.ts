@@ -549,7 +549,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       })
       .catch(() => setError(i18n.t("forms:editPraxis.errors.load")))
       .finally(() => setLoading(false));
-  }, [idParam, user, authLoading, navigate]);
+    // The membership guard above reads only `user?.character?.id`, so that is
+    // the whole dependency (#1390). Depending on `user` reloaded the praxis,
+    // its task and the metatask list every time `/auth/me` refetched — which a
+    // star cast does — and flashed the editor back to its loading state.
+  }, [idParam, user?.character?.id, authLoading, navigate]);
 
   useEffect(() => {
     if (!user?.character) return;
@@ -1144,7 +1148,17 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     return () => {
       cancelled = true;
     };
-  }, [inviteQuery, praxis, user, duelPaneOpen, foeIds, ownCharacterIds]);
+    // `user` narrowed to the id the filter actually reads (#1390) — otherwise
+    // every `/auth/me` refetch re-ran the character search behind an open
+    // invite box.
+  }, [
+    inviteQuery,
+    praxis,
+    user?.character?.id,
+    duelPaneOpen,
+    foeIds,
+    ownCharacterIds,
+  ]);
 
   const sendInvite = useCallback(
     async (character: CharacterOut) => {

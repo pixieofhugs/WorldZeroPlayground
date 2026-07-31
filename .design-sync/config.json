@@ -117,7 +117,6 @@
     "FactionProfileBody": "src/pages/characterProfile/FactionProfileBody.tsx",
     "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
     "FactionSigil": "src/components/sigil/FactionSigil.tsx",
-    "FactionSigilRow": "src/components/ui/FactionSigilRow.tsx",
     "FactionsDirectoryView": "src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx",
     "FeedArchiveButton": "src/components/feed/FeedArchiveButton.tsx",
     "FeedBadge": "src/components/feed/FeedBadge.tsx",
@@ -134,9 +133,7 @@
     "FeedRowActions": "src/components/feed/FeedRowActions.tsx",
     "FeedRowContent": "src/components/feed/FeedRowContent.tsx",
     "FeedUndoStrip": "src/components/feed/FeedUndoStrip.tsx",
-    "FilterFactionTabs": "src/components/ui/FilterFactionTabs.tsx",
     "FilterLevelNodes": "src/components/ui/FilterLevelNodes.tsx",
-    "FilterStamps": "src/components/ui/FilterStamps.tsx",
     "HoldoutPublishNotice": "src/pages/editPraxis/blocks/HoldoutPublishNotice.tsx",
     "ImageEditModal": "src/components/imageEdit/ImageEditModal.tsx",
     "InvitationLetterPopup": "src/components/InvitationLetterPopup.tsx",
@@ -156,7 +153,6 @@
     "MobileHeader": "src/components/layout/MobileHeader.tsx",
     "MobilePraxisFeed": "src/pages/praxes/MobilePraxisFeed.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
-    "MobileUpdates": "src/pages/updates/MobileUpdates.tsx",
     "NavBar": "src/components/NavBar.tsx",
     "OwnerControls": "src/components/comments/OwnerControls.tsx",
     "PageTitle": "src/components/ui/PageTitle.tsx",
@@ -481,9 +477,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "FactionSigilRow": {
-      "cardMode": "column"
-    },
     "FactionsDirectoryView": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -491,13 +484,7 @@
     "FeedChassisBand": {
       "cardMode": "column"
     },
-    "FilterFactionTabs": {
-      "cardMode": "column"
-    },
     "FilterLevelNodes": {
-      "cardMode": "column"
-    },
-    "FilterStamps": {
       "cardMode": "column"
     },
     "ImageEditModal": {
@@ -535,10 +522,6 @@
     },
     "MobileTabBar": {
       "cardMode": "column"
-    },
-    "MobileUpdates": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "NavBar": {
       "cardMode": "column"
