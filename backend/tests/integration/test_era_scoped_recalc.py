@@ -34,6 +34,7 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from services.character_stats import recalculate_character_stats
+from services.era import apply_era_reset
 from services.praxis import moderate_praxis
 from services.vote import cast_vote_on_praxis
 
@@ -220,6 +221,48 @@ async def test_era_reset_does_not_undo_itself_on_the_next_recalc(
 
     assert (await _stats(db_session, character, current_era)).score == 0
     assert (await _stats(db_session, character, current_era)).level == 0
+
+
+@pytest.mark.asyncio
+async def test_a_real_era_reset_survives_the_backfill_recalc(
+    db_session: AsyncSession,
+    character: Character,
+    account,
+    prior_era: Era,
+    faction_ua: Faction,
+):
+    """The reported flow end to end: score, reset through
+    :func:`services.era.apply_era_reset`, then run the recalc the admin
+    backfill runs. The new era starts at zero and lifetime keeps the history."""
+    await _sealed_praxis(
+        db_session,
+        character,
+        title="Last era's work",
+        points=PRIOR_ERA_POINTS,
+        sealed_at=prior_era.started_at + timedelta(days=1),
+    )
+    await recalculate_character_stats(character.id, db_session, era_row=prior_era)
+    await db_session.commit()
+    banked = (await _stats(db_session, character, prior_era)).score
+    assert banked == round(PRIOR_ERA_POINTS * UA_OWN_TASK_MODIFIER)
+
+    new_era = Era(
+        name=CURRENT_ERA.name,
+        config_key=CURRENT_ERA.config_key,
+        started_by=account.id,
+    )
+    db_session.add(new_era)
+    await db_session.flush()
+    await apply_era_reset([character], new_era, db_session)
+    await db_session.commit()
+
+    await recalculate_character_stats(character.id, db_session)
+    await db_session.commit()
+
+    new_stats = await _stats(db_session, character, new_era)
+    assert new_stats.score == 0
+    assert new_stats.level == 0
+    assert new_stats.all_time_score == banked
 
 
 # ---------------------------------------------------------------------------
