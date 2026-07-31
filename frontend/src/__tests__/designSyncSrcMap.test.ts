@@ -41,17 +41,18 @@
  *
  * WHY THIS LIVES IN `frontend/src/__tests__`
  * ------------------------------------------
- * `.design-sync/` sits outside `tsconfig`'s `include: ["src"]`, so CI's
- * `tsc --noEmit` never looks at it (#1328). Vitest is the one CI step that can:
- * it runs from `frontend/`, in node, with the whole repo on disk, so a test
- * under `src/` can read `../.design-sync/config.json`. That is the only reason
- * this file is here rather than next to the thing it guards.
+ * Both files this guards — `.design-sync/config.json` and `.ds-kit/index.tsx`
+ * — sit outside `tsconfig`'s `include: ["src"]`, so CI's `tsc --noEmit` never
+ * looks at either (#1328). Vitest is the one CI step that can: it runs from
+ * `frontend/`, in node, with the whole repo on disk, so a test under `src/`
+ * can read them. That is the only reason this file is here rather than next
+ * to the things it guards.
  *
  * This does NOT close #1328. That issue is about the preview `.tsx` files
  * failing *typecheck* — a different failure needing tsc coverage of
- * `.design-sync/previews/`. The two share a root cause (nothing verifies that
- * directory against reality) but not a fix; this guard checks path resolution
- * in one JSON file and typechecks nothing.
+ * `.design-sync/previews/`. The two share a root cause (that whole area is
+ * outside every CI net) but not a fix: this guard resolves paths and
+ * typechecks nothing, so it would not catch a preview whose props drifted.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
