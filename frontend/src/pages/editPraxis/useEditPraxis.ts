@@ -29,7 +29,6 @@ import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import {
   deleteCollabConfirm,
-  dissolveDuelConfirm,
   dropTaskConfirm,
   duelDropsCoauthorsConfirm,
   leaveCollabConfirm,
@@ -41,6 +40,7 @@ import { useComposerDraft } from "./useComposerDraft";
 import { useComposerMedia } from "./useComposerMedia";
 import { useMetataskApply } from "./useMetataskApply";
 import { useComposerRoster } from "./useComposerRoster";
+import { useComposerDuel } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listMetatasks } from "../../api/metatasks";
@@ -153,9 +153,24 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // One-shot post-publish beat for the member whose cast closed the gate (#591).
   const [collabSuccess, setCollabSuccess] = useState(false);
 
-  // Duel challenge (#311)
-  const [duelPaneOpen, setDuelPaneOpen] = useState(false);
-  const [duel, setDuel] = useState<DuelDetailOut | null>(null);
+  // ---- Confirms (#1082) ----
+  const { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm } =
+    useComposerConfirm();
+
+  // ---- Duel challenge (#311, #718, #956) ----
+  const {
+    duel,
+    setDuel,
+    duelPaneOpen,
+    setDuelPaneOpen,
+    duelSealOpen,
+    setDuelSealOpen,
+    requestDuelSeal,
+    cancelDuelSeal,
+    cancelDuel,
+    dissolveDuel,
+  } = useComposerDuel({ praxis, setPraxis, askConfirm, setError });
+
   // The duel gate and the ADR-0012 window length (#1164) are two era values off
   // one payload — since #1141 the app-wide cached one, rather than a third
   // `/game-config` request. `null` until it lands, and on a failed read, so the
@@ -163,30 +178,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const gameConfig = useGameConfig();
   const duelLevelRequired = gameConfig?.duel_level_required ?? null;
   const autoSubmitDays = gameConfig?.collab_auto_submit_days ?? null;
-  // Seal confirmation (#718) — opened by PublishButton in duel mode.
-  const [duelSealOpen, setDuelSealOpen] = useState(false);
-
-  // ---- The other players (#311, #421, #959, #1083, #1257) ----
-  const {
-    inviteQuery,
-    setInviteQuery,
-    inviteResults,
-    inviteOpen,
-    setInviteOpen,
-    inviting,
-    sendInvite,
-    cancelInvite,
-    kickMember,
-    nudge,
-    sendChallenge,
-  } = useComposerRoster({
-    praxis,
-    setPraxis,
-    duel,
-    setDuel,
-    duelPaneOpen,
-    setError,
-  });
 
   // ---- Draft text + autosave (#360, #1081, #1164) ----
   const {
@@ -205,10 +196,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     isDirty,
     needsTitle,
   } = useComposerDraft(praxis, setPraxis);
-
-  // ---- Confirms (#1082) ----
-  const { pendingConfirm, askConfirm, acceptConfirm, dismissConfirm } =
-    useComposerConfirm();
 
   // ---- Initial load ----
   useEffect(() => {
@@ -283,25 +270,31 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       });
   }, [user?.character?.id]);
 
-  // ---- Duel detail (opponent chip + status) whenever this praxis is a duel side ----
-  useEffect(() => {
-    const duelId = praxis?.duel_id ?? null;
-    if (duelId == null) {
-      setDuel(null);
-      return;
-    }
-    let cancelled = false;
-    getDuelDetail(duelId)
-      .then((d) => {
-        if (!cancelled) setDuel(d);
-      })
-      .catch(() => {
-        /* non-fatal */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [praxis?.duel_id]);
+  // Declared AFTER the two loads above on purpose. Effects register in call
+  // order, and this hook opens the mount-time foes read (#1390); keeping it
+  // below leaves getPraxis and listMetatasks first in the queue, which is the
+  // order #1379 settled on.
+  // ---- The other players (#311, #421, #959, #1083, #1257) ----
+  const {
+    inviteQuery,
+    setInviteQuery,
+    inviteResults,
+    inviteOpen,
+    setInviteOpen,
+    inviting,
+    sendInvite,
+    cancelInvite,
+    kickMember,
+    nudge,
+    sendChallenge,
+  } = useComposerRoster({
+    praxis,
+    setPraxis,
+    duel,
+    setDuel,
+    duelPaneOpen,
+    setError,
+  });
 
   // ---- Save / publish ----
   const publish = useCallback(async () => {
@@ -615,30 +608,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
-  const cancelDuel = useCallback(async () => {
-    if (!praxis?.duel_id) return;
-    setError("");
-    try {
-      await cancelChallenge(praxis.duel_id);
-      const refreshed = await getPraxis(praxis.id);
-      setPraxis(refreshed);
-      setDuel(null);
-      setDuelPaneOpen(false);
-    } catch (err) {
-      setError(
-        extractError(err, i18n.t("forms:editPraxis.errors.cancelChallenge")),
-      );
-    }
-  }, [praxis]);
-
-  // Dissolve an *active* duel (#956). Same neutral cancel as `cancelDuel`, but
-  // gated behind a confirm because it ends an accepted duel for both sides.
-  const dissolveDuel = useCallback(async () => {
-    if (!praxis?.duel_id) return;
-    if (!(await askConfirm(dissolveDuelConfirm()))) return;
-    await cancelDuel();
-  }, [praxis?.duel_id, cancelDuel, askConfirm]);
-
   // ---- Derived ----
   const isPublished = praxis?.status === "submitted";
   const isModerated =
@@ -757,8 +726,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     continueFromCollabSuccess,
 
     duelSealOpen,
-    requestDuelSeal: () => setDuelSealOpen(true),
-    cancelDuelSeal: () => setDuelSealOpen(false),
+    requestDuelSeal,
+    cancelDuelSeal,
 
     pendingConfirm,
     acceptConfirm,
