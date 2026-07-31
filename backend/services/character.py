@@ -259,8 +259,8 @@ async def list_era_invitations_for_character(
     (mirroring how #459 badges do sibling queries). The ``na`` sentinel and
     ``albescent`` are excluded — never invite-joinable.
 
-    Takes the era id rather than resolving it so /auth/me, which needs the same
-    row for three other reads, resolves it once (#1381).
+    Takes the era id rather than resolving it: /auth/me — the only caller — needs
+    the same era row for three other reads, so it resolves it once (#1381).
     """
     result = await session.execute(
         select(InvitationLetter.faction_slug)
@@ -272,20 +272,6 @@ async def list_era_invitations_for_character(
         )
     )
     return sorted(row[0] for row in result.all())
-
-
-async def list_current_era_invitations_for_character(
-    character_id: int,
-    session: AsyncSession,
-) -> list[str]:
-    """:func:`list_era_invitations_for_character` for the live era.
-
-    Returns ``[]`` when the era is unseeded or no invites exist.
-    """
-    era_row = await get_current_era_row_safe(session)
-    if era_row is None:
-        return []
-    return await list_era_invitations_for_character(character_id, era_row.id, session)
 
 
 async def _derive_unique_username(display_name: str, session: AsyncSession) -> str:
