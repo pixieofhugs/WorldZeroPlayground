@@ -59,6 +59,7 @@ import {
   GlyphRegister,
   INK,
   LINE,
+  NILE,
   OCHRE,
   PLATE,
   READING,
@@ -69,6 +70,28 @@ import {
 } from '../factionMarks/ephemeristsPlate'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+
+/**
+ * The one body ink the plate's own measurements never covered (#1341). The
+ * shared row paints the actor's name in the raw `--faction-ephemerists`, a hue
+ * measured against the app's neutral page: 4.37:1 on the bare papyrus and
+ * 4.15:1 once the light theme's gold {@link WASH} is composited over it, where
+ * 18px/700 owes 4.5:1 (700 weight reaches the large-text 3:1 exemption only at
+ * 18.66px). It is a LIGHT-only miss — the dark plate takes no wash at all and
+ * the same hue reads 5.56:1 there. #1252 recorded a dark failure by measuring
+ * the light wash over the dark plate; that composite is not a surface this
+ * chassis ever paints.
+ *
+ * {@link NILE} is the same teal walked down for type on this plate: 5.01:1 bare,
+ * 4.76:1 under the wash, 7.00:1 dark. It is also, exactly, the ink this faction
+ * declares for "links" — and the actor's name IS a link to that player. A
+ * repoint, not a mint. `-plate-quiet` clears too (5.60 / 5.32 / 5.98) and was
+ * rejected: it is the MUTED role's ink, and painting the row's one identity slot
+ * in a brown quieter than the body copy loses the faction rather than legibly
+ * keeping it.
+ */
+const ROW_SKIN: FeedRowSkin = { ink: { actor: NILE } }
 
 /**
  * The masthead's second ink tier. Declared here rather than beside its siblings
@@ -269,7 +292,7 @@ export default function EphemeristsFeedFrame({
         {/* The shared payload — the slot-driven row or one of the three
             companions. Its inks are the global text tokens, which follow the
             theme exactly as the plate ground does, so nothing is set on it. */}
-        {children}
+        <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
       </div>
     </div>
   )

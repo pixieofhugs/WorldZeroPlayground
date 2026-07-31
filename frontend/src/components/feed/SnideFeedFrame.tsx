@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 
 /**
  * S.N.I.D.E. activity-feed CHASSIS (surface #12, SPEC-faction-ui-profile.md §12).
@@ -51,6 +52,23 @@ import type { FeedFrameProps } from './feedFrameProps'
  * rotated card fouls its neighbours' edges and the shadow eats the gutter — and
  * the stripe narrows. Everything else is identical.
  */
+/**
+ * The shared body's one ink that is wrong on this stock (#1341). The row paints
+ * the actor's name in the raw `--faction-snide`, measured against the app's
+ * neutral page: 2.41:1 on the light slip, and the name is 18px/700, so it owes
+ * 4.5:1 rather than the large-text 3:1. It is the *deep* acid at that — the
+ * bright pigment reads 1.07:1 there.
+ *
+ * The ink that fixes it is the one this faction already minted for exactly the
+ * question "acid, but as TYPE on the slip": `-slip-acid-ink`, 5.21:1 light /
+ * 15.55:1 dark, and the same ink a resolved @mention prints in a comment on this
+ * very card. A repoint, not a mint — {@link FeedRowInk.actor}'s docblock makes
+ * this slot a place to re-point an existing ink and never a reason to make one —
+ * and the acid stays a DRAWN thing everywhere else on the slip (the sprocket
+ * stripe, the rule under the intake bar, the tag chip's edge).
+ */
+const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--faction-snide-slip-acid-ink)' } }
+
 export default function SnideFeedFrame({
   kicker,
   time,
@@ -184,7 +202,9 @@ export default function SnideFeedFrame({
 
         {/* The slip's body — the shared payload, which self-pads and paints its
             own inks. It gets a stock and nothing else. */}
-        <div style={{ position: 'relative' }}>{children}</div>
+        <div style={{ position: 'relative' }}>
+          <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
+        </div>
       </div>
     </div>
   )

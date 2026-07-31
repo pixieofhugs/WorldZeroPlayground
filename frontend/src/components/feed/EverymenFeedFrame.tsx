@@ -35,17 +35,32 @@
  * INK. The band is `--everymen-red` as a FILL, inked in
  * `--everymen-masthead-text` — the pairing the broadsheet chrome already
  * measured (5.24:1 light / 4.59:1 dark). #1223 established that red is only
- * 4.49:1 as TYPE on `--everymen-paper`, so no red label is set on the stock:
- * on the paper red is a fill, and the ink on it is the masthead's. The dateline
- * and the tag chip therefore print at FULL masthead ink and separate themselves
- * by face and size — the shared band's 0.7 opacity would have walked the dark
- * pairing down to roughly 3.2:1.
+ * 4.49:1 as TYPE on `--everymen-paper`, so no red label is set on the stock BY
+ * THIS FRAME: on the paper red is a fill, and the ink on it is the masthead's.
+ * The dateline and the tag chip therefore print at FULL masthead ink and
+ * separate themselves by face and size — the shared band's 0.7 opacity would
+ * have walked the dark pairing down to roughly 3.2:1.
+ *
+ * The SHARED BODY did set one, and nothing here could see it (#1341): the
+ * actor's name paints `factionCssVar(slug)` — `--faction-everymen`, the same
+ * #c1272d — at 18px/700, which owes 4.5:1 because 700 weight only reaches the
+ * large-text 3:1 exemption at 18.66px. So that 4.49:1 near-miss was a live
+ * pairing on this card and not a hypothetical, and #1223's "never set there" had
+ * quietly stopped being true one layer down. This is the only chassis of the
+ * four where no existing token could take the job: `--everymen-red` misses in
+ * light, `-red-deep` is 2.67:1 in dark, and `-sheet-accent` is the same red
+ * measured on the lighter sheet PANEL, so it misses in light too. Hence
+ * `--everymen-paper-accent`, the red walked down for this stock — a mint, and
+ * the only one this issue makes (5.09:1 light / 6.09:1 dark).
  *
  * One responsive component, no mobile twin (ADR-0056 / 0058 / 0063): the slip
  * tightens its band and drops the masthead a size on a phone.
  */
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
+import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+
+const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--everymen-paper-accent)' } }
 
 export default function EverymenFeedFrame({
   kicker,
@@ -188,7 +203,9 @@ export default function EverymenFeedFrame({
         </div>
 
         {/* The shared payload body, printed on the stock. */}
-        <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <FeedRowSkinContext.Provider value={ROW_SKIN}>{children}</FeedRowSkinContext.Provider>
+        </div>
       </div>
     </article>
   )

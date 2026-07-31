@@ -1431,6 +1431,15 @@
      on the paper, so a surface that mixes the two sheets is safe). A SIBLING:
      `--everymen-muted` keeps every job it has on the paper. */
   --everymen-quiet: #63533b;
+  /* The PAPER STOCK's accent ink (#1341) — the same (role, ground) split
+     `--faction-everymen-sheet-accent` already makes, one stock further down.
+     The red is 4.95:1 on the sheet panel and 4.49:1 here, so the feed row's
+     actor name — 18px/700, which owes 4.5:1 and not the large-text 3:1 — misses
+     by 0.01 on the broadsheet's own paper. Every OTHER job the red has on this
+     stock is a fill or a rule (the masthead band, the frame, the stamp wash),
+     and those are unaffected: this is a SIBLING, minted so `--everymen-red`
+     keeps all of them. Walked down until it clears with room: 5.09:1. */
+  --everymen-paper-accent: #b32227;
   --everymen-field: #c1272d;
   --everymen-field-deep: #8d1c20;
   --faction-everymen-card-bg: var(--everymen-paper);
@@ -2276,6 +2285,13 @@
      comfortable ground in either theme. Aliased rather than copied so a repaint
      of the dark muted ink carries the deep stock with it. */
   --everymen-quiet: var(--everymen-muted);
+  /* The paper stock's accent ink at night (#1341). `--everymen-red` is 4.16:1 on
+     the dark paper — a real failure, not a near-miss — so this half takes the
+     lifted red the faction already uses for type after dark, the value
+     --faction-everymen-sheet-accent carries. Declared rather than aliased for
+     the reason the slip/note/composer families are declared apart: same value
+     today, a different stock's contract tomorrow. 6.09:1. */
+  --everymen-paper-accent: #f4726c;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
