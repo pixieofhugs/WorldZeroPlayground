@@ -43,6 +43,26 @@ async def get_current_era_row_safe(session: AsyncSession) -> Era | None:
     return result.scalar_one_or_none()
 
 
+async def load_era_stats(
+    character_id: int,
+    era_id: int,
+    session: AsyncSession,
+) -> CharacterStats | None:
+    """A character's CharacterStats row for an era already in hand, or None.
+
+    Split out of :func:`load_current_era_stats` so a caller that has already
+    resolved the era row — /auth/me composes four such reads (#1381) — pays for
+    it once instead of once per lookup.
+    """
+    result = await session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character_id,
+            CharacterStats.era_id == era_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
 async def load_current_era_stats(
     character_id: int,
     session: AsyncSession,
@@ -55,13 +75,7 @@ async def load_current_era_stats(
     era_row = await get_current_era_row_safe(session)
     if era_row is None:
         return None
-    result = await session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id == era_row.id,
-        )
-    )
-    return result.scalar_one_or_none()
+    return await load_era_stats(character_id, era_row.id, session)
 
 
 async def get_or_create_stats(
@@ -75,13 +89,7 @@ async def get_or_create_stats(
     (see services.scoring.compute_votes_available), so new rows start with
     votes_spent_this_era = 0 — no explicit seeding of the budget is required.
     """
-    result = await session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id == era_id,
-        )
-    )
-    stats = result.scalar_one_or_none()
+    stats = await load_era_stats(character_id, era_id, session)
     if stats is None:
         stats = CharacterStats(
             character_id=character_id,
