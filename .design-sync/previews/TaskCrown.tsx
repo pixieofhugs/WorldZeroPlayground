@@ -1,9 +1,13 @@
-// TaskCrown preview cells. TaskCrown is the single praxis mark (ADR-0028): a
-// rainbow medallion with a fleur-de-lis glyph, worn by the top-scoring
-// submitted praxis for its task. The rainbow ring is a fixed brand constant
-// (--fdl-rainbow); each skin only recolours the inner disc (innerBg, the card's
-// paper) and the glyph (glyphColor, the card's ink). Props { size, innerBg,
-// glyphColor, ringInset, rotate, shadow }. It's small, so cells pack several.
+// TaskCrown preview cells. TaskCrown is the single praxis mark (ADR-0028,
+// amended by ADR-0054): a rainbow medallion with a fleur-de-lis glyph, worn by
+// the top-scoring submitted praxis for its task.
+//
+// ONE canonical look on every faction card. ADR-0054 retired the per-card
+// recolour, so there are no `innerBg` / `glyphColor` props to preview: the
+// inner disc and glyph are the theme-aware `--fdl-disc` / `--fdl-glyph`
+// tokens, and the ring reads the site's one rainbow conic (#1213, ADR-0066).
+// That leaves geometry — props { size, ringInset, rotate, shadow, style }.
+// It's small, so cells pack several.
 import { TaskCrown } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = {
@@ -44,32 +48,6 @@ export function Sizes() {
       </Chip>
       <Chip label="72 · hero">
         <TaskCrown size={72} />
-      </Chip>
-    </div>
-  )
-}
-
-/** Per-skin recolour: the fixed rainbow ring stays, while inner disc + glyph
- *  take each card's paper/ink — neutral, UA gilt paper, terminal green, and the
- *  Albescent monochrome pair. */
-export function Skins() {
-  return (
-    <div style={wrap}>
-      <Chip label="neutral">
-        <TaskCrown size={56} />
-      </Chip>
-      <Chip label="ua paper">
-        <TaskCrown size={56} innerBg="var(--ua-paper-warm)" glyphColor="var(--ua-ink)" />
-      </Chip>
-      <Chip label="singularity">
-        <TaskCrown size={56} innerBg="#050f08" glyphColor="#4ade80" />
-      </Chip>
-      <Chip label="albescent mono">
-        <TaskCrown
-          size={56}
-          innerBg="var(--al-surface)"
-          glyphColor="var(--al-ink)"
-        />
       </Chip>
     </div>
   )

@@ -11,7 +11,7 @@ function Frame({ children, label }: { children: React.ReactNode; label: string }
       <style>{`.bd-scope > div { position: absolute !important; inset: 0 !important; z-index: 0 !important; }`}</style>
       <div className="bd-scope" style={{ position: "absolute", inset: 0 }}>{children}</div>
       <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", alignItems: "flex-end", padding: 16 }}>
-        <span style={{ fontFamily: "\"Bebas Neue\", sans-serif", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.85 }}>Everymen</span>
+        <span style={{ fontFamily: "\"Bebas Neue\", sans-serif", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.85 }}>{label}</span>
       </div>
     </div>
   );

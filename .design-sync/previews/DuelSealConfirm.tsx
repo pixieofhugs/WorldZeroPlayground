@@ -5,6 +5,11 @@
 // that overlay to `absolute` inside a fixed-size box (`!important` beats the
 // component's own class), so each cell shows the whole dialog as a user meets it.
 // Preview-only — the shipped app mounts it unchanged.
+//
+// `DuelSealConfirm` is the DISPATCHER: it picks the skin from `taskFactionSlug`
+// — the faction of the TASK being duelled over, not either duellist's — and
+// falls through to the default sheet when that is null. Cells pass 'ua' to
+// match `duelFor('ua')`.
 import { DuelSealConfirm } from 'worldzero-frontend'
 import { duelFor, noop } from './_fixtures'
 
@@ -25,6 +30,7 @@ export function Submit() {
     <Stage>
       <DuelSealConfirm
         duel={duelFor('ua')}
+        taskFactionSlug="ua"
         viewerCharacterId={7}
         taskPointValue={30}
         onConfirm={noop}
@@ -40,6 +46,7 @@ export function Forfeit() {
     <Stage>
       <DuelSealConfirm
         duel={duelFor('ua')}
+        taskFactionSlug="ua"
         viewerCharacterId={7}
         taskPointValue={30}
         mode="forfeit"
@@ -56,6 +63,7 @@ export function Busy() {
     <Stage>
       <DuelSealConfirm
         duel={duelFor('ua')}
+        taskFactionSlug="ua"
         viewerCharacterId={7}
         taskPointValue={30}
         busy
