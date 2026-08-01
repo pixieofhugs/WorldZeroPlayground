@@ -170,6 +170,48 @@ export async function adminPatchTask(id: number, patch: AdminTaskPatch): Promise
   return data
 }
 
+/** Readout for a successful CSV task import (#1376). */
+export interface TaskImportResult {
+  created_count: number
+  created_titles: string[]
+  /** Corrections applied on the way in, e.g. a legacy faction slug. */
+  warnings: string[]
+}
+
+/** One rejected CSV row, as the backend's 422 `detail` reports it. */
+export interface TaskImportRowError {
+  row: number
+  msg: string
+}
+
+/**
+ * Bulk-create tasks from a CSV. **Atomic**: on success every row became a task;
+ * on failure nothing was created and `taskImportRowErrors` lists every bad row.
+ *
+ * The Content-Type is deliberately left to the browser — setting it by hand
+ * drops the multipart boundary.
+ */
+export async function importTasksCsv(file: File): Promise<TaskImportResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post<TaskImportResult>('/admin/tasks/import-csv', form)
+  return data
+}
+
+/**
+ * Every per-row rejection from a failed `importTasksCsv`, or `[]` if the failure
+ * was not a row-level one (network, 403, 500) — those go through `extractError`.
+ */
+export function taskImportRowErrors(err: unknown): TaskImportRowError[] {
+  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
+    ?.detail
+  if (!Array.isArray(detail)) return []
+  return detail.filter(
+    (item): item is TaskImportRowError =>
+      typeof item?.msg === 'string' && typeof item?.row === 'number',
+  )
+}
+
 export async function moderatePraxis(
   id: number,
   status: string,

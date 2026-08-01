@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +32,7 @@ from schemas.admin import (
     OverviewStats,
     RoleAction,
     SuspendAction,
+    TaskImportResult,
     TaskStatusAction,
 )
 from schemas.task import TaskCreate, TaskOut
@@ -65,6 +66,11 @@ from services.admin_service import (
 )
 from services.character_stats import recalculate_character_stats
 from services.era import apply_era_reset, get_current_era_row
+from services.task_import import (
+    TaskImportError,
+    import_tasks_from_csv,
+    resolve_admin_character,
+)
 from services.scoring import compute_votes_available
 from services.auth import create_jwt
 
@@ -495,15 +501,7 @@ async def admin_create_task(
     session: AsyncSession = Depends(get_db),
 ):
     """Admin-only: create a task directly in active status."""
-    result = await session.execute(
-        select(Character)
-        .where(
-            Character.account_id == admin.id,
-            Character.status == CharacterStatus.active,
-        )
-        .limit(1)
-    )
-    character = result.scalar_one_or_none()
+    character = await resolve_admin_character(admin, session)
     if character is None:
         raise HTTPException(status_code=422, detail="Admin must have an active character.")
 
@@ -538,3 +536,30 @@ async def admin_create_task(
     await session.flush()
     await session.refresh(task)
     return await build_task_out(task, session)
+
+
+@router.post("/tasks/import-csv", response_model=TaskImportResult, status_code=201)
+async def admin_import_tasks_csv(
+    file: UploadFile = File(...),
+    admin: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+):
+    """Admin-only: bulk-create tasks from an uploaded CSV (#1376).
+
+    Atomic — either every row becomes a task or none does. Rejections come back
+    as a 422 whose ``detail`` is one ``{row, msg}`` object per failing row, so the
+    admin can fix the whole file in one pass. Nothing is added to the session
+    before validation succeeds, and ``get_db`` rolls back on the raise besides.
+    """
+    try:
+        outcome = await import_tasks_from_csv(await file.read(), admin, session)
+    except TaskImportError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=[{"row": error.row, "msg": error.msg} for error in exc.errors],
+        )
+    return TaskImportResult(
+        created_count=outcome.created_count,
+        created_titles=outcome.created_titles,
+        warnings=outcome.warnings,
+    )
