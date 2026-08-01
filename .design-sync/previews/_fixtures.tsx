@@ -154,6 +154,11 @@ export const mockUser: CurrentUser = {
   can_comment: true,
   second_character_level_required: 5,
   era_name: 'Era One',
+  // #811 level-jump allowance. Only WOW carries `level_jump_reach > 0` in
+  // Era 1, and this fixture is a UA player — so the affordance stays hidden,
+  // which is the correct render for this character, not a missing value.
+  level_jump_reach: 0,
+  level_jump_available: false,
 }
 
 // ---------------------------------------------------------------------------
@@ -239,6 +244,11 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     members: SAMPLE_MEMBERS,
     invites: [SAMPLE_INVITE],
     media_items: SAMPLE_MEDIA,
+    // ADR-0053: score = (task_point_value + metatask_points) x display_multiplier
+    //           + points_from_votes  ->  (30 + 0) x 1 + 12 = 42
+    metatask_points: 0,
+    display_multiplier: 1,
+    points_from_votes: 12,
     score: 42,
     is_top_for_task: true,
     duel_id: null,
@@ -309,7 +319,13 @@ export const mockCollaboration: PraxisCardOut = {
   updated_at: NOW,
   submitted_at: NOW,
   member_count: 4,
-  score: 38,
+  // ADR-0053: (45 + 0) x 1 + 13 = 58. The old `score: 38` sat BELOW the task's
+  // own 45-point base, which the formula cannot produce — it predates the
+  // decomposition and nothing typechecked it.
+  metatask_points: 0,
+  display_multiplier: 1,
+  points_from_votes: 13,
+  score: 58,
   voter_count: 9,
   is_top_for_task: false,
   task_faction_slug: 'everymen',
@@ -336,6 +352,9 @@ export const mockCredential: CredentialCardProps = {
 export function makeFeedItem(overrides: Partial<ActivityFeedItem> = {}): ActivityFeedItem {
   return {
     type: 'friend_completion',
+    // #1193: `"{type}:{source row PK}"`. A feed item owns no row of its own, so
+    // this is the only handle the archive can name it by.
+    item_key: 'friend_completion:501',
     timestamp: NOW,
     actor_display_name: 'Ada Reed',
     actor_faction_slug: 'ua',
@@ -491,7 +510,7 @@ export function praxisCardsFor(slug: string): PraxisCardOut[] {
       title: 'Charcoal study, north portico',
     }),
     makePraxisCard({
-      id: 602, task_id: 108, task_faction_slug: slug, status: 'draft',
+      id: 602, task_id: 108, task_faction_slug: slug, status: 'in_progress',
       task_title: 'Organize a neighborhood tool library',
       title: 'Second pass, west light',
       submitted_at: null, score: 0, points_from_votes: 0, voter_count: 0, is_top_for_task: false,

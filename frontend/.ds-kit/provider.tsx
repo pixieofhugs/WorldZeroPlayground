@@ -30,6 +30,7 @@ const MOCK_USER: CurrentUser = {
     all_time_score: 320,
     faction_slug: "ua",
     status: "active",
+    created_at: "2026-06-28T09:12:00Z",
     badges: [],
     invitations: [],
   },
@@ -44,6 +45,10 @@ const MOCK_USER: CurrentUser = {
   can_comment: true,
   second_character_level_required: 3,
   era_name: "Era One",
+  // #811. Only WOW carries a level-jump reach in Era 1 and this viewer is UA,
+  // so the affordance is correctly absent.
+  level_jump_reach: 0,
+  level_jump_available: false,
 };
 
 let installed = false;

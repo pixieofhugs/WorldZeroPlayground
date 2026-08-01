@@ -11,7 +11,7 @@ const wrap: React.CSSProperties = { padding: 24, maxWidth: 520 }
 export function NeutralFallback() {
   return (
     <div style={wrap}>
-      <VoteUI praxisId={701} factionSlug={null} currentValue={3} mode="caster" />
+      <VoteUI praxisId={701} factionSlug={null} currentValue={3} />
     </div>
   )
 }
@@ -20,7 +20,7 @@ export function NeutralFallback() {
 export function FactionDispatch() {
   return (
     <div style={wrap}>
-      <VoteUI praxisId={702} factionSlug="wow" currentValue={2} mode="caster" />
+      <VoteUI praxisId={702} factionSlug="wow" currentValue={2} />
     </div>
   )
 }
@@ -29,7 +29,7 @@ export function FactionDispatch() {
 export function Summary() {
   return (
     <div style={wrap}>
-      <VoteUI praxisId={703} factionSlug="ephemerists" currentValue={4} points={38} totalVotes={11} mode="summary" />
+      <VoteUI praxisId={703} factionSlug="ephemerists" currentValue={4} points={38} totalVotes={11} />
     </div>
   )
 }
@@ -38,7 +38,7 @@ export function Summary() {
 export function TopRung() {
   return (
     <div style={wrap}>
-      <VoteUI praxisId={704} factionSlug="snide" currentValue={5} points={57} totalVotes={16} mode="caster" />
+      <VoteUI praxisId={704} factionSlug="snide" currentValue={5} points={57} totalVotes={16} />
     </div>
   )
 }

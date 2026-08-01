@@ -71,6 +71,14 @@ jobs:
         run: npm run typecheck
         working-directory: frontend
 
+      # The /design-sync preview kit lives outside `frontend/`, so the main
+      # tsconfig's `include: ["src"]` never saw it and it drifted invisibly
+      # (#1328). Separate config, separate step — a preview whose props go
+      # stale now fails the build like anything else.
+      - name: Typecheck the /design-sync preview kit
+        run: npm run typecheck:design-sync
+        working-directory: frontend
+
       - name: Run tests
         run: npm test
         working-directory: frontend

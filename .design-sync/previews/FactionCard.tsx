@@ -17,49 +17,17 @@ const wrap: React.CSSProperties = {
 }
 const col: React.CSSProperties = { width: 300 }
 
+// ADR-0038: `FactionOut` carries only the slug. The card reads each faction's
+// name and description from `locales/en/factions.json`, so fixtures are
+// slug-only — there is no wording left here to drift.
 const FACTIONS: Record<string, FactionOut> = {
-  ua: {
-    slug: 'ua',
-    name: 'University of Asthmatics',
-    description:
-      'A gilt salon for the patient craftsman. We prize the slow hand, the studied line, and work that will outlast the desk it was made on.',
-  },
-  wow: {
-    slug: 'wow',
-    name: 'Warriors of Whimsy',
-    description:
-      'Joy is a discipline. We flood the grey world with chalk suns and sidewalk parades until delight becomes contagious.',
-  },
-  snide: {
-    slug: 'snide',
-    name: 'SNIDE',
-    description:
-      'Paste it before they paint over it. Anonymous, unruly, loud — art that argues with the wall it lives on.',
-  },
-  ephemerists: {
-    slug: 'ephemerists',
-    name: 'The Ephemerists',
-    description:
-      'We catalogue what the world forgets: every bench, every tide line, every name carved and left to weather.',
-  },
-  singularity: {
-    slug: 'singularity',
-    name: 'The Singularity',
-    description:
-      'Measure yourself into optimization. Log the signal, tighten the variance, converge on a better protocol.',
-  },
-  everymen: {
-    slug: 'everymen',
-    name: 'The Everymen',
-    description:
-      'Honest work, plainly done. We finish what we start and stamp our name on it — no heroes, just neighbors.',
-  },
-  albescent: {
-    slug: 'albescent',
-    name: 'The Albescent',
-    description:
-      'Where exactly are you? We keep quiet company with what is passing, and write down only that it happened.',
-  },
+  ua: { slug: 'ua' },
+  wow: { slug: 'wow' },
+  snide: { slug: 'snide' },
+  ephemerists: { slug: 'ephemerists' },
+  singularity: { slug: 'singularity' },
+  everymen: { slug: 'everymen' },
+  albescent: { slug: 'albescent' },
 }
 
 /** The gilt-salon (UA), whimsy.exe window (Wow), and ransom sheet (Snide)
@@ -130,12 +98,9 @@ export function GenericFallback() {
       </div>
       <div style={col}>
         <FactionCard
-          faction={{
-            slug: 'mystery',
-            name: 'An Unlisted Order',
-            description:
-              'A faction the client has never seen — still rendered legibly in the neutral card frame.',
-          }}
+          // A slug with no archetype and no catalog entry — the neutral card
+          // frame still renders it legibly.
+          faction={{ slug: 'mystery' }}
           status="not_invited"
         />
       </div>

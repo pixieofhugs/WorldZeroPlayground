@@ -1,19 +1,16 @@
 // EverymenCard preview cells. EverymenCard is the Everymen faction's directory
 // card — a union recruitment poster: cog seal, big Bebas headline (the faction
-// name), a motto plaque, a blurb from faction.description, and a "what you get"
-// perk list. Props are FactionCardProps { faction, status, invitationNote }.
+// name), a motto plaque, the catalog blurb, and a "what you get" perk list.
+// Props are FactionCardProps { faction, status, invitationNote }.
 import { EverymenCard } from 'worldzero-frontend'
 import type { FactionOut } from '../../frontend/src/api/factions'
 
 const wrap: React.CSSProperties = { padding: 24, display: 'flex', gap: 28, flexWrap: 'wrap' }
 const col: React.CSSProperties = { width: 460 }
 
-const EVERYMEN: FactionOut = {
-  slug: 'everymen',
-  name: 'The Everymen',
-  description:
-    'Honest work, plainly done. We finish what we start and stamp our name on it — no heroes, just neighbors who show up and get it built.',
-}
+// ADR-0038: `FactionOut` is slug-only; the poster's name and blurb come from
+// `locales/en/factions.json`.
+const EVERYMEN: FactionOut = { slug: 'everymen' }
 
 /** The recruitment poster as it reads in the faction directory: cog seal,
  *  headline, motto plaque, blurb, and the three-perk enlistment list. */
@@ -43,16 +40,13 @@ export function WithInvitation() {
   )
 }
 
-/** No description supplied → the poster falls back to its built-in blurb, so the
- *  card never renders a hole where the motto text should be. */
-export function BlurbFallback() {
+/** Already enlisted: `status="member"` drops the recruitment kicker, so the
+ *  poster reads as a standing membership card rather than a call to join. */
+export function Member() {
   return (
     <div style={wrap}>
       <div style={col}>
-        <EverymenCard
-          faction={{ slug: 'everymen', name: 'The Everymen', description: null }}
-          status="member"
-        />
+        <EverymenCard faction={EVERYMEN} status="member" />
       </div>
     </div>
   )
