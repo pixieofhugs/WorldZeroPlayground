@@ -92,6 +92,7 @@ import { Link } from "react-router-dom";
 import type { DuelSideOut } from "../../../api/duel";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
+import { RosterAvatar } from "../../../components/collab/RosterAvatar";
 import { duelSides } from "../../../components/duel/shared";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import { useGameConfig } from "../../../hooks/useGameConfig";
@@ -263,23 +264,14 @@ export function CollabPublishClock({
 
 function SideAvatar({ side }: { side: DuelSideOut }) {
   return (
-    <span
-      className="flex items-center justify-center"
-      style={{
-        width: 28,
-        height: 28,
-        borderRadius: "50%",
-        flexShrink: 0,
-        // The SIDE's own faction, never the page's: a duel is the one place two
-        // factions share a surface, and the avatar is who is speaking.
-        background: factionCssVar(side.faction_slug, "light"),
-        border: `1px solid ${factionCssVar(side.faction_slug, "border")}`,
-        fontSize: "var(--text-md)",
-        fontWeight: 700,
-      }}
-    >
-      {side.display_name.charAt(0).toUpperCase()}
-    </span>
+    <RosterAvatar
+      name={side.display_name}
+      size={28}
+      // The SIDE's own faction, never the page's: a duel is the one place two
+      // factions share a surface, and the avatar is who is speaking.
+      background={factionCssVar(side.faction_slug, "light")}
+      borderColor={factionCssVar(side.faction_slug, "border")}
+    />
   );
 }
 
@@ -609,19 +601,13 @@ export default function PraxisWaitingSurface({
           )}
         </section>
 
-        {/* Who else is outstanding, under the composer's own section label —
-            `Collaborators · N` or `Opponent`, the same words the composer used
-            for the same block a moment ago. The collab reuses the roster
-            unchanged: it is the same component the composer and the read page
-            already mount, and it takes the faction slug itself. */}
+        {/* Who else is outstanding. The collab reuses the roster unchanged: it
+            is the same component the composer and the read page already mount,
+            and it takes the faction slug itself — including, since #1416, its
+            own `Collaborators · N` header, which is why only the duel guise
+            still passes a section label here. */}
         <ComposerSection
-          label={
-            isDuel
-              ? t("editPraxis.composer.opponentLabel")
-              : t("editPraxis.composer.collaboratorsLabel", {
-                  count: praxis.members.length,
-                })
-          }
+          label={isDuel ? t("editPraxis.composer.opponentLabel") : undefined}
           rule={rule("roster")}
           labelStyle={dress.labelStyle}
         >

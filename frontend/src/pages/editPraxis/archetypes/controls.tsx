@@ -158,21 +158,25 @@ export function InviteSearch({
                 )}
               </span>
             )
-          : [
-              // Live cast-status roster replaces the flat member pills (#591).
-              // `invites` is deliberately NOT passed here, and this is the only
-              // mount that withholds it (#1274): the roster's `awaiting` line
-              // names outstanding invitees, and on THIS surface they are already
-              // drawn as the pending chips immediately below — with the rescind
-              // × the line cannot offer. One fact, one place.
-              <div key="roster" style={{ flex: "1 1 100%" }}>
+          : (
+              // Live status roster replaces the flat member pills (#591) and,
+              // since #1416, the pending-invite chips that used to sit beside
+              // it. This mount used to withhold `invites` on the grounds that
+              // the chips below already named them — but the chips WERE the
+              // second place, and a declined invite had no first one. The roster
+              // now draws invited and declined as rows of its own and carries
+              // the rescind × the chips owned, so "one fact, one place" is
+              // finally true rather than merely asserted.
+              <div style={{ flex: "1 1 100%" }}>
                 <CollabRoster
                   praxisType={praxis.type}
                   members={praxis.members}
+                  invites={praxis.invites}
                   currentCharacterId={state.currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
                   onKick={state.kickMember}
+                  onRescindInvite={state.cancelInvite}
                 />
                 {/* The ADR-0012 countdown, for the holdout only (#1164). It
                     renders itself to nothing for every other viewer and for a
@@ -186,46 +190,8 @@ export function InviteSearch({
                   submitProposedAt={praxis.submit_proposed_at}
                   autoSubmitDays={state.autoSubmitDays}
                 />
-              </div>,
-              ...praxis.invites
-                .filter((invite) => invite.status === "pending")
-                .map((invite) => (
-                  <span
-                    key={`i-${invite.id}`}
-                    style={{
-                      fontFamily: skin.fontFamily,
-                      fontSize: "var(--text-md)",
-                      padding: "var(--space-xs) var(--space-sm)",
-                      background: skin.pendingBg ?? "transparent",
-                      color: skin.pendingColor ?? "inherit",
-                      border: "1px dashed currentColor",
-                    }}
-                  >
-                    {invite.invitee_display_name}{" "}
-                    <em>· {t("editPraxis.invite.statusPending")}</em>
-                    {/* Inviter rescinds a still-pending invite (#421). */}
-                    <button
-                      type="button"
-                      onClick={() => void state.cancelInvite(invite.id)}
-                      aria-label={t("editPraxis.invite.rescindInviteAria", {
-                        name: invite.invitee_display_name,
-                      })}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "inherit",
-                        cursor: "pointer",
-                        fontSize: "var(--text-xl)",
-                        lineHeight: 1,
-                        padding: 0,
-                        marginLeft: "var(--space-xs)",
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                )),
-            ]}
+              </div>
+            )}
       </div>
       {!challengeAttached && (duelMode || castCount === 0) && (
       <div style={{ position: "relative" }}>
