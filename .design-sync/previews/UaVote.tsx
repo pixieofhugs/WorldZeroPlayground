@@ -15,7 +15,7 @@ const wrap: React.CSSProperties = { padding: 24, maxWidth: 520 }
 export function Caster() {
   return (
     <div style={wrap}>
-      <UaVote praxisId={501} currentValue={3} mode="caster" />
+      <UaVote praxisId={501} currentValue={3} />
     </div>
   )
 }
@@ -24,7 +24,7 @@ export function Caster() {
 export function Summary() {
   return (
     <div style={wrap}>
-      <UaVote praxisId={501} currentValue={4} points={42} totalVotes={9} mode="summary" />
+      <UaVote praxisId={501} currentValue={4} points={42} totalVotes={9} />
     </div>
   )
 }
@@ -33,7 +33,7 @@ export function Summary() {
 export function TopRung() {
   return (
     <div style={wrap}>
-      <UaVote praxisId={501} currentValue={5} points={58} totalVotes={14} mode="caster" />
+      <UaVote praxisId={501} currentValue={5} points={58} totalVotes={14} />
     </div>
   )
 }

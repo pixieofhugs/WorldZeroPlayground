@@ -1,8 +1,7 @@
 // EverymenVote preview cells — union "approval stamps" with an escalating ink
 // ramp (gold → red → the authoritative black seal at 5), Bebas Neue numerals and
 // a dashed inset on the active stamp. Auth is mocked authed so the interactive
-// stamps render. Ignores `mode`; state comes from currentValue / points /
-// totalVotes.
+// stamps render. State comes from currentValue / points / totalVotes.
 import { EverymenVote } from 'worldzero-frontend'
 
 const wrap: React.CSSProperties = { padding: 24, maxWidth: 520 }
@@ -11,7 +10,7 @@ const wrap: React.CSSProperties = { padding: 24, maxWidth: 520 }
 export function Caster() {
   return (
     <div style={wrap}>
-      <EverymenVote praxisId={761} currentValue={3} mode="caster" />
+      <EverymenVote praxisId={761} currentValue={3} />
     </div>
   )
 }
@@ -20,7 +19,7 @@ export function Caster() {
 export function Summary() {
   return (
     <div style={wrap}>
-      <EverymenVote praxisId={761} currentValue={4} points={45} totalVotes={13} mode="summary" />
+      <EverymenVote praxisId={761} currentValue={4} points={45} totalVotes={13} />
     </div>
   )
 }
@@ -29,7 +28,7 @@ export function Summary() {
 export function TopRung() {
   return (
     <div style={wrap}>
-      <EverymenVote praxisId={761} currentValue={5} points={60} totalVotes={16} mode="caster" />
+      <EverymenVote praxisId={761} currentValue={5} points={60} totalVotes={16} />
     </div>
   )
 }
