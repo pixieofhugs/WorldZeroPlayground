@@ -12,6 +12,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -439,7 +440,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <div>
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={pinkButton}>
-            {t("detail.signup.cta")}
+            {t(signupCtaKey(task.signup_reason))}
           </button>
           <div
             style={{

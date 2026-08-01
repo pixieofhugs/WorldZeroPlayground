@@ -41,6 +41,12 @@ export interface TaskOut {
   can_submit_praxis: boolean
   allowed_modes: string[]
   eligible_for_current_user: boolean
+  // Why sign-up is open or shut for this viewer — the flag above says whether,
+  // this says which, so the CTA can read "Begin again" without the client
+  // re-deriving a server rule (#1497). Optional because it is absent from every
+  // anonymous read and from any response predating it; `signupCtaKey` treats
+  // absent and unrecognised alike.
+  signup_reason?: string | null
 }
 
 export interface TaskCreate {

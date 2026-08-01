@@ -12,6 +12,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -639,7 +640,7 @@ export default function EverymenTaskDetail({
         <div>
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={primaryBar}>
-            {t("detail.signup.cta")}
+            {t(signupCtaKey(task.signup_reason))}
           </button>
           <div
             style={{

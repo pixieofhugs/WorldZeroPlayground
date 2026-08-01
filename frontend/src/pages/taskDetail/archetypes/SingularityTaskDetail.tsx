@@ -12,6 +12,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -580,7 +581,7 @@ export default function SingularityTaskDetail({
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={primaryButton}>
             {prompt}
-            {t("detail.signup.cta")}
+            {t(signupCtaKey(task.signup_reason))}
             <Cursor />
           </button>
           <div
