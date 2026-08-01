@@ -5195,14 +5195,20 @@
 .filter-bar {
   border: 1px solid var(--color-border);
   border-radius: var(--space-md);
-  overflow: hidden;
+  /* No overflow: hidden — OptionPicker's desktop popover is an absolutely
+     positioned descendant that must escape this box. The bar's own
+     background still respects border-radius on all four corners without
+     it; only .filter-bar__spectrum below needs an explicit clip. */
   background: var(--color-bg-surface);
 }
 
-/* The spectrum edge along the top of the bar — ruling 1's ring, laid flat. */
+/* The spectrum edge along the top of the bar — ruling 1's ring, laid flat.
+   Rounded on its own top corners so it still follows the bar's radius now
+   that the bar no longer clips its children with overflow: hidden. */
 .filter-bar__spectrum {
   height: var(--filter-rail-pad);
   background: var(--faction-default-rainbow);
+  border-radius: var(--space-md) var(--space-md) 0 0;
 }
 
 .filter-bar__body {
