@@ -1,10 +1,20 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { getMe, type CurrentUser } from '../api/auth'
+import { getMe, logout, type CurrentUser } from '../api/auth'
 
 interface AuthState {
   user: CurrentUser | null
   loading: boolean
   refetch: () => Promise<void>
+  /**
+   * End the session and drop the app to its logged-out state.
+   *
+   * Exists so that signing out does not have to `logout()` and then `refetch()`
+   * (#1349). That second call was a request whose answer the client already
+   * held: the cookie is gone, so `/auth/me` can only 401, and `/auth/me` is a
+   * `SESSION_PROBE` (`api/axios.ts`) precisely so that 401 is swallowed. It cost
+   * a round trip to reach the `user = null` the caller had already caused.
+   */
+  signOut: () => Promise<void>
 }
 
 /** Exported for tests only: the harness is `renderToStaticMarkup`, so a
@@ -14,6 +24,7 @@ export const AuthContext = createContext<AuthState>({
   user: null,
   loading: true,
   refetch: async () => {},
+  signOut: async () => {},
 })
 
 const SESSION_HINT_KEY = 'wz_session_hint'
@@ -46,6 +57,23 @@ function rememberSession(signedIn: boolean): void {
   }
 }
 
+/**
+ * The sign-out wiring, extracted so it is unit-testable in a DOM-less env
+ * (`renderToStaticMarkup`, no jsdom — effects never run, so the provider's own
+ * closure is unreachable from a test). Lives here rather than beside a page
+ * because both sign-out buttons — the desktop NavBar and the mobile Settings
+ * surface — route through the one context method.
+ */
+export function runSignOut(
+  endSession: () => Promise<void>,
+  forgetViewer: () => void,
+): () => Promise<void> {
+  return async () => {
+    await endSession()
+    forgetViewer()
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -64,12 +92,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // No `/auth/me` follow-up: ending the session IS the new state, and the
+  // provider owns both halves of it — see `AuthState.signOut`.
+  const signOut = runSignOut(logout, () => {
+    setUser(null)
+    rememberSession(false)
+    setLoading(false)
+  })
+
   useEffect(() => {
     void fetchUser()
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, refetch: fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, signOut }}>
       {children}
     </AuthContext.Provider>
   )

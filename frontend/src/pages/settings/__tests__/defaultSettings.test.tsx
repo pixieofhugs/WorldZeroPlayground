@@ -4,18 +4,20 @@
  * seams the screen wires to, not synthetic clicks:
  *   - the dark-mode toggle delegates to `useTheme`'s `nextTheme`/`applyTheme`,
  *     which flip the real `[data-theme]` cascade (exercised via a document shim);
- *   - sign-out runs the extracted `runSignOut`, which invokes the reused `logout`;
  *   - the render shows ONLY real controls — the parked notifications / privacy /
  *     about rows are absent (ADR-0035).
+ *
+ * Sign-out moved out of this file with #1349: the screen now passes
+ * `useAuth().signOut` straight through, and the wiring it used to assert here is
+ * covered where it now lives — `auth/__tests__/authRefetchLedger.test.ts`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
 import DefaultSettings from '../mobileArchetypes/DefaultSettings'
-import { runSignOut } from '../../Settings'
 import { nextTheme, applyTheme } from '../../../hooks/useTheme'
 import type { CharacterOut } from '../../../api/auth'
 
@@ -124,12 +126,3 @@ describe('mobile Settings — dark-mode toggle flips [data-theme]', () => {
   })
 })
 
-describe('mobile Settings — sign out invokes logout', () => {
-  it('runSignOut ends the session via the reused auth client, then refetches', async () => {
-    const logout = vi.fn().mockResolvedValue(undefined)
-    const refetch = vi.fn().mockResolvedValue(undefined)
-    await runSignOut(logout, refetch)()
-    expect(logout).toHaveBeenCalledOnce()
-    expect(refetch).toHaveBeenCalledOnce()
-  })
-})

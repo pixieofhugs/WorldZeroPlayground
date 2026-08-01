@@ -224,6 +224,9 @@ export function useFactionDetail(
     setJoinError(null);
     try {
       await chooseFaction(slug);
+      // Membership dresses the whole site off `/auth/me` — faction slug, the
+      // level-jump allowance, `albescent_revealed`. `POST /factions/choose`
+      // answers `{slug, status}`, so nothing cheaper exists yet (#1383 item 1).
       await refetch();
       setRawStatus("member");
     } catch (err) {
