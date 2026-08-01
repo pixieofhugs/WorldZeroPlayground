@@ -231,11 +231,17 @@ async def backfill_all_character_stats(
     total, so a bug in the recalc path leaves every score wrong until something
     recomputes them. #1345 (the era bound) and #1373 (failed praxes score zero)
     are both changes whose backfill this is.
+
+    Silent: ``emit_taunts=False`` (ADR-0068). Recomputing a score everyone
+    already had is not an overtake, and a backfill must never mail the whole
+    playerbase a volley of taunts about history.
     """
     characters = await list_active_characters(session)
     era_row = await get_current_era_row(session)
     for character in characters:
-        await recalculate_character_stats(character.id, session, era_row=era_row)
+        await recalculate_character_stats(
+            character.id, session, era_row=era_row, emit_taunts=False
+        )
     await session.flush()
     return {"recalculated": len(characters)}
 
