@@ -313,7 +313,7 @@ async def test_the_crew_nudge_is_refused_once_the_praxis_is_published(
 
 @pytest.mark.asyncio
 async def test_the_crew_nudge_404s_on_a_praxis_that_is_not_there(
-    client: AsyncClient, auth_headers: dict
+    client: AsyncClient, character: Character, auth_headers: dict
 ) -> None:
     response = await client.post("/praxes/999999/nudge", headers=auth_headers)
     assert response.status_code == 404, response.text

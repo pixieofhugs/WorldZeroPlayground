@@ -49,7 +49,7 @@ class InviteResponse(BaseModel):
 
 class MetataskApply(BaseModel):
     task_id: int
-from schemas.nudge import NudgeOut
+from schemas.nudge import NudgeOut, NudgeResultOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
 from services.scoring import compute_votes_available
 from services.praxis import (
@@ -82,7 +82,7 @@ from services.praxis_out import (
     build_praxis_out,
 )
 from services.media import process_and_save_media
-from services.nudge import send_nudge
+from services.nudge import nudge_the_crew, send_nudge
 from services.vote import cast_vote_on_praxis
 
 logger = logging.getLogger(__name__)
@@ -492,13 +492,43 @@ async def nudge_route(
     for a duel, one per 24h) lives in ``services.nudge``; this handler is thin on
     purpose so a second caller cannot acquire a second set of them.
     """
-    nudge = await send_nudge(
+    return await send_nudge(
         praxis_id=praxis_id,
         from_character_id=character.id,
         to_character_id=character_id,
         session=session,
     )
-    return NudgeOut.model_validate(nudge)
+
+
+@router.post("/{praxis_id}/nudge", response_model=List[NudgeResultOut])
+async def nudge_crew_route(
+    praxis_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Poke everyone this praxis is still waiting on, in one request (#1415).
+
+    Takes no body: the crew is every member who has not filed yet, minus you,
+    and the server derives it from the roster it already has. One press, one
+    round trip — the alternative was N calls to the route above with the client
+    swallowing the 422s, which would put the cooldown rule in two places.
+
+    Returns **one entry per recipient**, in roster order, each carrying either
+    the recorded ``NudgeOut`` or the refusal that recipient alone earned. The
+    200 says "the request was processed", not "everyone was poked": inside the
+    24h window some of the crew are routinely refused, so read every entry.
+    Nobody outstanding is an empty list, not an error.
+
+    Batch-wide verdicts are still whole-request: 404 for a missing praxis, 422
+    once it is published, 403 unless the sender is a member who has already
+    filed. Authorisation is identical to the single route by construction —
+    both call ``services.nudge._send_nudges``.
+    """
+    return await nudge_the_crew(
+        praxis_id=praxis_id,
+        from_character_id=character.id,
+        session=session,
+    )
 
 
 @router.post("/{praxis_id}/kick/{member_id}", response_model=PraxisOut)
