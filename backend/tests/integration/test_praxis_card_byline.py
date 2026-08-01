@@ -20,7 +20,7 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
-from services.praxis import build_praxis_card_out, build_praxis_out
+from services.praxis_out import build_praxis_card_out, build_praxis_out
 
 
 async def _make_solo_praxis(session: AsyncSession, author: Character) -> Praxis:

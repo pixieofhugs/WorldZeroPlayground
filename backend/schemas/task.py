@@ -26,7 +26,7 @@ class TaskOut(BaseModel):
     # same set GET /tasks/{id}/signups exposes, reduced to a count (#1021).
     # Populated by services.task.build_task_out(_for_viewer). Defaults to 0
     # because TaskOut.model_validate() is also used directly on metatask rows
-    # (the praxis seal stack — services/praxis.py's applied_metatasks_for),
+    # (the praxis seal stack — services/praxis_out.py's applied_metatasks_for),
     # which have no such attribute on the Task ORM object; 0 is also the true
     # value there since metatasks are never signup targets (evaluate_signup
     # rejects TaskType.metatask before any status check).
@@ -41,7 +41,7 @@ class TaskOut(BaseModel):
     #
     # They default for the same reason ``in_progress_count`` does: metatask
     # rows in the praxis seal stack are built by TaskOut.model_validate() on a
-    # bare Task ORM object (services/praxis.py's applied_metatasks_for), which
+    # bare Task ORM object (services/praxis_out.py's applied_metatasks_for), which
     # carries no author attributes. A seal draws no byline, so the defaults are
     # never rendered there.
     created_by_display_name: str = ""

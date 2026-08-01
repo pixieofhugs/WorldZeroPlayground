@@ -39,7 +39,7 @@ async def tally_votes(
     The result covers exactly ``praxis_ids``: a praxis with no votes gets an
     empty tally instead of being omitted, so ``praxis_id in result`` means "this
     id was in the batch" and never "this id has no votes" (#1378). Page-wide
-    callers such as :func:`services.praxis.build_praxis_cards` use that
+    callers such as :func:`services.praxis_out.build_praxis_cards` use that
     membership to decide whether the precomputed map answers for a card or the
     card must fall back to its own query — with a sparse map, a praxis outside
     the batch would silently read as zero votes.

@@ -36,7 +36,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
-from services.praxis import (
+from services.praxis_out import (
     applied_metatasks_for,
     build_praxis_card_out,
     build_praxis_out,
