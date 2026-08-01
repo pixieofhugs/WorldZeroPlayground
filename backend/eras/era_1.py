@@ -86,6 +86,9 @@ ERA_1_FACTIONS = {
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
+    # Everymen's perk is "Double Dipper": a task may be claimed again while a
+    # claim on it is still active. Stated here as a FactionConfig field so the
+    # sign-up predicate and the browse exclusion both inherit it (#1359).
     "everymen": FactionConfig(
         slug="everymen",
         can_always_rejoin=False,
@@ -95,6 +98,7 @@ ERA_1_FACTIONS = {
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
+        can_hold_multiple_memberships=True,   # Double Dipper
     ),
     "singularity": FactionConfig(
         slug="singularity",

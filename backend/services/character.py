@@ -550,16 +550,19 @@ async def list_characters_for_viewer(
     exclude_active_task_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
+    era: EraConfig = CURRENT_ERA,
 ) -> list[tuple[Character, CharacterStats | None]]:
     """List active characters with current-era stats. Optional name/faction filters.
 
     ``exclude_active_task_id`` drops characters who already hold an active
     (in_progress or submitted) praxis membership for that task — so the invite
-    search doesn't surface players the backend would 409 (#320). Everymen are
-    never excluded (Double Dipper perk: they may hold multiple memberships per
-    task), mirroring :func:`services.praxis.is_active_member_of_task`.
+    search doesn't surface players the backend would 409 (#320). Members of a
+    faction the era grants Double Dipper to are never excluded: they may hold
+    multiple memberships per task, so there is no 409 to pre-empt. The set of
+    such factions comes from :func:`services.praxis.multi_membership_faction_slugs`,
+    the one place that rule is stated (#1359).
     """
-    from services.praxis import EVERYMEN_FACTION_SLUG
+    from services.praxis import multi_membership_faction_slugs
 
     era_row = await get_current_era_row_safe(session)
     era_id = era_row.id if era_row else None
@@ -622,7 +625,7 @@ async def list_characters_for_viewer(
         )
         query = query.where(
             or_(
-                Character.faction_slug == EVERYMEN_FACTION_SLUG,
+                Character.faction_slug.in_(multi_membership_faction_slugs(era)),
                 Character.id.notin_(active_member_ids),
             )
         )

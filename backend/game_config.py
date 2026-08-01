@@ -75,6 +75,14 @@ class FactionConfig:
     # Read via services.level_jump — never branch on a faction slug in a service.
     # Defaulted so existing/new era files only state it where it is non-zero.
     level_jump_reach: int = 0
+    # "Double Dipper" (#1359): may the member hold more than one active praxis
+    # membership on the SAME task? False (the baseline) means a task already in
+    # hand is neither claimable again nor listed in that character's browse.
+    # Read via services.praxis.multi_membership_faction_slugs — never branch on
+    # a faction slug in a service. Both halves of the membership gate (the
+    # Python predicate and the SQL the browse filters with) read that one
+    # function, so they cannot drift.
+    can_hold_multiple_memberships: bool = False
 
 
 @dataclass(frozen=True)

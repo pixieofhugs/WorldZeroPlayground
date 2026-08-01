@@ -71,7 +71,8 @@ from services.vote_tally import (
 )
 
 
-EVERYMEN_FACTION_SLUG = "everymen"
+# No EVERYMEN_FACTION_SLUG: the Double Dipper ability is a FactionConfig field
+# read via multi_membership_faction_slugs, not a slug to compare against (#1359).
 ALBESCENT_FACTION_SLUG = "albescent"
 
 
@@ -1184,15 +1185,21 @@ async def gather_signup_facts(
     character: Character,
     task_ids: Collection[int],
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> SignupFacts:
-    """Read one page's worth of :class:`SignupFacts` in four queries, not four per row."""
+    """Read one page's worth of :class:`SignupFacts` in four queries, not four per row.
+
+    ``era`` is threaded into the membership read so a caller evaluating against a
+    non-current ruleset gets facts from that same ruleset — precomputed facts
+    that disagree with the predicate would be the #1377 bug wearing a new hat.
+    """
     era_row = await get_current_era_row(session)
     return SignupFacts(
         stats=await get_or_create_stats(session, character.id, era_row.id),
         in_progress_praxis_count=await _count_in_progress_praxes(character.id, session),
         task_ids=frozenset(task_ids),
         active_member_task_ids=await active_member_task_ids(
-            character, task_ids, session
+            character, task_ids, session, era
         ),
     )
 
@@ -1247,7 +1254,7 @@ async def evaluate_signup(
     if facts is not None and task.id in facts.task_ids:
         already_member = task.id in facts.active_member_task_ids
     else:
-        already_member = await is_active_member_of_task(character, task, session)
+        already_member = await is_active_member_of_task(character, task, session, era)
     if already_member:
         return SignupEligibility(False, SignupDenialReason.already_active_member)
 
@@ -1759,18 +1766,50 @@ async def can_flag_praxis(
     return stats.level >= era.flag_level_required
 
 
-def active_member_task_ids_subquery(character_id: int):
+def multi_membership_faction_slugs(era: EraConfig = CURRENT_ERA) -> tuple[str, ...]:
+    """Slugs whose members may hold more than one active membership on a task.
+
+    The "Double Dipper" ability (Everymen in Era 1) read off ``era`` rather than
+    branched on a slug — it is a ``FactionConfig.can_hold_multiple_memberships``
+    field, the same shape as WOW's level jump (#1359).
+
+    This is the *only* statement of the rule. :func:`active_member_task_ids_subquery`
+    applies it in SQL and every Python caller reaches that subquery, so the
+    browse list and the sign-up predicate cannot answer differently.
+    """
+    return tuple(
+        sorted(
+            slug
+            for slug, faction in era.factions.items()
+            if faction.can_hold_multiple_memberships
+        )
+    )
+
+
+def active_member_task_ids_subquery(
+    character_id: int, era: EraConfig = CURRENT_ERA
+):
     """SQL subquery returning task IDs where ``character_id`` holds an active praxis membership.
 
-    "Active" means the praxis status is ``in_progress`` or ``submitted``.
+    "Active" means the praxis status is ``in_progress``, ``pending`` or ``submitted``.
     Used by the task-list query to exclude tasks the character is already working on,
-    and by :func:`is_active_member_of_task` for per-task checks.
+    and by :func:`active_member_task_ids` for the Python answer.
+
+    The Double Dipper carve-out lives *here*, in the SQL, and not in a Python
+    branch above it: the browse exclusion (``services.task.list_tasks``) reaches
+    this function without going through the predicate, so a carve-out stated
+    anywhere else is one the browse silently ignores — which is exactly how a
+    task an Everymen character could legitimately claim again went missing from
+    their own list (#1359). The join is on the membership's character, whose id
+    is a primary key, so it adds a row lookup and no fan-out.
     """
     return (
         select(Praxis.task_id)
         .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
+        .join(Character, Character.id == PraxisMember.character_id)
         .where(
             PraxisMember.character_id == character_id,
+            Character.faction_slug.notin_(multi_membership_faction_slugs(era)),
             Praxis.status.in_(
                 [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
             ),
@@ -1782,22 +1821,23 @@ async def active_member_task_ids(
     character: Character,
     task_ids: Collection[int],
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> frozenset[int]:
     """Which of ``task_ids`` ``character`` already holds an active membership on — ONE query.
 
-    "Active" is the same population as :func:`active_member_task_ids_subquery`
-    (in_progress, pending or submitted). Everymen (Double Dipper perk) get the
-    empty set: they may hold multiple memberships per task, so the gate never
+    "Active" is the same population as :func:`active_member_task_ids_subquery`,
+    which is also where the Double Dipper carve-out is applied: a member of a
+    faction that may hold multiple memberships matches no row, so the gate never
     closes for them.
 
-    The batch form of :func:`is_active_member_of_task`, which now delegates here
+    The batch form of :func:`is_active_member_of_task`, which delegates here
     — one implementation, so the page-wide answer and the single-task answer
     cannot drift (#1377).
     """
-    if character.faction_slug == EVERYMEN_FACTION_SLUG or not task_ids:
+    if not task_ids:
         return frozenset()
     result = await session.execute(
-        active_member_task_ids_subquery(character.id).where(
+        active_member_task_ids_subquery(character.id, era).where(
             Praxis.task_id.in_(task_ids)
         )
     )
@@ -1808,12 +1848,14 @@ async def is_active_member_of_task(
     character: Character,
     task: Task,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Return True if ``character`` holds an active (in_progress or submitted) praxis membership for ``task``.
+    """Return True if ``character`` holds an active praxis membership for ``task``.
 
-    Everymen (Double Dipper perk) always returns False — they may hold multiple memberships per task.
+    False for a faction the era grants Double Dipper to — see
+    :func:`multi_membership_faction_slugs`.
     """
-    return task.id in await active_member_task_ids(character, [task.id], session)
+    return task.id in await active_member_task_ids(character, [task.id], session, era)
 
 
 async def can_submit_praxis_for_task(
@@ -2416,6 +2458,7 @@ __all__ = [
     "PraxisSort",
     "VotedFilter",
     "moderate_praxis",
+    "multi_membership_faction_slugs",
     "remove_metatask",
     "respond_to_invite",
     "SignupDenialReason",
