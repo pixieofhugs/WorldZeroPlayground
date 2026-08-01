@@ -534,6 +534,14 @@ def meets_task_level(
     return character_level + level_reach >= task.level_required
 
 
+#: The one reason sign-up can be *open* that "you have not started this" does not
+#: explain: the viewer is already on the task and their faction may hold more than
+#: one membership on it (Double Dipper — ``can_hold_multiple_memberships``). It is
+#: never inferred from a slug; see :func:`signup_reason`, which derives it from the
+#: raw membership fact and the predicate's own verdict (#1497).
+SIGNUP_REASON_MULTI_MEMBERSHIP = "multi_membership"
+
+
 class SignupDenialReason(str, Enum):
     """Why the type-agnostic sign-up gates reject a claim (ADR-0008)."""
 
@@ -563,16 +571,22 @@ class SignupFacts:
     per page by :func:`gather_signup_facts`, a 50-row browse pays for them once
     instead of 50 times (#1377).
 
-    ``task_ids`` is the page these facts were gathered for.
-    ``active_member_task_ids`` is only meaningful within it, so
-    :func:`evaluate_signup` falls back to its own query for a task outside the
-    set rather than reading absence as "not a member".
+    ``task_ids`` is the page these facts were gathered for. Both membership sets
+    are only meaningful within it, so :func:`evaluate_signup` and
+    :func:`signup_reason` fall back to their own query for a task outside the set
+    rather than reading absence as "not a member".
+
+    The two membership sets answer different questions and differ by exactly the
+    Double Dipper ability: ``active_member_task_ids`` is what *blocks* a fresh
+    claim, ``held_membership_task_ids`` is what the viewer is on at all. The wire
+    needs both to say "begin again" rather than "you are already on this" (#1497).
     """
 
     stats: CharacterStats
     in_progress_praxis_count: int
     task_ids: frozenset[int]
     active_member_task_ids: frozenset[int]
+    held_membership_task_ids: frozenset[int]
 
 
 async def gather_signup_facts(
@@ -581,11 +595,16 @@ async def gather_signup_facts(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> SignupFacts:
-    """Read one page's worth of :class:`SignupFacts` in four queries, not four per row.
+    """Read one page's worth of :class:`SignupFacts` in five queries, not five per row.
 
     ``era`` is threaded into the membership read so a caller evaluating against a
     non-current ruleset gets facts from that same ruleset — precomputed facts
     that disagree with the predicate would be the #1377 bug wearing a new hat.
+
+    The fifth read is the raw membership set (#1497). It is a second page-wide
+    query rather than a Python derivation of the first because deriving it would
+    mean restating the Double Dipper carve-out outside the SQL that owns it — the
+    #1359 defect exactly.
     """
     era_row = await get_current_era_row(session)
     return SignupFacts(
@@ -594,6 +613,9 @@ async def gather_signup_facts(
         task_ids=frozenset(task_ids),
         active_member_task_ids=await active_member_task_ids(
             character, task_ids, session, era
+        ),
+        held_membership_task_ids=await held_membership_task_ids(
+            character, task_ids, session
         ),
     )
 
@@ -661,6 +683,46 @@ async def evaluate_signup(
         return SignupEligibility(False, SignupDenialReason.bank_full)
 
     return SignupEligibility(allowed=True)
+
+
+async def signup_reason(
+    character: Optional[Character],
+    task: Task,
+    eligibility: SignupEligibility,
+    session: AsyncSession,
+    *,
+    facts: Optional[SignupFacts] = None,
+) -> Optional[str]:
+    """The ``TaskOut.signup_reason`` the wire carries — *why* this viewer may or may
+    not claim this task (#1497).
+
+    ``None`` means "nothing to explain": an ordinary first claim, or an anonymous
+    viewer who has no standing to be given a reason. Otherwise it is either a
+    :class:`SignupDenialReason` value (the blocked state, so the client can say
+    which gate closed) or :data:`SIGNUP_REASON_MULTI_MEMBERSHIP`.
+
+    The allowed-but-notable case is derived, never branched on a slug: if
+    :func:`evaluate_signup` says yes *and* the viewer already holds a membership,
+    the only rule that can have let both be true is the multi-membership ability.
+    That is why this reads the raw membership set rather than
+    ``active_member_task_ids``, which the ability empties by construction.
+
+    ``facts`` is the page-wide precompute and carries #1377's property: an id
+    outside ``facts.task_ids`` falls back to its own read instead of taking the
+    absence as "not a member".
+    """
+    if eligibility.reason is not None:
+        return eligibility.reason.value
+    if not eligibility.allowed or character is None:
+        return None
+
+    if facts is not None and task.id in facts.task_ids:
+        holds_membership = task.id in facts.held_membership_task_ids
+    else:
+        holds_membership = task.id in await held_membership_task_ids(
+            character, [task.id], session
+        )
+    return SIGNUP_REASON_MULTI_MEMBERSHIP if holds_membership else None
 
 
 def _signup_denial_to_http(
@@ -1180,12 +1242,37 @@ def multi_membership_faction_slugs(era: EraConfig = CURRENT_ERA) -> tuple[str, .
     )
 
 
+def _held_membership_task_ids_subquery(character_id: int):
+    """Task IDs where ``character_id`` holds an active praxis membership — **the raw
+    fact, with no ability applied**.
+
+    "Active" means the praxis status is ``in_progress``, ``pending`` or ``submitted``.
+
+    "Am I on this task" is not the same question as "does being on this task stop me
+    claiming it again". Double Dipper is precisely the gap between the two, and
+    ``TaskOut.signup_reason`` needs both sides of it to tell "begin again" from
+    "you have never started this" (#1497).
+    :func:`active_member_task_ids_subquery` is this select plus the carve-out, so
+    the carve-out is still written exactly once.
+    """
+    return (
+        select(Praxis.task_id)
+        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
+        .join(Character, Character.id == PraxisMember.character_id)
+        .where(
+            PraxisMember.character_id == character_id,
+            Praxis.status.in_(
+                [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
+            ),
+        )
+    )
+
+
 def active_member_task_ids_subquery(
     character_id: int, era: EraConfig = CURRENT_ERA
 ):
-    """SQL subquery returning task IDs where ``character_id`` holds an active praxis membership.
+    """SQL subquery returning task IDs whose membership **blocks** a fresh claim.
 
-    "Active" means the praxis status is ``in_progress``, ``pending`` or ``submitted``.
     Used by the task-list query to exclude tasks the character is already working on,
     and by :func:`active_member_task_ids` for the Python answer.
 
@@ -1197,18 +1284,31 @@ def active_member_task_ids_subquery(
     their own list (#1359). The join is on the membership's character, whose id
     is a primary key, so it adds a row lookup and no fan-out.
     """
-    return (
-        select(Praxis.task_id)
-        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
-        .join(Character, Character.id == PraxisMember.character_id)
-        .where(
-            PraxisMember.character_id == character_id,
-            Character.faction_slug.notin_(multi_membership_faction_slugs(era)),
-            Praxis.status.in_(
-                [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
-            ),
+    return _held_membership_task_ids_subquery(character_id).where(
+        Character.faction_slug.notin_(multi_membership_faction_slugs(era))
+    )
+
+
+async def held_membership_task_ids(
+    character: Character,
+    task_ids: Collection[int],
+    session: AsyncSession,
+) -> frozenset[int]:
+    """Which of ``task_ids`` ``character`` is on **at all** — ONE query, no carve-out.
+
+    The batch sibling of :func:`active_member_task_ids`, reading
+    :func:`_held_membership_task_ids_subquery` instead. Takes no ``era`` because no
+    ruleset changes the raw fact; only what the fact *means* is era-dependent, and
+    that lives in :func:`multi_membership_faction_slugs`.
+    """
+    if not task_ids:
+        return frozenset()
+    result = await session.execute(
+        _held_membership_task_ids_subquery(character.id).where(
+            Praxis.task_id.in_(task_ids)
         )
     )
+    return frozenset(result.scalars().all())
 
 
 async def active_member_task_ids(
@@ -1700,6 +1800,7 @@ __all__ = [
     "flag_praxis",
     "gather_signup_facts",
     "get_praxis",
+    "held_membership_task_ids",
     "invite_to_praxis",
     "is_active_member_of_task",
     "is_task_eligible_for_character",
@@ -1714,6 +1815,8 @@ __all__ = [
     "moderate_praxis",
     "multi_membership_faction_slugs",
     "respond_to_invite",
+    "SIGNUP_REASON_MULTI_MEMBERSHIP",
+    "signup_reason",
     "SignupDenialReason",
     "SignupEligibility",
     "SignupFacts",

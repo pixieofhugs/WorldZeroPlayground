@@ -21,6 +21,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -325,7 +326,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         <div>
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={primaryAction}>
-            {t("detail.signup.cta")}
+            {t(signupCtaKey(task.signup_reason))}
           </button>
           <div style={{ ...aside, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}

@@ -62,6 +62,12 @@ class TaskOut(BaseModel):
     can_submit_praxis: bool = False
     allowed_modes: list[str] = []
     eligible_for_current_user: bool = False
+    # *Why* sign-up is open or shut for this viewer — a SignupDenialReason value,
+    # SIGNUP_REASON_MULTI_MEMBERSHIP, or None when there is nothing to explain.
+    # The flag above says whether; this says which, so the client can label the
+    # call to action ("begin again" vs "you are already on this") without
+    # re-deriving a server rule from its own state (#1497).
+    signup_reason: Optional[str] = None
 
 
 class TaskCreate(BaseModel):

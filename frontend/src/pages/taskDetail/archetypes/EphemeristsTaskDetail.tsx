@@ -12,6 +12,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -930,7 +931,7 @@ export default function EphemeristsTaskDetail({
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={primaryButton}>
             <Sign name="openEye" size={15} color={CTA_INK} weight={1.4} />
-            <span style={{ whiteSpace: "nowrap" }}>{t("detail.signup.cta")}</span>
+            <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
           </button>
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>

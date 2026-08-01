@@ -24,6 +24,7 @@ import { extractError } from "../../utils/errors";
 import { computeDisplayPoints, computeFactionMultiplier } from "../../utils/points";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { isLevelJumpSignup } from "./levelJump";
+import { canSignUpForTask } from "./signupCta";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
 
@@ -302,8 +303,18 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
         )
       : (task?.point_value ?? 0);
 
-  const canSignUp =
-    !!user && !mySubmission && !isInProgress && !!task?.can_submit_praxis;
+  // The server is the only authority on whether this viewer may claim this task.
+  // `!mySubmission && !isInProgress` used to be ANDed in here — a local mirror of
+  // the "already on it" rule, and a wrong one: a faction may hold more than one
+  // membership on a task (Double Dipper), and for its members the server says yes
+  // while the mirror said no. It degraded silently too, since `isInProgress`
+  // comes from a separate fetch that never runs for an anonymous viewer and is
+  // false until it lands. Deleted per #1385's finding on the same shape; the
+  // "already on it" state now reaches the UI as `task.signup_reason` (#1497).
+  const canSignUp = canSignUpForTask({
+    signedIn: !!user,
+    canSubmitPraxis: task?.can_submit_praxis,
+  });
   // The signable task is a level-jump iff the viewer's faction grants reach, the
   // allowance is unspent, and the task sits above the viewer's own level. Logic
   // lives in the pure `isLevelJumpSignup` predicate so it is testable props-in/

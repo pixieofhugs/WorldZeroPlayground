@@ -13,6 +13,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -443,7 +444,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={ctaStyle(false)}>
             <Star size={13} color={ON_PLUM} />
-            {t("detail.signup.cta")}
+            {t(signupCtaKey(task.signup_reason))}
           </button>
           <div style={{ ...quietNote, textAlign: "center", marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}

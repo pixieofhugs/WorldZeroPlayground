@@ -12,6 +12,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -428,7 +429,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={plateButton(false)}>
             <XMark size={17} />
-            <span style={plateLabel}>{t("detail.signup.cta")}</span>
+            <span style={plateLabel}>{t(signupCtaKey(task.signup_reason))}</span>
             <XMark size={17} />
           </button>
           <div
