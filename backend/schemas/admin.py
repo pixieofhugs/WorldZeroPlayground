@@ -173,6 +173,21 @@ class TaskStatusAction(BaseModel):
     status: Literal["pending", "active", "retired"]
 
 
+class TaskImportResult(BaseModel):
+    """Readout for a successful CSV task import (#1376).
+
+    Only ever returned when the whole file imported — the import is atomic, so
+    there is deliberately no partial-success shape. Failures come back as a 422
+    whose ``detail`` is one ``{row, msg}`` object per rejected row.
+    """
+
+    created_count: int
+    created_titles: list[str]
+    # Corrections applied on the way in (e.g. a legacy faction slug), so the admin
+    # sees what the importer changed and not only what it wrote.
+    warnings: list[str]
+
+
 class RoleAction(BaseModel):
     role: str = Field(..., min_length=1, max_length=50)
     action: Literal["grant", "revoke"]

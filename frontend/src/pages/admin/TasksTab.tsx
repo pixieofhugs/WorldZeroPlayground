@@ -9,6 +9,7 @@ import {
 import type { TaskOut } from "../../api/tasks";
 import { mergeAdminTaskRows } from "./adminTaskRows";
 import type { AdminTaskRow } from "./adminTaskRows";
+import TaskImportPanel from "./TaskImportPanel";
 import { extractError } from "../../utils/errors";
 
 type StatusFilter = "all" | "pending" | "active" | "retired";
@@ -127,6 +128,8 @@ export default function TasksTab() {
           {actionError}
         </p>
       )}
+
+      <TaskImportPanel onImported={refresh} />
 
       {/* Filter chips */}
       <div className="flex gap-2 mb-4">

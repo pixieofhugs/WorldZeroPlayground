@@ -43,6 +43,12 @@ class PraxisMemberOut(BaseModel):
     character_id: int
     character_display_name: str  # populated by build_praxis_out
     has_submitted: bool
+    # When `has_submitted` last flipped True (#571, #1415). NULL while the member
+    # still owes a part, and NULL again the moment they pull it back or the
+    # collab is unpublished — `collab_consensus` clears both together, so this is
+    # never a stale "last time they filed". The roster's optional timestamp line
+    # reads it; `has_submitted` stays the boolean the pill dispatches on.
+    submitted_at: Optional[datetime] = None
     joined_at: datetime
     # When the VIEWER last nudged this member about this praxis (#1083), and
     # NULL once that 24h window lapses — so "there is a timestamp here" and "you

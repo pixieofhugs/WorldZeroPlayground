@@ -17,6 +17,13 @@ enforced here, on the write path, rather than by hiding the button — a disable
 button is a UI preference and this is a rule.
 
 Delivery is the activity feed, never a message: see ``models/nudge.py``.
+
+**One writer, two front doors** (#1415). :func:`send_nudge` pokes one named
+player; :func:`nudge_the_crew` pokes everyone a collab is still waiting on in a
+single request. They are not two implementations — the single form delegates to
+the batch and raises on the one entry it gets back, the same shape #1377/#1378
+used for the task and praxis gathers, so the two answers cannot drift. Rule 3
+makes the batch inherently *partial* success: see :class:`schemas.nudge.NudgeResultOut`.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -29,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.duel import Duel, DuelStatus
 from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from schemas.nudge import NudgeOut, NudgeResultOut
 
 # One per sender → recipient → praxis per 24h (#1083). Expressed as a window
 # rather than a stored "next allowed at" so the rule is re-readable from the
@@ -41,34 +49,34 @@ NUDGE_COOLDOWN = timedelta(days=1)
 _OPEN_PRAXIS_STATUSES = (PraxisStatus.in_progress, PraxisStatus.pending)
 
 
-async def _load_praxis_with_members(praxis_id: int, session: AsyncSession) -> Praxis:
-    """The target praxis and its member rows, or 404."""
+async def _load_praxis_with_members(
+    praxis_id: int, session: AsyncSession
+) -> tuple[Praxis, dict[int, PraxisMember]]:
+    """The target praxis and its roster keyed by character, or 404.
+
+    The roster is read as its own query rather than through ``Praxis.members``:
+    one query for the whole crew however large it is — which is what lets every
+    per-recipient check below be a dict lookup — and never a collection the
+    session happens to have cached from earlier in the request.
+    """
     result = await session.execute(
         select(Praxis).where(Praxis.id == praxis_id)
     )
     praxis = result.scalar_one_or_none()
     if praxis is None:
         raise HTTPException(status_code=404, detail="Praxis not found.")
-    return praxis
 
-
-async def _member(
-    praxis_id: int, character_id: int, session: AsyncSession
-) -> Optional[PraxisMember]:
-    result = await session.execute(
-        select(PraxisMember).where(
-            PraxisMember.praxis_id == praxis_id,
-            PraxisMember.character_id == character_id,
-        )
+    roster = await session.execute(
+        select(PraxisMember).where(PraxisMember.praxis_id == praxis_id)
     )
-    return result.scalar_one_or_none()
+    return praxis, {member.character_id: member for member in roster.scalars().all()}
 
 
-async def _authorize_collab(
-    praxis: Praxis, from_character_id: int, session: AsyncSession
+def _authorize_collab(
+    members: dict[int, PraxisMember], from_character_id: int
 ) -> None:
     """Rule 1: the sender must be a member of this collab AND have cast."""
-    sender = await _member(praxis.id, from_character_id, session)
+    sender = members.get(from_character_id)
     if sender is None:
         raise HTTPException(
             status_code=403,
@@ -198,22 +206,62 @@ async def nudged_at_map(
     return latest
 
 
-async def send_nudge(
-    praxis_id: int,
+def _refuse(
     from_character_id: int,
     to_character_id: int,
-    session: AsyncSession,
-) -> Nudge:
-    """Record one nudge, or raise.
+    members: dict[int, PraxisMember],
+    nudged_at: dict[int, datetime],
+) -> Optional[HTTPException]:
+    """Why this one recipient may not be nudged, or None if they may.
 
-    ``praxis_id`` is the praxis the **recipient** owes — the shared collab for a
-    collab, the rival's own side for a duel. That is what the recipient's feed
-    card links to and what the rate limit is keyed on.
+    Every check here is a fact about **one recipient**, which is exactly what
+    makes it an entry in a batch response rather than a batch-wide failure. The
+    batch-wide verdicts (404, finished praxis, unauthorised sender) are raised
+    by :func:`_send_nudges` before this is reached.
+
+    Checking the member row rather than the praxis status covers both shapes at
+    once: a collab member who has cast while the group waits on others, and a
+    duel side that has already been filed.
     """
-    if from_character_id == to_character_id:
-        raise HTTPException(status_code=400, detail="You cannot nudge yourself.")
+    if to_character_id == from_character_id:
+        return HTTPException(status_code=400, detail="You cannot nudge yourself.")
+    recipient = members.get(to_character_id)
+    if recipient is None:
+        return HTTPException(
+            status_code=403, detail="That player is not part of this praxis."
+        )
+    if recipient.has_submitted:
+        return HTTPException(
+            status_code=422, detail="That player has already filed their part."
+        )
+    if to_character_id in nudged_at:
+        return HTTPException(
+            status_code=422,
+            detail="You already nudged this player about this praxis today.",
+        )
+    return None
 
-    praxis = await _load_praxis_with_members(praxis_id, session)
+
+async def _send_nudges(
+    praxis_id: int,
+    from_character_id: int,
+    to_character_ids: Optional[list[int]],
+    session: AsyncSession,
+) -> list[NudgeResultOut]:
+    """The one writer. ``to_character_ids=None`` means "everyone still owing".
+
+    Cost is flat in the size of the crew and that is deliberate: the roster is
+    one query, the cooldown is read once for the whole praxis via
+    :func:`nudged_at_map`, and the accepted nudges are added and flushed
+    together so SQLAlchemy emits them as one statement. A loop over
+    :func:`send_nudge` would be four queries per recipient;
+    ``tests/integration/test_nudge_bulk.py`` asserts the counts stay equal.
+
+    Batching changes no permission. A crew press writes exactly the rows N
+    separate presses would have written — same authorisation, same 24h window
+    per recipient — so it is a round-trip saving, not a wider power.
+    """
+    praxis, members = await _load_praxis_with_members(praxis_id, session)
 
     if praxis.status not in _OPEN_PRAXIS_STATUSES:
         raise HTTPException(
@@ -221,44 +269,104 @@ async def send_nudge(
             detail="Nothing is outstanding on this praxis.",
         )
 
-    # The recipient must actually owe something here. Checking the member row
-    # rather than the praxis status covers both shapes at once: a collab member
-    # who has cast while the group waits on others, and a duel side that has
-    # already been filed.
-    recipient = await _member(praxis_id, to_character_id, session)
-    if recipient is None:
-        raise HTTPException(
-            status_code=403,
-            detail="That player is not part of this praxis.",
-        )
-    if recipient.has_submitted:
-        raise HTTPException(
-            status_code=422,
-            detail="That player has already filed their part.",
-        )
-
     if praxis.type == PraxisType.collab:
-        await _authorize_collab(praxis, from_character_id, session)
+        _authorize_collab(members, from_character_id)
     else:
         # A duel side is `type='solo'` + a Duel row (ADR-0011) — never
         # `type='duel'` — so anything that is not a collab is routed here and
         # `_authorize_duel` 403s a genuinely solo praxis by finding no duel.
         await _authorize_duel(praxis, from_character_id, session)
 
-    if await latest_nudge_at(
-        praxis_id, from_character_id, to_character_id, session
-    ) is not None:
-        raise HTTPException(
-            status_code=422,
-            detail="You already nudged this player about this praxis today.",
-        )
-
-    nudge = Nudge(
-        from_character_id=from_character_id,
-        to_character_id=to_character_id,
-        praxis_id=praxis_id,
+    recipients = (
+        to_character_ids
+        if to_character_ids is not None
+        else [
+            character_id
+            for character_id, member in members.items()
+            if not member.has_submitted and character_id != from_character_id
+        ]
     )
-    session.add(nudge)
-    await session.flush()
-    await session.refresh(nudge)
-    return nudge
+
+    nudged_at = await nudged_at_map(praxis_id, from_character_id, session)
+
+    refusals: dict[int, HTTPException] = {}
+    created: dict[int, Nudge] = {}
+    for to_character_id in recipients:
+        refusal = _refuse(from_character_id, to_character_id, members, nudged_at)
+        if refusal is not None:
+            refusals[to_character_id] = refusal
+            continue
+        nudge = Nudge(
+            from_character_id=from_character_id,
+            to_character_id=to_character_id,
+            praxis_id=praxis_id,
+        )
+        session.add(nudge)
+        created[to_character_id] = nudge
+
+    if created:
+        # One flush for the whole batch. `created_at` is a server default and
+        # comes back on the INSERT's RETURNING, so no row needs a refresh.
+        await session.flush()
+
+    return [
+        NudgeResultOut(
+            to_character_id=to_character_id,
+            nudge=(
+                NudgeOut.model_validate(created[to_character_id])
+                if to_character_id in created
+                else None
+            ),
+            error=(
+                str(refusals[to_character_id].detail)
+                if to_character_id in refusals
+                else None
+            ),
+            status_code=(
+                refusals[to_character_id].status_code
+                if to_character_id in refusals
+                else None
+            ),
+        )
+        # An entry for every requested recipient, in request order (#1378).
+        for to_character_id in recipients
+    ]
+
+
+async def send_nudge(
+    praxis_id: int,
+    from_character_id: int,
+    to_character_id: int,
+    session: AsyncSession,
+) -> NudgeOut:
+    """Record one nudge, or raise.
+
+    ``praxis_id`` is the praxis the **recipient** owes — the shared collab for a
+    collab, the rival's own side for a duel. That is what the recipient's feed
+    card links to and what the rate limit is keyed on.
+
+    Delegates to :func:`_send_nudges` and re-raises the single entry's refusal,
+    so this route and the crew route cannot come to different verdicts about the
+    same recipient.
+    """
+    result = (
+        await _send_nudges(praxis_id, from_character_id, [to_character_id], session)
+    )[0]
+    if result.nudge is None:
+        raise HTTPException(status_code=result.status_code, detail=result.error)
+    return result.nudge
+
+
+async def nudge_the_crew(
+    praxis_id: int,
+    from_character_id: int,
+    session: AsyncSession,
+) -> list[NudgeResultOut]:
+    """Nudge everyone this praxis is still waiting on, one entry each (#1415).
+
+    The recipients are chosen **here**, not by the caller: the crew is derivable
+    from the member rows (not filed, not you), so there is no id list on the
+    wire to validate, to cap, or to probe membership with. The client presses
+    one button and the server decides who that means.
+    """
+    return await _send_nudges(praxis_id, from_character_id, None, session)

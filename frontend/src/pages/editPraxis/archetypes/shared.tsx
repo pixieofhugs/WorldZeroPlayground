@@ -526,7 +526,14 @@ export function ComposerStatusRow({
 }
 
 interface ComposerSectionProps {
-  label: ReactNode;
+  /**
+   * Optional since #1416: a region whose control names itself draws no heading
+   * row at all, rather than an empty one that still spends its margins. The
+   * collab roster is the live case — it grew its own `Collaborators · N` header
+   * beside the tally, so nine mounts stopped passing a label rather than
+   * printing the count twice and letting the two disagree.
+   */
+  label?: ReactNode;
   /** The right-hand end of the label row — a counter, a word count, a hint. */
   meta?: ReactNode;
   /**
@@ -561,36 +568,46 @@ export function ComposerSection({
   children,
 }: ComposerSectionProps) {
   const heading = composerLabelStyle(labelStyle);
+  // No label and no meta means no heading row. The rule above it still draws:
+  // it separates the regions, and that is not the label's job — but the rule
+  // carries no margin of its own (the heading row was supplying the whole gap),
+  // so an unheaded section stands the control off the hairline itself.
+  const headed = label != null || meta != null;
   return (
     <section style={style}>
       {rule === false ? null : (rule ?? <ComposerRule />)}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          gap: "var(--space-md)",
-          margin:
-            rule === false
-              ? "0 0 var(--space-md)"
-              : "var(--space-lg) 0 var(--space-md)",
-        }}
-      >
-        {htmlFor ? (
-          <label htmlFor={htmlFor} style={heading}>
-            {label}
-          </label>
-        ) : (
-          <span style={heading}>{label}</span>
-        )}
-        {meta != null && (
-          <span
-            style={composerLabelStyle({ letterSpacing: "0.06em", ...metaStyle })}
-          >
-            {meta}
-          </span>
-        )}
-      </div>
+      {!headed && rule !== false && (
+        <div aria-hidden style={{ height: "var(--space-lg)" }} />
+      )}
+      {headed && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            gap: "var(--space-md)",
+            margin:
+              rule === false
+                ? "0 0 var(--space-md)"
+                : "var(--space-lg) 0 var(--space-md)",
+          }}
+        >
+          {htmlFor ? (
+            <label htmlFor={htmlFor} style={heading}>
+              {label}
+            </label>
+          ) : (
+            <span style={heading}>{label}</span>
+          )}
+          {meta != null && (
+            <span
+              style={composerLabelStyle({ letterSpacing: "0.06em", ...metaStyle })}
+            >
+              {meta}
+            </span>
+          )}
+        </div>
+      )}
       {children}
     </section>
   );

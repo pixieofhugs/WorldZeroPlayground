@@ -1501,23 +1501,41 @@ async def respond_to_invite(
 async def cancel_invite(
     praxis_id: int,
     invite_id: int,
-    inviter_id: int,
+    requester_id: int,
     session: AsyncSession,
 ) -> None:
-    """Rescind a pending invite. Only the inviter may cancel, and only while
-    the invite is still pending (removing an accepted member is a separate
-    concern). Deletes the invite row (#421)."""
-    invite = await session.get(PraxisInvite, invite_id)
-    if invite is None or invite.praxis_id != praxis_id:
-        raise HTTPException(status_code=404, detail="Invite not found.")
+    """Rescind a pending invite. Any **member** may, and only while it is still
+    pending (removing an accepted member is :func:`kick_member`'s job). Deletes
+    the invite row (#421).
 
-    if invite.inviter_id != inviter_id:
-        raise HTTPException(status_code=403, detail="Only the inviter can rescind this invite.")
+    Until #1415 this was inviter-only, which made the roster's rescind control
+    appear on some pending rows and not others with nothing on screen to explain
+    why. A collab is co-owned — ADR-0013 gives ``created_by_id`` no powers and
+    any member may already invite (:func:`invite_to_praxis`) and kick
+    (:func:`kick_member`) — so "only the person who typed the name may untype
+    it" was the one asymmetric rule in the set, and it is gone.
+
+    The guard that remains is membership: an outsider, including the invitee
+    themselves, still gets 403. Declining is the invitee's verb
+    (:func:`respond_to_invite`), and it keeps the row.
+    """
+    praxis = await get_praxis(praxis_id, session)
+    _require_member(praxis, requester_id, "rescind an invite to")
+
+    invite = next(
+        (candidate for candidate in praxis.invites if candidate.id == invite_id), None
+    )
+    if invite is None:
+        raise HTTPException(status_code=404, detail="Invite not found.")
 
     if invite.status != PraxisInviteStatus.pending:
         raise HTTPException(status_code=409, detail="Only a pending invite can be rescinded.")
 
-    await session.delete(invite)
+    # Removed through the collection, not ``session.delete``: ``Praxis.invites``
+    # is delete-orphan, so this issues the DELETE *and* keeps the in-memory list
+    # consistent for anything that reuses this identity-mapped praxis — the same
+    # reason :func:`kick_member` removes through ``praxis.members``.
+    praxis.invites.remove(invite)
     await session.flush()
 
 
