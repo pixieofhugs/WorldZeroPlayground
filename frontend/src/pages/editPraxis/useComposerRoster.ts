@@ -1,6 +1,6 @@
 /**
  * Everyone else in this praxis: finding them, inviting or challenging them,
- * rescinding, kicking, and poking.
+ * rescinding, kicking, and poking — one at a time or the whole crew at once.
  *
  * One search box serves two jobs (#311) — collab invitees while the praxis is a
  * collab, an opponent while a duel is being set up — so the filter, the two
@@ -28,12 +28,31 @@ import {
   type PraxisOut,
 } from "../../api/praxis";
 import { getDuelDetail, issueChallenge, type DuelDetailOut } from "../../api/duel";
-import { sendNudge } from "../../api/nudge";
+import { nudgeTheCrew, sendNudge } from "../../api/nudge";
 import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listRelationships } from "../../api/relationships";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
+
+/**
+ * What one crew press actually did (#1418).
+ *
+ * `sent + skipped` is every member the server considered — the whole crew still
+ * owing a part, minus you — so both halves are needed to say anything true. The
+ * cooldown is per (sender → recipient → praxis) per 24h, which makes a partly
+ * refused press the ordinary case rather than an error, and reporting only
+ * `sent` would read as "and that was all of them".
+ *
+ * Counts, not a sentence: the words are the waiting surface's, resolved through
+ * `collabCopy` in the faction's voice like every other line it draws.
+ */
+export interface CrewNudgeResult {
+  /** Nudges the server actually wrote. */
+  sent: number;
+  /** Crew it refused — in this path, always someone inside their 24h window. */
+  skipped: number;
+}
 
 export interface ComposerRoster {
   inviteQuery: string;
@@ -46,6 +65,8 @@ export interface ComposerRoster {
   cancelInvite: (inviteId: number) => Promise<void>;
   kickMember: (memberId: number) => Promise<void>;
   nudge: (characterId: number) => Promise<void>;
+  nudgeCrew: () => Promise<void>;
+  crewNudge: CrewNudgeResult | null;
   sendChallenge: (character: CharacterOut) => Promise<void>;
 }
 
@@ -67,6 +88,7 @@ export function useComposerRoster(options: {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
+  const [crewNudge, setCrewNudge] = useState<CrewNudgeResult | null>(null);
 
   useEffect(() => {
     if (!user?.character) return;
@@ -261,6 +283,34 @@ export function useComposerRoster(options: {
     [praxis, duel, setPraxis, setDuel, setError],
   );
 
+  // Poke everyone the collab is still waiting on, in ONE request (#1418).
+  //
+  // It sends no recipient list. The server derives the crew from the roster and
+  // applies the same per-person 24h window the single form does, which is the
+  // whole reason this is not a fan-out of `nudge()` over the outstanding
+  // members: that would put the cooldown rule on the client, spend N requests,
+  // and leave a half-succeeded press to be reassembled from N rejected promises.
+  //
+  // A 200 therefore does NOT mean everyone was poked, so the counts are kept and
+  // handed to the surface to report. The refresh that follows is the same one
+  // `nudge` does and for the same reason: `nudged_at` on the refreshed rows is
+  // the only thing the per-row buttons believe.
+  const nudgeCrew = useCallback(async () => {
+    if (!praxis) return;
+    setError("");
+    setCrewNudge(null);
+    try {
+      const results = await nudgeTheCrew(praxis.id);
+      setCrewNudge({
+        sent: results.filter((result) => result.nudge != null).length,
+        skipped: results.filter((result) => result.nudge == null).length,
+      });
+      setPraxis(await getPraxis(praxis.id));
+    } catch (err) {
+      setError(extractError(err, i18n.t("forms:editPraxis.errors.nudgeCrew")));
+    }
+  }, [praxis, setPraxis, setError]);
+
   // ---- Duel challenge (#311): the same box, picking an opponent ----
   const sendChallenge = useCallback(
     async (character: CharacterOut) => {
@@ -303,6 +353,8 @@ export function useComposerRoster(options: {
     cancelInvite,
     kickMember,
     nudge,
+    nudgeCrew,
+    crewNudge,
     sendChallenge,
   };
 }

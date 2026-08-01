@@ -242,6 +242,10 @@ export function editPraxisState(slug: string): EditPraxisState {
     cancelInvite: anoop,
     kickMember: anoop,
     nudge: anoop,
+    // The bulk press and its receipt (#1418). `null` is the pre-press state, so
+    // the preview draws the button with no report beneath it.
+    nudgeCrew: anoop,
+    crewNudge: null,
     duel: null,
     sendChallenge: anoop,
     cancelDuel: anoop,

@@ -138,6 +138,19 @@ export type CollabCopyKey =
   | 'nudgeDescription'
   | 'duelNudgeAria'
   | 'nudgeFeedAction'
+  // The bulk press (#1418): one button, one request, everyone still outstanding.
+  //
+  // ponytail: the two result lines are count-agnostic English rather than
+  // i18next plural forms. This resolver's keys are runtime-dynamic strings (the
+  // slug comes from the task), so a `_one`/`_other` suffix would have to be a
+  // member of this union and would then owe every faction two variants — the
+  // same reason `holdoutClockLine` spells its days and hours out. If a locale
+  // that inflects on the number lands, the upgrade is to give `collabCopy` a
+  // `count` passthrough and let i18next select, not to branch here.
+  | 'nudgeCrewAction'
+  | 'nudgeCrewDescription'
+  | 'nudgeCrewResult'
+  | 'nudgeCrewResultPartial'
 
 /**
  * Keys that are content to speak in the shared voice (#1074).
@@ -172,6 +185,11 @@ export type CollabCopyKey =
  * particular is read by the RECIPIENT, whose faction is not the sender's, so a
  * sender-voiced quip there would land in someone else's room. Overrides stay
  * available for whichever faction earns one first.
+ *
+ * The `nudgeCrew*` block (#1418) joins them on the strongest version of that
+ * argument: two of its four keys are a REPORT — how many of the crew the press
+ * actually reached, and how many were inside their 24h window — and a faction
+ * voice over a count is where an honest number goes to become a vibe.
  *
  * The whole `awaiting*` / `duelAwaiting*` block (#1080) joins them for the same
  * reason, plus one of its own: the waiting surface is **one shared, token-themed
@@ -266,6 +284,10 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'nudgeDescription',
   'duelNudgeAria',
   'nudgeFeedAction',
+  'nudgeCrewAction',
+  'nudgeCrewDescription',
+  'nudgeCrewResult',
+  'nudgeCrewResultPartial',
 ]
 
 /**

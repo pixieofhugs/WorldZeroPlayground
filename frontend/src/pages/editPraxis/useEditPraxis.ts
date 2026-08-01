@@ -304,6 +304,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     cancelInvite,
     kickMember,
     nudge,
+    nudgeCrew,
+    crewNudge,
     sendChallenge,
   } = useComposerRoster({
     praxis,
@@ -716,6 +718,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     cancelInvite,
     kickMember,
     nudge,
+    nudgeCrew,
+    crewNudge,
 
     duel,
     sendChallenge,
