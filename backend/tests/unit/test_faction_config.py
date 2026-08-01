@@ -1,6 +1,9 @@
 """Unit tests for faction configuration values and modifier semantics."""
 
+from dataclasses import replace
+
 from game_config import ERA_1
+from services.praxis import multi_membership_faction_slugs
 
 
 def test_wow_modifiers_are_flat():
@@ -45,6 +48,35 @@ def test_level_jump_is_wow_only():
         if config.level_jump_reach > 0
     }
     assert granted == {"wow"}
+
+
+def test_double_dipper_is_everymen_only():
+    # #1359: Everymen's perk — the same task may be claimed again while a claim
+    # on it is still active.
+    granted = {
+        slug for slug, config in ERA_1.factions.items()
+        if config.can_hold_multiple_memberships
+    }
+    assert granted == {"everymen"}
+
+
+def test_multi_membership_slugs_follows_the_config_not_the_slug():
+    """The rule's one statement reads ``era``, so moving the ability moves it."""
+    assert multi_membership_faction_slugs(ERA_1) == ("everymen",)
+
+    moved = replace(
+        ERA_1,
+        factions={
+            **ERA_1.factions,
+            "everymen": replace(
+                ERA_1.factions["everymen"], can_hold_multiple_memberships=False
+            ),
+            "snide": replace(
+                ERA_1.factions["snide"], can_hold_multiple_memberships=True
+            ),
+        },
+    )
+    assert multi_membership_faction_slugs(moved) == ("snide",)
 
 
 def test_snide_duel_modifiers():
