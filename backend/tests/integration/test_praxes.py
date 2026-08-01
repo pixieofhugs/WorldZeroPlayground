@@ -1670,6 +1670,47 @@ async def test_collab_edit_cancels_pending_publish(
 
 
 @pytest.mark.asyncio
+async def test_roster_row_carries_when_each_member_filed(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """``PraxisMemberOut.submitted_at`` — the column has existed since #571 and
+    never reached the wire until #1415.
+
+    Pinned across the whole flip, not just the True case: NULL while a member
+    still owes their part, a timestamp once they file, and NULL again after the
+    hard reset — because a "when they filed" that survived an unsubmit would be
+    worse than not shipping it at all.
+    """
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+
+    before = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    assert all(m["submitted_at"] is None for m in before.json()["members"])
+
+    filed = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    rows = {m["character_id"]: m for m in filed.json()["members"]}
+    assert rows[character2.id]["has_submitted"] is True
+    assert rows[character2.id]["submitted_at"] is not None
+    # The member who has not filed is still NULL — one row moved, not the pair.
+    assert rows[character.id]["submitted_at"] is None
+
+    # An edit while pending hard-resets everyone (ADR-0012); the timestamp has
+    # to go with the flag.
+    reset = await client.put(
+        f"/praxes/{praxis_id}",
+        json={"body_text": "second thoughts"},
+        headers=auth_headers,
+    )
+    assert all(m["submitted_at"] is None for m in reset.json()["members"])
+
+
+@pytest.mark.asyncio
 async def test_collab_pending_window_auto_publishes_on_read(
     client: AsyncClient,
     character: Character,

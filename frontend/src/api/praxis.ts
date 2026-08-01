@@ -29,6 +29,14 @@ export interface PraxisMemberOut {
   character_id: number
   character_display_name: string
   has_submitted: boolean
+  /**
+   * When `has_submitted` last flipped true (#571, #1415), or null while this
+   * member still owes their part. Cleared again on an unsubmit or a pending
+   * reset, so it can never read as a stale "last time they filed".
+   * `has_submitted` stays the boolean to branch on; this is the timestamp line
+   * beside it.
+   */
+  submitted_at?: string | null
   joined_at: string
   /**
    * When the VIEWER last nudged this member about this praxis (#1083), and null
