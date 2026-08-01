@@ -56,6 +56,15 @@
  * member who has not cast (and only once YOU have), and on a duel rival while
  * the duel is `active`.
  *
+ * The design's footer button — **Nudge the crew** — arrives with #1418 and sits
+ * beside the authoring re-entry. It is one request, not a fan-out: the server
+ * derives the crew from the roster and applies the same per-person 24h window,
+ * which is what keeps the cooldown from being re-implemented here. The
+ * consequence the design did not draw is that a press is routinely PART
+ * refused, so the footer reports what it did rather than going quiet — and the
+ * report outlives the button, which disappears the moment the last nudgeable
+ * member has been nudged.
+ *
  * Two things the design draws that are still deliberately absent:
  *  - **A duel countdown.** Nothing backs one (see `waitingClock.ts`). The duel
  *    gets a plain elapsed line; the ring is the collab's.
@@ -92,6 +101,7 @@ import { Link } from "react-router-dom";
 import type { DuelSideOut } from "../../../api/duel";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
+import { deriveCollabGate } from "../../../components/collab/collabGate";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
 import { duelSides } from "../../../components/duel/shared";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
@@ -489,6 +499,33 @@ export default function PraxisWaitingSurface({
     </>
   );
 
+  /**
+   * How many of the crew a single press would actually reach (#1418).
+   *
+   * Three conditions, none of them new. `gate.iCast` is the backend's own
+   * authorisation — a member who has filed may hurry a member who has not — and
+   * it is read from the same derivation `CollabRoster` gates its per-row button
+   * on, so the two cannot drift. `nudged_at` is the server-owned 24h window on
+   * the wire, the same field the row reads its spent state from; a member
+   * already inside it would come back refused.
+   *
+   * Zero means the control is not drawn at all rather than drawn disabled. The
+   * report below it is gated separately and deliberately: nudging the last
+   * nudgeable member takes this to zero, and a press that vanishes its own
+   * button without saying what it did reads as nothing having happened.
+   */
+  const gate = deriveCollabGate(praxis.members, state.currentCharacterId);
+  const nudgeableCrew =
+    isCollab && !completed && gate.iCast
+      ? praxis.members.filter(
+          (member) =>
+            !member.has_submitted &&
+            member.character_id !== state.currentCharacterId &&
+            member.nudged_at == null,
+        ).length
+      : 0;
+  const crewNudge = isCollab && !completed ? state.crewNudge : null;
+
   const primaryClass = dress.primaryStyle ? undefined : "btn-primary";
   const quietButton = composerLabelStyle({
     background: "none",
@@ -771,7 +808,52 @@ export default function PraxisWaitingSurface({
               </>
             }
             end={
-              <div className="flex flex-col items-end gap-1">
+              <div className="flex flex-wrap items-end justify-end gap-4">
+                {/* The bulk press and its receipt (#1418), beside the way back
+                    into your own text. One request pokes everyone still owing a
+                    part; the cooldown is per person per day and lives on the
+                    server, so a press is routinely PART refused and the line
+                    under it says which — silence would read as "all of them". */}
+                {(nudgeableCrew > 0 || crewNudge != null) && (
+                  <div className="flex flex-col items-end gap-1">
+                    {nudgeableCrew > 0 && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void state.nudgeCrew()}
+                        title={collabCopy(slug, "nudgeCrewDescription")}
+                        className="hover:underline"
+                        style={quietButton}
+                      >
+                        {collabCopy(slug, "nudgeCrewAction")}
+                      </button>
+                    )}
+                    {crewNudge != null && (
+                      <span
+                        role="status"
+                        className="eyebrow-sentence"
+                        style={{
+                          textAlign: "right",
+                          maxWidth: 420,
+                          ...dress.quietStyle,
+                        }}
+                      >
+                        {collabCopy(
+                          slug,
+                          crewNudge.skipped > 0
+                            ? "nudgeCrewResultPartial"
+                            : "nudgeCrewResult",
+                          {
+                            sent: crewNudge.sent,
+                            total: crewNudge.sent + crewNudge.skipped,
+                            skipped: crewNudge.skipped,
+                          },
+                        )}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div className="flex flex-col items-end gap-1">
                 <button
                   type="button"
                   disabled={busy}
@@ -803,6 +885,7 @@ export default function PraxisWaitingSurface({
                     isDuel ? "duelPullBackDescription" : "awaitingEditDescription",
                   )}
                 </span>
+                </div>
               </div>
             }
           />
