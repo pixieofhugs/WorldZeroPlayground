@@ -297,7 +297,6 @@ describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
             created_by: 9,
             primary_faction_slug: null,
             metatask_faction_slug: "snide",
-            is_task_vision_eligible: false,
             created_at: "2026-01-01T00:00:00Z",
             can_submit_praxis: false,
             allowed_modes: [],

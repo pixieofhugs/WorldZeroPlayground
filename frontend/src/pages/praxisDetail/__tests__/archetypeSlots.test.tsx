@@ -179,7 +179,6 @@ const SEAL_METATASK: TaskOut = {
   created_by: 9,
   primary_faction_slug: null,
   metatask_faction_slug: "snide",
-  is_task_vision_eligible: false,
   created_at: "2026-01-01T00:00:00Z",
   can_submit_praxis: false,
   allowed_modes: [],
