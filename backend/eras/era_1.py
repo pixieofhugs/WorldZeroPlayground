@@ -582,4 +582,11 @@ ERA_1 = EraConfig(
     level_profiles=ERA_1_LEVEL_PROFILES,
     # Ephemerists' Task Vision perk: they may create praxes on retired tasks.
     allow_praxis_on_retired_task_factions=frozenset({"ephemerists"}),
+    # Collab invites reach across levels and factions on purpose (#1511) — a
+    # level-1 character of any faction may be invited onto a level-6 task and
+    # submit. The task bank is the one gate the invite does not lift, and it is
+    # charged on accept.
+    collab_invite_bypasses_level=True,
+    collab_invite_bypasses_faction=True,
+    collab_invite_bypasses_task_bank=False,
 )
