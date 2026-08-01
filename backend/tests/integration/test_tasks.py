@@ -1472,13 +1472,42 @@ async def test_metatask_list_hidden_for_anonymous(
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_false_with_existing_praxis_non_analog(
+async def test_get_task_names_the_signup_flag_can_sign_up(
     client: AsyncClient,
     character: Character,
     active_task: Task,
     auth_headers: dict,
 ):
-    """A non-Analog viewer with an in-progress praxis sees can_submit_praxis=False."""
+    """The wire contract names the sign-up gate ``can_sign_up`` (#1512).
+
+    The flag is ``evaluate_signup(...).allowed`` — whether this viewer may
+    *claim* the task. It shipped as ``can_sign_up``, which asserted
+    something false: a character who could never claim a task can still be
+    invited into a collab on it and submit (#1511), so the old name reported
+    ``false`` about a task where a praxis is demonstrably submittable.
+
+    This pins the JSON **key**, not just the value. Every value-level test
+    below would still pass against the old name; only the wire key catches a
+    rename that stops half way — and a half-done rename hands the frontend
+    ``undefined``, which it reads as "cannot sign up" and hides the button.
+    """
+    resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["can_sign_up"] is True
+    # The literal old name, deliberately: this is the only place in the tree
+    # that may still spell it, and it spells it to assert its ABSENCE.
+    assert "can_submit_praxis" not in body
+
+
+@pytest.mark.asyncio
+async def test_get_task_can_sign_up_false_with_existing_praxis_non_analog(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """A non-Analog viewer with an in-progress praxis sees can_sign_up=False."""
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -1488,18 +1517,18 @@ async def test_get_task_can_submit_false_with_existing_praxis_non_analog(
 
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is False
+    assert resp.json()["can_sign_up"] is False
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_true_for_analog_with_existing_praxis(
+async def test_get_task_can_sign_up_true_for_analog_with_existing_praxis(
     client: AsyncClient,
     character: Character,
     active_task: Task,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Analog viewer with an existing praxis still sees can_submit_praxis=True."""
+    """Analog viewer with an existing praxis still sees can_sign_up=True."""
     from models.faction import Faction, FactionStatus
     from sqlalchemy import select as sa_select
 
@@ -1527,41 +1556,41 @@ async def test_get_task_can_submit_true_for_analog_with_existing_praxis(
 
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is True
+    assert resp.json()["can_sign_up"] is True
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_true_when_no_prior_praxis(
+async def test_get_task_can_sign_up_true_when_no_prior_praxis(
     client: AsyncClient,
     character: Character,
     active_task: Task,
     auth_headers: dict,
 ):
-    """Viewer with no existing praxis for the task sees can_submit_praxis=True."""
+    """Viewer with no existing praxis for the task sees can_sign_up=True."""
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is True
+    assert resp.json()["can_sign_up"] is True
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_false_for_anonymous(
+async def test_get_task_can_sign_up_false_for_anonymous(
     client: AsyncClient,
     active_task: Task,
 ):
-    """Unauthenticated viewer sees can_submit_praxis=False."""
+    """Unauthenticated viewer sees can_sign_up=False."""
     resp = await client.get(f"/tasks/{active_task.id}")
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is False
+    assert resp.json()["can_sign_up"] is False
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_false_level_too_low(
+async def test_get_task_can_sign_up_false_level_too_low(
     client: AsyncClient,
     character: Character,
     db_session: AsyncSession,
     auth_headers: dict,
 ):
-    """Character below task.level_required sees can_submit_praxis=False."""
+    """Character below task.level_required sees can_sign_up=False."""
     high_level_task = Task(
         title="Hard Task",
         description="Requires level 5",
@@ -1578,17 +1607,17 @@ async def test_get_task_can_submit_false_level_too_low(
     # character fixture starts at level 0, so level_required=5 blocks it
     resp = await client.get(f"/tasks/{high_level_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is False
+    assert resp.json()["can_sign_up"] is False
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_false_retired_task(
+async def test_get_task_can_sign_up_false_retired_task(
     client: AsyncClient,
     character: Character,
     db_session: AsyncSession,
     auth_headers: dict,
 ):
-    """Character without Task Vision sees can_submit_praxis=False on a retired task."""
+    """Character without Task Vision sees can_sign_up=False on a retired task."""
     retired_task = Task(
         title="Retired Task",
         description="No longer active",
@@ -1604,11 +1633,11 @@ async def test_get_task_can_submit_false_retired_task(
 
     resp = await client.get(f"/tasks/{retired_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is False
+    assert resp.json()["can_sign_up"] is False
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_false_joined_collaborator(
+async def test_get_task_can_sign_up_false_joined_collaborator(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -1616,7 +1645,7 @@ async def test_get_task_can_submit_false_joined_collaborator(
     db_session: AsyncSession,
     auth_headers2: dict,
 ):
-    """A character who joined someone else's collab sees can_submit_praxis=False."""
+    """A character who joined someone else's collab sees can_sign_up=False."""
     from models.praxis import Praxis, PraxisMember, PraxisType
 
     collab = Praxis(
@@ -1635,11 +1664,11 @@ async def test_get_task_can_submit_false_joined_collaborator(
     # character2 is a joined collaborator, not the author
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is False
+    assert resp.json()["can_sign_up"] is False
 
 
 @pytest.mark.asyncio
-async def test_get_task_can_submit_true_everymen_as_collaborator(
+async def test_get_task_can_sign_up_true_everymen_as_collaborator(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -1647,7 +1676,7 @@ async def test_get_task_can_submit_true_everymen_as_collaborator(
     db_session: AsyncSession,
     auth_headers2: dict,
 ):
-    """Everymen (Double Dipper) member of a collab still sees can_submit_praxis=True."""
+    """Everymen (Double Dipper) member of a collab still sees can_sign_up=True."""
     from models.faction import FactionStatus
     from models.praxis import Praxis, PraxisMember, PraxisType
     from sqlalchemy import select
@@ -1675,7 +1704,7 @@ async def test_get_task_can_submit_true_everymen_as_collaborator(
 
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers2)
     assert resp.status_code == 200
-    assert resp.json()["can_submit_praxis"] is True
+    assert resp.json()["can_sign_up"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -2448,7 +2477,7 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
     case a deduped map cannot fake.
 
     The request is anonymous on purpose: the viewer-relative flags
-    (``can_submit_praxis`` and friends) do run per task, a pre-existing cost
+    (``can_sign_up`` and friends) do run per task, a pre-existing cost
     this issue does not touch, and including it would drown the signal.
     """
     for index in range(5):

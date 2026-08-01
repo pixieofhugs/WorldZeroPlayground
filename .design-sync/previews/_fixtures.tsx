@@ -57,7 +57,7 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     primary_faction_slug: 'ua',
     metatask_faction_slug: null,
     created_at: NOW,
-    can_submit_praxis: true,
+    can_sign_up: true,
     allowed_modes: ['solo', 'collab'],
     eligible_for_current_user: true,
     ...overrides,

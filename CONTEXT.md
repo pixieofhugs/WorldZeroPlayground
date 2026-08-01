@@ -235,8 +235,14 @@ The single game-logic predicate behind the Sign-up affordance: whether a charact
 governing invariant: it is true **iff `create_praxis` would accept**, so the button
 hides exactly when the action would be rejected (level, **active
 membership**, task bank, Analog carve-out). See ADR-0008.
-_Avoid_: conflating with `can_submit_praxis` (the narrow dup-authorship rule only) or
-`eligible_for_current_user` (level only) — neither is the whole gate.
+One name, two surfaces, by design: `TaskOut.can_sign_up` is the predicate's answer for one
+task, and `GET /tasks?can_sign_up=` is the filter that keeps the tasks it answers true for
+(#1130). The field carried the name `can_submit_praxis` until #1512, which was false on its
+face — an invited collaborator may submit a praxis on a task they could never *claim*.
+_Avoid_: conflating with `eligible_for_current_user` (level only) — that is one input to
+the gate, not the gate. Sign-up eligibility is about *claiming*; whether a viewer may
+submit a praxis they are already a member of is a different question, and no flag answers
+it today.
 
 **Active membership**:
 A character holding a `PraxisMember` row on a non-deleted praxis for a task whose status

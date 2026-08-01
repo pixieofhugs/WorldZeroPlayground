@@ -46,7 +46,7 @@ const TASK: TaskOut = {
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "coven",
   created_by_level: 4,
-  can_submit_praxis: true,
+  can_sign_up: true,
   allowed_modes: ["solo"],
   eligible_for_current_user: true,
 };

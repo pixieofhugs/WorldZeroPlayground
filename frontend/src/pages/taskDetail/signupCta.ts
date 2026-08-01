@@ -10,7 +10,7 @@
  * server was perfectly willing to honour.
  *
  * So the reason comes down the wire on `TaskOut.signup_reason` and this maps it
- * to a copy key. Nothing here re-derives eligibility — `can_submit_praxis` is
+ * to a copy key. Nothing here re-derives eligibility — `can_sign_up` is
  * still the only thing that decides whether the CTA renders; this only decides
  * what it says once it does. No slug is compared: a second faction gaining the
  * ability changes the backend's answer and nothing in this file.
@@ -31,10 +31,10 @@ export const SIGNUP_REASON_MULTI_MEMBERSHIP = "multi_membership";
 export function canSignUpForTask(params: {
   /** Whether anyone is signed in at all. */
   signedIn: boolean;
-  /** The server's ruling — `TaskOut.can_submit_praxis`, trusted, not recomputed. */
-  canSubmitPraxis: boolean | undefined;
+  /** The server's ruling — `TaskOut.can_sign_up`, trusted, not recomputed. */
+  canSignUp: boolean | undefined;
 }): boolean {
-  return params.signedIn && !!params.canSubmitPraxis;
+  return params.signedIn && !!params.canSignUp;
 }
 
 const CTA_KEY = "detail.signup.cta" as const;

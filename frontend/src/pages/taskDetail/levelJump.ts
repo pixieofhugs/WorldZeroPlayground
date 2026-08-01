@@ -10,7 +10,7 @@
  * viewer's level and the task's requirement.
  *
  * Eligibility itself is NOT recomputed here. `canSignUp` already trusts the
- * backend's `can_submit_praxis`, which threads the same reach and is false once
+ * backend's `can_sign_up`, which threads the same reach and is false once
  * the allowance is spent. So a signable task ABOVE the viewer's level can only be
  * signable because of the allowance — that is exactly what this predicate marks.
  * When it returns false (allowance spent, or the task is plainly out of reach)

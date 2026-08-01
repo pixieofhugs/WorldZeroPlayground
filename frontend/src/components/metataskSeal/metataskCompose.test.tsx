@@ -32,7 +32,7 @@ function metatask(
     primary_faction_slug: null,
     metatask_faction_slug: slug,
     created_at: "2026-01-01T00:00:00Z",
-    can_submit_praxis: true,
+    can_sign_up: true,
     allowed_modes: ["solo"],
     eligible_for_current_user: true,
   };

@@ -38,7 +38,7 @@ export interface TaskOut {
   // Server-driven viewer-specific flags. Backend computes these for the
   // authenticated viewer. Default to permissive values when absent (older
   // clients / unauthenticated reads).
-  can_submit_praxis: boolean
+  can_sign_up: boolean
   allowed_modes: string[]
   eligible_for_current_user: boolean
   // Why sign-up is open or shut for this viewer — the flag above says whether,

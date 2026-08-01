@@ -59,7 +59,7 @@ class TaskOut(BaseModel):
     # Viewer-relative capability flags — populated by the task router using
     # the authenticated viewer's character. Defaults keep the flags safe for
     # unauthenticated callers (empty modes, cannot submit, not eligible).
-    can_submit_praxis: bool = False
+    can_sign_up: bool = False
     allowed_modes: list[str] = []
     eligible_for_current_user: bool = False
     # *Why* sign-up is open or shut for this viewer — a SignupDenialReason value,

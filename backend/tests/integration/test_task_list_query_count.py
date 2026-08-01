@@ -1,7 +1,7 @@
 """#1377 — the signed-in task browse must cost a constant number of queries.
 
 **The seam under test** is ``GET /tasks`` → :func:`services.task.build_task_out_for_viewer`.
-The builder's viewer-relative fields (``can_submit_praxis``, ``allowed_modes``,
+The builder's viewer-relative fields (``can_sign_up``, ``allowed_modes``,
 ``eligible_for_current_user``) used to re-read the era row, the viewer's stats and
 the viewer's bank count once per row, so a 50-row page cost ~6 queries per row.
 The page-wide precomputes already in the route (``in_progress_counts_for_tasks``,
@@ -224,15 +224,15 @@ async def test_batched_flags_equal_the_per_task_predicates(
     for task_id, row in rows.items():
         task = await db_session.get(Task, task_id)
         eligibility = await evaluate_signup(character, task, db_session, CURRENT_ERA)
-        assert row["can_submit_praxis"] is eligibility.allowed, task_id
+        assert row["can_sign_up"] is eligibility.allowed, task_id
         assert row["eligible_for_current_user"] is is_task_eligible_for_character(
             character, task, stats.level, level_reach
         ), task_id
         assert row["allowed_modes"] == expected_modes, task_id
 
     # The mix actually exercised the gates it claims to.
-    assert rows[already_member.id]["can_submit_praxis"] is False
-    assert rows[too_hard.id]["can_submit_praxis"] is False
+    assert rows[already_member.id]["can_sign_up"] is False
+    assert rows[too_hard.id]["can_sign_up"] is False
     assert rows[too_hard.id]["eligible_for_current_user"] is False
-    assert rows[retired.id]["can_submit_praxis"] is False
-    assert all(rows[task.id]["can_submit_praxis"] is True for task in plain)
+    assert rows[retired.id]["can_sign_up"] is False
+    assert all(rows[task.id]["can_sign_up"] is True for task in plain)

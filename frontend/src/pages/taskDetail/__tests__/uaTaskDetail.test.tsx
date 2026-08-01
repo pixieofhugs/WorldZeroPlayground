@@ -52,7 +52,7 @@ const TASK: TaskOut = {
   created_by_display_name: "Ines Aurel",
   created_by_faction_slug: "ua",
   created_by_level: 5,
-  can_submit_praxis: true,
+  can_sign_up: true,
   allowed_modes: ["solo"],
   eligible_for_current_user: true,
 };

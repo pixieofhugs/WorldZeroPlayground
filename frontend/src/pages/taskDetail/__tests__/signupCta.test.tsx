@@ -48,7 +48,7 @@ const TASK: TaskOut = {
   primary_faction_slug: "everymen",
   metatask_faction_slug: null,
   created_at: "2026-01-01T00:00:00Z",
-  can_submit_praxis: true,
+  can_sign_up: true,
   allowed_modes: ["solo"],
   eligible_for_current_user: true,
 };
@@ -142,16 +142,16 @@ describe("signupCtaKey — the label follows the server's reason", () => {
 
 describe("canSignUpForTask — the deleted client-side mirror", () => {
   it("says yes on the server's word alone", () => {
-    expect(canSignUpForTask({ signedIn: true, canSubmitPraxis: true })).toBe(
+    expect(canSignUpForTask({ signedIn: true, canSignUp: true })).toBe(
       true,
     );
   });
 
   it("says no when the server refuses, and when nobody is signed in", () => {
-    expect(canSignUpForTask({ signedIn: true, canSubmitPraxis: false })).toBe(
+    expect(canSignUpForTask({ signedIn: true, canSignUp: false })).toBe(
       false,
     );
-    expect(canSignUpForTask({ signedIn: false, canSubmitPraxis: true })).toBe(
+    expect(canSignUpForTask({ signedIn: false, canSignUp: true })).toBe(
       false,
     );
   });
@@ -159,7 +159,7 @@ describe("canSignUpForTask — the deleted client-side mirror", () => {
   it("treats an absent flag as a refusal", () => {
     // Anonymous and pre-#1497 reads carry no flag; absent must not read as yes.
     expect(
-      canSignUpForTask({ signedIn: true, canSubmitPraxis: undefined }),
+      canSignUpForTask({ signedIn: true, canSignUp: undefined }),
     ).toBe(false);
   });
 });
@@ -175,7 +175,7 @@ describe("every task-detail skin renders both halves", () => {
           state={baseState({
             task: {
               ...TASK,
-              can_submit_praxis: true,
+              can_sign_up: true,
               signup_reason: SIGNUP_REASON_MULTI_MEMBERSHIP,
             },
             canSignUp: true,
@@ -198,7 +198,7 @@ describe("every task-detail skin renders both halves", () => {
           state={baseState({
             task: {
               ...TASK,
-              can_submit_praxis: false,
+              can_sign_up: false,
               signup_reason: "already_active_member",
             },
             canSignUp: false,

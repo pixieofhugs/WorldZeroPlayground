@@ -6,7 +6,7 @@
  *
  * The second half covers the ADR-0056 rewire (#1022): mobile browse renders the
  * SHARED <TaskCard>, so both branches must now show the same card and the same
- * signup CTA, gated identically on `can_submit_praxis`. Before the rewire mobile
+ * signup CTA, gated identically on `can_sign_up`. Before the rewire mobile
  * had no CTA at all, so "the button is there on mobile" is the regression this
  * pins.
  */
@@ -39,7 +39,7 @@ const TASK: TaskOut = {
   metatask_faction_slug: null,
   created_at: '2026-01-01T00:00:00Z',
   in_progress_count: 6,
-  can_submit_praxis: true,
+  can_sign_up: true,
   allowed_modes: ['solo'],
   eligible_for_current_user: true,
 }
@@ -170,7 +170,7 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
   })
 
   it('hides the CTA on both when the task refuses the viewer a praxis', () => {
-    const barred: TaskOut = { ...TASK, can_submit_praxis: false }
+    const barred: TaskOut = { ...TASK, can_sign_up: false }
     for (const formFactor of ['mobile', 'desktop'] as const) {
       dispatch.formFactor = formFactor
       state.current = { ...CANNED, user: VIEWER, tasks: [barred] }
