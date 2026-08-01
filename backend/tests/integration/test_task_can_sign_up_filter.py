@@ -7,13 +7,14 @@ because calling it per task is an N+1 on the page #1218 exists to speed up, so
 the only thing worth asserting is that the two never disagree.
 
 Parity is asserted over the rows the browse can return **at all**
-(``can_sign_up=False`` with identical filters), not over every ``Task`` row. The
-``exclude_character_id`` clause that supplies gate 5 is unconditional and has no
-Everymen "Double Dipper" carve-out, while :func:`is_active_member_of_task` does
-— so a task an Everymen character may legitimately claim a second time is
-already absent from the browse before this filter runs. Comparing against the
-browse's own candidate set keeps the assertion about *this* filter rather than
-that pre-existing asymmetry.
+(``can_sign_up=False`` with identical filters), not over every ``Task`` row —
+the candidate set is what this filter is allowed to narrow.
+
+Gate 5 is supplied by the ``exclude_character_id`` clause, which reuses the same
+``active_member_task_ids_subquery`` the predicate reads through. That subquery
+honours the Double Dipper ability (#1359); before it did not, so a task an
+Everymen character may legitimately claim a second time was dropped from the
+browse even though :func:`evaluate_signup` allowed it.
 """
 from dataclasses import replace
 
@@ -32,6 +33,11 @@ from services.era import get_or_create_stats
 from services.praxis import evaluate_signup
 from services.task import list_tasks
 
+# The faction Era 1 grants Double Dipper to. The slug is needed as a real
+# Faction row (FK), but the *ability* is asserted off the config below, never
+# assumed from the slug.
+EVERYMEN_SLUG = "everymen"
+
 
 @pytest_asyncio.fixture
 async def faction_wow(db_session: AsyncSession) -> Faction:
@@ -41,6 +47,22 @@ async def faction_wow(db_session: AsyncSession) -> Faction:
     if found is not None:
         return found
     faction = Faction(slug="wow", status=FactionStatus.visible)
+    db_session.add(faction)
+    await db_session.commit()
+    await db_session.refresh(faction)
+    return faction
+
+
+@pytest_asyncio.fixture
+async def faction_everymen(db_session: AsyncSession) -> Faction:
+    """The 'everymen' faction row — its Double Dipper ability is the point here."""
+    existing = await db_session.execute(
+        select(Faction).where(Faction.slug == EVERYMEN_SLUG)
+    )
+    found = existing.scalar_one_or_none()
+    if found is not None:
+        return found
+    faction = Faction(slug=EVERYMEN_SLUG, status=FactionStatus.visible)
     db_session.add(faction)
     await db_session.commit()
     await db_session.refresh(faction)
@@ -252,6 +274,77 @@ async def test_active_member_task_is_filtered_out(
 
     assert active_task.id not in eligible
     assert other.id in eligible
+
+
+async def _browse_task_ids(db_session: AsyncSession, viewer: Character) -> set[int]:
+    """The ordinary browse the route serves — ``exclude_character_id`` defaulted
+    to the viewer as ``routers/tasks.py`` does (#1229), and no ``can_sign_up``
+    filter. This is the list a player actually looks at.
+    """
+    tasks = await list_tasks(
+        db_session,
+        viewer=viewer,
+        exclude_character_id=viewer.id,
+        status="all",
+        task_type="all",
+        limit=200,
+    )
+    return {task.id for task in tasks}
+
+
+@pytest.mark.asyncio
+async def test_double_dipper_task_stays_in_browse(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua: Faction,
+    faction_everymen: Faction,
+):
+    """#1359 — the ability's holder still sees the task; a character without it does not.
+
+    Both halves, or the test cannot tell "the exclusion is faction-aware" from
+    "the exclusion was removed".
+    """
+    assert CURRENT_ERA.factions[EVERYMEN_SLUG].can_hold_multiple_memberships, (
+        "fixture premise: this era grants Double Dipper to Everymen"
+    )
+    await _seed_in_progress_praxis(db_session, character, active_task)
+
+    assert active_task.id not in await _browse_task_ids(db_session, character), (
+        "no ability: the task you are already working stays hidden"
+    )
+
+    character.faction_slug = EVERYMEN_SLUG
+    await db_session.commit()
+
+    assert active_task.id in await _browse_task_ids(db_session, character), (
+        "Double Dipper: a task you may claim again must be visible to claim again"
+    )
+
+
+@pytest.mark.asyncio
+async def test_parity_matrix_double_dipper(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua: Faction,
+    faction_everymen: Faction,
+):
+    """The predicate and the SQL agree on the fixture they drifted on (#1359)."""
+    await _seed_in_progress_praxis(db_session, character, active_task)
+    other = await _make_task(db_session, character, title="free")
+
+    ua_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
+    assert active_task.id not in ua_eligible
+
+    character.faction_slug = EVERYMEN_SLUG
+    await db_session.commit()
+
+    everymen_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
+    assert active_task.id in everymen_eligible
+    assert other.id in everymen_eligible
 
 
 @pytest.mark.asyncio
