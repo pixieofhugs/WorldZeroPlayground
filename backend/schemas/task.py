@@ -20,7 +20,6 @@ class TaskOut(BaseModel):
     created_by: int
     primary_faction_slug: str
     metatask_faction_slug: Optional[str] = None
-    is_task_vision_eligible: bool
     created_at: datetime
     # Derived, read-time count of characters actively working on this task —
     # active-signup population (Praxis.status in [in_progress, pending]), the

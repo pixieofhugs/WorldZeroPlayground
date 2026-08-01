@@ -54,7 +54,6 @@ const TASK: TaskOut = {
   created_by: 3,
   primary_faction_slug: null,
   metatask_faction_slug: null,
-  is_task_vision_eligible: false,
   created_at: '2026-01-01T00:00:00Z',
   in_progress_count: 6,
   can_submit_praxis: true,
