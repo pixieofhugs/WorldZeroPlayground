@@ -1,248 +1,106 @@
-"""
-Import tasks from a CSV file into the World Zero database.
+"""Import tasks from a CSV file into the World Zero database.
+
+A thin CLI over ``services.task_import``. Parsing, validation and insertion all
+live in that service and are shared with ``POST /admin/tasks/import-csv``, the
+admin-UI path (#1376) — do not grow a second CSV parser here.
 
 Usage:
-    python import_tasks_csv.py                               # dev, default CSV path
-    python import_tasks_csv.py path/to/tasks.csv            # dev, custom path
-    python import_tasks_csv.py --env prod                   # prod, default CSV path
-    python import_tasks_csv.py path/to/tasks.csv --env prod # prod, custom path
-    add --dry-run to any of the above to preview without writing
+    python import_tasks_csv.py path/to/tasks.csv              # dev
+    python import_tasks_csv.py path/to/tasks.csv --env prod   # prod
+    add --dry-run to any of the above to validate without writing
 
-CSV columns expected: Name, Faction, Description, Level, Points, ImagePath
+CSV columns expected: Name, Faction, Description, Level, Points
 
-Data corrections applied automatically:
-  - Faction slug typos mapped to canonical slugs: anolog → everymen, us_masters → ua
-  - "The Rotation Of Cubes In Your Mind": faction assigned to singularity
-  - "One of many Cultural Bridges": level=4, point_value=40
+The import is atomic: if any row fails validation nothing is written, and every
+failing row is listed so the file can be fixed in one pass. Legacy faction slugs
+are normalised automatically (see FACTION_ALIASES in the service) and each
+correction is reported.
 """
 
 import argparse
 import asyncio
-import csv
 import sys
 from pathlib import Path
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from models.account import Account, AccountStatus
-from models.character import Character, CharacterStatus
-from models.faction import Faction
 from models.roles import AccountRole, Role
-from models.task import Task, TaskStatus
 from script_utils import add_env_argument, get_settings
-
-# ---------------------------------------------------------------------------
-# Corrections
-# ---------------------------------------------------------------------------
+from services.task_import import TaskImportError, import_tasks_from_csv
 
 DEFAULT_CSV_PATH = Path.home() / "Downloads" / "W0 tasks - Unsorted.csv"
 
-# Faction slug typos / legacy slugs in the CSV → canonical slugs (ADR-0004)
-FACTION_CORRECTIONS: dict[str, str] = {
-    "anolog": "everymen",
-    "analog": "everymen",
-    "gestalt": "wow",
-    "journeymen": "ephemerists",
-    "us_masters": "ua",
-    "ua_masters": "ua",
-}
 
-# Per-task field overrides keyed by exact task name
-FIELD_OVERRIDES: dict[str, dict] = {
-    "The Rotation Of Cubes In Your Mind": {"primary_faction_slug": "singularity"},
-    "One of many Cultural Bridges":       {"level_required": 4, "point_value": 40},
-}
+async def _first_admin_account(session) -> Account | None:
+    """Any active admin account — the CLI has no signed-in user to credit."""
+    result = await session.execute(
+        select(Account)
+        .join(AccountRole, AccountRole.account_id == Account.id)
+        .join(Role, Role.id == AccountRole.role_id)
+        .where(Role.name == "admin", Account.status == AccountStatus.active)
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def parse_csv(csv_path: Path) -> list[dict[str, Any]]:
-    """Read CSV and return a list of raw row dicts."""
-    with csv_path.open(newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def apply_corrections(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
-    """
-    Normalise rows, apply faction corrections and field overrides.
-    Returns (cleaned_rows, warnings).
-    """
-    cleaned = []
-    warnings = []
-
-    for raw in rows:
-        name        = raw.get("Name", "").strip()
-        faction     = raw.get("Faction", "").strip()
-        description = raw.get("Description", "").strip() or None
-        level_raw   = raw.get("Level", "").strip()
-        points_raw  = raw.get("Points", "").strip()
-
-        if not name:
-            warnings.append("Skipped row with empty Name")
-            continue
-
-        # Apply faction slug corrections
-        if faction in FACTION_CORRECTIONS:
-            old = faction
-            faction = FACTION_CORRECTIONS[faction]
-            warnings.append(f"  [{name}] faction corrected: '{old}' → '{faction}'")
-
-        faction = faction or None  # empty string → None
-
-        # Parse level and points
-        try:
-            level = int(level_raw)
-        except ValueError:
-            level = None  # will be resolved by FIELD_OVERRIDES or flagged
-
-        try:
-            points = int(points_raw)
-        except ValueError:
-            points = None  # will be resolved by FIELD_OVERRIDES or flagged
-
-        row = {
-            "title":                name,
-            "description":          description,
-            "primary_faction_slug": faction,
-            "level_required":       level,
-            "point_value":          points,
-        }
-
-        # Apply per-task overrides
-        if name in FIELD_OVERRIDES:
-            overrides = FIELD_OVERRIDES[name]
-            row.update(overrides)
-            warnings.append(f"  [{name}] field overrides applied: {overrides}")
-
-        # Final validation — skip if still missing required numeric fields
-        if row["level_required"] is None or row["point_value"] is None:
-            warnings.append(
-                f"  SKIPPED [{name}]: missing level or points "
-                f"(level={level_raw!r}, points={points_raw!r}) — add to FIELD_OVERRIDES to include"
-            )
-            continue
-
-        cleaned.append(row)
-
-    return cleaned, warnings
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-async def run(csv_path: Path, dry_run: bool, env: str) -> None:
+async def run(csv_path: Path, dry_run: bool, env: str) -> int:
     settings = get_settings(env)
     print(f"Environment : {env}")
-    print(f"Database    : {settings.DATABASE_URL.split('@')[-1]}\n")  # host/db only, no creds
-
-    rows = parse_csv(csv_path)
-    print(f"Read {len(rows)} rows from {csv_path}\n")
-
-    tasks_data, warnings = apply_corrections(rows)
-
-    if warnings:
-        print("── Corrections & warnings ──────────────────────────────")
-        for warning in warnings:
-            print(warning)
-        print()
+    print(f"Database    : {settings.DATABASE_URL.split('@')[-1]}\n")  # host/db only
 
     engine = create_async_engine(settings.DATABASE_URL, echo=False)
     async_session = async_sessionmaker(engine, expire_on_commit=False)
 
-    async with async_session() as session:
+    try:
+        async with async_session() as session:
+            admin = await _first_admin_account(session)
+            if admin is None:
+                print("ERROR: No active admin account found in the database.")
+                return 1
 
-        # Validate faction slugs against DB
-        result = await session.execute(select(Faction.slug))
-        valid_slugs: set[str] = {row[0] for row in result.all()}
-
-        bad_slugs = {
-            task_data["primary_faction_slug"]
-            for task_data in tasks_data
-            if task_data["primary_faction_slug"] and task_data["primary_faction_slug"] not in valid_slugs
-        }
-        if bad_slugs:
-            print(f"ERROR: Unknown faction slug(s) after corrections: {bad_slugs}")
-            print("Add them to FACTION_CORRECTIONS or fix the CSV before running again.")
-            await engine.dispose()
-            sys.exit(1)
-
-        # Find admin character
-        admin_result = await session.execute(
-            select(Account)
-            .join(AccountRole, AccountRole.account_id == Account.id)
-            .join(Role, Role.id == AccountRole.role_id)
-            .where(Role.name == "admin", Account.status == AccountStatus.active)
-            .limit(1)
-        )
-        admin_account = admin_result.scalar_one_or_none()
-        if not admin_account:
-            print("ERROR: No active admin account found in the database.")
-            await engine.dispose()
-            sys.exit(1)
-
-        char_result = await session.execute(
-            select(Character)
-            .where(
-                Character.account_id == admin_account.id,
-                Character.status == CharacterStatus.active,
-            )
-            .limit(1)
-        )
-        admin_character = char_result.scalar_one_or_none()
-        if not admin_character:
-            print(f"ERROR: Admin account (id={admin_account.id}) has no active character.")
-            await engine.dispose()
-            sys.exit(1)
-
-        print(f"Creator: character '{admin_character.username}' (id={admin_character.id})\n")
-
-        # Preview / insert
-        print("── Tasks to import ─────────────────────────────────────")
-        print(f"{'#':<4} {'Title':<45} {'Faction':<14} {'Lvl':>3} {'Pts':>5}")
-        print("─" * 75)
-
-        inserted = 0
-        for row_number, task_data in enumerate(tasks_data, 1):
-            faction_display = task_data["primary_faction_slug"] or "(none)"
-            print(
-                f"{row_number:<4} {task_data['title'][:44]:<45} {faction_display:<14} "
-                f"{task_data['level_required']:>3} {task_data['point_value']:>5}"
-            )
-
-            if not dry_run:
-                task = Task(
-                    title=task_data["title"],
-                    description=task_data["description"],
-                    point_value=task_data["point_value"],
-                    level_required=task_data["level_required"],
-                    primary_faction_slug=task_data["primary_faction_slug"],
-                    created_by=admin_character.id,
-                    status=TaskStatus.active,
-                    is_task_vision_eligible=False,
+            try:
+                outcome = await import_tasks_from_csv(
+                    csv_path.read_bytes(), admin, session
                 )
-                session.add(task)
-                inserted += 1
+            except TaskImportError as exc:
+                print("Import rejected — nothing was written:\n")
+                for error in exc.errors:
+                    print(f"  {error.msg}")
+                await session.rollback()
+                return 1
 
-        print("─" * 75)
+            for warning in outcome.warnings:
+                print(f"  {warning}")
+            if outcome.warnings:
+                print()
 
-        if dry_run:
-            print(f"\nDRY RUN — {len(tasks_data)} tasks would be inserted. Nothing written.")
-        else:
-            await session.commit()
-            print(f"\n✓ Inserted {inserted} tasks successfully.")
+            for title in outcome.created_titles:
+                print(f"  {title}")
 
-    await engine.dispose()
+            # The service only flushes; committing (or not) is the caller's call,
+            # which is what makes --dry-run a real exercise of the real path.
+            if dry_run:
+                await session.rollback()
+                print(f"\nDRY RUN — {outcome.created_count} tasks would be created.")
+            else:
+                await session.commit()
+                print(f"\nInserted {outcome.created_count} tasks successfully.")
+    finally:
+        await engine.dispose()
+
+    return 0
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import tasks from a CSV into World Zero.")
-    parser.add_argument("csv_path", nargs="?", default=str(DEFAULT_CSV_PATH), help="Path to the CSV file")
-    parser.add_argument("--dry-run", action="store_true", help="Preview without writing to the database")
+    parser.add_argument(
+        "csv_path", nargs="?", default=str(DEFAULT_CSV_PATH), help="Path to the CSV file"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Validate without writing to the database"
+    )
     add_env_argument(parser)
     args = parser.parse_args()
 
@@ -251,7 +109,7 @@ def main() -> None:
         print(f"ERROR: CSV file not found: {csv_path}")
         sys.exit(1)
 
-    asyncio.run(run(csv_path, args.dry_run, args.env))
+    sys.exit(asyncio.run(run(csv_path, args.dry_run, args.env)))
 
 
 if __name__ == "__main__":

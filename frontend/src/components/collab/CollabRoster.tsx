@@ -1,31 +1,39 @@
 /**
- * Collab submission roster (#591). One shared, faction-token-themed block that
- * replaces the flat member-pill list in the composer and the plain member byline
- * on the praxis detail page. It renders the ADR-0012 lazy-consensus state live:
- * who has cast, who is still weaving, and the gate progress.
+ * Collab submission roster (#591, rebuilt #1416). One shared,
+ * faction-token-themed block that replaces the flat member-pill list in the
+ * composer and the plain member byline on the praxis detail page. It renders the
+ * ADR-0012 lazy-consensus state live: who is on the praxis, who has submitted,
+ * and the gate progress.
  *
- * State machine (derived from `members[]` — see docs/design/collab-submission):
- *   member_count < 2                    → awaiting  (S0) a crew of one
- *   cast_count === 0                    → writing   (S1) nobody cast yet
- *   0 < cast_count < member_count, I cast → waiting  (S2) my part is in, others aren't
- *   0 < cast_count < member_count, I didn't → holdout (S3) the circle waits on me
- *   cast_count === member_count         → published (S4) every part woven
+ * The consensus state machine lives in `collabGate.ts`; the row model — the
+ * merge of `members[]` and `invites[]` into four states, and the monogram
+ * derivation — lives in `rosterRows.ts`. Both are pure leaves, and both are
+ * separate modules for the same measured reason (#1397): a pure function
+ * imported from here bills its caller for `ConfirmDialog` and eight factions of
+ * confirm copy, which is what put ~5.5 KB gzip of composer on a praxis-detail
+ * route that draws no roster.
  *
- * S0 is #1274's. Below two members every consensus reading is degenerate —
- * `cast_count >= member_count` makes a lone author "published", and the bar can
- * only read 0% or 100% — so `awaiting` draws neither: just the author's row and
- * a line naming whoever was invited and has not answered.
+ * WHAT #1416 CHANGED. Invited people are now IN the roster. They used to be
+ * dashed chips drawn outside it by `InviteSearch`, and a declined invite was
+ * filtered away everywhere it appeared — so the one question this block exists
+ * to answer was split across two widgets and one silent deletion. The pill went
+ * from a boolean (`has_submitted`) to the four states in `RosterRowState`, and
+ * the rescind × moved onto the invited row it belongs to. The rows themselves
+ * lost their filled/dashed frames: done-ness now reads on the avatar and the
+ * pill, and the rows are separated by a hairline instead.
  *
  * Pure display everywhere (#646): the cast / pull-back action lives in the
  * composer footer's PublishButton, not the roster, so both the composer and the
  * read-only detail view consume this the same way. Spacing/type via Tailwind
- * utilities + --text-* tokens, not raw inline pixels (#588 lint guard).
+ * utilities and the --text- / --space- token scales, not raw inline pixels
+ * (#588 lint guard).
  *
  * Every word resolves through `collabCopy(factionSlug, key)`, so each faction
  * speaks the same states in its own voice and anything it hasn't overridden
  * falls back to the shared `editPraxis.collab.*` block (#591).
  */
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   PraxisInviteOut,
@@ -36,13 +44,45 @@ import { factionCssVar } from '../../utils/factions'
 import ConfirmDialog from '../confirm/ConfirmDialog'
 import { kickMemberConfirm } from '../confirm/composerConfirms'
 import { collabCopy } from './collabCopy'
+import type { CollabCopyKey } from './collabCopy'
 import { deriveCollabGate } from './collabGate'
+import { RosterAvatar } from './RosterAvatar'
+import { buildRosterRows, isRowDone } from './rosterRows'
+import type { RosterRow, RosterRowState } from './rosterRows'
 
 // The consensus state machine moved to `collabGate.ts` (#1397) — it is pure, and
 // keeping it here billed every caller for this component's dialog and copy.
 // Re-exported so every existing importer still reaches it by this path.
 export { deriveCollabGate } from './collabGate'
 export type { CollabGate, CollabState } from './collabGate'
+
+/** Diameter of the row monogram. The duel side draws the same circle at 28. */
+const AVATAR_SIZE = 34
+/** The design's 6px status dot. */
+const DOT_SIZE = 6
+
+/**
+ * The ink for text sitting ON the faction's card-accent, declared once on the
+ * roster root so the filled pill can name it with a fallback.
+ *
+ * `-on-accent` (#924) is exactly this measurement — it is what ConfirmDialog's
+ * primary button reads — but EPHEMERISTS HAS NONE: #1232 deleted it when its
+ * last consumer moved to the Valley plate's own CTA pair. index.css belongs to
+ * frontend-style, so rather than mint a faction token from here the pill falls
+ * back to that faction's own sheet (`card-bg`), which is the ink index.css
+ * already measures its card family against. Restoring
+ * `--faction-ephemerists-on-accent` (plus its ACCENT_PAIRS row) is the real fix
+ * and is flagged on the PR.
+ */
+const ON_ACCENT_PROPERTY = '--roster-on-accent'
+
+/** Which copy key each of the four states speaks through. */
+const PILL_KEY_BY_STATE: Record<RosterRowState, CollabCopyKey> = {
+  filed: 'pillCast',
+  accepted: 'pillWeaving',
+  invited: 'pillInvited',
+  declined: 'pillDeclined',
+}
 
 export function CollabRoster({
   praxisType,
@@ -53,6 +93,7 @@ export function CollabRoster({
   taskPointValue,
   onKick,
   onNudge,
+  onRescindInvite,
 }: {
   /**
    * `PraxisOut.type` — the ONLY thing that decides whether this block belongs on
@@ -68,10 +109,15 @@ export function CollabRoster({
   praxisType: PraxisType
   members: readonly PraxisMemberOut[]
   /**
-   * `PraxisOut.invites`, for the `awaiting` line only: a crew of one is only
-   * legible next to who has been asked. Optional because the backend serialises
-   * invites to MEMBERS ONLY (`build_praxis_out`), so a stranger reading the
-   * detail page legitimately has none and gets the neutral fallback line.
+   * `PraxisOut.invites`. Since #1416 these are ROWS, not just the awaiting
+   * line's names: a pending invite reads Invited and a declined one reads
+   * Declined, in the same list as the members.
+   *
+   * Optional, and legitimately empty rather than merely absent: the backend
+   * serialises invites to MEMBERS ONLY (`build_praxis_out`), so a stranger
+   * reading the detail page has none. Invite rows must therefore degrade to
+   * nothing — no empty row, no crash — which they do by construction, since
+   * they exist only where the data does.
    */
   invites?: readonly PraxisInviteOut[]
   currentCharacterId: number | null | undefined
@@ -79,7 +125,7 @@ export function CollabRoster({
   taskPointValue?: number | null
   /**
    * Remove another member (#959). Receives the target's CHARACTER id. When
-   * provided, a kick × renders on every OTHER member's pill — but only if the
+   * provided, a kick × renders on every OTHER member's row — but only if the
    * viewer is themselves a member and the collab is still open, mirroring the
    * backend `kick_member` guard ("any member may kick any other, not self, and
    * only while in_progress/pending" — #1076). The confirm step lives here so
@@ -88,14 +134,25 @@ export function CollabRoster({
    */
   onKick?: (memberId: number) => void | Promise<void>
   /**
-   * Poke a member who has not cast yet (#1083). Receives the target's CHARACTER
-   * id. When provided, a Nudge button renders on every OTHER member's pill that
-   * is still weaving — but only if the VIEWER has cast, mirroring the backend
-   * rule ("any member who has cast may nudge a member who has not"): you do not
-   * get to hurry people you have not caught up with. Left undefined on the
-   * read-only detail mount, which draws no author controls at all (#646).
+   * Poke a member who has not submitted yet (#1083). Receives the target's
+   * CHARACTER id. When provided, a Nudge button renders on every OTHER member's
+   * row that is still outstanding — but only if the VIEWER has submitted,
+   * mirroring the backend rule ("any member who has cast may nudge a member who
+   * has not"): you do not get to hurry people you have not caught up with. Left
+   * undefined on the read-only detail mount, which draws no author controls at
+   * all (#646).
    */
   onNudge?: (characterId: number) => void | Promise<void>
+  /**
+   * Withdraw a still-pending invite (#421). Receives the INVITE id, not a
+   * character id — an invite is the thing being cancelled.
+   *
+   * It arrived here with #1416: the × used to live on the pending-invite chips
+   * that `InviteSearch` drew beside the roster, and absorbing those chips into
+   * the roster would otherwise have deleted the control with them. Optional for
+   * the same reason `onKick` is — the read-only detail mount passes none.
+   */
+  onRescindInvite?: (inviteId: number) => void | Promise<void>
 }) {
   const { t } = useTranslation('forms')
   // The member a kick is waiting on confirmation for (#1082). Declared before
@@ -116,11 +173,15 @@ export function CollabRoster({
   const notice = factionCssVar(factionSlug, 'card-notice')
   const credit = factionCssVar(factionSlug, 'card-credit')
   const quiet = factionCssVar(factionSlug, 'card-muted')
+  const onAccent = `var(${ON_ACCENT_PROPERTY}, ${factionCssVar(factionSlug, 'card-bg')})`
   // A crew of one has no consensus to report, so the tally chip and the bar are
   // both withheld rather than printed at their degenerate readings (#1274) —
   // which also keeps `pct` off a zero denominator on an empty roster.
   const awaiting = gate.state === 'awaiting'
   const pct = awaiting ? 0 : Math.round((gate.castCount / gate.memberCount) * 100)
+
+  // Members and invites, one ordered list (#1416). Pure, and tested as such.
+  const rows = buildRosterRows(members, invites)
 
   // Mirror the backend: only a member may kick, never themselves, and only
   // while the praxis is still open (#1076). `published` is that last condition
@@ -148,22 +209,15 @@ export function CollabRoster({
     void onKick(member.character_id)
   }
 
-  // Who has been asked and has not answered — the whole content of `awaiting`
-  // beyond the author's own row. Filtered HERE rather than at eleven call sites,
-  // for the same reason the state machine lives here.
-  const pendingInvitees = (invites ?? [])
-    .filter((invite) => invite.status === 'pending')
-    .map((invite) => invite.invitee_display_name)
-
+  // `awaiting` used to have a second line naming whoever had been invited and
+  // not answered (#1274) — it existed because those people were nowhere in the
+  // roster. They are rows now, so the line printed the same name three lines
+  // above itself; it went with the chips (#1416). What is left is the one fact
+  // rows cannot state: nobody else has joined yet.
   const banner =
     gate.state === 'awaiting'
       ? {
-          text:
-            pendingInvitees.length > 0
-              ? collabCopy(factionSlug, 'rosterAwaitingInvited', {
-                  names: pendingInvitees.join(', '),
-                })
-              : collabCopy(factionSlug, 'rosterAwaitingAlone'),
+          text: collabCopy(factionSlug, 'rosterAwaitingAlone'),
           tone: quiet,
           warn: false,
         }
@@ -176,19 +230,35 @@ export function CollabRoster({
           : null
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Header: label + cast progress chip. Both this and the bar below are the
-          consensus reading, which `awaiting` has nothing true to say — a tally
-          of one over one is not a gate anybody is waiting on. */}
-      {!awaiting && (
-        <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
+    <div
+      className="flex flex-col gap-2"
+      style={{ [ON_ACCENT_PROPERTY]: factionCssVar(factionSlug, 'on-accent') } as CSSProperties}
+    >
+      {/* Panel header (#1416): the block names itself and reports the gate on
+          one row. `Collaborators · N` used to be the ComposerSection label at
+          nine separate mounts, which meant the heading and the tally could —
+          and did — disagree about how many people were on the praxis.
+
+          N counts MEMBERS, not rows: an invited or declined row is somebody who
+          has been asked, not somebody who is on it, and the tally beside it
+          reads out of the same denominator. */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+          {t('editPraxis.composer.collaboratorsLabel', { count: gate.memberCount })}
+        </span>
+        {/* `awaiting` has nothing true to say here — a tally of one over one is
+            not a gate anybody is waiting on (#1274). */}
+        {!awaiting && (
           <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
             {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Progress bar */}
+      {/* Progress bar. The design draws none, and #1416 asked for that to be a
+          decision rather than an omission: it stays. It is the only glanceable
+          reading of the gate, and it is the element carrying `aria-valuenow` —
+          deleting it would leave a screen reader with the tally string alone. */}
       {!awaiting && (
         <div
           role="progressbar"
@@ -203,105 +273,117 @@ export function CollabRoster({
       )}
 
       {/* Roster rows */}
-      <div className="flex flex-col gap-1">
-        {members.map((member) => {
-          const isMe = member.character_id === currentCharacterId
-          const cast = member.has_submitted
+      <div className="flex flex-col">
+        {rows.map((row, index) => {
+          const done = isRowDone(row.state)
+          const isMe =
+            row.member != null && row.member.character_id === currentCharacterId
           return (
             <div
-              key={member.id}
-              className="flex items-center gap-2 px-3 py-1"
+              key={row.key}
+              className="flex items-center"
               style={{
-                borderRadius: 4,
-                border: cast ? `1.5px solid ${accent}` : '1.5px dashed var(--color-border)',
-                // A cast row is a filled row, and the fill has to be a SURFACE.
-                // It used to be `card-muted`, which is the faction's muted TEXT
-                // ink — every other caller in the app reads it as `color:` — so
-                // the row came out as a slab of ink with the accent pill printed
-                // on it at 1.05:1 light / 1.17:1 dark (#694). `card-bg` is the
-                // faction's own sheet, and it is the surface the whole
-                // `card-{text,muted,accent}` family is already measured against,
-                // so filling with it makes the rendered pairing identical to one
-                // the token test has gated since #651.
-                background: cast ? factionCssVar(factionSlug, 'card-bg') : 'transparent',
-                // ...and once the row paints its own ground, it must paint its
-                // own ink: an inherited colour is whatever the MOUNT set, and
-                // this component has three mounts on eight sheets.
-                color: cast ? factionCssVar(factionSlug, 'card-text') : undefined,
+                gap: 'var(--space-sm)',
+                padding: 'var(--space-md) 0',
+                // Rows are separated by a hairline rather than framed
+                // individually — the state now reads on the avatar and the pill,
+                // and eight frames stacked on a faction sheet read as a table.
+                borderTop: index === 0 ? undefined : '1px solid var(--color-border)',
               }}
             >
-              <span className="font-body text-[12px]" style={{ fontWeight: cast ? 700 : 400, flex: 1 }}>
-                {member.character_display_name}
+              <RosterAvatar
+                name={row.name}
+                size={AVATAR_SIZE}
+                borderColor={done ? accent : quiet}
+                dashed={row.state === 'invited'}
+                color={done ? accent : undefined}
+              />
+
+              <span
+                className="font-body text-[13px]"
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  fontWeight: done ? 700 : 400,
+                }}
+              >
+                {row.name}
                 {isMe && (
-                  <span style={{ color: cast ? quiet : 'var(--color-text-tertiary)' }}> · {collabCopy(factionSlug, 'you')}</span>
+                  <span style={{ color: quiet }}> · {collabCopy(factionSlug, 'you')}</span>
                 )}
-                {gate.state === 'published' && taskPointValue != null && (
+                {done && gate.state === 'published' && taskPointValue != null && (
                   <span style={{ color: credit, fontWeight: 700 }}> +{taskPointValue}</span>
                 )}
               </span>
-              <span className="eyebrow text-[9px]" style={{ color: cast ? accent : notice }}>
-                {cast ? `✓ ${collabCopy(factionSlug, 'pillCast')}` : collabCopy(factionSlug, 'pillWeaving')}
-              </span>
-              {/* Nudge — only on a member who is still weaving, never my own row
+
+              {/* Nudge — only on a member who has not submitted, never my own row
                   (#1083). Disabled state comes from `member.nudged_at`, which the
                   server sends and clears when the 24h window lapses; nothing
-                  about it is remembered here, so a reload cannot un-nudge it. */}
-              {canNudge && !isMe && !cast && (
+                  about it is remembered here, so a reload cannot un-nudge it.
+                  An invited/declined row has no member to nudge. */}
+              {canNudge && row.member != null && !isMe && !done && (
                 <button
                   type="button"
-                  disabled={member.nudged_at != null}
-                  onClick={() => onNudge?.(member.character_id)}
+                  disabled={row.member.nudged_at != null}
+                  onClick={() => onNudge?.(row.member!.character_id)}
                   title={collabCopy(factionSlug, 'nudgeDescription')}
                   aria-label={collabCopy(
                     factionSlug,
-                    member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
-                    { name: member.character_display_name },
+                    row.member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
+                    { name: row.name },
                   )}
-                  className="eyebrow text-[9px] px-2 py-1"
+                  className="eyebrow text-[12px]"
                   style={{
+                    padding: 'var(--space-xs) var(--space-sm)',
                     borderRadius: 4,
                     border: `1px solid ${
-                      member.nudged_at != null ? 'var(--color-border)' : accent
+                      row.member.nudged_at != null ? 'var(--color-border)' : accent
                     }`,
                     background: 'transparent',
-                    color:
-                      member.nudged_at != null
-                        ? 'var(--color-text-tertiary)'
-                        : accent,
-                    cursor: member.nudged_at != null ? 'default' : 'pointer',
+                    color: row.member.nudged_at != null ? quiet : accent,
+                    cursor: row.member.nudged_at != null ? 'default' : 'pointer',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {collabCopy(
                     factionSlug,
-                    member.nudged_at != null ? 'nudgeSentAction' : 'nudgeAction',
+                    row.member.nudged_at != null ? 'nudgeSentAction' : 'nudgeAction',
                   )}
                 </button>
               )}
-              {/* Kick × — on every OTHER member's pill (never my own), gated to
+
+              {/* Kick × — on every OTHER member's row (never my own), gated to
                   members (#959). The glyph is an ornament; the button's name is
                   the aria-label so screen readers and the e2e locator resolve it. */}
-              {canKick && !isMe && (
-                <button
-                  type="button"
-                  onClick={() => setPendingKick(member)}
-                  aria-label={t('editPraxis.invite.kickMemberAria', {
-                    name: member.character_display_name,
-                  })}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    // Follows the row: on a filled row the ground is the faction
-                    // sheet, so the glyph takes that sheet's muted ink.
-                    color: cast ? quiet : 'var(--color-text-tertiary)',
-                    cursor: 'pointer',
-                    fontSize: 'var(--text-md)',
-                    lineHeight: 1,
-                    padding: 0,
-                  }}
-                >
-                  ×
-                </button>
+              {canKick && row.member != null && !isMe && (
+                <RowGlyphButton
+                  label={t('editPraxis.invite.kickMemberAria', { name: row.name })}
+                  color={quiet}
+                  onClick={() => setPendingKick(row.member!)}
+                />
               )}
+
+              {/* Rescind × — the pending-invite chip's control, now on the row
+                  that chip became (#421, moved #1416). Only a still-pending
+                  invite can be withdrawn; a declined one is already answered. */}
+              {onRescindInvite != null && row.invite != null && row.state === 'invited' && (
+                <RowGlyphButton
+                  label={t('editPraxis.invite.rescindInviteAria', { name: row.name })}
+                  color={quiet}
+                  onClick={() => void onRescindInvite(row.invite!.id)}
+                />
+              )}
+
+              <StatusPill
+                row={row}
+                label={collabCopy(factionSlug, PILL_KEY_BY_STATE[row.state])}
+                accent={accent}
+                quiet={quiet}
+                onAccent={onAccent}
+              />
             </div>
           )
         })}
@@ -310,8 +392,9 @@ export function CollabRoster({
       {/* Per-state banner */}
       {banner && (
         <p
-          className="font-body text-[11px] px-3 py-2"
+          className="font-body text-[11px]"
           style={{
+            padding: 'var(--space-sm) var(--space-md)',
             borderRadius: 4,
             color: banner.tone,
             border: `1px solid ${banner.tone}`,
@@ -337,5 +420,96 @@ export function CollabRoster({
         />
       )}
     </div>
+  )
+}
+
+/**
+ * The four-state pill (#1416), replacing the boolean that read only submitted /
+ * not submitted.
+ *
+ * It never communicates by colour alone: every state carries its own word, the
+ * two unanswered ones are additionally DASHED, and the leading dot is
+ * `aria-hidden` ornament rather than the message.
+ */
+function StatusPill({
+  row,
+  label,
+  accent,
+  quiet,
+  onAccent,
+}: {
+  row: RosterRow
+  label: string
+  accent: string
+  quiet: string
+  onAccent: string
+}) {
+  const done = isRowDone(row.state)
+  // Asked but not answered — the two states that are not membership.
+  const unanswered = row.state === 'invited' || row.state === 'declined'
+  return (
+    <span
+      className="eyebrow text-[12px]"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 'var(--space-xs)',
+        padding: 'var(--space-xs) var(--space-sm)',
+        borderRadius: 4,
+        border: `1px ${unanswered ? 'dashed' : 'solid'} ${done ? accent : quiet}`,
+        background: done ? accent : 'transparent',
+        color: done ? onAccent : quiet,
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          width: DOT_SIZE,
+          height: DOT_SIZE,
+          borderRadius: '50%',
+          flexShrink: 0,
+          background: done ? 'currentColor' : unanswered ? 'transparent' : accent,
+          border: unanswered ? `1px solid ${quiet}` : undefined,
+        }}
+      />
+      {label}
+    </span>
+  )
+}
+
+/**
+ * The row's × controls — kick and rescind — which are the same button with two
+ * names. Extracted because they were literally identical apart from the label
+ * and the handler, and `sonarjs/no-identical-functions` is on.
+ */
+function RowGlyphButton({
+  label,
+  color,
+  onClick,
+}: {
+  label: string
+  color: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        color,
+        cursor: 'pointer',
+        fontSize: 'var(--text-xl)',
+        lineHeight: 1,
+        padding: 0,
+        flexShrink: 0,
+      }}
+    >
+      ×
+    </button>
   )
 }

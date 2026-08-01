@@ -86,18 +86,21 @@ describe("InviteSearch — the duel chip names the other side (#1226)", () => {
  * #1274 — the composer's collab block for a crew of ONE.
  *
  * Two facts have to survive together on this surface, which is why they are
- * asserted in one place: the roster now renders (it is gated on `type`, and a
- * collab is a collab at one member), and the pending-invite chip path still
- * draws the person who was asked. The chip is what the roster's `awaiting` line
- * defers to here — the composer is the one mount that withholds `invites` from
- * `CollabRoster`, because printing the same name twice, once without the
- * rescind ×, would be worse than the bug.
+ * asserted in one place: the roster renders (it is gated on `type`, and a collab
+ * is a collab at one member), and the person who was asked is still drawn, with
+ * the rescind × still reachable.
+ *
+ * #1416 changed WHERE. The pending-invite chips this file was written against
+ * are gone: the roster draws invited and declined as rows of its own and carries
+ * the rescind ×, so the composer now passes `invites` like every other mount.
+ * The old comment here defended the chips on the grounds that the roster would
+ * otherwise print the same name twice — which was true, and the fix was to stop
+ * printing it in two widgets rather than to withhold data from one of them.
  *
  * `praxis.invites` reaches this render straight from `GET /praxes/:id`, which
  * the composer re-fetches after `inviteToPraxis` resolves (`useEditPraxis`
  * `sendInvite`). The backend serialises `invites` to MEMBERS ONLY
- * (`build_praxis_out`), which is why the read page's roster carries the line
- * itself and a stranger sees the neutral fallback.
+ * (`build_praxis_out`), which is why a stranger's read view has none at all.
  */
 function member(characterId: number, name: string): PraxisMemberOut {
   return {
@@ -143,6 +146,7 @@ function collabState(invites: PraxisInviteOut[]): EditPraxisState {
     inviteResults: [],
     inviteOpen: false,
     autoSubmitDays: 3,
+    cancelInvite: () => {},
   } as unknown as EditPraxisState;
 }
 
@@ -157,17 +161,18 @@ describe("InviteSearch — a collab whose crew is still one (#1274)", () => {
     expect(html).not.toContain("1 of 1");
   });
 
-  it("still draws the pending-invite chip and its rescind control", () => {
+  it("draws the invitee as a roster row, with the rescind control on it", () => {
     const html = chipHtml(collabState([pendingInvite("Asked Player")]));
     expect(html).toContain("Asked Player");
-    expect(html).toContain("pending");
+    expect(html).toContain("invited");
     expect(html).toContain("rescind invite to Asked Player");
   });
 
-  // The chip owns the invitee's name on this surface, so the roster must not
-  // print it a second time.
+  // The roster owns the invitee's name on this surface. Nothing else may print
+  // it — not a chip beside the roster, and not the awaiting line beneath it,
+  // which is the pair of duplications #1416 collapsed.
   it("names the invitee exactly once", () => {
     const html = chipHtml(collabState([pendingInvite("Asked Player")]));
-    expect(html.split("Asked Player").length - 1).toBe(2); // chip text + aria-label
+    expect(html.split("Asked Player").length - 1).toBe(2); // row text + aria-label
   });
 });

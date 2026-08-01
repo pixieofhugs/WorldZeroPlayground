@@ -575,11 +575,14 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           <ComposerSection
             rule={flute}
             label={
+              // The roster names itself now — `Collaborators · N` sits on its
+              // own header row inside the panel, beside the tally it used to
+              // disagree with (#1416). Only the duel guise of this block still
+              // needs a section label, and `undefined` drops the heading row
+              // rather than printing an empty one.
               state.duelMode
                 ? t("editPraxis.composer.opponentLabel")
-                : t("editPraxis.composer.collaboratorsLabel", {
-                    count: praxis.members.length,
-                  })
+                : undefined
             }
             labelStyle={sectionLabel}
           >

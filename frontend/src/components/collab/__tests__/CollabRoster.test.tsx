@@ -112,7 +112,7 @@ describe('CollabRoster render', () => {
     const html = renderToStaticMarkup(
       <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} />,
     )
-    expect(html).toContain('✓ submitted')
+    expect(html).toContain('submitted')
     expect(html).toContain('not submitted')
     expect(html).toContain('1 of 2 submitted')
   })
@@ -161,13 +161,15 @@ describe('CollabRoster — a one-member collab (#1274)', () => {
     expect(html([invite(2, 'Invitee', 'pending')])).toContain('Invitee')
   })
 
-  it('ignores answered invites', () => {
+  // The awaiting LINE names only whoever has not answered. A declined invite is
+  // now a row of its own (#1416), so it is on the page — but it is not somebody
+  // the collab is still waiting on, and the line must not say it is.
+  it('names only the unanswered in the awaiting line', () => {
     const answered = html([
       invite(2, 'Accepted One', 'accepted'),
       invite(3, 'Declined One', 'declined'),
     ])
     expect(answered).not.toContain('Accepted One')
-    expect(answered).not.toContain('Declined One')
     // …and falls back to the nobody-yet line, which the composer needs too:
     // invites are member-only on the wire, so a stranger's read view sees [].
     expect(answered).toContain('Nobody else has joined')
@@ -187,6 +189,170 @@ describe('CollabRoster — a one-member collab (#1274)', () => {
     )
     expect(lone).not.toContain('All parts submitted')
     expect(lone).not.toContain('+30')
+  })
+})
+
+/**
+ * #1416 — invites are rows, and the pill has four states.
+ *
+ * Every state is asserted, and each assertion also checks the three it is NOT:
+ * a test that only looks for its own word cannot tell "renders the right pill"
+ * from "always renders one pill".
+ */
+describe('CollabRoster — the four-state pill (#1416)', () => {
+  const PILLS = ['submitted', 'invited', 'declined'] as const
+  const render = (
+    members: PraxisMemberOut[],
+    invites: PraxisInviteOut[] = [],
+  ) =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={members}
+        invites={invites}
+        currentCharacterId={1}
+        factionSlug={null}
+      />,
+    )
+
+  // "not submitted" contains "submitted", so the accepted case is read off the
+  // full pill string rather than by substring.
+  const pillsIn = (html: string) =>
+    PILLS.filter((word) => html.includes(`>${word}</span>`))
+
+  it('filed — a member who has submitted', () => {
+    const html = render([member(1, true), member(2, true)])
+    expect(pillsIn(html)).toEqual(['submitted'])
+    expect(html).not.toContain('not submitted')
+  })
+
+  it('accepted — a member who has not', () => {
+    const html = render([member(1, false), member(2, false)])
+    expect(html).toContain('not submitted')
+    expect(pillsIn(html)).toEqual([])
+  })
+
+  it('invited — a pending invite, which used to live outside the roster', () => {
+    const html = render([member(1, false)], [invite(2, 'Asked', 'pending')])
+    expect(html).toContain('Asked')
+    expect(pillsIn(html)).toEqual(['invited'])
+  })
+
+  it('declined — which used to be filtered away entirely', () => {
+    const html = render([member(1, false)], [invite(2, 'Refused', 'declined')])
+    expect(html).toContain('Refused')
+    expect(pillsIn(html)).toEqual(['declined'])
+  })
+
+  it('draws all four at once, one pill each', () => {
+    const html = render(
+      [member(1, true), member(2, false)],
+      [invite(3, 'Asked', 'pending'), invite(4, 'Refused', 'declined')],
+    )
+    expect(pillsIn(html)).toEqual(['submitted', 'invited', 'declined'])
+    expect(html).toContain('not submitted')
+  })
+
+  // The pill must not carry its state in colour alone: the two unanswered
+  // states are additionally dashed, and every state has its own word.
+  it('dashes the unanswered states', () => {
+    expect(render([member(1, false)], [invite(2, 'Asked', 'pending')])).toContain('dashed')
+    expect(render([member(1, false)], [invite(2, 'Refused', 'declined')])).toContain('dashed')
+    expect(render([member(1, true), member(2, false)])).not.toContain('dashed')
+  })
+
+  it('derives a monogram for every row', () => {
+    const html = render([member(1, false)], [invite(2, 'Ada Lovelace', 'pending')])
+    expect(html).toContain('>AL<')
+  })
+})
+
+describe('CollabRoster — the panel header (#1416)', () => {
+  const header = (members: PraxisMemberOut[]) =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={members}
+        currentCharacterId={1}
+        factionSlug={null}
+      />,
+    )
+
+  // Zero is reachable: `praxisType` is the only gate, so a collab whose members
+  // have not loaded still mounts this block (#1274).
+  it('names itself at zero members, with no tally to report', () => {
+    const html = header([])
+    expect(html).toContain('Collaborators · 0')
+    expect(html).not.toContain('submitted')
+  })
+
+  it('names itself at one member, still with no tally', () => {
+    const html = header([member(1, false)])
+    expect(html).toContain('Collaborators · 1')
+    expect(html).not.toContain('of 1 submitted')
+  })
+
+  it('reports the gate beside the count once there is one', () => {
+    const html = header([member(1, true), member(2, false), member(3, false)])
+    expect(html).toContain('Collaborators · 3')
+    expect(html).toContain('1 of 3 submitted')
+  })
+
+  // The count is MEMBERS, not rows — an invited row is somebody who has been
+  // asked, and the tally beside it reads out of the same denominator.
+  it('counts members, not invites', () => {
+    const html = renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={[member(1, true), member(2, false)]}
+        invites={[invite(3, 'Asked', 'pending')]}
+        currentCharacterId={1}
+        factionSlug={null}
+      />,
+    )
+    expect(html).toContain('Collaborators · 2')
+    expect(html).toContain('1 of 2 submitted')
+  })
+})
+
+// The rescind × moved off the pending-invite chips and onto the invited row
+// those chips became (#421, moved #1416) — deleting the chips without it would
+// have deleted the feature.
+describe('CollabRoster rescind × visibility (#1416)', () => {
+  const rescind = () => {}
+  const html = (status: PraxisInviteOut['status']) =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={[member(1, false)]}
+        invites={[invite(2, 'Asked', status)]}
+        currentCharacterId={1}
+        factionSlug={null}
+        onRescindInvite={rescind}
+      />,
+    )
+
+  it('offers the × on a still-pending invite', () => {
+    expect(html('pending')).toContain('rescind invite to Asked')
+  })
+
+  it('withholds it from an invite that has already been answered', () => {
+    expect(html('declined')).not.toContain('rescind invite to Asked')
+  })
+
+  // The read-only detail mount passes no callback and draws no author controls.
+  it('withholds it where no handler is passed', () => {
+    expect(
+      renderToStaticMarkup(
+        <CollabRoster
+          praxisType="collab"
+          members={[member(1, false)]}
+          invites={[invite(2, 'Asked', 'pending')]}
+          currentCharacterId={1}
+          factionSlug={null}
+        />,
+      ),
+    ).not.toContain('rescind invite to Asked')
   })
 })
 
