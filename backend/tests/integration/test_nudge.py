@@ -611,3 +611,210 @@ async def test_the_duel_status_gate_itself_refuses_pending(
         f"/praxes/{opponent_praxis.id}/nudge/{character2.id}", headers=auth_headers
     )
     assert response.status_code == 422, response.text
+
+
+# ---------------------------------------------------------------------------
+# Bulk nudge — "nudge the crew" (#1415)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_pokes_every_eligible_member_in_one_call(
+    client,
+    db_session: AsyncSession,
+    praxis_collab: Praxis,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    auth_headers: dict,
+    auth_headers2: dict,
+) -> None:
+    """Every member other than the sender who has not submitted gets nudged."""
+    db_session.add(
+        PraxisMember(praxis_id=praxis_collab.id, character_id=character3.id)
+    )
+    await db_session.commit()
+    await _set_cast(db_session, praxis_collab.id, character.id, True)
+
+    response = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    results = {entry["character_id"]: entry for entry in response.json()}
+    assert set(results) == {character2.id, character3.id}
+    for entry in results.values():
+        assert entry["nudge"] is not None
+        assert entry["error"] is None
+        assert entry["nudge"]["from_character_id"] == character.id
+
+    # Landed in the recipient's feed, same as the single-recipient route.
+    feed = await client.get("/activity-feed", headers=auth_headers2)
+    nudges = [item for item in feed.json()["items"] if item["type"] == "nudge"]
+    assert len(nudges) == 1
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_excludes_the_sender_and_already_submitted_members(
+    client,
+    db_session: AsyncSession,
+    praxis_collab: Praxis,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    auth_headers: dict,
+) -> None:
+    """The sender is never a candidate, and neither is a member who already cast."""
+    db_session.add(
+        PraxisMember(praxis_id=praxis_collab.id, character_id=character3.id)
+    )
+    await db_session.commit()
+    await _set_cast(db_session, praxis_collab.id, character.id, True)
+    await _set_cast(db_session, praxis_collab.id, character2.id, True)
+
+    response = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    results = {entry["character_id"]: entry for entry in response.json()}
+    assert set(results) == {character3.id}
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_skips_a_recipient_still_cooling_down_without_failing_the_call(
+    client,
+    db_session: AsyncSession,
+    praxis_collab: Praxis,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    auth_headers: dict,
+) -> None:
+    """Partial success (the whole point): one recipient's cooldown must not
+    fail the crew nudge for everyone else."""
+    db_session.add(
+        PraxisMember(praxis_id=praxis_collab.id, character_id=character3.id)
+    )
+    await db_session.commit()
+    await _set_cast(db_session, praxis_collab.id, character.id, True)
+
+    # character2 is already inside their cooldown window.
+    first = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge/{character2.id}", headers=auth_headers
+    )
+    assert first.status_code == 200
+
+    response = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    results = {entry["character_id"]: entry for entry in response.json()}
+    assert set(results) == {character2.id, character3.id}
+
+    skipped = results[character2.id]
+    assert skipped["nudge"] is None
+    assert skipped["error"] is not None
+    assert skipped["status_code"] == 422
+
+    sent = results[character3.id]
+    assert sent["nudge"] is not None
+    assert sent["error"] is None
+
+    # And it did not write a second nudge row for the skipped recipient.
+    stored = (
+        await db_session.execute(
+            select(Nudge).where(
+                Nudge.from_character_id == character.id,
+                Nudge.to_character_id == character2.id,
+            )
+        )
+    ).scalars().all()
+    assert len(stored) == 1
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_requires_the_sender_to_have_cast_on_a_collab(
+    client,
+    praxis_collab: Praxis,
+    character2: Character,
+    auth_headers: dict,
+) -> None:
+    """The call-wide sender guard still applies — you cannot hurry others
+    before filing your own part."""
+    response = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers
+    )
+    assert response.status_code == 403, response.text
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_refuses_a_non_member(
+    client,
+    db_session: AsyncSession,
+    praxis_collab: Praxis,
+    character: Character,
+    auth_headers3: dict,
+) -> None:
+    """Not the public — a stranger to this circle cannot nudge the crew either."""
+    await _set_cast(db_session, praxis_collab.id, character.id, True)
+    response = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers3
+    )
+    assert response.status_code == 403, response.text
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_refuses_a_praxis_that_is_not_open(
+    client,
+    db_session: AsyncSession,
+    praxis_collab: Praxis,
+    character: Character,
+    auth_headers: dict,
+) -> None:
+    """Nothing is outstanding on a submitted praxis — the call-wide status
+    guard preserved from `send_nudge`."""
+    await _set_cast(db_session, praxis_collab.id, character.id, True)
+    praxis_collab.status = PraxisStatus.submitted
+    await db_session.commit()
+
+    response = await client.post(
+        f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers
+    )
+    assert response.status_code == 422, response.text
+
+
+@pytest.mark.asyncio
+async def test_anonymous_cannot_bulk_nudge(
+    client, praxis_collab: Praxis
+) -> None:
+    response = await client.post(f"/praxes/{praxis_collab.id}/nudge")
+    assert response.status_code in (401, 403)
+
+
+@pytest.mark.asyncio
+async def test_bulk_nudge_a_duel_pokes_the_one_rival_side(
+    client,
+    db_session: AsyncSession,
+    active_task: Task,
+    character: Character,
+    character2: Character,
+    auth_headers: dict,
+    auth_headers2: dict,
+) -> None:
+    """A duel side has exactly one member, so the bulk route degrades to the
+    same single poke `send_nudge` would issue — same guards, same delivery."""
+    _, _, opponent_praxis = await _make_duel(
+        db_session, active_task, character, character2, DuelStatus.active
+    )
+
+    response = await client.post(
+        f"/praxes/{opponent_praxis.id}/nudge", headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["character_id"] == character2.id
+    assert results[0]["nudge"] is not None
+
+    feed = await client.get("/activity-feed", headers=auth_headers2)
+    nudges = [item for item in feed.json()["items"] if item["type"] == "nudge"]
+    assert len(nudges) == 1

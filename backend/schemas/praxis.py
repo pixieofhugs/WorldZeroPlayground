@@ -43,6 +43,11 @@ class PraxisMemberOut(BaseModel):
     character_id: int
     character_display_name: str  # populated by build_praxis_out
     has_submitted: bool
+    # When has_submitted last flipped True (#571, wired to the wire in #1415).
+    # NULL means never submitted / pulled back — the same column and the same
+    # meaning as models.praxis.PraxisMember.submitted_at, maintained by
+    # collab_consensus.py.
+    submitted_at: Optional[datetime] = None
     joined_at: datetime
     # When the VIEWER last nudged this member about this praxis (#1083), and
     # NULL once that 24h window lapses — so "there is a timestamp here" and "you

@@ -49,7 +49,7 @@ class InviteResponse(BaseModel):
 
 class MetataskApply(BaseModel):
     task_id: int
-from schemas.nudge import NudgeOut
+from schemas.nudge import NudgeOut, NudgeResultOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
 from services.scoring import compute_votes_available
 from services.praxis import (
@@ -82,7 +82,7 @@ from services.praxis_out import (
     build_praxis_out,
 )
 from services.media import process_and_save_media
-from services.nudge import send_nudge
+from services.nudge import send_bulk_nudge, send_nudge
 from services.vote import cast_vote_on_praxis
 
 logger = logging.getLogger(__name__)
@@ -469,7 +469,7 @@ async def cancel_invite_route(
     await cancel_invite(
         praxis_id=praxis_id,
         invite_id=invite_id,
-        inviter_id=character.id,
+        requester_id=character.id,
         session=session,
     )
     return Response(status_code=204)
@@ -499,6 +499,32 @@ async def nudge_route(
         session=session,
     )
     return NudgeOut.model_validate(nudge)
+
+
+@router.post("/{praxis_id}/nudge", response_model=List[NudgeResultOut])
+async def bulk_nudge_route(
+    praxis_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """"Nudge the crew" — poke every member still owing this praxis (Roster B1, #1415).
+
+    Recipients are every member other than the sender who has not yet
+    submitted. The response is one entry per eligible recipient, following the
+    ``MediaUploadResultOut`` partial-success idiom (``schemas/praxis.py``):
+    most recipients succeed, but a recipient still inside their per-recipient
+    24h cooldown (``services.nudge.NUDGE_COOLDOWN``) is SKIPPED rather than
+    failing the whole call, and reported back with ``error`` set instead of
+    ``nudge``. Guards about the sender (member-of / has-cast-for-a-collab,
+    praxis still open, participant-of-an-active-duel) are call-wide and raise
+    for the whole request, exactly as the single-recipient route raises them —
+    all in ``services.nudge.send_bulk_nudge`` so this handler stays thin.
+    """
+    return await send_bulk_nudge(
+        praxis_id=praxis_id,
+        from_character_id=character.id,
+        session=session,
+    )
 
 
 @router.post("/{praxis_id}/kick/{member_id}", response_model=PraxisOut)

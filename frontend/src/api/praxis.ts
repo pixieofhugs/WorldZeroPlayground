@@ -29,6 +29,13 @@ export interface PraxisMemberOut {
   character_id: number
   character_display_name: string
   has_submitted: boolean
+  /**
+   * NULL means never submitted / pulled back — same column and meaning as
+   * models.praxis.PraxisMember.submitted_at, maintained by collab_consensus.py.
+   * Optional here only because existing test fixtures predate this field;
+   * the server always includes it.
+   */
+  submitted_at?: string | null
   joined_at: string
   /**
    * When the VIEWER last nudged this member about this praxis (#1083), and null

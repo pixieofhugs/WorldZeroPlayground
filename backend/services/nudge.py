@@ -20,7 +20,7 @@ Delivery is the activity feed, never a message: see ``models/nudge.py``.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -29,11 +29,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.duel import Duel, DuelStatus
 from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from schemas.nudge import NudgeOut, NudgeResultOut
 
 # One per sender → recipient → praxis per 24h (#1083). Expressed as a window
 # rather than a stored "next allowed at" so the rule is re-readable from the
 # rows alone: `created_at > now() - NUDGE_COOLDOWN`.
 NUDGE_COOLDOWN = timedelta(days=1)
+
+# Shared verbatim by the single-recipient and bulk routes (#1415) so a skipped
+# entry in a bulk response and a 422 from the single route report the same
+# fact in the same words.
+_COOLDOWN_DETAIL = "You already nudged this player about this praxis today."
 
 # A praxis that is still waiting on someone. `pending` is a collab mid-consensus
 # (ADR-0012) — the window is open and a member can still be the holdout — so it
@@ -248,10 +254,7 @@ async def send_nudge(
     if await latest_nudge_at(
         praxis_id, from_character_id, to_character_id, session
     ) is not None:
-        raise HTTPException(
-            status_code=422,
-            detail="You already nudged this player about this praxis today.",
-        )
+        raise HTTPException(status_code=422, detail=_COOLDOWN_DETAIL)
 
     nudge = Nudge(
         from_character_id=from_character_id,
@@ -262,3 +265,91 @@ async def send_nudge(
     await session.flush()
     await session.refresh(nudge)
     return nudge
+
+
+async def send_bulk_nudge(
+    praxis_id: int,
+    from_character_id: int,
+    session: AsyncSession,
+) -> List[NudgeResultOut]:
+    """Nudge every eligible member of a praxis in one call ("nudge the crew", #1415).
+
+    Eligible = every member of ``praxis_id`` other than the sender who has not
+    yet submitted — the same recipient shape :func:`send_nudge` accepts, just
+    every one of them at once instead of one named target.
+
+    The guards that are about the SENDER (member-of / has-cast-for-a-collab,
+    praxis still open, participant-of-an-active-duel) are call-wide: they are
+    checked once, exactly as :func:`send_nudge` checks them, and raise for the
+    whole batch — a bulk nudge from someone not entitled to nudge at all is one
+    4xx, not N of them. Filtering to "member, not yet submitted" before the
+    loop also makes the recipient-side guards of :func:`send_nudge`
+    (member-of, not-already-submitted, not-self) unreachable here by
+    construction, so they never fire per-recipient.
+
+    The one guard that is genuinely per-recipient is :data:`NUDGE_COOLDOWN`
+    (#1083): each recipient has their own sender→recipient→praxis window, so
+    some will be inside it and some outside within the same call. A recipient
+    still cooling down is SKIPPED, not raised — reported back as a
+    :class:`~schemas.nudge.NudgeResultOut` entry with ``error`` set, following
+    the ``MediaUploadResultOut`` partial-success idiom
+    (``schemas/praxis.py``) rather than failing the whole crew over one
+    still-waiting name.
+    """
+    praxis = await _load_praxis_with_members(praxis_id, session)
+
+    if praxis.status not in _OPEN_PRAXIS_STATUSES:
+        raise HTTPException(
+            status_code=422,
+            detail="Nothing is outstanding on this praxis.",
+        )
+
+    if praxis.type == PraxisType.collab:
+        await _authorize_collab(praxis, from_character_id, session)
+    else:
+        await _authorize_duel(praxis, from_character_id, session)
+
+    # Queried directly rather than read off `praxis.members` — a membership
+    # row added to the table elsewhere in this same session (an invite
+    # accepted moments earlier, say) would not be reflected in an
+    # already-loaded relationship collection, and this is a batch endpoint
+    # precisely because the roster can change out from under a stale read.
+    member_rows = await session.execute(
+        select(PraxisMember).where(PraxisMember.praxis_id == praxis_id)
+    )
+    recipients = [
+        member
+        for member in member_rows.scalars().all()
+        if member.character_id != from_character_id and not member.has_submitted
+    ]
+
+    results: List[NudgeResultOut] = []
+    for member in recipients:
+        if await latest_nudge_at(
+            praxis_id, from_character_id, member.character_id, session
+        ) is not None:
+            results.append(
+                NudgeResultOut(
+                    character_id=member.character_id,
+                    error=_COOLDOWN_DETAIL,
+                    status_code=422,
+                )
+            )
+            continue
+
+        nudge = Nudge(
+            from_character_id=from_character_id,
+            to_character_id=member.character_id,
+            praxis_id=praxis_id,
+        )
+        session.add(nudge)
+        await session.flush()
+        await session.refresh(nudge)
+        results.append(
+            NudgeResultOut(
+                character_id=member.character_id,
+                nudge=NudgeOut.model_validate(nudge),
+            )
+        )
+
+    return results

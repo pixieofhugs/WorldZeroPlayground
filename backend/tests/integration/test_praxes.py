@@ -719,11 +719,17 @@ async def test_submit_praxis(
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
 
+    # Before submission, submitted_at is on the wire and null (#1415).
+    before = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    assert before.json()["members"][0]["submitted_at"] is None
+
     submit_resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
     assert submit_resp.status_code == 200
     data = submit_resp.json()
     assert data["status"] == "submitted"
     assert data["members"][0]["has_submitted"] is True
+    # submitted_at is populated the moment has_submitted flips True (#571, #1415).
+    assert data["members"][0]["submitted_at"] is not None
 
 
 @pytest.mark.asyncio
@@ -1092,8 +1098,11 @@ async def test_cancel_pending_invite(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Inviter rescinds a pending invite; only the inviter may, and the row is
-    gone afterwards (#421)."""
+    """Inviter rescinds a pending invite, and the row is gone afterwards (#421).
+
+    Any member may rescind (#1415), not only the inviter — but the pending
+    invitee is not yet a member, so THEY are still refused.
+    """
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "Cancel Me"},
@@ -1108,7 +1117,7 @@ async def test_cancel_pending_invite(
     )
     invite_id = invite_resp.json()["id"]
 
-    # A non-inviter (the invitee) cannot rescind.
+    # The invitee is not yet a member (invite still pending) — refused.
     forbidden = await client.delete(
         f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers
     )
@@ -1123,6 +1132,97 @@ async def test_cancel_pending_invite(
         f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers2
     )
     assert gone.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_any_co_owned_member_can_rescind_an_invite_they_did_not_send(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    """A collab is co-owned by every member (ADR-0013); ``created_by_id``
+    grants no special powers (ADR-0041). So a member who did not send the
+    invite may still rescind it (#1415) — "only the person who typed the name
+    may untype it" is a rule nobody would guess.
+
+    ``character2`` is the creator here (not ``character``): collabs require
+    level 1 (see the module-level fixtures — ``character`` and ``character3``
+    are level 0, ``character2`` is level 5), and only creating one is
+    level-gated — accepting an invite is not.
+    """
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Co-owned"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201, create_resp.text
+    praxis_id = create_resp.json()["id"]
+
+    # `character` joins as a full member.
+    join_invite = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{join_invite.json()['id']}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+
+    # `character2` (the original inviter) invites character3; `character`
+    # (a member, but not this invite's sender) rescinds it.
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character3.id},
+        headers=auth_headers2,
+    )
+    invite_id = invite_resp.json()["id"]
+
+    response = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers
+    )
+    assert response.status_code == 204, response.text
+
+    # A genuine outsider is still refused. A second task — one active
+    # membership per task — so `character2` can hold a second in-progress
+    # collab alongside the first.
+    second_task = Task(
+        title="Second Task",
+        description="Another test task",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character2.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(second_task)
+    await db_session.commit()
+    await db_session.refresh(second_task)
+
+    create_resp2 = await client.post(
+        "/praxes",
+        json={"task_id": second_task.id, "type": "collab", "title": "Outsider"},
+        headers=auth_headers2,
+    )
+    assert create_resp2.status_code == 201, create_resp2.text
+    praxis_id2 = create_resp2.json()["id"]
+    invite_resp2 = await client.post(
+        f"/praxes/{praxis_id2}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    outsider_response = await client.delete(
+        f"/praxes/{praxis_id2}/invite/{invite_resp2.json()['id']}",
+        headers=auth_headers3,
+    )
+    assert outsider_response.status_code == 403, outsider_response.text
 
 
 @pytest.mark.asyncio
