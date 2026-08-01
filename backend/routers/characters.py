@@ -30,10 +30,10 @@ from services.character import (
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
 from services.praxis import (
-    build_praxis_out,
     praxis_membership_condition,
     praxis_visibility_condition,
 )
+from services.praxis_out import build_praxis_out
 from services.vote_tally import crowned_praxis_ids
 
 router = APIRouter()

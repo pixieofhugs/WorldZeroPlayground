@@ -302,7 +302,7 @@ async def list_flagged_comments(session: AsyncSession) -> list[Comment]:
 def build_comment_out(comment: Comment) -> CommentOut:
     """Assemble the API shape from a Comment with created_by + mentions loaded.
 
-    Lives in the service (like services.praxis.build_praxis_out) because the
+    Lives in the service (like services.praxis_out.build_praxis_out) because the
     nested author/mention assembly is shared by the public and admin routers.
     """
     return CommentOut(

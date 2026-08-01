@@ -26,7 +26,8 @@ from services.character import (
     set_active_character,
 )
 from services.current_user import build_current_user
-from services.praxis import build_praxis_cards, list_praxes
+from services.praxis import list_praxes
+from services.praxis_out import build_praxis_cards
 
 router = APIRouter()
 

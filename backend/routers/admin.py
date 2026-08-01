@@ -37,7 +37,8 @@ from schemas.admin import (
 from schemas.task import TaskCreate, TaskOut
 from schemas.praxis import PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
-from services.praxis import build_praxis_out, moderate_praxis
+from services.praxis import moderate_praxis
+from services.praxis_out import build_praxis_out
 from services.vote_tally import crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks

@@ -17,7 +17,7 @@ from services.duel import (
     issue_duel_challenge,
     respond_to_duel_challenge,
 )
-from services.praxis import build_praxis_out
+from services.praxis_out import build_praxis_out
 
 router = APIRouter()
 

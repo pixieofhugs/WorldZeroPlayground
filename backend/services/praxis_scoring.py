@@ -135,7 +135,7 @@ async def compute_contributions(
     # collab keeps its metatask and a duel side's metatask is multiplied by the
     # duel outcome — a Snide loss at ×0.0 zeroes the metatask along with the
     # base, which is intended (the metatask is part of what the duel judged).
-    # This reads the same PraxisMetaTask rows as applied_metatasks_for (the seal
+    # This reads the same PraxisMetaTask rows as praxis_out.applied_metatasks_for (the seal
     # set): the level gate here can zero the points while the seal stays
     # attached, so metatask_points == 0 beside a non-null seal is legitimate.
     meta_points = await get_meta_task_points_bulk(

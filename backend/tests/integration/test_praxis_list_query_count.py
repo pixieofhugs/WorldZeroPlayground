@@ -1,7 +1,7 @@
 """#1378 — the praxis list must cost a constant number of queries.
 
-**The seam under test** is ``GET /praxes`` → :func:`services.praxis.build_praxis_cards`
-→ :func:`services.praxis.build_praxis_card_out`. That gather page-batches six maps
+**The seam under test** is ``GET /praxes`` → :func:`services.praxis_out.build_praxis_cards`
+→ :func:`services.praxis_out.build_praxis_card_out`. That gather page-batches six maps
 (crowns, viewer votes, author contributions, applied metatasks, vote eligibility,
 duel ids) with explicit "never a per-card query" comments — but the card builder
 still called :func:`services.vote_tally.tally_votes` with a one-element list per

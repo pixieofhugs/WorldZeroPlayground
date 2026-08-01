@@ -27,7 +27,7 @@ from db import get_db
 from dependencies import get_current_character, get_current_character_optional
 from game_config import CURRENT_ERA
 from models.character import Character
-from models.praxis import MediaItem, ModerationStatus, Praxis, PraxisType
+from models.praxis import MediaItem, Praxis, PraxisType
 from pydantic import BaseModel
 from schemas.comment import FlagIn
 from schemas.praxis import (
@@ -53,12 +53,8 @@ from schemas.nudge import NudgeOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
 from services.scoring import compute_votes_available
 from services.praxis import (
-    _build_invite_out,
     _require_member,
     add_media_batch,
-    apply_metatask,
-    build_praxis_cards,
-    build_praxis_out,
     can_view_praxis,
     cancel_invite,
     cancel_pending_publish_on_edit,
@@ -74,11 +70,16 @@ from services.praxis import (
     PraxisEraScope,
     PraxisSort,
     VotedFilter,
-    remove_metatask,
     respond_to_invite,
     submit_praxis,
     update_praxis,
     unsubmit_praxis,
+)
+from services.praxis_metatask import apply_metatask, remove_metatask
+from services.praxis_out import (
+    _build_invite_out,
+    build_praxis_cards,
+    build_praxis_out,
 )
 from services.media import process_and_save_media
 from services.nudge import send_nudge
