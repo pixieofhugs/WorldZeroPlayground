@@ -5144,8 +5144,9 @@
    #13121a, #14110b) and used var(--faction-snide) — a faction hue — as a
    global accent. Neither ships. The lime is replaced by the repo's existing
    inverted-selection idiom (--color-text-primary fill, --color-bg-page ink),
-   the same pairing FilterStamps has drawn since it was written, so the bar
-   carries no faction's identity but one.
+   the same pairing FilterStamps drew for as long as it existed — this bar
+   (components/ui/FilterBar/) replaced it in #1368 and inherited the idiom, so
+   the bar carries no faction's identity but one.
 
    That one is the SPECTRUM RING on every rail, and it stays (#1361 ruling 1).
    --faction-default-rainbow is na's identity AND the site's default chrome
