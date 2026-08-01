@@ -162,9 +162,15 @@ describe("Singularity composer — structure", () => {
     }
   });
 
+  // The invite SEARCH is behind the `+ invite` chip since #1417, so its skinned
+  // placeholder is no longer in the closed reading this harness renders (no DOM,
+  // no clicks). The chip is what the region draws, and it carries the skin's own
+  // face — which is the same fact this test was asserting: the archetype's skin
+  // props reach the shared control.
   it("dresses the mode keys and the invite box through their skin props", () => {
     const html = render("desktop", state({ showInviteBox: true }));
     expect((html.match(/aria-pressed=/g) ?? []).length).toBe(3);
-    expect(html).toContain(i18n.t("forms:editPraxis.composer.invitePlaceholder"));
+    expect(html).toContain(i18n.t("forms:editPraxis.invite.addAction"));
+    expect(html).toContain("--faction-singularity-card-font");
   });
 });

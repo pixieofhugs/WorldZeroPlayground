@@ -329,6 +329,131 @@ describe("nudge — the honest version (#1083)", () => {
   });
 });
 
+/**
+ * The bulk press (#1418). One request pokes everyone still outstanding, and the
+ * cooldown is per (sender → recipient → praxis) — so a press is routinely PART
+ * refused, and the surface has to say which.
+ */
+describe("nudge the crew — the bulk press (#1418)", () => {
+  const CREW_ACTION = collabCopy(SLUG, "nudgeCrewAction");
+
+  it("offers it once my part is in and somebody still owes theirs", () => {
+    const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
+    expect(html).toContain(CREW_ACTION);
+  });
+
+  it("hides it from the holdout who has not filed — the same rule as the row", () => {
+    const html = render({
+      state: state({ currentCharacterId: THEM }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(CREW_ACTION);
+  });
+
+  it("hides it when everyone outstanding is already inside their window", () => {
+    // Nobody is nudgeable, so there is no control — hidden, not disabled.
+    const html = render({
+      state: state({
+        praxis: praxis({
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", false, "2026-01-02T00:00:00Z"),
+            member(A_THIRD, "Sable", false, "2026-01-02T00:00:00Z"),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(CREW_ACTION);
+  });
+
+  it("hides it on the completed reading — nobody is left to hurry", () => {
+    const html = render({
+      state: state({
+        phase: "completed",
+        praxis: praxis({
+          status: "submitted",
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", true),
+            member(A_THIRD, "Sable", true),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(CREW_ACTION);
+  });
+
+  it("draws none on a duel side — a rival is not a crew", () => {
+    const html = render({
+      state: state({
+        praxis: praxis({
+          type: "solo",
+          status: "submitted",
+          duel_id: 7,
+          members: [member(ME, "Wren", true)],
+          submit_proposed_at: null,
+        }),
+        duel: duelDetail("active"),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(CREW_ACTION);
+  });
+
+  it("says nothing about a press that has not happened", () => {
+    const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
+    expect(html).not.toContain("Nudged 2 of");
+  });
+
+  it("names both halves of a partly refused press", () => {
+    const html = render({
+      state: state({ crewNudge: { sent: 2, skipped: 1 } }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).toContain(
+      collabCopy(SLUG, "nudgeCrewResultPartial", {
+        sent: 2,
+        total: 3,
+        skipped: 1,
+      }),
+    );
+  });
+
+  it("reports a clean sweep without inventing a refusal", () => {
+    const html = render({
+      state: state({ crewNudge: { sent: 3, skipped: 0 } }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).toContain(
+      collabCopy(SLUG, "nudgeCrewResult", { sent: 3, total: 3 }),
+    );
+  });
+
+  it("keeps the report up after its own button has gone", () => {
+    // Silence reads as "all of them". A press that nudges the last nudgeable
+    // member hides the button, and the count has to outlive it.
+    const html = render({
+      state: state({
+        crewNudge: { sent: 2, skipped: 0 },
+        praxis: praxis({
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", false, "2026-01-02T00:00:00Z"),
+            member(A_THIRD, "Sable", false, "2026-01-02T00:00:00Z"),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(CREW_ACTION);
+    expect(html).toContain(
+      collabCopy(SLUG, "nudgeCrewResult", { sent: 2, total: 2 }),
+    );
+  });
+});
+
 describe("collab — exits by viewer", () => {
   it("offers Leave to the member who started it (ADR-0013)", () => {
     const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });

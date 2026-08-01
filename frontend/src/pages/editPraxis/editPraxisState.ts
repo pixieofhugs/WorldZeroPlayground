@@ -22,6 +22,7 @@ import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import type { TaskOut } from "../../api/tasks";
 import type { CharacterOut } from "../../api/characters";
 import type { EditPraxisPhase } from "./editPraxisPhase";
+import type { CrewNudgeResult } from "./useComposerRoster";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -81,6 +82,21 @@ export interface EditPraxisState {
    * server rather than being remembered here.
    */
   nudge: (characterId: number) => Promise<void>;
+  /**
+   * Poke everyone the collab is still waiting on, in one request (#1418).
+   *
+   * Takes no recipient list: the server derives the crew and applies the same
+   * per-person 24h window, so the cooldown stays in one place. Mounted only on
+   * the waiting surface's collab footer.
+   */
+  nudgeCrew: () => Promise<void>;
+  /**
+   * What the last crew press actually did, or null before one. A 200 does not
+   * mean everyone was poked — see {@link CrewNudgeResult}. Never persisted, and
+   * deliberately outlives the button, which disappears once the last nudgeable
+   * member has been nudged.
+   */
+  crewNudge: CrewNudgeResult | null;
 
   // Duel challenge (#311) — selecting duel attaches a challenge to this praxis;
   // the praxis stays type='solo' and gains a duel_id.
