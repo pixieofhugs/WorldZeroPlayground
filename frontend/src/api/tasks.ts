@@ -43,9 +43,11 @@ export interface TaskOut {
   eligible_for_current_user: boolean
   // Why sign-up is open or shut for this viewer — the flag above says whether,
   // this says which, so the CTA can read "Begin again" without the client
-  // re-deriving a server rule (#1497). Optional because it is absent from every
-  // anonymous read and from any response predating it; `signupCtaKey` treats
-  // absent and unrecognised alike.
+  // re-deriving a server rule (#1497). A live backend response ALWAYS carries the
+  // key (null when there is nothing to explain, e.g. an anonymous read); optional
+  // here for the same reason `in_progress_count` is — so existing TaskOut fixtures
+  // stay valid rather than taking a mechanical edit. `signupCtaKey` maps absent,
+  // null and unrecognised alike to the plain CTA, so the widening is inert.
   signup_reason?: string | null
 }
 
