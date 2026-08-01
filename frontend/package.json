@@ -10,6 +10,7 @@
     "measure": "node scripts/measure-load.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "typecheck:design-sync": "tsc -p tsconfig.design-sync.json --noEmit",
     "test": "vitest run",
     "lint": "eslint src",
     "e2e": "playwright test",
