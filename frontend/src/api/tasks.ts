@@ -14,7 +14,6 @@ export interface TaskOut {
   created_by: number
   primary_faction_slug: string | null
   metatask_faction_slug: string | null
-  is_task_vision_eligible: boolean
   created_at: string
   // Derived, read-time count of characters actively working on this task —
   // active-signup population (in_progress + pending), consistent with
