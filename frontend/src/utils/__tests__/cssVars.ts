@@ -22,7 +22,7 @@ const CUSTOM_PROP = /(--[\w-]+)\s*:\s*([^;]+);/g;
 const VAR_REF = /var\(\s*(--[\w-]+)\s*(?:,\s*([^)]*))?\)/;
 
 /** Strip comments so `/* … *​/` text can't be mistaken for a declaration. */
-function stripComments(css: string): string {
+export function stripComments(css: string): string {
   return css.replace(COMMENT, "");
 }
 
@@ -32,7 +32,7 @@ function stripComments(css: string): string {
  * (base, then the per-faction blocks), so all of them must merge — later
  * declarations win, as the cascade does.
  */
-function ruleBodies(css: string, selector: string): string[] {
+export function ruleBodies(css: string, selector: string): string[] {
   const bodies: string[] = [];
   let cursor = 0;
   while (cursor < css.length) {
