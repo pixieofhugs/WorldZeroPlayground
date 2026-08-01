@@ -112,6 +112,9 @@ export function useEditCharacter(): EditCharacterState {
         location: location || undefined,
       })
       setCharacter(updated)
+      // The edited life may BE the carried one, whose name/bio/avatar the rail
+      // and every byline draw from `/auth/me`. `updated` is a CharacterOut, not
+      // a CurrentUser, so it cannot be adopted wholesale (#1349 ledger).
       await refetch()
       navigate(`/characters/${characterId}`)
     } catch (err) {

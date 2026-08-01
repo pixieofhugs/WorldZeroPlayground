@@ -51,6 +51,8 @@ export default function FieldDesk() {
     setSwitching(id)
     try {
       await setActiveCharacter(id)
+      // As in CharacterSwitcherSheet: the POST already returns the refreshed
+      // `CurrentUser`; consuming it instead of re-asking is #1383 item 4.
       await refetch()
       navigate(`/characters/${id}`)
     } finally {
@@ -141,6 +143,10 @@ export default function FieldDesk() {
         <AlbescentInvitation
           lives={lives}
           onJoined={async () => {
+            // Joining Albescent moves `faction_slug`, `albescent_revealed` and
+            // the capability flags at once, and `POST /factions/choose` returns
+            // only `{slug, status}` — so the whole object has to be re-read
+            // until #1383 item 1 widens that response.
             await refetch()
             setLives(await getMyCharacters())
           }}

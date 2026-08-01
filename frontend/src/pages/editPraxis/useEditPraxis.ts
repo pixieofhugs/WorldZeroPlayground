@@ -337,6 +337,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       let refreshed: PraxisOut | null = null;
       let refreshedDuel: DuelDetailOut | null = duel;
       try {
+        // Going live runs `recalculate_members_stats`, which both moves points
+        // and delivers any newly-earned faction invitation letters — and those
+        // reach the InvitationWatcher only through `user.character.invitations`.
         await refetch();
         // Reload the praxis too: `refetch` is the AUTH refetch (points/level),
         // so it says nothing about who has now cast. The fresh member list is
@@ -499,6 +502,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     if (!confirmed) return;
     try {
       await leavePraxis(praxis.id);
+      // `leave_praxis` runs `recalculate_character_stats` for the leaver — the
+      // stake is gone, so score and level really move here.
       await refetch();
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.leave")));

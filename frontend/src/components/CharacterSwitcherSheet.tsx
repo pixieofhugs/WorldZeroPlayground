@@ -48,6 +48,9 @@ export default function CharacterSwitcherSheet({
     setSwitching(id)
     try {
       await setActiveCharacter(id)
+      // Carrying a different life changes the whole of `CurrentUser`. This POST
+      // already RETURNS that object and we throw it away — adopting it instead
+      // is #1383's item 4, not this sweep's (#1349 ledger).
       await refetch()
       onClose()
     } finally {

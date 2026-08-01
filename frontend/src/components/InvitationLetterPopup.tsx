@@ -92,6 +92,10 @@ export default function InvitationLetterPopup({
     setJoinError(null)
     try {
       await chooseFaction(factionSlug)
+      // Same as the faction page's join: the choose response is `{slug, status}`,
+      // and membership moves faction slug + capability flags together. Also what
+      // clears this letter out of `user.character.invitations` so the watcher
+      // stops re-opening the prospectus (#1383 item 1 would make it cheaper).
       await refetch()
       onClose() // advance the queue; watcher keys the popup per slug so state resets
     } catch (err) {

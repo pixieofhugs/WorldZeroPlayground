@@ -151,7 +151,7 @@ function state(user: CurrentUser | null, viewerCanVote: boolean): PraxisDetailSt
 
 function render(element: ReactElement, user: CurrentUser | null): string {
   const html = renderToStaticMarkup(
-    <AuthContext.Provider value={{ user, loading: false, refetch: async () => {} }}>
+    <AuthContext.Provider value={{ user, loading: false, refetch: async () => {}, signOut: async () => {} }}>
       <MemoryRouter>{element}</MemoryRouter>
     </AuthContext.Provider>,
   );
