@@ -271,6 +271,73 @@ async def test_list_characters_excludes_players_active_on_task(
 
 
 @pytest.mark.asyncio
+async def test_list_characters_excludes_own_account(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+):
+    """exclude_own_account hides every life on the VIEWER'S ACCOUNT (#1385).
+
+    The alt is the case that matters: a second character on the viewer's own
+    account reads as a different player by id alone, which is exactly the hole
+    ``services.duel._characters_share_account`` closes (ADR-0041, #1237). A
+    cross-account control proves the filter narrows rather than empties.
+    """
+    alt = Character(
+        account_id=account.id,
+        username="altlife",
+        display_name="Alt Life",
+        faction_slug="ua",
+    )
+    db_session.add(alt)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=alt.id,
+            era_id=era.id,
+            score=0,
+            all_time_score=0,
+            level=0,
+            votes_spent_this_era=0,
+        )
+    )
+    await db_session.commit()
+
+    resp = await client.get(
+        "/characters",
+        params={"exclude_own_account": True},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    ids = [c["id"] for c in resp.json()]
+    assert character.id not in ids  # the carried life
+    assert alt.id not in ids  # the alt — invisible to an id-only rule
+    assert character2.id in ids  # another account → still listed
+
+
+@pytest.mark.asyncio
+async def test_list_characters_exclude_own_account_anonymous_is_noop(
+    client: AsyncClient, character: Character, character2: Character
+):
+    """Anonymous + the param is a documented no-op, not a 401 or a 422 (#1385).
+
+    There is no viewer to exclude, and the real enforcement lives in
+    ``services.duel``; rejecting would make a deliberately public route
+    conditionally authenticated for no security gain.
+    """
+    resp = await client.get("/characters", params={"exclude_own_account": True})
+    assert resp.status_code == 200
+    ids = [c["id"] for c in resp.json()]
+    assert character.id in ids
+    assert character2.id in ids
+
+
+@pytest.mark.asyncio
 async def test_list_characters_limit_offset(
     client: AsyncClient, character: Character, character2: Character
 ):
