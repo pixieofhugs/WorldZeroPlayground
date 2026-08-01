@@ -160,7 +160,7 @@
       "searchAria": "search players to invite",
       "searchAriaDuel": "search an opponent",
       "addAction": "+ invite",
-      "addAria": "invite somebody to this collab",
+      "addDescription": "Ask somebody else onto this collab.",
       "duelVersus": "vs",
       "statusAccepted": "Challenge accepted",
       "statusChallenged": "Challenge sent",

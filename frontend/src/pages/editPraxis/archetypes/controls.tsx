@@ -332,7 +332,11 @@ export function InviteSearch({
         <button
           type="button"
           onClick={() => setPickerOpen(true)}
-          aria-label={t("editPraxis.invite.addAria")}
+          // A title, not an aria-label: the visible words are already the
+          // button's name, and an aria-label would replace them for a screen
+          // reader while leaving a voice-control user asking for a control whose
+          // name they cannot see.
+          title={t("editPraxis.invite.addDescription")}
           className="eyebrow text-[12px]"
           style={{
             padding: "var(--space-xs) var(--space-md)",
