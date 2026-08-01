@@ -36,3 +36,42 @@ export async function sendNudge(
   notifyRequestsChanged()
   return data
 }
+
+/**
+ * One entry per recipient of a crew nudge (#1415). Exactly one of `nudge` /
+ * `error` is set.
+ *
+ * `status_code` is the status the single-recipient route would have returned
+ * for that person on its own — 422 inside their 24h window or already filed,
+ * 403 not in the crew, 400 yourself — so a caller branches on the number
+ * rather than on the prose. Mirrors `schemas/nudge.py:NudgeResultOut`.
+ */
+export interface NudgeResultOut {
+  to_character_id: number
+  nudge: NudgeOut | null
+  error: string | null
+  status_code: number | null
+}
+
+/**
+ * Poke everyone the praxis is still waiting on, in one request.
+ *
+ * No body: the crew is every member who has not filed yet, minus you, and the
+ * server derives it from the roster — which is why the cooldown rule stays in
+ * one place instead of being re-implemented here as "fan out N calls and
+ * swallow the 422s".
+ *
+ * **The 200 does not mean everyone was poked.** Inside the 24h window some of
+ * the crew are routinely refused, so report the result by counting entries with
+ * a `nudge` against entries with an `error` — silence would read as "all of
+ * them" and the player would have no way to know otherwise. Nobody outstanding
+ * comes back as `[]`; a 403 means you are not a member who has filed, and a 422
+ * means the praxis is no longer waiting on anyone.
+ */
+export async function nudgeTheCrew(
+  praxisId: number,
+): Promise<NudgeResultOut[]> {
+  const { data } = await api.post<NudgeResultOut[]>(`/praxes/${praxisId}/nudge`)
+  notifyRequestsChanged()
+  return data
+}

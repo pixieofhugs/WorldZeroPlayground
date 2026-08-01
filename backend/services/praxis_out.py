@@ -60,6 +60,10 @@ def _build_member_out(
     :func:`build_praxis_out` supplies it — a card in a list has no nudge button,
     and threading the lookup through every list route would buy an N+1 for a
     field nothing there reads.
+
+    ``submitted_at`` is not viewer-relative and costs nothing: it is already on
+    the member row (#571) and had simply never reached the wire (#1415), so it
+    goes out on cards too.
     """
     return PraxisMemberOut(
         id=member.id,
@@ -67,6 +71,7 @@ def _build_member_out(
         character_id=member.character_id,
         character_display_name=member.character.display_name,
         has_submitted=member.has_submitted,
+        submitted_at=member.submitted_at,
         joined_at=member.joined_at,
         nudged_at=nudged_at,
     )
