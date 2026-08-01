@@ -1688,10 +1688,6 @@
   --space-5xl: 64px;
   --space-6xl: 96px;
 
-  /* ── Filter stamp dashed-border (inverts with active state bg) ── */
-  --stamp-active-dashed: rgba(255, 255, 255, 0.2);
-  --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
-
   /* ── Leaderboard rank colors (podium — stable across themes) ── */
   --rank-gold: #f59e0b;
   --rank-silver: #c49a3a;
@@ -2299,10 +2295,6 @@
 
   /* ── Shared tokens ── */
   --nav-blur: 8px;
-
-  /* ── Filter stamp dashed-border (dark-mode inversions) ── */
-  --stamp-active-dashed: rgba(0, 0, 0, 0.15);
-  --stamp-inactive-dashed: rgba(255, 255, 255, 0.1);
 
   /* ── Leaderboard rank accent (dark) ── */
   --color-rank-accent: #818cf8;
@@ -5152,8 +5144,9 @@
    #13121a, #14110b) and used var(--faction-snide) — a faction hue — as a
    global accent. Neither ships. The lime is replaced by the repo's existing
    inverted-selection idiom (--color-text-primary fill, --color-bg-page ink),
-   the same pairing FilterStamps has drawn since it was written, so the bar
-   carries no faction's identity but one.
+   the same pairing FilterStamps drew for as long as it existed — this bar
+   (components/ui/FilterBar/) replaced it in #1368 and inherited the idiom, so
+   the bar carries no faction's identity but one.
 
    That one is the SPECTRUM RING on every rail, and it stays (#1361 ruling 1).
    --faction-default-rainbow is na's identity AND the site's default chrome

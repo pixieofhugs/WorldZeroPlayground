@@ -241,7 +241,6 @@ async def build_task_out(
         created_by=task.created_by,
         primary_faction_slug=task.primary_faction_slug,
         metatask_faction_slug=task.metatask_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
         created_at=task.created_at,
         in_progress_count=in_progress_count,
         created_by_display_name=author.display_name,
@@ -290,7 +289,7 @@ async def build_task_out_for_viewer(
         return base
 
     if signup_facts is None:
-        signup_facts = await gather_signup_facts(viewer, [task.id], session)
+        signup_facts = await gather_signup_facts(viewer, [task.id], session, era)
     stats = signup_facts.stats
 
     base.can_submit_praxis = await can_submit_praxis_for_task(
@@ -616,9 +615,15 @@ async def list_tasks(
     if hidden_slugs:
         query = query.where(Task.primary_faction_slug.notin_(hidden_slugs))
 
-    # Exclude tasks the character has already started or completed (via praxis membership)
+    # Exclude tasks the character has already started or completed (via praxis membership).
+    # `era` is threaded rather than defaulted: since #1359 this subquery reads the era's
+    # Double Dipper set, so letting it fall back to CURRENT_ERA would answer with the LIVE
+    # era's abilities for a caller that passed a different one — the drift the `era`
+    # parameter exists to prevent.
     if exclude_character_id is not None:
-        query = query.where(Task.id.notin_(active_member_task_ids_subquery(exclude_character_id)))
+        query = query.where(
+            Task.id.notin_(active_member_task_ids_subquery(exclude_character_id, era))
+        )
 
     if sort == SORT_NEWEST:
         query = query.order_by(Task.created_at.desc(), Task.id.desc())

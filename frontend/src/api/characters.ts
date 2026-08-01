@@ -30,6 +30,13 @@ export async function listCharacters(params?: {
   faction?: string
   /** Hide players already active on this task (invite-search pre-filter, #320). */
   exclude_active_task_id?: number
+  /**
+   * Hide every life on the caller's own account (ADR-0041), resolved server-side
+   * from the bearer token — the duel picker's rule, which it used to re-derive
+   * from a second `/me/characters` read (#1385). A no-op when anonymous. Leave
+   * unset (not `false`) to keep the request byte-identical to the public form.
+   */
+  exclude_own_account?: boolean
   limit?: number
 }): Promise<CharacterOut[]> {
   const { data } = await api.get<CharacterOut[]>('/characters', { params })

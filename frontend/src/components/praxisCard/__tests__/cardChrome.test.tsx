@@ -47,7 +47,6 @@ function metatask(overrides: Partial<TaskOut>): TaskOut {
     created_by: 3,
     primary_faction_slug: 'snide',
     metatask_faction_slug: 'snide',
-    is_task_vision_eligible: false,
     created_at: '2026-01-01T00:00:00Z',
     can_submit_praxis: false,
     allowed_modes: [],

@@ -44,20 +44,37 @@ async def list_characters(
     search: Optional[str] = None,
     faction: Optional[str] = None,
     exclude_active_task_id: Optional[int] = None,
+    exclude_own_account: bool = False,
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """List all active characters. Optionally filter by name or faction.
 
     ``exclude_active_task_id`` hides players already active on that task (invite
     search pre-filter, #320).
+
+    ``exclude_own_account`` hides every life on the caller's own account — the
+    account-level identity rule of ADR-0041, which the duel-opponent picker needs
+    and used to re-derive client-side off a second request (#1385). Opt-in, so
+    the default path ignores the viewer entirely.
+
+    **From an anonymous caller the flag is a silent no-op**, not a 401 or a 422:
+    there is no viewer to exclude, the combination is meaningless rather than
+    malformed, and rejecting would make a deliberately public route
+    conditionally authenticated. That is never a security hole — the exclusion is
+    picker convenience, and ``services.duel`` independently enforces the rule at
+    both challenge and accept (``_characters_share_account``).
     """
     rows = await list_characters_for_viewer(
         session,
         search=search,
         faction_slug=faction,
         exclude_active_task_id=exclude_active_task_id,
+        exclude_account_id=(
+            viewer.account_id if exclude_own_account and viewer is not None else None
+        ),
         limit=limit,
         offset=offset,
     )

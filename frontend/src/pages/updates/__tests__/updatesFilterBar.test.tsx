@@ -60,7 +60,9 @@ describe('the Updates page mounts the shared FilterBar', () => {
   it('no longer hand-rolls a stamp — filter implementation #5 is gone', () => {
     // The desktop half drew its own stamp-shaped button duplicating
     // `FilterStamps`: same border, same dashed inset, same Courier recipe. The
-    // dashed inset was its tell and nothing else on this page uses it.
+    // dashed inset was its tell and nothing else on this page used it. The
+    // token itself is gone from index.css (#1445) — this page was its last
+    // reader, so the name below is a historical string, not a live var.
     expect(render('/updates').html).not.toContain('--stamp-active-dashed')
   })
 

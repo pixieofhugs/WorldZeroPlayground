@@ -548,6 +548,7 @@ async def list_characters_for_viewer(
     search: Optional[str] = None,
     faction_slug: Optional[str] = None,
     exclude_active_task_id: Optional[int] = None,
+    exclude_account_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -560,7 +561,13 @@ async def list_characters_for_viewer(
     faction the era grants Double Dipper to are never excluded: they may hold
     multiple memberships per task, so there is no 409 to pre-empt. The set of
     such factions comes from :func:`services.praxis.multi_membership_faction_slugs`,
-    the one place that rule is stated (#1359).
+    the one place that rule is stated (#1359) — no slug is named here.
+
+    ``exclude_account_id`` drops every life on one account — the account-level
+    identity rule of ADR-0041, and the same comparison
+    :func:`services.duel._characters_share_account` makes. The duel-opponent
+    picker asks for it so it does not have to re-derive the roster client-side
+    (#1385); the duel service remains the enforcement.
     """
     from services.praxis import multi_membership_faction_slugs
 
@@ -612,6 +619,8 @@ async def list_characters_for_viewer(
         )
     if faction_slug:
         query = query.where(Character.faction_slug == faction_slug)
+    if exclude_account_id is not None:
+        query = query.where(Character.account_id != exclude_account_id)
     if exclude_active_task_id is not None:
         active_member_ids = (
             select(PraxisMember.character_id)

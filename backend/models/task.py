@@ -56,6 +56,11 @@ class Task(TimestampMixin, Base):
     metatask_faction_slug: Mapped[Optional[str]] = mapped_column(
         ForeignKey("faction.slug"), nullable=True
     )
+    # Parked v2 feature (SPEC-backend-architecture §9 "Intentional v2
+    # deferrals"): Task Vision would let Ephemerists see retired tasks. The
+    # column and its TaskDef writer stay so an era can mark tasks eligible;
+    # nothing reads it yet and it is deliberately NOT on the wire (#1471) —
+    # give it a reader before serialising it again.
     is_task_vision_eligible: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
