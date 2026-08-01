@@ -202,6 +202,14 @@ ERA_N = EraConfig(
     comment_level_required=2,
     comment_flag_review_threshold=1,
 
+    # Collab invites: which sign-up gates an invite lifts (#1511). Era 1 lets an
+    # invited collaborator onto a task they could never claim themselves — any
+    # level, any faction — and charges only the task bank, on accept. Set a flag
+    # False to make the invite door enforce that gate like sign-up does.
+    collab_invite_bypasses_level=True,
+    collab_invite_bypasses_faction=True,
+    collab_invite_bypasses_task_bank=False,
+
     # Character account / faction gates
     second_character_level_required=4,
     albescent_level_required=8,
