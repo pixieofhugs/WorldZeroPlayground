@@ -4,6 +4,34 @@ World Zero's frontend is a Vite **app**, not a published component library, so t
 sync uses the `package` shape in **synth-entry / barrel** mode. Read this before any
 re-sync.
 
+## What is and isn't in this repo (#1328)
+
+**The CLI that consumes this directory is not committed.** It lives in `.ds-sync/`,
+which is gitignored (`.gitignore:26`), and `.design-sync/node_modules` is a symlink
+into it (`.gitignore:30`). So a sync run is **not reproducible from a clean checkout** —
+you have to install that tool separately first. What IS committed is everything the
+kit is built *from*: the previews, `_state.tsx` / `_fixtures.tsx`, `config.json`, the
+generators, and the `frontend/.ds-kit/` barrel + provider.
+
+**`previews/` is typechecked in CI.** `frontend/tsconfig.design-sync.json` covers
+`previews/` plus `frontend/.ds-kit/`, and the `frontend` job runs it as
+`npm run typecheck:design-sync`. It sits in `frontend/` rather than here because
+TypeScript resolves bare imports by walking up from the importing file, and
+`frontend/node_modules` is the only install in the repo.
+
+Two consequences worth knowing before you touch a preview:
+
+- A preview whose props drift is now **a red build for everyone**, not a silent
+  floor card at the next sync. That is the point — but it means a PR that changes a
+  hook-state interface has to update `_state.tsx` in the same PR.
+- The check is deliberately scoped to `previews/`, NOT to `.design-sync/**`.
+  `docs/agents/design-fidelity.md` reuses `.design-sync/<epic>/` for ephemeral
+  vendored design bundles that the epic's last PR deletes; those must stay out of CI.
+
+When this guard was added, **70 errors across 23 files** were waiting in a directory
+nothing had ever compiled — including a `mockCollaboration.score` the scoring formula
+cannot produce, and an `EditPraxisState` builder 28 fields behind.
+
 ## How the build is wired (non-obvious pieces)
 
 - **Barrel entry**: `frontend/.ds-kit/index.tsx` (committed) named-re-exports all 86
