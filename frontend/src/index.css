@@ -1688,10 +1688,6 @@
   --space-5xl: 64px;
   --space-6xl: 96px;
 
-  /* ── Filter stamp dashed-border (inverts with active state bg) ── */
-  --stamp-active-dashed: rgba(255, 255, 255, 0.2);
-  --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
-
   /* ── Leaderboard rank colors (podium — stable across themes) ── */
   --rank-gold: #f59e0b;
   --rank-silver: #c49a3a;
@@ -2299,10 +2295,6 @@
 
   /* ── Shared tokens ── */
   --nav-blur: 8px;
-
-  /* ── Filter stamp dashed-border (dark-mode inversions) ── */
-  --stamp-active-dashed: rgba(0, 0, 0, 0.15);
-  --stamp-inactive-dashed: rgba(255, 255, 255, 0.1);
 
   /* ── Leaderboard rank accent (dark) ── */
   --color-rank-accent: #818cf8;
