@@ -63,7 +63,6 @@ export type CollabCopyKey =
   // It replaces the banner AND the consensus readings, which are degenerate at
   // one member, so it is not a `banner*` key.
   | 'rosterAwaitingAlone'
-  | 'rosterAwaitingInvited'
   | 'castAction'
   | 'castFinalAction'
   | 'pullBackAction'
@@ -184,13 +183,13 @@ export type CollabCopyKey =
  * still override any of them; per-faction frames for this surface are a
  * follow-up wave, not a debt this one incurs.
  *
- * The two `rosterAwaiting*` lines (#1274) join them as well. They state a fact
- * about the praxis rather than address the player — nobody else is on this
- * collab yet, and here is who was invited and has not answered — which is the
- * same register as the invite chips they sit under, and the same tier as the
- * other mechanics lines here. They are also read on the PUBLIC detail page by
- * non-members, for whom the backend serialises no invites at all, so the
- * fallback line has to work as a neutral statement to a stranger.
+ * `rosterAwaitingAlone` (#1274) joins them as well. It states a fact about the
+ * praxis rather than addressing the player — nobody else is on this collab yet —
+ * which is the same tier as the other mechanics lines here. It is also read on
+ * the PUBLIC detail page by non-members, so it has to work as a neutral
+ * statement to a stranger. Its sibling `rosterAwaitingInvited`, which named the
+ * outstanding invitees, went with the invite chips in #1416: those people are
+ * roster rows now, so the line repeated a name three lines above itself.
  *
  * `pillInvited` / `pillDeclined` (#1416) join them, and the issue asks for it by
  * name so that absorbing invites into the roster costs no faction a translation.
@@ -222,7 +221,6 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'kickAction',
   'duelPullBackAction',
   'rosterAwaitingAlone',
-  'rosterAwaitingInvited',
   'pillInvited',
   'pillDeclined',
   'awaitingStatusMeta',

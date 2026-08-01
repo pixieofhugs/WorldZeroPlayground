@@ -183,7 +183,6 @@
       "bannerHoldout": "Waiting on you — submit your part.",
       "bannerPublished": "All parts submitted. Every member is credited.",
       "rosterAwaitingAlone": "Nobody else has joined this collab yet.",
-      "rosterAwaitingInvited": "Invited, not answered yet: {{names}}.",
       "castAction": "Submit my part",
       "castFinalAction": "Submit — this one publishes it",
       "pullBackAction": "Pull my part back",

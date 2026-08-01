@@ -209,22 +209,15 @@ export function CollabRoster({
     void onKick(member.character_id)
   }
 
-  // Who has been asked and has not answered — the whole content of `awaiting`
-  // beyond the author's own row. Filtered HERE rather than at eleven call sites,
-  // for the same reason the state machine lives here.
-  const pendingInvitees = rows
-    .filter((row) => row.state === 'invited')
-    .map((row) => row.name)
-
+  // `awaiting` used to have a second line naming whoever had been invited and
+  // not answered (#1274) — it existed because those people were nowhere in the
+  // roster. They are rows now, so the line printed the same name three lines
+  // above itself; it went with the chips (#1416). What is left is the one fact
+  // rows cannot state: nobody else has joined yet.
   const banner =
     gate.state === 'awaiting'
       ? {
-          text:
-            pendingInvitees.length > 0
-              ? collabCopy(factionSlug, 'rosterAwaitingInvited', {
-                  names: pendingInvitees.join(', '),
-                })
-              : collabCopy(factionSlug, 'rosterAwaitingAlone'),
+          text: collabCopy(factionSlug, 'rosterAwaitingAlone'),
           tone: quiet,
           warn: false,
         }
