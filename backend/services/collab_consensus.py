@@ -24,16 +24,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.praxis import Praxis, PraxisInviteStatus, PraxisStatus, PraxisType
+from models.taunt_message import TauntTriggerType
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
 )
 from services.era import get_era_row_for_praxis
+from services.taunt_service import fan_out_taunt
 
 
-def _apply_seal(praxis: Praxis) -> None:
-    """Pure state mutation for going Live: mark the whole group submitted and clear
-    the window. Caller flushes and recalculates member stats.
+async def _apply_seal(praxis: Praxis, session: AsyncSession) -> None:
+    """The transition into ``submitted``: mark the whole group submitted, clear
+    the window, and needle each member's foes. Caller flushes and recalculates
+    member stats.
 
     **Establishes the invariant** ``status == submitted ⟹ submitted_at IS NOT NULL``.
     This is the only writer of ``praxis.submitted_at``, and every route to
@@ -43,6 +46,13 @@ def _apply_seal(praxis: Praxis) -> None:
     depends on it — and drops any row that violates it — is the
     ``status == submitted`` branch of ``services.praxis.list_praxes``, whose
     feed sort orders on ``submitted_at`` (#658).
+
+    Being the single such writer is also why the ADR-0068 ``praxis_complete``
+    taunt fires here rather than at either call site: one taunt **per member**,
+    each reaching that member's own subscribers, so a collab needles every
+    member's rivals and a duel side needles its own (ADR-0013 co-ownership).
+    Unsubmit-then-resubmit fires again — accepted, rather than carry a praxis
+    reference on the taunt row purely to deduplicate.
     """
     praxis.status = PraxisStatus.submitted
     now = datetime.now(timezone.utc)
@@ -52,6 +62,10 @@ def _apply_seal(praxis: Praxis) -> None:
         if not member.has_submitted:
             member.submitted_at = now
         member.has_submitted = True
+    # Second pass on purpose: the fan-out flushes, and the seal must be whole
+    # before any of it reaches the database.
+    for member in praxis.members:
+        await fan_out_taunt(member.character_id, TauntTriggerType.praxis_complete, session)
 
 
 async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
@@ -59,7 +73,7 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
 
     Shared by the lazy-on-access timeout and the leave path.
     """
-    _apply_seal(praxis)
+    await _apply_seal(praxis, session)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
 
@@ -133,7 +147,7 @@ async def on_submit(
     await session.refresh(praxis)
 
     if all(m.has_submitted for m in praxis.members):
-        _apply_seal(praxis)
+        await _apply_seal(praxis, session)
         await session.flush()
         return True
     if praxis.type == PraxisType.collab:
