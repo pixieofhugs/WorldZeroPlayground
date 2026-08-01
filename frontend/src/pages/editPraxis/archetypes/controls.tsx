@@ -4,11 +4,12 @@
  * (paperclips, customs stamps, sticky notes); these are the inner essentials
  * that must always render: file picker, member chips, search dropdown.
  */
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
+import type { DuelSideOut } from "../../../api/duel";
 import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
@@ -16,7 +17,11 @@ import type { EditPraxisState } from "../useEditPraxis";
 import { duelSides } from "../../../components/duel/shared";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
+import { RosterAvatar } from "../../../components/collab/RosterAvatar";
 import HoldoutPublishNotice from "../blocks/HoldoutPublishNotice";
+
+/** The pair's monogram, against 34 on a roster row and 28 on a waiting side. */
+const DUEL_PAIR_AVATAR_SIZE = 52;
 
 export interface InviteSearchSkin {
   inputBg?: string;
@@ -46,6 +51,197 @@ export interface InviteSearchSkin {
   leaveStyle?: CSSProperties;
 }
 
+/**
+ * One side of the compose-stage duel pair (#1417).
+ *
+ * The circle is `RosterAvatar` at 52 rather than a third avatar idiom, and it
+ * takes the SIDE's own faction — a duel is the one surface two factions share,
+ * and the monogram is who is speaking. That is the same call the waiting
+ * surface's `SideAvatar` makes at 28.
+ *
+ * The filing word is `duelPill*`, the pair the waiting surface already speaks:
+ * one fact, one wording. The design labelled these "Submitted" / "Not yet
+ * submitted", which is the same fact in a second vocabulary — and this composer
+ * and that surface are two stages of one screen.
+ */
+function DuelPairSide({
+  side,
+  mine,
+  factionSlug,
+  accent,
+  quiet,
+}: {
+  side: DuelSideOut;
+  mine?: boolean;
+  factionSlug: string | null | undefined;
+  accent: string;
+  quiet: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1" style={{ minWidth: 0 }}>
+      <RosterAvatar
+        name={side.display_name}
+        size={DUEL_PAIR_AVATAR_SIZE}
+        background={factionCssVar(side.faction_slug, "light")}
+        borderColor={factionCssVar(side.faction_slug, "border")}
+      />
+      <span
+        className="font-body text-[13px]"
+        style={{
+          maxWidth: 140,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          fontWeight: 700,
+        }}
+      >
+        {side.display_name}
+      </span>
+      <span
+        className="eyebrow text-[12px]"
+        style={{ color: side.is_submitted ? accent : quiet }}
+      >
+        {mine && (
+          <>
+            {collabCopy(factionSlug, "you")}
+            {" · "}
+          </>
+        )}
+        {collabCopy(
+          factionSlug,
+          side.is_submitted ? "duelPillSealed" : "duelPillWriting",
+        )}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The compose-stage duel: a status badge over the two sides facing each other
+ * across a `vs` (#1417), replacing the single inline chip that carried the same
+ * facts on one line.
+ *
+ * KEEPS THE TWO CONTROLS. The design's static mock drew neither the rescind nor
+ * the dissolve, which is a fact about a mock and not a decision to delete the
+ * only ways out of a challenge.
+ *
+ * The pair itself needs the duel DETAIL, which is fetched separately and whose
+ * failure `useComposerDuel` deliberately swallows — so `duel == null` alongside
+ * a `duel_id` is reachable, and the badge and the rescind are drawn without it.
+ * A player who cannot see who they challenged must still be able to take the
+ * challenge back.
+ */
+function DuelPair({
+  state,
+  skin,
+}: {
+  state: EditPraxisState;
+  skin: InviteSearchSkin;
+}) {
+  const { t } = useTranslation("forms");
+  const praxis = state.praxis!;
+  const duel = state.duel;
+  // The sides name the OTHER player, not the fixed `opponent` ROLE — accepting a
+  // challenge puts the viewer's own praxis in that role, which is what used to
+  // print the viewer's own name as the rival (#1226). `praxis.created_by_id` is
+  // the viewer here: a duel side's composer only ever shows its own praxis.
+  const sides = duel ? duelSides(duel, praxis.created_by_id) : null;
+  const factionSlug = praxis.task_faction_slug;
+  // The same measured-per-faction card inks the roster reads on this same sheet
+  // (#694). Not `--color-text-tertiary`: this block is mounted on eight faction
+  // grounds, and the neutral tertiary is the ink that failed on the dark ones.
+  const accent = factionCssVar(factionSlug, "card-accent");
+  const quiet = factionCssVar(factionSlug, "card-muted");
+  const accepted = duel?.status === "active";
+  // A still-pending challenge is withdrawn with the compact × — nothing is at
+  // stake yet.
+  const canRescind = duel == null || duel.status === "pending";
+  return (
+    <div
+      className="flex flex-col items-center gap-3"
+      style={{ flex: "1 1 100%", fontFamily: skin.fontFamily }}
+    >
+      <span
+        className="eyebrow text-[12px]"
+        style={{
+          padding: "var(--space-xs) var(--space-sm)",
+          borderRadius: 4,
+          border: `1px ${accepted ? "solid" : "dashed"} ${accepted ? accent : quiet}`,
+          color: accepted ? accent : quiet,
+        }}
+      >
+        {accepted
+          ? t("editPraxis.invite.statusAccepted")
+          : t("editPraxis.invite.statusChallenged")}
+      </span>
+      {sides && (
+        <div className="flex items-center justify-center gap-4">
+          <DuelPairSide
+            side={sides.me}
+            mine
+            factionSlug={factionSlug}
+            accent={accent}
+            quiet={quiet}
+          />
+          <span className="eyebrow text-[12px]" style={{ color: quiet }}>
+            {t("editPraxis.invite.duelVersus")}
+          </span>
+          <DuelPairSide
+            side={sides.foe}
+            factionSlug={factionSlug}
+            accent={accent}
+            quiet={quiet}
+          />
+        </div>
+      )}
+      {(canRescind || accepted) && (
+        <div className="flex items-center gap-2">
+          {canRescind && (
+            <button
+              type="button"
+              onClick={() => void state.cancelDuel()}
+              aria-label={t("editPraxis.invite.cancelChallengeAria")}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: quiet,
+                cursor: "pointer",
+                fontSize: "var(--text-xl)",
+                lineHeight: 1,
+                padding: 0,
+              }}
+            >
+              ×
+            </button>
+          )}
+          {/* Once accepted, either participant can still dissolve the duel
+              neutrally (#956) — the backend recalculates both sides back to solo
+              scoring, no forfeit. It's a heavier action than the ×, so it's a
+              labelled button behind a confirm (state.dissolveDuel). */}
+          {accepted && (
+            <button
+              type="button"
+              onClick={() => void state.dissolveDuel()}
+              aria-label={t("editPraxis.invite.dissolveDuelAria")}
+              className="eyebrow text-[12px]"
+              style={{
+                background: "transparent",
+                border: `1px solid ${quiet}`,
+                borderRadius: 4,
+                color: quiet,
+                cursor: "pointer",
+                padding: "var(--space-xs) var(--space-sm)",
+              }}
+            >
+              {t("editPraxis.invite.dissolveDuelLabel")}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function InviteSearch({
   state,
   skin,
@@ -55,22 +251,22 @@ export function InviteSearch({
 }) {
   const { t } = useTranslation("forms");
   const praxis = state.praxis!;
+  // The invite search is behind the `+ invite` chip (#1417) rather than sitting
+  // permanently open across a whole row of the composer. Local state, because it
+  // is a disclosure and nothing outside this control has an opinion about it.
+  const [pickerOpen, setPickerOpen] = useState(false);
   // Duel mode reuses this same box as a one-opponent challenge picker (#311):
-  // picking issues a challenge; once attached, the opponent shows as a chip and
-  // the search input is hidden (a duel has exactly one opponent).
+  // picking issues a challenge; once attached, the pair replaces it and the
+  // search input is hidden (a duel has exactly one opponent).
   const duelMode = state.duelMode;
   const challengeAttached = duelMode && praxis.duel_id != null;
   const onPick = duelMode ? state.sendChallenge : state.sendInvite;
-  // The chip names the OTHER side, not the fixed `opponent` role — accepting a
-  // challenge puts the viewer's own praxis in that role, which used to make the
-  // chip print the viewer's own name (#1226). `praxis.created_by_id` is the
-  // viewer's character id here: a duel side's composer only ever shows its own
-  // praxis, never the rival's.
-  const duelFoeName = state.duel
-    ? duelSides(state.duel, praxis.created_by_id).foe.display_name
-    : null;
-  // Cast progress drives the roster + hides "invite another" once weaving starts (#591).
-  const castCount = praxis.members.filter((m) => m.has_submitted).length;
+  // No chip in duel mode: choosing an opponent is the whole purpose of the pane
+  // the player just opened, so hiding the picker behind a disclosure would put a
+  // click in front of the one thing there is to do. The chip is the collab's,
+  // where the roster is what the region is for and inviting is an addition to
+  // it — which is where the design draws it.
+  const searchOpen = !challengeAttached && (duelMode || pickerOpen);
   // Any collab member can drop out from here (#958) — a standalone exit that
   // doesn't require the bank-full drop-to-accept modal. That includes whoever
   // started it: a collab is co-owned by its members and `created_by_id` is only
@@ -90,74 +286,7 @@ export function InviteSearch({
         style={{ display: "flex", gap: "var(--space-sm)", flexWrap: "wrap", marginBottom: "var(--space-sm)" }}
       >
         {duelMode
-          ? challengeAttached && (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "var(--space-xs)",
-                  fontFamily: skin.fontFamily,
-                  fontSize: "var(--text-md)",
-                  padding: "var(--space-xs) var(--space-sm)",
-                  background: skin.pendingBg ?? "transparent",
-                  color: skin.pendingColor ?? "inherit",
-                  border: "1px dashed currentColor",
-                }}
-              >
-                ⚔{" "}
-                {duelFoeName ?? t("editPraxis.invite.opponentFallback")}{" "}
-                <em>
-                  ·{" "}
-                  {state.duel?.status === "active"
-                    ? t("editPraxis.invite.statusAccepted")
-                    : t("editPraxis.invite.statusChallenged")}
-                </em>
-                {/* A still-pending challenge is withdrawn with the compact × —
-                    nothing is at stake yet. */}
-                {(state.duel == null || state.duel.status === "pending") && (
-                  <button
-                    type="button"
-                    onClick={() => void state.cancelDuel()}
-                    aria-label={t("editPraxis.invite.cancelChallengeAria")}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      color: "inherit",
-                      cursor: "pointer",
-                      fontSize: "var(--text-xl)",
-                      lineHeight: 1,
-                      padding: 0,
-                    }}
-                  >
-                    ×
-                  </button>
-                )}
-                {/* Once accepted, either participant can still dissolve the duel
-                    neutrally (#956) — the backend recalculates both sides back to
-                    solo scoring, no forfeit. It's a heavier action than the ×, so
-                    it's a labelled button behind a confirm (state.dissolveDuel). */}
-                {state.duel?.status === "active" && (
-                  <button
-                    type="button"
-                    onClick={() => void state.dissolveDuel()}
-                    aria-label={t("editPraxis.invite.dissolveDuelAria")}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid currentColor",
-                      color: "inherit",
-                      cursor: "pointer",
-                      fontFamily: skin.fontFamily,
-                      fontSize: "var(--text-sm)",
-                      lineHeight: 1,
-                      padding: "var(--space-xs) var(--space-sm)",
-                      marginLeft: "var(--space-xs)",
-                    }}
-                  >
-                    {t("editPraxis.invite.dissolveDuelLabel")}
-                  </button>
-                )}
-              </span>
-            )
+          ? challengeAttached && <DuelPair state={state} skin={skin} />
           : (
               // Live status roster replaces the flat member pills (#591) and,
               // since #1416, the pending-invite chips that used to sit beside
@@ -193,10 +322,42 @@ export function InviteSearch({
               </div>
             )}
       </div>
-      {!challengeAttached && (duelMode || castCount === 0) && (
+      {/* The chip the search hides behind (#1417) — dashed, muted, at the end of
+          the roster. Its ink is the faction's own `card-muted`, the same one the
+          roster rows read on this same sheet: the neutral tertiary is the ink
+          that failed on the dark grounds (#694). No skin field for it — like the
+          Leave link and SaveDraftButton below, this is a mechanics affordance
+          rather than a faction gesture. */}
+      {!duelMode && !pickerOpen && (
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          // A title, not an aria-label: the visible words are already the
+          // button's name, and an aria-label would replace them for a screen
+          // reader while leaving a voice-control user asking for a control whose
+          // name they cannot see.
+          title={t("editPraxis.invite.addDescription")}
+          className="eyebrow text-[12px]"
+          style={{
+            padding: "var(--space-xs) var(--space-md)",
+            borderRadius: 4,
+            border: `1px dashed ${factionCssVar(praxis.task_faction_slug, "card-muted")}`,
+            background: "transparent",
+            color: factionCssVar(praxis.task_faction_slug, "card-muted"),
+            cursor: "pointer",
+            fontFamily: skin.fontFamily,
+          }}
+        >
+          {t("editPraxis.invite.addAction")}
+        </button>
+      )}
+      {searchOpen && (
       <div style={{ position: "relative" }}>
         <input
           type="text"
+          // Opened by the chip, so it takes the caret with it — the click that
+          // asked for a search box is not also a request to go and find it.
+          autoFocus={pickerOpen}
           value={state.inviteQuery}
           onChange={(event) => state.setInviteQuery(event.target.value)}
           placeholder={
@@ -246,7 +407,12 @@ export function InviteSearch({
                 key={character.id}
                 type="button"
                 disabled={state.inviting}
-                onMouseDown={() => void onPick(character)}
+                onMouseDown={() => {
+                  // Back to the chip once somebody is asked: the roster below
+                  // grows their row, and the next invite is another click on it.
+                  setPickerOpen(false);
+                  void onPick(character);
+                }}
                 style={{
                   display: "flex",
                   alignItems: "center",
