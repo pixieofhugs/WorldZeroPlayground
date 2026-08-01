@@ -52,7 +52,11 @@ export default function ProtectedRoute({ children, warm, adminOnly = false }: Pr
     return <Navigate to="/?login=required" replace />
   }
 
-  if (adminOnly && (user.character?.level ?? 0) < 1) {
+  // `is_admin`, never `character.level`: level is a game stat and admin is a
+  // permission, and reading the stat was wrong both ways — it admitted every
+  // levelled player and turned away an admin whose life had not scored (#1488).
+  // `CurrentUser`'s server-computed flags are the whole permission surface.
+  if (adminOnly && !user.is_admin) {
     return <Navigate to="/" replace />
   }
 

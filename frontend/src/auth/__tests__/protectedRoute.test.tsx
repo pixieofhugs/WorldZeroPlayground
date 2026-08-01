@@ -52,8 +52,13 @@ vi.mock('react-router-dom', async (importOriginal) => ({
 
 const PAGE = <div data-page="protected" />
 
-const signedIn = (level: number): CurrentUser =>
-  ({ account_id: 1, is_admin: level >= 1, character: { level } } as unknown as CurrentUser)
+/** Level and admin status are independent facts and the helper keeps them so:
+ *  `level` is a game stat, `is_admin` is the permission (#1488). Deriving one
+ *  from the other here is what let the guard's own confusion of the two go
+ *  unnoticed — a fixture that cannot express "level 5, not an admin" cannot
+ *  catch a gate that lets one in. */
+const signedIn = (level: number, isAdmin = false): CurrentUser =>
+  ({ account_id: 1, is_admin: isAdmin, character: { level } } as unknown as CurrentUser)
 
 /** The node test env has no `localStorage`; `hadSessionLastVisit` treats that
  *  as "no hint", which is the guest default. */
@@ -151,14 +156,33 @@ describe('a protected route shows no surface it should not', () => {
     expect(markup).not.toContain('data-page="protected"')
   })
 
+  it('redirects a non-admin away from an adminOnly route at any character level', () => {
+    // The gate used to read `character.level < 1`, so every levelled player who
+    // typed `/admin` got the admin surface (#1488). Levelling up is not a
+    // promotion; the case above passes on both predicates and proves nothing.
+    const markup = renderGuard({ user: signedIn(7), loading: false }, { adminOnly: true })
+
+    expect(markup).toContain('data-redirect="/"')
+    expect(markup).not.toContain('data-page="protected"')
+  })
+
   it('renders its children for a resolved signed-in viewer', () => {
     const markup = renderGuard({ user: signedIn(0), loading: false })
 
     expect(markup).toContain('data-page="protected"')
   })
 
-  it('renders its children on an adminOnly route for a viewer who passes the gate', () => {
-    const markup = renderGuard({ user: signedIn(1), loading: false }, { adminOnly: true })
+  it('renders its children on an adminOnly route for an admin', () => {
+    const markup = renderGuard({ user: signedIn(3, true), loading: false }, { adminOnly: true })
+
+    expect(markup).toContain('data-page="protected"')
+    expect(markup).not.toContain('data-redirect')
+  })
+
+  it('renders its children on an adminOnly route for an admin at character level 0', () => {
+    // The other half of the same defect: the level gate turned away a real
+    // admin whose carried life had not scored yet.
+    const markup = renderGuard({ user: signedIn(0, true), loading: false }, { adminOnly: true })
 
     expect(markup).toContain('data-page="protected"')
     expect(markup).not.toContain('data-redirect')
