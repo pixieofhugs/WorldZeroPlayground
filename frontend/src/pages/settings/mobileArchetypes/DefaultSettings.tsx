@@ -10,7 +10,7 @@ export interface DefaultSettingsProps {
   dark: boolean
   /** Reused verbatim from `useTheme().toggle` — flips `[data-theme]` + persists. */
   onToggleTheme: () => void
-  /** Reused auth sign-out (`logout()` + refetch). */
+  /** Reused auth sign-out — `useAuth().signOut`. */
   onSignOut: () => void
 }
 

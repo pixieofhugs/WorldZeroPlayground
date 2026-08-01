@@ -163,6 +163,9 @@ export default function Home() {
         {!user && import.meta.env.DEV && (
           <div className="relative" style={{ marginTop: 'var(--space-lg)' }}>
             <button
+              // The mirror image of sign-out, and the one case that genuinely
+              // has to ask: `POST /auth/dev-login` sets the cookie and returns
+              // nothing, so `/auth/me` is the only way to learn who that is.
               onClick={async () => { await devLogin(); await refetch() }}
               className="btn-outline"
               style={{ padding: 'var(--space-xs) var(--space-md)' }}

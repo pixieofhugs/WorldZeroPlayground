@@ -234,6 +234,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       const updated = await unsubmitPraxis(praxis.id);
       setPraxis(updated);
       setShowWithdrawConfirm(false);
+      // `unsubmit_praxis` recalculates every member's stats: the points this
+      // praxis was carrying come back off the rail's score and can drop a level.
       void refetch();
     } catch (err) {
       setWithdrawError(extractError(err, t("detail.errors.withdraw")));

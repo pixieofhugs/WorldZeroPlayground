@@ -79,6 +79,16 @@
       "cancel": "cancel"
     }
   },
+  "import": {
+    "heading": "Import tasks from CSV",
+    "columns": "Columns: Name, Faction, Description, Level, Points. Leave Faction blank for a cross-faction task.",
+    "atomicNote": "All rows import together. If any row is invalid nothing is created, and every problem is listed below so you can fix the file in one pass.",
+    "submit": "import",
+    "importing": "importing…",
+    "failed": "Could not import the file.",
+    "created": "Imported {{total}} task(s).",
+    "rejected": "Nothing was imported. {{total}} row(s) need fixing:"
+  },
   "moderation": {
     "loadError": "Couldn't load moderation data.",
     "actionError": "Moderation action failed.",
