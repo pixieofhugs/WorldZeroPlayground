@@ -228,13 +228,30 @@ The set of a character's `in_progress` praxis, capped per character by the era's
 `max_task_signups`. Claiming a task ("signing up") adds to the bank; submitting or
 withdrawing frees a slot.
 
+**Claim** *(a character claims a task; contrast being **carried onto** one)*:
+A **Character** claims a task by **signing up** — the door that runs the full
+**sign-up eligibility** gate and opens their own praxis. A character can also arrive on a
+task without claiming it: by accepting a **collab invite**, or by accepting a **duel
+challenge**. Those two doors deliberately lift gates the claim door enforces (ADR-0071),
+so *who is on a task* is a wider set than *who could have claimed it*. `can_sign_up`
+answers only the claim door; **active membership** records arrival by any door; every door
+charges the **task bank**.
+_Avoid_: saying a **faction** claims (or re-claims) a task — a faction holds no
+memberships and does nothing. The Character is the unit that acts; its faction is one of
+its attributes. Also avoid "join" for the claim door (joining is the invite door) and
+"sign up" for accepting an invite or a challenge.
+
 **Sign-up eligibility**:
 The single game-logic predicate behind the Sign-up affordance: whether a character may
 *claim* a task right now. One boolean, owned by the service layer, exposed as the
 `can_sign_up` flag — the API and frontend read it, they never assemble it. Its
-governing invariant: it is true **iff `create_praxis` would accept**, so the button
-hides exactly when the action would be rejected (level, **active
-membership**, task bank, Analog carve-out). See ADR-0008.
+governing invariant is scoped to the **sign-up door**: it is true iff `create_praxis`
+would accept, so the button hides exactly when *that* action would be rejected (level,
+**active membership**, task bank, Analog carve-out). See ADR-0008. It is **not** a claim
+about every route into a praxis: a collab invite and a duel accept are separate doors
+that deliberately bypass gates this one enforces (ADR-0071), so a character can hold a
+praxis on a task they could never have claimed. Reading the invariant wider than the
+sign-up door is what makes those carve-outs look like defects.
 One name, two surfaces, by design: `TaskOut.can_sign_up` is the predicate's answer for one
 task, and `GET /tasks?can_sign_up=` is the filter that keeps the tasks it answers true for
 (#1130). The field carried the name `can_submit_praxis` until #1512, which was false on its
@@ -245,11 +262,20 @@ submit a praxis they are already a member of is a different question, and no fla
 it today.
 
 **Active membership**:
-A character holding a `PraxisMember` row on a non-deleted praxis for a task whose status
-is `in_progress` or `submitted` — i.e. currently working or done, not abandoned. Keyed on
-*membership*, not authorship, so a **joined collaborator** counts too. One shared predicate
-(`is_active_member_of_task`) drives the task-list exclusion, the sign-up guard, and the
-flag, so all three agree.
+A character holding a `PraxisMember` row on a praxis whose status is `in_progress`,
+`pending` or `submitted` — i.e. currently working, inside the lazy-consensus window
+(ADR-0012), or done; not abandoned. Keyed on *membership*, not authorship, so a **joined
+collaborator** counts too.
+**Two questions, not one** (#1510): whether a membership **blocks a fresh claim**, and
+whether the character is on the task **at all** (`held_membership_task_ids`). They differ
+by the **Double Dipper** carve-out (#1359) — a faction the era grants
+`can_hold_multiple_memberships` still holds the membership but is not blocked by it. The
+carve-out is stated exactly once, in `multi_membership_faction_slugs(era)`, and every
+caller of the blocking question — the task-list exclusion, the sign-up guard, the flag —
+reaches it through one subquery, so those three still cannot disagree. The at-all question
+takes no `era` precisely because it applies no carve-out.
+_Avoid_: treating the two as interchangeable, or restating the carve-out anywhere but
+`multi_membership_faction_slugs` (a second statement is one the browse list ignores).
 
 **Vote reframe**:
 A faction's bespoke rendering of the shared 1–5 rating — Ephemerists' **Concordance**
