@@ -1092,8 +1092,11 @@ async def test_cancel_pending_invite(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Inviter rescinds a pending invite; only the inviter may, and the row is
-    gone afterwards (#421)."""
+    """The inviter rescinds a pending invite and the row is gone (#421).
+
+    The 403 here is now a *membership* refusal, not an inviter one (#1415 §3):
+    the invitee is not a member of the praxis, and never was.
+    """
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "Cancel Me"},
@@ -1108,7 +1111,7 @@ async def test_cancel_pending_invite(
     )
     invite_id = invite_resp.json()["id"]
 
-    # A non-inviter (the invitee) cannot rescind.
+    # The invitee is not a member, so they cannot rescind.
     forbidden = await client.delete(
         f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers
     )
@@ -1123,6 +1126,59 @@ async def test_cancel_pending_invite(
         f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers2
     )
     assert gone.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_any_member_can_rescind_a_pending_invite(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    """The ruling of #1415 §3: rescinding is a member power, not an inviter one.
+
+    A collab is co-owned (ADR-0013): every member may invite and every member may
+    kick, so "only the person who typed the name may untype it" was the one
+    asymmetric rule — and it made the roster's rescind control appear on some
+    pending rows and not others with nothing on screen to explain why.
+
+    Membership is still the boundary, which is the second half of this test: the
+    invitee is an outsider until they accept, and an outsider gets 403.
+    """
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character3.id},
+        headers=auth_headers2,
+    )
+    assert invite_resp.status_code == 200, invite_resp.text
+    invite_id = invite_resp.json()["id"]
+
+    # The invitee — not a member — still may not.
+    outsider = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers3
+    )
+    assert outsider.status_code == 403, outsider.text
+
+    # The other member, who did not send it, may.
+    rescinded = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers
+    )
+    assert rescinded.status_code == 204, rescinded.text
+
+    # By value: that row is gone, and only that row — the accepted invite the
+    # praxis was built from is untouched.
+    after = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    invites = after.json()["invites"]
+    assert invite_id not in {invite["id"] for invite in invites}
+    assert character3.id not in {invite["invitee_id"] for invite in invites}
 
 
 @pytest.mark.asyncio

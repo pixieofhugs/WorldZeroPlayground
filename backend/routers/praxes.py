@@ -469,7 +469,7 @@ async def cancel_invite_route(
     await cancel_invite(
         praxis_id=praxis_id,
         invite_id=invite_id,
-        inviter_id=character.id,
+        requester_id=character.id,
         session=session,
     )
     return Response(status_code=204)
