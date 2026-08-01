@@ -253,7 +253,10 @@ async def issue_duel_challenge(
         raise HTTPException(status_code=404, detail="Opponent character not found.")
 
     # Opponent eligibility: must not already have an active praxis for this task.
-    if await is_active_member_of_task(opponent, task, session):
+    # `era` is threaded through because the predicate carries the Double Dipper
+    # carve-out (#1511); dropping it silently resolved against CURRENT_ERA no
+    # matter what this function was passed.
+    if await is_active_member_of_task(opponent, task, session, era):
         raise HTTPException(
             status_code=409,
             detail="The opponent already has an active praxis for this task.",
@@ -336,8 +339,9 @@ async def respond_to_duel_challenge(
         raise HTTPException(status_code=404, detail="Task no longer exists.")
 
     # Opponent must still be eligible (they could have signed up for the task
-    # in the window between challenge and accept).
-    if await is_active_member_of_task(opponent, task, session):
+    # in the window between challenge and accept). `era` threaded for the same
+    # reason as in `issue_duel_challenge` above (#1511).
+    if await is_active_member_of_task(opponent, task, session, era):
         raise HTTPException(
             status_code=409,
             detail="You already have an active praxis for this task.",
