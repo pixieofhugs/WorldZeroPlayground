@@ -963,10 +963,13 @@ async def test_get_task_response_fields(client: AsyncClient, active_task: Task):
     required_fields = {
         "id", "title", "description", "point_value",
         "level_required", "status", "created_by",
-        "primary_faction_slug", "is_task_vision_eligible", "created_at",
+        "primary_faction_slug", "created_at",
         "in_progress_count",
     }
     assert required_fields.issubset(data.keys())
+    # Parked v2 feature, deliberately off the wire (#1471) — the Task column
+    # and its TaskDef writer survive, but nothing serialises them.
+    assert "is_task_vision_eligible" not in data
     # account_id and email must never be exposed
     assert "account_id" not in data
     assert "email" not in data

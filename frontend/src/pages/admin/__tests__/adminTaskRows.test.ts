@@ -21,7 +21,6 @@ function task(overrides: Partial<TaskOut> & { id: number }): TaskOut {
     created_by: 1,
     primary_faction_slug: null,
     metatask_faction_slug: null,
-    is_task_vision_eligible: false,
     created_at: "2026-07-01T00:00:00Z",
     can_submit_praxis: true,
     allowed_modes: [],
