@@ -24,9 +24,10 @@ from services.praxis import (
     _count_in_progress_praxes,
     active_member_task_ids_subquery,
     allowed_praxis_modes,
-    can_submit_praxis_for_task,
+    evaluate_signup,
     gather_signup_facts,
     is_task_eligible_for_character,
+    signup_reason,
     SignupFacts,
 )
 from services.level_jump import available_level_reach
@@ -292,8 +293,14 @@ async def build_task_out_for_viewer(
         signup_facts = await gather_signup_facts(viewer, [task.id], session, era)
     stats = signup_facts.stats
 
-    base.can_submit_praxis = await can_submit_praxis_for_task(
-        viewer, task, session, era, facts=signup_facts
+    # One evaluation, both answers. `can_submit_praxis` is the verdict
+    # (`can_submit_praxis_for_task` is this same call with the reason discarded);
+    # `signup_reason` is *why*, so the client can label its call to action off the
+    # server's ruling instead of mirroring the rule locally and drifting (#1497).
+    eligibility = await evaluate_signup(viewer, task, session, era, facts=signup_facts)
+    base.can_submit_praxis = eligibility.allowed
+    base.signup_reason = await signup_reason(
+        viewer, task, eligibility, session, facts=signup_facts
     )
     base.allowed_modes = [m.value for m in allowed_praxis_modes(viewer, stats.level, era)]
     base.eligible_for_current_user = is_task_eligible_for_character(
