@@ -5,8 +5,8 @@
  * One search box serves two jobs (#311) — collab invitees while the praxis is a
  * collab, an opponent while a duel is being set up — so the filter, the two
  * "send" calls that clear it, and the roster writes that follow all live
- * together. The two viewer-keyed reads the filter depends on (active foes for
- * ordering, the account's own lives for exclusion) come with it.
+ * together. The one viewer-keyed read the filter still depends on (active foes,
+ * for ordering) comes with it.
  *
  * Split out of `useEditPraxis.ts` (#1392); behaviour unchanged. It reads
  * `useAuth()` directly rather than taking the viewer as a parameter, which is
@@ -31,33 +31,9 @@ import { getDuelDetail, issueChallenge, type DuelDetailOut } from "../../api/due
 import { sendNudge } from "../../api/nudge";
 import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listRelationships } from "../../api/relationships";
-import { getMyCharacters } from "../../api/me";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
-
-/**
- * Which of the viewer's own lives the invite/opponent picker withholds (#1257).
- *
- * Collab invites withhold only the life you are carrying — inviting your own alt
- * to a collab is doing a task with yourself, which splits no points unfairly and
- * which the backend allows. Duel mode withholds the whole account roster: #1237
- * blocked both sides of a duel landing on one account, so offering an alt as an
- * opponent could only ever earn a 400 on Challenge.
- *
- * `ownCharacterIds` is empty until the lazy `/me/characters` read lands (and
- * stays empty if it fails), so the carried life is unioned in rather than
- * assumed present — the narrow old rule remains the floor.
- */
-export function selfExcludedPickIds(
-  carriedCharacterId: number | undefined,
-  ownCharacterIds: Set<number>,
-  duelMode: boolean,
-): Set<number> {
-  const excluded = new Set<number>(duelMode ? ownCharacterIds : []);
-  if (carriedCharacterId != null) excluded.add(carriedCharacterId);
-  return excluded;
-}
 
 export interface ComposerRoster {
   inviteQuery: string;
@@ -91,10 +67,6 @@ export function useComposerRoster(options: {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
-  // Every life on the viewer's account (#1257) — read lazily when the duel pane
-  // opens, since only duel mode withholds them and there is no app-wide cache of
-  // the roster to read. Empty until it lands, and on failure.
-  const [ownCharacterIds, setOwnCharacterIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!user?.character) return;
@@ -105,24 +77,6 @@ export function useComposerRoster(options: {
       });
   }, [user?.character?.id]);
 
-  // The account's own roster, for the duel opponent picker only (#1257). The
-  // picker already fetches per keystroke, so one read on a pane the player has
-  // just opened costs nothing on mount.
-  useEffect(() => {
-    if (!duelPaneOpen || !user?.character) return;
-    let cancelled = false;
-    getMyCharacters()
-      .then((roster) => {
-        if (!cancelled) setOwnCharacterIds(new Set(roster.map((c) => c.id)));
-      })
-      .catch(() => {
-        /* the carried life stays withheld either way — see selfExcludedPickIds */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [duelPaneOpen, user?.character?.id]);
-
   // ---- Invite search (debounced via input change handler in caller, but
   // we keep the actual fetch here so archetypes can wire the input directly) ----
   useEffect(() => {
@@ -132,12 +86,24 @@ export function useComposerRoster(options: {
       setInviteOpen(false);
       return;
     }
+    // The picker is choosing an *opponent* only while a duel is being set up;
+    // with a challenge already attached it is hidden, and otherwise it is
+    // choosing collab invitees.
+    const pickingOpponent = praxis.duel_id == null && duelPaneOpen;
     let cancelled = false;
     void (async () => {
       try {
         const results = await listCharacters({
           search: inviteQuery,
           exclude_active_task_id: praxis.task_id,
+          // Duel mode withholds the viewer's whole ACCOUNT, not just the life
+          // they are carrying: #1237 blocked both sides of a duel landing on one
+          // account, so offering an alt could only ever earn a 400 on Challenge.
+          // The server answers that (#1385) — it is the only party that knows
+          // which characters share an account, and asking it costs no request.
+          // Collab invites deliberately do NOT set this: inviting your own alt to
+          // a collab is allowed, so only the carried life is withheld below.
+          exclude_own_account: pickingOpponent || undefined,
           limit: 8,
         });
         if (cancelled) return;
@@ -147,18 +113,9 @@ export function useComposerRoster(options: {
             .filter((i) => i.status === "pending")
             .map((i) => i.invitee_id),
         );
-        // The picker is choosing an *opponent* only while a duel is being set up;
-        // with a challenge already attached it is hidden, and otherwise it is
-        // choosing collab invitees.
-        const pickingOpponent = praxis.duel_id == null && duelPaneOpen;
-        const selfExcluded = selfExcludedPickIds(
-          user?.character?.id,
-          ownCharacterIds,
-          pickingOpponent,
-        );
         const filtered = results.filter(
           (c) =>
-            !selfExcluded.has(c.id) &&
+            c.id !== user?.character?.id &&
             !memberIds.has(c.id) &&
             !pendingInviteIds.has(c.id),
         );
@@ -183,14 +140,7 @@ export function useComposerRoster(options: {
     // `user` narrowed to the id the filter actually reads (#1390) — otherwise
     // every `/auth/me` refetch re-ran the character search behind an open
     // invite box.
-  }, [
-    inviteQuery,
-    praxis,
-    user?.character?.id,
-    duelPaneOpen,
-    foeIds,
-    ownCharacterIds,
-  ]);
+  }, [inviteQuery, praxis, user?.character?.id, duelPaneOpen, foeIds]);
 
   /** Empty the box the way both "send" paths do: query, results, dropdown. */
   const clearPicker = useCallback(() => {

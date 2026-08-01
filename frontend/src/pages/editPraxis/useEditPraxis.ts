@@ -115,12 +115,8 @@ export {
 /**
  * The invite/opponent search box, the two sends that clear it, and the roster
  * writes that follow (kick, rescind, nudge) moved to `useComposerRoster.ts`
- * (#1392). `selfExcludedPickIds` is re-exported: `useEditPraxis.test.ts` calls
- * it directly, which is the only way to prove the #1257 rule with no effects in
- * the harness.
+ * (#1392).
  */
-export { selfExcludedPickIds } from "./useComposerRoster";
-
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
   const { user, refetch, loading: authLoading } = useAuth();
