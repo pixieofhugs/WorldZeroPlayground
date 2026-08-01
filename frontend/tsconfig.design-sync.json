@@ -1,0 +1,41 @@
+// Typecheck for the committed `/design-sync` preview kit (issue #1328).
+//
+// The previews live at `../.design-sync/previews/`, outside this project, so the
+// main `tsconfig.json` (`include: ["src"]`) has never looked at them and they
+// drifted invisibly. This config lives in `frontend/` rather than beside the
+// previews for one reason: module resolution. TypeScript finds `react`,
+// `@types/*` and friends by walking up from the *config's* directory, and the
+// only `node_modules` in the repo is `frontend/node_modules`. An `include` may
+// climb out with `../`; a missing `node_modules` cannot be worked around.
+//
+// Scope is deliberately `previews` only, NOT `../.design-sync`. The same
+// directory is reused by `docs/agents/design-fidelity.md` for ephemeral
+// vendored design bundles that the epic's last PR deletes — sweeping those into
+// CI would fail the build on scaffolding that is meant to be disposable.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      // Previews import the published kit by its package name. The barrel is
+      // committed at `frontend/.ds-kit/index.tsx`; at sync time the real
+      // resolution goes through `.design-sync/node_modules`, a symlink into the
+      // gitignored `.ds-sync/` CLI. Pointing straight at the barrel is what
+      // makes this check runnable from a clean checkout.
+      "worldzero-frontend": ["./.ds-kit/index.tsx"],
+      // TypeScript resolves a bare specifier by walking up from the *importing
+      // file*, so the `jsx: "react-jsx"` runtime import is unreachable from
+      // `../.design-sync/`: there is no `node_modules` above the repo root.
+      // Mapped to the exact declaration file the app already resolves to, so
+      // `src` typechecks identically under both configs. Deliberately narrow —
+      // a `"*": ["./node_modules/*"]` catch-all also works for the previews but
+      // routes every bare import past the `@types` lookup, which buries `src`
+      // in ~1000 implicit-any errors.
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime.d.ts"]
+    }
+  },
+  // `src` is here for `src/vite-env.d.ts` — without it every `import.meta.env`
+  // read in the app fails, since the previews pull app source in through the
+  // barrel.
+  "include": ["src", ".ds-kit", "../.design-sync/previews"]
+}
