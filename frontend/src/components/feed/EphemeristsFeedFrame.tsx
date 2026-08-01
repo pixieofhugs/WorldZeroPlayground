@@ -53,6 +53,7 @@
 import {
   BAND,
   BAND_INK,
+  BAND_QUIET,
   BRASS,
   BRASS_LIGHT,
   Cornice,
@@ -92,14 +93,6 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * keeping it.
  */
 const ROW_SKIN: FeedRowSkin = { ink: { actor: NILE } }
-
-/**
- * The masthead's second ink tier. Declared here rather than beside its siblings
- * in `ephemeristsPlate` only because this issue's footprint is the chassis, the
- * voice and the faction's own token block; a follow-up whose whole diff is a
- * move can hoist it.
- */
-const BAND_QUIET = 'var(--faction-ephemerists-plate-band-quiet)'
 
 interface BandSize {
   /** Masthead height, and the width its register is drawn to fill. Geometry. */
