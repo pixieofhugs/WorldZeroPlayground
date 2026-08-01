@@ -444,7 +444,6 @@ async def list_pending_tasks(
             created_by=task.created_by,
             primary_faction_slug=task.primary_faction_slug,
             metatask_faction_slug=task.metatask_faction_slug,
-            is_task_vision_eligible=task.is_task_vision_eligible,
             created_at=task.created_at,
             in_progress_count=in_progress_counts.get(task.id, 0),
             created_by_name=display_name or "",
