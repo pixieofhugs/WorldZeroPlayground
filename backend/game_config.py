@@ -176,6 +176,24 @@ class EraConfig:
     allow_praxis_on_retired_task_factions: frozenset = field(default=frozenset())
     allow_praxis_on_pending_task_factions: frozenset = field(default=frozenset())
 
+    # The collab door's eligibility carve-outs (#1511). Sign-up eligibility and the
+    # ability to submit a praxis are different questions: a character who could never
+    # claim a task themselves — too low a level, wrong faction — may be *invited* into
+    # a collab on it and submit. That is deliberate (owner ruling, 2026-08-01): an
+    # Easter egg encouraging collaboration across factions and character levels.
+    #
+    # It used to be enforced by absence — services.praxis.invite_to_praxis simply
+    # never checked — which is a rule nothing can grep and no test can defend. These
+    # make it explicit and tunable per era; the values below are Era 1's behaviour
+    # exactly. Enforcement lives in invite_to_praxis (level, faction) and
+    # respond_to_invite (task bank, charged on accept, not on invite).
+    #
+    # The duel door has the same shape and its own home (era.duel_level_required,
+    # ADR-0051) — these flags do not govern it.
+    collab_invite_bypasses_level: bool = True
+    collab_invite_bypasses_faction: bool = True
+    collab_invite_bypasses_task_bank: bool = False
+
 
 # -- Era configs live in backend/eras/ (one file per era) --------------------
 # To create a new era, copy eras/_template.py and fill it in.

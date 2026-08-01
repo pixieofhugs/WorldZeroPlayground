@@ -1487,7 +1487,25 @@ async def invite_to_praxis(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> PraxisInvite:
-    """Create a collab invite. Praxis must be collab type. Inviter must be a member."""
+    """Create a collab invite. Praxis must be collab type. Inviter must be a member.
+
+    **The invitee is not held to sign-up eligibility.** Whether they could have
+    claimed this task themselves is a different question from whether they may
+    join someone else's praxis on it: under Era 1 a level-1 character of the
+    wrong faction can be invited onto a level-6 task, accept, and submit. That is
+    deliberate — an Easter egg encouraging collaboration across factions and
+    character levels (owner ruling, 2026-08-01; #1511).
+
+    Which gates the invite lifts is era-owned, not hardcoded here:
+    ``era.collab_invite_bypasses_level`` and ``era.collab_invite_bypasses_faction``.
+    Set either False and this door enforces the same predicate sign-up does
+    (:func:`meets_task_level`, :func:`~services.faction_service.faction_permits`).
+    The task-bank flag is charged on the accept, in :func:`respond_to_invite`.
+
+    What no era flag lifts: the invitee must not already hold an active
+    membership on the task. That is a data-integrity rule (one live praxis per
+    character per task), not an eligibility one.
+    """
     praxis = await get_praxis(praxis_id, session)
 
     if praxis.type != PraxisType.collab:
@@ -1526,10 +1544,33 @@ async def invite_to_praxis(
     if invitee is None:
         raise HTTPException(status_code=404, detail="Invitee not found.")
 
-    if await is_active_member_of_task(invitee, praxis.task, session):
+    if await is_active_member_of_task(invitee, praxis.task, session, era):
         raise HTTPException(
             status_code=409,
             detail="This player already has an active praxis for this task and cannot be invited.",
+        )
+
+    # The two eligibility axes, each read from the era rather than skipped by
+    # omission (#1511). Both are False-by-default *bypasses*: under Era 1 neither
+    # branch runs, so this costs nothing and changes nothing.
+    if not era.collab_invite_bypasses_level:
+        era_row = await get_current_era_row(session)
+        invitee_stats = await get_or_create_stats(session, invitee.id, era_row.id)
+        # ponytail: the faction level-jump allowance (#811) is not extended to the
+        # invite door — reach is spent by claiming, and nothing here would consume
+        # it. Upgrade path if an era ever wants it: pass available_level_reach(...)
+        # here and consume_level_jump on accept, as create_praxis does.
+        if not meets_task_level(invitee_stats.level, praxis.task):
+            raise HTTPException(
+                status_code=403,
+                detail=f"This task requires level {praxis.task.level_required}.",
+            )
+    if not era.collab_invite_bypasses_faction and not faction_permits(
+        invitee, praxis.task, era
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="This player's faction may not act on this task.",
         )
 
     invite = PraxisInvite(
@@ -1551,7 +1592,15 @@ async def respond_to_invite(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> PraxisInvite:
-    """Accept or decline an invite. Creates a PraxisMember on accept."""
+    """Accept or decline an invite. Creates a PraxisMember on accept.
+
+    The task bank is the one sign-up gate the collab door does not lift under
+    Era 1 (``era.collab_invite_bypasses_task_bank`` is False), and it is charged
+    here rather than at invite time: the cost is the invitee's to accept, and
+    their bank may have emptied or filled since the invite was sent. The level
+    and faction bypasses live on the invite itself
+    (:func:`invite_to_praxis`, #1511).
+    """
     invite = await session.get(PraxisInvite, invite_id)
     if invite is None:
         raise HTTPException(status_code=404, detail="Invite not found.")
@@ -1575,14 +1624,15 @@ async def respond_to_invite(
     if praxis.status == PraxisStatus.submitted:
         raise HTTPException(status_code=400, detail="Cannot join a submitted praxis.")
 
-    # Check bank capacity
-    in_progress_count = await _count_in_progress_praxes(character_id, session)
+    # Check bank capacity — unless this era's collab door lifts it too (#1511).
     already_member = any(m.character_id == character_id for m in praxis.members)
-    if not already_member and in_progress_count >= era.max_task_signups:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Task bank is full ({era.max_task_signups} in-progress praxes).",
-        )
+    if not era.collab_invite_bypasses_task_bank and not already_member:
+        in_progress_count = await _count_in_progress_praxes(character_id, session)
+        if in_progress_count >= era.max_task_signups:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+            )
 
     # Add member
     member = PraxisMember(

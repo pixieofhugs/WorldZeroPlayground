@@ -24,6 +24,7 @@ from services.era import (
 )
 from services.praxis_scoring import Contribution, compute_contributions
 from services.scoring import compute_level
+from services.taunt_service import emit_recalc_taunts
 
 # Factions that never receive invitation letters (ADR-0022 / ADR-0019 sentinels).
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
@@ -179,6 +180,8 @@ async def recalculate_character_stats(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
     era_row: Era | None = None,
+    *,
+    emit_taunts: bool = True,
 ) -> None:
     """Recompute and persist score, level, and vote budget for a character.
 
@@ -202,6 +205,13 @@ async def recalculate_character_stats(
 
     ``score`` and ``level`` are per-era; ``all_time_score`` stays lifetime — see
     ``_credit_all_time_score``.
+
+    This is also the ADR-0068 hook for the ``score_overtake`` and ``level_up``
+    taunts: the before/after pair this function already computes *is* the lead
+    flip. Pass ``emit_taunts=False`` from an admin backfill — a recomputation of
+    facts that were already true is not news, and only organic play needles
+    anyone. (The era-reset path never lands here at all: ``apply_era_reset``
+    writes the new rows itself, which is why an era reset is silent for free.)
 
     Safe to call on praxis creation (0 votes → base points only) or after any
     vote change.
@@ -262,14 +272,28 @@ async def recalculate_character_stats(
     # Vote budget is computed on read (services.scoring.compute_votes_available)
     # from stats.score and stats.votes_spent_this_era, so no bookkeeping needed here.
     score_delta = total_score - stats.score
+    previous_score = stats.score
+    previous_level = stats.level
     stats.score = total_score
     stats.level = compute_level(total_score, era)
     if score_delta:
         await _credit_all_time_score(character_id, era_row.id, score_delta, session)
 
     if next_era_row is not None:
-        # Recomputing a closed era. ADR-0022 invitations are current-era mail.
+        # Recomputing a closed era. ADR-0022 invitations are current-era mail,
+        # and a lead flip on a finished ladder is not news either (ADR-0068).
         return
+
+    if emit_taunts and score_delta:
+        await emit_recalc_taunts(
+            author,
+            session,
+            era_id=era_row.id,
+            old_score=previous_score,
+            new_score=total_score,
+            old_level=previous_level,
+            new_level=stats.level,
+        )
 
     # ADR-0022: deliver any faction invitations this submitted-praxis set now earns.
     await _deliver_earned_invitations(
