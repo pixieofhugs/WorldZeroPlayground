@@ -2,12 +2,12 @@ import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
-import { loginWithGoogle, logout } from '../api/auth'
+import { loginWithGoogle } from '../api/auth'
 import { useTheme } from '../hooks/useTheme'
 
 export default function NavBar() {
   const { t } = useTranslation('common')
-  const { user, refetch } = useAuth()
+  const { user, signOut } = useAuth()
   const { theme, toggle } = useTheme()
   const { adminMode, toggleAdminMode } = useAdminMode()
   const dark = theme === 'dark'
@@ -20,11 +20,6 @@ export default function NavBar() {
     { to: '/factions', label: t('nav.factions') },
     { to: '/updates', label: t('nav.updates') },
   ]
-
-  const handleLogout = async () => {
-    await logout()
-    await refetch()
-  }
 
   return (
     <nav
@@ -156,7 +151,7 @@ export default function NavBar() {
                   {t('nav.createCharacter')}
                 </NavLink>
               )}
-              <button onClick={handleLogout} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)' }}>
+              <button onClick={signOut} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)' }}>
                 {t('nav.logout')}
               </button>
             </>
