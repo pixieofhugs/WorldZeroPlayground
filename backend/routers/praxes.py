@@ -55,7 +55,6 @@ from services.scoring import compute_votes_available
 from services.praxis import (
     _require_member,
     add_media_batch,
-    apply_metatask,
     can_view_praxis,
     cancel_invite,
     cancel_pending_publish_on_edit,
@@ -71,12 +70,12 @@ from services.praxis import (
     PraxisEraScope,
     PraxisSort,
     VotedFilter,
-    remove_metatask,
     respond_to_invite,
     submit_praxis,
     update_praxis,
     unsubmit_praxis,
 )
+from services.praxis_metatask import apply_metatask, remove_metatask
 from services.praxis_out import (
     _build_invite_out,
     build_praxis_cards,
