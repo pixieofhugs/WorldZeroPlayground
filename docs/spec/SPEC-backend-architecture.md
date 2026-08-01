@@ -228,13 +228,21 @@ use the canonical one.
   parameter.
 - Module-level imports between `services/*` files that form cycles. If you
   need a function-scoped import to break a cycle, it's a code smell: leave a
-  `# TODO: break cycle` comment and open a task. The one current instance is
-  `services/era.py:96`.
+  `# TODO: break cycle` comment and open a task. There are **seven** current
+  instances (2026-07-31), and they are not scattered — they orbit one triangle:
+  four in `services/praxis.py` + `services/vote.py` all import `services.duel`,
+  because `services/duel.py` imports `_count_in_progress_praxes`, `get_praxis`
+  and `is_active_member_of_task` at module level. The remaining three are in
+  `services/character.py` (one of them the `praxis → faction_service → character`
+  loop). Breaking the triangle needs `get_praxis` to move, which is why #1391's
+  third cut exists.
 - String literals for domain values (`status == "active"`). Use the Enum.
 - Hand-written joins where a declared `relationship()` would load the same
   data. Most of our models have no `relationship()` declarations today.
 - Fat route handlers that inline query construction. `routers/tasks.py::list_tasks`
-  is the current worst offender.
+  used to be the worst offender and is now the example of the fix: it is a thin
+  parameter-forwarder, and the query it used to inline lives in
+  `services/task.py::list_tasks`.
 - Leaking `account_id` / `email` onto a public `*Out` schema. Always check
   before adding a field.
 
