@@ -85,7 +85,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
                   task={task}
                   basePoints={task.point_value}
                   multiplier={displayMultiplierFor(task)}
-                  onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
+                  onSignup={user && task.can_sign_up ? handleSignup : undefined}
                 />
               ))}
             </div>

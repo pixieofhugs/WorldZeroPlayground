@@ -29,7 +29,7 @@ These are non-negotiable and take precedence over any visual specification.
 4. **If you can't use it, you can't see it.** Buttons, menu items, and actions that the user lacks permission for (level gate, role, status) should not render at all. Don't show disabled controls — hide them. This is already the pattern in the codebase; maintain it.
 
    **Validation belongs in business logic, not UX.** Gate rules (level thresholds, faction rules, anti-self checks, one-per-task rules) live in backend services. The backend is authoritative.
-   - API responses include explicit `can_X` flags (`can_flag`, `can_submit_praxis`, `can_create_additional_character`, `allowed_modes`, `eligible_for_current_user`, etc.) computed server-side.
+   - API responses include explicit `can_X` flags (`can_flag`, `can_sign_up`, `can_create_additional_character`, `allowed_modes`, `eligible_for_current_user`, etc.) computed server-side.
    - The frontend consumes those flags and hides controls accordingly. Do not re-implement the rule in a component.
    - No hardcoded rule thresholds in the frontend. If you're writing `level >= 4` in a component, the backend should be returning a flag instead.
    - Disabled state (`<button disabled>`) is only for in-flight async and form validity — never for rule-based denial.

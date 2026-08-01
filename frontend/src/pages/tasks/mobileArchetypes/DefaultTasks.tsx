@@ -19,7 +19,7 @@ import TaskFilterBar, { TaskListEmpty } from '../TaskFilterBar'
  * The results list renders the SHARED `<TaskCard>` — the one call site
  * ADR-0056 turned on. Each faction card sizes itself for the phone via
  * `useFormFactor()`, and mobile inherits the inline signup CTA (gated on
- * `can_submit_praxis` exactly as desktop is), the in-progress count and the
+ * `can_sign_up` exactly as desktop is), the in-progress count and the
  * multiplier badge, none of which the old mobile-only cards had. That was
  * shipped as a reversible experiment; the owner's hands-on verdict accepted it,
  * so the `mobileTaskCard` dispatcher and its nine cards are now deleted and
@@ -84,7 +84,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
                   task={task}
                   basePoints={task.point_value}
                   multiplier={displayMultiplierFor(task)}
-                  onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
+                  onSignup={user && task.can_sign_up ? handleSignup : undefined}
                 />
               ))
             )}

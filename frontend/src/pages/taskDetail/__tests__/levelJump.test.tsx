@@ -31,7 +31,7 @@ const TASK_ABOVE: TaskOut = {
   primary_faction_slug: "snide",
   metatask_faction_slug: null,
   created_at: "2026-01-01T00:00:00Z",
-  can_submit_praxis: true,
+  can_sign_up: true,
   allowed_modes: ["solo"],
   eligible_for_current_user: true,
 };
@@ -50,7 +50,7 @@ describe("isLevelJumpSignup — the three states", () => {
   });
 
   it("state 2: spent (allowance unavailable -> backend denies -> canSignUp false) -> false", () => {
-    // Once spent, the backend's can_submit_praxis is false, so canSignUp is
+    // Once spent, the backend's can_sign_up is false, so canSignUp is
     // false and the flag never fires — the task reads as locked.
     expect(
       isLevelJumpSignup({

@@ -1,7 +1,7 @@
 """#330 — the single sign-up eligibility predicate (evaluate_signup).
 
 The predicate is the test surface (ADR-0008): one place asserts each denial
-reason, and the regression pins the can_submit_praxis flag to the bank cap it
+reason, and the regression pins the can_sign_up flag to the bank cap it
 previously omitted.
 """
 from dataclasses import replace
@@ -17,7 +17,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
 from services.praxis import (
     SignupDenialReason,
-    can_submit_praxis_for_task,
+    can_sign_up_for_task,
     evaluate_signup,
 )
 
@@ -142,12 +142,12 @@ async def test_evaluate_signup_bank_full(
 async def test_can_submit_flag_false_when_bank_full(
     db_session: AsyncSession, character: Character, active_task: Task, era: Era, faction_ua: Faction
 ):
-    """Regression: the can_submit_praxis flag now reflects the bank cap.
+    """Regression: the can_sign_up flag now reflects the bank cap.
 
     Before #330 the flag omitted the bank cap, so a full-bank character got
-    can_submit_praxis=True and the sign-up button lied.
+    can_sign_up=True and the sign-up button lied.
     """
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character)
     capped = replace(CURRENT_ERA, max_task_signups=1)
-    assert await can_submit_praxis_for_task(character, other, db_session, capped) is False
+    assert await can_sign_up_for_task(character, other, db_session, capped) is False

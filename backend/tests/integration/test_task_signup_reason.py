@@ -102,7 +102,7 @@ async def test_perk_holder_already_on_the_task_gets_the_allowed_reason(
 
     out = await build_task_out_for_viewer(active_task, character, db_session)
 
-    assert out.can_submit_praxis is True
+    assert out.can_sign_up is True
     assert out.signup_reason == SIGNUP_REASON_MULTI_MEMBERSHIP
 
 
@@ -119,7 +119,7 @@ async def test_without_the_perk_the_same_task_still_reads_blocked(
 
     out = await build_task_out_for_viewer(active_task, character, db_session)
 
-    assert out.can_submit_praxis is False
+    assert out.can_sign_up is False
     assert out.signup_reason == SignupDenialReason.already_active_member.value
 
 
@@ -138,7 +138,7 @@ async def test_a_task_never_started_carries_no_reason(
 
     out = await build_task_out_for_viewer(active_task, character, db_session)
 
-    assert out.can_submit_praxis is True
+    assert out.can_sign_up is True
     assert out.signup_reason is None
 
 

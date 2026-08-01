@@ -208,7 +208,7 @@ async def build_task_out(
     """Convert a Task ORM instance to a TaskOut schema.
 
     This builder does not compute any viewer-relative fields; flags such as
-    ``can_submit_praxis``, ``allowed_modes``, and ``eligible_for_current_user``
+    ``can_sign_up``, ``allowed_modes``, and ``eligible_for_current_user``
     are left at their safe defaults. Use :func:`build_task_out_for_viewer`
     from a route that has an authenticated viewer available.
 
@@ -263,7 +263,7 @@ async def build_task_out_for_viewer(
 ) -> TaskOut:
     """Build a :class:`TaskOut` with viewer-relative capability flags.
 
-    Populates ``can_submit_praxis``, ``allowed_modes``, and
+    Populates ``can_sign_up``, ``allowed_modes``, and
     ``eligible_for_current_user`` using the authenticated viewer's character
     (``None`` for anonymous callers). All three flags default to the same
     safe values as :func:`build_task_out` when ``viewer`` is ``None``.
@@ -293,12 +293,12 @@ async def build_task_out_for_viewer(
         signup_facts = await gather_signup_facts(viewer, [task.id], session, era)
     stats = signup_facts.stats
 
-    # One evaluation, both answers. `can_submit_praxis` is the verdict
-    # (`can_submit_praxis_for_task` is this same call with the reason discarded);
+    # One evaluation, both answers. `can_sign_up` is the verdict
+    # (`can_sign_up_for_task` is this same call with the reason discarded);
     # `signup_reason` is *why*, so the client can label its call to action off the
     # server's ruling instead of mirroring the rule locally and drifting (#1497).
     eligibility = await evaluate_signup(viewer, task, session, era, facts=signup_facts)
-    base.can_submit_praxis = eligibility.allowed
+    base.can_sign_up = eligibility.allowed
     base.signup_reason = await signup_reason(
         viewer, task, eligibility, session, facts=signup_facts
     )

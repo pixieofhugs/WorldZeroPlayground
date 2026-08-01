@@ -261,7 +261,7 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
               primary_faction_slug: null,
               metatask_faction_slug: "ua",
               created_at: "2026-01-01T00:00:00Z",
-              can_submit_praxis: false,
+              can_sign_up: false,
               allowed_modes: [],
               eligible_for_current_user: false,
             },

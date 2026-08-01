@@ -773,7 +773,7 @@ async def _check_create_preconditions(
         raise HTTPException(status_code=404, detail="Character not found.")
 
     # Type-agnostic gates: level, retired/pending, active-member, bank cap — one
-    # predicate, so the can_submit_praxis flag can't drift from enforcement.
+    # predicate, so the can_sign_up flag can't drift from enforcement.
     eligibility = await evaluate_signup(character, task, session, era)
     if not eligibility.allowed:
         raise _signup_denial_to_http(eligibility.reason, task, era)
@@ -1352,7 +1352,7 @@ async def is_active_member_of_task(
     return task.id in await active_member_task_ids(character, [task.id], session, era)
 
 
-async def can_submit_praxis_for_task(
+async def can_sign_up_for_task(
     character: Optional[Character],
     task: Task,
     session: AsyncSession,
@@ -1361,7 +1361,7 @@ async def can_submit_praxis_for_task(
     facts: Optional[SignupFacts] = None,
 ) -> bool:
     """Return True iff ``create_praxis``'s type-agnostic gates would accept — the
-    truthful ``can_submit_praxis`` flag on ``TaskOut`` (ADR-0008).
+    truthful ``can_sign_up`` flag on ``TaskOut`` (ADR-0008).
 
     Derives from :func:`evaluate_signup`, so it covers every shared gate: level,
     retired/pending faction carve-out, active-member (Everymen Double-Dipper
@@ -1842,7 +1842,7 @@ __all__ = [
     "allowed_praxis_modes",
     "cancel_pending_publish_on_edit",
     "can_flag_praxis",
-    "can_submit_praxis_for_task",
+    "can_sign_up_for_task",
     "can_view_praxis",
     "create_praxis",
     "delete_praxis",

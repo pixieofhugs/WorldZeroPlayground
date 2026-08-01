@@ -267,7 +267,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
       setIsInProgress(false);
       setInProgressPraxisId(null);
       setSubmissions((prev) => prev.filter((s) => s.id !== targetPraxisId));
-      // `canSignUp` gates on `task.can_submit_praxis`, which the SERVER computes
+      // `canSignUp` gates on `task.can_sign_up`, which the SERVER computes
       // and flips to false once you are on the task. Clearing local state alone
       // leaves that stale `false` in place, so the sign-up button stayed hidden
       // until a manual reload. Re-read the task — it also refreshes
@@ -313,13 +313,13 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   // "already on it" state now reaches the UI as `task.signup_reason` (#1497).
   const canSignUp = canSignUpForTask({
     signedIn: !!user,
-    canSubmitPraxis: task?.can_submit_praxis,
+    canSignUp: task?.can_sign_up,
   });
   // The signable task is a level-jump iff the viewer's faction grants reach, the
   // allowance is unspent, and the task sits above the viewer's own level. Logic
   // lives in the pure `isLevelJumpSignup` predicate so it is testable props-in/
   // value-out. We do NOT recompute eligibility — canSignUp already trusts the
-  // backend's `can_submit_praxis`.
+  // backend's `can_sign_up`.
   const levelJumpSignup = isLevelJumpSignup({
     canSignUp,
     levelJumpReach: user?.level_jump_reach ?? 0,

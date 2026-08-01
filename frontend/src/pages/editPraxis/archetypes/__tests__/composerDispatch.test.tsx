@@ -69,7 +69,7 @@ function task(allowedModes: string[], slug: string | null = null): TaskOut {
     primary_faction_slug: slug,
     metatask_faction_slug: null,
     created_at: "2026-01-01T00:00:00Z",
-    can_submit_praxis: true,
+    can_sign_up: true,
     allowed_modes: allowedModes,
     eligible_for_current_user: true,
   } as unknown as TaskOut;

@@ -213,7 +213,7 @@ export default function Home() {
               newestTask.primary_faction_slug,
               factionConfigs,
             )}
-            onSignup={user && newestTask.can_submit_praxis ? handleSignup : undefined}
+            onSignup={user && newestTask.can_sign_up ? handleSignup : undefined}
           />
         ) : (
           <p className="font-body text-muted">{t('sections.newestTask.empty')}</p>
