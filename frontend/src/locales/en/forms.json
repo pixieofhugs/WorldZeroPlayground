@@ -119,7 +119,8 @@
       "duelUnderway": "This duel is already underway — it can't be cancelled from here.",
       "fileTooLarge_one": "File too large (50 MB limit): {{names}}",
       "fileTooLarge_other": "Files too large (50 MB limit): {{names}}",
-      "nudge": "Could not nudge {{name}}."
+      "nudge": "Could not nudge {{name}}.",
+      "nudgeCrew": "Could not nudge the crew."
     },
     "confirm": {
       "dismiss": "Never mind",
@@ -244,7 +245,11 @@
       "nudgeSentAria": "You already nudged {{name}} today — you can nudge them again tomorrow",
       "nudgeDescription": "Sends one reminder to their feed. Once a day, and it is signed with your name.",
       "duelNudgeAria": "Nudge {{name}} to answer",
-      "nudgeFeedAction": "nudged you to submit your part of"
+      "nudgeFeedAction": "nudged you to submit your part of",
+      "nudgeCrewAction": "Nudge the crew",
+      "nudgeCrewDescription": "One reminder each to everyone who has not submitted. Once a day per person, signed with your name.",
+      "nudgeCrewResult": "Nudged {{sent}} of {{total}}.",
+      "nudgeCrewResultPartial": "Nudged {{sent}} of {{total}} — {{skipped}} already nudged today. They can be nudged again tomorrow."
     },
     "toolbar": {
       "label": "formatting",
