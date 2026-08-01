@@ -513,3 +513,125 @@ async def test_a_malformed_before_cursor_is_a_422_not_a_500(
         headers=auth_headers,
     )
     assert good.status_code == 200, good.text
+
+
+@pytest.mark.asyncio
+async def test_a_malformed_payload_is_dropped_and_its_siblings_still_serve(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+):
+    """One drifted payload costs one card, never the page (#1402).
+
+    The owner's fail-soft ruling in one test. The feed is a read projection over
+    fifteen unrelated tables, so a producer whose shape has drifted must not be
+    able to take the whole surface down with it — and "the feed still 200s" is
+    only worth anything if the *other* items are still in it. Hence the two
+    kinds of survivor asserted below: a second row from the SAME source, which
+    proves the drop is per-item rather than per-source, and a row from a
+    different source on the same tab.
+
+    The drift simulated here is the one ``extra="forbid"`` exists to catch and
+    the one a green test suite would otherwise wave through: somebody tucks an
+    undeclared key into a payload for a card they are building. A missing field
+    is caught by the field being required; an added one is caught by nothing
+    else at all.
+    """
+    import logging
+    from dataclasses import replace as replace_dataclass
+
+    from models.task import TaskStatus
+
+    import services.activity_feed as feed_service
+    from schemas.activity_feed import GlobalTaskPayload
+
+    # A second global_task row, so the dropped item has a same-source sibling.
+    sibling_task = Task(
+        title="Sibling Task",
+        description="Survives the drop",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(sibling_task)
+    await db_session.commit()
+    await db_session.refresh(sibling_task)
+
+    poisoned_task_id = active_task.id
+    global_source = next(
+        source
+        for source in feed_service.FEED_SOURCES
+        if source.item_type == feed_service.FEED_ITEM_TYPE_GLOBAL_TASK
+    )
+    healthy_to_item = global_source.to_item
+
+    def drifted_to_item(row):
+        """The global_task producer, drifted for exactly one row."""
+        if row.id == poisoned_task_id:
+            GlobalTaskPayload(
+                task_id=row.id,
+                task_title=row.title,
+                task_point_value=row.point_value,
+                task_level_required=row.level_required,
+                task_faction_slug=row.primary_faction_slug,
+                task_banner_url="/media/undeclared.png",
+            )
+        return healthy_to_item(row)
+
+    monkeypatch.setattr(
+        feed_service,
+        "FEED_SOURCES",
+        tuple(
+            replace_dataclass(source, to_item=drifted_to_item)
+            if source is global_source
+            else source
+            for source in feed_service.FEED_SOURCES
+        ),
+    )
+
+    with caplog.at_level(logging.ERROR, logger="services.activity_feed"):
+        response = await client.get(
+            "/activity-feed", params={"filter": "global"}, headers=auth_headers
+        )
+
+    assert response.status_code == 200, response.text
+    items = response.json()["items"]
+
+    global_task_ids = [
+        item["payload"]["task_id"] for item in items if item["type"] == "global_task"
+    ]
+    assert poisoned_task_id not in global_task_ids, "the malformed item was served"
+    assert sibling_task.id in global_task_ids, "a same-source sibling was dropped too"
+    assert any(item["type"] == "era_announcement" for item in items), (
+        "a sibling from another source was dropped too"
+    )
+
+    # Logged loudly, and named well enough to find the row: item_key + the error.
+    assert f"global_task:{poisoned_task_id}" in caplog.text
+    assert "task_banner_url" in caplog.text
+
+
+def test_every_registry_type_has_a_schema_variant():
+    """The union's fifteen discriminator tags ARE the registry's fifteen types.
+
+    ``Literal`` will not accept a variable, so the type strings are spelled
+    twice: once as ``FEED_ITEM_TYPE_*`` in the service, which stays the registry
+    authority, and once as a ``Literal`` in each schema variant. This is the
+    seam that keeps them equal — a new feed type with no schema variant would
+    otherwise serialise fine right up until the response model refused it, and a
+    retired one would linger in the OpenAPI forever.
+    """
+    from typing import get_args
+
+    from schemas.activity_feed import ActivityFeedItem
+    from services.activity_feed import FEED_ITEM_TYPES
+
+    variants = get_args(get_args(ActivityFeedItem)[0])
+    tags = {get_args(variant.model_fields["type"].annotation)[0] for variant in variants}
+    assert tags == set(FEED_ITEM_TYPES)

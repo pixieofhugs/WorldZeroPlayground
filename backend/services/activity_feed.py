@@ -14,11 +14,13 @@ counts are ``COUNT`` over the *same* windowed query, so a source's ``WHERE`` is
 authored exactly once and the counts can never drift from the fan-out.
 """
 import asyncio
+import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy import Select, and_, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,7 +39,26 @@ from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteSt
 from models.task import Task, TaskStatus
 from models.taunt_message import TauntMessage
 from models.vote import Vote
+from schemas.activity_feed import (
+    AwaitingSubmissionPayload,
+    CollabInvitePayload,
+    CollaboratorSubmittedPayload,
+    CommentMentionPayload,
+    CompletionPayload,
+    DuelChallengePayload,
+    EraAnnouncementPayload,
+    FeedPayload,
+    FoeTauntPayload,
+    FriendDefectionPayload,
+    FriendSignupPayload,
+    GlobalTaskPayload,
+    InvitationLetterPayload,
+    NudgePayload,
+    VoteOnMinePayload,
+)
 from services.era import get_current_era_row
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -45,11 +66,18 @@ class ActivityFeedItemDC:
     """Frozen dataclass mirror of schemas.activity_feed.ActivityFeedItem.
 
     ``item_key`` is the item's stable identity — see ``build_item_key``.
+
+    ``payload`` is one of the fourteen declared shapes (#1402), not a loose
+    dict: the mapper that builds it is the producer, so that is where a drifted
+    shape has to fail. This is the one place the service reaches for a Pydantic
+    model rather than a dataclass — the payload *is* the contract with the
+    client, and mirroring fourteen of them as dataclasses would buy nothing but
+    a second place to drift.
     """
     type: str
     item_key: str
     timestamp: datetime
-    payload: dict[str, Any]
+    payload: FeedPayload
     actor_display_name: Optional[str] = None
     actor_faction_slug: Optional[str] = None
     actor_avatar_url: Optional[str] = None
@@ -298,14 +326,14 @@ def _vote_on_mine_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.voter_display_name,
         actor_faction_slug=row.voter_faction_slug,
         actor_avatar_url=row.voter_avatar_url,
-        payload={
-            "vote_id": row.id,
-            "value": row.value,
-            "praxis_id": row.praxis_id,
-            "praxis_title": row.praxis_title,
-            "task_point_value": row.task_point_value,
-            "points_earned": row.value * row.task_point_value,
-        },
+        payload=VoteOnMinePayload(
+            vote_id=row.id,
+            value=row.value,
+            praxis_id=row.praxis_id,
+            praxis_title=row.praxis_title,
+            task_point_value=row.task_point_value,
+            points_earned=row.value * row.task_point_value,
+        ),
     )
 
 
@@ -348,14 +376,14 @@ def _completion_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItem
             actor_display_name=row.author_display_name,
             actor_faction_slug=row.author_faction_slug,
             actor_avatar_url=row.author_avatar_url,
-            payload={
-                "praxis_id": row.id,
-                "praxis_title": row.title,
-                "task_title": row.task_title,
-                "task_point_value": row.task_point_value,
-                "task_faction_slug": row.task_faction_slug,
-                "character_id": row.character_id,
-            },
+            payload=CompletionPayload(
+                praxis_id=row.id,
+                praxis_title=row.title,
+                task_title=row.task_title,
+                task_point_value=row.task_point_value,
+                task_faction_slug=row.task_faction_slug,
+                character_id=row.character_id,
+            ),
         )
     return to_item
 
@@ -394,14 +422,14 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.from_display_name,
         actor_faction_slug=row.from_faction_slug,
         actor_avatar_url=row.from_avatar_url,
-        payload={
-            "taunt_id": taunt.id,
-            "faction_slug": taunt.faction_slug,
-            "trigger_type": taunt.trigger_type.value,
-            "from_character_id": taunt.from_character_id,
-            "from_name": row.from_display_name,
-            "to_name": row.to_display_name,
-        },
+        payload=FoeTauntPayload(
+            taunt_id=taunt.id,
+            faction_slug=taunt.faction_slug,
+            trigger_type=taunt.trigger_type.value,
+            from_character_id=taunt.from_character_id,
+            from_name=row.from_display_name,
+            to_name=row.to_display_name,
+        ),
     )
 
 
@@ -428,13 +456,13 @@ def _global_task_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=ADMIN_ACTOR_NAME,
         actor_faction_slug=None,
         actor_avatar_url=None,
-        payload={
-            "task_id": row.id,
-            "task_title": row.title,
-            "task_point_value": row.point_value,
-            "task_level_required": row.level_required,
-            "task_faction_slug": row.primary_faction_slug,
-        },
+        payload=GlobalTaskPayload(
+            task_id=row.id,
+            task_title=row.title,
+            task_point_value=row.point_value,
+            task_level_required=row.level_required,
+            task_faction_slug=row.primary_faction_slug,
+        ),
     )
 
 
@@ -455,12 +483,12 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=ADMIN_ACTOR_NAME,
         actor_faction_slug=None,
         actor_avatar_url=None,
-        payload={
-            "era_id": era.id,
-            "era_name": era.name,
-            "era_notes": era.notes,
-            "config_key": era.config_key,
-        },
+        payload=EraAnnouncementPayload(
+            era_id=era.id,
+            era_name=era.name,
+            era_notes=era.notes,
+            config_key=era.config_key,
+        ),
     )
 
 
@@ -504,17 +532,17 @@ def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
         actor_avatar_url=row.actor_avatar_url,
-        payload={
-            "invite_id": row.id,
-            "praxis_id": row.praxis_id,
-            "task_title": row.task_title,
-            "task_point_value": row.task_point_value,
-            "task_faction_slug": row.task_faction_slug,
-            "invite_status": row.status.value,
+        payload=CollabInvitePayload(
+            invite_id=row.id,
+            praxis_id=row.praxis_id,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
+            invite_status=row.status.value,
             # ponytail: only collab cards render a level badge
-            "inviter_character_id": row.inviter_id,
-            "task_level_required": row.task_level_required,
-        },
+            inviter_character_id=row.inviter_id,
+            task_level_required=row.task_level_required,
+        ),
     )
 
 
@@ -554,15 +582,15 @@ def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
         actor_avatar_url=row.actor_avatar_url,
-        payload={
-            "duel_id": row.id,
-            "challenger_praxis_id": row.challenger_praxis_id,
-            "challenger_character_id": row.challenger_character_id,
-            "task_title": row.task_title,
-            "task_point_value": row.task_point_value,
-            "task_faction_slug": row.task_faction_slug,
-            "duel_status": row.status.value,
-        },
+        payload=DuelChallengePayload(
+            duel_id=row.id,
+            challenger_praxis_id=row.challenger_praxis_id,
+            challenger_character_id=row.challenger_character_id,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
+            duel_status=row.status.value,
+        ),
     )
 
 
@@ -602,14 +630,14 @@ def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
         actor_avatar_url=row.avatar_url,
-        payload={
-            "praxis_member_id": row.id,
-            "character_id": row.character_id,
-            "task_id": row.task_id,
-            "task_title": row.task_title,
-            "task_point_value": row.task_point_value,
-            "task_faction_slug": row.task_faction_slug,
-        },
+        payload=FriendSignupPayload(
+            praxis_member_id=row.id,
+            character_id=row.character_id,
+            task_id=row.task_id,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
+        ),
     )
 
 
@@ -650,10 +678,10 @@ def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=letter.faction_slug,
         actor_faction_slug=letter.faction_slug,
         actor_avatar_url=None,
-        payload={
-            "letter_id": letter.id,
-            "faction_slug": letter.faction_slug,
-        },
+        payload=InvitationLetterPayload(
+            letter_id=letter.id,
+            faction_slug=letter.faction_slug,
+        ),
     )
 
 
@@ -692,11 +720,11 @@ def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.display_name,
         actor_faction_slug=row.current_faction_slug,
         actor_avatar_url=row.avatar_url,
-        payload={
-            "character_id": row.character_id,
-            "old_faction_slug": row.faction_slug,
-            "new_faction_slug": row.current_faction_slug,
-        },
+        payload=FriendDefectionPayload(
+            character_id=row.character_id,
+            old_faction_slug=row.faction_slug,
+            new_faction_slug=row.current_faction_slug,
+        ),
     )
 
 
@@ -735,21 +763,21 @@ def _comment_mention_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.author_display_name,
         actor_faction_slug=row.author_faction_slug,
         actor_avatar_url=row.author_avatar_url,
-        payload={
-            "comment_id": row.id,
+        payload=CommentMentionPayload(
+            comment_id=row.id,
             # The commenter, so the card's actor can link to their character page
             # like every other actor-bearing type (#1196). Keyed "character_id"
             # to match friend_completion / friend_signup / friend_defection /
             # collaborator_submitted — the frontend reads one payload key for
             # "whose name is this", not a per-type spelling.
-            "character_id": row.author_character_id,
+            character_id=row.author_character_id,
             # Exactly one of these is set: num_nonnulls(praxis_id, task_id) = 1 is
             # a DB CHECK (migration 0005), so the client can read them in order
             # without a tie-break.
-            "praxis_id": row.praxis_id,
-            "task_id": row.task_id,
-            "excerpt": row.body_text[:COMMENT_EXCERPT_LENGTH],
-        },
+            praxis_id=row.praxis_id,
+            task_id=row.task_id,
+            excerpt=row.body_text[:COMMENT_EXCERPT_LENGTH],
+        ),
     )
 
 
@@ -802,14 +830,14 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
         actor_avatar_url=row.avatar_url,
-        payload={
-            "praxis_member_id": row.id,
-            "character_id": row.character_id,
-            "praxis_id": row.praxis_id,
-            "task_title": row.task_title,
-            "task_point_value": row.task_point_value,
-            "task_faction_slug": row.task_faction_slug,
-        },
+        payload=CollaboratorSubmittedPayload(
+            praxis_member_id=row.id,
+            character_id=row.character_id,
+            praxis_id=row.praxis_id,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
+        ),
     )
 
 
@@ -861,15 +889,15 @@ def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=None,
         actor_faction_slug=None,
         actor_avatar_url=None,
-        payload={
-            "praxis_member_id": row.id,
-            "praxis_id": row.praxis_id,
-            "praxis_type": row.praxis_type.value,
-            "task_title": row.task_title,
-            "task_point_value": row.task_point_value,
-            "task_faction_slug": row.task_faction_slug,
-            "task_level_required": row.task_level_required,
-        },
+        payload=AwaitingSubmissionPayload(
+            praxis_member_id=row.id,
+            praxis_id=row.praxis_id,
+            praxis_type=row.praxis_type.value,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
+            task_level_required=row.task_level_required,
+        ),
     )
 
 
@@ -943,20 +971,20 @@ def _nudge_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.from_display_name,
         actor_faction_slug=row.from_faction_slug,
         actor_avatar_url=row.from_avatar_url,
-        payload={
-            "nudge_id": row.id,
-            "praxis_id": row.praxis_id,
+        payload=NudgePayload(
+            nudge_id=row.id,
+            praxis_id=row.praxis_id,
             # A duel side is `type='solo'` + a Duel row (ADR-0011), so this
             # reads 'solo' for a duel and the card badges off it the same way
             # `awaiting_submission` does — deliberately not re-deriving the duel
             # here, where the row it sits beside is the one that carries it.
-            "praxis_type": row.praxis_type.value,
-            "from_character_id": row.from_character_id,
-            "from_name": row.from_display_name,
-            "task_title": row.task_title,
-            "task_point_value": row.task_point_value,
-            "task_faction_slug": row.task_faction_slug,
-        },
+            praxis_type=row.praxis_type.value,
+            from_character_id=row.from_character_id,
+            from_name=row.from_display_name,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
+        ),
     )
 
 
@@ -1244,19 +1272,74 @@ def _scoped_query(
     return query.where(source.source_id_column.notin_(dismissed_ids))
 
 
+def _row_source_id(source: FeedSource, row: Any) -> Any:
+    """Best-effort PK of a row whose mapper just failed — for the drop log only.
+
+    Reads the registry's own ``source_id_column`` name off the row, falling back
+    to the first selected entity for the three sources that select a whole ORM
+    object rather than columns. ponytail: a log line, not a contract. If it ever
+    reads ``None`` the validation error still names the model that refused the
+    shape and the field it refused, which is the actionable half.
+    """
+    column_name = source.source_id_column.key
+    if hasattr(row, column_name):
+        return getattr(row, column_name)
+    return getattr(row[0], column_name, None)
+
+
+def _map_row(source: FeedSource, row: Any) -> Optional[ActivityFeedItemDC]:
+    """One row → one item, or ``None`` if its payload does not validate (#1402).
+
+    THE FAIL-SOFT RULE (owner ruling, 2026-07-30). A payload shape that has
+    drifted from its declared model is a bug in the producer, but the feed is a
+    read projection of fifteen unrelated tables and one bad row must not be able
+    to take the whole page down with it. So the item is dropped, loudly, and its
+    fourteen siblings are served.
+
+    Only ``ValidationError`` is caught. A mapper that raises ``AttributeError``
+    because a query stopped selecting a column is not a malformed payload — it
+    is a broken source, and swallowing it would hide an outage behind a quietly
+    shorter list.
+
+    The badge count does NOT drop with it: counts are ``COUNT`` over the same
+    windowed Select (ADR-0036) and never hydrate a row, so they cannot know one
+    failed to map. That is deliberate — a dropped item is an emergency, and
+    making the numbers agree would mean paying full row hydration on every
+    count, on every request, forever, to be accurate about a state that should
+    not exist. The log is the alarm; the count is not.
+    """
+    try:
+        return source.to_item(row)
+    except ValidationError as error:
+        logger.error(
+            "Dropping malformed feed item %s from the feed: %s",
+            build_item_key(source.item_type, _row_source_id(source, row)),
+            error,
+        )
+        return None
+
+
 async def _run_source_fetch(
     source: FeedSource,
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
 ) -> list[ActivityFeedItemDC]:
-    """Run a source's query in its own session and map rows → items."""
+    """Run a source's query in its own session and map rows → items.
+
+    The single place ``to_item`` is called, which is why the malformed-payload
+    drop lives here rather than in each of the fourteen mappers.
+    """
     query = _scoped_query(source, ctx, archive_view)
     if query is None:
         return []
     async with session_factory() as session:
         result = await session.execute(query)
-        return [source.to_item(row) for row in result.all()]
+        return [
+            item
+            for item in (_map_row(source, row) for row in result.all())
+            if item is not None
+        ]
 
 
 async def _run_source_count(

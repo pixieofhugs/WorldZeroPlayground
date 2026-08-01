@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db, get_session_factory
 from models.account import Account
 from models.praxis import PraxisStatus
-from schemas.activity_feed import ActivityFeedItem
+from schemas.activity_feed import ACTIVITY_FEED_ITEM_ADAPTER
 from schemas.auth import CurrentUser
 from schemas.character import ActiveCharacterIn, CharacterOut
 from schemas.sidebar import SidebarOut
@@ -104,7 +104,8 @@ async def my_sidebar(
     return SidebarOut(
         pending_requests_count=pending_requests_count,
         global_activity=[
-            ActivityFeedItem.model_validate(asdict(item)) for item in global_activity
+            ACTIVITY_FEED_ITEM_ADAPTER.validate_python(asdict(item))
+            for item in global_activity
         ],
         active_praxes=await build_praxis_cards(active_praxes, session, character),
     )
