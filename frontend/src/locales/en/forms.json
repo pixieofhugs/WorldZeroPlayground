@@ -175,6 +175,8 @@
       "castStatus": "{{cast}} of {{total}} submitted",
       "pillCast": "submitted",
       "pillWeaving": "not submitted",
+      "pillInvited": "invited",
+      "pillDeclined": "declined",
       "you": "you",
       "progressAria": "{{cast}} of {{total}} members have submitted their part",
       "bannerWaiting": "Submitted. Waiting on the others.",

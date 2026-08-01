@@ -48,6 +48,12 @@ export type CollabCopyKey =
   | 'castStatus'
   | 'pillCast'
   | 'pillWeaving'
+  // The roster's other two states (#1416). `pillCast`/`pillWeaving` already name
+  // the two a MEMBER can be in — submitted, and on the crew but not submitted —
+  // so absorbing the invites needed only the two states that are not membership
+  // at all: asked and not answered, and asked and refused.
+  | 'pillInvited'
+  | 'pillDeclined'
   | 'you'
   | 'progressAria'
   | 'bannerWaiting'
@@ -186,6 +192,14 @@ export type CollabCopyKey =
  * non-members, for whom the backend serialises no invites at all, so the
  * fallback line has to work as a neutral statement to a stranger.
  *
+ * `pillInvited` / `pillDeclined` (#1416) join them, and the issue asks for it by
+ * name so that absorbing invites into the roster costs no faction a translation.
+ * They also earn it: an invite's status is a fact about the INVITEE — they have
+ * not answered, or they said no — and the roster speaks in the voice of the
+ * TASK's faction, which is frequently not theirs. A voiced refusal would put
+ * words in the mouth of someone who is not on this praxis at all. The two
+ * membership states stay voiced, because those people did join.
+ *
  * The `holdout*` and `completed*` blocks (#1164) are the same block finished.
  * The first says what the ADR-0012 window does to the member who has not
  * submitted — a deadline and its escape, stated once; the second is the reading
@@ -209,6 +223,8 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'duelPullBackAction',
   'rosterAwaitingAlone',
   'rosterAwaitingInvited',
+  'pillInvited',
+  'pillDeclined',
   'awaitingStatusMeta',
   'awaitingHeading',
   'awaitingBody',
