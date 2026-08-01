@@ -18,15 +18,14 @@ import type { CreateCharacterState } from '../../frontend/src/pages/characterPat
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
 import type { ProfileBodyProps } from '../../frontend/src/pages/characterProfile/FactionProfileBody'
 import type { PlayersDirectoryProps } from '../../frontend/src/pages/players/mobileArchetypes/DefaultPlayers'
-import type { TaskSignupOut } from '../../frontend/src/api/tasks'
 import type { VoterDetail } from '../../frontend/src/api/votes'
 import {
   characterFor,
   makeCharacter,
   taskFor,
   makePraxis,
-  makePraxisCard,
   praxisCardsFor,
+  mockComments,
   mockUser,
   factionOuts,
   gameFactionConfigs,
@@ -66,18 +65,24 @@ export function tasksState(slug: string): TasksState {
     error: null,
     factions: factionOuts,
     factionConfigs: gameFactionConfigs,
-    levelFilters: [1, 2, 3, 4, 5, 6, 7, 8],
     statusFilters: ['active', 'completed'],
     taskType: 'standard',
     setTaskType: noop,
+    // Ordering (#1364), defaulting to `TASK_SORT_DEFAULT`.
+    sort: 'level',
+    setSort: noop,
     status: 'active',
     setStatus: noop,
-    faction: slug,
-    setFaction: noop,
-    level: '',
-    setLevel: noop,
+    // The faction axis is a multi-select union now, not a single slug — empty
+    // means "every faction", so the preview seeds it with its own.
+    selectedFactions: [slug],
+    setSelectedFactions: noop,
+    // "Tasks I can sign up for" (#1130) defaults OFF: the page is a catalogue.
+    canSignUp: false,
+    setCanSignUp: noop,
     query: '',
     setQuery: noop,
+    clearFilters: noop,
     hasMore: false,
     loadMore: noop,
     signupMsg: SIGNUP_OK,
@@ -104,10 +109,6 @@ export function factionsDirectoryState(): FactionsDirectoryState {
 }
 
 // ── taskDetail ───────────────────────────────────────────────────────────────
-const SIGNUPS: TaskSignupOut[] = [
-  { character_id: 12, display_name: 'Sam Okafor', avatar_url: '', faction_slug: 'everymen', status: 'active', signed_up_at: '2026-06-28T09:12:00Z' },
-  { character_id: 19, display_name: 'Pip Marigold', avatar_url: '', faction_slug: 'wow', status: 'active', signed_up_at: '2026-06-29T10:00:00Z' },
-]
 /** A task with a few ranked submissions and open slots. */
 export function taskDetailState(slug: string): TaskDetailState {
   const submissions = praxisCardsFor(slug)
@@ -116,17 +117,26 @@ export function taskDetailState(slug: string): TaskDetailState {
     task: taskFor(slug, { level_required: 3, point_value: 30 }),
     fetchError: null,
     submissions,
-    signups: SIGNUPS,
+    // No `signups`: nothing on task detail renders a roster, the population is
+    // the `inProgressCount` header alone (owner ruling 2026-07-28, reversing
+    // epic #1028 decision 3). `detailContract.test.tsx` pins the absence.
+    comments: mockComments,
     friends: new Set<number>([12]),
     foes: new Set<number>(),
     mySubmission: undefined,
     isInProgress: false,
     inProgressPraxisId: null,
     canSignUp: true,
+    levelJumpSignup: false,
     slotsOpen: 3,
     maxTaskSlots: 5,
-    factionMultiplier: 1.5,
-    modifiedPoints: 45,
+    basePoints: 30,
+    // era_1 neutralises every faction modifier to 1.0, so the `x n` badge is
+    // correctly invisible. The old 1.5 / 45 pair previewed a badge no viewer
+    // can see and a total the live config cannot produce.
+    factionMultiplier: 1,
+    modifiedPoints: 30,
+    inProgressCount: 2,
     topScore: 42,
     voteCount: 8,
     submissionSort: 'score',
@@ -144,15 +154,17 @@ const VOTERS: VoterDetail[] = [
   { character_id: 19, display_name: 'Pip Marigold', avatar_url: '', faction_slug: 'wow', value: 4 },
   { character_id: 22, display_name: 'Dr. Iris Vale', avatar_url: '', faction_slug: 'ephemerists', value: 5 },
 ]
-/** A submitted praxis the viewer owns, with votes and voters. */
+/** A submitted praxis the viewer owns, with its voters. */
 export function praxisDetailState(slug: string): PraxisDetailState {
   return {
     loading: false,
     praxis: makePraxis({ task_faction_slug: slug, created_by_faction_slug: slug }),
     fetchError: null,
-    votes: { praxis_id: 501, total_votes: 8, total_score: 42 },
+    // No `votes` summary any more — the tally lives on the praxis itself
+    // (`score` / `voter_count`, ADR-0053) and `voters` carries the detail.
     voters: VOTERS,
     duel: null,
+    comments: mockComments,
     isOwner: true,
     showAdminBar: false,
     user: mockUser,
@@ -177,16 +189,15 @@ export function praxisDetailState(slug: string): PraxisDetailState {
     setFlagError: noop,
     flagSubmitted: false,
     handleModerate: anoop,
+    // No `handleResubmit` twin (#1089): ADR-0062 sends 'in_progress' and
+    // 'pending' back to the composer, so detail's CAST control and its handler
+    // were dead on arrival and were deleted rather than left dormant.
     handleWithdraw: anoop,
-    handleResubmit: anoop,
     handleFlag: anoop,
-    metatasks: [],
-    metataskLoading: false,
-    metataskError: null,
-    applyingMetataskId: null,
-    removingMetataskId: null,
-    handleApplyMetatask: anoop,
-    handleRemoveMetatask: anoop,
+    handleKickMember: anoop,
+    // Metatasks are READ-ONLY on detail (#1093). The seal stack draws
+    // `praxis.applied_metatasks`; the catalog fetch and apply/remove handlers
+    // this builder still carried no longer exist.
   }
 }
 
@@ -195,7 +206,15 @@ export function praxisDetailState(slug: string): PraxisDetailState {
 export function editPraxisState(slug: string): EditPraxisState {
   return {
     loading: false,
-    praxis: makePraxis({ task_faction_slug: slug, created_by_faction_slug: slug, status: 'draft', submitted_at: null }),
+    // 'draft' left `PraxisStatus`; an unsubmitted composer praxis is
+    // 'in_progress'.
+    phase: 'composing',
+    praxis: makePraxis({
+      task_faction_slug: slug,
+      created_by_faction_slug: slug,
+      status: 'in_progress',
+      submitted_at: null,
+    }),
     task: taskFor(slug),
     error: '',
     setError: noop,
@@ -221,23 +240,50 @@ export function editPraxisState(slug: string): EditPraxisState {
     inviting: false,
     sendInvite: anoop,
     cancelInvite: anoop,
+    kickMember: anoop,
+    nudge: anoop,
     duel: null,
     sendChallenge: anoop,
     cancelDuel: anoop,
+    dissolveDuel: anoop,
     metatasks: [],
     appliedMetatasks: new Set<number>(),
+    appliedMetataskList: [],
     applyingMetatask: null,
     toggleMetatask: anoop,
+    addMetatask: anoop,
+    metataskPickerOpen: false,
+    openMetataskPicker: noop,
+    closeMetataskPicker: noop,
+    metataskRemovalTarget: null,
+    requestRemoveMetatask: noop,
+    confirmRemoveMetatask: anoop,
+    cancelRemoveMetatask: noop,
     submitting: false,
     publish: anoop,
+    saveDraft: anoop,
+    pullBack: anoop,
+    reopenForEdit: anoop,
+    leaveCollab: anoop,
     cancel: anoop,
+    collabSuccess: false,
+    continueFromCollabSuccess: noop,
+    duelSealOpen: false,
+    requestDuelSeal: noop,
+    cancelDuelSeal: noop,
+    pendingConfirm: null,
+    acceptConfirm: noop,
+    dismissConfirm: noop,
     autosaveAt: null,
     saveStatus: 'idle',
+    autoSubmitDays: null,
     isPublished: false,
     controlsLocked: false,
     modeIsLocked: false,
     showInviteBox: false,
     showMetatasks: true,
+    canSealMetatask: true,
+    showSealStack: false,
     duelMode: false,
     duelChipVisible: false,
     currentCharacterId: 7,
@@ -278,10 +324,12 @@ export function createCharacterState(slug: string): CreateCharacterState {
     factionSlug: slug,
     setFactionSlug: noop,
     invited: [],
+    avatarFile: null,
     avatarPreview: null,
     avatarSource: null,
     setAvatarSource: noop,
-    handleFile: noop,
+    avatarError: '',
+    handleAvatarChange: noop,
     handleAvatarConfirm: noop,
     error: null,
     submitting: false,
@@ -308,6 +356,7 @@ export function editCharacterState(slug: string): EditCharacterState {
     avatarFile: null,
     avatarSource: null,
     setAvatarSource: noop,
+    avatarPreview: null,
     avatarError: '',
     handleAvatarChange: noop,
     handleAvatarConfirm: noop,
