@@ -5622,7 +5622,12 @@
   z-index: 39;
   border: 0;
   padding: 0;
-  background: rgba(0, 0, 0, 0.55);
+  /* One scrim for every overlay. This was the outlier at 0.55 while
+     ConfirmDialog, FeedBankFullModal and (as of #1591) CharacterSwitcherSheet
+     all dimmed at --color-overlay-strong. Two modal sheets disagreeing about
+     how dark "the page behind is unavailable" looks is the drift a token
+     exists to stop. Costs 0 bytes gzip — measured against the built sheet. */
+  background: var(--color-overlay-strong);
   cursor: pointer;
 }
 
