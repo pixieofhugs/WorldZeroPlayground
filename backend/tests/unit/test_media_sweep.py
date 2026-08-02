@@ -164,3 +164,51 @@ def test_obviously_wrong_media_roots_are_refused():
 
 def test_a_real_media_directory_is_sweepable(tmp_path):
     assert media_root_is_sweepable(str(tmp_path)) is True
+
+
+def test_the_report_prints_whole_on_a_cp1252_console(tmp_path, capsys):
+    """The report is the only thing between an operator and an irreversible flag.
+
+    It is printed to a Windows console as often as to a Render shell, and a
+    ``UnicodeEncodeError`` halfway through leaves a half-read report and a
+    non-zero exit — so the printer is exercised over every branch (held-back
+    files, escaping paths, all three shapes) and its output is asserted to
+    survive a cp1252 encode.
+    """
+    from scripts.sweep_orphan_media import print_report
+
+    _write(tmp_path, os.path.join("42", "avatar", "abc", "avatar.jpg"))
+    _write(tmp_path, os.path.join("42", "7", "def", "proof.jpg"))
+    _write(tmp_path, "stray.bin")
+    scanned, _escaping = scan_media_root(str(tmp_path))
+    report = find_orphans(
+        str(tmp_path),
+        scanned,
+        ("/somewhere/else/link.jpg",),
+        KnownPaths(frozenset(), frozenset(), avatar_rows=3, media_item_rows=0),
+        min_age_seconds=3600,
+    )
+
+    print_report(report, min_age_seconds=3600)
+
+    printed = capsys.readouterr().out
+    printed.encode("cp1252")
+    assert "Held back" in printed
+    assert "Skipped" in printed
+    assert "Orphans     : 0 file(s)" in printed
+
+    # The same report with nothing held back: the orphan listing and the
+    # per-shape summary are the lines the operator actually reads counts off.
+    listing = find_orphans(
+        str(tmp_path),
+        scanned,
+        (),
+        KnownPaths(frozenset(), frozenset(), avatar_rows=3, media_item_rows=0),
+        min_age_seconds=0,
+    )
+    print_report(listing, min_age_seconds=0)
+
+    printed = capsys.readouterr().out
+    printed.encode("cp1252")
+    assert "Orphans     : 3 file(s)" in printed
+    assert "stray.bin" in printed
