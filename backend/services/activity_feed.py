@@ -17,11 +17,20 @@ import asyncio
 import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime
-from typing import Any, Callable, Coroutine, Optional
+from typing import Any, Callable, Coroutine, Optional, Sequence
 
 from fastapi import HTTPException
 from pydantic import ValidationError
-from sqlalchemy import Select, and_, delete, func, select
+from sqlalchemy import (
+    Select,
+    String,
+    and_,
+    delete,
+    func,
+    literal,
+    select,
+    union_all,
+)
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
@@ -1343,26 +1352,49 @@ async def _run_source_fetch(
         ]
 
 
-async def _run_source_count(
-    source: FeedSource,
+async def _count_sources(
+    sources: Sequence[FeedSource],
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
-) -> int:
-    """COUNT over the source's OWN windowed query (ADR-0036).
+) -> dict[str, int]:
+    """Every source's COUNT in ONE round trip (ADR-0036, #1532).
 
-    The count wraps the identical Select in a subquery, so it respects the same
-    WHERE, the ``before`` cursor, the ``SUB_QUERY_LIMIT`` window *and the
-    archive filter* as the fetch — the badge can never disagree with what the
-    fan-out would return. An archive that doesn't move the numbers is a bug.
+    Each count still wraps that source's OWN windowed Select in a subquery, so
+    it respects the same WHERE, the same ``before`` cursor, the same
+    ``SUB_QUERY_LIMIT`` window *and* the same archive filter as the fetch — the
+    badge can never disagree with what the fan-out would return. An archive that
+    doesn't move the numbers is a bug.
+
+    What changed is only how they travel: a ``UNION ALL`` of
+    ``SELECT '<type>', count(*)`` instead of one statement, one session and one
+    pooled connection per source. Fifteen sources used to mean fifteen
+    concurrent connections for numbers nobody reads a row of; the pool holds
+    fifteen in total, so the badges alone could exhaust it (#1532).
+
+    Sources whose pre-fetch context is empty — or which have nothing archived on
+    the Archived tab — are answered as 0 without joining the union, exactly as
+    they were answered without a round trip before.
     """
-    query = _scoped_query(source, ctx, archive_view)
-    if query is None:
-        return 0
+    counts = {source.item_type: 0 for source in sources}
+    branches = []
+    for source in sources:
+        query = _scoped_query(source, ctx, archive_view)
+        if query is None:
+            continue
+        branches.append(
+            select(
+                literal(source.item_type, String).label("item_type"),
+                func.count().label("count"),
+            ).select_from(query.subquery())
+        )
+    if not branches:
+        return counts
     async with session_factory() as session:
-        windowed = query.subquery()
-        result = await session.execute(select(func.count()).select_from(windowed))
-        return int(result.scalar_one())
+        result = await session.execute(union_all(*branches))
+        for item_type, count in result.all():
+            counts[item_type] = int(count)
+    return counts
 
 
 def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
@@ -1382,15 +1414,8 @@ async def _count_by_type(
     archive_view: FeedArchiveView,
     session_factory: Callable,
 ) -> dict[str, int]:
-    """One COUNT per registry source, all fifteen concurrently (ADR-0036)."""
-    results = await asyncio.gather(*(
-        _run_source_count(source, ctx, archive_view, session_factory)
-        for source in FEED_SOURCES
-    ))
-    return {
-        source.item_type: count
-        for source, count in zip(FEED_SOURCES, results)
-    }
+    """Every registry source's COUNT, in one statement (ADR-0036, #1532)."""
+    return await _count_sources(FEED_SOURCES, ctx, archive_view, session_factory)
 
 
 async def _compute_counts(
@@ -1514,10 +1539,9 @@ async def get_sidebar_feed(
 
     The two sides do not share a fan-out, because they no longer overlap: the
     four request sources and the two global sources are disjoint in the
-    registry. Requests are counted with :func:`_run_source_count`, global news
-    is fetched with :func:`_run_source_fetch`, and all six queries still go out
-    concurrently — the same six round trips as before, four of them now COUNTs
-    over the identical windowed Select instead of row hydration.
+    registry. Requests are counted with :func:`_count_sources` — all four in one
+    UNION ALL, one round trip (#1532) — global news is fetched with
+    :func:`_run_source_fetch`, and the two sides still go out concurrently.
 
     WHY THE NUMBER CANNOT DRIFT FROM THE QUEUE
     ------------------------------------------
@@ -1538,10 +1562,9 @@ async def get_sidebar_feed(
         return [source for source in FEED_SOURCES if source.item_type in visible]
 
     request_counts, global_results = await asyncio.gather(
-        asyncio.gather(*(
-            _run_source_count(source, fetch_ctx, archive_view, session_factory)
-            for source in sources_for(FILTER_REQUESTS)
-        )),
+        _count_sources(
+            sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session_factory
+        ),
         asyncio.gather(*(
             _run_source_fetch(source, fetch_ctx, archive_view, session_factory)
             for source in sources_for(FILTER_GLOBAL)
@@ -1550,7 +1573,7 @@ async def get_sidebar_feed(
 
     global_activity = [item for items in global_results for item in items]
     global_activity.sort(key=lambda item: item.timestamp, reverse=True)
-    return sum(request_counts), global_activity[:SIDEBAR_GLOBAL_LIMIT]
+    return sum(request_counts.values()), global_activity[:SIDEBAR_GLOBAL_LIMIT]
 
 
 async def get_activity_feed(
