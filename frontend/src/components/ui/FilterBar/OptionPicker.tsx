@@ -39,6 +39,16 @@ export default function OptionPicker({ facet }: { facet: FilterFacet }) {
   const isSheet = useFormFactor() === 'mobile'
   const { label, options, selected, onChange, renderOrnament } = facet
 
+  // A facet with nothing to offer draws no trigger (#1567). Both facets hide a
+  // zero-count row, so on a quiet board — a fresh account, or a freshly reset
+  // one — every row is filtered out and tapping the trigger opened an empty
+  // picker. Hide the unusable control rather than disable it (CLAUDE.md).
+  //
+  // A SELECTED option always keeps its row even at zero, so a deep link like
+  // `?types=nudge` on a view with no nudges still renders the trigger and stays
+  // removable. That is why this tests the option list and not the counts.
+  if (options.length === 0) return null
+
   const panel = (
     <div
       className={isSheet ? 'filter-factions__sheet' : 'filter-factions__popover'}

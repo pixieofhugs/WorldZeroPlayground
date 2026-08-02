@@ -72,14 +72,29 @@ describe('the Updates page mounts the shared FilterBar', () => {
     mocks.formFactor = 'desktop'
   })
 
-  it('draws the state segment and the type facet', () => {
+  it('draws the state segment', () => {
     const { text } = render('/updates')
     expect(text).toContain(INBOX)
     expect(text).toContain(ARCHIVED)
+  })
+
+  it('draws the type facet once it has a row to show', () => {
+    // The facet drops zero-count rows, and this harness runs no effects, so the
+    // counts never arrive and every row is filtered out. A SELECTED type keeps
+    // its row at zero — that is what a `?types=` deep link relies on — so it is
+    // also what makes the trigger reachable here.
+    const { text } = render(`/updates?types=nudge`)
     // "Type", not "Kicker" — a kicker is a typography term for the eyebrow
     // above a headline (epic decision 5).
     expect(text).toContain(TYPE)
     expect(text).not.toContain('Kicker')
+  })
+
+  it('hides the type facet on a board with nothing in it (#1567)', () => {
+    // No counts and nothing selected: every row is filtered out, so the trigger
+    // would open an empty picker. Hide the unusable control instead. This is
+    // what a fresh or freshly reset account sees.
+    expect(render('/updates').text).not.toContain(TYPE)
   })
 
   it('draws the five relationship segments, localized', () => {

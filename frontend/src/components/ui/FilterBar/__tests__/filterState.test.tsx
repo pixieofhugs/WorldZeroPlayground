@@ -318,3 +318,36 @@ describe('selectedFirst / toggleOption', () => {
     expect(selected).toEqual(['ua'])
   })
 })
+
+describe('a facet with no options draws no trigger (#1567)', () => {
+  const emptyFacet = (selected: string[] = []): FilterFacet => ({
+    key: 'type',
+    label: 'Type',
+    options: [],
+    selected,
+    onChange: () => {},
+  })
+
+  const render = (facet: FilterFacet) =>
+    renderToStaticMarkup(
+      <FilterBar rails={[]} facets={[facet]} onClearAll={() => {}} />,
+    )
+
+  it('hides the trigger when every row was filtered out', () => {
+    // A quiet board: both facets drop zero-count rows, so on a fresh or freshly
+    // reset account the list is empty and the trigger opened an empty picker.
+    expect(render(emptyFacet())).not.toContain('filter-factions__trigger')
+  })
+
+  it('still draws the trigger when a selected option keeps its row', () => {
+    // `?types=nudge` on a view with no nudges: the row survives at zero so the
+    // filter stays removable, which means the picker must stay reachable.
+    const html = render(typeFacet(['praxis']))
+    expect(html).toContain('filter-factions__trigger')
+  })
+
+  it('leaves the rest of the bar alone', () => {
+    // Hiding one facet is not hiding the bar.
+    expect(render(emptyFacet())).toContain('filter-bar')
+  })
+})

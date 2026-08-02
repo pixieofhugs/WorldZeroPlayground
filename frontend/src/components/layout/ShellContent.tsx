@@ -59,7 +59,10 @@ const DESKTOP_REGION = 'flex-1 relative max-w-[min(92vw,1600px)] mx-auto w-full 
 
 const MOBILE_REGION_STYLE: CSSProperties = {
   zIndex: 5,
-  paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
+  // The tab bar's height is `--mobile-tabbar-height` in index.css, not a literal
+  // here: the filter sheet needs the same clearance (#1566) and two hardcoded
+  // 3.5rems would drift the first time the bar changes height.
+  paddingBottom: 'calc(var(--mobile-tabbar-height) + env(safe-area-inset-bottom))',
 }
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 
