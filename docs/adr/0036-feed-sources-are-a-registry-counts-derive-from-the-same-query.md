@@ -41,10 +41,19 @@ Model each feed type as one **`FeedSource`**, held in a module-level
   deleted as a consequence, not patched separately.
 - **`session_factory` stays** in `get_activity_feed`'s signature. It reads like a
   leak (the router only passes it back down), but it is a deliberate test seam:
-  each concurrent sub-query needs its own session under `asyncio.gather`, and
   tests inject a factory that reuses the test transaction. Dissolving it would
-  buy a cleaner signature at the cost of the test seam — not worth it. The
-  own-session-per-source gather runner stays internal to the service.
+  buy a cleaner signature at the cost of the test seam — not worth it.
+
+  > Amended 2026-08-02 (#1532): this decision originally justified the factory as
+  > *"each concurrent sub-query needs its own session under `asyncio.gather`"*.
+  > That reason is gone — the gather is gone. Fanning out a session per source
+  > asked for ~26 connections against a pool of 15, which is what made Updates
+  > slow; the fifteen badge COUNTs are now one `UNION ALL` and the row fetches run
+  > sequentially on the request's own session. `AsyncSession` is not
+  > concurrency-safe, so the gather was never buying real parallelism anyway.
+  > The factory survives for a narrower reason: the badge UNION runs on its own
+  > connection. **Nothing above this note changes** — counts still derive from
+  > each source's own windowed query, which is what this ADR is actually about.
 
 ## Consequences
 
