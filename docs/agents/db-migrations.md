@@ -58,11 +58,19 @@ A squash invalidates the Alembic stamp in **every existing DB**.
 - **Prod / remote:** run `python scripts/reset_render_db.py` from **Render Shell**
   (worldzero-backend → Shell). `render.yaml` already injects `DATABASE_URL` there from the
   `worldzero-db` instance, so no connection string is pasted or stored on a laptop. It drops
-  the public schema and runs `alembic upgrade head`; it does **not** seed — redeploy
-  afterwards so `start.sh` runs `seed.py`. Typed-confirmation gated on the database name,
-  with the target host printed first.
+  the public schema and empties the media disk, then **stops** — redeploy afterwards and
+  `start.sh` migrates and seeds. Typed-confirmation gated on the database name, with the
+  target host printed first.
   (`reset_db.sh --url <connection-string>` still works from a machine that has the `psql`
   client; the prod image does not ship one.)
+
+  ⚠️ **Never run `alembic upgrade head` from Render Shell during a squash recovery.** The
+  Shell attaches to the currently-*running* instance, which is the last **successful**
+  deploy — by definition the image with the OLD chain. Migrating from there stamps the DB
+  at the old head, which is exactly the stamp the incoming deploy refuses, so every reset
+  re-creates the condition it was meant to clear. This cost a live loop on 2026-08-02.
+  An **empty, unstamped** database is the goal: `check_db_stamp.stamp_is_known` passes a
+  fresh DB, so the new image migrates it correctly.
 
 ## CI is never affected
 
