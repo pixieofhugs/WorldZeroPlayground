@@ -539,7 +539,6 @@ def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
             invite_status=row.status.value,
-            # ponytail: only collab cards render a level badge
             inviter_character_id=row.inviter_id,
             task_level_required=row.task_level_required,
         ),
@@ -608,6 +607,7 @@ def _friend_signups_query(ctx: FeedContext) -> Select:
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
+            Task.level_required.label("task_level_required"),
         )
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .join(Character, PraxisMember.character_id == Character.id)
@@ -637,6 +637,7 @@ def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
+            task_level_required=row.task_level_required,
         ),
     )
 
