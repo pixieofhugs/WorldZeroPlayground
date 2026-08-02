@@ -17,7 +17,7 @@ rows, so the source PK alone is not unique across the feed. Storing the key as
 one opaque string (rather than a type column + an id column) keeps the value
 the client sends, the value stored, and the value compared byte-identical.
 
-**Archiving is a view state, never a decision** (ADR-0065, epic #1192). An
+**Archiving is a view state, never a decision** (ADR-0070, epic #1192). An
 archived ``duel_challenge`` or ``collab_invite`` is still open and still
 unanswered — this table is written, and nothing else is. Nothing here touches
 ``Duel.status`` or ``PraxisInvite.status``.

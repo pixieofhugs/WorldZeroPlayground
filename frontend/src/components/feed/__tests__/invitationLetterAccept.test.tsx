@@ -113,7 +113,7 @@ describe('the controls the card actually draws', () => {
     expect(render('coven', () => {})).toContain(NOT_NOW)
     expect(render('coven')).not.toContain(NOT_NOW)
     // It survives suppression — archiving a stale card is still meaningful, and
-    // "Not now" is a deferral, never an answer (ADR-0065/0066).
+    // "Not now" is a deferral, never an answer (ADR-0070).
     expect(render(LETTER_SLUG, () => {})).toContain(NOT_NOW)
   })
 

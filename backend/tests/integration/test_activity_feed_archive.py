@@ -575,7 +575,7 @@ async def test_archiving_a_collab_invite_leaves_it_pending(
     full_feed: dict,
     auth_headers: dict,
 ):
-    """ADR-0065: the archive is a view state, never a decision. The invite is
+    """ADR-0070: the archive is a view state, never a decision. The invite is
     still open and still unanswered — F2 tags it 'still waiting'."""
     feed = await _feed(client, auth_headers, REQUESTS_FILTER)
     target = _key_of(feed, FEED_ITEM_TYPE_COLLAB_INVITE)
@@ -731,7 +731,7 @@ async def test_restore_all_can_be_scoped_to_one_filter(
 #
 # Two halves of one rule: a feed item is derived from a source row, so "this
 # stopped being relevant" is a property of that row and belongs in the source's
-# WHERE. Nothing here writes `feed_dismissal` — ADR-0065 keeps the archive
+# WHERE. Nothing here writes `feed_dismissal` — ADR-0070 keeps the archive
 # player-owned, and every assertion below holds with an empty archive.
 # ---------------------------------------------------------------------------
 
@@ -936,7 +936,7 @@ async def test_the_stream_badges_drop_with_the_stream(
 async def test_bulk_archive_on_the_stream_cannot_sweep_up_an_obligation(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """ADR-0065 at its sharpest: you cannot answer forty obligations in one
+    """ADR-0070 at its sharpest: you cannot answer forty obligations in one
     click, because "Archive all" on ``all`` no longer reaches them."""
     response = await client.post(
         "/activity-feed/dismiss-all", json={"filter": ALL_FILTER}, headers=auth_headers

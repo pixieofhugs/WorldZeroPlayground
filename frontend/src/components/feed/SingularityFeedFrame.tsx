@@ -282,7 +282,7 @@ export default function SingularityFeedFrame({
             blue well. The catalog's word is printed unchanged — `lowercase` is
             CSS costume, not a rewrite — and the only tag that exists today is
             "Still waiting": an archived invite or challenge stays unanswered
-            (ADR-0066).
+            (ADR-0070).
           */
           <span
             style={{

@@ -3,7 +3,22 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
 import { loginWithGoogle } from '../api/auth'
+import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { useTheme } from '../hooks/useTheme'
+import PendingBadge from './layout/PendingBadge'
+
+interface NavLinkSpec {
+  readonly to: string
+  readonly label: string
+  readonly end?: boolean
+  /** Unanswered obligations behind this link. Only `/updates` has any. */
+  readonly pending?: number
+  /**
+   * Replaces the accessible name when a badge is carrying meaning visually.
+   * Must still CONTAIN the visible label, or voice control loses the link.
+   */
+  readonly accessibleName?: string
+}
 
 export default function NavBar() {
   const { t } = useTranslation('common')
@@ -11,14 +26,48 @@ export default function NavBar() {
   const { theme, toggle } = useTheme()
   const { adminMode, toggleAdminMode } = useAdminMode()
   const dark = theme === 'dark'
+  /**
+   * WHY THE NAV LINK CARRIES THE PENDING COUNT TOO (#1457)
+   * ------------------------------------------------------
+   * Three reasons, and the second is the one that makes it necessary rather
+   * than merely tidy.
+   *
+   * 1. After ADR-0070 the Requests queue on `/updates` is the ONLY surface an
+   *    unanswered obligation can be answered on. This is the desktop's one
+   *    permanent route to it, on every route; a plain word pointing at the
+   *    place where someone is waiting on you undersells the place.
+   * 2. It closes a band the sidebar handle cannot reach. `SidebarColumn` is
+   *    `hidden lg:block` and `ShellContent` gates it on a signed-in user, so a
+   *    signed-in player between 768px and 1023px gets this bar and NO rail —
+   *    neither handle state exists to badge. That width had no pending-request
+   *    signal at all, in either sidebar state.
+   * 3. Parity with the phone, where the bell in `MobileHeader` — the same
+   *    nav-level entry to the same page — has been badged since #572.
+   *
+   * It costs nothing: `SidebarProvider` sits above `Layout` (#1344), so this is
+   * a fourth consumer of one existing fetch, not a fourth request. Guests read
+   * 0 and see no badge.
+   *
+   * At >=1024px the count now appears twice — here and on the rail's handle.
+   * That is NOT the duplication ADR-0070 forbids: those are two live accept
+   * buttons for one obligation, able to disagree. These are two read-only
+   * pointers at one number from one subscription, which cannot.
+   */
+  const { pending_requests_count: pendingCount } = useSidebarPanels()
 
-  const links = [
+  const links: readonly NavLinkSpec[] = [
     { to: '/', label: t('nav.home'), end: true },
     { to: '/tasks', label: t('nav.tasks') },
     { to: '/praxis', label: t('nav.praxis') },
     { to: '/leaderboard', label: t('nav.players') },
     { to: '/factions', label: t('nav.factions') },
-    { to: '/updates', label: t('nav.updates') },
+    {
+      to: '/updates',
+      label: t('nav.updates'),
+      pending: pendingCount,
+      accessibleName:
+        pendingCount > 0 ? t('nav.updatesWithPending', { count: pendingCount }) : undefined,
+    },
   ]
 
   return (
@@ -61,18 +110,24 @@ export default function NavBar() {
 
         {/* Nav links */}
         <ul className="flex gap-5 flex-1 list-none">
-          {links.map(({ to, label, end }) => (
+          {links.map(({ to, label, end, pending, accessibleName }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 end={end}
-                className="nav-link"
+                aria-label={accessibleName}
+                // The badge sits INSIDE the link, so the link has to become a
+                // flex line to hold it — but only when there is a badge, so the
+                // other five keep their plain inline box and the row's baseline
+                // is untouched while nothing is pending.
+                className={pending ? 'nav-link inline-flex items-center gap-1' : 'nav-link'}
                 style={({ isActive }) => ({
                   color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                   borderBottom: isActive ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
                 })}
               >
                 {label}
+                <PendingBadge count={pending ?? 0} />
               </NavLink>
             </li>
           ))}

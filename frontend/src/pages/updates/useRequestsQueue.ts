@@ -13,7 +13,7 @@ export interface RequestsQueueState {
   /**
    * Refetch. Wired to the chassis's `onArchiveChange`, which the requests bus
    * does NOT cover: archiving goes through `dismissFeedItem` and answers
-   * nothing (ADR-0065), so it fires no request-changed event — but the item
+   * nothing (ADR-0070), so it fires no request-changed event — but the item
    * does leave the live view, and a queue still drawing it would be lying.
    */
   refresh: () => void

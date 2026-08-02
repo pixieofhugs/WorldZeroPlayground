@@ -1175,7 +1175,8 @@ def _visible_types(active_filter: str, archived: bool) -> set[str]:
     registry — not by editing ``FEED_SOURCES``. That distinction is the whole
     subtlety: the Archived view reads ``filter=all`` with ``archived=true``, so
     a registry edit would take the four types out of the archive as well, where
-    ADR-0065 says a request a player put away must still be findable.
+    ADR-0070's archive rule says a request a player put away must still be
+    findable.
 
     Anyone reading ``FEED_SOURCES`` alone will see the four types listed under
     ALL and conclude they belong there. They belong to the queue. Read ADR-0070
@@ -1684,7 +1685,7 @@ async def get_activity_feed(
 # ---------------------------------------------------------------------------
 # The archive — reading and writing dismissals
 #
-# ADR-0065 / epic #1192: archiving is a *view state* and never a decision. Every
+# ADR-0070 / epic #1192: archiving is a *view state* and never a decision. Every
 # function below writes exactly one thing, ``feed_dismissal``. An archived duel
 # challenge is still open; an archived collab invite is still unanswered. If a
 # change here ever needs to touch ``Duel.status`` or ``PraxisInvite.status``,

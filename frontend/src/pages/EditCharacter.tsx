@@ -108,6 +108,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     avatarSource,
     setAvatarSource,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
     saving,
@@ -346,6 +347,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
           aspect={AVATAR_ASPECT}
           onConfirm={handleAvatarConfirm}
           onCancel={() => setAvatarSource(null)}
+          onError={setAvatarError}
         />
       )}
     </div>

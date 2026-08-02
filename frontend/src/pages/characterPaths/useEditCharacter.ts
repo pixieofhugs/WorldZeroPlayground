@@ -38,6 +38,8 @@ export interface EditCharacterState {
   setAvatarSource: (file: File | null) => void
   avatarPreview: string | null
   avatarError: string
+  /** Set the avatar-scoped error — the crop modal reports failures here (#1527). */
+  setAvatarError: (message: string) => void
   handleAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleAvatarConfirm: (blob: Blob) => void
   saving: boolean
@@ -154,6 +156,7 @@ export function useEditCharacter(): EditCharacterState {
     setAvatarSource,
     avatarPreview,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
     saving,
