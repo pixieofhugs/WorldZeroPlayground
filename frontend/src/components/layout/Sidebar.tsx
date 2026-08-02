@@ -30,7 +30,9 @@ const identityActionStyle: CSSProperties = {
   border: '1px solid var(--color-border-strong)',
   background: 'var(--color-bg-surface-alt)',
   fontFamily: 'var(--font-body)',
-  fontSize: 'var(--text-base)',
+  // --text-md, not .eyebrow's --text-sm: a 44px pill wants a label a reader can
+  // land on, and this is the size the bare caps it replaces already read at.
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
   color: 'var(--color-text-primary)',
