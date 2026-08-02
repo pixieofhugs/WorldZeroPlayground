@@ -88,6 +88,16 @@ describe('the rail and its pending requests', () => {
     expect(html).toContain('>3<')
   })
 
+  // #1457: the count is the ONLY thing the rail still says about requests, so
+  // it has to survive in the state where the panel used to be. The seam is the
+  // point — the column must thread the number into the handle in both states,
+  // not just the one that has always had a badge.
+  it('badges the count on the expanded handle too, where the panel used to be', () => {
+    const html = render(false)
+    expect(html).toContain('aria-label="Collapse sidebar — 3 pending requests"')
+    expect(html).toContain('>3<')
+  })
+
   it('badges nothing when the count is 0 — 0 is not a silent failure', () => {
     panelsMock.mockReturnValue({
       pending_requests_count: 0,

@@ -90,6 +90,48 @@ export function feedKicker(type: string): string {
 }
 
 /**
+ * The types whose dismissal line is NOT `Archived "{title}"` (#1458).
+ *
+ * The shared undo strip is right for fourteen of the fifteen: you filed the
+ * card away and nothing else happened. It is wrong for the invitation letter,
+ * whose dismiss control is labelled **Not now** — a deferral, never an answer
+ * (ADR-0070). "Archived" reads as a decision the player did not make, so
+ * that one type spends its own authored sentence instead:
+ *
+ *   > Set aside — the invitation still stands
+ *
+ * Same class of defect as #1342, where the archive's shared "Still waiting"
+ * tag spoke for a request that had since been answered — one strip asserting
+ * something untrue for one type.
+ *
+ * It is keyed on the TYPE, not on which control was pressed, because both
+ * routes to the write mean the same thing: the ✕ and the swipe archive a
+ * letter that also stays standing.
+ *
+ * Rewording the shared line was rejected on sight: it would be correct here and
+ * wrong for the other fourteen. The map is the override list — deliberately
+ * literal, so an unnamed type falls through to the shared line rather than
+ * printing a raw key.
+ */
+const DISMISSED_MESSAGE_KEY = {
+  invitation_letter: 'feed:invitationLetter.setAside',
+} as const
+
+/**
+ * What the undo strip says after a DISMISSAL — the per-type line where one is
+ * authored, the shared `Archived "{title}"` otherwise.
+ *
+ * Only the dismiss direction takes overrides. Restoring is the same act for
+ * every type (the row comes back), so the archived view keeps
+ * `feed:archive.restored` for all fifteen.
+ */
+export function feedDismissedMessage(item: ActivityFeedItem): string {
+  const override = DISMISSED_MESSAGE_KEY[item.type as keyof typeof DISMISSED_MESSAGE_KEY]
+  if (override) return i18n.t(override)
+  return i18n.t('feed:archive.archived', { title: feedItemTitle(item) })
+}
+
+/**
  * A short human handle for the card, used by the undo strip's
  * `Archived "{title}"`. Falls back to the kicker so the strip never reads
  * `Archived ""`.
