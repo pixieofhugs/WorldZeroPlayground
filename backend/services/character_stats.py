@@ -1,7 +1,12 @@
 """Service for recomputing and persisting CharacterStats from current vote data."""
 
-from sqlalchemy import ColumnElement, and_, or_, select
+import dataclasses
+from typing import Any
+
+from fastapi import HTTPException
+from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -16,7 +21,9 @@ from models.praxis import (
     UNSCORED_MODERATION_STATUSES,
 )
 from models.task import Task
+from models.vote import Vote
 from services.era import (
+    get_closing_era_id,
     get_current_era_row,
     get_era_row_for_praxis,
     get_next_era_row,
@@ -30,7 +37,9 @@ from services.taunt_service import emit_recalc_taunts
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
 
 def _era_window_condition(
-    era_row: Era, next_era_row: Era | None
+    era_row: Era,
+    next_era_row: Era | None,
+    timestamp_column: InstrumentedAttribute[Any] = Praxis.submitted_at,
 ) -> ColumnElement[bool]:
     """The seal-time bound that puts a praxis inside ``era_row``'s era (#1345).
 
@@ -50,18 +59,28 @@ def _era_window_condition(
     confining it to the open era stops one such row scoring once per era that
     ever ran.
 
+    ``timestamp_column`` defaults to the praxis seal because that is what both
+    score gathers below bound. :func:`recompute_votes_spent_this_era` passes
+    ``Vote.created_at`` instead — the vote *budget* is a CAST-time fact, not a
+    seal-time one (``services.vote.cast_or_update_vote``: voting on a closed
+    era's praxis still spends today's budget, #1345), so the column differs but
+    the era bound must not. Parameterising it is how the two stay one
+    definition. ``Vote.created_at`` is NOT NULL, so the null-tolerant branch is
+    simply unreachable for that caller.
+
     ponytail: seal time is the bound because there is no column to read. #1398
     adds ``praxis.era_id`` stamped at submit — when it lands, this collapses to
-    ``Praxis.era_id == era_row.id`` and both callers below simplify with it.
+    ``Praxis.era_id == era_row.id`` and both praxis callers below simplify with
+    it. The vote caller does not: a vote has no era stamp either.
     """
     if next_era_row is None:
         return or_(
-            Praxis.submitted_at.is_(None),
-            Praxis.submitted_at >= era_row.started_at,
+            timestamp_column.is_(None),
+            timestamp_column >= era_row.started_at,
         )
     return and_(
-        Praxis.submitted_at >= era_row.started_at,
-        Praxis.submitted_at < next_era_row.started_at,
+        timestamp_column >= era_row.started_at,
+        timestamp_column < next_era_row.started_at,
     )
 
 
@@ -332,3 +351,118 @@ async def recalculate_members_stats(
             member.character_id, session, era, era_row=era_row
         )
     await session.flush()
+
+
+@dataclasses.dataclass(frozen=True)
+class VoteSpendRepair:
+    """One character's ``votes_spent_this_era`` before and after a recompute."""
+
+    character_id: int
+    before: int
+    after: int
+
+
+async def recompute_votes_spent_this_era(
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    era_row: Era | None = None,
+    *,
+    dry_run: bool = False,
+) -> list[VoteSpendRepair]:
+    """Rebuild every ``votes_spent_this_era`` in ``era_row`` from the vote table (#1531).
+
+    ``votes_spent_this_era`` is the one *stored* number in the budget —
+    ``votes_available`` is derived from it and ``score`` on read
+    (``services.scoring.compute_votes_available``). Anything that removes a vote
+    row behind the service's back therefore leaves its caster permanently
+    charged for a vote that no longer exists. Migration
+    ``0011_vote_unique_per_account`` did exactly that: it deleted the surplus
+    rows of 13 duplicated ``(praxis, account)`` pairs and deliberately left the
+    counter for a follow-up, because the refund is an era attribution SQL cannot
+    derive without guessing.
+
+    **The identity this rests on: the counter equals the number of that
+    character's vote rows cast inside the era window.** It holds because the
+    counter only ever moves in one place —
+    ``services.vote.cast_or_update_vote`` increments it by one on a NEW cast,
+    and a re-rate takes the update branch, which is free. Nothing in the
+    application deletes a vote or decrements the counter (the only ``DELETE FROM
+    vote`` outside a migration is ``scripts/seed_demo_praxes.py``, which is a
+    local reseed, not a production path).
+
+    Two things break the identity, and both are refused or ruled out here rather
+    than silently invented:
+
+    - **An era that carries spend forward.** ``apply_era_reset`` seeds the new
+      row with the previous era's count when ``era.reset_vote_budget`` is False,
+      so the counter is then a lifetime-ish total that no window can reproduce.
+      This raises 409 in that case. Era 1 sets ``reset_vote_budget=True``, and
+      an era with no predecessor cannot have carried anything in, so the live
+      era is safe on both counts.
+    - **An admin budget grant.** ``services.admin_service.set_character_stats``
+      writes this same counter to translate a desired ``votes_available``
+      (``votes_spent = cap - desired``), and nothing on the row records that it
+      was hand-set. A recompute CANNOT tell such a row from a stale one and will
+      revert the grant. There is no fix short of a provenance column; instead
+      this returns the full before/after list and supports ``dry_run`` so an
+      operator reads the diff before applying it.
+
+    Bounded by ``_era_window_condition`` on ``Vote.created_at`` — the vote
+    budget is a cast-time fact, so a vote on a closed era's praxis counts
+    against the era it was *cast* in, exactly as ``cast_or_update_vote`` charges
+    it (#1345).
+
+    Only rows that actually change are reported. Characters with no votes in the
+    window recompute to 0, which is the correct answer for a row whose era began
+    at zero. Sequencing (#1531): run this BEFORE a score backfill, never in the
+    same pass — both write ``CharacterStats``.
+    """
+    if era_row is None:
+        era_row = await get_current_era_row(session)
+
+    if not era.reset_vote_budget and await get_closing_era_id(era_row, session) is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This era carries the previous era's vote spend forward "
+                "(reset_vote_budget is False), so votes_spent_this_era is not the "
+                "count of votes cast in this era and cannot be rebuilt from the "
+                "vote table."
+            ),
+        )
+
+    next_era_row = await get_next_era_row(era_row, session)
+    cast_within_era = _era_window_condition(era_row, next_era_row, Vote.created_at)
+
+    counted = await session.execute(
+        select(Vote.voter_character_id, func.count())
+        .where(cast_within_era)
+        .group_by(Vote.voter_character_id)
+    )
+    votes_cast_by_character: dict[int, int] = {
+        character_id: count for character_id, count in counted.all()
+    }
+
+    stats_result = await session.execute(
+        select(CharacterStats)
+        .where(CharacterStats.era_id == era_row.id)
+        .order_by(CharacterStats.character_id)
+    )
+    repairs: list[VoteSpendRepair] = []
+    for stats in stats_result.scalars():
+        recomputed = votes_cast_by_character.get(stats.character_id, 0)
+        if recomputed == stats.votes_spent_this_era:
+            continue
+        repairs.append(
+            VoteSpendRepair(
+                character_id=stats.character_id,
+                before=stats.votes_spent_this_era,
+                after=recomputed,
+            )
+        )
+        if not dry_run:
+            stats.votes_spent_this_era = recomputed
+
+    if not dry_run:
+        await session.flush()
+    return repairs
