@@ -6,7 +6,12 @@ Migrations handle schema. This script adds:
   - Factions (from the era config)
   - Era row
   - Pixie admin account + character + admin role
-  - All live tasks (from the era config)
+  - Any tasks the era config declares (Era 1 declares none — #1398)
+  - The single game-wide level-0 onboarding task (#511)
+
+Every phase is idempotent, and `start.sh` runs this on EVERY production deploy.
+That is why the era config owns no tasks: anything listed there is restored the
+next deploy after an admin deletes it.
 
 Run from /backend:
     python seed.py               # dev (default)
@@ -19,7 +24,7 @@ import sys
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 
 from game_config import CURRENT_ERA
 from script_utils import add_env_argument, get_settings
@@ -199,10 +204,15 @@ ONBOARDING_TASK_POINT_VALUE = 10
 async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     """Upsert the single game-wide level-0 onboarding task (keyed on title).
 
-    Mirrors ``ensure_placeholder_metatask``: this runs on every seed so the
-    onboarding self-portrait exists in every era, independent of era config
-    (#511). Guarded by a title lookup, so it is safe on a populated database.
-    Returns True if the task was created this run.
+    This runs on every seed so the onboarding self-portrait exists in every era,
+    independent of era config (#511). Guarded by a title lookup, so it is safe on
+    a populated database. Returns True if the task was created this run.
+
+    It is now the **only** task any seed run creates: Era 1's config task list is
+    empty (see ``eras/era_1.py``) and the Phase-4 placeholder metatask is gone
+    (#1398). That is deliberate — everything else on the board is authored in the
+    admin UI — but this one stays, because it is what a brand-new player has to
+    do on the day they arrive.
     """
     existing = (
         await session.execute(
@@ -225,39 +235,12 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     return True
 
 
-# ---------------------------------------------------------------------------
-# Phase 4: Meta Tasks (placeholder) — idempotent
-# ---------------------------------------------------------------------------
-
-async def ensure_placeholder_metatask(session, created_by_id: int) -> bool:
-    """Seed a single placeholder metatask so the UI has something to render.
-
-    A metatask is a Task row with ``task_type=metatask`` (unified in migration
-    0006, SESSION M). Guarded by a count check, so this is safe on a populated
-    database. Returns True if the placeholder was created this run.
-    """
-    metatask_count = (
-        await session.execute(
-            select(func.count())
-            .select_from(Task)
-            .where(Task.task_type == TaskType.metatask)
-        )
-    ).scalar()
-    if metatask_count:
-        return False
-    session.add(Task(
-        title="Upside Down",
-        description="Do this task upside down",
-        point_value=100,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.metatask,
-        created_by=created_by_id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
-    ))
-    await session.flush()
-    return True
+# There is deliberately no metatask phase (#1398). A "placeholder" metatask
+# ("Upside Down") used to be seeded here so the metatask surface had something
+# to render; it was invented content that appeared on production every deploy
+# and could not be permanently deleted, because the seeder recreated it whenever
+# the metatask count hit zero. The surface now renders empty until an admin
+# authors a real metatask, which is the correct empty state.
 
 
 # ---------------------------------------------------------------------------
@@ -373,18 +356,21 @@ async def seed(env: str, yes: bool) -> None:
 
         task_count = (await session.execute(select(func.count()).select_from(Task))).scalar()
 
-        # Every phase below is idempotent (upsert / count-guard / per-task sync),
+        # Every phase below is idempotent (upsert / title-guard / per-task sync),
         # so a fully-seeded DB runs the exact same phases as an empty one — there
-        # is no early-return shortcut. This matters because Phases 3 and 4 add
-        # content that appears in the era config *after* the first seed (new
-        # tasks, the placeholder metatask); an early return skipped them, so
-        # config additions never reached any already-seeded environment,
-        # including production (#905). Phase 1 was already hoisted for the same
-        # reason (#784, Cozy Coven): the Faction table is a thin display mirror
-        # of the era config, safe to top up and needing no migration.
+        # is no early-return shortcut. This matters because Phase 3 adds content
+        # that appears in the era config *after* the first seed; an early return
+        # skipped it, so config additions never reached any already-seeded
+        # environment, including production (#905). Phase 1 was hoisted for the
+        # same reason (#784, Cozy Coven): the Faction table is a thin display
+        # mirror of the era config, safe to top up and needing no migration.
+        #
+        # The flip side of that sync, and why Era 1's task list is empty (#1398):
+        # this script runs on every deploy (``start.sh``), so any task named in
+        # the era config comes back the deploy after an admin deletes it.
         if pixie_acc and task_count > 0:
             print("Database already fully seeded — running idempotent top-up "
-                  "(factions, admin, task sync, metatask).")
+                  "(factions, admin, task sync).")
         else:
             print("Seeding World Zero...\n")
 
@@ -405,11 +391,13 @@ async def seed(env: str, yes: bool) -> None:
         # ------------------------------------------------------------------
         # Phase 3: Tasks (from era config) — idempotent per-task sync
         # ------------------------------------------------------------------
+        # Era 1's list is empty on purpose (#1398), so this is a no-op today;
+        # the phase stays because a future era may ship a config-owned roster.
         new_tasks = await sync_era_tasks(session, era, pixie_char.id)
         if new_tasks > 0:
-            print(f"  >Tasks ({new_tasks} new)")
+            print(f"  >Tasks ({new_tasks} new from the era config)")
         else:
-            print(f"  >Tasks already exist ({task_count}) — skipping")
+            print(f"  >No new era-config tasks ({task_count} already on the board)")
 
         # ------------------------------------------------------------------
         # Phase 3b: Onboarding task (game-wide level-0, era-independent)
@@ -418,14 +406,6 @@ async def seed(env: str, yes: bool) -> None:
             print("  >Onboarding task (1 game-wide level-0)")
         else:
             print("  >Onboarding task already exists — skipping")
-
-        # ------------------------------------------------------------------
-        # Phase 4: Meta Tasks (placeholder) — idempotent
-        # ------------------------------------------------------------------
-        if await ensure_placeholder_metatask(session, pixie_char.id):
-            print("  >Metatasks (1 placeholder)")
-        else:
-            print("  >Metatasks already exist — skipping")
 
         await session.commit()
 
@@ -438,7 +418,7 @@ async def seed(env: str, yes: bool) -> None:
         print(f"  factions       : {len(era.factions)}")
         print(f"  pixie account  : pixieofhugs@gmail.com")
         print(f"  pixie character: @pixie (admin)")
-        print(f"  tasks          : {len(era.tasks)}")
+        print(f"  era-config tasks: {len(era.tasks)} (Era 1 ships none — #1398)")
 
     await engine.dispose()
 

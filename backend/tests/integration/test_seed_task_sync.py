@@ -1,19 +1,20 @@
 """The seeder propagates era-config additions to an already-seeded DB (#905).
 
 `backend/seed.py` used to `return` early on any DB that already had the Pixie
-account plus at least one task, skipping Phases 2-4. Two consequences, both
-prod-relevant:
-
-  * a task added to the era config after the first seed never reached the
-    database (Phase 3 was unreachable, and even when reached it was
-    all-or-nothing on an empty table — never a per-task sync), and
-  * the Phase-4 placeholder metatask was only ever created on a from-scratch
-    seed, so `praxis_meta_task` had zero rows everywhere.
+account plus at least one task, skipping the later phases — so a task added to
+the era config after the first seed never reached the database (Phase 3 was
+unreachable, and even when reached it was all-or-nothing on an empty table,
+never a per-task sync).
 
 These tests exercise the now-idempotent phase helpers directly against a
 populated database — the exact path the seeded-DB case now runs — and assert
-that a newly-added config task lands and the placeholder metatask is created
-(and neither duplicates on re-run).
+that a newly-added config task lands, and does not duplicate on re-run.
+
+The sync is fed a purpose-built era stand-in rather than ``CURRENT_ERA``: Era 1
+declares no tasks at all (#1398, so that a deploy cannot resurrect a task an
+admin deleted), and this is a test of the *mechanism*, which the next era will
+still need. The same PR removed the Phase-4 placeholder metatask and its two
+tests here; ``praxis_meta_task`` is empty until an admin authors a real one.
 """
 from types import SimpleNamespace
 
@@ -29,7 +30,6 @@ from models.task import Task, TaskType
 from seed import (
     ONBOARDING_TASK_TITLE,
     ensure_onboarding_task,
-    ensure_placeholder_metatask,
     sync_era_tasks,
 )
 
@@ -146,35 +146,36 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
 
 
 @pytest.mark.asyncio
-async def test_placeholder_metatask_created_on_already_seeded_db(
+async def test_seed_creates_no_metatask(
     db_session: AsyncSession,
     era: Era,
     character: Character,
     faction_ua: Faction,
 ):
-    """The Phase-4 placeholder metatask is created even when tasks already exist."""
-    # Simulate an already-seeded DB: a standard task exists, no metatask does.
+    """A seed run authors no metatask at all (#1398).
+
+    The replacement for the two ``ensure_placeholder_metatask`` tests this
+    supersedes. The placeholder ("Upside Down") was invented content that
+    reappeared on production every deploy the metatask count hit zero, so it
+    could never be permanently deleted. An empty metatask surface until an admin
+    authors a real one is the intended state, and this pins it.
+    """
+    from models.faction import FactionStatus
+
+    if (
+        await db_session.execute(select(Faction).where(Faction.slug == "albescent"))
+    ).scalar_one_or_none() is None:
+        db_session.add(Faction(slug="albescent", status=FactionStatus.visible))
+        await db_session.flush()
+
     await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
     )
-
-    created = await ensure_placeholder_metatask(db_session, character.id)
-    assert created is True
+    await ensure_onboarding_task(db_session, character.id)
 
     metatasks = (
         await db_session.execute(
             select(Task).where(Task.task_type == TaskType.metatask)
         )
     ).scalars().all()
-    assert len(metatasks) == 1
-
-    # Idempotent: a second run creates nothing.
-    created_again = await ensure_placeholder_metatask(db_session, character.id)
-    assert created_again is False
-
-    metatasks = (
-        await db_session.execute(
-            select(Task).where(Task.task_type == TaskType.metatask)
-        )
-    ).scalars().all()
-    assert len(metatasks) == 1
+    assert metatasks == []

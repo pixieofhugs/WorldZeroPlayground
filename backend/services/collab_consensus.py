@@ -29,7 +29,7 @@ from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
 )
-from services.era import get_era_row_for_praxis
+from services.era import get_current_era_row_safe, get_era_row_for_praxis
 from services.taunt_service import fan_out_taunt
 
 
@@ -47,6 +47,14 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession) -> None:
     ``status == submitted`` branch of ``services.praxis.list_praxes``, whose
     feed sort orders on ``submitted_at`` (#658).
 
+    Being that single writer is also what makes it the right place to stamp
+    ``praxis.era_id`` (#1398): era membership is a **seal-time** fact, so the
+    column moves with ``submitted_at`` and is written on every entry into
+    ``submitted`` — an unsubmit-then-resubmit across an era boundary therefore
+    re-attributes the praxis to the era it was really sealed in. Nothing reads
+    the column yet; #1345's era-bounded score recalculation is the consumer, and
+    rides its own PR.
+
     Being the single such writer is also why the ADR-0068 ``praxis_complete``
     taunt fires here rather than at either call site: one taunt **per member**,
     each reaching that member's own subscribers, so a collab needles every
@@ -58,6 +66,14 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession) -> None:
     now = datetime.now(timezone.utc)
     praxis.submitted_at = now
     praxis.submit_proposed_at = None
+    # `_safe`: a praxis can be sealed against a database with no Era row at all
+    # (unit fixtures), and an absent era must not turn a seal into a 500. NULL
+    # then means "era unknown", exactly what every row sealed before this column
+    # existed says — which is why readers keep the `submitted_at` fallback in
+    # ``services.era.get_era_row_for_praxis`` until #1345 retires it.
+    era_row = await get_current_era_row_safe(session)
+    if era_row is not None:
+        praxis.era_id = era_row.id
     for member in praxis.members:
         if not member.has_submitted:
             member.submitted_at = now
