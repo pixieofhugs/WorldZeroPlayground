@@ -254,6 +254,8 @@
     "players": "Players",
     "factions": "Factions",
     "updates": "Updates",
+    "updatesWithPending_one": "Updates — {{count}} pending request",
+    "updatesWithPending_other": "Updates — {{count}} pending requests",
     "admin": "Admin",
     "adminMode": {
       "badge": "MOD",
@@ -330,6 +332,8 @@
   "sidebar": {
     "toggle": {
       "collapse": "Collapse sidebar",
+      "collapseWithPending_one": "Collapse sidebar — {{count}} pending request",
+      "collapseWithPending_other": "Collapse sidebar — {{count}} pending requests",
       "expand": "Expand sidebar",
       "expandWithPending_one": "Expand sidebar — {{count}} pending request",
       "expandWithPending_other": "Expand sidebar — {{count}} pending requests"

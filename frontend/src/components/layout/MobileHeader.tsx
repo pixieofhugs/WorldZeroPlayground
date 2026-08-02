@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
+import PendingBadge from './PendingBadge'
 
 /**
  * Mobile shell chrome, top half: a minimal sticky wordmark bar with the bell +
@@ -42,7 +43,14 @@ export default function MobileHeader() {
               (#572); carries the same pending-request badge as the sidebar. */}
           <Link
             to="/updates"
-            aria-label={t('nav.updates')}
+            // The badge is `aria-hidden` and colour-carried, so the count has to
+            // ride the LINK's accessible name or it never reaches a screen
+            // reader — same contract the sidebar handle's label meets (#1457).
+            aria-label={
+              pendingCount > 0
+                ? t('nav.updatesWithPending', { count: pendingCount })
+                : t('nav.updates')
+            }
             className="relative flex items-center"
             style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', padding: 'var(--space-xs)' }}
           >
@@ -60,27 +68,9 @@ export default function MobileHeader() {
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            {pendingCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute flex items-center justify-center font-body"
-                style={{
-                  top: -2,
-                  right: -4,
-                  minWidth: 15,
-                  height: 15,
-                  padding: '0 var(--space-xs)',
-                  borderRadius: 999,
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  color: 'var(--color-text-on-accent)',
-                  background: 'var(--badge-collab)',
-                }}
-              >
-                {pendingCount}
-              </span>
-            )}
+            {/* Pinned over the bell's top-right corner; the shape itself is
+                shared with the sidebar handle and NavBar (#1457). */}
+            <PendingBadge count={pendingCount} className="absolute" style={{ top: -2, right: -4 }} />
           </Link>
           {/* Settings / More affordance — the phone path to theme + sign out +
               character management (#520). */}
