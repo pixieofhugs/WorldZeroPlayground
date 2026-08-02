@@ -168,6 +168,63 @@ export function contrastRatio(text: Rgba, surface: Rgba): number {
 }
 
 /**
+ * CIE L*a*b* of an opaque sRGB colour, D65 white point.
+ *
+ * Exported only for `deltaE76` below and its tests. Contrast maths lives in
+ * relative luminance; this is the other axis, and the reason the file needs
+ * both is #1549: two inks can be a hair apart in luminance and a whole hue
+ * apart, or a hair apart in both, and a ratio cannot tell you which.
+ */
+export function toLab(color: Rgba): { L: number; a: number; b: number } {
+  const linear = (channel: number): number => {
+    const srgb = channel / 255;
+    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  };
+  const [r, g, b] = [color.r, color.g, color.b].map(linear);
+  // sRGB -> XYZ (D65), normalised by the D65 white point.
+  const xyz = [
+    (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047,
+    0.2126 * r + 0.7152 * g + 0.0722 * b,
+    (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883,
+  ].map((value) => (value > 0.008856 ? Math.cbrt(value) : 7.787 * value + 16 / 116));
+  const [x, y, z] = xyz;
+  return { L: 116 * y - 16, a: 500 * (x - y), b: 200 * (y - z) };
+}
+
+/**
+ * CIE76 perceptual distance between two opaque colours (#1549).
+ *
+ * WHY THIS EXISTS. `contrastRatio` measures an ink against the GROUND it sits
+ * on. It is blind to the ink sitting BESIDE it — the gap #1449 named when the
+ * card family's alarm and notice roles collapsed onto one hue with every ratio
+ * in the manifest still green. That gap was papered over with a hex inequality
+ * ("these two tokens are not literally the same string"), and the ponytail
+ * there said the upgrade was a distance floor, once a repaint walked two inks
+ * apart. #1549 is that repaint: `--color-text-secondary` and
+ * `--color-text-tertiary` were a hex inequality apart in light and nothing
+ * more, at ΔE 3.4.
+ *
+ * CIE76 ON PURPOSE. It is the crude one — it over-reports distance in
+ * saturated regions and under-reports near-neutral hue swings, and CIEDE2000
+ * is the accurate answer. But every pairing this repo asks about is a
+ * desaturated ink against another desaturated ink, where CIE76 is *pessimistic*
+ * rather than flattering, and a guard that errs toward "these are too close"
+ * is the safe direction for a floor. Forty lines of ΔE2000 to make a threshold
+ * marginally kinder is not a trade worth making.
+ *
+ * Calibration, so a future floor is not picked out of the air: ~2.3 is the
+ * classic just-noticeable difference for adjacent patches, and text tiers are
+ * never adjacent patches — they are small type separated by layout. The shipped
+ * neutral tiers run 29.5 (light secondary/tertiary) to 48.5 (dark
+ * primary/tertiary); the pair this issue fixed was 3.4.
+ */
+export function deltaE76(first: Rgba, second: Rgba): number {
+  const one = toLab(first);
+  const two = toLab(second);
+  return Math.hypot(one.L - two.L, one.a - two.a, one.b - two.b);
+}
+
+/**
  * WCAG "large text": >= 24px, or >= 18.66px when bold (>= 700). Large text
  * only owes 3:1. Several faction surfaces use big display type and would
  * false-positive against the 4.5:1 floor.

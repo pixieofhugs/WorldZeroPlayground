@@ -62,7 +62,7 @@ All color values are CSS custom properties defined in `index.css`. See that file
 **Key groups:**
 
 - **Page:** `--color-bg-page`, `--color-bg-surface`, `--color-bg-surface-alt`
-- **Text:** `--color-text-primary`, `--color-text-secondary`, `--color-text-tertiary`
+- **Text:** `--color-text-primary`, `--color-text-secondary`, `--color-text-tertiary` — three tiers, and the third one is a **temperature** rather than a weight (see below)
 - **Borders:** `--color-border`, `--color-border-strong`
 - **Factions:** `--faction-{slug}` (primary), `--faction-{slug}-light` (tint), `--faction-{slug}-border`
 - **Faction cards:** `--faction-{slug}-card-bg`, `--faction-{slug}-card-text`, `--faction-{slug}-card-accent`, `--faction-{slug}-card-font`
@@ -73,6 +73,22 @@ All color values are CSS custom properties defined in `index.css`. See that file
 **Dark mode** is handled by `[data-theme="dark"]` overrides in `index.css`. Components should use `var(--faction-everymen-card-bg)` — never `dark ? '#1e1a10' : '#fffef5'`.
 
 **Rule:** If you're about to hardcode a hex value in a component, stop. Add it as a CSS variable first.
+
+### The third text tier is a TEMPERATURE, not a weight (#1549)
+
+The neutral vocabulary is three tiers, and only the first step is a step in contrast. `--color-text-primary` → `--color-text-secondary` is a 3.0× drop in ratio; `--color-text-secondary` → `--color-text-tertiary` is a **hue swing at held weight** — a lavender against warm greys, in both cascades, at essentially the same luminance.
+
+**That is arithmetic, not taste.** Secondary bottoms out at 4.96:1 on `--filter-well` in light and 4.87:1 on `--color-bg-surface-alt` in dark, so a third rung that is genuinely *quieter* than secondary and still clears AA has the band [4.50, 4.96] to live in — a 1.10× span against the 3.0× above it. There is no room below secondary for a step anyone could see. A palette can afford two weight tiers over an AA floor and this one already spends both, so the third tier had to find a different axis or stop claiming to exist.
+
+It had been claiming to exist without one. Light ran `#6b6050` / `#6c6358` — one hex step per channel, **ΔE 3.4**, 5.60:1 against 5.37:1 on the page — so every surface reaching for tertiary to sound quieter than secondary got nothing back, and had every reason to hardcode a grey instead. Dark had already made the right call (a lavender at h 296°, ΔE 38.3) and was left untouched; light was walked to the same hue at h 298°, C 20, weight held to within 0.2 L\*. **The dark cascade was the reference and not the patient** — repointing it would have moved ~460 `.eyebrow` sites for no defect.
+
+Three things worth carrying.
+
+**Cool-on-warm recedes at equal luminance**, so "quieter" survives as a perception after it stops being a ratio. A desaturated cool ink on warm paper reads as further away; that is what buys the hierarchy the contrast ladder could not. Chroma is dialled *down* from dark's 27 to 20 for the same reason in reverse — a mid-tone at C 27 reads as a colour on cream and as a tint on near-black, so matching the number would not have matched the voice.
+
+**Neither cascade makes tertiary dimmer than secondary, and dark makes it louder** (6.21:1 against 5.63:1 on the page). If you find a comment claiming tertiary is "one step down", it predates this and is wrong; the file had two, and both were corrected rather than acted on. A rule that routes *away* from tertiary because it is "too faint" is the tell — measure before you believe it, since the same rule in `.filter-factions` cost contrast in dark while claiming to buy it in light.
+
+**A contrast manifest cannot see this class of bug**, which is why the fix ships with a non-ratio guard beside the ratios. Both inks were comfortably AA-clear on every ground the whole time: the maths knows what an ink sits **on** and never what it sits **beside**. `deltaE76` and a floor of 20 across the three tiers in both cascades is #1449's deferred upgrade — that block guards the card family's alarm/notice split with a hex *inequality* and says in its own ponytail that a distance floor is the real answer, to be minted when a repaint walks two inks apart. This was that repaint. **Two tiers a viewer cannot tell apart are one tier with two names**, and a hex inequality passes them both.
 
 ### Contrast is a pairing, not a property (#1028)
 
@@ -365,6 +381,8 @@ only**: a card, a panel or a rail is not a drawing, and there the doctrine above
 There is deliberately no `.content-heading` / `.content-display` / `.content-score`: each would have a single caller already owned by a component, and a class for one caller is a class for nobody. A score is a title-sized number — `.content-title` plus a `fontWeight`.
 
 **Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class. Never add an inline `fontSize` to an element that already carries `.eyebrow` — the class owns the size.
+
+That ink is the third text tier, and §3 records what it can and cannot do. The eyebrow clears AA on every neutral stock it lands on — **5.40:1** on the page, 5.78 over the frost, 5.07 on the alt surface, 4.78 on the filter well in light; 6.21 / 5.67 / 5.37 / 5.47 in dark — and it is now visibly a different ink from `--color-text-secondary` rather than the same one under a second name. What it does **not** have is headroom: the tier sits at secondary's weight because the palette has no AA-clear room below secondary, so an eyebrow cannot be made quieter by walking its colour down. If a label rank needs to recede further, the levers left are size, tracking, casing and layout — not ink.
 
 ---
 
