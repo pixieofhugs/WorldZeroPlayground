@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -12,8 +13,8 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * The carried life and its open jobs become dark ransom cards taped down on a
  * near-black desk: Bebas mastheads over an acid rule, halftone dot screens, hard
  * offset shadows, a hot-pink primary. Same content slots as the Default mobile
- * home (character header, Points/Votes/Era tiles, active-tasks list, primary
- * actions) — only the paste-up changes. Grounds on the `--faction-snide-*`
+ * home (the identity block — name, level, era points and the level track —
+ * active-tasks list, primary actions) — only the paste-up changes. Grounds on the `--faction-snide-*`
  * tokens already in index.css; native-dark (dark ink cards on the flyposted
  * wall). Presentation-only — all data arrives via {@link FieldDeskHomeState}.
  */
@@ -45,6 +46,42 @@ const kicker: CSSProperties = {
   color: MUTED,
 }
 
+/**
+ * Characters / Edit as real controls (#1553) — a cut-out chip taped to the
+ * file. They were bare caps with no box: a sub-20px hit target on a phone. 44
+ * is the WCAG 2.5.5 target floor and is GEOMETRY, not spacing.
+ */
+const actionPillStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: 44,
+  boxSizing: 'border-box',
+  padding: '0 var(--space-lg)',
+  borderRadius: 999,
+  border: `1px solid ${ACID}`,
+  background: INK,
+  fontFamily: COND,
+  fontSize: 'var(--text-lg)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: ACID,
+  textDecoration: 'none',
+  cursor: 'pointer',
+  transition: 'opacity 120ms ease',
+}
+
+/** The baseline row under the track — the file's typewriter voice. */
+const trackMetaStyle: CSSProperties = {
+  fontFamily: TYPE,
+  fontSize: 'var(--text-xs)',
+  letterSpacing: '0.24em',
+  textTransform: 'uppercase',
+  color: MUTED,
+}
+
+/** The operative's own ramp: hot pink burning up into acid (#1553). */
+const TRACK_FILL = `linear-gradient(90deg, ${PINK}, ${ACID})`
+
 /** Dark ransom card — taped, halftoned, hard-shadowed, slightly askew. */
 function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: number }) {
   return (
@@ -75,13 +112,8 @@ function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: numbe
 
 export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
-
-  const stats = [
-    { label: t('fieldDesk.home.stats.points'), value: character.score?.toLocaleString() ?? '0' },
-    { label: t('fieldDesk.home.stats.votes'), value: votesReceived.toLocaleString() },
-    { label: t('fieldDesk.home.stats.era'), value: eraName || '—' },
-  ]
+  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
     <div
@@ -100,10 +132,21 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
 
       {/* ── Operative file ── */}
       <RansomCard tilt={-1}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
-          <span style={{ ...kicker, color: ACID }}>{t('fieldDesk.home.snide.charEyebrow')}</span>
-          <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: PINK, textDecoration: 'none' }}>
-            {t('fieldDesk.home.edit')}
+        <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-lg)' }}>
+          <button
+            type="button"
+            onClick={() => setSwitcherOpen(true)}
+            style={actionPillStyle}
+            className="hover:opacity-80 active:opacity-60"
+          >
+            {t('sidebar.characterCard.characters')}
+          </button>
+          <Link
+            to={`/characters/${character.id}/edit`}
+            style={{ ...actionPillStyle, borderColor: PINK, color: PINK }}
+            className="hover:opacity-80 active:opacity-60"
+          >
+            {t('sidebar.characterCard.edit')}
           </Link>
         </div>
 
@@ -125,33 +168,67 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
               {character.display_name}
             </Link>
             <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
-              {t('sidebar.characterCard.factionLevel', {
-                faction: factionName(character.faction_slug),
-                level: character.level,
-              })}
+              {t('sidebar.characterCard.level', { level: character.level })}
             </div>
-          </div>
-          <div className="shrink-0 text-right">
-            <div style={{ fontFamily: IMPACT, fontSize: 'var(--text-title)', lineHeight: 1, color: ACID }}>
-              {character.score?.toLocaleString() ?? '0'}
-            </div>
-            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-sm)' }}
-            >
-              <div className="truncate" style={{ fontFamily: IMPACT, fontSize: 'var(--text-content)', lineHeight: 1, color: TEXT }}>
-                {stat.value}
-              </div>
-              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
-            </div>
-          ))}
+        {/* The one points figure, in the display face (#1553). */}
+        <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
+          <span style={{ fontFamily: IMPACT, fontSize: 'var(--text-heading)', lineHeight: 1, color: ACID }}>
+            {character.score.toLocaleString()}
+          </span>
+          <span className="truncate" style={trackMetaStyle}>
+            {eraName ? t('sidebar.characterCard.eraPoints', { era: eraName }) : t('sidebar.characterCard.points')}
+          </span>
+        </div>
+
+        {/* The level track — the faction's own spectrum CLIPPED by the fill width,
+            one full ramp read through a narrower window rather than a solid
+            colour. Same mark as this skin's rule and its avatar ring, at a third
+            scale. */}
+        <div
+          className="overflow-hidden"
+          style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.04)', marginTop: 'var(--space-md)' }}
+          {...(levelTrack
+            ? {
+                role: 'progressbar',
+                'aria-valuemin': 0,
+                'aria-valuemax': 100,
+                'aria-valuenow': Math.round(levelTrack.fillPercent),
+                'aria-label': t('sidebar.characterCard.trackLabel', {
+                  score: character.score.toLocaleString(),
+                  target: levelTrack.nextThreshold.toLocaleString(),
+                  level: levelTrack.nextLevel ?? character.level,
+                }),
+              }
+            : null)}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${levelTrack?.fillPercent ?? 0}%`,
+              borderRadius: 999,
+              background: TRACK_FILL,
+              transition: 'width 300ms',
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
+          {levelTrack && (
+            <span style={trackMetaStyle}>
+              {levelTrack.nextLevel === null
+                ? t('sidebar.characterCard.topLevel')
+                : t('sidebar.characterCard.toNextLevel', {
+                    points: levelTrack.pointsToNext.toLocaleString(),
+                    level: levelTrack.nextLevel,
+                  })}
+            </span>
+          )}
+          <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
+            {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
+          </span>
         </div>
       </RansomCard>
 
@@ -237,6 +314,13 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
           </Link>
         )}
       </div>
+
+      {/* The switcher the "Characters" pill opens (#516). */}
+      <CharacterSwitcherSheet
+        open={switcherOpen}
+        activeCharacterId={character.id}
+        onClose={() => setSwitcherOpen(false)}
+      />
     </div>
   )
 }
