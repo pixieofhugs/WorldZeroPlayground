@@ -133,6 +133,7 @@ class FriendSignupPayload(FeedPayloadBase):
     task_title: str
     task_point_value: int
     task_faction_slug: str
+    task_level_required: int
 
 
 class InvitationLetterPayload(FeedPayloadBase):
