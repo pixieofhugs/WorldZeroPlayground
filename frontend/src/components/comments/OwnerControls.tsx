@@ -38,10 +38,15 @@ export function isCommentOwner(
   return characterId != null && characterId === comment.author.id
 }
 
-/** Save is inert on an empty (whitespace-only) draft or while a save is inflight. */
-export function editSaveDisabled(draft: string, saving: boolean): boolean {
-  return saving || draft.trim().length === 0
-}
+/*
+ * There is no `editSaveDisabled` here any more (#1524). The save gate is
+ * `ComposerControls`' own `disabled` in `shared.tsx` — empty draft, inflight
+ * save, OR over the body cap — and every voice reaches it through
+ * `<CommentEditor>`, so nothing re-derives it. This helper was a two-thirds
+ * copy of that rule (it never learned about the cap #1205 added) that only its
+ * own unit test ever called. Its empty-draft assertion now lives on the real
+ * gate in `composerControls.test.tsx`.
+ */
 
 // ── Shared state machine ─────────────────────────────────────────────────────
 
