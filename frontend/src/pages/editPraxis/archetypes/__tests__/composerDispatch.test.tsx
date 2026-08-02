@@ -110,6 +110,7 @@ function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     pendingImage: null,
     confirmImageEdit: async () => {},
     cancelImageEdit: () => {},
+    reportImageError: () => {},
     switchingMode: null,
     changeMode: async () => {},
     inviteQuery: "",

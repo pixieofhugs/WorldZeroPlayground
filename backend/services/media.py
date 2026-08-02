@@ -53,6 +53,55 @@ def _sanitize_filename(raw: str) -> str:
     return cleaned
 
 
+def _resolve_stored_media_path(stored_path: str) -> str | None:
+    """Resolve a stored relative media path to an absolute path under MEDIA_ROOT.
+
+    Returns ``None`` for anything this process must not touch on disk, which is
+    the point of the helper: ``Character.avatar_url`` is not always ours.
+    ``POST /characters`` and the admin editor both accept a player-supplied
+    ``avatar_url``, and the upload route's own error text invites pasting a URL,
+    so the column holds either an uploaded relative path *or* a remote
+    ``http(s)`` URL. Absolute filesystem paths and ``..`` escapes are refused
+    for the same reason ``_sanitize_filename`` exists — a value that resolves
+    outside ``MEDIA_ROOT`` is not a file we wrote.
+    """
+    if not stored_path:
+        return None
+    if stored_path.startswith(("http://", "https://")):
+        return None
+    if os.path.isabs(stored_path):
+        return None
+    media_root = os.path.realpath(settings.MEDIA_ROOT)
+    resolved = os.path.realpath(os.path.join(media_root, stored_path))
+    if not resolved.startswith(media_root + os.sep):
+        return None
+    return resolved
+
+
+def _remove_superseded_avatar(previous_avatar_url: str | None) -> None:
+    """Delete the avatar a fresh upload has just replaced, best-effort.
+
+    Called only after the replacement is safely on disk: an upload must never
+    leave a character with a dead ``avatar_url``, so a failure to unlink is
+    logged and swallowed rather than raised.
+    """
+    absolute_path = _resolve_stored_media_path(previous_avatar_url or "")
+    if absolute_path is None:
+        return
+    try:
+        os.remove(absolute_path)
+    except OSError:
+        logger.info("Could not remove superseded avatar %s", absolute_path)
+        return
+    # Each upload owns its directory, so the unlink leaves that directory empty.
+    # rmdir refuses a non-empty one, which is exactly the guard we want for
+    # pre-#1565 avatars still sitting directly in the shared ``<id>/avatar``.
+    try:
+        os.rmdir(os.path.dirname(absolute_path))
+    except OSError:
+        pass
+
+
 def _detect_media_type(content_type: str) -> MediaType:
     """Map a MIME type prefix to a MediaType enum or raise 422."""
     if content_type.startswith("image/"):
@@ -64,19 +113,37 @@ def _detect_media_type(content_type: str) -> MediaType:
     raise HTTPException(status_code=422, detail="Unsupported media type.")
 
 
-async def process_and_save_avatar(upload: UploadFile, character_id: int) -> str:
+async def process_and_save_avatar(
+    upload: UploadFile,
+    character_id: int,
+    previous_avatar_url: str | None = None,
+) -> str:
     """Resize and JPEG-encode an avatar upload; return its relative path.
 
     Router contract: the caller has already validated that the target
     character exists and is owned by the current account. This function
     handles PIL + filesystem concerns only. The returned path is stored on
     ``Character.avatar_url``; the caller commits the session.
+
+    **Every upload gets its own directory** (#1565), the same mechanism #1336
+    gave praxis media one function below. The avatar used to live at the fully
+    deterministic ``<id>/avatar/avatar.jpg``, so a re-upload changed the bytes
+    but not the URL — and the ``/media`` mount sends no ``Cache-Control``, so
+    browsers applied heuristic freshness and kept showing the old photo.
+    Uniquifying the *directory* rather than the basename changes the URL, which
+    (unlike a ``?v=`` token) no proxy can strip. The avatar is the one media
+    route that replaces rather than appends, which is why it is the one where a
+    stale cache was guaranteed rather than incidental.
+
+    ``previous_avatar_url`` is the caller's pre-upload ``Character.avatar_url``;
+    it is unlinked *after* the new file is written, so a unique path per upload
+    does not mean an orphaned file per upload. Paths stay relative (CLAUDE.md).
     """
     content_type = upload.content_type or ""
     if not content_type.startswith("image/"):
         raise HTTPException(status_code=422, detail="Avatar must be an image file.")
 
-    relative_directory = os.path.join(str(character_id), "avatar")
+    relative_directory = os.path.join(str(character_id), "avatar", uuid.uuid4().hex)
     absolute_directory = os.path.join(settings.MEDIA_ROOT, relative_directory)
     filename = "avatar.jpg"
     absolute_path = os.path.join(absolute_directory, filename)
@@ -103,6 +170,9 @@ async def process_and_save_avatar(upload: UploadFile, character_id: int) -> str:
             status_code=500,
             detail="We couldn't save your avatar. Please try again or paste a URL instead.",
         )
+
+    # Only once the replacement is safely on disk.
+    _remove_superseded_avatar(previous_avatar_url)
 
     return relative_path
 

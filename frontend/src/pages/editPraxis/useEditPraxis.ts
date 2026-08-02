@@ -138,6 +138,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     pendingImage,
     confirmImageEdit,
     cancelImageEdit,
+    reportImageError,
   } = useComposerMedia(idParam, setError);
 
   // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
@@ -704,6 +705,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     pendingImage,
     confirmImageEdit,
     cancelImageEdit,
+    reportImageError,
 
     switchingMode,
     changeMode,
