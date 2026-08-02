@@ -174,7 +174,6 @@ ERA_N = EraConfig(
     config_key="era_n",                  # TODO: Unique key stored in DB (lowercase, underscored)
 
     max_task_signups=20,                 # Max active task signups per character
-    max_duel_participants=2,             # Max members in a duel praxis
 
     vote_budget_base=100,                # Starting vote budget
     vote_budget_multiplier=2.0,          # Extra votes per point of score
@@ -213,7 +212,6 @@ ERA_N = EraConfig(
     # Character account / faction gates
     second_character_level_required=4,
     albescent_level_required=8,
-    faction_graduation_level=3,
     invitation_point_threshold=50,   # ADR-0022: points from a faction's tasks
     invitation_task_threshold=2,     # ADR-0022: completed tasks for that faction
 

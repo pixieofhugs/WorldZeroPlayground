@@ -51,13 +51,13 @@ class MetataskApply(BaseModel):
     task_id: int
 from schemas.nudge import NudgeOut, NudgeResultOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
+from services.collab_consensus import on_member_edit
 from services.scoring import compute_votes_available
 from services.praxis import (
     _require_member,
     add_media_batch,
     can_view_praxis,
     cancel_invite,
-    cancel_pending_publish_on_edit,
     change_praxis_type,
     create_praxis,
     delete_praxis,
@@ -317,7 +317,7 @@ async def upload_media_route(
     await session.flush()
     await session.refresh(media_item)
     # Media is part of the shared document — adding it cancels a pending publish (ADR-0012).
-    await cancel_pending_publish_on_edit(praxis, session)
+    await on_member_edit(praxis, session)
     return MediaItemOut.model_validate(media_item)
 
 
@@ -407,7 +407,7 @@ async def delete_media_route(
     await session.delete(media_item)
     await session.flush()
     # Removing media edits the shared document — cancels a pending publish (ADR-0012).
-    await cancel_pending_publish_on_edit(praxis, session)
+    await on_member_edit(praxis, session)
     return Response(status_code=204)
 
 

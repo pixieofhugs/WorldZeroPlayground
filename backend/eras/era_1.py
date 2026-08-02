@@ -457,10 +457,9 @@ ERA_1_TASKS = (
 # entries are pure whimsy. Bot-drafted copy — Molly may revise later
 # (config-only, no code change).
 #
-# NOTE: issue #287's table paired level 3 with "choose a faction"
-# (`faction_graduation_level`), but that field is DORMANT (see game_config.py)
-# and `services/faction_service.py::defect_to_faction` has no level check at
-# all — faction choice is gated purely by invitation, not by level. Dropped
+# NOTE: issue #287's table paired level 3 with "choose a faction", but
+# `services/faction_service.py::defect_to_faction` has no level check at all —
+# faction choice is gated purely by invitation (ADR-0022), not by level. Dropped
 # from the grounded abilities below rather than citing a gate that isn't
 # actually enforced.
 
@@ -543,7 +542,6 @@ ERA_1 = EraConfig(
     name="TestEra",
     config_key="era_1",
     max_task_signups=20,
-    max_duel_participants=2,
     vote_budget_base=100,
     vote_budget_multiplier=2.0,
     level_thresholds=(0, 10, 70, 170, 330, 610, 1090, 1840, 3040),
@@ -569,7 +567,6 @@ ERA_1 = EraConfig(
     # Character account / faction gates
     second_character_level_required=4,
     albescent_level_required=8,
-    faction_graduation_level=3,
     invitation_point_threshold=50,   # ADR-0022: 50 points from a faction's tasks
     invitation_task_threshold=2,     # ADR-0022: 2 completed tasks for that faction
     reset_score=True,

@@ -57,17 +57,6 @@ from models.duel import Duel, DuelStatus
 # ---------------------------------------------------------------------------
 
 
-async def cancel_pending_publish_on_edit(
-    praxis: Praxis, session: AsyncSession, era: EraConfig = CURRENT_ERA
-) -> None:
-    """Backwards-compatible alias for :func:`collab_consensus.on_member_edit`.
-
-    Kept so the media/edit routes keep their existing import; the ADR-0012 window
-    logic now lives in ``services.collab_consensus`` (#331).
-    """
-    await collab_consensus.on_member_edit(praxis, session, era)
-
-
 def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
     """403 unless ``character_id`` is a member of ``praxis`` (ADR-0013 co-ownership).
 
@@ -876,7 +865,7 @@ async def update_praxis(
     if data.body_text is not None:
         praxis.body_text = data.body_text
     await session.flush()
-    await cancel_pending_publish_on_edit(praxis, session, era)
+    await collab_consensus.on_member_edit(praxis, session, era)
     # Re-fetch rather than session.refresh(praxis): refresh expires the
     # lazy='raise' relationships and breaks the subsequent build_praxis_out.
     return await get_praxis(praxis_id, session)
@@ -1134,7 +1123,7 @@ async def add_media_batch(
         saved_count += 1
 
     if saved_count:
-        await cancel_pending_publish_on_edit(praxis, session, era)
+        await collab_consensus.on_member_edit(praxis, session, era)
     return results
 
 
@@ -1413,7 +1402,7 @@ def is_task_eligible_for_character(
     never eligible.
 
     Note this mirrors the metatask scoring gate in
-    :func:`services.meta_task.get_meta_task_points`
+    :func:`services.meta_task.get_meta_task_points_bulk`
     (``character_level >= task.level_required``)
     rather than the stricter :func:`apply_metatask` service gate. The flag is
     intended for UI affordances such as "metatasks this character could use
@@ -1840,7 +1829,6 @@ __all__ = [
     "active_member_task_ids",
     "active_member_task_ids_subquery",
     "allowed_praxis_modes",
-    "cancel_pending_publish_on_edit",
     "can_flag_praxis",
     "can_sign_up_for_task",
     "can_view_praxis",

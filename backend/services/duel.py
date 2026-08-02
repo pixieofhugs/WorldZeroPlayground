@@ -26,7 +26,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task
-from schemas.duel import DuelDetailOut, DuelOut, DuelSideOut
+from schemas.duel import DuelDetailOut, DuelSideOut
 from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at
 from services.vote_tally import get_tally, tally_votes
@@ -67,18 +67,6 @@ async def _characters_share_account(
     if first is None or second is None:
         return False
     return first.account_id == second.account_id
-
-
-def _build_duel_out(duel: Duel) -> DuelOut:
-    return DuelOut(
-        id=duel.id,
-        task_id=duel.task_id,
-        challenger_praxis_id=duel.challenger_praxis_id,
-        opponent_character_id=duel.opponent_character_id,
-        opponent_praxis_id=duel.opponent_praxis_id,
-        status=duel.status,
-        created_at=duel.created_at,
-    )
 
 
 async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
