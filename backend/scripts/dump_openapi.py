@@ -77,9 +77,17 @@ def render(schema: dict) -> str:
     return json.dumps(schema, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
 
 
-def main() -> None:
-    OUTPUT_PATH.write_text(render(build_schema()), encoding="utf-8", newline="\n")
-    print(f"Wrote {OUTPUT_PATH}")
+def main(argv: list[str] | None = None) -> None:
+    """Write the schema to ``backend/openapi.json``, or to a path given as argv[0].
+
+    The override exists for ``tests/test_openapi_dump.py``, which regenerates
+    into a temp directory to compare against the committed file. A test that
+    proved the artifact was current by overwriting it would prove nothing.
+    """
+    argv = sys.argv[1:] if argv is None else argv
+    destination = Path(argv[0]) if argv else OUTPUT_PATH
+    destination.write_text(render(build_schema()), encoding="utf-8", newline="\n")
+    print(f"Wrote {destination}")
 
 
 if __name__ == "__main__":
