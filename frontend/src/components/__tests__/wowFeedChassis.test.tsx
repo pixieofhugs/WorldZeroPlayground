@@ -231,7 +231,7 @@ describe('every type the backend emits, inside this chassis', () => {
     expect(html).not.toContain('disabled')
   })
 
-  it('tags an archived challenge "still waiting" (ADR-0066)', () => {
+  it('tags an archived challenge "still waiting" (ADR-0070)', () => {
     expect(card('duel_challenge', true)).toContain(i18n.t('feed:archive.stillWaiting'))
     expect(card('friend_completion', true)).not.toContain(i18n.t('feed:archive.stillWaiting'))
   })

@@ -174,7 +174,7 @@ export default function WowFeedFrame({
         </span>
 
         {/* "Still waiting" — an archived challenge or invite is still open, since
-            archiving never answers anything (ADR-0066). Struck as the decree's
+            archiving never answers anything (ADR-0070). Struck as the decree's
             own plum lozenge, the one WOW chip pairing measured in both themes. */}
         {tag && (
           <span
