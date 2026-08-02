@@ -1,4 +1,5 @@
 import api from './axios'
+import { dropAllCaches } from '../utils/cacheEpoch'
 
 // Faction name/description prose is no longer backend-emitted (issue #461): the
 // server sends only the slug, and the frozen English words live in the
@@ -39,5 +40,11 @@ export async function getFactionStatus(): Promise<FactionPageOut> {
 
 export async function chooseFaction(factionSlug: string): Promise<FactionOut> {
   const res = await api.post<FactionOut>('/factions/choose', { faction_slug: factionSlug })
+  // `GET /factions` is viewer-scoped: Albescent is omitted until the account has
+  // been revealed to it (ADR-0027), and joining is what reveals it. The
+  // directory is otherwise deploy-scoped and held for the whole session
+  // (ADR-0072), so the reveal has to be answered as the mutation it is — a timer
+  // short enough to catch it would defeat the class.
+  dropAllCaches()
   return res.data
 }
