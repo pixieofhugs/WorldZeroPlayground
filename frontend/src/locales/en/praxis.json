@@ -26,16 +26,7 @@
       "voted": "Voted"
     }
   },
-  "mobileFeed": {
-    "unaffiliated": "Unaffiliated",
-    "untitled": "Untitled praxis",
-    "byline": "{{faction}} · {{time}}",
-    "tally_one": "{{points}} pts · {{count}} vote",
-    "tally_other": "{{points}} pts · {{count}} votes"
-  },
   "mobileCard": {
-    "taskRef": "Re · {{title}}",
-    "untitled": "Untitled praxis",
     "rosterMore": "+{{count}} more",
     "mediaMore": "+{{count}}",
     "mediaVideo": "video",

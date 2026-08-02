@@ -120,8 +120,8 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
 /* Coven and WOW are distinct factions that must never fall back on each      */
 /* other aesthetically, and a faction missing a custom experience is a design */
 /* bug. Any fallback goes to the generic Default (N/A) — pickVariant has no    */
-/* cross-faction path (FACTION_ALIASES is empty) — so this enforces the second */
-/* half: both must be bespoke on every surface the core factions are.         */
+/* cross-faction path at all — so this enforces the second half: both must be  */
+/* bespoke on every surface the core factions are.                            */
 /* -------------------------------------------------------------------------- */
 
 // The bar, derived so a new core surface raises it automatically: every surface

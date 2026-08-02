@@ -1,5 +1,4 @@
 import i18n from '../../i18n'
-import { FACTION_ALIASES } from '../../utils/factions'
 
 export interface ReframeTier {
   value: number
@@ -87,7 +86,7 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
     // The growing-mandala vote widget (#821): each rank is a "reading" of the
     // filed work as the mandala blooms fuller/warmer — faint → radiant. These
     // words are the mandala's per-rank captions AND UA's app-wide vote
-    // vocabulary (the voter-breakdown resolver reads them via reframeLabel).
+    // vocabulary (anything labelling a value reads them via reframeLabel).
     tiers: [
       { value: 1, label: i18n.t('votes:ua.faint') },
       { value: 2, label: i18n.t('votes:ua.forming') },
@@ -104,13 +103,10 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
 }
 
 /**
- * Label a vote value in a task faction's vocabulary (alias-aware, mirroring
- * pickVariant). Falls back to the arabic number when no reframe exists
- * (factionless / unknown slug).
+ * Label a vote value in a task faction's vocabulary. Falls back to the arabic
+ * number when no reframe exists (factionless / unknown slug).
  */
 export function reframeLabel(factionSlug: string | null | undefined, value: number): string {
-  const reframe =
-    VOTE_REFRAMES[factionSlug ?? ''] ??
-    VOTE_REFRAMES[FACTION_ALIASES[factionSlug ?? ''] ?? '']
+  const reframe = VOTE_REFRAMES[factionSlug ?? '']
   return reframe?.tiers.find((tier) => tier.value === value)?.label ?? String(value)
 }

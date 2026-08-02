@@ -18,7 +18,6 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  FACTION_ALIASES,
   FACTION_RAINBOW_ORDER,
   factionCssVar,
   factionFill,
@@ -122,8 +121,8 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
   it("is not an alias — it is registered, just unthemed", () => {
     // Guards the other way of "fixing" this: re-pointing albescent at another
     // faction's identity. It borrows nobody's costume (it wore ua's before
-    // #232); it simply has none of its own.
-    expect(FACTION_ALIASES["albescent"]).toBeUndefined();
+    // #232); it simply has none of its own. There is no alias map left to
+    // check, so the resolved variables ARE the whole assertion.
     for (const suffix of SUFFIXES) {
       expect(factionCssVar("albescent", suffix)).not.toContain("--faction-ua");
     }

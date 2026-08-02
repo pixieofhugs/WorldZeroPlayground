@@ -31,7 +31,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/factionMarks/TaskCrown'
 import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
@@ -701,47 +700,6 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           {flagError && <p className="font-body content-text" style={{ color: 'var(--color-danger)', marginTop: 'var(--space-sm)' }}>{flagError}</p>}
         </div>
       )}
-    </div>
-  )
-}
-
-// ── Voter breakdown (who voted + their value) ─────────────────────────────────
-//
-// Task-scoped surface: every voter's value is labelled in the *task* faction's
-// vocabulary (one reframe), not each voter's own. Read-only; faction-agnostic
-// structure, so it lives here and every archetype renders it identically.
-
-export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
-  const { t } = useTranslation('praxis')
-  const { praxis, voters } = state
-  if (!praxis || voters.length === 0) return null
-
-  return (
-    <div className="sidebar-card card-on-page mb-4" style={{ padding: 'var(--space-lg) var(--space-lg)' }}>
-      <div className="flex items-baseline justify-between mb-3">
-        <span className="eyebrow">{t('detail.voters.heading')}</span>
-        <span className="eyebrow">{t('detail.voters.count', { count: voters.length })}</span>
-      </div>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {voters.map((voter) => (
-          <li
-            key={voter.character_id}
-            className="flex items-center justify-between"
-            style={{ padding: 'var(--space-xs) 0', borderTop: '1px solid var(--color-border)' }}
-          >
-            <Link
-              to={`/characters/${voter.character_id}`}
-              className="font-body"
-              style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-primary)', textDecoration: 'none' }}
-            >
-              {voter.display_name}
-            </Link>
-            <span className="font-body content-text" style={{ fontWeight: 700, color: 'var(--color-text-secondary)' }}>
-              {reframeLabel(praxis.task_faction_slug, voter.value)}
-            </span>
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }

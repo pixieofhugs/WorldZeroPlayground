@@ -2892,15 +2892,6 @@
 
   /* ── Task card shared patterns ── */
 
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px dashed var(--color-border-strong);
-    padding-top: 5px;
-    margin-top: auto;
-  }
-
   .card-meta {
     font-size: var(--text-xs);
     text-transform: uppercase;
@@ -3190,12 +3181,6 @@
     @apply max-w-5xl mx-auto px-4 sm:px-6 py-8;
   }
 
-  .page-heading {
-    @apply font-display text-4xl font-bold mb-6;
-    font-style: italic;
-    color: var(--color-text-primary);
-  }
-
   /* ── Nav links (Courier Prime 10px uppercase — Style Guide §5.1) ── */
 
   .nav-link {
@@ -3262,10 +3247,6 @@
     background-image: radial-gradient(currentColor 32%, transparent 34%);
     background-size: 5px 5px;
   }
-  .ht-dots-lg {
-    background-image: radial-gradient(currentColor 30%, transparent 33%);
-    background-size: 8px 8px;
-  }
   .xerox {
     background-color: var(--faction-snide-paper);
     background-image:
@@ -3296,9 +3277,6 @@
   }
   .snide-tape::after {
     right: 0;
-  }
-  .snide-merrow {
-    background-image: repeating-conic-gradient(var(--faction-snide-acid) 0deg 18deg, var(--faction-snide-acid-deep) 18deg 36deg);
   }
 }
 
@@ -3386,22 +3364,6 @@
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
-}
-
-/* S.N.I.D.E. duel rail — the settled-state dot flickers like a failing xerox
-   lamp. Class-gated on reduced-motion like every other faction animation, so a
-   component never writes `animation:` inline and bypasses the gate. (#722) */
-@keyframes snide-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-@media (prefers-reduced-motion: no-preference) {
-  .snide-pulse { animation: snide-pulse 1.6s ease-in-out infinite; }
-}
-
-/* Everymen duel rail — the "live" dot on the settled-standing strip pulses like a
-   dispatch-board indicator (#721). Stilled for reduced-motion, same as its
-   neighbours: the dot's meaning is carried by the note's copy, never by motion. */
-@keyframes ev-duel-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.82); } }
-@media (prefers-reduced-motion: no-preference) {
-  .ev-duel-pulse { animation: ev-duel-pulse 1.1s ease-in-out infinite; }
 }
 
 /* ══ Praxis-card redesign vote widgets (#821) ══

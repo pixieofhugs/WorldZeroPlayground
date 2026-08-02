@@ -1,4 +1,3 @@
-import i18n from "../../i18n";
 import { Enso } from "../factionMarks";
 
 /**
@@ -60,38 +59,4 @@ export function UaSigil({
   color?: string;
 }) {
   return <Enso size={width} height={height} color={color} style={{ flexShrink: 0 }} />;
-}
-
-/**
- * The motto cartouche — a solid sienna ribbon with notched ends.
- *
- * Kept as-is structurally; only repointed off the legacy gilt-salon family onto
- * the fill/on-fill pair, which carries both themes (4.59:1 light, 5.59:1 dark).
- * Whether the practice still wants a motto ribbon at all is an archetype
- * question and belongs to the surfaces that draw it, not to this file.
- */
-export function MottoRibbon({
-  fontSize = 11,
-  padding = "5px 26px",
-}: {
-  fontSize?: number;
-  padding?: string;
-}) {
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "fit-content",
-        background: "var(--faction-ua)",
-        color: "var(--faction-ua-on-fill)",
-        fontFamily: 'var(--faction-ua-body-font)',
-        fontSize,
-        letterSpacing: "0.1em",
-        padding,
-        clipPath: "polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)",
-      }}
-    >
-      {i18n.t("feed:identity.ua.motto")}
-    </div>
-  );
 }

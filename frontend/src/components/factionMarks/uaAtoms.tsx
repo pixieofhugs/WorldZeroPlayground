@@ -36,12 +36,6 @@ export const UA_EYEBROW: CSSProperties = {
   color: "var(--faction-ua-card-muted)",
 };
 
-/** The same label in the accent, for a section head that must lead the eye. */
-export const UA_EYEBROW_ACCENT: CSSProperties = {
-  ...UA_EYEBROW,
-  color: "var(--faction-ua-card-accent)",
-};
-
 /**
  * A drop shadow mixed from the ink token rather than a raw rgba.
  *
@@ -52,9 +46,6 @@ export const UA_EYEBROW_ACCENT: CSSProperties = {
 export function uaShade(percent: number): string {
   return `color-mix(in srgb, var(--faction-ua-card-text) ${percent}%, transparent)`;
 }
-
-/** The neutral hairline, as a border shorthand. */
-export const UA_HAIRLINE = "1px solid var(--faction-ua-rule)";
 
 /**
  * How much of the drawn box the ensō leaves clear, across the middle.

@@ -505,10 +505,10 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
 // Retired/renamed slugs → their live archetype. Raw slug wins first, so a
 // first-class faction always renders its own card rather than a legacy skin.
 //
-// This is a SECOND alias table, parallel to FACTION_ALIASES in utils/factions.ts
-// which pickVariant already consults. Folding the two together is a behaviour
-// change (these two slugs are not in FACTION_ALIASES), so it is left alone here
-// and tracked as follow-up.
+// This is the only alias table left in the frontend. The general-purpose one in
+// utils/factions.ts had been an empty object since #232 and was deleted with the
+// four resolution branches that consulted it (#1389); these two slugs were never
+// in it, so nothing here changed.
 const LEGACY_SLUG: Record<string, string> = {
   gestalt: "coven",
   journeymen: "ephemerists",
