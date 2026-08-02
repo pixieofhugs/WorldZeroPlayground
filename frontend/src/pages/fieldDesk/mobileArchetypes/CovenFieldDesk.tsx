@@ -28,7 +28,8 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * Cozy Coven MOBILE FieldDesk home (#500, re-dressed by #1209) — the coven's
@@ -159,7 +160,7 @@ const ghostButton: CSSProperties = {
 
 export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -322,10 +323,10 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
           </div>
         </Plate>
 
-        {/* ── Pending requests ── */}
-        {pendingCount > 0 && (
-          <Link
-            to={REQUESTS_QUEUE_LINK}
+        {/* ── The pending row, in all three of its states (#1554) ── */}
+        {pendingRow && (
+          <PendingRowPill
+            row={pendingRow}
             className="flex items-center justify-between"
             style={{
               background: CARD,
@@ -337,13 +338,9 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
               color: INK,
               textDecoration: 'none',
             }}
-          >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-              <CovenSigil size={12} color={GOLD} />
-              {t('fieldDesk.home.pending', { count: pendingCount })}
-            </span>
-            <span aria-hidden style={{ color: SOFT }}>›</span>
-          </Link>
+            glyph={<CovenSigil size={12} color={GOLD} />}
+            chevron={<span aria-hidden style={{ color: SOFT }}>›</span>}
+          />
         )}
 
         {/* ── Quests plate ── */}
@@ -408,19 +405,15 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
           )}
         </Plate>
 
-        {/* ── Primary actions ── */}
+        {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
         <div className="flex gap-2.5">
-          <Link to="/tasks" style={primaryButton}>
+          <Link to={FIND_TASK_LINK} style={primaryButton}>
             <CovenSigil size={13} color={CTA_INK} />
-            {t('fieldDesk.home.browseTasks')}
+            {t('fieldDesk.home.findTask')}
           </Link>
-          {canProposeTask && (
-            <Link to="/propose-task" style={ghostButton}>
-              {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-              <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-              {t('actions.proposeTask')}
-            </Link>
-          )}
+          <Link to={CAST_VOTES_LINK} style={ghostButton}>
+            {t('fieldDesk.home.castVotes')}
+          </Link>
         </div>
 
         {/* The switcher the "Characters" pill opens (#516). */}

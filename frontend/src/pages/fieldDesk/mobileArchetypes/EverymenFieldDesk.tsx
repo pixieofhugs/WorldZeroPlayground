@@ -6,7 +6,8 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * Everymen MOBILE FieldDesk home (#529) — the union broadsheet on a phone. The
@@ -123,7 +124,7 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
 
 export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -289,16 +290,14 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         </div>
       </Plate>
 
-      {/* ── Pending requests ── */}
-      {pendingCount > 0 && (
-        <Link
-          to={REQUESTS_QUEUE_LINK}
+      {/* ── The pending row, in all three of its states (#1554) ── */}
+      {pendingRow && (
+        <PendingRowPill
+          row={pendingRow}
           className="flex items-center justify-between"
           style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
-        >
-          <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
-          <span aria-hidden style={{ color: RED }}>›</span>
-        </Link>
+          chevron={<span aria-hidden style={{ color: RED }}>›</span>}
+        />
       )}
 
       {/* ── On the job ── */}
@@ -349,26 +348,22 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         )}
       </Plate>
 
-      {/* ── Primary actions ── */}
+      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
         <Link
-          to="/tasks"
+          to={FIND_TASK_LINK}
           className="flex-1 flex items-center justify-center"
           style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: CREAM, background: RED, border: `2px solid ${INK}`, textDecoration: 'none' }}
         >
-          {t('fieldDesk.home.browseTasks')}
+          {t('fieldDesk.home.findTask')}
         </Link>
-        {canProposeTask && (
-          <Link
-            to="/propose-task"
-            className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
-          >
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-            <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-            <span>{t('actions.proposeTask')}</span>
-          </Link>
-        )}
+        <Link
+          to={CAST_VOTES_LINK}
+          className="flex-1 flex items-center justify-center"
+          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
+        >
+          {t('fieldDesk.home.castVotes')}
+        </Link>
       </div>
 
       {/* The switcher the "Characters" pill opens (#516). */}

@@ -8,7 +8,8 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * University of Asthmatics MOBILE FieldDesk home (#525/#852) — "One mark today.
@@ -92,7 +93,7 @@ function Sheet({ children }: { children: ReactNode }) {
 
 export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -250,10 +251,10 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </div>
       </Sheet>
 
-      {/* ── Pending requests ── */}
-      {pendingCount > 0 && (
-        <Link
-          to={REQUESTS_QUEUE_LINK}
+      {/* ── The pending row, in all three of its states (#1554) ── */}
+      {pendingRow && (
+        <PendingRowPill
+          row={pendingRow}
           className="flex items-center justify-between"
           style={{
             background: SHEET,
@@ -265,12 +266,12 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
             color: INK,
             textDecoration: 'none',
           }}
-        >
-          <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
-          <span aria-hidden style={{ color: ACCENT }}>
-            ›
-          </span>
-        </Link>
+          chevron={
+            <span aria-hidden style={{ color: ACCENT }}>
+              ›
+            </span>
+          }
+        />
       )}
 
       {/* ── What is out on the table ── */}
@@ -323,7 +324,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
       {/* ── Begin ── */}
       <div className="flex flex-wrap gap-2.5">
         <Link
-          to="/tasks"
+          to={FIND_TASK_LINK}
           className="flex items-center justify-center"
           style={{
             flex: '1 1 0',
@@ -340,34 +341,28 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
             textDecoration: 'none',
           }}
         >
-          {t('fieldDesk.home.browseTasks')}
+          {t('fieldDesk.home.findTask')}
         </Link>
-        {canProposeTask && (
-          <Link
-            to="/propose-task"
-            className="flex items-center justify-center gap-2"
-            style={{
-              flex: '1 1 0',
-              minWidth: 0,
-              fontFamily: SERIF,
-              fontSize: 'var(--text-xl)',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              padding: 'var(--space-lg)',
-              color: INK,
-              background: SHEET,
-              border: `1px solid ${RULE}`,
-              borderRadius: 3,
-              textDecoration: 'none',
-            }}
-          >
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-            <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>
-              +
-            </span>
-            <span>{t('actions.proposeTask')}</span>
-          </Link>
-        )}
+        <Link
+          to={CAST_VOTES_LINK}
+          className="flex items-center justify-center"
+          style={{
+            flex: '1 1 0',
+            minWidth: 0,
+            fontFamily: SERIF,
+            fontSize: 'var(--text-xl)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            padding: 'var(--space-lg)',
+            color: INK,
+            background: SHEET,
+            border: `1px solid ${RULE}`,
+            borderRadius: 3,
+            textDecoration: 'none',
+          }}
+        >
+          {t('fieldDesk.home.castVotes')}
+        </Link>
       </div>
 
       {/* The switcher the "Characters" pill opens (#516). */}

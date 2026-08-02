@@ -154,7 +154,10 @@
       "taskMeta": "{{faction}} · +{{points}} pts",
       "pending_one": "{{count}} pending request",
       "pending_other": "{{count}} pending requests",
-      "browseTasks": "Browse Tasks",
+      "notifications": "New updates",
+      "caughtUp": "All caught up",
+      "findTask": "Find a Task",
+      "castVotes": "Cast Your Votes",
       "coven": {
         "charWindow": "you",
         "questsWindow": "quests",
