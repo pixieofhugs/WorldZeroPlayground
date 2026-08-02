@@ -250,10 +250,17 @@ async def resolve_admin_character(
 async def import_tasks_from_csv(
     raw: bytes, admin: Account, session: AsyncSession
 ) -> ImportOutcome:
-    """Create one active task per CSV row, or create nothing at all.
+    """Create one active task per CSV row, skipping names the board already has.
 
     Raises :class:`TaskImportError` with every failing row; the caller maps that
     to a response. Nothing is added to the session unless every row validates.
+
+    A row whose title already exists is **not** a failure — it is skipped and
+    reported as a warning, so re-running the same file is a no-op rather than a
+    rejection. That is what makes a curated sheet safe to re-import after adding
+    a few lines to it. A file that lists the same title twice is still an error
+    (:func:`parse_task_csv`): a collision with the board is expected, a collision
+    inside one file is a mistake in the file.
     """
     rows, warnings = parse_task_csv(raw)
 
@@ -269,6 +276,7 @@ async def import_tasks_from_csv(
     )
 
     errors: list[RowError] = []
+    to_create: list[ParsedRow] = []
     for parsed in rows:
         label = f'Row {parsed.row} ("{parsed.task.title}")'
         if parsed.task.primary_faction_slug not in known_slugs:
@@ -279,12 +287,15 @@ async def import_tasks_from_csv(
                     f"'{parsed.task.primary_faction_slug}'.",
                 )
             )
+            continue
         if parsed.task.title in existing_titles:
-            errors.append(RowError(parsed.row, f"{label}: a task with this name already exists."))
+            warnings.append(f"{label}: a task with this name already exists — skipped.")
+            continue
+        to_create.append(parsed)
     if errors:
         raise TaskImportError(errors)
 
-    for parsed in rows:
+    for parsed in to_create:
         session.add(
             Task(
                 title=parsed.task.title,
@@ -301,6 +312,6 @@ async def import_tasks_from_csv(
     await session.flush()
 
     return ImportOutcome(
-        created_titles=[parsed.task.title for parsed in rows],
+        created_titles=[parsed.task.title for parsed in to_create],
         warnings=warnings,
     )

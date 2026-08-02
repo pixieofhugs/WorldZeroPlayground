@@ -1,10 +1,16 @@
 """
-Wipe the database named in DATABASE_URL, rebuild its schema, and clear MEDIA_ROOT.
+Empty the database named in DATABASE_URL and clear MEDIA_ROOT.
 
-Drops and recreates the `public` schema (destroying every table and row), then
-runs `alembic upgrade head` to rebuild from the migration chain, then empties
-the media disk. It does NOT seed — seeding happens on the next deploy, when
-`start.sh` runs `seed.py`.
+Drops and recreates the `public` schema (destroying every table and row) and
+empties the media disk, then **stops**. It deliberately does not migrate and
+does not seed: the following deploy does both, from the new image.
+
+Leaving the database EMPTY is the whole point. Render Shell runs on the
+currently-running instance — the last *successful* deploy — so during a squash
+recovery this image carries the OLD migration chain. Running `alembic upgrade
+head` from here would re-stamp the database at the OLD head, which is precisely
+the stamp the incoming deploy rejects, and every reset would re-create the
+condition it exists to clear.
 
 The media step exists because uploads live on a Render *disk*, which no schema
 drop can reach: every avatar and praxis image would otherwise survive as an
@@ -28,7 +34,6 @@ which this deliberately does not.
 import asyncio
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -130,35 +135,32 @@ def main() -> None:
     if input(f"\nType the database name ({database_name}) to continue: ").strip() != database_name:
         sys.exit("Aborted.")
 
-    print("\n[1/3] Dropping and recreating public schema...")
+    print("\n[1/2] Dropping and recreating public schema...")
     asyncio.run(drop_and_recreate_public_schema(dsn))
     print("      Done.")
 
-    # scripts/ sits inside the backend package, which is the image's WORKDIR on
-    # Render and `backend/` in a checkout — parent.parent is the alembic root in
-    # both.
-    backend_directory = Path(__file__).resolve().parent.parent
-    print("\n[2/3] Running alembic upgrade head...")
-    result = subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        cwd=backend_directory,
-        env={**os.environ, "DATABASE_URL": database_url},
-    )
-    if result.returncode != 0:
-        # Media is deliberately left alone: the files are already orphaned, and
-        # keeping them means a retry can still report what it is about to delete.
-        sys.exit(result.returncode)
+    # DELIBERATELY NO `alembic upgrade head` HERE. Render Shell runs on the
+    # currently-RUNNING instance — the last *successful* deploy — so during a
+    # squash recovery this image is by definition the OLD one, carrying the OLD
+    # chain. Migrating from here re-stamps the database at the OLD head, which
+    # is exactly the stamp the incoming deploy refuses. That is an unbreakable
+    # loop: every reset re-creates the condition it exists to clear.
+    #
+    # Leaving the database empty is what makes the next deploy work.
+    # `check_db_stamp.stamp_is_known` treats an unstamped DB as fine, so
+    # start.sh proceeds and migrates from the NEW image.
 
     if media_root is None:
-        print("\n[3/3] Media left untouched.")
+        print("\n[2/2] Media left untouched.")
     else:
-        print(f"\n[3/3] Emptying {media_root}...")
+        print(f"\n[2/2] Emptying {media_root}...")
         empty_directory(media_root)
         print("      Done.")
 
     print(
-        "\nSchema rebuilt. Now redeploy (Render → worldzero-backend → Manual Deploy) "
-        "so start.sh runs seed.py — this script does not seed."
+        "\nDatabase is empty and unstamped — that is the point. Do NOT run alembic here.\n"
+        "Redeploy now (Render → worldzero-backend → Manual Deploy → Deploy latest commit); "
+        "start.sh migrates from the new image and seeds."
     )
 
 
