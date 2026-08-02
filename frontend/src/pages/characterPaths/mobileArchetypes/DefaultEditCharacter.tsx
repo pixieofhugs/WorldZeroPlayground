@@ -253,7 +253,7 @@ const errorBox: CSSProperties = {
 }
 const stickyBar: CSSProperties = {
   position: 'sticky',
-  bottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
+  bottom: 'var(--tab-bar-clearance)',
   marginTop: 'auto',
   paddingTop: 'var(--space-sm)',
 }

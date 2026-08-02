@@ -59,7 +59,7 @@ const DESKTOP_REGION = 'flex-1 relative max-w-[min(92vw,1600px)] mx-auto w-full 
 
 const MOBILE_REGION_STYLE: CSSProperties = {
   zIndex: 5,
-  paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
+  paddingBottom: 'var(--tab-bar-clearance)',
 }
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 
