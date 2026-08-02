@@ -271,6 +271,19 @@ async def backfill_all_character_stats(
     Silent: ``emit_taunts=False`` (ADR-0068). Recomputing a score everyone
     already had is not an overtake, and a backfill must never mail the whole
     playerbase a volley of taunts about history.
+
+    **It repairs ``all_time_score`` too** — asked and answered in #1531, because
+    that field is lifetime-cumulative and moved by delta rather than re-derived
+    (``_credit_all_time_score``), which looks like it would be left holding
+    points whose votes are gone. It is not: the delta this recalc applies is
+    ``recomputed - stored``, so a score that falls by five stars drags lifetime
+    down five as well, and a second run applies zero. Pinned by
+    ``tests/integration/test_vote_dedupe_repair.py``.
+
+    Two limits worth knowing before leaning on it as a repair tool: it recalcs
+    the CURRENT era row only, so a change to a closed era's praxis needs
+    ``recalculate_character_stats`` with that ``era_row``; and it skips banned
+    characters (``list_active_characters``).
     """
     characters = await list_active_characters(session)
     era_row = await get_current_era_row(session)
