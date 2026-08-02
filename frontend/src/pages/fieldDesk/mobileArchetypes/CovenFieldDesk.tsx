@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import {
   Braid,
@@ -108,6 +109,36 @@ const primaryButton: CSSProperties = {
   textDecoration: 'none',
 }
 
+/**
+ * Characters / Edit as real controls (#1553) — a slip-sheet pill in the coven's
+ * hand. They were bare caps with no box: a sub-20px hit target on a phone. 44
+ * is the WCAG 2.5.5 target floor and is GEOMETRY, not spacing.
+ */
+const actionPillStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: 44,
+  boxSizing: 'border-box',
+  padding: '0 var(--space-lg)',
+  borderRadius: 999,
+  border: `1.5px solid ${BORDER}`,
+  background: SLIP_SHEET,
+  fontFamily: CHROME,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: DEEP,
+  textDecoration: 'none',
+  cursor: 'pointer',
+  transition: 'opacity 120ms ease',
+}
+
+/** The baseline row under the track — the plate's caption voice. */
+const trackMetaStyle: CSSProperties = { ...CAPTION }
+
+/** The candle's own spectrum: the ring's gradient, laid flat (#1553). */
+const TRACK_FILL = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
+
 const ghostButton: CSSProperties = {
   flex: 1,
   display: 'flex',
@@ -128,13 +159,8 @@ const ghostButton: CSSProperties = {
 
 export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
-
-  const stats = [
-    { label: t('fieldDesk.home.stats.points'), value: character.score?.toLocaleString() ?? '0' },
-    { label: t('fieldDesk.home.stats.votes'), value: votesReceived.toLocaleString() },
-    { label: t('fieldDesk.home.stats.era'), value: eraName || '—' },
-  ]
+  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
     <div
@@ -170,10 +196,21 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
 
         {/* ── Character plate ── */}
         <Plate title={t('fieldDesk.home.coven.charWindow')}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
-            <span style={CAPTION}>{t('fieldDesk.home.coven.charEyebrow')}</span>
-            <Link to={`/characters/${character.id}/edit`} style={{ ...CAPTION, color: DEEP, textDecoration: 'none' }}>
-              {t('fieldDesk.home.edit')}
+          <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-md)' }}>
+            <button
+              type="button"
+              onClick={() => setSwitcherOpen(true)}
+              style={actionPillStyle}
+              className="hover:opacity-80 active:opacity-60"
+            >
+              {t('sidebar.characterCard.characters')}
+            </button>
+            <Link
+              to={`/characters/${character.id}/edit`}
+              style={actionPillStyle}
+              className="hover:opacity-80 active:opacity-60"
+            >
+              {t('sidebar.characterCard.edit')}
             </Link>
           </div>
 
@@ -221,41 +258,67 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                 {character.display_name}
               </Link>
               <div className="truncate" style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>
-                {t('sidebar.characterCard.factionLevel', {
-                  faction: factionName(character.faction_slug),
-                  level: character.level,
-                })}
+                {t('sidebar.characterCard.level', { level: character.level })}
               </div>
-            </div>
-            <div className="shrink-0 text-right">
-              <div style={{ fontFamily: READING, fontWeight: 600, fontSize: 'var(--text-heading)', lineHeight: 1, color: DEEP }}>
-                {character.score?.toLocaleString() ?? '0'}
-              </div>
-              <div style={CAPTION}>{t('fieldDesk.home.stats.points')}</div>
             </div>
           </div>
 
-          <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="text-center"
-                style={{
-                  flex: '1 1 0',
-                  minWidth: 0,
-                  boxSizing: 'border-box',
-                  background: SLIP_SHEET,
-                  border: `1.5px solid ${BORDER}`,
-                  borderRadius: 12,
-                  padding: 'var(--space-md) var(--space-sm)',
-                }}
-              >
-                <div className="truncate" style={{ fontFamily: READING, fontWeight: 600, fontSize: 'var(--text-title)', lineHeight: 1, color: INK }}>
-                  {stat.value}
-                </div>
-                <div style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>{stat.label}</div>
-              </div>
-            ))}
+          {/* The one points figure, in the display face (#1553). */}
+          <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
+            <span style={{ fontFamily: READING, fontWeight: 600, fontSize: 'var(--text-heading)', lineHeight: 1, color: DEEP }}>
+              {character.score.toLocaleString()}
+            </span>
+            <span className="truncate" style={trackMetaStyle}>
+              {eraName ? t('sidebar.characterCard.eraPoints', { era: eraName }) : t('sidebar.characterCard.points')}
+            </span>
+          </div>
+
+          {/* The level track — the faction's own spectrum CLIPPED by the fill width,
+              one full ramp read through a narrower window rather than a solid
+              colour. Same mark as this skin's rule and its avatar ring, at a third
+              scale. */}
+          <div
+            className="overflow-hidden"
+            style={{ height: 6, borderRadius: 999, background: SLIP_SHEET, marginTop: 'var(--space-md)' }}
+            {...(levelTrack
+              ? {
+                  role: 'progressbar',
+                  'aria-valuemin': 0,
+                  'aria-valuemax': 100,
+                  'aria-valuenow': Math.round(levelTrack.fillPercent),
+                  'aria-label': t('sidebar.characterCard.trackLabel', {
+                    score: character.score.toLocaleString(),
+                    target: levelTrack.nextThreshold.toLocaleString(),
+                    level: levelTrack.nextLevel ?? character.level,
+                  }),
+                }
+              : null)}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${levelTrack?.fillPercent ?? 0}%`,
+                borderRadius: 999,
+                background: TRACK_FILL,
+                transition: 'width 300ms',
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
+            {levelTrack && (
+              <span style={trackMetaStyle}>
+                {levelTrack.nextLevel === null
+                  ? t('sidebar.characterCard.topLevel')
+                  : t('sidebar.characterCard.toNextLevel', {
+                      points: levelTrack.pointsToNext.toLocaleString(),
+                      level: levelTrack.nextLevel,
+                    })}
+              </span>
+            )}
+            <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
+              {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
+            </span>
           </div>
         </Plate>
 
@@ -359,6 +422,13 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
             </Link>
           )}
         </div>
+
+        {/* The switcher the "Characters" pill opens (#516). */}
+        <CharacterSwitcherSheet
+          open={switcherOpen}
+          activeCharacterId={character.id}
+          onClose={() => setSwitcherOpen(false)}
+        />
       </div>
     </div>
   )
