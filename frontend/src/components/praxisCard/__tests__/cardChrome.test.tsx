@@ -79,6 +79,26 @@ describe('one score per card (#888, closes #663)', () => {
   // `MobileVoteFooter` had the identical assertion against an identical
   // `VoteUI` call. It is gone with the `mobilePraxisCard` surface (ADR-0067);
   // the desktop case above is what a phone renders now.
+
+  /**
+   * #1444 — and no score at all on a praxis that banked none.
+   *
+   * `ScoreStamp` owns the gate (it is the single mount for every surface that
+   * shows a total); this case pins that the CARD BODY actually routes through
+   * it, which is the surface the issue reported. ADR-0067 collapsed the mobile
+   * card into this same component, so one case covers both form factors.
+   */
+  it('stamps a visible praxis and stamps nothing on a failed one', () => {
+    const stamped = text(
+      render(<PraxisBody praxis={praxis({ moderation_status: 'visible' })} tint="#000" muted="#555" />),
+    )
+    expect(stamped, 'the total, to one decimal').toContain('12.5')
+
+    const failed = text(
+      render(<PraxisBody praxis={praxis({ moderation_status: 'failed' })} tint="#000" muted="#555" />),
+    )
+    expect(failed, 'a figure nobody banked').not.toContain('12.5')
+  })
 })
 
 describe('the byline portrait (#888)', () => {

@@ -132,6 +132,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -610,7 +611,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // faction, which lands `EphemeristsScoreStamp` here. The design's own
   // arithmetic is NOT built: the model is `(base + meta) × faction_mult + votes`
   // (ADR-0014/0047/0053), resolved once by `scoreBreakdown()` inside the stamp.
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
