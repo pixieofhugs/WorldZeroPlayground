@@ -60,6 +60,68 @@ def compute_display_status(
     return DISPLAY_STATUS_UNKNOWN
 
 
+def _to_list_item(
+    relationship: Relationship,
+    target_character: Character,
+    incoming_type: Optional[str],
+    incoming_status: Optional[str],
+) -> RelationshipListItem:
+    """Assemble one display-ready edge.
+
+    The item describes THE EDGE, not the viewer: ``to_*`` always names
+    ``relationship.to_character_id`` and ``display_status`` is computed with this
+    edge as the outgoing side. Block and unblock may be performed by either party
+    (ADR-0009), so a viewer-relative shape would hand back the same row mirrored
+    depending on who acted.
+    """
+    outgoing_type = relationship.type.value
+    outgoing_status = relationship.status.value
+    return RelationshipListItem(
+        id=relationship.id,
+        from_character_id=relationship.from_character_id,
+        to_character_id=relationship.to_character_id,
+        type=outgoing_type,
+        status=outgoing_status,
+        created_at=relationship.created_at,
+        to_display_name=target_character.display_name,
+        to_avatar_url=target_character.avatar_url,
+        to_faction_slug=target_character.faction_slug,
+        display_status=compute_display_status(
+            outgoing_type, outgoing_status, incoming_type, incoming_status
+        ),
+    )
+
+
+async def build_relationship_item(
+    relationship: Relationship,
+    session: AsyncSession,
+) -> RelationshipListItem:
+    """Enrich one freshly-written edge into the shape the list route emits.
+
+    The three mutation routes answer with this rather than the bare row (#1383):
+    every caller of add / block / unblock immediately re-ran
+    ``GET /relationships`` for exactly these display fields, so the write already
+    held the answer to the read that chased it.
+    """
+    target_character = await session.get(Character, relationship.to_character_id)
+    if target_character is None:
+        raise HTTPException(status_code=404, detail="Target character not found.")
+
+    reverse_result = await session.execute(
+        select(Relationship).where(
+            Relationship.from_character_id == relationship.to_character_id,
+            Relationship.to_character_id == relationship.from_character_id,
+        )
+    )
+    reverse = reverse_result.scalar_one_or_none()
+    return _to_list_item(
+        relationship,
+        target_character,
+        reverse.type.value if reverse else None,
+        reverse.status.value if reverse else None,
+    )
+
+
 async def create_relationship(
     from_character: Character,
     to_character_id: int,
@@ -176,24 +238,12 @@ async def list_relationships(
 
     items = []
     for relationship, target_character in rows:
-        outgoing_type = relationship.type.value
-        outgoing_status = relationship.status.value
         incoming = reverse_map.get(target_character.id)
-        incoming_type = incoming[0] if incoming else None
-        incoming_status = incoming[1] if incoming else None
-        items.append(RelationshipListItem(
-            id=relationship.id,
-            from_character_id=relationship.from_character_id,
-            to_character_id=relationship.to_character_id,
-            type=outgoing_type,
-            status=outgoing_status,
-            created_at=relationship.created_at,
-            to_display_name=target_character.display_name,
-            to_avatar_url=target_character.avatar_url,
-            to_faction_slug=target_character.faction_slug,
-            display_status=compute_display_status(
-                outgoing_type, outgoing_status, incoming_type, incoming_status
-            ),
+        items.append(_to_list_item(
+            relationship,
+            target_character,
+            incoming[0] if incoming else None,
+            incoming[1] if incoming else None,
         ))
 
     return items

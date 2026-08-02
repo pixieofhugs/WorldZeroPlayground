@@ -7,9 +7,10 @@ from db import get_db
 from dependencies import get_current_character
 from models.character import Character
 from models.relationship import RelationshipType
-from schemas.relationship import RelationshipCreate, RelationshipListItem, RelationshipOut
+from schemas.relationship import RelationshipCreate, RelationshipListItem
 from services.relationship_service import (
     block_relationship,
+    build_relationship_item,
     create_relationship,
     list_relationships,
     unblock_relationship,
@@ -34,43 +35,48 @@ async def list_my_relationships(
     )
 
 
-@router.post("", response_model=RelationshipOut, status_code=201)
+@router.post("", response_model=RelationshipListItem, status_code=201)
 async def create_relationship_route(
     data: RelationshipCreate,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
-) -> RelationshipOut:
-    """Declare a friend or foe relationship (instant, no pending state)."""
+) -> RelationshipListItem:
+    """Declare a friend or foe relationship (instant, no pending state).
+
+    Answers the enriched item, not the bare row (#1383): the display name,
+    avatar, faction and derived ``display_status`` are what the profile draws,
+    and it used to re-list every relationship the viewer holds to get them.
+    """
     relationship = await create_relationship(
         from_character=character,
         to_character_id=data.to_character_id,
         rel_type=RelationshipType[data.type],
         session=session,
     )
-    return RelationshipOut.model_validate(relationship)
+    return await build_relationship_item(relationship, session)
 
 
-@router.put("/{relationship_id}", response_model=RelationshipOut)
+@router.put("/{relationship_id}", response_model=RelationshipListItem)
 async def block_relationship_route(
     relationship_id: int,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
-) -> RelationshipOut:
+) -> RelationshipListItem:
     """Block a relationship. Either party can block."""
     relationship = await block_relationship(
         relationship_id=relationship_id,
         character=character,
         session=session,
     )
-    return RelationshipOut.model_validate(relationship)
+    return await build_relationship_item(relationship, session)
 
 
-@router.post("/{relationship_id}/unblock", response_model=RelationshipOut)
+@router.post("/{relationship_id}/unblock", response_model=RelationshipListItem)
 async def unblock_relationship_route(
     relationship_id: int,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
-) -> RelationshipOut:
+) -> RelationshipListItem:
     """Reverse a block (ADR-0009). Either party can unblock; the edge returns to
     active. Separate route from PUT /{id} (block) so the two actions don't
     collide."""
@@ -79,7 +85,7 @@ async def unblock_relationship_route(
         character=character,
         session=session,
     )
-    return RelationshipOut.model_validate(relationship)
+    return await build_relationship_item(relationship, session)
 
 
 @router.delete("/{relationship_id}", status_code=204)

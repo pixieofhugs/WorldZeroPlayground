@@ -198,7 +198,14 @@ async def test_wrong_faction_low_level_character_can_be_invited_and_submit(
         headers=invitee_headers,
     )
     assert accept_resp.status_code == 200, accept_resp.text
-    assert invitee.id in [m["character_id"] for m in accept_resp.json()["members"]]
+    # The respond route answers an ack (#1383). The Easter egg's claim is that
+    # the invitee BECAME A MEMBER of a task they could not claim, so that still
+    # has to be read off the praxis rather than inferred from the 200.
+    assert accept_resp.json() == {"praxis_id": praxis_id, "accepted": True}
+
+    detail_resp = await client.get(f"/praxes/{praxis_id}", headers=inviter_headers)
+    assert detail_resp.status_code == 200, detail_resp.text
+    assert invitee.id in [m["character_id"] for m in detail_resp.json()["members"]]
 
     # ...and they may submit, which is the whole point of the carve-out.
     submit_resp = await client.post(
