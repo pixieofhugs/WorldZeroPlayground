@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Collection, Optional
 
 from fastapi import HTTPException
@@ -413,13 +414,24 @@ async def in_progress_counts_for_tasks(
     return {task_id: int(count or 0) for task_id, count in agg_result.all()}
 
 
-#: ``sort`` value that orders the task list by creation time, newest first.
-SORT_NEWEST = "newest"
-#: ``sort`` value that orders the task list by creation time, oldest first.
-SORT_OLDEST = "oldest"
-#: ``sort`` value naming the browse default — easiest first, richest within a
-#: level. Ascending only: there is no level-descending option (#1364).
-SORT_LEVEL = "level"
+class TaskSort(str, Enum):
+    """The orderings ``GET /tasks`` accepts (#1364) — a closed set (#1443).
+
+    ``newest``/``oldest`` order on ``Task.created_at``, tiebroken on ``id`` so a
+    paged read stays stable when rows share a timestamp. ``level`` names the
+    browse default — easiest first, richest within a level — and is ascending
+    only: there is no level-descending twin.
+
+    Closed is the point. Until #1443 an unrecognised ``sort`` fell through to
+    ``level`` and returned 200, so a typo'd or retired value silently bought a
+    different ordering than the one asked for and nothing surfaced the mistake.
+    Mirrors :class:`services.praxis.PraxisSort`, whose router raises 422 on the
+    same input. An *absent* sort is still legal and still means ``level``.
+    """
+
+    newest = "newest"
+    oldest = "oldest"
+    level = "level"
 
 
 async def list_tasks(
@@ -434,7 +446,7 @@ async def list_tasks(
     created_by: Optional[int] = None,
     task_type: Optional[str] = None,
     q: Optional[str] = None,
-    sort: Optional[str] = None,
+    sort: Optional[TaskSort] = None,
     limit: int = 50,
     offset: int = 0,
     viewer: Optional[Character] = None,
@@ -474,11 +486,10 @@ async def list_tasks(
     ``faction`` is a list of slugs matched as a union (#1364), so the browse
     filter can hold several factions at once; an empty list is no filter.
 
-    ``sort`` is one of :data:`SORT_NEWEST`, :data:`SORT_OLDEST` or
-    :data:`SORT_LEVEL`, the latter being the default when ``sort`` is absent —
-    easiest first, richest within a level. Level *ascending* is the only level
-    ordering there is. The two chronological sorts tiebreak on ``id`` so a
-    paged read stays stable when rows share a ``created_at``.
+    ``sort`` is a :class:`TaskSort` or ``None``; ``None`` means
+    :attr:`TaskSort.level`, the browse ordering ``Tasks.tsx`` gets by sending no
+    ``sort`` at all. Rejecting an unknown *string* is the router's job (#1443) —
+    by the time it reaches here the value is already a member of the enum.
     """
     # Collect hidden faction slugs to exclude their tasks (faction-rules seam, #171)
     hidden_slugs = await hidden_faction_slugs(session)
@@ -632,13 +643,13 @@ async def list_tasks(
             Task.id.notin_(active_member_task_ids_subquery(exclude_character_id, era))
         )
 
-    if sort == SORT_NEWEST:
+    if sort == TaskSort.newest:
         query = query.order_by(Task.created_at.desc(), Task.id.desc())
-    elif sort == SORT_OLDEST:
+    elif sort == TaskSort.oldest:
         query = query.order_by(Task.created_at.asc(), Task.id.asc())
     else:
-        # SORT_LEVEL, and the fall-through for an absent or unrecognised sort:
-        # the browse ordering Tasks.tsx gets by sending no ``sort`` at all.
+        # TaskSort.level, and the fall-through for an ABSENT sort only — an
+        # unrecognised one never gets here, the router 422s it (#1443).
         query = query.order_by(Task.level_required.asc(), Task.point_value.desc())
     query = query.limit(limit).offset(offset)
     result = await session.execute(query)
