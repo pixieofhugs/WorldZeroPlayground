@@ -58,6 +58,17 @@ export interface EditPraxisState {
   pendingImage: File | null;
   confirmImageEdit: (blob: Blob) => Promise<void>;
   cancelImageEdit: () => void;
+  /**
+   * The modal's failure channel (#1545). Before this, a praxis image the browser
+   * could not decode or render was uploaded UNPROCESSED with nothing on screen —
+   * the pass-through #1527 removed from the avatar path but deliberately left
+   * here, because praxis media had no error line of its own to report on.
+   *
+   * It always did: `fileError`, the line a too-large pick already uses. This
+   * reports onto it, named with the file the modal was holding. `EditPraxis.tsx`
+   * passes it as the modal's `onError`.
+   */
+  reportImageError: (reason: string) => void;
 
   // Mode switching
   switchingMode: PraxisType | null;
