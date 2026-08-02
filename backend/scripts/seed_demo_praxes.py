@@ -41,6 +41,11 @@ PLAYERS = [
     ("demo_vesper", "Vesper", "ephemerists"),
     ("demo_unit", "UNIT-7", "singularity"),
     ("demo_almanac", "Almanac Okonkwo", "ephemerists"),  # extra collaborator
+    # Appended, not inserted: the DEMOS loop and the metatask fixture both take
+    # the FIRST n non-member players as voters, so anything added here must go on
+    # the end to leave the existing fixtures' vote tallies untouched.
+    ("demo_kettle", "Kettle", "coven"),      # collab fixture, both sides Coven
+    ("demo_thimble", "Thimble", "coven"),
 ]
 
 # faction -> (author_username, title, body, type, [stars from other players])
@@ -65,9 +70,10 @@ DEMOS = {
                     PraxisType.solo, [4, 3, 4]),
 }
 
-# All demos are solo so each routes to the per-faction PraxisCard (collab praxes
-# render via the separate CollaborationCard, not the faction card under test).
-COLLAB_SECOND_MEMBER: dict[str, str] = {}
+# DEMOS is all-solo on purpose: one praxis per faction so every per-faction
+# praxis card archetype has something to render. The collab case is not missing,
+# it is just seeded separately (COLLAB_* / seed_collab_fixture below) because it
+# exists to exercise a multiplier rather than a card archetype.
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +128,25 @@ DUEL_WINNER_BODY = "Answered the challenge. Took the room."
 # Unequal on purpose — the duel winner is decided on points_from_votes.
 DUEL_LOSER_STARS = [("demo_quill", 1), ("demo_marigold", 2)]
 DUEL_WINNER_STARS = [("demo_vesper", 5), ("demo_unit", 5), ("demo_almanac", 4)]
+
+# The collab pair. Coven is the only faction in Era 1 with a non-1.0
+# collaboration modifier (era.factions["coven"].collab_own_modifier), and it is
+# also the only Era 1 multiplier that is neither a duel modifier nor a whole
+# number — so it is the one place the score arithmetic can round wrong, and
+# until now the one case with no fixture. Own-faction means the TASK's faction
+# matches the scoring character's (services/scoring.compute_faction_multiplier),
+# so both members are Coven doing a Coven task: whichever member's card you open
+# shows the modifier. The value itself is never written here — it is read off the
+# era at render time.
+COLLAB_TASK_FACTION_SLUG = "coven"
+COLLAB_AUTHOR_USERNAME = "demo_kettle"
+COLLAB_SECOND_USERNAME = "demo_thimble"
+COLLAB_TITLE = TITLE_MARKER + "Collab: proofed the dough in shifts"
+COLLAB_BODY = (
+    "Two of us, one Coven task, one long rise. The multiplier row is the "
+    "own-faction collaboration bonus."
+)
+COLLAB_STARS = [("demo_quill", 5), ("demo_vesper", 4), ("demo_unit", 4)]
 
 
 async def _praxis_exists(session, title: str) -> bool:
@@ -372,12 +397,79 @@ async def seed_duel_fixture(session, players: dict[str, Character]) -> None:
     )
 
 
+async def seed_collab_fixture(session, players: dict[str, Character]) -> None:
+    """One submitted own-faction collab, so the collaboration modifier renders.
+
+    Both members are Coven on a Coven task, which is what makes the multiplier
+    ``collab_own_modifier`` rather than ``collab_other_modifier``. Two members is
+    not decoration: a collab that drops to one member is converted back to solo
+    (ADR-0060), which would take the modifier with it.
+    """
+    if await _praxis_exists(session, COLLAB_TITLE):
+        print("  = collab praxis already present — skipped")
+        return
+
+    # Same contract as the metatask and duel fixtures: ERA_1_TASKS is empty by
+    # design (the board lives only in the DB, see eras/era_1.py), so this fixture
+    # renders only on a database whose board actually has a Coven task. Never
+    # create one here — that would put a task in a code path the era config
+    # deliberately refuses to own.
+    task = await _pick_task(session, COLLAB_TASK_FACTION_SLUG)
+    if task is None:
+        print(
+            f"  ! collab: no {COLLAB_TASK_FACTION_SLUG} task on the board — skipped "
+            f"(import a board first; the collab modifier stays invisible until then)"
+        )
+        return
+
+    author = players[COLLAB_AUTHOR_USERNAME]
+    second = players[COLLAB_SECOND_USERNAME]
+    now = datetime.now(timezone.utc)
+
+    praxis = Praxis(
+        task_id=task.id,
+        type=PraxisType.collab,
+        status=PraxisStatus.submitted,
+        title=COLLAB_TITLE,
+        body_text=COLLAB_BODY,
+        created_by_id=author.id,
+        moderation_status=ModerationStatus.visible,
+        submitted_at=now,
+    )
+    session.add(praxis)
+    await session.flush()
+    # `submitted` means every member submitted (a partial collab is `pending`).
+    for member in (author, second):
+        session.add(PraxisMember(
+            praxis_id=praxis.id, character_id=member.id, has_submitted=True
+        ))
+
+    member_account_ids = {author.account_id, second.account_id}
+    for voter_username, star in COLLAB_STARS:
+        voter = players[voter_username]
+        # Anti-self-voting is per ACCOUNT, not per character (ADR-0041).
+        if voter.account_id in member_account_ids:
+            continue
+        session.add(Vote(
+            praxis_id=praxis.id,
+            voter_character_id=voter.id,
+            voter_account_id=voter.account_id,
+            value=star,
+        ))
+    await session.flush()
+    print(
+        f"  + collab: '{COLLAB_TITLE}' by {author.display_name} + "
+        f"{second.display_name} on a {COLLAB_TASK_FACTION_SLUG} task"
+    )
+
+
 async def seed_score_fixtures(
     session, players: dict[str, Character], era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Everything #891 asks for: a metatask in use and a non-1.0 multiplier."""
+    """Everything #891 asks for: a metatask in use and every non-1.0 multiplier."""
     await seed_metatask_fixture(session, players, era)
     await seed_duel_fixture(session, players)
+    await seed_collab_fixture(session, players)
 
 
 def print_login_recipe(era: EraConfig = CURRENT_ERA) -> None:
@@ -397,6 +489,16 @@ def print_login_recipe(era: EraConfig = CURRENT_ERA) -> None:
     print(
         f"  multiplier row: '{DUEL_LOSER_TITLE}' (losing Snide side) and "
         f"'{DUEL_WINNER_TITLE}'"
+    )
+    collab_modifier = era.factions[COLLAB_TASK_FACTION_SLUG].collab_own_modifier
+    print(
+        f"  collab row    : '{COLLAB_TITLE}' - "
+        f"{COLLAB_TASK_FACTION_SLUG} own-faction collab at x{collab_modifier} "
+        f"(era.factions['{COLLAB_TASK_FACTION_SLUG}'].collab_own_modifier)"
+    )
+    print(
+        f"                  needs a {COLLAB_TASK_FACTION_SLUG} task on the board; "
+        f"if the line above said 'skipped', import one first"
     )
 
 
@@ -466,15 +568,8 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
         session.add(praxis)
         await session.flush()
 
-        members = [author]
         session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_submitted=True))
-        second = COLLAB_SECOND_MEMBER.get(faction)
-        if second:
-            members.append(players[second])
-            session.add(PraxisMember(praxis_id=praxis.id, character_id=players[second].id, has_submitted=True))
-
-        member_ids = {m.id for m in members}
-        voters = [c for c in players.values() if c.id not in member_ids][: len(stars)]
+        voters = [c for c in players.values() if c.id != author.id][: len(stars)]
         for voter, star in zip(voters, stars):
             session.add(Vote(
                 praxis_id=praxis.id,
