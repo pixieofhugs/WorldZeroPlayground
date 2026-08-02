@@ -41,6 +41,7 @@ import type { FactionConfigOut } from '../../api/gameConfig'
 import { useFactions } from '../../hooks/useFactions'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { extractError } from '../../utils/errors'
+import { readOneOf } from '../../utils/urlParams'
 import { useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
@@ -67,6 +68,14 @@ export const TASK_FILTER_PARAMS = {
   canSignUp: 'can_sign_up',
 } as const
 
+/**
+ * The status axis, which is NOT a backend enum: `All` is the page's own "no
+ * status filter" value and the other three are `TaskStatus`. Whether the viewer
+ * may SEE `retired` / `pending` is a separate, server-owned question — see
+ * `statusFilters`, which is what the control offers.
+ */
+export type TaskStatusFilter = 'All' | 'active' | 'retired' | 'pending'
+
 /** Browse mode default: ordinary tasks, metatasks excluded backend-side. */
 export const TASK_TYPE_DEFAULT: TaskType = 'standard'
 /**
@@ -76,20 +85,69 @@ export const TASK_TYPE_DEFAULT: TaskType = 'standard'
  * newest/oldest pair from silently deleting it.
  */
 export const TASK_SORT_DEFAULT: TaskSort = 'level'
-export const TASK_STATUS_DEFAULT = 'All'
+export const TASK_STATUS_DEFAULT: TaskStatusFilter = 'All'
 /** The eligibility axis is a flag; this is its one non-default value. */
 export const CAN_SIGN_UP_ON = '1'
+
+/**
+ * The legal value of each enumerated axis, for {@link readOneOf} (#1537). A URL
+ * is untrusted input: `GET /tasks` 422s on an unknown `sort` (#1443), so a stale
+ * bookmark or a hand-edited link has to degrade to the default view here rather
+ * than surface the browse error state.
+ *
+ * Status is whitelisted against EVERY status, not against the viewer-gated
+ * `statusFilters` — those depend on `/auth/me`, which settles after first
+ * render, so gating the read would flip a shared `?status=retired` link back to
+ * `All` mid-load. A viewer who may not see retired tasks is told so by the
+ * server, which owns that rule.
+ */
+const TASK_TYPES: readonly TaskType[] = ['standard', 'metatask']
+const TASK_SORTS: readonly TaskSort[] = ['newest', 'oldest', 'level']
+const TASK_STATUSES: readonly TaskStatusFilter[] = [
+  'All',
+  'active',
+  'retired',
+  'pending',
+]
 
 /** Navigation options for every filter write: replace, never push. */
 const FILTER_NAV_OPTIONS = { replace: true } as const
 
-/** Read one single-valued axis. A missing or blank param IS the default. */
-export function readFilterParam(
-  params: URLSearchParams,
-  key: string,
-  defaultValue: string,
-): string {
-  return params.get(key) || defaultValue
+/** Every filter axis the browse owns, as read out of the address bar. */
+export interface TaskFilterAxes {
+  taskType: TaskType
+  sort: TaskSort
+  status: TaskStatusFilter
+  factions: string[]
+  canSignUp: boolean
+}
+
+/**
+ * Hydrate the whole filter set from a param set — the hook's entire URL read,
+ * pulled out where the no-DOM harness can drive it. Counterpart to the praxis
+ * feed's `readFeedFilters`.
+ *
+ * The three enumerated axes go through the shared whitelist, so an unknown value
+ * clamps to the default instead of riding out to a route that 422s on it.
+ */
+export function readTaskFilters(params: URLSearchParams): TaskFilterAxes {
+  return {
+    taskType: readOneOf(
+      params.get(TASK_FILTER_PARAMS.taskType),
+      TASK_TYPES,
+      TASK_TYPE_DEFAULT,
+    ),
+    sort: readOneOf(params.get(TASK_FILTER_PARAMS.sort), TASK_SORTS, TASK_SORT_DEFAULT),
+    status: readOneOf(
+      params.get(TASK_FILTER_PARAMS.status),
+      TASK_STATUSES,
+      TASK_STATUS_DEFAULT,
+    ),
+    // Unknown slugs are left alone, as on the praxis feed: `/factions` is
+    // fetched separately and a slug that matches nothing simply returns no rows.
+    factions: params.getAll(TASK_FILTER_PARAMS.faction).filter((slug) => slug !== ''),
+    canSignUp: params.get(TASK_FILTER_PARAMS.canSignUp) === CAN_SIGN_UP_ON,
+  }
 }
 
 /**
@@ -240,24 +298,13 @@ export function useTasks(): TasksState {
   const factionConfigs: FactionConfigOut[] = gameConfig?.factions ?? []
 
   const [searchParams, setSearchParams] = useSearchParams()
-  const taskType = readFilterParam(
-    searchParams,
-    TASK_FILTER_PARAMS.taskType,
-    TASK_TYPE_DEFAULT,
-  ) as TaskType
-  const sort = readFilterParam(
-    searchParams,
-    TASK_FILTER_PARAMS.sort,
-    TASK_SORT_DEFAULT,
-  ) as TaskSort
-  const status = readFilterParam(
-    searchParams,
-    TASK_FILTER_PARAMS.status,
-    TASK_STATUS_DEFAULT,
-  )
-  const selectedFactions = searchParams.getAll(TASK_FILTER_PARAMS.faction)
-  const canSignUp =
-    searchParams.get(TASK_FILTER_PARAMS.canSignUp) === CAN_SIGN_UP_ON
+  const {
+    taskType,
+    sort,
+    status,
+    factions: selectedFactions,
+    canSignUp,
+  } = readTaskFilters(searchParams)
   const [query, setQueryState] = useSearchQueryParam()
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
 
