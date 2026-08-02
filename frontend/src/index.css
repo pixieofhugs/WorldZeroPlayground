@@ -54,6 +54,37 @@
   --color-text-secondary: #6b6050;
   --color-text-tertiary: #656081;
 
+  /* ── The label tier's ink is a SEAM, not a constant (#1307) ───────────────
+     Read by .label-heading and .label-caption and by nothing else. Declared
+     here rather than left to a `var(--label-ink, …)` fallback for the reason
+     the ep* motion knobs give further down: a fallback-only property is a
+     token nobody can find, and `factionTokensDeclared.test.ts` is right to
+     police it. Declared as an INDIRECTION rather than a hex, so it follows
+     --color-text-tertiary through the dark cascade and needs no counterpart
+     there — and so there is still exactly one place the neutral's value lives.
+
+     WHY IT IS A SEAM. Measured on the #1549 instrument, the neutral clears at
+     the tier's floor (both tiers are under WCAG's large-text threshold, so
+     both owe 4.5:1) on every neutral stock in both cascades and on all eight
+     card sheets in DARK — but it fails on three sheets in LIGHT, and the
+     reason is polarity rather than taste. S.N.I.D.E. 3.18:1 and Singularity
+     3.29:1 are near-black in BOTH themes (§6), so no light-cascade neutral can
+     clear them; Ephemerists' vellum is the darkest light sheet at 4.36:1 (its
+     praxis plate 4.35). That is #694's shape exactly: a colour that must
+     differ between two factions WITHIN one theme is a faction question, not a
+     global one.
+
+     A faction frame therefore sets this ONCE on its own root and every label
+     underneath follows — no per-label style, and no faction contradicting the
+     shared class in its own component (#1252: the seam is the token, not the
+     component). NOTHING NEW IS MINTED FOR IT: --faction-{key}-card-muted is
+     already the measured quiet ink for this role on that sheet, and it clears
+     on all eight in both cascades (worst 4.70:1, the Ephemerists plate), so a
+     frame points at its own rather than at a fresh hex. #1302 made the same
+     call for the same reason, and a second name for a value that is already
+     measured is a name pretending to be a value (#1213). */
+  --label-ink: var(--color-text-tertiary);
+
   /* ── Borders ── */
   --color-border: rgba(0, 0, 0, 0.07);
   --color-border-strong: rgba(0, 0, 0, 0.15);
@@ -2639,10 +2670,17 @@
 
 /* ── Type Scale + Font Families ── */
 :root {
-  /* ── Label tier (issue #627) ──
-     A size ramp, deliberately t-shirt-named. Backs .eyebrow and every
-     label-tier surface: pills, badges, stamps, bylines, button chrome.
-     Small on purpose — this text is scanned, not read. */
+  /* ── Label tier (issue #627, split in two by #1307) ──
+     A size ramp, deliberately t-shirt-named. Backs .label-heading and
+     .label-caption below, the legacy .eyebrow, and every label-tier surface:
+     pills, badges, stamps, bylines, button chrome.
+
+     "Small on purpose — this text is scanned, not read" was the rule for the
+     whole tier and is now the HEADING half's alone. A caption is a small FACT
+     about the thing beside it — a timestamp, a count, a byline — and those are
+     genuinely read. The split, the sizes and the ink seam are documented at
+     .label-heading / .label-caption; the content-floor exception it forces is
+     on the content tier below. */
   --text-xs: 8px;
   --text-sm: 9px;
   --text-base: 10px;
@@ -2655,7 +2693,35 @@
      "--text-content is the floor" needs no doc to explain. A clean 4:3
      ramp: each step is exactly a third bigger than the last.
      Nothing readable may sit below --text-content. If the type doesn't
-     fit, the container is too small — see WORLD_ZERO_STYLE.md §4. */
+     fit, the container is too small — see WORLD_ZERO_STYLE.md §4.
+
+     THE ONE EXCEPTION IS A TIER, NOT A SITE: .label-caption, --text-lg
+     (12px), #1307. State it here or the next reader files a 12px caption as a
+     violation to be fixed.
+
+     The floor governs CONTENT — the thing a container exists to hold, and the
+     thing that can run to any length. "The container is too small" is an
+     instruction you can act on for a paragraph and meaningless for a
+     timestamp: a caption does not size its container, it rides along beside
+     something that does, and widening the card gives it nothing. So the floor
+     could only ever have been enforced on captions by deleting them.
+
+     What the caption tier owes instead is legibility per glyph, and #1307
+     measured where that actually comes from. Against `.eyebrow`'s 9px
+     uppercase on 0.15em tracking, dropping the casing and the tracking is the
+     larger half of the fix — uppercase removes the ascender/descender shape
+     that carries word recognition at small sizes, and wide tracking works
+     against reading the run as a word at all. The size step is the smaller
+     half and 12px is where it stops, because past that the tier stops reading
+     as subordinate to the 18px it annotates and the hierarchy has to be
+     restated.
+
+     The boundary is a role test, not a length test: anything that CAN become a
+     paragraph is content and takes --text-content. A caption is bounded by
+     what it is — a date, a count, a name, a status. When one starts wrapping
+     to three lines, it was content wearing a caption's clothes, which is
+     exactly the mistake .eyebrow-sentence was minted to paper over (#850) and
+     #1307 deleted rather than kept in sync. */
   --text-content: 18px; /* body copy, descriptions, admin notes — the floor */
   --text-title: 24px; /* titles, scores */
   --text-heading: 32px; /* section and page headings */
@@ -3041,17 +3107,83 @@
     color: var(--color-text-tertiary);
   }
 
-  /* A label slot whose content is a SENTENCE rather than a word.
-     `.eyebrow`'s uppercase + 0.15em tracking is tuned for one or two words; a
-     sentence set that way is a wall. The propose-task faction descriptors are
-     the live case — six factions answer with one word and UA answers with
-     "Practise with us — one true mark a day." (#850). Same size and colour, so
-     the row still reads as one rank of labels; only the casing gives way. */
-  .eyebrow-sentence {
+  /* ── The label tier is TWO roles, not one (#1307) ──────────────────────────
+     `.eyebrow` above covers five jobs — section headings, metadata captions,
+     status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the
+     weakest neutral. Four legibility costs stacked on one string, and the file
+     had already admitted the stack half-fails: `.eyebrow-sentence` lived here
+     (deleted by #1307) precisely because "a sentence set that way is a wall".
+     That was a CAPTION wearing a heading's clothes, and a variant rather than
+     the rethink it should have had. The five jobs are two intents:
+
+       .label-heading   THIS NAMES A REGION. "COLLABORATORS · 4", "WRITE-UP",
+                        "IN PROGRESS TASKS". 11px, uppercase, tracked. Being
+                        hard to read as prose is acceptable here — the job is
+                        marking where a region starts, and a region name is one
+                        or two words by construction.
+
+       .label-caption   THIS IS A SMALL FACT ABOUT THE THING. "5d ago",
+                        "5 / 20 slots", a byline, a status. 12px, normal case,
+                        normal tracking. It is genuinely read, so it may not be
+                        hard to read.
+
+     THE CAPTION IS NOMINALLY LARGER THAN THE HEADING, ON PURPOSE. Uppercase
+     reads optically larger than its nominal size, so 11px caps and 12px
+     lowercase land at about the same weight while doing different jobs. Do not
+     "fix" the inversion by pulling the caption to 11px: the casing is what the
+     size is compensating for, and matching the numbers un-matches the voices.
+
+     COLOUR IS `--label-ink`, WHICH IS NOT DECLARED HERE. Its measurement and
+     the reason a faction repoints it (three light-mode sheets the neutral
+     cannot clear) are at its declaration, up with the text tiers. Unset it is
+     `--color-text-tertiary`, so a label outside a faction frame renders what
+     `.eyebrow` renders today. Both tiers read the SAME property: they land on
+     one AA floor, so one measurement serves the pair, and a frame that had to
+     repoint two properties would eventually repoint one.
+
+     PURGE, AND ONE FRAGILE THING ABOUT IT. These live in @layer components, so
+     Tailwind emits a class only once it sees the literal string in a scanned
+     file — same as `.content-text` and `.eyebrow`, and it means a name
+     assembled at runtime is a name that never ships. Write both as literals.
+     `.label-caption` has real callers from the day it landed (the four sites
+     `.eyebrow-sentence` used to hold). `.label-heading` HAS NONE YET and is in
+     the bundle only because `factionContrast.test.ts` quotes it and Tailwind's
+     content glob scans every .ts and .tsx under src — so moving that spec out
+     of src would silently delete the class. Its first sweep is what makes it
+     load-bearing; until then, check the built stylesheet rather than the source
+     if it appears to do nothing. (Do not write that glob out here. It contains
+     a star-slash, which ENDS a CSS comment, and postcss then fails on the
+     remains of the sentence rather than on the thing you typed.)
+
+     `.eyebrow` stays declared and in use; #1307's per-area sweeps are what
+     retire it, and deleting it is the last of them. */
+
+  /* Written as two whole rules rather than a grouped selector plus two
+     role rules: the shared face and ink LOOK like 29 raw bytes of duplication,
+     and hoisting them measured 6 bytes gzip WORSE on the day (22,968 against
+     22,962, warn line 23,000). gzip had already collapsed the repetition and
+     the second selector list is new text. Measure a de-duplication in the
+     BUILT stylesheet before believing it — the raw file is not the payload. */
+
+  .label-heading {
     @apply font-body;
-    font-size: var(--text-sm);
-    letter-spacing: 0.02em;
-    color: var(--color-text-tertiary);
+    font-size: var(--text-md);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--label-ink);
+  }
+
+  /* `text-transform: none` is not redundant. A caption inherits its casing, and
+     several faction frames uppercase whole regions — a swept caption without
+     this line renders as the wall the split exists to remove, silently, at the
+     one size that makes it worse. `.eyebrow` never needed the reset because it
+     sets uppercase itself. */
+  .label-caption {
+    @apply font-body;
+    font-size: var(--text-lg);
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--label-ink);
   }
 
   /* ── Level gem (issue #728) ──

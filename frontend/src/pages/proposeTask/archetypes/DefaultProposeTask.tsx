@@ -302,7 +302,7 @@ export default function DefaultProposeTask({
                     {/* Sentence-case: the descriptors are no longer uniformly
                         one word (#850 gave UA a full sentence), and 0.15em
                         all-caps is a wall at that length. */}
-                    <span className="eyebrow-sentence">
+                    <span className="label-caption">
                       {factionDescriptor(slug)}
                     </span>
                   </button>

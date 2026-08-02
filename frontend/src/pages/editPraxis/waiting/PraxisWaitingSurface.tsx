@@ -831,7 +831,7 @@ export default function PraxisWaitingSurface({
                     {crewNudge != null && (
                       <span
                         role="status"
-                        className="eyebrow-sentence"
+                        className="label-caption"
                         style={{
                           textAlign: "right",
                           maxWidth: 420,
@@ -877,7 +877,7 @@ export default function PraxisWaitingSurface({
                     (`cancel_pending_publish_on_edit`, ADR-0012) — the countdown
                     drawn a few blocks up. */}
                 <span
-                  className="eyebrow-sentence"
+                  className="label-caption"
                   style={{ textAlign: "right", maxWidth: 420, ...dress.quietStyle }}
                 >
                   {collabCopy(

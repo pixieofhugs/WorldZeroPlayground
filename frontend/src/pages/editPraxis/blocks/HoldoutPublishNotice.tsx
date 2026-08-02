@@ -91,7 +91,7 @@ export default function HoldoutPublishNotice({
       {/* The way out, said in the same breath as the deadline: submitting ends
           it, and an edit cancels it outright (ADR-0012). A countdown with no
           stated escape reads as a threat rather than a rule. */}
-      <span className="font-body eyebrow-sentence">
+      <span className="font-body label-caption">
         {collabCopy(factionSlug, "holdoutClockCaption")}
       </span>
     </div>
