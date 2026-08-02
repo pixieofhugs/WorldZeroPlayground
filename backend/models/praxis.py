@@ -204,9 +204,12 @@ class PraxisInvite(CreatedAtMixin, Base):
     praxis: Mapped["Praxis"] = relationship(
         "Praxis", back_populates="invites", lazy="raise"
     )
-    inviter: Mapped["Character"] = relationship(
-        "Character", foreign_keys=[inviter_id], lazy="selectin"
-    )
+    # No ``inviter`` relationship: its only reader was the dead
+    # ``PraxisInviteOut.inviter_display_name`` (#1387), and it was ``selectin``,
+    # so every invite load paid a SELECT for it. ``inviter_id`` stays on the
+    # wire, and the feed joins Character on that column directly
+    # (``services.activity_feed``). ``foreign_keys`` stays on ``invitee``
+    # because this table has two FKs into character.id.
     invitee: Mapped["Character"] = relationship(
         "Character", foreign_keys=[invitee_id], lazy="selectin"
     )
