@@ -26,7 +26,13 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.badge import build_badge_contexts, list_badges_for_character
@@ -126,6 +132,8 @@ async def _make_duel(
     winner_character_id: Optional[int] = None,
     challenger_faction: str = "ua",
     opponent_faction: str = "ua",
+    challenger_moderation: ModerationStatus = ModerationStatus.visible,
+    opponent_moderation: ModerationStatus = ModerationStatus.visible,
 ) -> tuple[Duel, Character, Character]:
     """Two fresh characters + their two solo praxes, linked as one duel."""
     challenger = await _make_character(
@@ -138,6 +146,8 @@ async def _make_duel(
     task = await _make_task(session, challenger)
     challenger_praxis = await _make_solo(session, task, challenger)
     opponent_praxis = await _make_solo(session, task, opponent)
+    challenger_praxis.moderation_status = challenger_moderation
+    opponent_praxis.moderation_status = opponent_moderation
 
     if challenger_votes:
         await _cast_vote(session, challenger_praxis, voter, challenger_votes)
@@ -379,6 +389,28 @@ async def test_active_forfeited_duel_still_counts(
     )
     assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
+
+
+@pytest.mark.asyncio
+async def test_failed_side_is_not_a_duelist_even_while_leading(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """The badge reads the same rule as the multiplier (#1442).
+
+    ``services.badge`` is the third caller of ``duel_winner`` — the issue named
+    two. If it kept deciding on the tally alone, a praxis an admin ruled failed
+    would still wear "Duelist" while its score said it lost.
+    """
+    _, challenger, opponent = await _make_duel(
+        db_session,
+        era,
+        label="failbadge",
+        challenger_votes=9,
+        opponent_votes=1,
+        challenger_moderation=ModerationStatus.failed,
+    )
+    assert await _badge_keys(db_session, challenger) == []
+    assert await _badge_keys(db_session, opponent) == ["duelist"]
 
 
 @pytest.mark.asyncio

@@ -18,7 +18,13 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.duel_outcome import duel_winner
@@ -80,12 +86,14 @@ async def _make_solo(
     author: Character,
     *,
     status: PraxisStatus = PraxisStatus.submitted,
+    moderation: ModerationStatus = ModerationStatus.visible,
 ) -> Praxis:
     praxis = Praxis(
         task_id=task.id,
         created_by_id=author.id,
         type=PraxisType.solo,
         status=status,
+        moderation_status=moderation,
         title="side",
         body_text="proof",
     )
@@ -122,6 +130,8 @@ async def _make_duel(
     forfeiter: str | None = None,
     challenger_faction: str = "ua",
     opponent_faction: str = "ua",
+    challenger_moderation: ModerationStatus = ModerationStatus.visible,
+    opponent_moderation: ModerationStatus = ModerationStatus.visible,
 ) -> tuple[Duel, Character, Character]:
     """Build a full duel: two characters, two solo praxes, optional votes."""
     challenger = await _make_character(
@@ -136,8 +146,12 @@ async def _make_duel(
         session, era, username=f"{label}_v", email=f"{label}_v@x.com"
     )
     task = await _make_task(session, challenger)
-    challenger_praxis = await _make_solo(session, task, challenger)
-    opponent_praxis = await _make_solo(session, task, opponent)
+    challenger_praxis = await _make_solo(
+        session, task, challenger, moderation=challenger_moderation
+    )
+    opponent_praxis = await _make_solo(
+        session, task, opponent, moderation=opponent_moderation
+    )
 
     if challenger_votes:
         await _cast_vote(session, challenger_praxis, voter, challenger_votes)
@@ -188,6 +202,8 @@ def test_duel_winner_prefers_forfeit_over_the_tally():
             opponent_character_id=2,
             challenger_points=99,
             opponent_points=0,
+            challenger_moderation=ModerationStatus.visible,
+            opponent_moderation=ModerationStatus.visible,
             forfeited_by_character_id=1,
         )
         == 2
@@ -201,6 +217,8 @@ def test_duel_winner_needs_strictly_greater_points():
             opponent_character_id=2,
             challenger_points=4,
             opponent_points=3,
+            challenger_moderation=ModerationStatus.visible,
+            opponent_moderation=ModerationStatus.visible,
         )
         == 1
     )
@@ -210,6 +228,8 @@ def test_duel_winner_needs_strictly_greater_points():
             opponent_character_id=2,
             challenger_points=3,
             opponent_points=3,
+            challenger_moderation=ModerationStatus.visible,
+            opponent_moderation=ModerationStatus.visible,
         )
         is None
     )
@@ -320,6 +340,53 @@ async def test_era_reset_wins_for_the_opponent_side_too(
     assert duel.winner_character_id == opponent.id
     assert duel.challenger_final_points == 1
     assert duel.opponent_final_points == 4
+
+
+@pytest.mark.asyncio
+async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
+    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+):
+    """A praxis a moderator ruled failed cannot win the frozen record (#1442).
+
+    The failed side leads 5–1, and still loses: the tally is not the input that
+    decides eligibility. This is the era-close half of the fix — the settlement
+    path is covered in ``test_praxis_card_breakdown``, and the two must agree
+    because they share one rule.
+    """
+    duel, _challenger, opponent = await _make_duel(
+        db_session, era, label="failwin", status=DuelStatus.settled,
+        challenger_votes=5, opponent_votes=1,
+        challenger_moderation=ModerationStatus.failed,
+    )
+
+    await _close_the_era(db_session, account)
+
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.resolved
+    assert duel.winner_character_id == opponent.id
+    # The snapshot still records what the tally actually said — the ruling
+    # changes who won, not what the voters did.
+    assert duel.challenger_final_points == 5
+    assert duel.opponent_final_points == 1
+
+
+@pytest.mark.asyncio
+async def test_era_reset_freezes_no_winner_when_both_sides_failed(
+    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+):
+    """Nobody won. A NULL winner, not the higher tally and not the tiebreak."""
+    duel, _challenger, _opponent = await _make_duel(
+        db_session, era, label="bothfail", status=DuelStatus.settled,
+        challenger_votes=5, opponent_votes=1,
+        challenger_moderation=ModerationStatus.failed,
+        opponent_moderation=ModerationStatus.failed,
+    )
+
+    await _close_the_era(db_session, account)
+
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.resolved
+    assert duel.winner_character_id is None
 
 
 @pytest.mark.asyncio

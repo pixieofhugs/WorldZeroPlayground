@@ -184,30 +184,40 @@ async def compute_contributions(
                 character_faction, task_faction, era,
                 collaboration_mode=COLLABORATION_MODE_SOLO,
             )
-            # One shared rule decides the winner (ADR-0052): forfeit first, then
-            # strictly-greater points_from_votes, else a tie. Read live here; the
-            # same call freezes Duel.winner_character_id at era close — after
-            # which the frozen winner is authoritative and the tally stops moving
-            # the multiplier.
+            # One shared rule decides the winner (ADR-0052): ineligible sides
+            # first (forfeit, or a moderation ruling that the work is unscored —
+            # #1442), then strictly-greater points_from_votes, else a tie. Read
+            # live here; the same call freezes Duel.winner_character_id at era
+            # close — after which the frozen winner is authoritative and the tally
+            # stops moving the multiplier.
             if duel.status == DuelStatus.resolved:
                 winner_character_id: Optional[int] = duel.winner_character_id
             else:
+                opp_moderation: Optional[ModerationStatus] = (
+                    opp_praxis.moderation_status if opp_praxis is not None else None
+                )
                 if duel.challenger_praxis_id == praxis.id:
                     challenger_character_id: Optional[int] = character.id
                     challenger_points = own_tally.points_from_votes
                     opponent_points = opp_tally.points_from_votes
+                    challenger_moderation = praxis.moderation_status
+                    opponent_moderation = opp_moderation
                 else:
                     challenger_character_id = (
                         opp_praxis.created_by_id if opp_praxis is not None else None
                     )
                     challenger_points = opp_tally.points_from_votes
                     opponent_points = own_tally.points_from_votes
+                    challenger_moderation = opp_moderation
+                    opponent_moderation = praxis.moderation_status
 
                 winner_character_id = duel_winner(
                     challenger_character_id=challenger_character_id,
                     opponent_character_id=duel.opponent_character_id,
                     challenger_points=challenger_points,
                     opponent_points=opponent_points,
+                    challenger_moderation=challenger_moderation,
+                    opponent_moderation=opponent_moderation,
                     forfeited_by_character_id=duel.forfeited_by_character_id,
                 )
             duel_multiplier = compute_duel_multiplier(

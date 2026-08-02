@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from game_config import ERA_1
+from models.praxis import ModerationStatus
 from services.duel_outcome import duel_winner
 from services.scoring import (
     COLLABORATION_MODE_COLLAB,
@@ -333,39 +334,124 @@ def test_snide_tie_winner_id_resolves_to_the_snide_side():
     assert snide_tie_winner_id("wow", 1, "ua", 2) is None
 
 
+def _winner(**overrides):
+    """``duel_winner`` with two eligible sides — override only what a case is about.
+
+    The moderation arguments are required (#1442), so every call names them; this
+    keeps the cases below about the rule rather than about the signature.
+    """
+    kwargs = dict(
+        challenger_character_id=1,
+        opponent_character_id=2,
+        challenger_points=0,
+        opponent_points=0,
+        challenger_moderation=ModerationStatus.visible,
+        opponent_moderation=ModerationStatus.visible,
+    )
+    kwargs.update(overrides)
+    return duel_winner(**kwargs)
+
+
 def test_duel_winner_returns_tiebreak_on_equal_points():
     # Equal points, no forfeit → the pre-resolved tiebreak winner (Snide's id).
-    assert (
-        duel_winner(
-            challenger_character_id=1,
-            opponent_character_id=2,
-            challenger_points=3,
-            opponent_points=3,
-            tie_break_winner_id=1,
-        )
-        == 1
-    )
+    assert _winner(challenger_points=3, opponent_points=3, tie_break_winner_id=1) == 1
     # A real tie (no tiebreak) is still None.
-    assert (
-        duel_winner(
-            challenger_character_id=1,
-            opponent_character_id=2,
-            challenger_points=3,
-            opponent_points=3,
-        )
-        is None
-    )
+    assert _winner(challenger_points=3, opponent_points=3) is None
     # Forfeit outranks any tiebreak.
     assert (
-        duel_winner(
-            challenger_character_id=1,
-            opponent_character_id=2,
+        _winner(
             challenger_points=3,
             opponent_points=3,
             forfeited_by_character_id=1,
             tie_break_winner_id=1,
         )
         == 2
+    )
+
+
+# ---------------------------------------------------------------------------
+# a side a moderator ruled unscored cannot win (#1442)
+# ---------------------------------------------------------------------------
+
+
+def test_failed_side_loses_even_holding_the_higher_tally():
+    """The intended consequence, not a bug — it only looks wrong at a glance.
+
+    #1373 made a failed praxis bank nothing; letting it still *beat* an opponent
+    put the cost of an admin ruling on the other player.
+    """
+    assert (
+        _winner(
+            challenger_points=99,
+            opponent_points=0,
+            challenger_moderation=ModerationStatus.failed,
+        )
+        == 2
+    )
+
+
+def test_hidden_side_loses_the_same_way_as_a_failed_one():
+    # One set (`UNSCORED_MODERATION_STATUSES`) answers "banks nothing" and
+    # "cannot win", so hidden cannot win either.
+    assert (
+        _winner(
+            challenger_points=0,
+            opponent_points=99,
+            opponent_moderation=ModerationStatus.hidden,
+        )
+        == 1
+    )
+
+
+def test_both_sides_failed_is_nobody_won():
+    # Not even the tiebreak gets to pick one of them.
+    assert (
+        _winner(
+            challenger_points=5,
+            opponent_points=1,
+            challenger_moderation=ModerationStatus.failed,
+            opponent_moderation=ModerationStatus.failed,
+            tie_break_winner_id=1,
+        )
+        is None
+    )
+
+
+def test_failure_and_forfeit_on_opposite_sides_is_nobody_won():
+    # Challenger's work was ruled failed; the opponent walked away. Each is out
+    # for its own reason, so neither wins — no precedence question to get wrong.
+    assert (
+        _winner(
+            challenger_points=7,
+            opponent_points=3,
+            challenger_moderation=ModerationStatus.failed,
+            forfeited_by_character_id=2,
+        )
+        is None
+    )
+
+
+def test_failure_and_forfeit_on_the_same_side_still_names_the_opponent():
+    assert (
+        _winner(
+            challenger_points=7,
+            opponent_points=3,
+            challenger_moderation=ModerationStatus.failed,
+            forfeited_by_character_id=1,
+        )
+        == 2
+    )
+
+
+def test_flagged_side_can_still_win():
+    # `flagged` is merely *awaiting* a ruling — it is not one.
+    assert (
+        _winner(
+            challenger_points=4,
+            opponent_points=1,
+            challenger_moderation=ModerationStatus.flagged,
+        )
+        == 1
     )
 
 
