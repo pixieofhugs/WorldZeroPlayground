@@ -11,8 +11,8 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 /**
  * Default (na) MOBILE FieldDesk home — the account's carried life at a glance,
  * one-hand and single-column (#500). Character header (avatar in the all-paths
- * rainbow ring + name + faction/level + points), three stat tiles, the
- * in-progress task list, and one or two primary actions. Every faction falls
+ * rainbow ring + name + level, then the era points figure over a rainbow
+ * level track), the in-progress task list, and one or two primary actions. Every faction falls
  * through here until it registers a bespoke mobile home skin (mirrors the
  * taskDetail mobile Default). Presentation-only: all data arrives via
  * {@link FieldDeskHomeState}; copy resolves from the `common` catalog.
@@ -21,10 +21,6 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * (SPEC-faction-ui-profile §1a).
  */
 
-// Decorative down-caret (aria-hidden) marking the name as a switcher trigger; a
-// const so the jsx-text-only literal rule doesn't read it as user-facing copy.
-const CARET_DOWN = '▾'
-
 // Static style objects, hoisted to module scope (#586) — no closure deps.
 const pageTitleStyle: CSSProperties = {
   fontSize: 'var(--text-heading)',
@@ -32,13 +28,39 @@ const pageTitleStyle: CSSProperties = {
   color: 'var(--color-text-primary)',
   margin: 0,
 }
-const statTileStyle: CSSProperties = {
-  flex: '1 1 0',
+/**
+ * Characters / Edit as real controls (#1553). They were bare ~11px caps with no
+ * box — a sub-20px hit target on a phone, which is the accessibility half of
+ * the identity redesign. 44 is the WCAG 2.5.5 target floor and is GEOMETRY, not
+ * spacing: deliberately not on the --space-* ramp.
+ */
+const actionPillStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: 44,
+  boxSizing: 'border-box',
+  padding: '0 var(--space-lg)',
+  borderRadius: 999,
+  border: '1px solid var(--color-border-strong)',
   background: 'var(--color-bg-surface-alt)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 9,
-  padding: 'var(--space-md) var(--space-sm)',
-  minWidth: 0,
+  fontFamily: 'var(--font-body)',
+  // --text-md, not .eyebrow's --text-sm: a 44px pill wants a label a thumb can
+  // aim at, and this is the size the bare caps it replaces already read at.
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-primary)',
+  textDecoration: 'none',
+  cursor: 'pointer',
+  transition: 'opacity 120ms ease',
+}
+/** The baseline row under the track. */
+const trackMetaStyle: CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontSize: 'var(--text-base)',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)',
 }
 const pendingPillStyle: CSSProperties = {
   background: 'var(--color-bg-surface)',
@@ -70,14 +92,8 @@ const secondaryActionStyle: CSSProperties = {
 
 export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
-
-  const stats = [
-    { label: t('fieldDesk.home.stats.points'), value: character.score?.toLocaleString() ?? '0' },
-    { label: t('fieldDesk.home.stats.votes'), value: votesReceived.toLocaleString() },
-    { label: t('fieldDesk.home.stats.era'), value: eraName || '—' },
-  ]
 
   return (
     <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
@@ -91,7 +107,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         </h1>
       </header>
 
-      {/* ── Character card ── */}
+      {/* ── Identity block ── */}
       <section
         style={{
           position: 'relative',
@@ -102,6 +118,8 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           padding: 'var(--space-lg)',
         }}
       >
+        {/* The signature hairline — the hairline, the avatar ring and the level
+            track are one mark at three scales (#1553). */}
         <span
           style={{
             position: 'absolute',
@@ -113,29 +131,28 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             background: 'var(--faction-default-rainbow)',
           }}
         />
-        <div className="flex items-center justify-between mb-4" style={{ marginTop: 'var(--space-xs)' }}>
-          <span className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
-            {t('fieldDesk.home.charEyebrow')}
-          </span>
-          <div className="flex items-center" style={{ gap: 'var(--space-lg)' }}>
-            <button
-              type="button"
-              onClick={() => setSwitcherOpen(true)}
-              className="eyebrow"
-              style={{ color: 'var(--faction-default-card-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              {t('fieldDesk.home.switch')}
-            </button>
-            <Link
-              to={`/characters/${character.id}/edit`}
-              className="eyebrow"
-              style={{ color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
-            >
-              {t('fieldDesk.home.edit')}
-            </Link>
-          </div>
+
+        {/* Actions on their own row, right-aligned, real targets. */}
+        <div className="flex justify-end gap-2 mb-4" style={{ marginTop: 'var(--space-xs)' }}>
+          <button
+            type="button"
+            onClick={() => setSwitcherOpen(true)}
+            className="hover:opacity-80 active:opacity-60"
+            style={actionPillStyle}
+          >
+            {t('sidebar.characterCard.characters')}
+          </button>
+          <Link
+            to={`/characters/${character.id}/edit`}
+            className="hover:opacity-80 active:opacity-60"
+            style={actionPillStyle}
+          >
+            {t('sidebar.characterCard.edit')}
+          </Link>
         </div>
 
+        {/* Name over level. No faction word — the rainbow ring and the page
+            already say unaffiliated — and no second points figure. */}
         <div className="flex items-center gap-3.5">
           <div
             className="shrink-0 rounded-full"
@@ -164,25 +181,13 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5" style={{ minWidth: 0 }}>
-              <Link
-                to={`/characters/${character.id}`}
-                className="font-display italic block truncate content-title"
-                style={{ lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
-              >
-                {character.display_name}
-              </Link>
-              {/* ▾ opens the active-character switcher sheet (#516). */}
-              <button
-                type="button"
-                onClick={() => setSwitcherOpen(true)}
-                aria-label={t('fieldDesk.home.switcher.title')}
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: ▾ dingbat used as an icon, sized to the name row
-                style={{ flex: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 14, lineHeight: 1, color: 'var(--color-text-tertiary)' }}
-              >
-                <span aria-hidden>{CARET_DOWN}</span>
-              </button>
-            </div>
+            <Link
+              to={`/characters/${character.id}`}
+              className="font-display italic block truncate content-title"
+              style={{ lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+            >
+              {character.display_name}
+            </Link>
             <div
               className="truncate"
               style={{
@@ -194,40 +199,65 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                 color: 'var(--color-text-secondary)',
               }}
             >
-              {t('sidebar.characterCard.factionLevel', {
-                faction: factionName(character.faction_slug),
-                level: character.level,
-              })}
-            </div>
-          </div>
-          <div className="shrink-0 text-right">
-            <div className="font-display content-title" style={{ lineHeight: 1, color: 'var(--color-text-primary)' }}>
-              {character.score?.toLocaleString() ?? '0'}
-            </div>
-            <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
-              {t('fieldDesk.home.stats.points')}
+              {t('sidebar.characterCard.level', { level: character.level })}
             </div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="text-center"
-              style={statTileStyle}
-            >
-              <div className="font-display truncate content-text" style={{ lineHeight: 1, color: 'var(--color-text-primary)' }}>
-                {stat.value}
-              </div>
-              <div
-                className="eyebrow"
-                style={{ marginTop: 'var(--space-sm)', color: 'var(--color-text-secondary)' }}
-              >
-                {stat.label}
-              </div>
-            </div>
-          ))}
+        {/* The one points figure, in the display face. */}
+        <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
+          <span className="font-display italic" style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
+            {character.score.toLocaleString()}
+          </span>
+          <span className="truncate" style={trackMetaStyle}>
+            {eraName ? t('sidebar.characterCard.eraPoints', { era: eraName }) : t('sidebar.characterCard.points')}
+          </span>
+        </div>
+
+        {/* The level track: the spectrum CLIPPED by the fill width — one full
+            ramp read through a narrower window, not a solid colour. */}
+        <div
+          className="overflow-hidden"
+          style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)', marginTop: 'var(--space-md)' }}
+          {...(levelTrack
+            ? {
+                role: 'progressbar',
+                'aria-valuemin': 0,
+                'aria-valuemax': 100,
+                'aria-valuenow': Math.round(levelTrack.fillPercent),
+                'aria-label': t('sidebar.characterCard.trackLabel', {
+                  score: character.score.toLocaleString(),
+                  target: levelTrack.nextThreshold.toLocaleString(),
+                  level: levelTrack.nextLevel ?? character.level,
+                }),
+              }
+            : null)}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${levelTrack?.fillPercent ?? 0}%`,
+              borderRadius: 999,
+              background: 'var(--faction-default-rainbow)',
+              transition: 'width 300ms',
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
+          {levelTrack && (
+            <span style={trackMetaStyle}>
+              {levelTrack.nextLevel === null
+                ? t('sidebar.characterCard.topLevel')
+                : t('sidebar.characterCard.toNextLevel', {
+                    points: levelTrack.pointsToNext.toLocaleString(),
+                    level: levelTrack.nextLevel,
+                  })}
+            </span>
+          )}
+          <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
+            {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
+          </span>
         </div>
       </section>
 

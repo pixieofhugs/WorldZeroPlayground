@@ -41,7 +41,8 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
   return {
     character: characterFor(slug, { level: 4, score: 320, all_time_score: 1180 }),
     eraName: 'Era One',
-    votesReceived: 47,
+    // The design's worked example: 320 of 500, 180 short of level 5 (#1553).
+    levelTrack: { nextLevel: 5, pointsToNext: 180, nextThreshold: 500, fillPercent: 64 },
     activeTasks: praxisCardsFor(slug),
     pendingCount: 2,
     loadingTasks: false,

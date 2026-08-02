@@ -309,7 +309,7 @@ async def test_duplicate_title_within_the_file_is_rejected(
 
 
 @pytest.mark.asyncio
-async def test_title_that_already_exists_is_rejected(
+async def test_title_that_already_exists_is_skipped_not_rejected(
     client: AsyncClient,
     account: Account,
     character: Character,
@@ -317,17 +317,30 @@ async def test_title_that_already_exists_is_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Re-uploading a file that was already imported must not duplicate tasks."""
+    """A name the board already has is skipped and reported, never duplicated.
+
+    Re-running a curated sheet after adding a few lines has to be safe, so a
+    collision with the board is a warning rather than a rejection of the file.
+    """
     await _make_admin(account, db_session)
 
     resp = await client.post(
         IMPORT_URL,
         headers=auth_headers,
-        files=_upload(f"{HEADER}\n{active_task.title},ua,Duplicate,1,10\n"),
+        files=_upload(
+            f"{HEADER}\n"
+            f"{active_task.title},ua,Duplicate,1,10\n"
+            "Genuinely New Task,ua,Fresh,1,10\n"
+        ),
     )
 
-    assert resp.status_code == 422, resp.text
-    assert "Row 2" in _messages(resp)[0]
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+
+    # The duplicate is skipped; the new row still lands.
+    assert body["created_titles"] == ["Genuinely New Task"]
+    assert body["created_count"] == 1
+    assert any(active_task.title in w and "skipped" in w for w in body["warnings"])
 
     count = len(
         (
@@ -339,6 +352,30 @@ async def test_title_that_already_exists_is_rejected(
         .all()
     )
     assert count == 1
+
+
+@pytest.mark.asyncio
+async def test_file_of_only_duplicates_creates_nothing_and_still_succeeds(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """Re-importing an unchanged file is a no-op, not an error."""
+    await _make_admin(account, db_session)
+    before = await _task_titles(db_session)
+
+    resp = await client.post(
+        IMPORT_URL,
+        headers=auth_headers,
+        files=_upload(f"{HEADER}\n{active_task.title},ua,Duplicate,1,10\n"),
+    )
+
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["created_count"] == 0
+    assert await _task_titles(db_session) == before
 
 
 @pytest.mark.asyncio

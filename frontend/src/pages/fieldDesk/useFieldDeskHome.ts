@@ -1,18 +1,24 @@
 import { useAuth } from '../../auth/AuthContext'
-import { useVotesReceived } from '../../hooks/useVotesReceived'
+import { useLevelTrack } from '../../hooks/useLevelTrack'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
+import type { LevelTrack } from '../../utils/levelTrack'
 
 /**
  * Composed read-model for the MOBILE FieldDesk home (#500).
  *
  * Pure composition over the same reads the desktop rail draws from:
  * `useSidebarPanels` for the in-progress tasks and the pending-request count,
- * `useVotesReceived` for the votes tile, and the carried character from
- * auth. No new data logic — it only bundles what those already return, so the
- * mobile skins stay presentation-only and slot-invariant (mirrors
- * `useTaskDetail`, whose `state` every TaskDetail archetype renders).
+ * `useLevelTrack` for the identity block's progress read-out, and the carried
+ * character from auth. No new data logic — it only bundles what those already
+ * return, so the mobile skins stay presentation-only and slot-invariant
+ * (mirrors `useTaskDetail`, whose `state` every TaskDetail archetype renders).
+ *
+ * IT NO LONGER CARRIES A VOTE COUNT (#1553). `useVotesReceived` fed a "Votes"
+ * stat tile that the identity-block redesign removed — vote count is an input,
+ * not an achievement — and this hook was its only consumer, so the
+ * `/characters/{id}/stats/votes-received` request left the home screen with it.
  *
  * It used to compose two hooks of its OWN (`useMyActiveTasks` /
  * `usePendingRequests`) that fetched the same two things the rail was fetching,
@@ -30,8 +36,8 @@ export interface FieldDeskHomeState {
   character: CharacterOut
   /** Current era label from /auth/me (e.g. "Era 3"); '' when unknown. */
   eraName: string
-  /** Votes this life has received (the "Votes" stat tile). */
-  votesReceived: number
+  /** Progress toward the next level; `null` until the era config lands. */
+  levelTrack: LevelTrack | null
   /** In-progress praxes (membership-scoped) — the active-tasks list. */
   activeTasks: PraxisCardOut[]
   /** Count of unanswered requests, straight from `/me/sidebar` (#1456). */
@@ -53,14 +59,14 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
     pending_requests_count: pendingCount,
     loading: loadingTasks,
   } = useSidebarPanels()
-  const { votesReceived } = useVotesReceived(character?.id)
+  const track = useLevelTrack(character?.level ?? 0, character?.score ?? 0)
 
   if (!character) return null
 
   return {
     character,
     eraName: user?.era_name ?? '',
-    votesReceived,
+    levelTrack: track,
     activeTasks,
     pendingCount,
     loadingTasks,

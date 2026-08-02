@@ -66,7 +66,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
   return {
     character: CHARACTER,
     eraName: 'Era 1',
-    votesReceived: 12,
+    levelTrack: { nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 },
     activeTasks: [ACTIVE_TASK],
     pendingCount: 0,
     loadingTasks: false,
@@ -107,12 +107,17 @@ describe('UA mobile home — what it draws', () => {
     expect(html).toContain('opacity:0.14')
   })
 
-  it('keeps its slots: name, points, stat tiles, active work and both actions', () => {
+  it('keeps its slots: name, points, the level track, active work and both actions', () => {
     const { html, text } = render(<UaFieldDesk state={baseState()} />)
     expect(text).toContain('Ada Reed')
     expect(text).toContain('340')
     expect(text.toLowerCase()).toContain('era 1')
     expect(text).toContain('Ten thumbnails before breakfast')
+    // The stat trio became the level track (#1553): one points figure, a
+    // progress rail, and the two figures that bound it.
+    expect(text).toContain('Level 2')
+    expect(text).toContain('160 to Level 5')
+    expect(html).toContain('role="progressbar"')
     expect(html).toContain('href="/tasks"')
     expect(html).toContain('href="/propose-task"')
   })

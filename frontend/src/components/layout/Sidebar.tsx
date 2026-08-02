@@ -1,15 +1,54 @@
-import { type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { relativeTime } from '../../utils/dates'
-import { factionCssVar, factionName } from '../../utils/factions'
+import { factionCssVar } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import { praxisModeLabel } from '../../utils/praxis'
 import { useGameConfig } from '../../hooks/useGameConfig'
+import { useLevelTrack } from '../../hooks/useLevelTrack'
+import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
+
+/**
+ * Switch / Edit as REAL controls (#1553). They were bare ~11px caps with no
+ * box — a sub-20px hit target, which is the accessibility half of the identity
+ * redesign and the reason it is not merely cosmetic. 44 is the WCAG 2.5.5
+ * target floor and is GEOMETRY, not spacing: it is deliberately not on the
+ * --space-* ramp and must not be rounded onto it.
+ */
+const identityActionStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: 44,
+  boxSizing: 'border-box',
+  padding: '0 var(--space-lg)',
+  borderRadius: 999,
+  border: '1px solid var(--color-border-strong)',
+  background: 'var(--color-bg-surface-alt)',
+  fontFamily: 'var(--font-body)',
+  // --text-md, not .eyebrow's --text-sm: a 44px pill wants a label a reader can
+  // land on, and this is the size the bare caps it replaces already read at.
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-primary)',
+  textDecoration: 'none',
+  cursor: 'pointer',
+  transition: 'opacity 120ms ease',
+}
+
+/** The baseline row under the track: "N to Level X" · "N,NNN all-time". */
+const identityMetaStyle: CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontSize: 'var(--text-base)',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)',
+}
 
 /** Shared panel shell for the redesigned sidebar (unaffiliated rainbow style).
  *  Exported so the fold-away handle (#1191) reads as part of the rail. */
@@ -73,16 +112,19 @@ export default function Sidebar() {
   const { t } = useTranslation('common')
   const { user } = useAuth()
   const character = user?.character
+  const [switcherOpen, setSwitcherOpen] = useState(false)
 
   const {
     global_activity: globalActivity,
     active_praxes: activeTasks,
   } = useSidebarPanels()
   const gameConfig = useGameConfig()
+  const track = useLevelTrack(character?.level ?? 0, character?.score ?? 0)
 
   const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS
   const slotCount = activeTasks.length
   const slotPercent = Math.min((slotCount / maxTaskSlots) * 100, 100)
+  const eraName = user?.era_name ?? ''
 
   return (
     // `id` is the target of the fold-away handle's `aria-controls` (#1191).
@@ -90,40 +132,43 @@ export default function Sidebar() {
       {/* ── Character Card ── */}
       {character ? (
         <section style={panelStyle}>
-          {/* signature rainbow rule (this panel only) */}
+          {/* Signature rainbow hairline — this panel only. Kept through the
+              identity redesign (#1553): the hairline, the avatar ring and the
+              level track are one mark at three scales. */}
           <span
             style={{
               position: 'absolute',
               top: 0,
               left: 0,
               right: 0,
-              height: 2,
-              opacity: 0.85,
+              height: 3,
+              opacity: 0.9,
               background: 'var(--faction-default-rainbow)',
             }}
           />
-          <div className="flex items-center justify-between mb-4">
-            <span style={sectionLabel}>{t('sidebar.characterCard.eyebrow')}</span>
-            {/* ponytail: dropped a 1px paddingBottom rather than round it up to
-                --space-xs — 4px would visibly detach the underline; 0 is the
-                nearest honest value and the smallest delta off 1px. */}
+
+          {/* ── Actions: real 44px targets, right-aligned on their own row ── */}
+          <div className="flex justify-end gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setSwitcherOpen(true)}
+              className="hover:opacity-80 active:opacity-60"
+              style={identityActionStyle}
+            >
+              {t('sidebar.characterCard.characters')}
+            </button>
             <Link
               to={`/characters/${character.id}/edit`}
-              className="hover:opacity-80"
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 'var(--text-base)',
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                color: 'var(--faction-default-card-muted)',
-                textDecoration: 'none',
-                borderBottom: '1px solid var(--color-border-strong)',
-              }}
+              className="hover:opacity-80 active:opacity-60"
+              style={identityActionStyle}
             >
               {t('sidebar.characterCard.edit')}
             </Link>
           </div>
 
+          {/* ── Identity: avatar + name + level. No faction word — the rainbow
+                 ring and the whole rail already say unaffiliated, and no points
+                 figure either; there is exactly one of those, below. ── */}
           <div className="flex items-center gap-3.5 mb-4">
             {/* avatar in a rainbow ring (unaffiliated / all-paths mark) */}
             <div
@@ -165,48 +210,82 @@ export default function Sidebar() {
                   color: 'var(--color-text-secondary)',
                 }}
               >
-                {t('sidebar.characterCard.factionLevel', {
-                  faction: factionName(character.faction_slug),
-                  level: character.level,
-                })}
+                {t('sidebar.characterCard.level', { level: character.level })}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: t('sidebar.stats.score'), value: character.score?.toLocaleString() ?? '0' },
-              { label: t('sidebar.stats.allTime'), value: character.all_time_score?.toLocaleString() ?? '0' },
-              { label: t('sidebar.stats.current'), value: user?.era_name ?? '' },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="text-center"
-                style={{
-                  background: 'var(--color-bg-surface)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 9,
-                  padding: 'var(--space-md) var(--space-sm)',
-                }}
-              >
-                <div className="font-display" style={{ fontSize: 'var(--text-content)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
-                  {stat.value}
-                </div>
-                <div
-                  style={{
-                    marginTop: 'var(--space-sm)',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 'var(--text-xs)',
-                    letterSpacing: '0.2em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-text-secondary)',
-                  }}
-                >
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+          {/* ── The one points figure, in the display face ── */}
+          <div className="flex items-baseline gap-2">
+            <span
+              className="font-display italic"
+              style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--color-text-primary)' }}
+            >
+              {character.score.toLocaleString()}
+            </span>
+            <span className="truncate" style={identityMetaStyle}>
+              {eraName
+                ? t('sidebar.characterCard.eraPoints', { era: eraName })
+                : t('sidebar.characterCard.points')}
+            </span>
           </div>
+
+          {/* ── The level track. The fill is the spectrum CLIPPED by the fill
+                 width — one full ramp read through a narrower window, so the
+                 mark is the same rainbow the hairline and the ring are. Not a
+                 solid colour, and not a token of its own. ── */}
+          <div
+            className="overflow-hidden"
+            style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)', marginTop: 'var(--space-md)' }}
+            {...(track
+              ? {
+                  role: 'progressbar',
+                  'aria-valuemin': 0,
+                  'aria-valuemax': 100,
+                  'aria-valuenow': Math.round(track.fillPercent),
+                  'aria-label': t('sidebar.characterCard.trackLabel', {
+                    score: character.score.toLocaleString(),
+                    target: track.nextThreshold.toLocaleString(),
+                    level: track.nextLevel ?? character.level,
+                  }),
+                }
+              : null)}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${track?.fillPercent ?? 0}%`,
+                borderRadius: 999,
+                background: 'var(--faction-default-rainbow)',
+                transition: 'width 300ms',
+              }}
+            />
+          </div>
+
+          {/* ── Baseline: what is owed, and what has ever been earned ── */}
+          <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
+            {track && (
+              <span style={identityMetaStyle}>
+                {track.nextLevel === null
+                  ? t('sidebar.characterCard.topLevel')
+                  : t('sidebar.characterCard.toNextLevel', {
+                      points: track.pointsToNext.toLocaleString(),
+                      level: track.nextLevel,
+                    })}
+              </span>
+            )}
+            <span style={{ ...identityMetaStyle, marginLeft: 'auto' }}>
+              {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
+            </span>
+          </div>
+
+          {/* The switcher the "Characters" pill opens — the same sheet the
+              mobile home uses, so both homes answer the button identically. */}
+          <CharacterSwitcherSheet
+            open={switcherOpen}
+            activeCharacterId={character.id}
+            onClose={() => setSwitcherOpen(false)}
+          />
         </section>
       ) : (
         <section style={panelStyle}>

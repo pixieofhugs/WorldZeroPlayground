@@ -2,10 +2,17 @@
  * Mobile FieldDesk-home slot invariant — the home twin of the taskDetail
  * mobileArchetypeSlots test. Walks surfaceMap('mobileFieldDesk') plus the Default
  * mobile home and asserts each skin emits the invariant content slots from the
- * (hand-built) FieldDeskHomeState: character header (name + faction + level +
- * points), the Points/Votes/Era stat tiles, the active-tasks list, the empty
- * state, and the primary actions. Presentation-only — the skins take state, so
- * no hooks or network are involved.
+ * (hand-built) FieldDeskHomeState: the identity block (name + level + era
+ * points + the level track + all-time), the active-tasks list, the empty state,
+ * and the primary actions. Presentation-only — the skins take state, so no
+ * hooks or network are involved.
+ *
+ * THE FACTION WORD AND THE VOTE COUNT ARE NOT SLOTS ANY MORE (#1553). The
+ * identity block dropped "Unaffiliated · Level 4" down to "Level 4" (the art
+ * already says the faction) and dropped the votes tile outright — a vote count
+ * is an input, not an achievement. A faction assertion here would also have
+ * passed for the wrong reason: every skin still names the faction on its
+ * active-task rows.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { surfaceMap } from '../../../factions'
@@ -18,7 +25,6 @@ import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import type { CharacterOut } from '../../../api/auth'
 import type { PraxisCardOut } from '../../../api/praxis'
-import { factionName } from '../../../utils/factions'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -69,7 +75,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
   return {
     character: CHARACTER,
     eraName: 'Era 3',
-    votesReceived: 12,
+    levelTrack: { nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 },
     activeTasks: [ACTIVE_TASK],
     pendingCount: 2,
     loadingTasks: false,
@@ -82,15 +88,28 @@ const archetypes = { ...surfaceMap('mobileFieldDesk'), __default__: DefaultField
 
 describe('mobile FieldDesk-home content-slot invariant', () => {
   for (const [slug, Skin] of Object.entries(archetypes)) {
-    it(`${slug} renders the character header + stat tiles`, () => {
+    it(`${slug} renders the identity block`, () => {
       const { html, text } = render(<Skin state={baseState()} />)
       expect(text, 'character name slot').toContain('Mollusk')
-      expect(text, 'faction slot').toContain(factionName('wow'))
+      expect(text, 'level slot').toContain('Level 4')
       expect(text, 'points/score slot').toContain('340')
-      expect(text, 'votes slot').toContain('12')
       expect(text, 'era slot').toContain('Era 3')
+      expect(text, 'all-time slot').toContain('900')
       expect(html, 'profile link slot').toContain('href="/characters/42"')
       expect(html, 'edit link slot').toContain('href="/characters/42/edit"')
+    })
+
+    it(`${slug} renders the level track`, () => {
+      const { html, text } = render(<Skin state={baseState()} />)
+      expect(html, 'progress track slot').toContain('role="progressbar"')
+      expect(html, 'fill width slot').toContain('width:68%')
+      expect(text, 'to-next-level slot').toContain('160 to Level 5')
+    })
+
+    it(`${slug} holds the track back until the era curve lands`, () => {
+      const { html, text } = render(<Skin state={baseState({ levelTrack: null })} />)
+      expect(html, 'no progressbar without a target').not.toContain('role="progressbar"')
+      expect(text, 'points figure still reads').toContain('340')
     })
 
     it(`${slug} renders the active-tasks list (continue link)`, () => {

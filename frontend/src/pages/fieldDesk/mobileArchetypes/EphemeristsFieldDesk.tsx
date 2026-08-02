@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -34,8 +35,8 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * #1208) — the field journal on a phone. The carried life and its
  * surveys-underway become papyrus leaves bound in hairlines, headed by an
  * incised running-head over the design's fluted rule. Same content slots as the
- * Default mobile home (character header, Points/Votes/Era stat tiles,
- * active-tasks list, primary actions) — only the dress changes. Grounds on
+ * Default mobile home (the identity block — name, level, era points and the
+ * level track — active-tasks list, primary actions) — only the dress changes. Grounds on
  * `--faction-ephemerists-plate-*` and is theme-aware through the cascade: the
  * papyrus flips to the night plate in dark, no ternaries. Presentation-only —
  * all data arrives via {@link FieldDeskHomeState}.
@@ -49,6 +50,39 @@ const kicker: CSSProperties = {
 }
 
 const brassRule = `linear-gradient(90deg, ${BRASS}, transparent)`
+
+/**
+ * Characters / Edit as real controls (#1553) — an incised tablet in the plate's
+ * hairline. They were bare caps with no box: a sub-20px hit target on a phone.
+ * 44 is the WCAG 2.5.5 target floor and is GEOMETRY, not spacing.
+ */
+const actionPillStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: 44,
+  boxSizing: 'border-box',
+  padding: '0 var(--space-lg)',
+  border: `1px solid ${LINE}`,
+  background: INNER,
+  ...SMALL_CAPS,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
+  color: NILE,
+  textDecoration: 'none',
+  cursor: 'pointer',
+  transition: 'opacity 120ms ease',
+}
+
+/** The baseline row under the track — the leaf's marginalia voice. */
+const trackMetaStyle: CSSProperties = {
+  ...SMALL_CAPS,
+  fontSize: 'var(--text-sm)',
+  letterSpacing: '0.12em',
+  color: QUIET,
+}
+
+/** The valley's own spectrum: ochre through brass into the Nile (#1553). */
+const TRACK_FILL = `linear-gradient(90deg, ${OCHRE}, ${BRASS}, ${NILE})`
 
 /** One leaf off the field journal — papyrus inside the plate's hairline. */
 function Leaf({ children }: { children: ReactNode }) {
@@ -69,13 +103,8 @@ function Leaf({ children }: { children: ReactNode }) {
 
 export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
-
-  const stats = [
-    { label: t('fieldDesk.home.stats.points'), value: character.score?.toLocaleString() ?? '0' },
-    { label: t('fieldDesk.home.stats.votes'), value: votesReceived.toLocaleString() },
-    { label: t('fieldDesk.home.stats.era'), value: eraName || '—' },
-  ]
+  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
     <div
@@ -99,10 +128,21 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
 
       {/* ── Observer leaf ── */}
       <Leaf>
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
-          <span style={{ ...kicker, color: CAPTION }}>{t('fieldDesk.home.ephemerists.charEyebrow')}</span>
-          <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: NILE, textDecoration: 'none' }}>
-            {t('fieldDesk.home.edit')}
+        <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-lg)' }}>
+          <button
+            type="button"
+            onClick={() => setSwitcherOpen(true)}
+            style={actionPillStyle}
+            className="hover:opacity-80 active:opacity-60"
+          >
+            {t('sidebar.characterCard.characters')}
+          </button>
+          <Link
+            to={`/characters/${character.id}/edit`}
+            style={actionPillStyle}
+            className="hover:opacity-80 active:opacity-60"
+          >
+            {t('sidebar.characterCard.edit')}
           </Link>
         </div>
 
@@ -143,34 +183,68 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...SMALL_CAPS, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', color: QUIET }}>
-              {t('sidebar.characterCard.factionLevel', {
-                faction: factionName(character.faction_slug),
-                level: character.level,
-              })}
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...trackMetaStyle }}>
+              {t('sidebar.characterCard.level', { level: character.level })}
             </div>
-          </div>
-          <div className="shrink-0 text-right">
-            <div style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1, color: INK }}>
-              {character.score?.toLocaleString() ?? '0'}
-            </div>
-            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: INNER, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-sm)' }}
-            >
-              <div className="truncate" style={{ fontFamily: DECO, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
-                {stat.value}
-              </div>
-              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
-            </div>
-          ))}
+        {/* The one points figure, in the display face (#1553). */}
+        <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
+          <span style={{ fontFamily: DECO, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK }}>
+            {character.score.toLocaleString()}
+          </span>
+          <span className="truncate" style={trackMetaStyle}>
+            {eraName ? t('sidebar.characterCard.eraPoints', { era: eraName }) : t('sidebar.characterCard.points')}
+          </span>
+        </div>
+
+        {/* The level track — the faction's own spectrum CLIPPED by the fill width,
+            one full ramp read through a narrower window rather than a solid
+            colour. Same mark as this skin's rule and its avatar ring, at a third
+            scale. */}
+        <div
+          className="overflow-hidden"
+          style={{ height: 6, borderRadius: 999, background: INNER, marginTop: 'var(--space-md)' }}
+          {...(levelTrack
+            ? {
+                role: 'progressbar',
+                'aria-valuemin': 0,
+                'aria-valuemax': 100,
+                'aria-valuenow': Math.round(levelTrack.fillPercent),
+                'aria-label': t('sidebar.characterCard.trackLabel', {
+                  score: character.score.toLocaleString(),
+                  target: levelTrack.nextThreshold.toLocaleString(),
+                  level: levelTrack.nextLevel ?? character.level,
+                }),
+              }
+            : null)}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${levelTrack?.fillPercent ?? 0}%`,
+              borderRadius: 999,
+              background: TRACK_FILL,
+              transition: 'width 300ms',
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
+          {levelTrack && (
+            <span style={trackMetaStyle}>
+              {levelTrack.nextLevel === null
+                ? t('sidebar.characterCard.topLevel')
+                : t('sidebar.characterCard.toNextLevel', {
+                    points: levelTrack.pointsToNext.toLocaleString(),
+                    level: levelTrack.nextLevel,
+                  })}
+            </span>
+          )}
+          <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
+            {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
+          </span>
         </div>
       </Leaf>
 
@@ -258,6 +332,13 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
           </Link>
         )}
       </div>
+
+      {/* The switcher the "Characters" pill opens (#516). */}
+      <CharacterSwitcherSheet
+        open={switcherOpen}
+        activeCharacterId={character.id}
+        onClose={() => setSwitcherOpen(false)}
+      />
     </div>
   )
 }
