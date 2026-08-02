@@ -21,11 +21,11 @@ MEDIA_ROOT itself — that is the mount point, and removing it would break the
 mount.
 
 `--keep-media`, or any environment wiped by other means (a reset predating this
-step, a local `reset_db.sh`), leaves that accumulation behind. `scripts/
-sweep_orphan_media.py` is what clears it after the fact: it deletes only files
-no database row claims, so it is safe to run on a live disk, and reports before
-it touches anything. This script is the blunt instrument for a disk that is
-*meant* to be empty; the sweep is the selective one.
+step, a local `reset_db.sh`), leaves that accumulation behind.
+`scripts/sweep_orphan_media.py` is what clears it after the fact: it deletes
+only files no database row claims, so it is safe to run on a live disk, and
+reports before it touches anything. This script is the blunt instrument for a
+disk that is *meant* to be empty; the sweep is the selective one.
 
 Designed to run from **Render Shell** (worldzero-backend → Shell), where
 `DATABASE_URL` and `MEDIA_ROOT` are already injected by `render.yaml`. Nothing
