@@ -96,15 +96,14 @@ export default function CharacterProfile() {
     setRelationshipLoading(true);
     setRelationshipError(null);
     try {
-      await createRelationship(character.id, type);
-      // Re-fetch to get the properly typed RelationshipListItem with display data
-      const rels = await listRelationships();
-      const match = rels.find(
-        (r) => r.to_character_id === character.id,
-      );
-      setRelationship(match ?? null);
+      // The POST answers the enriched item, display data and all (#1383) —
+      // it used to answer the bare row, so this re-listed every relationship
+      // the viewer holds just to find the one it had written.
+      setRelationship(await createRelationship(character.id, type));
     } catch (err: unknown) {
-      // Handle 409 (already exists) gracefully — re-fetch existing relationship
+      // Handle 409 (already exists) gracefully — re-fetch existing relationship.
+      // This one stays a list read: the write FAILED, so there is no response
+      // body carrying the edge that already existed.
       if (err && typeof err === "object" && "response" in err) {
         const axiosErr = err as { response?: { status?: number } };
         if (axiosErr.response?.status === 409) {
@@ -143,12 +142,9 @@ export default function CharacterProfile() {
     setRelationshipLoading(true);
     setRelationshipError(null);
     try {
-      await unblockRelationship(relationship.id);
-      // Re-fetch to get the re-derived display status (Blocked → type label).
-      const rels = await listRelationships();
-      setRelationship(
-        rels.find((r) => r.to_character_id === character.id) ?? null,
-      );
+      // The re-derived display status (Blocked → type label) comes back on the
+      // unblock itself (#1383); it used to cost a full re-list.
+      setRelationship(await unblockRelationship(relationship.id));
     } catch {
       setRelationshipError("Could not unblock.");
     } finally {

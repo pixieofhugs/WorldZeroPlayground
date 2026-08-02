@@ -116,7 +116,7 @@ export function useFactionDetail(
   slug: string | undefined,
 ): FactionDetailState {
   const { t } = useTranslation("factions");
-  const { user, refetch } = useAuth();
+  const { user, applyUser } = useAuth();
   const characterId = user?.character?.id;
 
   // Section ③ — the viewer's relationship to this faction. Raw status ("member"
@@ -223,18 +223,17 @@ export function useFactionDetail(
     setJoining(true);
     setJoinError(null);
     try {
-      await chooseFaction(slug);
       // Membership dresses the whole site off `/auth/me` — faction slug, the
-      // level-jump allowance, `albescent_revealed`. `POST /factions/choose`
-      // answers `{slug, status}`, so nothing cheaper exists yet (#1383 item 1).
-      await refetch();
+      // level-jump allowance, `albescent_revealed`. The POST now answers that
+      // whole object, so adopting it replaces the follow-up `/auth/me` (#1383).
+      applyUser(await chooseFaction(slug));
       setRawStatus("member");
     } catch (err) {
       setJoinError(extractError(err, t("detail.errors.join")));
     } finally {
       setJoining(false);
     }
-  }, [slug, refetch, t]);
+  }, [slug, applyUser, t]);
 
   return {
     slug,

@@ -76,7 +76,7 @@ function renderGuard(
 ): string {
   const { warm = async () => {}, adminOnly = false } = props
   return renderToStaticMarkup(
-    <AuthContext.Provider value={{ ...session, refetch: async () => {}, signOut: async () => {} }}>
+    <AuthContext.Provider value={{ ...session, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
       <ProtectedRoute warm={warm} adminOnly={adminOnly}>
         {PAGE}
       </ProtectedRoute>

@@ -478,12 +478,25 @@ export async function inviteToPraxis(id: number, inviteeId: number): Promise<Pra
   return data
 }
 
+/** Acknowledgement for answering a collab invite (#1383). */
+export interface InviteResponseOut {
+  praxis_id: number
+  accepted: boolean
+}
+
+/**
+ * Accept or decline a collab invite.
+ *
+ * Answers an ack, not the praxis (#1383). This route used to return a full
+ * tally-bearing `PraxisOut` — mistyped here as `PraxisInviteOut` — and every
+ * caller discarded it, then navigated or refreshed the feed.
+ */
 export async function respondToInvite(
   praxisId: number,
   inviteId: number,
   accept: boolean,
-): Promise<PraxisInviteOut> {
-  const { data } = await api.post<PraxisInviteOut>(
+): Promise<InviteResponseOut> {
+  const { data } = await api.post<InviteResponseOut>(
     `/praxes/${praxisId}/invite/${inviteId}/respond`,
     { accept },
   )

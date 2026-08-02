@@ -44,7 +44,7 @@ function viewer(factionSlug: string | null): CurrentUser {
 
 function render(factionSlug: string | null, onNotNow?: () => void): string {
   return renderToStaticMarkup(
-    <AuthContext.Provider value={{ user: viewer(factionSlug), loading: false, refetch: async () => {}, signOut: async () => {} }}>
+    <AuthContext.Provider value={{ user: viewer(factionSlug), loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
       <MemoryRouter>
         <FeedCardInvitationLetter item={letter} onNotNow={onNotNow} />
       </MemoryRouter>
