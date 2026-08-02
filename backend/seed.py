@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from sqlalchemy import func, select
 
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA
 from script_utils import add_env_argument, get_settings
 from models.account import Account, OAuthProvider
@@ -42,7 +43,7 @@ from models.task import Task, TaskStatus, TaskType
 # Faction status mapping
 # ---------------------------------------------------------------------------
 # System factions that should be hidden in the UI.
-HIDDEN_FACTION_SLUGS = frozenset({"aged_out", "na"})
+HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
 
 
 async def upsert_era_factions(session, era) -> int:
@@ -105,7 +106,12 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
         username="pixie",
         display_name="Pixie",
         bio="",
-        faction_slug="ua",
+        # Born unaffiliated like every other character (ADR-0019 / ADR-0030),
+        # read from the era so the fixture cannot contradict the live default.
+        # This said "ua" until #1559 — a bare literal with no reason attached,
+        # which made a freshly seeded prod show the admin as UA · Level 0 and
+        # made the site-wide default look broken on the most-used account.
+        faction_slug=era.starting_faction_slug,
     )
     session.add(pixie_char)
     await session.flush()
@@ -276,7 +282,9 @@ async def seed_dev_demo(session) -> None:
             account_id=dev_acc.id,
             username="dev",
             display_name="Molly",
-            faction_slug="na",  # unaffiliated — everyone starts here (ADR-0030)
+            # unaffiliated — everyone starts here (ADR-0030), read from the era
+            # so the fixture tracks era.starting_faction_slug (#1559).
+            faction_slug=CURRENT_ERA.starting_faction_slug,
         )
         session.add(molly)
         await session.flush()

@@ -14,6 +14,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
@@ -144,14 +145,14 @@ async def compute_contributions(
 
     # ── assemble contributions ───────────────────────────────────────────────
     contributions: dict[int, Contribution] = {}
-    character_faction = character.faction_slug or "na"
+    character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
 
     for praxis in praxes:
         task = tasks_by_id.get(praxis.task_id)
         if task is None:
             continue
 
-        task_faction = task.primary_faction_slug or "na"
+        task_faction = task.primary_faction_slug or CROSS_FACTION_SLUG
         own_tally = get_tally(tallies, praxis.id)
         base_points = task.point_value
         metatask_points = meta_points.get(praxis.id, 0)
@@ -174,11 +175,11 @@ async def compute_contributions(
             opp_tally = get_tally(opp_tallies, opp_id) if opp_id is not None else VoteTally(0, 0)
 
             opp_praxis = opp_praxes_by_id.get(opp_id) if opp_id is not None else None
-            opponent_faction = "na"
+            opponent_faction = UNAFFILIATED_FACTION_SLUG
             if opp_praxis is not None:
                 opp_char = opp_characters_by_id.get(opp_praxis.created_by_id)
                 if opp_char is not None:
-                    opponent_faction = opp_char.faction_slug or "na"
+                    opponent_faction = opp_char.faction_slug or UNAFFILIATED_FACTION_SLUG
 
             faction_multiplier = compute_faction_multiplier(
                 character_faction, task_faction, era,
