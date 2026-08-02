@@ -11,8 +11,8 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 /**
  * Default (na) MOBILE FieldDesk home — the account's carried life at a glance,
  * one-hand and single-column (#500). Character header (avatar in the all-paths
- * rainbow ring + name + faction/level + points), three stat tiles, the
- * in-progress task list, and one or two primary actions. Every faction falls
+ * rainbow ring + name + level, then the era points figure over a rainbow
+ * level track), the in-progress task list, and one or two primary actions. Every faction falls
  * through here until it registers a bespoke mobile home skin (mirrors the
  * taskDetail mobile Default). Presentation-only: all data arrives via
  * {@link FieldDeskHomeState}; copy resolves from the `common` catalog.

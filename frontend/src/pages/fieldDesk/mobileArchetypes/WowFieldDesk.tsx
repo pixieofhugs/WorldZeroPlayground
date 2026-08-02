@@ -11,14 +11,17 @@
  * faction across the phone (§6).
  *
  * SLOTS ARE INVARIANT. Same {@link FieldDeskHomeState} and the same content
- * slots as `DefaultFieldDesk` — carried life, stat tiles, active quests, primary
+ * slots as `DefaultFieldDesk` — carried life, level track, active quests, primary
  * actions, pending-request line. Only the dress changes; nothing here fetches.
  *
  * THREE DEVIATIONS FROM THE DRAWING, each forced:
  *
  *  • the PHONE BEZEL and the 9:41 CLOCK are the mockup's device shell and are
  *    dropped (see the note in `wowMobile.tsx`). The header's `✦ 4,180` is real
- *    — it is the carried life's score — and survives as the header tally.
+ *    — it is the carried life's score — and it survives, but no longer in the
+ *    tally corner: #1553 allows exactly ONE points figure per identity block,
+ *    so the spark and the number moved down into the crest's footer beside the
+ *    level track, and the corner took the Characters/Edit chits instead.
  *  • the BOTTOM NAV is dropped: the app's `MobileTabBar` is global chrome, and
  *    a per-faction nav would both fork it and strand a knight with three of its
  *    destinations.

@@ -23,7 +23,9 @@
  *  • the PHONE BEZEL and the 9:41 STATUS BAR. Both are the mockup's device
  *    shell, not surfaces of ours — the app already runs inside a real one. The
  *    header's right-hand `✦ 4,180` is NOT part of that shell (it is the player's
- *    score), so it survives as {@link WowPavilionHeader}'s `tally`.
+ *    score), so it survives — the home now draws it in `footer` beside the level
+ *    track (#1553) and hands `tally` its two actions, but the slot is the same
+ *    corner the kit drew.
  *  • the BOTTOM NAV (`✦ Desk · ⚔ Quests · ❦ Court`). The app has one global
  *    `MobileTabBar` (#494), which is app chrome and not a faction surface —
  *    ADR-0039's reasoning for the level gem applies to it exactly: navigation

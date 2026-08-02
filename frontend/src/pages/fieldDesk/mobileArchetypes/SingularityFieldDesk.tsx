@@ -13,8 +13,9 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * carried life and its running functions become bracketed readout panels on a
  * void field: a prompt-headed masthead, corner-bracketed node panel with signal
  * stat cells, an active-functions list, and prompt-styled actions. Same content
- * slots as the Default mobile home (character header, Points/Votes/Era tiles,
- * active-tasks list, primary actions) — only the dress changes.
+ * slots as the Default mobile home (the identity block — name, level, era
+ * points and the level track — active-tasks list, primary actions) — only the
+ * dress changes.
  *
  * Singularity is ALWAYS DARK: every colour resolves to a --faction-singularity-*
  * token that reads identically in both themes, so the skin paints its own void

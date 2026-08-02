@@ -35,8 +35,8 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * #1208) — the field journal on a phone. The carried life and its
  * surveys-underway become papyrus leaves bound in hairlines, headed by an
  * incised running-head over the design's fluted rule. Same content slots as the
- * Default mobile home (character header, Points/Votes/Era stat tiles,
- * active-tasks list, primary actions) — only the dress changes. Grounds on
+ * Default mobile home (the identity block — name, level, era points and the
+ * level track — active-tasks list, primary actions) — only the dress changes. Grounds on
  * `--faction-ephemerists-plate-*` and is theme-aware through the cascade: the
  * papyrus flips to the night plate in dark, no ternaries. Presentation-only —
  * all data arrives via {@link FieldDeskHomeState}.

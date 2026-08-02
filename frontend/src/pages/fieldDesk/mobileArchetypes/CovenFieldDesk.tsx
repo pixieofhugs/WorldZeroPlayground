@@ -36,7 +36,7 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  *
  * The carried life and its in-progress quests each sit under a slip band on the
  * candlelit page. Same content slots as the Default mobile home — character
- * header, stat tiles, active-tasks list, primary actions — only the dress
+ * block, active-tasks list, primary actions — only the dress
  * changes.
  *
  * THE `wow.exe` WINDOWS ARE GONE. Traffic-light dots, the dotted board, the

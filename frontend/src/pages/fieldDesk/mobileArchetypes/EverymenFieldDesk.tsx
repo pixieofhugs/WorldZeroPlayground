@@ -11,10 +11,11 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 /**
  * Everymen MOBILE FieldDesk home (#529) — the union broadsheet on a phone. The
  * carried life becomes the day's front page: a red masthead billboard with the
- * cog seal and knockout Bebas nameplate, gold points seals for the stat tiles,
+ * cog seal and knockout Bebas nameplate, the union band run as a level track,
  * and the in-progress work filed as newsprint dispatches. Same content slots as
- * the Default mobile home (character header, Points/Votes/Era tiles,
- * active-tasks list, primary actions) — only the dress changes. Grounds on the
+ * the Default mobile home (the identity block — name, level, era points and
+ * the level track — active-tasks list, primary actions) — only the dress
+ * changes. Grounds on the
  * `--everymen-*` tokens already in index.css (the set EverymenTaskDetail /
  * EverymenFactionBody use), so it flips with `[data-theme]` without mutating the
  * document theme. Presentation-only — all data arrives via

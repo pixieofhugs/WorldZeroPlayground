@@ -20,8 +20,9 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * the mandala at `texture` behind the masthead, which is the page backdrop case
  * the primitive allows. The lists below it are dense and ask for nothing.
  *
- * Same content slots as the Default mobile home (character header, Points/Votes/
- * Era tiles, active-tasks list, primary actions) — only the dress changes
+ * Same content slots as the Default mobile home (the identity block — name,
+ * level, era points and the level track — active-tasks list, primary actions)
+ * — only the dress changes
  * (ADR-0016), and all data still arrives via {@link FieldDeskHomeState}.
  *
  * Every colour is a `--faction-ua-*` token with both themes, so the screen dims

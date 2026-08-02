@@ -13,8 +13,8 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
  * The carried life and its open jobs become dark ransom cards taped down on a
  * near-black desk: Bebas mastheads over an acid rule, halftone dot screens, hard
  * offset shadows, a hot-pink primary. Same content slots as the Default mobile
- * home (character header, Points/Votes/Era tiles, active-tasks list, primary
- * actions) — only the paste-up changes. Grounds on the `--faction-snide-*`
+ * home (the identity block — name, level, era points and the level track —
+ * active-tasks list, primary actions) — only the paste-up changes. Grounds on the `--faction-snide-*`
  * tokens already in index.css; native-dark (dark ink cards on the flyposted
  * wall). Presentation-only — all data arrives via {@link FieldDeskHomeState}.
  */
