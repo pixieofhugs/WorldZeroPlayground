@@ -1,11 +1,18 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { relativeTime } from '../../utils/dates'
 import { factionCssVar } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
+import type { ActivityFeedItem } from '../../api/activityFeed'
+import type { PraxisCardOut } from '../../api/praxis'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
+import {
+  SIDEBAR_PANEL_COLLAPSIBLE,
+  useSidebarPanelLayout,
+  type SidebarPanelId,
+} from '../../hooks/useSidebarPanelLayout'
 import { praxisModeLabel } from '../../utils/praxis'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { useLevelTrack } from '../../hooks/useLevelTrack'
@@ -14,6 +21,19 @@ import { feedKicker, feedItemTitle } from '../feed/feedItemLabels'
 import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
+
+/**
+ * Each reorderable panel's heading key.
+ *
+ * A LOOKUP of whole literal keys, never a `sidebar.${id}.heading` template: a
+ * computed key is invisible to the copy sweep and to the typed `t()`, which is
+ * the same reason `SidebarHandle` writes its four toggle labels out longhand.
+ * Every string here is greppable exactly as it appears in the catalog.
+ */
+const PANEL_HEADING_KEY = {
+  'active-tasks': 'sidebar.activeTasks.heading',
+  'recent-activity': 'sidebar.recentActivity.heading',
+} as const satisfies Record<SidebarPanelId, string>
 
 /**
  * Switch / Edit as REAL controls (#1553). They were bare ~11px caps with no
@@ -71,19 +91,458 @@ const sectionLabel: CSSProperties = {
   color: 'var(--color-text-secondary)',
 }
 
-/** "LABEL ——————" header: eyebrow + a rule that fades out to the right. */
-function SectionHeader({ label }: { label: string }) {
+/** The rule that fades out to the right, in "LABEL ——————". Decorative. */
+function HeaderRule() {
   return (
-    <div className="flex items-center gap-2.5 mb-3.5">
-      <span style={sectionLabel}>{label}</span>
-      <span
-        style={{
-          flex: 1,
-          height: 1,
-          background: 'linear-gradient(90deg, var(--color-border-strong), transparent)',
-        }}
-      />
-    </div>
+    <span
+      aria-hidden="true"
+      style={{
+        flex: 1,
+        height: 1,
+        background: 'linear-gradient(90deg, var(--color-border-strong), transparent)',
+      }}
+    />
+  )
+}
+
+/** Six dots, the conventional "grab me" mark. Inline rather than a font glyph so
+ *  it renders identically everywhere, and `currentColor` so it inherits the
+ *  header's own token instead of naming a colour. */
+function GripMark() {
+  return (
+    <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true" focusable="false">
+      <circle cx="2.5" cy="4" r="1.2" fill="currentColor" />
+      <circle cx="7.5" cy="4" r="1.2" fill="currentColor" />
+      <circle cx="2.5" cy="8" r="1.2" fill="currentColor" />
+      <circle cx="7.5" cy="8" r="1.2" fill="currentColor" />
+      <circle cx="2.5" cy="12" r="1.2" fill="currentColor" />
+      <circle cx="7.5" cy="12" r="1.2" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** Reuses the rail's existing glyph rather than introducing a second chevron:
+ *  '›' points right, so a quarter turn down is "open" and no turn is "closed" —
+ *  the design's "rotates −90° when collapsed", read from the open state. */
+const CHEVRON_ROTATION_OPEN = 'rotate(90deg)'
+const CHEVRON_ROTATION_CLOSED = 'rotate(0deg)'
+
+const gripButtonStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  color: 'var(--color-text-tertiary)',
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'grab',
+}
+
+const disclosureButtonStyle: CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  color: 'var(--color-text-secondary)',
+  fontSize: 'var(--text-content)',
+  lineHeight: 1,
+}
+
+interface SidebarPanelProps {
+  readonly id: SidebarPanelId
+  readonly label: string
+  /** 1-based seat, spoken by the grip so a keyboard user hears the move land. */
+  readonly position: number
+  readonly total: number
+  readonly collapsed: boolean
+  readonly onToggleCollapsed: () => void
+  readonly onMoveByStep: (delta: number) => void
+  readonly armed: boolean
+  readonly onArm: (armed: boolean) => void
+  readonly dragging: boolean
+  readonly dropTarget: boolean
+  readonly onDragStart: () => void
+  readonly onDragOverPanel: () => void
+  readonly onDragLeavePanel: () => void
+  readonly onDropPanel: () => void
+  readonly onDragEnd: () => void
+  readonly children: ReactNode
+}
+
+/**
+ * A panel below the character card: its shell, its header row, and the two
+ * gestures the header carries (#1555).
+ *
+ * COLLAPSING HIDES, IT DOES NOT UNMOUNT
+ * -------------------------------------
+ * The body is always rendered and folded away with the `hidden` attribute —
+ * the same instrument, one level down, that `SidebarColumn` uses for the rail
+ * as a whole. #1343 fixed exactly this bug at the rail level: unmounting tore
+ * down the hooks inside, so reopening blinked. `hidden` draws nothing,
+ * contributes no box and takes the subtree out of the accessibility tree, so
+ * "collapsed means gone" holds without costing the reopen.
+ *
+ * WHY THE GRIP IS A BUTTON
+ * ------------------------
+ * Native HTML drag-and-drop is a pointer gesture with no keyboard equivalent,
+ * so a `<div draggable>` would be a control half the site cannot use. The grip
+ * is a real `<button>`: the pointer arms the drag through it, and Arrow Up /
+ * Arrow Down move the panel a seat at a time through the same reorder
+ * primitive. `draggable` is armed by the grip rather than left on permanently
+ * so the panel's own links and text stay selectable and draggable as links.
+ */
+function SidebarPanel({
+  id,
+  label,
+  position,
+  total,
+  collapsed,
+  onToggleCollapsed,
+  onMoveByStep,
+  armed,
+  onArm,
+  dragging,
+  dropTarget,
+  onDragStart,
+  onDragOverPanel,
+  onDragLeavePanel,
+  onDropPanel,
+  onDragEnd,
+  children,
+}: SidebarPanelProps) {
+  const { t } = useTranslation('common')
+  const bodyId = `wz-sidebar-panel-${id}`
+  const collapsible = SIDEBAR_PANEL_COLLAPSIBLE[id]
+
+  function handleGripKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      onMoveByStep(-1)
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      onMoveByStep(1)
+    }
+  }
+
+  function handleDragStart(event: DragEvent<HTMLElement>) {
+    // Firefox refuses to start a drag with an empty dataTransfer.
+    event.dataTransfer.setData('text/plain', id)
+    event.dataTransfer.effectAllowed = 'move'
+    onDragStart()
+  }
+
+  function handleDragOver(event: DragEvent<HTMLElement>) {
+    // preventDefault is what marks this element as a valid drop target.
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    onDragOverPanel()
+  }
+
+  function handleDrop(event: DragEvent<HTMLElement>) {
+    event.preventDefault()
+    onDropPanel()
+  }
+
+  return (
+    <section
+      aria-labelledby={`${bodyId}-label`}
+      draggable={armed}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragLeave={onDragLeavePanel}
+      onDrop={handleDrop}
+      onDragEnd={onDragEnd}
+      style={{
+        ...panelStyle,
+        // The drop-target mark: the panel's own hairline, brightened. It is the
+        // border it already has rather than a new outline, so nothing shifts.
+        ...(dropTarget ? { borderColor: 'var(--color-border-strong)' } : null),
+        ...(dragging ? { opacity: 0.5 } : null),
+      }}
+    >
+      <div className="flex items-center gap-2.5 mb-3.5">
+        <button
+          type="button"
+          onPointerDown={() => onArm(true)}
+          onPointerUp={() => onArm(false)}
+          onKeyDown={handleGripKeyDown}
+          aria-label={t('sidebar.panel.reorder', { panel: label, position, total })}
+          title={t('sidebar.panel.reorder', { panel: label, position, total })}
+          aria-keyshortcuts="ArrowUp ArrowDown"
+          className="shrink-0 hover:opacity-80"
+          style={gripButtonStyle}
+        >
+          <GripMark />
+        </button>
+
+        {collapsible ? (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-controls={bodyId}
+            aria-label={
+              collapsed
+                ? t('sidebar.panel.expand', { panel: label })
+                : t('sidebar.panel.collapse', { panel: label })
+            }
+            className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+            style={disclosureButtonStyle}
+          >
+            <span id={`${bodyId}-label`} className="truncate" style={sectionLabel}>
+              {label}
+            </span>
+            <HeaderRule />
+            <span
+              aria-hidden="true"
+              className="shrink-0"
+              style={{
+                display: 'inline-block',
+                transform: collapsed ? CHEVRON_ROTATION_CLOSED : CHEVRON_ROTATION_OPEN,
+                transition: 'transform 160ms ease',
+              }}
+            >
+              ›
+            </span>
+          </button>
+        ) : (
+          // Reorderable but not collapsible — the owner ruling's asymmetry. No
+          // disclosure control at all rather than a disabled one.
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <span id={`${bodyId}-label`} className="truncate" style={sectionLabel}>
+              {label}
+            </span>
+            <HeaderRule />
+          </div>
+        )}
+      </div>
+
+      <div id={bodyId} hidden={collapsed}>
+        {children}
+      </div>
+    </section>
+  )
+}
+
+/** The "In progress tasks" panel's body — everything the header does not own.
+ *  A component of its own since #1555, because the panel is now rendered from an
+ *  ORDER rather than from its position in this file's source. */
+function ActiveTasksBody({
+  activeTasks,
+  maxTaskSlots,
+}: {
+  readonly activeTasks: PraxisCardOut[]
+  readonly maxTaskSlots: number
+}) {
+  const { t } = useTranslation('common')
+  const slotCount = activeTasks.length
+  const slotPercent = Math.min((slotCount / maxTaskSlots) * 100, 100)
+
+  return (
+    <>
+      {activeTasks.length === 0 ? (
+        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
+          {t('sidebar.activeTasks.empty')}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {activeTasks.map((praxis) => (
+            <div key={praxis.id} className="flex items-start justify-between gap-3">
+              <Link
+                to={`/praxis/${praxis.id}/edit`}
+                className="font-display min-w-0"
+                style={{ fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+              >
+                {praxis.task_title}
+              </Link>
+              <span
+                className="shrink-0"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'var(--text-sm)',
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'var(--faction-default-card-muted)',
+                  padding: 'var(--space-xs) var(--space-sm)',
+                  border: '1px solid var(--color-border-strong)',
+                  borderRadius: 999,
+                }}
+              >
+                {praxisModeLabel(praxis, t)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Slot-usage progress bar — a STATIC window onto one track-wide rainbow
+          (#1128). The spectrum belongs to the TRACK, not to the fill: at 1 of 5
+          slots you see red→orange, at 5 of 5 the whole rainbow, and a visible
+          stop is the same physical width at every fill level. Nothing animates,
+          so there is no motion left for prefers-reduced-motion to gate — which
+          also retires the old drift's un-gated `background-size: 200%`, a
+          permanently half-drawn spectrum for anyone who reduced motion. */}
+      <div className="mt-4">
+        <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)' }}>
+          <div
+            style={{
+              height: '100%',
+              width: `${slotPercent}%`,
+              borderRadius: 999,
+              /* --faction-default-rainbow is the 90deg ramp that runs red 0% →
+                 magenta 100%: exactly ONE pass of the spectrum, which is what a
+                 window wants. Deliberately not -rainbow-loop (eight stops, back
+                 to red at 100% — cut to TILE under a travelling
+                 background-position, and it would seat a second red at the
+                 track's far end), not -rainbow-conic (angular), not
+                 -rainbow-vertical (180deg, for a tall thin rule) and not
+                 -ring (hard wedges). With no repeat and no motion the ramp's
+                 red↔magenta seam never comes into view. */
+              backgroundImage: 'var(--faction-default-rainbow)',
+              backgroundRepeat: 'no-repeat',
+              /* Scale the gradient up by however much the fill is shrunk, so a
+                 fifth-width fill reveals the first fifth of one rainbow rather
+                 than squeezing all seven stops into a fifth of the bar.
+                 A PERCENTAGE is correct here, and this is not the px span
+                 DefaultVote's docstring (#842) argues for: that widget has
+                 five separate dot elements, so a percentage gave each dot its own
+                 restarted ramp. This is ONE fill, so the percentage resolves
+                 against it alone — fill = slotPercent% × track, therefore
+                 backgroundSize = (100/slotPercent)% × fill = track, exactly.
+                 Omitted at zero slots, where the ratio is Infinity (invalid CSS);
+                 the fill is 0%-wide there, so nothing is visible either way. */
+              ...(slotPercent > 0 ? { backgroundSize: `${(100 / slotPercent) * 100}% 100%` } : null),
+              transition: 'width 300ms, background-size 300ms',
+            }}
+          />
+        </div>
+        <p
+          className="font-body text-right"
+          style={{ fontSize: 'var(--text-base)', letterSpacing: '0.08em', color: 'var(--color-text-secondary)', marginTop: 'var(--space-sm)' }}
+        >
+          {t('sidebar.activeTasks.slots', { count: slotCount, max: maxTaskSlots })}
+        </p>
+      </div>
+    </>
+  )
+}
+
+/** The "Recent activity" panel's body. See `ActiveTasksBody` for why it is its
+ *  own component. */
+function RecentActivityBody({ recentActivity }: { readonly recentActivity: ActivityFeedItem[] }) {
+  const { t } = useTranslation('common')
+
+  return (
+    <>
+      {recentActivity.length === 0 ? (
+        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
+          {t('sidebar.recentActivity.empty')}
+        </p>
+      ) : (
+        <div className="flex flex-col">
+          {recentActivity.map((item, index) => {
+            const isLast = index === recentActivity.length - 1
+            // The SAME vocabulary `/updates` draws its cards from — `feedKicker`
+            // names all fifteen types and `normalizeFeedItem` unpacks the
+            // eleven the faction chassis owns into actor / action / headline /
+            // points. The panel used to hand-roll a two-branch kicker over the
+            // only two types it could ever see; now that it sees eleven, a
+            // second private vocabulary here would be eleven ways to disagree
+            // with the page this panel links to.
+            const row = normalizeFeedItem(item)
+            // `era_announcement` is the one live type the chassis does not own
+            // (epic #1192 decision 6), so `row` is null for it and the shared
+            // title helper answers instead. `friend_defection` has no headline
+            // at all — its substance IS the sentence — so the action line is
+            // the fallback before the title helper.
+            const headline = row?.headline ?? row?.action ?? feedItemTitle(item)
+            const href = row?.headlineHref ?? null
+            const kicker = item.actor_display_name
+              ? `${feedKicker(item.type)} · ${item.actor_display_name}`
+              : feedKicker(item.type)
+            const titleStyle: CSSProperties = {
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.3,
+              color: 'var(--color-text-primary)',
+              textDecoration: 'none',
+            }
+            return (
+              <div
+                key={item.item_key}
+                className="flex gap-3"
+                style={{
+                  padding: 'var(--space-md) 0',
+                  borderBottom: isLast ? undefined : '1px solid var(--color-border)',
+                }}
+              >
+                {/* rainbow bullet — sampled from the default spectrum by position */}
+                <span
+                  className="shrink-0"
+                  style={{
+                    width: 6,
+                    height: 6,
+                    marginTop: 'var(--space-xs)',
+                    borderRadius: 2,
+                    background: 'var(--faction-default-rainbow)',
+                    backgroundSize: '600% 100%',
+                    backgroundPosition: `${index * 20}% 0`,
+                  }}
+                />
+                <div className="min-w-0">
+                  <div
+                    className="truncate"
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 'var(--text-sm)',
+                      letterSpacing: '0.18em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-text-secondary)',
+                      marginBottom: 'var(--space-xs)',
+                    }}
+                  >
+                    {kicker}
+                  </div>
+                  {href ? (
+                    <Link to={href} className="font-display block truncate" style={titleStyle}>
+                      {headline}
+                    </Link>
+                  ) : (
+                    <div className="font-display truncate" style={titleStyle}>
+                      {headline}
+                    </div>
+                  )}
+                  <div className="font-body" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', color: 'var(--color-text-tertiary)' }}>
+                    {relativeTime(item.timestamp)}
+                    {row?.points ? ` · ${row.points}` : ''}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* The panel is a WINDOW onto the feed, never a replacement for it: it
+          shows five items and has no paging, no archive gesture and no type
+          facet. `/updates` has all three, so the foot of the panel is a door
+          to it — and it is drawn even when the panel is empty, because "no
+          activity yet" is exactly when a player most needs telling that the
+          full feed exists somewhere. */}
+      <div className="mt-3">
+        <Link
+          to="/updates"
+          className="font-body hover:opacity-80"
+          style={{
+            fontSize: 'var(--text-base)',
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            textDecoration: 'none',
+          }}
+        >
+          {t('sidebar.recentActivity.seeMore')}
+        </Link>
+      </div>
+    </>
   )
 }
 
@@ -118,12 +577,48 @@ function SectionHeader({ label }: { label: string }) {
  * The response no longer carries the request items at all (#1456) — only
  * `pending_requests_count`, read by the collapsed handle's badge
  * (`SidebarColumn`), the mobile bell (`MobileHeader`) and the mobile FieldDesk.
+ *
+ * THE PANELS BELOW THE CARD ARE THE PLAYER'S TO ARRANGE (#1555)
+ * -------------------------------------------------------------
+ * Everything under the character card is rendered from an ORDER, not from
+ * source position, and each of those panels can be dragged to a new seat or
+ * moved with the arrow keys from its grip. The two long ones fold away as well.
+ * The character card is pinned above all of it and carries neither gesture:
+ * it is the answer to "who am I playing", which has no useful second position
+ * and nothing worth hiding.
+ *
+ * The shape persists per ACCOUNT (`useSidebarPanelLayout`), never per
+ * character — a rail that rearranged itself as you switched lives would read as
+ * a bug rather than as your own preference.
+ *
+ * Note what does NOT appear in the order: pending requests. The rail stopped
+ * listing them at #1423 (ADR-0070) and the count lives on the handle, so there
+ * is no requests panel here to seat. The ruling that it would be reorderable
+ * but never collapsible is carried by `SIDEBAR_PANEL_COLLAPSIBLE`, which is a
+ * per-panel flag for that reason.
  */
 export default function Sidebar() {
   const { t } = useTranslation('common')
   const { user } = useAuth()
   const character = user?.character
   const [switcherOpen, setSwitcherOpen] = useState(false)
+  const { order, isCollapsed, toggleCollapsed, movePanelOnto, movePanelByStep } =
+    useSidebarPanelLayout(user?.account_id ?? null)
+
+  // Transient drag bookkeeping — the design's `dragKey` / `overKey`. It is
+  // deliberately NOT in the layout hook: nothing about a drag in flight is worth
+  // persisting, and a re-render per pointer move should not touch storage.
+  // `armedId` is the third: `draggable` is switched on only while the pointer is
+  // on that panel's grip, so the panel's own links stay ordinary links.
+  const [armedId, setArmedId] = useState<SidebarPanelId | null>(null)
+  const [draggingId, setDraggingId] = useState<SidebarPanelId | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<SidebarPanelId | null>(null)
+
+  function endDrag() {
+    setArmedId(null)
+    setDraggingId(null)
+    setDropTargetId(null)
+  }
 
   const {
     // The wire field is still named `global_activity`, but since #1556 it
@@ -136,9 +631,15 @@ export default function Sidebar() {
   const track = useLevelTrack(character?.level ?? 0, character?.score ?? 0)
 
   const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS
-  const slotCount = activeTasks.length
-  const slotPercent = Math.min((slotCount / maxTaskSlots) * 100, 100)
   const eraName = user?.era_name ?? ''
+
+  // Built for EVERY panel on every render, collapsed or not. That is the point:
+  // a collapsed panel is hidden, never unmounted (#1343), so its body is here
+  // waiting rather than being rebuilt when the player opens it again.
+  const panelBodies: Record<SidebarPanelId, ReactNode> = {
+    'active-tasks': <ActiveTasksBody activeTasks={activeTasks} maxTaskSlots={maxTaskSlots} />,
+    'recent-activity': <RecentActivityBody recentActivity={recentActivity} />,
+  }
 
   return (
     // `id` is the target of the fold-away handle's `aria-controls` (#1191).
@@ -307,209 +808,38 @@ export default function Sidebar() {
         </section>
       )}
 
-      {/* ── In Progress Panel ── */}
-      <section style={panelStyle}>
-        <SectionHeader label={t('sidebar.activeTasks.heading')} />
+      {/* ── The panels the player arranges ──
+          Rendered from `order`, and KEYED BY PANEL ID: React then moves the
+          existing DOM node into its new seat instead of rebuilding it, which is
+          what keeps focus on the grip a keyboard user just pressed an arrow on
+          — and what stops a reorder re-mounting a panel it must not unmount. */}
+      {order.map((id, index) => (
+        <SidebarPanel
+          key={id}
+          id={id}
+          label={t(PANEL_HEADING_KEY[id])}
+          position={index + 1}
+          total={order.length}
+          collapsed={isCollapsed(id)}
+          onToggleCollapsed={() => toggleCollapsed(id)}
+          onMoveByStep={(delta) => movePanelByStep(id, delta)}
+          armed={armedId === id}
+          onArm={(next) => setArmedId(next ? id : null)}
+          dragging={draggingId === id}
+          dropTarget={draggingId !== null && draggingId !== id && dropTargetId === id}
+          onDragStart={() => setDraggingId(id)}
+          onDragOverPanel={() => setDropTargetId(id)}
+          onDragLeavePanel={() => setDropTargetId((previous) => (previous === id ? null : previous))}
+          onDropPanel={() => {
+            if (draggingId !== null && draggingId !== id) movePanelOnto(draggingId, id)
+            endDrag()
+          }}
+          onDragEnd={endDrag}
+        >
+          {panelBodies[id]}
+        </SidebarPanel>
+      ))}
 
-        {activeTasks.length === 0 ? (
-          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
-            {t('sidebar.activeTasks.empty')}
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {activeTasks.map((praxis) => (
-              <div key={praxis.id} className="flex items-start justify-between gap-3">
-                <Link
-                  to={`/praxis/${praxis.id}/edit`}
-                  className="font-display min-w-0"
-                  style={{ fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
-                >
-                  {praxis.task_title}
-                </Link>
-                <span
-                  className="shrink-0"
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 'var(--text-sm)',
-                    letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
-                    color: 'var(--faction-default-card-muted)',
-                    padding: 'var(--space-xs) var(--space-sm)',
-                    border: '1px solid var(--color-border-strong)',
-                    borderRadius: 999,
-                  }}
-                >
-                  {praxisModeLabel(praxis, t)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Slot-usage progress bar — a STATIC window onto one track-wide rainbow
-            (#1128). The spectrum belongs to the TRACK, not to the fill: at 1 of 5
-            slots you see red→orange, at 5 of 5 the whole rainbow, and a visible
-            stop is the same physical width at every fill level. Nothing animates,
-            so there is no motion left for prefers-reduced-motion to gate — which
-            also retires the old drift's un-gated `background-size: 200%`, a
-            permanently half-drawn spectrum for anyone who reduced motion. */}
-        <div className="mt-4">
-          <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)' }}>
-            <div
-              style={{
-                height: '100%',
-                width: `${slotPercent}%`,
-                borderRadius: 999,
-                /* --faction-default-rainbow is the 90deg ramp that runs red 0% →
-                   magenta 100%: exactly ONE pass of the spectrum, which is what a
-                   window wants. Deliberately not -rainbow-loop (eight stops, back
-                   to red at 100% — cut to TILE under a travelling
-                   background-position, and it would seat a second red at the
-                   track's far end), not -rainbow-conic (angular), not
-                   -rainbow-vertical (180deg, for a tall thin rule) and not
-                   -ring (hard wedges). With no repeat and no motion the ramp's
-                   red↔magenta seam never comes into view. */
-                backgroundImage: 'var(--faction-default-rainbow)',
-                backgroundRepeat: 'no-repeat',
-                /* Scale the gradient up by however much the fill is shrunk, so a
-                   fifth-width fill reveals the first fifth of one rainbow rather
-                   than squeezing all seven stops into a fifth of the bar.
-                   A PERCENTAGE is correct here, and this is not the px span
-                   DefaultVote's docstring (#842) argues for: that widget has
-                   five separate dot elements, so a percentage gave each dot its own
-                   restarted ramp. This is ONE fill, so the percentage resolves
-                   against it alone — fill = slotPercent% × track, therefore
-                   backgroundSize = (100/slotPercent)% × fill = track, exactly.
-                   Omitted at zero slots, where the ratio is Infinity (invalid CSS);
-                   the fill is 0%-wide there, so nothing is visible either way. */
-                ...(slotPercent > 0 ? { backgroundSize: `${(100 / slotPercent) * 100}% 100%` } : null),
-                transition: 'width 300ms, background-size 300ms',
-              }}
-            />
-          </div>
-          <p
-            className="font-body text-right"
-            style={{ fontSize: 'var(--text-base)', letterSpacing: '0.08em', color: 'var(--color-text-secondary)', marginTop: 'var(--space-sm)' }}
-          >
-            {t('sidebar.activeTasks.slots', { count: slotCount, max: maxTaskSlots })}
-          </p>
-        </div>
-      </section>
-
-      {/* ── Recent Activity Panel ── */}
-      <section style={panelStyle}>
-        <SectionHeader label={t('sidebar.recentActivity.heading')} />
-
-        {recentActivity.length === 0 ? (
-          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
-            {t('sidebar.recentActivity.empty')}
-          </p>
-        ) : (
-          <div className="flex flex-col">
-            {recentActivity.map((item, index) => {
-              const isLast = index === recentActivity.length - 1
-              // The SAME vocabulary `/updates` draws its cards from — `feedKicker`
-              // names all fifteen types and `normalizeFeedItem` unpacks the
-              // eleven the faction chassis owns into actor / action / headline /
-              // points. The panel used to hand-roll a two-branch kicker over the
-              // only two types it could ever see; now that it sees eleven, a
-              // second private vocabulary here would be eleven ways to disagree
-              // with the page this panel links to.
-              const row = normalizeFeedItem(item)
-              // `era_announcement` is the one live type the chassis does not own
-              // (epic #1192 decision 6), so `row` is null for it and the shared
-              // title helper answers instead. `friend_defection` has no headline
-              // at all — its substance IS the sentence — so the action line is
-              // the fallback before the title helper.
-              const headline = row?.headline ?? row?.action ?? feedItemTitle(item)
-              const href = row?.headlineHref ?? null
-              const kicker = item.actor_display_name
-                ? `${feedKicker(item.type)} · ${item.actor_display_name}`
-                : feedKicker(item.type)
-              const titleStyle: CSSProperties = {
-                fontSize: 'var(--text-content)',
-                lineHeight: 1.3,
-                color: 'var(--color-text-primary)',
-                textDecoration: 'none',
-              }
-              return (
-                <div
-                  key={item.item_key}
-                  className="flex gap-3"
-                  style={{
-                    padding: 'var(--space-md) 0',
-                    borderBottom: isLast ? undefined : '1px solid var(--color-border)',
-                  }}
-                >
-                  {/* rainbow bullet — sampled from the default spectrum by position */}
-                  <span
-                    className="shrink-0"
-                    style={{
-                      width: 6,
-                      height: 6,
-                      marginTop: 'var(--space-xs)',
-                      borderRadius: 2,
-                      background: 'var(--faction-default-rainbow)',
-                      backgroundSize: '600% 100%',
-                      backgroundPosition: `${index * 20}% 0`,
-                    }}
-                  />
-                  <div className="min-w-0">
-                    <div
-                      className="truncate"
-                      style={{
-                        fontFamily: 'var(--font-body)',
-                        fontSize: 'var(--text-sm)',
-                        letterSpacing: '0.18em',
-                        textTransform: 'uppercase',
-                        color: 'var(--color-text-secondary)',
-                        marginBottom: 'var(--space-xs)',
-                      }}
-                    >
-                      {kicker}
-                    </div>
-                    {href ? (
-                      <Link to={href} className="font-display block truncate" style={titleStyle}>
-                        {headline}
-                      </Link>
-                    ) : (
-                      <div className="font-display truncate" style={titleStyle}>
-                        {headline}
-                      </div>
-                    )}
-                    <div className="font-body" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', color: 'var(--color-text-tertiary)' }}>
-                      {relativeTime(item.timestamp)}
-                      {row?.points ? ` · ${row.points}` : ''}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* The panel is a WINDOW onto the feed, never a replacement for it: it
-            shows five items and has no paging, no archive gesture and no type
-            facet. `/updates` has all three, so the foot of the panel is a door
-            to it — and it is drawn even when the panel is empty, because "no
-            activity yet" is exactly when a player most needs telling that the
-            full feed exists somewhere. */}
-        <div className="mt-3">
-          <Link
-            to="/updates"
-            className="font-body hover:opacity-80"
-            style={{
-              fontSize: 'var(--text-base)',
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase',
-              color: 'var(--color-text-secondary)',
-              textDecoration: 'none',
-            }}
-          >
-            {t('sidebar.recentActivity.seeMore')}
-          </Link>
-        </div>
-      </section>
     </aside>
   )
 }

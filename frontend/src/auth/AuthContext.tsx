@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { getMe, logout, type CurrentUser } from '../api/auth'
+import { dropAllCaches } from '../utils/cacheEpoch'
 
 interface AuthState {
   user: CurrentUser | null
@@ -98,6 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     rememberSession(false)
     setLoading(false)
+    // Deploy-scoped is not viewer-scoped: `/factions` hides Albescent from an
+    // account that has not been revealed to it, and a session-lifetime cache
+    // would hand the departing viewer's directory to whoever signs in next in
+    // this tab (ADR-0072).
+    dropAllCaches()
   })
 
   useEffect(() => {

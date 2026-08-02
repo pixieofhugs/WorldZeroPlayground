@@ -6,13 +6,15 @@ import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * Default (na) MOBILE FieldDesk home — the account's carried life at a glance,
  * one-hand and single-column (#500). Character header (avatar in the all-paths
  * rainbow ring + name + level, then the era points figure over a rainbow
- * level track), the in-progress task list, and one or two primary actions. Every faction falls
+ * level track), the pending row, the in-progress task list, and the two
+ * primary actions — both of which land on an already-narrowed view. Every faction falls
  * through here until it registers a bespoke mobile home skin (mirrors the
  * taskDetail mobile Default). Presentation-only: all data arrives via
  * {@link FieldDeskHomeState}; copy resolves from the `common` catalog.
@@ -92,7 +94,7 @@ const secondaryActionStyle: CSSProperties = {
 
 export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -261,16 +263,15 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         </div>
       </section>
 
-      {/* ── Pending requests pill (only when there are any) ── */}
-      {pendingCount > 0 && (
-        <Link
-          to={REQUESTS_QUEUE_LINK}
+      {/* ── The pending row: requests, other news, or a dead-ended "all caught
+          up" that keeps the pill and drops the chevron (#1554). ── */}
+      {pendingRow && (
+        <PendingRowPill
+          row={pendingRow}
           className="font-body flex items-center justify-between content-text"
           style={pendingPillStyle}
-        >
-          <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
-          <span aria-hidden style={{ color: 'var(--color-text-tertiary)' }}>›</span>
-        </Link>
+          chevron={<span aria-hidden style={{ color: 'var(--color-text-tertiary)' }}>›</span>}
+        />
       )}
 
       {/* ── In-progress tasks ── */}
@@ -355,26 +356,22 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         )}
       </section>
 
-      {/* ── Primary actions ── */}
+      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
         <Link
-          to="/tasks"
+          to={FIND_TASK_LINK}
           className="font-body flex-1 flex items-center justify-center"
           style={primaryActionStyle}
         >
-          {t('fieldDesk.home.browseTasks')}
+          {t('fieldDesk.home.findTask')}
         </Link>
-        {canProposeTask && (
-          <Link
-            to="/propose-task"
-            className="font-body flex-1 flex items-center justify-center gap-2"
-            style={secondaryActionStyle}
-          >
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-            <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-            <span>{t('actions.proposeTask')}</span>
-          </Link>
-        )}
+        <Link
+          to={CAST_VOTES_LINK}
+          className="font-body flex-1 flex items-center justify-center"
+          style={secondaryActionStyle}
+        >
+          {t('fieldDesk.home.castVotes')}
+        </Link>
       </div>
 
       {/* Active-character switcher — bottom sheet over Home (#516). */}
