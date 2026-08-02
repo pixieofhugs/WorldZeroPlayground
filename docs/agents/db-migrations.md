@@ -51,8 +51,14 @@ Flesh this out when actually needed — do not build or test the full stamp danc
 A squash invalidates the Alembic stamp in **every existing DB**.
 - **Local / worktree:** run `backend/scripts/reset_db.sh` (does `docker-compose down -v`
   then rebuild + seed).
-- **Prod / remote:** `backend/scripts/reset_db.sh --url <connection-string>` drops the
-  public schema; the next deploy rebuilds. Typed-confirmation gated.
+- **Prod / remote:** run `python scripts/reset_render_db.py` from **Render Shell**
+  (worldzero-backend → Shell). `render.yaml` already injects `DATABASE_URL` there from the
+  `worldzero-db` instance, so no connection string is pasted or stored on a laptop. It drops
+  the public schema and runs `alembic upgrade head`; it does **not** seed — redeploy
+  afterwards so `start.sh` runs `seed.py`. Typed-confirmation gated on the database name,
+  with the target host printed first.
+  (`reset_db.sh --url <connection-string>` still works from a machine that has the `psql`
+  client; the prod image does not ship one.)
 
 ## CI is never affected
 
