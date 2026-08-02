@@ -238,6 +238,17 @@ describe('the type facet', () => {
     expect(options[0].label).not.toBe('nudge')
   })
 
+  it('offers nothing at all on a wiped board (#1567)', () => {
+    // Every count is zero, so every row drops off — and `OptionPicker` renders
+    // no trigger for an option-less facet rather than opening an empty sheet.
+    expect(typeFacetOptions({}, [])).toEqual([])
+    expect(typeFacet({}, [], () => {}).options).toHaveLength(0)
+  })
+
+  it('but a deep-linked selection keeps the facet non-empty, so it still draws', () => {
+    expect(typeFacet({}, ['nudge'], () => {}).options).toHaveLength(1)
+  })
+
   it('sorts selected rows to the top', () => {
     const options = typeFacetOptions({ vote_on_mine: 2, nudge: 1, global_task: 4 }, ['global_task'])
     expect(options.map((option) => option.value)).toEqual([
