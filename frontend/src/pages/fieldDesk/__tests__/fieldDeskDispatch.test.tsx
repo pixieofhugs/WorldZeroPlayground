@@ -25,8 +25,8 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: mocks.user, refetch: async () => {} }),
 }))
-vi.mock('../../../hooks/useMyCharacterStats', () => ({
-  useMyCharacterStats: () => ({ votesReceived: 0, loading: false }),
+vi.mock('../../../hooks/useVotesReceived', () => ({
+  useVotesReceived: () => ({ votesReceived: 0, loading: false }),
 }))
 vi.mock('../../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => ({
