@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
@@ -64,7 +65,10 @@ from services.admin_service import (
     suspend_account,
     update_task_status,
 )
-from services.character_stats import recalculate_character_stats
+from services.character_stats import (
+    recalculate_character_stats,
+    recompute_votes_spent_this_era,
+)
 from services.era import apply_era_reset, get_current_era_row
 from services.task_import import (
     TaskImportError,
@@ -214,6 +218,38 @@ async def admin_patch_character_stats(
     )
 
 
+@router.post("/characters/backfill-vote-budget", status_code=200)
+async def backfill_vote_budget(
+    dry_run: bool = False,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """Rebuild ``votes_spent_this_era`` for the live era from the vote table (#1531).
+
+    The repair half of the 2026-08-02 vote dedupe: migration
+    ``0011_vote_unique_per_account`` deleted 13 surplus vote rows, and their
+    casters are still charged for them because the spend is a stored counter.
+    See :func:`services.character_stats.recompute_votes_spent_this_era` for the
+    identity this rests on and the two ways it can fail.
+
+    **``dry_run=true`` first.** The same counter is what an admin
+    ``votes_available`` grant writes (``set_character_stats``), and a row does
+    not record that it was hand-set — so a recompute silently reverts such a
+    grant. The response lists every before/after pair precisely so an operator
+    can spot one before applying.
+
+    **Run this BEFORE ``/admin/characters/backfill-stats``, not with it.** Both
+    write ``CharacterStats``; the budget repair does not depend on scores, but
+    interleaving them risks one pass overwriting the other.
+    """
+    repairs = await recompute_votes_spent_this_era(session, dry_run=dry_run)
+    return {
+        "dry_run": dry_run,
+        "changed": len(repairs),
+        "changes": [dataclasses.asdict(repair) for repair in repairs],
+    }
+
+
 @router.post("/characters/backfill-stats", status_code=200)
 async def backfill_all_character_stats(
     _: Account = Depends(require_admin),
@@ -235,6 +271,19 @@ async def backfill_all_character_stats(
     Silent: ``emit_taunts=False`` (ADR-0068). Recomputing a score everyone
     already had is not an overtake, and a backfill must never mail the whole
     playerbase a volley of taunts about history.
+
+    **It repairs ``all_time_score`` too** — asked and answered in #1531, because
+    that field is lifetime-cumulative and moved by delta rather than re-derived
+    (``_credit_all_time_score``), which looks like it would be left holding
+    points whose votes are gone. It is not: the delta this recalc applies is
+    ``recomputed - stored``, so a score that falls by five stars drags lifetime
+    down five as well, and a second run applies zero. Pinned by
+    ``tests/integration/test_vote_dedupe_repair.py``.
+
+    Two limits worth knowing before leaning on it as a repair tool: it recalcs
+    the CURRENT era row only, so a change to a closed era's praxis needs
+    ``recalculate_character_stats`` with that ``era_row``; and it skips banned
+    characters (``list_active_characters``).
     """
     characters = await list_active_characters(session)
     era_row = await get_current_era_row(session)
