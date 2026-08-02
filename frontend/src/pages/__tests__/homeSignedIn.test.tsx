@@ -132,7 +132,9 @@ describe('the signed-in desktop home (#1557)', () => {
     const html = render()
     const body = text(html)
     expect(body).toContain('Tasks you can sign up for')
-    expect(body).not.toContain('Praxes that need your vote')
+    // The plural of *praxis* is *praxis* (#1136) — the design's transcription
+    // says "Praxes", and the catalog guard makes that spelling a build failure.
+    expect(body).not.toContain('Praxis that needs your vote')
     // Both pills are present; the inactive one is a control the viewer can use.
     expect(html).toContain('aria-pressed="true"')
     expect(html).toContain('aria-pressed="false"')
