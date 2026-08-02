@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
+import { useFormFactor } from '../hooks/useFormFactor'
 import { factionCssVar, factionName } from '../utils/factions'
 import { mediaUrl } from '../utils/media'
+import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
  * MOBILE active-character switcher (#516) — a bottom sheet over Home. Lists the
@@ -14,6 +16,13 @@ import { mediaUrl } from '../utils/media'
  * and holds the two path actions:
  * Create new character and Edit this character. Opened from the Home character
  * card's Switch / avatar caret. Presentation-only over existing endpoints.
+ *
+ * **Drawn at the document root** (#1591). Every caller — the desktop rail's
+ * Characters pill (`layout/Sidebar`) and all eight mobile field desks — mounts
+ * this from inside `ShellContent`, whose `position: relative` + `z-index: 5`
+ * opens a stacking context that no descendant can escape by declaring a bigger
+ * number. On the phone that put the tab bar over the sheet and left it tappable
+ * behind the scrim. `drawAtRoot` carries the full argument.
  */
 
 // Decorative edit glyph (aria-hidden icon); a const so the jsx-text-only literal
@@ -31,6 +40,7 @@ export default function CharacterSwitcherSheet({
   const { t } = useTranslation('common')
   const { applyUser } = useAuth()
   const navigate = useNavigate()
+  const isMobile = useFormFactor() === 'mobile'
   const [lives, setLives] = useState<CharacterOut[]>([])
   const [switching, setSwitching] = useState<number | null>(null)
 
@@ -58,10 +68,10 @@ export default function CharacterSwitcherSheet({
     }
   }
 
-  return (
+  return drawAtRoot(
     <div role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
       <button type="button" aria-label={t('fieldDesk.home.switcher.close')} onClick={onClose} style={scrim} />
-      <div style={sheet}>
+      <div style={{ ...sheet, paddingBottom: bottomRest(isMobile) }}>
         <span style={grab} />
         <div style={sheetTitle}>{t('fieldDesk.home.switcher.title')}</div>
 
@@ -166,15 +176,38 @@ export function CharacterSwitcherRows({
 
 // --- token-driven styles ----------------------------------------------------
 
+/**
+ * What sits under the last action before the screen ends.
+ *
+ * On the phone that is the mobile tab bar, and `--tab-bar-clearance` is the one
+ * token that says how tall it is (#1590) — the filter sheet already reads it,
+ * so both sheets now agree about where the bottom of the screen is. On desktop
+ * there is no bar to clear and the sheet keeps its own breathing room.
+ *
+ * ponytail: the clearance folds in `env(safe-area-inset-bottom)`, which
+ * resolves to `0px` app-wide today because `index.html` sets no
+ * `viewport-fit=cover`. Correct-but-inert, and live the day someone sets it.
+ */
+function bottomRest(isMobile: boolean): string {
+  return isMobile ? 'calc(var(--space-xl) + var(--tab-bar-clearance))' : 'var(--space-xl)'
+}
+
+// Bottom-sheet band, shared with `.filter-factions__scrim` / `__sheet` in
+// index.css: scrim 39, sheet 40. Read in the ROOT stacking context now that
+// both sheets portal out of the shell (#1591) — above the chrome at 10, below
+// ConfirmDialog's 50 and the full-screen modals at 1000, which is the order a
+// confirm raised from inside this sheet needs.
 const scrim: CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 40, border: 'none', padding: 0,
-  background: 'rgba(0,0,0,0.45)', cursor: 'pointer',
+  position: 'fixed', inset: 0, zIndex: 39, border: 'none', padding: 0,
+  background: 'var(--color-overlay-strong)', cursor: 'pointer',
 }
 const sheet: CSSProperties = {
-  position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 41,
+  position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40,
   background: 'var(--color-bg-surface)', borderRadius: '22px 22px 0 0',
-  padding: 'var(--space-md) var(--space-lg) calc(var(--space-xl) + env(safe-area-inset-bottom))',
-  boxShadow: '0 -12px 34px rgba(0,0,0,0.3)', maxHeight: '80vh', overflowY: 'auto',
+  padding: 'var(--space-md) var(--space-lg)',
+  // No --shadow-* token exists; the colour half is the half that would drift
+  // between themes, so it is the half that comes from a token (ConfirmDialog).
+  boxShadow: '0 -12px 34px var(--color-overlay-strong)', maxHeight: '80vh', overflowY: 'auto',
 }
 const grab: CSSProperties = {
   display: 'block', width: 38, height: 4, borderRadius: 999,
