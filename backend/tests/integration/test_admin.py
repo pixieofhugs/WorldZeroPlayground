@@ -432,6 +432,51 @@ async def test_admin_ban_character(
     assert resp.json()["banned"] is False
 
 
+@pytest.mark.asyncio
+async def test_admin_ban_deletes_no_media(
+    client: AsyncClient,
+    account: Account,
+    character2: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    tmp_path,
+    monkeypatch,
+):
+    """A ban destroys nothing on disk (#1568).
+
+    Self-deletion erases the avatar; moderation does not. Two reasons, both
+    load-bearing: moderation must not shred the evidence it is acting on, and a
+    ban is a reversible toggle — un-banning would otherwise restore a character
+    with holes in it. The two paths land in the same ``status = banned`` state,
+    so nothing but a test distinguishes them.
+    """
+    import os
+
+    from config import settings as _settings
+
+    monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
+    await _make_admin(account, db_session)
+
+    relative_path = os.path.join(str(character2.id), "avatar", "abc", "avatar.jpg")
+    absolute_path = os.path.join(str(tmp_path), relative_path)
+    os.makedirs(os.path.dirname(absolute_path), exist_ok=True)
+    with open(absolute_path, "wb") as handle:
+        handle.write(b"avatar bytes")
+    character2.avatar_url = relative_path
+    await db_session.flush()
+
+    resp = await client.post(
+        f"/admin/characters/{character2.id}/ban",
+        json={"banned": True},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+
+    await db_session.refresh(character2)
+    assert os.path.isfile(absolute_path)
+    assert character2.avatar_url == relative_path
+
+
 # ---------------------------------------------------------------------------
 # Accounts & roles
 # ---------------------------------------------------------------------------

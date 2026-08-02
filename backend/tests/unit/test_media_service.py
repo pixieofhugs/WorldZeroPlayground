@@ -162,8 +162,8 @@ def test_superseded_avatar_outside_media_root_is_refused(tmp_path, monkeypatch):
     outsider = tmp_path / "not-ours.jpg"
     outsider.write_bytes(b"someone else's file")
 
-    media._remove_superseded_avatar(os.path.join("..", "not-ours.jpg"))
-    media._remove_superseded_avatar(str(outsider))
+    media.delete_stored_avatar(os.path.join("..", "not-ours.jpg"))
+    media.delete_stored_avatar(str(outsider))
 
     assert outsider.exists()
 
