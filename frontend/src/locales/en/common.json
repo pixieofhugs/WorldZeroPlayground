@@ -340,12 +340,10 @@
       "slots_one": "{{count}} / {{max}} slots",
       "slots_other": "{{count}} / {{max}} slots"
     },
-    "globalActivity": {
-      "heading": "Recent global activity",
+    "recentActivity": {
+      "heading": "Recent activity",
       "empty": "No activity yet",
-      "kickerNewTask": "New task",
-      "kickerEra": "New era",
-      "fallbackTaskTitle": "a task"
+      "seeMore": "See more"
     }
   },
   "imageEdit": {

@@ -21,7 +21,23 @@ export interface SidebarPanels {
    * reports, so the badge and the card list cannot disagree.
    */
   pending_requests_count: number
-  /** Recent site-wide news — new tasks and era announcements. */
+  /**
+   * The rail's "Recent activity" panel: the viewer's whole LIVE feed minus the
+   * obligations, newest first, capped at five (#1556).
+   *
+   * It was the `global` tab alone until #1556 — new tasks and era announcements
+   * — which is why the wire field is still called `global_activity`. It now
+   * carries votes on your praxes, friend and foe completions, taunts, nudges
+   * and mentions as well.
+   *
+   * The exclusion is exactly the one the Requests queue is built from
+   * (ADR-0070): the server asks `_visible_types` for the live `all` view, the
+   * same call the queue makes, so the panel and the queue partition the feed
+   * and no item can land in both or neither. The name is kept deliberately —
+   * renaming a field the rail reads on every route is a deploy-skew hazard, and
+   * a frontend ahead of its API would read `undefined` here and white-page the
+   * whole site rather than just this panel.
+   */
   global_activity: ActivityFeedItem[]
   /** In-progress praxes the carried character is a MEMBER of (so accepted
    *  collab invites count), which is also what the slot bar counts. */
