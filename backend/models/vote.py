@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Identity,
+    Integer,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -24,13 +32,15 @@ class Vote(Base):
         UniqueConstraint("praxis_id", "voter_account_id", name="uq_vote_praxis_account"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    praxis_id: Mapped[int] = mapped_column(ForeignKey("praxis.id"), nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    praxis_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("praxis.id"), nullable=False
+    )
     voter_character_id: Mapped[int] = mapped_column(
-        ForeignKey("character.id"), nullable=False
+        BigInteger, ForeignKey("character.id"), nullable=False
     )
     voter_account_id: Mapped[int] = mapped_column(
-        ForeignKey("account.id"), nullable=False
+        BigInteger, ForeignKey("account.id"), nullable=False
     )
     value: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -13,16 +13,31 @@ if TYPE_CHECKING:
 
 
 class CharacterStatus(enum.Enum):
+    """A life is either playable or banned.
+
+    There is no ``paused``: nothing ever set it. Every write is
+    ``active`` (creation) or ``banned`` (``services/character.py::ban_character``,
+    the admin toggle), so the pause state existed only as a value the reads had
+    to keep allowing for. Removed in the #1398 squash; the roster still means
+    "this account's lives, banned excluded" (``_ROSTER_STATUSES``), which is now
+    simply ``active``.
+    """
+
     active = "active"
-    paused = "paused"
     banned = "banned"
 
 
 class Character(TimestampMixin, Base):
     __tablename__ = "character"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), nullable=False)
+    # The account roster (`routers/me.py`, `services/character.py`) reads every
+    # life of one account on nearly every authenticated request (#1393).
+    __table_args__ = (Index("ix_character_account_id", "account_id"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("account.id"), nullable=False
+    )
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String, nullable=False)
     bio: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
@@ -31,8 +46,9 @@ class Character(TimestampMixin, Base):
     # ADR-0019: characters are born Unaffiliated ("na"); factions are invite-gated.
     # services.character.create_character always sets this explicitly — the default
     # is only a backstop for direct inserts, and must not contradict ADR-0019.
+    # String FK: faction's primary key is its slug (ADR-0038), not an integer.
     faction_slug: Mapped[str] = mapped_column(
-        ForeignKey("faction.slug"), nullable=False, server_default="na"
+        String, ForeignKey("faction.slug"), nullable=False, server_default="na"
     )
     status: Mapped[CharacterStatus] = mapped_column(
         Enum(CharacterStatus, create_type=False), nullable=False, default=CharacterStatus.active

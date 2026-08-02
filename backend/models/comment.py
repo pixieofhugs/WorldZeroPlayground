@@ -1,6 +1,16 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, CheckConstraint, Enum, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    Enum,
+    ForeignKey,
+    Identity,
+    Index,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -37,17 +47,25 @@ class Comment(TimestampMixin, Base):
     __tablename__ = "comment"
     __table_args__ = (
         CheckConstraint(
-            "num_nonnulls(praxis_id, task_id) = 1", name="ck_comment_one_target"
+            # Bare name: models/base.py's `ck_` convention prefixes the table,
+            # so this still lands as `ck_comment_one_target`.
+            "num_nonnulls(praxis_id, task_id) = 1", name="one_target"
         ),
+        # One thread per target, read whenever a praxis or task is opened
+        # (`services/comment.py`) — two partial-ish lookups, two indexes (#1393).
+        Index("ix_comment_praxis_id", "praxis_id"),
+        Index("ix_comment_task_id", "task_id"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     praxis_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("praxis.id"), nullable=True
+        BigInteger, ForeignKey("praxis.id"), nullable=True
     )
-    task_id: Mapped[Optional[int]] = mapped_column(ForeignKey("task.id"), nullable=True)
+    task_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("task.id"), nullable=True
+    )
     created_by_id: Mapped[int] = mapped_column(
-        ForeignKey("character.id"), nullable=False
+        BigInteger, ForeignKey("character.id"), nullable=False
     )
     body_text: Mapped[str] = mapped_column(Text, nullable=False)
     # is_edited is a marker, not a timestamp — the "edited" slot needs only the fact.
@@ -89,12 +107,18 @@ class CommentMention(Base):
         UniqueConstraint(
             "comment_id", "mentioned_character_id", name="uq_comment_mention"
         ),
+        # The activity feed's mention source reads by *recipient* (#1393), which
+        # is the trailing column of the unique constraint above and so cannot
+        # use its index.
+        Index("ix_comment_mention_mentioned_character_id", "mentioned_character_id"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    comment_id: Mapped[int] = mapped_column(ForeignKey("comment.id"), nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    comment_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("comment.id"), nullable=False
+    )
     mentioned_character_id: Mapped[int] = mapped_column(
-        ForeignKey("character.id"), nullable=False
+        BigInteger, ForeignKey("character.id"), nullable=False
     )
 
     comment: Mapped["Comment"] = relationship(

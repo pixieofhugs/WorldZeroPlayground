@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, ForeignKey, Text
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Identity, Index, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -66,18 +66,25 @@ class Flag(CreatedAtMixin, Base):
     __tablename__ = "flag"
     __table_args__ = (
         CheckConstraint(
-            "num_nonnulls(praxis_id, comment_id) = 1", name="ck_flag_one_target"
+            # Bare name: models/base.py's `ck_` convention prefixes the table,
+            # so this still lands as `ck_flag_one_target`.
+            "num_nonnulls(praxis_id, comment_id) = 1", name="one_target"
         ),
+        # "has this viewer already flagged it?" runs on every praxis detail, and
+        # the admin queue joins flags to praxes (#1393).
+        Index("ix_flag_praxis_id", "praxis_id"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     praxis_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("praxis.id"), nullable=True
+        BigInteger, ForeignKey("praxis.id"), nullable=True
     )
     comment_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("comment.id"), nullable=True
+        BigInteger, ForeignKey("comment.id"), nullable=True
     )
-    flagged_by: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
+    flagged_by: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
     reason: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
 
     praxis: Mapped[Optional["Praxis"]] = relationship(

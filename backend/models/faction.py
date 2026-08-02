@@ -8,9 +8,17 @@ from models.mixins import TimestampMixin
 
 
 class FactionStatus(enum.Enum):
+    """A faction row is either listed or not.
+
+    There is no ``deprecated``: ``seed.py`` writes ``visible`` or ``hidden`` and
+    nothing else ever writes this column, so ``deprecated`` was a third value
+    every reader had to spell out (``hidden/deprecated``) and no writer could
+    produce. Retiring a faction means dropping it from the era config, which
+    leaves its row ``hidden``. Removed in the #1398 squash.
+    """
+
     visible = "visible"
     hidden = "hidden"
-    deprecated = "deprecated"
 
 
 class Faction(TimestampMixin, Base):

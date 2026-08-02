@@ -93,7 +93,6 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
         account_id=pixie_acc.id,
         provider="google",
         provider_user_id="google_pixie",
-        access_token="seed_token",
     ))
 
     pixie_char = Character(
@@ -289,7 +288,6 @@ async def seed_dev_demo(session) -> None:
             account_id=dev_acc.id,
             provider="dev",
             provider_user_id="dev-user-1",
-            access_token="",
         ))
         molly = Character(
             account_id=dev_acc.id,

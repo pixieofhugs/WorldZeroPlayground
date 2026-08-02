@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, Enum, ForeignKey, Identity, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -32,7 +32,7 @@ class TaskType(enum.Enum):
 class Task(TimestampMixin, Base):
     __tablename__ = "task"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     point_value: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -46,15 +46,18 @@ class Task(TimestampMixin, Base):
         default=TaskType.standard,
         server_default="standard",
     )
-    created_by: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
-    # "na" is the sentinel for generic cross-faction tasks
+    created_by: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
+    # "na" is the sentinel for generic cross-faction tasks. String FK: faction's
+    # primary key is its slug (ADR-0038), not an integer.
     primary_faction_slug: Mapped[str] = mapped_column(
-        ForeignKey("faction.slug"), nullable=False, server_default="na"
+        String, ForeignKey("faction.slug"), nullable=False, server_default="na"
     )
     # Only set when task_type == metatask; identifies which faction's members
     # (at level 7+) may apply this metatask to their praxes. Null for standard.
     metatask_faction_slug: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("faction.slug"), nullable=True
+        String, ForeignKey("faction.slug"), nullable=True
     )
     # Parked v2 feature (SPEC-backend-architecture §9 "Intentional v2
     # deferrals"): Task Vision would let Ephemerists see retired tasks. The

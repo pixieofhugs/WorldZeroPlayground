@@ -37,7 +37,7 @@ async def my_characters(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db),
 ):
-    """The account's own roster — active + paused lives, carried life first."""
+    """The account's own roster — every non-banned life, carried life first."""
     rows = await list_account_roster(account, session)
     return [build_character_out(character, stats) for character, stats in rows]
 

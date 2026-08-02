@@ -166,7 +166,6 @@ async def get_or_create_metatask_owner(
             account_id=account.id,
             provider="dev",
             provider_user_id=f"dev-{METATASK_PLAYER_KEY}",
-            access_token="",
         ))
         existing = Character(
             account_id=account.id,
@@ -416,7 +415,6 @@ async def get_or_create_players(session) -> dict[str, Character]:
             account_id=account.id,
             provider="demo",
             provider_user_id=username,
-            access_token="demo_token",
         ))
         character = Character(
             account_id=account.id,

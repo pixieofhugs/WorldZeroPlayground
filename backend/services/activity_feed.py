@@ -913,11 +913,12 @@ def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
 def _nudge_query(ctx: FeedContext) -> Select:
     """Nudges the viewer has RECEIVED (#1083).
 
-    The nudge's whole delivery mechanism. It is not a message: the ``Message``
-    model has no player-facing reader, only the admin moderation tab, so a nudge
-    posted there would arrive nowhere. The feed is where this game already puts
-    "someone did a thing involving you", and this row lands beside the
-    ``awaiting_submission`` row the recipient already has for the same praxis.
+    The nudge's whole delivery mechanism, and the only one it has ever had: the
+    player-to-player ``Message`` model this was once weighed against had no
+    player-facing reader and was deleted outright (#1375). The feed is where
+    this game puts "someone did a thing involving you", and this row lands
+    beside the ``awaiting_submission`` row the recipient already has for the
+    same praxis.
 
     ``Nudge.praxis_id`` is always the praxis the RECIPIENT owes, so the join to
     ``Praxis``/``Task`` gives the card a title and a link the recipient can
