@@ -55,9 +55,9 @@ import { factionCssVar } from '../../utils/factions'
  * disagree about which praxes have a score to show.
  *
  * The honest signal survives here: {@link PraxisStatusBanners} draws the failed
- * banner on this page too. It needs an `admin_note` to draw, so a praxis failed
- * without one shows no banner AND now no score — a gap that predates this and
- * belongs to the banner, not the stamp.
+ * banner on this page too, keyed on the STATUS alone (#1538) — so suppressing
+ * the stamp never leaves the page silent about a moderation decision, whether or
+ * not the admin wrote a note.
  */
 export function scoreWasBanked(praxis: PraxisOut): boolean {
   return !UNSCORED_MODERATION_STATUSES.has(praxis.moderation_status)
@@ -373,7 +373,20 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           composer, so neither banner could ever paint again. An open praxis now
           has one owner — the composer's waiting surface (#1071) — instead of two
           that described it differently. */}
-      {praxis.moderation_status === 'failed' && praxis.admin_note && (
+      {/* THE MARK DRAWS ON THE STATUS, NOT ON THE NOTE (#1538).
+          This used to require `praxis.admin_note` as well, and the note is
+          optional everywhere it is set: `ModerationAction.admin_note` is
+          `str | None`, and `moderate_praxis` stores `admin_note or ""` on a
+          fail — so an admin who leaves the box empty banks an EMPTY STRING,
+          falsy here. The card badge next door has always keyed on the status
+          alone, so that praxis carried a "FAILED" badge in the feed and, since
+          #1444 correctly suppressed its score stamp, nothing whatsoever on this
+          page. #1373 made `failed` a PUBLIC MARK — a mark nobody can see is not
+          one. The note is now optional detail INSIDE the banner: its span is
+          omitted entirely when there is nothing to say, so an empty note leaves
+          no dangling element behind the title (which is a whole sentence and
+          reads alone). */}
+      {praxis.moderation_status === 'failed' && (
         <div style={{ background: 'var(--color-danger-veil)', border: '2px solid var(--color-danger-edge)', borderRadius: 8, padding: 'var(--space-sm) var(--space-lg)', marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {/* Ornament: a ✗ dingbat used as an icon, not readable text. Sized
               from the label tier (nearest token to its old 16px), never the
@@ -388,9 +401,11 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
             <span className="font-body content-title" style={{ color: wallInk(praxis, 'alarm'), fontWeight: 700, display: 'block' }}>
               {t('detail.banners.failedTitle')}
             </span>
-            <span className="font-body content-text" style={{ color: wallInk(praxis, 'notice') }}>
-              {praxis.admin_note}
-            </span>
+            {praxis.admin_note && (
+              <span className="font-body content-text" style={{ color: wallInk(praxis, 'notice') }}>
+                {praxis.admin_note}
+              </span>
+            )}
           </div>
         </div>
       )}

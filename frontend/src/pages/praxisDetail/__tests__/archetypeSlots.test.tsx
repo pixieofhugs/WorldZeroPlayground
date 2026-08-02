@@ -30,6 +30,7 @@ import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
+import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut } from "../../../api/praxis";
 import type { TaskOut } from "../../../api/tasks";
@@ -146,6 +147,72 @@ describe("praxis-read Task Crown hero", () => {
       expect(render(<Archetype state={state()} />).text).not.toContain("TASK CROWN");
     });
   }
+});
+
+// ─── The failed mark survives an empty admin note (#1538) ────────────────────
+//
+// #1373 made `failed` a PUBLIC MARK: the praxis keeps its place in the feed and
+// keeps its "marked as failed" banner. The banner used to need an `admin_note`
+// as well as the status, and the note is optional at every layer that sets it —
+// `ModerationAction.admin_note` is `str | None`, and `moderate_praxis` banks
+// `admin_note or ""` on a fail, so leaving the steward's box empty stores the
+// falsy empty string. The card badge next door has always keyed on the status
+// alone, so such a praxis carried a FAILED badge in the feed and (once #1444
+// correctly suppressed its score stamp) nothing at all on its own page.
+//
+// Walked across the whole registry rather than asserted once on the shared slot:
+// the mark has to reach all nine dressed pages, and the empty-note case is
+// exactly the one a skin could quietly stop mounting.
+
+/** The banner's title copy — a whole sentence, so it reads without a note. */
+const FAILED_TITLE = "This praxis was marked as failed.";
+
+describe("failed banner (#1538)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} marks a failed praxis with a null, empty, or written note`, () => {
+      for (const note of [null, "", "The photo is of a different ridge."]) {
+        const failed = state();
+        failed.praxis = { ...PRAXIS, moderation_status: "failed", admin_note: note };
+        expect(
+          render(<Archetype state={failed} />).text,
+          `admin_note ${JSON.stringify(note)}`,
+        ).toContain(FAILED_TITLE);
+      }
+      expect(
+        render(<Archetype state={state()} />).text,
+        "a visible praxis carries no mark",
+      ).not.toContain(FAILED_TITLE);
+    });
+  }
+
+  it("prints the note as the banner's body when there is one", () => {
+    const failed = state();
+    failed.praxis = {
+      ...PRAXIS,
+      moderation_status: "failed",
+      admin_note: "The photo is of a different ridge.",
+    };
+    expect(render(<PraxisStatusBanners state={failed} />).text).toContain(
+      "The photo is of a different ridge.",
+    );
+  });
+
+  /**
+   * An optional body must be ABSENT, not empty. Rendering the note's span with
+   * nothing in it would leave a dangling element under the title — the shape
+   * #1444 deleted the headed score panel to avoid.
+   */
+  it("leaves no empty body element when the note is blank", () => {
+    for (const note of [null, ""]) {
+      const failed = state();
+      failed.praxis = { ...PRAXIS, moderation_status: "failed", admin_note: note };
+      const { html } = render(<PraxisStatusBanners state={failed} />);
+      expect(html, `admin_note ${JSON.stringify(note)}`).toContain(FAILED_TITLE);
+      expect(html, "no empty note span").not.toMatch(
+        /<span[^>]*content-text[^>]*><\/span>/,
+      );
+    }
+  });
 });
 
 // ─── Single earned-points breakdown (#641) ───────────────────────────────────
