@@ -73,6 +73,101 @@ async def test_non_image_rejected(tmp_path, monkeypatch):
     assert os.listdir(tmp_path) == []
 
 
+@pytest.mark.asyncio
+async def test_reuploaded_avatar_gets_a_new_path_and_drops_the_old_file(
+    tmp_path, monkeypatch
+):
+    """A re-upload must change the URL and leave no orphan (#1565).
+
+    The stale-avatar bug was a deterministic path: new bytes at the same URL,
+    which mobile browsers happily served from cache. Distinct paths alone would
+    not prove the fix is complete — an unlinked-nothing version orphans a file
+    per upload — so this asserts both halves.
+    """
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+
+    first_path = await process_and_save_avatar(
+        _make_upload("selfie.jpg", _jpeg_bytes(64, 64), "image/jpeg"),
+        character_id=42,
+    )
+    second_path = await process_and_save_avatar(
+        _make_upload("selfie.jpg", _jpeg_bytes(64, 64), "image/jpeg"),
+        character_id=42,
+        previous_avatar_url=first_path,
+    )
+
+    assert first_path != second_path
+    assert not os.path.isabs(second_path)
+    assert not os.path.exists(os.path.join(str(tmp_path), first_path))
+    assert os.path.isfile(os.path.join(str(tmp_path), second_path))
+    # The replaced upload's directory goes with it; the character's avatar
+    # directory stays, because the new upload lives under it.
+    assert not os.path.exists(os.path.dirname(os.path.join(str(tmp_path), first_path)))
+    assert os.path.isdir(os.path.join(str(tmp_path), "42", "avatar"))
+
+
+@pytest.mark.asyncio
+async def test_legacy_deterministic_avatar_is_replaced_in_place(tmp_path, monkeypatch):
+    """Characters uploaded before #1565 sit at ``<id>/avatar/avatar.jpg``.
+
+    That legacy file must be unlinked without taking the shared ``avatar``
+    directory — which now holds the replacement — down with it.
+    """
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+    legacy_relative = os.path.join("42", "avatar", "avatar.jpg")
+    legacy_absolute = os.path.join(str(tmp_path), legacy_relative)
+    os.makedirs(os.path.dirname(legacy_absolute), exist_ok=True)
+    with open(legacy_absolute, "wb") as handle:
+        handle.write(b"OLD-AVATAR-BYTES")
+
+    new_path = await process_and_save_avatar(
+        _make_upload("selfie.jpg", _jpeg_bytes(64, 64), "image/jpeg"),
+        character_id=42,
+        previous_avatar_url=legacy_relative,
+    )
+
+    assert not os.path.exists(legacy_absolute)
+    assert os.path.isfile(os.path.join(str(tmp_path), new_path))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "previous",
+    ["", "https://example.com/photo.jpg", "http://example.com/photo.jpg"],
+)
+async def test_avatar_upload_never_unlinks_a_value_it_did_not_write(
+    tmp_path, monkeypatch, previous
+):
+    """``avatar_url`` may be a pasted remote URL, not a path we own.
+
+    ``POST /characters`` and the admin editor both accept one, and the upload
+    route's own 500 text suggests it. Superseding such a value must be a no-op
+    on disk rather than an error.
+    """
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+
+    new_path = await process_and_save_avatar(
+        _make_upload("selfie.jpg", _jpeg_bytes(64, 64), "image/jpeg"),
+        character_id=42,
+        previous_avatar_url=previous,
+    )
+
+    assert os.path.isfile(os.path.join(str(tmp_path), new_path))
+
+
+def test_superseded_avatar_outside_media_root_is_refused(tmp_path, monkeypatch):
+    """A stored path that escapes MEDIA_ROOT is never unlinked."""
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path / "media"))
+    os.makedirs(str(tmp_path / "media"), exist_ok=True)
+    outsider = tmp_path / "not-ours.jpg"
+    outsider.write_bytes(b"someone else's file")
+
+    media._remove_superseded_avatar(os.path.join("..", "not-ours.jpg"))
+    media._remove_superseded_avatar(str(outsider))
+
+    assert outsider.exists()
+
+
 def test_filename_sanitization_strips_path_and_unsafe_chars():
     """Path components and special characters are replaced; length capped."""
     # Path traversal attempt collapses to a safe basename.
