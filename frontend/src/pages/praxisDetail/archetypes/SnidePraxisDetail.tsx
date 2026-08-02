@@ -118,6 +118,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -588,7 +589,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // foreign task keeps its own mark on this page. No term is restated here and
   // no arithmetic is invented: `scoreBreakdown()` is the only resolver
   // (ADR-0014/0047/0053).
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={plate}>
       {sectionHead(t("detail.score.heading"), { onPlate: true })}
       <div style={{ display: "flex", justifyContent: "center" }}>

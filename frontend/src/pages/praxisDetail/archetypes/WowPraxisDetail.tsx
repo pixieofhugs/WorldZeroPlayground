@@ -19,6 +19,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -524,7 +525,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // member reading a foreign task's praxis on this page still sees that task's
   // stamp. The arithmetic is `scoreBreakdown()`'s alone (ADR-0053); this file
   // adds no second strip restating the same terms.
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={panel}>
       {panelHead('score', t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>

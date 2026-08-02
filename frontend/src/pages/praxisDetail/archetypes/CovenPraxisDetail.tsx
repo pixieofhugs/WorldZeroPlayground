@@ -91,6 +91,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -477,7 +478,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   //
   // The candle sits behind it: `.cvn-candle` carries the flicker and its
   // reduced-motion guard, so stilled it is simply a steady glow.
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={{ ...panel, position: 'relative', overflow: 'hidden' }}>
       {sectionHead(t('detail.score.heading'))}
       <span
