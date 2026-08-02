@@ -1,5 +1,5 @@
 import { useAuth } from '../../auth/AuthContext'
-import { useMyCharacterStats } from '../../hooks/useMyCharacterStats'
+import { useVotesReceived } from '../../hooks/useVotesReceived'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
@@ -9,7 +9,7 @@ import type { PraxisCardOut } from '../../api/praxis'
  *
  * Pure composition over the same reads the desktop rail draws from:
  * `useSidebarPanels` for the in-progress tasks and the pending-request count,
- * `useMyCharacterStats` for the votes tile, and the carried character from
+ * `useVotesReceived` for the votes tile, and the carried character from
  * auth. No new data logic — it only bundles what those already return, so the
  * mobile skins stay presentation-only and slot-invariant (mirrors
  * `useTaskDetail`, whose `state` every TaskDetail archetype renders).
@@ -53,7 +53,7 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
     pending_requests_count: pendingCount,
     loading: loadingTasks,
   } = useSidebarPanels()
-  const { votesReceived } = useMyCharacterStats(character?.id)
+  const { votesReceived } = useVotesReceived(character?.id)
 
   if (!character) return null
 

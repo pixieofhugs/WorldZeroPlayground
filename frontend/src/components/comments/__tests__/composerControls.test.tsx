@@ -61,6 +61,28 @@ describe('ComposerControls — the mention hint', () => {
 })
 
 /**
+ * The save gate itself (#1524).
+ *
+ * `OwnerControls` used to export an `editSaveDisabled(draft, saving)` helper that
+ * only its own unit test called, while every composer and every editor actually
+ * gates here. These assertions moved onto the rule production runs.
+ */
+describe('ComposerControls — the save gate', () => {
+  it('is inert on an empty or whitespace-only body', () => {
+    expect(composer({ value: '' })).toContain('disabled=""')
+    expect(composer({ value: '   ' })).toContain('disabled=""')
+  })
+
+  it('is inert while a save is inflight, even on a good body', () => {
+    expect(composer({ value: 'seedlings', submitting: true })).toContain('disabled=""')
+  })
+
+  it('is live on a non-empty body at rest', () => {
+    expect(composer({ value: 'seedlings' })).not.toContain('disabled=""')
+  })
+})
+
+/**
  * The body cap (#1205).
  *
  * 500 is the number every design sheet shows. It was 2000 in the editor, 2000 at

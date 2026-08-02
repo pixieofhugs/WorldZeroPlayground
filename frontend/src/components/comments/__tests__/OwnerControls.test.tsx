@@ -2,7 +2,8 @@
  * Comment author affordance (#456).
  *
  * The stateful toggle/confirm/edit machinery lives once in `useOwnerEdit`; these
- * tests exercise the pure decisions (owner check, empty-draft guard), the neutral
+ * tests exercise the pure decision left here (the owner check — the empty-draft
+ * guard is asserted on the real gate, `ComposerControls`, since #1524), the neutral
  * `<OwnerControls>` affordance in each of its resting/confirm states, the seeded
  * `<CommentEditor>`, and the new `deleteComment` client. Rendered to static markup
  * (no DOM) per the comments-test convention; `useAuth` resolves to its anonymous
@@ -16,7 +17,6 @@ import type { CommentOut } from '../../../api/comments'
 import {
   CommentEditor,
   OwnerControls,
-  editSaveDisabled,
   isCommentOwner,
   ownerRevealStyle,
   useOwnerReveal,
@@ -77,15 +77,6 @@ describe('isCommentOwner', () => {
     expect(isCommentOwner(COMMENT, 99)).toBe(false)
     expect(isCommentOwner(COMMENT, null)).toBe(false)
     expect(isCommentOwner(COMMENT, undefined)).toBe(false)
-  })
-})
-
-describe('editSaveDisabled', () => {
-  it('disables save on an empty/whitespace draft or while saving', () => {
-    expect(editSaveDisabled('', false)).toBe(true)
-    expect(editSaveDisabled('   ', false)).toBe(true)
-    expect(editSaveDisabled('hello', true)).toBe(true)
-    expect(editSaveDisabled('hello', false)).toBe(false)
   })
 })
 
