@@ -9,6 +9,8 @@ switches all live game mechanics.
 from dataclasses import dataclass, field
 from enum import Enum
 
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
+
 
 class LevelUnlockKind(str, Enum):
     """Whether a level unlock is a rules-backed capability or pure flavor."""
@@ -145,6 +147,20 @@ class EraConfig:
     # ADR-0022: completed-task count (per faction) required to earn that faction's invite.
     # Defaulted so existing EraConfig constructions stay valid.
     invitation_task_threshold: int = 2
+
+    # The faction a character is born into when creation names none (#1559).
+    # ADR-0019 makes characters born unaffiliated and ADR-0030 makes `na` the
+    # site-wide answer, so the default below is already right for every era so
+    # far — an era file declares this ONLY when it wants players pre-sorted into
+    # a real faction. That is ADR-0042's shape: the era doc wins where it
+    # speaks, and stays silent about the obvious.
+    #
+    # Deliberately NOT the era-*reset* faction
+    # (services.era.ERA_RESET_DEFAULT_FACTION). They hold the same value today
+    # and are arguably one knob, but an era may reasonably want players born
+    # unaffiliated and *reset* into something else, so #1559 left them apart
+    # rather than silently unify them.
+    starting_faction_slug: str = UNAFFILIATED_FACTION_SLUG
 
     # Metatask-per-praxis cap (defaulted so bare EraConfig constructions stay valid).
     # A praxis holds metatasks_per_praxis_base metatasks until the applying character

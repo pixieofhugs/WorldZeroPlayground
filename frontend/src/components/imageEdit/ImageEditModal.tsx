@@ -58,14 +58,15 @@ export interface ImageEditModalProps {
   /** Dismiss without uploading. */
   onCancel: () => void
   /**
-   * Report a processing failure as a caller-scoped message (#1527). The
-   * character screens pass their picker's `setAvatarError` (#985) so the failure
-   * lands on the same line as an over-size pick, and the modal closes so that
-   * line is visible.
+   * Report a processing failure as a caller-scoped message (#1527). Both call
+   * sites pass one, and both land the failure on the line an over-size pick
+   * already uses — the character screens their picker's `setAvatarError` (#985),
+   * the praxis composer its tray's `fileError` (#1545) — with the modal closing
+   * so that line is visible.
    *
-   * Omit it and a failure keeps the historical behaviour — the untouched file is
-   * uploaded silently. Praxis media is deliberately left on that path for now
-   * (it has no avatar-scoped error line; see the useAvatarPicker docblock).
+   * Still optional, and omitting it still keeps the historical behaviour (the
+   * untouched file is uploaded silently), because that is the fallback
+   * `applyImageEdit` is written around. No caller relies on it.
    */
   onError?: (message: string) => void
 }

@@ -199,7 +199,13 @@ async def upload_avatar(
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot update another character's avatar.")
     character = current_character
-    character.avatar_url = await process_and_save_avatar(file, character_id)
+    # Read the outgoing path before overwriting it: the service unlinks it once
+    # the replacement is written, so a per-upload directory (#1565) does not
+    # orphan a file per upload.
+    previous_avatar_url = character.avatar_url
+    character.avatar_url = await process_and_save_avatar(
+        file, character_id, previous_avatar_url=previous_avatar_url
+    )
     await session.flush()
     await session.refresh(character)
     stats = await load_current_era_stats(character_id, session)
