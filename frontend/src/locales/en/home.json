@@ -29,6 +29,32 @@
     "prompt": "not sure where to start?",
     "randomTask": "→ grab a random task ←"
   },
+  "signedIn": {
+    "continue": {
+      "heading": "Continue where you left off",
+      "meta": {
+        "draft": "Draft · +{{points}} pts",
+        "submitted_one": "Submitted · {{points}} pts · {{count}} vote",
+        "submitted_other": "Submitted · {{points}} pts · {{count}} votes"
+      }
+    },
+    "browse": {
+      "tabs": {
+        "tasks": "Tasks",
+        "praxis": "Praxis"
+      },
+      "headings": {
+        "tasks": "Tasks you can sign up for",
+        "praxis": "Praxes that need your vote"
+      },
+      "seeMore": "See more",
+      "loading": "Loading…",
+      "empty": {
+        "tasks": "Nothing open to you right now — level up or check back soon.",
+        "praxis": "You have voted on everything you can. Nice."
+      }
+    }
+  },
   "ticker": {
     "live": "Live",
     "defaultActor": "World Zero",
