@@ -28,7 +28,14 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({
-    user: { account_id: 1, character: { id: 1, faction_slug: 'na' } } as unknown as CurrentUser,
+    // The gate is open (#1560): the roster half of this page is only drawn when
+    // it has a choice to offer, and this file's job is to pin that the two
+    // halves coexist. `fieldDeskRosterGate.test.tsx` owns the shut case.
+    user: {
+      account_id: 1,
+      character: { id: 1, faction_slug: 'na' },
+      can_create_additional_character: true,
+    } as unknown as CurrentUser,
     loading: false,
     refetch: async () => {},
     signOut: async () => {},

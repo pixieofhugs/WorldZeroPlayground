@@ -62,12 +62,15 @@ function character(faction_slug: string | null): CharacterOut {
   }
 }
 
-function currentUser(faction_slug: string | null): CurrentUser {
+function currentUser(faction_slug: string | null, canCreateAdditional = false): CurrentUser {
   return {
     account_id: 1,
     character: character(faction_slug),
     is_admin: false,
-    can_create_additional_character: false,
+    // #1560: the desktop roster is only drawn when it has a choice to offer, so
+    // the desktop case below opens the gate. Irrelevant to the mobile skins,
+    // which never render the roster at all.
+    can_create_additional_character: canCreateAdditional,
     can_start_as_albescent: false,
     albescent_revealed: false,
     can_propose_task: true,
@@ -113,9 +116,17 @@ describe('FieldDesk form-factor dispatch', () => {
 
   it('renders the desktop roster on desktop (skin dispatch untouched)', () => {
     mocks.formFactor = 'desktop'
-    mocks.user = currentUser('coven')
+    mocks.user = currentUser('coven', true)
     const html = render()
     expect(html).not.toContain('data-skin=')
     expect(html.replace(/<[^>]*>/g, '')).toContain('Whose shoes today?')
+  })
+
+  it('takes no mobile skin on desktop even when the roster is gated away (#1560)', () => {
+    mocks.formFactor = 'desktop'
+    mocks.user = currentUser('coven')
+    const html = render()
+    expect(html).not.toContain('data-skin=')
+    expect(html.replace(/<[^>]*>/g, '')).not.toContain('Whose shoes today?')
   })
 })
