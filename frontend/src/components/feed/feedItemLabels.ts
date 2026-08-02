@@ -95,7 +95,7 @@ export function feedKicker(type: string): string {
  * The shared undo strip is right for fourteen of the fifteen: you filed the
  * card away and nothing else happened. It is wrong for the invitation letter,
  * whose dismiss control is labelled **Not now** — a deferral, never an answer
- * (ADR-0065/0066). "Archived" reads as a decision the player did not make, so
+ * (ADR-0070). "Archived" reads as a decision the player did not make, so
  * that one type spends its own authored sentence instead:
  *
  *   > Set aside — the invitation still stands

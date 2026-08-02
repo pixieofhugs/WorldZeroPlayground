@@ -6,7 +6,7 @@
  * **Not now** through `FeedItemSlot`'s shared strip, which says `Archived
  * "{title}"`. That routing was the right call (one dismiss implementation for
  * eight skins), but the shared line states a decision the player did not make:
- * "Not now" is a deferral and the letter stays valid (ADR-0065/0066). Same
+ * "Not now" is a deferral and the letter stays valid (ADR-0070). Same
  * class of defect as #1342.
  *
  * The fix is a per-type override, so this pins BOTH halves of it:
