@@ -191,7 +191,6 @@ async def list_relationships(
             to_display_name=target_character.display_name,
             to_avatar_url=target_character.avatar_url,
             to_faction_slug=target_character.faction_slug,
-            reverse_type=incoming_type,
             display_status=compute_display_status(
                 outgoing_type, outgoing_status, incoming_type, incoming_status
             ),

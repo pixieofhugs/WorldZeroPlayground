@@ -29,7 +29,6 @@ class CharacterCapabilities:
     """Boolean flags the frontend uses to gate action UI."""
     can_propose_task: bool
     can_propose_metatask: bool
-    can_see_metatasks: bool
     can_see_retired_tasks: bool
     can_see_pending_tasks: bool
     can_comment: bool
@@ -66,7 +65,6 @@ def compute_capabilities(
         return CharacterCapabilities(
             can_propose_task=True,
             can_propose_metatask=True,
-            can_see_metatasks=True,
             can_see_retired_tasks=True,
             can_see_pending_tasks=True,
             can_comment=True,
@@ -78,7 +76,6 @@ def compute_capabilities(
         return CharacterCapabilities(
             can_propose_task=False,
             can_propose_metatask=False,
-            can_see_metatasks=False,
             can_see_retired_tasks=False,
             can_see_pending_tasks=False,
             can_comment=False,
@@ -89,7 +86,6 @@ def compute_capabilities(
     return CharacterCapabilities(
         can_propose_task=character_level >= era.level_to_propose_task,
         can_propose_metatask=character_level >= era.level_to_propose_metatask,
-        can_see_metatasks=character_level >= era.level_to_see_metatasks,
         can_see_retired_tasks=character_level >= era.level_to_see_retired_tasks,
         can_see_pending_tasks=character_level >= era.level_to_see_pending_tasks,
         can_comment=character_level >= era.comment_level_required,

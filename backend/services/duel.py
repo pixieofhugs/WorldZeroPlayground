@@ -77,8 +77,6 @@ def _build_duel_out(duel: Duel) -> DuelOut:
         opponent_character_id=duel.opponent_character_id,
         opponent_praxis_id=duel.opponent_praxis_id,
         status=duel.status,
-        accepted_at=duel.accepted_at,
-        declined_at=duel.declined_at,
         created_at=duel.created_at,
     )
 
@@ -109,10 +107,13 @@ async def get_duel_detail(
 ) -> DuelDetailOut:
     """Read-oriented duel view for the praxis read page (#308).
 
-    Returns both sides' display info + live vote points in one round trip, plus
-    ``viewer_is_participant`` (account-level, mirroring #309) which drives the
-    opponent-side anti-vote UI. Never returns a praxis body — a forfeited or
-    unsubmitted side still renders name/avatar but ``is_submitted`` is False.
+    Returns both sides' display info + live vote points in one round trip.
+    Never returns a praxis body — a forfeited or unsubmitted side still renders
+    name/avatar but ``is_submitted`` is False.
+
+    ``viewer`` is still taken: it keys the per-side nudge state below. It no
+    longer yields a ``viewer_is_participant`` flag (#1387) — anti-self-voting is
+    enforced server-side at the account level (ADR-0041) and no client read it.
     """
     duel = await get_duel(duel_id, session)
 
@@ -170,15 +171,6 @@ async def get_duel_detail(
             nudged_at=nudged_at,
         )
 
-    participant_account_ids = {
-        character.account_id
-        for character in (challenger_character, opponent_character)
-        if character is not None
-    }
-    viewer_is_participant = (
-        viewer is not None and viewer.account_id in participant_account_ids
-    )
-
     return DuelDetailOut(
         id=duel.id,
         task_id=duel.task_id,
@@ -196,7 +188,6 @@ async def get_duel_detail(
             duel.opponent_praxis_id,
             opponent_nudged_at,
         ),
-        viewer_is_participant=viewer_is_participant,
         winner_character_id=duel.winner_character_id,
         challenger_final_points=duel.challenger_final_points,
         opponent_final_points=duel.opponent_final_points,

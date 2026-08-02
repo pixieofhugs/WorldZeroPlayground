@@ -4,8 +4,11 @@ from pydantic import BaseModel
 class FactionConfigOut(BaseModel):
     # ADR-0038: no name/description — the frontend resolves faction prose from
     # frontend/src/locales/en/factions.json by slug.
+    # NOT here: `can_always_rejoin` (#1387). It stays a LIVE rule on
+    # `game_config.FactionConfig` — `services.faction_service` branches on it —
+    # but the server already answers "may this life join?" itself, so no client
+    # needs the raw flag.
     slug: str
-    can_always_rejoin: bool
     own_task_modifier: float
     other_task_modifier: float
     collab_own_modifier: float
@@ -28,13 +31,15 @@ class LevelProfileOut(BaseModel):
 
 
 class GameConfigOut(BaseModel):
+    # NOT here (#1387): `collaboration_level_required`, `vote_budget_base` and
+    # `vote_budget_multiplier`. All three remain live `EraConfig` rules the
+    # server enforces; none had a frontend reader. The vote budget in particular
+    # is computed on read (ADR-0043) and surfaces on `VoteCastOut.viewer_stats`,
+    # so the client never needs the formula's inputs.
     era_name: str
     level_thresholds: list[int]
     duel_level_required: int
-    collaboration_level_required: int
     collab_auto_submit_days: int
     max_task_signups: int
-    vote_budget_base: int
-    vote_budget_multiplier: float
     factions: list[FactionConfigOut]
     level_profiles: list[LevelProfileOut]

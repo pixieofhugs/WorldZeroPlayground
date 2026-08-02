@@ -54,7 +54,6 @@ async def test_auth_me_capabilities_no_character(
     data = resp.json()
     assert data["can_propose_task"] is False
     assert data["can_propose_metatask"] is False
-    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is False
     assert data["can_see_pending_tasks"] is False
 
@@ -76,7 +75,6 @@ async def test_auth_me_capabilities_level_1(
     data = resp.json()
     assert data["can_propose_task"] is False
     assert data["can_propose_metatask"] is False
-    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is False
     assert data["can_see_pending_tasks"] is False
 
@@ -98,7 +96,6 @@ async def test_auth_me_capabilities_level_2(
     data = resp.json()
     assert data["can_propose_task"] is False
     assert data["can_propose_metatask"] is False
-    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is False
 
@@ -120,7 +117,6 @@ async def test_auth_me_capabilities_level_3(
     data = resp.json()
     assert data["can_propose_task"] is True
     assert data["can_propose_metatask"] is False
-    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is True
 
@@ -134,15 +130,21 @@ async def test_auth_me_capabilities_level_6(
     db_session: AsyncSession,
     era: Era,
 ) -> None:
-    """Level-6 character: meets every flag including metatask proposal."""
+    """Level-6 character: meets every flag including metatask proposal.
+
+    Level 6 also clears the retired ``era.level_to_see_metatasks`` threshold, so
+    a serializer still emitting ``can_see_metatasks`` would emit ``true`` here —
+    which is exactly why the absence assertion lives on this case (#1387). The
+    metatask-list gate itself is unchanged and enforced in ``services.task``.
+    """
     await _set_character_level(db_session, character.id, era.id, 6)
 
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
+    assert "can_see_metatasks" not in data
     assert data["can_propose_task"] is True
     assert data["can_propose_metatask"] is True
-    assert data["can_see_metatasks"] is True
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is True
 
@@ -166,6 +168,5 @@ async def test_auth_me_capabilities_admin_short_circuit(
     assert data["is_admin"] is True
     assert data["can_propose_task"] is True
     assert data["can_propose_metatask"] is True
-    assert data["can_see_metatasks"] is True
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is True

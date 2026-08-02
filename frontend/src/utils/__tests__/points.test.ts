@@ -23,7 +23,6 @@ function config(
     slug,
     own_task_modifier,
     other_task_modifier,
-    can_always_rejoin: false,
     // Irrelevant to the task multiplier; the praxis-side modifiers are a
     // separate axis (ADR-0053 retired the display one).
     collab_own_modifier: 1,

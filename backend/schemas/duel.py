@@ -22,8 +22,6 @@ class DuelOut(BaseModel):
     opponent_character_id: int
     opponent_praxis_id: Optional[int]
     status: DuelStatus
-    accepted_at: Optional[datetime]
-    declined_at: Optional[datetime]
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -57,7 +55,6 @@ class DuelDetailOut(BaseModel):
     forfeited_by_character_id: Optional[int]
     challenger: DuelSideOut
     opponent: DuelSideOut
-    viewer_is_participant: bool
     # Frozen outcome, populated once the duel is ``resolved`` at era close
     # (ADR-0052); NULL on live duels. A resolved surface renders these instead of
     # the live vote tally so the final standing never moves under the reader.

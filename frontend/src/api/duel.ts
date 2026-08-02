@@ -15,8 +15,6 @@ export interface DuelOut {
   opponent_character_id: number
   opponent_praxis_id: number | null
   status: DuelStatus
-  accepted_at: string | null
-  declined_at: string | null
   created_at: string
 }
 
@@ -48,7 +46,6 @@ export interface DuelDetailOut {
   forfeited_by_character_id: number | null
   challenger: DuelSideOut
   opponent: DuelSideOut
-  viewer_is_participant: boolean
   // Frozen outcome, populated once the duel is `resolved` at era close
   // (ADR-0052); null on live duels. A resolved rail renders these instead of the
   // live vote tally. null winner on a resolved duel = tie, or no-contest.

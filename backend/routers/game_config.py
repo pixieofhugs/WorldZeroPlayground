@@ -17,7 +17,6 @@ async def get_game_config() -> GameConfigOut:
     factions = [
         FactionConfigOut(
             slug=faction.slug,
-            can_always_rejoin=faction.can_always_rejoin,
             own_task_modifier=faction.own_task_modifier,
             other_task_modifier=faction.other_task_modifier,
             collab_own_modifier=faction.collab_own_modifier,
@@ -43,11 +42,8 @@ async def get_game_config() -> GameConfigOut:
         era_name=CURRENT_ERA.name,
         level_thresholds=list(CURRENT_ERA.level_thresholds),
         duel_level_required=CURRENT_ERA.duel_level_required,
-        collaboration_level_required=CURRENT_ERA.collaboration_level_required,
         collab_auto_submit_days=CURRENT_ERA.collab_auto_submit_days,
         max_task_signups=CURRENT_ERA.max_task_signups,
-        vote_budget_base=CURRENT_ERA.vote_budget_base,
-        vote_budget_multiplier=CURRENT_ERA.vote_budget_multiplier,
         factions=factions,
         level_profiles=level_profiles,
     )

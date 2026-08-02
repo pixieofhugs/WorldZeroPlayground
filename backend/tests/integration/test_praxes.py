@@ -1180,6 +1180,15 @@ async def test_any_member_can_rescind_a_pending_invite(
     assert invite_id not in {invite["id"] for invite in invites}
     assert character3.id not in {invite["invitee_id"] for invite in invites}
 
+    # The surviving invite carries the INVITEE's display name only (#1387):
+    # `inviter_display_name` had no client reader, and every roster row the UI
+    # draws is keyed off the invitee. These invites have a real inviter with a
+    # real display name, so a leftover serializer would emit it, not a blank.
+    assert invites
+    for invite in invites:
+        assert "inviter_display_name" not in invite
+        assert invite["invitee_display_name"]
+
 
 @pytest.mark.asyncio
 async def test_cannot_cancel_accepted_invite(

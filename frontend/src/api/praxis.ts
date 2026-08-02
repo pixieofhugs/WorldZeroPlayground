@@ -54,7 +54,6 @@ export interface PraxisInviteOut {
   praxis_id: number
   inviter_id: number
   invitee_id: number
-  inviter_display_name: string
   invitee_display_name: string
   status: PraxisInviteStatus
   created_at: string

@@ -127,7 +127,6 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     forfeited_by_character_id: null,
     challenger: MINE,
     opponent: RIVAL,
-    viewer_is_participant: false,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

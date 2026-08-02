@@ -126,7 +126,6 @@ function duelAgainst(hostSlug: string, rivalSlug: string): DuelDetailOut {
       faction_slug: rivalSlug,
       points_from_votes: 15.4,
     }),
-    viewer_is_participant: false,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

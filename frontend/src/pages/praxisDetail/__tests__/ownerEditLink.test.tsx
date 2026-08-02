@@ -103,7 +103,6 @@ function duel(status: DuelStatus): DuelDetailOut {
     forfeited_by_character_id: null,
     challenger: side(1, 1, 'Ada'),
     opponent: side(2, 2, 'Rax'),
-    viewer_is_participant: true,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

@@ -362,10 +362,12 @@ async def test_display_status_blocked_overrides_mutual_friends(
     # Verify Mutual Friends before block
     pre_block = await client.get("/relationships", headers=auth_headers)
     pre_items = pre_block.json()
-    assert any(
-        r["to_character_id"] == character2.id and r["display_status"] == "Mutual Friends"
-        for r in pre_items
-    )
+    mutual = next(r for r in pre_items if r["to_character_id"] == character2.id)
+    assert mutual["display_status"] == "Mutual Friends"
+    # The raw reverse edge is NOT emitted (#1387). A reverse edge exists here —
+    # that is what makes the pair Mutual Friends — so a leftover serializer
+    # would put a non-null "friend" in the payload, not a defaulted null.
+    assert "reverse_type" not in mutual
 
     # character2 blocks their own outgoing edge → both should see Blocked
     rel2_id = create_resp2.json()["id"]

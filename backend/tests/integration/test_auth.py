@@ -66,7 +66,7 @@ async def test_auth_me_returns_character_stats(
     character: Character,
     auth_headers: dict,
 ):
-    """GET /auth/me includes character stats fields (level, score, votes_available)."""
+    """GET /auth/me includes character stats fields (level, score)."""
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
@@ -211,7 +211,7 @@ async def test_auth_me_with_character_faction(
 
 
 @pytest.mark.asyncio
-async def test_auth_me_exposes_votes_available(
+async def test_auth_me_omits_votes_available(
     client: AsyncClient,
     account: Account,
     character: Character,
@@ -219,17 +219,20 @@ async def test_auth_me_exposes_votes_available(
     db_session: AsyncSession,
     era,
 ):
-    """GET /auth/me surfaces the on-read computed vote budget (R.5).
+    """CharacterOut no longer carries the vote budget (#1387).
 
-    votes_available = base + floor(multiplier * score) - votes_spent_this_era
+    The budget is still computed on read (ADR-0043) and still enforced on cast;
+    it simply is not projected onto every character row. Its reader is
+    ``VoteCastOut.viewer_stats`` (#1382), asserted in test_votes.py, and the
+    admin surface keeps its own ``schemas.admin`` shape (test_admin.py).
+
+    Seeds a non-zero score so a leftover serializer would emit a *truthy* value
+    rather than a defaulted zero — the key must be absent either way.
     """
-    from math import floor
     from sqlalchemy import select
 
-    from game_config import CURRENT_ERA
     from models.character_stats import CharacterStats
 
-    # Seed a known score on the character
     result = await db_session.execute(
         select(CharacterStats).where(
             CharacterStats.character_id == character.id,
@@ -245,43 +248,7 @@ async def test_auth_me_exposes_votes_available(
     assert resp.status_code == 200
     char = resp.json()["character"]
     assert char is not None
-    assert "votes_available" in char
-
-    expected = (
-        CURRENT_ERA.vote_budget_base
-        + floor(CURRENT_ERA.vote_budget_multiplier * 100)
-        - 0
-    )
-    assert char["votes_available"] == expected
-
-    # Admin patches votes_available lower; re-fetch /auth/me and confirm update.
-    # (Uses the admin service layer directly; emulates an admin patch.)
-    from schemas.admin import CharacterStatsPatch
-    from services.admin_service import set_character_stats
-    from models.roles import AccountRole, Role
-
-    # Grant admin to this account so we can call the admin endpoint
-    role = Role(name="admin", description="Administrator")
-    db_session.add(role)
-    await db_session.flush()
-    db_session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    )
-    await db_session.commit()
-
-    # Patch votes_available to 42 via the admin service
-    await set_character_stats(
-        character.id,
-        CharacterStatsPatch(votes_available=42),
-        db_session,
-    )
-
-    # Re-fetch /auth/me
-    resp2 = await client.get("/auth/me", headers=auth_headers)
-    assert resp2.status_code == 200
-    updated_char = resp2.json()["character"]
-    # The computed value must reflect the admin patch
-    assert updated_char["votes_available"] == 42
+    assert "votes_available" not in char
 
 
 # ---------------------------------------------------------------------------

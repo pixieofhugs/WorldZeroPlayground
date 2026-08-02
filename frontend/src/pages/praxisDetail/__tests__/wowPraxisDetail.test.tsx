@@ -180,7 +180,6 @@ function duel(status: DuelDetailOut["status"]): DuelDetailOut {
     forfeited_by_character_id: null,
     challenger: side(1, 3, "Wren Abalone", 18),
     opponent: side(2, 4, "Bram Quilling", 15.4),
-    viewer_is_participant: false,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

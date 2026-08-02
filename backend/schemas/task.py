@@ -81,15 +81,6 @@ class TaskCreate(BaseModel):
     metatask_faction_slug: Optional[str] = None
 
 
-class CharacterTaskOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    task: TaskOut
-    status: str
-    signed_up_at: datetime
-
-
 class TaskSignupOut(BaseModel):
     """One row of a task's in-progress roster (GET /tasks/{id}/signups).
 

@@ -110,7 +110,6 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       points_from_votes: 0,
       is_submitted: false,
     },
-    viewer_is_participant: true,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

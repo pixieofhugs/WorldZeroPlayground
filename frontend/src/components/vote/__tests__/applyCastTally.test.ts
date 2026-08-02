@@ -122,7 +122,6 @@ const DUEL: DuelDetailOut = {
   forfeited_by_character_id: null,
   challenger: MINE_SIDE,
   opponent: RIVAL_SIDE,
-  viewer_is_participant: false,
   winner_character_id: null,
   challenger_final_points: null,
   opponent_final_points: null,

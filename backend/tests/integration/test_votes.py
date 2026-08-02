@@ -587,6 +587,10 @@ async def test_duel_challenge_accept_creates_opponent_praxis(
     duel = accept_resp.json()
     assert duel["status"] == "active"
     assert duel["opponent_praxis_id"] is not None
+    # The respond timestamps are DB history, not wire fields (#1387). This is
+    # the request that WRITES `accepted_at`, so a leftover serializer would emit
+    # a real timestamp here rather than a null; `status` is what clients read.
+    assert "accepted_at" not in duel and "declined_at" not in duel
 
 
 @pytest.mark.asyncio
@@ -1128,8 +1132,11 @@ async def test_duel_detail_returns_both_sides_with_tallies(
 ):
     """Settled-duel detail: both sides' display info + live vote points in one call.
 
-    ``viewer_is_participant`` is True for a side's account, False for a third
-    party and for anonymous. No praxis body is ever included.
+    No praxis body is ever included, and the payload carries no
+    ``viewer_is_participant`` flag (#1387): it had no client reader, and
+    anti-self-voting is enforced server-side at the account level (ADR-0041).
+    A participant, a third party and an anonymous reader are all checked, since
+    the removed flag differed between exactly those three.
     """
     from models.duel import Duel, DuelStatus
     from services.auth import create_jwt
@@ -1173,7 +1180,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
     body = resp.json()
     assert body["status"] == "settled"
     assert body["forfeited_by_character_id"] is None
-    assert body["viewer_is_participant"] is True
+    assert "viewer_is_participant" not in body
     assert body["challenger"]["character_id"] == character.id
     assert body["challenger"]["display_name"] == character.display_name
     assert body["challenger"]["is_submitted"] is True
@@ -1182,13 +1189,13 @@ async def test_duel_detail_returns_both_sides_with_tallies(
     assert body["opponent"]["points_from_votes"] == 0
     assert "body_text" not in body["challenger"]  # never leak the praxis body
 
-    # Third party and anonymous are not participants.
-    assert (await client.get(
+    # Neither a third party nor an anonymous reader gets the flag either.
+    assert "viewer_is_participant" not in (await client.get(
         f"/duels/{duel.id}/detail", headers=third_headers
-    )).json()["viewer_is_participant"] is False
+    )).json()
     anon = await client.get(f"/duels/{duel.id}/detail")
     assert anon.status_code == 200
-    assert anon.json()["viewer_is_participant"] is False
+    assert "viewer_is_participant" not in anon.json()
 
 
 @pytest.mark.asyncio
@@ -1443,7 +1450,15 @@ async def test_vote_post_returns_viewer_vote_and_stats(
     praxis_id = await _create_and_submit_solo(client, active_task, auth_headers2)
 
     before = (await client.get("/auth/me", headers=auth_headers)).json()
-    budget_before = before["character"]["votes_available"]
+    # The budget is no longer on CharacterOut (#1387), so the pre-cast value
+    # comes from the same on-read computation the route uses (ADR-0043).
+    voter_stats = (await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )).scalar_one()
+    budget_before = compute_votes_available(voter_stats)
 
     body = (
         await client.post(

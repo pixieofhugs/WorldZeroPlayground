@@ -14,9 +14,10 @@ class BadgeOut(BaseModel):
 class CharacterOut(BaseModel):
     """Public character response. Stats (score, level, all_time_score) come from CharacterStats.
 
-    votes_available is the on-read computed vote budget for the current era
-    (see services.scoring.compute_votes_available); it reflects score growth
-    and spent votes without a stored counter.
+    The vote budget is deliberately NOT here (#1387). It is computed on read
+    (ADR-0043), so carrying it cost a recomputation per roster row for a number
+    no client read. Its reader is the post-cast ``VoteCastOut.viewer_stats``
+    (#1382); admin surfaces have their own shape in ``schemas.admin``.
 
     badges is evaluated on read (ADR-0033) — never stored. List serializers may
     populate it, but only via services.badge.build_badge_contexts, which resolves
@@ -36,7 +37,6 @@ class CharacterOut(BaseModel):
     level: int
     score: int
     all_time_score: int
-    votes_available: int = 0
     faction_slug: str
     status: str
     created_at: datetime

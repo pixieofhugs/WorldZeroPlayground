@@ -16,7 +16,7 @@ from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
-from services.scoring import compute_level, compute_vote_budget, compute_votes_available
+from services.scoring import compute_level, compute_vote_budget
 
 # Status set for the account-scoped roster: a player's own lives, excluding banned.
 _ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset(
@@ -34,7 +34,6 @@ def build_character_out(
 ) -> CharacterOut:
     """Flatten a Character row plus its (optional) CharacterStats into CharacterOut.
 
-    votes_available is computed on read from stats.score and votes_spent_this_era.
     badges (ADR-0033) is supplied by the caller and defaults to empty; list
     callers should go through :func:`build_character_outs` so every context is
     resolved in one batched query rather than one per character (#655).
@@ -55,7 +54,6 @@ def build_character_out(
         score=stats.score if stats else 0,
         all_time_score=stats.all_time_score if stats else 0,
         level=stats.level if stats else 0,
-        votes_available=compute_votes_available(stats) if stats else 0,
         badges=badges or [],
         invitations=invitations or [],
     )

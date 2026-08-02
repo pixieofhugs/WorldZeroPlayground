@@ -5,7 +5,6 @@ import api from './axios'
 // with factionName(slug) / factionDescription(slug) from utils/factions.
 export interface FactionConfigOut {
   slug: string
-  can_always_rejoin: boolean
   own_task_modifier: number
   other_task_modifier: number
   collab_own_modifier: number
@@ -33,11 +32,8 @@ export interface GameConfigOut {
   era_name: string
   level_thresholds: number[]
   duel_level_required: number
-  collaboration_level_required: number
   collab_auto_submit_days: number
   max_task_signups: number
-  vote_budget_base: number
-  vote_budget_multiplier: number
   factions: FactionConfigOut[]
   level_profiles: LevelProfile[]
 }

@@ -25,7 +25,6 @@ import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
     slug,
-    can_always_rejoin: false,
     own_task_modifier: 1.0,
     other_task_modifier: 1.0,
     collab_own_modifier: 1.0,
