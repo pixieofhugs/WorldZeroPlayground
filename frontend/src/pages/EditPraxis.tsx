@@ -150,13 +150,15 @@ export default function EditPraxis() {
       )}
       {/* Praxis images crop/rotate in place before upload (#514), free-form so
           nothing is force-cropped. Sequential: keyed on identity so each queued
-          image gets a fresh modal. */}
+          image gets a fresh modal. A failure reports on the tray's file-error
+          line rather than uploading the unprocessed image (#1545). */}
       {state.pendingImage && (
         <ImageEditModal
           key={`${state.pendingImage.name}-${state.pendingImage.lastModified}`}
           file={state.pendingImage}
           onConfirm={(blob) => void state.confirmImageEdit(blob)}
           onCancel={state.cancelImageEdit}
+          onError={state.reportImageError}
         />
       )}
     </>

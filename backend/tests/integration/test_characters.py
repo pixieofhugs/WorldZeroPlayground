@@ -1,4 +1,5 @@
 """Integration tests for /characters endpoints."""
+import os
 from dataclasses import replace
 
 import pytest
@@ -725,6 +726,41 @@ async def test_upload_avatar_success(
     assert data["id"] == character.id
     assert data["avatar_url"] is not None
     assert "avatar" in data["avatar_url"]
+
+
+@pytest.mark.asyncio
+async def test_reuploading_an_avatar_changes_the_url(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    tmp_path,
+    monkeypatch,
+):
+    """A second upload must return a different ``avatar_url`` (#1565).
+
+    Route-level rather than service-level because the defect the route can
+    reintroduce is forgetting to hand the outgoing path to the service: the
+    unit tests pass ``previous_avatar_url`` themselves and so cannot see it.
+    """
+    from config import settings as _settings
+
+    monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
+
+    async def _upload() -> str:
+        resp = await client.post(
+            f"/characters/{character.id}/avatar",
+            files={"file": ("avatar.jpg", _make_jpeg_bytes(), "image/jpeg")},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        return resp.json()["avatar_url"]
+
+    first_url = await _upload()
+    second_url = await _upload()
+
+    assert first_url != second_url
+    assert not os.path.exists(os.path.join(str(tmp_path), first_url))
+    assert os.path.isfile(os.path.join(str(tmp_path), second_url))
 
 
 @pytest.mark.asyncio

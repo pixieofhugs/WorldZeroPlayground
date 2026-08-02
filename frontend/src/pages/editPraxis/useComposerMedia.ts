@@ -26,6 +26,28 @@ import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
+/**
+ * The tray's line for an image the edit stage could not process (#1545).
+ *
+ * The modal supplies the sentence (it is the only party that knows *why*, and
+ * the copy is already localised there); this names the file it was holding,
+ * because unlike an avatar the tray edits a QUEUE — "that image" is ambiguous
+ * once two of three picks have landed as tiles. Naming the file is also what
+ * every other file-picker error here does (`fileTooLarge`, `upload`).
+ *
+ * Pure so the composition is testable without a DOM.
+ */
+export function imageEditFailureMessage(
+  fileName: string | undefined,
+  reason: string,
+): string {
+  if (!fileName) return reason;
+  return i18n.t("forms:editPraxis.errors.imageEditFailed", {
+    name: fileName,
+    reason,
+  });
+}
+
 export interface ComposerMedia {
   media: MediaItemOut[];
   /** Seed the tray from a freshly loaded praxis, or from a mode switch. */
@@ -37,6 +59,12 @@ export interface ComposerMedia {
   pendingImage: File | null;
   confirmImageEdit: (blob: Blob) => Promise<void>;
   cancelImageEdit: () => void;
+  /**
+   * The edit stage could not process the pending image (#1545). A narrow
+   * reporter rather than the raw `setFileError`, so the tray's one error line
+   * keeps a single owner.
+   */
+  reportImageError: (reason: string) => void;
 }
 
 export function useComposerMedia(
@@ -124,6 +152,16 @@ export function useComposerMedia(
     setImageEditQueue((previous) => previous.slice(1));
   }, []);
 
+  // The modal reports here and then cancels, so the queue head is still the
+  // file that failed when this runs. Lands on the same line a rejected pick
+  // uses, which the next pick clears (see `handleFileChange`).
+  const reportImageError = useCallback(
+    (reason: string) => {
+      setFileError(imageEditFailureMessage(imageEditQueue[0]?.name, reason));
+    },
+    [imageEditQueue],
+  );
+
   const removeMedia = useCallback(
     async (item: MediaItemOut) => {
       if (!idParam) return;
@@ -148,5 +186,6 @@ export function useComposerMedia(
     pendingImage,
     confirmImageEdit,
     cancelImageEdit,
+    reportImageError,
   };
 }
