@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -14,7 +15,16 @@ from services.duel_outcome import duel_winner
 from services.scoring import snide_tie_winner_id
 from services.vote_tally import get_tally, tally_votes
 
-ERA_RESET_DEFAULT_FACTION: str = "na"
+#: Faction a character is dropped into when ``era.reset_faction`` fires.
+#:
+#: Deliberately its own name, and deliberately NOT ``era.starting_faction_slug``
+#: (#1559): being *born* into a faction and being *returned* to one at era close
+#: are different questions an era may want to answer differently — players born
+#: unaffiliated but reset into a starter faction, say. Today both answer
+#: :data:`~faction_slugs.UNAFFILIATED_FACTION_SLUG`, which is why the two were
+#: easy to mistake for one knob. Promote this to an ``EraConfig`` field the day
+#: an era wants to move it; do not quietly point it at the birth default.
+ERA_RESET_DEFAULT_FACTION: str = UNAFFILIATED_FACTION_SLUG
 
 
 async def get_current_era_row(session: AsyncSession) -> Era:

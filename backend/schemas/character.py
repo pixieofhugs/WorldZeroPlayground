@@ -56,9 +56,10 @@ class CharacterCreate(BaseModel):
     bio: str = Field(default="", max_length=500)
     avatar_url: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=100)
-    # Optional starting faction. Born unaffiliated ("na") by default; a non-None
-    # slug must be one the account holds an invitation for. "albescent" is never
-    # a creation option (join-in-the-field only).
+    # Optional starting faction. Omitted lands era.starting_faction_slug, which
+    # defaults to unaffiliated ("na") — #1559. A non-None slug must be one the
+    # account holds an invitation for. "albescent" is never a creation option
+    # (join-in-the-field only).
     faction_slug: str | None = Field(default=None, max_length=50)
 
 

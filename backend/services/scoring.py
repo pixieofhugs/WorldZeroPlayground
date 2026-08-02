@@ -1,6 +1,7 @@
 from math import floor
 from typing import TYPE_CHECKING, Optional
 
+from faction_slugs import CROSS_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 
 if TYPE_CHECKING:
@@ -9,7 +10,6 @@ if TYPE_CHECKING:
 COLLABORATION_MODE_SOLO = "solo"
 COLLABORATION_MODE_COLLAB = "collab"
 COLLABORATION_MODE_DUEL = "duel"
-UNAFFILIATED_FACTION_SLUG = "na"
 SNIDE_FACTION_SLUG = "snide"
 
 
@@ -60,7 +60,8 @@ def compute_faction_multiplier(
 
     For duels, duel outcome is captured separately via compute_duel_multiplier — this
     function returns the own/other task modifier regardless of collaboration mode.
-    Unaffiliated ("na") tasks are treated as own-faction (no penalty).
+    Cross-faction tasks — those carrying CROSS_FACTION_SLUG, i.e. belonging to no
+    faction — are treated as own-faction, so nobody is penalised for generic work.
     Votes are always added flat after all multipliers are applied.
     """
     faction_config = era.factions.get(character_faction_slug)
@@ -69,7 +70,7 @@ def compute_faction_multiplier(
 
     is_own_faction = (
         task_faction_slug == character_faction_slug
-        or task_faction_slug == UNAFFILIATED_FACTION_SLUG
+        or task_faction_slug == CROSS_FACTION_SLUG
         or not task_faction_slug
     )
 

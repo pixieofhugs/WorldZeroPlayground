@@ -44,8 +44,11 @@ class Character(TimestampMixin, Base):
     avatar_url: Mapped[str] = mapped_column(String, nullable=False, server_default="")
     location: Mapped[str] = mapped_column(String, nullable=False, server_default="")
     # ADR-0019: characters are born Unaffiliated ("na"); factions are invite-gated.
-    # services.character.create_character always sets this explicitly — the default
-    # is only a backstop for direct inserts, and must not contradict ADR-0019.
+    # services.character.create_character always sets this explicitly, from
+    # era.starting_faction_slug (#1559) — that field, not this literal, is the
+    # live rule. The server_default stays a literal because it is baked into DDL
+    # by the migration: it is only a backstop for direct inserts, and must not
+    # contradict ADR-0019.
     # String FK: faction's primary key is its slug (ADR-0038), not an integer.
     faction_slug: Mapped[str] = mapped_column(
         String, ForeignKey("faction.slug"), nullable=False, server_default="na"
