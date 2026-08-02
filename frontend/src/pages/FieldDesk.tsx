@@ -37,7 +37,7 @@ import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
  * 1. "Whose shoes today?" — the roster: step back into a life, begin a new one,
  *    or take the order's correspondence. This is the page's established job and
  *    the ONLY desktop path to switching the carried character, so it keeps the
- *    top of the page.
+ *    top of the page. It is now CONDITIONAL — see the gate below.
  * 2. "What do I do now?" — continue-where-you-left-off over a tabbed browse
  *    (#1557's design). It is second because it is not addressed to anyone until
  *    question 1 is settled: "your drafts" and "tasks you can sign up for" are
@@ -47,6 +47,27 @@ import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
  * The design drew (2) as its own page. Owner ruling 2026-08-02: it merges in
  * here instead, because `/` for a signed-in desktop viewer IS this component —
  * routing it to `Home` would have silently orphaned all three roster controls.
+ *
+ * THE ROSTER IS GATED, NOT THE ROUTE (#1560)
+ * ------------------------------------------
+ * Owner ruling: a second life must not be advertised before the gate opens — a
+ * player discovers it at the era's `second_character_level_required`, and until
+ * then has no idea it exists. The padlocked "A second self awaits" dossier is
+ * gone, but hiding it alone made the leak louder, not quieter: the heading
+ * presumes a choice, the header chip counts lives that could be plural, and the
+ * closing line offered outright to "cut a new pair from whole cloth".
+ *
+ * #1560 was written when `/` was ONLY the roster, so it asked for the route to
+ * be gated. Since #1557 landed, `/` also carries "continue where you left off"
+ * and the browse — a pre-gate player still needs those. So the seam is the
+ * ROSTER SECTION (chip, heading, rule, cards, dossier, closing line), which is
+ * hidden as one piece unless it has a choice to offer. `rosterOffersAChoice`
+ * below is that rule, and the create-your-first-life path is inside it: an
+ * account with zero lives ALWAYS sees the roster, or signup dead-ends.
+ *
+ * The Albescent letter (#395) is deliberately OUTSIDE the gate. It converts an
+ * existing life rather than adding one, so it is a real control for a
+ * single-life pre-gate account and its own server flag already guards it.
  *
  * WHAT THIS PAGE DOES NOT DRAW
  * ----------------------------
@@ -70,8 +91,9 @@ export default function FieldDesk() {
   const { t: tHome } = useTranslation('home')
   const { user, refetch } = useAuth()
   const navigate = useNavigate()
-  const [lives, setLives] = useState<CharacterOut[]>([])
-  const [loading, setLoading] = useState(true)
+  // `null` until the roster lands — "not known yet" and "known to be empty" are
+  // different answers to the gate below, and one state cannot say both.
+  const [lives, setLives] = useState<CharacterOut[] | null>(null)
   const [switching, setSwitching] = useState<number | null>(null)
   const [signupMsg, setSignupMsg] = useState<string | null>(null)
 
@@ -83,7 +105,10 @@ export default function FieldDesk() {
   useEffect(() => {
     void getMyCharacters()
       .then(setLives)
-      .finally(() => setLoading(false))
+      // A failed read must still resolve to a KNOWN roster, or the page waits
+      // on `null` forever and a brand-new account never reaches "begin a new
+      // self". Empty is the same thing the old `finally` left behind.
+      .catch(() => setLives([]))
   }, [])
 
   const enterLife = async (id: number) => {
@@ -112,12 +137,15 @@ export default function FieldDesk() {
   }
 
   const active = user?.character ?? null
-  const gateLevel = user?.second_character_level_required ?? 0
-  const eraName = user?.era_name ?? ''
+  const carriesALife = Boolean(user?.character)
+  const canCreateAdditional = user?.can_create_additional_character ?? false
   // First life is always free; otherwise the server-computed flag is authoritative.
-  const unlocked = lives.length === 0 || (user?.can_create_additional_character ?? false)
-  const highestLevel = lives.reduce((max, life) => Math.max(max, life.level), 0)
-  const levelsToGo = Math.max(0, gateLevel - highestLevel)
+  const canBeginNewSelf = lives !== null && (lives.length === 0 || canCreateAdditional)
+  const showRoster = rosterOffersAChoice(lives, carriesALife, canCreateAdditional)
+  // "Is the drawer empty?" — settled outright once the roster lands. Before it
+  // does, the carried life is the best proof there is: an account playing
+  // someone has at least one. Keeps the heading from swapping under the viewer.
+  const drawerEmpty = lives === null ? !carriesALife : lives.length === 0
 
   // Phone + a carried life → the mobile-native home skin for that faction.
   if (formFactor === 'mobile' && homeState) {
@@ -127,70 +155,79 @@ export default function FieldDesk() {
 
   return (
     <div className="page" style={pageStyle}>
-      {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No account handle. */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
-        {active && (
-          <div style={pillStyle}>
-            {active.avatar_url ? (
-              <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
-            ) : (
-              <span style={{ ...pillAvatar, display: 'inline-block' }} />
+      {/* ── The roster (#1560: only when it has a choice to offer) ─────────── */}
+      {showRoster && (
+        <>
+          {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No
+              account handle. Inside the gate — a count is an invitation to make
+              it bigger, which is the thing being kept back. */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
+            {active && lives !== null && (
+              <div style={pillStyle}>
+                {active.avatar_url ? (
+                  <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
+                ) : (
+                  <span style={{ ...pillAvatar, display: 'inline-block' }} />
+                )}
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                  @{active.username} ·{' '}
+                  <b style={{ color: 'var(--color-text-primary)' }}>
+                    {t('fieldDesk.livesInPlay', { count: lives.length })}
+                  </b>
+                </span>
+              </div>
             )}
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
-              @{active.username} ·{' '}
-              <b style={{ color: 'var(--color-text-primary)' }}>
-                {t('fieldDesk.livesInPlay', { count: lives.length })}
-              </b>
-            </span>
           </div>
-        )}
-      </div>
 
-      <h1 style={headingStyle}>{t('fieldDesk.heading')}</h1>
-      <div style={rainbowUnderline} />
+          <h1 style={headingStyle}>
+            {/* "Whose shoes today?" presumes shoes. An account with none is being
+                asked to cut its first pair, not to choose between pairs. */}
+            {drawerEmpty ? t('fieldDesk.headingFirstLife') : t('fieldDesk.heading')}
+          </h1>
+          <div style={rainbowUnderline} />
 
-      {loading ? (
-        <p className="font-body text-muted" style={{ marginTop: 'var(--space-xl)' }}>{t('fieldDesk.loading')}</p>
-      ) : (
-        <div style={rosterRow}>
-          {lives.map((life, index) => (
-            <button
-              key={life.id}
-              type="button"
-              onClick={() => enterLife(life.id)}
-              disabled={switching != null}
-              className="fielddesk-life"
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-              title={t('fieldDesk.stepInto', { name: life.display_name })}
-            >
-              <CredentialCard
-                displayName={life.display_name}
-                handle={life.username}
-                bio={life.bio}
-                factionSlug={life.faction_slug}
-                level={life.level}
-                score={life.score}
-                avatarUrl={mediaUrl(life.avatar_url)}
-                rotation={TILTS[index % TILTS.length]}
-              />
-            </button>
-          ))}
+          {lives === null ? (
+            <p className="font-body text-muted" style={{ marginTop: 'var(--space-xl)' }}>{t('fieldDesk.loading')}</p>
+          ) : (
+            <div style={rosterRow}>
+              {lives.map((life, index) => (
+                <button
+                  key={life.id}
+                  type="button"
+                  onClick={() => enterLife(life.id)}
+                  disabled={switching != null}
+                  className="fielddesk-life"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  title={t('fieldDesk.stepInto', { name: life.display_name })}
+                >
+                  <CredentialCard
+                    displayName={life.display_name}
+                    handle={life.username}
+                    bio={life.bio}
+                    factionSlug={life.faction_slug}
+                    level={life.level}
+                    score={life.score}
+                    avatarUrl={mediaUrl(life.avatar_url)}
+                    rotation={TILTS[index % TILTS.length]}
+                  />
+                </button>
+              ))}
 
-          {/* "Begin a new self" dossier — locked/unlocked off the server flag. */}
-          <NewSelfDossier
-            unlocked={unlocked}
-            gateLevel={gateLevel}
-            eraName={eraName}
-            levelsToGo={levelsToGo}
-            onBegin={() => navigate('/characters/create')}
-          />
-        </div>
+              {/* "Begin a new self" — the dossier has no locked face any more
+                  (#1560). Either the slot is open and the card is here, or the
+                  offer is not made at all. */}
+              {canBeginNewSelf && <NewSelfDossier onBegin={() => navigate('/characters/create')} />}
+            </div>
+          )}
+        </>
       )}
 
       {/* The order's correspondence (#395) — account-collective invitation
           (ADR-0021), shown only while the server flag holds. Deliberately no
-          link to any faction surface (ADR-0027 secrecy). */}
-      {!loading && (user?.can_start_as_albescent ?? false) && (
+          link to any faction surface (ADR-0027 secrecy). OUTSIDE the roster gate:
+          it re-dresses a life the account already carries, so it is offered to a
+          single-life pre-gate account too. */}
+      {lives !== null && (user?.can_start_as_albescent ?? false) && (
         <AlbescentInvitation
           lives={lives}
           onJoined={async () => {
@@ -204,9 +241,11 @@ export default function FieldDesk() {
         />
       )}
 
-      <p style={footerHint}>
-        {t('fieldDesk.footer')}
-      </p>
+      {/* The line that closes the roster, so it says only what the roster above
+          it actually offers: both halves, lacing only, or the first pair. */}
+      {showRoster && lives !== null && (
+        <p style={footerHint}>{t(rosterFooterKey(lives.length, canCreateAdditional))}</p>
+      )}
 
       {/* ── "What do I do now?" (#1557) ──────────────────────────────────────
           Below the roster, and below the line that closes it: the roster names
@@ -225,57 +264,68 @@ export default function FieldDesk() {
   )
 }
 
-function NewSelfDossier({
-  unlocked,
-  gateLevel,
-  eraName,
-  levelsToGo,
-  onBegin,
-}: {
-  unlocked: boolean
-  gateLevel: number
-  eraName: string
-  levelsToGo: number
-  onBegin: () => void
-}) {
+/**
+ * Does the roster have a choice to offer? (#1560)
+ *
+ * A chooser with one option and no way to add one is a dead end, and — worse —
+ * it is a tell: it can only be read as "there is something here you cannot have
+ * yet". So the roster earns its place on three counts, any one of which is
+ * enough:
+ *   - ZERO lives — this is the create-your-first-life path, and it must never be
+ *     gated away or signup dead-ends (the roster is the only way in).
+ *   - MORE THAN ONE life — a genuine chooser, whatever the gate says.
+ *   - AN OPEN GATE — "begin a new self" is a control the viewer can use.
+ *
+ * `lives === null` means the roster read is still in flight. The count is not
+ * known yet, so the answer falls back to what `CurrentUser` alone can prove: no
+ * carried life needs the create-first path, and an open gate guarantees the
+ * dossier. Everyone else waits — a shut gate never flashes a heading it is about
+ * to take away.
+ */
+export function rosterOffersAChoice(
+  lives: CharacterOut[] | null,
+  carriesALife: boolean,
+  canCreateAdditional: boolean,
+): boolean {
+  if (lives === null) return !carriesALife || canCreateAdditional
+  return lives.length !== 1 || canCreateAdditional
+}
+
+/** The three closing lines the roster can honestly end on. */
+type FooterKey = 'fieldDesk.footer' | 'fieldDesk.footerFirstLife' | 'fieldDesk.footerNoNewSelf'
+
+/**
+ * Which closing line the roster earns (#1560).
+ *
+ * "Lace up an old one, or cut a new pair from whole cloth" names both halves of
+ * the roster, and was rendered unconditionally — which is how a pre-gate player
+ * was told about second lives in prose after the padlock was taken away. It is
+ * kept for the case where it is TRUE, and each half drops out when its offer
+ * does: nothing to lace up with an empty drawer, nothing to cut with a shut gate.
+ */
+export function rosterFooterKey(lifeCount: number, canCreateAdditional: boolean): FooterKey {
+  if (lifeCount === 0) return 'fieldDesk.footerFirstLife'
+  return canCreateAdditional ? 'fieldDesk.footer' : 'fieldDesk.footerNoNewSelf'
+}
+
+/**
+ * "Begin a new self" — the open slot.
+ *
+ * There is no locked face (#1560). The gate is answered by the caller: this card
+ * is mounted when the slot is open and absent when it is not, per CLAUDE.md's
+ * "hide unusable controls, don't show them disabled".
+ */
+function NewSelfDossier({ onBegin }: { onBegin: () => void }) {
   const { t } = useTranslation('common')
-  if (unlocked) {
-    return (
-      <button type="button" onClick={onBegin} style={dossierUnlocked} title={t('fieldDesk.beginNewSelfTitle')}>
-        <div style={folderTab} />
-        <div style={medallion}>+</div>
-        <div className="content-title" style={dossierTitle}>
-          {t('fieldDesk.beginNewSelf')}
-        </div>
-        <div style={slotOpen}>{t('fieldDesk.slotOpen')}</div>
-      </button>
-    )
-  }
   return (
-    <div style={dossierLocked} aria-disabled>
-      <div
-        style={{
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: padlock dingbat used as an icon, sized to its slot — not text
-          fontSize: 22,
-        }}
-      >
-        🔒
+    <button type="button" onClick={onBegin} style={dossierUnlocked} title={t('fieldDesk.beginNewSelfTitle')}>
+      <div style={folderTab} />
+      <div style={medallion}>+</div>
+      <div className="content-title" style={dossierTitle}>
+        {t('fieldDesk.beginNewSelf')}
       </div>
-      <div className="content-title" style={dossierTitleLocked}>
-        {t('fieldDesk.secondSelfAwaits')}
-      </div>
-      <div className="content-text" style={gateHintStyle}>
-        {t('fieldDesk.gateHint', {
-          gateLevel,
-          eraSuffix: eraName ? t('fieldDesk.gateHintEra', { eraName }) : '',
-        })}
-        <br />
-        <b style={{ color: 'var(--color-text-secondary)' }}>{t('fieldDesk.levelsToGo', { count: levelsToGo })}</b>
-      </div>
-      <div style={progressTrack}>
-        <div style={progressFill} />
-      </div>
-    </div>
+      <div style={slotOpen}>{t('fieldDesk.slotOpen')}</div>
+    </button>
   )
 }
 
@@ -609,19 +659,6 @@ const dossierTitle: CSSProperties = {
   fontWeight: 700,
   color: 'var(--color-text-primary)',
 }
-const dossierTitleLocked: CSSProperties = {
-  ...dossierTitle,
-  color: 'var(--color-text-secondary)',
-  marginTop: 'var(--space-sm)',
-}
-const gateHintStyle: CSSProperties = {
-  lineHeight: 1.6,
-  color: 'var(--color-text-tertiary)',
-  marginTop: 'var(--space-sm)',
-  // Container yields to type (§4 geometry doctrine): the hint reads at
-  // --text-content now, so it gets the dossier's full inner width.
-  maxWidth: 226,
-}
 const headingStyle: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontStyle: 'italic',
@@ -673,11 +710,6 @@ const dossierUnlocked: CSSProperties = {
   border: '1.5px dashed var(--color-border-strong)',
   cursor: 'pointer',
 }
-const dossierLocked: CSSProperties = {
-  ...dossierBase,
-  border: '1.5px dashed var(--color-border-strong)',
-  opacity: 0.7,
-}
 const folderTab: CSSProperties = {
   position: 'absolute',
   top: -1,
@@ -710,20 +742,4 @@ const slotOpen: CSSProperties = {
   marginTop: 'var(--space-lg)',
   borderTop: '1px solid var(--color-border-strong)',
   paddingTop: 'var(--space-md)',
-}
-const progressTrack: CSSProperties = {
-  width: 160,
-  height: 6,
-  borderRadius: 3,
-  marginTop: 'var(--space-lg)',
-  overflow: 'hidden',
-  background: 'var(--color-bg-surface)',
-  border: '1px solid var(--color-border-strong)',
-}
-// Narrower still — a 6px fill inside a 160px track, and only 45% of it drawn.
-// Three stops, which is --faction-default-eyebrow-rainbow (#1220, ADR-0066).
-const progressFill: CSSProperties = {
-  height: '100%',
-  width: '45%',
-  background: 'var(--faction-default-eyebrow-rainbow)',
 }
