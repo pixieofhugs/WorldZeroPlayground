@@ -77,7 +77,7 @@ Read only what your task needs.
 - Faction config: `factions.ts`. Use `factionCssVar()` for styles.
 - Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
 - Each faction has its own card archetype; don't unify
-- Reuse `.card-footer`, `.card-meta`, `.card-description` for repeated patterns
+- Reuse `.card-meta`, `.card-description` for repeated patterns
 - Hide unusable controls; don't show them disabled
 - Form factor (#494): a new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.
 
