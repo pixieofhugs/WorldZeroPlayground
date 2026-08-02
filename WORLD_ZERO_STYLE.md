@@ -494,6 +494,16 @@ A faction skin that wants a full-page ground reaches for `position: fixed; inset
 
 `z-index: 0` is neither, and it reads as if it were both. When an ornament lands over copy, the bug is almost always here rather than in the opacity.
 
+### The phone's bottom edge is spoken for, and `position: fixed` does not escape it (#1566)
+
+Two separate rules meet at the bottom 3.5rem of a phone viewport, and the filter bottom sheet broke both at once — on every filter surface in the app, since `OptionPicker` is shared by tasks, praxes and updates.
+
+**A fixed child cannot climb out of an ancestor's stacking context, and `z-index` is what makes that invisible.** The sheet sits at `z-index: 40` and `MobileTabBar` at `10`, so the sheet looks like it wins. It does not: `ShellContent`'s mobile region is `relative` with `z-index: 5`, which opens a stacking context, so *everything* inside it — the sheet at 40, its scrim at 39 — composites at 5 against a bar sitting at 10 in the **root** context. The bar paints over the sheet. That is why the report was "Done is cut off" rather than "Done is behind the tab bar": the number in the rule says the opposite of what renders. **When two fixed elements disagree about who is on top, read the ancestors before you read the z-indexes** — and note that raising the region's z-index is the wrong lever, because it puts ordinary page content over the bar.
+
+**Bottom chrome is a reservation, not a paint order.** The right fix is for anything pinned to the bottom of a phone viewport to reserve the strip the tab bar occupies. That strip is two things summed — the bar's height, then the home-indicator inset beneath it — and it was written out longhand as `calc(3.5rem + env(safe-area-inset-bottom))` in four files with no name before the sheet became the fifth consumer and reserved nothing at all. It is `--tab-bar-clearance` now, composed from `--tab-bar-height`. Two properties of it are worth knowing. **The height is measured, not declared** — the bar has no height rule for the token to read, so it is five `py-2` tabs at `--text-lg` under a 2px rule, and if that type moves nothing catches the drift. And **the `env()` half is currently inert**: without `viewport-fit=cover` on the viewport meta the browser already excludes the safe area from the layout viewport, so the inset resolves to `0px` — correct today, and correct on the day someone sets `viewport-fit`, which is exactly why it stays in the sum.
+
+The corollary at the sheet: **a `max-height` measured from `bottom: 0` is not the height it claims.** `70vh` was spending its last 3.5rem on chrome, so it grows by the clearance to go back to meaning 70vh of *usable* panel. And a panel with a pinned action gives the scroll to the **list**, not to itself — the label row and the Done button stay put, a long facet can never push the action below the fold, and the bottom padding stays out of a scrollport, where browsers have a long history of dropping it on a flex column.
+
 ---
 
 ## 6. Faction Card Archetypes

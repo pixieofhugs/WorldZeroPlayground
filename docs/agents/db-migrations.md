@@ -72,6 +72,25 @@ A squash invalidates the Alembic stamp in **every existing DB**.
   An **empty, unstamped** database is the goal: `check_db_stamp.stamp_is_known` passes a
   fresh DB, so the new image migrates it correctly.
 
+## The media disk survives every wipe ⚠️
+
+`MEDIA_ROOT` is a separate volume. Nothing above touches it — dropping the public schema,
+`reset_db.sh`, `alembic downgrade base`. So after any wipe **every file on disk is
+orphaned**, and because character ids restart at 1 the next character to sign up writes
+into the previous occupant's directory. That surprise is what produced #1565.
+
+Two tools, different jobs:
+
+- `backend/scripts/reset_render_db.py` **empties** `MEDIA_ROOT` as part of a Render reset
+  (`--keep-media` skips it). Blunt: it assumes the disk is meant to be empty, which is true
+  only in lockstep with the schema drop it accompanies.
+- `backend/scripts/sweep_orphan_media.py` **reconciles** disk against database — it removes
+  only files no `Character.avatar_url` or `MediaItem.file_path` row claims, so it is safe to
+  run against a live disk. Dry run by default; `--apply` to unlink.
+
+Use the sweep for anything a past wipe left behind, and for any environment (local,
+self-managed) reset by other means.
+
 ## CI is never affected
 
 Tests do **not** use migrations. `tests/integration/conftest.py` builds the schema

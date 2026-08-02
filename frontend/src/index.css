@@ -1725,6 +1725,23 @@
   --space-5xl: 64px;
   --space-6xl: 96px;
 
+  /* ── Mobile bottom-chrome clearance (#1566) ──
+     `MobileTabBar` is `fixed bottom-0` and ~3.5rem tall, and it pads ITSELF by
+     the home indicator. Anything else pinned to the bottom of a phone viewport
+     therefore owes that strip twice over — the bar's height, then the inset
+     beneath it — and the sum was written out by hand in four files with no
+     name: the shell's content region, the two character-path action bars and
+     the faction-detail action bar. A fifth surface (the filter bottom sheet)
+     reserved nothing at all and put its Done button behind the bar. One name
+     so the two halves of the sum can never disagree.
+     Theme-invariant, :root only, like --space-*.
+     ponytail: 3.5rem is the bar's MEASURED height (five `py-2` tabs set in
+     --text-lg under a 2px active rule), not a declared one — the bar has no
+     height property for this to read. If its type or padding moves, re-measure
+     here; nothing enforces the match. */
+  --tab-bar-height: 3.5rem;
+  --tab-bar-clearance: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
+
   /* ── Leaderboard rank colors (podium — stable across themes) ── */
   --rank-gold: #f59e0b;
   --rank-silver: #c49a3a;
@@ -5429,16 +5446,35 @@
 
 /* Same panel, anchored to the viewport instead of the trigger. One conditional
    in FactionPicker picks between these two classes; there is no second
-   component (#1313's precedent). */
+   component (#1313's precedent).
+
+   The bottom edge is the whole of #1566. Anchored at `bottom: 0` the sheet's
+   last child — Done — landed inside the tab bar's strip, and the sheet's
+   z-index does NOT save it: `ShellContent`'s mobile region is `relative` with
+   `z-index: 5`, which opens a stacking context, so 40 here is composited at 5
+   against a tab bar sitting at 10 in the ROOT context. The bar paints over the
+   sheet (and over the scrim), and Done reads as cut off. Reserving the strip is
+   the fix at this layer; raising the region's z-index would only put page
+   content over the bar.
+
+   `max-height` grows by the same clearance on purpose: 70vh measured from
+   `bottom: 0` was already spending its last 3.5rem on chrome, so the sheet
+   claimed a height it did not have. Adding the strip back keeps 70vh meaning
+   70vh of USABLE panel.
+
+   The rows region owns the scroll rather than the sheet, so head and Done are
+   pinned and a long facet can never push Done below the fold — and the bottom
+   padding stays out of a scrollport, where browsers have historically dropped
+   it on a flex column. */
 .filter-factions__sheet {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 40;
-  max-height: 70vh;
-  overflow: auto;
-  padding: var(--space-lg);
+  max-height: calc(70vh + var(--tab-bar-clearance));
+  padding: var(--space-lg) var(--space-lg)
+    calc(var(--space-lg) + var(--tab-bar-clearance));
   border-top: 1px solid var(--color-border-strong);
   border-radius: var(--space-lg) var(--space-lg) 0 0;
   background: var(--filter-well);
@@ -5468,6 +5504,16 @@
 .filter-factions__rows {
   display: flex;
   flex-direction: column;
+}
+
+/* Sheet-only: the option list is the scrolling part, so the label row and Done
+   stay put (#1566). `min-height: 0` is load-bearing — a flex item's default
+   `min-height: auto` refuses to shrink below its content, which would push the
+   sheet past its own max-height and take Done off-screen again. The popover has
+   no max-height and therefore nothing to scroll, so this stays scoped. */
+.filter-factions__sheet .filter-factions__rows {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .filter-factions__row {

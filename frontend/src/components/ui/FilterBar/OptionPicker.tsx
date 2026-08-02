@@ -32,12 +32,32 @@ const CHECK_GLYPH = '✓'
  * Dismissal is the trigger, the Done button, and Escape. Deliberately no
  * document-level click-outside listener: three routes is enough, and an effect
  * here would be untestable in a harness with no DOM.
+ *
+ * **An option-less facet draws nothing at all** (#1567). A facet may legitimately
+ * narrow itself to nothing — Updates' type facet hides zero-count rows, so on a
+ * quiet board every row drops off — and the trigger was still rendering, opening
+ * a panel with no rows in it and no explanation. That is a control that cannot
+ * be used, and this repo hides those rather than showing them disabled
+ * (CLAUDE.md; STYLE §1.4). It lives here rather than in `FilterBar`'s facet loop
+ * because this component is the one that knows whether it has anything to offer;
+ * the bar maps facets to pickers and should not reason about their contents.
+ *
+ * The control therefore comes and goes with activity. That cost is accepted: on
+ * a board with traffic it is always present, and it vanishes exactly when it had
+ * nothing to offer. A SELECTED value always keeps its row (see
+ * `typeFacetOptions` and `factionFacet`), so a deep link like `?types=nudge`
+ * leaves a non-empty list and the trigger still renders — the chip it raises
+ * stays removable both from the panel and from the applied-chip row.
  */
 export default function OptionPicker({ facet }: { facet: FilterFacet }) {
   const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   const isSheet = useFormFactor() === 'mobile'
   const { label, options, selected, onChange, renderOrnament } = facet
+
+  // After the hooks, never before: an early return above them is a conditional
+  // hook call, and `options` is a prop that changes as counts arrive.
+  if (options.length === 0) return null
 
   const panel = (
     <div

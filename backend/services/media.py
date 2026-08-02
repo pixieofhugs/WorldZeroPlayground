@@ -53,7 +53,9 @@ def _sanitize_filename(raw: str) -> str:
     return cleaned
 
 
-def _resolve_stored_media_path(stored_path: str) -> str | None:
+def resolve_stored_media_path(
+    stored_path: str, media_root: str | None = None
+) -> str | None:
     """Resolve a stored relative media path to an absolute path under MEDIA_ROOT.
 
     Returns ``None`` for anything this process must not touch on disk, which is
@@ -64,6 +66,17 @@ def _resolve_stored_media_path(stored_path: str) -> str | None:
     ``http(s)`` URL. Absolute filesystem paths and ``..`` escapes are refused
     for the same reason ``_sanitize_filename`` exists — a value that resolves
     outside ``MEDIA_ROOT`` is not a file we wrote.
+
+    This is the single "is this a file we own?" predicate. Every caller that
+    turns a stored column value into a filesystem operation goes through it —
+    the upload path, character self-deletion (#1568) and the orphan sweep
+    (``services.media_sweep``) — because unlinking whatever a 500-char
+    player-supplied column happens to hold is a path-traversal primitive.
+
+    ``media_root`` overrides ``settings.MEDIA_ROOT`` for callers that resolve
+    settings themselves rather than from the process environment: the sweep
+    script loads a ``Settings`` for ``--env prod`` and must ask about *that*
+    disk, not this process's.
     """
     if not stored_path:
         return None
@@ -71,27 +84,36 @@ def _resolve_stored_media_path(stored_path: str) -> str | None:
         return None
     if os.path.isabs(stored_path):
         return None
-    media_root = os.path.realpath(settings.MEDIA_ROOT)
-    resolved = os.path.realpath(os.path.join(media_root, stored_path))
-    if not resolved.startswith(media_root + os.sep):
+    resolved_root = os.path.realpath(media_root or settings.MEDIA_ROOT)
+    resolved = os.path.realpath(os.path.join(resolved_root, stored_path))
+    if not resolved.startswith(resolved_root + os.sep):
         return None
     return resolved
 
 
-def _remove_superseded_avatar(previous_avatar_url: str | None) -> None:
-    """Delete the avatar a fresh upload has just replaced, best-effort.
+def delete_stored_avatar(stored_avatar_url: str | None) -> None:
+    """Unlink an avatar file we wrote, best-effort. Two callers, one rule.
 
-    Called only after the replacement is safely on disk: an upload must never
-    leave a character with a dead ``avatar_url``, so a failure to unlink is
-    logged and swallowed rather than raised.
+    1. A fresh upload has superseded it (``process_and_save_avatar``). Called
+       only once the replacement is safely on disk — an upload must never leave
+       a character with a dead ``avatar_url``.
+    2. The player has ended this life (``services.character.soft_delete_character``,
+       #1568). Self-deletion is the *only* path that erases: an admin ban leaves
+       every file alone, because moderation must not shred the evidence it is
+       acting on and a ban is a reversible toggle.
+
+    Best-effort in both: a failure to unlink is logged and swallowed rather than
+    raised, so a filesystem problem can never block the state change the caller
+    is really making. The residue is an orphan, which
+    ``scripts/sweep_orphan_media.py`` exists to collect.
     """
-    absolute_path = _resolve_stored_media_path(previous_avatar_url or "")
+    absolute_path = resolve_stored_media_path(stored_avatar_url or "")
     if absolute_path is None:
         return
     try:
         os.remove(absolute_path)
     except OSError:
-        logger.info("Could not remove superseded avatar %s", absolute_path)
+        logger.info("Could not remove avatar file %s", absolute_path)
         return
     # Each upload owns its directory, so the unlink leaves that directory empty.
     # rmdir refuses a non-empty one, which is exactly the guard we want for
@@ -172,7 +194,7 @@ async def process_and_save_avatar(
         )
 
     # Only once the replacement is safely on disk.
-    _remove_superseded_avatar(previous_avatar_url)
+    delete_stored_avatar(previous_avatar_url)
 
     return relative_path
 
@@ -243,6 +265,8 @@ __all__ = [
     "AVATAR_MAX_SIZE",
     "MEDIA_FILENAME_MAX_LEN",
     "MEDIA_MAX_BYTES",
+    "delete_stored_avatar",
     "process_and_save_avatar",
     "process_and_save_media",
+    "resolve_stored_media_path",
 ]

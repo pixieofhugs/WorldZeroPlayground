@@ -17,6 +17,7 @@ from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
+from services.media import delete_stored_avatar
 
 # Status set for the account-scoped roster: a player's own lives, excluding
 # banned. Kept as a set even though `active` is currently its only member — the
@@ -476,10 +477,39 @@ async def soft_delete_character(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> None:
+    """End a life at the player's own request, and erase its avatar (#1568).
+
+    "Soft" is literal: there is no hard delete anywhere in the codebase, and
+    this sets ``status = banned`` — the same *state* an admin ban lands in.
+    The two paths are nevertheless split on media, and this is the erasing one:
+
+    * **Self-deletion** (``DELETE /characters/{id}``, which 403s on anyone
+      else's, so the caller is always ending their own life) unlinks the
+      avatar file and clears the column.
+    * **Moderator ban** (``POST /admin/characters/{id}/ban``) deletes nothing.
+      Moderation must not shred the evidence it is acting on, and a ban is a
+      reversible toggle — destroying files on it would restore a character
+      with holes in it. That route sets ``status`` directly and deliberately
+      does not call this function; keep it that way.
+
+    **Praxis media survives both.** It is the public artefact of work other
+    players have voted on and built feeds around; removing it retroactively
+    would leave praxis cards with missing images across other people's history.
+
+    The column is cleared before the unlink so the row never points at a file
+    that is gone. The unlink itself is the last thing this function does, and
+    is deliberately *not* transactional — the router owns the commit (``db.get_db``),
+    so a commit that failed after the unlink would leave a file deleted and a
+    row rolled back. Doing it last makes that window as small as it can be
+    without moving filesystem I/O into the route handler; the failure mode is a
+    dead ``avatar_url``, which the next upload overwrites.
+    """
     character = await get_character_by_id(character_id, session)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
     character.status = CharacterStatus.banned
+    erased_avatar_url = character.avatar_url
+    character.avatar_url = ""
 
     # ADR-0011 §Forfeit (#307): a ban forfeits every *settled* duel the banned
     # character is a side of — the opponent wins by default. Sticky: leave duels
@@ -523,6 +553,10 @@ async def soft_delete_character(
                 winner_id, session, era, era_row=era_row
             )
         await session.flush()
+
+    # Last, and only after the cleared column has been flushed: see the docstring.
+    # A no-op when the column held a pasted remote URL rather than a path we wrote.
+    delete_stored_avatar(erased_avatar_url)
 
 
 def _character_stats_era_join(era_id: int | None) -> Select:
