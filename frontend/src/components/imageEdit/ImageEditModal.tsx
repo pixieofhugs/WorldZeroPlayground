@@ -5,6 +5,11 @@
  * the caller uploads through the EXISTING upload function. "Use original" skips
  * the canvas entirely and returns the untouched File.
  *
+ * "Use original" is the ONLY silent pass-through a player can be given without
+ * being told: it is their choice. When processing fails instead, the modal
+ * reports through `onError` rather than uploading the unprocessed file behind
+ * their back (#1527) — the decision table lives in `applyImageEdit`.
+ *
  * One reusable component drives both call sites: praxis media (free-form frame
  * that follows the image's natural ratio) and character avatars (locked 1:1).
  *
@@ -18,12 +23,14 @@ import Cropper from 'react-easy-crop'
 import type { Area, MediaSize, Point } from 'react-easy-crop'
 import { useTranslation } from 'react-i18next'
 import {
+  applyImageEdit,
   cropOutputSize,
   effectiveAspect,
   originalUpload,
   rotateSize,
   toRadians,
 } from './imageEditHelpers'
+import type { ApplyFailureReason } from './imageEditHelpers'
 
 const PAPER = 'var(--color-bg-page)'
 const INK = 'var(--color-text-primary)'
@@ -50,6 +57,17 @@ export interface ImageEditModalProps {
   onConfirm: (blob: Blob) => void
   /** Dismiss without uploading. */
   onCancel: () => void
+  /**
+   * Report a processing failure as a caller-scoped message (#1527). The
+   * character screens pass their picker's `setAvatarError` (#985) so the failure
+   * lands on the same line as an over-size pick, and the modal closes so that
+   * line is visible.
+   *
+   * Omit it and a failure keeps the historical behaviour — the untouched file is
+   * uploaded silently. Praxis media is deliberately left on that path for now
+   * (it has no avatar-scoped error line; see the useAvatarPicker docblock).
+   */
+  onError?: (message: string) => void
 }
 
 /** Load an <img> from an object URL (canvas source). Not unit-tested (needs DOM). */
@@ -112,6 +130,7 @@ export default function ImageEditModal({
   aspect,
   onConfirm,
   onCancel,
+  onError,
 }: ImageEditModalProps) {
   const { t } = useTranslation('common')
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
@@ -150,25 +169,30 @@ export default function ImageEditModal({
   const rotateBy = (delta: number) =>
     setRotation((previous) => (previous + delta + 360) % 360)
 
+  const failureMessage = (reason: ApplyFailureReason): string =>
+    reason === 'not-ready' ? t('imageEdit.errorNotReady') : t('imageEdit.errorFailed')
+
+  // A failure reports on the caller's error line and closes, so the message is
+  // not hidden behind this overlay (#1527). Without a channel to report on, the
+  // helper keeps the old silent pass-through.
+  const handleFailure = onError
+    ? (reason: ApplyFailureReason) => {
+        onError(failureMessage(reason))
+        onCancel()
+      }
+    : undefined
+
   const handleApply = async () => {
-    // Belt-and-suspenders for #569: a GIF should never be canvas-encoded (that
-    // flattens it to its first frame), so short-circuit to the untouched file.
-    if (file.type === 'image/gif') {
-      onConfirm(originalUpload(file))
-      return
-    }
-    const area = croppedAreaRef.current
-    if (!objectUrl || !area) {
-      // Nothing to slice yet — fall back to the untouched file.
-      onConfirm(originalUpload(file))
-      return
-    }
     setApplying(true)
     try {
-      const blob = await renderCroppedBlob(objectUrl, area, rotation, file.type)
-      onConfirm(blob ?? originalUpload(file))
-    } catch {
-      onConfirm(originalUpload(file))
+      await applyImageEdit({
+        file,
+        objectUrl,
+        cropArea: croppedAreaRef.current,
+        render: (source, area) => renderCroppedBlob(source, area, rotation, file.type),
+        onConfirm,
+        onFailure: handleFailure,
+      })
     } finally {
       setApplying(false)
     }

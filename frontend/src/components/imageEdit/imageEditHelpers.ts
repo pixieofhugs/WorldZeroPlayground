@@ -63,13 +63,19 @@ export function isImageFile(file: { type: string }): boolean {
 }
 
 /**
+ * The one format that must never be canvas-encoded (#569) — see
+ * {@link isCropEditableImage} and {@link applyImageEdit}.
+ */
+export const GIF_MIME_TYPE = 'image/gif'
+
+/**
  * True when an image can safely go through the crop/rotate stage. Animated GIFs
  * are excluded (#569): the edit modal canvas-encodes on "Apply", which only ever
  * captures the first frame, so a cropped GIF loses its animation. GIFs upload
  * straight through untouched instead.
  */
 export function isCropEditableImage(file: { type: string }): boolean {
-  return isImageFile(file) && file.type !== 'image/gif'
+  return isImageFile(file) && file.type !== GIF_MIME_TYPE
 }
 
 /**
@@ -108,4 +114,82 @@ export function blobToFile(blob: Blob, originalName: string): File {
   const extension = blob.type === 'image/png' ? 'png' : 'jpg'
   const base = originalName.replace(/\.[^./\\]+$/, '') || 'image'
   return new File([blob], `${base}.${extension}`, { type: blob.type })
+}
+
+/**
+ * Why "Apply" could not produce a cropped image (#1527). Reasons, not messages:
+ * the copy lives in the i18n catalog, so this stays DOM- and locale-free.
+ *
+ * - `not-ready` — no object URL or no crop rect yet. The cropper reports the rect
+ *   through `onCropComplete`, which only fires once the image has decoded, so an
+ *   image the browser cannot decode sits here forever.
+ * - `render-failed` — the canvas pipeline gave up: no 2d context, `toBlob`
+ *   returned null, or the source image failed to load and the render threw.
+ */
+export type ApplyFailureReason = 'not-ready' | 'render-failed'
+
+export interface ApplyImageEditOptions {
+  /** The picked source image. */
+  file: File
+  /** Object URL backing the cropper, null before the effect has minted it. */
+  objectUrl: string | null
+  /** The crop rect the cropper last reported, null before it has reported one. */
+  cropArea: Area | null
+  /** Draw the crop to a canvas and hand back the encoded blob (null on failure). */
+  render: (objectUrl: string, cropArea: Area) => Promise<Blob | null>
+  /** Hand the upload to the caller — a cropped blob, or the untouched File. */
+  onConfirm: (blob: Blob) => void
+  /**
+   * Report a processing failure. Omit and a failure falls back to uploading the
+   * untouched file, which is what every path did before #1527.
+   */
+  onFailure?: (reason: ApplyFailureReason) => void
+}
+
+/**
+ * Decide what "Apply" does, with the canvas injected so the decision is testable
+ * without a DOM.
+ *
+ * Before #1527 every one of these branches ended in `onConfirm(originalUpload)`:
+ * a file the browser could not process was uploaded untouched, with nothing
+ * distinguishing "cropped" from "gave up". The player saw a portrait that never
+ * changed and no error anywhere. Failures now report instead of confirming — the
+ * caller decides where that shows (the avatar screens use their `avatarError`
+ * line, #985).
+ *
+ * The GIF short-circuit is NOT a failure and keeps its silent pass-through:
+ * canvas-encoding a GIF flattens it to its first frame (#569).
+ */
+export async function applyImageEdit({
+  file,
+  objectUrl,
+  cropArea,
+  render,
+  onConfirm,
+  onFailure,
+}: ApplyImageEditOptions): Promise<void> {
+  if (file.type === GIF_MIME_TYPE) {
+    onConfirm(originalUpload(file))
+    return
+  }
+  const fail = (reason: ApplyFailureReason): void => {
+    if (onFailure) onFailure(reason)
+    else onConfirm(originalUpload(file))
+  }
+  if (!objectUrl || !cropArea) {
+    fail('not-ready')
+    return
+  }
+  let blob: Blob | null
+  try {
+    blob = await render(objectUrl, cropArea)
+  } catch {
+    fail('render-failed')
+    return
+  }
+  if (!blob) {
+    fail('render-failed')
+    return
+  }
+  onConfirm(blob)
 }
