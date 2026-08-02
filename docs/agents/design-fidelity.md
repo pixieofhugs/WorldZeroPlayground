@@ -69,5 +69,7 @@ So visual verification is a **separate gate**, and it is split:
   success without resizing.
 - **A human** does the mobile looking. Nothing in the toolchain covers it.
 
-Related: ADR-0049 (score stamp as a manifest surface), ADR-0050 (WOW/Coven
+Related: `docs/kit-structure.md` (what the kit is shaped like — the surface list,
+why each faction gets a bespoke component, and the two ways a faction silently
+loses one), ADR-0049 (score stamp as a manifest surface), ADR-0050 (WOW/Coven
 identity), `docs/spec/SPEC-faction-ui-profile.md`.
