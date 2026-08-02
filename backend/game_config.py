@@ -92,7 +92,6 @@ class EraConfig:
 
     # Task rules
     max_task_signups: int            # max concurrent in_progress praxes per character
-    max_duel_participants: int       # max members in a duel praxis
 
     # Vote budget: available = base + (multiplier x score)
     vote_budget_base: int
@@ -128,7 +127,6 @@ class EraConfig:
     # Character account / faction gates (enforced in services/character.py and faction_service.py)
     second_character_level_required: int  # min level on an existing char to create another
     albescent_level_required: int         # min level on an existing char to start a new Albescent
-    faction_graduation_level: int         # DORMANT — old level gate, retired by ADR-0022
     # ADR-0022 invitation delivery: a character earns faction X's invite once it has
     # >= invitation_task_threshold completed tasks for X AND >= invitation_point_threshold
     # points from X's tasks (both per-character, faction-scoped, era-scoped).

@@ -19,8 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.task import Task
+from services import collab_consensus
 from services import media as media_service
-from services import praxis as praxis_service
 
 
 def _jpeg_bytes(width: int = 32, height: int = 32) -> bytes:
@@ -249,15 +249,13 @@ async def test_pending_publish_cancelled_once_per_batch(
     """ADR-0012: the shared document is edited once by a batch, not once per file."""
     praxis_id = await _in_progress_solo(client, active_task, auth_headers)
     calls: list[int] = []
-    original = praxis_service.cancel_pending_publish_on_edit
+    original = collab_consensus.on_member_edit
 
-    async def _spy(praxis, session, era=None, **kwargs):
+    async def _spy(praxis, session, *args, **kwargs):
         calls.append(praxis.id)
-        if era is None:
-            return await original(praxis, session)
-        return await original(praxis, session, era)
+        return await original(praxis, session, *args, **kwargs)
 
-    monkeypatch.setattr(praxis_service, "cancel_pending_publish_on_edit", _spy)
+    monkeypatch.setattr(collab_consensus, "on_member_edit", _spy)
 
     response = await client.post(
         f"/praxes/{praxis_id}/media/batch",
@@ -281,10 +279,10 @@ async def test_pending_publish_not_cancelled_when_every_file_fails(
     praxis_id = await _in_progress_solo(client, active_task, auth_headers)
     calls: list[int] = []
 
-    async def _spy(praxis, session, era=None, **kwargs):
+    async def _spy(praxis, session, *args, **kwargs):
         calls.append(praxis.id)
 
-    monkeypatch.setattr(praxis_service, "cancel_pending_publish_on_edit", _spy)
+    monkeypatch.setattr(collab_consensus, "on_member_edit", _spy)
 
     response = await client.post(
         f"/praxes/{praxis_id}/media/batch",

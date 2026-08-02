@@ -62,8 +62,8 @@ def test_level_6_has_no_hard_gate_sense_only():
 
 
 def test_faction_choice_is_not_a_grounded_ability_anywhere():
-    """faction_graduation_level is DORMANT (services/faction_service.py has no
-    level check on faction choice) — it must not be cited as a grounded gate."""
+    """services/faction_service.py has no level check on faction choice — it is
+    gated by invitation (ADR-0022), so no level may cite it as a grounded gate."""
     for profile in ERA_1.level_profiles:
         for unlock in profile.unlocks:
             if unlock.kind == LevelUnlockKind.ability:

@@ -28,36 +28,15 @@ def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
     return era.metatasks_per_praxis_base
 
 
-async def get_meta_task_points(
-    praxis_id: int, character_level: int, session: AsyncSession
-) -> int:
-    """Return flat bonus points from metatask tasks attached to a praxis.
-
-    A metatask is a Task row with ``task_type == TaskType.metatask``. Its flat
-    bonus is ``task.point_value``. Applied only when the viewing character
-    meets the metatask's own ``level_required``. Sums across every attached
-    metatask; standard tasks should never be linked here (service guards
-    prevent that) but are defensively skipped if encountered.
-    """
-    result = await session.execute(
-        select(Task)
-        .join(PraxisMetaTask, PraxisMetaTask.task_id == Task.id)
-        .where(PraxisMetaTask.praxis_id == praxis_id)
-    )
-    total = 0
-    for task in result.scalars().all():
-        if task.task_type != TaskType.metatask:
-            continue
-        if character_level < task.level_required:
-            continue
-        total += int(task.point_value)
-    return total
-
-
 async def get_meta_task_points_bulk(
     praxis_ids: list[int], character_level: int, session: AsyncSession
 ) -> dict[int, int]:
-    """Bulk version of ``get_meta_task_points`` — one query for many praxes.
+    """Flat bonus points from the metatasks attached to each praxis — one query.
+
+    A metatask's flat bonus is ``task.point_value``, applied only when the
+    viewing character meets the metatask's own ``level_required``. Standard
+    tasks should never be linked here (service guards prevent that) but are
+    defensively skipped if encountered.
 
     Returns ``{praxis_id: total_points}`` with zero entries for praxes whose
     attached tasks don't qualify. Praxes with no attached metatasks are

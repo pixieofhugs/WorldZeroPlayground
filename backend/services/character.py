@@ -16,7 +16,6 @@ from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
-from services.scoring import compute_level, compute_vote_budget
 
 # Status set for the account-scoped roster: a player's own lives, excluding banned.
 _ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset(
