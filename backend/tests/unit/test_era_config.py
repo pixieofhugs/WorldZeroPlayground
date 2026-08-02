@@ -99,67 +99,29 @@ def test_reset_all_time_score_is_false():
 # ---------------------------------------------------------------------------
 
 
-def test_era1_has_tasks():
-    assert len(ERA_1.tasks) > 0
+def test_era1_ships_no_config_tasks():
+    """Era 1's board is authored in the admin UI, not in the era config (#1398).
 
-
-def test_era1_task_count():
-    # 45 pre-#904 (46 minus snide's removed L0 "FLIP THE SYSTEM", #511) + 14 new
-    # faction tasks (#904: coven 6, snide 4, singularity 2, ephemerists 1,
-    # everymen 1).
-    assert len(ERA_1.tasks) == 59
+    This is a guard, not a formality. ``seed.py::sync_era_tasks`` re-adds every
+    config task missing from the database, and ``start.sh`` runs the seeder on
+    every production deploy — so a ``TaskDef`` restored to this tuple would
+    resurrect itself the deploy after an admin deleted it from the board. The
+    field itself is not going away: a future era may well ship a fixed roster.
+    """
+    assert ERA_1.tasks == ()
 
 
 def test_era1_config_has_no_level_zero_tasks():
     """#511: level 0 is reserved for the single game-wide onboarding task, which
-    is seeded in seed.py (not era config). No era-config task may be level 0."""
+    is seeded in seed.py (not era config). No era-config task may be level 0.
+
+    Vacuous while ``ERA_1.tasks`` is empty, and kept for the era that isn't.
+    """
     level_zero = [task for task in ERA_1.tasks if task.level_required == 0]
     assert level_zero == [], (
         f"Era config must have no level-0 tasks (#511); found: "
         f"{[task.title for task in level_zero]}"
     )
-
-
-def test_era1_every_faction_except_albescent_has_six_tasks_in_levels_one_to_seven():
-    """#904: every faction with roster content reaches >=6 tasks in levels 1-7.
-
-    Albescent stays at 1 by design (it hides — ADR-0048). na is a system
-    faction with no roster content. WOW/UA already qualify and are untouched.
-    """
-    exempt = {"albescent", "na"}
-    counts: dict[str, int] = {}
-    for task in ERA_1.tasks:
-        if 1 <= task.level_required <= 7:
-            counts[task.faction_slug] = counts.get(task.faction_slug, 0) + 1
-    for slug in ERA_1.factions:
-        if slug in exempt:
-            continue
-        assert counts.get(slug, 0) >= 6, (
-            f"Faction '{slug}' has {counts.get(slug, 0)} tasks in levels 1-7; "
-            f"needs >=6 (#904)"
-        )
-
-
-def test_era1_new_faction_tasks_follow_the_point_ramp():
-    """#904: L1->5, L2->10, L3->25, L4->50, L5->75, L6->100, L7->500."""
-    ramp = {1: 5, 2: 10, 3: 25, 4: 50, 5: 75, 6: 100, 7: 500}
-    new_titles = {
-        "A Light Left On", "Mend, Don't End", "The Comfort Bake",
-        "Gather the Weird Ones", "A Room That Holds You",
-        "Keep a Light On All Year", "Ruin a Perfectly Good Thing",
-        "Steelman Your Enemy", "Unsanctioned Maintenance",
-        "Organize the Ungovernable", "Sort Your Life",
-        "The Map Is the Territory", "Archive of a Single Hour", "The Commons",
-    }
-    seen = set()
-    for task in ERA_1.tasks:
-        if task.title in new_titles:
-            seen.add(task.title)
-            assert task.point_value == ramp[task.level_required], (
-                f"Task '{task.title}' (L{task.level_required}) should be worth "
-                f"{ramp[task.level_required]}, got {task.point_value}"
-            )
-    assert seen == new_titles, f"Missing #904 tasks: {new_titles - seen}"
 
 
 def test_era1_task_faction_slugs_valid():

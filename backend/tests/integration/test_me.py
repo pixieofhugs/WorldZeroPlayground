@@ -39,7 +39,7 @@ async def _add_character(
 
 
 @pytest.mark.asyncio
-async def test_my_characters_excludes_banned_includes_paused(
+async def test_my_characters_excludes_banned(
     client: AsyncClient,
     db_session: AsyncSession,
     account: Account,
@@ -48,14 +48,20 @@ async def test_my_characters_excludes_banned_includes_paused(
     faction_ua: Faction,
     auth_headers: dict,
 ):
-    paused = await _add_character(db_session, account, era, username="pausedlife", status=CharacterStatus.paused)
+    """The roster is every life on the account except the banned ones.
+
+    ``CharacterStatus.paused`` was removed in the #1398 squash — nothing ever
+    wrote it — so "not banned" now means "active"; the rule this asserts is
+    unchanged.
+    """
+    second = await _add_character(db_session, account, era, username="secondlife")
     await _add_character(db_session, account, era, username="bannedlife", status=CharacterStatus.banned)
 
     resp = await client.get("/me/characters", headers=auth_headers)
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
     assert character.id in ids
-    assert paused.id in ids
+    assert second.id in ids
     assert len(ids) == 2  # banned excluded
 
 
@@ -134,9 +140,11 @@ async def test_switch_active_character_non_active_rejected(
     faction_ua: Faction,
     auth_headers: dict,
 ):
-    paused = await _add_character(db_session, account, era, username="pausedlife", status=CharacterStatus.paused)
+    banned = await _add_character(
+        db_session, account, era, username="bannedlife", status=CharacterStatus.banned
+    )
     resp = await client.post(
-        "/me/active-character", json={"character_id": paused.id}, headers=auth_headers
+        "/me/active-character", json={"character_id": banned.id}, headers=auth_headers
     )
     assert resp.status_code == 409
 

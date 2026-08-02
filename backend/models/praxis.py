@@ -2,7 +2,20 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Identity,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -69,8 +82,18 @@ class PraxisInviteStatus(enum.Enum):
 class Praxis(TimestampMixin, Base):
     __tablename__ = "praxis"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    task_id: Mapped[int] = mapped_column(ForeignKey("task.id"), nullable=False)
+    __table_args__ = (
+        # The stats recalc gathers every praxis by author after each vote, and
+        # the board reads praxes per task on list, tally and signup count
+        # (#1393).
+        Index("ix_praxis_created_by_id", "created_by_id"),
+        Index("ix_praxis_task_id", "task_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    task_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("task.id"), nullable=False
+    )
     type: Mapped[PraxisType] = mapped_column(
         Enum(PraxisType, create_type=False), nullable=False
     )
@@ -102,7 +125,25 @@ class Praxis(TimestampMixin, Base):
     submit_proposed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    created_by_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
+    created_by_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
+    # The era this praxis was SEALED in — stamped alongside `submitted_at` on the
+    # transition to `submitted` (`services/collab_consensus._apply_seal`, the one
+    # writer of both). NULL while the praxis is still open, and NULL forever on
+    # any praxis sealed before this column existed.
+    #
+    # It exists because "which era does this score belong to?" cannot be answered
+    # from `submitted_at`: an era reset inserts the new `Era` row inside the same
+    # transaction that closes the old one (`services/era.apply_era_reset`), so a
+    # timestamp comparison against `era.started_at` sits a hair on the wrong side
+    # of the boundary — the same trap `duel.resolved_era_id` was added for
+    # (#823). #1345's era-bounded score recalculation becomes a WHERE clause on
+    # this column instead of a timestamp range; that fix rides its own PR, so
+    # nothing reads this column yet.
+    era_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("era.id"), nullable=True
+    )
 
     task: Mapped["Task"] = relationship(
         "Task", back_populates="praxes", lazy="selectin"
@@ -164,9 +205,13 @@ class PraxisMember(Base):
         UniqueConstraint("praxis_id", "character_id", name="uq_praxis_member"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    praxis_id: Mapped[int] = mapped_column(ForeignKey("praxis.id"), nullable=False)
-    character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    praxis_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("praxis.id"), nullable=False
+    )
+    character_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
     has_submitted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
@@ -190,8 +235,14 @@ class PraxisMember(Base):
 class MediaItem(CreatedAtMixin, Base):
     __tablename__ = "media_item"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    praxis_id: Mapped[int] = mapped_column(ForeignKey("praxis.id"), nullable=False)
+    # Selectin-loaded on every praxis detail, plus the display-order max on
+    # upload (#1393).
+    __table_args__ = (Index("ix_media_item_praxis_id", "praxis_id"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    praxis_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("praxis.id"), nullable=False
+    )
     type: Mapped[MediaType] = mapped_column(
         Enum(MediaType, create_type=False), nullable=False
     )
@@ -206,10 +257,16 @@ class MediaItem(CreatedAtMixin, Base):
 class PraxisInvite(CreatedAtMixin, Base):
     __tablename__ = "praxis_invite"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    praxis_id: Mapped[int] = mapped_column(ForeignKey("praxis.id"), nullable=False)
-    inviter_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
-    invitee_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    praxis_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("praxis.id"), nullable=False
+    )
+    inviter_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
+    invitee_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
     status: Mapped[PraxisInviteStatus] = mapped_column(
         Enum(PraxisInviteStatus, create_type=False),
         nullable=False,

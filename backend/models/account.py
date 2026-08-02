@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Boolean, Enum, ForeignKey, String
+from sqlalchemy import BigInteger, Boolean, Enum, ForeignKey, Identity, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -12,15 +12,24 @@ if TYPE_CHECKING:
 
 
 class AccountStatus(enum.Enum):
+    """Account lifecycle. ``suspended`` is the only non-``active`` state written.
+
+    There is no ``deleted``: nothing in the codebase ever set it, and the two
+    gates that read status (``dependencies.py``, ``services/auth.py``) test for
+    ``active`` — so a `deleted` account behaved exactly like a suspended one
+    while implying an account-erasure flow that does not exist. Removed in the
+    #1398 squash rather than left as a value the DB would accept and no code
+    could produce.
+    """
+
     active = "active"
     suspended = "suspended"
-    deleted = "deleted"
 
 
 class Account(TimestampMixin, Base):
     __tablename__ = "account"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     status: Mapped[AccountStatus] = mapped_column(
         Enum(AccountStatus, create_type=False), nullable=False, default=AccountStatus.active
@@ -29,6 +38,7 @@ class Account(TimestampMixin, Base):
     # Nullable: a 0-life account, or one that has not switched yet. use_alter avoids a
     # chicken-and-egg DDL cycle with character.account_id → account.id.
     active_character_id: Mapped[int | None] = mapped_column(
+        BigInteger,
         ForeignKey("character.id", use_alter=True, name="fk_account_active_character"),
         nullable=True,
     )
@@ -56,11 +66,17 @@ class Account(TimestampMixin, Base):
 class OAuthProvider(TimestampMixin, Base):
     __tablename__ = "oauth_provider"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("account.id"), nullable=False
+    )
     provider: Mapped[str] = mapped_column(String, nullable=False)
     provider_user_id: Mapped[str] = mapped_column(String, nullable=False)
-    access_token: Mapped[str] = mapped_column(String, nullable=False)
+    # No `access_token` (#1374). The Google token was written once at sign-in
+    # and read by nothing: World Zero authenticates with its own JWT and never
+    # calls a Google API on the player's behalf. Storing a live third-party
+    # credential that no code path uses is pure liability, so the column is
+    # gone rather than nulled.
 
     account: Mapped["Account"] = relationship(
         "Account", back_populates="oauth_providers", lazy="raise"

@@ -47,11 +47,13 @@ async def auth_google_callback(
     token = await _OAUTH.google.authorize_access_token(request)
     user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
 
+    # Google's access token is used here and then discarded (#1374): it proves
+    # this sign-in, and nothing afterwards calls a Google API as the player. The
+    # session that follows is World Zero's own JWT.
     account = await create_or_get_account(
         provider="google",
         provider_user_id=user_info["sub"],
         email=user_info["email"],
-        access_token=token.get("access_token", ""),
         session=session,
     )
 
@@ -132,7 +134,6 @@ async def dev_login(
         provider="dev",
         provider_user_id=provider_user_id,
         email=email,
-        access_token="",
         session=session,
     )
 

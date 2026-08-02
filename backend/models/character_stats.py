@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Identity,
+    Integer,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -24,9 +32,13 @@ class CharacterStats(Base):
     __tablename__ = "character_stats"
     __table_args__ = (UniqueConstraint("character_id", "era_id"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
-    era_id: Mapped[int] = mapped_column(ForeignKey("era.id"), nullable=False)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    character_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
+    era_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("era.id"), nullable=False
+    )
     score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     all_time_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     level: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")

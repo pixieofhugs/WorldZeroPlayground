@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Identity,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -25,15 +33,16 @@ class FactionDefectionHistory(Base):
         UniqueConstraint("character_id", "faction_slug", "era_id"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     character_id: Mapped[int] = mapped_column(
-        ForeignKey("character.id"), nullable=False
+        BigInteger, ForeignKey("character.id"), nullable=False
     )
+    # String FK: faction's primary key is its slug (ADR-0038), not an integer.
     faction_slug: Mapped[str] = mapped_column(
-        ForeignKey("faction.slug"), nullable=False
+        String, ForeignKey("faction.slug"), nullable=False
     )
     era_id: Mapped[int] = mapped_column(
-        ForeignKey("era.id"), nullable=False
+        BigInteger, ForeignKey("era.id"), nullable=False
     )
     defected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

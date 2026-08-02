@@ -82,8 +82,9 @@ COLLAB_SECOND_MEMBER: dict[str, str] = {}
 
 # The metatask itself. `point_value` is fixture content, not a rule — a
 # metatask is a plain Task row and no metatask lives in the era config.
-# Distinct from seed.py's Phase-4 placeholder metatask ("Upside Down"), which
-# is prod content and is applied to nothing.
+# Since #1398 this is the ONLY metatask any seeding path creates: seed.py's
+# Phase-4 placeholder ("Upside Down") is gone, and it was prod content applied
+# to nothing. This one is dev-only fixture content, and it is applied.
 METATASK_TITLE = TITLE_MARKER + "Do It Backwards"
 METATASK_DESCRIPTION = "Run the whole task in reverse order. Photographic proof or it didn't happen."
 METATASK_POINTS = 100
@@ -166,7 +167,6 @@ async def get_or_create_metatask_owner(
             account_id=account.id,
             provider="dev",
             provider_user_id=f"dev-{METATASK_PLAYER_KEY}",
-            access_token="",
         ))
         existing = Character(
             account_id=account.id,
@@ -416,7 +416,6 @@ async def get_or_create_players(session) -> dict[str, Character]:
             account_id=account.id,
             provider="demo",
             provider_user_id=username,
-            access_token="demo_token",
         ))
         character = Character(
             account_id=account.id,

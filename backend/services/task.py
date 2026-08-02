@@ -629,7 +629,7 @@ async def list_tasks(
                 )
             query = query.where(or_(*conditions))
 
-    # Exclude tasks from hidden/deprecated factions
+    # Exclude tasks from hidden factions
     if hidden_slugs:
         query = query.where(Task.primary_faction_slug.notin_(hidden_slugs))
 

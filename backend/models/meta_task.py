@@ -8,7 +8,7 @@ been removed; see migration 0006_task_type_and_metatask_unification.
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, func
+from sqlalchemy import BigInteger, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -17,11 +17,13 @@ from models.base import Base
 class PraxisMetaTask(Base):
     __tablename__ = "praxis_meta_task"
 
+    # The only composite primary key in the schema, and so the only table with
+    # no `Identity()`: both halves are foreign keys, and the pair IS the fact.
     praxis_id: Mapped[int] = mapped_column(
-        ForeignKey("praxis.id"), primary_key=True
+        BigInteger, ForeignKey("praxis.id"), primary_key=True
     )
     task_id: Mapped[int] = mapped_column(
-        ForeignKey("task.id"), primary_key=True
+        BigInteger, ForeignKey("task.id"), primary_key=True
     )
     applied_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

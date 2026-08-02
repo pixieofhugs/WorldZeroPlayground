@@ -17,10 +17,12 @@ from models.task import Task
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 
-# Status set for the account-scoped roster: a player's own lives, excluding banned.
-_ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset(
-    {CharacterStatus.active, CharacterStatus.paused}
-)
+# Status set for the account-scoped roster: a player's own lives, excluding
+# banned. Kept as a set even though `active` is currently its only member — the
+# rule is "not banned", and reads that mean it should not have to be rewritten
+# if a future life state (e.g. a genuine pause) is ever added. `paused` was
+# removed in the #1398 squash: nothing ever wrote it.
+_ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset({CharacterStatus.active})
 _DEFAULT_HANDLE = "wanderer"
 _HANDLE_MAX_LEN = 14
 
@@ -205,9 +207,9 @@ async def can_start_as_albescent(
         a submitted, non-hidden praxis for **every** non-sentinel faction in the
         era (i.e. every faction except ``na`` and ``albescent``).
 
-    Coverage pools over the account roster (active + paused, banned excluded) —
-    the same "a player's own lives" set as :data:`_ROSTER_STATUSES`. A banned
-    life's work does not carry the account through the gate.
+    Coverage pools over the account roster (banned excluded) — the same "a
+    player's own lives" set as :data:`_ROSTER_STATUSES`. A banned life's work
+    does not carry the account through the gate.
     """
     era_row = await get_current_era_row(session)
     eligibility = await load_account_eligibility(account_id, era_row.id, session, era)
@@ -320,7 +322,7 @@ async def set_active_character(
     session: AsyncSession,
 ) -> None:
     """Point the account at a different owned, active life. 404 if not owned/missing,
-    409 if the target life is paused/banned (can't carry a non-active life)."""
+    409 if the target life is banned (a banned life cannot be carried)."""
     character = await session.get(Character, character_id)
     if character is None or character.account_id != account.id:
         raise HTTPException(status_code=404, detail="Character not found.")
@@ -334,7 +336,7 @@ async def list_account_roster(
     account: Account,
     session: AsyncSession,
 ) -> list[tuple[Character, CharacterStats | None]]:
-    """The account's own lives (active + paused, not banned) with current-era stats,
+    """The account's own lives (not banned) with current-era stats,
     carried life first then newest-first."""
     era_row = await get_current_era_row_safe(session)
     era_id = era_row.id if era_row else None

@@ -103,9 +103,24 @@ ERA_N_FACTIONS = {
 #   level_required      -- minimum character level to sign up (0 = anyone)
 #   point_value         -- base points awarded on completion (before modifiers)
 #   is_task_vision_eligible -- True if Ephemerists can see this after retirement
+#
+# DECIDE FIRST: does this era own its board, or does the admin UI?
+#
+# `seed.py::sync_era_tasks` adds every task named here that is missing from the
+# database, and `start.sh` runs the seeder on EVERY deploy. A task listed here is
+# therefore *permanent*: deleting it in the admin UI lasts until the next deploy
+# brings it back. That is the right behaviour for a fixed, authored era roster,
+# and the wrong behaviour for a board someone curates by hand.
+#
+# Era 1 chose the latter and leaves this tuple EMPTY (#1398). Keep the field
+# wired up either way — `EraConfig.tasks` is not going anywhere.
+#
+# Level 0 is reserved: the one game-wide onboarding task is seeded by
+# `seed.py::ensure_onboarding_task` (#511) and belongs to no era.
 
-ERA_N_TASKS = (
-    # TODO: Define your tasks. Example:
+ERA_N_TASKS: tuple[TaskDef, ...] = (
+    # TODO: Define your tasks, or leave this empty and author them in the admin
+    # UI. Example:
     #
     # TaskDef(
     #     title="Example Task",

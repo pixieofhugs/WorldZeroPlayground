@@ -3,11 +3,15 @@
 How World Zero keeps its Alembic chain short and recovers when a squash
 invalidates an existing DB. Read this before squashing migrations or resetting a DB.
 
-**Current baseline:** `0001_squashed` (`down_revision = None`, the squashed root — the
-head advances as new revisions stack on top; currently at `0003`) —
-squashed 2026-07-14, collapsing legacy `0001`–`0013`. Its `upgrade()` builds the
-whole schema from the live ORM models via `Base.metadata.create_all`, so it can
-never drift from `models/`.
+**Current baseline:** `0002_squashed` (`down_revision = None`, the squashed root and
+currently the *only* file in `versions/`; the head advances as new revisions stack on
+top) — squashed 2026-08-02 (#1398), collapsing `0001_squashed` + `0002`–`0011`.
+Its `upgrade()` builds the whole schema from the live ORM models via
+`Base.metadata.create_all`, so it can never drift from `models/`.
+
+Every revision it replaced was a *carry-forward*: `0002`–`0011` existed only to bring
+already-deployed databases to a shape `create_all` had been producing on fresh ones
+since the model changed. Nothing was lost by collapsing them.
 
 ## Why this exists
 
@@ -28,7 +32,7 @@ Squash the `versions/` chain when **either**:
 World Zero is **pre-launch**: production data is disposable today.
 
 A squash = **rebuild the schema from the models** via `Base.metadata.create_all`
-(that's all `0001_squashed.py` does). This requires **wiping every existing DB** —
+(that's all the squashed root does). This requires **wiping every existing DB** —
 prod *and* every local/worktree DB — because their old stamps are now dangling.
 
 This strategy is only valid while data is disposable. The moment real user data
@@ -86,18 +90,99 @@ to wipe), and you've read every model in `backend/models/` to know the final sch
 2. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_messages`);
    Tier 1 depends only on Tier 0 (`account`, `role`); Tier 2+ on prior tiers.
 3. **Delete the chain.** `rm backend/alembic/versions/*.py`.
-4. **Write `0001_squashed_initial.py`** with `down_revision = None` (the new root):
-   - **A — enum types** via `op.execute("CREATE TYPE … AS ENUM (…)")`, each guarded
-     by a `SELECT 1 FROM pg_type WHERE typname = :name` existence check.
-   - **B — tables** via `op.create_table()` in FK order. Every `sa.Enum()` uses `create_type=False`.
-   - **C — seed** reference data (factions, roles) with parameterized `ON CONFLICT DO NOTHING`.
-   - **D — downgrade()** drops tables in reverse, then `DROP TYPE IF EXISTS` each enum.
+4. **Write the new root** with `down_revision = None`:
+   - **A — enum types** via `op.execute("DO $$ … CREATE TYPE … AS ENUM (…) … $$;")`,
+     each guarded so re-running is a no-op. Keep the values in declaration order —
+     Postgres sorts an enum by the order its values were added.
+   - **B — tables** via `Base.metadata.create_all(op.get_bind())`. This is the whole
+     point: the baseline is generated from the models, so it cannot drift from them
+     and every model-level index / identity / type change ships for free. (Steps 1–2
+     still matter — enums are the one thing `create_all` must *not* emit.)
+   - **C — reference data** is `seed.py`'s job, not the migration's; `start.sh` runs
+     it right after `alembic upgrade head`.
+   - **D — downgrade()** is `Base.metadata.drop_all` then `DROP TYPE IF EXISTS` each
+     enum, in reverse.
+   - **Revision id must be ≤ 32 chars** — `alembic_version.version_num` is
+     `varchar(32)`, and an over-long id only fails *after* the DDL has run.
+     `backend/tests/test_migration_revision_ids.py` guards this.
 5. **Verify** on a fresh DB: `alembic upgrade head`, then `alembic check` (drift),
-   then a `downgrade base` → `upgrade head` round-trip, then spot-check seed rows.
-6. **Stamp, don't upgrade, live DBs** that already hold the schema: `alembic stamp 0001_squashed`
-   (writes the revision without running DDL — this is Strategy B above).
+   then a `downgrade base` → `upgrade head` round-trip, then seed and spot-check the
+   rows. Do this by hand against a real Postgres — CI builds from
+   `Base.metadata.create_all`, so a green `pytest` proves nothing about the migration.
+6. **Stamp, don't upgrade, live DBs** that already hold the schema:
+   `alembic stamp <new_root>` (writes the revision without running DDL — this is
+   Strategy B above). Under Strategy A you wipe instead; see "Blast radius".
+7. **Delete any test coupled to a revision you removed.** A test that imports a
+   migration module by path (there was one for `0011`) breaks at collection.
 
-Future squashes are identical with a bumped id (`0002_squashed`, `down_revision = None`).
+Future squashes are identical with a bumped id (next is `0003_squashed`,
+`down_revision = None`).
+
+## Schema-wide column conventions (#1398)
+
+Signed off by the owner on 2026-07-30 as prose only, and recorded here rather than in
+an ADR because this file already owns the baseline these conventions ship in. They are
+worth the words because the sweep that introduced them said "across all models" with
+no enumeration — so the inventory below is what makes "did we get all of them?"
+answerable. `backend/tests/unit/test_model_conventions.py` enforces the same three
+rules against `Base.metadata`, so a new model cannot quietly opt out; this table is
+the human-readable half.
+
+1. **Naming convention on the metadata.** `models/base.py` sets
+   `MetaData(naming_convention=NAMING_CONVENTION)` — `ix_`/`uq_`/`ck_`/`fk_`/`pk_`
+   patterns — so every constraint has a deterministic, predictable name. Under
+   Strategy B a squash can no longer rebuild the schema, and every change becomes a
+   named-object `ALTER`; there has to be a name to aim at. An explicit `name=` on a
+   model still wins verbatim. The `ck_` pattern interpolates `constraint_name`, so
+   declare a CHECK with its **bare** name (`name="one_target"` → `ck_comment_one_target`).
+2. **`Identity()`, not `SERIAL`.** PostgreSQL's own "Don't Do This" page names serial
+   for its owned-sequence dependency and permission quirks. Every surrogate key is
+   `BIGINT GENERATED BY DEFAULT AS IDENTITY`.
+3. **`BigInteger` primary keys, and matching foreign keys.** Insurance. Widening a live
+   PK plus every FK referencing it rewrites half the database; before real rows exist
+   it costs nothing. Note that Postgres will happily accept an `INTEGER` FK pointing at
+   a `BIGINT` PK, so a missed column fails *silently* — hence the test and this table.
+
+`praxis.era_id` (nullable FK to `era`, stamped on the transition to `submitted` by
+`services/collab_consensus._apply_seal`) shipped in the same sweep. Its consumer is
+#1345's era-bounded score recalculation.
+
+### Model inventory
+
+Every table, its primary key, and its integer foreign keys. `faction` is the one
+deliberate exception to rules 2 and 3: its primary key is the human-written `slug`
+(ADR-0038), so the five `*_faction_slug` columns are `VARCHAR` foreign keys.
+
+| Model file | Table | Primary key | Integer (BIGINT) foreign keys |
+|---|---|---|---|
+| `account.py` | `account` | `id` | `active_character_id` |
+| `account.py` | `oauth_provider` | `id` | `account_id` |
+| `character.py` | `character` | `id` | `account_id` (+ `faction_slug`, string) |
+| `character_stats.py` | `character_stats` | `id` | `character_id`, `era_id` |
+| `comment.py` | `comment` | `id` | `praxis_id`, `task_id`, `created_by_id` |
+| `comment.py` | `comment_mention` | `id` | `comment_id`, `mentioned_character_id` |
+| `contact.py` | `contact_messages` | `id` | — |
+| `duel.py` | `duel` | `id` | `task_id`, `challenger_praxis_id`, `opponent_praxis_id`, `opponent_character_id`, `forfeited_by_character_id`, `winner_character_id`, `resolved_era_id` |
+| `era.py` | `era` | `id` | `started_by` |
+| `faction.py` | `faction` | `slug` (**VARCHAR — the exception**) | — |
+| `faction_defection_history.py` | `faction_defection_history` | `id` | `character_id`, `era_id` (+ `faction_slug`, string) |
+| `feed_dismissal.py` | `feed_dismissal` | `id` | `character_id` |
+| `flag.py` | `flag` | `id` | `praxis_id`, `comment_id`, `flagged_by` |
+| `invitation_letter.py` | `invitation_letter` | `id` | `character_id`, `era_id` (+ `faction_slug`, string) |
+| `meta_task.py` | `praxis_meta_task` | `(praxis_id, task_id)` — **composite, no `Identity()`** | `praxis_id`, `task_id` |
+| `nudge.py` | `nudge` | `id` | `from_character_id`, `to_character_id`, `praxis_id` |
+| `praxis.py` | `praxis` | `id` | `task_id`, `created_by_id`, `era_id` |
+| `praxis.py` | `praxis_member` | `id` | `praxis_id`, `character_id` |
+| `praxis.py` | `media_item` | `id` | `praxis_id` |
+| `praxis.py` | `praxis_invite` | `id` | `praxis_id`, `inviter_id`, `invitee_id` |
+| `relationship.py` | `relationship` | `id` | `from_character_id`, `to_character_id` |
+| `roles.py` | `role` | `id` | — |
+| `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by` |
+| `task.py` | `task` | `id` | `created_by` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
+| `taunt_message.py` | `taunt_message` | `id` | `from_character_id`, `to_character_id` |
+| `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
+
+26 tables, 51 integer foreign keys, 5 string ones.
 
 ### The `create_type=False` convention (three-layer enum defense)
 

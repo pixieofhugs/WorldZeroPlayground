@@ -31,7 +31,7 @@ Orphaned rows (the source row is later deleted) are harmless: the key simply
 matches nothing. There is deliberately no cleanup job.
 """
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, ForeignKey, Identity, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -41,9 +41,9 @@ from models.mixins import CreatedAtMixin
 class FeedDismissal(CreatedAtMixin, Base):
     __tablename__ = "feed_dismissal"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     character_id: Mapped[int] = mapped_column(
-        ForeignKey("character.id"), nullable=False
+        BigInteger, ForeignKey("character.id"), nullable=False
     )
     item_key: Mapped[str] = mapped_column(String(128), nullable=False)
 

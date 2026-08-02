@@ -262,16 +262,21 @@ async def test_another_accounts_coverage_does_not_count(
 
 
 @pytest.mark.asyncio
-async def test_paused_life_contributes_coverage(
+async def test_another_life_on_the_account_contributes_coverage(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """A paused life is still one of the player's own lives (``_ROSTER_STATUSES``)."""
+    """Coverage pools across the account's roster (``_ROSTER_STATUSES``).
+
+    The level gate is satisfied by one life and the coverage gate entirely by
+    another — the two conditions are independent. This replaces the
+    ``paused``-life version of the same assertion: ``CharacterStatus.paused``
+    was removed in the #1398 squash (nothing ever wrote it), so the roster set
+    is now simply "not banned".
+    """
     await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    paused = await _make_character(
-        db_session, account, era, "paused", level=0, status=CharacterStatus.paused
-    )
+    other_life = await _make_character(db_session, account, era, "otherlife", level=0)
     for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, paused, slug)
+        await _complete_task_for(db_session, other_life, slug)
 
     assert await can_start_as_albescent(account.id, db_session) is True
 

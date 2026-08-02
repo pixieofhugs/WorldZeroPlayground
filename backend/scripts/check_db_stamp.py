@@ -49,7 +49,8 @@ def main() -> None:
     if not stamp_is_known(stamped, _known_revisions()):
         sys.stderr.write(
             f"DB stamped at unknown revision '{stamped}' — chain was likely squashed.\n"
-            f"Run scripts/reset_db.sh --url $DATABASE_URL then redeploy.\n"
+            f"Recover: open this service's Shell tab, run `python scripts/reset_render_db.py`,\n"
+            f"then redeploy. DATABASE_URL and MEDIA_ROOT are already set there.\n"
             f"See docs/agents/db-migrations.md.\n"
         )
         sys.exit(1)

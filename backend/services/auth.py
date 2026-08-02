@@ -76,9 +76,15 @@ async def create_or_get_account(
     provider: str,
     provider_user_id: str,
     email: str,
-    access_token: str,
     session: AsyncSession,
 ) -> Account:
+    """Resolve an OAuth identity to an Account, minting one on first sight.
+
+    Deliberately takes no ``access_token`` (#1374): World Zero authenticates
+    every request with its own JWT and never calls a provider API on the
+    player's behalf, so the provider's token was stored at rest and read by
+    nothing. The callback now drops it on the floor instead.
+    """
     # Check if this OAuth identity already exists
     result = await session.execute(
         select(OAuthProvider).where(
@@ -107,7 +113,6 @@ async def create_or_get_account(
         account_id=account.id,
         provider=provider,
         provider_user_id=provider_user_id,
-        access_token=access_token,
     )
     session.add(oauth_row)
     await session.flush()

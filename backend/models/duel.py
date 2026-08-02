@@ -2,7 +2,16 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Enum, ForeignKey, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Identity,
+    Index,
+    Integer,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -39,13 +48,28 @@ class Duel(CreatedAtMixin, Base):
 
     __tablename__ = "duel"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    task_id: Mapped[int] = mapped_column(ForeignKey("task.id"), nullable=False)
-    challenger_praxis_id: Mapped[int] = mapped_column(ForeignKey("praxis.id"), nullable=False)
-    opponent_character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
+    __table_args__ = (
+        # Both praxis sides are probed on every praxis list and detail to
+        # annotate a row as a duel side; the opponent column is the feed's
+        # duel-challenge source and the pending-challenge check (#1393).
+        Index("ix_duel_challenger_praxis_id", "challenger_praxis_id"),
+        Index("ix_duel_opponent_praxis_id", "opponent_praxis_id"),
+        Index("ix_duel_opponent_character_id", "opponent_character_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    task_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("task.id"), nullable=False
+    )
+    challenger_praxis_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("praxis.id"), nullable=False
+    )
+    opponent_character_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("character.id"), nullable=False
+    )
     # NULL until the opponent accepts and their praxis is created.
     opponent_praxis_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("praxis.id"), nullable=True
+        BigInteger, ForeignKey("praxis.id"), nullable=True
     )
     status: Mapped[DuelStatus] = mapped_column(
         Enum(DuelStatus, create_type=False),
@@ -62,13 +86,13 @@ class Duel(CreatedAtMixin, Base):
     # opponent wins by default, the duel stays settled, and resubmitting does
     # not restore the contest (ADR-0011 §Forfeit, #307).
     forfeited_by_character_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("character.id"), nullable=True
+        BigInteger, ForeignKey("character.id"), nullable=True
     )
 
     # ── frozen outcome, written once at era close (ADR-0052) ────────────────
     # NULL winner on a resolved duel = tie, or no-contest (never became votable).
     winner_character_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("character.id"), nullable=True
+        BigInteger, ForeignKey("character.id"), nullable=True
     )
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -82,12 +106,15 @@ class Duel(CreatedAtMixin, Base):
     # duel timestamps a hair *after* the incoming era's `started_at` and a naive
     # boundary comparison attributes it to the era it did not belong to.
     resolved_era_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("era.id"), nullable=True
+        BigInteger, ForeignKey("era.id"), nullable=True
     )
     # Snapshot of each side's points_from_votes at the moment of resolution, so a
     # resolved surface can show vote shares without the live tally moving under it.
-    challenger_final_points: Mapped[Optional[int]] = mapped_column(nullable=True)
-    opponent_final_points: Mapped[Optional[int]] = mapped_column(nullable=True)
+    # Point tallies, not identifiers — plain INTEGER like every other score column.
+    challenger_final_points: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
+    opponent_final_points: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     challenger_praxis: Mapped["Praxis"] = relationship(
         "Praxis", foreign_keys=[challenger_praxis_id], lazy="selectin"
