@@ -3,6 +3,7 @@ import type { TasksState } from '../useTasks'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import TaskFilterBar, { TaskListEmpty } from '../TaskFilterBar'
+import ProposeTaskLink from '../ProposeTaskLink'
 
 /**
  * Default MOBILE task-browse skin — a scannable single-column card list, NOT the
@@ -52,6 +53,13 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         {tc('nav.tasks')}
       </h1>
       <p className="eyebrow mb-3">{t('mobile.count', { count: tasks.length })}</p>
+
+      {/* The affordance that left the Field Desk (#1556). Full width because the
+          mobile path stacks single-column (#494) and this is a thumb target;
+          above the filter bar so it is not buried under a collapsed rail. */}
+      <div className="mb-3">
+        <ProposeTaskLink user={user} fullWidth />
+      </div>
 
       <TaskFilterBar state={state} />
 

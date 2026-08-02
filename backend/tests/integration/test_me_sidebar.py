@@ -35,6 +35,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task
+from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
 
 
@@ -88,7 +89,7 @@ async def test_sidebar_returns_all_three_panels(
 
     assert data["pending_requests_count"] == 1  # the collab invite
     # `active_task` is active in the current era, so it is global news. The
-    # global panel also carries the era announcement — the rail renders that
+    # activity panel also carries the era announcement — the rail renders that
     # type too — so this asserts membership, not the whole list.
     assert "global_task" in [item["type"] for item in data["global_activity"]]
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
@@ -339,3 +340,83 @@ async def test_sidebar_ships_the_number_without_the_items(
     # The other two panels still ship their items — this narrows one field.
     assert isinstance(body["global_activity"], list)
     assert isinstance(body["active_praxes"], list)
+
+
+@pytest.mark.asyncio
+async def test_activity_panel_carries_the_players_own_news_not_just_global(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """#1556: the panel is the whole live feed, not the ``global`` tab.
+
+    A vote on the viewer's own praxis is ``vote_on_mine`` — a ``your_stuff``
+    type that the old ``global``-only panel could not carry at any volume of
+    activity. It is the sharpest single case for the widening, because it is
+    the one the design calls out by name: *"Dr. Vale voted on your praxis"*.
+    """
+    mine = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.submitted,
+        title="A praxis of mine",
+        body_text="proof",
+    )
+    db_session.add(mine)
+    await db_session.flush()
+    db_session.add(
+        Vote(
+            praxis_id=mine.id,
+            voter_character_id=character2.id,
+            voter_account_id=character2.account_id,
+            value=4,
+        )
+    )
+    await db_session.commit()
+
+    response = await client.get("/me/sidebar", headers=auth_headers)
+    assert response.status_code == 200
+    types = [item["type"] for item in response.json()["global_activity"]]
+
+    assert "vote_on_mine" in types, (
+        "the rail's activity panel must carry the viewer's own news; it "
+        f"returned {types}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_activity_panel_excludes_exactly_what_the_requests_queue_holds(
+    client: AsyncClient,
+    four_request_types: int,
+    auth_headers: dict,
+):
+    """THE guard for #1556: the panel and the queue PARTITION the live feed.
+
+    ADR-0070 — *an unanswered obligation lives in the queue, never in the
+    stream*. The panel widened from the two ``global`` sources to the whole
+    live ``all`` view, which in the registry includes all four obligation
+    types; ``_visible_types`` is what takes them back out, and it is the same
+    call the Requests queue makes. Hand-rolling a second exclusion here is the
+    failure this pins: it would pass every typecheck and silently give the four
+    types two live surfaces again, which is the exact defect ADR-0070 exists to
+    prevent.
+
+    The fixture makes this sharp — one UNANSWERED item of each of the four
+    types, so a leak cannot hide behind an empty source.
+    """
+    response = await client.get("/me/sidebar", headers=auth_headers)
+    assert response.status_code == 200
+    body = response.json()
+
+    panel_types = {item["type"] for item in body["global_activity"]}
+    assert body["pending_requests_count"] == four_request_types, (
+        "guard: the fixture's four obligations are outstanding"
+    )
+    assert panel_types.isdisjoint(REQUEST_ITEM_TYPES), (
+        "an unanswered obligation reached the rail's activity panel: "
+        f"{sorted(panel_types & REQUEST_ITEM_TYPES)} (ADR-0070)"
+    )

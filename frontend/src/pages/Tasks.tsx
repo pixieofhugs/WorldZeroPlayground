@@ -6,6 +6,7 @@ import { useFormFactor } from '../hooks/useFormFactor'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
 import TaskFilterBar, { TaskListEmpty } from './tasks/TaskFilterBar'
+import ProposeTaskLink from './tasks/ProposeTaskLink'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 
 export default function Tasks() {
@@ -42,7 +43,14 @@ function DesktopTasks({ state }: { state: TasksState }) {
 
   return (
     <div className="py-8">
-      <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
+      {/* Propose sits beside the title, not in the rail (#1556) — the bank and
+          the way to add to it are one surface now. `ProposeTaskLink` renders
+          nothing for a viewer the server would refuse, so the row collapses to
+          the title alone rather than drawing a dead control. */}
+      <div className="flex items-start justify-between gap-4">
+        <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
+        <ProposeTaskLink user={user} />
+      </div>
 
       {/* One filter surface for both form factors (#1367, epic #1361). The
           stamp stack, the faction tabs and the inline search input that used to

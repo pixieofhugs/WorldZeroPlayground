@@ -26,5 +26,16 @@ class SidebarOut(BaseModel):
     """
 
     pending_requests_count: int
+    #: The player's whole LIVE feed minus the obligations (#1556) — the same
+    #: partition ADR-0070 draws for the Requests queue, taken from the other
+    #: side. Votes on your praxes, friend and foe completions, taunts, nudges,
+    #: mentions, new global tasks, era announcements.
+    #:
+    #: The name is a legacy wire name: until #1556 the panel was the ``global``
+    #: tab alone, and it is kept because renaming a field the rail reads on
+    #: every route is a deploy-skew hazard — a frontend ahead of its API would
+    #: read ``undefined`` and white-page every page, not just the rail. Rename
+    #: it deliberately, with a client-side normalizer landed first, or not at
+    #: all. What the field CONTAINS is this comment, not its name.
     global_activity: list[ActivityFeedItem]
     active_praxes: list[PraxisCardOut]

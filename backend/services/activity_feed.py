@@ -1548,9 +1548,9 @@ async def _build_fetch_context(
     )
 
 
-# The rail's global panel is a glance, not a list. The requests side has no
+# The rail's activity panel is a glance, not a list. The requests side has no
 # limit constant any more: it is a COUNT, and a number has nothing to truncate.
-SIDEBAR_GLOBAL_LIMIT = 5
+SIDEBAR_ACTIVITY_LIMIT = 5
 
 
 async def get_sidebar_feed(
@@ -1558,9 +1558,29 @@ async def get_sidebar_feed(
     session: AsyncSession,
     session_factory: Callable,
 ) -> tuple[int, list[ActivityFeedItemDC]]:
-    """The rail's pending-request COUNT and its ``global`` panel, in one pass.
+    """The rail's pending-request COUNT and its activity panel, in one pass.
 
-    Returns ``(pending_requests_count, global_activity)``, the list newest-first.
+    Returns ``(pending_requests_count, recent_activity)``, the list newest-first.
+
+    WHAT THE PANEL CARRIES (#1556)
+    ------------------------------
+    The player's whole live feed **minus the obligations** — votes on their
+    praxes, friend and foe completions, taunts, nudges, mentions, new global
+    tasks, era announcements. It used to be the ``global`` tab alone (two
+    sources), which meant the rail could not tell you that someone had just
+    voted on your work.
+
+    The exclusion is not a second predicate written here: this asks
+    :func:`_visible_types` for the live ``all`` view, which is the ONE place
+    ADR-0070's *an unanswered obligation lives in the queue, never in the
+    stream* is implemented. The Requests queue on ``/updates`` is fed by the
+    same function, so the panel and the queue partition the feed exactly — no
+    item can fall into both, and none can fall out of both.
+
+    Widening the fan-out from two sources to eleven is the cost, and it is paid
+    the way :func:`_fetch_sources` documents: sequential statements on the
+    request's own warm connection, never a connection per source. This is the
+    same fan-out ``/updates`` already runs on its own load.
 
     WHY A COUNT AND NOT A LIST (#1456)
     ----------------------------------
@@ -1570,12 +1590,10 @@ async def get_sidebar_feed(
     the Requests queue on ``/updates`` is the only surface a request can be
     answered on (ADR-0070). One integer is the whole of what is left.
 
-    The two sides do not share a fan-out, because they no longer overlap: the
-    four request sources and the two global sources are disjoint in the
-    registry. Requests are counted with :func:`_count_sources` — all four in one
-    UNION ALL — and global news with :func:`_fetch_sources`, two statements on
-    the request's own session. Three round trips on two connections, where the
-    rail used to take six connections out of a pool of fifteen (#1532).
+    The two sides still do not share a fan-out, because they still do not
+    overlap — that is ADR-0070 again, from the other direction. Requests are
+    counted with :func:`_count_sources` (all four in one UNION ALL); activity is
+    fetched with :func:`_fetch_sources`.
 
     WHY THE NUMBER CANNOT DRIFT FROM THE QUEUE
     ------------------------------------------
@@ -1595,15 +1613,15 @@ async def get_sidebar_feed(
         visible = _visible_types(feed_filter, archived=False)
         return [source for source in FEED_SOURCES if source.item_type in visible]
 
-    global_activity = await _fetch_sources(
-        sources_for(FILTER_GLOBAL), fetch_ctx, archive_view, session
+    recent_activity = await _fetch_sources(
+        sources_for(FILTER_ALL), fetch_ctx, archive_view, session
     )
     request_counts = await _count_sources(
         sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session_factory
     )
 
-    global_activity.sort(key=lambda item: item.timestamp, reverse=True)
-    return sum(request_counts.values()), global_activity[:SIDEBAR_GLOBAL_LIMIT]
+    recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
+    return sum(request_counts.values()), recent_activity[:SIDEBAR_ACTIVITY_LIMIT]
 
 
 async def get_activity_feed(
