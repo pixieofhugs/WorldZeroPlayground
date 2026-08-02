@@ -1,4 +1,5 @@
 import api from './axios'
+import { noteEraStamp } from '../utils/cacheEpoch'
 
 /** A badge the character currently holds (ADR-0033). Evaluated on read by the
  *  backend; the image is a bundled frontend asset mapped by `key`. */
@@ -60,6 +61,10 @@ export interface CurrentUser {
 
 export async function getMe(): Promise<CurrentUser> {
   const { data } = await api.get<CurrentUser>('/auth/me')
+  // Every signed-in page load gates on this request, which makes it the earliest
+  // and most frequent era stamp the client gets (ADR-0072). A disagreement with
+  // the era already held drops the whole cache.
+  noteEraStamp(data.era_name)
   return data
 }
 

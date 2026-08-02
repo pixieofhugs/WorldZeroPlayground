@@ -1,5 +1,5 @@
 import { getGameConfig } from '../api/gameConfig'
-import { createCachedResource } from './cachedResource'
+import { createCachedResource, SESSION_TTL_MS } from './cachedResource'
 
 /**
  * Hook to fetch and cache the current era game config.
@@ -8,14 +8,17 @@ import { createCachedResource } from './cachedResource'
  * same paint cost one `/game-config` request, and navigating between pages
  * costs none.
  *
- * **Staleness bound: 5 minutes** (`CACHE_TTL_MS`). The cache used to be
- * written once and never cleared, so an era transition mid-session served stale
- * rules until a reload (#1284). There is no push channel from the server, so
- * the client cannot be told the era rolled over; instead each entry is stamped
- * when it resolves and the first consumer to mount past the bound refetches.
- * The policy lives in `cachedResource.ts` and is shared verbatim with
- * `useFactions` — one cache story, not two.
+ * **Class A — deploy-scoped; the bound is the session** (`SESSION_TTL_MS`,
+ * ADR-0072). This endpoint touches no database at all: it serialises the
+ * `CURRENT_ERA` module constant (#1283), so its answer can only change when the
+ * process restarts. A five-minute bound was not conservative here, it was
+ * meaningless — nothing it re-read could ever differ.
+ *
+ * The era transition that used to be served stale until a reload (#1284) is
+ * still answered, but by the right instrument: `getGameConfig()` reports its
+ * `era_name` to `utils/cacheEpoch`, and a disagreement drops the whole cache.
+ * That is a version key, not a bound — no TTL can say "everything is wrong now".
  *
  * Returns `null` until the first response lands.
  */
-export const useGameConfig = createCachedResource(getGameConfig)
+export const useGameConfig = createCachedResource(getGameConfig, SESSION_TTL_MS)

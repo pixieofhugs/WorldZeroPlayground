@@ -1,4 +1,5 @@
 import api from './axios'
+import { noteEraStamp } from '../utils/cacheEpoch'
 
 // Faction name/description prose moved to the factions.json catalog (issue
 // #461); /game-config emits only the slug + numeric rules. Resolve display copy
@@ -40,5 +41,9 @@ export interface GameConfigOut {
 
 export async function getGameConfig(): Promise<GameConfigOut> {
   const { data } = await api.get<GameConfigOut>('/game-config')
+  // The era stamp: if this disagrees with the era the client already saw, every
+  // rule it holds describes the old world. Dropping the whole cache is the only
+  // honest response, and no TTL can express it (ADR-0072).
+  noteEraStamp(data.era_name)
   return data
 }
