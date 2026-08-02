@@ -15,7 +15,6 @@ async def test_get_game_config_returns_current_era(client: AsyncClient):
     assert data["era_name"] == CURRENT_ERA.name
     assert data["level_thresholds"] == list(CURRENT_ERA.level_thresholds)
     assert data["max_task_signups"] == CURRENT_ERA.max_task_signups
-    assert data["vote_budget_base"] == CURRENT_ERA.vote_budget_base
 
     # Pending-publish silence-is-consent window (ADR-0012): duration only,
     # since submit_proposed_at (the start) is already on PraxisOut.
@@ -36,3 +35,30 @@ async def test_get_game_config_returns_current_era(client: AsyncClient):
     assert first_unlock["kind"] in {"ability", "sense"}
     assert first_unlock["key"] == CURRENT_ERA.level_profiles[1].unlocks[0].key
     assert "name" not in first_unlock and "desc" not in first_unlock
+
+
+@pytest.mark.asyncio
+async def test_game_config_omits_rules_no_client_reads(client: AsyncClient):
+    """Four dead wire fields are gone from /game-config (#1387).
+
+    All four stay LIVE rules on ``EraConfig``: the server enforces the
+    collaboration gate, ``services.faction_service`` branches on
+    ``can_always_rejoin``, and the vote budget is computed on read (ADR-0043).
+    Only the projection onto the public config payload went.
+
+    Albescent is named explicitly because it is the one faction whose
+    ``can_always_rejoin`` is True — a leftover serializer would emit ``true``
+    there rather than a defaulted false.
+    """
+    data = (await client.get("/game-config")).json()
+
+    for field in (
+        "collaboration_level_required",
+        "vote_budget_base",
+        "vote_budget_multiplier",
+    ):
+        assert field not in data
+
+    assert CURRENT_ERA.factions["albescent"].can_always_rejoin is True
+    for faction in data["factions"]:
+        assert "can_always_rejoin" not in faction
