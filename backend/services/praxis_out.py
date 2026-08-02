@@ -83,7 +83,6 @@ def _build_invite_out(invite: PraxisInvite) -> PraxisInviteOut:
         praxis_id=invite.praxis_id,
         inviter_id=invite.inviter_id,
         invitee_id=invite.invitee_id,
-        inviter_display_name=invite.inviter.display_name,
         invitee_display_name=invite.invitee.display_name,
         status=invite.status,
         created_at=invite.created_at,

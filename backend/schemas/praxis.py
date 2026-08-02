@@ -66,7 +66,6 @@ class PraxisInviteOut(BaseModel):
     praxis_id: int
     inviter_id: int
     invitee_id: int
-    inviter_display_name: str   # populated by build_praxis_out
     invitee_display_name: str   # populated by build_praxis_out
     status: PraxisInviteStatus
     created_at: datetime

@@ -46,7 +46,8 @@ async def get_duel_detail_route(
     session: AsyncSession = Depends(get_db),
 ):
     """Read-oriented duel view for the praxis read page: both sides' display
-    info + live vote points + ``viewer_is_participant`` in one round trip (#308)."""
+    info + live vote points in one round trip (#308). ``viewer`` keys the
+    per-side nudge state."""
     return await get_duel_detail(duel_id, viewer, session)
 
 

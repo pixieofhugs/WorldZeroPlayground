@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -34,21 +34,6 @@ class RelationshipOut(BaseModel):
     created_at: datetime
 
 
-class RelationshipDetailOut(BaseModel):
-    """Enriched relationship with character display data — avoids N+1 on frontend."""
-
-    id: int
-    from_character_id: int
-    to_character_id: int
-    type: str
-    status: str
-    created_at: datetime
-    from_character_display_name: str
-    from_character_faction_slug: Optional[str]
-    to_character_display_name: str
-    to_character_faction_slug: Optional[str]
-
-
 class RelationshipCreate(BaseModel):
     to_character_id: int
     type: RelationshipTypeEnum
@@ -66,5 +51,6 @@ class RelationshipListItem(BaseModel):
     to_display_name: str
     to_avatar_url: str
     to_faction_slug: str
-    reverse_type: Optional[str] = None
+    # The reverse edge's type is NOT emitted (#1387): `display_status` is the
+    # server's word on what the pair of edges means, and was the only thing read.
     display_status: RelationshipDisplayStatus
