@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
@@ -16,7 +17,9 @@ from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import get_current_era_row, get_or_create_stats
 
 UA_FACTION_SLUG: str = "ua"
-UNAFFILIATED_FACTION_SLUG: str = "na"
+
+# UNAFFILIATED_FACTION_SLUG is imported above from faction_slugs, which owns it
+# (#1559). It used to be re-declared here and again in services/scoring.py.
 
 
 # ---------------------------------------------------------------------------

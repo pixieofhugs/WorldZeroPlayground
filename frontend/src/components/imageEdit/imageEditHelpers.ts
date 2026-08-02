@@ -155,7 +155,7 @@ export interface ApplyImageEditOptions {
  * distinguishing "cropped" from "gave up". The player saw a portrait that never
  * changed and no error anywhere. Failures now report instead of confirming — the
  * caller decides where that shows (the avatar screens use their `avatarError`
- * line, #985).
+ * line, #985; the praxis composer its media tray's `fileError`, #1545).
  *
  * The GIF short-circuit is NOT a failure and keeps its silent pass-through:
  * canvas-encoding a GIF flattens it to its first frame (#569).

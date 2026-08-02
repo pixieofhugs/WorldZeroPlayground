@@ -496,6 +496,93 @@ export function PraxisRoster({
 }
 
 /**
+ * Slot: the duel banner — who this side is fighting (#596).
+ *
+ * ONE SHARED SLOT, NOT NINE TREATMENTS (owner ruling, 2026-08-01). It sits in
+ * the composition where {@link PraxisRoster} sits and is themed the same way —
+ * the frame's own `accent`/`paper` for the avatar, `factionCssVar` off
+ * `task_faction_slug` for the ink — so a faction gets its duel banner from the
+ * archetype it already passes, with no per-archetype edit. The Snide mock in
+ * #596 was reference for tone; it also assumed the rival was findable in
+ * `members`, which the schema never supported.
+ *
+ * NO NEW TOKEN IS MINTED (ADR-0061). The "vs." mark reads in `card-notice`, the
+ * sheet's cautionary ink — the same ink the duel mode chip directly above it
+ * already prints, so the banner reads as that chip's continuation rather than a
+ * second colour language. The rival's NAME takes the frame accent, exactly as a
+ * collaborator's name does in {@link PraxisRoster}.
+ *
+ * SILENT DURING THE PENDING WINDOW. The card names an opponent only when the
+ * wire carries one: `opponent_display_name` is absent both for a non-duel praxis
+ * and for a challenger whose rival has not accepted yet, and in the second case
+ * the mode chip alone is the answer that already shipped. Deliberately gated on
+ * the NAME rather than `isDuelPraxis`: a duel side whose opponent is still
+ * pending IS a duel by `duel_id`, and has nobody to print.
+ */
+export function PraxisDuelBanner({
+  praxis,
+  accent,
+  paper,
+  fonts,
+}: {
+  praxis: PraxisCardOut;
+  accent: string;
+  paper?: string;
+  fonts?: PraxisCardFonts;
+}) {
+  const { t } = useTranslation("praxis");
+  const name = praxis.opponent_display_name;
+  if (!name) return null;
+  const { notice } = sheetInk(praxis.task_faction_slug);
+  // The rival's own praxis, when the payload carries the id. A duel side always
+  // has one once it exists, so the link is the optional half only defensively: a
+  // named opponent with no link still says more than the bare chip did.
+  const rival = (
+    <span
+      className="font-body"
+      style={{ color: accent, fontFamily: fonts?.body, minWidth: 0 }}
+    >
+      {name}
+    </span>
+  );
+  return (
+    <div
+      className="flex items-center flex-wrap"
+      style={{ gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}
+    >
+      <span
+        style={{
+          // A LABEL, not running text — the same tier and tracking the duel mode
+          // chip above it uses, so the two read as one mark.
+          fontSize: "var(--text-sm)",
+          fontFamily: fonts?.display,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: notice,
+          flex: "none",
+        }}
+      >
+        {t("duelBanner.versus")}
+      </span>
+      <RosterAvatar name={name} accent={accent} paper={paper} />
+      <span style={{ fontSize: "var(--text-content)", minWidth: 0 }}>
+        {praxis.opponent_praxis_id != null ? (
+          <Link
+            to={`/praxis/${praxis.opponent_praxis_id}`}
+            className="hover:underline"
+            aria-label={t("duelBanner.readTheirs", { name })}
+          >
+            {rival}
+          </Link>
+        ) : (
+          rival
+        )}
+      </span>
+    </div>
+  );
+}
+
+/**
  * Slot: the mode chip — "Collaboration · {members}" or "Duel", plus a pending
  * marker when a collab's submit window is open. Reuses the shared collaboration
  * copy (`collaborationCard.*`, common ns) the retired CollaborationCard used.

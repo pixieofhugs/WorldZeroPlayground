@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import CROSS_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -84,7 +85,7 @@ async def propose_task(
         description=data.description or "",
         point_value=data.point_value,
         level_required=data.level_required,
-        primary_faction_slug=data.primary_faction_slug or "na",
+        primary_faction_slug=data.primary_faction_slug or CROSS_FACTION_SLUG,
         metatask_faction_slug=(
             data.metatask_faction_slug if task_type == TaskType.metatask else None
         ),
@@ -113,7 +114,7 @@ async def update_task(
     task.description = data.description or ""
     task.point_value = data.point_value
     task.level_required = data.level_required
-    task.primary_faction_slug = data.primary_faction_slug or "na"
+    task.primary_faction_slug = data.primary_faction_slug or CROSS_FACTION_SLUG
     if task.task_type == TaskType.metatask and data.metatask_faction_slug is not None:
         task.metatask_faction_slug = data.metatask_faction_slug
     await session.flush()

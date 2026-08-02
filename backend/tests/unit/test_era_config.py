@@ -1,4 +1,7 @@
-from game_config import CURRENT_ERA, ERA_1
+import dataclasses
+
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
+from game_config import CURRENT_ERA, ERA_1, EraConfig
 
 
 def test_current_era_is_defined():
@@ -75,6 +78,40 @@ def test_aged_out_faction_removed():
 
 def test_albescent_faction_exists():
     assert "albescent" in ERA_1.factions
+
+
+# ---------------------------------------------------------------------------
+# Starting faction (#1559)
+# ---------------------------------------------------------------------------
+
+
+def test_starting_faction_slug_defaults_to_unaffiliated():
+    """The site-wide invariant lives on the dataclass default (ADR-0019/ADR-0030).
+
+    #1559 opened ADR-0042's seam — an era may pre-sort its players — *without*
+    making every era restate the obvious. This is the one place the literal is
+    pinned; every other assertion in the suite reads ``era.starting_faction_slug``
+    so a future era that overrides it does not have to rewrite them.
+    """
+    field = next(
+        f for f in dataclasses.fields(EraConfig) if f.name == "starting_faction_slug"
+    )
+    assert field.default == UNAFFILIATED_FACTION_SLUG
+
+
+def test_era_1_inherits_the_unaffiliated_start():
+    """Era 1 declares nothing, so it must land on the dataclass default."""
+    assert ERA_1.starting_faction_slug == UNAFFILIATED_FACTION_SLUG
+
+
+def test_starting_faction_is_a_faction_the_era_configures():
+    """An era cannot be born into a faction it does not define.
+
+    ``character.faction_slug`` is an FK onto a seeded ``Faction`` row, and
+    ``seed.py`` seeds exactly the era's factions — so an override naming an
+    unknown slug would fail at insert time on a fresh database.
+    """
+    assert ERA_1.starting_faction_slug in ERA_1.factions
 
 
 def test_vote_budget_base_positive():

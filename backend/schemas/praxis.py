@@ -190,6 +190,22 @@ class PraxisCardOut(BaseModel):
     # this, not ``type`` (#992). Precomputed page-wide by the card-list route (no
     # N+1) via ``duel_id_map``; mirrors ``PraxisOut.duel_id``.
     duel_id: Optional[int] = None
+    # ── the other side of the duel (#596) ───────────────────────────────────
+    # A duel is two separate praxis rows joined by a ``Duel`` row (ADR-0011), so
+    # a duel side's own ``members`` holds only its own submitter and the card
+    # cannot name its rival from anything else on this body. Populated page-wide
+    # in one query by the card-list route (no N+1) via ``duel_opponents_for``.
+    #
+    # ALL THREE ARE SET TOGETHER OR NOT AT ALL. They stay None in two cases the
+    # card must not confuse: the praxis is not a duel side, or it IS one and the
+    # duel is still ``pending`` — ``Duel.opponent_praxis_id`` is NULL until the
+    # challenge is accepted, and a challenger has nobody to name until then. The
+    # card falls back to the duel mode chip alone, which is what shipped before
+    # these fields existed. Gate the banner on ``opponent_display_name``, NOT on
+    # ``type == 'duel'``: a duel side is stored ``type='solo'`` (#992).
+    opponent_praxis_id: Optional[int] = None
+    opponent_display_name: Optional[str] = None
+    opponent_faction_slug: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

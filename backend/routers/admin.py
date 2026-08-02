@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 from config import settings
 from db import get_db
 from dependencies import require_admin
+from faction_slugs import CROSS_FACTION_SLUG
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character, CharacterStatus
@@ -582,7 +583,7 @@ async def admin_create_task(
         description=data.description or "",
         point_value=data.point_value,
         level_required=data.level_required,
-        primary_faction_slug=data.primary_faction_slug or "na",
+        primary_faction_slug=data.primary_faction_slug or CROSS_FACTION_SLUG,
         metatask_faction_slug=(
             data.metatask_faction_slug if task_type == TaskType.metatask else None
         ),

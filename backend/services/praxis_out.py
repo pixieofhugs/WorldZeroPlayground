@@ -3,7 +3,8 @@
 Every praxis response body is built here: the single-praxis
 :func:`build_praxis_out`, the list card :func:`build_praxis_card_out`, and the
 page-wide precompute maps (:func:`author_contributions_for`,
-:func:`applied_metatasks_for`, :func:`duel_id_map`, plus the tally/crown/vote
+:func:`applied_metatasks_for`, :func:`duel_id_map`, :func:`duel_opponents_for`,
+plus the tally/crown/vote
 maps gathered in :func:`build_praxis_cards`) that keep a feed from turning into
 an N+1.
 
@@ -14,11 +15,13 @@ the domain predicate a response field reports (``can_flag``), and nothing in
 modules becoming an import cycle.
 """
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -374,6 +377,125 @@ async def duel_id_map(
     return mapping
 
 
+@dataclass(frozen=True)
+class DuelOpponent:
+    """The OTHER side of a duel, as a card names it (#596).
+
+    Identity only — who a duel side is fighting. Deliberately not the other
+    side's score or standing: the card names the opponent, and the duel detail
+    page (``duelCrossLink``) is what reports how the contest is going.
+    """
+
+    #: The other side's praxis, for the card's link through to it.
+    praxis_id: int
+    #: The other side's AUTHOR. A duel side is always solo (ADR-0011), so its
+    #: author is the whole of it — there is no roster to cap.
+    display_name: str
+    #: The author's member faction, for the opponent's avatar. ``None`` for an
+    #: unaffiliated author, which is the `default` sheet's slug (ADR-0039).
+    faction_slug: Optional[str]
+
+
+async def duel_opponents_for(
+    praxes: list[Praxis],
+    session: AsyncSession,
+) -> dict[int, DuelOpponent]:
+    """Praxis id → the OTHER side of its duel, for the whole page in ONE query.
+
+    A duel is two separate ``Praxis`` rows joined by a ``Duel`` row (ADR-0011),
+    not one praxis with two members, so a duel side's own ``members`` contains
+    only its own submitter and the card has no path to the rival's name. This is
+    that path, batched: the same "one query for the page, never one per card"
+    shape as :func:`~services.vote_tally.viewer_votes_for` and
+    :func:`~services.vote_tally.crowned_praxis_ids`. A per-card version of this
+    lookup would be three joins × page size; ``/tasks`` was measured at ~300
+    queries a page once (#1371) and this is exactly how that happens.
+
+    Both sides are resolved in the same statement via aliased joins rather than a
+    second round trip for the ids gathered from the first: a duel row where BOTH
+    sides are on the page (two rivals adjacent in a feed) maps in both directions
+    off the one row.
+
+    THE PENDING WINDOW IS THE CASE THIS GETS RIGHT. ``Duel.opponent_praxis_id``
+    is NULL until the challenge is accepted, so a challenger's card has no
+    opponent praxis to name yet. Such a praxis is simply ABSENT from the map, and
+    the card falls back to the mode chip alone — which is what ships today. The
+    challenged character is knowable (``Duel.opponent_character_id`` is set from
+    the start), but naming someone who has not accepted, on a card that may yet
+    become an ordinary solo praxis if they decline, asserts a contest that does
+    not exist. The outer joins below are what make the absence, rather than a
+    dropped row, the answer.
+
+    Mirrors :func:`duel_id_map`'s status set (incl. ``resolved``, ADR-0052), so a
+    past duel's card still names who it was against after the era froze it.
+    """
+    if not praxes:
+        return {}
+
+    praxis_ids = {p.id for p in praxes}
+
+    challenger_praxis = aliased(Praxis)
+    opponent_praxis = aliased(Praxis)
+    challenger_author = aliased(Character)
+    opponent_author = aliased(Character)
+
+    rows = await session.execute(
+        select(
+            Duel.challenger_praxis_id,
+            Duel.opponent_praxis_id,
+            challenger_author.display_name,
+            challenger_author.faction_slug,
+            opponent_author.display_name,
+            opponent_author.faction_slug,
+        )
+        .join(challenger_praxis, challenger_praxis.id == Duel.challenger_praxis_id)
+        .join(challenger_author, challenger_author.id == challenger_praxis.created_by_id)
+        # Outer, both of them: the opponent side does not exist while the duel is
+        # pending, and an inner join would drop the whole row rather than leave
+        # the challenger unmatched.
+        .outerjoin(opponent_praxis, opponent_praxis.id == Duel.opponent_praxis_id)
+        .outerjoin(opponent_author, opponent_author.id == opponent_praxis.created_by_id)
+        .where(
+            (Duel.challenger_praxis_id.in_(praxis_ids))
+            | (Duel.opponent_praxis_id.in_(praxis_ids)),
+            Duel.status.in_(
+                [
+                    DuelStatus.pending,
+                    DuelStatus.active,
+                    DuelStatus.settled,
+                    DuelStatus.resolved,
+                ]
+            ),
+        )
+    )
+
+    opponents: dict[int, DuelOpponent] = {}
+    for (
+        challenger_praxis_id,
+        opponent_praxis_id,
+        challenger_name,
+        challenger_faction,
+        opponent_name,
+        opponent_faction,
+    ) in rows.all():
+        # The challenger's card names the opponent — only once there IS one.
+        if challenger_praxis_id in praxis_ids and opponent_praxis_id is not None:
+            opponents[challenger_praxis_id] = DuelOpponent(
+                praxis_id=opponent_praxis_id,
+                display_name=opponent_name or "",
+                faction_slug=opponent_faction,
+            )
+        # The opponent's card names the challenger, who always exists: a Duel row
+        # cannot be created without the challenger's praxis.
+        if opponent_praxis_id is not None and opponent_praxis_id in praxis_ids:
+            opponents[opponent_praxis_id] = DuelOpponent(
+                praxis_id=challenger_praxis_id,
+                display_name=challenger_name or "",
+                faction_slug=challenger_faction,
+            )
+    return opponents
+
+
 def _resolve_card_scoring(
     contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
 ) -> tuple[int, float, int, float]:
@@ -422,6 +544,7 @@ async def build_praxis_card_out(
     applied_metatasks: Optional[dict[int, list[TaskOut]]] = None,
     viewer_can_vote: Optional[dict[int, bool]] = None,
     duel_ids: Optional[dict[int, int]] = None,
+    duel_opponents: Optional[dict[int, DuelOpponent]] = None,
     tallies: Optional[dict[int, VoteTally]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
@@ -463,6 +586,13 @@ async def build_praxis_card_out(
     the duel lookup is not a per-card query (N+1). When absent, this builder
     loads the single praxis's duel id itself (single-card callers). A missing
     entry means the praxis is not a duel side (``duel_id=None``).
+
+    ``duel_opponents`` maps praxis id → the OTHER side of its duel (#596); list
+    routes precompute it once via :func:`duel_opponents_for` so naming the rival
+    is not a per-card join. When absent, this builder resolves the single
+    praxis's own opponent (single-card callers). A missing entry means there is
+    no opponent to name — either the praxis is not a duel side at all, or its
+    duel is still ``pending`` and nobody has accepted yet.
 
     ``tallies`` maps praxis id → its :class:`~services.vote_tally.VoteTally`;
     list routes precompute it once via :func:`~services.vote_tally.tally_votes`
@@ -525,6 +655,14 @@ async def build_praxis_card_out(
     else:
         praxis_duel_id = (await duel_id_map([praxis], session)).get(praxis.id)
 
+    # The other side of the duel (#596). Reuse the precomputed page-wide map when
+    # the list route supplies it; otherwise resolve this praxis's own. Absent for
+    # a non-duel praxis and for a challenger whose duel is still pending.
+    if duel_opponents is not None:
+        opponent = duel_opponents.get(praxis.id)
+    else:
+        opponent = (await duel_opponents_for([praxis], session)).get(praxis.id)
+
     return PraxisCardOut(
         id=praxis.id,
         task_id=praxis.task_id,
@@ -561,6 +699,9 @@ async def build_praxis_card_out(
             viewer_can_vote.get(praxis.id, True) if viewer_can_vote else True
         ),
         duel_id=praxis_duel_id,
+        opponent_praxis_id=opponent.praxis_id if opponent else None,
+        opponent_display_name=opponent.display_name if opponent else None,
+        opponent_faction_slug=opponent.faction_slug if opponent else None,
     )
 
 
@@ -569,7 +710,7 @@ async def build_praxis_cards(
     session: AsyncSession,
     viewer: Optional[Character],
 ) -> list[PraxisCardOut]:
-    """Enrich a whole page of praxes into cards, seven PAGE-WIDE queries deep.
+    """Enrich a whole page of praxes into cards, eight PAGE-WIDE queries deep.
 
     Every lookup here is deliberately one query for the list rather than one per
     card, and they are listed together so that stays true — an eighth per-card
@@ -611,6 +752,11 @@ async def build_praxis_cards(
     # duel lookup per card. A duel side is stored type='solo' + a non-null
     # duel_id (ADR-0011), so the card mode label/chip gates on this, not type.
     duel_ids = await duel_id_map(praxes, session)
+    # Duel opponents (#596): one three-join query for the whole page — not a join
+    # per card. A duel side's own members list holds only itself (ADR-0011), so
+    # naming the rival needs the Duel row and the other side's author; this is
+    # the only place on a card that reaches across a duel.
+    duel_opponents = await duel_opponents_for(praxes, session)
     # Vote tallies (#1378): one grouped aggregate for the whole page — this was
     # the last per-card query here, a one-element ``tally_votes`` call inside the
     # builder, costing +1 SELECT per row on every list and doubling on each
@@ -626,6 +772,7 @@ async def build_praxis_cards(
             applied_metatasks=applied_metatasks,
             viewer_can_vote=viewer_can_vote,
             duel_ids=duel_ids,
+            duel_opponents=duel_opponents,
             tallies=tallies,
         )
         for praxis in praxes
@@ -639,4 +786,6 @@ __all__ = [
     "build_praxis_cards",
     "build_praxis_out",
     "duel_id_map",
+    "duel_opponents_for",
+    "DuelOpponent",
 ]

@@ -7,6 +7,7 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character, CharacterStatus
@@ -78,7 +79,9 @@ async def get_character_by_id(character_id: int, session: AsyncSession) -> Chara
 
 ALBESCENT_FACTION_SLUG = "albescent"
 
-_ALBESCENT_SENTINEL_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
+_ALBESCENT_SENTINEL_SLUGS: frozenset[str] = frozenset(
+    {UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG}
+)
 
 
 async def account_peak_character_level(
@@ -400,8 +403,10 @@ async def create_character(
 
     # ADR-0019: born unaffiliated by default. A non-None faction must be one the
     # account holds an invitation for. Albescent is never a creation option.
+    # The default is era-owned (ADR-0042) and defaults to `na` on EraConfig, so
+    # this reads era.starting_faction_slug rather than the slug itself.
     if requested_faction_slug is None:
-        starting_faction_slug = "na"
+        starting_faction_slug = era.starting_faction_slug
     elif requested_faction_slug == ALBESCENT_FACTION_SLUG:
         raise HTTPException(
             status_code=400,
