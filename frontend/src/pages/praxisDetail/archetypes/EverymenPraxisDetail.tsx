@@ -93,6 +93,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -562,7 +563,7 @@ export default function EverymenPraxisDetail({
   // design's own sums are NOT built: the model is
   // `(base + meta) × faction_mult + votes`, resolved once by `scoreBreakdown()`
   // inside the stamp (ADR-0014/0047/0053).
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>

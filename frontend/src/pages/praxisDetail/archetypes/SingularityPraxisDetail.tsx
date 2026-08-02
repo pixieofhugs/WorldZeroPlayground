@@ -18,6 +18,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -530,7 +531,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // the struck well, the ruled register rows and the votes tally. No arithmetic
   // is restated here: `scoreBreakdown()` is the single authority (ADR-0053), and
   // the design's own multiplier-from-the-vote-average is not built.
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>

@@ -38,10 +38,30 @@ import type { PraxisDetailState } from './usePraxisDetail'
 // The LEAF module, not `useEditPraxis` — reaching for the hook's barrel would
 // drag the composer's api and upload plumbing onto every praxis-detail load.
 import { deriveEditPraxisPhase } from '../editPraxis/editPraxisPhase'
+import { UNSCORED_MODERATION_STATUSES } from '../../api/praxis'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'
 import { factionCssVar } from '../../utils/factions'
+
+/**
+ * Whether this praxis's score was actually banked (#1444).
+ *
+ * `ScoreStamp` renders nothing on a `failed` or `hidden` praxis: #1373 ruled
+ * those bank no points, and a mark naming a total nobody holds is simply false.
+ * Every archetype wraps its stamp in a HEADED panel, so the dispatcher's null
+ * would leave eight empty "Score" sections behind it — the panel goes with the
+ * mark. One predicate for both, so the page and the stamp cannot come to
+ * disagree about which praxes have a score to show.
+ *
+ * The honest signal survives here: {@link PraxisStatusBanners} draws the failed
+ * banner on this page too. It needs an `admin_note` to draw, so a praxis failed
+ * without one shows no banner AND now no score — a gap that predates this and
+ * belongs to the banner, not the stamp.
+ */
+export function scoreWasBanked(praxis: PraxisOut): boolean {
+  return !UNSCORED_MODERATION_STATUSES.has(praxis.moderation_status)
+}
 
 // ── The detail WALL's alarm inks (#1451) ─────────────────────────────────────
 //

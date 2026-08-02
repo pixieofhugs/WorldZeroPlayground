@@ -389,6 +389,57 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
 
 
 @pytest.mark.asyncio
+async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+):
+    """An unrecognised ?sort= is a 422, not the level default under a 200.
+
+    The seam is the trust boundary: GET /tasks parsing the raw query string.
+    Before #1443 'most_liked' fell through to level-ascending and returned
+    plausible-looking rows, so a typo'd or retired value never surfaced —
+    /praxes has always raised on the same input.
+
+    The absent half is the other required assertion: Tasks.tsx sends no sort at
+    all and depends on landing on level-ascending, so a route that rejected
+    everything would pass a one-sided test.
+    """
+    easy = Task(
+        title="Easy Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    hard = Task(
+        title="Hard Task",
+        description="",
+        point_value=50,
+        level_required=3,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([easy, hard])
+    await db_session.commit()
+
+    rejected = await client.get("/tasks", params={"sort": "most_liked"})
+    assert rejected.status_code == 422
+
+    absent = await client.get("/tasks")
+    assert absent.status_code == 200
+    absent_ids = [task["id"] for task in absent.json()]
+    # Level ascending: the level-0 row precedes the level-3 one, and the rich
+    # level-3 row has not floated to the top on point value.
+    assert absent_ids.index(easy.id) < absent_ids.index(hard.id)
+    assert absent_ids[0] != hard.id
+
+
+@pytest.mark.asyncio
 async def test_list_tasks_exclude_character_id(
     client: AsyncClient,
     character: Character,
