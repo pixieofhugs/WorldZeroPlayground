@@ -50,7 +50,6 @@ function detail(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     forfeited_by_character_id: null,
     challenger: side(MINE_PRAXIS, 3),
     opponent: side(RIVAL_PRAXIS, 4),
-    viewer_is_participant: false,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

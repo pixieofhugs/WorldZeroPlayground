@@ -35,7 +35,6 @@ import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
     slug,
-    can_always_rejoin: false,
     own_task_modifier: 1.0,
     other_task_modifier: 1.0,
     collab_own_modifier: 1.0,
@@ -129,7 +128,6 @@ function duel(status: DuelStatus, foeSubmitted: boolean): DuelDetailOut {
     forfeited_by_character_id: null,
     challenger: ME,
     opponent: { ...FOE, is_submitted: foeSubmitted },
-    viewer_is_participant: true,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

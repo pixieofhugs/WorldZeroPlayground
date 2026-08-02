@@ -120,7 +120,6 @@ const DUEL: DuelDetailOut = {
     points_from_votes: 15.4,
     is_submitted: true,
   },
-  viewer_is_participant: false,
   winner_character_id: null,
   challenger_final_points: null,
   opponent_final_points: null,

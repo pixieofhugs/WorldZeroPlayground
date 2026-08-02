@@ -189,7 +189,6 @@ const SAMPLE_INVITE: PraxisInviteOut = {
   praxis_id: 501,
   inviter_id: 7,
   invitee_id: 19,
-  inviter_display_name: 'Ada Reed',
   invitee_display_name: 'Pip Marigold',
   status: 'pending',
   created_at: EARLIER,
@@ -416,7 +415,6 @@ export const mockFeedItems: Record<string, ActivityFeedItem> = {
       praxis_id: 501,
       invite_id: 1,
       task_title: 'Organize a neighborhood tool library',
-      inviter_display_name: 'Sam Okafor',
     },
     actor_faction_slug: 'everymen',
     context_faction_slug: 'everymen',
@@ -450,7 +448,6 @@ export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({ slug }))
 export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
   return {
     slug: 'ua',
-    can_always_rejoin: false,
     own_task_modifier: 1.5,
     other_task_modifier: 1,
     collab_own_modifier: 1.25,
@@ -571,7 +568,6 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 28,
       is_submitted: false,
     },
-    viewer_is_participant: true,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

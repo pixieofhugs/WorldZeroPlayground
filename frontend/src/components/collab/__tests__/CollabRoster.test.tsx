@@ -25,7 +25,6 @@ function invite(
     praxis_id: 1,
     inviter_id: 1,
     invitee_id: id + 100,
-    inviter_display_name: 'M1',
     invitee_display_name: name,
     status,
     created_at: '2026-01-01T00:00:00Z',

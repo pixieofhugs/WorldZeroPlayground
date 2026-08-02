@@ -11,7 +11,8 @@ export interface RelationshipListItem {
   to_display_name: string
   to_avatar_url: string
   to_faction_slug: string
-  reverse_type: string | null
+  // The reverse edge's raw type is not emitted: `display_status` is the
+  // server's word on what the pair of edges means (#1387).
   display_status: 'Mutual Friends' | 'Rivals' | 'Tsundere' | 'One-sided Friend' | 'One-sided Foe' | 'Secret Admirer' | 'Targeted' | 'Blocked' | 'Unknown'
 }
 

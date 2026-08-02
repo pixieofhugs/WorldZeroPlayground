@@ -139,7 +139,6 @@ function duelState(
     forfeited_by_character_id: null,
     challenger: duelSide(1, overrides.isPublished ?? true),
     opponent: duelSide(2, overrides.rivalCast ?? false),
-    viewer_is_participant: true,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,

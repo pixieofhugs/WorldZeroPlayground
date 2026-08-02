@@ -33,7 +33,6 @@ function invite(
     praxis_id: 1,
     inviter_id: 1,
     invitee_id: inviteeId,
-    inviter_display_name: 'M1',
     invitee_display_name: `I${inviteeId}`,
     status,
     created_at: createdAt,

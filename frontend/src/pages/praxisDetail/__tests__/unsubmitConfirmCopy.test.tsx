@@ -120,7 +120,6 @@ function duel(status: DuelStatus): DuelDetailOut {
     forfeited_by_character_id: null,
     challenger: ME,
     opponent: FOE,
-    viewer_is_participant: true,
     winner_character_id: null,
     challenger_final_points: null,
     opponent_final_points: null,
