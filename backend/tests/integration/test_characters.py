@@ -842,6 +842,121 @@ async def test_delete_character_wrong_owner(
 
 
 # ---------------------------------------------------------------------------
+# DELETE erases the avatar (#1568)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_delete_character_erases_the_avatar_file_and_the_column(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    tmp_path,
+    monkeypatch,
+):
+    """Ending your own life takes your photo with it (#1568).
+
+    Route-level because the erasure is a property of the *self-deletion path*,
+    not of the state it lands in: the admin ban reaches the identical
+    ``status = banned`` and must leave the file alone.
+
+    Both halves are asserted. Unlinking without clearing the column leaves the
+    row pointing at a file that is gone; clearing without unlinking leaves an
+    orphan nothing will ever reference again.
+    """
+    from config import settings as _settings
+
+    monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
+
+    upload = await client.post(
+        f"/characters/{character.id}/avatar",
+        files={"file": ("avatar.jpg", _make_jpeg_bytes(), "image/jpeg")},
+        headers=auth_headers,
+    )
+    assert upload.status_code == 200
+    avatar_url = upload.json()["avatar_url"]
+    assert os.path.isfile(os.path.join(str(tmp_path), avatar_url))
+
+    resp = await client.delete(f"/characters/{character.id}", headers=auth_headers)
+    assert resp.status_code == 204
+
+    assert not os.path.exists(os.path.join(str(tmp_path), avatar_url))
+    await db_session.refresh(character)
+    assert character.avatar_url == ""
+
+
+@pytest.mark.asyncio
+async def test_delete_character_leaves_praxis_media_on_disk(
+    client: AsyncClient,
+    character: Character,
+    praxis_solo,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    tmp_path,
+    monkeypatch,
+):
+    """Praxis media is other people's history, not the departing player's alone.
+
+    It is the public artefact of work others have voted on and built feeds
+    around; removing it retroactively would leave praxis cards with missing
+    images across those feeds (#1568).
+    """
+    from config import settings as _settings
+    from models.praxis import MediaItem, MediaType
+
+    monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
+
+    relative_path = os.path.join(str(character.id), str(praxis_solo.id), "abc", "proof.jpg")
+    absolute_path = os.path.join(str(tmp_path), relative_path)
+    os.makedirs(os.path.dirname(absolute_path), exist_ok=True)
+    with open(absolute_path, "wb") as handle:
+        handle.write(b"proof bytes")
+    db_session.add(
+        MediaItem(
+            praxis_id=praxis_solo.id,
+            type=MediaType.image,
+            file_path=relative_path,
+            display_order=0,
+        )
+    )
+    await db_session.flush()
+
+    resp = await client.delete(f"/characters/{character.id}", headers=auth_headers)
+    assert resp.status_code == 204
+
+    assert os.path.isfile(absolute_path)
+
+
+@pytest.mark.asyncio
+async def test_delete_character_with_a_pasted_avatar_url_deletes_nothing(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    tmp_path,
+    monkeypatch,
+):
+    """``avatar_url`` may hold a remote URL a player typed, not a path we wrote.
+
+    Unlinking whatever that column holds would be a path-traversal primitive;
+    the guard lives in ``services.media.resolve_stored_media_path`` and this is
+    the deletion path's proof that it goes through it.
+    """
+    from config import settings as _settings
+
+    monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
+    character.avatar_url = "https://example.com/photo.jpg"
+    await db_session.flush()
+
+    resp = await client.delete(f"/characters/{character.id}", headers=auth_headers)
+
+    assert resp.status_code == 204
+    await db_session.refresh(character)
+    assert character.avatar_url == ""
+
+
+# ---------------------------------------------------------------------------
 # Relationships endpoint — deleted, see below
 # ---------------------------------------------------------------------------
 
