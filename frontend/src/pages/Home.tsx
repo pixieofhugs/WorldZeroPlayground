@@ -37,6 +37,25 @@ import ActivityTicker from '../components/ActivityTicker'
 /** How many cards each browse tab shows — two rows of the design's 2-up grid. */
 const BROWSE_LIMIT = 4
 
+/**
+ * What each browse tab actually asks the server for.
+ *
+ * Exported because the two headings — "Tasks you can sign up for", "Praxes that
+ * need your vote" — are promises, and an unfiltered list under either of them is
+ * a bug that renders perfectly. The SSR test harness never runs effects, so a
+ * render assertion cannot see the request; naming the filters here is what makes
+ * the promise assertable at all.
+ *
+ * Neither carries a `status`. `can_sign_up` makes the SERVER evaluate its own
+ * sign-up predicate (#1130), so an ability that bends the level bar — WOW's
+ * once-a-level jump, the Ephemerists' retired-task access — is honoured here
+ * without this page knowing a rule; pinning `status: 'active'` alongside it would
+ * quietly cancel the second one. `voted: 'no'` is the feed's "needs my vote":
+ * votable, unvoted, and never a praxis the account co-owns (ADR-0013).
+ */
+export const BROWSE_TASK_FILTERS = { can_sign_up: true, limit: BROWSE_LIMIT } as const
+export const BROWSE_PRAXIS_FILTERS = { voted: 'no', limit: BROWSE_LIMIT } as const
+
 /** The design's card surface: `--color-bg-surface`, 1px border, `--radius-xl`. */
 const surfaceCard: CSSProperties = {
   background: 'var(--color-bg-surface)',
@@ -211,7 +230,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
   useEffect(() => {
     if (tab !== 'tasks' || tasks !== null) return
     let cancelled = false
-    listTasks({ can_sign_up: true, limit: BROWSE_LIMIT })
+    listTasks(BROWSE_TASK_FILTERS)
       .then((rows) => { if (!cancelled) setTasks(rows) })
       .catch(() => { if (!cancelled) setTasks([]) })
     return () => { cancelled = true }
@@ -220,7 +239,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
   useEffect(() => {
     if (tab !== 'praxis' || praxes !== null) return
     let cancelled = false
-    listPraxes({ voted: 'no', limit: BROWSE_LIMIT })
+    listPraxes(BROWSE_PRAXIS_FILTERS)
       .then((rows) => { if (!cancelled) setPraxes(rows) })
       .catch(() => { if (!cancelled) setPraxes([]) })
     return () => { cancelled = true }
