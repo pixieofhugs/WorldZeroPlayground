@@ -52,6 +52,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
     avatarSource,
     setAvatarSource,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
     error,
@@ -181,6 +182,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
           aspect={AVATAR_ASPECT}
           onConfirm={handleAvatarConfirm}
           onCancel={() => setAvatarSource(null)}
+          onError={setAvatarError}
         />
       )}
     </div>
