@@ -27,6 +27,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -571,7 +572,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // TASK's faction — so this page gets UA's own stamp, and the arithmetic is
   // `scoreBreakdown()`'s alone (ADR-0053). No second strip restating the same
   // terms, and no hand-drawn ensō: the stamp already owns the mark's score half.
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={panel}>
       {panelHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>

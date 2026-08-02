@@ -169,8 +169,9 @@ async def resolve_duels_at_era_close(
     A duel has no winner until the era closes — the tally floats live until this
     runs (ADR-0011). Here every ``active`` or ``settled`` duel gets:
 
-    - ``winner_character_id`` from the one shared rule (``duel_winner``): forfeit
-      → the non-forfeiter, else strictly greater ``points_from_votes``, tie → NULL.
+    - ``winner_character_id`` from the one shared rule (``duel_winner``): a side
+      that forfeited or that a moderator ruled unscored cannot win (#1442), else
+      strictly greater ``points_from_votes``, tie → NULL.
     - a snapshot of both sides' ``points_from_votes``, so a resolved surface can
       show vote shares without the live tally moving under it.
     - ``resolved_at`` and the terminal ``resolved`` status.
@@ -248,12 +249,26 @@ async def resolve_duels_at_era_close(
         challenger_character_id = (
             challenger_praxis.created_by_id if challenger_praxis else None
         )
+        opponent_praxis = (
+            praxes_by_id.get(duel.opponent_praxis_id)
+            if duel.opponent_praxis_id is not None
+            else None
+        )
         duel.winner_character_id = (
             duel_winner(
                 challenger_character_id=challenger_character_id,
                 opponent_character_id=duel.opponent_character_id,
                 challenger_points=challenger_points,
                 opponent_points=opponent_points,
+                # The freeze reads moderation for the same reason the live
+                # multiplier does (#1442): a side an admin ruled unscored cannot
+                # win, and this is the write that makes the result permanent.
+                challenger_moderation=(
+                    challenger_praxis.moderation_status if challenger_praxis else None
+                ),
+                opponent_moderation=(
+                    opponent_praxis.moderation_status if opponent_praxis else None
+                ),
                 forfeited_by_character_id=duel.forfeited_by_character_id,
                 tie_break_winner_id=snide_tie_winner_id(
                     faction_by_character.get(challenger_character_id, ""),

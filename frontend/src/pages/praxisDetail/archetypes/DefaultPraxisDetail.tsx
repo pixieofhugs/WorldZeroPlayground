@@ -113,6 +113,7 @@ import {
   PraxisDetailComments,
   MemberByline,
   orderedMembers,
+  scoreWasBanked,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -478,7 +479,7 @@ export default function DefaultPraxisDetail({
   // VOTE AVERAGE, calls it the faction multiplier, and prints votes as a count.
   // The model is `(base + meta) × faction_mult + votes` (ADR-0014/0047/0053),
   // resolved once by `scoreBreakdown()` inside the stamp.
-  const scoreBlock = (
+  const scoreBlock = !scoreWasBanked(praxis) ? null : (
     <section style={panel}>
       {sectionHead(t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>

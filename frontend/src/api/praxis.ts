@@ -14,6 +14,25 @@ export type PraxisInviteStatus = 'pending' | 'accepted' | 'declined'
 export type ModerationStatus = 'visible' | 'flagged' | 'hidden' | 'failed'
 export type MediaType = 'image' | 'video' | 'audio'
 
+/**
+ * The moderation states that bank nobody any points — the frontend's mirror of
+ * `_UNSCORED_MODERATION_STATUSES` in `backend/services/character_stats.py`.
+ *
+ * `hidden` is off the site entirely; `failed` is an admin ruling that the work
+ * was not done, so it keeps its banner and its place in the feed but banks
+ * nothing (#1373). `flagged` is deliberately NOT here: a flag is a praxis
+ * *awaiting* a ruling, and it still counts.
+ *
+ * Lives beside {@link ModerationStatus} because it is a fact about the wire
+ * enum, not about any one surface, and because the pair is only safe as ONE
+ * list — the defect in #1444 was a card that stamped a computed total on a
+ * praxis whose score the backend had already declined to bank.
+ */
+export const UNSCORED_MODERATION_STATUSES: ReadonlySet<ModerationStatus> = new Set([
+  'hidden',
+  'failed',
+])
+
 export interface MediaItemOut {
   id: number
   praxis_id: number

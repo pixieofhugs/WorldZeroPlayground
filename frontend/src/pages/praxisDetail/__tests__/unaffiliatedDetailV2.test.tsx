@@ -332,6 +332,28 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(render(unvoted).text).toContain("from votes");
   });
 
+  /**
+   * #1444 — the whole score SECTION leaves a praxis that banked nothing, not
+   * just the mark inside it.
+   *
+   * The stamp is gated in its dispatcher, which every surface mounts; the panel
+   * has to go with it or the page keeps a headed "Score" section with nothing
+   * under it. Both halves are asserted: a gate that hid the section ALWAYS would
+   * satisfy the first case on its own.
+   */
+  it("drops the score section on a failed praxis and keeps it on a scored one", () => {
+    const failed = state({
+      praxis: { ...PRAXIS, moderation_status: "failed", admin_note: "Not the task." },
+    });
+    const { text } = render(failed);
+    expect(text, "no headed empty panel").not.toContain("Score");
+    expect(text, "no total nobody banked").not.toContain("16.0");
+    // The banner is the honest signal and it stays (the #1373 ruling).
+    expect(text).toContain("Not the task.");
+
+    expect(render(state()).text, "a visible praxis still stamps").toContain("16.0");
+  });
+
   it("banners flagged, failed-with-note, and the crown", () => {
     expect(render(state()).text, "clean praxis has no banner").not.toContain("FLAGGED");
 

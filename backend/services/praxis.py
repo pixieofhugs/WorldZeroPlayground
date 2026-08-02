@@ -1803,6 +1803,13 @@ async def moderate_praxis(
     recalc is unconditional rather than gated on "did the scored-ness change":
     it is the same handful of queries the vote path already runs per vote, and
     an admin action is rare.
+
+    A **duel side** also recalcs the *opponent* (#1442). A praxis ruled unscored
+    cannot win its duel, which hands the other side the guaranteed-win modifier —
+    and the opponent is not a member of this praxis, so nothing else would move
+    their score until their own next edit. Same shape as the forfeit recalc in
+    :func:`unsubmit_praxis`, for the same reason: the ruling changes what a second
+    player is worth.
     """
     praxis = await get_praxis(praxis_id, session)
 
@@ -1821,8 +1828,37 @@ async def moderate_praxis(
         praxis.admin_note = None
 
     await session.flush()
-    await recalculate_members_stats(praxis, session, era)
+    era_row = await get_era_row_for_praxis(praxis, session)
+    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+
+    opponent_character_id = await _duel_opponent_character_id(praxis_id, session)
+    if opponent_character_id is not None:
+        await recalculate_character_stats(
+            opponent_character_id, session, era, era_row=era_row
+        )
+        await session.flush()
     return await get_praxis(praxis_id, session)
+
+
+async def _duel_opponent_character_id(
+    praxis_id: int, session: AsyncSession
+) -> Optional[int]:
+    """The other side's character in ``praxis_id``'s live duel, or None.
+
+    None covers every "no second player to move" case: not a duel side, a duel
+    already frozen at era close (``get_duel_for_praxis`` excludes ``resolved``, and
+    ADR-0052 says a frozen outcome never recomputes), or a challenge with no
+    opponent praxis yet.
+    """
+    from services.duel import get_duel_for_praxis
+
+    duel = await get_duel_for_praxis(praxis_id, session)
+    if duel is None:
+        return None
+    if duel.challenger_praxis_id == praxis_id:
+        return duel.opponent_character_id
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    return challenger_praxis.created_by_id if challenger_praxis else None
 
 
 __all__ = [
