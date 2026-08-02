@@ -8,7 +8,7 @@ import i18n from '../../i18n'
 import { extractError } from '../../utils/errors'
 import FeedArchiveButton from './FeedArchiveButton'
 import FeedUndoStrip, { UNDO_WINDOW_MS, type FeedUndoPhase } from './FeedUndoStrip'
-import { feedItemTitle, isArchivable } from './feedItemLabels'
+import { feedDismissedMessage, feedItemTitle, isArchivable } from './feedItemLabels'
 
 /**
  * ONE SLOT IN THE FEED — and the whole of the archive interaction (#1194,
@@ -148,13 +148,17 @@ export default function FeedItemSlot({
 
   // ─── The undo strip, standing in this slot ────────────────────────────────
   if (phase === 'acted') {
-    const title = feedItemTitle(item)
     return (
       <FeedUndoStrip
-        message={i18n.t(
-          archivedView ? 'feed:archive.restored' : 'feed:archive.archived',
-          { title },
-        )}
+        // The dismiss direction takes a per-type line where one is authored
+        // (#1458): the invitation letter's "Not now" is a deferral, and a strip
+        // reading "Archived" would state a decision the player did not make.
+        // Restoring is the same act for every type, so it keeps one sentence.
+        message={
+          archivedView
+            ? i18n.t('feed:archive.restored', { title: feedItemTitle(item) })
+            : feedDismissedMessage(item)
+        }
         actionLabel={i18n.t(
           undoPhase === 'undo'
             ? 'feed:archive.undo'
