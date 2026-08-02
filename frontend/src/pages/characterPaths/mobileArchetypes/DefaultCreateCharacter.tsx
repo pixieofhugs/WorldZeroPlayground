@@ -30,6 +30,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
     avatarSource,
     setAvatarSource,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
     error,
@@ -158,6 +159,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           aspect={AVATAR_ASPECT}
           onConfirm={handleAvatarConfirm}
           onCancel={() => setAvatarSource(null)}
+          onError={setAvatarError}
         />
       )}
     </form>

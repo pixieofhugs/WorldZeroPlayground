@@ -3,9 +3,10 @@
  * vite.config.ts), so we test the geometry + decision logic directly and leave
  * the canvas drawing (ImageEditModal.renderCroppedBlob) to manual/e2e.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   AVATAR_ASPECT,
+  applyImageEdit,
   blobToFile,
   cropOutputSize,
   effectiveAspect,
@@ -15,6 +16,7 @@ import {
   partitionByEditability,
   rotateSize,
 } from '../imageEditHelpers'
+import type { Area } from 'react-easy-crop'
 
 describe('rotateSize — cropped-canvas bounding box', () => {
   it('is unchanged at 0°', () => {
@@ -131,5 +133,123 @@ describe('blobToFile — wrapping an edited blob for upload', () => {
   it('keeps png lossless with a .png name', () => {
     const blob = new Blob(['bytes'], { type: 'image/png' })
     expect(blobToFile(blob, 'sketch.png').name).toBe('sketch.png')
+  })
+})
+
+/**
+ * #1527: every failing branch of "Apply" used to end in a silent upload of the
+ * untouched file. These pin which branches are failures (they report) and which
+ * one is a deliberate pass-through (it confirms, silently).
+ */
+describe('applyImageEdit — a processing failure is reported, not swallowed', () => {
+  const CROP_AREA: Area = { x: 0, y: 0, width: 100, height: 100 }
+  const OBJECT_URL = 'blob:fake'
+
+  function photo(type = 'image/jpeg'): File {
+    return new File(['bytes'], 'photo.jpg', { type })
+  }
+
+  function harness(overrides: {
+    file?: File
+    objectUrl?: string | null
+    cropArea?: Area | null
+    render?: () => Promise<Blob | null>
+    withFailureChannel?: boolean
+  }) {
+    const onConfirm = vi.fn()
+    const onFailure = vi.fn()
+    const file = overrides.file ?? photo()
+    return {
+      file,
+      onConfirm,
+      onFailure,
+      run: () =>
+        applyImageEdit({
+          file,
+          objectUrl: overrides.objectUrl === undefined ? OBJECT_URL : overrides.objectUrl,
+          cropArea: overrides.cropArea === undefined ? CROP_AREA : overrides.cropArea,
+          render: overrides.render ?? (async () => new Blob(['cropped'], { type: 'image/jpeg' })),
+          onConfirm,
+          onFailure: overrides.withFailureChannel === false ? undefined : onFailure,
+        }),
+    }
+  }
+
+  it('confirms the rendered blob when the crop succeeds', async () => {
+    const cropped = new Blob(['cropped'], { type: 'image/jpeg' })
+    const { onConfirm, onFailure, run } = harness({ render: async () => cropped })
+    await run()
+    expect(onConfirm).toHaveBeenCalledWith(cropped)
+    expect(onFailure).not.toHaveBeenCalled()
+  })
+
+  it('reports not-ready when the object URL has not been minted yet', async () => {
+    const { onConfirm, onFailure, run } = harness({ objectUrl: null })
+    await run()
+    expect(onFailure).toHaveBeenCalledWith('not-ready')
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('reports not-ready when the cropper has reported no crop rect', async () => {
+    // The undecodable-image case: onCropComplete never fires, so this stays null.
+    const { onConfirm, onFailure, run } = harness({ cropArea: null })
+    await run()
+    expect(onFailure).toHaveBeenCalledWith('not-ready')
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('reports render-failed when the canvas hands back no blob', async () => {
+    const { onConfirm, onFailure, run } = harness({ render: async () => null })
+    await run()
+    expect(onFailure).toHaveBeenCalledWith('render-failed')
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('reports render-failed when the render throws (image never decoded)', async () => {
+    const { onConfirm, onFailure, run } = harness({
+      render: async () => {
+        throw new Error('decode failed')
+      },
+    })
+    await run()
+    expect(onFailure).toHaveBeenCalledWith('render-failed')
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('never uploads the unprocessed file on any failure path', async () => {
+    for (const overrides of [
+      { objectUrl: null },
+      { cropArea: null },
+      { render: async () => null },
+      {
+        render: async () => {
+          throw new Error('decode failed')
+        },
+      },
+    ]) {
+      const { file, onConfirm, run } = harness(overrides)
+      await run()
+      expect(onConfirm).not.toHaveBeenCalledWith(file)
+    }
+  })
+
+  it('keeps the GIF pass-through silent — it is a choice, not a failure (#569)', async () => {
+    const gif = new File(['bytes'], 'party.gif', { type: 'image/gif' })
+    const render = vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' }))
+    const { onConfirm, onFailure, run } = harness({ file: gif, render })
+    await run()
+    expect(onConfirm).toHaveBeenCalledWith(gif)
+    expect(onFailure).not.toHaveBeenCalled()
+    expect(render).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the untouched file when no failure channel is supplied', async () => {
+    // Praxis media still mounts the modal without an error line (#1527 scope).
+    const { file, onConfirm, run } = harness({
+      render: async () => null,
+      withFailureChannel: false,
+    })
+    await run()
+    expect(onConfirm).toHaveBeenCalledWith(file)
   })
 })

@@ -35,6 +35,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
     avatarSource,
     setAvatarSource,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
     saving,
@@ -177,6 +178,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
           aspect={AVATAR_ASPECT}
           onConfirm={handleAvatarConfirm}
           onCancel={() => setAvatarSource(null)}
+          onError={setAvatarError}
         />
       )}
     </form>
