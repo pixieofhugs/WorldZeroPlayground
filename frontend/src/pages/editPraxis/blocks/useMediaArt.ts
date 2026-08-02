@@ -54,14 +54,3 @@ export function pickArtKey(filename: string, kind?: MediaType): MediaArtKey {
   if (lower.includes("recipe") || lower.includes("card")) return "recipe";
   return "page";
 }
-
-export function mediaArtKeysFromFile(file: File): MediaArtKey {
-  const kind: MediaType | undefined = file.type.startsWith("image/")
-    ? "image"
-    : file.type.startsWith("video/")
-      ? "video"
-      : file.type.startsWith("audio/")
-        ? "audio"
-        : undefined;
-  return pickArtKey(file.name, kind);
-}
