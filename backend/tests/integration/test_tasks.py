@@ -8,6 +8,9 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# These tests set and assert a *task's* primary_faction_slug, so they name the
+# cross-faction sentinel, not the unaffiliated-character one (#1559).
+from faction_slugs import CROSS_FACTION_SLUG
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -17,7 +20,6 @@ from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
-from services.faction_service import UNAFFILIATED_FACTION_SLUG
 
 
 async def _set_character_level(
@@ -248,7 +250,7 @@ async def test_list_tasks_filter_by_multiple_factions(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug=UNAFFILIATED_FACTION_SLUG,
+        primary_faction_slug=CROSS_FACTION_SLUG,
     )
     ephemerist_task = Task(
         title="Ephemerist Task",
@@ -263,7 +265,7 @@ async def test_list_tasks_filter_by_multiple_factions(
     await db_session.commit()
 
     both = await client.get(
-        "/tasks", params={"faction": ["ua", UNAFFILIATED_FACTION_SLUG]}
+        "/tasks", params={"faction": ["ua", CROSS_FACTION_SLUG]}
     )
     assert both.status_code == 200
     both_ids = {t["id"] for t in both.json()}
@@ -271,7 +273,7 @@ async def test_list_tasks_filter_by_multiple_factions(
     assert ephemerist_task.id not in both_ids
     assert {t["primary_faction_slug"] for t in both.json()} == {
         "ua",
-        UNAFFILIATED_FACTION_SLUG,
+        CROSS_FACTION_SLUG,
     }
 
     one = await client.get("/tasks", params={"faction": "ua"})
@@ -734,7 +736,7 @@ async def test_list_tasks_includes_unaffiliated_tasks(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug=UNAFFILIATED_FACTION_SLUG,
+        primary_faction_slug=CROSS_FACTION_SLUG,
     )
     hidden_task = Task(
         title="Hidden Faction Task",
@@ -941,7 +943,7 @@ async def test_propose_task_without_faction_is_unaffiliated(
         headers=auth_headers2,
     )
     assert resp.status_code == 201
-    assert resp.json()["primary_faction_slug"] == UNAFFILIATED_FACTION_SLUG
+    assert resp.json()["primary_faction_slug"] == CROSS_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -2474,7 +2476,7 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug=UNAFFILIATED_FACTION_SLUG,
+        primary_faction_slug=CROSS_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -2483,7 +2485,7 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
     resp = await client.get(f"/tasks/{task.id}")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["primary_faction_slug"] == UNAFFILIATED_FACTION_SLUG
+    assert data["primary_faction_slug"] == CROSS_FACTION_SLUG
     assert data["created_by_faction_slug"] == "ua"
 
 

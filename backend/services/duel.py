@@ -15,6 +15,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
@@ -150,7 +151,11 @@ async def get_duel_detail(
             praxis_id=praxis_id,
             character_id=character.id if character is not None else 0,
             display_name=character.display_name if character is not None else "",
-            faction_slug=(character.faction_slug or "na") if character is not None else "na",
+            faction_slug=(
+                (character.faction_slug or UNAFFILIATED_FACTION_SLUG)
+                if character is not None
+                else UNAFFILIATED_FACTION_SLUG
+            ),
             avatar_url=character.avatar_url if character is not None else "",
             points_from_votes=(
                 get_tally(tallies, praxis_id).points_from_votes if praxis_id is not None else 0
