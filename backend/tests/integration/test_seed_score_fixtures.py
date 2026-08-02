@@ -23,6 +23,10 @@ from models.faction import Faction, FactionStatus
 from models.praxis import Praxis
 from models.task import Task, TaskStatus, TaskType
 from scripts.seed_demo_praxes import (
+    COLLAB_AUTHOR_USERNAME,
+    COLLAB_SECOND_USERNAME,
+    COLLAB_TASK_FACTION_SLUG,
+    COLLAB_TITLE,
     DUEL_LOSER_TITLE,
     DUEL_LOSER_USERNAME,
     DUEL_TASK_FACTION_SLUG,
@@ -47,7 +51,7 @@ async def _board(db_session: AsyncSession, author: Character) -> None:
         if existing is None:
             db_session.add(Faction(slug=slug, status=FactionStatus.visible))
     await db_session.flush()
-    for slug in {METATASK_FACTION_SLUG, DUEL_TASK_FACTION_SLUG}:
+    for slug in {METATASK_FACTION_SLUG, DUEL_TASK_FACTION_SLUG, COLLAB_TASK_FACTION_SLUG}:
         db_session.add(Task(
             title=f"Board task ({slug})",
             description="fixture",
@@ -159,6 +163,87 @@ async def test_seeded_duel_sides_have_non_unit_multipliers(
 
 
 @pytest.mark.asyncio
+async def test_seeded_collab_carries_the_own_faction_collab_modifier(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+):
+    """The seeded collab reports the era's collab_own_modifier, and it is not 1.0.
+
+    This is the fixture's whole reason to exist: Coven's collab_own_modifier is
+    the only Era 1 multiplier that is neither a duel modifier nor a whole number,
+    so it is the one that can round wrong — and it had nothing rendering it.
+    """
+    await _board(db_session, character)
+    players = await get_or_create_players(db_session)
+    await seed_score_fixtures(db_session, players, CURRENT_ERA)
+
+    praxis = await _praxis(db_session, COLLAB_TITLE)
+    expected = CURRENT_ERA.factions[COLLAB_TASK_FACTION_SLUG].collab_own_modifier
+    # Guards the premise, not the value: if a future era neutralises Coven this
+    # fixture stops proving anything and should be re-pointed at whichever
+    # faction carries the non-1.0 modifier then.
+    assert expected != 1.0, (
+        f"'{COLLAB_TASK_FACTION_SLUG}' no longer has a non-1.0 collab_own_modifier "
+        f"— the collab fixture renders nothing"
+    )
+
+    # Both members are Coven on a Coven task, so either side shows the modifier.
+    for username in (COLLAB_AUTHOR_USERNAME, COLLAB_SECOND_USERNAME):
+        member = await _character(db_session, username)
+        contribution = (
+            await compute_contributions([praxis], member, CURRENT_ERA, db_session)
+        )[praxis.id]
+        assert contribution.faction_multiplier == expected, username
+        assert contribution.duel_multiplier == 1.0, username
+
+
+@pytest.mark.asyncio
+async def test_collab_fixture_skips_when_the_board_has_no_coven_task(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+):
+    """No Coven task on the board is a skip, not a crash.
+
+    ERA_1_TASKS is empty by design — the board lives only in the DB — so on a
+    freshly seeded database there may be no Coven task at all. The fixture must
+    behave like its metatask/duel siblings and skip rather than invent one.
+    """
+    for slug in CURRENT_ERA.factions:
+        existing = (
+            await db_session.execute(select(Faction).where(Faction.slug == slug))
+        ).scalar_one_or_none()
+        if existing is None:
+            db_session.add(Faction(slug=slug, status=FactionStatus.visible))
+    await db_session.flush()
+    # Deliberately no COLLAB_TASK_FACTION_SLUG task.
+    for slug in {METATASK_FACTION_SLUG, DUEL_TASK_FACTION_SLUG}:
+        db_session.add(Task(
+            title=f"Board task ({slug})",
+            description="fixture",
+            point_value=100,
+            level_required=0,
+            status=TaskStatus.active,
+            task_type=TaskType.standard,
+            created_by=character.id,
+            primary_faction_slug=slug,
+        ))
+    await db_session.flush()
+
+    players = await get_or_create_players(db_session)
+    await seed_score_fixtures(db_session, players, CURRENT_ERA)
+
+    rows = (
+        await db_session.execute(select(Praxis).where(Praxis.title == COLLAB_TITLE))
+    ).scalars().all()
+    assert rows == []
+    # The siblings still landed — one missing task does not sink the whole seed.
+    await _praxis(db_session, METATASK_PRAXIS_TITLE)
+    await _praxis(db_session, DUEL_LOSER_TITLE)
+
+
+@pytest.mark.asyncio
 async def test_seed_score_fixtures_is_idempotent(
     db_session: AsyncSession,
     era: Era,
@@ -175,6 +260,7 @@ async def test_seed_score_fixtures_is_idempotent(
         METATASK_OPEN_PRAXIS_TITLE,
         DUEL_LOSER_TITLE,
         DUEL_WINNER_TITLE,
+        COLLAB_TITLE,
     ):
         rows = (
             await db_session.execute(select(Praxis).where(Praxis.title == title))
