@@ -28,6 +28,8 @@ from httpx import AsyncClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from db import get_session_factory
+from main import app
 from models.character import Character
 from models.era import Era
 from models.feed_dismissal import FeedDismissal
@@ -49,6 +51,14 @@ EXPECTED_FEED_LOAD_STATEMENTS = 19
 #: Round trips the six tab badges cost. One ``UNION ALL`` over the same fifteen
 #: windowed Selects the fetch fan-out runs (#1532). Was 15.
 EXPECTED_BADGE_COUNT_STATEMENTS = 1
+
+#: Sessions a feed load takes from ``session_factory`` — i.e. pooled connections
+#: it holds *on top of* the request's own. Every one of the fifteen fetches and
+#: fifteen counts used to take one, so a single page load reached for ~30 against
+#: a pool of 15 and the surplus queued on ``pool_timeout`` (#1532). Only the
+#: badge UNION takes one now. This is the assertion the bug was actually about:
+#: statement count alone would not have caught it.
+EXPECTED_SUBQUERY_SESSIONS = 1
 
 
 @contextmanager
@@ -152,6 +162,43 @@ async def test_badge_counts_cost_one_round_trip_not_one_per_source(
     assert len(counts) == EXPECTED_BADGE_COUNT_STATEMENTS, (
         f"badge counts cost {len(counts)} round trips against a registry of "
         f"{len(FEED_SOURCES)} sources:\n" + "\n".join(counts)
+    )
+
+
+@pytest.mark.asyncio
+async def test_feed_load_takes_one_pooled_connection_beyond_its_own(
+    client: AsyncClient,
+    feed_viewer: Character,
+    auth_headers: dict,
+):
+    """A page load must not reach for a pool's worth of connections (#1532).
+
+    Counts how many times the service asks ``session_factory`` for a session.
+    The test harness hands back one shared session, so the connections are not
+    real here — the *number of asks* is, and that number is what exhausted the
+    pool in production.
+    """
+    inner_factory = app.dependency_overrides[get_session_factory]
+    asks: list[int] = []
+
+    def counting_override():
+        make_context = inner_factory()
+
+        def counted():
+            asks.append(1)
+            return make_context()
+
+        return counted
+
+    app.dependency_overrides[get_session_factory] = counting_override
+    try:
+        response = await client.get("/activity-feed", headers=auth_headers)
+    finally:
+        app.dependency_overrides[get_session_factory] = inner_factory
+    assert response.status_code == 200
+    assert len(asks) == EXPECTED_SUBQUERY_SESSIONS, (
+        f"the feed took {len(asks)} sessions from the factory against a registry "
+        f"of {len(FEED_SOURCES)} sources"
     )
 
 
