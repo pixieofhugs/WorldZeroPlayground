@@ -16,6 +16,8 @@
  *     hardcoded roster (#1361 ruling 4)
  *   - factionFacet — the faction axis expressed in the generic shape: rows in
  *     roster order, selected first, named, and NO counts (#1361 ruling 3)
+ *   - an option-less facet drawing no trigger at all (#1567), which IS reachable
+ *     here: it is the absence of markup, not the contents of the panel
  *
  * The picker's rows are not reachable here: the panel is behind `open`, which
  * only a click sets. The option list they render is what `factionFacet` and
@@ -301,6 +303,72 @@ describe('factionFacet — the faction axis as one configuration of the widget',
     for (const place of ['row', 'trigger', 'chip'] as const) {
       expect(facet.renderOrnament?.('ua', place)).toBeTruthy()
     }
+  })
+})
+
+describe('an option-less facet draws no trigger (#1567)', () => {
+  // A facet is allowed to narrow itself to nothing: Updates' type facet hides
+  // zero-count rows, so a quiet board leaves it empty. `OptionPicker` returns
+  // null rather than opening a panel with no rows in it. `FilterBar` maps facets
+  // to pickers unconditionally and is deliberately not the place this lives.
+  const emptyFacet: FilterFacet = {
+    key: 'type',
+    label: 'Type',
+    options: [],
+    selected: [],
+    onChange: () => {},
+  }
+
+  const render = (facets: FilterFacet[], summary?: string) =>
+    renderToStaticMarkup(
+      <FilterBar
+        rails={[eraRail('current')]}
+        facets={facets}
+        onClearAll={() => {}}
+        summary={summary}
+      />,
+    )
+
+  it('hides the trigger when the facet has no options', () => {
+    expect(render([emptyFacet])).not.toContain('filter-factions')
+  })
+
+  it('leaves the rails, the summary and the bar itself alone', () => {
+    const html = render([emptyFacet], 'Showing 0 updates')
+    expect(html).toContain('filter-bar')
+    expect(html).toContain('filter-rail')
+    expect(html).toContain('Showing 0 updates')
+  })
+
+  it('hides only the empty facet, not its populated neighbour', () => {
+    const html = render([emptyFacet, factionFacet([{ slug: 'ua' }], [], () => {})])
+    // One trigger, not two: the faction facet still draws.
+    expect(html.match(/filter-factions__trigger/g)).toHaveLength(1)
+  })
+
+  it('KEEPS the trigger for a facet whose only row is a selected zero', () => {
+    // The shape `typeFacetOptions` returns for a deep link like `?types=nudge`
+    // on a board with no nudges. Hiding it would strand the chip.
+    const html = render([
+      {
+        ...emptyFacet,
+        options: [{ value: 'nudge', label: 'Nudge', count: 0 }],
+        selected: ['nudge'],
+      },
+    ])
+    expect(html).toContain('filter-factions__trigger')
+    expect(html).toContain('Nudge')
+  })
+
+  it('never hides the FACTION facet — its roster is not count-filtered', () => {
+    // #1567 guessed this was the same bug; it is not. `factionFacet` carries no
+    // counts at all (#1361 ruling 3) and `filterRoster` always appends the `na`
+    // sentinel, so its option list is non-empty even before GET /factions
+    // answers. Nothing to fix, and nothing to "restore" either.
+    expect(factionFacet([], [], () => {}).options).not.toHaveLength(0)
+    expect(render([factionFacet([], [], () => {})])).toContain(
+      'filter-factions__trigger',
+    )
   })
 })
 

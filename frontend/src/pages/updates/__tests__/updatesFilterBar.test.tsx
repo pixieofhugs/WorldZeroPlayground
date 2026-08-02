@@ -37,6 +37,7 @@ const ARCHIVED = i18n.t('feed:filter.state.archived')
 const FOES = i18n.t('feed:filter.relationship.foes')
 const YOUR_STUFF = i18n.t('feed:filter.relationship.yourStuff')
 const TYPE = i18n.t('feed:filter.type')
+const NUDGE = i18n.t('feed:kicker.nudge')
 const FILTERING_BY = i18n.t('common:filters.bar.filteringBy')
 
 function render(entry: string): { html: string; text: string } {
@@ -72,10 +73,17 @@ describe('the Updates page mounts the shared FilterBar', () => {
     mocks.formFactor = 'desktop'
   })
 
-  it('draws the state segment and the type facet', () => {
+  it('draws the state segment', () => {
     const { text } = render('/updates')
     expect(text).toContain(INBOX)
     expect(text).toContain(ARCHIVED)
+  })
+
+  it('draws the type facet when it has rows to offer', () => {
+    // The harness runs no effects, so `counts.by_type` is the hook's empty seed
+    // and the facet has no rows — see the #1567 block below. A selected type
+    // keeps its row, which is the one way to get a populated facet from here.
+    const { text } = render('/updates?types=nudge')
     // "Type", not "Kicker" — a kicker is a typography term for the eyebrow
     // above a headline (epic decision 5).
     expect(text).toContain(TYPE)
@@ -130,5 +138,45 @@ describe('the relationship rail is hidden on the archive', () => {
 
   it('brings it back in the inbox', () => {
     expect(render('/updates?state=inbox').text).toContain(FOES)
+  })
+})
+
+describe('the type facet on an empty board (#1567)', () => {
+  // `typeFacetOptions` hides zero-count rows on purpose, so on a wiped board
+  // every row drops off and the facet has nothing to offer. The trigger used to
+  // render anyway and opened a sheet with nothing in it. `OptionPicker` now
+  // returns null for an option-less facet — the same rule the relationship rail
+  // above follows (CLAUDE.md: hide unusable controls, don't show them disabled).
+  //
+  // This harness runs no effects, so `counts.by_type` never leaves `useUpdates`'
+  // empty seed: the wiped board IS the default render here.
+  it('draws no Type trigger when every count is zero', () => {
+    const { html, text } = render('/updates')
+    expect(html).not.toContain('filter-factions__trigger')
+    expect(text).not.toContain(TYPE)
+  })
+
+  it('still draws the rest of the bar — hiding one facet is not hiding the bar', () => {
+    const { html, text } = render('/updates')
+    expect(html).toContain('filter-bar')
+    expect(text).toContain(INBOX)
+    expect(text).toContain(FOES)
+  })
+
+  it('KEEPS the trigger for a type selected by deep link, so it can be un-ticked', () => {
+    // The regression most likely to bite: a selected type keeps its row at zero,
+    // so the list is non-empty and the picker must still render. Hiding it here
+    // would strand the chip's only other removal route.
+    const { html } = render('/updates?types=nudge')
+    expect(html).toContain('filter-factions__trigger')
+  })
+
+  it('and the chip that names it stays removable and NAMED', () => {
+    // `deriveChips` reads the label off the same option list, so an emptied list
+    // would print the raw slug.
+    const { text } = render('/updates?types=nudge')
+    expect(text).toContain(FILTERING_BY)
+    expect(text).toContain(NUDGE)
+    expect(text).not.toContain('nudge')
   })
 })

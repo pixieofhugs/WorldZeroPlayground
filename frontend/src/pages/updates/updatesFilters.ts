@@ -302,6 +302,10 @@ export function feedTypeLabel(type: string): string {
  * leave an un-removable filter and — because `deriveChips` reads chip labels off
  * this list — print the raw slug `nudge` on the chip. The faction facet solves
  * the same problem the same way, for the same reason.
+ *
+ * On a quiet board this returns NOTHING, which is a legal answer: `OptionPicker`
+ * draws no trigger for an option-less facet (#1567), so the control disappears
+ * rather than opening a sheet with no rows in it.
  */
 export function typeFacetOptions(
   byType: Record<string, number>,
