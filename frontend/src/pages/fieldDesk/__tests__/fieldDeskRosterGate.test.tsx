@@ -147,9 +147,11 @@ describe('rosterOffersAChoice', () => {
     expect(rosterOffersAChoice(null, false, false)).toBe(true)
   })
 
-  it('always offers the roster to an empty drawer', () => {
-    expect(rosterOffersAChoice([], true, false)).toBe(true)
+  it('always offers the roster to an account playing nobody', () => {
     expect(rosterOffersAChoice([], false, false)).toBe(true)
+    // Even if a row comes back that the server will not carry (a banned life):
+    // the account still has no one to play, and no other way to make someone.
+    expect(rosterOffersAChoice([life()], false, false)).toBe(true)
   })
 
   it('hides it for exactly one life and no way to make another', () => {

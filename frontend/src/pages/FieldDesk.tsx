@@ -271,24 +271,26 @@ export default function FieldDesk() {
  * it is a tell: it can only be read as "there is something here you cannot have
  * yet". So the roster earns its place on three counts, any one of which is
  * enough:
- *   - ZERO lives — this is the create-your-first-life path, and it must never be
- *     gated away or signup dead-ends (the roster is the only way in).
- *   - MORE THAN ONE life — a genuine chooser, whatever the gate says.
+ *   - NO CARRIED LIFE — the account is playing nobody. This is the
+ *     create-your-first-life path, and it must never be gated away or signup
+ *     dead-ends, because the roster is the only way in. Asked of `CurrentUser`
+ *     rather than of the count, so it holds even if the roster read is still out
+ *     or comes back with a life the server will not carry.
  *   - AN OPEN GATE — "begin a new self" is a control the viewer can use.
+ *   - MORE THAN ONE life — a genuine chooser, whatever the gate says. Reachable
+ *     with a shut gate: an era reset drops every level.
  *
- * `lives === null` means the roster read is still in flight. The count is not
- * known yet, so the answer falls back to what `CurrentUser` alone can prove: no
- * carried life needs the create-first path, and an open gate guarantees the
- * dossier. Everyone else waits — a shut gate never flashes a heading it is about
- * to take away.
+ * `lives === null` means the roster read is still in flight, so only the first
+ * two — both answerable from `CurrentUser` alone — can be decided. Everyone else
+ * waits, and a shut gate never flashes a heading it is about to take away.
  */
 export function rosterOffersAChoice(
   lives: CharacterOut[] | null,
   carriesALife: boolean,
   canCreateAdditional: boolean,
 ): boolean {
-  if (lives === null) return !carriesALife || canCreateAdditional
-  return lives.length !== 1 || canCreateAdditional
+  if (!carriesALife || canCreateAdditional) return true
+  return lives !== null && lives.length > 1
 }
 
 /** The three closing lines the roster can honestly end on. */
