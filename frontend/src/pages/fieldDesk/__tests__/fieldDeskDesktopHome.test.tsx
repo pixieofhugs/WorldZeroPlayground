@@ -1,28 +1,40 @@
 /**
- * #1557 — the desktop signed-in home.
+ * #1557 — the "what do I do now?" half of the DESKTOP FieldDesk.
+ *
+ * The roster half is `fieldDeskDispatch.test.tsx`'s; this pins what merged in
+ * below it, plus the one thing that binds the two halves together: the roster
+ * must still be there. Owner ruling 2026-08-02 put these sections here rather
+ * than in `Home` precisely because routing `/` to `Home` would have orphaned
+ * character switching, "begin a new self" and the Albescent invitation.
  *
  * SSR (`renderToStaticMarkup`) never runs effects, so these pin the STATIC
- * shape: which of `/`'s two screens rendered, the continue rows and their two
- * meta states, the tab switch, and the browse section's landing tab. The two
- * fetches cannot be observed this way at all, which is why the filters they use
- * are exported constants and asserted directly — an unfiltered list under
- * "Tasks you can sign up for" renders perfectly and is still a bug.
+ * shape: the continue rows and their two meta states, the tab switch, and the
+ * browse section's landing tab. The two fetches cannot be observed this way at
+ * all, which is why the filters they use are exported constants and asserted
+ * directly — an unfiltered list under "Tasks you can sign up for" renders
+ * perfectly and is still a bug.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
-import '../../i18n'
-import type { PraxisCardOut } from '../../api/praxis'
+import '../../../i18n'
+import type { PraxisCardOut } from '../../../api/praxis'
+import type { CurrentUser } from '../../../api/auth'
 
 const mocks = vi.hoisted(() => ({
-  user: null as unknown,
   activePraxes: [] as unknown[],
 }))
 
-vi.mock('../../auth/AuthContext', () => ({
-  useAuth: () => ({ user: mocks.user, loading: false, refetch: async () => {}, signOut: () => {} }),
+vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+vi.mock('../../../auth/AuthContext', () => ({
+  useAuth: () => ({
+    user: { account_id: 1, character: { id: 1, faction_slug: 'na' } } as unknown as CurrentUser,
+    loading: false,
+    refetch: async () => {},
+    signOut: async () => {},
+  }),
 }))
-vi.mock('../../hooks/useSidebarPanels', () => ({
+vi.mock('../../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => ({
     pending_requests_count: 0,
     global_activity: [],
@@ -31,15 +43,22 @@ vi.mock('../../hooks/useSidebarPanels', () => ({
     refetch: () => {},
   }),
 }))
-vi.mock('../../hooks/useGameConfig', () => ({ useGameConfig: () => null }))
-vi.mock('../../api/tasks', () => ({ listTasks: async () => [] }))
-vi.mock('../../api/praxis', () => ({
+vi.mock('../../../hooks/useVotesReceived', () => ({
+  useVotesReceived: () => ({ votesReceived: 0, loading: false }),
+}))
+vi.mock('../../../hooks/useGameConfig', () => ({ useGameConfig: () => null }))
+vi.mock('../../../api/me', () => ({
+  getMyCharacters: async () => [],
+  setActiveCharacter: async () => {},
+}))
+vi.mock('../../../api/tasks', () => ({ listTasks: async () => [] }))
+vi.mock('../../../api/praxis', () => ({
   listPraxes: async () => [],
   createPraxis: async () => ({ id: 1 }),
 }))
 
 // Imported after the mocks are registered.
-import Home, { BROWSE_TASK_FILTERS, BROWSE_PRAXIS_FILTERS } from '../Home'
+import FieldDesk, { BROWSE_TASK_FILTERS, BROWSE_PRAXIS_FILTERS } from '../../FieldDesk'
 
 function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
   return {
@@ -72,7 +91,7 @@ function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
 function render(): string {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <Home />
+      <FieldDesk />
     </MemoryRouter>,
   )
 }
@@ -81,31 +100,27 @@ function text(html: string): string {
   return html.replace(/<[^>]*>/g, '')
 }
 
-describe('the signed-in desktop home (#1557)', () => {
-  it('shows the marketing landing to a guest, not the signed-in home', () => {
-    mocks.user = null
-    mocks.activePraxes = []
-    const html = text(render())
-    expect(html).toContain('a collaborative production game played in the real world')
-    expect(html).not.toContain('Continue where you left off')
+describe('the desktop FieldDesk keeps the roster and gains the new sections (#1557)', () => {
+  it('still asks whose shoes today, above the new sections', () => {
+    mocks.activePraxes = [praxis({})]
+    const body = text(render())
+    expect(body).toContain('Whose shoes today?')
+    // Order matters: the roster answers "who am I playing", and only then does
+    // a list of drafts and signable tasks mean anything.
+    expect(body.indexOf('Whose shoes today?')).toBeLessThan(body.indexOf('Continue where you left off'))
   })
 
-  it('shows the signed-in home to a signed-in viewer, not the hero', () => {
-    mocks.user = { character: { id: 1, faction_slug: 'na' } }
+  it('shows the continue card when something is in flight', () => {
     mocks.activePraxes = [praxis({})]
-    const html = text(render())
-    expect(html).not.toContain('a collaborative production game played in the real world')
-    expect(html).toContain('Continue where you left off')
+    expect(text(render())).toContain('Continue where you left off')
   })
 
   it('hides the continue card when nothing is in flight', () => {
-    mocks.user = { character: { id: 1, faction_slug: 'na' } }
     mocks.activePraxes = []
     expect(text(render())).not.toContain('Continue where you left off')
   })
 
   it('reads a draft row as a draft and a filed one as submitted', () => {
-    mocks.user = { character: { id: 1, faction_slug: 'na' } }
     mocks.activePraxes = [
       praxis({ id: 1, status: 'in_progress', score: 30 }),
       praxis({ id: 2, status: 'submitted', score: 42, voter_count: 8, task_title: 'Repaint a bench' }),
@@ -116,7 +131,6 @@ describe('the signed-in desktop home (#1557)', () => {
   })
 
   it('links a draft to its composer and a filed praxis to its page', () => {
-    mocks.user = { character: { id: 1, faction_slug: 'na' } }
     mocks.activePraxes = [
       praxis({ id: 1, status: 'in_progress' }),
       praxis({ id: 2, status: 'submitted' }),
@@ -127,7 +141,6 @@ describe('the signed-in desktop home (#1557)', () => {
   })
 
   it('lands on the Tasks tab, with both pills and the tab-specific see-more', () => {
-    mocks.user = { character: { id: 1, faction_slug: 'na' } }
     mocks.activePraxes = []
     const html = render()
     const body = text(html)
