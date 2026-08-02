@@ -12,10 +12,47 @@
   --color-bg-surface: rgba(255, 255, 255, 0.72);
   --color-bg-surface-alt: #f0ede6;
 
-  /* ── Text ── */
+  /* ── Text ── ─────────────────────────────────────────────────────────────
+     THE THIRD TIER IS A TEMPERATURE, NOT A WEIGHT (#1549).
+
+     `--color-text-tertiary` was #6c6358 against secondary's #6b6050 — one hex
+     step per channel, ΔE 3.4, and 5.37:1 against secondary's 5.60:1 on the
+     page. The vocabulary claimed three inks and rendered two, so anything
+     reaching for tertiary to sound quieter than secondary got nothing back and
+     had every reason to hardcode a grey instead.
+
+     THE WEIGHT RUNG DOES NOT EXIST, and that is a measurement rather than a
+     preference. Secondary bottoms out at 4.96:1 on `--filter-well`, the darkest
+     neutral stock either quiet ink lands on, so a genuinely quieter third rung
+     that still clears AA has the band [4.50, 4.96] to live in — a 1.10x span,
+     against the 3.0x that separates primary from secondary. There is no room
+     below secondary for a rung anyone could see. Walking tertiary down there
+     would buy an invisible step and spend the whole AA margin for it.
+
+     So the axis is the one with room, and DARK ALREADY CHOSE IT: its tertiary
+     is a lavender (h 296°, C 27) against a warm-grey secondary (h 85°), at
+     essentially the same weight — the "this is chrome, not content" signal.
+     Light now says the same thing at the same hue: h 298°, C 20, L* 42.3
+     against the outgoing 42.5. Chroma is dialled back from dark's because a
+     mid-tone at C 27 reads as a COLOUR on cream and as a tint on near-black.
+
+     THE FIX SPENDS NO CONTRAST — every neutral ground gains a little:
+       page 5.37 -> 5.40 · frost 5.74 -> 5.78 · surface-alt 5.04 -> 5.07 ·
+       filter-well 4.75 -> 4.78.  ΔE from secondary 3.4 -> 29.5 (dark: 38.3).
+     All four clear AA for body text at any size, which matters because
+     `.eyebrow` prints this ink at 9px on ~460 sites.
+
+     Cool-on-warm recedes at equal luminance, so "quieter" survives as a
+     perception even though it is no longer a ratio. That is the claim #1307
+     builds its label-tier redesign on: the eyebrow's ink is legible on every
+     neutral stock and is no longer competing with secondary — what it does NOT
+     have is headroom to be walked further down. Measured in
+     `factionContrast.test.ts`, both cascades, with a ΔE floor beside the
+     ratios (#1449's shape: a guard that measures an ink against a ground is
+     blind to an ink measured against its NEIGHBOUR). */
   --color-text-primary: #1a1209;
   --color-text-secondary: #6b6050;
-  --color-text-tertiary: #6c6358;
+  --color-text-tertiary: #656081;
 
   /* ── Borders ── */
   --color-border: rgba(0, 0, 0, 0.07);
@@ -1774,7 +1811,18 @@
   --color-bg-surface: rgba(255, 255, 255, 0.04);
   --color-bg-surface-alt: rgba(255, 255, 255, 0.06);
 
-  /* ── Text ── */
+  /* ── Text ── ─ UNCHANGED BY #1549, AND IT IS THE REFERENCE. This cascade
+     already answered the question the light one was failing to: tertiary is a
+     lavender (h 296°, C 27) against a warm-grey secondary (h 85°) at roughly
+     one weight — ΔE 38.3, and 6.21:1 against 5.63:1 on the page, so if
+     anything it is the LOUDER of the two. Light was brought to this hue rather
+     than this hue being softened toward light, because dark is the cascade
+     that works and a repaint here would move ~460 `.eyebrow` sites for no
+     defect. Note the direction that leaves: neither cascade makes tertiary
+     dimmer than secondary, and dark has even less room to than light does —
+     secondary is 4.87:1 on `--color-bg-surface-alt` here, so a rung below it
+     would be under AA before it was visible. "Tertiary" names a role, not a
+     rank in a contrast ladder; see the `:root` block for the whole argument. */
   --color-text-primary: #f0e6d0;
   --color-text-secondary: #988c78;
   --color-text-tertiary: #9490c0;
@@ -5484,8 +5532,14 @@
    Updates' type counts are the first to ship (#1419 decision 4), so this is the
    rule's first consumer. Undressed it inherited the row's --text-xl primary ink
    and sat flush right at full strength, reading as a second label rather than
-   an annotation on the one beside it. Tertiary and one step down: the count is
-   information about the option, not a peer of it. */
+   an annotation on the one beside it. Tertiary: the count is information about
+   the option, not a peer of it.
+
+   "One step down" is how that used to read here, and #1549 retired the phrase
+   rather than the choice — the third tier is a cooler ink at roughly
+   secondary's weight, not a dimmer one, because the palette has no room below
+   secondary that still clears AA. What sets the count apart from the label is
+   its temperature and its size, and that is the whole of it. */
 .filter-factions__count {
   flex: none;
   font-size: var(--text-lg);
@@ -5493,8 +5547,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* A selected row inverts to the thumb fill, which the tertiary ink is too faint
-   against — the count follows the label up to secondary there. */
+/* A selected row inverts to the thumb fill, and the count follows the label
+   into the warm family there so the whole row reads as one selected object.
+
+   ponytail (#1549): the original reason given was "tertiary is too faint
+   against the thumb", and that was never worth much — measured, the thumb
+   (10% primary over `--filter-well`) reads secondary at 4.05:1 and tertiary at
+   3.90:1 in light, and secondary at 3.80:1 against tertiary's 4.19:1 in DARK,
+   where this rule therefore costs contrast rather than buying it. Both inks
+   are under AA on that stock at `--text-lg` in both themes, so the fix is the
+   GROUND (a selected row wants more than a 10% lift) and not the ink, which
+   puts it outside a token-tier change. Left as-is here, measured, and named. */
 .filter-factions__row[data-on] .filter-factions__count {
   color: var(--color-text-secondary);
 }
