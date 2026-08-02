@@ -58,6 +58,8 @@ export interface CreateCharacterState {
   avatarSource: File | null
   setAvatarSource: (file: File | null) => void
   avatarError: string
+  /** Set the avatar-scoped error — the crop modal reports failures here (#1527). */
+  setAvatarError: (message: string) => void
   handleAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleAvatarConfirm: (blob: Blob) => void
   error: string | null
@@ -86,6 +88,7 @@ export function useCreateCharacter(): CreateCharacterState {
     setAvatarSource,
     avatarPreview,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
   } = useAvatarPicker()
@@ -129,6 +132,7 @@ export function useCreateCharacter(): CreateCharacterState {
     avatarSource,
     setAvatarSource,
     avatarError,
+    setAvatarError,
     handleAvatarChange,
     handleAvatarConfirm,
     error,

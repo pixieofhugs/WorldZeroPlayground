@@ -17,6 +17,8 @@
  * the feed URL and the request it makes read alike — and `?task_id=` was
  * already snake_case for the same reason.
  */
+import { readOneOf } from '../../utils/urlParams'
+
 
 /** Account-scoped vote filter. `all` = no filter (#644 §6). */
 export type VotedFilter = 'all' | 'yes' | 'no'
@@ -80,16 +82,9 @@ const ERA_SCOPES: readonly EraScope[] = ['this_era', 'all_eras']
 /**
  * A URL is untrusted input and the list route 422s on an unknown `sort`,
  * `voted` or `era_scope` — so a hand-edited or truncated link degrades to the
- * landing value here rather than turning the feed into an error.
+ * landing value via {@link readOneOf} rather than turning the feed into an
+ * error. That whitelist is now shared with the task browse (#1537).
  */
-function readOneOf<T extends string>(
-  raw: string | null,
-  allowed: readonly T[],
-  fallback: T,
-): T {
-  return allowed.includes(raw as T) ? (raw as T) : fallback
-}
-
 export function readFeedFilters(params: URLSearchParams): PraxisFeedFilters {
   return {
     // Unknown slugs are left alone: `/factions` is fetched separately and a

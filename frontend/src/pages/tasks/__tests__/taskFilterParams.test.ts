@@ -6,47 +6,97 @@
  * functions of a param set — the repo's harness has no DOM, so the hook itself
  * is not renderable here, and these are deliberately the hook's whole decision.
  *
- * Three decisions:
- *   1. non-default values only — a clean browse has a clean address
- *   2. faction is REPEATED (`?faction=a&faction=b`), the union B2 (#1364) reads
- *   3. "clear all" clears search too, and touches nothing it does not own
+ * Four decisions:
+ *   1. an enumerated axis is WHITELISTED — a value the page cannot serve reads
+ *      as the default rather than riding out to a route that 422s on it (#1537)
+ *   2. non-default values only — a clean browse has a clean address
+ *   3. faction is REPEATED (`?faction=a&faction=b`), the union B2 (#1364) reads
+ *   4. "clear all" clears search too, and touches nothing it does not own
  */
 import { describe, it, expect } from 'vitest'
 import {
   CAN_SIGN_UP_ON,
   TASK_FILTER_PARAMS,
   TASK_SORT_DEFAULT,
-  TASK_STATUS_DEFAULT,
   TASK_TYPE_DEFAULT,
   clearedFilterParams,
   nextFactionParams,
   nextFilterParams,
-  readFilterParam,
+  readTaskFilters,
 } from '../useTasks'
 
 const params = (query: string) => new URLSearchParams(query)
 
-describe('readFilterParam — a missing param IS the default', () => {
-  it('falls back when the axis is absent', () => {
-    expect(
-      readFilterParam(params(''), TASK_FILTER_PARAMS.sort, TASK_SORT_DEFAULT),
-    ).toBe('level')
+describe('readTaskFilters — a missing param IS the default', () => {
+  it('reads a bare URL as the whole default filter set', () => {
+    expect(readTaskFilters(params(''))).toEqual({
+      taskType: 'standard',
+      sort: 'level',
+      status: 'All',
+      factions: [],
+      canSignUp: false,
+    })
   })
 
-  it('falls back when the axis is present but blank', () => {
-    expect(
-      readFilterParam(params('sort='), TASK_FILTER_PARAMS.sort, TASK_SORT_DEFAULT),
-    ).toBe('level')
+  it('falls back when an axis is present but blank', () => {
+    const filters = readTaskFilters(params('sort=&type=&status='))
+    expect(filters.sort).toBe('level')
+    expect(filters.taskType).toBe('standard')
+    expect(filters.status).toBe('All')
   })
 
   it('hydrates a pasted link', () => {
-    expect(
-      readFilterParam(
-        params('sort=oldest&status=retired'),
-        TASK_FILTER_PARAMS.status,
-        TASK_STATUS_DEFAULT,
+    const filters = readTaskFilters(
+      params(
+        `type=metatask&sort=oldest&status=retired&faction=ua&faction=coven&can_sign_up=${CAN_SIGN_UP_ON}`,
       ),
-    ).toBe('retired')
+    )
+    expect(filters).toEqual({
+      taskType: 'metatask',
+      sort: 'oldest',
+      status: 'retired',
+      factions: ['ua', 'coven'],
+      canSignUp: true,
+    })
+  })
+})
+
+describe('readTaskFilters — an unrecognised value CLAMPS (#1537)', () => {
+  it('clamps a sort the list route would 422 on', () => {
+    // `GET /tasks` rejects an unknown sort outright (#1443). A stale bookmark is
+    // not an API caller, so it gets the default browse, not the error state.
+    expect(readTaskFilters(params('sort=bogus')).sort).toBe('level')
+    expect(readTaskFilters(params('sort=most_voted')).sort).toBe('level')
+  })
+
+  it('clamps an unknown browse mode', () => {
+    expect(readTaskFilters(params('type=metatasks')).taskType).toBe('standard')
+  })
+
+  it('clamps an unknown status', () => {
+    expect(readTaskFilters(params('status=archived')).status).toBe('All')
+  })
+
+  it('clamps one axis without disturbing its neighbours', () => {
+    const filters = readTaskFilters(params('sort=bogus&status=retired&faction=ua'))
+    expect(filters.sort).toBe('level')
+    expect(filters.status).toBe('retired')
+    expect(filters.factions).toEqual(['ua'])
+  })
+
+  it('leaves unknown faction slugs alone — /factions is fetched separately', () => {
+    expect(readTaskFilters(params('faction=not-a-faction')).factions).toEqual([
+      'not-a-faction',
+    ])
+  })
+
+  it('drops a blank faction, which would filter to no faction at all', () => {
+    expect(readTaskFilters(params('faction=&faction=ua')).factions).toEqual(['ua'])
+  })
+
+  it('reads any eligibility value but the flag as OFF', () => {
+    expect(readTaskFilters(params('can_sign_up=yes')).canSignUp).toBe(false)
+    expect(readTaskFilters(params(`can_sign_up=${CAN_SIGN_UP_ON}`)).canSignUp).toBe(true)
   })
 })
 
