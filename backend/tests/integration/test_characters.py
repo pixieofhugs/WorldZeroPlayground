@@ -1,9 +1,13 @@
 """Integration tests for /characters endpoints."""
+import os
+from dataclasses import replace
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -11,6 +15,8 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
+from schemas.character import CharacterCreate
+from services.character import create_character
 
 
 @pytest.mark.asyncio
@@ -52,8 +58,9 @@ async def test_create_character(
     assert resp.status_code == 201
     data = resp.json()
     assert data["username"] == "newchar"
-    # ADR-0019: born unaffiliated, not forced into UA.
-    assert data["faction_slug"] == "na"
+    # ADR-0019: born unaffiliated, not forced into UA. Read from the era rather
+    # than spelled "na" (#1559) — tests.unit.test_era_config pins the literal.
+    assert data["faction_slug"] == CURRENT_ERA.starting_faction_slug
     assert "account_id" not in data
 
 
@@ -722,6 +729,41 @@ async def test_upload_avatar_success(
 
 
 @pytest.mark.asyncio
+async def test_reuploading_an_avatar_changes_the_url(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    tmp_path,
+    monkeypatch,
+):
+    """A second upload must return a different ``avatar_url`` (#1565).
+
+    Route-level rather than service-level because the defect the route can
+    reintroduce is forgetting to hand the outgoing path to the service: the
+    unit tests pass ``previous_avatar_url`` themselves and so cannot see it.
+    """
+    from config import settings as _settings
+
+    monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
+
+    async def _upload() -> str:
+        resp = await client.post(
+            f"/characters/{character.id}/avatar",
+            files={"file": ("avatar.jpg", _make_jpeg_bytes(), "image/jpeg")},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        return resp.json()["avatar_url"]
+
+    first_url = await _upload()
+    second_url = await _upload()
+
+    assert first_url != second_url
+    assert not os.path.exists(os.path.join(str(tmp_path), first_url))
+    assert os.path.isfile(os.path.join(str(tmp_path), second_url))
+
+
+@pytest.mark.asyncio
 async def test_upload_avatar_wrong_owner(
     client: AsyncClient,
     character: Character,
@@ -908,3 +950,27 @@ async def test_faction_slug_db_default_is_unaffiliated(
     await db_session.refresh(bare)
 
     assert bare.faction_slug == "na"
+
+
+@pytest.mark.asyncio
+async def test_starting_faction_is_read_from_the_era_not_hardcoded(
+    db_session: AsyncSession, account: Account, era: Era, faction_ua: Faction
+):
+    """An era that overrides ``starting_faction_slug`` actually moves the birth faction.
+
+    Without this the field would be decorative: ``test_create_character`` passes
+    whether the slug comes from ``era.starting_faction_slug`` or from the literal
+    "na" it used to be (#1559), because Era 1's answer is the same either way.
+    Substituting an era that says "ua" is the only assertion that can tell them
+    apart — and it is deliberately *not* an assertion that new characters are UA.
+    """
+    ua_start = replace(CURRENT_ERA, starting_faction_slug="ua")
+
+    result = await create_character(
+        account_id=account.id,
+        data=CharacterCreate(display_name="Era Says UA", username="erasaysua"),
+        session=db_session,
+        era=ua_start,
+    )
+
+    assert result.character.faction_slug == "ua"

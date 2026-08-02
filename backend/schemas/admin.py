@@ -122,8 +122,11 @@ class AdminCharacterCreate(BaseModel):
     avatar_url: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=100)
     # Characters start unaffiliated (ADR-0019). An admin who wants to place a
-    # character straight into a faction passes the slug explicitly.
-    faction_slug: str = Field(default="na")
+    # character straight into a faction passes the slug explicitly. Omitted here
+    # rather than defaulted to a literal so the era owns the answer: the service
+    # fills it from era.starting_faction_slug (#1559), which the admin door must
+    # agree with or the two creation paths drift.
+    faction_slug: str | None = Field(default=None)
 
 
 # ---------------------------------------------------------------------------

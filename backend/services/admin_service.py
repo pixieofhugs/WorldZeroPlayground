@@ -288,7 +288,10 @@ async def admin_create_character(
         bio=data.bio,
         avatar_url=data.avatar_url,
         location=data.location,
-        faction_slug=data.faction_slug,
+        # ADR-0019 read through the era (#1559): omitting a slug lands the era's
+        # starting faction, the same answer services.character.create_character
+        # gives. Two creation doors, one rule.
+        faction_slug=data.faction_slug or era.starting_faction_slug,
     )
     session.add(character)
     await session.flush()

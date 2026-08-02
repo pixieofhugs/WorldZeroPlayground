@@ -8,6 +8,7 @@ import {
   PraxisStats,
   PraxisExcerpt,
   PraxisModeChip,
+  PraxisDuelBanner,
   PraxisRoster,
   PraxisMediaGallery,
   PraxisVoteFooter,
@@ -200,6 +201,15 @@ export function PraxisBody({
         fonts={fonts}
       />
       <PraxisModeChip praxis={praxis} fonts={fonts} />
+      {/*
+       * Duel banner (#596) and collab roster are the same slot wearing two
+       * modes, and they are mutually exclusive by construction: the banner
+       * needs an `opponent_display_name` (duel only), the roster needs
+       * `type === 'collab'`. One card can never draw both, so they sit as
+       * siblings rather than behind a ternary that would have to re-derive the
+       * duel test the banner already owns.
+       */}
+      <PraxisDuelBanner praxis={praxis} accent={tint} paper={paper} fonts={fonts} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}
       <PraxisMediaGallery

@@ -10,6 +10,8 @@ import { praxisModeLabel } from '../../utils/praxis'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { useLevelTrack } from '../../hooks/useLevelTrack'
 import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
+import { feedKicker, feedItemTitle } from '../feed/feedItemLabels'
+import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
@@ -88,12 +90,21 @@ function SectionHeader({ label }: { label: string }) {
 /**
  * Always-on right sidebar (Style Guide §4.2), redesigned into the unaffiliated
  * "all paths" rainbow-spectrum identity: character card + in-progress tasks +
- * recent global activity + propose CTA.
+ * recent activity.
  *
  * Those panels used to be three separate fetches made here, each one waiting on
  * `/auth/me`. They are one request now, made before this component exists — see
  * `hooks/useSidebarPanels` (#1344). Identity is still read from auth: the
  * character card is `/auth/me`'s payload, not the rail's.
+ *
+ * IT NO LONGER OFFERS "PROPOSE A TASK" (#1556)
+ * --------------------------------------------
+ * The rail is status and requests, not an authoring entry point. The affordance
+ * has one home now and it is `/tasks`, where the player is already browsing the
+ * bank — see `pages/Tasks.tsx`. This moves WHERE the entry point is, never WHO
+ * gets one: the `can_propose_task` gate moved with it, and in fact tightened,
+ * because the rail's button was ungated and offered the route to accounts the
+ * server would refuse.
  *
  * IT NO LONGER LISTS PENDING REQUESTS (#1423, ADR-0070)
  * -----------------------------------------------------
@@ -115,7 +126,10 @@ export default function Sidebar() {
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   const {
-    global_activity: globalActivity,
+    // The wire field is still named `global_activity`, but since #1556 it
+    // carries the player's whole LIVE feed minus the obligations — see
+    // `api/sidebar.ts`. Read under the name of what it holds.
+    global_activity: recentActivity,
     active_praxes: activeTasks,
   } = useSidebarPanels()
   const gameConfig = useGameConfig()
@@ -382,31 +396,36 @@ export default function Sidebar() {
         </div>
       </section>
 
-      {/* ── Recent Global Activity Panel ── */}
+      {/* ── Recent Activity Panel ── */}
       <section style={panelStyle}>
-        <SectionHeader label={t('sidebar.globalActivity.heading')} />
+        <SectionHeader label={t('sidebar.recentActivity.heading')} />
 
-        {globalActivity.length === 0 ? (
+        {recentActivity.length === 0 ? (
           <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
-            {t('sidebar.globalActivity.empty')}
+            {t('sidebar.recentActivity.empty')}
           </p>
         ) : (
           <div className="flex flex-col">
-            {globalActivity.map((item, index) => {
-              const isTask = item.type === 'global_task'
-              const isEra = item.type === 'era_announcement'
-              const isLast = index === globalActivity.length - 1
-              const taskId = item.payload.task_id
-              const title = isEra
-                ? item.payload.era_name
-                : item.payload.task_title ||
-                  item.payload.praxis_title ||
-                  t('sidebar.globalActivity.fallbackTaskTitle')
-              const kicker = isEra
-                ? t('sidebar.globalActivity.kickerEra')
-                : isTask
-                  ? t('sidebar.globalActivity.kickerNewTask')
-                  : item.actor_display_name
+            {recentActivity.map((item, index) => {
+              const isLast = index === recentActivity.length - 1
+              // The SAME vocabulary `/updates` draws its cards from — `feedKicker`
+              // names all fifteen types and `normalizeFeedItem` unpacks the
+              // eleven the faction chassis owns into actor / action / headline /
+              // points. The panel used to hand-roll a two-branch kicker over the
+              // only two types it could ever see; now that it sees eleven, a
+              // second private vocabulary here would be eleven ways to disagree
+              // with the page this panel links to.
+              const row = normalizeFeedItem(item)
+              // `era_announcement` is the one live type the chassis does not own
+              // (epic #1192 decision 6), so `row` is null for it and the shared
+              // title helper answers instead. `friend_defection` has no headline
+              // at all — its substance IS the sentence — so the action line is
+              // the fallback before the title helper.
+              const headline = row?.headline ?? row?.action ?? feedItemTitle(item)
+              const href = row?.headlineHref ?? null
+              const kicker = item.actor_display_name
+                ? `${feedKicker(item.type)} · ${item.actor_display_name}`
+                : feedKicker(item.type)
               const titleStyle: CSSProperties = {
                 fontSize: 'var(--text-content)',
                 lineHeight: 1.3,
@@ -415,7 +434,7 @@ export default function Sidebar() {
               }
               return (
                 <div
-                  key={`${item.type}-${index}`}
+                  key={item.item_key}
                   className="flex gap-3"
                   style={{
                     padding: 'var(--space-md) 0',
@@ -437,6 +456,7 @@ export default function Sidebar() {
                   />
                   <div className="min-w-0">
                     <div
+                      className="truncate"
                       style={{
                         fontFamily: 'var(--font-body)',
                         fontSize: 'var(--text-sm)',
@@ -448,17 +468,18 @@ export default function Sidebar() {
                     >
                       {kicker}
                     </div>
-                    {isTask && taskId ? (
-                      <Link to={`/tasks/${taskId}`} className="font-display block truncate" style={titleStyle}>
-                        {title}
+                    {href ? (
+                      <Link to={href} className="font-display block truncate" style={titleStyle}>
+                        {headline}
                       </Link>
                     ) : (
                       <div className="font-display truncate" style={titleStyle}>
-                        {title}
+                        {headline}
                       </div>
                     )}
                     <div className="font-body" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', color: 'var(--color-text-tertiary)' }}>
                       {relativeTime(item.timestamp)}
+                      {row?.points ? ` · ${row.points}` : ''}
                     </div>
                   </div>
                 </div>
@@ -466,28 +487,29 @@ export default function Sidebar() {
             })}
           </div>
         )}
-      </section>
 
-      {/* ── Propose a Task CTA ── */}
-      <Link
-        to="/propose-task"
-        className="font-display w-full flex items-center justify-center gap-2.5 hover:opacity-90"
-        style={{
-          boxSizing: 'border-box',
-          padding: 'var(--space-lg)',
-          borderRadius: 11,
-          fontSize: 'var(--text-xl)',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: 'var(--color-bg-page)',
-          background: 'var(--color-text-primary)',
-          border: '1px solid var(--color-text-primary)',
-          textDecoration: 'none',
-        }}
-      >
-        <span style={{ fontSize: 'var(--text-xl)', lineHeight: 1 }}>+</span>
-        <span>{t('actions.proposeTask')}</span>
-      </Link>
+        {/* The panel is a WINDOW onto the feed, never a replacement for it: it
+            shows five items and has no paging, no archive gesture and no type
+            facet. `/updates` has all three, so the foot of the panel is a door
+            to it — and it is drawn even when the panel is empty, because "no
+            activity yet" is exactly when a player most needs telling that the
+            full feed exists somewhere. */}
+        <div className="mt-3">
+          <Link
+            to="/updates"
+            className="font-body hover:opacity-80"
+            style={{
+              fontSize: 'var(--text-base)',
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-secondary)',
+              textDecoration: 'none',
+            }}
+          >
+            {t('sidebar.recentActivity.seeMore')}
+          </Link>
+        </div>
+      </section>
     </aside>
   )
 }

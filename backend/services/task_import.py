@@ -26,6 +26,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import CROSS_FACTION_SLUG
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.faction import Faction
@@ -47,9 +48,9 @@ REQUIRED_COLUMNS: tuple[str, ...] = (
     COLUMN_POINTS,
 )
 
-# The sentinel slug for a task no single faction owns. Same default as
+# CROSS_FACTION_SLUG — the sentinel for a task no single faction owns — is
+# imported from faction_slugs, which owns it (#1559). Same default as
 # POST /admin/tasks; `primary_faction_slug` is NOT NULL, so "" can never pass through.
-CROSS_FACTION_SLUG = "na"
 
 # Legacy/typo faction slugs seen in the source spreadsheet → canonical slugs
 # (ADR-0004). Corrections are reported back to the admin, never applied silently.

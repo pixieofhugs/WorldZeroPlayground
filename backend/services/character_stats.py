@@ -8,6 +8,7 @@ from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
+from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -22,6 +23,7 @@ from models.praxis import (
 )
 from models.task import Task
 from models.vote import Vote
+from services.character import ALBESCENT_FACTION_SLUG
 from services.era import (
     get_closing_era_id,
     get_current_era_row,
@@ -34,7 +36,9 @@ from services.scoring import compute_level
 from services.taunt_service import emit_recalc_taunts
 
 # Factions that never receive invitation letters (ADR-0022 / ADR-0019 sentinels).
-_NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
+_NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
+    {UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG}
+)
 
 def _era_window_condition(
     era_row: Era,
@@ -150,7 +154,7 @@ async def _deliver_earned_invitations(
     task_ids_by_faction: dict[str, set[int]] = {}
     points_by_faction: dict[str, float] = {}
     for praxis in praxes:
-        slug = faction_by_task.get(praxis.task_id) or "na"
+        slug = faction_by_task.get(praxis.task_id) or CROSS_FACTION_SLUG
         if slug in uninvitable:
             continue
         task_ids_by_faction.setdefault(slug, set()).add(praxis.task_id)
