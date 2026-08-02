@@ -119,6 +119,7 @@
       "duelUnderway": "This duel is already underway — it can't be cancelled from here.",
       "fileTooLarge_one": "File too large (50 MB limit): {{names}}",
       "fileTooLarge_other": "Files too large (50 MB limit): {{names}}",
+      "imageEditFailed": "{{name}} — {{reason}}",
       "nudge": "Could not nudge {{name}}.",
       "nudgeCrew": "Could not nudge the crew."
     },

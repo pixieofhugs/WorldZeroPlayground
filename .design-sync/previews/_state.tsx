@@ -231,6 +231,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     pendingImage: null,
     confirmImageEdit: anoop,
     cancelImageEdit: noop,
+    reportImageError: noop,
     switchingMode: null,
     changeMode: anoop,
     inviteQuery: '',
