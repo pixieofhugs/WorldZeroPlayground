@@ -225,6 +225,25 @@ export interface PraxisCardOut {
    * `PraxisOut.duel_id`; precomputed page-wide by the feed route (no N+1).
    */
   duel_id?: number | null
+  /**
+   * The OTHER side of this duel (#596) — who this card is fighting.
+   *
+   * A duel is two separate praxis rows joined by a `Duel` row (ADR-0011), so
+   * `members` on a duel side holds only its own submitter; these three are the
+   * card's only path to the rival's name. Precomputed page-wide by the feed
+   * route (no N+1) via `duel_opponents_for`.
+   *
+   * ALL THREE ARRIVE TOGETHER OR NOT AT ALL, and absent is the ordinary case
+   * twice over: the praxis is not a duel side, or it IS one and the duel is
+   * still `pending` — the opponent praxis does not exist until the challenge is
+   * accepted, so a challenger has nobody to name and the card shows the duel
+   * mode chip alone. Gate the banner on `opponent_display_name`, never on
+   * `type === 'duel'`, which a duel side never has (#992).
+   */
+  opponent_praxis_id?: number | null
+  opponent_display_name?: string | null
+  /** The rival author's member faction; `null` for an unaffiliated author. */
+  opponent_faction_slug?: string | null
 }
 
 export interface PraxisCreate {
