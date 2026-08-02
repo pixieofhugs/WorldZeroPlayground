@@ -89,7 +89,7 @@ export default function FieldDesk() {
   // what `/` renders for a signed-in viewer, and `home.json` is documented as
   // "Home / landing page copy". `common:fieldDesk.*` stays the roster's.
   const { t: tHome } = useTranslation('home')
-  const { user, refetch } = useAuth()
+  const { user, applyUser } = useAuth()
   const navigate = useNavigate()
   // `null` until the roster lands — "not known yet" and "known to be empty" are
   // different answers to the gate below, and one state cannot say both.
@@ -114,10 +114,9 @@ export default function FieldDesk() {
   const enterLife = async (id: number) => {
     setSwitching(id)
     try {
-      await setActiveCharacter(id)
-      // As in CharacterSwitcherSheet: the POST already returns the refreshed
-      // `CurrentUser`; consuming it instead of re-asking is #1383 item 4.
-      await refetch()
+      // As in CharacterSwitcherSheet: the POST already answers the refreshed
+      // `CurrentUser`, so consume it rather than re-asking `/auth/me` (#1383).
+      applyUser(await setActiveCharacter(id))
       navigate(`/characters/${id}`)
     } finally {
       setSwitching(null)
@@ -231,11 +230,11 @@ export default function FieldDesk() {
         <AlbescentInvitation
           lives={lives}
           onJoined={async () => {
-            // Joining Albescent moves `faction_slug`, `albescent_revealed` and
-            // the capability flags at once, and `POST /factions/choose` returns
-            // only `{slug, status}` — so the whole object has to be re-read
-            // until #1383 item 1 widens that response.
-            await refetch()
+            // Only the roster now: joining Albescent moves `faction_slug`,
+            // `albescent_revealed` and the capability flags at once, but they
+            // all ride back on the join POST and AlbescentInvitation adopts
+            // that directly (#1383). The roster still has to be re-read — the
+            // joined life's faction changed, and the rows above draw it.
             setLives(await getMyCharacters())
           }}
         />

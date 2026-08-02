@@ -1077,8 +1077,13 @@ async def test_collab_invite_and_accept(
         headers=auth_headers,
     )
     assert respond_resp.status_code == 200
-    data = respond_resp.json()
-    member_ids = [m["character_id"] for m in data["members"]]
+    # The respond route answers an ack, not the praxis (#1383).
+    assert respond_resp.json() == {"praxis_id": praxis_id, "accepted": True}
+
+    # Membership is the real effect, so read it off the praxis itself.
+    praxis_resp = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
+    assert praxis_resp.status_code == 200
+    member_ids = [m["character_id"] for m in praxis_resp.json()["members"]]
     assert character.id in member_ids
     assert character2.id in member_ids
 
@@ -1387,9 +1392,14 @@ async def test_collab_invite_decline(
         headers=auth_headers,
     )
     assert respond_resp.status_code == 200
+    # The respond route answers an ack, not the praxis (#1383). A decline is
+    # still an answer, so `accepted` reports which way it went.
+    assert respond_resp.json() == {"praxis_id": praxis_id, "accepted": False}
+
     # character should NOT be a member
-    data = respond_resp.json()
-    member_ids = [m["character_id"] for m in data["members"]]
+    praxis_resp = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
+    assert praxis_resp.status_code == 200
+    member_ids = [m["character_id"] for m in praxis_resp.json()["members"]]
     assert character.id not in member_ids
 
 

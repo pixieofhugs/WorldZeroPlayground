@@ -109,7 +109,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
   // there on purpose (ADR-0039 §2), and the cascade owns the dark half.
   const color = factionCssVar(faction_slug);
 
-  const { user, refetch } = useAuth();
+  const { user, applyUser } = useAuth();
   const mode = acceptMode(user?.character?.faction_slug, faction_slug);
   const currentName = factionName(user?.character?.faction_slug ?? UNAFFILIATED_FACTION_SLUG);
   const letterName = factionName(faction_slug);
@@ -124,13 +124,13 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
     setJoining(true);
     setError(null);
     try {
-      await chooseFaction(faction_slug);
+      // The character's faction is on /auth/me and dresses most of the site, so
+      // the feed alone is not enough — but the join POST now answers the whole
+      // refreshed viewer (#1383), so adopting it replaces the /auth/me that
+      // used to chase it. The bell and the queue count still follow.
+      applyUser(await chooseFaction(faction_slug));
       setJoined(true);
       setConfirming(false);
-      // The character's faction is on /auth/me and dresses most of the site, so
-      // the feed alone is not enough — refresh the character context, then let
-      // the bell and the queue count follow.
-      await refetch();
       notifyRequestsChanged();
     } catch (err) {
       // `extractError` returns the backend `detail` verbatim, which is what

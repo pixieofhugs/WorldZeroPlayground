@@ -1085,6 +1085,12 @@ export interface paths {
          *
          *     Works for the initial faction join and later defections.
          *     Players cannot rejoin factions they have left, except UA Masters and Albescent.
+         *
+         *     Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
+         *     dresses the whole site off `/auth/me` — the faction slug, the level-jump
+         *     allowance, the capability flags and the sticky `albescent_revealed` reveal
+         *     move together — so all four callers threw the `{slug}` away and re-asked
+         *     `/auth/me` for the object this handler is already positioned to build.
          */
         post: operations["choose_faction_factions_choose_post"];
         delete?: never;
@@ -1411,7 +1417,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Respond To Invite Route */
+        /**
+         * Respond To Invite Route
+         * @description Accept or decline a collab invite; answer an ack (#1383).
+         *
+         *     See `InviteResponseOut` for why this is an ack rather than the praxis.
+         */
         post: operations["respond_to_invite_route_praxes__praxis_id__invite__invite_id__respond_post"];
         delete?: never;
         options?: never;
@@ -1734,6 +1745,10 @@ export interface paths {
         /**
          * Create Relationship Route
          * @description Declare a friend or foe relationship (instant, no pending state).
+         *
+         *     Answers the enriched item, not the bare row (#1383): the display name,
+         *     avatar, faction and derived ``display_status`` are what the profile draws,
+         *     and it used to re-list every relationship the viewer holds to get them.
          */
         post: operations["create_relationship_route_relationships_post"];
         delete?: never;
@@ -3489,6 +3504,26 @@ export interface components {
             /** Accept */
             accept: boolean;
         };
+        /**
+         * InviteResponseOut
+         * @description Acknowledgement for answering a collab invite (#1383).
+         *
+         *     Deliberately an ack and not the praxis. This route used to answer a full
+         *     tally-bearing `PraxisOut`, which meant a `selectinload` of the invites and
+         *     media plus the whole `build_praxis_out` fan-out — and every caller discarded
+         *     it, then navigated or refreshed the feed. The two facts a responder actually
+         *     needs are which praxis was answered and which way.
+         *
+         *     Widening this to the updated feed row instead is the better end state, but it
+         *     waits on #1419/ADR-0070 to settle what a request row is once requests leave
+         *     the stream.
+         */
+        InviteResponseOut: {
+            /** Accepted */
+            accepted: boolean;
+            /** Praxis Id */
+            praxis_id: number;
+        };
         /** LevelProfileOut */
         LevelProfileOut: {
             /** Rank Key */
@@ -4109,24 +4144,6 @@ export interface components {
             to_display_name: string;
             /** To Faction Slug */
             to_faction_slug: string;
-            /** Type */
-            type: string;
-        };
-        /** RelationshipOut */
-        RelationshipOut: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** From Character Id */
-            from_character_id: number;
-            /** Id */
-            id: number;
-            /** Status */
-            status: string;
-            /** To Character Id */
-            to_character_id: number;
             /** Type */
             type: string;
         };
@@ -6406,7 +6423,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FactionOut"];
+                    "application/json": components["schemas"]["CurrentUser"];
                 };
             };
             /** @description Validation Error */
@@ -7070,7 +7087,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PraxisOut"];
+                    "application/json": components["schemas"]["InviteResponseOut"];
                 };
             };
             /** @description Validation Error */
@@ -7582,7 +7599,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RelationshipOut"];
+                    "application/json": components["schemas"]["RelationshipListItem"];
                 };
             };
             /** @description Validation Error */
@@ -7615,7 +7632,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RelationshipOut"];
+                    "application/json": components["schemas"]["RelationshipListItem"];
                 };
             };
             /** @description Validation Error */
@@ -7679,7 +7696,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RelationshipOut"];
+                    "application/json": components["schemas"]["RelationshipListItem"];
                 };
             };
             /** @description Validation Error */

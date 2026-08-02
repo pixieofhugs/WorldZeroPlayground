@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CharacterOut } from '../api/auth'
+import { useAuth } from '../auth/AuthContext'
 import { setActiveCharacter } from '../api/me'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
@@ -62,12 +63,17 @@ const PERK_KEYS: ReadonlyArray<string> = [
 export interface AlbescentInvitationProps {
   /** The account's roster (active + paused lives). */
   lives: CharacterOut[]
-  /** Called after a successful join — refetch auth + roster so the UI reflects it. */
+  /**
+   * Called after a successful join, to refresh what the PARENT owns — the
+   * roster. The viewer half is no longer the parent's job: the join POST
+   * answers the refreshed `CurrentUser` and this component adopts it (#1383).
+   */
   onJoined: () => Promise<void> | void
 }
 
 export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvitationProps) {
   const { t } = useTranslation('factions')
+  const { applyUser } = useAuth()
   // Dynamic term/perk keys are data-driven; resolve them through a plain
   // string view of `t` (the typed union can't see the interpolated key).
   const tDynamic = t as unknown as (key: string) => string
@@ -89,8 +95,13 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
     try {
       // Existing character-switch flow, then the plain defection endpoint —
       // /factions/choose acts on the account's active character.
+      //
+      // Both POSTs answer a `CurrentUser` (#1383), but only the second is worth
+      // keeping: it is built AFTER the defection, so it supersedes the switch's
+      // answer. Adopting the first as well would only be overwritten a line
+      // later. Neither call is followed by an `/auth/me` any more.
       await setActiveCharacter(picked.id)
-      await chooseFaction(ALBESCENT_SLUG)
+      applyUser(await chooseFaction(ALBESCENT_SLUG))
       setJoined(true)
       await onJoined()
     } catch (err) {

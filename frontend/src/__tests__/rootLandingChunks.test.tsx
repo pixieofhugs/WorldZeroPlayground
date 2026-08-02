@@ -70,7 +70,7 @@ function withSessionHint(hint: string | null): void {
 function renderRoot(session: { user: CurrentUser | null; loading: boolean }): string {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <AuthContext.Provider value={{ ...session, refetch: async () => {}, signOut: async () => {} }}>
+      <AuthContext.Provider value={{ ...session, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
         {/* Stands in for App's one Suspense boundary. A distinctive fallback so
             "chunk still in flight" is never mistaken for a rendered page. */}
         <Suspense fallback={<div data-page="suspended" />}>

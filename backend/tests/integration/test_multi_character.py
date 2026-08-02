@@ -135,7 +135,12 @@ async def test_other_account_character_collaborates_on_praxis(
         headers=auth_headers,
     )
     assert accept.status_code == 200, accept.text
-    member_ids = {m["character_id"] for m in accept.json()["members"]}
+    # The respond route answers an ack (#1383); membership is read off the praxis.
+    assert accept.json() == {"praxis_id": praxis_id, "accepted": True}
+
+    detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
+    assert detail.status_code == 200, detail.text
+    member_ids = {m["character_id"] for m in detail.json()["members"]}
     assert member_ids == {character.id, character2.id}
 
 
@@ -436,7 +441,12 @@ async def test_second_life_collaborates_on_praxis(
         headers=auth_headers,
     )
     assert accept.status_code == 200, accept.text
-    member_ids = {m["character_id"] for m in accept.json()["members"]}
+    # The respond route answers an ack (#1383); membership is read off the praxis.
+    assert accept.json() == {"praxis_id": praxis_id, "accepted": True}
+
+    detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
+    assert detail.status_code == 200, detail.text
+    member_ids = {m["character_id"] for m in detail.json()["members"]}
     assert second.id in member_ids, (
         "Collab accept did not add the carried second life as a member: "
         f"expected {second.id} in {member_ids}."

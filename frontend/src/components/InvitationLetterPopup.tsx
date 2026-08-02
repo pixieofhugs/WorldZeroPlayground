@@ -61,7 +61,7 @@ export default function InvitationLetterPopup({
   onClose,
 }: InvitationLetterPopupProps) {
   const { t } = useTranslation('factions')
-  const { user, refetch } = useAuth()
+  const { user, applyUser } = useAuth()
   const currentSlug = user?.character?.faction_slug
   const isSwitch = !!currentSlug && currentSlug !== 'na'
   const [confirming, setConfirming] = useState(false)
@@ -91,12 +91,12 @@ export default function InvitationLetterPopup({
     setJoining(true)
     setJoinError(null)
     try {
-      await chooseFaction(factionSlug)
-      // Same as the faction page's join: the choose response is `{slug, status}`,
-      // and membership moves faction slug + capability flags together. Also what
-      // clears this letter out of `user.character.invitations` so the watcher
-      // stops re-opening the prospectus (#1383 item 1 would make it cheaper).
-      await refetch()
+      // Same as the faction page's join: membership moves the faction slug and
+      // the capability flags together, and this is also what clears the letter
+      // out of `user.character.invitations` so the watcher stops re-opening the
+      // prospectus. The POST answers that whole viewer now (#1383), so adopting
+      // it does the job the follow-up `/auth/me` used to.
+      applyUser(await chooseFaction(factionSlug))
       onClose() // advance the queue; watcher keys the popup per slug so state resets
     } catch (err) {
       setJoinError(extractError(err, t('detail.errors.join')))

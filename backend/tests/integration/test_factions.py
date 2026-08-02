@@ -198,7 +198,9 @@ async def test_choose_faction_with_invitation_succeeds(
         headers=auth_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["slug"] == "wow"
+    # The choose POST answers the refreshed CurrentUser, so the caller never has
+    # to re-ask /auth/me for the membership it just caused (#1383).
+    assert resp.json()["character"]["faction_slug"] == "wow"
 
 
 @pytest.mark.asyncio
@@ -337,7 +339,13 @@ async def test_choose_albescent_eligible_succeeds(
         headers=auth_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["slug"] == "albescent"
+    body = resp.json()
+    assert body["character"]["faction_slug"] == "albescent"
+    # The sticky ADR-0027 reveal arrives in the SAME answer as the join. This is
+    # the case that most needed the widened response (#1383): joining is what
+    # reveals the secret society, and the client used to learn that only on the
+    # follow-up /auth/me.
+    assert body["albescent_revealed"] is True
 
 
 @pytest.mark.asyncio

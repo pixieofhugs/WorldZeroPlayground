@@ -10,7 +10,8 @@ import { mediaUrl } from '../utils/media'
 /**
  * MOBILE active-character switcher (#516) — a bottom sheet over Home. Lists the
  * account's lives (active one checkmarked), swaps the carried life on tap
- * (`POST /me/active-character` then refetch), and holds the two path actions:
+ * (one `POST /me/active-character`, whose answer IS the new viewer — #1383),
+ * and holds the two path actions:
  * Create new character and Edit this character. Opened from the Home character
  * card's Switch / avatar caret. Presentation-only over existing endpoints.
  */
@@ -28,7 +29,7 @@ export default function CharacterSwitcherSheet({
   onClose: () => void
 }) {
   const { t } = useTranslation('common')
-  const { refetch } = useAuth()
+  const { applyUser } = useAuth()
   const navigate = useNavigate()
   const [lives, setLives] = useState<CharacterOut[]>([])
   const [switching, setSwitching] = useState<number | null>(null)
@@ -47,11 +48,10 @@ export default function CharacterSwitcherSheet({
     }
     setSwitching(id)
     try {
-      await setActiveCharacter(id)
-      // Carrying a different life changes the whole of `CurrentUser`. This POST
-      // already RETURNS that object and we throw it away — adopting it instead
-      // is #1383's item 4, not this sweep's (#1349 ledger).
-      await refetch()
+      // Carrying a different life changes the whole of `CurrentUser`, and this
+      // POST already answers that object — so adopt it rather than throwing it
+      // away and re-asking `/auth/me` (#1383).
+      applyUser(await setActiveCharacter(id))
       onClose()
     } finally {
       setSwitching(null)

@@ -1,4 +1,5 @@
 import api from './axios'
+import type { CurrentUser } from './auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 
 // Faction name/description prose is no longer backend-emitted (issue #461): the
@@ -38,8 +39,16 @@ export async function getFactionStatus(): Promise<FactionPageOut> {
   return res.data
 }
 
-export async function chooseFaction(factionSlug: string): Promise<FactionOut> {
-  const res = await api.post<FactionOut>('/factions/choose', { faction_slug: factionSlug })
+/**
+ * Join or defect to a faction; answers the refreshed `CurrentUser` (#1383).
+ *
+ * Membership moves the faction slug, the level-jump allowance, the capability
+ * flags and the sticky `albescent_revealed` reveal together, and all of those
+ * ride on `/auth/me`. The POST now carries that whole object, so callers hand
+ * it straight to `applyUser()` instead of chasing it with `refetch()`.
+ */
+export async function chooseFaction(factionSlug: string): Promise<CurrentUser> {
+  const res = await api.post<CurrentUser>('/factions/choose', { faction_slug: factionSlug })
   // `GET /factions` is viewer-scoped: Albescent is omitted until the account has
   // been revealed to it (ADR-0027), and joining is what reveals it. The
   // directory is otherwise deploy-scoped and held for the whole session

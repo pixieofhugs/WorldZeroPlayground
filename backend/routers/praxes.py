@@ -47,6 +47,24 @@ class InviteResponse(BaseModel):
     accept: bool
 
 
+class InviteResponseOut(BaseModel):
+    """Acknowledgement for answering a collab invite (#1383).
+
+    Deliberately an ack and not the praxis. This route used to answer a full
+    tally-bearing `PraxisOut`, which meant a `selectinload` of the invites and
+    media plus the whole `build_praxis_out` fan-out — and every caller discarded
+    it, then navigated or refreshed the feed. The two facts a responder actually
+    needs are which praxis was answered and which way.
+
+    Widening this to the updated feed row instead is the better end state, but it
+    waits on #1419/ADR-0070 to settle what a request row is once requests leave
+    the stream.
+    """
+
+    praxis_id: int
+    accepted: bool
+
+
 class MetataskApply(BaseModel):
     task_id: int
 from schemas.nudge import NudgeOut, NudgeResultOut
@@ -433,7 +451,7 @@ async def invite_member_route(
     return _build_invite_out(invite)
 
 
-@router.post("/{praxis_id}/invite/{invite_id}/respond", response_model=PraxisOut)
+@router.post("/{praxis_id}/invite/{invite_id}/respond", response_model=InviteResponseOut)
 async def respond_to_invite_route(
     praxis_id: int,
     invite_id: int,
@@ -441,6 +459,10 @@ async def respond_to_invite_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
+    """Accept or decline a collab invite; answer an ack (#1383).
+
+    See `InviteResponseOut` for why this is an ack rather than the praxis.
+    """
     invite = await respond_to_invite(
         invite_id=invite_id,
         character_id=character.id,
@@ -448,15 +470,7 @@ async def respond_to_invite_route(
         session=session,
         era=CURRENT_ERA,
     )
-    result = await session.execute(
-        select(Praxis)
-        .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
-        .where(Praxis.id == invite.praxis_id)
-    )
-    praxis = result.scalar_one_or_none()
-    if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
-    return await build_praxis_out(praxis, session, viewer=character)
+    return InviteResponseOut(praxis_id=invite.praxis_id, accepted=data.accept)
 
 
 @router.delete("/{praxis_id}/invite/{invite_id}", status_code=204)

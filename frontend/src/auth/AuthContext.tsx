@@ -7,6 +7,20 @@ interface AuthState {
   loading: boolean
   refetch: () => Promise<void>
   /**
+   * Adopt a `CurrentUser` a mutation just handed back, with no `/auth/me` trip.
+   *
+   * The same move as `signOut` (#1349), pointed the other way: when the client
+   * has *caused* the new state and the server has already answered with it,
+   * re-asking is a round trip for a value we are already holding.
+   * `POST /factions/choose` and `POST /me/active-character` both answer the
+   * refreshed `CurrentUser` (#1383) — every caller used to discard it and
+   * `refetch()`.
+   *
+   * Only for a WHOLE, freshly-built `CurrentUser`. Anything partial belongs on
+   * `refetch`, or the context starts drifting from what `/auth/me` would say.
+   */
+  applyUser: (user: CurrentUser) => void
+  /**
    * End the session and drop the app to its logged-out state.
    *
    * Exists so that signing out does not have to `logout()` and then `refetch()`
@@ -25,6 +39,7 @@ export const AuthContext = createContext<AuthState>({
   user: null,
   loading: true,
   refetch: async () => {},
+  applyUser: () => {},
   signOut: async () => {},
 })
 
@@ -93,6 +108,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // See `AuthState.applyUser`. `rememberSession(true)` because being handed a
+  // built `CurrentUser` is itself proof the session is live — the same fact
+  // `fetchUser` records on a successful `/auth/me`.
+  const applyUser = (me: CurrentUser) => {
+    setUser(me)
+    rememberSession(true)
+    setLoading(false)
+  }
+
   // No `/auth/me` follow-up: ending the session IS the new state, and the
   // provider owns both halves of it — see `AuthState.signOut`.
   const signOut = runSignOut(logout, () => {
@@ -111,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, signOut }}>
+    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, applyUser, signOut }}>
       {children}
     </AuthContext.Provider>
   )

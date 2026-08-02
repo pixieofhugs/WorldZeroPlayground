@@ -10,6 +10,7 @@ from dependencies import (
 from models.account import Account
 from models.character import Character
 from models.faction import Faction, FactionStatus
+from schemas.auth import CurrentUser
 from schemas.faction import (
     FactionChoiceRequest,
     FactionOut,
@@ -19,6 +20,7 @@ from schemas.faction import (
 )
 from services.auth import get_current_account
 from services.character import ALBESCENT_FACTION_SLUG
+from services.current_user import build_current_user
 from services.era import get_current_era_row
 from services.faction_service import (
     defect_to_faction,
@@ -51,9 +53,10 @@ async def list_factions(
     ]
 
 
-@router.post("/choose", response_model=FactionOut)
+@router.post("/choose", response_model=CurrentUser)
 async def choose_faction(
     data: FactionChoiceRequest,
+    account: Account = Depends(get_current_account),
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
@@ -61,12 +64,15 @@ async def choose_faction(
 
     Works for the initial faction join and later defections.
     Players cannot rejoin factions they have left, except UA Masters and Albescent.
+
+    Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
+    dresses the whole site off `/auth/me` — the faction slug, the level-jump
+    allowance, the capability flags and the sticky `albescent_revealed` reveal
+    move together — so all four callers threw the `{slug}` away and re-asked
+    `/auth/me` for the object this handler is already positioned to build.
     """
-    updated_character = await defect_to_faction(
-        character, data.faction_slug, session
-    )
-    faction = await session.get(Faction, updated_character.faction_slug)
-    return FactionOut.model_validate(faction)
+    await defect_to_faction(character, data.faction_slug, session)
+    return await build_current_user(account, session)
 
 
 @router.get("/status", response_model=FactionPageOut)

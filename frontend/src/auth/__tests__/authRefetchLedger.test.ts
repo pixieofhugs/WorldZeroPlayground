@@ -5,9 +5,10 @@
  * era stats, its invitation letters, and a dozen server-computed capability
  * flags. The refetch family (#1346) has been closing it down one reason at a
  * time — #1382 retired the per-star reload, #1390 stopped a fresh `CurrentUser`
- * object fanning out into unrelated reads — and this is the closing sweep: an
- * inventory in which every surviving call site is written down with the reason
- * it survives.
+ * object fanning out into unrelated reads, #1349 deleted the post-`logout()`
+ * pair, and #1383 had the six sites that discarded a `CurrentUser` the server
+ * had already built consume it instead. What is left is an inventory in which
+ * every surviving call site is written down with the reason it survives.
  *
  * WHAT THIS PROVES, AND WHAT IT CANNOT
  * ------------------------------------
@@ -29,9 +30,7 @@ const SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 
 type Verdict =
   /** The mutation genuinely changed `CurrentUser` and nothing cheaper exists. */
-  | 'identity-changed'
-  /** The server already handed the client the answer; consuming it is #1383. */
-  | 'response-in-hand'
+  'identity-changed'
 
 interface LedgerEntry {
   file: string
@@ -43,46 +42,24 @@ interface LedgerEntry {
 /**
  * Every `useAuth().refetch()` in the tree, with its justification.
  *
- * The classification the sweep landed on, from tracing each mutation into the
- * service that answers it:
+ * #1383 closed the ledger's second class out. Every entry that survives is
+ * `identity-changed`: the mutation really did move `CurrentUser` and no response
+ * carries the new one. Publishing, withdrawing or leaving a praxis each run a
+ * stats recalc (points, level, and on publish the delivery of newly-earned
+ * invitation letters); creating, editing and deleting a life change or
+ * re-resolve the carried one; dev-login has no other way to learn who signed in.
  *
- *  - 8 calls are `identity-changed` — publishing, withdrawing or leaving a
- *    praxis all run a stats recalc (points, level, and on publish the delivery
- *    of newly-earned invitation letters); creating, editing and deleting a life
- *    all change or re-resolve the carried one; dev-login has no other way to
- *    learn who just signed in.
- *  - 6 calls are `response-in-hand`, and are #1383's to delete, not this
- *    sweep's: two discard the `CurrentUser` that `POST /me/active-character`
- *    already returns, and four follow `POST /factions/choose`, which #1383
- *    item 1 widens to return `CurrentUser` too.
- *  - The 2 that were neither — the post-`logout()` reloads in `NavBar` and
- *    `Settings` — are gone. See the `signOut` rule below.
+ * The two classes that are gone, and why they are not coming back:
+ *
+ *  - `response-in-hand` — 6 calls across 4 files that discarded a `CurrentUser`
+ *    the server had already built. #1383 widened `POST /factions/choose` to
+ *    answer one and had those callers, plus the three `POST /me/active-character`
+ *    callers, adopt it via `applyUser()`. A mutation that answers the whole
+ *    viewer should be consumed, never chased with `/auth/me`.
+ *  - Merely redundant — the post-`logout()` reloads in `NavBar` and `Settings`,
+ *    deleted by #1349. See the `signOut` rule below.
  */
 const LEDGER: LedgerEntry[] = [
-  {
-    file: 'components/CharacterSwitcherSheet.tsx',
-    calls: 1,
-    verdict: 'response-in-hand',
-    why: 'POST /me/active-character already returns the refreshed CurrentUser (#1383 item 4).',
-  },
-  {
-    file: 'components/InvitationLetterPopup.tsx',
-    calls: 1,
-    verdict: 'response-in-hand',
-    why: 'Accepting a letter joins the faction; POST /factions/choose returns {slug,status} (#1383 item 1).',
-  },
-  {
-    file: 'components/feed/FeedCardInvitationLetter.tsx',
-    calls: 1,
-    verdict: 'response-in-hand',
-    why: 'The feed-row twin of the popup — same join, same narrow response (#1383 item 1).',
-  },
-  {
-    file: 'pages/FieldDesk.tsx',
-    calls: 2,
-    verdict: 'response-in-hand',
-    why: 'Life switch (#1383 item 4) and the Albescent join (#1383 item 1).',
-  },
   {
     file: 'pages/Home.tsx',
     calls: 1,
@@ -106,12 +83,6 @@ const LEDGER: LedgerEntry[] = [
     calls: 3,
     verdict: 'identity-changed',
     why: 'publish / pullBack / leaveCollab each run a backend stats recalc; publish also delivers invitation letters.',
-  },
-  {
-    file: 'pages/factionDetail/useFactionDetail.ts',
-    calls: 1,
-    verdict: 'response-in-hand',
-    why: 'Join or defect; POST /factions/choose returns {slug,status} (#1383 item 1).',
   },
   {
     file: 'pages/praxisDetail/usePraxisDetail.ts',
@@ -185,20 +156,20 @@ describe('the useAuth().refetch() inventory matches the ledger', () => {
   })
 
   it('totals the count this sweep reports', () => {
-    // 16 before, in 12 files — the same headline figure the issue was filed
-    // with, though not the same sixteen: #1382 had already deleted the per-star
-    // reload it named, and a faction letter gained an Accept button (#1424)
-    // that added one back.
+    // 16 before #1349, in 12 files; 14 in 10 after it; 8 in 5 once #1383 had
+    // the six `response-in-hand` sites consume the response instead.
     const total = [...measured.values()].reduce((sum, calls) => sum + calls, 0)
-    expect(total).toBe(14)
-    expect(measured.size).toBe(10)
+    expect(total).toBe(8)
+    expect(measured.size).toBe(5)
   })
 
-  it('leaves nothing classified as merely redundant', () => {
-    // The two that were — `logout()` then `refetch()` — are deleted. Anything
-    // that lands in this state again should be deleted, not written down.
+  it('leaves only identity reloads', () => {
+    // Both other classes are closed: merely-redundant (#1349) and
+    // response-in-hand (#1383). A new call site belongs here only if the
+    // mutation moved the whole viewer AND no response carries it — otherwise
+    // consume the response, or delete the call.
     const verdicts = new Set(LEDGER.map((entry) => entry.verdict))
-    expect([...verdicts].sort()).toEqual(['identity-changed', 'response-in-hand'])
+    expect([...verdicts]).toEqual(['identity-changed'])
   })
 })
 
