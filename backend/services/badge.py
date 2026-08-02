@@ -84,19 +84,23 @@ async def _duel_winner_facts(
       fact, and these duels need no tally row at all.
     * ``active`` / ``settled`` — the winner comes from the one shared rule
       (:func:`services.duel_outcome.duel_winner`, ADR-0052) over the live tally:
-      forfeit first, then strictly-greater ``points_from_votes``, else a tie.
+      ineligible sides first (forfeit, or a moderation ruling that the work is
+      unscored — #1442), then strictly-greater ``points_from_votes``, else a tie.
 
-    Never infer a winner from the points: a forfeit winner can hold the *lower*
-    score, frozen or live.
+    Never infer a winner from the points: a forfeit winner — or the opponent of a
+    failed praxis — can hold the *lower* score, frozen or live.
     """
     if not character_ids:
         return DuelWinnerFacts()
 
     challenger_praxis = aliased(Praxis)
+    opponent_praxis = aliased(Praxis)
     duel_rows = (
         await session.execute(
             select(
                 challenger_praxis.created_by_id.label("challenger_character_id"),
+                challenger_praxis.moderation_status.label("challenger_moderation"),
+                opponent_praxis.moderation_status.label("opponent_moderation"),
                 Duel.opponent_character_id,
                 Duel.challenger_praxis_id,
                 Duel.opponent_praxis_id,
@@ -108,6 +112,13 @@ async def _duel_winner_facts(
             .join(
                 challenger_praxis,
                 challenger_praxis.id == Duel.challenger_praxis_id,
+            )
+            # Outer: an `active` duel has no opponent praxis yet, and a side an
+            # admin ruled unscored cannot win the badge any more than it can win
+            # the multiplier (#1442). Same join, no extra query.
+            .outerjoin(
+                opponent_praxis,
+                opponent_praxis.id == Duel.opponent_praxis_id,
             )
             .where(
                 Duel.status.in_(BADGE_DUEL_STATUSES),
@@ -172,6 +183,8 @@ async def _duel_winner_facts(
                     tallies, row.challenger_praxis_id
                 ).points_from_votes,
                 opponent_points=opponent_points,
+                challenger_moderation=row.challenger_moderation,
+                opponent_moderation=row.opponent_moderation,
                 forfeited_by_character_id=row.forfeited_by_character_id,
                 tie_break_winner_id=snide_tie_winner_id(
                     faction_by_character.get(row.challenger_character_id, ""),

@@ -30,6 +30,21 @@ class ModerationStatus(enum.Enum):
     deleted = "deleted"
 
 
+# Moderation states that earn nobody points (#1373) — and, because of that, that
+# cannot win a duel (#1442). ``hidden`` is off the site entirely; ``failed`` is an
+# admin ruling that the work was not done, so it keeps its banner and its place in
+# the feed but banks nothing. It lives beside the enum because two layers read it
+# and must not drift: the scoring gather (``services.character_stats``) leaves
+# these praxes out, and the duel outcome rule
+# (``services.duel_outcome.duel_winner``) refuses to let one win. It mirrors the
+# accepted set in ``services.character``'s Albescent-unlock query, which has always
+# counted only ``visible`` + ``flagged`` — a flagged praxis is merely *awaiting* a
+# ruling.
+UNSCORED_MODERATION_STATUSES: frozenset["ModerationStatus"] = frozenset(
+    {ModerationStatus.hidden, ModerationStatus.failed}
+)
+
+
 class PraxisType(enum.Enum):
     solo = "solo"
     collab = "collab"

@@ -9,11 +9,11 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.invitation_letter import InvitationLetter
 from models.praxis import (
-    ModerationStatus,
     Praxis,
     PraxisMember,
     PraxisStatus,
     PraxisType,
+    UNSCORED_MODERATION_STATUSES,
 )
 from models.task import Task
 from services.era import (
@@ -29,17 +29,6 @@ from services.taunt_service import emit_recalc_taunts
 # Factions that never receive invitation letters (ADR-0022 / ADR-0019 sentinels).
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset({"na", "albescent"})
 
-# Moderation states that earn nobody points (#1373). ``hidden`` is off the site
-# entirely; ``failed`` is an admin ruling that the work was not done, so it keeps
-# its banner and its place in the feed but banks nothing. Both praxis gathers
-# below read this one set so they cannot drift apart. It mirrors the accepted set
-# in ``services.character.py``'s Albescent-unlock query, which has always counted
-# only ``visible`` + ``flagged`` — a flagged praxis is merely *awaiting* a ruling.
-_UNSCORED_MODERATION_STATUSES: frozenset[ModerationStatus] = frozenset(
-    {ModerationStatus.hidden, ModerationStatus.failed}
-)
-
-
 def _era_window_condition(
     era_row: Era, next_era_row: Era | None
 ) -> ColumnElement[bool]:
@@ -52,7 +41,7 @@ def _era_window_condition(
     ``Praxis`` carries no ``era_id``, so era membership is a **seal-time** fact:
     ``[era.started_at, next_era.started_at)``, the same bound
     :class:`services.praxis.PraxisEraScope` reads (#1362). Both gathers below
-    compose this with ``_UNSCORED_MODERATION_STATUSES`` so they cannot drift.
+    compose this with ``UNSCORED_MODERATION_STATUSES`` so they cannot drift.
 
     A NULL ``submitted_at`` counts for the **live** era only.
     ``services.collab_consensus._apply_seal`` establishes
@@ -189,7 +178,7 @@ async def recalculate_character_stats(
     ``era_row``'s era** — solo/duel praxes they authored, plus collab praxes they
     are a member of — then delegates all scoring arithmetic to
     ``compute_contributions`` (ADR-0014). Praxes in an
-    ``_UNSCORED_MODERATION_STATUSES`` state are left out of the gather entirely,
+    ``UNSCORED_MODERATION_STATUSES`` state are left out of the gather entirely,
     so they also stop counting toward faction invitations (ADR-0022).
 
     The era bound is the fix for #1345: the row being written is one era's
@@ -241,7 +230,7 @@ async def recalculate_character_stats(
             Praxis.created_by_id == character_id,
             Praxis.type == PraxisType.solo,
             Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status.notin_(list(_UNSCORED_MODERATION_STATUSES)),
+            Praxis.moderation_status.notin_(list(UNSCORED_MODERATION_STATUSES)),
             within_era,
         )
     )
@@ -255,7 +244,7 @@ async def recalculate_character_stats(
             PraxisMember.character_id == character_id,
             Praxis.type == PraxisType.collab,
             Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status.notin_(list(_UNSCORED_MODERATION_STATUSES)),
+            Praxis.moderation_status.notin_(list(UNSCORED_MODERATION_STATUSES)),
             within_era,
         )
     )

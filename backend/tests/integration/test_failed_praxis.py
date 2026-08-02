@@ -23,7 +23,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
-from models.praxis import ModerationStatus, Praxis, PraxisStatus
+from models.duel import Duel, DuelStatus
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.roles import AccountRole, Role
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
@@ -153,6 +160,82 @@ async def test_restoring_a_failed_praxis_restores_the_score(
         assert response.status_code == 200
 
     assert await _score_of(character.id, db_session) == before
+
+
+@pytest.mark.asyncio
+async def test_failing_a_duel_side_moves_the_opponents_recorded_score(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    praxis_solo: Praxis,
+):
+    """The second player (#1442): failing one side hands the other the win *now*.
+
+    A duel has an opponent who is not a member of the failed praxis, so the
+    members-only recalc of #1373 would leave their stored score carrying a loss to
+    work an admin ruled did not meet the task — until their own next unrelated
+    edit. The ruling has to reach the opponent's row in the same transaction.
+    """
+    await _make_admin(account, db_session)
+
+    opponent_praxis = Praxis(
+        task_id=praxis_solo.task_id,
+        created_by_id=character2.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.submitted,
+        title="Opponent side",
+        body_text="proof",
+    )
+    db_session.add(opponent_praxis)
+    await db_session.flush()
+    db_session.add(
+        PraxisMember(praxis_id=opponent_praxis.id, character_id=character2.id)
+    )
+    db_session.add(
+        Duel(
+            task_id=praxis_solo.task_id,
+            challenger_praxis_id=praxis_solo.id,
+            opponent_character_id=character2.id,
+            opponent_praxis_id=opponent_praxis.id,
+            status=DuelStatus.settled,
+        )
+    )
+    # Direct inserts: a duel participant may not vote on either side.
+    db_session.add_all(
+        [
+            Vote(
+                praxis_id=praxis_solo.id,
+                voter_character_id=character3.id,
+                voter_account_id=character3.account_id,
+                value=5,
+            ),
+            Vote(
+                praxis_id=opponent_praxis.id,
+                voter_character_id=character3.id,
+                voter_account_id=character3.account_id,
+                value=1,
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    # The opponent is behind 1–5, so they are currently the loser.
+    await recalculate_character_stats(character2.id, db_session)
+    losing_score = await _score_of(character2.id, db_session)
+
+    response = await client.patch(
+        f"/admin/praxes/{praxis_solo.id}/moderate",
+        json={"status": "failed", "admin_note": "Proof does not show the task."},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+
+    # No recalc of character2 here — the moderation transition must do it.
+    assert await _score_of(character2.id, db_session) > losing_score
 
 
 @pytest.mark.asyncio

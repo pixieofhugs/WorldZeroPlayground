@@ -32,7 +32,13 @@ from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.meta_task import PraxisMetaTask
-from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
@@ -441,6 +447,51 @@ async def test_duel_winner_and_loser_scores(
     assert loser_card.display_multiplier == pytest.approx(0.5)
     assert loser_card.score == pytest.approx(7.0)
     assert_invariant(loser_card)
+
+
+@pytest.mark.asyncio
+async def test_failed_duel_side_hands_the_win_to_the_opponent(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """A praxis ruled ``failed`` cannot win, even leading 5–2 on votes (#1442).
+
+    This is the settlement path (``services.praxis_scoring``) of the one duel
+    rule; ``test_duel_era_resolution`` covers the era-close freeze. The opponent
+    wins on the *lower* tally, and still banks the guaranteed-win modifier —
+    they won a duel. #1373 (a failed praxis banks nothing) is about the author's
+    own scoring; this is about the second player.
+    """
+    challenger = await _make_character(
+        db_session, era, faction_slug="ua", username="failedside", email="fs@x.com"
+    )
+    opponent = await _make_character(
+        db_session, era, faction_slug="ua", username="cleanside", email="cs@x.com"
+    )
+    voter = await _make_character(
+        db_session, era, faction_slug="ua", username="failvoter", email="fv@x.com"
+    )
+    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    challenger_praxis = await _make_solo(db_session, task, challenger)
+    opponent_praxis = await _make_solo(db_session, task, opponent)
+
+    await _cast_vote(db_session, challenger_praxis, voter, 5)
+    await _cast_vote(db_session, opponent_praxis, voter, 2)
+    await _make_duel(db_session, task, challenger_praxis, opponent, opponent_praxis)
+
+    challenger_praxis.moderation_status = ModerationStatus.failed
+    await db_session.flush()
+
+    winner_card = await _load_card(db_session, opponent_praxis.id)
+    failed_card = await _load_card(db_session, challenger_praxis.id)
+
+    # Opponent: UA duel_win 1.5 → 10 × 1.5 + 2 = 17.0, off the lower tally.
+    assert winner_card.display_multiplier == pytest.approx(1.5)
+    assert winner_card.score == pytest.approx(17.0)
+    assert_invariant(winner_card)
+
+    # The failed side reads the loss multiplier, not a tie: it lost the duel.
+    # (Its author banks nothing regardless — #1373 keeps it out of the gather.)
+    assert failed_card.display_multiplier == pytest.approx(0.5)
 
 
 @pytest.mark.asyncio
