@@ -49,18 +49,6 @@ export interface FactionConfig {
 }
 
 /**
- * Faction-identity aliases: a derived/retired slug renders with its canonical
- * faction's identity (archetype + CSS theme). Single source of truth for the
- * relationship — consumed here by factionCssVar and by pickVariant in
- * utils/factionDispatch.ts.
- *
- * Currently empty: albescent became first-class (#232) and the last remaining
- * alias, aged_out, was retired with its faction (#428). Kept as the seam so a
- * future derived slug has one home; unknown slugs pass through unaliased.
- */
-export const FACTION_ALIASES: Record<string, string> = {};
-
-/**
  * Slug-to-CSS-variable-key mapping.
  * Faction slugs use underscores in the DB but CSS variables use hyphens.
  */
@@ -95,12 +83,11 @@ const CSS_KEY: Record<string, string> = {
 };
 
 /**
- * Resolve a slug (through aliases) to its CSS-variable key. Unknown/unregistered
- * slugs degrade to `default` (neutral grey / rainbow), never impersonate `ua`.
+ * Resolve a slug to its CSS-variable key. Unknown/unregistered slugs degrade to
+ * `default` (neutral grey / rainbow), never impersonate `ua`.
  */
 function resolveCssKey(slug: string | null | undefined): string {
-  const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
-  return CSS_KEY[resolved] ?? "default";
+  return CSS_KEY[slug ?? ""] ?? "default";
 }
 
 /**
@@ -302,7 +289,7 @@ export function factionFill(
  * absence of a faction identity rather than one of them. Testing the mapped
  * value, not key presence, is what keeps those two meanings apart — presence
  * alone reported `na` as a real faction and turned every unaffiliated ornament
- * grey (#749). Aliases resolve first, so a derived slug counts as known.
+ * grey (#749).
  *
  * `albescent` now sits on that same unthemed side (#783), and it is there for a
  * different reason than `na`: it IS a faction, it just refuses to look like one.
@@ -312,8 +299,8 @@ export function factionFill(
  * both grey out unaffiliated players AND expose a secret society.
  */
 export function isKnownFaction(slug: string | null | undefined): boolean {
-  const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
-  return resolved in CSS_KEY && CSS_KEY[resolved] !== "default";
+  const key = slug ?? "";
+  return key in CSS_KEY && CSS_KEY[key] !== "default";
 }
 
 /**

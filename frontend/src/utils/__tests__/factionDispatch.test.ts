@@ -7,7 +7,7 @@
  * factions/__tests__/surfaceDispatch.test.ts; that a manifest routes to every
  * surface at all is guarded generically by factions/__tests__/addAFaction.test.
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { pickVariant } from '../factionDispatch'
 
 const A = () => null
@@ -35,21 +35,12 @@ describe('pickVariant', () => {
     expect(pickVariant(map, '__nope__')).toBeUndefined()
     expect(pickVariant(map, null)).toBeUndefined()
   })
-})
 
-// The alias branch: a derived slug inherits its canonical faction's variant.
-// FACTION_ALIASES is empty in production, so this is the only thing that
-// exercises the branch at all.
-describe('pickVariant alias resolution', () => {
-  it('resolves a slug through its alias to the canonical entry', async () => {
-    // resetModules so the dynamic import re-evaluates factionDispatch against
-    // the mocked FACTION_ALIASES instead of the already-cached real (empty) one.
-    vi.resetModules()
-    vi.doMock('../factions', () => ({ FACTION_ALIASES: { derived: 'coven' } }))
-    const { pickVariant: withAlias } = await import('../factionDispatch')
-    expect(withAlias(map, 'derived', Fallback)).toBe(A) // derived → coven → A
-    expect(withAlias({ coven: A }, 'derived')).toBe(A) // even with no fallback
-    vi.doUnmock('../factions')
-    vi.resetModules()
+  it('never resolves one faction to another', () => {
+    // The alias branch used to sit here, so a slug could reach a sibling
+    // faction's variant. Nothing may do that now: an unregistered slug takes
+    // the fallback or nothing, never `map`'s other entries.
+    expect(pickVariant(map, 'derived', Fallback)).toBe(Fallback)
+    expect(pickVariant({ coven: A }, 'derived')).toBeUndefined()
   })
 })
