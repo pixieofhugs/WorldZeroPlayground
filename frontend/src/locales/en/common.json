@@ -142,9 +142,6 @@
     "levelsToGo_other": "{{count}} levels to go.",
     "home": {
       "title": "FieldDesk",
-      "charEyebrow": "You",
-      "edit": "Edit",
-      "switch": "Switch",
       "switcher": {
         "title": "Your characters",
         "close": "Close",
@@ -157,49 +154,37 @@
       "questsEmpty": "Nothing in progress yet — pick up a task.",
       "viewAll": "All tasks",
       "taskMeta": "{{faction}} · +{{points}} pts",
-      "stats": {
-        "points": "Points",
-        "votes": "Votes",
-        "era": "Era"
-      },
       "pending_one": "{{count}} pending request",
       "pending_other": "{{count}} pending requests",
       "browseTasks": "Browse Tasks",
       "coven": {
         "charWindow": "you",
         "questsWindow": "quests",
-        "charEyebrow": "you",
         "questsHeading": "quests"
       },
       "ua": {
         "masthead": "One mark today. Begin.",
-        "charEyebrow": "Practising",
         "questsHeading": "On the sheet"
       },
       "singularity": {
         "masthead": "FieldDesk.sys",
-        "charEyebrow": "// active_node",
         "questsHeading": "// running_processes"
       },
       "everymen": {
         "masthead": "The Union Desk",
-        "charEyebrow": "On the roll",
         "questsHeading": "On the job"
       },
       "ephemerists": {
         "masthead": "The Codex Desk",
-        "charEyebrow": "On the road",
         "questsHeading": "Surveys underway"
       },
       "snide": {
         "masthead": "The Job Board",
-        "charEyebrow": "on file",
         "questsHeading": "jobs in play"
       },
       "wow": {
         "greeting": "Good morrow, Sir {{name}}.",
         "masthead": "Thy crusade awaits. The noodle sword is where thou left it.",
-        "charEyebrow": "Thy Standing",
         "questsHeading": "Thy Open Quests"
       }
     }
@@ -339,15 +324,16 @@
       "expandWithPending_other": "Expand sidebar — {{count}} pending requests"
     },
     "characterCard": {
-      "eyebrow": "Your Character",
-      "edit": "edit",
+      "characters": "Characters",
+      "edit": "Edit",
       "factionLevel": "{{faction}} · Level {{level}}",
+      "level": "Level {{level}}",
+      "eraPoints": "points in {{era}}",
+      "toNextLevel": "{{points}} to Level {{level}}",
+      "topLevel": "Top of the era's ladder",
+      "allTime": "{{points}} all-time",
+      "trackLabel": "{{score}} of {{target}} points toward Level {{level}}",
       "noCharacter": "No character yet"
-    },
-    "stats": {
-      "score": "Score",
-      "allTime": "All-Time",
-      "current": "Current"
     },
     "activeTasks": {
       "heading": "In progress tasks",

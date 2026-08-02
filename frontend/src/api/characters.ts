@@ -71,8 +71,3 @@ export async function uploadCharacterAvatar(id: number, file: File): Promise<Cha
   const { data } = await api.post<CharacterOut>(`/characters/${id}/avatar`, form)
   return data
 }
-
-export async function getVotesReceived(characterId: number): Promise<{ character_id: number; votes_received: number }> {
-  const { data } = await api.get<{ character_id: number; votes_received: number }>(`/characters/${characterId}/stats/votes-received`)
-  return data
-}
