@@ -379,7 +379,8 @@ async def recompute_votes_spent_this_era(
     ``0011_vote_unique_per_account`` did exactly that: it deleted the surplus
     rows of 13 duplicated ``(praxis, account)`` pairs and deliberately left the
     counter for a follow-up, because the refund is an era attribution SQL cannot
-    derive without guessing.
+    derive without guessing. That revision was collapsed into ``0002_squashed``
+    by #1398 and no longer exists as a file; this function is not tied to it.
 
     **The identity this rests on: the counter equals the number of that
     character's vote rows cast inside the era window.** It holds because the

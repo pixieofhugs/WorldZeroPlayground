@@ -32,7 +32,7 @@ Squash the `versions/` chain when **either**:
 World Zero is **pre-launch**: production data is disposable today.
 
 A squash = **rebuild the schema from the models** via `Base.metadata.create_all`
-(that's all `0001_squashed.py` does). This requires **wiping every existing DB** —
+(that's all the squashed root does). This requires **wiping every existing DB** —
 prod *and* every local/worktree DB — because their old stamps are now dangling.
 
 This strategy is only valid while data is disposable. The moment real user data

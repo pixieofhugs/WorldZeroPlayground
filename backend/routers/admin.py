@@ -229,7 +229,10 @@ async def backfill_vote_budget(
     The repair half of the 2026-08-02 vote dedupe: migration
     ``0011_vote_unique_per_account`` deleted 13 surplus vote rows, and their
     casters are still charged for them because the spend is a stored counter.
-    See :func:`services.character_stats.recompute_votes_spent_this_era` for the
+    (That revision no longer exists as a file — #1398 collapsed the chain into
+    ``0002_squashed`` — but this endpoint outlives it: anything that removes a
+    vote row behind the service's back leaves the same drift.) See
+    :func:`services.character_stats.recompute_votes_spent_this_era` for the
     identity this rests on and the two ways it can fail.
 
     **``dry_run=true`` first.** The same counter is what an admin
