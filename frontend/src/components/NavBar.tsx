@@ -81,7 +81,14 @@ export default function NavBar() {
         transition: 'background 150ms',
       }}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
+      {/* The design's 1392px grid (#1557), replacing `max-w-5xl` (1024px). The
+          bar itself is unchanged — same sticky chrome, same wordmark and its
+          rainbow rule, same nav-link underline, same theme/character/logout
+          cluster; only the container it centres in got wider, so the nav lines
+          up with the home page's column grid instead of stopping short of it.
+          A raw measure, not a --space-* rung: `maxWidth` is geometry, and 1392
+          is a container width the design names outright. */}
+      <div className="mx-auto px-4 sm:px-6 h-14 flex items-center gap-6" style={{ maxWidth: 1392 }}>
         {/* Wordmark — Lora italic with rainbow gradient underline */}
         <NavLink to="/" className="shrink-0 leading-none" style={{ textDecoration: 'none' }}>
           <span
