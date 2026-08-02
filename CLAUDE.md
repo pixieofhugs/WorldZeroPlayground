@@ -38,6 +38,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | API routes + auth guards | `backend/routers/` (source files) |
 | Pages, routing, components | `frontend/src/` (source files) |
 | Frontend API clients | `frontend/src/api/` |
+| How stale a cached read may be — which class, why, and the era epoch | ADR-0072; code in `frontend/src/hooks/cachedResource.ts` + `frontend/src/utils/cacheEpoch.ts` |
 | User-facing frontend copy (i18n catalogs) | `frontend/src/locales/en/*.json` — editor guide: `frontend/src/locales/README.md` |
 | Testing approach | `docs/spec/SPEC-testing.md` |
 | Design intent, UX, faction archetypes | `WORLD_ZERO_STYLE.md` |
