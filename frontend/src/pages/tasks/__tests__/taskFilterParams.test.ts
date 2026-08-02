@@ -90,6 +90,10 @@ describe('readTaskFilters — an unrecognised value CLAMPS (#1537)', () => {
     ])
   })
 
+  it('drops a blank faction, which would filter to no faction at all', () => {
+    expect(readTaskFilters(params('faction=&faction=ua')).factions).toEqual(['ua'])
+  })
+
   it('reads any eligibility value but the flag as OFF', () => {
     expect(readTaskFilters(params('can_sign_up=yes')).canSignUp).toBe(false)
     expect(readTaskFilters(params(`can_sign_up=${CAN_SIGN_UP_ON}`)).canSignUp).toBe(true)
