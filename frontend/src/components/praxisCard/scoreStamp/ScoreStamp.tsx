@@ -1,6 +1,10 @@
 import type { ScoredPraxis } from "./scoreBreakdown";
 import { pickVariant } from "../../../utils/factionDispatch";
 import { surfaceMap } from "../../../factions";
+import {
+  UNSCORED_MODERATION_STATUSES,
+  type ModerationStatus,
+} from "../../../api/praxis";
 import DefaultScoreStamp from "./DefaultScoreStamp";
 
 /**
@@ -34,15 +38,18 @@ import DefaultScoreStamp from "./DefaultScoreStamp";
  * slug are presentation inputs of this surface, and a future consumer that only
  * wants the rows shouldn't have to carry them.
  *
- * These are the only two extras, verified across all eight registered stamps:
- * every skin reads `score` + the breakdown terms, plus `is_top_for_task` for the
- * crown; the dispatcher alone reads `task_faction_slug`.
+ * These are the only extras, verified across all eight registered stamps: every
+ * skin reads `score` + the breakdown terms, plus `is_top_for_task` for the
+ * crown; the dispatcher alone reads `task_faction_slug` and
+ * `moderation_status`.
  */
 export interface StampablePraxis extends ScoredPraxis {
   /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
   is_top_for_task: boolean;
   /** The task's faction: what the stamp surface dispatches on (ADR-0039). */
   task_faction_slug: string | null;
+  /** Whether the total was banked at all — see the gate below (#1444). */
+  moderation_status: ModerationStatus;
 }
 
 export interface ScoreStampProps {
@@ -55,6 +62,26 @@ export interface ScoreStampProps {
 }
 
 export default function ScoreStamp({ praxis, showCrown }: ScoreStampProps) {
+  /**
+   * No stamp on a praxis that banked nothing (#1444).
+   *
+   * #1373 ruled and shipped that a `failed` praxis contributes 0 to its author's
+   * score; `hidden` never contributed. Every skin below reads `score`, so on
+   * those two states the card said "failed" in its banner and `13.6 POINTS` in
+   * its stamp — a figure nobody holds. The banner is the honest signal and it
+   * stays; ADR-0047's rule that a row exists only when it tells the viewer
+   * something true applies a level up, to the whole mark.
+   *
+   * The gate is HERE, not in a card slot, because ADR-0049 made this the single
+   * mount for every surface that shows a total (the nine cards, the nine
+   * praxis-detail rails, the composer's waiting slip). Only `failed` and
+   * `hidden` — `flagged` is awaiting a ruling and still counts, which is why
+   * this reads the one shared set rather than naming a state inline.
+   *
+   * Nothing else about an unscored praxis changes: it keeps its place in the
+   * feed, its banner, and its votes (the #1373 ruling).
+   */
+  if (UNSCORED_MODERATION_STATUSES.has(praxis.moderation_status)) return null;
   const Stamp = pickVariant(
     surfaceMap("scoreStamp"),
     praxis.task_faction_slug,

@@ -21,6 +21,7 @@ import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
 import { applyCastTally } from '../../../vote/useVotedPraxis'
 import { recordCastTally, castTally, __resetCastTallies } from '../../../vote/castTallies'
+import ScoreStamp from '../ScoreStamp'
 import DefaultScoreStamp from '../DefaultScoreStamp'
 import EverymenScoreStamp from '../EverymenScoreStamp'
 import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
@@ -163,6 +164,52 @@ describe('useVotedPraxis merge feeds the stamp breakdown (#912)', () => {
     const voted = applyCastTally(base, tally)
     expect(scoreBreakdown(voted)).toEqual(
       expect.objectContaining({ votes: 9, total: 18.6 }),
+    )
+  })
+})
+
+/**
+ * #1444 — a stamp may only name a number somebody banked.
+ *
+ * #1373 shipped the ruling that a `failed` praxis contributes 0 to its author's
+ * score, and `hidden` never contributed at all: `_UNSCORED_MODERATION_STATUSES`
+ * in `backend/services/character_stats.py` is the ONE predicate naming that
+ * pair. The card kept stamping its computed total anyway, so the failed banner
+ * and a `13.6 POINTS` mark sat in the same frame, and only one of them was true.
+ *
+ * The gate is on the DISPATCHER rather than a card slot because ADR-0049 made
+ * this component the single mount for every surface that shows a total — the
+ * nine cards, the nine praxis-detail rails, the composer's waiting slip. A gate
+ * at `desktop/shared.tsx` would leave the same untrue figure on the detail page
+ * one click away.
+ *
+ * Both halves are asserted deliberately: a stamp that hides on `failed` and a
+ * stamp that hides ALWAYS produce the same first assertion.
+ */
+describe('the stamp leaves an unscored praxis (#1444)', () => {
+  /** `task_faction_slug: null` resolves to the eagerly-imported Default stamp. */
+  const unscorable = (moderation_status: string) =>
+    praxis({ moderation_status, task_faction_slug: null, is_top_for_task: false })
+
+  it('renders nothing on a failed praxis — the banner is the honest signal', () => {
+    expect(renderToStaticMarkup(<ScoreStamp praxis={unscorable('failed')} />)).toBe('')
+  })
+
+  it('renders nothing on a hidden praxis — the other half of the same pair', () => {
+    expect(renderToStaticMarkup(<ScoreStamp praxis={unscorable('hidden')} />)).toBe('')
+  })
+
+  it('still stamps a visible praxis — otherwise the gate is "hide always"', () => {
+    const html = text(renderToStaticMarkup(<ScoreStamp praxis={unscorable('visible')} />))
+    expect(html).toContain('13.6')
+    expect(html).toContain('points')
+  })
+
+  it('still stamps a flagged praxis — a flag is awaiting a ruling, not a ruling', () => {
+    // `_UNSCORED_MODERATION_STATUSES` excludes `flagged` for the same reason:
+    // a flagged praxis is still counted, so its total is still banked.
+    expect(text(renderToStaticMarkup(<ScoreStamp praxis={unscorable('flagged')} />))).toContain(
+      '13.6',
     )
   })
 })
