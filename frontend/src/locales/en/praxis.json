@@ -243,6 +243,10 @@
       "edited": "amended"
     }
   },
+  "duelBanner": {
+    "versus": "vs.",
+    "readTheirs": "Read {{name}}'s side of the duel"
+  },
   "duelCrossLink": {
     "label": "The duel",
     "readTheirPraxis": "Read their praxis",
