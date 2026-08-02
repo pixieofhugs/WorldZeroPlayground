@@ -28,9 +28,10 @@ import type { CSSProperties, ReactNode } from "react";
  */
 
 /**
- * Sticky bottom action bar. Pins just above the fixed {@link MobileTabBar}
- * (~3.5rem) and clears the home-indicator safe area; goes full-bleed by
- * cancelling the mobile shell's 16px gutter. Stacks its children in a column so
+ * Sticky bottom action bar. Pins just above the fixed {@link MobileTabBar} and
+ * clears the home-indicator safe area — both halves of that sum live in
+ * `--tab-bar-clearance` (#1566). Goes full-bleed by cancelling the mobile
+ * shell's 16px gutter. Stacks its children in a column so
  * a skin can drop an error line or caption above the action row.
  */
 export function MobileStickyBar({
@@ -44,7 +45,7 @@ export function MobileStickyBar({
     <div
       style={{
         position: "sticky",
-        bottom: "calc(3.5rem + env(safe-area-inset-bottom))",
+        bottom: "var(--tab-bar-clearance)",
         marginLeft: "calc(-1 * var(--space-lg))",
         marginRight: "calc(-1 * var(--space-lg))",
         marginTop: "var(--space-xl)",
