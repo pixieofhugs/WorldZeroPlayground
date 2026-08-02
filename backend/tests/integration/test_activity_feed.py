@@ -635,3 +635,75 @@ def test_every_registry_type_has_a_schema_variant():
     variants = get_args(get_args(ActivityFeedItem)[0])
     tags = {get_args(variant.model_fields["type"].annotation)[0] for variant in variants}
     assert tags == set(FEED_ITEM_TYPES)
+
+
+@pytest.mark.asyncio
+async def test_friend_signup_carries_the_task_level(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """The friend-signup card's level badge, at the HTTP seam (#1518).
+
+    ``normalizeFeedItem`` has read ``p.task_level_required ?? null`` on this
+    card since it was written while the producer never emitted the key, so the
+    badge was permanently blank and the ``?? null`` kept anybody from noticing.
+    Asserting the *value* is the point — that the number arrives from the task
+    row rather than a schema default — hence the level below is not the
+    fixture's 0.
+
+    The presence assertion is not filler. Payload shapes are ``extra="forbid"``
+    (#1402), so a key added to the builder but not to ``FriendSignupPayload``
+    fails validation and the whole item is dropped from the feed rather than
+    rendered without a badge.
+    """
+    from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+    from models.relationship import Relationship, RelationshipStatus, RelationshipType
+
+    active_task.level_required = 3
+    db_session.add(
+        Relationship(
+            from_character_id=character.id,
+            to_character_id=character2.id,
+            type=RelationshipType.friend,
+            status=RelationshipStatus.active,
+        )
+    )
+    mine = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Mine",
+        body_text="proof",
+    )
+    theirs = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Theirs",
+        body_text="proof",
+    )
+    db_session.add_all([mine, theirs])
+    await db_session.flush()
+    db_session.add_all(
+        [
+            PraxisMember(praxis_id=mine.id, character_id=character.id),
+            PraxisMember(praxis_id=theirs.id, character_id=character2.id),
+        ]
+    )
+    await db_session.commit()
+
+    response = await client.get(
+        "/activity-feed",
+        params={"filter": "friends", "limit": 100, "types": ["friend_signup"]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    items = [i for i in response.json()["items"] if i["type"] == "friend_signup"]
+    assert len(items) == 1, f"the friend_signup item was dropped: {response.json()}"
+    assert items[0]["payload"]["task_level_required"] == 3
