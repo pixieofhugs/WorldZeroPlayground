@@ -2,13 +2,28 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from authlib.jose import JsonWebToken
 from httpx import AsyncClient
-from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from models.account import Account
 from models.character import Character
+
+_JWT = JsonWebToken(["HS256"])
+
+
+def _mint(payload: dict, key: str | None = None) -> str:
+    """Sign a token directly, bypassing ``create_jwt``.
+
+    The rejection tests below need token shapes ``create_jwt`` will never
+    produce. ``exp`` is a NumericDate, so datetimes are converted here rather
+    than at each call site.
+    """
+    claims = dict(payload)
+    if isinstance(claims.get("exp"), datetime):
+        claims["exp"] = int(claims["exp"].timestamp())
+    return _JWT.encode({"alg": "HS256"}, claims, key or settings.SECRET_KEY).decode()
 
 
 @pytest.mark.asyncio
@@ -130,7 +145,7 @@ async def test_expired_token(client: AsyncClient, account: Account):
         "sub": str(account.id),
         "exp": datetime.now(timezone.utc) - timedelta(seconds=1),
     }
-    expired_token = jwt.encode(expired_payload, settings.SECRET_KEY, algorithm="HS256")
+    expired_token = _mint(expired_payload)
 
     resp = await client.get(
         "/auth/me",
@@ -146,7 +161,7 @@ async def test_malformed_token_no_sub(client: AsyncClient):
         "exp": datetime.now(timezone.utc) + timedelta(days=1),
         # deliberately omit 'sub'
     }
-    bad_token = jwt.encode(bad_payload, settings.SECRET_KEY, algorithm="HS256")
+    bad_token = _mint(bad_payload)
 
     resp = await client.get(
         "/auth/me",
@@ -162,7 +177,7 @@ async def test_token_wrong_signature(client: AsyncClient, account: Account):
         "sub": str(account.id),
         "exp": datetime.now(timezone.utc) + timedelta(days=1),
     }
-    wrong_token = jwt.encode(wrong_key_payload, "wrong-secret-key", algorithm="HS256")
+    wrong_token = _mint(wrong_key_payload, key="wrong-secret-key")
 
     resp = await client.get(
         "/auth/me",

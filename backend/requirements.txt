@@ -1,16 +1,16 @@
-fastapi
-uvicorn[standard]
-sqlalchemy[asyncio]
-asyncpg
-alembic
-pydantic
-pydantic-settings
-python-jose[cryptography]
-authlib
-itsdangerous
-python-multipart
-Pillow
-httpx
+# Dev/CI install: the runtime set plus the test toolchain.
+#
+# The prod image installs requirements-prod.txt only (see Dockerfile), so the
+# pytest family below never reaches it. The runtime set is not duplicated here;
+# it is included by reference.
+#
+# ponytail: the conventional split is requirements.txt (runtime) +
+# requirements-dev.txt (extras), i.e. this pair inverted. It is this way round
+# because both CI workflows hardcode `pip install -r backend/requirements.txt`
+# and they live outside backend/. Upgrade path: rename the pair and point
+# .github/workflows/{test,e2e}.yml at the dev file.
+-r requirements-prod.txt
+
 pytest
 pytest-asyncio
 pytest-cov
