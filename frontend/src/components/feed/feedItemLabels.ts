@@ -47,7 +47,7 @@ const REQUEST_TYPES: ReadonlySet<string> = new Set([
  * Is this item an obligation nobody has answered yet?
  *
  * Two conditions, and the second one is the whole of #1342. Archiving never
- * answers anything (ADR-0065), so an archived request is still open — but
+ * answers anything (ADR-0070), so an archived request is still open — but
  * *answering* it does, and a request archived while pending and accepted a week
  * later kept reading "still waiting" because the tag was keyed on the item's
  * TYPE alone. Since #1301 windowed the live feed to pending requests, the

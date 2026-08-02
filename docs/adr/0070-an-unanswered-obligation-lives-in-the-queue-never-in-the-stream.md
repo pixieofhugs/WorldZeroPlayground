@@ -4,8 +4,8 @@
 **Date:** 2026-07-30
 **Relates to:** ADR-0023 (the activity feed stays a read-time projection),
 ADR-0036 (feed sources are a registry; counts derive from the same query),
-ADR-0065/0066 (the feed is archivable, and archiving never answers anything),
-epic #1419 (the Updates page gains a filter bar and a Requests queue)
+epic #1192 (the feed gains an archive), epic #1419 (the Updates page gains a
+filter bar and a Requests queue)
 
 ## Context
 
@@ -55,13 +55,16 @@ Three consequences follow, and all three are intended:
    exists to prevent.
 3. **Bulk archive stops sweeping up obligations.** `dismiss-all` is scoped by
    the active filter, so "Archive all" on `All` no longer touches them. This is
-   the sharpest possible statement of ADR-0065: you cannot answer an obligation
-   by archiving it, and you certainly cannot answer forty of them with one
-   click.
+   the sharpest possible statement of *archiving is a view state, never a
+   decision*: you cannot answer an obligation by archiving it, and you
+   certainly cannot answer forty of them with one click.
 
 **Archived is unaffected.** A dismissed request still appears there, tagged
-*still waiting*, because archiving never answered it (ADR-0065). This is the
-subtle part of the implementation: the four types cannot simply be dropped from
+*still waiting*, because **archiving is a view state, never a decision** — it
+never answered anything. That rule arrived with the archive itself (epic #1192)
+and had no record of its own until this one, so this ADR is where it lives and
+what the code should cite for it. This is the subtle part of the
+implementation: the four types cannot simply be dropped from
 the `ALL` source set, since the Archived view reads `filter=all` with
 `archived=true` and would lose them too. The exclusion is a context axis applied
 to the *live* view only — a sibling of the existing

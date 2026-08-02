@@ -206,7 +206,7 @@ describe('the chassis', () => {
   })
 })
 
-describe('archiving never answers anything (ADR-0066)', () => {
+describe('archiving never answers anything (ADR-0070)', () => {
   const stillWaiting = i18n.t('feed:archive.stillWaiting')
 
   it('tags an archived duel challenge and collab invite "still waiting"', () => {

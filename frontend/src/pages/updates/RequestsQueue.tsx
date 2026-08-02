@@ -55,7 +55,7 @@ const BODY_ID = 'requests-queue-body'
  * ## No "Archive all" here (decision 18)
  *
  * Deliberately absent, and not an oversight. Bulk-archiving your outstanding
- * obligations in one click is precisely what ADR-0065 forbids — archiving never
+ * obligations in one click is precisely what ADR-0070 forbids — archiving never
  * answers anything. The button stays scoped to the feed below.
  *
  * ## Chrome

@@ -41,7 +41,7 @@ export interface FeedFrameProps {
   /**
    * A neutral status tag for the band, or null. Today the only one is
    * "Still waiting" — the tag an archived duel challenge / collab invite
-   * carries, because archiving never answers anything (ADR-0066).
+   * carries, because archiving never answers anything (ADR-0070).
    */
   tag: string | null
   /**

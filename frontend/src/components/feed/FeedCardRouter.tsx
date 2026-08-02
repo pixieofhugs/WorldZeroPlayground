@@ -83,7 +83,7 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
   if (!row && !Companion && !isEraAnnouncement) return null
 
   // "Still waiting" only in the archive, and only where something really is
-  // still waiting: archiving never answers anything (ADR-0065), so an archived
+  // still waiting: archiving never answers anything (ADR-0070), so an archived
   // duel challenge or collab invite that is STILL PENDING is open and says so —
   // one accepted or declined after it was archived is not, and must not (#1342).
   // In the live feed the card's own buttons already make that plain.

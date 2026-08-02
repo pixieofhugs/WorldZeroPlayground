@@ -95,7 +95,7 @@ const QUIET: CSSProperties = {
  *    holding that faction's current-era letter. It always was the accept
  *    endpoint. See {@link acceptMode} for the three branches it has.
  *  - **Not now** is the slot's existing archive write, wearing a label. It is
- *    emphatically **not** "Decline": ADR-0065/0066 say archiving never answers
+ *    emphatically **not** "Decline": ADR-0070 says archiving never answers
  *    anything, the letter stays valid, the factions page still joins, and
  *    `InvitationLetter` has no status column to decline into.
  *
