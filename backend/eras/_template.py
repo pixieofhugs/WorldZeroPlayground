@@ -42,7 +42,11 @@ from game_config import (
 #
 # Required system factions (include these in every era):
 #   "ua"       -- an ordinary invite-joinable faction (no starter privilege, ADR-0030)
-#   "na"       -- sentinel for tasks with no faction affiliation
+#   "na"       -- answers two questions at once (see backend/faction_slugs.py):
+#                 the sentinel for a task with no faction affiliation, AND the
+#                 unaffiliated state every character is born into (ADR-0019).
+#                 Omit it and both the default birth faction and every
+#                 cross-faction task lose their FK target.
 #
 # Modifier guide (1.0 = no change, >1.0 = bonus, <1.0 = penalty):
 #   own_task_modifier       -- solo task from your own faction
@@ -229,6 +233,11 @@ ERA_N = EraConfig(
     albescent_level_required=8,
     invitation_point_threshold=50,   # ADR-0022: points from a faction's tasks
     invitation_task_threshold=2,     # ADR-0022: completed tasks for that faction
+    # starting_faction_slug — deliberately OMITTED (#1559). Characters are born
+    # unaffiliated (ADR-0019/ADR-0030) and the EraConfig default already says so,
+    # so name this ONLY if your era wants players pre-sorted into a real faction.
+    # Whatever you name must be a key in ERA_N_FACTIONS above: it is an FK onto a
+    # Faction row and seed.py seeds exactly the era's factions.
 
     reset_score=True,
     reset_level=True,
