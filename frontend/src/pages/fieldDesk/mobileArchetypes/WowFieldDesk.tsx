@@ -27,6 +27,7 @@
  *    — geometry yields to type (§4), and it is also what makes the whole row a
  *    46px-tall target rather than a 14px title.
  */
+import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -44,10 +45,12 @@ import {
   WowQuestFrame,
   WowSectionHead,
   WowSpark,
+  wowChecker,
   wowGhostButton,
   wowGiltButton,
   wowMobilePage,
 } from "../../../components/factionMarks/wowMobile";
+import CharacterSwitcherSheet from "../../../components/CharacterSwitcherSheet";
 import { factionName } from "../../../utils/factions";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
 import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
@@ -55,15 +58,43 @@ import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 /** Every tappable row clears the faction's 46px thumb target. */
 const TAP = 46;
 
+/**
+ * Characters / Edit as real controls (#1553) — a gilt-framed chit on the crest.
+ * They were bare caps: a sub-20px hit target on a phone. 44 is the WCAG 2.5.5
+ * floor, and this skin's own thumb target is TAP (46), which clears it.
+ */
+const actionPillStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: TAP,
+  boxSizing: "border-box",
+  padding: "0 var(--space-lg)",
+  borderRadius: 999,
+  border: `1.5px solid ${WOW_RULE}`,
+  background: WOW_PLATE,
+  fontFamily: WOW_DISPLAY,
+  fontSize: "var(--text-lg)",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: WOW_PLUM,
+  textDecoration: "none",
+  cursor: "pointer",
+  transition: "opacity 120ms ease",
+};
+
+/** The baseline row under the track — the chronicle's quiet hand. */
+const trackMetaStyle: CSSProperties = {
+  fontFamily: WOW_BODY,
+  fontSize: "var(--text-md)",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: WOW_DEEP,
+};
+
 export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation("common");
-  const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state;
-
-  const stats = [
-    { label: t("fieldDesk.home.stats.points"), value: character.score?.toLocaleString() ?? "0" },
-    { label: t("fieldDesk.home.stats.votes"), value: votesReceived.toLocaleString() },
-    { label: t("fieldDesk.home.stats.era"), value: eraName || "—" },
-  ];
+  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state;
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   return (
     <div
@@ -81,28 +112,27 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
       }}
     >
       <WowPavilionHeader
-        eyebrow={
-          <>
-            {t("fieldDesk.home.wow.charEyebrow")}
+        /* The crest's own corner carries the two actions now — no eyebrow, and
+           no score up here: there is exactly one points figure and it is the
+           one in the footer below (#1553). */
+        tally={
+          <span style={{ display: "inline-flex", gap: "var(--space-sm)" }}>
+            <button
+              type="button"
+              onClick={() => setSwitcherOpen(true)}
+              style={actionPillStyle}
+              className="hover:opacity-80 active:opacity-60"
+            >
+              {t("sidebar.characterCard.characters")}
+            </button>
             <Link
               to={`/characters/${character.id}/edit`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: TAP,
-                marginLeft: "var(--space-sm)",
-                color: WOW_PLUM,
-                textDecoration: "none",
-              }}
+              style={actionPillStyle}
+              className="hover:opacity-80 active:opacity-60"
             >
-              {t("fieldDesk.home.edit")}
+              {t("sidebar.characterCard.edit")}
             </Link>
-          </>
-        }
-        tally={
-          <>
-            <WowSpark /> {character.score?.toLocaleString() ?? "0"}
-          </>
+          </span>
         }
         name={
           <Link
@@ -112,10 +142,98 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             {t("fieldDesk.home.wow.greeting", { name: character.display_name })}
           </Link>
         }
-        byline={t("sidebar.characterCard.factionLevel", {
-          faction: factionName(character.faction_slug),
-          level: character.level,
-        })}
+        byline={t("sidebar.characterCard.level", { level: character.level })}
+        footer={
+          <div style={{ marginTop: "var(--space-lg)" }}>
+            {/* The one points figure, in the display face. */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "center",
+                gap: "var(--space-sm)",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: WOW_DISPLAY,
+                  fontSize: "var(--text-heading)",
+                  lineHeight: 1,
+                  color: WOW_FIGURE,
+                }}
+              >
+                <WowSpark /> {character.score.toLocaleString()}
+              </span>
+              <span style={trackMetaStyle}>
+                {eraName
+                  ? t("sidebar.characterCard.eraPoints", { era: eraName })
+                  : t("sidebar.characterCard.points")}
+              </span>
+            </div>
+
+            {/* The level track. WOW's spectrum is the gold/plum checker — the
+                same device as the running head and the quest frame, at a third
+                scale — CLIPPED by the fill width rather than squeezed into it. */}
+            <div
+              style={{
+                height: 6,
+                borderRadius: 999,
+                overflow: "hidden",
+                background: WOW_PLATE,
+                border: `1px solid ${WOW_RULE}`,
+                marginTop: "var(--space-md)",
+              }}
+              {...(levelTrack
+                ? {
+                    role: "progressbar",
+                    "aria-valuemin": 0,
+                    "aria-valuemax": 100,
+                    "aria-valuenow": Math.round(levelTrack.fillPercent),
+                    "aria-label": t("sidebar.characterCard.trackLabel", {
+                      score: character.score.toLocaleString(),
+                      target: levelTrack.nextThreshold.toLocaleString(),
+                      level: levelTrack.nextLevel ?? character.level,
+                    }),
+                  }
+                : null)}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${levelTrack?.fillPercent ?? 0}%`,
+                  borderRadius: 999,
+                  background: wowChecker(6),
+                  transition: "width 300ms",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+                marginTop: "var(--space-sm)",
+              }}
+            >
+              {levelTrack && (
+                <span style={trackMetaStyle}>
+                  {levelTrack.nextLevel === null
+                    ? t("sidebar.characterCard.topLevel")
+                    : t("sidebar.characterCard.toNextLevel", {
+                        points: levelTrack.pointsToNext.toLocaleString(),
+                        level: levelTrack.nextLevel,
+                      })}
+                </span>
+              )}
+              <span style={{ ...trackMetaStyle, marginLeft: "auto" }}>
+                {t("sidebar.characterCard.allTime", {
+                  points: character.all_time_score.toLocaleString(),
+                })}
+              </span>
+            </div>
+          </div>
+        }
       />
 
       <div
@@ -133,40 +251,6 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         >
           {t("fieldDesk.home.wow.masthead")}
         </p>
-
-        {/* ── the tally of deeds ── */}
-        <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              style={{
-                flex: "1 1 0",
-                minWidth: 0,
-                textAlign: "center",
-                background: WOW_PLATE,
-                border: `1px solid ${WOW_RULE}`,
-                borderRadius: 7,
-                padding: "var(--space-md) var(--space-sm)",
-              }}
-            >
-              <div
-                className="content-title"
-                style={{
-                  fontFamily: WOW_DISPLAY,
-                  lineHeight: 1,
-                  color: WOW_FIGURE,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {stat.value}
-              </div>
-              <div className="eyebrow" style={{ color: WOW_MUTED, marginTop: "var(--space-xs)" }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* ── the herald's pending dispatches ── */}
         {pendingCount > 0 && (
@@ -303,6 +387,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
           )}
         </div>
       </div>
+
+      {/* The switcher the "Characters" chit opens (#516). */}
+      <CharacterSwitcherSheet
+        open={switcherOpen}
+        activeCharacterId={character.id}
+        onClose={() => setSwitcherOpen(false)}
+      />
     </div>
   );
 }

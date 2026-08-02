@@ -93,11 +93,16 @@ export function WowPavilionHeader({
   byline,
   tally,
   eyebrow,
+  footer,
 }: {
   name: ReactNode;
   byline: ReactNode;
   tally?: ReactNode;
   eyebrow?: ReactNode;
+  /** Optional block closing the crest — the home's level track sits here
+   *  (#1553), which is why the identity block stays ONE card on this skin
+   *  rather than a crest with a stray panel bolted under it. */
+  footer?: ReactNode;
 }) {
   return (
     <header
@@ -197,6 +202,7 @@ export function WowPavilionHeader({
         >
           {byline}
         </div>
+        {footer}
       </div>
     </header>
   );
