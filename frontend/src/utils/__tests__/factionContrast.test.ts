@@ -1392,6 +1392,23 @@ function resolveColor(name: string, theme: Theme) {
   return { raw, color: raw === null ? null : parseColor(raw) };
 }
 
+/**
+ * The stylesheet as text, and one rule out of it.
+ *
+ * Two blocks at the bottom of this file assert on DECLARATIONS rather than on
+ * ratios (#1413, #1307), because the bugs they guard are structural: a ground
+ * that is not a ground, an ink that is not reachable. Every ratio above stays
+ * green through both, which is the whole reason source assertions belong in a
+ * contrast spec at all. Shared so there is one reader of the file.
+ */
+const CSS_TEXT = readFileSync(CSS_PATH, "utf8");
+
+function ruleBody(selector: string): string {
+  const at = CSS_TEXT.indexOf(`${selector} {`);
+  expect(at, `index.css declares no \`${selector}\` rule`).toBeGreaterThan(-1);
+  return CSS_TEXT.slice(at, CSS_TEXT.indexOf("}", at));
+}
+
 describe("faction token contrast (WCAG AA)", () => {
   for (const theme of BOTH_THEMES) {
     describe(theme, () => {
@@ -1610,14 +1627,6 @@ describe("the neutral text tiers stay three inks (#1549)", () => {
  * would still pass here; `e2e/contrast.spec.ts` measures the real composite.
  */
 describe("the frost is a layer, not a ground (#1413)", () => {
-  const CSS = readFileSync(CSS_PATH, "utf8");
-
-  function ruleBody(selector: string): string {
-    const at = CSS.indexOf(`${selector} {`);
-    expect(at, `index.css declares no \`${selector}\` rule`).toBeGreaterThan(-1);
-    return CSS.slice(at, CSS.indexOf("}", at));
-  }
-
   for (const theme of BOTH_THEMES) {
     it(`--color-bg-surface is alpha in ${theme}, which is why it cannot be a Pair surface`, () => {
       const surface = resolveColor("--color-bg-surface", theme);
@@ -1646,5 +1655,103 @@ describe("the frost is a layer, not a ground (#1413)", () => {
       ruleBody(".card-on-page"),
       "`.card-on-page` is what the praxis detail's steward bar and report card wear (#1118: a block whose ink you do not control gets the stock that ink was measured on).",
     ).toContain("--card-ground: var(--color-bg-page)");
+  });
+});
+
+/**
+ * #1307 — THE LABEL TIER IS TWO TIERS, AND ITS INK IS A SEAM.
+ *
+ * WHY THERE ARE NO NEW `Pair` ROWS BELOW, which is a finding rather than an
+ * omission and is the whole reason this block is shaped the way it is.
+ *
+ * #1307 ruled "measure first, per tier, on all eight faction grounds; where the
+ * neutral fails a ground, mint a per-faction label ink". The measurement was
+ * done and it says the family gains no member. Both tiers sit under WCAG's
+ * large-text threshold (11px and 12px), so both owe 4.5:1 and ONE measurement
+ * serves the pair. `--color-text-tertiary` clears that floor on the app's two
+ * stocks — already gated above, "app page / app alt surface, tertiary ink"
+ * (#1549) — and on all eight card sheets in dark. It fails on three sheets in
+ * LIGHT, and the reason is polarity rather than taste: S.N.I.D.E. 3.18:1 and
+ * Singularity 3.29:1 are near-black sheets in BOTH themes, and Ephemerists'
+ * vellum is the darkest light sheet at 4.36:1 (its praxis plate 4.35). No
+ * light-cascade neutral clears a near-black sheet, so this is #694's shape: a
+ * colour that must differ between two factions within one theme is a faction
+ * question.
+ *
+ * And that faction question already has an answer with a name and a row.
+ * `--faction-{key}-card-muted` IS the measured quiet ink for this role on that
+ * sheet — 4.70:1 at worst, the Ephemerists plate — gated by `{key} card muted
+ * text` above and, for the four keys whose sheet is a different token, by
+ * `{key} praxis card sheet, muted ink`. Adding `{key} label ink on its sheet`
+ * beside those would be a second name for one measurement, which is what this
+ * file keeps warning about. So the frame points `--label-ink` at its own
+ * `-card-muted` and nothing is minted, exactly as #1302 concluded for the
+ * praxis card's shared inks.
+ *
+ * WHAT IS LEFT IS STRUCTURAL, and it is the #1449 / #1413 shape: a guard that
+ * measures an ink against a ground is blind to the ink not being reachable.
+ * Every ratio in this file stays green through a `.label-caption` that
+ * hardcodes `--color-text-tertiary` — and that version puts 3.18:1 back on the
+ * S.N.I.D.E. sheet with no faction able to do anything about it, because the
+ * seam a frame repoints would no longer be read. Likewise every ratio stays
+ * green through a `.label-caption` that goes back to uppercase on 0.15em
+ * tracking, which is `.eyebrow` again under a new name and the collapse #1307
+ * undid.
+ */
+describe("the label tier stays two tiers on one seam (#1307)", () => {
+  for (const selector of [".label-heading", ".label-caption"]) {
+    it(`${selector} paints the seam, not a hardcoded neutral`, () => {
+      expect(
+        ruleBody(selector),
+        `${selector} must read \`var(--label-ink)\`. Hardcoding the neutral is invisible to every ratio in this file and leaves S.N.I.D.E. (3.18:1), Singularity (3.29:1) and Ephemerists (4.36:1) in light with no way to fix their own sheet.`,
+      ).toContain("color: var(--label-ink)");
+    });
+  }
+
+  for (const theme of BOTH_THEMES) {
+    it(`--label-ink unset is the measured neutral (${theme})`, () => {
+      const seam = resolveColor("--label-ink", theme);
+      const neutral = resolveColor("--color-text-tertiary", theme);
+      expect(seam.color, `--label-ink (${theme}) resolved to "${seam.raw}"`).not.toBeNull();
+      expect(
+        seam.raw,
+        "a label outside a faction frame must render what `.eyebrow` renders today — that is what makes the sweeps a size-and-casing change rather than a repaint.",
+      ).toBe(neutral.raw);
+    });
+  }
+
+  it("the caption tier does not collapse back into the heading tier", () => {
+    const caption = ruleBody(".label-caption");
+    expect(
+      caption,
+      "the caption is normal-case on purpose: uppercase removes the ascender/descender shape that carries word recognition, and dropping it is the LARGER half of #1307's legibility fix.",
+    ).not.toContain("text-transform: uppercase");
+    expect(
+      caption,
+      "the caption carries no tracking: 0.15em works against reading the run as a word, which is why `.eyebrow-sentence` had to exist and why it does not any more.",
+    ).toContain("letter-spacing: normal");
+    expect(
+      ruleBody(".label-heading"),
+      "the heading tier keeps the caps — it names a region, and being hard to read as prose is acceptable for one or two words.",
+    ).toContain("text-transform: uppercase");
+  });
+
+  it("the two tiers take the sizes the split was measured at", () => {
+    expect(ruleBody(".label-heading"), "11px — see the ruling on #1307").toContain(
+      "font-size: var(--text-md)",
+    );
+    expect(
+      ruleBody(".label-caption"),
+      "12px, and nominally LARGER than the heading on purpose: uppercase reads optically larger, so 11px caps and 12px lowercase land at about the same weight doing different jobs. Matching the numbers un-matches the voices.",
+    ).toContain("font-size: var(--text-lg)");
+  });
+
+  it("the variant the split absorbed is gone, not kept in sync", () => {
+    // The SELECTOR, not the string: the block above still names the class in
+    // prose, and a comment is not a declaration.
+    expect(
+      CSS_TEXT.includes(".eyebrow-sentence {"),
+      "`.eyebrow-sentence` was a caption wearing a heading's clothes (#850). The two-tier split is the rethink it should have had; keeping it is keeping a second thing to sync.",
+    ).toBe(false);
   });
 });

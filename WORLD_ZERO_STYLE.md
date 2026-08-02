@@ -331,7 +331,7 @@ Three things that ruling turns up. **Adding a face can retire one**: Lora uprigh
 
 | Tier        | Tokens                                                                     | Rule                    |
 | ----------- | -------------------------------------------------------------------------- | ----------------------- |
-| **Label**   | `--text-xs` 8 · `--text-sm` 9 · `--text-base` 10 · `--text-md` 11 · `--text-lg` 12 · `--text-xl` 14 | Stays small. Scanned, not read. |
+| **Label**   | `--text-xs` 8 · `--text-sm` 9 · `--text-base` 10 · `--text-md` 11 · `--text-lg` 12 · `--text-xl` 14 | Stays small. Scanned, not read — **except the caption role**, below. |
 | **Content** | `--text-content` 18 · `--text-title` 24 · `--text-heading` 32 · `--text-display` 42 | The floor and up. Read for meaning. |
 
 The content tier is a clean **4:3 ramp** — each step is exactly a third bigger than the last, so it needs no table to reproduce.
@@ -350,7 +350,7 @@ The content tier is a clean **4:3 ramp** — each step is exactly a third bigger
 Classify every string against these three roles. This is the vocabulary the sweeps work from.
 
 - **Content → the floor.** User-authored free text (`praxis.body`, `task.description`, `admin_note`, comments). Titles (`h1`–`h3`, `font-display`, `task.title`). Numbers a player cares about (points, votes, level). Full sentences from the i18n catalog — banner prose, status explanations.
-- **Label → stays small.** `.eyebrow` (and anything uppercase + letter-spacing, which is the same thing hand-rolled). Button and link chrome. Pills, badges, stamps, corner counters. Bylines, timestamps, metadata.
+- **Label → stays small,** and splits in two (#1307). `.label-heading` for a region name; `.label-caption` for a small fact about the thing. `.eyebrow` (and anything uppercase + letter-spacing, which is the same thing hand-rolled) is the retiring form of both. Button and link chrome. Pills, badges, stamps, corner counters. Bylines, timestamps, metadata.
 - **Ornament → exempt.** Glyphs used as icons (a `✗` dingbat is not text). Text that is part of the illustration — stamp text, tape-strip labels, punch-card headers.
 
 ### The geometry doctrine
@@ -359,7 +359,7 @@ Classify every string against these three roles. This is the vocabulary the swee
 > Type wins; geometry yields. A cramped card is not a reason to shrink readable text —
 > it is a reason to widen the card.
 
-Both of the floor's original exceptions came from treating a fixed container as immovable. It is not.
+Both of the floor's original exceptions came from treating a fixed container as immovable. It is not. (The floor now carries **one standing exception**, `.label-caption` at 12px — stated below, because it is a tier rather than a site and the doctrine above cannot be acted on for a timestamp.)
 
 **One container really is immovable: a drawn one (#1147).** When ornament type sits *inside a mark* — a
 figure in UA's ensō, a total in Everymen's roundel — the container is an illustration, and widening it
@@ -380,9 +380,30 @@ only**: a card, a panel or a rail is not a drawing, and there the doctrine above
 
 There is deliberately no `.content-heading` / `.content-display` / `.content-score`: each would have a single caller already owned by a component, and a class for one caller is a class for nobody. A score is a title-sized number — `.content-title` plus a `fontWeight`.
 
-**Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class. Never add an inline `fontSize` to an element that already carries `.eyebrow` — the class owns the size.
+**Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class. Never add an inline `fontSize` to an element that already carries `.eyebrow` — the class owns the size. **`.eyebrow` is being retired** — see the split below; it stays declared and correct until the last sweep moves off it.
 
 That ink is the third text tier, and §3 records what it can and cannot do. The eyebrow clears AA on every neutral stock it lands on — **5.40:1** on the page, 5.78 over the frost, 5.07 on the alt surface, 4.78 on the filter well in light; 6.21 / 5.67 / 5.37 / 5.47 in dark — and it is now visibly a different ink from `--color-text-secondary` rather than the same one under a second name. What it does **not** have is headroom: the tier sits at secondary's weight because the palette has no AA-clear room below secondary, so an eyebrow cannot be made quieter by walking its colour down. If a label rank needs to recede further, the levers left are size, tracking, casing and layout — not ink.
+
+### The label tier is TWO tiers, and the content floor has one exception (#1307)
+
+One class covered five jobs — section headings, metadata captions, status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the weakest neutral, on 461 sites. Four legibility costs on the same string, and the treatment had already been found not to survive real content once: `.eyebrow-sentence` existed because *"a sentence set that way is a wall"*, which is a caption wearing a heading's clothes and a variant standing in for a rethink. **Owner ruling: two intents, not five treatments and not one.**
+
+| Class | Intent | Size | Casing | Tracking |
+| --- | --- | --- | --- | --- |
+| `.label-heading` | **This names a region.** "COLLABORATORS · 4", "WRITE-UP", "IN PROGRESS TASKS" | `--text-md` (11px) | uppercase | 0.15em |
+| `.label-caption` | **This is a small fact about the thing.** "5d ago", "5 / 20 slots", a byline, a status | `--text-lg` (12px) | normal | normal |
+
+Being hard to read as prose is acceptable for a heading, whose job is marking where a region starts and which is one or two words by construction. It is not acceptable for a caption, which is genuinely read. `.eyebrow-sentence` is **deleted**, absorbed by the caption tier rather than kept in sync.
+
+**The caption is nominally larger than the heading on purpose.** Uppercase reads optically larger than its nominal size, so 11px caps and 12px lowercase land at about the same weight while doing different jobs. Do not "fix" the inversion by pulling the caption to 11px: the casing is what the size is compensating for. And note where the win actually comes from — **dropping the casing and the tracking is the larger half**, since uppercase removes the ascender/descender shape that carries word recognition at small sizes and wide tracking works against reading the run as a word at all. The step from 9px is the smaller half.
+
+**The content floor's one exception is a tier, not a site.** §4's geometry doctrine says nothing readable may sit below `--text-content` and that a container which cannot hold it is too small; the label ramp says the tier is scanned, not read. Both cannot hold for a caption carrying text people read. The floor governs **content** — the thing a container exists to hold, and the thing that can run to any length. "Make the container bigger" is an instruction you can act on for a paragraph and meaningless for a timestamp: a caption does not size its container, it rides along beside something that does. So the floor could only ever have been enforced on captions by deleting them. What the caption tier owes instead is legibility per glyph, which it buys with casing and tracking rather than with size. **The boundary is a role test, not a length test:** anything that *can* become a paragraph is content and takes `--text-content`. When a caption starts wrapping to three lines it was content in a caption's clothes, which is the mistake `.eyebrow-sentence` was minted to paper over.
+
+**The ink is a SEAM, and it is the token — never the component (#1252).** `--label-ink` is what both classes paint; unset it is `--color-text-tertiary`, so a label outside a faction frame renders exactly what `.eyebrow` renders today. Both tiers sit under WCAG's large-text threshold, so both owe 4.5:1 and one measurement serves the pair. Measured on the #1549 instrument, the neutral clears on every neutral stock in both cascades and on all eight card sheets in **dark** — and fails on three in **light**, for a reason that is polarity rather than taste: S.N.I.D.E. **3.18:1** and Singularity **3.29:1** are near-black sheets in *both* themes (§6), so no light-cascade neutral can clear them, and Ephemerists' vellum is the darkest light sheet at **4.36:1** (its praxis plate 4.35). That is §3's "a colour that must differ between two factions within one theme is a faction token" arriving on the label tier. A faction frame therefore sets `--label-ink` **once on its own root** and every label underneath follows; a faction does not restyle the tier in its own component, because eight bespoke components quietly contradicting a shared class is the problem the shared class exists to prevent.
+
+**Nothing new was minted for it, and that is the measurement's finding rather than a shortcut.** `--faction-{key}-card-muted` is already the quiet ink for this role on that sheet and clears on all eight in both cascades (worst **4.70:1**, the Ephemerists plate), gated by rows `factionContrast.test.ts` has carried since #651. A second name for a value that is already measured is a name pretending to be a value (#1213), and #1302 reached the same conclusion for the praxis card's shared inks. What the guard gained instead is **structural**: every ratio in the file stays green through a `.label-caption` that hardcodes the neutral (which puts 3.18:1 back on S.N.I.D.E. with no faction able to reach it) and through one that goes back to uppercase on 0.15em (which is `.eyebrow` under a new name). Both are asserted on the declaration text, in the shape #1449 and #1413 set — a guard that measures an ink against a ground is blind to the ink not being reachable.
+
+**Retiring it is a foundation plus per-area sweeps, and the sweeps are free.** A sweep swaps class names in `.tsx` and adds no CSS; the whole issue's stylesheet cost is the foundation's **+39 bytes gzip**, and the last sweep gets some of it back by deleting `.eyebrow`. Classify each site by asking which of the two sentences it says — *this names a region* or *this is a small fact about the thing* — not by how long the string is.
 
 ---
 
