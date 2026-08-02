@@ -344,6 +344,11 @@
       "heading": "Recent activity",
       "empty": "No activity yet",
       "seeMore": "See more"
+    },
+    "panel": {
+      "collapse": "Collapse {{panel}}",
+      "expand": "Expand {{panel}}",
+      "reorder": "Move {{panel}} — {{position}} of {{total}}. Use the up and down arrow keys."
     }
   },
   "imageEdit": {
