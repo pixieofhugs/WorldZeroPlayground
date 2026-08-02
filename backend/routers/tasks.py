@@ -26,6 +26,7 @@ from services.task import (
     list_signups_for_task,
     list_tasks as service_list_tasks,
     propose_task,
+    TaskSort,
     update_task,
 )
 
@@ -52,6 +53,18 @@ async def list_tasks(
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
 ):
+    # An unrecognised sort is an error, not a silent fall-back to the level
+    # default (#1443) — matching GET /praxes, which has always raised here.
+    # Substituting an ordering nobody asked for returns 200 with plausible
+    # data, so a typo'd or retired value never surfaces. An ABSENT sort is
+    # still legal and still means level-ascending: Tasks.tsx sends none.
+    task_sort: Optional[TaskSort] = None
+    if sort is not None:
+        try:
+            task_sort = TaskSort(sort)
+        except ValueError:
+            raise HTTPException(status_code=422, detail=f"Invalid task sort: {sort}")
+
     is_admin = account is not None and await account_has_admin_role(
         account.id, session
     )
@@ -73,7 +86,7 @@ async def list_tasks(
         created_by=created_by,
         task_type=task_type,
         q=q,
-        sort=sort,
+        sort=task_sort,
         limit=limit,
         offset=offset,
         viewer=viewer,
