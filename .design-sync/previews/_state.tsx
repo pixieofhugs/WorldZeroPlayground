@@ -44,9 +44,10 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
     // The design's worked example: 320 of 500, 180 short of level 5 (#1553).
     levelTrack: { nextLevel: 5, pointsToNext: 180, nextThreshold: 500, fillPercent: 64 },
     activeTasks: praxisCardsFor(slug),
-    pendingCount: 2,
+    // The pending row's obligation state (#1554) — the one worth previewing,
+    // since the other two are the same pill with less in it.
+    pendingRow: { kind: 'requests', count: 2, to: '/updates#requests-queue' },
     loadingTasks: false,
-    canProposeTask: true,
   }
 }
 

@@ -7,6 +7,12 @@
  * and the primary actions. Presentation-only — the skins take state, so no
  * hooks or network are involved.
  *
+ * THE PENDING ROW IS A THREE-STATE SLOT (#1554), and every skin has to hold all
+ * three: an obligation, other news, and a caught-up row that keeps its shape and
+ * stops being a link. The third is asserted per skin rather than once on
+ * `PendingRowPill`, because the failure it guards against is a skin quietly
+ * going back to its own `{pendingCount > 0 && <Link …>}`.
+ *
  * THE FACTION WORD AND THE VOTE COUNT ARE NOT SLOTS ANY MORE (#1553). The
  * identity block dropped "Unaffiliated · Level 4" down to "Level 4" (the art
  * already says the faction) and dropped the votes tile outright — a vote count
@@ -23,6 +29,8 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { CAST_VOTES_LINK, FIND_TASK_LINK, UPDATES_LINK } from '../homeDestinations'
+import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
 import type { CharacterOut } from '../../../api/auth'
 import type { PraxisCardOut } from '../../../api/praxis'
 
@@ -77,9 +85,8 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
     eraName: 'Era 3',
     levelTrack: { nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 },
     activeTasks: [ACTIVE_TASK],
-    pendingCount: 2,
+    pendingRow: { kind: 'requests', count: 2, to: REQUESTS_QUEUE_LINK },
     loadingTasks: false,
-    canProposeTask: true,
     ...overrides,
   }
 }
@@ -123,17 +130,66 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       expect(text.toLowerCase(), 'empty-tasks slot').toContain('nothing in progress')
     })
 
-    it(`${slug} renders the primary Browse Tasks action`, () => {
+    /**
+     * #1554: both CTAs land on an ALREADY-NARROWED view. The hrefs are asserted
+     * rather than the labels alone because "Find a Task" pointing at the whole
+     * catalogue renders identically to one that works — see
+     * `homeDestinations.test.ts`, which proves the two query strings actually
+     * turn the axes on at the destination.
+     */
+    it(`${slug} lands its primary action on the tasks it can sign up for`, () => {
       const { html, text } = render(<Skin state={baseState()} />)
-      expect(text.toLowerCase(), 'browse-tasks slot').toContain('browse tasks')
-      expect(html, 'tasks link slot').toContain('href="/tasks"')
+      expect(text.toLowerCase(), 'find-task slot').toContain('find a task')
+      expect(html, 'eligible-tasks link slot').toContain(`href="${FIND_TASK_LINK}"`)
     })
 
-    it(`${slug} shows the propose action only when permitted`, () => {
-      const permitted = render(<Skin state={baseState({ canProposeTask: true })} />)
-      expect(permitted.html, 'propose shown when permitted').toContain('href="/propose-task"')
-      const denied = render(<Skin state={baseState({ canProposeTask: false })} />)
-      expect(denied.html, 'propose hidden when not permitted').not.toContain('href="/propose-task"')
+    it(`${slug} lands its secondary action on praxes awaiting this vote`, () => {
+      const { html, text } = render(<Skin state={baseState()} />)
+      expect(text.toLowerCase(), 'cast-votes slot').toContain('cast your votes')
+      expect(html, 'needs-my-vote link slot').toContain(`href="${CAST_VOTES_LINK}"`)
+    })
+
+    /**
+     * Proposing has ONE home and it is `/tasks` (#1556 + this issue). The
+     * assertion is on the route, not the label: a link left here would be a
+     * second, ungated entry point to a page that 403s the viewer it lets in.
+     */
+    it(`${slug} offers no propose entry point — /tasks owns it`, () => {
+      const { html } = render(<Skin state={baseState()} />)
+      expect(html, 'propose lives on /tasks now').not.toContain('/propose-task')
+    })
+
+    // ── the pending row's three states (#1554) ──────────────────────────────
+    it(`${slug} points the pending row at the requests queue`, () => {
+      const { html, text } = render(<Skin state={baseState()} />)
+      expect(text, 'requests copy').toContain('2 pending requests')
+      expect(html, 'queue anchor').toContain(`href="${REQUESTS_QUEUE_LINK}"`)
+    })
+
+    it(`${slug} points the pending row at unfiltered Updates when only news waits`, () => {
+      const { html, text } = render(
+        <Skin state={baseState({ pendingRow: { kind: 'notifications', count: 0, to: UPDATES_LINK } })} />,
+      )
+      expect(text, 'notifications copy').toContain('New updates')
+      expect(html, 'unfiltered updates').toContain(`href="${UPDATES_LINK}"`)
+    })
+
+    it(`${slug} dead-ends the pending row rather than linking nowhere`, () => {
+      const { html, text } = render(
+        <Skin state={baseState({ pendingRow: { kind: 'clear', count: 0, to: null } })} />,
+      )
+      // The pill STAYS — it is a sentence, not a control that got hidden.
+      expect(text, 'caught-up copy').toContain('All caught up')
+      // ...and it is not a link at all. A pill that still looks pressable and
+      // goes nowhere is worse than no pill, so neither Updates href survives.
+      expect(html, 'no route out of a caught-up row').not.toContain('/updates')
+    })
+
+    it(`${slug} draws no pending row until the panels land`, () => {
+      const { text } = render(<Skin state={baseState({ pendingRow: null })} />)
+      // Zero-because-unknown must not render as "All caught up" over a queue
+      // with four invites in it, then swap under the reader.
+      expect(text, 'nothing claimed while loading').not.toContain('All caught up')
     })
   }
 })

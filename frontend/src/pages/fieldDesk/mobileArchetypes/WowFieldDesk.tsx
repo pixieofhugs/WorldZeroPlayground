@@ -56,7 +56,8 @@ import {
 import CharacterSwitcherSheet from "../../../components/CharacterSwitcherSheet";
 import { factionName } from "../../../utils/factions";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /** Every tappable row clears the faction's 46px thumb target. */
 const TAP = 46;
@@ -96,7 +97,7 @@ const trackMetaStyle: CSSProperties = {
 
 export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation("common");
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state;
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state;
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   return (
@@ -255,10 +256,10 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
           {t("fieldDesk.home.wow.masthead")}
         </p>
 
-        {/* ── the herald's pending dispatches ── */}
-        {pendingCount > 0 && (
-          <Link
-            to={REQUESTS_QUEUE_LINK}
+        {/* ── the herald's dispatches, in all three of their states (#1554) ── */}
+        {pendingRow && (
+          <PendingRowPill
+            row={pendingRow}
             style={{
               minHeight: TAP,
               display: "flex",
@@ -274,15 +275,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               color: WOW_INK,
               textDecoration: "none",
             }}
-          >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-sm)" }}>
-              <WowSpark />
-              {t("fieldDesk.home.pending", { count: pendingCount })}
-            </span>
-            <span aria-hidden style={{ color: WOW_DEEP }}>
-              ›
-            </span>
-          </Link>
+            glyph={<WowSpark />}
+            chevron={
+              <span aria-hidden style={{ color: WOW_DEEP }}>
+                ›
+              </span>
+            }
+          />
         )}
 
         {/* ── Thy Open Quests ── */}
@@ -379,15 +378,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
 
         {/* ── the two verbs ── */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}>
-          <Link to="/tasks" className="wow-btn" style={wowGiltButton}>
+          <Link to={FIND_TASK_LINK} className="wow-btn" style={wowGiltButton}>
             <WowSpark color="var(--faction-wow-quest-text)" />
-            {t("fieldDesk.home.browseTasks")}
+            {t("fieldDesk.home.findTask")}
           </Link>
-          {canProposeTask && (
-            <Link to="/propose-task" style={{ ...wowGhostButton, flex: "1 1 auto" }}>
-              {t("actions.proposeTask")}
-            </Link>
-          )}
+          <Link to={CAST_VOTES_LINK} style={{ ...wowGhostButton, flex: "1 1 auto" }}>
+            {t("fieldDesk.home.castVotes")}
+          </Link>
         </div>
       </div>
 

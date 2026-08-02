@@ -28,7 +28,8 @@ import {
   PLATE as SHEET,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * The Ephemerists MOBILE FieldDesk home (#527, swept onto the Valley plate by
@@ -103,7 +104,7 @@ function Leaf({ children }: { children: ReactNode }) {
 
 export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -248,16 +249,14 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         </div>
       </Leaf>
 
-      {/* ── Pending requests ── */}
-      {pendingCount > 0 && (
-        <Link
-          to={REQUESTS_QUEUE_LINK}
+      {/* ── The pending row, in all three of its states (#1554) ── */}
+      {pendingRow && (
+        <PendingRowPill
+          row={pendingRow}
           className="flex items-center justify-between"
           style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
-        >
-          <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
-          <span aria-hidden style={{ color: NILE }}>›</span>
-        </Link>
+          chevron={<span aria-hidden style={{ color: NILE }}>›</span>}
+        />
       )}
 
       {/* ── Surveys underway ── */}
@@ -311,26 +310,22 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         )}
       </Leaf>
 
-      {/* ── Primary actions ── */}
+      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
         <Link
-          to="/tasks"
+          to={FIND_TASK_LINK}
           className="flex-1 flex items-center justify-center"
           style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, textDecoration: 'none' }}
         >
-          {t('fieldDesk.home.browseTasks')}
+          {t('fieldDesk.home.findTask')}
         </Link>
-        {canProposeTask && (
-          <Link
-            to="/propose-task"
-            className="flex-1 flex items-center justify-center gap-2"
-            style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: INK, background: SHEET, border: `1px solid ${BRASS}`, textDecoration: 'none' }}
-          >
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-            <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-            <span>{t('actions.proposeTask')}</span>
-          </Link>
-        )}
+        <Link
+          to={CAST_VOTES_LINK}
+          className="flex-1 flex items-center justify-center"
+          style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: INK, background: SHEET, border: `1px solid ${BRASS}`, textDecoration: 'none' }}
+        >
+          {t('fieldDesk.home.castVotes')}
+        </Link>
       </div>
 
       {/* The switcher the "Characters" pill opens (#516). */}

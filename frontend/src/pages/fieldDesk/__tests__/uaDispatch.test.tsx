@@ -19,6 +19,7 @@ import { surfaceMap } from '../../../factions'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import UaFieldDesk from '../mobileArchetypes/UaFieldDesk'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import type { CharacterOut } from '../../../api/auth'
 import type { PraxisCardOut } from '../../../api/praxis'
 
@@ -68,9 +69,8 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
     eraName: 'Era 1',
     levelTrack: { nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 },
     activeTasks: [ACTIVE_TASK],
-    pendingCount: 0,
+    pendingRow: { kind: 'clear', count: 0, to: null },
     loadingTasks: false,
-    canProposeTask: true,
     ...overrides,
   }
 }
@@ -118,8 +118,10 @@ describe('UA mobile home — what it draws', () => {
     expect(text).toContain('Level 2')
     expect(text).toContain('160 to Level 5')
     expect(html).toContain('role="progressbar"')
-    expect(html).toContain('href="/tasks"')
-    expect(html).toContain('href="/propose-task"')
+    // Both verbs now land already narrowed (#1554); proposing lives on /tasks.
+    expect(html).toContain(`href="${FIND_TASK_LINK}"`)
+    expect(html).toContain(`href="${CAST_VOTES_LINK}"`)
+    expect(html).not.toContain('/propose-task')
   })
 
   it('carries no gold: the legacy --ua-* palette and Cinzel are gone here', () => {

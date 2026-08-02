@@ -6,7 +6,8 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
-import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
+import PendingRowPill from '../PendingRowPill'
+import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
@@ -112,7 +113,7 @@ function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: numbe
 
 export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingCount, canProposeTask } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -232,16 +233,14 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
         </div>
       </RansomCard>
 
-      {/* ── Pending requests ── */}
-      {pendingCount > 0 && (
-        <Link
-          to={REQUESTS_QUEUE_LINK}
+      {/* ── The pending row, in all three of its states (#1554) ── */}
+      {pendingRow && (
+        <PendingRowPill
+          row={pendingRow}
           className="flex items-center justify-between"
           style={{ background: INK, color: TEXT, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.03em', textDecoration: 'none' }}
-        >
-          <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
-          <span aria-hidden style={{ color: ACID }}>›</span>
-        </Link>
+          chevron={<span aria-hidden style={{ color: ACID }}>›</span>}
+        />
       )}
 
       {/* ── Jobs in play ── */}
@@ -293,26 +292,22 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
         )}
       </RansomCard>
 
-      {/* ── Primary actions ── */}
+      {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
         <Link
-          to="/tasks"
+          to={FIND_TASK_LINK}
           className="flex-1 flex items-center justify-center"
           style={{ fontFamily: BLACK, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: 'var(--faction-snide-paper)', background: PINK, boxShadow: '2px 3px 0 rgba(0,0,0,.4)', textDecoration: 'none' }}
         >
-          {t('fieldDesk.home.browseTasks')}
+          {t('fieldDesk.home.findTask')}
         </Link>
-        {canProposeTask && (
-          <Link
-            to="/propose-task"
-            className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: TEXT, background: INK, border: `1px solid ${ACID}`, textDecoration: 'none' }}
-          >
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
-            <span aria-hidden style={{ fontSize: 15, lineHeight: 1, color: ACID }}>+</span>
-            <span>{t('actions.proposeTask')}</span>
-          </Link>
-        )}
+        <Link
+          to={CAST_VOTES_LINK}
+          className="flex-1 flex items-center justify-center"
+          style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: TEXT, background: INK, border: `1px solid ${ACID}`, textDecoration: 'none' }}
+        >
+          {t('fieldDesk.home.castVotes')}
+        </Link>
       </div>
 
       {/* The switcher the "Characters" pill opens (#516). */}
