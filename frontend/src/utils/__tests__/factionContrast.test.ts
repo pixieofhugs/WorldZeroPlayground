@@ -30,7 +30,15 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { AA_LARGE, AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from "../contrast";
+import {
+  AA_LARGE,
+  AA_NORMAL,
+  compositeOver,
+  contrastRatio,
+  deltaE76,
+  formatRatio,
+  parseColor,
+} from "../contrast";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
 
 const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
@@ -1242,6 +1250,39 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text,
   })),
 
+  // ── THE NEUTRAL TEXT TIERS, ON THE APP'S OWN TWO STOCKS (#1549) ──────────
+  //
+  // The most-painted pairing in the repo and it was not in this manifest. The
+  // rows above reach `--color-text-secondary` / `-tertiary` only THROUGH the
+  // frost, on one card class, on one page — so the bare page ground and the
+  // alt surface, which between them carry every eyebrow, timestamp, byline,
+  // placeholder and inactive nav link in the app, were unmeasured.
+  //
+  // `--color-bg-surface-alt` is opaque in light and rgba(255,255,255,0.06) in
+  // DARK, so it cannot be a `surface` — it is modelled as a veil over the page,
+  // which is exactly what it composites to. Same trick, same reason as the
+  // frost rows above (#1413).
+  //
+  // These are the pairings #1549's repaint moves, so they are the ones that
+  // have to be pinned: light tertiary goes #6c6358 -> #656081, which is a hue
+  // swing at held weight and reads a fraction HIGHER on every one of them
+  // (page 5.37 -> 5.40, alt 5.04 -> 5.07). The tier separation itself is not a
+  // ratio and is asserted at the bottom of this file.
+  ...(
+    [
+      ["secondary", "--color-text-secondary"],
+      ["tertiary", "--color-text-tertiary"],
+    ] as const
+  ).flatMap(([role, text]) => [
+    { what: `app page, ${role} ink`, surface: "--color-bg-page", text },
+    {
+      what: `app alt surface, ${role} ink`,
+      surface: "--color-bg-page",
+      veil: "--color-bg-surface-alt" as Veil,
+      text,
+    },
+  ]),
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
@@ -1475,6 +1516,70 @@ describe("the card sheet's alarm and notice inks stay apart (#1449)", () => {
         `snide (${theme}) prints the destructive and the cautionary mark on the wall in one colour.`,
       ).not.toBe(notice.raw);
     });
+  }
+});
+
+/**
+ * #1549 — THE NEUTRAL TEXT VOCABULARY IS THREE INKS, NOT TWO.
+ *
+ * This is #1449's ponytail collected. That block guards the card family's
+ * alarm/notice split with a hex INEQUALITY, and says so: it cannot see two reds
+ * a viewer could not tell apart, and the upgrade path is a distance floor, to
+ * be minted "when a repaint walks them together, not now". This is that
+ * repaint, one token family over.
+ *
+ * `--color-text-secondary` (#6b6050) and `--color-text-tertiary` (#6c6358) were
+ * one hex step apart per channel in LIGHT — ΔE 3.4, 5.60:1 against 5.37:1 on
+ * the page — so the site advertised a three-tier vocabulary and rendered two.
+ * A hex inequality would have passed that the entire time, and so did every
+ * ratio in this file, because both inks were comfortably AA-clear on every
+ * ground. THE TIERS WERE LEGIBLE AND INDISTINGUISHABLE, which is a defect a
+ * contrast manifest is structurally unable to notice.
+ *
+ * WHY A DISTANCE AND NOT A RATIO-GAP. The obvious guard — "tertiary must be N
+ * ratio points quieter than secondary" — encodes an assumption #1549 measured
+ * and rejected. Secondary bottoms out at 4.96:1 on `--filter-well` in light and
+ * 4.87:1 on `--color-bg-surface-alt` in dark, so a rung genuinely below it and
+ * still above AA has nowhere to stand in either theme. The third tier is a
+ * TEMPERATURE (a lavender against warm greys, in both cascades now), and
+ * temperature is a distance, not a ratio.
+ *
+ * THE FLOOR IS 20, well under the 29.5 the tightest shipped pair measures and
+ * an order of magnitude over the 3.4 that failed. It is deliberately not set
+ * just under today's values: a floor that tracks the current palette turns
+ * every future re-tune into a test edit, and the question being asked here is
+ * "can a viewer tell these apart", to which 20 is a confident yes and 3.4 an
+ * equally confident no.
+ *
+ * ponytail: CIE76 under-reports hue swings very close to neutral, so a pair
+ * this passes is genuinely distinct while a pair it fails MIGHT be. That is the
+ * safe direction for a floor. Swap in CIEDE2000 if a legitimate palette ever
+ * trips it — do not lower the number.
+ */
+describe("the neutral text tiers stay three inks (#1549)", () => {
+  const TIER_DELTA_E = 20;
+  const TIERS = ["--color-text-primary", "--color-text-secondary", "--color-text-tertiary"] as const;
+
+  for (const theme of BOTH_THEMES) {
+    for (let index = 0; index < TIERS.length; index += 1) {
+      for (let other = index + 1; other < TIERS.length; other += 1) {
+        const [first, second] = [TIERS[index], TIERS[other]];
+        it(`${first} is not ${second} (${theme})`, () => {
+          const one = resolveColor(first, theme);
+          const two = resolveColor(second, theme);
+          expect(one.color, `${first} (${theme}) resolved to "${one.raw}"`).not.toBeNull();
+          expect(two.color, `${second} (${theme}) resolved to "${two.raw}"`).not.toBeNull();
+
+          const distance = deltaE76(one.color!, two.color!);
+          expect(
+            distance,
+            `${first} (${one.raw}) and ${second} (${two.raw}) are ΔE ${distance.toFixed(1)} apart in ${theme}, ` +
+              `under the ${TIER_DELTA_E} floor. Two tiers a viewer cannot tell apart are one tier with two names — ` +
+              "that is #1549, and every ratio in this file stays green through it.",
+          ).toBeGreaterThanOrEqual(TIER_DELTA_E);
+        });
+      }
+    }
   }
 });
 
