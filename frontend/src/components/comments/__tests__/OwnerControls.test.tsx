@@ -24,11 +24,27 @@ import {
   type OwnerReveal,
 } from '../OwnerControls'
 
-// Mock the axios instance so the comments client can be exercised without a network.
-vi.mock('../../../api/axios', () => ({
-  default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn().mockResolvedValue({}) },
-}))
-import api from '../../../api/axios'
+/**
+ * Stub the wire so the comments client can be exercised without a network (#1400).
+ *
+ * `vi.hoisted`, NOT `beforeEach`: `openapi-fetch` binds `globalThis.fetch` when
+ * the client is CREATED, at `api/client`'s top level — during this file's
+ * imports. A stub installed later is never consulted, and the suite silently
+ * issues REAL requests to localhost:8000 instead of failing.
+ *
+ * Unlike the `api/axios` module mock it replaces, this cannot go inert: the
+ * assertion reads the request out of `wire.sent`, which only this stub writes,
+ * so a request that escapes to the network throws rather than passing.
+ */
+const wire = vi.hoisted(() => {
+  const sent: Request[] = []
+  globalThis.fetch = (async (input: Request) => {
+    sent.push(input)
+    return new Response(null, { status: 204 })
+  }) as unknown as typeof globalThis.fetch
+  return { sent }
+})
+
 import { deleteComment } from '../../../api/comments'
 
 const COMMENT: CommentOut = {
@@ -200,6 +216,9 @@ describe('CommentEditor', () => {
 describe('deleteComment', () => {
   it('issues DELETE /comments/{id}', async () => {
     await deleteComment(7)
-    expect(vi.mocked(api.delete)).toHaveBeenCalledWith('/comments/7')
+
+    const request = wire.sent.at(-1)!
+    expect(request.method).toBe('DELETE')
+    expect(new URL(request.url).pathname).toBe('/comments/7')
   })
 })
