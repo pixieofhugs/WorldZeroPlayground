@@ -49,6 +49,8 @@ const MEMBER: PraxisMemberOut = {
   character_display_name: "Ada",
   has_submitted: true,
   joined_at: "2026-01-01T00:00:00Z",
+  nudged_at: null,
+  submitted_at: null,
 };
 
 const CO_MEMBER: PraxisMemberOut = {
@@ -58,6 +60,8 @@ const CO_MEMBER: PraxisMemberOut = {
   character_display_name: "Beth",
   has_submitted: true,
   joined_at: "2026-01-02T00:00:00Z",
+  nudged_at: null,
+  submitted_at: null,
 };
 
 const METATASK: TaskOut = {
@@ -125,6 +129,9 @@ const PRAXIS: PraxisOut = {
   duel_id: null,
   can_flag: true,
   applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voter_count: 0,
 };
 
 const VIEWER: CurrentUser = {

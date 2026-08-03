@@ -76,6 +76,20 @@ function makePraxis(): PraxisCardOut {
     points_from_votes: 12,
     is_top_for_task: false,
     task_faction_slug: 'ephemerists',
+    applied_metatasks: [],
+    body_text: null,
+    created_by_avatar_url: '',
+    created_by_faction_slug: null,
+    duel_id: null,
+    media_items: [],
+    members: [],
+    opponent_display_name: null,
+    opponent_faction_slug: null,
+    opponent_praxis_id: null,
+    submit_proposed_at: null,
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voted_by_name: null,
   }
 }
 

@@ -75,6 +75,9 @@ const PRAXIS: PraxisOut = {
   duel_id: null,
   can_flag: true,
   applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voter_count: 0,
 };
 
 function viewer(): CurrentUser {

@@ -179,6 +179,8 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_display_name: 'Ada Reed',
     has_submitted: true,
     joined_at: EARLIER,
+    submitted_at: NOW,
+    nudged_at: null,
   },
   {
     id: 2,
@@ -187,6 +189,8 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_display_name: 'Sam Okafor',
     has_submitted: false,
     joined_at: EARLIER,
+    submitted_at: null,
+    nudged_at: null,
   },
 ]
 
@@ -259,6 +263,9 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     duel_id: null,
     can_flag: true,
     applied_metatasks: [],
+    voter_count: 3,
+    viewer_can_vote: true,
+    viewer_vote: null,
     ...overrides,
   }
 }
@@ -334,6 +341,20 @@ export const mockCollaboration: PraxisCardOut = {
   voter_count: 9,
   is_top_for_task: false,
   task_faction_slug: 'everymen',
+  body_text: null,
+  created_by_avatar_url: '',
+  created_by_faction_slug: 'everymen',
+  submit_proposed_at: null,
+  members: SAMPLE_MEMBERS,
+  media_items: SAMPLE_MEDIA,
+  applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
+  duel_id: null,
+  opponent_praxis_id: null,
+  opponent_display_name: null,
+  opponent_faction_slug: null,
 }
 
 // ---------------------------------------------------------------------------
@@ -500,6 +521,20 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     voter_count: 8,
     is_top_for_task: true,
     task_faction_slug: slug,
+    body_text: PRAXIS_BODY_BY_SLUG[slug ?? 'ua'] ?? PRAXIS_BODY_BY_SLUG.ua,
+    created_by_avatar_url: '',
+    created_by_faction_slug: slug,
+    submit_proposed_at: null,
+    members: [],
+    media_items: SAMPLE_MEDIA,
+    applied_metatasks: [],
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voted_by_name: null,
+    duel_id: null,
+    opponent_praxis_id: null,
+    opponent_display_name: null,
+    opponent_faction_slug: null,
     ...overrides,
   }
 }

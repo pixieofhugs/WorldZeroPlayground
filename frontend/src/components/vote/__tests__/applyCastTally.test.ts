@@ -25,13 +25,20 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { PraxisCardOut, PraxisOut } from '../../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { VoteTallyOut } from '../../../api/votes'
-import { scoreBreakdown } from '../../praxisCard/scoreStamp/scoreBreakdown'
+import { scoreBreakdown, type ScoredPraxis } from '../../praxisCard/scoreStamp/scoreBreakdown'
 import { applyCastTally, applyDuelCastTally } from '../useVotedPraxis'
 import { __resetCastTallies, castTally, recordCastTally } from '../castTallies'
 
 const PRAXIS_ID = 7
 
-/** A detail payload: `PraxisOut` carries no voter count. (base 12 + meta 0) × 1.0 + 4. */
+/**
+ * A detail payload. (base 12 + meta 0) × 1.0 + 4.
+ *
+ * This used to be introduced as "`PraxisOut` carries no voter count", which was
+ * never true of the wire — `voter_count` has always been on the response, and
+ * only the hand-written mirror omitted it. Since #1400 `PraxisOut` IS the
+ * generated schema, so it is here.
+ */
 const DETAIL: PraxisOut = {
   id: PRAXIS_ID,
   task_id: 2,
@@ -64,6 +71,9 @@ const DETAIL: PraxisOut = {
   duel_id: null,
   can_flag: true,
   applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voter_count: 0,
 }
 
 /** A card payload: same numbers, plus the voter count only cards carry. */
@@ -90,6 +100,20 @@ const CARD: PraxisCardOut = {
   points_from_votes: 4,
   is_top_for_task: false,
   task_faction_slug: null,
+  applied_metatasks: [],
+  body_text: null,
+  created_by_avatar_url: '',
+  created_by_faction_slug: null,
+  duel_id: null,
+  media_items: [],
+  members: [],
+  opponent_display_name: null,
+  opponent_faction_slug: null,
+  opponent_praxis_id: null,
+  submit_proposed_at: null,
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
 }
 
 /** The other side of the duel — the one a spectator's cast used to leave stale. */
@@ -166,8 +190,30 @@ describe('applyCastTally on a detail payload (#1142)', () => {
   })
 
   it('invents no voter count on a payload that has none', () => {
-    const voted = applyCastTally(DETAIL, firstCastOfFive())
+    // The guard's real subject is `ScoredPraxis` — the five score terms and
+    // nothing else — because that is what `applyCastTally` is generic over.
+    // It used to be asserted against DETAIL on the belief that `PraxisOut`
+    // carried no voter count; both live payloads do, so DETAIL could only ever
+    // have proved the opposite branch. A bare `ScoredPraxis` is the shape that
+    // reaches the `typeof praxis.voter_count === 'number'` test and fails it,
+    // and inventing a `NaN` there is what would print through a card's footer.
+    const scoreOnly: ScoredPraxis = {
+      task_point_value: 12,
+      metatask_points: 0,
+      display_multiplier: 1.0,
+      points_from_votes: 4,
+      score: 16,
+    }
+    const voted = applyCastTally(scoreOnly, firstCastOfFive())
     expect('voter_count' in voted).toBe(false)
+    expect(scoreBreakdown(voted)).toEqual(
+      expect.objectContaining({ votes: 9, total: 21 }),
+    )
+  })
+
+  it('carries a detail payload\'s voter count forward, because it has one', () => {
+    const voted = applyCastTally(DETAIL, firstCastOfFive())
+    expect(voted.voter_count).toBe(3)
   })
 
   it('applies the same tally twice without compounding', () => {

@@ -648,6 +648,9 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
     duel_id: null,
     can_flag: true,
     applied_metatasks: [],
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voter_count: 0,
   }
 
   it('type-checks as ScoreStampProps — the assertion is the assignment itself', () => {

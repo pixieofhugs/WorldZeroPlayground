@@ -19,6 +19,8 @@ function member(id: number, submitted: boolean): PraxisMemberOut {
     character_display_name: `M${id}`,
     has_submitted: submitted,
     joined_at: '2026-01-01T00:00:00Z',
+    nudged_at: null,
+    submitted_at: null,
   }
 }
 

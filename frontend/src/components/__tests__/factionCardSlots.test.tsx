@@ -59,6 +59,20 @@ const PRAXIS: PraxisCardOut = {
   points_from_votes: 0,
   is_top_for_task: false,
   task_faction_slug: "ua",
+  applied_metatasks: [],
+  body_text: null,
+  created_by_avatar_url: "",
+  created_by_faction_slug: null,
+  duel_id: null,
+  media_items: [],
+  members: [],
+  opponent_display_name: null,
+  opponent_faction_slug: null,
+  opponent_praxis_id: null,
+  submit_proposed_at: null,
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
 };
 
 const PRAXIS_ADMIN = {
@@ -145,6 +159,8 @@ function member(id: number, name: string): PraxisMemberOut {
     character_display_name: name,
     has_submitted: true,
     joined_at: "2026-01-01T00:00:00Z",
+    nudged_at: null,
+    submitted_at: null,
   };
 }
 

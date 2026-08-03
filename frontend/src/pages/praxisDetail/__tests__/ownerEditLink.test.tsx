@@ -45,6 +45,8 @@ function member(characterId: number, name: string): PraxisMemberOut {
     character_display_name: name,
     has_submitted: true,
     joined_at: '2026-01-01T00:00:00Z',
+    nudged_at: null,
+    submitted_at: null,
   }
 }
 

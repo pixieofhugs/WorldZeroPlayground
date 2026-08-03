@@ -42,6 +42,7 @@ function member(
     has_submitted: hasSubmitted,
     joined_at: OPENED,
     nudged_at: nudgedAt,
+    submitted_at: hasSubmitted ? OPENED : null,
   };
 }
 

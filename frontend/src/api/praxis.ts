@@ -1,37 +1,34 @@
 import { apiDelete, apiGet, apiPost, apiPut } from './client'
 import { clearCastTallies } from '../components/vote/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
-import type { TaskOut } from './tasks'
+import type { components } from './generated/schema'
 import type { FlagReason } from '../utils/flagReasons'
 
 // ---------------------------------------------------------------------------
-// Types — hand-written mirrors of backend schemas/praxis.py, and NOT known to
-// match it. #1400 replaces them with aliases of the generated
-// `components['schemas'][…]`, which is what turns "matches exactly" into a fact
-// instead of a heading. Until then the mirror is close but demonstrably not
-// exact: the wire carries `PraxisOut.voter_count`, which is not declared here.
+// Types. Every one below is an alias of the generated
+// `components['schemas'][…]`, so "matches the backend exactly" is a fact rather
+// than a heading — there is no second declaration left to drift. The mirrors
+// these replaced were close but demonstrably not exact: the wire carries
+// `PraxisOut.voter_count`, which none of them declared (#1400).
 // ---------------------------------------------------------------------------
 
-export type PraxisType = 'solo' | 'collab' | 'duel'
-export type PraxisStatus = 'in_progress' | 'pending' | 'submitted'
-export type PraxisInviteStatus = 'pending' | 'accepted' | 'declined'
+export type PraxisType = components['schemas']['PraxisType']
+export type PraxisStatus = components['schemas']['PraxisStatus']
+export type PraxisInviteStatus = components['schemas']['PraxisInviteStatus']
 /**
- * `deleted` is on the wire, but not in a praxis' life (#1400).
+ * `deleted` is on the wire, but not in a praxis' life.
  *
  * The backend shares ONE `ModerationStatus` enum between Comment and Praxis
  * (`backend/models/praxis.py`), and its own comment says a praxis never takes
- * the `deleted` tombstone — only comments do. The generated schema has no way
- * to express that, so `PraxisOut.moderation_status` admits five values where
- * four are reachable.
- *
- * This union follows the wire rather than the narrower truth, because the
- * alternative is a frontend type that silently contradicts the contract it is
- * checked against. `UNSCORED_MODERATION_STATUSES` below deliberately does NOT
- * list it: a state a praxis cannot reach needs no scoring rule, and inventing
- * one would be exactly the mirror-drift this migration is retiring.
+ * the `deleted` tombstone — only comments do. The schema has no way to express
+ * that, so `PraxisOut.moderation_status` admits five values where four are
+ * reachable. Narrowing the alias here would put a frontend type back in
+ * contradiction with the contract it is checked against, which is the drift
+ * this file exists to have retired; `UNSCORED_MODERATION_STATUSES` below is
+ * where the narrower truth is spent.
  */
-export type ModerationStatus = 'visible' | 'flagged' | 'hidden' | 'failed' | 'deleted'
-export type MediaType = 'image' | 'video' | 'audio'
+export type ModerationStatus = components['schemas']['ModerationStatus']
+export type MediaType = components['schemas']['MediaType']
 
 /**
  * The moderation states that bank nobody any points — the frontend's mirror of
@@ -52,237 +49,124 @@ export const UNSCORED_MODERATION_STATUSES: ReadonlySet<ModerationStatus> = new S
   'failed',
 ])
 
-export interface MediaItemOut {
-  id: number
-  praxis_id: number
-  type: MediaType
-  file_path: string
-  display_order: number
-  created_at: string
-}
+export type MediaItemOut = components['schemas']['MediaItemOut']
 
-export interface PraxisMemberOut {
-  id: number
-  praxis_id: number
-  character_id: number
-  character_display_name: string
-  has_submitted: boolean
-  /**
-   * When `has_submitted` last flipped true (#571, #1415), or null while this
-   * member still owes their part. Cleared again on an unsubmit or a pending
-   * reset, so it can never read as a stale "last time they filed".
-   * `has_submitted` stays the boolean to branch on; this is the timestamp line
-   * beside it.
-   */
-  submitted_at?: string | null
-  joined_at: string
-  /**
-   * When the VIEWER last nudged this member about this praxis (#1083), and null
-   * once that 24h window lapses. The server owns both facts through one
-   * constant, so "there is a timestamp" and "you may not nudge again yet" can
-   * never disagree — and a reload cannot un-nudge the button, which is what made
-   * the design's local-state version dishonest. Absent on list-route cards,
-   * which have no nudge button.
-   */
-  nudged_at?: string | null
-}
+/**
+ * One member of a praxis crew.
+ *
+ * - `submitted_at` is when `has_submitted` last flipped true (#571, #1415), or
+ *   null while this member still owes their part. Cleared again on an unsubmit
+ *   or a pending reset, so it can never read as a stale "last time they filed".
+ *   `has_submitted` stays the boolean to branch on; this is the timestamp line
+ *   beside it.
+ * - `nudged_at` is when the VIEWER last nudged this member about this praxis
+ *   (#1083), and null once that 24h window lapses. The server owns both facts
+ *   through one constant, so "there is a timestamp" and "you may not nudge
+ *   again yet" can never disagree — and a reload cannot un-nudge the button,
+ *   which is what made the design's local-state version dishonest. Null on
+ *   list-route cards, which have no nudge button.
+ */
+export type PraxisMemberOut = components['schemas']['PraxisMemberOut']
 
-export interface PraxisInviteOut {
-  id: number
-  praxis_id: number
-  inviter_id: number
-  invitee_id: number
-  invitee_display_name: string
-  status: PraxisInviteStatus
-  created_at: string
-}
+export type PraxisInviteOut = components['schemas']['PraxisInviteOut']
 
-export interface PraxisOut {
-  id: number
-  task_id: number
-  task_title: string
-  task_point_value: number
-  task_level_required: number
-  task_faction_slug: string | null
-  type: PraxisType
-  status: PraxisStatus
-  title: string | null
-  body_text: string | null
-  moderation_status: ModerationStatus
-  admin_note: string | null
-  flagged_at: string | null
-  submitted_at: string | null
-  /** When a collab's pending-publish window opened; null if not pending (ADR-0012). */
-  submit_proposed_at: string | null
-  created_by_id: number
-  created_by_display_name: string
-  created_by_faction_slug: string | null
-  created_at: string
-  updated_at: string
-  members: PraxisMemberOut[]
-  invites: PraxisInviteOut[]
-  media_items: MediaItemOut[]
-  // The one authoritative number for this praxis (ADR-0053), computed for its
-  // AUTHOR for every type including collab, with the terms behind it:
-  //   score = (task_point_value + metatask_points) × display_multiplier
-  //           + points_from_votes
-  /** The computed total. Never derive its parts by subtraction — read the terms. */
-  score: number
-  /** Points contributed by applied metatasks; the meta row shows only when > 0. */
-  metatask_points: number
-  /** faction × duel collapsed into one value; `1.0` hides the mult row. */
-  display_multiplier: number
-  /** Points scored from votes (`+0` is valid — the votes row always shows). */
-  points_from_votes: number
-  /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
-  is_top_for_task: boolean
-  /** Set when this praxis is one side of a duel (ADR-0011). */
-  duel_id: number | null
-  can_flag: boolean
-  applied_metatasks: TaskOut[]
-  /**
-   * Viewer-relative (#998). `false` only when the logged-in viewer's account
-   * owns this praxis (author/collab co-owner) or is a participant in its duel —
-   * the two PERMANENT vote blocks the client can't compute itself. Drives hiding
-   * the whole vote module. Default `true` (incl. anonymous — the client shows
-   * its own login gate). Optional so a stale payload degrades to showing it.
-   */
-  viewer_can_vote?: boolean
-  /**
-   * The viewer's own star (1-5); `null` when unvoted or anonymous (#1382). Same
-   * field and meaning as `PraxisCardOut.viewer_vote`. Detail used to be the one
-   * surface without it, which is why the client recovered the viewer's cast
-   * from the voters list and parked it in an overlay store.
-   */
-  viewer_vote?: number | null
-}
+/**
+ * A praxis in full, as the detail route answers it.
+ *
+ * The score fields are ONE set (ADR-0053), computed for the praxis AUTHOR for
+ * every type including collab:
+ *
+ *     score = (task_point_value + metatask_points) × display_multiplier
+ *             + points_from_votes
+ *
+ * - `score` is the computed total. Never derive its parts by subtraction —
+ *   read the terms.
+ * - `metatask_points` is what applied metatasks contributed; the meta row shows
+ *   only when > 0.
+ * - `display_multiplier` is faction × duel collapsed into one value; `1.0`
+ *   hides the mult row.
+ * - `points_from_votes` is points scored from votes (`+0` is valid — the votes
+ *   row always shows).
+ *
+ * And the rest that is not self-describing:
+ *
+ * - `submit_proposed_at` is when a collab's pending-publish window opened; null
+ *   if not pending (ADR-0012).
+ * - `is_top_for_task` is the Task Crown — top-scoring submitted praxis for its
+ *   task (ADR-0028).
+ * - `duel_id` is set when this praxis is one side of a duel (ADR-0011).
+ * - `viewer_can_vote` is viewer-relative (#998). `false` only when the
+ *   logged-in viewer's account owns this praxis (author/collab co-owner) or is
+ *   a participant in its duel — the two PERMANENT vote blocks the client
+ *   cannot compute itself. Drives hiding the whole vote module. `true` for
+ *   anonymous viewers, who get the client's own login gate instead.
+ * - `viewer_vote` is the viewer's own star (1-5); null when unvoted or
+ *   anonymous (#1382). Same field and meaning as `PraxisCardOut.viewer_vote`.
+ *   Detail used to be the one surface without it, which is why the client once
+ *   recovered the viewer's cast from the voters list into an overlay store.
+ */
+export type PraxisOut = components['schemas']['PraxisOut']
 
-export interface PraxisCardOut {
-  id: number
-  task_id: number
-  task_title: string
-  task_point_value: number
-  task_level_required: number
-  type: PraxisType
-  status: PraxisStatus
-  title: string | null
-  moderation_status: ModerationStatus
-  created_by_id: number
-  created_by_display_name: string
-  /**
-   * The author's portrait for the card byline (#888). `""` when they have none
-   * — the byline falls back to the shared monogram avatar. Optional so a stale
-   * cached payload degrades to the monogram rather than crashing the card.
-   */
-  created_by_avatar_url?: string
-  created_at: string
-  updated_at: string
-  submitted_at: string | null
-  /**
-   * When a collab's pending-publish window opened; null/absent if not pending
-   * (ADR-0012). Optional because the list schema may omit it — the pending chip
-   * simply doesn't render until it's present.
-   */
-  submit_proposed_at?: string | null
-  member_count: number
-  // The computed total and the terms behind it (ADR-0053, supersedes ADR-0047),
-  // resolved for the praxis AUTHOR for every type including collab:
-  //   score = (task_point_value + metatask_points) × display_multiplier
-  //           + points_from_votes
-  // "Merit" (base + votes, multipliers discarded) is retired, and nothing
-  // derives vote-points or a multiplier by subtraction.
-  /** The computed total — the stamp headline, shown to 1 decimal. */
-  score: number
-  voter_count: number
-  /** Points contributed by applied metatasks; the meta row shows only when > 0. */
-  metatask_points: number
-  /** faction × duel collapsed into one value; `1.0` hides the mult row. */
-  display_multiplier: number
-  /** Points scored from votes (`+0` is valid — the votes row always shows). */
-  points_from_votes: number
-  /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
-  is_top_for_task: boolean
-  task_faction_slug: string | null
-  // Full-fidelity fields the bespoke praxis cards need (#573). The list
-  // schema now emits these; older callers simply ignore them.
-  /** Proof body excerpt — clamped to 1–2 lines in the mobile card. */
-  body_text?: string | null
-  /** Author's own member faction — drives the actor-scoped byline. */
-  created_by_faction_slug?: string | null
-  /** Crew roster (owner + collaborators); empty/absent on solo. */
-  members?: PraxisMemberOut[]
-  /** Attached proof media (images / video / audio). */
-  media_items?: MediaItemOut[]
-  /** The authenticated viewer's own cast value (1–5); null/absent if unvoted. */
-  viewer_vote?: number | null
-  /**
-   * Display name of an account-mate character who voted on this praxis — the
-   * "voted by {name}" marker (#644, §7). Account-scoped, so it can be set even
-   * when the *carried* character has no star of its own (`viewer_vote` null).
-   * Null/absent when no character on the viewer's account has voted.
-   */
-  voted_by_name?: string | null
-  /**
-   * The metatasks pinned to this praxis, as full TaskOut rows (not just the
-   * summed `metatask_points` above). The card's read-only seal stack dispatches
-   * on each metatask's issuing faction, so it needs the rows. The backend always
-   * emits it (empty when none); optional so a stale cached payload or an older
-   * caller degrades to no seal rather than crashing the card — matching the
-   * other late-added card fields above.
-   */
-  applied_metatasks?: TaskOut[]
-  /**
-   * Viewer-relative (#998); see `PraxisOut.viewer_can_vote`. Precomputed
-   * page-wide by the feed route (no N+1). Optional so a stale cached payload
-   * degrades to showing the module rather than hiding it.
-   */
-  viewer_can_vote?: boolean
-  /**
-   * Set when this praxis is a side of a duel (ADR-0011): a duel side is stored
-   * `type='solo'` + a non-null `duel_id`, so mode labels/chips must gate on this,
-   * not `type` (#992). Null/absent when the praxis is not a duel side. Mirrors
-   * `PraxisOut.duel_id`; precomputed page-wide by the feed route (no N+1).
-   */
-  duel_id?: number | null
-  /**
-   * The OTHER side of this duel (#596) — who this card is fighting.
-   *
-   * A duel is two separate praxis rows joined by a `Duel` row (ADR-0011), so
-   * `members` on a duel side holds only its own submitter; these three are the
-   * card's only path to the rival's name. Precomputed page-wide by the feed
-   * route (no N+1) via `duel_opponents_for`.
-   *
-   * ALL THREE ARRIVE TOGETHER OR NOT AT ALL, and absent is the ordinary case
-   * twice over: the praxis is not a duel side, or it IS one and the duel is
-   * still `pending` — the opponent praxis does not exist until the challenge is
-   * accepted, so a challenger has nobody to name and the card shows the duel
-   * mode chip alone. Gate the banner on `opponent_display_name`, never on
-   * `type === 'duel'`, which a duel side never has (#992).
-   */
-  opponent_praxis_id?: number | null
-  opponent_display_name?: string | null
-  /** The rival author's member faction; `null` for an unaffiliated author. */
-  opponent_faction_slug?: string | null
-}
+/**
+ * A praxis as the feed and every list surface see it.
+ *
+ * The score fields are the same ONE set as `PraxisOut`'s (ADR-0053, supersedes
+ * ADR-0047), resolved for the praxis AUTHOR for every type including collab.
+ * "Merit" (base + votes, multipliers discarded) is retired, and nothing derives
+ * vote-points or a multiplier by subtraction. `score` is the stamp headline,
+ * shown to 1 decimal.
+ *
+ * The fields that are not self-describing:
+ *
+ * - `created_by_avatar_url` is the author's portrait for the card byline
+ *   (#888). `""` when they have none — the byline falls back to the shared
+ *   monogram avatar.
+ * - `submit_proposed_at` is when a collab's pending-publish window opened; null
+ *   if not pending (ADR-0012).
+ * - `is_top_for_task` is the Task Crown (ADR-0028).
+ * - `body_text` is the proof excerpt — clamped to 1–2 lines in the mobile card.
+ * - `created_by_faction_slug` is the author's own MEMBER faction, which drives
+ *   the actor-scoped byline.
+ * - `members` is the crew roster (owner + collaborators); empty on solo.
+ * - `viewer_vote` is the authenticated viewer's own cast value (1–5); null if
+ *   unvoted.
+ * - `voted_by_name` is the display name of an ACCOUNT-MATE character who voted
+ *   on this praxis — the "voted by {name}" marker (#644, §7). Account-scoped,
+ *   so it can be set even when the *carried* character has no star of its own
+ *   (`viewer_vote` null). Null when no character on the viewer's account has
+ *   voted.
+ * - `applied_metatasks` is the metatasks pinned to this praxis as full
+ *   `TaskOut` rows, not just the summed `metatask_points`: the read-only seal
+ *   stack dispatches on each metatask's issuing faction, so it needs the rows.
+ * - `viewer_can_vote` is viewer-relative (#998); see `PraxisOut`. Precomputed
+ *   page-wide by the feed route (no N+1).
+ * - `duel_id` is set when this praxis is a side of a duel (ADR-0011): a duel
+ *   side is stored `type='solo'` + a non-null `duel_id`, so mode labels and
+ *   chips must gate on this, not `type` (#992).
+ * - `opponent_praxis_id` / `opponent_display_name` / `opponent_faction_slug`
+ *   are the OTHER side of this duel (#596) — who this card is fighting. A duel
+ *   is two separate praxis rows joined by a `Duel` row, so `members` on a duel
+ *   side holds only its own submitter and these three are the card's only path
+ *   to the rival's name. Precomputed page-wide via `duel_opponents_for`.
+ *
+ *   ALL THREE ARRIVE TOGETHER OR NOT AT ALL, and null is the ordinary case
+ *   twice over: the praxis is not a duel side, or it IS one and the duel is
+ *   still `pending` — the opponent praxis does not exist until the challenge is
+ *   accepted, so a challenger has nobody to name and the card shows the duel
+ *   mode chip alone. Gate the banner on `opponent_display_name`, never on
+ *   `type === 'duel'`, which a duel side never has (#992).
+ */
+export type PraxisCardOut = components['schemas']['PraxisCardOut']
 
-export interface PraxisCreate {
-  task_id: number
-  /**
-   * Required here although the backend defaults it to `solo`: the generated
-   * request body declares it (#1400), because `openapi-typescript` renders a
-   * field carrying a default as one the client always states. Every caller
-   * already passes it, so saying so costs nothing and removes the question of
-   * which side owns the default.
-   */
-  type: PraxisType
-  title?: string
-  body_text?: string
-}
+/**
+ * `type` is required although the backend defaults it to `solo`:
+ * `openapi-typescript` renders a field carrying a default as one the client
+ * always states. Every caller already passes it, so saying so costs nothing and
+ * removes the question of which side owns the default.
+ */
+export type PraxisCreate = components['schemas']['PraxisCreate']
 
-export interface PraxisUpdate {
-  title?: string
-  body_text?: string
-}
+export type PraxisUpdate = components['schemas']['PraxisUpdate']
 
 // ---------------------------------------------------------------------------
 // List / detail
@@ -491,20 +375,15 @@ export async function uploadPraxisMedia(id: number, file: File): Promise<MediaIt
 }
 
 /**
- * One entry per file submitted to the batch route — `schemas/praxis.py`'s
- * `MediaUploadResultOut`. Exactly one of `media_item` / `error` is set.
+ * One entry per file submitted to the batch route. Exactly one of `media_item`
+ * / `error` is set.
  *
  * `filename` is echoed back verbatim and unsanitized so a failure can name the
  * file the player recognises. It is for DISPLAY only: two files in one selection
  * can share a basename, so callers must attribute by position (the array is in
  * request order), never by matching on this string.
  */
-export interface MediaUploadResultOut {
-  filename: string
-  media_item: MediaItemOut | null
-  error: string | null
-  status_code: number | null
-}
+export type MediaUploadResultOut = components['schemas']['MediaUploadResultOut']
 
 /**
  * Upload N media files to one praxis in a single multipart request (#1286).
@@ -549,10 +428,7 @@ export async function inviteToPraxis(id: number, inviteeId: number): Promise<Pra
 }
 
 /** Acknowledgement for answering a collab invite (#1383). */
-export interface InviteResponseOut {
-  praxis_id: number
-  accepted: boolean
-}
+export type InviteResponseOut = components['schemas']['InviteResponseOut']
 
 /**
  * Accept or decline a collab invite.
