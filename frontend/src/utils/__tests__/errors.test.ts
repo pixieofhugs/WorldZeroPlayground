@@ -82,6 +82,94 @@ describe('extractError — status and network fallbacks', () => {
 })
 
 /**
+ * The ADR-0031 half of #1401: `errors.json` owns the words, the backend emits a
+ * `code` plus the `params` its prose interpolates, and `message` is what a code
+ * the catalog has never heard of still renders.
+ */
+describe('extractError — the errors.json catalog', () => {
+  it('renders catalog copy for a code, interpolating params', () => {
+    const detail = {
+      code: 'TASK_LEVEL_TOO_LOW',
+      message: 'This task requires level 3.',
+      params: { level: 3 },
+    }
+    expect(extractError(axiosError(403, detail), FALLBACK)).toBe(
+      'This task requires level 3.'
+    )
+  })
+
+  it('prefers the catalog over the backend prose', () => {
+    // Same code, deliberately divergent prose: whichever string comes back
+    // proves which side won.
+    const detail = {
+      code: 'VOTE_BUDGET_EXHAUSTED',
+      message: 'BACKEND PROSE',
+    }
+    expect(extractError(axiosError(403, detail), FALLBACK)).toBe(
+      'No votes remaining in your budget.'
+    )
+  })
+
+  it('resolves the context sibling when the raise site names one', () => {
+    const flagged = (context: string) => ({
+      code: 'FLAG_LEVEL_TOO_LOW',
+      message: 'BACKEND PROSE',
+      params: { level: 2, context },
+    })
+    expect(extractError(axiosError(403, flagged('comment')), FALLBACK)).toBe(
+      'Must be level 2 or above to flag a comment.'
+    )
+    expect(extractError(axiosError(403, flagged('praxis')), FALLBACK)).toBe(
+      'Must be level 2 or above to flag a praxis.'
+    )
+  })
+
+  it('falls back to the base key for an unknown context', () => {
+    const detail = {
+      code: 'FLAG_LEVEL_TOO_LOW',
+      message: 'BACKEND PROSE',
+      params: { level: 2, context: 'nonesuch' },
+    }
+    expect(extractError(axiosError(403, detail), FALLBACK)).toBe(
+      'Must be level 2 or above to flag.'
+    )
+  })
+
+  it('falls back to message for a code the catalog does not carry', () => {
+    const detail = { code: 'NOT_IN_THE_CATALOG', message: 'Backend prose wins.' }
+    expect(extractError(axiosError(403, detail), FALLBACK)).toBe('Backend prose wins.')
+  })
+
+  /**
+   * The deploy-skew guard. A backend that predates the `params` channel sends
+   * `{code, message}` for a code whose catalog entry interpolates — rendering
+   * it would produce "This task requires level ." at the player.
+   */
+  it('falls back to message when params for a placeholder are missing', () => {
+    const detail = {
+      code: 'TASK_LEVEL_TOO_LOW',
+      message: 'This task requires level 3.',
+    }
+    expect(extractError(axiosError(403, detail), FALLBACK)).toBe(
+      'This task requires level 3.'
+    )
+    expect(
+      extractError(
+        axiosError(403, { code: 'TASK_BANK_FULL', message: 'Task bank is full (20).' }),
+        FALLBACK
+      )
+    ).toBe('Task bank is full (20).')
+  })
+
+  it('never renders a half-interpolated catalog string', () => {
+    // No message either — the caller's fallback beats broken copy.
+    expect(extractError(axiosError(403, { code: 'TASK_LEVEL_TOO_LOW' }), FALLBACK)).toBe(
+      FALLBACK
+    )
+  })
+})
+
+/**
  * `extractErrorCode` exists so a caller can branch on *which* failure happened
  * without reaching past this module for a raw `detail` and matching English
  * prose — the exact drift that made a coded raise a silent UI break (#1598).

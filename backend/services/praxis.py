@@ -14,7 +14,13 @@ from sqlalchemy import and_, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from errors import ErrorCode, coded_error, detail_message, raise_coded
+from errors import (
+    DETAIL_CONTEXT_PARAM,
+    ErrorCode,
+    coded_error,
+    detail_message,
+    raise_coded,
+)
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.flag import Flag, FlagReason, stored_flag_reason
@@ -736,25 +742,34 @@ def _signup_denial_to_http(
             403,
             ErrorCode.task_level_too_low,
             f"This task requires level {task.level_required}.",
+            {"level": task.level_required},
         )
     if reason == SignupDenialReason.task_status_closed:
-        detail = (
-            "This task is retired and is not open for new praxes."
-            if task.status == TaskStatus.retired
-            else "This task is pending and is not open for new praxes."
+        # The status word is the only thing that varies, and it is also the
+        # catalog discriminator — so the branch picks a context and the prose
+        # follows from it rather than the two being spelled out twice.
+        status_context = (
+            "retired" if task.status == TaskStatus.retired else "pending"
         )
-        return coded_error(403, ErrorCode.task_not_open_for_signup, detail)
+        return coded_error(
+            403,
+            ErrorCode.task_not_open_for_signup,
+            f"This task is {status_context} and is not open for new praxes.",
+            {DETAIL_CONTEXT_PARAM: status_context},
+        )
     if reason == SignupDenialReason.already_active_member:
         return coded_error(
             409,
             ErrorCode.task_already_active_member,
             "You have already submitted a praxis for this task.",
+            {DETAIL_CONTEXT_PARAM: "signup"},
         )
     # bank_full (and the anonymous/None fallback, which create_praxis never hits).
     return coded_error(
         400,
         ErrorCode.task_bank_full,
         f"Task bank is full ({era.max_task_signups} in-progress praxes). Complete or withdraw one first.",
+        {"limit": era.max_task_signups, DETAIL_CONTEXT_PARAM: "signup"},
     )
 
 
@@ -799,6 +814,7 @@ async def _check_create_preconditions(
                 403,
                 ErrorCode.collaboration_level_too_low,
                 f"Collaborations require level {era.collaboration_level_required}.",
+                {"level": era.collaboration_level_required},
             )
         raise_coded(
             403, ErrorCode.praxis_mode_unavailable, "Praxis mode not available."
@@ -1019,6 +1035,7 @@ async def change_praxis_type(
                 403,
                 ErrorCode.collaboration_level_too_low,
                 f"Collaborations require level {era.collaboration_level_required}.",
+                {"level": era.collaboration_level_required},
             )
         praxis.type = PraxisType.collab
     else:
@@ -1472,6 +1489,7 @@ async def flag_praxis(
             403,
             ErrorCode.flag_level_too_low,
             f"Must be level {era.flag_level_required} or above to flag a praxis.",
+            {"level": era.flag_level_required, DETAIL_CONTEXT_PARAM: "praxis"},
         )
 
     praxis.moderation_status = ModerationStatus.flagged
@@ -1527,7 +1545,10 @@ async def invite_to_praxis(
         )
     if praxis.status == PraxisStatus.submitted:
         raise_coded(
-            400, ErrorCode.invite_praxis_submitted, "Cannot invite to a submitted praxis."
+            400,
+            ErrorCode.invite_praxis_submitted,
+            "Cannot invite to a submitted praxis.",
+            {DETAIL_CONTEXT_PARAM: "invite"},
         )
 
     member_ids = {m.character_id for m in praxis.members}
@@ -1583,6 +1604,7 @@ async def invite_to_praxis(
                 403,
                 ErrorCode.task_level_too_low,
                 f"This task requires level {praxis.task.level_required}.",
+                {"level": praxis.task.level_required},
             )
     if not era.collab_invite_bypasses_faction and not faction_permits(
         invitee, praxis.task, era
@@ -1643,7 +1665,10 @@ async def respond_to_invite(
 
     if praxis.status == PraxisStatus.submitted:
         raise_coded(
-            400, ErrorCode.invite_praxis_submitted, "Cannot join a submitted praxis."
+            400,
+            ErrorCode.invite_praxis_submitted,
+            "Cannot join a submitted praxis.",
+            {DETAIL_CONTEXT_PARAM: "join"},
         )
 
     # Check bank capacity — unless this era's collab door lifts it too (#1511).
@@ -1655,6 +1680,7 @@ async def respond_to_invite(
                 409,
                 ErrorCode.task_bank_full,
                 f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+                {"limit": era.max_task_signups},
             )
 
     # Add member

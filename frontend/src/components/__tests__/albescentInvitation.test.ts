@@ -1,8 +1,8 @@
 /**
  * The Albescent invitation's life chooser (#395) only offers active,
- * non-Albescent lives — paused/banned lives can't be carried, and a life
- * already of the Order has nothing left to accept. Pure filter, tested
- * directly (no jsdom in this repo — see vite.config.ts).
+ * non-Albescent lives — a banned life can't be carried, and a life already of
+ * the Order has nothing left to accept. Pure filter, tested directly (no jsdom
+ * in this repo — see vite.config.ts).
  */
 import { describe, it, expect } from 'vitest'
 import { eligibleLives } from '../AlbescentInvitation'
@@ -32,8 +32,12 @@ describe('eligibleLives', () => {
     expect(eligibleLives(lives).map((l) => l.id)).toEqual([1, 2])
   })
 
-  it('drops paused lives — the roster includes them, the order will not', () => {
-    const lives = [life({ id: 1, status: 'paused' }), life({ id: 2 })]
+  // Was written against `paused`, the one status the roster carried and the
+  // order refused. That value is gone (#1550), so the mixed-list case — one
+  // life dropped, its sibling kept — is asserted on the surviving non-active
+  // status instead of deleted with it.
+  it('drops a non-active life while keeping its sibling', () => {
+    const lives = [life({ id: 1, status: 'banned' }), life({ id: 2 })]
     expect(eligibleLives(lives).map((l) => l.id)).toEqual([2])
   })
 

@@ -12,12 +12,28 @@ becomes an object::
 ``code`` is the stable machine-readable identifier — the thing a client may
 branch on. ``message`` is **exactly the prose that raise site has always
 emitted**, kept as a fallback so no player-visible copy changes when a raise is
-converted. ``frontend/src/utils/errors.ts::extractError`` reads ``message`` for
-display and deliberately shows nothing for a bare ``code``, so the two halves
-can be adopted independently.
+converted. ``frontend/src/utils/errors.ts::extractError`` resolves the catalog
+first and falls back to ``message``, so the two halves stay independently
+adoptable: a code the catalog does not know still renders its prose.
 
-The i18n catalog lookup (``code`` -> ``errors.json``, the ADR-0031 emit-keys
-half of #1401) is a **later slice**. Nothing here reads a catalog.
+## ``params``: the numbers the catalog cannot know
+
+Fifteen raise sites interpolate a runtime value into their prose — the level
+gates, the signup caps, the media ceilings. ``frontend/src/locales/en/errors.json``
+owns the words (ADR-0031), but it cannot reproduce *"level 3"* from the key
+alone, and dropping the number makes the message unactionable. So a coded
+detail may carry a third member::
+
+    {"detail": {"code": "TASK_LEVEL_TOO_LOW",
+                "message": "This task requires level 3.",
+                "params": {"level": 3}}}
+
+``params`` is **additive and optional** — omitted entirely when a raise site has
+nothing to interpolate, so the non-interpolating sites' bodies are unchanged and
+a client that ignores the field is unaffected. Its keys are the i18next
+placeholder names used in ``errors.json``.
+
+One key is special: see :data:`DETAIL_CONTEXT_PARAM`.
 
 ## Why a helper and not an exception hierarchy
 
@@ -99,21 +115,56 @@ class ErrorCode(str, enum.Enum):
     avatar_too_large = "AVATAR_TOO_LARGE"
 
 
-#: The two keys of a coded ``detail`` body. Named so the frontend contract is
+#: The keys of a coded ``detail`` body. Named so the frontend contract is
 #: greppable from Python and no raise site spells them as bare literals.
 DETAIL_CODE_KEY = "code"
 DETAIL_MESSAGE_KEY = "message"
+DETAIL_PARAMS_KEY = "params"
+
+#: The one ``params`` entry that is not interpolated into copy.
+#:
+#: Five codes are raised with genuinely different prose at different sites:
+#: ``FLAG_LEVEL_TOO_LOW`` reads "…to flag a comment" in :mod:`services.comment`
+#: and "…to flag a praxis" in :mod:`services.praxis`; ``TASK_BANK_FULL`` gains
+#: "Complete or withdraw one first." on the signup path only. A single catalog
+#: key per code cannot render both variants, and #1401 adds a machine-readable
+#: channel — it does not restyle copy. So the raise site names its variant here
+#: and the catalog carries a ``<CODE>_<context>`` sibling key, which is
+#: i18next's native ``context`` feature rather than anything bespoke.
+#:
+#: Prefer *not* reaching for this. A new code is the better answer whenever the
+#: two messages describe genuinely different failures; ``context`` is for one
+#: failure worded for its surface.
+DETAIL_CONTEXT_PARAM = "context"
+
+#: What a ``params`` mapping may carry: interpolation values (ints for levels
+#: and caps) plus the string :data:`DETAIL_CONTEXT_PARAM` discriminator.
+ErrorParams = Mapping[str, Any]
 
 
-def coded_detail(code: ErrorCode, message: str) -> dict[str, str]:
-    """Build the ``detail`` body for a coded failure."""
-    return {DETAIL_CODE_KEY: code.value, DETAIL_MESSAGE_KEY: message}
+def coded_detail(
+    code: ErrorCode, message: str, params: Optional[ErrorParams] = None
+) -> dict[str, Any]:
+    """Build the ``detail`` body for a coded failure.
+
+    ``params`` is omitted from the body entirely when absent or empty, so a
+    raise site with nothing to interpolate produces the exact two-key body it
+    produced before #1401's catalog slice.
+    """
+    detail: dict[str, Any] = {
+        DETAIL_CODE_KEY: code.value,
+        DETAIL_MESSAGE_KEY: message,
+    }
+    if params:
+        detail[DETAIL_PARAMS_KEY] = dict(params)
+    return detail
 
 
 def coded_error(
     status_code: int,
     code: ErrorCode,
     message: str,
+    params: Optional[ErrorParams] = None,
     headers: Optional[dict[str, str]] = None,
 ) -> HTTPException:
     """Build — but do not raise — a coded :class:`HTTPException`.
@@ -125,7 +176,9 @@ def coded_error(
     which is why the ratchet's scan is AST-based and matches construction.
     """
     return HTTPException(
-        status_code=status_code, detail=coded_detail(code, message), headers=headers
+        status_code=status_code,
+        detail=coded_detail(code, message, params),
+        headers=headers,
     )
 
 
@@ -133,14 +186,16 @@ def raise_coded(
     status_code: int,
     code: ErrorCode,
     message: str,
+    params: Optional[ErrorParams] = None,
     headers: Optional[dict[str, str]] = None,
 ) -> NoReturn:
     """Raise a coded failure. The blessed replacement for ``raise HTTPException``.
 
     ``message`` stays the prose the raise site already emitted — this helper
-    adds a code, it does not rewrite copy.
+    adds a code and (since the catalog slice) the values that prose interpolates.
+    It does not rewrite copy.
     """
-    raise coded_error(status_code, code, message, headers=headers)
+    raise coded_error(status_code, code, message, params, headers=headers)
 
 
 def detail_message(detail: Any) -> str:
@@ -174,13 +229,31 @@ def detail_code(detail: Any) -> Optional[str]:
     return None
 
 
+def detail_params(detail: Any) -> dict[str, Any]:
+    """The interpolation ``params`` carried by a ``detail``, or an empty mapping.
+
+    Absent ``params`` reads the same as empty ``params`` on purpose: a caller
+    can splat the result into a catalog lookup without branching on whether the
+    raise site had anything to interpolate.
+    """
+    if isinstance(detail, Mapping):
+        params = detail.get(DETAIL_PARAMS_KEY)
+        if isinstance(params, Mapping):
+            return dict(params)
+    return {}
+
+
 __all__ = [
     "DETAIL_CODE_KEY",
+    "DETAIL_CONTEXT_PARAM",
     "DETAIL_MESSAGE_KEY",
+    "DETAIL_PARAMS_KEY",
     "ErrorCode",
+    "ErrorParams",
     "coded_detail",
     "coded_error",
     "detail_code",
     "detail_message",
+    "detail_params",
     "raise_coded",
 ]

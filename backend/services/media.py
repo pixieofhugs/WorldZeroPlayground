@@ -23,13 +23,20 @@ from models.praxis import MediaItem, MediaType
 logger = logging.getLogger(__name__)
 
 
+#: Named so the size ceilings can state their limit in megabytes to both the
+#: prose and the ``params`` the copy catalog interpolates (#1401), instead of
+#: repeating the number as a bare literal in three places.
+BYTES_PER_MEGABYTE = 1024 * 1024
+
 # Avatar pipeline tunables — kept here so the whole avatar contract lives in one place.
 AVATAR_MAX_SIZE = 512
 AVATAR_JPEG_QUALITY = 85
-AVATAR_MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+AVATAR_MAX_MEGABYTES = 10
+AVATAR_MAX_BYTES = AVATAR_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 
 # Praxis-media tunables.
-MEDIA_MAX_BYTES = 100 * 1024 * 1024  # 100 MB
+MEDIA_MAX_MEGABYTES = 100
+MEDIA_MAX_BYTES = MEDIA_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 MEDIA_FILENAME_MAX_LEN = 100
 
 
@@ -176,7 +183,12 @@ async def process_and_save_avatar(
         os.makedirs(absolute_directory, exist_ok=True)
         contents = await upload.read()
         if len(contents) > AVATAR_MAX_BYTES:
-            raise_coded(413, ErrorCode.avatar_too_large, "Avatar too large (max 10 MB).")
+            raise_coded(
+                413,
+                ErrorCode.avatar_too_large,
+                f"Avatar too large (max {AVATAR_MAX_MEGABYTES} MB).",
+                {"max_megabytes": AVATAR_MAX_MEGABYTES},
+            )
 
         image = Image.open(io.BytesIO(contents))
         image = image.convert("RGB")
@@ -240,7 +252,12 @@ async def process_and_save_media(
         os.makedirs(absolute_directory, exist_ok=True)
         contents = await upload.read()
         if len(contents) > MEDIA_MAX_BYTES:
-            raise_coded(413, ErrorCode.media_too_large, "File too large (max 100 MB).")
+            raise_coded(
+                413,
+                ErrorCode.media_too_large,
+                f"File too large (max {MEDIA_MAX_MEGABYTES} MB).",
+                {"max_megabytes": MEDIA_MAX_MEGABYTES},
+            )
         with open(absolute_path, "wb") as file_handle:
             file_handle.write(contents)
     except HTTPException:
@@ -263,9 +280,12 @@ async def process_and_save_media(
 __all__ = [
     "AVATAR_JPEG_QUALITY",
     "AVATAR_MAX_BYTES",
+    "AVATAR_MAX_MEGABYTES",
     "AVATAR_MAX_SIZE",
+    "BYTES_PER_MEGABYTE",
     "MEDIA_FILENAME_MAX_LEN",
     "MEDIA_MAX_BYTES",
+    "MEDIA_MAX_MEGABYTES",
     "delete_stored_avatar",
     "process_and_save_avatar",
     "process_and_save_media",

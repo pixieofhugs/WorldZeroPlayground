@@ -10,13 +10,17 @@ import type { AccountSummary, AccountDetail } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
 
-type AccountStatus = "active" | "suspended" | "banned" | "paused";
-const ACCOUNT_STATUSES: AccountStatus[] = [
-  "active",
-  "suspended",
-  "banned",
-  "paused",
-];
+/** Every status this tab renders a label for — the UNION of two backend enums,
+ *  not one of them. `statusLabel` below is called on `account.status`
+ *  (`AccountStatus`: active | suspended) and on `character.status`
+ *  (`CharacterStatus`: active | banned) alike, so the name understates it: no
+ *  account is ever `banned` and no life is ever `suspended`. Left as one list
+ *  because it is a label lookup rather than a set of offerable values, and the
+ *  fallback renders anything unmapped verbatim. Splitting it in two is a
+ *  separate decision, tracked in #1610 — #1551 is the `paused` removal that
+ *  surfaced it, not the split. `paused` is gone from both enums (#1550). */
+type LabelledStatus = "active" | "suspended" | "banned";
+const ACCOUNT_STATUSES: LabelledStatus[] = ["active", "suspended", "banned"];
 
 export default function AccountsTab() {
   const { t } = useTranslation(["admin", "common"]);
@@ -184,10 +188,7 @@ export default function AccountsTab() {
               {/* Expanded: characters */}
               {expandedId === account.id && detail && (
                 <div className="mt-3 ml-4 border-l-2 border-border pl-4">
-                  <p
-                    className="eyebrow mb-2"
-                    style={{ color: "var(--color-text-tertiary)" }}
-                  >
+                  <p className="label-heading mb-2">
                     {t("accounts.charactersHeading", {
                       count: detail.characters.length,
                     })}
@@ -217,9 +218,7 @@ export default function AccountsTab() {
                                 color:
                                   character.status === "banned"
                                     ? "var(--color-danger)"
-                                    : character.status === "paused"
-                                      ? "var(--color-warning)"
-                                      : "var(--color-success)",
+                                    : "var(--color-success)",
                                 fontWeight: 700,
                               }}
                             >

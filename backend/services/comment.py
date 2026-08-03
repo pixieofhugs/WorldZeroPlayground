@@ -12,7 +12,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from errors import ErrorCode, raise_coded
+from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.comment import MAX_COMMENT_BODY, Comment, CommentMention
@@ -161,6 +161,7 @@ async def create_comment(
             403,
             ErrorCode.comment_level_too_low,
             f"Must be level {era.comment_level_required} or above to comment.",
+            {"level": era.comment_level_required},
         )
     body_text = _clean_body(body_text)
     await _assert_commentable_target(praxis_id, task_id, session)
@@ -258,6 +259,7 @@ async def flag_comment(
             403,
             ErrorCode.flag_level_too_low,
             f"Must be level {era.flag_level_required} or above to flag a comment.",
+            {"level": era.flag_level_required, DETAIL_CONTEXT_PARAM: "comment"},
         )
     session.add(
         Flag(

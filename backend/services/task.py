@@ -69,6 +69,7 @@ async def propose_task(
                 403,
                 ErrorCode.metatask_proposal_level_too_low,
                 f"Must be level {era.level_to_propose_metatask} or above to propose metatasks.",
+                {"level": era.level_to_propose_metatask},
             )
         if not data.metatask_faction_slug:
             raise HTTPException(
@@ -81,6 +82,7 @@ async def propose_task(
                 403,
                 ErrorCode.task_proposal_level_too_low,
                 f"Must be level {era.level_to_propose_task} or above to propose tasks.",
+                {"level": era.level_to_propose_task},
             )
 
     task = Task(

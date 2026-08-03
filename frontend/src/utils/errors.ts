@@ -1,14 +1,84 @@
 import type { AxiosError } from 'axios'
 
+import i18n from '../i18n'
+import errorsCatalog from '../locales/en/errors.json'
+
 /** FastAPI validation failures arrive as a list of these. */
 type ValidationDetail = { msg?: string }
 
 /**
- * A coded backend error: a stable machine-readable `code` plus player-facing
- * prose in `message`. `message` is what we display; `code` exists so callers
- * (and, later, an i18n catalog) can branch on the failure without matching prose.
+ * A coded backend error: a stable machine-readable `code`, player-facing prose
+ * in `message`, and the runtime values that prose interpolates in `params`.
+ *
+ * `code` is what the copy catalog is keyed by and what callers branch on.
+ * `message` is the backend's own prose, kept as the fallback for any code the
+ * catalog does not know. `params` is absent whenever the raise site had nothing
+ * to interpolate — see `backend/errors.py`.
  */
-type CodedDetail = { code?: string; message?: string }
+type CodedDetail = {
+  code?: string
+  message?: string
+  params?: Record<string, unknown>
+}
+
+/** Where `backend/errors.py::ErrorCode` values are keyed in the copy catalog. */
+const ERRORS_NAMESPACE = 'errors'
+const CODE_KEY_PREFIX = 'codes'
+
+/**
+ * The codes `errors.json` actually carries — read off the catalog itself.
+ *
+ * i18next types keys as a literal union built from the resources, so a key
+ * composed from an unconstrained `string` does not compile (the problem
+ * `components/feed/feedItemLabels.ts` solves with a hand-written map of its 15
+ * types). Deriving the union from the imported JSON solves it without a second
+ * copy of the code list to drift: the catalog stays the single frontend
+ * inventory, and `backend/tests/unit/test_i18n_catalog_coverage.py` is what
+ * holds it level with the backend enum.
+ */
+type CatalogedCode = keyof typeof errorsCatalog.codes
+
+function isCataloged(code: string): code is CatalogedCode {
+  return code in errorsCatalog.codes
+}
+
+/** i18next interpolation placeholders, as written in the catalog values. */
+const PLACEHOLDER_PATTERN = /\{\{(\w+)\}\}/g
+
+/**
+ * The catalog value i18next will resolve for this code and context.
+ *
+ * Read so {@link hasEveryPlaceholder} can inspect the template *before*
+ * rendering it. Mirrors i18next's own context resolution: prefer the
+ * `<CODE>_<context>` sibling, fall back to the base key.
+ */
+function catalogTemplate(code: CatalogedCode, context: unknown): string {
+  if (typeof context === 'string' && context) {
+    const contextual = `${code}_${context}`
+    if (isCataloged(contextual)) return errorsCatalog.codes[contextual]
+  }
+  return errorsCatalog.codes[code]
+}
+
+/**
+ * Does `params` supply every value this catalog string interpolates?
+ *
+ * The guard that makes the catalog safe during a deploy skew. A backend that
+ * predates the `params` channel still sends `{code, message}`, and a catalog
+ * entry like "This task requires level {{level}}." would render as "This task
+ * requires level ." — strictly worse than the prose it replaced, and on the
+ * frontend-deploys-first path that has taken this site down before. When a
+ * value is missing the catalog simply does not apply and `message` wins.
+ */
+function hasEveryPlaceholder(
+  template: string,
+  params: Record<string, unknown> | undefined
+): boolean {
+  for (const [, name] of template.matchAll(PLACEHOLDER_PATTERN)) {
+    if (params?.[name] === undefined) return false
+  }
+  return true
+}
 
 type ErrorDetail = string | ValidationDetail[] | CodedDetail
 
@@ -28,6 +98,39 @@ export const ErrorCode = {
 } as const
 
 /**
+ * The catalog's words for a coded error, or null if it has none (ADR-0031).
+ *
+ * This is the emit-keys half of #1401: the backend sends `code` + the `params`
+ * its prose interpolates, and `errors.json` owns the wording. A code the
+ * catalog has never heard of returns null so the caller falls back to the
+ * backend's own `message` — which is how a newly-coded raise can ship before
+ * its catalog entry does, and how a deploy-skewed client stays useful.
+ *
+ * Membership is checked before `t` rather than letting the lookup miss, because
+ * `i18n.ts` installs a `missingKeyHandler` that THROWS in dev and test. An
+ * unknown code here is an ordinary runtime condition — an older client meeting
+ * a newer backend — not a build defect, so it must not take the error path down
+ * with it.
+ *
+ * `params.context` is i18next's discriminator, not an interpolation value: it
+ * resolves `<CODE>_<context>` for the handful of codes whose prose differs by
+ * the surface that raised them, falling back to the base key when the catalog
+ * has no such sibling. Spreading `params` passes both at once.
+ */
+function catalogMessage(detail: CodedDetail): string | null {
+  const { code, params } = detail
+  if (typeof code !== 'string' || !isCataloged(code)) return null
+  if (!hasEveryPlaceholder(catalogTemplate(code, params?.context), params)) {
+    return null
+  }
+
+  const rendered = i18n.t(`${ERRORS_NAMESPACE}:${CODE_KEY_PREFIX}.${code}`, {
+    ...params,
+  })
+  return typeof rendered === 'string' && rendered ? rendered : null
+}
+
+/**
  * Pulls the displayable prose out of a `detail` body, whatever shape it takes.
  * Returns null when there is nothing worth showing, so the caller falls through
  * to its status-based messages.
@@ -43,9 +146,13 @@ function displayableDetail(detail: ErrorDetail | undefined): string | null {
     return detail[0]?.msg || null
   }
 
-  // Coded object — `message` carries the prose, `code` is for machines only.
-  // A bare code with no message is not shown; a raw code reads worse to a
-  // player than the caller's fallback does.
+  // Coded object. The catalog owns the words when it knows this code; the
+  // backend's own prose is the fallback for every code it does not.
+  const fromCatalog = catalogMessage(detail)
+  if (fromCatalog) return fromCatalog
+
+  // A bare code with no message is still not shown: a raw code reads worse to
+  // a player than the caller's fallback does.
   const message = detail.message
   if (typeof message !== 'string' || message === GENERIC_SERVER_PROSE) return null
   return message || null
@@ -57,7 +164,9 @@ function displayableDetail(detail: ErrorDetail | undefined): string | null {
  * Priority:
  *   1. FastAPI `detail` from the response body (skip generic "Internal Server Error"), as either
  *      a plain string, a validation array (uses the first item's msg), or a
- *      coded `{ code, message }` object (uses `message`)
+ *      coded `{ code, message, params }` object — which resolves the `errors.json`
+ *      catalog by `code` first (interpolated with `params`) and falls back to
+ *      `message` for any code the catalog does not carry
  *   2. Server error (5xx) with no useful detail — server-side problem message
  *   3. Network error (no response at all) — connection message
  *   4. Caller-provided fallback, or generic default

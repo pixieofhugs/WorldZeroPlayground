@@ -3145,13 +3145,15 @@
      Tailwind emits a class only once it sees the literal string in a scanned
      file — same as `.content-text` and `.eyebrow`, and it means a name
      assembled at runtime is a name that never ships. Write both as literals.
-     `.label-caption` has real callers from the day it landed (the four sites
-     `.eyebrow-sentence` used to hold). `.label-heading` HAS NONE YET and is in
-     the bundle only because `factionContrast.test.ts` quotes it and Tailwind's
-     content glob scans every .ts and .tsx under src — so moving that spec out
-     of src would silently delete the class. Its first sweep is what makes it
-     load-bearing; until then, check the built stylesheet rather than the source
-     if it appears to do nothing. (Do not write that glob out here. It contains
+     Both tiers now have real callers across propose-task, praxis detail, task
+     detail, the feed and admin (#1601, #1603, #1604, #1605, #1602), so neither
+     depends any longer on `factionContrast.test.ts` quoting it to survive the
+     purge — which it did, for `.label-heading`, between landing and its first
+     sweep. Worth knowing that this was ever true: a class held in the bundle
+     only by a spec is one `src`-relative move away from silently vanishing, and
+     the symptom is a rule that does nothing rather than a build that fails. If
+     either tier ever appears inert, check the BUILT stylesheet rather than the
+     source before believing the source. (Do not write that glob out here. It contains
      a star-slash, which ENDS a CSS comment, and postcss then fails on the
      remains of the sentence rather than on the thing you typed.)
 
