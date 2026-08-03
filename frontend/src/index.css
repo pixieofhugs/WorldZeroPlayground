@@ -1582,6 +1582,27 @@
   --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12); /* journal ruling */
   --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28); /* hairline borders */
 
+  /* ── THE EPHEMERIS GRID (#1635) ──
+     The faction hero's ruled ground, published so the surfaces queued behind it
+     borrow the graticule instead of each re-typing the pair. Opacity is
+     deliberately NOT in the token: the hero wears it at .10 and a card at .17,
+     and a wash baked into the image cannot be dialled by its mount.
+
+     It is the STRAIGHT ruling, which is a decision and not an oversight. The
+     design canvas draws a warped `0 0 1000 600` survey graticule; nothing in
+     this app has ever drawn it, and inlining a multi-kilobyte data URI here
+     would put it on every page's critical path rather than on the Ephemerists
+     surfaces that want it (`docs/agents/load-time.md`). Publishing what ships
+     today costs ~250 bytes and buys the seam.
+
+     ponytail: two crossed repeating gradients — ceiling is no warp and one
+     pitch. Upgrade path: point this at a `url()` of a hosted SVG. Every
+     consumer already sizes it `100% 100%` / `no-repeat`, so a stretched image
+     lands exactly where the tiling gradient sat, and no consumer changes. */
+  --faction-ephemerists-grid:
+    repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-brass-light) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, var(--faction-ephemerists-plate-brass-light) 0 1px, transparent 1px 26px);
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -3567,6 +3588,43 @@
     repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-rule) 0 1px, transparent 1px 26px),
     linear-gradient(170deg, var(--faction-ephemerists-plate-bg), var(--faction-ephemerists-plate-page));
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 5px 5px, 100% 100%, 100% 100%;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THE EPHEMERIS GRID, as a card ground (#1635)
+
+   "The ruling is a ground, not a veil" — so it sits between the card's
+   own fill and everything printed on it, and it is inert: no hit
+   testing, no contribution to any ink's contrast reading.
+
+   The design lifts the card's content to `z-index: 1` over a `z-index: 0`
+   ::before. This does the same render with `isolation: isolate` and a
+   NEGATIVE layer instead, because the lift is the half that costs: a
+   `> *` rule strong enough to lift static children has to set
+   `position: relative`, which overrides any absolutely-positioned
+   ornament the card already had — and the plate skins are full of them.
+   Isolating makes the host a stacking context, so `-1` paints after the
+   host's own background and before every descendant, and an adopting
+   card adds one class and changes nothing else.
+
+   Sized `100% 100%` / `no-repeat` per the design, which is a no-op for a
+   repeating gradient and is exactly what a warped SVG would need — see
+   the token's upgrade path beside its declaration.
+   ══════════════════════════════════════════════════════════════ */
+.eph-grid-ground {
+  position: relative;
+  isolation: isolate;
+}
+.eph-grid-ground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.17;
+  background-image: var(--faction-ephemerists-grid);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */

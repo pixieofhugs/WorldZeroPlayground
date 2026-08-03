@@ -10,6 +10,7 @@ import {
   DECO,
   EmblemOctagon,
   GOLD,
+  GRID,
   GlyphRegister,
   MARGINALIA,
   READING,
@@ -40,8 +41,9 @@ function HeroGrids() {
           position: "absolute",
           inset: 0,
           opacity: 0.1,
-          backgroundImage:
-            `repeating-linear-gradient(0deg, ${BRASS_LIGHT} 0 1px, transparent 1px 26px), repeating-linear-gradient(90deg, ${BRASS_LIGHT} 0 1px, transparent 1px 26px)`,
+          // The graticule is the published token now (#1635) — this hero is
+          // where it was drawn, and it is the first thing to borrow it back.
+          backgroundImage: GRID,
         }}
       />
       <svg viewBox="0 0 1000 320" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.16 }}>

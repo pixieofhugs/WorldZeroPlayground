@@ -593,6 +593,26 @@ Two rules follow, and UA is the worked example:
 
 Where a mark ships as an inline SVG and where as a masked `public/` asset is a **weight** decision, not a style one — see `components/factionMarks/index.ts`. Both are token-tinted, so both follow the dark cascade. The same faction can legitimately carry two versions of one device at different sizes for different consumers; do not consolidate them on sight.
 
+### A mark below the size of its own line is a different drawing (#1635)
+
+The paragraph above allows two versions of a device at two sizes. This is the case where you owe one, and the threshold is arithmetic rather than taste.
+
+Every faction sigil renders in `BadgedAvatar`'s membership badge, whose glyph is `badge - 5` px — **7px at the small avatar**, and 12–14px in a masthead datum row. The Ephemerists' kite is drawn on a 486×560 frame with a 26-unit stroke, so its rule is 2.9 rendered px at page scale and **0.6px at 13**. Sub-pixel geometry does not get finer, it gets grey: the crossed axes and four of the five discs stopped being detail and became a smudge, which is why "just scale it down" is the failure the reduced cut exists to prevent. So `EphemeristsSigil` draws the kite and the apex point alone below 20px, and 20 is not a round number — **it is where the design's own stroke crosses one device pixel** (20 × 26 / 560 = 0.93px), i.e. the mark is cut at the size where its line stops being drawable. Two floors do the rest: the rule and the point are each clamped to a device pixel, expressed once as user-units-per-rendered-pixel, so the small cut thickens rather than fades.
+
+**A caller hands a mark one number, so the mark owns its ratio.** The kite is not square. Passing `size` through to both `width` and `height` would have stretched it on every mount, and asking each mount for two numbers puts the design's aspect ratio in eight call sites where it can drift. `size` is the **height** and the width follows the frame — which is what makes a masthead's 54×62, 38×44 and inline mounts one prop apart.
+
+**And a prop whose every existing value became wrong is deleted, not reinterpreted.** The old mark took `stroke` in a 24-unit space, where `1.4` was right; in a 560-unit space it is a hairline, so every caller's number was wrong and none of them knew. Keeping the prop and quietly ignoring it is worse than removing it: the component derives a better weight from `size` than any call site can, and a knob nothing turns is scaffolding.
+
+### A published ornament GROUND carries no opacity (#1635)
+
+`--faction-ephemerists-grid` is the faction hero's ruled graticule, published so the surfaces queued behind it borrow it instead of each re-typing the crossed gradients. Two things about publishing a **ground** rather than a colour.
+
+**The wash belongs to the mount.** The hero wears the grid at `.10` and a card at `.17`; an opacity baked into the image cannot be dialled back by whatever sits on it, and the second consumer then forks the token. Publish the marks, let the surface decide how far back they sit.
+
+**A decorative ground goes in an ISOLATED negative layer, not on top with the content lifted over it.** The obvious shape — a `::before` at `z-index: 0` with the card's content lifted to `1` — needs a `> *` rule strong enough to lift *static* children, which means setting `position: relative`, which overrides any absolutely-positioned ornament the card already had. The plate skins are full of those. `isolation: isolate` on the host plus `z-index: -1` on the layer renders identically and asks the adopter for nothing: the host becomes a stacking context, so the negative layer paints after the host's own fill and before every descendant, and a card adopting `.eph-grid-ground` changes one class and nothing else. This is the same family as #1148 and #1255 — the question is never "may this element clip or stack?", it is "what is downstream of it?"
+
+**Size it `100% 100% / no-repeat` even when that is a no-op.** It is, for a repeating gradient. It is exactly what a warped SVG needs, and it is the difference between swapping the warp in later as one declaration and revisiting every consumer.
+
 ---
 
 ## 7. Components
