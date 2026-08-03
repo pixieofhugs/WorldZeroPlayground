@@ -44,6 +44,10 @@ import { useFormFactor } from '../../../hooks/useFormFactor'
 import { factionFill, factionName, isKnownFaction } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import type { ProfileBodyProps } from '../FactionProfileBody'
+// The ② About block is shared with every faction kit — see profileSkin.tsx. This
+// is the one profile that does NOT delegate to `ProfileSkin`, so it mounts that
+// component itself rather than growing a second copy of the rule.
+import { AboutBlock } from './profileSkin'
 
 type Segment = 'praxis' | 'tasks'
 
@@ -340,7 +344,6 @@ function DesktopProfile({
             <CredentialCard
               displayName={character.display_name}
               handle={character.username}
-              bio={character.bio}
               factionSlug={character.faction_slug}
               level={character.level}
               score={character.score}
@@ -525,7 +528,8 @@ function DesktopProfile({
         </div>
       </div>
 
-      {/* ── ② About: skipped in v1 (no long-form field; contract hides empty) ── */}
+      {/* ── ② About — the long-form field arrived with #1626 ── */}
+      <AboutBlock bio={character.bio} heading={<SectionHeading title={t('profile.aboutHeading')} />} />
 
       {badges.length > 0 ? (
         <div
@@ -678,7 +682,6 @@ function MobileProfile({
             <CredentialCard
               displayName={character.display_name}
               handle={character.username}
-              bio={character.bio}
               factionSlug={character.faction_slug}
               level={character.level}
               score={character.score}
@@ -805,6 +808,9 @@ function MobileProfile({
             )}
           </div>
         </div>
+
+        {/* ── ② About — same block as the desktop branch and every kit ── */}
+        <AboutBlock bio={character.bio} heading={<SectionHeading title={t('profile.aboutHeading')} />} />
 
         {/* ── ③ Badges — hidden entirely when empty ── */}
         {badges.length > 0 && (

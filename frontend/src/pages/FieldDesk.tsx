@@ -202,7 +202,6 @@ export default function FieldDesk() {
                   <CredentialCard
                     displayName={life.display_name}
                     handle={life.username}
-                    bio={life.bio}
                     factionSlug={life.faction_slug}
                     level={life.level}
                     score={life.score}

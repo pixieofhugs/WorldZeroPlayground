@@ -368,7 +368,6 @@ export const mockCollaboration: PraxisCardOut = {
 export const mockCredential: CredentialCardProps = {
   displayName: 'Ada Reed',
   handle: 'ada_reed',
-  bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
   factionSlug: 'ua',
   level: 4,
   score: 320,
