@@ -40,8 +40,7 @@ from game_config import (
 # Config owns which factions exist + their mechanics; add matching name/description
 # entries there for every slug below.
 #
-# Required system factions (include these in every era):
-#   "ua"       -- an ordinary invite-joinable faction (no starter privilege, ADR-0030)
+# The one structurally required faction:
 #   "na"       -- answers two questions at once (see backend/faction_slugs.py):
 #                 the sentinel for a task with no faction affiliation, AND the
 #                 unaffiliated state every character is born into (ADR-0019).
@@ -60,18 +59,11 @@ from game_config import (
 #                              (no ability). Era 1 gives wow 1; everyone else 0.
 
 ERA_N_FACTIONS = {
-    # --- Required system factions (copy and customize) ---
+    # --- Required system faction (copy and customize) ---
     #
-    # "ua": FactionConfig(
-    #     slug="ua",
-    #     can_always_rejoin=False,
-    #     own_task_modifier=1.0,
-    #     other_task_modifier=1.0,
-    #     collab_own_modifier=1.0,
-    #     collab_other_modifier=1.0,
-    #     duel_win_modifier=1.0,
-    #     duel_loss_modifier=1.0,
-    # ),
+    # Every OTHER faction is this era's own choice: Era 2 drops "ua" entirely
+    # (#1618) and nothing structural objects.
+    #
     # "na": FactionConfig(
     #     slug="na",
     #     can_always_rejoin=False,
