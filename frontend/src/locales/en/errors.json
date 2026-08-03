@@ -15,16 +15,16 @@
     "FLAG_LEVEL_TOO_LOW_comment": "Must be level {{level}} or above to flag a comment.",
     "FLAG_LEVEL_TOO_LOW_praxis": "Must be level {{level}} or above to flag a praxis.",
 
-    "TASK_BANK_FULL": "Task bank is full ({{limit}} in-progress praxes).",
-    "TASK_BANK_FULL_signup": "Task bank is full ({{limit}} in-progress praxes). Complete or withdraw one first.",
+    "TASK_BANK_FULL": "Task bank is full ({{limit}} in-progress praxis).",
+    "TASK_BANK_FULL_signup": "Task bank is full ({{limit}} in-progress praxis). Complete or withdraw one first.",
 
     "TASK_ALREADY_ACTIVE_MEMBER": "You already have an active praxis for this task.",
     "TASK_ALREADY_ACTIVE_MEMBER_duel": "You already have an active praxis for this task.",
     "TASK_ALREADY_ACTIVE_MEMBER_signup": "You have already submitted a praxis for this task.",
 
-    "TASK_NOT_OPEN_FOR_SIGNUP": "This task is not open for new praxes.",
-    "TASK_NOT_OPEN_FOR_SIGNUP_retired": "This task is retired and is not open for new praxes.",
-    "TASK_NOT_OPEN_FOR_SIGNUP_pending": "This task is pending and is not open for new praxes.",
+    "TASK_NOT_OPEN_FOR_SIGNUP": "This task is not open for new praxis.",
+    "TASK_NOT_OPEN_FOR_SIGNUP_retired": "This task is retired and is not open for new praxis.",
+    "TASK_NOT_OPEN_FOR_SIGNUP_pending": "This task is pending and is not open for new praxis.",
 
     "TASK_IS_METATASK": "Metatasks are applied to a praxis, not signed up for.",
 
