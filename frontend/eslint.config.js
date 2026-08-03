@@ -279,9 +279,49 @@ const LEGACY_RAW_STYLE_FILES = fs
   .map((line) => line.trim())
   .filter(Boolean)
 
+/**
+ * #1400: axios is gone. An import of it would install a SECOND transport that
+ * misses everything `api/client.ts` carries — the JWT cookie, the 401→landing
+ * rule, the array-param serialization FastAPI actually reads — and every one of
+ * those failures is a 200 with the wrong answer rather than a crash. Cheaper as
+ * a lint line than as a bug report.
+ */
+const NO_AXIOS_IMPORT = [
+  'error',
+  {
+    paths: [
+      {
+        name: 'axios',
+        message:
+          'axios was retired in #1400 — issue requests through api/client.ts (apiGet/apiPost/...).',
+      },
+    ],
+  },
+]
+
 export default [
   {
     ignores: ['dist/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'],
+  },
+  /**
+   * The axios ban reaches past `src/`, because the one hidden axios dependent
+   * this migration turned up was OUTSIDE it: `.ds-kit/provider.tsx` faked
+   * `GET /auth/me` by swapping `api.defaults.adapter`, and nothing but
+   * `typecheck:design-sync` ever looked at it — `npm run lint` was `eslint src`.
+   *
+   * These directories get the import ban and nothing else. Widening the whole
+   * rule set to them would surface a backlog that has nothing to do with #1400,
+   * so this block is deliberately one rule wide.
+   */
+  {
+    files: ['.ds-kit/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: {
+      'no-restricted-imports': NO_AXIOS_IMPORT,
+    },
   },
   {
     files: ['src/**/*.{ts,tsx}'],
@@ -307,23 +347,7 @@ export default [
       ],
       'local/no-raw-style-values': 'error',
       'sonarjs/no-identical-functions': 'error',
-      // #1400: axios is gone. An import of it would install a SECOND transport
-      // that misses everything `api/client.ts` carries — the JWT cookie, the
-      // 401→landing rule, the array-param serialization FastAPI actually reads
-      // — and every one of those failures is a 200 with the wrong answer rather
-      // than a crash. Cheaper as a lint line than as a bug report.
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'axios',
-              message:
-                'axios was retired in #1400 — issue requests through api/client.ts (apiGet/apiPost/...).',
-            },
-          ],
-        },
-      ],
+      'no-restricted-imports': NO_AXIOS_IMPORT,
     },
   },
   // Ratchet: existing violations are grandfathered until migrated. Spread
