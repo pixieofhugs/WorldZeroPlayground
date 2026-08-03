@@ -46,7 +46,12 @@ function toEntry(item: ActivityFeedItem): TickerEntry | null {
     item.payload?.praxis_title ??
     item.payload?.era_name ??
     ''
-  return { player: item.actor_display_name ?? null, verbKey, subject, faction: item.actor_faction_slug }
+  return {
+    player: item.actor_display_name ?? null,
+    verbKey,
+    subject,
+    faction: item.actor_faction_slug ?? null,
+  }
 }
 
 function TickerCard({ entry }: { entry: TickerEntry }) {

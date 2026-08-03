@@ -166,7 +166,7 @@ function buildMentionActions(payload: Record<string, any>): FeedRowAction[] {
 export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
   if (!FACTION_ROW_TYPES.has(item.type)) return null
   const p = item.payload ?? {}
-  const actor = item.actor_display_name
+  const actor = item.actor_display_name ?? null
   const slug = item.context_faction_slug
 
   switch (item.type) {

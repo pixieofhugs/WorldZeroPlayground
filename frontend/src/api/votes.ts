@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiGet, apiPost } from './client'
 
 export interface VoteOut {
   id: number
@@ -54,11 +54,16 @@ export interface VoterDetail {
 }
 
 export async function castVote(praxisId: number, value: number): Promise<VoteCastOut> {
-  const { data } = await api.post<VoteCastOut>(`/praxes/${praxisId}/vote`, { value })
+  const { data } = await apiPost('/praxes/{praxis_id}/vote', {
+    params: { path: { praxis_id: praxisId } },
+    body: { value },
+  })
   return data
 }
 
 export async function getVoters(praxisId: number): Promise<VoterDetail[]> {
-  const { data } = await api.get<VoterDetail[]>(`/praxes/${praxisId}/voters`)
+  const { data } = await apiGet('/praxes/{praxis_id}/voters', {
+    params: { path: { praxis_id: praxisId } },
+  })
   return data
 }

@@ -1,6 +1,16 @@
-import api from './axios'
+import { apiGet, apiPost, apiPut, apiDelete } from './client'
 
-/** Matches backend RelationshipListItem (enriched list response) */
+/**
+ * Matches backend RelationshipListItem (enriched list response).
+ *
+ * ponytail (#1400): `type` and `status` are narrower here than in the schema,
+ * deliberately, so the four reads below narrow with a cast. The backend types
+ * both as bare `str` (`schemas/relationship.py`) even though only these values
+ * are ever written — `display_status` beside them shows what the annotated
+ * version looks like. Widening these two to `string` would delete a guarantee
+ * the UI branches on in order to match an annotation gap; the upgrade path is a
+ * backend `StrEnum`, after which the casts go.
+ */
 export interface RelationshipListItem {
   id: number
   from_character_id: number
@@ -22,8 +32,8 @@ export interface RelationshipFilters {
 }
 
 export async function listRelationships(filters?: RelationshipFilters): Promise<RelationshipListItem[]> {
-  const { data } = await api.get<RelationshipListItem[]>('/relationships', { params: filters })
-  return data
+  const { data } = await apiGet('/relationships', { params: { query: filters } })
+  return data as RelationshipListItem[]
 }
 
 // The three mutations below answer the same enriched item the list emits
@@ -34,22 +44,28 @@ export async function listRelationships(filters?: RelationshipFilters): Promise<
 // `to_character_id`, and either party may block or unblock (ADR-0009).
 
 export async function createRelationship(to_character_id: number, type: 'friend' | 'foe'): Promise<RelationshipListItem> {
-  const { data } = await api.post<RelationshipListItem>('/relationships', { to_character_id, type })
-  return data
+  const { data } = await apiPost('/relationships', { body: { to_character_id, type } })
+  return data as RelationshipListItem
 }
 
 /** Block a relationship. Either party can block. */
 export async function blockRelationship(id: number): Promise<RelationshipListItem> {
-  const { data } = await api.put<RelationshipListItem>(`/relationships/${id}`)
-  return data
+  const { data } = await apiPut('/relationships/{relationship_id}', {
+    params: { path: { relationship_id: id } },
+  })
+  return data as RelationshipListItem
 }
 
 /** Reverse a block (ADR-0009) — restores the edge to active. Either party can unblock. */
 export async function unblockRelationship(id: number): Promise<RelationshipListItem> {
-  const { data } = await api.post<RelationshipListItem>(`/relationships/${id}/unblock`)
-  return data
+  const { data } = await apiPost('/relationships/{relationship_id}/unblock', {
+    params: { path: { relationship_id: id } },
+  })
+  return data as RelationshipListItem
 }
 
 export async function deleteRelationship(id: number): Promise<void> {
-  await api.delete(`/relationships/${id}`)
+  await apiDelete('/relationships/{relationship_id}', {
+    params: { path: { relationship_id: id } },
+  })
 }
