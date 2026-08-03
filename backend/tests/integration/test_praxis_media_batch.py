@@ -135,7 +135,11 @@ async def test_one_bad_file_fails_only_itself(
     failed = results[1]
     assert failed["media_item"] is None
     assert failed["status_code"] == 422
-    assert failed["error"]
+    # Exact prose, not just truthiness (#1401). `error` flattens an
+    # `HTTPException` whose `detail` is now a `{code, message}` object, and a
+    # truthiness check passes just as happily on a stringified dict — which is
+    # what the player would have read.
+    assert failed["error"] == "Unsupported media type."
 
     # The two survivors persisted; the reject wrote nothing.
     detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)

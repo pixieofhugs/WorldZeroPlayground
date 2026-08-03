@@ -7,6 +7,7 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
@@ -394,9 +395,10 @@ async def create_character(
         # Need level >= era.second_character_level_required on at least one
         # character to create another.
         if not await can_create_additional_character(account_id, session, era):
-            raise HTTPException(
-                status_code=403,
-                detail=(
+            raise_coded(
+                403,
+                ErrorCode.second_character_level_too_low,
+                (
                     f"Must reach level {era.second_character_level_required} "
                     "before creating additional characters."
                 ),

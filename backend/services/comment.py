@@ -12,6 +12,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.comment import MAX_COMMENT_BODY, Comment, CommentMention
@@ -156,9 +157,10 @@ async def create_comment(
     era: EraConfig = CURRENT_ERA,
 ) -> Comment:
     if not await can_comment(author, session, era):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Must be level {era.comment_level_required} or above to comment.",
+        raise_coded(
+            403,
+            ErrorCode.comment_level_too_low,
+            f"Must be level {era.comment_level_required} or above to comment.",
         )
     body_text = _clean_body(body_text)
     await _assert_commentable_target(praxis_id, task_id, session)
@@ -252,9 +254,10 @@ async def flag_comment(
     if flagged_by.id == comment.created_by_id:
         raise HTTPException(status_code=403, detail="Cannot flag your own comment.")
     if await _character_level(flagged_by.id, session) < era.flag_level_required:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Must be level {era.flag_level_required} or above to flag a comment.",
+        raise_coded(
+            403,
+            ErrorCode.flag_level_too_low,
+            f"Must be level {era.flag_level_required} or above to flag a comment.",
         )
     session.add(
         Flag(

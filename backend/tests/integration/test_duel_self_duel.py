@@ -29,6 +29,7 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
+from errors import ErrorCode
 from models.task import Task
 from services.duel import (
     SELF_DUEL_DETAIL,
@@ -132,7 +133,10 @@ async def test_challenging_an_alt_on_the_same_account_is_rejected(
         )
 
     assert exception_info.value.status_code == 400
-    assert exception_info.value.detail == SELF_DUEL_DETAIL
+    assert exception_info.value.detail == {
+        "code": ErrorCode.duel_self_challenge.value,
+        "message": SELF_DUEL_DETAIL,
+    }
 
     # No Duel row was created.
     result = await db_session.execute(
@@ -161,7 +165,10 @@ async def test_challenging_your_own_character_is_still_rejected(
         )
 
     assert exception_info.value.status_code == 400
-    assert exception_info.value.detail == SELF_DUEL_DETAIL
+    assert exception_info.value.detail == {
+        "code": ErrorCode.duel_self_challenge.value,
+        "message": SELF_DUEL_DETAIL,
+    }
 
 
 @pytest.mark.asyncio
@@ -240,7 +247,10 @@ async def test_accepting_a_challenge_from_your_own_character_is_rejected(
         await respond_to_duel_challenge(duel.id, alt.id, True, db_session)
 
     assert exception_info.value.status_code == 400
-    assert exception_info.value.detail == SELF_DUEL_DETAIL
+    assert exception_info.value.detail == {
+        "code": ErrorCode.duel_self_challenge.value,
+        "message": SELF_DUEL_DETAIL,
+    }
     assert duel.status == DuelStatus.pending
     assert duel.opponent_praxis_id is None
 
