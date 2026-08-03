@@ -42,6 +42,44 @@ function isCataloged(code: string): code is CatalogedCode {
   return code in errorsCatalog.codes
 }
 
+/** i18next interpolation placeholders, as written in the catalog values. */
+const PLACEHOLDER_PATTERN = /\{\{(\w+)\}\}/g
+
+/**
+ * The catalog value i18next will resolve for this code and context.
+ *
+ * Read so {@link hasEveryPlaceholder} can inspect the template *before*
+ * rendering it. Mirrors i18next's own context resolution: prefer the
+ * `<CODE>_<context>` sibling, fall back to the base key.
+ */
+function catalogTemplate(code: CatalogedCode, context: unknown): string {
+  if (typeof context === 'string' && context) {
+    const contextual = `${code}_${context}`
+    if (isCataloged(contextual)) return errorsCatalog.codes[contextual]
+  }
+  return errorsCatalog.codes[code]
+}
+
+/**
+ * Does `params` supply every value this catalog string interpolates?
+ *
+ * The guard that makes the catalog safe during a deploy skew. A backend that
+ * predates the `params` channel still sends `{code, message}`, and a catalog
+ * entry like "This task requires level {{level}}." would render as "This task
+ * requires level ." — strictly worse than the prose it replaced, and on the
+ * frontend-deploys-first path that has taken this site down before. When a
+ * value is missing the catalog simply does not apply and `message` wins.
+ */
+function hasEveryPlaceholder(
+  template: string,
+  params: Record<string, unknown> | undefined
+): boolean {
+  for (const [, name] of template.matchAll(PLACEHOLDER_PATTERN)) {
+    if (params?.[name] === undefined) return false
+  }
+  return true
+}
+
 type ErrorDetail = string | ValidationDetail[] | CodedDetail
 
 /** FastAPI's default 500 body — prose, but useless to a player. */
@@ -82,6 +120,9 @@ export const ErrorCode = {
 function catalogMessage(detail: CodedDetail): string | null {
   const { code, params } = detail
   if (typeof code !== 'string' || !isCataloged(code)) return null
+  if (!hasEveryPlaceholder(catalogTemplate(code, params?.context), params)) {
+    return null
+  }
 
   const rendered = i18n.t(`${ERRORS_NAMESPACE}:${CODE_KEY_PREFIX}.${code}`, {
     ...params,
