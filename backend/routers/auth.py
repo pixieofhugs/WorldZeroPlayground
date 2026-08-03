@@ -3,13 +3,14 @@ from typing import Optional
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi import Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
 from game_config import CURRENT_ERA
 from models.account import Account
-from schemas.auth import CurrentUser
+from schemas.auth import CurrentUser, DevLoginOut, LogoutOut
 from schemas.character import CharacterCreate
 from services.auth import create_jwt, create_or_get_account, get_current_account
 from services.character import create_character, resolve_active_character
@@ -32,18 +33,32 @@ _OAUTH.register(
 _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 
 
-@router.get("/google")
+# The two OAuth legs answer with a redirect, not JSON, so they carry
+# `response_class=RedirectResponse` and a 302 instead of a `response_model`
+# (#1400). A model here would be a lie the generated client believes: without
+# it FastAPI documents a 200 with an empty JSON schema, which is exactly the
+# untyped success shape the contract gate exists to remove. Declaring the
+# redirect is the honest version — there is no body to type.
+#
+# The decorator's `status_code` does not touch runtime behaviour: both handlers
+# return a Response object, which FastAPI passes through untouched.
+
+
+@router.get("/google", response_class=RedirectResponse, status_code=302)
 async def auth_google(request: Request):
     """Redirect the browser to Google's OAuth consent screen."""
     return await _OAUTH.google.authorize_redirect(request, settings.GOOGLE_REDIRECT_URI)
 
 
-@router.get("/google/callback")
+@router.get("/google/callback", response_class=RedirectResponse, status_code=302)
 async def auth_google_callback(
     request: Request,
     session: AsyncSession = Depends(get_db),
 ):
-    """Exchange the OAuth code for a token, create/get the Account, set JWT cookie."""
+    """Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
+
+    Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+    """
     token = await _OAUTH.google.authorize_access_token(request)
     user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
 
@@ -85,8 +100,8 @@ async def auth_me(
     return await build_current_user(account, session)
 
 
-@router.post("/logout")
-async def auth_logout(response: Response):
+@router.post("/logout", response_model=LogoutOut)
+async def auth_logout(response: Response) -> LogoutOut:
     """Clear the JWT cookie."""
     response.delete_cookie(
         "access_token",
@@ -95,10 +110,10 @@ async def auth_logout(response: Response):
         secure=settings.ENVIRONMENT == "production",
         domain=settings.COOKIE_DOMAIN,
     )
-    return {"message": "Logged out"}
+    return LogoutOut(message="Logged out")
 
 
-@router.post("/dev-login")
+@router.post("/dev-login", response_model=DevLoginOut)
 async def dev_login(
     response: Response,
     session: AsyncSession = Depends(get_db),
@@ -175,10 +190,10 @@ async def dev_login(
         secure=False,
         max_age=_COOKIE_MAX_AGE,
     )
-    return {
-        "message": "Dev login successful",
-        "account_id": account.id,
-        "character_id": character.id if character else None,
-        "character_name": character.display_name if character else None,
-        "faction_slug": character.faction_slug if character else None,
-    }
+    return DevLoginOut(
+        message="Dev login successful",
+        account_id=account.id,
+        character_id=character.id if character else None,
+        character_name=character.display_name if character else None,
+        faction_slug=character.faction_slug if character else None,
+    )

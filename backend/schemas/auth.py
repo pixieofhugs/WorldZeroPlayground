@@ -36,3 +36,33 @@ class CurrentUser(BaseModel):
     # is_admin — the jump is a faction perk, not a level gate.
     level_jump_reach: int = 0
     level_jump_available: bool = False
+
+
+class LogoutOut(BaseModel):
+    """Acknowledgement for ``POST /auth/logout``.
+
+    The work of logging out is the ``Set-Cookie`` header that clears the JWT,
+    not the body; this exists so the body is a declared shape in the schema
+    rather than an untyped object the generated client cannot check.
+    """
+
+    message: str
+
+
+class DevLoginOut(BaseModel):
+    """Result of the dev-only bot login (``POST /auth/dev-login``).
+
+    Exposes ``account_id``, which the public API never does — and this is not a
+    second exception beside ``/auth/me``. The endpoint 404s outside development
+    (``settings.ENVIRONMENT``), and the ids exist so e2e fixtures can invite and
+    credit by id without a second round trip. If this route ever becomes
+    reachable in production the leak is the route, not the field.
+    """
+
+    message: str
+    account_id: int
+    # None whenever the dev account carries no character yet — passing `name=`
+    # on the first call is what creates one.
+    character_id: Optional[int] = None
+    character_name: Optional[str] = None
+    faction_slug: Optional[str] = None

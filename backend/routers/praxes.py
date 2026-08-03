@@ -36,6 +36,7 @@ from schemas.praxis import (
     PraxisCardOut,
     PraxisCreate,
     PraxisInviteCreate,
+    PraxisInviteOut,
     PraxisOut,
     PraxisTypeChange,
     PraxisUpdate,
@@ -434,13 +435,21 @@ async def delete_media_route(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/{praxis_id}/invite", response_model=None)
+@router.post("/{praxis_id}/invite", response_model=PraxisInviteOut)
 async def invite_member_route(
     praxis_id: int,
     data: PraxisInviteCreate,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
-):
+) -> PraxisInviteOut:
+    """Invite a character onto this praxis; answer the invite row.
+
+    The ``response_model=None`` this replaced (#1400) was a suppression, not a
+    description: ``_build_invite_out`` has always returned a ``PraxisInviteOut``,
+    so the only thing the annotation achieved was keeping the shape out of the
+    schema. Not to be confused with the *respond* route below, which answers an
+    ack rather than an invite.
+    """
     invite = await invite_to_praxis(
         praxis_id=praxis_id,
         invitee_id=data.invitee_id,

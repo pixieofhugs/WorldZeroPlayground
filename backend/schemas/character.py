@@ -67,6 +67,19 @@ class ActiveCharacterIn(BaseModel):
     character_id: int
 
 
+class VotesReceivedOut(BaseModel):
+    """Votes received on the praxes a character **authored**.
+
+    Author-scoped, not membership-scoped (ADR-0053) — see the route docstring in
+    ``routers/characters.py`` for why the two must not be conflated. It echoes
+    ``character_id`` so a caller batching several of these can tell the answers
+    apart.
+    """
+
+    character_id: int
+    votes_received: int
+
+
 class CharacterUpdate(BaseModel):
     display_name: str | None = Field(None, max_length=50)
     bio: str | None = Field(None, max_length=500)

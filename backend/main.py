@@ -12,6 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
 from routers import comments, contact, me
+from schemas.system import HealthOut
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,6 @@ app.include_router(contact.router, prefix="/contact", tags=["contact"])
 app.include_router(activity_feed.router, prefix="/activity-feed", tags=["activity-feed"])
 
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+@app.get("/health", response_model=HealthOut)
+async def health() -> HealthOut:
+    return HealthOut(status="ok")
