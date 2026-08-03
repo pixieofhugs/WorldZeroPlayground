@@ -76,7 +76,7 @@ const COMMENT: CommentOut = {
     id: 42,
     username: 'vex',
     display_name: 'Vex Line Crane',
-    avatar_url: null,
+    avatar_url: '',
     faction_slug: 'snide',
   },
   mentions: [],

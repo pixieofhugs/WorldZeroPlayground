@@ -24,7 +24,7 @@ function ephComment(over: Partial<CommentOut>): CommentOut {
       id: 31,
       username: 'iris_vale',
       display_name: 'Dr. Iris Vale',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'ephemerists',
     },
     mentions: [],

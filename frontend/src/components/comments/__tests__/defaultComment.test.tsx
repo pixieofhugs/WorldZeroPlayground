@@ -31,7 +31,7 @@ const COMMENT: CommentOut = {
     id: 42,
     username: 'ada',
     display_name: 'Adabel',
-    avatar_url: null,
+    avatar_url: '',
     faction_slug: 'na',
   },
   mentions: [],

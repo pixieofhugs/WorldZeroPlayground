@@ -24,7 +24,7 @@ function sgComment(over: Partial<CommentOut>): CommentOut {
       id: 44,
       username: 'node_44',
       display_name: 'node_44',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'singularity',
     },
     mentions: [],

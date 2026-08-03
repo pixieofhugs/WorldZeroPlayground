@@ -24,7 +24,7 @@ function snideComment(over: Partial<CommentOut>): CommentOut {
       id: 22,
       username: 'rax_vandal',
       display_name: 'Rax Vandal',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'snide',
     },
     mentions: [],

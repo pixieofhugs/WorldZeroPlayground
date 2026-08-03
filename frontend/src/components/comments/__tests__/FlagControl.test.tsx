@@ -47,7 +47,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  author: { id: 42, username: 'ada', display_name: 'Ada', avatar_url: null, faction_slug: 'ua' },
+  author: { id: 42, username: 'ada', display_name: 'Ada', avatar_url: '', faction_slug: 'ua' },
   mentions: [],
 }
 

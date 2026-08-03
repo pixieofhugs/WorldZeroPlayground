@@ -25,7 +25,7 @@ function uaComment(over: Partial<CommentOut>): CommentOut {
       id: 7,
       username: 'ada_reed',
       display_name: 'Ada Reed',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'ua',
     },
     mentions: [],
