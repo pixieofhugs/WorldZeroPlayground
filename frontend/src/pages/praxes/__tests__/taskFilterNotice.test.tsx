@@ -8,7 +8,7 @@
  * actual symptom the repo can assert: the page landed on with a task filter used
  * to be indistinguishable from the bare feed.
  *
- * `listPraxes` is mocked so no axios call is attempted (same posture as
+ * `listPraxes` is mocked so no request is attempted (same posture as
  * `pages/__tests__/praxesFeedDispatch.test.tsx`); the feed sits in its loading
  * state, which is enough — the notice is page chrome, above the results.
  */

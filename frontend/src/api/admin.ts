@@ -68,10 +68,11 @@ export interface AdminCharacterSummary {
  *  legacy free text / `other` notes surface via `reason_detail`. */
 export interface FlagOut {
   reason: string
-  /** Optional, not merely nullable: `Flag.reason_detail` is `Optional[str] = None`
-   *  in Pydantic, and a defaulted field is not *required* in the OpenAPI schema
-   *  (#1400). */
-  reason_detail?: string | null
+  /** Nullable, not optional. `Flag.reason_detail` is `Optional[str] = None` in
+   *  Pydantic, so the OpenAPI schema does not mark it *required* — but the wire
+   *  always carries it, and both readers of this type reach it through
+   *  `wireSent`, which is where that difference is written down (#1400). */
+  reason_detail: string | null
   flagged_by_id: number
   flagged_by_name: string
   created_at: string

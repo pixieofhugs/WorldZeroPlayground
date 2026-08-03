@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from './client'
+import { wireSent } from './wireSent'
 import { noteEraStamp } from '../utils/cacheEpoch'
 
 /** A badge the character currently holds (ADR-0033). Evaluated on read by the
@@ -35,13 +36,14 @@ export interface CharacterOut {
 
 export interface CurrentUser {
   account_id: number
-  /** Absent, not just null, when the account carries no life. `schemas/auth.py`
+  /** Null, not absent, when the account carries no life. `schemas/auth.py`
    *  declares `character: Optional[CharacterOut] = None`, and a Pydantic field
    *  with a default is *not required* in the OpenAPI schema — so the generated
-   *  type is `character?: CharacterOut | null` and this one used to disagree
-   *  (#1400). In practice the key is always serialized; the optionality is the
-   *  contract, and every reader already treats it as falsy-or-a-life. */
-  character?: CharacterOut | null
+   *  type says `character?: CharacterOut | null`. The wire disagrees with the
+   *  schema, not with this line: no route sets `response_model_exclude_unset`
+   *  or `exclude_none`, so the key is always serialized. `wireSent` in `getMe`
+   *  is where that is written down (#1400). */
+  character: CharacterOut | null
   is_admin: boolean
   // Server-computed capability flags. Admin short-circuits the propose/see
   // flags to true. Drive UI off these instead of comparing character.level.
@@ -73,7 +75,7 @@ export async function getMe(): Promise<CurrentUser> {
   // and most frequent era stamp the client gets (ADR-0072). A disagreement with
   // the era already held drops the whole cache.
   noteEraStamp(data.era_name)
-  return data
+  return wireSent(data)
 }
 
 export async function logout(): Promise<void> {
