@@ -118,9 +118,13 @@ export default function FeedBankFullModal({
         }}
         onClick={(event) => event.stopPropagation()}
       >
+        {/* The dialog's accessible name, and the one site in the feed that
+            unambiguously NAMES A REGION — so it takes `.label-heading` while
+            the failure line below, which is genuinely read, takes the caption
+            tier (#1307). */}
         <p
           id={titleId}
-          className="eyebrow"
+          className="label-heading"
           style={{ marginBottom: 'var(--space-sm)' }}
         >
           {title}
@@ -167,7 +171,7 @@ export default function FeedBankFullModal({
         </div>
         {error && (
           <p
-            className="eyebrow"
+            className="label-caption"
             style={{
               color: 'var(--color-danger)',
               marginTop: 'var(--space-md)',

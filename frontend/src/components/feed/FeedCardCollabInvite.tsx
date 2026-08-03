@@ -204,10 +204,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
           >
             {task_title}
           </span>
-          <span
-            className="eyebrow"
-            style={{ color: "var(--color-text-tertiary)" }}
-          >
+          <span className="label-caption">
             {i18n.t("feed:collabInvite.taskMeta", {
               points: task_point_value,
               level: task_level_required,
@@ -265,7 +262,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               {i18n.t("feed:collabInvite.decline")}
             </button>
             {error && (
-              <span className="eyebrow" style={{ color: "var(--color-danger)" }}>
+              <span className="label-caption" style={{ color: "var(--color-danger)" }}>
                 {error}
               </span>
             )}
@@ -276,7 +273,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
               to={`/praxis/${praxis_id}`}
-              className="eyebrow"
+              className="label-caption"
               style={{ color: "var(--badge-collab)", textDecoration: "none" }}
             >
               {i18n.t("feed:collabInvite.accepted")}
@@ -285,10 +282,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
         )}
         {status === "declined" && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
-            <span
-              className="eyebrow"
-              style={{ color: "var(--color-text-tertiary)" }}
-            >
+            <span className="label-caption">
               {i18n.t("feed:collabInvite.declined")}
             </span>
           </div>
