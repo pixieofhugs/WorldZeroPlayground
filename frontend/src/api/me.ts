@@ -1,7 +1,8 @@
 import api from './axios'
 import type { CharacterOut, CurrentUser } from './auth'
 
-/** The account's own roster — active + paused lives, carried life first (#270). */
+/** The account's own roster — every life but the banned ones, carried life
+ *  first (#270). It used to read "active + paused"; `paused` is gone (#1550). */
 export async function getMyCharacters(): Promise<CharacterOut[]> {
   const { data } = await api.get<CharacterOut[]>('/me/characters')
   return data
