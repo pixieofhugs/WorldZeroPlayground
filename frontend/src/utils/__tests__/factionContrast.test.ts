@@ -240,8 +240,11 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
  *                                                only honest scalar reading — the
  *                                                same call `ua leaf darkest stop` makes)
  *   coven        `--faction-coven-ward-card`     the ward panel, not the slip
- *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate (a WHOLE shade off
- *                                                `-card-bg` in dark: #171a26 vs #211a10)
+ *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate, which is a
+ *                                                different SHEET from the cornice
+ *                                                band `-card-bg` names — #171a26
+ *                                                against #0a0c15, in both cascades
+ *                                                since #1627
  *   wow          `--faction-wow-chronicle-bg`    same value as `-card-bg` today, a
  *                                                different token tomorrow (the reason
  *                                                the snide composer block gives)
@@ -795,7 +798,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
   { what: "snide seal stakes scrap, credit ink", surface: "--faction-snide-ink", text: "--faction-snide-card-credit" },
   // #1208 swept this dialog off the codex; the band is the plate's panel cell.
-  { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--color-success" },
+  // The INK moved too, in #1627: the panel cell is dark in both cascades now, so
+  // the light-theme `--color-success` lands on a night ground at 1.76:1 and the
+  // skin routes its own credit — S.N.I.D.E.'s and Singularity's call, made here
+  // for the third time and for the identical reason.
+  { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-card-credit" },
   { what: "ua seal stakes well, credit ink", surface: "--faction-ua-panel", text: "--color-success" },
 
   // ── THE STAKES PANEL'S MUTED INK (#1173) ─────────────────────────────────
@@ -1392,8 +1399,12 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   "light | everymen card accent": { ratio: 4.49, issue: 651 },
   "light | coven card accent": { ratio: 2.81, issue: 651 },
   "dark | everymen card accent": { ratio: 4.16, issue: 651 },
-  "dark | ephemerists card accent": { ratio: 3.72, issue: 651 },
-  // The same rubric vermilion, reached through its archetype-private primitive.
+  // (`dark | ephemerists card accent` stood here at 3.72:1 from the sweep until
+  // #1627 moved the card contract off the codex's rubric vermilion onto the
+  // plate's brass highlight — 11.98:1, in both cascades. The entry below is the
+  // SAME vermilion on the same vellum, reached through the archetype-private
+  // primitive; it survives because the `--eph-*` family is still declared, and
+  // it should go with the family's deletion rather than be fixed.)
   "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
   // (UA mono metadata labels on the legacy gilt sheet measured 3.06:1 in both
   // themes and were listed here until #853 deleted the legacy family, exactly

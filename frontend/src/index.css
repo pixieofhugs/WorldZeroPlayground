@@ -238,7 +238,14 @@
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
-  --faction-ephemerists-card-bg: var(--eph-vellum); /* Ephemerists: aged manuscript stock */
+  /* The cornice masthead (#1627). Ephemerists is a DARK-IN-LIGHT card faction
+     now, beside S.N.I.D.E. and Singularity: the aged-manuscript vellum was the
+     illuminated CODEX's stock, and #1208 swept the last surface off that
+     metaphor — this contract was the only thing still holding it up. The four
+     card names take the four inks the cornice BAND admits (WORLD_ZERO_STYLE §3:
+     band-ink, gold, band-quiet, brass-light), which is the whole of the plate's
+     ink budget on that ground. */
+  --faction-ephemerists-card-bg: var(--faction-ephemerists-plate-band);
   --faction-singularity-card-bg: #050f08; /* terminal black */
 
   /* ── Faction card text (light mode) ── */
@@ -246,7 +253,7 @@
   --faction-wow-card-text: #2b2412; /* chronicle body ink — 14.02:1 */
   --faction-coven-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
-  --faction-ephemerists-card-text: var(--eph-vellum-text);
+  --faction-ephemerists-card-text: var(--faction-ephemerists-plate-band-ink); /* 14.00:1 */
   --faction-singularity-card-text: #4ade80;
 
   /* ── Faction card accents (light mode) ── */
@@ -267,7 +274,11 @@
   --faction-wow-card-accent: #7a4a9e; /* chronicle plum — 5.79:1 */
   --faction-coven-card-accent: #ec5f99;
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
-  --faction-ephemerists-card-accent: var(--eph-rubric);
+  /* The brass HIGHLIGHT, not `-plate-brass`: the darker brass is a rule and a
+     frame colour on every plate ground and is never an ink. The accent is
+     metadata, so it owes 4.5:1 and pays 11.98:1 — retiring the rubric
+     vermilion's 3.72:1, which #651 allowlisted and no repaint had reached. */
+  --faction-ephemerists-card-accent: var(--faction-ephemerists-plate-brass-light);
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
@@ -281,7 +292,7 @@
   --faction-wow-card-muted: #7a6b45;
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
-  --faction-ephemerists-card-muted: var(--eph-muted);
+  --faction-ephemerists-card-muted: var(--faction-ephemerists-plate-band-quiet); /* 8.97:1 */
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── Faction headline fonts (per-faction display) ──
@@ -1449,71 +1460,81 @@
 
   /* ══ Ephemerists — THE VALLEY PLATE (task card v2, #1023) ══
      Deco × Egypt: the deco-space card carried into a field journal out of the
-     Valley. A papyrus plate under a cavetto-cornice masthead holding a winged
-     sun disc between incised glyph registers; the points ride a stepped octagon
+     Valley. A plate under a cavetto-cornice masthead holding a winged sun disc
+     between incised glyph registers; the points ride a stepped octagon
      medallion. This is a full metaphor swap away from THE DISCORDANT MAP, and
      since #1208 it is the faction's ONLY identity: no component paints
      `--eph-*` any more, and `frontend/src/__tests__/ephemeristsSpeakOneIdentity`
      is the guard that keeps it that way. The codex family stays DECLARED
-     because the `--faction-ephemerists-card-*` contract above still aliases six
-     of its members, and those are read through `factionCssVar` by surfaces that
-     are not Ephemerists skins at all.
+     because the `--faction-ephemerists-card-font` / `-body-font` pair above
+     still aliases two of its members — Cinzel and EB Garamond, both FACES. Its
+     colours have no reader left anywhere (#1627); deleting them is a follow-up
+     and takes the six now-self-referential `ephemerists vellum …` rows in
+     `factionContrast.test.ts` with it.
 
-     ONE VALUE IS WALKED DOWN. `-brass` is a FRAME AND RULE colour, never an ink:
-     the design's #9A7A2E measures 2.97:1 on the plate, which is fine for a
-     hairline and wrong for the "Level" caption the design sets in it. That
-     caption takes `-caption` instead (4.75:1, same hue). Same shape as WOW's
-     chronicle gold, which is likewise never painted as text. */
-  --faction-ephemerists-plate-bg: #eadcb6; /* papyrus */
-  --faction-ephemerists-plate-ink: #2a2418;
-  --faction-ephemerists-plate-muted: #6b5f45; /* brief + in-progress */
-  --faction-ephemerists-plate-caption: #765a19; /* small-caps labels */
-  --faction-ephemerists-plate-brass: #9a7a2e; /* rules, borders — never an ink */
-  --faction-ephemerists-plate-brass-light: #c39b3d;
-  --faction-ephemerists-plate-gold: #e3c56a; /* glyphs + the winged disc */
-  --faction-ephemerists-plate-band: #1e2233; /* the cornice masthead */
-  --faction-ephemerists-plate-band-ink: #efe4c4;
-  /* Quiet ink ON THE NIGHT BAND (feed chassis v2, #1199) — the masthead's
+     THE PLATE IS THEME-INVARIANT (#1627 + #1636). It was papyrus by day and
+     night-blue after dark until the card contract above moved onto it; that
+     move made Ephemerists dark-in-light, and `praxisCard/shared.tsx::sheetInk`
+     reads ONE set of card ink names for a card that grounds on `-plate-bg`. Two
+     grounds of opposite polarity cannot share four inks: clearing 4.5:1 on the
+     band wants relative luminance >= 0.2497, clearing it on the papyrus wants
+     <= 0.1212, and no value is in both intervals. So the whole register takes
+     the design's own NIGHT half in both cascades — one palette drawn together,
+     rather than a light band spliced onto a dark sheet — exactly as Singularity's
+     terminal and S.N.I.D.E.'s photocopier black are one palette in both themes
+     (§6). Everything below therefore has ONE value, and `[data-theme="dark"]`
+     declares no plate token at all.
+
+     `-brass` STAYS A FRAME AND RULE COLOUR, never an ink, on both sides of the
+     old cascade: it clears AA on the night plate (7.22:1) where it missed on the
+     papyrus (2.97:1), but one token keeps one role — the "Level" caption the
+     design sets in it takes `-caption` (7.22:1). Same shape as WOW's chronicle
+     gold, which is likewise never painted as text. */
+  --faction-ephemerists-plate-bg: #171a26;
+  --faction-ephemerists-plate-ink: #f0e6c8;
+  --faction-ephemerists-plate-muted: #a2977a; /* brief + in-progress */
+  --faction-ephemerists-plate-caption: #c9a24b; /* small-caps labels */
+  --faction-ephemerists-plate-brass: #c9a24b; /* rules, borders — never an ink */
+  --faction-ephemerists-plate-brass-light: #e6c877;
+  --faction-ephemerists-plate-gold: #f2d98a; /* glyphs + the winged disc */
+  --faction-ephemerists-plate-band: #0a0c15; /* the cornice masthead */
+  --faction-ephemerists-plate-band-ink: #f2d98a;
+  /* Quiet ink ON THE CORNICE BAND (feed chassis v2, #1199) — the masthead's
      second tier, for a timestamp beside the kicker. A measured token rather
      than `band-ink` at an opacity: a translucent ink takes its tint from the
-     band under it, which is exactly the failure #669/#677 chased down, and the
-     dark cascade repoints `band-ink` to the GOLD, so an opacity there would
-     have collapsed both tiers onto one colour. 8.6:1 light, 8.9:1 dark. */
-  --faction-ephemerists-plate-band-quiet: #c9bfa4;
-  --faction-ephemerists-plate-disc: #f6eed6; /* the medallion's field */
-  --faction-ephemerists-plate-ochre: #a6432b; /* the fifth tally stroke */
-  --faction-ephemerists-plate-cta-bg: #1e2233;
-  --faction-ephemerists-plate-cta-ink: #e9d79b;
-  /* The gold wash behind the cartouche and the ratio chip. A gradient token
-     rather than a hex + an alpha the component picks: the dark plate takes no
-     wash at all, and "no wash" is not an opacity a TSX ternary should decide. */
-  --faction-ephemerists-plate-wash: linear-gradient(180deg, rgba(227, 197, 106, 0.24), transparent);
-  --faction-ephemerists-plate-shadow: 0 18px 44px -26px rgba(42, 32, 16, 0.45);
+     band under it, which is exactly the failure #669/#677 chased down. Muted
+     gold rather than a cool grey, because the band is nearly black and its
+     primary ink is already the gold, so the second tier steps DOWN one hue
+     instead of introducing another. 8.97:1. */
+  --faction-ephemerists-plate-band-quiet: #c2ae7e;
+  --faction-ephemerists-plate-disc: #12151f; /* the medallion's field */
+  --faction-ephemerists-plate-ochre: #d9744c; /* the fifth tally stroke */
+  /* The CTA bar swaps ends against the light plate it replaced: a BRASS bar
+     carrying dark ink, where the papyrus had a dark bar and gold ink. */
+  --faction-ephemerists-plate-cta-bg: #c9a24b;
+  --faction-ephemerists-plate-cta-ink: #12151f;
+  /* The gold wash behind the cartouche and the ratio chip is GONE, not dimmed —
+     on a night plate it reads as a smudge. It stays a declared token so no
+     component has to decide the absence with a ternary. */
+  --faction-ephemerists-plate-wash: none;
+  --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
 
   /* ── THE VALLEY PLATE, page-sized (task detail v2, #1032) ──
      The task card is one plate on the app's own page ground; task detail IS the
      plate, so it needs a ground of its own, a second sheet for the panel cells,
      and two hairline weights the card never had to name.
 
-     TWO VALUES ARE WALKED DOWN, for the same reason `-brass` became `-caption`
-     in the block above — the design's inks were measured against the plate, and
-     detail sets quiet type on the darker PAGE as well:
-       · design `faint` #9a8c6c → 2.43:1 on the plate. Unusable as an ink at any
-         size; there is no `-faint` token. Quiet type takes `-quiet` below.
-       · design `muted` #6b5f45 (`-plate-muted`) clears 4.60:1 on the plate but
-         only 4.31:1 on the page. `-quiet` is that same brown taken down until it
-         clears on ALL THREE grounds (page 5.25, plate 5.60, inner 6.20), so a
-         skin never has to know which sheet a label landed on.
-       · design `nile` #2e6e6a measures 4.34:1 on the plate / 4.24:1 on the page —
-         a near miss on the one hue that carries links and the "level met" yes.
-         Walked to #276460: page 4.70, plate 5.01, inner 5.55.
-     Dark needs no walk-down: the same roles clear 5.5–7.5 on the night plate. */
-  --faction-ephemerists-plate-page: #e4d5b0; /* the page ground under the plate */
-  --faction-ephemerists-plate-inner: #f2e7cb; /* the action panel's two cells */
-  --faction-ephemerists-plate-quiet: #5f5238; /* quiet ink — AA on all 3 grounds */
-  --faction-ephemerists-plate-nile: #276460; /* links, affirmations, the eye */
-  --faction-ephemerists-plate-rule: rgba(42, 36, 24, 0.1); /* journal ruling */
-  --faction-ephemerists-plate-line: rgba(42, 36, 24, 0.24); /* hairline borders */
+     The papyrus half of this block walked THREE inks down, because a minimal
+     warm palette put quiet type on a page ground darker than the plate and two
+     of the design's values missed by a tenth. The night half needs no walk-down
+     — the same roles clear 5.5–7.5 here — which is one more reason the register
+     collapsed onto it rather than onto its twin. */
+  --faction-ephemerists-plate-page: #101320; /* the page ground under the plate */
+  --faction-ephemerists-plate-inner: #1d2130; /* the action panel's two cells */
+  --faction-ephemerists-plate-quiet: #a2977a; /* quiet ink — AA on all 3 grounds */
+  --faction-ephemerists-plate-nile: #5fb3a6; /* links, affirmations, the eye */
+  --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12); /* journal ruling */
+  --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28); /* hairline borders */
 
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
@@ -2236,40 +2257,12 @@
   --eph-frame: rgba(58, 160, 164, 0.35);
   --eph-stamp-bg: #181208;
 
-  /* ══ Ephemerists — the Valley plate (dark, #1023) ══
-     Read off the design's own dark half. Two inversions worth naming, because
-     neither is what "darken the light values" would produce: the CTA bar swaps
-     ends (a brass BAR carrying dark ink, where light has dark bar / gold ink),
-     and the cartouche's gold wash disappears entirely rather than dimming — on
-     a night plate the wash reads as a smudge. The brass lifts far enough that
-     it clears AA on the plate here (7.22:1), but it stays a rule colour on both
-     sides: one token, one role. */
-  --faction-ephemerists-plate-bg: #171a26;
-  --faction-ephemerists-plate-ink: #f0e6c8;
-  --faction-ephemerists-plate-muted: #a2977a;
-  --faction-ephemerists-plate-caption: #c9a24b;
-  --faction-ephemerists-plate-brass: #c9a24b;
-  --faction-ephemerists-plate-brass-light: #e6c877;
-  --faction-ephemerists-plate-gold: #f2d98a;
-  --faction-ephemerists-plate-band: #0a0c15;
-  --faction-ephemerists-plate-band-ink: #f2d98a;
-  /* Muted gold, not the parchment grey of the light band: the dark band is
-     nearly black and its primary ink is already the gold, so the second tier
-     steps DOWN the same hue instead of introducing a cool one. */
-  --faction-ephemerists-plate-band-quiet: #c2ae7e;
-  --faction-ephemerists-plate-disc: #12151f;
-  --faction-ephemerists-plate-ochre: #d9744c;
-  --faction-ephemerists-plate-cta-bg: #c9a24b;
-  --faction-ephemerists-plate-cta-ink: #12151f;
-  --faction-ephemerists-plate-wash: none;
-  --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
-  /* Page-sized plate (#1032) — the night half of the block above. */
-  --faction-ephemerists-plate-page: #101320;
-  --faction-ephemerists-plate-inner: #1d2130;
-  --faction-ephemerists-plate-quiet: #a2977a;
-  --faction-ephemerists-plate-nile: #5fb3a6;
-  --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12);
-  --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28);
+  /* ══ Ephemerists — the Valley plate declares NOTHING here (#1627) ══
+     The whole `--faction-ephemerists-plate-*` register used to have a night
+     half in this block, read off the design's own dark drawing. It is the only
+     half now: the register is theme-invariant and lives entirely in `:root`,
+     for the polarity reason set out beside it there. This note stays so the
+     absence reads as a decision rather than as an omission. */
 
   /* ── Warriors of Whimsy collage scrap layers (dark) ── */
   --faction-coven-scrap-deep: #091209;
@@ -2818,11 +2811,12 @@
    `--color-warning` / `--color-success`, which stay exactly as they are for
    every surface that reads them as a fill, a rule or an ink on app chrome.
 
-   Polarity, not theme, is what these flip on. Six sheets are light by day and
-   dark by night, so their inks flip with the cascade as usual; S.N.I.D.E. and
-   Singularity are dark in BOTH themes (§6), so their light-theme values are
-   the bright pair. That is the whole reason a global token could not do this
-   job: one light-theme value cannot clear both #f7e7d2 and #14110b.
+   Polarity, not theme, is what these flip on. Five sheets are light by day and
+   dark by night, so their inks flip with the cascade as usual; S.N.I.D.E.,
+   Singularity and — since #1627 — Ephemerists are dark in BOTH themes (§6), so
+   their light-theme values are the bright pair. That is the whole reason a
+   global token could not do this job: one light-theme value cannot clear both
+   #f7e7d2 and #14110b.
 
    Measured against `--faction-{key}-card-bg` in both themes by
    `utils/__tests__/factionContrast.test.ts` (ROSTER_PAIRS), which also
@@ -2832,17 +2826,20 @@
    compared at a glance; the cascade merges `:root` either way. */
 :root {
   /* Attention / not-yet-done. Amber walked down off #b45309, which misses AA
-     on every warm faction paper. Worst light-sheet reading is Ephemerists at
-     5.06:1 under the veil. */
+     on every warm faction paper. Worst light-sheet reading is UA at 5.20:1
+     under the veil. */
   --faction-ua-card-notice: #92400e;
   --faction-everymen-card-notice: #92400e;
   --faction-coven-card-notice: #92400e;
   --faction-wow-card-notice: #92400e;
-  --faction-ephemerists-card-notice: #92400e;
   --faction-default-card-notice: #92400e;
-  /* ...and the two always-dark sheets take the bright amber in LIGHT theme. */
+  /* ...and the THREE always-dark sheets take the bright amber in LIGHT theme.
+     Ephemerists joined them in #1627: its card sheet is the cornice band and
+     its praxis sheet is the Valley plate, and neither is papyrus in either
+     cascade any more. */
   --faction-snide-card-notice: #fbbf24;
   --faction-singularity-card-notice: #fbbf24;
+  --faction-ephemerists-card-notice: #fbbf24;
 
   /* ── The DESTRUCTIVE half of the attention role (#1449) ──────────────────
      `-card-notice` above was the card family's ENTIRE attention role, so the
@@ -2881,10 +2878,10 @@
   --faction-everymen-card-alarm: #991b1b;
   --faction-coven-card-alarm: #991b1b;
   --faction-wow-card-alarm: #991b1b;
-  --faction-ephemerists-card-alarm: #991b1b;
   --faction-default-card-alarm: #991b1b;
   --faction-snide-card-alarm: #fca5a5;
   --faction-singularity-card-alarm: #fca5a5;
+  --faction-ephemerists-card-alarm: #fca5a5;
 
   /* Points credited. The global success green, kept as-is where the sheet is
      light, and flipped on the two dark sheets for the same reason. */
@@ -2892,10 +2889,10 @@
   --faction-everymen-card-credit: #14532d;
   --faction-coven-card-credit: #14532d;
   --faction-wow-card-credit: #14532d;
-  --faction-ephemerists-card-credit: #14532d;
   --faction-default-card-credit: #14532d;
   --faction-snide-card-credit: #4ade80;
   --faction-singularity-card-credit: #4ade80;
+  --faction-ephemerists-card-credit: #4ade80;
 }
 
 /* Every card sheet is dark here, so all three inks take their bright value

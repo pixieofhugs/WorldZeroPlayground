@@ -81,6 +81,17 @@ import {
 
 const HAIRLINE_FAINT = `1px solid ${LINE}`
 const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`
+/**
+ * The sheet-measured "sealed / positive" ink — the call S.N.I.D.E. and
+ * Singularity already make, and now for the same reason. `--color-success` is
+ * the shared slots' default and was right while this dialog's panel cell was
+ * papyrus (7.41:1); #1627 took the Valley plate dark in BOTH cascades, so the
+ * light-theme green lands on a night cell it was never chosen for and reads
+ * **1.76:1**. The faction's own credit ink is the bright green either side of
+ * the cascade, at 9.18:1. Measured by `ephemerists seal ledger band, credit
+ * ink` in `factionContrast.test.ts`, which is repointed with it.
+ */
+const CREDIT = 'var(--faction-ephemerists-card-credit)'
 
 /**
  * The rubric mark — an incised sigil used as an icon. Not text. Local since
@@ -147,7 +158,7 @@ export default function EphemeristsDuelSealConfirm({
   // Opponent tokens, the same rule as the Default dialog and the rail: the
   // foreign duelist looks foreign even on the Ephemerists' own vellum.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: QUIET, bodyFont: READING }
+  const theme: DuelSlotTheme = { accent, muted: QUIET, bodyFont: READING, credit: CREDIT }
 
   return (
     <DuelSealSheet
