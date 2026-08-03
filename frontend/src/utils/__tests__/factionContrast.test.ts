@@ -593,6 +593,24 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
+  // The PROFILE HEADER's eyebrow and handle line (#1636). `EphemeristsProfileBody`
+  // hands `profileSkin` a kit whose `muted` is `-plate-quiet` — the ink measured
+  // for the plate, the page and the panel cells — and a `headerStyle` whose
+  // ground is the cornice BAND. `-plate-band-quiet` is the ink that band owns,
+  // and this row is the one that would have said so: the crossing measured
+  // 2.07:1 in light for as long as it has shipped, with every other row in this
+  // file green, because the manifest measured each ink on the grounds its
+  // DECLARATION names and no row named the pair a kit assembles.
+  { what: "ephemerists profile header, quiet ink on the band", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-quiet" },
+  // THE LOGGED-OUT VOTE GATE (#1627). `VoteShell`'s gate voice paints
+  // `--faction-ephemerists-card-accent`, and `EphemeristsVote` early-returns the
+  // gate BEFORE it draws its own night vote plate — so the ink lands on whatever
+  // the mounting surface painted, which for both the praxis card and the praxis
+  // detail's vote section is `-plate-bg`. A card ink on the plate: the same
+  // (ink, ground) crossing the row above records, one surface over, and likewise
+  // uncovered — it measured 3.75:1 in dark while `ephemerists card accent` was
+  // green against `-card-bg`, the sheet this gate never sits on.
+  { what: "ephemerists vote login gate, card accent on the plate", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-card-accent" },
 
   // …and the three surfaces task detail (#1032) added, where the plate stops
   // being one card on the app's ground and becomes the page. `-quiet` exists
@@ -1754,4 +1772,96 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
       "`.eyebrow-sentence` was a caption wearing a heading's clothes (#850). The two-tier split is the rethink it should have had; keeping it is keeping a second thing to sync.",
     ).toBe(false);
   });
+});
+
+/**
+ * #1636 — A PROSE LINK'S INK IS A SEAM TOO.
+ *
+ * `.markdown-preview` is the only rule in the app that colours a link, and it
+ * carried ONE ink for every ground it is ever mounted on: `--color-text-
+ * secondary`, a warm brown in light, chosen against the app's near-white page.
+ * The praxis body is faction-skinned on all eight sheets, so that brown lands on
+ * S.N.I.D.E.'s photocopier black (3.06:1), Singularity's terminal (3.17:1) and —
+ * once the Valley plate is dark in both cascades — the Ephemerists' page ground,
+ * where it was ALREADY the tightest reading in the family at 4.23:1.
+ *
+ * This is #1307's shape one property over, and it takes #1307's answer: the ink
+ * becomes a seam a faction frame repoints once on its own root, defaulted at
+ * `:root` to the neutral so it renders exactly what it renders today everywhere
+ * else. NOTHING IS MINTED for the Ephemerists half — `-plate-nile` is declared
+ * "links, affirmations" and is already measured on all three of the plate's
+ * grounds by the rows above, which is why this block asserts the WIRING and adds
+ * no `Pair`. A second name for a measured value is a name pretending to be one.
+ *
+ * And the wiring is the only assertable half. Every ratio in this file stays
+ * green through a `.markdown-preview a` that hardcodes the neutral, because the
+ * pairing it creates is "a global ink on a faction ground" — the #694 shape a
+ * token-value manifest is structurally unable to name.
+ */
+describe("a prose link's ink is a seam (#1636)", () => {
+  it(".markdown-preview links paint the seam, not a hardcoded neutral", () => {
+    expect(
+      ruleBody(".markdown-preview a"),
+      "`.markdown-preview a` must read `var(--link-ink)`, or a faction whose sheet the neutral fails has no way to fix its own ground.",
+    ).toContain("color: var(--link-ink)");
+    expect(
+      ruleBody(".markdown-preview a:hover"),
+      "the hover ink needs the same seam: `--color-text-primary` is near-black in light, which is 1.3:1 on the Ephemerists plate.",
+    ).toContain("color: var(--link-ink-hover)");
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`--link-ink and --link-ink-hover unset are the measured neutrals (${theme})`, () => {
+      for (const [seam, neutral] of [
+        ["--link-ink", "--color-text-secondary"],
+        ["--link-ink-hover", "--color-text-primary"],
+      ]) {
+        const resolved = resolveColor(seam, theme);
+        expect(resolved.color, `${seam} (${theme}) resolved to "${resolved.raw}"`).not.toBeNull();
+        expect(
+          resolved.raw,
+          `a link outside a faction frame must render what it renders today — that is what keeps this a seam rather than a repaint.`,
+        ).toBe(resolveColor(neutral, theme).raw);
+      }
+    });
+  }
+
+  it("the Ephemerists plate repoints the seam onto its own two inks", () => {
+    const body = ruleBody(".eph-plate-sheet");
+    expect(
+      body,
+      "`.eph-plate-sheet` is the column both Ephemerists detail pages wear; it is the one place the plate's link ink has to be set.",
+    ).toContain("--link-ink: var(--faction-ephemerists-plate-nile)");
+    expect(body, "hover goes to the plate's body ink, the same relation the neutral pair has.").toContain(
+      "--link-ink-hover: var(--faction-ephemerists-plate-ink)",
+    );
+  });
+});
+
+/**
+ * #1636 — A TRANSITIONED `background` SHORTHAND CANNOT CARRY A THEMED TOKEN.
+ *
+ * The shorthand resets `background-image`, `-position`, `-size` and `-repeat`
+ * along with the colour, and naming it in a `transition` names a list of
+ * longhands only one of which is interpolable. A ground that has to re-resolve
+ * through the `[data-theme]` cascade wants the colour in `background-color`,
+ * where it is one declaration that one transition can carry — the shape
+ * `.wow-detail-field` and `.ua-praxis-leaf` already use.
+ *
+ * Asserted on the declaration rather than on a render for the reason #1413
+ * gives: a ground that is not a ground leaves every ratio in this file green.
+ */
+describe("a themed ground is a longhand (#1636)", () => {
+  for (const selector of [".eph-plate-sheet", ".na-backdrop", ".coven-candle-backdrop", ".coven-backdrop"]) {
+    it(`${selector} names its stock in background-color`, () => {
+      const body = ruleBody(selector);
+      expect(body, `${selector} must declare its themed ground as \`background-color\`.`).toMatch(
+        /background-color:\s*var\(--/,
+      );
+      expect(
+        body.replace(/background-color:[^;]*;/g, "").replace(/background-image:[^;]*;/g, ""),
+        `${selector} must not also carry a \`background\` shorthand — the shorthand wins by order and takes the longhand with it.`,
+      ).not.toMatch(/(^|[\s;{])background:/);
+    });
+  }
 });
