@@ -17,7 +17,8 @@ import { formatTimestamp } from "../../utils/dates";
  *  account is ever `banned` and no life is ever `suspended`. Left as one list
  *  because it is a label lookup rather than a set of offerable values, and the
  *  fallback renders anything unmapped verbatim. Splitting it in two is a
- *  separate decision (#1551). `paused` is gone from both enums (#1550). */
+ *  separate decision, tracked in #1610 — #1551 is the `paused` removal that
+ *  surfaced it, not the split. `paused` is gone from both enums (#1550). */
 type LabelledStatus = "active" | "suspended" | "banned";
 const ACCOUNT_STATUSES: LabelledStatus[] = ["active", "suspended", "banned"];
 
