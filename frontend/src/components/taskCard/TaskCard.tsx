@@ -85,10 +85,12 @@ export default function TaskCard({
   const [moderated, setModerated] = useState<TaskOut | null>(null)
   const shown = displayedTask(task, moderated)
   // Caller's value wins; otherwise read it off the SHOWN task, so the write's
-  // own answer refreshes it the way the reload used to. `in_progress_count` is
-  // optional on TaskOut so pre-#1021 fixtures stay valid; a live backend always
-  // sends it (int, default 0).
-  const shownInProgressCount = inProgressCount ?? shown.in_progress_count ?? 0
+  // own answer refreshes it the way the reload used to. The remaining `??` is
+  // for the PROP, which callers may omit. `in_progress_count` itself is always
+  // on the wire (`int = 0`) and since #1400 `TaskOut` is the generated type,
+  // which says so — the second `?? 0` this line carried existed only so
+  // pre-#1021 fixtures stayed valid, and no fixture may claim that shape now.
+  const shownInProgressCount = inProgressCount ?? shown.in_progress_count
 
   // `api/admin` is loaded here rather than at module scope (#1141): a task card
   // renders for every visitor, and a static import put the admin chunk in every

@@ -32,7 +32,7 @@ export function HighLevelNoDescription() {
   const task = taskFor('ua', {
     id: 202,
     title: 'Restore the water-damaged fresco in the east reading room',
-    description: null,
+    description: '',
     level_required: 6,
     point_value: 90,
   })

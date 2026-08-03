@@ -40,9 +40,14 @@ const TASK: TaskOut = {
   status: 'active',
   task_type: 'standard',
   created_by: 3,
-  primary_faction_slug: null,
+  primary_faction_slug: 'na',
   metatask_faction_slug: null,
   created_at: '2026-01-01T00:00:00Z',
+  created_by_display_name: '',
+  created_by_avatar_url: '',
+  created_by_faction_slug: null,
+  created_by_level: 0,
+  signup_reason: null,
   in_progress_count: 6,
   can_sign_up: true,
   allowed_modes: ['solo'],
@@ -160,9 +165,14 @@ describe('TaskCard dispatcher — prop defaults', () => {
     expect(text).toContain(i18n.t('feed:taskCard.inProgress', { count: 6 }))
   })
 
-  it('treats a pre-#1021 task with no in_progress_count as zero, not NaN', () => {
-    const legacy: TaskOut = { ...TASK, in_progress_count: undefined }
-    const { text } = markup(<TaskCard task={legacy} basePoints={legacy.point_value} />)
+  // This used to spell the empty task `in_progress_count: undefined` and call
+  // it "pre-#1021". No response can carry that: the field is `int = 0` and,
+  // since #1400, `TaskOut` is the generated type. The reachable version of the
+  // same question — a task nobody is working — is `0`, and it still has to draw
+  // neither the in-progress line nor a NaN.
+  it('draws no in-progress line, and no NaN, for a task with nobody on it', () => {
+    const empty: TaskOut = { ...TASK, in_progress_count: 0 }
+    const { text } = markup(<TaskCard task={empty} basePoints={empty.point_value} />)
     expect(text).not.toContain('NaN')
     expect(text).not.toContain(i18n.t('feed:taskCard.inProgress', { count: 0 }))
   })

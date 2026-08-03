@@ -32,7 +32,7 @@ export function HighLevelNoDescription() {
   const task = taskFor('wow', {
     id: 205,
     title: 'Stage a surprise kazoo parade',
-    description: null,
+    description: '',
     level_required: 6,
     point_value: 75,
   })

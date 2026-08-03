@@ -32,7 +32,7 @@ export function HighLevelNoDescription() {
   const task = taskFor('snide', {
     id: 206,
     title: 'Occupy the empty lot and plant it before dawn',
-    description: null,
+    description: '',
     level_required: 7,
     point_value: 95,
   })

@@ -27,14 +27,14 @@ export function WithSignup() {
   )
 }
 
-/** Faction-less task (primary_faction_slug null) with no description at a higher
+/** Cross-faction task (primary_faction_slug 'na') with no description at a higher
  *  level — tests the sheet carrying only a title. */
 export function HighLevelNoDescription() {
   const task = makeTask({
     id: 211,
-    primary_faction_slug: null,
+    primary_faction_slug: 'na',
     title: 'Choose a faction, or stay open to all of them',
-    description: null,
+    description: '',
     level_required: 5,
     point_value: 60,
   })
