@@ -31,7 +31,7 @@ Each layer has one job.
 models. Services may import models, `scoring`, and `game_config`. Models
 import nothing from `services/` or `routers/`. A module-level import inside
 `services/` that points at another `services/` file is OK *if it doesn't
-create a cycle*; see §9 for what to do when it does.
+create a cycle*; see §10 for what to do when it does.
 
 ---
 
@@ -98,7 +98,7 @@ themselves are frozen dataclasses.
 ### What we deliberately skip
 
 - No repository abstraction. Services issue SQLAlchemy queries directly.
-  Revisit if query duplication grows (see §10).
+  Revisit if query duplication grows (see §11).
 - No behavior on models. `Character.level_up()` would be nice in theory;
   in practice, `recalculate_character_stats` is where level transitions
   happen. Leave models anemic.
@@ -197,7 +197,48 @@ use the canonical one.
 
 ---
 
-## 7. Patterns to follow
+## 7. The API is a private BFF
+
+This is not a public API. It is a backend-for-frontend with exactly one
+consumer — `frontend/` — which is developed in the same repository, reviewed in
+the same PR, and deployed alongside it. Every design argument that starts "but a
+REST API should…" has to answer that first, because the constraints those
+arguments exist to satisfy — unknown clients, clients you cannot upgrade,
+clients that outlive your deploy — are not constraints we have.
+
+Three things follow, and they are the reason this section is written down at
+all.
+
+**Screen-shaped endpoints are correct here.** `GET /me/sidebar` returns the
+rail's panels: a compound read assembled for one piece of UI, named after that
+UI rather than after a resource. Under public-API doctrine that is a smell, and
+the cure is to expose the underlying resources and let the client compose them.
+Here the cure is the disease — it turns one round trip into several, on the
+first wave of every page load, to serve a caller we control and can see. Build
+the endpoint the screen needs. The pressure to resist is the opposite one: a
+compound endpoint that no screen uses.
+
+**There is no versioning, and there should not be.** No `/v1`, no version
+header, no deprecation window, no parallel old-and-new shape. Both halves ship
+together, so a wire change is a single atomic edit across the seam — and since
+#1400 the seam is checked: `backend/openapi.json` is regenerated in CI and the
+frontend's types are generated from it, so a shape that changes on one side and
+not the other fails the build instead of failing a user. The moment a second
+consumer appears that we cannot deploy in lockstep, this paragraph is wrong and
+the posture has to be revisited (§11); until then, versioning buys nothing and
+costs every change twice.
+
+**Verb and URL aesthetics are opportunistic only.** Some routes are tidier than
+others, and the untidy ones are not bugs. Rename a path or straighten a verb
+when you are already editing that router for another reason and the change is
+free; never open a PR to do it, and never make one a precondition of shipping
+something else. A rename costs a backend edit, a frontend edit, a regenerated
+schema and a review — and buys a nicer-looking string that no one outside this
+repository will ever read.
+
+---
+
+## 8. Patterns to follow
 
 - **Service signature**: `async def verb_noun(session: AsyncSession, ...,
   era: EraConfig = CURRENT_ERA) -> Orm | Dataclass`. Example:
@@ -220,7 +261,7 @@ use the canonical one.
 
 ---
 
-## 8. Patterns to avoid
+## 9. Patterns to avoid
 
 - Business logic inside route handlers. If a handler has more than a few
   lines after `Depends`, it likely owes work to a service.
@@ -248,7 +289,7 @@ use the canonical one.
 
 ---
 
-## 9. Intentional v2 deferrals
+## 10. Intentional v2 deferrals
 
 These features are **parked, not built** — deliberately deferred until v2. Do not "fix" them.
 
@@ -265,7 +306,7 @@ Only the exotic cases in the table above remain deferred.
 
 ---
 
-## 10. When to revisit this posture
+## 11. When to revisit this posture
 
 The current posture is sized for a ~20-model codebase with a single bounded
 context. Signs it's time to revisit:
@@ -279,9 +320,9 @@ context. Signs it's time to revisit:
 - A second bounded context emerging (e.g. a distinct moderation/admin
   domain that is no longer a thin overlay on the game model).
 
-Until then, the rules in §1–§8 are enough.
+Until then, the rules in §1–§9 are enough.
 
-## 11. When in doubt
+## 12. When in doubt
 
 - Start at `CLAUDE.md`'s "Where to look for X" table.
 - For game rule values: `backend/eras/era_1.py`.

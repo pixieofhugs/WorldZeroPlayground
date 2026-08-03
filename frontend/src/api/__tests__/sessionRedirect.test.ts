@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { shouldReturnToLanding } from '../axios'
+import { shouldReturnToLanding } from '../sessionRedirect'
 
 /**
  * Guard for the guest deep-link bounce.

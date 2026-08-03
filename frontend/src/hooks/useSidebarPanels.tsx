@@ -48,8 +48,8 @@ const UNSETTLED = Symbol('auth-unsettled')
  *    resolves the viewer from the JWT cookie, so there is nothing to wait for.
  *
  *    The client therefore asks before it knows whether anyone is signed in, and
- *    a guest's answer is 401. `SESSION_PROBES` in `api/axios` excludes this URL
- *    from the expired-session redirect for exactly that reason — without it,
+ *    a guest's answer is 401. `SESSION_PROBES` in `api/sessionRedirect` excludes
+ *    this URL from the expired-session redirect for exactly that reason — without it,
  *    every guest opening any deep link would be thrown to `/` by a full document
  *    navigation, from chrome that mounts on every route.
  *

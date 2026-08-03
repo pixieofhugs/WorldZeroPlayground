@@ -53,7 +53,7 @@ export interface SidebarPanels {
  * `/auth/me` rather than behind it.
  *
  * Rejects with 401 for a guest. That is an answer, not a failure — see
- * `SESSION_PROBES` in `./axios`.
+ * `SESSION_PROBES` in `./sessionRedirect`.
  */
 export async function getSidebar(): Promise<SidebarPanels> {
   const { data } = await api.get<SidebarPanels>('/me/sidebar')

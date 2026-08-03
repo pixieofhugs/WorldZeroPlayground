@@ -26,8 +26,9 @@ interface AuthState {
    * Exists so that signing out does not have to `logout()` and then `refetch()`
    * (#1349). That second call was a request whose answer the client already
    * held: the cookie is gone, so `/auth/me` can only 401, and `/auth/me` is a
-   * `SESSION_PROBE` (`api/axios.ts`) precisely so that 401 is swallowed. It cost
-   * a round trip to reach the `user = null` the caller had already caused.
+   * `SESSION_PROBE` (`api/sessionRedirect.ts`) precisely so that 401 is
+   * swallowed. It cost a round trip to reach the `user = null` the caller had
+   * already caused.
    */
   signOut: () => Promise<void>
 }
