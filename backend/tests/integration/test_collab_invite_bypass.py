@@ -266,8 +266,10 @@ async def test_full_task_bank_still_refuses_on_accept(
             era=tight_bank,
         )
     assert excinfo.value.status_code == 409
-    assert excinfo.value.detail["code"] == ErrorCode.task_bank_full.value
-    assert "bank" in excinfo.value.detail["message"].lower()
+    # Still plain prose, not a coded body: this one raise is held back from
+    # #1401 phase 1 because `FeedCardCollabInvite` substring-matches it outside
+    # `extractError`. The rationale is at the raise in `services/praxis.py`.
+    assert "bank" in excinfo.value.detail.lower()
 
 
 @pytest.mark.asyncio
