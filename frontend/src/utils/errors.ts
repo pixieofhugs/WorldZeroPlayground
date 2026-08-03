@@ -1,5 +1,3 @@
-import type { AxiosError } from 'axios'
-
 import { ApiError } from '../api/apiError'
 import i18n from '../i18n'
 import errorsCatalog from '../locales/en/errors.json'
@@ -163,40 +161,31 @@ function displayableDetail(detail: ErrorDetail | undefined): string | null {
 type ErrorBody = { detail?: ErrorDetail }
 
 /**
- * What a failed request tells us, whichever transport issued it (#1400).
+ * What a failed request tells us (#1400).
  *
- * Two are live at once while `api/*.ts` migrates off axios module by module, so
- * both readers below go through this rather than each growing a second branch.
- * The transports agree on everything that matters here and disagree on where it
- * sits: axios hangs `status` and the parsed body off `err.response`, the
- * openapi-fetch client puts them on {@link ApiError} directly.
+ * ONE transport reaches here now. `api/client.ts` throws {@link ApiError} for
+ * every answer that arrived and was not 2xx, carrying the status and the parsed
+ * body directly — where axios hung both off `err.response`, and this function
+ * read both shapes for as long as both were live.
  *
- * `ApiError` is checked FIRST and deliberately. It carries a `response` too — a
- * fetch `Response`, which has a `status` and no `data` — so the axios lens would
- * half-read it: right status, `detail` silently always absent, and every coded
- * backend error degraded to the caller's generic fallback with nothing failing.
+ * Everything else is "no answer": an `ApiNetworkError` (fetch itself rejected —
+ * offline, DNS, connection refused), or a throw that was never a request failure
+ * at all. Neither has a status, and `extractError` keys its network branch off
+ * exactly that absence — see the note there.
  */
 function failureOf(err: unknown): {
   status: number | undefined
   body: ErrorBody | undefined
-  unreachable: boolean
 } {
   if (err instanceof ApiError) {
-    return { status: err.status, body: err.data as ErrorBody | undefined, unreachable: false }
+    return { status: err.status, body: err.data as ErrorBody | undefined }
   }
-  const axiosError = err as AxiosError<ErrorBody>
-  return {
-    status: axiosError?.response?.status,
-    body: axiosError?.response?.data,
-    // `ApiNetworkError` sets this exact message for this exact reason, so a
-    // `fetch` that never got an answer reads the same as an axios one.
-    unreachable: axiosError?.message === 'Network Error' || !axiosError?.response,
-  }
+  return { status: undefined, body: undefined }
 }
 
 /**
- * Extracts a user-friendly error message from a failed request — an axios
- * error, or an {@link ApiError} from the openapi-fetch client.
+ * Extracts a user-friendly error message from a failed request — an
+ * {@link ApiError} from the API client, or anything else a `catch` caught.
  *
  * Priority:
  *   1. FastAPI `detail` from the response body (skip generic "Internal Server Error"), as either
@@ -212,7 +201,7 @@ export function extractError(
   err: unknown,
   fallback = 'Something went wrong. Please try again.'
 ): string {
-  const { status, body, unreachable } = failureOf(err)
+  const { status, body } = failureOf(err)
 
   // Surface meaningful detail from the backend (e.g. "Task requires level 3")
   const message = displayableDetail(body?.detail)
@@ -223,17 +212,17 @@ export function extractError(
     return 'The server ran into an unexpected problem. Try again in a moment.'
   }
 
-  // 4xx we didn't already handle (missing detail, unusual format)
-  if (status && status >= 400) {
-    return fallback
-  }
+  // Any other answer that ARRIVED — a 4xx with no usable detail, an unusual
+  // status — is the caller's story to tell, not this module's.
+  if (status !== undefined) return fallback
 
-  // No response object at all — genuine network failure
-  if (unreachable) {
-    return 'Unable to reach the server. Check your connection and try again.'
-  }
-
-  return fallback
+  // No status at all, so no answer at all: an `ApiNetworkError`, or a throw
+  // from outside the transport. Keyed off the ABSENCE of a status rather than
+  // `instanceof ApiNetworkError`, because the second case is real — a `catch`
+  // here also receives ordinary bugs — and telling a player the request did not
+  // get through is nearer the truth than the caller's "please try again", which
+  // invites them to repeat something that never left the building.
+  return 'Unable to reach the server. Check your connection and try again.'
 }
 
 /**
