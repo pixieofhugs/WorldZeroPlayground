@@ -85,8 +85,13 @@ function softenMissingKeys(): void {
 }
 
 export function DSProvider({ children }: { children: ReactNode }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const preview = typeof window !== "undefined" && Boolean((window as any).__dsPreview);
+  // The preview harness sets this flag on `window` before evaluating the kit.
+  // Narrowed rather than `any`: this file is now linted (#1400 put the axios ban
+  // on `.ds-kit/`, which is where the last hidden axios dependent was hiding),
+  // and a one-property cast says what is being read without disabling a rule.
+  const preview =
+    typeof window !== "undefined" &&
+    Boolean((window as unknown as { __dsPreview?: unknown }).__dsPreview);
   if (preview) softenMissingKeys();
   // ThemeProvider backs useTheme() — NavBar and the shell chrome throw without
   // it. It also owns the [data-theme] cascade the whole kit styles against.
