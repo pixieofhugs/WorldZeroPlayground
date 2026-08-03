@@ -31,6 +31,7 @@ function character(overrides: Partial<CharacterOut>): CharacterOut {
     username: 'molly',
     display_name: 'Molly',
     bio: 'Doing very human things.',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 4,

@@ -44,6 +44,7 @@ const CHARACTER: CharacterOut = {
   avatar_url: '',
   faction_slug: 'na',
   bio: '',
+  tagline: '',
   location: '',
   level: 3,
   score: 0,

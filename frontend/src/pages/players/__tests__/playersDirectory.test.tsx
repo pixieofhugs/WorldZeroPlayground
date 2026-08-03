@@ -55,6 +55,7 @@ function player(overrides: Partial<CharacterOut>): CharacterOut {
     username: 'wren',
     display_name: 'Wren',
     bio: '',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 3,

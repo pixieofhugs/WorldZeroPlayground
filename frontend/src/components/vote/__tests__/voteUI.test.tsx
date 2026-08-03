@@ -40,6 +40,7 @@ function currentUser(): CurrentUser {
       username: 'ada',
       display_name: 'Ada',
       bio: '',
+      tagline: '',
       avatar_url: '',
       location: '',
       level: 8,

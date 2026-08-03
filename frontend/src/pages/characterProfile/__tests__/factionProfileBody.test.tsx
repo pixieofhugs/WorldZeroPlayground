@@ -23,6 +23,7 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
     username: "wren",
     display_name: "Wren Aldercross",
     bio: "Keeps a field notebook.",
+    tagline: "",
     avatar_url: '',
     location: '',
     level: 3,

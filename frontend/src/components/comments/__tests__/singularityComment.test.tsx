@@ -51,6 +51,7 @@ const CHARACTER: CharacterOut = {
   avatar_url: '',
   faction_slug: 'singularity',
   bio: '',
+  tagline: '',
   location: '',
   level: 3,
   score: 0,

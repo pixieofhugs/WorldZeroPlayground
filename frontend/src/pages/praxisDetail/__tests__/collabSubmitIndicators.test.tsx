@@ -106,6 +106,7 @@ function character(id: number): CharacterOut {
     username: `u${id}`,
     display_name: `Player ${id}`,
     bio: '',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 5,

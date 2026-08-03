@@ -15,6 +15,7 @@ function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
     username: "Isolde",
     display_name: "Isolde",
     bio: '',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 3,

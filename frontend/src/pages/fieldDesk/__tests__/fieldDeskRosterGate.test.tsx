@@ -60,6 +60,7 @@ function life(overrides: Partial<CharacterOut> = {}): CharacterOut {
     username: 'molly',
     display_name: 'Mollusk',
     bio: '',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 2,

@@ -14,6 +14,7 @@ function life(overrides: Partial<CharacterOut>): CharacterOut {
     username: 'wanderer',
     display_name: 'Wanderer',
     bio: '',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 8,
