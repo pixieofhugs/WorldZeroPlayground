@@ -1,11 +1,11 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from schemas.base import WireModel
 
 from schemas.character import CharacterOut
 
 
-class CurrentUser(BaseModel):
+class CurrentUser(WireModel):
     # account_id is the one deliberate exception to the "never expose account_id publicly" rule.
     # The /auth/me endpoint is authenticated — it returns the caller's own account_id only.
     # Authorization: SPEC-backend-architecture.md §4
@@ -38,7 +38,7 @@ class CurrentUser(BaseModel):
     level_jump_available: bool = False
 
 
-class LogoutOut(BaseModel):
+class LogoutOut(WireModel):
     """Acknowledgement for ``POST /auth/logout``.
 
     The work of logging out is the ``Set-Cookie`` header that clears the JWT,
@@ -49,7 +49,7 @@ class LogoutOut(BaseModel):
     message: str
 
 
-class DevLoginOut(BaseModel):
+class DevLoginOut(WireModel):
     """Result of the dev-only bot login (``POST /auth/dev-login``).
 
     Exposes ``account_id``, which the public API never does — and this is not a

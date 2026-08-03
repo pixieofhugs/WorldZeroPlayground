@@ -28,7 +28,7 @@ from dependencies import get_current_character, get_current_character_optional
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.praxis import MediaItem, Praxis, PraxisType
-from pydantic import BaseModel
+from schemas.base import WireModel
 from schemas.comment import FlagIn
 from schemas.praxis import (
     MediaItemOut,
@@ -44,11 +44,11 @@ from schemas.praxis import (
 )
 
 
-class InviteResponse(BaseModel):
+class InviteResponse(WireModel):
     accept: bool
 
 
-class InviteResponseOut(BaseModel):
+class InviteResponseOut(WireModel):
     """Acknowledgement for answering a collab invite (#1383).
 
     Deliberately an ack and not the praxis. This route used to answer a full
@@ -66,7 +66,7 @@ class InviteResponseOut(BaseModel):
     accepted: bool
 
 
-class MetataskApply(BaseModel):
+class MetataskApply(WireModel):
     task_id: int
 from schemas.nudge import NudgeOut, NudgeResultOut
 from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut

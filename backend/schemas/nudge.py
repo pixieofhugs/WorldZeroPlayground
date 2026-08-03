@@ -2,10 +2,10 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from schemas.base import WireModel
 
 
-class NudgeOut(BaseModel):
+class NudgeOut(WireModel):
     """Confirmation that one nudge was recorded.
 
     The caller does not render this: the roster row's disabled state comes from
@@ -23,7 +23,7 @@ class NudgeOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class NudgeResultOut(BaseModel):
+class NudgeResultOut(WireModel):
     """One recipient in, one entry out — the per-recipient outcome of a crew nudge.
 
     ``POST /praxes/{id}/nudge`` is deliberately partial-success, and unlike the

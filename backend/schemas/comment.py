@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+from schemas.base import WireModel
 
 from models.comment import MAX_COMMENT_BODY
 from models.flag import MAX_FLAG_REASON_DETAIL, FlagReason
 
 
-class CommentAuthor(BaseModel):
+class CommentAuthor(WireModel):
     """Public author identity — drives the actor-scoped theming on the frontend.
 
     Never exposes account_id or email (CLAUDE.md Do-NOT).
@@ -22,7 +23,7 @@ class CommentAuthor(BaseModel):
     faction_slug: str
 
 
-class CommentMentionOut(BaseModel):
+class CommentMentionOut(WireModel):
     """A resolved @mention — the frontend linkifies these handles in the body."""
 
     character_id: int
@@ -30,12 +31,12 @@ class CommentMentionOut(BaseModel):
     display_name: str
 
 
-class CommentIn(BaseModel):
+class CommentIn(WireModel):
     # max_length enforces the ≤2000 trust-boundary cap at the API edge (ADR-0006).
     body_text: str = Field(..., min_length=1, max_length=MAX_COMMENT_BODY)
 
 
-class FlagIn(BaseModel):
+class FlagIn(WireModel):
     """Player flag payload — reason constrained to the shared vocabulary (ADR-0037).
 
     ``reason_detail`` is the free-text escape hatch for ``other``; the four named
@@ -46,14 +47,14 @@ class FlagIn(BaseModel):
     reason_detail: Optional[str] = Field(None, max_length=MAX_FLAG_REASON_DETAIL)
 
 
-class CommentModerationIn(BaseModel):
+class CommentModerationIn(WireModel):
     # Comments have their own moderation vocabulary (ADR-0006): hidden (reversible)
     # / deleted (terminal tombstone) / visible. Praxis-only states like `failed`
     # don't apply, and `deleted` must be reachable.
     status: Literal["visible", "hidden", "deleted"]
 
 
-class CommentOut(BaseModel):
+class CommentOut(WireModel):
     id: int
     praxis_id: Optional[int] = None
     task_id: Optional[int] = None

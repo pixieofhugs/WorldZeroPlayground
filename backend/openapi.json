@@ -173,7 +173,8 @@
         },
         "required": [
           "items",
-          "counts"
+          "counts",
+          "next_cursor"
         ],
         "title": "ActivityFeedResponse",
         "type": "object"
@@ -426,6 +427,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -762,7 +766,9 @@
           "all_time_score",
           "faction_slug",
           "status",
-          "created_at"
+          "created_at",
+          "badges",
+          "invitations"
         ],
         "title": "CharacterOut",
         "type": "object"
@@ -1070,6 +1076,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -1196,6 +1205,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -1361,6 +1373,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -1433,6 +1448,8 @@
         "required": [
           "comment_id",
           "character_id",
+          "praxis_id",
+          "task_id",
           "excerpt"
         ],
         "title": "CommentMentionPayload",
@@ -1516,11 +1533,14 @@
         },
         "required": [
           "id",
+          "praxis_id",
+          "task_id",
           "body_text",
           "is_edited",
           "created_at",
           "updated_at",
-          "author"
+          "author",
+          "mentions"
         ],
         "title": "CommentOut",
         "type": "object"
@@ -1563,6 +1583,7 @@
         },
         "required": [
           "praxis_id",
+          "praxis_title",
           "task_title",
           "task_point_value",
           "task_faction_slug",
@@ -1683,7 +1704,21 @@
           }
         },
         "required": [
-          "account_id"
+          "account_id",
+          "character",
+          "is_admin",
+          "can_create_additional_character",
+          "can_start_as_albescent",
+          "albescent_revealed",
+          "second_character_level_required",
+          "era_name",
+          "can_propose_task",
+          "can_propose_metatask",
+          "can_see_retired_tasks",
+          "can_see_pending_tasks",
+          "can_comment",
+          "level_jump_reach",
+          "level_jump_available"
         ],
         "title": "CurrentUser",
         "type": "object"
@@ -1735,7 +1770,10 @@
         },
         "required": [
           "message",
-          "account_id"
+          "account_id",
+          "character_id",
+          "character_name",
+          "faction_slug"
         ],
         "title": "DevLoginOut",
         "type": "object"
@@ -1829,6 +1867,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -1951,7 +1992,10 @@
           "status",
           "forfeited_by_character_id",
           "challenger",
-          "opponent"
+          "opponent",
+          "winner_character_id",
+          "challenger_final_points",
+          "opponent_final_points"
         ],
         "title": "DuelDetailOut",
         "type": "object"
@@ -2078,7 +2122,8 @@
           "faction_slug",
           "avatar_url",
           "points_from_votes",
-          "is_submitted"
+          "is_submitted",
+          "nudged_at"
         ],
         "title": "DuelSideOut",
         "type": "object"
@@ -2164,6 +2209,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -2448,6 +2496,15 @@
             "type": "integer"
           }
         },
+        "required": [
+          "all",
+          "friends",
+          "foes",
+          "your_stuff",
+          "global_count",
+          "requests",
+          "by_type"
+        ],
         "title": "FeedCounts",
         "type": "object"
       },
@@ -2548,6 +2605,7 @@
         },
         "required": [
           "reason",
+          "reason_detail",
           "flagged_by_id",
           "flagged_by_name",
           "created_at"
@@ -2636,11 +2694,15 @@
         },
         "required": [
           "id",
+          "praxis_id",
+          "task_id",
           "body_text",
           "is_edited",
           "created_at",
           "updated_at",
-          "author"
+          "author",
+          "mentions",
+          "flags"
         ],
         "title": "FlaggedCommentOut",
         "type": "object"
@@ -2891,6 +2953,8 @@
           "task_id",
           "task_title",
           "task_point_value",
+          "task_level_required",
+          "task_faction_slug",
           "type",
           "status",
           "title",
@@ -2898,14 +2962,28 @@
           "moderation_status",
           "admin_note",
           "flagged_at",
+          "submitted_at",
+          "submit_proposed_at",
           "created_by_id",
           "created_by_display_name",
+          "created_by_faction_slug",
           "created_at",
           "updated_at",
           "members",
           "invites",
           "media_items",
-          "score"
+          "score",
+          "metatask_points",
+          "display_multiplier",
+          "points_from_votes",
+          "voter_count",
+          "is_top_for_task",
+          "duel_id",
+          "applied_metatasks",
+          "can_flag",
+          "viewer_can_vote",
+          "viewer_vote",
+          "flags"
         ],
         "title": "FlaggedPraxisOut",
         "type": "object"
@@ -2980,6 +3058,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3056,6 +3137,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3172,6 +3256,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3248,6 +3335,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3349,6 +3439,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3522,6 +3615,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3661,6 +3757,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -3879,7 +3978,10 @@
           }
         },
         "required": [
-          "filename"
+          "filename",
+          "media_item",
+          "error",
+          "status_code"
         ],
         "title": "MediaUploadResultOut",
         "type": "object"
@@ -4008,6 +4110,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -4140,7 +4245,10 @@
           }
         },
         "required": [
-          "to_character_id"
+          "to_character_id",
+          "nudge",
+          "error",
+          "status_code"
         ],
         "title": "NudgeResultOut",
         "type": "object"
@@ -4183,7 +4291,9 @@
           "characters",
           "active_tasks",
           "praxis",
-          "votes"
+          "votes",
+          "flagged_praxis",
+          "suspended_accounts"
         ],
         "title": "OverviewStats",
         "type": "object"
@@ -4316,7 +4426,18 @@
           "task_type",
           "created_by",
           "primary_faction_slug",
-          "created_at"
+          "metatask_faction_slug",
+          "created_at",
+          "in_progress_count",
+          "created_by_display_name",
+          "created_by_avatar_url",
+          "created_by_faction_slug",
+          "created_by_level",
+          "can_sign_up",
+          "allowed_modes",
+          "eligible_for_current_user",
+          "signup_reason",
+          "created_by_name"
         ],
         "title": "PendingTaskOut",
         "type": "object"
@@ -4585,10 +4706,31 @@
           "moderation_status",
           "created_by_id",
           "created_by_display_name",
+          "created_by_avatar_url",
           "created_at",
           "updated_at",
+          "submitted_at",
+          "submit_proposed_at",
           "member_count",
-          "score"
+          "score",
+          "metatask_points",
+          "display_multiplier",
+          "points_from_votes",
+          "voter_count",
+          "is_top_for_task",
+          "applied_metatasks",
+          "task_faction_slug",
+          "body_text",
+          "created_by_faction_slug",
+          "members",
+          "media_items",
+          "viewer_vote",
+          "voted_by_name",
+          "viewer_can_vote",
+          "duel_id",
+          "opponent_praxis_id",
+          "opponent_display_name",
+          "opponent_faction_slug"
         ],
         "title": "PraxisCardOut",
         "type": "object"
@@ -4755,7 +4897,9 @@
           "character_id",
           "character_display_name",
           "has_submitted",
-          "joined_at"
+          "submitted_at",
+          "joined_at",
+          "nudged_at"
         ],
         "title": "PraxisMemberOut",
         "type": "object"
@@ -4997,6 +5141,8 @@
           "task_id",
           "task_title",
           "task_point_value",
+          "task_level_required",
+          "task_faction_slug",
           "type",
           "status",
           "title",
@@ -5004,14 +5150,27 @@
           "moderation_status",
           "admin_note",
           "flagged_at",
+          "submitted_at",
+          "submit_proposed_at",
           "created_by_id",
           "created_by_display_name",
+          "created_by_faction_slug",
           "created_at",
           "updated_at",
           "members",
           "invites",
           "media_items",
-          "score"
+          "score",
+          "metatask_points",
+          "display_multiplier",
+          "points_from_votes",
+          "voter_count",
+          "is_top_for_task",
+          "duel_id",
+          "applied_metatasks",
+          "can_flag",
+          "viewer_can_vote",
+          "viewer_vote"
         ],
         "title": "PraxisOut",
         "type": "object"
@@ -5599,7 +5758,17 @@
           "task_type",
           "created_by",
           "primary_faction_slug",
-          "created_at"
+          "metatask_faction_slug",
+          "created_at",
+          "in_progress_count",
+          "created_by_display_name",
+          "created_by_avatar_url",
+          "created_by_faction_slug",
+          "created_by_level",
+          "can_sign_up",
+          "allowed_modes",
+          "eligible_for_current_user",
+          "signup_reason"
         ],
         "title": "TaskOut",
         "type": "object"
@@ -5642,6 +5811,7 @@
           "display_name",
           "avatar_url",
           "faction_slug",
+          "level",
           "praxis_type",
           "joined_at"
         ],
@@ -5899,6 +6069,9 @@
           "type",
           "item_key",
           "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
           "payload",
           "context_faction_slug"
         ],
@@ -5945,6 +6118,7 @@
           "vote_id",
           "value",
           "praxis_id",
+          "praxis_title",
           "task_point_value",
           "points_earned"
         ],
@@ -6080,6 +6254,7 @@
           "name",
           "email",
           "message",
+          "is_archived",
           "created_at"
         ],
         "title": "ContactMessageOut",

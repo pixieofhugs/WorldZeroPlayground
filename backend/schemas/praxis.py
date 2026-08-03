@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from schemas.base import WireModel
 from schemas.task import TaskOut
 from models.praxis import PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
 
 
-class MediaItemOut(BaseModel):
+class MediaItemOut(WireModel):
     id: int
     praxis_id: int
     type: MediaType
@@ -16,7 +16,7 @@ class MediaItemOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class MediaUploadResultOut(BaseModel):
+class MediaUploadResultOut(WireModel):
     """One file in, one entry out — the per-file outcome of a batch media upload.
 
     ``POST /praxes/{id}/media/batch`` is deliberately partial-success: a file the
@@ -37,7 +37,7 @@ class MediaUploadResultOut(BaseModel):
     status_code: Optional[int] = None
 
 
-class PraxisMemberOut(BaseModel):
+class PraxisMemberOut(WireModel):
     id: int
     praxis_id: int
     character_id: int
@@ -61,7 +61,7 @@ class PraxisMemberOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class PraxisInviteOut(BaseModel):
+class PraxisInviteOut(WireModel):
     id: int
     praxis_id: int
     inviter_id: int
@@ -73,7 +73,7 @@ class PraxisInviteOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class PraxisOut(BaseModel):
+class PraxisOut(WireModel):
     id: int
     task_id: int
     task_title: str             # populated by build_praxis_out
@@ -127,7 +127,7 @@ class PraxisOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class PraxisCardOut(BaseModel):
+class PraxisCardOut(WireModel):
     """Lightweight list-view schema."""
     id: int
     task_id: int
@@ -210,27 +210,27 @@ class PraxisCardOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class PraxisCreate(BaseModel):
+class PraxisCreate(WireModel):
     task_id: int
     type: PraxisType = PraxisType.solo
     title: Optional[str] = None
     body_text: Optional[str] = None
 
 
-class PraxisUpdate(BaseModel):
+class PraxisUpdate(WireModel):
     title: Optional[str] = None
     body_text: Optional[str] = None
 
 
-class PraxisTypeChange(BaseModel):
+class PraxisTypeChange(WireModel):
     """Body for the in-place solo↔collab mode switch (#321)."""
 
     type: PraxisType
 
 
-class PraxisInviteCreate(BaseModel):
+class PraxisInviteCreate(WireModel):
     invitee_id: int
 
 
-class PraxisVoteIn(BaseModel):
+class PraxisVoteIn(WireModel):
     value: int

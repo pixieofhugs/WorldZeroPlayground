@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+from schemas.base import WireModel
 
 from models.praxis import PraxisType
 from models.task import TaskStatus, TaskType
 
 
-class TaskOut(BaseModel):
+class TaskOut(WireModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     id: int
@@ -70,7 +71,7 @@ class TaskOut(BaseModel):
     signup_reason: Optional[str] = None
 
 
-class TaskCreate(BaseModel):
+class TaskCreate(WireModel):
     title: str
     description: Optional[str] = None
     point_value: int = Field(..., gt=0)
@@ -81,7 +82,7 @@ class TaskCreate(BaseModel):
     metatask_faction_slug: Optional[str] = None
 
 
-class TaskSignupOut(BaseModel):
+class TaskSignupOut(WireModel):
     """One row of a task's in-progress roster (GET /tasks/{id}/signups).
 
     This is the route's real response model (``response_model=list[TaskSignupOut]``).
