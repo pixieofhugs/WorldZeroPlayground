@@ -39,7 +39,7 @@ import {
   formatRatio,
   parseColor,
 } from "../contrast";
-import { readThemes, resolveVar, type Theme } from "./cssVars";
+import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
 const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
 const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
@@ -596,15 +596,23 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
-  // The PROFILE HEADER's eyebrow and handle line (#1636). `EphemeristsProfileBody`
-  // hands `profileSkin` a kit whose `muted` is `-plate-quiet` — the ink measured
-  // for the plate, the page and the panel cells — and a `headerStyle` whose
-  // ground is the cornice BAND. `-plate-band-quiet` is the ink that band owns,
-  // and this row is the one that would have said so: the crossing measured
-  // 2.07:1 in light for as long as it has shipped, with every other row in this
-  // file green, because the manifest measured each ink on the grounds its
-  // DECLARATION names and no row named the pair a kit assembles.
-  { what: "ephemerists profile header, quiet ink on the band", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-quiet" },
+  // THE PROFILE HEADER ADDS NO ROW, and that is the finding rather than an
+  // omission. `EphemeristsProfileBody` handed `profileSkin` a kit whose `muted`
+  // was `-plate-quiet` — the ink measured for the plate, the page and the panel
+  // cells — while its `headerStyle` grounds on the cornice BAND, so six quiet
+  // lines inside `<header>` sat on a sheet their ink was never chosen for and
+  // read 2.07:1 in light, with every row in this file green.
+  //
+  // The first fix written was a row for that crossing. It would have measured
+  // 6.73:1 and passed, and it would have recorded the WRONG (ink, ground) pair
+  // as the intended one: `-plate-band-quiet` is the ink the band owns, it only
+  // read 6.73 because #1627 repainted the ground under the bug, and the pairing
+  // that ships now — band-quiet on the band — is `ephemerists cornice band,
+  // quiet ink` further down, which has gated it since #1199. So the kit grew a
+  // `headerMuted` and this file gains nothing: a second name for one
+  // measurement is what the WOW block above warns about, and a row that
+  // certifies a bug is worse than no row at all.
+  //
   // THE LOGGED-OUT VOTE GATE (#1627). `VoteShell`'s gate voice paints
   // `--faction-ephemerists-card-accent`, and `EphemeristsVote` early-returns the
   // gate BEFORE it draws its own night vote plate — so the ink lands on whatever
@@ -614,6 +622,17 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // uncovered — it measured 3.75:1 in dark while `ephemerists card accent` was
   // green against `-card-bg`, the sheet this gate never sits on.
   { what: "ephemerists vote login gate, card accent on the plate", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-card-accent" },
+  // THE FLAGGED BANNER (#1636), on the praxis detail's page ground. Neutral
+  // chrome that paints no ground of its own — so it is the same shape as the
+  // gate above, and the one a dark-in-light move CREATES rather than exposes.
+  // Undressed it read 3.01:1 (body, the app neutral) and 3.68:1 (label,
+  // `--color-warning`) once `-plate-page` went dark: both halves failing, and
+  // the amber failing as a light-cascade value on a night sheet. Singularity
+  // already deviates onto `--color-warning` at 3.88:1 on its own wall, so the
+  // precedent settles that the banner may be dressed and not what to dress it
+  // in. This is the faction's own attention ink, which is what `-card-notice`
+  // is for; the border takes it too, so the mark's ink and rule agree (#1449).
+  { what: "ephemerists flagged banner, notice ink on the page ground", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-card-notice" },
 
   // …and the three surfaces task detail (#1032) added, where the plate stops
   // being one card on the app's ground and becomes the page. `-quiet` exists
@@ -825,8 +844,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // clearing on the body ground (CARD_PAIRS still measures it there). The
   // EPHEMERISTS panel needed nothing: #1208 moved that band off the codex onto
   // the Valley plate's inner cell, whose quiet ink `ephemerists panel cell,
-  // quiet ink` above already measures at 6.21 / 5.52 — the same pairing, so a
-  // second row here would be a second name for one measurement.
+  // quiet ink` above already measures — at 6.21 / 5.52 then, and at 5.52 in both
+  // cascades since #1627 made the register theme-invariant. The same pairing
+  // either way, so a second row here would be a second name for one measurement.
   { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-chronicle-quiet" },
   { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
 
@@ -1841,10 +1861,34 @@ describe("a prose link's ink is a seam (#1636)", () => {
     const body = ruleBody(".eph-plate-sheet");
     expect(
       body,
-      "`.eph-plate-sheet` is the column both Ephemerists detail pages wear; it is the one place the plate's link ink has to be set.",
+      "`.eph-plate-sheet` is the column both Ephemerists detail pages wear; it is one of the two roots the plate's link ink has to be set on.",
     ).toContain("--link-ink: var(--faction-ephemerists-plate-nile)");
     expect(body, "hover goes to the plate's body ink, the same relation the neutral pair has.").toContain(
       "--link-ink-hover: var(--faction-ephemerists-plate-ink)",
+    );
+  });
+
+  // ...and the OTHER root, which is why this assertion is not one assertion.
+  // `.eph-plate-sheet` is worn by the two detail columns and nothing else, so
+  // the seam reached `MarkdownPreview` on the detail pages and missed it in the
+  // composer and the waiting surface — where `BodyPreview` renders the same
+  // `.markdown-preview` into a panel cell, at 2.60:1 with hover at 1.16:1. Both
+  // of those mount `dress.pageStyle`, which is the one Ephemerists root outside
+  // that column, so the seam is declared there. A ratio row cannot see this: the
+  // pairing it would name (`nile` on `-plate-inner`) is already green above,
+  // measured on a surface that was not reading it.
+  it("the composer and waiting surface set the same seam on their own root", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("../../pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx", import.meta.url)),
+      "utf8",
+    );
+    const pageStyle = source.slice(source.indexOf("pageStyle: {"), source.indexOf("breadcrumbInk:"));
+    expect(
+      pageStyle,
+      "`dress.pageStyle` is mounted by both `ComposerPage` and `PraxisWaitingSurface`; without the seam their prose links fall back to the app neutral on a night ground.",
+    ).toContain('["--link-ink" as string]: NILE');
+    expect(pageStyle, "and its hover partner, for the same reason").toContain(
+      '["--link-ink-hover" as string]: INK',
     );
   });
 });
@@ -1863,16 +1907,45 @@ describe("a prose link's ink is a seam (#1636)", () => {
  * gives: a ground that is not a ground leaves every ratio in this file green.
  */
 describe("a themed ground is a longhand (#1636)", () => {
-  for (const selector of [".eph-plate-sheet", ".na-backdrop", ".coven-candle-backdrop", ".coven-backdrop"]) {
-    it(`${selector} names its stock in background-color`, () => {
-      const body = ruleBody(selector);
-      expect(body, `${selector} must declare its themed ground as \`background-color\`.`).toMatch(
-        /background-color:\s*var\(--/,
-      );
+  // A SCAN, NOT A LIST. This block began as four named selectors — the four
+  // grounds #1636 fixed — which is precisely the shape WORLD_ZERO_STYLE warns
+  // about two sections earlier: a per-file check leaves the fifth instance
+  // unguarded, and the fifth instance is the one nobody is looking at. The
+  // defect has an exact syntactic signature, so the whole stylesheet can be
+  // asked at once and every future rule is covered for free.
+  it("no rule transitions the `background` shorthand", () => {
+    const offenders = [...stripComments(CSS_TEXT).matchAll(/transition:[^;}]*/g)]
+      .map((match) => match[0].trim())
+      // `background-color`, `background-size` and friends are longhands and are
+      // exactly what this asks for; only the bare shorthand is the bug.
+      .filter((declaration) => /(^|[\s,:])background(\s|,|$)/.test(declaration));
+    expect(
+      offenders,
+      "a `transition` naming `background` animates a list of longhands only `background-color` interpolates, and the shorthand it goes with resets `-image`, `-position`, `-size` and `-repeat` every time the cascade re-resolves the token. Name the longhand.",
+    ).toEqual([]);
+  });
+
+  // ...and the other half of the same swap: a rule that transitions a ground
+  // must have a ground to transition. Also derived from the file rather than
+  // named, so it grows with it.
+  it("every rule that transitions a ground declares that ground", () => {
+    const css = stripComments(CSS_TEXT);
+    const bodies: string[] = [];
+    for (const match of css.matchAll(/transition:[^;}]*background-color/g)) {
+      const open = css.lastIndexOf("{", match.index);
+      bodies.push(css.slice(open + 1, css.indexOf("}", match.index)));
+    }
+    expect(bodies.length, "the four grounds #1636 split, at least").toBeGreaterThanOrEqual(4);
+    for (const body of bodies) {
+      expect(
+        body,
+        "a rule transitioning `background-color` without declaring it is transitioning whatever it inherited.",
+      ).toMatch(/background-color:\s*var\(--/);
       expect(
         body.replace(/background-color:[^;]*;/g, "").replace(/background-image:[^;]*;/g, ""),
-        `${selector} must not also carry a \`background\` shorthand — the shorthand wins by order and takes the longhand with it.`,
+        "and it must not also carry a `background` shorthand — the shorthand wins by order and takes the longhand with it.",
       ).not.toMatch(/(^|[\s;{])background:/);
-    });
-  }
+    }
+  });
+
 });

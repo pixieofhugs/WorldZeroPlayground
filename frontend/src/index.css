@@ -993,10 +993,13 @@
      contract — the family's one remaining reader, reaching it by indirection —
      moved onto the plate's cornice band in #1627. What survives the repoint is
      `--eph-display` and `--eph-serif`, both FACES, both still aliased by
-     `-card-font` / `-body-font` below. The seventeen colours are declared and
-     dead; deleting them is a follow-up, and it takes the six `ephemerists
-     vellum …` rows in `factionContrast.test.ts` with it (one of which is still
-     carrying a #651 BASELINE entry). CONSTANTS (gold/rubric/lapis/verdigris/
+     `-card-font` / `-body-font` below. NINETEEN of the twenty-one names here are
+     declared and dead: the EIGHTEEN colours, and `--eph-script` (Cormorant
+     Garamond), a third face that lost its last reader earlier and is easy to
+     miss beside the two that survive. Deleting them is a follow-up, and it takes
+     the six `ephemerists vellum …` rows in `factionContrast.test.ts` with it —
+     one of which is still spending a #651 BASELINE entry on a vermilion nothing
+     prints. CONSTANTS (gold/rubric/lapis/verdigris/
      ink) kept their role in both themes; the VELLUM surface + its text FLIPPED
      in dark (see [data-theme="dark"]). */
   --eph-gold: #b0863a; /* gold leaf / ochre */
@@ -1508,10 +1511,21 @@
      band wants relative luminance >= 0.2497, clearing it on the papyrus wants
      <= 0.1212, and no value is in both intervals. So the whole register takes
      the design's own NIGHT half in both cascades — one palette drawn together,
-     rather than a light band spliced onto a dark sheet — exactly as Singularity's
-     terminal and S.N.I.D.E.'s photocopier black are one palette in both themes
-     (§6). Everything below therefore has ONE value, and `[data-theme="dark"]`
-     declares no plate token at all.
+     rather than a light band spliced onto a dark sheet.
+
+     WHAT THE PEERS SHARE WITH THIS IS POLARITY, NOT ONE PALETTE, and the
+     difference matters because it makes this a first rather than a pattern.
+     S.N.I.D.E. and Singularity are the other two skins that are dark in BOTH
+     cascades (§6) — but both are still TUNED per theme: Singularity restates all
+     seventeen `-term-*` tokens under `[data-theme="dark"]` with different values
+     (`-bg` #07130c against #050f08, `-ink` #22c55e against #4ade80), and
+     S.N.I.D.E.'s `-wall-*` family flips outright. Ephemerists is the FIRST skin
+     register in the repo with no night tuning at all: everything below has ONE
+     value and `[data-theme="dark"]` declares no plate token. That is a claim
+     about this palette — it was drawn for the dark and reads on both app
+     grounds — and not a house pattern to copy without measuring. What still
+     flips for this faction is the spine hue's fill, wash and border, which are
+     not the skin.
 
      `-brass` STAYS A FRAME AND RULE COLOUR, never an ink, on both sides of the
      old cascade: it clears AA on the night plate (7.22:1) where it missed on the
@@ -3851,8 +3865,11 @@
    of motion on a page whose whole subject is a thing already done.
 
    All the pigment is here rather than in the archetype, which reserves the layer
-   and nothing else. The gold token already flips in the dark cascade, so this
-   needs no `[data-theme="dark"]` twin — the bloom follows the band it sits on.
+   and nothing else. This needs no `[data-theme="dark"]` twin, though not for the
+   reason it originally gave: the gold token USED to flip in the dark cascade and
+   the bloom followed the band it sat on. Since #1627 the gold does not flip at
+   all — the plate register is theme-invariant — so the same one rule is correct
+   by a shorter argument, and there is nothing here that a cascade could reach.
 
    Motion is opt-in under `no-preference`, the repo's inversion of the design's
    `reduce → none`: the BASE state is the stilled one (a bloom at rest, centred),

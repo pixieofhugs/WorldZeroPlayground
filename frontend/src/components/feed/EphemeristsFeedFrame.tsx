@@ -76,21 +76,21 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 /**
  * The one body ink the plate's own measurements never covered (#1341). The
  * shared row paints the actor's name in the raw `--faction-ephemerists`, a hue
- * measured against the app's neutral page: 4.37:1 on the bare papyrus and
- * 4.15:1 once the light theme's gold {@link WASH} is composited over it, where
- * 18px/700 owes 4.5:1 (700 weight reaches the large-text 3:1 exemption only at
- * 18.66px). It is a LIGHT-only miss — the dark plate takes no wash at all and
- * the same hue reads 5.56:1 there. #1252 recorded a dark failure by measuring
- * the light wash over the dark plate; that composite is not a surface this
- * chassis ever paints.
+ * measured against the app's neutral page — 4.37:1 on the papyrus this plate
+ * used to be, and 4.15:1 once the light theme's gold {@link WASH} composited
+ * over it, where 18px/700 owes 4.5:1 (700 weight reaches the large-text 3:1
+ * exemption only at 18.66px).
  *
- * {@link NILE} is the same teal walked down for type on this plate: 5.01:1 bare,
- * 4.76:1 under the wash, 7.00:1 dark. It is also, exactly, the ink this faction
- * declares for "links" — and the actor's name IS a link to that player. A
- * repoint, not a mint. `-plate-quiet` clears too (5.60 / 5.32 / 5.98) and was
- * rejected: it is the MUTED role's ink, and painting the row's one identity slot
- * in a brown quieter than the body copy loses the faction rather than legibly
- * keeping it.
+ * BOTH HALVES OF THAT READING ARE HISTORY SINCE #1627; the conclusion is not.
+ * The plate is night in both cascades and {@link WASH} is `none` in both, so the
+ * raw hue reads 5.56:1 flat with no composite left to take it down — the miss
+ * went away rather than being fixed. The repoint stays, because it was never
+ * only a ratio: {@link NILE} is exactly the ink this faction declares for
+ * "links", and the actor's name IS a link to that player. It measures 7.00:1 on
+ * the plate. `-plate-quiet` clears too (5.98) and is still rejected for the
+ * reason it always was — it is the MUTED role's ink, and painting the row's one
+ * identity slot in a colour quieter than the body copy loses the faction rather
+ * than legibly keeping it.
  */
 const ROW_SKIN: FeedRowSkin = { ink: { actor: NILE } }
 

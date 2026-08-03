@@ -33,22 +33,30 @@
  * hairline mixes from `-line`, the plate's own border weight, so a rule stays
  * visible on the night plate without a ternary.
  *
- * CONTRAST (#1168, re-measured on the new grounds for #1208): the forfeit body
- * is `-band-ink` on the night band at 12.44 / 14.00 — the skin routes around the
- * global red, and the note below records why; the marginal gloss is `-quiet` on
- * the plate at 5.60 / 5.98; and the ledger band moved from the codex's
- * `--eph-vellum-deep` to `-plate-inner`, where the win figure and the roster's
- * 18px "sealed" mark clear at 7.41 / 9.18 and the zero figure — 24px bold
- * against a 3:1 floor — sits at 3.93 / 5.78. The plate is the ONE ground in the
- * family that improved both: the codex band had the zero figure at 3.01:1, the
- * narrowest reading anywhere, and it is no longer the tightest. Both rows are in
- * `utils/__tests__/factionContrast.test.ts`, repointed to the new sheet, so a
- * later repaint of the plate cannot sink them.
+ * CONTRAST (#1168, re-measured on the new grounds for #1208, and again for
+ * #1627, which took the whole plate register to its night values in BOTH
+ * cascades — so every figure below is now one reading rather than two): the
+ * forfeit body is `-band-ink` on the cornice band at 14.00 — the skin routes
+ * around the global red, and the note below records why; the marginal gloss is
+ * `-quiet` on the plate at 5.98; and the ledger band, which #1208 moved from the
+ * codex's `--eph-vellum-deep` to `-plate-inner`, carries the win figure and the
+ * roster's 18px "sealed" mark at 9.18 with the zero figure — 24px bold against a
+ * 3:1 floor — at 3.31 / 5.78.
  *
- * OCHRE IS A MARK, NEVER AN INK HERE. `-plate-ochre` reads 4.46:1 on the plate,
- * a near miss, so it draws the rubric glyph, the cost panel's rule and the
- * panel's edge — nothing legible is set in it. `-brass` is likewise a rule
- * colour by its own declaration.
+ * THE ZERO FIGURE IS THE TIGHTEST READING IN THE FACTION AGAIN, and by the same
+ * mechanism as last time: it is `--color-danger`, a global ink that flips with
+ * the viewer, on a sheet that no longer does. It was 3.01:1 on the codex band,
+ * 3.93 after #1208 moved it onto the papyrus panel cell, and 3.31 now that the
+ * cell is night in light too. It still clears its floor, and it is the row to
+ * watch — see `CREDIT` below, which is the same ink family one step further on,
+ * measured at 1.76:1 and routed to the faction's own.
+ *
+ * OCHRE IS A MARK, NEVER AN INK HERE. It read 4.46:1 on the papyrus, a near
+ * miss, which is why nothing legible is set in it — it draws the rubric glyph,
+ * the cost panel's rule and the panel's edge. On the night plate it measures
+ * 5.41 and the ROLE is unchanged: one token, one job, not re-litigated every
+ * time the ground moves. `-brass` is likewise a rule colour by its own
+ * declaration.
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
