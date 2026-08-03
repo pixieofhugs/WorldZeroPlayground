@@ -31,6 +31,8 @@ export interface EditCharacterState {
   setDisplayName: (value: string) => void
   bio: string
   setBio: (value: string) => void
+  tagline: string
+  setTagline: (value: string) => void
   location: string
   setLocation: (value: string) => void
   avatarFile: File | null
@@ -56,6 +58,7 @@ export function useEditCharacter(): EditCharacterState {
   const [character, setCharacter] = useState<CharacterOut | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
+  const [tagline, setTagline] = useState('')
   const [location, setLocation] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -81,6 +84,7 @@ export function useEditCharacter(): EditCharacterState {
         setCharacter(c)
         setDisplayName(c.display_name)
         setBio(c.bio || '')
+        setTagline(c.tagline || '')
         setLocation(c.location || '')
       })
       .catch((err) => setError(extractError(err, 'Could not load character.')))
@@ -111,6 +115,12 @@ export function useEditCharacter(): EditCharacterState {
       const updated = await updateCharacter(characterId, {
         display_name: displayName,
         bio: bio || undefined,
+        // Sent unconditionally, unlike its neighbours: `|| undefined` omits the
+        // key, and an omitted key is "leave it alone" server-side, so a field
+        // sent that way can be set but never cleared. An empty tagline is a
+        // state the player is entitled to — the header hides the slot rather
+        // than filling it (#1628) — so "" has to reach the server as "".
+        tagline: tagline.trim(),
         location: location || undefined,
       })
       setCharacter(updated)
@@ -149,6 +159,8 @@ export function useEditCharacter(): EditCharacterState {
     setDisplayName,
     bio,
     setBio,
+    tagline,
+    setTagline,
     location,
     setLocation,
     avatarFile,

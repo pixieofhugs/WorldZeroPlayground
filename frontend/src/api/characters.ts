@@ -9,6 +9,10 @@ export interface CharacterCreate {
   username?: string
   display_name: string
   bio?: string
+  /** A 140-char slogan line for the profile header, distinct from the 500-char
+   *  long-form `bio` (#1628). Optional here for the same reason the rest of this
+   *  interface exists: the server defaults it to "". */
+  tagline?: string
   avatar_url?: string
   location?: string
   /**

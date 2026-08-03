@@ -15,6 +15,12 @@ import { NAME_MAX, type CreateCharacterState } from '../useCreateCharacter'
  *
  * Layout is flex/relative single-column — no fixed-px grid drives the page
  * (SPEC-faction-ui-profile §1a).
+ *
+ * No prose fields, deliberately: this is "Step 1 of 2 · Identity" and has never
+ * carried `bio`, which mobile players write on the edit screen instead.
+ * `tagline` (#1628) follows `bio` for exactly that reason — offered everywhere
+ * bio is offered and nowhere it is not, so the two stay a pair rather than one
+ * of them quietly becoming the phone's only first-run prose field.
  */
 export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {
   const { t } = useTranslation('forms')

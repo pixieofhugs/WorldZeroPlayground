@@ -10,6 +10,7 @@ import {
   useCreateCharacter,
   NAME_MAX,
   BIO_MAX,
+  TAGLINE_MAX,
   type CreateCharacterState,
 } from './characterPaths/useCreateCharacter'
 import PortraitPicker from './characterPaths/PortraitPicker'
@@ -44,6 +45,8 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
     setDisplayName,
     bio,
     setBio,
+    tagline,
+    setTagline,
     factionSlug,
     setFactionSlug,
     invited,
@@ -102,6 +105,26 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
           <div style={metaRow}>
             <span />
             <span style={{ color: 'var(--color-text-tertiary)' }}>{t('createCharacter.charsLeft', { count: BIO_MAX - bio.length })}</span>
+          </div>
+
+          {/* Tagline — a slogan line, not a short bio (#1628). Its counter turns
+              danger on the cap the way the name field's does: this is the field
+              the profile header's identity slot is laid out against, so running
+              out of room is worth seeing before the text stops appearing. */}
+          <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.taglineLabel')}</label>
+          <textarea
+            value={tagline}
+            onChange={(e) => setTagline(e.target.value)}
+            maxLength={TAGLINE_MAX}
+            placeholder={t('createCharacter.taglinePlaceholder')}
+            rows={2}
+            style={bioInput}
+          />
+          <div style={metaRow}>
+            <span />
+            <span style={{ color: tagline.length >= TAGLINE_MAX ? 'var(--color-danger)' : 'var(--color-text-tertiary)' }}>
+              {t('createCharacter.charsLeft', { count: TAGLINE_MAX - tagline.length })}
+            </span>
           </div>
 
           {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar).
