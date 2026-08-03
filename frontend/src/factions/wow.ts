@@ -116,6 +116,7 @@ const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchet
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
 const WowMobileFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/WowFactionPage'))
+const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -143,6 +144,15 @@ export const WOW_MANIFEST: FactionManifest = {
 
   // #900 — the page-level desktop surfaces.
   factionHero: () => WowFactionHero,
+  // The PAGE beneath that hero. #900 drew the recruiting banner and left the
+  // body defaulting, so a WOW faction page was a gilt banner over the na
+  // placeholder — and, because `DefaultFactionBody` carries no join block, with
+  // no way to enlist. Derived rather than drawn (no sheet exists): the ornaments
+  // come from `wowOrnament`, the section order from the phone twin below, and
+  // the main + rail shape from the other six bodies. The copy was already in
+  // `factions.json` from #900, unread until now. Third of #951's four bullets;
+  // `factionCard` is the last one open.
+  factionBody: () => WowFactionBody,
   backdrop: () => WowBackdrop,
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WOWSelectCard,

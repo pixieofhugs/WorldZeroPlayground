@@ -141,12 +141,14 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // When a skin ships, drop the surface here and the "still pending" guard below
 // fails, forcing this allowlist to shrink in lockstep with the fix.
 // `taskDetail` left this set in #1037 — the parchment field, WOW's first
-// desktop task-detail page — and `praxisDetail` left it in #1121, the chronicle
-// entry: WOW's dress over the one shared praxis-detail page (ADR-0061). Two
-// bullets of #951 remain, and neither is a page the kit ever drew.
+// desktop task-detail page — `praxisDetail` left it in #1121, the chronicle
+// entry (WOW's dress over the one shared praxis-detail page, ADR-0061), and
+// `factionBody` left it with the muster page: the charter, the muster roll, the
+// two galleries and the enlist rail, derived from the phone twin and the shared
+// ornament module because the kit never drew this one either. `factionCard` is
+// the last bullet of #951.
 const WOW_PENDING: ReadonlySet<string> = new Set([
   'factionCard',
-  'factionBody',
 ])
 
 describe('Coven is bespoke on every core surface, never the Default', () => {
