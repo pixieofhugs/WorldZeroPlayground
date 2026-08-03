@@ -245,7 +245,10 @@ ERA_1_LEVEL_PROFILES = (
 # =============================================================================
 
 ERA_1 = EraConfig(
-    name="TestEra",
+    name="Renaissance",
+    # Display prose above, identity below: `config_key` is matched against
+    # Era.config_key in the database (seed.py, routers/admin.py on rollover), so
+    # renaming it would orphan the existing row. Rename the era, never the key.
     config_key="era_1",
     max_task_signups=20,
     vote_budget_base=100,

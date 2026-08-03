@@ -13,6 +13,17 @@ def test_era1_config_key():
     assert ERA_1.config_key == "era_1"
 
 
+def test_era1_is_named_renaissance():
+    """The live era's player-visible name (#1620).
+
+    Pinned as a literal on purpose: every surface that shows it — the character
+    card's era stat, GET /game-config, the era announcement — asserts against
+    ``.name`` rather than prose, so without this one assertion the rename has no
+    test that can fail.
+    """
+    assert ERA_1.name == "Renaissance"
+
+
 def test_level_thresholds_count():
     # Levels 0–8 = 9 entries
     assert len(ERA_1.level_thresholds) == 9
