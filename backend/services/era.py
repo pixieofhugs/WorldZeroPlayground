@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
@@ -11,6 +11,12 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.praxis import Praxis
+from models.task import Task, TaskStatus
+# ``seed`` is a leaf as far as services go — it imports models, game_config and
+# config, never a service — so naming the one task both modules must agree on
+# costs no cycle. The seeder owns the title because the seeder is what keeps the
+# task alive in every era (#511); the sweep below only has to recognise it.
+from seed import ONBOARDING_TASK_TITLE
 from services.duel_outcome import duel_winner
 from services.scoring import snide_tie_winner_id
 from services.vote_tally import get_tally, tally_votes
@@ -300,6 +306,50 @@ async def resolve_duels_at_era_close(
     return duels
 
 
+async def retire_board_at_era_close(session: AsyncSession) -> int:
+    """Retire every task except the onboarding one. Returns how many rows moved.
+
+    An era's board belongs to that era. Before #1619 ``apply_era_reset`` had no
+    ``Task`` reference at all, so a rollover left the whole board active and
+    claimable; an empty ``ERA_2_TASKS`` only stops the *seeder* adding more, it
+    says nothing about what is already there.
+
+    **Retire, not delete.** ``praxis.task_id`` is NOT NULL, so deleting a task
+    would strand or destroy every praxis written against it. Retiring preserves
+    every reference — the row keeps answering "what was this proof *for*".
+
+    The onboarding self-portrait is spared: ``seed.ensure_onboarding_task`` keeps
+    it alive in every era by design (#511), so re-retiring it each rollover would
+    only fight the seeder on the next deploy. Everything else goes, including
+    ``pending`` proposals — a proposal from a closed era is that era's content,
+    and leaving it approvable would let the board the sweep just cleared come
+    back one admin click at a time.
+
+    Two consequences, neither a blocker and both certain to be re-discovered as
+    bugs otherwise:
+
+    1. **Retired titles stay taken.** ``services.task_import`` dedupes on
+       ``select(Task.title)`` with no status filter, so a retired task still
+       occupies its name. From here every title from every past era is reserved
+       forever — and once #1563 lands, a colliding import row is *silently
+       skipped* rather than rejected, so re-using a task name across eras yields
+       a successful-looking import that quietly drops rows.
+    2. **The board un-hides itself as players climb.** ``level_to_see_retired_tasks``
+       is 2, so retired tasks return to browse for anyone past that level.
+       ``reset_level`` puts everyone at 0 on rollover, so "only the photo task"
+       is true on day one and decays from there. (An era listing a faction in
+       ``allow_praxis_on_retired_task_factions`` — Era 1 lists Ephemerists —
+       leaks a second way, for that faction only.)
+    """
+    result = await session.execute(
+        update(Task)
+        .where(Task.title != ONBOARDING_TASK_TITLE)
+        .where(Task.status != TaskStatus.retired)
+        .values(status=TaskStatus.retired)
+    )
+    return result.rowcount
+
+
 async def apply_era_reset(
     characters: list[Character],
     new_era_row: Era,
@@ -310,7 +360,8 @@ async def apply_era_reset(
 
     Preserves historical stats rows for prior eras. Also freezes every unresolved
     duel outcome — era close is the moment a duel acquires a definitive winner
-    (ADR-0011 / ADR-0052).
+    (ADR-0011 / ADR-0052) — and retires the closing era's board
+    (:func:`retire_board_at_era_close`, #1619).
 
     Defection history is **not** purged. ``reset_faction`` returns everyone to
     ``na``, and a fresh start on the join gate falls out of era scoping alone:
@@ -325,6 +376,10 @@ async def apply_era_reset(
     # tell "last era" from "this era" without comparing timestamps (#823).
     closing_era_id = await get_closing_era_id(new_era_row, session)
     await resolve_duels_at_era_close(session, closing_era_id=closing_era_id)
+
+    # The closing era's board closes with it. Order does not matter to the duel
+    # freeze above — a duel's outcome is a vote tally, never a task status.
+    await retire_board_at_era_close(session)
 
     for character in characters:
         # Find previous stats to carry all_time_score forward

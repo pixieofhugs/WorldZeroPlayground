@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from sqlalchemy import func, select
 
-from faction_slugs import UNAFFILIATED_FACTION_SLUG
+from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA
 from script_utils import add_env_argument, get_settings
 from models.account import Account, OAuthProvider
@@ -191,10 +191,7 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
 # The single game-wide level-0 task (#511). It is NOT era content — it lives in
 # no `era_N.tasks` list — so it is seeded here on every run and exists in every
 # era regardless of era config. Level 0 is reserved for this one task; every
-# faction's roster content lives in levels 1-7 (#904). Faction is Albescent
-# (owner's call): task signup is gated on level only (`meets_task_level`), never
-# faction, so a brand-new unaffiliated (na) player can sign up, and Albescent
-# renders neutral/rainbow (#783/#794) so it reads as neutral to a newcomer.
+# faction's roster content lives in levels 1-7 (#904).
 ONBOARDING_TASK_TITLE = "Take a Picture of \"Yourself\""
 ONBOARDING_TASK_DESCRIPTION = (
     "Point a camera at yourself — but the quotation marks are doing work. "
@@ -203,7 +200,24 @@ ONBOARDING_TASK_DESCRIPTION = (
     "carried you, the desk that's unmistakably yours. Show us who you are. A "
     "literal selfie is allowed, but never required."
 )
-ONBOARDING_TASK_FACTION_SLUG = "albescent"
+# Cross-faction, not Albescent (#1619 B5). It was Albescent by the owner's call
+# and for good reasons that all still hold — signup is gated on level only
+# (`meets_task_level`), never faction, so an unaffiliated player could always
+# take it, and Albescent renders neutral/rainbow (#783/#794) so it *reads*
+# neutral. What changed is that a second era makes a faction slug carry
+# arithmetic it did not carry before: `compute_faction_multiplier` treats a task
+# as own-faction only when its slug matches the character's or the task is
+# cross-faction, so an Albescent task charged a brand-new `na` character
+# `other_task_modifier`. In Era 1 that is 1.0 and nothing happens; at 0.8 the
+# first act of an era pays a newcomer 8 points instead of 10 for not having a
+# faction yet, on what may be the only task on the board. Cross-faction keeps
+# every property the original call wanted and adds era-independence: it pays the
+# same to everyone, in every era, whatever the modifiers are.
+#
+# CROSS_FACTION_SLUG, not UNAFFILIATED_FACTION_SLUG — they share the value "na"
+# and are not aliases (see faction_slugs). This is a task belonging to no
+# faction, not a player who has joined none.
+ONBOARDING_TASK_FACTION_SLUG = CROSS_FACTION_SLUG
 ONBOARDING_TASK_POINT_VALUE = 10
 
 

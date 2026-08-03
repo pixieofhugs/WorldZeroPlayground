@@ -34,6 +34,7 @@ from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
 
+from game_config import era_config_for_key
 from models.character import Character
 from models.comment import Comment, CommentMention
 from models.era import Era
@@ -484,6 +485,16 @@ def _era_announcements_query(ctx: FeedContext) -> Select:
 
 def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
     era: Era = row[0]
+    # The era's display name comes from its CONFIG, resolved through the row's
+    # own config_key (#1623) — not from the Era.name column, and not from
+    # CURRENT_ERA. This query emits announcements for PAST eras too, so
+    # CURRENT_ERA would relabel Era 1's historical announcement with Era 2's
+    # name the day Metamorphosis starts.
+    #
+    # The stored name is the fallback for a config_key with no config left:
+    # a deleted era file, or a row written by a newer version. An old
+    # announcement showing the name it shipped under beats showing "era_1".
+    era_config = era_config_for_key(era.config_key)
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
         item_key=build_item_key(FEED_ITEM_TYPE_ERA_ANNOUNCEMENT, era.id),
@@ -493,7 +504,7 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
         actor_avatar_url=None,
         payload=EraAnnouncementPayload(
             era_id=era.id,
-            era_name=era.name,
+            era_name=era_config.name if era_config is not None else era.name,
             era_notes=era.notes,
             config_key=era.config_key,
         ),
