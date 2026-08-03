@@ -203,16 +203,18 @@ export default function FeedRowContent({
                 a chassis had no way to reach it, nor any value to strike one
                 with. A frame that publishes no `points` renderer gets the
                 caption line below, unchanged; the gate is shared, so a skin
-                never has to guard for an empty figure. */}
+                never has to guard for an empty figure.
+
+                That line is `.label-caption` (#1307) — a points/level figure is
+                a small fact about the row, not a region name. Its inline
+                tertiary is gone rather than restated: unset, `--label-ink`
+                resolves to exactly that token, and pinning it here is the one
+                thing that would stop a faction frame repointing the label
+                ink. */}
             {(row.points || row.level != null) &&
               (skin.points ? (
                 skin.points({ points: row.points, level: row.level })
               ) : (
-                {/* A points/level figure is a small fact about the row, so it
-                    is `.label-caption` (#1307). The inline tertiary is gone
-                    rather than restated: unset, `--label-ink` resolves to
-                    exactly that token, and pinning it here would be the one
-                    thing that stops a faction frame repointing the label ink. */}
                 <span className="label-caption">
                   {row.points}
                   {row.points && row.level != null ? ' · ' : ''}
