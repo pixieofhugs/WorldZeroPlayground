@@ -94,7 +94,7 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
   // action IS archiving. In the Archived tab that action is restore, and a
   // "Not now" that un-archived the card would mean the opposite of its label.
   const renderBody = (act: (() => void) | null): ReactNode => {
-    if (row) return <FeedRowContent row={row} avatarUrl={item.actor_avatar_url} />
+    if (row) return <FeedRowContent row={row} avatarUrl={item.actor_avatar_url ?? null} />
     return <Companion item={item} onNotNow={archivedView ? undefined : (act ?? undefined)} />
   }
 

@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiGet, apiPost } from './client'
 
 export interface ActivityFeedItem {
   type: string
@@ -13,9 +13,21 @@ export interface ActivityFeedItem {
    */
   item_key: string
   timestamp: string
-  actor_display_name: string | null
-  actor_faction_slug: string | null
-  actor_avatar_url: string | null
+  /**
+   * The actor triple, OPTIONAL as of #1400 — the generated schema says so.
+   *
+   * `FeedItemBase` declares all three `Optional[str] = None`, which makes them
+   * non-required in the OpenAPI document; this interface used to declare them
+   * required-and-nullable, and the migration to the typed transport is what
+   * surfaced the disagreement. A live FastAPI response does serialise every key
+   * (`null` at worst), so `?? null` at the three read sites is a formality
+   * rather than a defence — but the schema is the contract, and a client that
+   * claims more than the contract promises is exactly the drift #1400 exists to
+   * make visible.
+   */
+  actor_display_name?: string | null
+  actor_faction_slug?: string | null
+  actor_avatar_url?: string | null
   payload: Record<string, any>
   /** Faction this card's frame themes to (surface #12): actor's faction, else
    *  the task's faction, else null (neutral). Derived server-side. */
@@ -106,21 +118,6 @@ export interface FeedBulkArchiveResult {
   archived: boolean
 }
 
-/**
- * How this client writes a repeated query param — the same `{ indexes: null }`
- * `api/tasks.ts` and `api/praxis.ts` set, and for the same reason.
- *
- * `GET /activity-feed` reads `types: Optional[list[str]] = Query(None)`, which
- * FastAPI fills from REPEATED bare keys (`types=nudge&types=global_task`).
- * Axios' default serializer writes `types[]=nudge` instead, and FastAPI reads
- * nothing at all from that key: the endpoint answers 200 with a completely
- * unfiltered list. Nothing else in the app catches it — the types line up, the
- * request succeeds, tsc and the suite stay green, and the page quietly shows
- * every update with type chips sitting on top of it. Hence the test that pins
- * the serialised string rather than the config object.
- */
-export const FEED_PARAMS_SERIALIZER = { indexes: null } as const
-
 export async function getActivityFeed(params?: {
   filter?: string
   before?: string
@@ -133,16 +130,26 @@ export async function getActivityFeed(params?: {
    * `filter`'s own set. Values the registry does not know are ignored server
    * side and an empty selection means "no type constraint", so a stale
    * bookmark degrades instead of 4xx-ing or matching nothing.
+   *
+   * REPEATED BARE keys — `types=nudge&types=global_task`, never `types[]=`,
+   * which FastAPI reads nothing from while still answering 200 with an
+   * unfiltered list. This module carried a `paramsSerializer` to force that out
+   * of axios; `./client` gets it right by default, and
+   * `__tests__/feedQueryParams.test.ts` pins the URL it actually builds rather
+   * than trusting the library's default (#1400).
    */
   types?: string[]
 }): Promise<ActivityFeedResponse> {
-  const { data } = await api.get<ActivityFeedResponse>('/activity-feed', {
-    params,
-    paramsSerializer: FEED_PARAMS_SERIALIZER,
-  })
+  const { data } = await apiGet('/activity-feed', { params: { query: params } })
   // The one place a `FeedCounts` enters the app, so the one place it has to be
   // made true. See `normalizeFeedCounts`.
-  return { ...data, counts: normalizeFeedCounts(data?.counts) }
+  //
+  // `next_cursor` gets the same treatment for the same kind of reason: the
+  // schema has it non-required (`Optional[str] = None` on the response model),
+  // and an absent cursor means precisely what a null one means — no further
+  // page. Collapsing the two here rather than widening the field keeps
+  // `useUpdates`' `string | null` cursor state honest (#1400).
+  return { ...data, counts: normalizeFeedCounts(data?.counts), next_cursor: data.next_cursor ?? null }
 }
 
 /**
@@ -152,17 +159,13 @@ export async function getActivityFeed(params?: {
  * at all (hide unusable controls; never render them disabled).
  */
 export async function dismissFeedItem(itemKey: string): Promise<FeedItemArchiveResult> {
-  const { data } = await api.post<FeedItemArchiveResult>('/activity-feed/dismiss', {
-    item_key: itemKey,
-  })
+  const { data } = await apiPost('/activity-feed/dismiss', { body: { item_key: itemKey } })
   return data
 }
 
 /** Take one feed item back out of the archive. */
 export async function restoreFeedItem(itemKey: string): Promise<FeedItemArchiveResult> {
-  const { data } = await api.post<FeedItemArchiveResult>('/activity-feed/restore', {
-    item_key: itemKey,
-  })
+  const { data } = await apiPost('/activity-feed/restore', { body: { item_key: itemKey } })
   return data
 }
 
@@ -172,17 +175,13 @@ export async function restoreFeedItem(itemKey: string): Promise<FeedItemArchiveR
  * tab shows. `awaiting_submission` rows are SKIPPED, not refused.
  */
 export async function dismissAllFeedItems(filter?: string): Promise<FeedBulkArchiveResult> {
-  const { data } = await api.post<FeedBulkArchiveResult>('/activity-feed/dismiss-all', {
-    filter: filter ?? null,
-  })
+  const { data } = await apiPost('/activity-feed/dismiss-all', { body: { filter: filter ?? null } })
   return data
 }
 
 /** Empty the archive (no filter = everything, which is what "Restore all" means
  *  on the Archived tab — the archived view has no tabs of its own). */
 export async function restoreAllFeedItems(filter?: string): Promise<FeedBulkArchiveResult> {
-  const { data } = await api.post<FeedBulkArchiveResult>('/activity-feed/restore-all', {
-    filter: filter ?? null,
-  })
+  const { data } = await apiPost('/activity-feed/restore-all', { body: { filter: filter ?? null } })
   return data
 }
