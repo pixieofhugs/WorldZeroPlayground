@@ -1,6 +1,6 @@
 // Metatask API — metatasks are Task rows with task_type="metatask".
 // Apply/remove routes are praxis-scoped; see frontend/src/api/praxis.ts.
-import api from './axios'
+import { apiGet, apiPost } from './client'
 import type { TaskOut } from './tasks'
 
 export interface MetataskProposal {
@@ -13,17 +13,12 @@ export interface MetataskProposal {
 
 /** List all metatask-type tasks. */
 export async function listMetatasks(): Promise<TaskOut[]> {
-  const { data } = await api.get<TaskOut[]>('/tasks', {
-    params: { task_type: 'metatask' },
-  })
+  const { data } = await apiGet('/tasks', { params: { query: { task_type: 'metatask' } } })
   return data
 }
 
 /** Propose a new metatask. Level-6 gated on the backend (admin bypass). */
 export async function proposeMetatask(body: MetataskProposal): Promise<TaskOut> {
-  const { data } = await api.post<TaskOut>('/tasks', {
-    ...body,
-    task_type: 'metatask',
-  })
+  const { data } = await apiPost('/tasks', { body: { ...body, task_type: 'metatask' } })
   return data
 }
