@@ -222,7 +222,7 @@ export default function DefaultPraxisDetail({
       }}
     >
       <span
-        className="eyebrow"
+        className="label-heading"
         style={{ letterSpacing: '0.22em', color: 'var(--color-text-primary)' }}
       >
         {label}
@@ -263,33 +263,31 @@ export default function DefaultPraxisDetail({
     >
       <Link
         to="/tasks"
-        className="eyebrow"
+        className="label-caption"
         style={{
-          letterSpacing: '0.2em',
           color: 'var(--faction-default-card-accent)',
           textDecoration: 'none',
         }}
       >
         {t('detail.breadcrumb.tasks')}
       </Link>
-      <span aria-hidden className="eyebrow">
+      <span aria-hidden className="label-caption">
         ›
       </span>
       <Link
         to={`/tasks/${praxis.task_id}`}
-        className="eyebrow"
+        className="label-caption"
         style={{
-          letterSpacing: '0.2em',
           color: 'var(--faction-default-card-accent)',
           textDecoration: 'none',
         }}
       >
         {praxis.task_title}
       </Link>
-      <span aria-hidden className="eyebrow">
+      <span aria-hidden className="label-caption">
         ›
       </span>
-      <span className="eyebrow" style={{ letterSpacing: '0.2em' }}>
+      <span className="label-caption">
         {t('detail.breadcrumb.current')}
       </span>
     </nav>
@@ -309,9 +307,8 @@ export default function DefaultPraxisDetail({
     >
       <Link
         to="/praxis"
-        className="eyebrow"
+        className="label-caption"
         style={{
-          letterSpacing: '0.2em',
           color: 'var(--faction-default-card-accent)',
           textDecoration: 'none',
         }}
@@ -320,8 +317,8 @@ export default function DefaultPraxisDetail({
         {t('detail.back')}
       </Link>
       <span
-        className="eyebrow"
-        style={{ flex: 1, textAlign: 'center', letterSpacing: '0.2em' }}
+        className="label-caption"
+        style={{ flex: 1, textAlign: 'center' }}
       >
         {t('detail.breadcrumb.current')}
       </span>
@@ -351,7 +348,7 @@ export default function DefaultPraxisDetail({
             flexWrap: 'wrap',
           }}
         >
-          <span className="eyebrow" style={{ color: 'var(--color-warning)' }}>
+          <span className="label-caption" style={{ color: 'var(--color-warning)' }}>
             {t('detail.banners.flaggedLabel')}
           </span>
           <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
@@ -410,7 +407,7 @@ export default function DefaultPraxisDetail({
               textDecoration: 'none',
             }}
           />
-          <div className="eyebrow" style={{ color: 'var(--faction-default-card-muted)' }}>
+          <div className="label-caption" style={{ color: 'var(--faction-default-card-muted)' }}>
             {t('detail.filed', {
               date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
             })}
@@ -447,7 +444,7 @@ export default function DefaultPraxisDetail({
           marginBottom: 'var(--space-xl)',
         }}
       >
-        <span className="eyebrow" style={{ color: 'var(--faction-default-card-muted)' }}>
+        <span className="label-caption" style={{ color: 'var(--faction-default-card-muted)' }}>
           {t('detail.taskRef.label')}
         </span>
         <Link
@@ -457,7 +454,7 @@ export default function DefaultPraxisDetail({
         >
           {praxis.task_title}
         </Link>
-        <span className="eyebrow" style={{ marginLeft: 'auto', color: 'var(--faction-default-card-muted)' }}>
+        <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--faction-default-card-muted)' }}>
           {t('detail.taskRef.level', { level: praxis.task_level_required })}
           {' · '}
           {t('detail.taskRef.points', { points: praxis.task_point_value })}
@@ -555,7 +552,7 @@ export default function DefaultPraxisDetail({
     <section style={panel}>
       {sectionHead(
         t('detail.voters.heading'),
-        <span className="eyebrow" style={{ color: 'var(--faction-default-card-muted)' }}>
+        <span className="label-caption" style={{ color: 'var(--faction-default-card-muted)' }}>
           {t('detail.voters.count', { count: voters.length })}
         </span>,
       )}

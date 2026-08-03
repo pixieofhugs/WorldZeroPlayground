@@ -69,7 +69,7 @@ export default function FeedUndoStrip({
       <button
         type="button"
         onClick={onAct}
-        className="eyebrow"
+        className="label-caption"
         style={{
           flexShrink: 0,
           background: 'transparent',

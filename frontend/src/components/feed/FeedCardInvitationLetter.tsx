@@ -269,7 +269,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
         >
           {joined ? (
             <span
-              className="eyebrow"
+              className="label-caption"
               style={{ color }}
               data-invitation-accepted
             >

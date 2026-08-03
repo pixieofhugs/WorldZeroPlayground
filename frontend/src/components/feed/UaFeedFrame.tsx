@@ -36,8 +36,14 @@ import type { FeedFrameProps } from './feedFrameProps'
  * functional control sits under an ornament.
  *
  * TYPE. Kicker in Cormorant Garamond (the display cut), uppercase and widely
- * tracked; the time in the EB Garamond eyebrow, the pairing the sheet draws.
- * Both are label tier — a kind label and a timestamp are scanned, not read (§4).
+ * tracked; the tag and the time in the EB Garamond label face, the pairing the
+ * sheet draws. Both are label tier, but #1307 split that tier in two and this
+ * band has NOT been swept: the kicker is heading work (it names the card) while
+ * the tag and the time are captions (small facts, genuinely read), and both of
+ * the latter wear `UA_EYEBROW` — a hand-rolled label style in
+ * `components/factionMarks/uaAtoms.ts`, outside this directory. Moving it is
+ * that atom's sweep, not this file's; until then the old "scanned, not read"
+ * reading still describes what renders here, and it is no longer the doctrine.
  *
  * NO COPY. Every string on this card arrives as a prop from the neutral `feed`
  * catalog; the sheet's own dialect is discarded (epic #1192), and there is no

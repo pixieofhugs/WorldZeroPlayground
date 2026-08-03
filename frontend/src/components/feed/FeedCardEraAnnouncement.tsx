@@ -32,8 +32,11 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
-        <span className="eyebrow">{i18n.t('feed:eraAnnouncement.kicker')}</span>
-        <span className="eyebrow" style={{ color: 'var(--rank-silver)' }}>
+        {/* The masthead pair (#1307): "ERA" names the card, so it is the
+            heading tier; "Era Announcement" beside it is a fact about the card
+            and takes the caption's sentence case. */}
+        <span className="label-heading">{i18n.t('feed:eraAnnouncement.kicker')}</span>
+        <span className="label-caption" style={{ color: 'var(--rank-silver)' }}>
           {i18n.t('feed:eraAnnouncement.label')}
         </span>
         <span style={{ marginLeft: 'auto' }}>

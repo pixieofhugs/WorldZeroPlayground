@@ -202,13 +202,20 @@ export default function FeedRowContent({
                 crooked gold plaque, the Everymen's stamped circular seal — and
                 a chassis had no way to reach it, nor any value to strike one
                 with. A frame that publishes no `points` renderer gets the
-                eyebrow line below, unchanged; the gate is shared, so a skin
-                never has to guard for an empty figure. */}
+                caption line below, unchanged; the gate is shared, so a skin
+                never has to guard for an empty figure.
+
+                That line is `.label-caption` (#1307) — a points/level figure is
+                a small fact about the row, not a region name. Its inline
+                tertiary is gone rather than restated: unset, `--label-ink`
+                resolves to exactly that token, and pinning it here is the one
+                thing that would stop a faction frame repointing the label
+                ink. */}
             {(row.points || row.level != null) &&
               (skin.points ? (
                 skin.points({ points: row.points, level: row.level })
               ) : (
-                <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+                <span className="label-caption">
                   {row.points}
                   {row.points && row.level != null ? ' · ' : ''}
                   {row.level != null ? i18n.t('feed:row.level', { level: row.level }) : ''}

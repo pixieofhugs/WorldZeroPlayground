@@ -140,11 +140,14 @@ export default function EverymenFeedFrame({
         >
           {/* Left flank — the status tag ("Still waiting"), or nothing. Drawn as
               an overprinted chip: a currentColor hairline box, so it reads as a
-              stamp struck onto the band rather than a second colour on it. */}
+              stamp struck onto the band rather than a second colour on it.
+              A status and a dateline are both small FACTS about the slip, so
+              both flanks are `.label-caption` (#1307); the masthead between
+              them is the kicker and already carries its own poster face. */}
           <span style={{ justifySelf: 'start', minWidth: 0, display: 'inline-flex' }}>
             {tag && (
               <span
-                className="eyebrow"
+                className="label-caption"
                 style={{
                   color: 'inherit',
                   border: '1px solid currentColor',
@@ -193,7 +196,7 @@ export default function EverymenFeedFrame({
             }}
           >
             <span
-              className="eyebrow"
+              className="label-caption"
               style={{ color: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}
             >
               {time}

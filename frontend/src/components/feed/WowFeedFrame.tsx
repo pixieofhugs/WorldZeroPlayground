@@ -50,7 +50,7 @@ import type { FeedFrameProps } from './feedFrameProps'
  *
  * #1252 grew the body the slot this note asked for: publish a
  * {@link FeedRowSkin} with a `points` renderer and it draws the figure INSTEAD
- * of the shared eyebrow line, with the row's own values. Striking the plaque is
+ * of the shared caption line, with the row's own values. Striking the plaque is
  * dress and belongs to #1204's own follow-up; what this file claims today is
  * the ink half of that seam, below.
  *
@@ -157,8 +157,12 @@ export default function WowFeedFrame({
           ✦
         </span>
 
+        {/* The proclamation head NAMES the card, so it is `.label-heading`
+            (#1307) — the tier the decree's own caps and tracking already agree
+            with, and the faction dress below only re-tunes. The chip beside it
+            is a status, which is caption work. */}
         <span
-          className="eyebrow"
+          className="label-heading"
           style={{
             fontFamily: MED,
             fontSize: size.kicker,
@@ -175,14 +179,15 @@ export default function WowFeedFrame({
 
         {/* "Still waiting" — an archived challenge or invite is still open, since
             archiving never answers anything (ADR-0070). Struck as the decree's
-            own plum lozenge, the one WOW chip pairing measured in both themes. */}
+            own plum lozenge, the one WOW chip pairing measured in both themes.
+            Its 11px and its 0.1em tracking are gone rather than restated: both
+            existed to lift the chip off `.eyebrow`'s 9px caps, and the caption
+            tier now carries that job further than the overrides did. */}
         {tag && (
           <span
-            className="eyebrow"
+            className="label-caption"
             style={{
               fontFamily: MED,
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.1em',
               color: 'var(--faction-wow-on-plum)',
               background: 'var(--faction-wow-plum-surface)',
               borderRadius: 4,

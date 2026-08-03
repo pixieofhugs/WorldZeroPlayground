@@ -16,6 +16,13 @@ import type { ReactNode } from 'react'
  * Everything here paints in `color: inherit` / `currentColor`, so a frame tints
  * the whole band (the archive control included) by setting `color` on whatever
  * it places this inside.
+ *
+ * THE BAND SPENDS BOTH LABEL TIERS (#1307), and the split is the slot's job
+ * rather than its position. The kicker NAMES THE REGION — it is the card's kind,
+ * one or two words by construction, and every faction sheet that places the four
+ * slots by hand draws it as a masthead — so it is `.label-heading`. The tag and
+ * the time are small FACTS about the card, genuinely read, so they take
+ * `.label-caption` and its sentence case.
  */
 export default function FeedChassisBand({
   kicker,
@@ -39,7 +46,7 @@ export default function FeedChassisBand({
       }}
     >
       <span
-        className="eyebrow"
+        className="label-heading"
         style={{
           color: 'inherit',
           minWidth: 0,
@@ -52,7 +59,7 @@ export default function FeedChassisBand({
       </span>
       {tag && (
         <span
-          className="eyebrow"
+          className="label-caption"
           style={{
             color: 'inherit',
             opacity: 0.8,
@@ -65,7 +72,7 @@ export default function FeedChassisBand({
         </span>
       )}
       <span
-        className="eyebrow"
+        className="label-caption"
         style={{
           marginLeft: 'auto',
           color: 'inherit',

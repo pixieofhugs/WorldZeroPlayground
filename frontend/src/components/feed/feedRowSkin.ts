@@ -122,7 +122,7 @@ export function resolveFeedRowInk(
   }
 }
 
-/** The figure the row would otherwise print in its own eyebrow voice. */
+/** The figure the row would otherwise print in its own caption voice. */
 export interface FeedRowPoints {
   /** Pre-formatted points string, e.g. "40 pts" / "+12 pts", or null. */
   points: string | null
@@ -133,7 +133,7 @@ export interface FeedRowSkin {
   /** Re-point the body's inks for this chassis's ground. */
   ink?: FeedRowInk
   /**
-   * Draw the points/level figure instead of the shared eyebrow line.
+   * Draw the points/level figure instead of the shared caption line.
    *
    * A renderer rather than a style bag because the four asks are STRUCTURE, not
    * colour: WOW's sheet strikes a crooked gold plaque (`rotate(-2deg)`) with a ✦
