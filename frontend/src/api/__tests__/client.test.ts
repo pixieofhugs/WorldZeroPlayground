@@ -187,8 +187,8 @@ describe('what the client does with a failure', () => {
   /**
    * A proxy's HTML error page is not JSON. That is no reason to throw something
    * the caller cannot read: the status still tells the truth, and `extractError`
-   * falls through to its 5xx prose exactly as it does for an axios failure with
-   * an unparseable body.
+   * falls through to its 5xx prose, which is what it does for any failure whose
+   * body it cannot make sense of.
    */
   it('still throws with a status when the body is not JSON', async () => {
     wire.replyWith(() => Promise.resolve(new Response('<html>502</html>', { status: 502 })))
