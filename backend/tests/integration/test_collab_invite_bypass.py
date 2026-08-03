@@ -266,10 +266,14 @@ async def test_full_task_bank_still_refuses_on_accept(
             era=tight_bank,
         )
     assert excinfo.value.status_code == 409
-    # Still plain prose, not a coded body: this one raise is held back from
-    # #1401 phase 1 because `FeedCardCollabInvite` substring-matches it outside
-    # `extractError`. The rationale is at the raise in `services/praxis.py`.
-    assert "bank" in excinfo.value.detail.lower()
+    # Coded as of #1598 — the last phase-1 raise, held back only until the
+    # client stopped substring-matching this response's prose.
+    # `FeedCardCollabInvite` opens its drop-to-accept modal off this code now,
+    # so the code is the contract and the prose is the fallback, not the
+    # reverse. The prose is still asserted because it is what a player reads
+    # on any client that does not know the code.
+    assert excinfo.value.detail["code"] == ErrorCode.task_bank_full.value
+    assert "bank" in excinfo.value.detail["message"].lower()
 
 
 @pytest.mark.asyncio
