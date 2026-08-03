@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+from schemas.base import WireModel
 
 
-class VoteOut(BaseModel):
+class VoteOut(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -15,7 +16,7 @@ class VoteOut(BaseModel):
     updated_at: datetime
 
 
-class VoteTallyOut(BaseModel):
+class VoteTallyOut(WireModel):
     """A praxis's vote aggregate, in the field names every praxis payload uses.
 
     Deliberately the same two names as ``PraxisOut`` / ``PraxisCardOut`` carry
@@ -29,7 +30,7 @@ class VoteTallyOut(BaseModel):
     voter_count: int
 
 
-class ViewerStatsOut(BaseModel):
+class ViewerStatsOut(WireModel):
     """The voter's own stats as of immediately after their cast (#1382).
 
     Carried so the client never has to refetch ``/auth/me`` to find out what a
@@ -64,7 +65,7 @@ class VoteCastOut(VoteOut):
     viewer_stats: ViewerStatsOut
 
 
-class VoterDetail(BaseModel):
+class VoterDetail(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     character_id: int

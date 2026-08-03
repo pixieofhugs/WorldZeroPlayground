@@ -1,5 +1,4 @@
 import { apiGet, apiPost, apiPut, apiPatch } from './client'
-import { wireSent } from './wireSent'
 import type { TaskOut } from './tasks'
 import type { PraxisOut } from './praxis'
 import type { CommentOut } from './comments'
@@ -69,9 +68,8 @@ export interface AdminCharacterSummary {
 export interface FlagOut {
   reason: string
   /** Nullable, not optional. `Flag.reason_detail` is `Optional[str] = None` in
-   *  Pydantic, so the OpenAPI schema does not mark it *required* — but the wire
-   *  always carries it, and both readers of this type reach it through
-   *  `wireSent`, which is where that difference is written down (#1400). */
+   *  Pydantic, but the wire always carries the key — and since #1400 the
+   *  generated schema marks it required rather than leaving it `?`. */
   reason_detail: string | null
   flagged_by_id: number
   flagged_by_name: string
@@ -107,12 +105,12 @@ export async function getMessages(archived = false): Promise<ContactMessageOut[]
 
 export async function getFlaggedPraxes(): Promise<FlaggedPraxisOut[]> {
   const { data } = await apiGet('/admin/praxes/flagged')
-  return data.map(wireSent)
+  return data
 }
 
 export async function getFlaggedComments(): Promise<FlaggedCommentOut[]> {
   const { data } = await apiGet('/admin/comments/flagged')
-  return data.map(wireSent)
+  return data
 }
 
 export async function getAdminCharacters(status?: CharacterStatus): Promise<AdminCharacterSummary[]> {
@@ -260,7 +258,7 @@ export async function moderatePraxis(
     params: { path: { praxis_id: id } },
     body: { status, admin_note: adminNote || null },
   })
-  return wireSent(data)
+  return data
 }
 
 export async function moderateComment(
@@ -271,7 +269,7 @@ export async function moderateComment(
     params: { path: { comment_id: id } },
     body: { status },
   })
-  return wireSent(data)
+  return data
 }
 
 export async function archiveMessage(id: number): Promise<ContactMessageOut> {

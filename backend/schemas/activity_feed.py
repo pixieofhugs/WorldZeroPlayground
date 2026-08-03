@@ -26,10 +26,11 @@ member should fail validation, not silently serialise the same way.
 from datetime import datetime
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, computed_field
+from pydantic import ConfigDict, Field, TypeAdapter, computed_field
+from schemas.base import WireModel
 
 
-class FeedPayloadBase(BaseModel):
+class FeedPayloadBase(WireModel):
     """Shared config for every feed payload: closed, frozen, wire-shaped."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -226,7 +227,7 @@ FeedPayload = Union[
 ]
 
 
-class FeedItemBase(BaseModel):
+class FeedItemBase(WireModel):
     """The fields every feed item carries, whatever its type.
 
     ``item_key`` is the item's stable identity, ``"{type}:{source row PK}"``.
@@ -381,7 +382,7 @@ ActivityFeedItem = Annotated[
 ACTIVITY_FEED_ITEM_ADAPTER: TypeAdapter[ActivityFeedItem] = TypeAdapter(ActivityFeedItem)
 
 
-class FeedCounts(BaseModel):
+class FeedCounts(WireModel):
     """Badge counts for each filter tab, plus the per-type facet.
 
     The six scalars are **sidebar** numbers: they always describe the live feed,
@@ -403,7 +404,7 @@ class FeedCounts(BaseModel):
     by_type: dict[str, int] = Field(default_factory=dict)
 
 
-class ActivityFeedResponse(BaseModel):
+class ActivityFeedResponse(WireModel):
     """Paginated activity feed with badge counts."""
 
     items: list[ActivityFeedItem]
@@ -411,13 +412,13 @@ class ActivityFeedResponse(BaseModel):
     next_cursor: Optional[str] = None
 
 
-class FeedItemArchiveRequest(BaseModel):
+class FeedItemArchiveRequest(WireModel):
     """Archive or restore exactly one feed item, named by its stable key."""
 
     item_key: str
 
 
-class FeedItemArchiveResponse(BaseModel):
+class FeedItemArchiveResponse(WireModel):
     """The item's resulting archive state.
 
     ``archived`` is the state *after* the call, not whether the call changed
@@ -431,7 +432,7 @@ class FeedItemArchiveResponse(BaseModel):
     changed: bool
 
 
-class FeedBulkArchiveRequest(BaseModel):
+class FeedBulkArchiveRequest(WireModel):
     """Archive or restore in bulk, scoped to one filter tab.
 
     ``filter`` names the tab the player is looking at — the same values the
@@ -443,7 +444,7 @@ class FeedBulkArchiveRequest(BaseModel):
     filter: Optional[str] = None
 
 
-class FeedBulkArchiveResponse(BaseModel):
+class FeedBulkArchiveResponse(WireModel):
     """How many items the bulk call moved."""
 
     count: int

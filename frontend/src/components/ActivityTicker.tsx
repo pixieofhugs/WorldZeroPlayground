@@ -47,10 +47,10 @@ function toEntry(item: ActivityFeedItem): TickerEntry | null {
     item.payload?.era_name ??
     ''
   return {
-    player: item.actor_display_name ?? null,
+    player: item.actor_display_name,
     verbKey,
     subject,
-    faction: item.actor_faction_slug ?? null,
+    faction: item.actor_faction_slug,
   }
 }
 

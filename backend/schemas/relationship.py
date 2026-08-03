@@ -2,7 +2,8 @@ import enum
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+from schemas.base import WireModel
 
 
 class RelationshipTypeEnum(str, enum.Enum):
@@ -23,12 +24,12 @@ RelationshipDisplayStatus = Literal[
 ]
 
 
-class RelationshipCreate(BaseModel):
+class RelationshipCreate(WireModel):
     to_character_id: int
     type: RelationshipTypeEnum
 
 
-class RelationshipListItem(BaseModel):
+class RelationshipListItem(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int

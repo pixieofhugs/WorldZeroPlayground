@@ -20,10 +20,12 @@ export interface paths {
          *     character has put away.
          *
          *     ``types`` is a **repeated bare key** — ``?types=nudge&types=global_task`` —
-         *     intersected with ``filter``'s own set. Clients must serialise it that way:
-         *     axios' default ``types[]=nudge`` arrives as a key FastAPI does not read, and
-         *     the endpoint answers 200 with an unfiltered list, so nothing anywhere fails.
-         *     ``frontend/src/api/`` sets ``paramsSerializer: { indexes: null }`` for this.
+         *     intersected with ``filter``'s own set, and clients must serialise it that
+         *     way. A client that brackets the key instead — ``types[]=nudge`` — sends a
+         *     name FastAPI reads nothing from, and this endpoint then answers 200 with an
+         *     unfiltered list: the filter is silently ignored and nothing fails anywhere.
+         *     That silence is why the rule is written down on the endpoint rather than
+         *     left to whatever a client's HTTP library does by default.
          *
          *     Both ``filter`` and ``types`` are tolerant of values the registry does not
          *     know — this is a read projection and a stale bookmark should degrade, not
@@ -1940,7 +1942,7 @@ export interface components {
             /** Items */
             items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
-            next_cursor?: string | null;
+            next_cursor: string | null;
         };
         /** AdminCharacterCreate */
         AdminCharacterCreate: {
@@ -2027,11 +2029,11 @@ export interface components {
         /** AwaitingSubmissionItem */
         AwaitingSubmissionItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -2192,7 +2194,7 @@ export interface components {
             /** Avatar Url */
             avatar_url: string;
             /** Badges */
-            badges?: components["schemas"]["BadgeOut"][];
+            badges: components["schemas"]["BadgeOut"][];
             /** Bio */
             bio: string;
             /**
@@ -2207,7 +2209,7 @@ export interface components {
             /** Id */
             id: number;
             /** Invitations */
-            invitations?: string[];
+            invitations: string[];
             /** Level */
             level: number;
             /** Location */
@@ -2308,11 +2310,11 @@ export interface components {
         /** CollabInviteItem */
         CollabInviteItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -2366,11 +2368,11 @@ export interface components {
         /** CollaboratorSubmittedItem */
         CollaboratorSubmittedItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -2443,11 +2445,11 @@ export interface components {
         /** CommentMentionItem */
         CommentMentionItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -2504,9 +2506,9 @@ export interface components {
             /** Excerpt */
             excerpt: string;
             /** Praxis Id */
-            praxis_id?: number | null;
+            praxis_id: number | null;
             /** Task Id */
-            task_id?: number | null;
+            task_id: number | null;
         };
         /** CommentModerationIn */
         CommentModerationIn: {
@@ -2536,9 +2538,9 @@ export interface components {
              */
             mentions: components["schemas"]["CommentMentionOut"][];
             /** Praxis Id */
-            praxis_id?: number | null;
+            praxis_id: number | null;
             /** Task Id */
-            task_id?: number | null;
+            task_id: number | null;
             /**
              * Updated At
              * Format: date-time
@@ -2561,7 +2563,7 @@ export interface components {
             /** Praxis Id */
             praxis_id: number;
             /** Praxis Title */
-            praxis_title?: string | null;
+            praxis_title: string | null;
             /** Task Faction Slug */
             task_faction_slug: string;
             /** Task Point Value */
@@ -2622,7 +2624,7 @@ export interface components {
              * @default false
              */
             can_start_as_albescent: boolean;
-            character?: components["schemas"]["CharacterOut"] | null;
+            character: components["schemas"]["CharacterOut"] | null;
             /**
              * Era Name
              * @default
@@ -2663,11 +2665,11 @@ export interface components {
             /** Account Id */
             account_id: number;
             /** Character Id */
-            character_id?: number | null;
+            character_id: number | null;
             /** Character Name */
-            character_name?: string | null;
+            character_name: string | null;
             /** Faction Slug */
-            faction_slug?: string | null;
+            faction_slug: string | null;
             /** Message */
             message: string;
         };
@@ -2684,11 +2686,11 @@ export interface components {
         /** DuelChallengeItem */
         DuelChallengeItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -2744,19 +2746,19 @@ export interface components {
         DuelDetailOut: {
             challenger: components["schemas"]["DuelSideOut"];
             /** Challenger Final Points */
-            challenger_final_points?: number | null;
+            challenger_final_points: number | null;
             /** Forfeited By Character Id */
             forfeited_by_character_id: number | null;
             /** Id */
             id: number;
             opponent: components["schemas"]["DuelSideOut"];
             /** Opponent Final Points */
-            opponent_final_points?: number | null;
+            opponent_final_points: number | null;
             status: components["schemas"]["DuelStatus"];
             /** Task Id */
             task_id: number;
             /** Winner Character Id */
-            winner_character_id?: number | null;
+            winner_character_id: number | null;
         };
         /** DuelOut */
         DuelOut: {
@@ -2805,7 +2807,7 @@ export interface components {
             /** Is Submitted */
             is_submitted: boolean;
             /** Nudged At */
-            nudged_at?: string | null;
+            nudged_at: string | null;
             /** Points From Votes */
             points_from_votes: number;
             /** Praxis Id */
@@ -2819,11 +2821,11 @@ export interface components {
         /** EraAnnouncementItem */
         EraAnnouncementItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -2977,7 +2979,7 @@ export interface components {
              */
             all: number;
             /** By Type */
-            by_type?: {
+            by_type: {
                 [key: string]: number;
             };
             /**
@@ -3064,7 +3066,7 @@ export interface components {
             /** Reason */
             reason: string;
             /** Reason Detail */
-            reason_detail?: string | null;
+            reason_detail: string | null;
         };
         /**
          * FlagReason
@@ -3104,9 +3106,9 @@ export interface components {
              */
             mentions: components["schemas"]["CommentMentionOut"][];
             /** Praxis Id */
-            praxis_id?: number | null;
+            praxis_id: number | null;
             /** Task Id */
-            task_id?: number | null;
+            task_id: number | null;
             /**
              * Updated At
              * Format: date-time
@@ -3140,7 +3142,7 @@ export interface components {
             /** Created By Display Name */
             created_by_display_name: string;
             /** Created By Faction Slug */
-            created_by_faction_slug?: string | null;
+            created_by_faction_slug: string | null;
             /** Created By Id */
             created_by_id: number;
             /**
@@ -3149,7 +3151,7 @@ export interface components {
              */
             display_multiplier: number;
             /** Duel Id */
-            duel_id?: number | null;
+            duel_id: number | null;
             /** Flagged At */
             flagged_at: string | null;
             /**
@@ -3185,11 +3187,11 @@ export interface components {
             score: number;
             status: components["schemas"]["PraxisStatus"];
             /** Submit Proposed At */
-            submit_proposed_at?: string | null;
+            submit_proposed_at: string | null;
             /** Submitted At */
-            submitted_at?: string | null;
+            submitted_at: string | null;
             /** Task Faction Slug */
-            task_faction_slug?: string | null;
+            task_faction_slug: string | null;
             /** Task Id */
             task_id: number;
             /**
@@ -3215,7 +3217,7 @@ export interface components {
              */
             viewer_can_vote: boolean;
             /** Viewer Vote */
-            viewer_vote?: number | null;
+            viewer_vote: number | null;
             /**
              * Voter Count
              * @default 0
@@ -3225,11 +3227,11 @@ export interface components {
         /** FoeCompletionItem */
         FoeCompletionItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3261,11 +3263,11 @@ export interface components {
         /** FoeTauntItem */
         FoeTauntItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3318,11 +3320,11 @@ export interface components {
         /** FriendCompletionItem */
         FriendCompletionItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3354,11 +3356,11 @@ export interface components {
         /** FriendDefectionItem */
         FriendDefectionItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3402,11 +3404,11 @@ export interface components {
         /** FriendSignupItem */
         FriendSignupItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3475,11 +3477,11 @@ export interface components {
         /** GlobalTaskItem */
         GlobalTaskItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3548,11 +3550,11 @@ export interface components {
         /** InvitationLetterItem */
         InvitationLetterItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3694,12 +3696,12 @@ export interface components {
          */
         MediaUploadResultOut: {
             /** Error */
-            error?: string | null;
+            error: string | null;
             /** Filename */
             filename: string;
-            media_item?: components["schemas"]["MediaItemOut"] | null;
+            media_item: components["schemas"]["MediaItemOut"] | null;
             /** Status Code */
-            status_code?: number | null;
+            status_code: number | null;
         };
         /** MetataskApply */
         MetataskApply: {
@@ -3724,11 +3726,11 @@ export interface components {
         /** NudgeItem */
         NudgeItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -3826,10 +3828,10 @@ export interface components {
          */
         NudgeResultOut: {
             /** Error */
-            error?: string | null;
-            nudge?: components["schemas"]["NudgeOut"] | null;
+            error: string | null;
+            nudge: components["schemas"]["NudgeOut"] | null;
             /** Status Code */
-            status_code?: number | null;
+            status_code: number | null;
             /** To Character Id */
             to_character_id: number;
         };
@@ -3886,7 +3888,7 @@ export interface components {
              */
             created_by_display_name: string;
             /** Created By Faction Slug */
-            created_by_faction_slug?: string | null;
+            created_by_faction_slug: string | null;
             /**
              * Created By Level
              * @default 0
@@ -3914,13 +3916,13 @@ export interface components {
             /** Level Required */
             level_required: number;
             /** Metatask Faction Slug */
-            metatask_faction_slug?: string | null;
+            metatask_faction_slug: string | null;
             /** Point Value */
             point_value: number;
             /** Primary Faction Slug */
             primary_faction_slug: string;
             /** Signup Reason */
-            signup_reason?: string | null;
+            signup_reason: string | null;
             status: components["schemas"]["TaskStatus"];
             task_type: components["schemas"]["TaskType"];
             /** Title */
@@ -3937,7 +3939,7 @@ export interface components {
              */
             applied_metatasks: components["schemas"]["TaskOut"][];
             /** Body Text */
-            body_text?: string | null;
+            body_text: string | null;
             /**
              * Created At
              * Format: date-time
@@ -3951,7 +3953,7 @@ export interface components {
             /** Created By Display Name */
             created_by_display_name: string;
             /** Created By Faction Slug */
-            created_by_faction_slug?: string | null;
+            created_by_faction_slug: string | null;
             /** Created By Id */
             created_by_id: number;
             /**
@@ -3960,7 +3962,7 @@ export interface components {
              */
             display_multiplier: number;
             /** Duel Id */
-            duel_id?: number | null;
+            duel_id: number | null;
             /** Id */
             id: number;
             /**
@@ -3987,11 +3989,11 @@ export interface components {
             metatask_points: number;
             moderation_status: components["schemas"]["ModerationStatus"];
             /** Opponent Display Name */
-            opponent_display_name?: string | null;
+            opponent_display_name: string | null;
             /** Opponent Faction Slug */
-            opponent_faction_slug?: string | null;
+            opponent_faction_slug: string | null;
             /** Opponent Praxis Id */
-            opponent_praxis_id?: number | null;
+            opponent_praxis_id: number | null;
             /**
              * Points From Votes
              * @default 0
@@ -4001,11 +4003,11 @@ export interface components {
             score: number;
             status: components["schemas"]["PraxisStatus"];
             /** Submit Proposed At */
-            submit_proposed_at?: string | null;
+            submit_proposed_at: string | null;
             /** Submitted At */
-            submitted_at?: string | null;
+            submitted_at: string | null;
             /** Task Faction Slug */
-            task_faction_slug?: string | null;
+            task_faction_slug: string | null;
             /** Task Id */
             task_id: number;
             /** Task Level Required */
@@ -4028,9 +4030,9 @@ export interface components {
              */
             viewer_can_vote: boolean;
             /** Viewer Vote */
-            viewer_vote?: number | null;
+            viewer_vote: number | null;
             /** Voted By Name */
-            voted_by_name?: string | null;
+            voted_by_name: string | null;
             /**
              * Voter Count
              * @default 0
@@ -4093,11 +4095,11 @@ export interface components {
              */
             joined_at: string;
             /** Nudged At */
-            nudged_at?: string | null;
+            nudged_at: string | null;
             /** Praxis Id */
             praxis_id: number;
             /** Submitted At */
-            submitted_at?: string | null;
+            submitted_at: string | null;
         };
         /** PraxisOut */
         PraxisOut: {
@@ -4123,7 +4125,7 @@ export interface components {
             /** Created By Display Name */
             created_by_display_name: string;
             /** Created By Faction Slug */
-            created_by_faction_slug?: string | null;
+            created_by_faction_slug: string | null;
             /** Created By Id */
             created_by_id: number;
             /**
@@ -4132,7 +4134,7 @@ export interface components {
              */
             display_multiplier: number;
             /** Duel Id */
-            duel_id?: number | null;
+            duel_id: number | null;
             /** Flagged At */
             flagged_at: string | null;
             /** Id */
@@ -4163,11 +4165,11 @@ export interface components {
             score: number;
             status: components["schemas"]["PraxisStatus"];
             /** Submit Proposed At */
-            submit_proposed_at?: string | null;
+            submit_proposed_at: string | null;
             /** Submitted At */
-            submitted_at?: string | null;
+            submitted_at: string | null;
             /** Task Faction Slug */
-            task_faction_slug?: string | null;
+            task_faction_slug: string | null;
             /** Task Id */
             task_id: number;
             /**
@@ -4193,7 +4195,7 @@ export interface components {
              */
             viewer_can_vote: boolean;
             /** Viewer Vote */
-            viewer_vote?: number | null;
+            viewer_vote: number | null;
             /**
              * Voter Count
              * @default 0
@@ -4422,7 +4424,7 @@ export interface components {
              */
             created_by_display_name: string;
             /** Created By Faction Slug */
-            created_by_faction_slug?: string | null;
+            created_by_faction_slug: string | null;
             /**
              * Created By Level
              * @default 0
@@ -4445,13 +4447,13 @@ export interface components {
             /** Level Required */
             level_required: number;
             /** Metatask Faction Slug */
-            metatask_faction_slug?: string | null;
+            metatask_faction_slug: string | null;
             /** Point Value */
             point_value: number;
             /** Primary Faction Slug */
             primary_faction_slug: string;
             /** Signup Reason */
-            signup_reason?: string | null;
+            signup_reason: string | null;
             status: components["schemas"]["TaskStatus"];
             task_type: components["schemas"]["TaskType"];
             /** Title */
@@ -4610,11 +4612,11 @@ export interface components {
         /** VoteOnMineItem */
         VoteOnMineItem: {
             /** Actor Avatar Url */
-            actor_avatar_url?: string | null;
+            actor_avatar_url: string | null;
             /** Actor Display Name */
-            actor_display_name?: string | null;
+            actor_display_name: string | null;
             /** Actor Faction Slug */
-            actor_faction_slug?: string | null;
+            actor_faction_slug: string | null;
             /**
              * Context Faction Slug
              * @description The faction this card's frame themes to (per-faction feed surface #12).
@@ -4653,7 +4655,7 @@ export interface components {
             /** Praxis Id */
             praxis_id: number;
             /** Praxis Title */
-            praxis_title?: string | null;
+            praxis_title: string | null;
             /** Task Point Value */
             task_point_value: number;
             /** Value */

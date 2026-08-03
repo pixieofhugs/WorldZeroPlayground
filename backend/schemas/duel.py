@@ -1,21 +1,21 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from schemas.base import WireModel
 from models.duel import DuelStatus
 
 
-class DuelChallengeIn(BaseModel):
+class DuelChallengeIn(WireModel):
     """Body for POST /duels/challenge — attach a duel to an existing praxis."""
     challenger_praxis_id: int
     opponent_character_id: int
 
 
-class DuelRespondIn(BaseModel):
+class DuelRespondIn(WireModel):
     """Body for POST /duels/{duel_id}/respond — accept or decline."""
     accept: bool
 
 
-class DuelOut(BaseModel):
+class DuelOut(WireModel):
     id: int
     task_id: int
     challenger_praxis_id: int
@@ -27,7 +27,7 @@ class DuelOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class DuelSideOut(BaseModel):
+class DuelSideOut(WireModel):
     """One side of a duel, shaped for the read page (#308).
 
     Display metadata + live vote points only — never the praxis body. A
@@ -47,7 +47,7 @@ class DuelSideOut(BaseModel):
     nudged_at: Optional[datetime] = None
 
 
-class DuelDetailOut(BaseModel):
+class DuelDetailOut(WireModel):
     """Read-oriented duel view: both sides' display info + tallies in one call."""
     id: int
     task_id: int

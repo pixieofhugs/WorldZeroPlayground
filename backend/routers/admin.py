@@ -2,7 +2,8 @@ import dataclasses
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+from schemas.base import WireModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -91,7 +92,7 @@ from services.auth import create_jwt
 router = APIRouter()
 
 
-class ContactMessageOut(BaseModel):
+class ContactMessageOut(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int

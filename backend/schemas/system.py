@@ -2,10 +2,10 @@
 
 from typing import Literal
 
-from pydantic import BaseModel
+from schemas.base import WireModel
 
 
-class HealthOut(BaseModel):
+class HealthOut(WireModel):
     """``GET /health`` — the liveness probe the host polls.
 
     ``status`` is a ``Literal`` rather than a bare ``str`` because the endpoint

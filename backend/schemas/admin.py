@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+from schemas.base import WireModel
 
 from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
@@ -12,7 +13,7 @@ from schemas.praxis import PraxisOut
 # ---------------------------------------------------------------------------
 
 
-class AccountSummary(BaseModel):
+class AccountSummary(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -21,7 +22,7 @@ class AccountSummary(BaseModel):
     created_at: datetime
 
 
-class CharacterBrief(BaseModel):
+class CharacterBrief(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -31,7 +32,7 @@ class CharacterBrief(BaseModel):
     status: str
 
 
-class AccountDetail(BaseModel):
+class AccountDetail(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -41,7 +42,7 @@ class AccountDetail(BaseModel):
     characters: list[CharacterBrief]
 
 
-class CharacterSummary(BaseModel):
+class CharacterSummary(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -56,7 +57,7 @@ class CharacterSummary(BaseModel):
     created_at: datetime
 
 
-class FlagOut(BaseModel):
+class FlagOut(WireModel):
     """One flag row for the moderator queue (#237, ADR-0037).
 
     ``reason`` is normalized onto the shared vocabulary at read time; legacy
@@ -83,7 +84,7 @@ class FlaggedCommentOut(CommentOut):
     flags: list[FlagOut] = []
 
 
-class OverviewStats(BaseModel):
+class OverviewStats(WireModel):
     accounts: int
     characters: int
     active_tasks: int
@@ -101,12 +102,12 @@ class OverviewStats(BaseModel):
 # ADR-0038: faction name/description prose is not DB-owned. A faction row carries
 # slug + status only; the English words live in
 # frontend/src/locales/en/factions.json.
-class FactionCreate(BaseModel):
+class FactionCreate(WireModel):
     slug: str = Field(..., min_length=2, max_length=30, pattern=r"^[a-z0-9_-]+$")
     hidden: bool = False
 
 
-class AdminFactionOut(BaseModel):
+class AdminFactionOut(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     slug: str
@@ -114,7 +115,7 @@ class AdminFactionOut(BaseModel):
     created_at: datetime
 
 
-class AdminCharacterCreate(BaseModel):
+class AdminCharacterCreate(WireModel):
     account_id: int
     username: str = Field(..., min_length=3, max_length=30)
     display_name: str = Field(..., max_length=50)
@@ -129,7 +130,7 @@ class AdminCharacterCreate(BaseModel):
     faction_slug: str | None = Field(default=None)
 
 
-class AdminCharacterOut(BaseModel):
+class AdminCharacterOut(WireModel):
     """The character an admin just minted (``POST /admin/characters``).
 
     Carries ``account_id`` on purpose. The "never expose account_id" rule
@@ -159,7 +160,7 @@ class AdminCharacterOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class VoteSpendRepairOut(BaseModel):
+class VoteSpendRepairOut(WireModel):
     """One character's ``votes_spent_this_era`` before and after a recompute.
 
     The wire mirror of ``services.character_stats.VoteSpendRepair``. It is a
@@ -173,7 +174,7 @@ class VoteSpendRepairOut(BaseModel):
     after: int
 
 
-class VoteBudgetBackfillOut(BaseModel):
+class VoteBudgetBackfillOut(WireModel):
     """Readout for ``POST /admin/characters/backfill-vote-budget``.
 
     ``changes`` is the whole point of the endpoint's ``dry_run`` mode: an admin
@@ -187,7 +188,7 @@ class VoteBudgetBackfillOut(BaseModel):
     changes: list[VoteSpendRepairOut]
 
 
-class StatsBackfillOut(BaseModel):
+class StatsBackfillOut(WireModel):
     """Readout for ``POST /admin/characters/backfill-stats``.
 
     ``recalculated`` counts *active* characters — banned ones are skipped — so
@@ -197,14 +198,14 @@ class StatsBackfillOut(BaseModel):
     recalculated: int
 
 
-class EraResetOut(BaseModel):
+class EraResetOut(WireModel):
     """Readout for ``PUT /admin/era/reset``: the new era row and who it touched."""
 
     era_id: int
     characters_reset: int
 
 
-class CharacterStatsPatch(BaseModel):
+class CharacterStatsPatch(WireModel):
     """All fields optional — only supplied fields are updated."""
 
     level: int | None = Field(None, ge=0)
@@ -213,7 +214,7 @@ class CharacterStatsPatch(BaseModel):
     votes_available: int | None = Field(None, ge=0)
 
 
-class CharacterStatsOut(BaseModel):
+class CharacterStatsOut(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -230,23 +231,23 @@ class CharacterStatsOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class ModerationAction(BaseModel):
+class ModerationAction(WireModel):
     status: Literal["visible", "hidden", "failed"]
     admin_note: str | None = Field(None, max_length=1000)
 
 
-class AdminTaskPatch(BaseModel):
+class AdminTaskPatch(WireModel):
     title: str | None = Field(None, min_length=1, max_length=200)
     description: str | None = None
     point_value: int | None = Field(None, ge=1)
     level_required: int | None = Field(None, ge=0)
 
 
-class TaskStatusAction(BaseModel):
+class TaskStatusAction(WireModel):
     status: Literal["pending", "active", "retired"]
 
 
-class TaskImportResult(BaseModel):
+class TaskImportResult(WireModel):
     """Readout for a successful CSV task import (#1376).
 
     Only ever returned when the whole file imported — the import is atomic, so
@@ -261,20 +262,20 @@ class TaskImportResult(BaseModel):
     warnings: list[str]
 
 
-class RoleAction(BaseModel):
+class RoleAction(WireModel):
     role: str = Field(..., min_length=1, max_length=50)
     action: Literal["grant", "revoke"]
 
 
-class SuspendAction(BaseModel):
+class SuspendAction(WireModel):
     suspended: bool
 
 
-class BanAction(BaseModel):
+class BanAction(WireModel):
     banned: bool
 
 
-class RoleActionOut(BaseModel):
+class RoleActionOut(WireModel):
     """Echo of an applied ``POST /admin/accounts/{id}/role``.
 
     An echo rather than the account's full role set: the service applies one
@@ -287,7 +288,7 @@ class RoleActionOut(BaseModel):
     action: Literal["grant", "revoke"]
 
 
-class SuspendActionOut(BaseModel):
+class SuspendActionOut(WireModel):
     """Result of ``POST /admin/accounts/{id}/suspend``.
 
     ``status`` is the account's resulting ``AccountStatus`` value, read back from
@@ -299,7 +300,7 @@ class SuspendActionOut(BaseModel):
     status: str
 
 
-class BanActionOut(BaseModel):
+class BanActionOut(WireModel):
     """Result of ``POST /admin/characters/{id}/ban``.
 
     Character-scoped: a ban lands on one character, not the account behind it
@@ -315,5 +316,5 @@ class BanActionOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class CliTokenResponse(BaseModel):
+class CliTokenResponse(WireModel):
     access_token: str

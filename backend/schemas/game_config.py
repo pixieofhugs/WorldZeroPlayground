@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from schemas.base import WireModel
 
 
-class FactionConfigOut(BaseModel):
+class FactionConfigOut(WireModel):
     # ADR-0038: no name/description — the frontend resolves faction prose from
     # frontend/src/locales/en/factions.json by slug.
     # NOT here: `can_always_rejoin` (#1387). It stays a LIVE rule on
@@ -17,20 +17,20 @@ class FactionConfigOut(BaseModel):
     duel_loss_modifier: float
 
 
-class LevelUnlockOut(BaseModel):
+class LevelUnlockOut(WireModel):
     # ADR-0031: emit a copy key, not prose. Frontend resolves
     # t('progression:unlocks.<key>.name' | '.desc'). kind stays (game data).
     kind: str
     key: str
 
 
-class LevelProfileOut(BaseModel):
+class LevelProfileOut(WireModel):
     # ADR-0031: rank_key resolves to t('progression:ranks.<rank_key>').
     rank_key: str
     unlocks: list[LevelUnlockOut]
 
 
-class GameConfigOut(BaseModel):
+class GameConfigOut(WireModel):
     # NOT here (#1387): `collaboration_level_required`, `vote_budget_base` and
     # `vote_budget_multiplier`. All three remain live `EraConfig` rules the
     # server enforces; none had a frontend reader. The vote budget in particular

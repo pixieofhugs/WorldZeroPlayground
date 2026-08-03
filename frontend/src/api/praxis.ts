@@ -1,5 +1,4 @@
 import { apiDelete, apiGet, apiPost, apiPut } from './client'
-import { wireSent } from './wireSent'
 import { clearCastTallies } from '../components/vote/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { TaskOut } from './tasks'
@@ -341,13 +340,13 @@ export async function listPraxes(filters?: {
   // Server truth — drop any cast tally it supersedes, so a stale one can't
   // mask another player's later vote (#626, #1382).
   clearCastTallies(data.map((praxis) => praxis.id))
-  return data.map(wireSent)
+  return data
 }
 
 export async function getPraxis(id: number): Promise<PraxisOut> {
   const { data } = await apiGet('/praxes/{praxis_id}', { params: { path: { praxis_id: id } } })
   clearCastTallies([id])
-  return wireSent(data)
+  return data
 }
 
 // ---------------------------------------------------------------------------
@@ -387,8 +386,7 @@ export function takeJustCreatedPraxis(praxisId: number): PraxisOut | null {
 }
 
 export async function createPraxis(data: PraxisCreate): Promise<PraxisOut> {
-  const { data: result } = await apiPost('/praxes', { body: data })
-  const created = wireSent(result)
+  const { data: created } = await apiPost('/praxes', { body: data })
   justCreatedPraxis = created
   return created
 }
@@ -398,7 +396,7 @@ export async function updatePraxis(id: number, data: PraxisUpdate): Promise<Prax
     params: { path: { praxis_id: id } },
     body: data,
   })
-  return wireSent(result)
+  return result
 }
 
 export async function deletePraxis(id: number): Promise<void> {
@@ -412,7 +410,7 @@ export async function changePraxisType(id: number, type: PraxisType): Promise<Pr
     params: { path: { praxis_id: id } },
     body: { type },
   })
-  return wireSent(data)
+  return data
 }
 
 // ---------------------------------------------------------------------------
@@ -428,7 +426,7 @@ export async function unsubmitPraxis(id: number): Promise<PraxisOut> {
   })
   // A collab/duel is awaiting your submission again — refresh the badge.
   notifyRequestsChanged()
-  return wireSent(data)
+  return data
 }
 
 export async function submitPraxis(id: number): Promise<PraxisOut> {
@@ -437,7 +435,7 @@ export async function submitPraxis(id: number): Promise<PraxisOut> {
   })
   // Your part landed — this praxis leaves the "awaiting your submission" bucket.
   notifyRequestsChanged()
-  return wireSent(data)
+  return data
 }
 
 /**
@@ -449,7 +447,7 @@ export async function leavePraxis(id: number): Promise<PraxisOut> {
     params: { path: { praxis_id: id } },
   })
   notifyRequestsChanged()
-  return wireSent(data)
+  return data
 }
 
 // ---------------------------------------------------------------------------
@@ -529,7 +527,7 @@ export async function uploadPraxisMediaBatch(
     params: { path: { praxis_id: id } },
     body: form as unknown as { files: string[] },
   })
-  return data.map(wireSent)
+  return data
 }
 
 export async function deletePraxisMedia(id: number, mediaId: number): Promise<void> {
@@ -601,7 +599,7 @@ export async function kickMember(
   const { data } = await apiPost('/praxes/{praxis_id}/kick/{member_id}', {
     params: { path: { praxis_id: praxisId, member_id: memberId } },
   })
-  return wireSent(data)
+  return data
 }
 
 // ---------------------------------------------------------------------------
@@ -614,7 +612,7 @@ export async function applyMetatask(praxisId: number, taskId: number): Promise<P
     params: { path: { praxis_id: praxisId } },
     body: { task_id: taskId },
   })
-  return wireSent(data)
+  return data
 }
 
 export async function removeMetatask(praxisId: number, taskId: number): Promise<void> {

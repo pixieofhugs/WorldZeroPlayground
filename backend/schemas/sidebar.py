@@ -1,11 +1,11 @@
 """Schema for the desktop rail's one compound read (#1344)."""
-from pydantic import BaseModel
+from schemas.base import WireModel
 
 from schemas.activity_feed import ActivityFeedItem
 from schemas.praxis import PraxisCardOut
 
 
-class SidebarOut(BaseModel):
+class SidebarOut(WireModel):
     """Everything the rail's three data panels draw, in one response.
 
     One field per panel, and nothing else. Identity is deliberately absent: the

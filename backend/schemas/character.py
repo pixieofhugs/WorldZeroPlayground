@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+from schemas.base import WireModel
 
 
-class BadgeOut(BaseModel):
+class BadgeOut(WireModel):
     """A badge a character currently holds (ADR-0033). The image is a frontend
     asset keyed by ``key`` — never part of the payload."""
 
@@ -11,7 +12,7 @@ class BadgeOut(BaseModel):
     name: str
 
 
-class CharacterOut(BaseModel):
+class CharacterOut(WireModel):
     """Public character response. Stats (score, level, all_time_score) come from CharacterStats.
 
     The vote budget is deliberately NOT here (#1387). It is computed on read
@@ -48,7 +49,7 @@ class CharacterOut(BaseModel):
     invitations: list[str] = Field(default_factory=list)
 
 
-class CharacterCreate(BaseModel):
+class CharacterCreate(WireModel):
     # username is optional: the server derives a unique @handle from display_name
     # when absent (ADR-0019). An explicit one is still accepted for back-compat.
     username: str | None = Field(default=None, min_length=3, max_length=30)
@@ -63,11 +64,11 @@ class CharacterCreate(BaseModel):
     faction_slug: str | None = Field(default=None, max_length=50)
 
 
-class ActiveCharacterIn(BaseModel):
+class ActiveCharacterIn(WireModel):
     character_id: int
 
 
-class VotesReceivedOut(BaseModel):
+class VotesReceivedOut(WireModel):
     """Votes received on the praxes a character **authored**.
 
     Author-scoped, not membership-scoped (ADR-0053) — see the route docstring in
@@ -80,7 +81,7 @@ class VotesReceivedOut(BaseModel):
     votes_received: int
 
 
-class CharacterUpdate(BaseModel):
+class CharacterUpdate(WireModel):
     display_name: str | None = Field(None, max_length=50)
     bio: str | None = Field(None, max_length=500)
     avatar_url: str | None = Field(None, max_length=500)
