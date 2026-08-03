@@ -153,7 +153,7 @@ describe('deriveChips — one removable chip per active filter', () => {
   it('puts facet chips first and carries the ornament the facet draws', () => {
     const chips = deriveChips({
       rails: [sortRail('oldest'), eraRail('all')],
-      facets: [factionFacet([{ slug: 'ua' }, { slug: 'coven' }], ['ua', 'coven'], () => {})],
+      facets: [factionFacet([{ slug: 'ua', status: 'visible' }, { slug: 'coven', status: 'visible' }], ['ua', 'coven'], () => {})],
     })
     expect(chips.map((chip) => chip.label)).toEqual([
       'UA',
@@ -211,7 +211,7 @@ describe('the applied-count badge', () => {
     renderToStaticMarkup(
       <FilterBar
         rails={[eraRail(eraValue)]}
-        facets={[factionFacet([{ slug: 'ua' }], selectedFactions, () => {})]}
+        facets={[factionFacet([{ slug: 'ua', status: 'visible' }], selectedFactions, () => {})]}
         onClearAll={() => {}}
       />,
     )
@@ -248,9 +248,9 @@ describe('selectEmptyState — three states, not one (#1361 ruling 9)', () => {
 
 describe('filterRoster — GET /factions plus the na sentinel (#1361 ruling 4)', () => {
   const VISIBLE: FactionOut[] = [
-    { slug: 'singularity' },
-    { slug: 'ua' },
-    { slug: 'everymen' },
+    { slug: 'singularity', status: 'visible' },
+    { slug: 'ua', status: 'visible' },
+    { slug: 'everymen', status: 'visible' },
   ]
 
   it('renders exactly the factions it is given, in rainbow order, then na', () => {
@@ -269,7 +269,7 @@ describe('filterRoster — GET /factions plus the na sentinel (#1361 ruling 4)',
 
   it('appends the na sentinel exactly once even if the API ever emits it', () => {
     expect(
-      filterRoster([...VISIBLE, { slug: 'na' }]).filter(
+      filterRoster([...VISIBLE, { slug: 'na', status: 'visible' }]).filter(
         (slug: string) => slug === 'na',
       ),
     ).toHaveLength(1)
@@ -277,7 +277,7 @@ describe('filterRoster — GET /factions plus the na sentinel (#1361 ruling 4)',
 })
 
 describe('factionFacet — the faction axis as one configuration of the widget', () => {
-  const VISIBLE: FactionOut[] = [{ slug: 'singularity' }, { slug: 'ua' }]
+  const VISIBLE: FactionOut[] = [{ slug: 'singularity', status: 'visible' }, { slug: 'ua', status: 'visible' }]
 
   it('offers the roster in order, named, with the selected rows first', () => {
     const facet = factionFacet(VISIBLE, ['na'], () => {})
@@ -341,7 +341,7 @@ describe('an option-less facet draws no trigger (#1567)', () => {
   })
 
   it('hides only the empty facet, not its populated neighbour', () => {
-    const html = render([emptyFacet, factionFacet([{ slug: 'ua' }], [], () => {})])
+    const html = render([emptyFacet, factionFacet([{ slug: 'ua', status: 'visible' }], [], () => {})])
     // One trigger, not two: the faction facet still draws.
     expect(html.match(/filter-factions__trigger/g)).toHaveLength(1)
   })

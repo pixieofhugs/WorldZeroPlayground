@@ -117,6 +117,7 @@ const DUEL: DuelDetailOut = {
     avatar_url: "",
     points_from_votes: 18,
     is_submitted: true,
+    nudged_at: null,
   },
   opponent: {
     praxis_id: 2,
@@ -126,6 +127,7 @@ const DUEL: DuelDetailOut = {
     avatar_url: "",
     points_from_votes: 15.4,
     is_submitted: true,
+    nudged_at: null,
   },
   winner_character_id: null,
   challenger_final_points: null,

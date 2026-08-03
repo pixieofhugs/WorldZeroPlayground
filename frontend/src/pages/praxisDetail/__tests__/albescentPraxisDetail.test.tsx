@@ -148,6 +148,7 @@ const MINE: DuelSideOut = {
   avatar_url: "",
   points_from_votes: 18,
   is_submitted: true,
+  nudged_at: null,
 };
 
 const RIVAL: DuelSideOut = {
@@ -158,6 +159,7 @@ const RIVAL: DuelSideOut = {
   avatar_url: "",
   points_from_votes: 15.4,
   is_submitted: true,
+  nudged_at: null,
 };
 
 const DUEL: DuelDetailOut = {

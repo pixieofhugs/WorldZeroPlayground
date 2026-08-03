@@ -103,6 +103,7 @@ const ME: DuelSideOut = {
   avatar_url: '',
   points_from_votes: 0,
   is_submitted: true,
+  nudged_at: null,
 }
 const FOE: DuelSideOut = {
   praxis_id: 2,
@@ -112,6 +113,7 @@ const FOE: DuelSideOut = {
   avatar_url: '',
   points_from_votes: 0,
   is_submitted: false,
+  nudged_at: null,
 }
 
 function duel(status: DuelStatus): DuelDetailOut {

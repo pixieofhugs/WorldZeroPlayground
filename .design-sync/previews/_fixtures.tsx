@@ -468,8 +468,12 @@ export const noop = (): void => {}
 import type { FactionOut } from '../../frontend/src/api/factions'
 import type { FactionConfigOut } from '../../frontend/src/api/gameConfig'
 
-/** FactionOut is just a slug carrier; one per live faction. */
-export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({ slug }))
+/** One `FactionOut` per live faction. `GET /factions` answers only visible
+ *  rows, so that is what these carry. */
+export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({
+  slug,
+  status: 'visible',
+}))
 
 /** A neutral 1× config; overrides tune the multipliers. */
 export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
@@ -599,6 +603,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       avatar_url: '',
       points_from_votes: 42,
       is_submitted: true,
+      nudged_at: null,
     },
     opponent: {
       praxis_id: null,
@@ -608,6 +613,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       avatar_url: '',
       points_from_votes: 28,
       is_submitted: false,
+      nudged_at: null,
     },
     winner_character_id: null,
     challenger_final_points: null,

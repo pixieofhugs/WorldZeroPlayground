@@ -179,6 +179,7 @@ function duel(status: DuelDetailOut["status"]): DuelDetailOut {
     avatar_url: "",
     points_from_votes: votes,
     is_submitted: true,
+    nudged_at: null,
   });
   return {
     id: 5,

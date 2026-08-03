@@ -25,6 +25,7 @@ import { factionName } from "../../utils/factions";
 // display copy resolves from the factions.json catalog by slug.
 const FACTION: FactionOut = {
   slug: "everymen",
+  status: "visible",
 };
 
 function html(node: React.ReactElement): string {

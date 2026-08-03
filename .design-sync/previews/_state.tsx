@@ -303,7 +303,7 @@ export function factionDetailState(slug: string): FactionDetailState {
   return {
     slug,
     loading: false,
-    faction: { slug },
+    faction: { slug, status: 'visible' },
     fetchError: null,
     members: [characterFor(slug), characterFor(slug, { id: 8, display_name: 'Kestrel Ng', level: 6 })],
     tasks: [taskFor(slug), taskFor(slug, { id: 116, title: 'A second charge', level_required: 5 })],

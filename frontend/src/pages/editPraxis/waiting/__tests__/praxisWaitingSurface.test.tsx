@@ -101,6 +101,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       avatar_url: "",
       points_from_votes: 0,
       is_submitted: true,
+      nudged_at: null,
     },
     opponent: {
       praxis_id: null,
@@ -110,6 +111,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       avatar_url: "",
       points_from_votes: 0,
       is_submitted: false,
+      nudged_at: null,
     },
     winner_character_id: null,
     challenger_final_points: null,

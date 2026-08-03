@@ -26,16 +26,19 @@ function render(element: ReactElement): { html: string; text: string } {
 // the 7-stripes-over-6-cards regression when the bar was built off the static
 // seven-slug array instead of the rendered rows.
 const FACTIONS: FactionOut[] = [
-  { slug: 'coven' },
-  { slug: 'everymen' },
-  { slug: 'snide' },
-  { slug: 'na' },
-  { slug: 'ua' },
-  { slug: 'ephemerists' },
-  { slug: 'singularity' },
+  { slug: 'coven', status: 'visible' },
+  { slug: 'everymen', status: 'visible' },
+  { slug: 'snide', status: 'visible' },
+  { slug: 'na', status: 'visible' },
+  { slug: 'ua', status: 'visible' },
+  { slug: 'ephemerists', status: 'visible' },
+  { slug: 'singularity', status: 'visible' },
 ]
 
-function status(rows: Array<[string, string]>): FactionPageOut {
+// The status half of a row is the schema's five-value membership enum, not any
+// string — spelling it that way is what stops a typo reaching a card state the
+// server cannot report (#1400).
+function status(rows: Array<[string, FactionStatusOut['status']]>): FactionPageOut {
   const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status }))
   return { current_faction_slug: 'coven', all_factions, invitations: [] }
 }

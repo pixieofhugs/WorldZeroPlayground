@@ -38,7 +38,7 @@ function stateWith(slug: string, state: MembershipState): FactionDetailState {
   return {
     slug,
     loading: false,
-    faction: { slug },
+    faction: { slug , status: 'visible' },
     fetchError: null,
     members: [],
     tasks: [],

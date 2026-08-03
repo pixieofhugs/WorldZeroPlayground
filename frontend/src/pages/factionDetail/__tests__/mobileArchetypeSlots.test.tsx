@@ -97,7 +97,7 @@ function baseState(overrides: Partial<FactionDetailState> = {}): FactionDetailSt
   return {
     slug: 'everymen',
     loading: false,
-    faction: { slug: 'everymen' },
+    faction: { slug: 'everymen', status: 'visible' },
     fetchError: null,
     members: [MEMBER],
     tasks: [],

@@ -1,4 +1,5 @@
 import { apiPost } from './client'
+import type { components } from './generated/schema'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 
 /**
@@ -15,13 +16,7 @@ import { notifyRequestsChanged } from '../utils/requestsBus'
  * own side of the duel (a duel is two linked solo praxes, ADR-0011). Not yours.
  */
 
-export interface NudgeOut {
-  id: number
-  praxis_id: number
-  from_character_id: number
-  to_character_id: number
-  created_at: string
-}
+export type NudgeOut = components['schemas']['NudgeOut']
 
 export async function sendNudge(
   praxisId: number,
@@ -44,22 +39,13 @@ export async function sendNudge(
  * `status_code` is the status the single-recipient route would have returned
  * for that person on its own — 422 inside their 24h window or already filed,
  * 403 not in the crew, 400 yourself — so a caller branches on the number
- * rather than on the prose. Mirrors `schemas/nudge.py:NudgeResultOut`.
+ * rather than on the prose.
  *
- * ponytail (#1400): the three nullable fields stay REQUIRED here where the
- * generated type marks them optional, so `nudgeTheCrew` narrows with a cast.
- * Their Pydantic fields are `... | None = None`, and openapi-typescript reads a
- * `None` default as "may be absent" — but FastAPI serializes every key, so each
- * arrives as `T | null`. "Exactly one of nudge/error is set" is the contract
- * callers branch on; a `| undefined` that never appears would only blur it.
- * Reconciled once, for every module, by the alias slice of #1400.
+ * The three nullable fields are nullable, not optional: FastAPI serializes
+ * every key, so each arrives as `T | null`, and "exactly one of nudge/error is
+ * set" stays the contract callers branch on.
  */
-export interface NudgeResultOut {
-  to_character_id: number
-  nudge: NudgeOut | null
-  error: string | null
-  status_code: number | null
-}
+export type NudgeResultOut = components['schemas']['NudgeResultOut']
 
 /**
  * Poke everyone the praxis is still waiting on, in one request.
@@ -83,5 +69,5 @@ export async function nudgeTheCrew(
     params: { path: { praxis_id: praxisId } },
   })
   notifyRequestsChanged()
-  return data as NudgeResultOut[]
+  return data
 }

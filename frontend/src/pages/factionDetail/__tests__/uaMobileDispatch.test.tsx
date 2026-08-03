@@ -53,7 +53,7 @@ function baseState(overrides: Partial<FactionDetailState> = {}): FactionDetailSt
   return {
     slug: 'ua',
     loading: false,
-    faction: { slug: 'ua' },
+    faction: { slug: 'ua', status: 'visible' },
     fetchError: null,
     members: [MEMBER],
     tasks: [],

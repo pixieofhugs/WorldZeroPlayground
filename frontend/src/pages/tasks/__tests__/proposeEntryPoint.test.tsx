@@ -55,7 +55,7 @@ const CANNED: TasksState = {
   tasks: [],
   loading: false,
   error: null,
-  factions: [{ slug: 'everymen' }],
+  factions: [{ slug: 'everymen', status: 'visible' }],
   factionConfigs: [],
   statusFilters: ['All', 'active'],
   taskType: 'standard',

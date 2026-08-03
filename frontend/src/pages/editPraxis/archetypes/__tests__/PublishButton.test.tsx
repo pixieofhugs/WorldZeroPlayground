@@ -102,6 +102,7 @@ function duelSide(characterId: number, submitted: boolean) {
     avatar_url: "",
     points_from_votes: 0,
     is_submitted: submitted,
+    nudged_at: null,
   };
 }
 

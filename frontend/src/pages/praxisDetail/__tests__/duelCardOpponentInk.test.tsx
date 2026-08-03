@@ -114,6 +114,7 @@ function duelAgainst(hostSlug: string, rivalSlug: string): DuelDetailOut {
     avatar_url: '',
     points_from_votes: 18,
     is_submitted: true,
+    nudged_at: null,
     ...overrides,
   })
   return {

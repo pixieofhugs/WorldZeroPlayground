@@ -17,17 +17,18 @@ const wrap: React.CSSProperties = {
 }
 const col: React.CSSProperties = { width: 300 }
 
-// ADR-0038: `FactionOut` carries only the slug. The card reads each faction's
-// name and description from `locales/en/factions.json`, so fixtures are
-// slug-only — there is no wording left here to drift.
+// ADR-0038: the card reads each faction's name and description from
+// `locales/en/factions.json`, so no wording is left here to drift. `FactionOut`
+// itself is the slug plus the row's own visibility, and `GET /factions`
+// answers only visible rows.
 const FACTIONS: Record<string, FactionOut> = {
-  ua: { slug: 'ua' },
-  wow: { slug: 'wow' },
-  snide: { slug: 'snide' },
-  ephemerists: { slug: 'ephemerists' },
-  singularity: { slug: 'singularity' },
-  everymen: { slug: 'everymen' },
-  albescent: { slug: 'albescent' },
+  ua: { slug: 'ua', status: 'visible' },
+  wow: { slug: 'wow', status: 'visible' },
+  snide: { slug: 'snide', status: 'visible' },
+  ephemerists: { slug: 'ephemerists', status: 'visible' },
+  singularity: { slug: 'singularity', status: 'visible' },
+  everymen: { slug: 'everymen', status: 'visible' },
+  albescent: { slug: 'albescent', status: 'visible' },
 }
 
 /** The gilt-salon (UA), whimsy.exe window (Wow), and ransom sheet (Snide)
@@ -100,7 +101,7 @@ export function GenericFallback() {
         <FactionCard
           // A slug with no archetype and no catalog entry — the neutral card
           // frame still renders it legibly.
-          faction={{ slug: 'mystery' }}
+          faction={{ slug: 'mystery', status: 'visible' }}
           status="not_invited"
         />
       </div>

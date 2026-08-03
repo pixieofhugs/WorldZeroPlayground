@@ -36,6 +36,7 @@ function duelSide(
     avatar_url: "",
     points_from_votes: 0,
     is_submitted: isSubmitted,
+    nudged_at: null,
   };
 }
 
