@@ -34,8 +34,8 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  *                     re-inked here — hence no padding on the body wrapper.
  *
  * The four slots are placed by hand rather than through `FeedChassisBand`,
- * because the band's `.eyebrow` sets the kicker at the label ramp's floor and
- * this sheet wants it in the display face. Nothing is dropped: kicker · tag ·
+ * because the band's `.label-heading` sets the kicker in the shared label face
+ * and this sheet wants it in the display face. Nothing is dropped: kicker · tag ·
  * time · archive all ride the head, and the head is tinted `--faction-coven-
  * slip-ink` so the archive control — which paints in `currentColor` — comes out
  * in the slip's own ink.

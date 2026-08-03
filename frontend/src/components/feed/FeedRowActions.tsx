@@ -24,6 +24,10 @@ import type { FeedRowAction } from './normalizeFeedItem'
  * longer describes reality (you have left the collab), so the button is replaced
  * by nothing rather than left clickable. `notifyRequestsChanged()` makes the
  * surrounding feed refetch, which is what actually removes the row.
+ *
+ * The labels and the failure line are `.label-caption` (#1307): an action label
+ * and an error are both genuinely read, so neither may wear the heading tier's
+ * caps and tracking. Nothing here names a region.
  */
 export default function FeedRowActions({ actions }: { actions: FeedRowAction[] }) {
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -59,14 +63,14 @@ export default function FeedRowActions({ actions }: { actions: FeedRowAction[] }
     >
       {visible.map((action) =>
         action.href ? (
-          <Link key={action.id} to={action.href} className="eyebrow" style={buttonStyle(action.tone)}>
+          <Link key={action.id} to={action.href} className="label-caption" style={buttonStyle(action.tone)}>
             {action.label}
           </Link>
         ) : (
           <button
             key={action.id}
             type="button"
-            className="eyebrow"
+            className="label-caption"
             onClick={() => runCall(action)}
             style={{
               ...buttonStyle(action.tone),
@@ -78,7 +82,7 @@ export default function FeedRowActions({ actions }: { actions: FeedRowAction[] }
         ),
       )}
       {error && (
-        <span className="eyebrow" style={{ color: 'var(--color-danger)' }}>
+        <span className="label-caption" style={{ color: 'var(--color-danger)' }}>
           {error}
         </span>
       )}

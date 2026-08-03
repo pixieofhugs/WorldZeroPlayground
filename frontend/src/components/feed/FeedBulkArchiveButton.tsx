@@ -27,7 +27,7 @@ export default function FeedBulkArchiveButton({
     <button
       type="button"
       onClick={onAct}
-      className="eyebrow"
+      className="label-caption"
       data-feed-bulk={archivedView ? 'restore-all' : 'archive-all'}
       style={{
         cursor: pending ? 'progress' : 'pointer',

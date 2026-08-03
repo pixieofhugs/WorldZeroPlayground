@@ -190,8 +190,9 @@ export default function EphemeristsFeedFrame({
 
         {/* The four chrome slots, placed by hand rather than through
             `FeedChassisBand`: this band sets the kicker in incised small caps and
-            the time in the reading face, which the shared arrangement's uniform
-            `.eyebrow` would flatten. All four are still drawn — a swallowed slot
+            the time in the reading face, which the shared arrangement's
+            `.label-heading` / `.label-caption` pair would flatten. All four are
+            still drawn — a swallowed slot
             loses a feature, not a decoration. */}
         <div
           style={{
