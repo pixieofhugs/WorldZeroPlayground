@@ -51,6 +51,17 @@ describe("FactionSigil dispatcher (#659)", () => {
     expect(html).toContain("var(--everymen-cream)");
   });
 
+  // #1626. `factions/albescent.ts` registers no `sigil` row — and must not,
+  // since its manifest takes only Default-plus-a-flourish surfaces (#783) — so
+  // the dispatcher used to hand albescent the unaffiliated ring while its own
+  // cross-hair sat one directory over. Resolved HERE, once, rather than by a
+  // slug branch in each of the four callers.
+  it("renders the surveyor's cross-hair for the albescent slug", () => {
+    const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
+    expect(html, "the always-light reveal ink").toContain("var(--albescent-reveal-text)");
+    expect(html, "not the unaffiliated ring").not.toContain("var(--faction-default-rainbow-conic)");
+  });
+
   it("falls back to the unaffiliated ring for an unknown slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="totally-unknown" />);
     expect(html).toContain("var(--faction-default-rainbow-conic)");

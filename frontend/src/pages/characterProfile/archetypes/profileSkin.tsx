@@ -228,6 +228,63 @@ export function LaurelGlyph({ size = 18 }: { size?: number }) {
   )
 }
 
+/**
+ * ② About — the profile's home for `character.bio` (#1626).
+ *
+ * The bio used to live in the credential card as a two-line clamp, which could
+ * only ever show its first sentence: the field takes 500 characters and is
+ * explicitly not guaranteed to be a blurb. Deleting that slot without this
+ * block would have left `bio` editable in Settings and rendered nowhere.
+ *
+ * ONE BLOCK, NOT NINE. The seven factions that delegate to {@link ProfileSkin}
+ * inherit it without touching their kits; `DefaultProfileBody` mounts the same
+ * component in each of its two branches. A kit dresses it through `heading` and
+ * `style` — it never re-implements it, and nothing here is per-faction.
+ *
+ * PLAIN TEXT. `pre-wrap` so the line breaks a player typed survive, and no
+ * markdown: nothing on the profile renders markdown today and rich text is its
+ * own epic (#523). The paragraph is content, so `--text-content` is its floor —
+ * a kit may hand it ink and a font, never a size.
+ *
+ * Hidden when empty, per the house rule — a heading over nothing is chrome.
+ */
+export function AboutBlock({
+  bio,
+  heading,
+  style,
+}: {
+  bio?: string | null
+  /** The section heading, dressed by the caller (kit heading / na's rule). */
+  heading: ReactNode
+  /** Ink + font for the paragraph. */
+  style?: CSSProperties
+}) {
+  const text = (bio ?? '').trim()
+  if (!text) return null
+  return (
+    <section style={{ marginTop: 'var(--space-2xl)', marginBottom: 'var(--space-2xl)' }}>
+      {heading}
+      <p
+        style={{
+          fontFamily: 'var(--font-body)',
+          color: 'var(--color-text-secondary)',
+          ...style,
+          fontSize: 'var(--text-content)',
+          lineHeight: 1.6,
+          whiteSpace: 'pre-wrap',
+          overflowWrap: 'anywhere',
+          // A measure, so a 500-character paragraph is not one long line on a
+          // laptop. `ch` rather than px: it follows the kit's own body font.
+          maxWidth: '68ch',
+          margin: 0,
+        }}
+      >
+        {text}
+      </p>
+    </section>
+  )
+}
+
 /** Shared badge-row primitive: a skinnable medallion + the badge name. Kits
  *  pass their medallion chrome; the glyph is mapped client-side by badge key. */
 export function BadgeRow({
@@ -317,7 +374,6 @@ export function ProfileSkin({
     <CredentialCard
       displayName={character.display_name}
       handle={character.username}
-      bio={character.bio}
       factionSlug={character.faction_slug}
       level={character.level}
       score={character.score}
@@ -601,7 +657,12 @@ export function ProfileSkin({
           </div>
         </header>
 
-        {/* ── ② About: skipped in v1 (no long-form field) ── */}
+        {/* ── ② About — the field arrived (#1626); the kit only dresses it ── */}
+        <AboutBlock
+          bio={character.bio}
+          heading={kit.sectionHeading(t('profile.aboutHeading'), '')}
+          style={{ fontFamily: kit.bodyFont ?? kit.eyebrowFont, color: kit.muted }}
+        />
 
         {badges.length > 0 ? (
           <div

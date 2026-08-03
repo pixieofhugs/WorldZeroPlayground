@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import FactionSigil from './sigil/FactionSigil'
 import { factionName, isKnownFaction } from '../utils/factions'
 
 /**
@@ -13,7 +14,6 @@ import { factionName, isKnownFaction } from '../utils/factions'
 export interface CredentialCardProps {
   displayName: string
   handle: string
-  bio?: string | null
   factionSlug?: string | null
   level: number
   score: number
@@ -75,7 +75,6 @@ const NEUTRAL: Skin = {
 export default function CredentialCard({
   displayName,
   handle,
-  bio,
   factionSlug,
   level,
   score,
@@ -88,7 +87,6 @@ export default function CredentialCard({
   const skinned = skinFor(factionSlug)
   const skin = skinned ?? NEUTRAL
   const name = displayName.trim() || t('credential.fallbackName')
-  const cardBio = (bio ?? '').trim()
 
   const cardStyle: CSSProperties = {
     // Local skin vars consumed by descendants.
@@ -115,7 +113,10 @@ export default function CredentialCard({
 
   return (
     <div style={cardStyle}>
-      {/* eyebrow: @handle + credential / unaffiliated tag */}
+      {/* eyebrow: @handle. The "CREDENTIAL" / "UNAFFILIATED" kicker that used to
+          sit opposite it is gone (#1626) — it named the object the reader is
+          already holding, and its unaffiliated variant said a second time what
+          the footer sigil says. */}
       <div
         style={{
           display: 'flex',
@@ -128,7 +129,6 @@ export default function CredentialCard({
         }}
       >
         <span>@{handle}</span>
-        <span>{skinned ? t('credential.credential') : t('credential.unaffiliated')}</span>
       </div>
 
       {/* portrait ring. Rendered as a <button> only when it's an upload affordance —
@@ -138,8 +138,9 @@ export default function CredentialCard({
         {(() => {
           const ringStyle: CSSProperties = {
             position: 'relative',
-            width: 96,
-            height: 96,
+            // The portrait is the card's subject, not one of its fields (#1626).
+            width: 136,
+            height: 136,
             borderRadius: '50%',
             padding: 'var(--space-xs)',
             boxSizing: 'border-box',
@@ -207,26 +208,11 @@ export default function CredentialCard({
         {name}
       </div>
 
-      {/* bio (clamped to 2 lines) */}
-      <div
-        style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 'var(--text-content)',
-          lineHeight: 1.55,
-          color: 'var(--fc-muted)',
-          margin: 'var(--space-sm) auto 0',
-          maxWidth: 210,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          minHeight: cardBio ? undefined : 12,
-        }}
-      >
-        {cardBio || (skinned ? '' : t('credential.blankPassport'))}
-      </div>
+      {/* No bio slot. A two-line clamp could only ever show the first sentence
+          of a 500-character field, so the bio moved to the profile's ② About
+          block, where it is read whole (#1626, `archetypes/profileSkin.tsx`). */}
 
-      {/* footer: pill + level + score */}
+      {/* footer: sigil + level + score */}
       <div
         style={{
           display: 'flex',
@@ -238,35 +224,34 @@ export default function CredentialCard({
           paddingTop: 'var(--space-md)',
         }}
       >
-        {skinned ? (
-          <span
-            style={{
-              background: 'var(--fc-accent)',
-              color: 'var(--fc-bg)',
-              fontFamily: 'var(--fc-font)',
-              fontSize: 'var(--text-md)',
-              padding: 'var(--space-xs) var(--space-md)',
-              borderRadius: 4,
-              lineHeight: 1.3,
-            }}
-          >
-            {factionName(factionSlug)}
-          </span>
-        ) : (
-          <span
-            style={{
-              fontStyle: 'italic',
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--fc-muted)',
-            }}
-          >
-            {t('credential.factionToBeChosen')}
-          </span>
-        )}
+        {/* The faction is the sigil now — the name is spoken, never printed
+            (#1626). `role="img"` + the catalog name is the whole accessible
+            name: it makes the mark a labelled image rather than decoration, so
+            a screen reader still gets "Cozy Coven" where a sighted reader gets
+            the mark. Unaffiliated and unknown slugs are not a hole — they get
+            `FactionSigil`'s spectrum `DefaultSigil` and the name `na` resolves
+            to. The card stays slug-blind: which sigil belongs to which slug is
+            `FactionSigil`'s dispatch to answer, including albescent's. */}
+        <span
+          role="img"
+          aria-label={factionName(factionSlug)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 'none',
+            width: 42,
+            height: 42,
+            borderRadius: '50%',
+            border: '2px solid var(--fc-accent)',
+            background: 'transparent',
+          }}
+        >
+          <FactionSigil slug={factionSlug} size={28} />
+        </span>
         <span
           style={{
-            fontSize: 'var(--text-xs)',
+            fontSize: 'var(--text-lg)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             color: 'var(--fc-muted)',

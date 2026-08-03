@@ -187,7 +187,6 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
           <CredentialCard
             displayName={displayName || t('createCharacter.previewFallbackName')}
             handle={handle}
-            bio={bio}
             factionSlug={factionSlug || null}
             level={1}
             score={0}

@@ -29,6 +29,7 @@
     "ptsThisLevel": "{{current}} / {{span}} pts this level",
     "nextLevel": "next · lvl {{level}}",
     "ptsToNext": "{{score}} / {{threshold}} pts",
+    "aboutHeading": "About",
     "badgesHeading": "Badges",
     "badgesEarned": "{{count}} earned",
     "mobile": {
@@ -117,11 +118,7 @@
   },
   "credential": {
     "fallbackName": "Wanderer",
-    "credential": "credential",
-    "unaffiliated": "unaffiliated",
     "uploadTitle": "Click to upload a photo",
-    "blankPassport": "A blank passport, waiting for its first stamp.",
-    "factionToBeChosen": "— faction to be chosen —",
     "lvl": "lvl {{level}}",
     "pts": "pts"
   },

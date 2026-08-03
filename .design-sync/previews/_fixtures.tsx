@@ -105,8 +105,7 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
     id: 7,
     username: 'ada_reed',
     display_name: 'Ada Reed',
-    bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
-    // Deliberately a slogan, not the bio's first sentence — the two fields are
+      // Deliberately a slogan, not the bio's first sentence — the two fields are
     // separate jobs (#1628), and a fixture that blurred them would let a design
     // be built against a distinction the product does not make.
     tagline: 'Slow spells, strong tea.',
@@ -368,7 +367,6 @@ export const mockCollaboration: PraxisCardOut = {
 export const mockCredential: CredentialCardProps = {
   displayName: 'Ada Reed',
   handle: 'ada_reed',
-  bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
   factionSlug: 'ua',
   level: 4,
   score: 320,

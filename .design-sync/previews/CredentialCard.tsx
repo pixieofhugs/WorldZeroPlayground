@@ -1,7 +1,8 @@
 // CredentialCard preview cells — the skinnable faction "passport" card (#271):
 // one structure re-skinned per faction via the --faction-<slug>-card-* tokens.
-// Portrait ring, name, clamped bio, faction pill, level + score. Cells sweep a
-// couple of faction skins plus the neutral (unaffiliated) treatment.
+// Portrait ring, name, a labelled faction sigil, level + score (#1626 dropped
+// the kicker and the clamped bio; the bio lives on the profile's About block).
+// Cells sweep a couple of faction skins plus the neutral (unaffiliated) one.
 import { CredentialCard } from 'worldzero-frontend'
 import { mockCredential } from './_fixtures'
 
@@ -23,7 +24,6 @@ export function FactionSkins() {
       <CredentialCard
         displayName="node_44"
         handle="node_44"
-        bio="Instruments the self. Publishes the raw series, not the story."
         factionSlug="singularity"
         level={6}
         score={512}
@@ -32,7 +32,6 @@ export function FactionSkins() {
       <CredentialCard
         displayName="Pip Marigold"
         handle="pip_marigold"
-        bio="Chalk on every sidewalk. Believes joy is a public work."
         factionSlug="wow"
         level={3}
         score={140}
@@ -42,14 +41,13 @@ export function FactionSkins() {
   )
 }
 
-/** Unaffiliated — the neutral field treatment: no faction pill, blank-passport bio. */
+/** Unaffiliated — the neutral field treatment: spectrum ring, spectrum sigil. */
 export function Unaffiliated() {
   return (
     <div style={wrap}>
       <CredentialCard
         displayName="New Recruit"
         handle="new_recruit"
-        bio={null}
         factionSlug={null}
         level={0}
         score={0}
