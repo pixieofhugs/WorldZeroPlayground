@@ -1,0 +1,52 @@
+{
+  "codes": {
+    "VOTE_BUDGET_EXHAUSTED": "No votes remaining in your budget.",
+
+    "TASK_LEVEL_TOO_LOW": "This task requires level {{level}}.",
+    "COLLABORATION_LEVEL_TOO_LOW": "Collaborations require level {{level}}.",
+    "DUEL_LEVEL_TOO_LOW": "Duels require level {{level}}.",
+    "COMMENT_LEVEL_TOO_LOW": "Must be level {{level}} or above to comment.",
+    "TASK_PROPOSAL_LEVEL_TOO_LOW": "Must be level {{level}} or above to propose tasks.",
+    "METATASK_PROPOSAL_LEVEL_TOO_LOW": "Must be level {{level}} or above to propose metatasks.",
+    "SECOND_CHARACTER_LEVEL_TOO_LOW": "Must reach level {{level}} before creating additional characters.",
+    "PRAXIS_MODE_UNAVAILABLE": "Praxis mode not available.",
+
+    "FLAG_LEVEL_TOO_LOW": "Must be level {{level}} or above to flag.",
+    "FLAG_LEVEL_TOO_LOW_comment": "Must be level {{level}} or above to flag a comment.",
+    "FLAG_LEVEL_TOO_LOW_praxis": "Must be level {{level}} or above to flag a praxis.",
+
+    "TASK_BANK_FULL": "Task bank is full ({{limit}} in-progress praxis).",
+    "TASK_BANK_FULL_signup": "Task bank is full ({{limit}} in-progress praxis). Complete or withdraw one first.",
+
+    "TASK_ALREADY_ACTIVE_MEMBER": "You already have an active praxis for this task.",
+    "TASK_ALREADY_ACTIVE_MEMBER_duel": "You already have an active praxis for this task.",
+    "TASK_ALREADY_ACTIVE_MEMBER_signup": "You have already submitted a praxis for this task.",
+
+    "TASK_NOT_OPEN_FOR_SIGNUP": "This task is not open for new praxis.",
+    "TASK_NOT_OPEN_FOR_SIGNUP_retired": "This task is retired and is not open for new praxis.",
+    "TASK_NOT_OPEN_FOR_SIGNUP_pending": "This task is pending and is not open for new praxis.",
+
+    "TASK_IS_METATASK": "Metatasks are applied to a praxis, not signed up for.",
+
+    "DUEL_SELF_CHALLENGE": "You cannot duel your own character.",
+    "DUEL_REQUIRES_SOLO_PRAXIS": "Only a solo praxis can issue a duel challenge.",
+    "DUEL_REQUIRES_IN_PROGRESS_PRAXIS": "A duel can only start from an in-progress praxis.",
+    "DUEL_ALREADY_EXISTS": "This praxis is already part of a duel.",
+    "DUEL_OPPONENT_HAS_ACTIVE_PRAXIS": "The opponent already has an active praxis for this task.",
+
+    "INVITE_SELF": "Cannot invite yourself.",
+    "INVITE_ALREADY_MEMBER": "Player is already a member.",
+    "INVITE_ALREADY_PENDING": "A pending invite already exists. Resolve it before sending another.",
+    "INVITE_TARGET_HAS_ACTIVE_PRAXIS": "This player already has an active praxis for this task and cannot be invited.",
+    "INVITE_FACTION_NOT_PERMITTED": "This player's faction may not act on this task.",
+
+    "INVITE_PRAXIS_SUBMITTED": "Cannot act on a submitted praxis.",
+    "INVITE_PRAXIS_SUBMITTED_invite": "Cannot invite to a submitted praxis.",
+    "INVITE_PRAXIS_SUBMITTED_join": "Cannot join a submitted praxis.",
+
+    "MEDIA_TYPE_UNSUPPORTED": "Unsupported media type.",
+    "MEDIA_TOO_LARGE": "File too large (max {{max_megabytes}} MB).",
+    "AVATAR_MUST_BE_IMAGE": "Avatar must be an image file.",
+    "AVATAR_TOO_LARGE": "Avatar too large (max {{max_megabytes}} MB)."
+  }
+}

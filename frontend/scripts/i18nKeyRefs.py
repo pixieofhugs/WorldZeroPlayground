@@ -24,12 +24,21 @@ Exit code 1 if anything is deletable, so it can gate a commit.
 
 DELETABLE IS A CANDIDATE LIST, NEVER A DELETE ORDER. A key composed at runtime
 has no literal anywhere and reads as deletable while being very much alive.
-There is a live example in this repo: `components/duel/wowLists.tsx` calls
-``t(`duelSeal.wow.${scope}.sub`)``, so all six `duelSeal.wow.*` keys report
-DELETABLE and must NOT be removed. Before deleting anything, grep the source for
-template-literal `t(` calls and check none of them can build the key. The useful
-signal is the DIFF of this report before and after a change — the keys a change
-newly orphaned — not its absolute output.
+Two live examples in this repo:
+
+* `components/duel/wowLists.tsx` calls ``t(`duelSeal.wow.${scope}.sub`)``, so
+  all six `duelSeal.wow.*` keys report DELETABLE and must NOT be removed.
+* **The whole `errors` namespace.** `utils/errors.ts` builds its key from the
+  backend's wire `code` (``t(`errors:codes.${code}`)``, #1401), so this script
+  reports *every* key in `errors.json` as deletable — "0 kept, 38 deletable" is
+  the expected output there, not a finding. The real guard for that namespace is
+  `backend/tests/unit/test_i18n_catalog_coverage.py`, which holds the keys level
+  with the `ErrorCode` enum, the raise sites' contexts, and their `params`.
+
+Before deleting anything, grep the source for template-literal `t(` calls and
+check none of them can build the key. The useful signal is the DIFF of this
+report before and after a change — the keys a change newly orphaned — not its
+absolute output.
 """
 from __future__ import annotations
 

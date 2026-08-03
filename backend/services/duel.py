@@ -15,7 +15,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode, raise_coded
+from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -257,6 +257,7 @@ async def issue_duel_challenge(
             403,
             ErrorCode.duel_level_too_low,
             f"Duels require level {era.duel_level_required}.",
+            {"level": era.duel_level_required},
         )
 
     # Create only the pending Duel row, pointing at the existing praxis.
@@ -334,6 +335,7 @@ async def respond_to_duel_challenge(
             409,
             ErrorCode.task_already_active_member,
             "You already have an active praxis for this task.",
+            {DETAIL_CONTEXT_PARAM: "duel"},
         )
 
     # Opponent bank cap check.
@@ -343,6 +345,7 @@ async def respond_to_duel_challenge(
             400,
             ErrorCode.task_bank_full,
             f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+            {"limit": era.max_task_signups},
         )
 
     # Opponent level check.
@@ -358,6 +361,7 @@ async def respond_to_duel_challenge(
             403,
             ErrorCode.duel_level_too_low,
             f"Duels require level {era.duel_level_required}.",
+            {"level": era.duel_level_required},
         )
 
     # Create the opponent's solo praxis.

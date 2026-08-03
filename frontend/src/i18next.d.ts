@@ -13,6 +13,7 @@ declare module 'i18next' {
     resources: {
       admin: typeof import('./locales/en/admin.json')
       common: typeof import('./locales/en/common.json')
+      errors: typeof import('./locales/en/errors.json')
       factions: typeof import('./locales/en/factions.json')
       feed: typeof import('./locales/en/feed.json')
       forms: typeof import('./locales/en/forms.json')

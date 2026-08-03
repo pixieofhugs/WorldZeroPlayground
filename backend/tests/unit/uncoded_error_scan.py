@@ -228,6 +228,47 @@ class CodedSite:
     code_member: Optional[str]
     #: Whether a third positional argument (the prose ``message``) was supplied.
     has_message: bool
+    #: The interpolation placeholder names this site passes in ``params``,
+    #: excluding the :data:`errors.DETAIL_CONTEXT_PARAM` discriminator.
+    param_names: frozenset[str] = frozenset()
+    #: The literal ``context`` value this site passes, or ``None``. Drives the
+    #: ``<CODE>_<context>`` sibling lookup in the catalog-coverage guard.
+    context: Optional[str] = None
+
+
+def _read_params(node: ast.Call) -> tuple[frozenset[str], Optional[str]]:
+    """The ``params`` mapping a coded raise passes, as (placeholders, context).
+
+    Only a dict literal is readable, which is every site in the codebase and
+    the shape the convention wants: a raise site that computes its params
+    dynamically would be invisible to the catalog-coverage guard, so keeping
+    them literal is what keeps that guard honest.
+    """
+    params: Optional[ast.expr] = None
+    if len(node.args) >= 4:
+        params = node.args[3]
+    else:
+        for keyword in node.keywords:
+            if keyword.arg == "params":
+                params = keyword.value
+    if not isinstance(params, ast.Dict):
+        return frozenset(), None
+
+    names: set[str] = set()
+    context: Optional[str] = None
+    for key, value in zip(params.keys, params.values):
+        # The context key is spelled as the DETAIL_CONTEXT_PARAM constant, not
+        # a bare literal, so match the Name as well as the string.
+        is_context = (isinstance(key, ast.Name) and key.id == "DETAIL_CONTEXT_PARAM") or (
+            isinstance(key, ast.Constant) and key.value == "context"
+        )
+        if is_context:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                context = value.value
+            continue
+        if isinstance(key, ast.Constant) and isinstance(key.value, str):
+            names.add(key.value)
+    return frozenset(names), context
 
 
 def scan_coded_source(source: str, module_path: str) -> list[CodedSite]:
@@ -253,6 +294,7 @@ def scan_coded_source(source: str, module_path: str) -> list[CodedSite]:
                 and code_argument.value.id == "ErrorCode"
             ):
                 code_member = code_argument.attr
+        param_names, context = _read_params(node)
         sites.append(
             CodedSite(
                 module_path=module_path,
@@ -260,6 +302,8 @@ def scan_coded_source(source: str, module_path: str) -> list[CodedSite]:
                 code_member=code_member,
                 has_message=len(node.args) >= 3
                 or any(keyword.arg == "message" for keyword in node.keywords),
+                param_names=param_names,
+                context=context,
             )
         )
     return sites
