@@ -988,9 +988,17 @@
   --faction-singularity-term-cta-glow: none; /* the lit JOIN key */
 
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
-     The card contract above rebinds to these. CONSTANTS (gold/rubric/
-     lapis/verdigris/ink) keep their role in both themes; the VELLUM
-     surface + its text FLIP in dark (see [data-theme="dark"]). */
+     NOTHING PAINTS THESE COLOURS ANY MORE. #1208 swept the last surface off
+     the codex onto the Valley plate, and the `--faction-ephemerists-card-*`
+     contract — the family's one remaining reader, reaching it by indirection —
+     moved onto the plate's cornice band in #1627. What survives the repoint is
+     `--eph-display` and `--eph-serif`, both FACES, both still aliased by
+     `-card-font` / `-body-font` below. The seventeen colours are declared and
+     dead; deleting them is a follow-up, and it takes the six `ephemerists
+     vellum …` rows in `factionContrast.test.ts` with it (one of which is still
+     carrying a #651 BASELINE entry). CONSTANTS (gold/rubric/lapis/verdigris/
+     ink) kept their role in both themes; the VELLUM surface + its text FLIPPED
+     in dark (see [data-theme="dark"]). */
   --eph-gold: #b0863a; /* gold leaf / ochre */
   --eph-gold-light: #d4ab55; /* burnished highlight */
   --eph-gold-deep: #8a6622;
@@ -1997,7 +2005,11 @@
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
   --faction-coven-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
-  /* ephemerists card-bg inherits the :root var(--eph-vellum) rebind (flips below) */
+  /* Ephemerists declares no card value here at all (#1627). Its four card names
+     alias the Valley plate's cornice band, and the plate is theme-invariant, so
+     the sheet is the same near-black in both cascades — the shape S.N.I.D.E. and
+     Singularity above have (theirs restate a value; there is nothing to restate
+     when the contract is an alias). */
   --faction-singularity-card-bg: #050f08;
 
   /* ── Faction card text (dark mode) ── */
@@ -2252,9 +2264,10 @@
      unlit frame and break the cut. */
   --badge-victor-frame: #14100b;
 
-  /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
-     to aged tobacco and its text flips ink→parchment. The card contract
-     inherits these via the :root var() rebind. ══ */
+  /* ══ Ephemerists CODEX palette (dark) — pigments stay vivid; vellum darkens
+     to aged tobacco and its text flips ink→parchment. The card contract used to
+     inherit these through the :root var() rebind; since #1627 it rebinds to the
+     Valley plate instead and this half has no reader either. ══ */
   --eph-gold: #cda24a;
   --eph-gold-light: #e6c267;
   --eph-gold-deep: #9c7626;

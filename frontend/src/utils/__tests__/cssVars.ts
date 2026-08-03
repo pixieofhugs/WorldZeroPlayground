@@ -7,9 +7,13 @@
  *
  * The one subtlety it must get right: a var can be declared once in `:root`
  * and still differ per theme, because it POINTS at another var that the dark
- * block rebinds — `--faction-ephemerists-card-bg: var(--eph-vellum)` is
+ * block rebinds — `--faction-everymen-card-bg: var(--everymen-paper)` is
  * declared only in `:root`, yet flips in dark. So resolution is recursive and
  * theme-scoped: every hop re-reads the dark map first, root second.
+ *
+ * (This example used to be `--faction-ephemerists-card-bg: var(--eph-vellum)`.
+ * It stopped demonstrating the point in #1627: that contract now aliases the
+ * Valley plate, which is theme-invariant, so the name no longer flips at all.)
  */
 
 /** A resolved theme: custom-property name (with `--`) → raw declared value. */
