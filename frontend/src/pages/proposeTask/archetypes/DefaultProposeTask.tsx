@@ -256,8 +256,9 @@ export default function DefaultProposeTask({
         <div>
           {/* Faction Selector (§20.2) */}
           <div style={{ marginBottom: "var(--space-lg)" }}>
+            {/* A full sentence, not a region name — caption tier (#1307). */}
             <span
-              className="eyebrow"
+              className="label-caption"
               style={{ display: "block", marginBottom: "var(--space-sm)" }}
             >
               {t("proposeTask.factionSelectorLabel")}
@@ -328,7 +329,7 @@ export default function DefaultProposeTask({
               {/* Task Name (§20.4) */}
               <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
-                  className="eyebrow"
+                  className="label-heading"
                   style={{ display: "block", marginBottom: "var(--space-sm)" }}
                 >
                   {t("proposeTask.fields.name.label")}
@@ -364,7 +365,7 @@ export default function DefaultProposeTask({
                   }}
                 />
                 <span
-                  className={`eyebrow self-end ${title.length >= 180 ? "text-red-600" : ""}`}
+                  className={`label-caption self-end ${title.length >= 180 ? "text-red-600" : ""}`}
                   style={{ marginTop: "var(--space-xs)" }}
                 >
                   {title.length}/200
@@ -382,7 +383,7 @@ export default function DefaultProposeTask({
               {/* Description (§20.4) */}
               <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
-                  className="eyebrow"
+                  className="label-heading"
                   style={{ display: "block", marginBottom: "var(--space-sm)" }}
                 >
                   {t("proposeTask.fields.description.label")}
@@ -398,7 +399,7 @@ export default function DefaultProposeTask({
                   style={descriptionTextareaStyle}
                 />
                 <span
-                  className={`eyebrow self-end ${description.length >= 4500 ? "text-red-600" : ""}`}
+                  className={`label-caption self-end ${description.length >= 4500 ? "text-red-600" : ""}`}
                   style={{ marginTop: "var(--space-xs)" }}
                 >
                   {description.length}/5000
@@ -425,7 +426,7 @@ export default function DefaultProposeTask({
                 {!isMetatask && (
                   <div>
                     <span
-                      className="eyebrow"
+                      className="label-heading"
                       style={{ display: "block", marginBottom: "var(--space-sm)" }}
                     >
                       {t("proposeTask.fields.basePoints.label")}
@@ -443,7 +444,7 @@ export default function DefaultProposeTask({
                       style={basePointsInputStyle}
                     />
                     <span
-                      className="eyebrow"
+                      className="label-caption"
                       style={{ display: "block", marginTop: "var(--space-xs)" }}
                     >
                       {t("proposeTask.fields.basePoints.hint")}
@@ -453,7 +454,7 @@ export default function DefaultProposeTask({
                 {isMetatask && (
                   <div>
                     <span
-                      className="eyebrow"
+                      className="label-heading"
                       style={{ display: "block", marginBottom: "var(--space-sm)" }}
                     >
                       {t("proposeTask.fields.bonusPoints.label")}
@@ -474,7 +475,7 @@ export default function DefaultProposeTask({
                       }}
                     />
                     <span
-                      className="eyebrow"
+                      className="label-caption"
                       style={{ display: "block", marginTop: "var(--space-xs)" }}
                     >
                       {t("proposeTask.fields.bonusPoints.hint")}
@@ -483,7 +484,7 @@ export default function DefaultProposeTask({
                 )}
                 <div>
                   <span
-                    className="eyebrow"
+                    className="label-heading"
                     style={{ display: "block", marginBottom: "var(--space-sm)" }}
                   >
                     {t("proposeTask.fields.minimumLevel.label")}
@@ -494,7 +495,7 @@ export default function DefaultProposeTask({
                     onChange={setLevelRequired}
                   />
                   <span
-                    className="eyebrow"
+                    className="label-caption"
                     style={{ display: "block", marginTop: "var(--space-xs)" }}
                   >
                     {t("proposeTask.fields.minimumLevel.hint")}
@@ -538,12 +539,7 @@ export default function DefaultProposeTask({
                     >
                       {t("proposeTask.metaToggle.label")}
                     </span>
-                    <span
-                      className="eyebrow"
-                      style={{
-                        color: "var(--color-text-tertiary)",
-                      }}
-                    >
+                    <span className="label-caption">
                       {isKnownFaction(factionSlug)
                         ? t("proposeTask.metaToggle.hint", {
                             faction: factionName(factionSlug),
@@ -559,7 +555,7 @@ export default function DefaultProposeTask({
             {!isMetatask && (
               <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
-                  className="eyebrow"
+                  className="label-heading"
                   style={{ display: "block", marginBottom: "var(--space-sm)" }}
                 >
                   {t("proposeTask.fields.notes.label")}
@@ -599,8 +595,12 @@ export default function DefaultProposeTask({
                   marginBottom: "var(--space-lg)",
                 }}
               >
+                {/* Caption, not a heading: the faction name is interpolated in,
+                    so "Task preview — University of Asthmatics — Pending" is a
+                    run of prose the moment a long slug is selected (#1307). The
+                    faction accent stays — ink is measured separately. */}
                 <span
-                  className="eyebrow"
+                  className="label-caption"
                   style={{ color, marginBottom: "var(--space-xs)", display: "block" }}
                 >
                   {isMetatask
@@ -635,7 +635,7 @@ export default function DefaultProposeTask({
                 <div style={{ display: "flex", gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
                   {isMetatask ? (
                     <span
-                      className="eyebrow"
+                      className="label-caption"
                       style={{ color: "var(--color-success)" }}
                     >
                       {t("proposeTask.preview.bonusPoints", {
@@ -643,19 +643,19 @@ export default function DefaultProposeTask({
                       })}
                     </span>
                   ) : (
-                    <span className="eyebrow">
+                    <span className="label-caption">
                       {t("proposeTask.preview.points", {
                         points: pointValue || "?",
                       })}
                     </span>
                   )}
-                  <span className="eyebrow">
+                  <span className="label-caption">
                     {t("proposeTask.preview.level", {
                       level: levelRequired === "" ? 0 : levelRequired,
                     })}
                   </span>
                   {!isMetatask && (
-                    <span className="eyebrow" style={{ color }}>
+                    <span className="label-caption" style={{ color }}>
                       {t("proposeTask.preview.pending")}
                     </span>
                   )}
@@ -729,7 +729,11 @@ export default function DefaultProposeTask({
         {/* ── Right: Tips Column (§20.8) ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
           <div className="sidebar-card" style={{ padding: "var(--space-md) var(--space-lg)" }}>
-            <p className="eyebrow mb-2">
+            {/* Both tips-card titles are prose phrases rather than region
+                names ("What makes a good task"), so they take the caption tier
+                — and they take the SAME one, or two sibling cards disagree
+                about what a card title is. */}
+            <p className="label-caption mb-2">
               {t("proposeTask.tips.goodTaskHeading")}
             </p>
             <ul
@@ -747,7 +751,7 @@ export default function DefaultProposeTask({
           </div>
 
           <div className="sidebar-card" style={{ padding: "var(--space-md) var(--space-lg)" }}>
-            <p className="eyebrow mb-2">{t("proposeTask.tips.nextHeading")}</p>
+            <p className="label-caption mb-2">{t("proposeTask.tips.nextHeading")}</p>
             <p
               className="content-text font-body"
               style={tipsBodyStyle}
