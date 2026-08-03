@@ -6,6 +6,7 @@ import {
   updateTaskStatus,
   adminPatchTask,
 } from "../../api/admin";
+import type { AdminTaskStatus } from "../../api/admin";
 import type { TaskOut } from "../../api/tasks";
 import { mergeAdminTaskRows } from "./adminTaskRows";
 import type { AdminTaskRow } from "./adminTaskRows";
@@ -62,7 +63,7 @@ export default function TasksTab() {
     refresh();
   }, []);
 
-  const handleStatusChange = async (taskId: number, newStatus: string) => {
+  const handleStatusChange = async (taskId: number, newStatus: AdminTaskStatus) => {
     setActionError(null);
     try {
       await updateTaskStatus(taskId, newStatus);
