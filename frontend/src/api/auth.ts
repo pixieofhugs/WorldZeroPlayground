@@ -19,7 +19,9 @@ export interface CharacterOut {
   score: number
   all_time_score: number
   faction_slug: string | null
-  /** "active" | "paused" | "banned" — the roster includes paused lives (#270). */
+  /** "active" | "banned" (`CharacterStatus`). The roster is every life of the
+   *  account with banned excluded (#270), which since #1550 is simply the
+   *  active ones — `paused` was deleted, nothing ever wrote it. */
   status: string
   created_at: string
   /** Evaluated on read (ADR-0033). Populated by GET /characters/{id} and, since
