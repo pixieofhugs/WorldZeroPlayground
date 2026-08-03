@@ -93,16 +93,22 @@ export async function deleteCharacter(id: number): Promise<void> {
  * assumed, in `__tests__/avatarUpload.test.ts`, because a serializer that chose
  * to `JSON.stringify` this would send `{}` and fail only at runtime.
  *
- * The cast is the schema's limit, not a shortcut: OpenAPI renders a binary
- * upload as `{ file: string }`, which is the shape of the multipart FIELD, and
- * no TypeScript type for this route can describe the `FormData` that carries it.
+ * The cast is the schema's limit, not a shortcut: `openapi-typescript` renders
+ * `format: binary` as `string`, so the generated body type is `{ file: string }`
+ * — the shape of the multipart FIELD, which no `FormData` can ever satisfy.
+ *
+ * Spelled as the literal rather than as the generated alias, deliberately (the
+ * review of #1622). The literal is the STRICTER of the two: it has to stay
+ * assignable to whatever the schema says this body is, so a renamed or added
+ * form field fails `tsc` right here. The alias is assignable to itself by
+ * construction and would follow the wire silently wherever it went.
  */
 export async function uploadCharacterAvatar(id: number, file: File): Promise<CharacterOut> {
   const form = new FormData()
   form.append('file', file)
   const { data } = await apiPost('/characters/{character_id}/avatar', {
     params: { path: { character_id: id } },
-    body: form as unknown as components['schemas']['Body_upload_avatar_characters__character_id__avatar_post'],
+    body: form as unknown as { file: string },
   })
   return data
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import api from '../api/axios'
+import { apiPost } from '../api/client'
 import PageTitle from '../components/ui/PageTitle'
 
 type FormState = { name: string; email: string; message: string }
@@ -21,7 +21,7 @@ export default function Contact() {
     setSubmitting(true)
     setError(null)
     try {
-      await api.post('/contact', form)
+      await apiPost('/contact', { body: form })
       setSuccess(true)
     } catch {
       setError(t('contact.error'))

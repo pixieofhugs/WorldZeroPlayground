@@ -42,11 +42,15 @@ cannot produce, and an `EditPraxisState` builder 28 fields behind.
 - **Preview provider**: `frontend/.ds-kit/provider.tsx` (committed, `cfg.provider = DSProvider`).
   Wraps previews in `MemoryRouter` (react-router-dom v6 hooks throw without a Router) and
   initializes i18next. **Preview-only auth mock**: guarded by `window.__dsPreview` (set only
-  inside the preview harness, never in a shipped design), it resolves `GET /auth/me` to a mock
-  authed UA user so auth-gated UI (vote rungs, comment composer, signup buttons, NavBar) renders
-  its real state instead of a login gate; every other request rejects like the offline app. It
-  also sets `i18n.options.saveMissing=false` so a missing copy key renders the key instead of
-  throwing (dev-mode i18n throws and blanks the whole card).
+  inside the preview harness, never in a shipped design), it supplies `AuthContext` directly
+  with a mock authed UA user so auth-gated UI (vote rungs, comment composer, signup buttons,
+  NavBar) renders its real state instead of a login gate; requests are not intercepted at all,
+  so anything a preview fetches behaves like the offline app. It used to fake `GET /auth/me`
+  (and `GET /factions`) through axios' adapter; #1400 retired axios, and `openapi-fetch` binds
+  `globalThis.fetch` at client creation — before this module's body runs — so a transport stub
+  installed from here would never be consulted. It also sets `i18n.options.saveMissing=false`
+  so a missing copy key renders the key instead of throwing (dev-mode i18n throws and blanks
+  the whole card).
 - **cssEntry = `frontend/.ds-kit/kit.css`** (GENERATED, gitignored). Built by
   `node .design-sync/gen-kit-css.mjs` (committed) = **Tailwind-compiled** `src/index.css`
   (the app uses `@tailwind` utilities that the converter would otherwise copy verbatim as

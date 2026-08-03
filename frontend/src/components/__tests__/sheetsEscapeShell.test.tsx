@@ -45,7 +45,7 @@ vi.mock('../../auth/AuthContext', () => ({
 }))
 
 // Fetched in an effect the static renderer never runs; mocked so the module
-// graph does not drag an axios client in behind it.
+// graph does not drag the API transport in behind it.
 vi.mock('../../api/me', () => ({
   getMyCharacters: async () => [],
   setActiveCharacter: async () => ({}),

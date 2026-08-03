@@ -4,15 +4,27 @@
 //
 // Preview-only auth: auth-gated UI (vote rungs, comment composer) otherwise
 // renders a "log in" gate because useAuth() has no user. We give it an
-// authenticated viewer by resolving GET /auth/me to a mock user — but ONLY
-// inside the preview harness (window.__dsPreview is set by the preview IIFE,
-// never in a real design). Every other request rejects exactly like the
-// offline app, so the SHIPPED bundle behaves as if this code isn't here.
+// authenticated viewer by SUPPLYING the auth context directly — but ONLY inside
+// the preview harness (window.__dsPreview is set by the preview IIFE, never in
+// a real design), so the SHIPPED bundle behaves as if this code isn't here.
+//
+// It used to fake `GET /auth/me` by swapping axios' adapter, which #1400 retired
+// along with axios. Replacing the transport is no longer even possible from
+// here: `openapi-fetch` binds `globalThis.fetch` when `src/api/client.ts`
+// creates the client, which happens while THIS module's imports are still being
+// evaluated — a stub installed at render time is simply never consulted. The
+// context is the honest seam anyway; it is what the app's own tests use, and it
+// needs no request to succeed.
+//
+// ponytail: the old adapter also served `GET /factions` (a slug-only list) so
+// the mobile factions directory previewed populated instead of showing its
+// offline state. That one is gone with the transport. Restoring it means the
+// preview harness stubbing `globalThis.fetch` BEFORE it evaluates this bundle —
+// after that point the binding is already taken.
 import i18n from "../src/i18n"; // default export = the initialized i18next instance
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import api from "../src/api/axios";
-import { AuthProvider } from "../src/auth/AuthContext";
+import { AuthContext, AuthProvider } from "../src/auth/AuthContext";
 import { ThemeProvider } from "../src/hooks/useTheme";
 import type { CurrentUser } from "../src/api/auth";
 
@@ -51,41 +63,44 @@ const MOCK_USER: CurrentUser = {
   level_jump_available: false,
 };
 
-let installed = false;
-function installPreviewAuth(): void {
-  if (installed) return;
-  installed = true;
+/** The signed-in viewer a preview is drawn for, with no request behind it. */
+const PREVIEW_AUTH = {
+  user: MOCK_USER,
+  loading: false,
+  refetch: async () => {},
+  applyUser: () => {},
+  signOut: async () => {},
+};
+
+let softened = false;
+function softenMissingKeys(): void {
+  if (softened) return;
+  softened = true;
   // The app's i18n throws on a missing copy key in dev mode. In a preview that
   // crashes the whole card blank (e.g. AlbescentInvitation, whose copy keys are
   // currently shadowed by a duplicate in factions.json). Downgrade to
   // render-the-key so a missing string degrades gracefully instead of blanking.
   i18n.options.saveMissing = false;
   i18n.options.missingKeyHandler = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  api.defaults.adapter = (config: any) => {
-    const url = String(config.url ?? "");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ok = (data: any) =>
-      Promise.resolve({ data, status: 200, statusText: "OK", headers: {}, config });
-    if (url.includes("/auth/me")) return ok(MOCK_USER);
-    // The mobile factions-directory self-fetches GET /factions (slug-only list);
-    // serve it so the preview renders the populated grid, not the offline error.
-    if (/\/factions(\?|$)/.test(url))
-      return ok(["ua", "wow", "snide", "ephemerists", "singularity", "everymen", "albescent"].map((slug) => ({ slug })));
-    return Promise.reject(new Error("design-sync preview: network disabled"));
-  };
 }
 
 export function DSProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof window !== "undefined" && (window as any).__dsPreview) installPreviewAuth();
+  const preview = typeof window !== "undefined" && Boolean((window as any).__dsPreview);
+  if (preview) softenMissingKeys();
   // ThemeProvider backs useTheme() — NavBar and the shell chrome throw without
   // it. It also owns the [data-theme] cascade the whole kit styles against.
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <MemoryRouter>{children}</MemoryRouter>
-      </AuthProvider>
+      {preview ? (
+        <AuthContext.Provider value={PREVIEW_AUTH}>
+          <MemoryRouter>{children}</MemoryRouter>
+        </AuthContext.Provider>
+      ) : (
+        <AuthProvider>
+          <MemoryRouter>{children}</MemoryRouter>
+        </AuthProvider>
+      )}
     </ThemeProvider>
   );
 }

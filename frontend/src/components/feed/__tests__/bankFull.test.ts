@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { ApiError, ApiNetworkError } from '../../../api/apiError'
 import { isTaskBankFull } from '../bankFull'
 
 /**
@@ -21,10 +22,13 @@ import { isTaskBankFull } from '../bankFull'
  * with, in and out.
  */
 
-const axiosError = (status: number, detail?: unknown) => ({
-  message: 'Request failed',
-  response: { status, data: detail === undefined ? {} : { detail } },
-})
+/**
+ * A failed request, as `api/client.ts` reports one: an `ApiError` carrying the
+ * status and the parsed body (#1400). These cases were written against an
+ * axios-shaped literal and are unchanged apart from the constructor.
+ */
+const apiError = (status: number, detail?: unknown) =>
+  new ApiError(new Response(null, { status }), detail === undefined ? {} : { detail })
 
 const BANK_FULL_PROSE = 'Task bank is full (20 in-progress praxes).'
 
@@ -32,36 +36,36 @@ describe('isTaskBankFull', () => {
   it('recognises the coded body every live backend path now sends', () => {
     // `services/praxis.py::respond_to_invite` — the collab accept this card drives.
     expect(
-      isTaskBankFull(axiosError(409, { code: 'TASK_BANK_FULL', message: BANK_FULL_PROSE }))
+      isTaskBankFull(apiError(409, { code: 'TASK_BANK_FULL', message: BANK_FULL_PROSE }))
     ).toBe(true)
     // The duel twin and the shared signup denial answer 400, same code. The
     // status is not part of the decision and must not become part of it.
     expect(
-      isTaskBankFull(axiosError(400, { code: 'TASK_BANK_FULL', message: BANK_FULL_PROSE }))
+      isTaskBankFull(apiError(400, { code: 'TASK_BANK_FULL', message: BANK_FULL_PROSE }))
     ).toBe(true)
   })
 
   it('recognises the code even with no prose attached', () => {
-    expect(isTaskBankFull(axiosError(409, { code: 'TASK_BANK_FULL' }))).toBe(true)
+    expect(isTaskBankFull(apiError(409, { code: 'TASK_BANK_FULL' }))).toBe(true)
   })
 
   it('still recognises the bare-string body, for the deploy-skew window', () => {
     // Frontend and API deploy separately. Until no running API predates the
     // coded raise, this bundle can be talking to one that answers prose — the
     // window #1401 is sequenced client-first to survive.
-    expect(isTaskBankFull(axiosError(409, BANK_FULL_PROSE))).toBe(true)
+    expect(isTaskBankFull(apiError(409, BANK_FULL_PROSE))).toBe(true)
   })
 
   it('does not fire on some other failure', () => {
     expect(
       isTaskBankFull(
-        axiosError(400, { code: 'INVITE_PRAXIS_SUBMITTED', message: 'Cannot join a submitted praxis.' })
+        apiError(400, { code: 'INVITE_PRAXIS_SUBMITTED', message: 'Cannot join a submitted praxis.' })
       )
     ).toBe(false)
-    expect(isTaskBankFull(axiosError(403, 'This invite is not for you.'))).toBe(false)
-    expect(isTaskBankFull(axiosError(404, { code: 'TASK_LEVEL_TOO_LOW' }))).toBe(false)
-    expect(isTaskBankFull(axiosError(500))).toBe(false)
-    expect(isTaskBankFull({ message: 'Network Error' })).toBe(false)
+    expect(isTaskBankFull(apiError(403, 'This invite is not for you.'))).toBe(false)
+    expect(isTaskBankFull(apiError(404, { code: 'TASK_LEVEL_TOO_LOW' }))).toBe(false)
+    expect(isTaskBankFull(apiError(500))).toBe(false)
+    expect(isTaskBankFull(new ApiNetworkError(new TypeError('Failed to fetch')))).toBe(false)
     expect(isTaskBankFull(undefined)).toBe(false)
   })
 })

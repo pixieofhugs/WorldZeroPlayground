@@ -307,6 +307,23 @@ export default [
       ],
       'local/no-raw-style-values': 'error',
       'sonarjs/no-identical-functions': 'error',
+      // #1400: axios is gone. An import of it would install a SECOND transport
+      // that misses everything `api/client.ts` carries — the JWT cookie, the
+      // 401→landing rule, the array-param serialization FastAPI actually reads
+      // — and every one of those failures is a 200 with the wrong answer rather
+      // than a crash. Cheaper as a lint line than as a bug report.
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'axios',
+              message:
+                'axios was retired in #1400 — issue requests through api/client.ts (apiGet/apiPost/...).',
+            },
+          ],
+        },
+      ],
     },
   },
   // Ratchet: existing violations are grandfathered until migrated. Spread

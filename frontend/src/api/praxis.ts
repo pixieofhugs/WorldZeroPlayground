@@ -1,5 +1,4 @@
 import { apiDelete, apiGet, apiPost, apiPut } from './client'
-import type { components } from './generated/schema'
 import { wireSent } from './wireSent'
 import { clearCastTallies } from '../components/vote/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
@@ -458,35 +457,37 @@ export async function leavePraxis(id: number): Promise<PraxisOut> {
 // ---------------------------------------------------------------------------
 
 /**
- * The two multipart bodies below, named from the generated schema rather than
- * restated by hand.
+ * The two multipart bodies below, and why each is spelled as a literal.
  *
  * OpenAPI describes an uploaded file as `type: string, format: binary`, so
  * `openapi-typescript` renders these bodies as `{ file: string }` — a real
  * `File` can never satisfy that, and no amount of correct code will make it. The
  * cast is the only way to say "multipart" in this type system.
  *
+ * The literal is the STRICTER of the two available spellings (the review of
+ * #1622). It must stay assignable to whatever the schema says the body is, so a
+ * renamed or added form field fails `tsc` at the `body:` property; the generated
+ * `components['schemas']['Body_upload_…']` alias is assignable to itself by
+ * construction and would follow the wire silently instead.
+ *
  * The RUNTIME needs no help: `openapi-fetch`'s default serializer returns a
  * `FormData` untouched and deliberately leaves `Content-Type` unset so the
  * platform writes the boundary. That is the load-bearing half, and the half the
- * cast above could hide, so it is asserted in `__tests__/praxisRequests.test.ts`
+ * cast could hide, so it is asserted in `__tests__/praxisRequests.test.ts`
  * rather than assumed — a JSON-stringified `FormData` reaches the server as `{}`
  * and fails at runtime with nothing failing in CI.
  *
- * ponytail: both aliases disappear if the generator is ever configured to emit
+ * ponytail: both casts disappear if the generator is ever configured to emit
  * `Blob` for `format: binary`; until then this is the documented upload idiom.
  */
-type MediaUploadBody =
-  components['schemas']['Body_upload_media_route_praxes__praxis_id__media_post']
-type MediaBatchUploadBody =
-  components['schemas']['Body_upload_media_batch_route_praxes__praxis_id__media_batch_post']
-
 export async function uploadPraxisMedia(id: number, file: File): Promise<MediaItemOut> {
   const form = new FormData()
   form.append('file', file)
   const { data } = await apiPost('/praxes/{praxis_id}/media', {
     params: { path: { praxis_id: id } },
-    body: form as unknown as MediaUploadBody,
+    // `display_order` is in the schema's field list and deliberately not in the
+    // FormData: it is `Form(0)` server-side, so an omitted one appends last.
+    body: form as unknown as { display_order: number; file: string },
   })
   return data
 }
@@ -526,7 +527,7 @@ export async function uploadPraxisMediaBatch(
   for (const file of files) form.append('files', file)
   const { data } = await apiPost('/praxes/{praxis_id}/media/batch', {
     params: { path: { praxis_id: id } },
-    body: form as unknown as MediaBatchUploadBody,
+    body: form as unknown as { files: string[] },
   })
   return data.map(wireSent)
 }
