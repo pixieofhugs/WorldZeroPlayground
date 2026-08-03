@@ -1,4 +1,5 @@
 import { apiGet, apiPost, apiPut, apiPatch } from './client'
+import { wireSent } from './wireSent'
 import type { TaskOut } from './tasks'
 import type { PraxisOut } from './praxis'
 import type { CommentOut } from './comments'
@@ -105,12 +106,12 @@ export async function getMessages(archived = false): Promise<ContactMessageOut[]
 
 export async function getFlaggedPraxes(): Promise<FlaggedPraxisOut[]> {
   const { data } = await apiGet('/admin/praxes/flagged')
-  return data
+  return data.map(wireSent)
 }
 
 export async function getFlaggedComments(): Promise<FlaggedCommentOut[]> {
   const { data } = await apiGet('/admin/comments/flagged')
-  return data
+  return data.map(wireSent)
 }
 
 export async function getAdminCharacters(status?: CharacterStatus): Promise<AdminCharacterSummary[]> {
@@ -258,7 +259,7 @@ export async function moderatePraxis(
     params: { path: { praxis_id: id } },
     body: { status, admin_note: adminNote || null },
   })
-  return data
+  return wireSent(data)
 }
 
 export async function moderateComment(
@@ -269,7 +270,7 @@ export async function moderateComment(
     params: { path: { comment_id: id } },
     body: { status },
   })
-  return data
+  return wireSent(data)
 }
 
 export async function archiveMessage(id: number): Promise<ContactMessageOut> {
