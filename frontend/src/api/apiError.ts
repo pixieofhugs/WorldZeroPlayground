@@ -46,9 +46,14 @@ export class ApiError<TBody = unknown> extends Error {
  *
  * A separate class rather than an {@link ApiError} with a made-up status,
  * because there genuinely is no status and the player is told something else
- * ("check your connection", not "the server had a problem"). The message is
- * `'Network Error'` to match what axios sets on the same condition, so
- * `extractError`'s existing branch reads both transports without a special case.
+ * ("check your connection", not "the server had a problem"). `extractError`
+ * keys that branch off the ABSENCE of a status rather than off this class, so
+ * an ordinary throw from outside the transport lands there too.
+ *
+ * The message was chosen as `'Network Error'` because that is what axios set on
+ * the same condition, and for the length of the #1400 migration one string had
+ * to read the same from either transport. Nothing matches on it now; it is kept
+ * because it is still the right words in a log.
  */
 export class ApiNetworkError extends Error {
   /**

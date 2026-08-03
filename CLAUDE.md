@@ -14,7 +14,7 @@ FastAPI (Python) + React community game. Players make Characters, complete
 real-world tasks, post proof ("praxis"), earn points via star-rating votes.
 
 ## Stack
-FastAPI · SQLAlchemy (async) · Alembic · PostgreSQL · React · Axios ·
+FastAPI · SQLAlchemy (async) · Alembic · PostgreSQL · React · openapi-fetch ·
 Google OAuth2 → JWT · local-fs media (relative paths) · pytest + GitHub Actions.
 Deeper notes: `docs/spec/SPEC-backend-architecture.md` (backend posture);
 identity + era-as-ruleset in ADR-0041 / ADR-0042.

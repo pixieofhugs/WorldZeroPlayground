@@ -1,12 +1,14 @@
 /**
  * The 401 → landing rule, kept apart from any one transport.
  *
- * It lived inside `axios.ts` until #1400 started replacing axios with an
- * `openapi-fetch` client. Both transports are live during that migration, and
- * both have to bounce an expired session the same way — so the rule is stated
- * once, here, and imported by each. A second copy is how it drifts, and the
- * failure mode of drift is silent: guests stop being able to open any URL but
- * `/`, and nothing throws.
+ * It lived inside the axios client until #1400 replaced that with an
+ * `openapi-fetch` one, and was lifted out here because both were live at once
+ * and had to bounce an expired session identically. `./client.ts` is the only
+ * caller now, and the rule stays out here anyway: it is a pure predicate, which
+ * is what lets the DOM-less test harness reach it, and a transport that owned
+ * it privately is what made it drift in the first place. The failure mode of
+ * drift is silent — guests stop being able to open any URL but `/`, and nothing
+ * throws.
  */
 
 /**
@@ -49,9 +51,9 @@ const SESSION_PROBES = ['/auth/me', '/me/sidebar']
  * The redirect still fires for a session that expires while the app is in use,
  * which is what it was written for.
  *
- * `requestUrl` is matched by substring, so it may be either the relative URL
- * axios records in `config.url` or the absolute one `openapi-fetch` puts on its
- * `Request`. Both contain the probe path.
+ * `requestUrl` is matched by substring rather than compared, because what the
+ * caller has is the absolute URL `openapi-fetch` puts on its `Request` — the
+ * probe path is inside it, not equal to it.
  */
 export function shouldReturnToLanding(
   status: number | undefined,

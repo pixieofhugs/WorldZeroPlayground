@@ -43,9 +43,15 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  * populated landing page now costs 227 KB in total, less than the old entry
  * chunk on its own.
  *
+ * Then #1400 took axios out of it: the whole app issues through an
+ * `openapi-fetch` client over the platform's `fetch`, so the entry chunk went
+ * 142.9 KB → 127.9 KB, measured on either side of the retirement. WARN comes
+ * down with it (150,000 → 134,000) — a 15 KB win nobody can spend by accident
+ * is the only kind that stays won.
+ *
  * Next levers, if this needs to go lower: the markdown stack (~568 KB
  * unminified, serving one preview component) and react-easy-crop (one modal)
- * are still eager, and axios does what fetch does.
+ * are still eager.
  *
  * WARN sits just above today's number so any real growth speaks up immediately,
  * while the build stays green. Ratchet WARN downward each time a chunk moves
@@ -73,7 +79,7 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  * to, not a restatement of the warn line.
  */
 const BUDGETS = {
-  js: { warn: 150_000, fail: 180_000, target: 120_000 },
+  js: { warn: 134_000, fail: 180_000, target: 120_000 },
   css: { warn: 23_000, fail: 25_000, target: 20_000 },
 }
 

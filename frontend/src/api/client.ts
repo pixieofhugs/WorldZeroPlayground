@@ -6,10 +6,10 @@
  * That is the whole point: a route whose shape changes stops being a runtime
  * surprise and becomes a compile error.
  *
- * It carries every convention `./axios.ts` carries, because during the
- * migration both are live and a request must not mean two different things
- * depending on which one issued it — see `credentials`, the 401 rule below, and
- * the query serialization proven in `__tests__/client.test.ts`.
+ * It is the app's only transport. It carries every convention the axios client
+ * it replaced carried — `credentials`, the 401 rule below, and the query
+ * serialization proven in `__tests__/client.test.ts` — because each of those,
+ * dropped, fails as a 200 with the wrong answer rather than as an error.
  */
 import createClient, {
   type ClientPathsWithMethod,
@@ -31,12 +31,12 @@ const client = createClient<paths>({
 
 /**
  * The 401 → landing rule, applied to this transport (`./sessionRedirect.ts`
- * owns it; `./axios.ts` applies the same one).
+ * owns it).
  *
- * Middleware rather than the helpers below, to match where axios puts it: on
- * the client, so it holds for anything issued through it. `request.url` is
- * absolute here where axios recorded a relative one, which the probe check
- * tolerates because it matches by substring.
+ * Middleware rather than the helpers below: on the client, so it holds for
+ * anything issued through it rather than only for the five wrappers exported
+ * here. `request.url` is absolute, which the probe check tolerates because it
+ * matches by substring.
  */
 client.use({
   onResponse({ request, response }) {
