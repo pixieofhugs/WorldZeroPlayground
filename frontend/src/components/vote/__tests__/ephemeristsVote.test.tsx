@@ -143,12 +143,14 @@ describe('EphemeristsVote markup', () => {
    * from the component's constants is the CLEARANCE each disc's ornament needs,
    * and the plate has to be at least that wide between rims.
    *
-   * A ray starts at `radius + 3` from the disc centre and runs `rayLength` past
-   * that, so the ornament reaches `3 + 8.5` = 11.5px beyond an ordinary disc's
-   * rim and `3 + 11.5` = 14.5px beyond rank 5's; rank 5's filings orbit 13px
-   * out. Two neighbours therefore need roughly 24px between rims, and they had
-   * `--space-md` (12). The same figure has to hold at the plate's own edges, or
-   * the outermost bursts collide with the border instead of with each other.
+   * What costs a neighbour room is each burst's HORIZONTAL projection, not its
+   * longest ray — a ray pointing straight up reaches nothing sideways. An
+   * ordinary disc's 10 rays sit at 36° steps, so the one nearest horizontal is
+   * index 2 at 72°: `33.5·sin72° − 22 = 9.86`. Rank 5 carries 16, putting index
+   * 4 at exactly 90°: `39.5 − 25 = 14.5`. Side by side they need
+   * `9.86 + 14.5 = 24.36`px between rims and they had `--space-md` (12). The
+   * same figure has to hold at the plate's own edges, or the outermost bursts
+   * collide with the border instead of with each other.
    */
   it('holds the metals far enough apart for their bursts to clear (#1633)', () => {
     mocks.user = currentUser()

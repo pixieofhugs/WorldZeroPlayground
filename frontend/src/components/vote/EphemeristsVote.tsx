@@ -119,19 +119,26 @@ export default function EphemeristsVote({
           display: 'flex',
           alignItems: 'center',
           /*
-           * The gap holds the BURSTS apart, not the discs (#1633). A ray leaves
-           * the rim at `radius + 3` and runs `rayLength` further, so the
-           * ornament reaches 11.5px past an ordinary disc and 14.5px past rank
-           * 5, whose filings also orbit 13px out — two neighbours want ~24px of
-           * clear rim-to-rim, and at `--space-md` (12) they had half that, so
-           * the bursts and the sheens ran into each other. `--space-xl` is the
-           * rung that clears it. The Ephemerists kit asked for 22px; the token
-           * scale has no 22, and this is the direction to round in — the raw
-           * value would also have failed the no-raw-style-values ratchet.
+           * The gap holds the BURSTS apart, not the discs (#1633). What matters
+           * is each burst's HORIZONTAL projection, not its longest ray — a ray
+           * pointing straight up costs a neighbour nothing.
            *
-           * The horizontal padding matches the gap for the same reason: rank 1
-           * and rank 5 burst toward the plate's border rather than toward a
-           * neighbour, and owe it the same room.
+           * An ordinary disc's 10 rays sit at 36° steps, so the one nearest
+           * horizontal is index 2 at 72°: `33.5·sin72° − 22 = 9.86`. Rank 5
+           * carries 16 rays, which puts index 4 at exactly 90°: `39.5 − 25 =
+           * 14.5`. Side by side they want `9.86 + 14.5 = 24.36`px rim-to-rim,
+           * and at `--space-md` (12) they had half that, so the bursts and the
+           * sheens ran into each other. `--space-xl` (24) is the rung that
+           * clears it, and the 0.36px it does not cover falls inside the rays'
+           * own taper. The Ephemerists kit asked for 22px; the token scale has
+           * no 22, up is the direction to round (`WORLD_ZERO_STYLE.md`), and a
+           * raw 22 would have failed the no-raw-style-values ratchet anyway.
+           *
+           * The horizontal padding matches the gap because rank 1 and rank 5
+           * burst toward the plate's border rather than toward a neighbour. The
+           * BLOCK padding deliberately does not: rank 5's index-0 ray points
+           * straight up and reaches 14.5px, which `stepClip(7)` already cuts.
+           * Giving it room is a dressing question and belongs to #1638.
            */
           gap: 'var(--space-xl)',
           padding: 'var(--space-md) var(--space-xl)',
