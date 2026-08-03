@@ -293,9 +293,8 @@ export default function EverymenTaskDetail({
       >
         <Link
           to="/tasks"
-          className="eyebrow"
+          className="label-caption"
           style={{
-            letterSpacing: "0.2em",
             color: ACCENT,
             textDecoration: "none",
           }}
@@ -365,7 +364,7 @@ export default function EverymenTaskDetail({
 
       {isMetatask && (
         <p
-          className="eyebrow"
+          className="label-caption"
           style={{
             marginTop: 0,
             marginBottom: "var(--space-md)",
@@ -446,7 +445,7 @@ export default function EverymenTaskDetail({
               {authorName}
             </span>
           </Link>
-          <span className="eyebrow" style={{ color: MUTED }}>
+          <span className="label-caption" style={{ color: MUTED }}>
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>
         </div>
@@ -537,10 +536,7 @@ export default function EverymenTaskDetail({
           gap: "var(--space-sm)",
         }}
       >
-        <span
-          className="eyebrow"
-          style={{ letterSpacing: "0.16em", color: MUTED }}
-        >
+        <span className="label-caption" style={{ color: MUTED }}>
           {t("detail.points.base")}
         </span>
         <span

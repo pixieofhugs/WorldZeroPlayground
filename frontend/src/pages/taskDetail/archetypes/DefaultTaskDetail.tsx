@@ -177,7 +177,7 @@ export default function DefaultTaskDetail({
       }}
     >
       <span
-        className="eyebrow"
+        className="label-heading"
         style={{ letterSpacing: "0.22em", color: "var(--color-text-primary)" }}
       >
         {label}
@@ -193,7 +193,7 @@ export default function DefaultTaskDetail({
           opacity: 0.55,
         }}
       />
-      {gloss !== undefined && <span className="eyebrow">{gloss}</span>}
+      {gloss !== undefined && <span className="label-caption">{gloss}</span>}
     </div>
   );
 
@@ -201,9 +201,7 @@ export default function DefaultTaskDetail({
   const scoreBody = (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-        <span className="eyebrow" style={{ letterSpacing: "0.16em" }}>
-          {t("detail.points.base")}
-        </span>
+        <span className="label-caption">{t("detail.points.base")}</span>
         <span
           style={{
             fontFamily: "var(--font-accent)",
@@ -455,9 +453,8 @@ export default function DefaultTaskDetail({
       >
         <Link
           to="/tasks"
-          className="eyebrow"
+          className="label-caption"
           style={{
-            letterSpacing: "0.2em",
             color: "var(--faction-default-card-accent)",
             textDecoration: "none",
           }}
@@ -485,12 +482,7 @@ export default function DefaultTaskDetail({
             backgroundImage: SPECTRUM,
           }}
         />
-        <span
-          className="eyebrow"
-          style={{ fontSize: "var(--text-base)", letterSpacing: "0.2em" }}
-        >
-          {factionName(slug)}
-        </span>
+        <span className="label-caption">{factionName(slug)}</span>
         {isMetatask && (
           <span
             className="font-body"
@@ -528,7 +520,7 @@ export default function DefaultTaskDetail({
 
       {isMetatask && (
         <p
-          className="eyebrow"
+          className="label-caption"
           style={{
             marginTop: 0,
             marginBottom: "var(--space-md)",
@@ -609,7 +601,7 @@ export default function DefaultTaskDetail({
               {authorName}
             </span>
           </Link>
-          <span className="eyebrow">
+          <span className="label-caption">
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>
         </div>
@@ -626,7 +618,7 @@ export default function DefaultTaskDetail({
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-          <span className="eyebrow" style={{ marginBottom: "var(--space-xs)" }}>
+          <span className="label-caption" style={{ marginBottom: "var(--space-xs)" }}>
             {t("detail.stats.level")}
           </span>
           <span
@@ -651,7 +643,7 @@ export default function DefaultTaskDetail({
           }}
         />
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-          <span className="eyebrow" style={{ marginBottom: "var(--space-xs)" }}>
+          <span className="label-caption" style={{ marginBottom: "var(--space-xs)" }}>
             {t("detail.stats.inProgress")}
           </span>
           <span
@@ -703,7 +695,7 @@ export default function DefaultTaskDetail({
         }}
       >
         <span
-          className="eyebrow"
+          className="label-heading"
           style={{ letterSpacing: "0.22em", color: "var(--color-text-primary)" }}
         >
           {t("detail.gallery.heading", { count: submissions.length })}
@@ -732,7 +724,7 @@ export default function DefaultTaskDetail({
             <button
               key={sort}
               onClick={() => setSubmissionSort(sort)}
-              className="eyebrow"
+              className="label-caption"
               style={{
                 cursor: "pointer",
                 border: "none",
