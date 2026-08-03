@@ -40,7 +40,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Optional
 
 #: ``backend/``. The scan root, resolved from this file rather than the cwd so
 #: it does not matter where pytest was invoked from.
@@ -212,7 +212,73 @@ def tally(sites: Iterable[UncodedSite]) -> dict[str, int]:
     return counts
 
 
+#: The two blessed constructors in ``errors.py``. A call to either is what "has
+#: a code" means.
+CODED_CONSTRUCTORS = frozenset({"raise_coded", "coded_error"})
+
+
+@dataclass(frozen=True)
+class CodedSite:
+    """One ``raise_coded`` / ``coded_error`` call in the shipped backend."""
+
+    module_path: str
+    line: int
+    #: The :class:`errors.ErrorCode` *member name* (not its value) this site
+    #: passes, or ``None`` if it passes something the AST cannot resolve.
+    code_member: Optional[str]
+    #: Whether a third positional argument (the prose ``message``) was supplied.
+    has_message: bool
+
+
+def scan_coded_source(source: str, module_path: str) -> list[CodedSite]:
+    """Find the coded raises in one module."""
+    sites: list[CodedSite] = []
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.Call):
+            continue
+        function = node.func
+        name = (
+            function.id
+            if isinstance(function, ast.Name)
+            else function.attr if isinstance(function, ast.Attribute) else None
+        )
+        if name not in CODED_CONSTRUCTORS:
+            continue
+        code_member: Optional[str] = None
+        if len(node.args) >= 2:
+            code_argument = node.args[1]
+            if (
+                isinstance(code_argument, ast.Attribute)
+                and isinstance(code_argument.value, ast.Name)
+                and code_argument.value.id == "ErrorCode"
+            ):
+                code_member = code_argument.attr
+        sites.append(
+            CodedSite(
+                module_path=module_path,
+                line=node.lineno,
+                code_member=code_member,
+                has_message=len(node.args) >= 3
+                or any(keyword.arg == "message" for keyword in node.keywords),
+            )
+        )
+    return sites
+
+
+def scan_coded_backend(root: Path = BACKEND_ROOT) -> list[CodedSite]:
+    """Find every coded raise in the shipped backend."""
+    sites: list[CodedSite] = []
+    for path in shipped_modules(root):
+        module_path = path.relative_to(root).as_posix()
+        sites.extend(scan_coded_source(path.read_text(encoding="utf-8"), module_path))
+    return sites
+
+
 __all__ = [
+    "CODED_CONSTRUCTORS",
+    "CodedSite",
+    "scan_coded_backend",
+    "scan_coded_source",
     "BACKEND_ROOT",
     "EXCLUDED_DIRECTORIES",
     "EXCLUDED_FILES",
