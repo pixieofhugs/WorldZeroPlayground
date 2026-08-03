@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiPost } from './client'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 
 /**
@@ -27,9 +27,9 @@ export async function sendNudge(
   praxisId: number,
   toCharacterId: number,
 ): Promise<NudgeOut> {
-  const { data } = await api.post<NudgeOut>(
-    `/praxes/${praxisId}/nudge/${toCharacterId}`,
-  )
+  const { data } = await apiPost('/praxes/{praxis_id}/nudge/{character_id}', {
+    params: { path: { praxis_id: praxisId, character_id: toCharacterId } },
+  })
   // The recipient's feed just gained a row. Nothing in the SENDER's own feed
   // changes, but the bus is how every feed surface learns to refetch and the
   // sender may well be looking at their own — cheap, and never stale.
@@ -45,6 +45,14 @@ export async function sendNudge(
  * for that person on its own — 422 inside their 24h window or already filed,
  * 403 not in the crew, 400 yourself — so a caller branches on the number
  * rather than on the prose. Mirrors `schemas/nudge.py:NudgeResultOut`.
+ *
+ * ponytail (#1400): the three nullable fields stay REQUIRED here where the
+ * generated type marks them optional, so `nudgeTheCrew` narrows with a cast.
+ * Their Pydantic fields are `... | None = None`, and openapi-typescript reads a
+ * `None` default as "may be absent" — but FastAPI serializes every key, so each
+ * arrives as `T | null`. "Exactly one of nudge/error is set" is the contract
+ * callers branch on; a `| undefined` that never appears would only blur it.
+ * Reconciled once, for every module, by the alias slice of #1400.
  */
 export interface NudgeResultOut {
   to_character_id: number
@@ -71,7 +79,9 @@ export interface NudgeResultOut {
 export async function nudgeTheCrew(
   praxisId: number,
 ): Promise<NudgeResultOut[]> {
-  const { data } = await api.post<NudgeResultOut[]>(`/praxes/${praxisId}/nudge`)
+  const { data } = await apiPost('/praxes/{praxis_id}/nudge', {
+    params: { path: { praxis_id: praxisId } },
+  })
   notifyRequestsChanged()
-  return data
+  return data as NudgeResultOut[]
 }
