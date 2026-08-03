@@ -31,14 +31,16 @@ function character(overrides: Partial<CharacterOut>): CharacterOut {
     username: 'molly',
     display_name: 'Molly',
     bio: 'Doing very human things.',
-    avatar_url: null,
-    location: null,
+    avatar_url: '',
+    location: '',
     level: 4,
     score: 340,
     all_time_score: 340,
-    faction_slug: null,
+    faction_slug: 'na',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
     ...overrides,
   }
 }
@@ -146,8 +148,14 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(html, 'name input').toContain('value="Molly"')
     expect(text, 'tagline label (real bio field)').toContain('Tagline')
     expect(html, 'tagline value is the bio').toContain('value="Doing very human things."')
-    // Faction is read-only and links out to the Factions surface.
-    expect(html, 'faction link-out').toContain('href="/factions"')
+    // Faction is read-only and links out to that faction's own page — and for
+    // an unaffiliated life that page is `/factions/na`, not the directory.
+    // This fixture used to carry `faction_slug: null` and assert `/factions`,
+    // which no live payload could produce: the column is `nullable=False` with
+    // the era's starting slug as its default, `na` is a seeded visible
+    // `Faction` row, and `/factions/:slug` resolves it (#1400). The skin's
+    // `: '/factions'` fallback is therefore unreachable in production.
+    expect(html, 'faction link-out').toContain('href="/factions/na"')
     expect(text, 'unaffiliated').toContain('Unaffiliated')
     expect(text, 'delete affordance').toContain('Delete this character')
     expect(text, 'sticky save').toContain('Save Changes')

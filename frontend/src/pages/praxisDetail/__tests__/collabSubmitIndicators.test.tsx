@@ -100,15 +100,17 @@ function character(id: number): CharacterOut {
     id,
     username: `u${id}`,
     display_name: `Player ${id}`,
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 5,
     score: 0,
     all_time_score: 0,
-    faction_slug: null,
+    faction_slug: "na",
     status: "active",
     created_at: "2026-01-01T00:00:00Z",
+    badges: [],
+    invitations: [],
   };
 }
 

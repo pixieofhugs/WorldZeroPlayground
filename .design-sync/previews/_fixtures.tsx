@@ -100,7 +100,7 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
     username: 'ada_reed',
     display_name: 'Ada Reed',
     bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
-    avatar_url: null,
+    avatar_url: '',
     location: 'Portland, OR',
     level: 4,
     score: 320,

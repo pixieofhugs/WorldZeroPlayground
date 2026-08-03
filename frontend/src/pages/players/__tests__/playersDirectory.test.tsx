@@ -54,15 +54,17 @@ function player(overrides: Partial<CharacterOut>): CharacterOut {
     id: 1,
     username: 'wren',
     display_name: 'Wren',
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 3,
     score: 320,
     all_time_score: 900,
     faction_slug: 'everymen',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
     ...overrides,
   }
 }
@@ -70,7 +72,7 @@ function player(overrides: Partial<CharacterOut>): CharacterOut {
 const PLAYERS: CharacterOut[] = [
   player({ id: 11, display_name: 'Perpetua', faction_slug: 'everymen', score: 2140 }),
   player({ id: 22, display_name: 'Reza', faction_slug: 'ephemerists', score: 1880 }),
-  player({ id: 33, display_name: 'Molly', faction_slug: null, score: 340 }),
+  player({ id: 33, display_name: 'Molly', faction_slug: 'na', score: 340 }),
 ]
 
 function ranked(list: CharacterOut[]): RankedPlayer[] {

@@ -37,16 +37,17 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
     id: 7,
     username: 'reza',
     display_name: 'Reza',
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 7,
     score: 1880,
     all_time_score: 2400,
-    faction_slug: null,
+    faction_slug: 'na',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
     badges: [{ key: 'sock_puppet', name: 'Sock Puppet' }],
+    invitations: [],
     ...overrides,
   }
 }
@@ -133,7 +134,7 @@ describe('the profile surface is one responsive component per faction', () => {
 describe('na profile serves both form factors from DefaultProfileBody', () => {
   it('reaches the shipped mobile skin on a phone', () => {
     mocks.formFactor = 'mobile'
-    const html = renderBody({ faction_slug: null })
+    const html = renderBody({ faction_slug: 'na' })
     expect(html, 'the na mobile skin').toContain('data-testid="mobile-profile"')
   })
 
@@ -160,7 +161,7 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
   })
 
   it('still renders the desktop body on a wide viewport', () => {
-    const html = renderBody({ faction_slug: null })
+    const html = renderBody({ faction_slug: 'na' })
     expect(html).not.toContain('data-testid="mobile-profile"')
     expect(html, 'desktop na copy').toContain('Unaffiliated · faction pending')
   })

@@ -228,15 +228,19 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
     id: praxis.created_by_id,
     username: name,
     display_name: name,
-    avatar_url: praxis.created_by_avatar_url || null,
-    faction_slug: praxis.created_by_faction_slug ?? null,
-    bio: null,
-    location: null,
+    avatar_url: praxis.created_by_avatar_url || "",
+    // Unaffiliated is a slug, not a missing one (ADR-0030), and `CharacterOut`
+    // says so now that it IS the generated type (#1400).
+    faction_slug: praxis.created_by_faction_slug ?? "na",
+    bio: "",
+    location: "",
     level: 0,
     score: 0,
     all_time_score: 0,
     status: "active",
     created_at: "",
+    badges: [],
+    invitations: [],
   };
 }
 

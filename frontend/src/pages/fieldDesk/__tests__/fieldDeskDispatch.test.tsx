@@ -45,24 +45,26 @@ vi.mock('../../../api/me', () => ({
 // Imported after the mocks are registered.
 import FieldDesk from '../../FieldDesk'
 
-function character(faction_slug: string | null): CharacterOut {
+function character(faction_slug: string): CharacterOut {
   return {
     id: 42,
     username: 'molly',
     display_name: 'Mollusk',
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 4,
     score: 340,
     all_time_score: 900,
     faction_slug,
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
   }
 }
 
-function currentUser(faction_slug: string | null, canCreateAdditional = false): CurrentUser {
+function currentUser(faction_slug: string, canCreateAdditional = false): CurrentUser {
   return {
     account_id: 1,
     character: character(faction_slug),

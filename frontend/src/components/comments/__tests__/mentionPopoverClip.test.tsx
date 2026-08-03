@@ -52,15 +52,17 @@ function character(slug: string): CharacterOut {
     id: 42,
     username: 'ada',
     display_name: 'Adabel',
-    avatar_url: null,
+    avatar_url: '',
     faction_slug: slug,
-    bio: null,
-    location: null,
+    bio: '',
+    location: '',
     level: 3,
     score: 0,
     all_time_score: 0,
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
   }
 }
 

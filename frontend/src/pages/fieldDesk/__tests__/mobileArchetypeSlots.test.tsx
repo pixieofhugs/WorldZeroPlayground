@@ -43,15 +43,17 @@ const CHARACTER: CharacterOut = {
   id: 42,
   username: 'molly',
   display_name: 'Mollusk',
-  bio: null,
-  avatar_url: null,
-  location: null,
+  bio: '',
+  avatar_url: '',
+  location: '',
   level: 4,
   score: 340,
   all_time_score: 900,
   faction_slug: 'wow',
   status: 'active',
   created_at: '2026-01-01T00:00:00Z',
+  badges: [],
+  invitations: [],
 }
 
 const ACTIVE_TASK: PraxisCardOut = {

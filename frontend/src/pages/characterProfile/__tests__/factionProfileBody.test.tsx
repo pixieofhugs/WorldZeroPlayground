@@ -23,15 +23,16 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
     username: "wren",
     display_name: "Wren Aldercross",
     bio: "Keeps a field notebook.",
-    avatar_url: null,
-    location: null,
+    avatar_url: '',
+    location: '',
     level: 3,
     score: 320,
     all_time_score: 320,
-    faction_slug: null,
+    faction_slug: "na",
     status: "active",
     created_at: "2026-06-01T00:00:00Z",
     badges: [],
+    invitations: [],
     ...overrides,
   };
 }
@@ -76,7 +77,7 @@ describe("FactionProfileBody dispatch", () => {
     // their profile names it, where an unaffiliated player's says "faction
     // pending". Copy differs; the skin must not — that is what would make a
     // member visually identifiable in a list of players.
-    const skinOf = (slug: string | null): string[] =>
+    const skinOf = (slug: string): string[] =>
       [...renderBody({ faction_slug: slug }).matchAll(/--fc-[a-z]+:([^;"]+)/g)].map(
         (match) => match[1],
       );
@@ -87,8 +88,12 @@ describe("FactionProfileBody dispatch", () => {
     expect(renderBody({ faction_slug: "albescent" })).not.toContain("albescent");
   });
 
-  it("renders the default skin for an unaffiliated (null) character", () => {
-    const html = renderBody({ faction_slug: null });
+  // Unaffiliated is the slug `na`, not a missing one (ADR-0030), and since
+  // #1400 `CharacterOut` is the generated type, which says so: `faction_slug`
+  // is `string`. `CSS_KEY` maps `na` to `default` — exactly where the `null`
+  // this used to pass already landed.
+  it("renders the default skin for an unaffiliated (na) character", () => {
+    const html = renderBody({ faction_slug: "na" });
     expect(html).toContain("Unaffiliated · faction pending");
     expect(html).toContain("Wren Aldercross");
     expect(html).toContain("No praxis sealed yet");

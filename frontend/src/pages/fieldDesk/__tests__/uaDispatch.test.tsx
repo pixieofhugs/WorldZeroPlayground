@@ -27,15 +27,17 @@ const CHARACTER: CharacterOut = {
   id: 42,
   username: 'ada',
   display_name: 'Ada Reed',
-  bio: null,
-  avatar_url: null,
-  location: null,
+  bio: '',
+  avatar_url: '',
+  location: '',
   level: 2,
   score: 340,
   all_time_score: 900,
   faction_slug: 'ua',
   status: 'active',
   created_at: '2026-01-01T00:00:00Z',
+  badges: [],
+  invitations: [],
 }
 
 const ACTIVE_TASK: PraxisCardOut = {

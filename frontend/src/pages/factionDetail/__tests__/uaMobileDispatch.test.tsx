@@ -25,15 +25,17 @@ const MEMBER: CharacterOut = {
   id: 7,
   username: 'ada',
   display_name: 'Ada Reed',
-  bio: null,
-  avatar_url: null,
-  location: null,
+  bio: '',
+  avatar_url: '',
+  location: '',
   level: 2,
   score: 120,
   all_time_score: 340,
   faction_slug: 'ua',
   status: 'active',
   created_at: '2026-01-01T00:00:00Z',
+  badges: [],
+  invitations: [],
 }
 
 function membership(overrides: Partial<Membership> = {}): Membership {
