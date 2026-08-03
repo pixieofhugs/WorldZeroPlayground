@@ -14,20 +14,23 @@ export interface ActivityFeedItem {
   item_key: string
   timestamp: string
   /**
-   * The actor triple, OPTIONAL as of #1400 — the generated schema says so.
+   * The actor triple: always sent, `null` at worst.
    *
-   * `FeedItemBase` declares all three `Optional[str] = None`, which makes them
-   * non-required in the OpenAPI document; this interface used to declare them
-   * required-and-nullable, and the migration to the typed transport is what
-   * surfaced the disagreement. A live FastAPI response does serialise every key
-   * (`null` at worst), so `?? null` at the three read sites is a formality
-   * rather than a defence — but the schema is the contract, and a client that
-   * claims more than the contract promises is exactly the drift #1400 exists to
-   * make visible.
+   * These read `?:` for one release, and the reason is the defect this slice
+   * closes. `FeedItemBase` declares all three `Optional[str] = None`, and
+   * FastAPI derived the OpenAPI `required` list from Pydantic defaults — so the
+   * schema said "may be absent" about keys a live response has always
+   * serialised. This interface was then widened to match the SCHEMA rather than
+   * the wire, which is the wrong direction: a client claiming less than the
+   * contract promises makes every reader carry a case that cannot happen, and
+   * it left five dead `?? null` reads behind it.
+   *
+   * `WireModel` (`backend/schemas/base.py`) fixed the schema instead, so the
+   * contract and the wire now agree and these can simply say what is true.
    */
-  actor_display_name?: string | null
-  actor_faction_slug?: string | null
-  actor_avatar_url?: string | null
+  actor_display_name: string | null
+  actor_faction_slug: string | null
+  actor_avatar_url: string | null
   payload: Record<string, any>
   /** Faction this card's frame themes to (surface #12): actor's faction, else
    *  the task's faction, else null (neutral). Derived server-side. */

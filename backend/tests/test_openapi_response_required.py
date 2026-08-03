@@ -128,6 +128,15 @@ def _optional_fields_in_response_schemas() -> list[str]:
     return sorted(offenders)
 
 
+def _route_declaring_sources() -> list[Path]:
+    """Every file that can carry a route decorator — not just ``routers/``.
+
+    ``main.py`` declares ``/health`` directly on the app, outside the router
+    package, so globbing ``routers/*.py`` alone left one real route unguarded.
+    """
+    return sorted(ROUTERS_DIRECTORY.glob("*.py")) + [BACKEND_ROOT / "main.py"]
+
+
 def _routes_that_drop_fields() -> list[str]:
     """Return one ``file:line option`` per route decorator that can omit a field.
 
@@ -139,7 +148,7 @@ def _routes_that_drop_fields() -> list[str]:
     """
     offenders: list[str] = []
 
-    for source_path in sorted(ROUTERS_DIRECTORY.glob("*.py")):
+    for source_path in _route_declaring_sources():
         tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

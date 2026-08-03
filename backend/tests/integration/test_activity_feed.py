@@ -447,11 +447,12 @@ async def test_types_intersects_with_the_filter_rather_than_replacing_it(
 async def test_types_accepts_more_than_one_value(
     client: AsyncClient, character: Character, active_task: Task, auth_headers: dict
 ):
-    """A repeated bare key, which is what a correctly-configured axios sends.
+    """A repeated bare key, which is the only spelling this endpoint reads.
 
-    ``{types: ['a','b']}`` serialises to ``types[]=a&types[]=b`` by default and
-    FastAPI reads the bracketed key as *nothing* — 200, unfiltered, tests green.
-    #1421 must set ``paramsSerializer: { indexes: null }``.
+    A client that sends ``types[]=a&types[]=b`` instead hands FastAPI a key it
+    does not know, and the answer is a 200 with an *unfiltered* list — no error,
+    no failing test, just the filter quietly gone. Asserted here so the endpoint
+    owns the rule rather than any one client library remembering it.
     """
     response = await client.get(
         "/activity-feed",
