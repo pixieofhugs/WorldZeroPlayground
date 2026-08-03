@@ -64,6 +64,15 @@ export const RULE = "var(--faction-ephemerists-plate-rule)";
 export const LINE = "var(--faction-ephemerists-plate-line)";
 export const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 export const WASH = "var(--faction-ephemerists-plate-wash)";
+/**
+ * The EPHEMERIS GRID (#1635) — the surveyor's graticule, as a `background-image`.
+ * A published ground rather than a colour: any surface shipping ruled notepaper
+ * takes this instead of re-typing the crossed gradients, and it carries no
+ * opacity of its own, so the mount decides how far back it sits. Cards want the
+ * `.eph-grid-ground` class in `index.css`, which lays it in an inert layer under
+ * the card's content; this constant is for the surfaces that draw it themselves.
+ */
+export const GRID = "var(--faction-ephemerists-grid)";
 
 /**
  * The plate's STEPPED CORNER — top-left and bottom-right chamfered, so a cell
