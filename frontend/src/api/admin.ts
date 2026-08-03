@@ -1,88 +1,39 @@
 import { apiGet, apiPost, apiPut, apiPatch } from './client'
+import type { components } from './generated/schema'
 import type { TaskOut } from './tasks'
 import type { PraxisOut } from './praxis'
 import type { CommentOut } from './comments'
 
-export interface PendingTaskOut extends TaskOut {
-  created_by_name: string
-}
+export type PendingTaskOut = components['schemas']['PendingTaskOut']
 
-export interface ContactMessageOut {
-  id: number
-  name: string
-  email: string
-  message: string
-  is_archived: boolean
-  created_at: string
-}
+// Two different models are called ContactMessageOut server-side — the admin
+// queue's row and the public contact form's ack — so the generator disambiguates
+// both by module path. This is the admin one.
+export type ContactMessageOut = components['schemas']['routers__admin__ContactMessageOut']
 
-export interface OverviewStats {
-  accounts: number
-  characters: number
-  active_tasks: number
-  praxis: number
-  votes: number
-  flagged_praxis: number
-  suspended_accounts: number
-}
+export type OverviewStats = components['schemas']['OverviewStats']
 
-export interface AccountSummary {
-  id: number
-  email: string
-  status: string
-  created_at: string
-}
+export type AccountSummary = components['schemas']['AccountSummary']
 
-export interface CharacterBrief {
-  id: number
-  username: string
-  display_name: string
-  faction_slug: string
-  status: string
-}
+export type CharacterBrief = components['schemas']['CharacterBrief']
 
-export interface AccountDetail extends AccountSummary {
-  characters: CharacterBrief[]
-}
+export type AccountDetail = components['schemas']['AccountDetail']
 
-/** The two lives a character can be in (`models.character.CharacterStatus`).
- *  `paused` was deleted in #1550 and nothing ever wrote it. */
-export type CharacterStatus = 'active' | 'banned'
+/** The two lives a character can be in. `paused` was deleted in #1550 and
+ *  nothing ever wrote it. */
+export type CharacterStatus = components['schemas']['CharacterStatus']
 
-/** Full admin character row — matches backend schemas/admin.py CharacterSummary. */
-export interface AdminCharacterSummary {
-  id: number
-  account_id: number
-  username: string
-  display_name: string
-  faction_slug: string
-  status: string
-  score: number
-  level: number
-  votes_available: number
-  created_at: string
-}
+/** Full admin character row. */
+export type AdminCharacterSummary = components['schemas']['CharacterSummary']
 
 /** One flag row on a queue item (#237, ADR-0037). `reason` is a vocabulary key;
- *  legacy free text / `other` notes surface via `reason_detail`. */
-export interface FlagOut {
-  reason: string
-  /** Nullable, not optional. `Flag.reason_detail` is `Optional[str] = None` in
-   *  Pydantic, but the wire always carries the key — and since #1400 the
-   *  generated schema marks it required rather than leaving it `?`. */
-  reason_detail: string | null
-  flagged_by_id: number
-  flagged_by_name: string
-  created_at: string
-}
+ *  legacy free text and `other` notes surface via `reason_detail`, which is
+ *  nullable rather than optional — the wire always carries the key. */
+export type FlagOut = components['schemas']['FlagOut']
 
-export interface FlaggedPraxisOut extends PraxisOut {
-  flags: FlagOut[]
-}
+export type FlaggedPraxisOut = components['schemas']['FlaggedPraxisOut']
 
-export interface FlaggedCommentOut extends CommentOut {
-  flags: FlagOut[]
-}
+export type FlaggedCommentOut = components['schemas']['FlaggedCommentOut']
 
 // ---------------------------------------------------------------------------
 // Read / Inspect
@@ -164,8 +115,8 @@ export async function retireTask(id: number): Promise<TaskOut> {
   return data
 }
 
-/** The three states an admin can move a task between (`schemas.admin.TaskStatusAction`). */
-export type AdminTaskStatus = 'pending' | 'active' | 'retired'
+/** The three states an admin can move a task between. */
+export type AdminTaskStatus = components['schemas']['TaskStatusAction']['status']
 
 export async function updateTaskStatus(id: number, status: AdminTaskStatus): Promise<TaskOut> {
   const { data } = await apiPut('/admin/tasks/{task_id}/status', {
@@ -190,13 +141,9 @@ export async function adminPatchTask(id: number, patch: AdminTaskPatch): Promise
   return data
 }
 
-/** Readout for a successful CSV task import (#1376). */
-export interface TaskImportResult {
-  created_count: number
-  created_titles: string[]
-  /** Corrections applied on the way in, e.g. a legacy faction slug. */
-  warnings: string[]
-}
+/** Readout for a successful CSV task import (#1376). `warnings` holds the
+ *  corrections applied on the way in, e.g. a legacy faction slug. */
+export type TaskImportResult = components['schemas']['TaskImportResult']
 
 /** One rejected CSV row, as the backend's 422 `detail` reports it. */
 export interface TaskImportRowError {
@@ -245,9 +192,9 @@ export function taskImportRowErrors(err: unknown): TaskImportRowError[] {
   )
 }
 
-/** What a moderator can rule a praxis to be (`schemas.admin.ModerationAction`).
- *  Note `failed`, which is not one of the comment verdicts. */
-export type PraxisModerationStatus = 'visible' | 'hidden' | 'failed'
+/** What a moderator can rule a praxis to be. Note `failed`, which is not one of
+ *  the comment verdicts. */
+export type PraxisModerationStatus = components['schemas']['ModerationAction']['status']
 
 export async function moderatePraxis(
   id: number,

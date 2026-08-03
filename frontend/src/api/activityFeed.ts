@@ -1,5 +1,15 @@
 import { apiGet, apiPost } from './client'
+import type { components } from './generated/schema'
 
+/**
+ * NOT an alias of the generated schema, and deliberately (#1400).
+ *
+ * The schema's feed item is a fifteen-arm discriminated union, one model per
+ * feed type, each with its own typed payload. This is one flat shape with
+ * `payload: Record<string, any>` — every consumer narrows the payload by hand.
+ * Adopting the union is a real migration of those consumers, which is issue
+ * #1402's subject; renaming the type without it would only move the `any`.
+ */
 export interface ActivityFeedItem {
   type: string
   /**
@@ -37,29 +47,21 @@ export interface ActivityFeedItem {
   context_faction_slug: string | null
 }
 
-export interface FeedCounts {
-  all: number
-  friends: number
-  foes: number
-  your_stuff: number
-  global_count: number
-  requests: number
-  /**
-   * The type facet's counts (#1420, epic #1419 decision 4) — one entry per feed
-   * type the CURRENT view could show, zeros included.
-   *
-   * It answers a different question from the six scalars above. Those are the
-   * sidebar's "what is waiting for you" numbers and always describe the LIVE
-   * feed, even while the archive is on screen; `by_type` describes the list the
-   * caller is actually looking at, so on Archived it counts the archive.
-   *
-   * Computed under every active axis EXCEPT its own (decision 19), so ticking
-   * one type never zeroes the rest and strands the player with no way back.
-   * The zero rows are the client's to hide (decision 20) — they arrive so the
-   * facet can tell "this view has no nudges" from "this view cannot have any".
-   */
-  by_type: Record<string, number>
-}
+/**
+ * `by_type` is the type facet's counts (#1420, epic #1419 decision 4) — one
+ * entry per feed type the CURRENT view could show, zeros included.
+ *
+ * It answers a different question from the six scalars beside it. Those are the
+ * sidebar's "what is waiting for you" numbers and always describe the LIVE
+ * feed, even while the archive is on screen; `by_type` describes the list the
+ * caller is actually looking at, so on Archived it counts the archive.
+ *
+ * Computed under every active axis EXCEPT its own (decision 19), so ticking one
+ * type never zeroes the rest and strands the player with no way back. The zero
+ * rows are the client's to hide (decision 20) — they arrive so the facet can
+ * tell "this view has no nudges" from "this view cannot have any".
+ */
+export type FeedCounts = components['schemas']['FeedCounts']
 
 export interface ActivityFeedResponse {
   items: ActivityFeedItem[]
@@ -109,17 +111,10 @@ export function normalizeFeedCounts(raw: Partial<FeedCounts> | undefined | null)
 
 /** Result of archiving/restoring one item. `archived` is the state AFTER the
  *  call (both endpoints are idempotent); `changed` says whether a row moved. */
-export interface FeedItemArchiveResult {
-  item_key: string
-  archived: boolean
-  changed: boolean
-}
+export type FeedItemArchiveResult = components['schemas']['FeedItemArchiveResponse']
 
 /** Result of a bulk archive/restore — how many items moved. */
-export interface FeedBulkArchiveResult {
-  count: number
-  archived: boolean
-}
+export type FeedBulkArchiveResult = components['schemas']['FeedBulkArchiveResponse']
 
 export async function getActivityFeed(params?: {
   filter?: string
