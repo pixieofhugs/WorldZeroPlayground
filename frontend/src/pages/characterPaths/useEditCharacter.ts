@@ -112,16 +112,18 @@ export function useEditCharacter(): EditCharacterState {
       }
     }
     try {
+      // Every editable field is sent unconditionally, empty or not. `|| undefined`
+      // omits the key, and an omitted key is "leave it alone" server-side
+      // (`exclude_unset=True`), so a field sent that way can be set but never
+      // cleared — #1644, which is how a player emptied a bio, saved, and got the
+      // old one back. Emptying these three is a state the player is entitled to,
+      // so "" has to reach the server as "". `exclude_unset` stays: it is what
+      // makes a partial update partial for callers that genuinely send a subset.
       const updated = await updateCharacter(characterId, {
         display_name: displayName,
-        bio: bio || undefined,
-        // Sent unconditionally, unlike its neighbours: `|| undefined` omits the
-        // key, and an omitted key is "leave it alone" server-side, so a field
-        // sent that way can be set but never cleared. An empty tagline is a
-        // state the player is entitled to — the header hides the slot rather
-        // than filling it (#1628) — so "" has to reach the server as "".
+        bio: bio.trim(),
         tagline: tagline.trim(),
-        location: location || undefined,
+        location: location.trim(),
       })
       setCharacter(updated)
       // The edited life may BE the carried one, whose name/bio/avatar the rail
