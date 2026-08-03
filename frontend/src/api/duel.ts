@@ -1,5 +1,4 @@
 import { apiGet, apiPost } from './client'
-import { wireSent } from './wireSent'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import { clearCastTallies } from '../components/vote/castTallies'
 
@@ -77,7 +76,7 @@ export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
       (praxisId): praxisId is number => praxisId != null,
     ),
   )
-  return wireSent(data)
+  return data
 }
 
 export async function respondToChallenge(duelId: number, data: DuelRespondIn): Promise<DuelOut> {

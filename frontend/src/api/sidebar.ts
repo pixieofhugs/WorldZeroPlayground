@@ -1,5 +1,4 @@
 import { apiGet } from './client'
-import { wireSent } from './wireSent'
 import type { ActivityFeedItem } from './activityFeed'
 import type { PraxisCardOut } from './praxis'
 
@@ -58,7 +57,5 @@ export interface SidebarPanels {
  */
 export async function getSidebar(): Promise<SidebarPanels> {
   const { data } = await apiGet('/me/sidebar')
-  // `active_praxes` carries `PraxisCardOut` rows, whose `submitted_at` the schema
-  // marks optional and the wire always sends — see `./wireSent` (#1400).
-  return wireSent(data)
+  return data
 }
