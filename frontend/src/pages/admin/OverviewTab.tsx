@@ -42,7 +42,9 @@ export default function OverviewTab() {
           >
             {value}
           </p>
-          <p className="eyebrow mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
+          {/* A stat card's label is a small fact about the figure above it, not
+              a region name (#1307) — caption tier. */}
+          <p className="label-caption mt-1">
             {label}
           </p>
         </div>
