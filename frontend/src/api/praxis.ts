@@ -1,17 +1,38 @@
-import api from './axios'
+import { apiDelete, apiGet, apiPost, apiPut } from './client'
+import type { components } from './generated/schema'
+import { wireSent } from './wireSent'
 import { clearCastTallies } from '../components/vote/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { TaskOut } from './tasks'
 import type { FlagReason } from '../utils/flagReasons'
 
 // ---------------------------------------------------------------------------
-// Types — match backend schemas/praxis.py exactly
+// Types — hand-written mirrors of backend schemas/praxis.py, and NOT known to
+// match it. #1400 replaces them with aliases of the generated
+// `components['schemas'][…]`, which is what turns "matches exactly" into a fact
+// instead of a heading. Until then the mirror is close but demonstrably not
+// exact: the wire carries `PraxisOut.voter_count`, which is not declared here.
 // ---------------------------------------------------------------------------
 
 export type PraxisType = 'solo' | 'collab' | 'duel'
 export type PraxisStatus = 'in_progress' | 'pending' | 'submitted'
 export type PraxisInviteStatus = 'pending' | 'accepted' | 'declined'
-export type ModerationStatus = 'visible' | 'flagged' | 'hidden' | 'failed'
+/**
+ * `deleted` is on the wire, but not in a praxis' life (#1400).
+ *
+ * The backend shares ONE `ModerationStatus` enum between Comment and Praxis
+ * (`backend/models/praxis.py`), and its own comment says a praxis never takes
+ * the `deleted` tombstone — only comments do. The generated schema has no way
+ * to express that, so `PraxisOut.moderation_status` admits five values where
+ * four are reachable.
+ *
+ * This union follows the wire rather than the narrower truth, because the
+ * alternative is a frontend type that silently contradicts the contract it is
+ * checked against. `UNSCORED_MODERATION_STATUSES` below deliberately does NOT
+ * list it: a state a praxis cannot reach needs no scoring rule, and inventing
+ * one would be exactly the mirror-drift this migration is retiring.
+ */
+export type ModerationStatus = 'visible' | 'flagged' | 'hidden' | 'failed' | 'deleted'
 export type MediaType = 'image' | 'video' | 'audio'
 
 /**
@@ -248,7 +269,14 @@ export interface PraxisCardOut {
 
 export interface PraxisCreate {
   task_id: number
-  type?: PraxisType
+  /**
+   * Required here although the backend defaults it to `solo`: the generated
+   * request body declares it (#1400), because `openapi-typescript` renders a
+   * field carrying a default as one the client always states. Every caller
+   * already passes it, so saying so costs nothing and removes the question of
+   * which side owns the default.
+   */
+  type: PraxisType
   title?: string
   body_text?: string
 }
@@ -261,12 +289,6 @@ export interface PraxisUpdate {
 // ---------------------------------------------------------------------------
 // List / detail
 // ---------------------------------------------------------------------------
-
-/**
- * How repeated query params are written. Exported so the wire shape the feed's
- * faction union depends on is assertable without a running server.
- */
-export const LIST_PARAMS_SERIALIZER = { indexes: null } as const
 
 export async function listPraxes(filters?: {
   task_id?: number
@@ -306,24 +328,27 @@ export async function listPraxes(filters?: {
   limit?: number
   offset?: number
 }): Promise<PraxisCardOut[]> {
-  const { data } = await api.get<PraxisCardOut[]>('/praxes', {
-    params: filters,
-    // `indexes: null` = repeated `faction=a&faction=b`. Axios' default writes
-    // `faction[]=a`, which FastAPI's `List[str] = Query(None)` does not read at
-    // all — the union would be dropped silently and the feed would look like it
-    // had no faction filter (LIST_PARAMS_SERIALIZER, asserted in tests).
-    paramsSerializer: LIST_PARAMS_SERIALIZER,
-  })
+  // The faction union travels as repeated bare `faction=` keys, which is what
+  // FastAPI's `List[str] = Query(None)` reads and what the transport writes by
+  // default — the axios serializer this replaced had to be told (#1366,
+  // asserted in `__tests__/client.test.ts`).
+  //
+  // Note what the seam does NOT check: `filters` is a VARIABLE, so TypeScript's
+  // excess-property check does not apply and a query key the backend renamed or
+  // dropped stays silently assignable. Paths and bodies do become compile
+  // errors; query keys only have the runtime assertions in
+  // `__tests__/praxisRequests.test.ts`.
+  const { data } = await apiGet('/praxes', { params: { query: filters } })
   // Server truth — drop any cast tally it supersedes, so a stale one can't
   // mask another player's later vote (#626, #1382).
   clearCastTallies(data.map((praxis) => praxis.id))
-  return data
+  return data.map(wireSent)
 }
 
 export async function getPraxis(id: number): Promise<PraxisOut> {
-  const { data } = await api.get<PraxisOut>(`/praxes/${id}`)
+  const { data } = await apiGet('/praxes/{praxis_id}', { params: { path: { praxis_id: id } } })
   clearCastTallies([id])
-  return data
+  return wireSent(data)
 }
 
 // ---------------------------------------------------------------------------
@@ -363,25 +388,32 @@ export function takeJustCreatedPraxis(praxisId: number): PraxisOut | null {
 }
 
 export async function createPraxis(data: PraxisCreate): Promise<PraxisOut> {
-  const { data: result } = await api.post<PraxisOut>('/praxes', data)
-  justCreatedPraxis = result
-  return result
+  const { data: result } = await apiPost('/praxes', { body: data })
+  const created = wireSent(result)
+  justCreatedPraxis = created
+  return created
 }
 
 export async function updatePraxis(id: number, data: PraxisUpdate): Promise<PraxisOut> {
-  const { data: result } = await api.put<PraxisOut>(`/praxes/${id}`, data)
-  return result
+  const { data: result } = await apiPut('/praxes/{praxis_id}', {
+    params: { path: { praxis_id: id } },
+    body: data,
+  })
+  return wireSent(result)
 }
 
 export async function deletePraxis(id: number): Promise<void> {
-  await api.delete(`/praxes/${id}`)
+  await apiDelete('/praxes/{praxis_id}', { params: { path: { praxis_id: id } } })
   notifyRequestsChanged()
 }
 
 /** Flip a praxis between solo and collab in place, preserving id/content/media (#321). */
 export async function changePraxisType(id: number, type: PraxisType): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${id}/change-type`, { type })
-  return data
+  const { data } = await apiPost('/praxes/{praxis_id}/change-type', {
+    params: { path: { praxis_id: id } },
+    body: { type },
+  })
+  return wireSent(data)
 }
 
 // ---------------------------------------------------------------------------
@@ -392,17 +424,21 @@ export async function changePraxisType(id: number, type: PraxisType): Promise<Pr
 // sealed solo/collab this reopens the whole group; for a pending collab where
 // the caller has submitted, it clears only the caller's part.
 export async function unsubmitPraxis(id: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${id}/unsubmit`)
+  const { data } = await apiPost('/praxes/{praxis_id}/unsubmit', {
+    params: { path: { praxis_id: id } },
+  })
   // A collab/duel is awaiting your submission again — refresh the badge.
   notifyRequestsChanged()
-  return data
+  return wireSent(data)
 }
 
 export async function submitPraxis(id: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${id}/submit`)
+  const { data } = await apiPost('/praxes/{praxis_id}/submit', {
+    params: { path: { praxis_id: id } },
+  })
   // Your part landed — this praxis leaves the "awaiting your submission" bucket.
   notifyRequestsChanged()
-  return data
+  return wireSent(data)
 }
 
 /**
@@ -410,19 +446,48 @@ export async function submitPraxis(id: number): Promise<PraxisOut> {
  * unlike withdraw, which keeps the membership. Backend: POST /praxes/{id}/leave.
  */
 export async function leavePraxis(id: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${id}/leave`)
+  const { data } = await apiPost('/praxes/{praxis_id}/leave', {
+    params: { path: { praxis_id: id } },
+  })
   notifyRequestsChanged()
-  return data
+  return wireSent(data)
 }
 
 // ---------------------------------------------------------------------------
 // Media
 // ---------------------------------------------------------------------------
 
+/**
+ * The two multipart bodies below, named from the generated schema rather than
+ * restated by hand.
+ *
+ * OpenAPI describes an uploaded file as `type: string, format: binary`, so
+ * `openapi-typescript` renders these bodies as `{ file: string }` — a real
+ * `File` can never satisfy that, and no amount of correct code will make it. The
+ * cast is the only way to say "multipart" in this type system.
+ *
+ * The RUNTIME needs no help: `openapi-fetch`'s default serializer returns a
+ * `FormData` untouched and deliberately leaves `Content-Type` unset so the
+ * platform writes the boundary. That is the load-bearing half, and the half the
+ * cast above could hide, so it is asserted in `__tests__/praxisRequests.test.ts`
+ * rather than assumed — a JSON-stringified `FormData` reaches the server as `{}`
+ * and fails at runtime with nothing failing in CI.
+ *
+ * ponytail: both aliases disappear if the generator is ever configured to emit
+ * `Blob` for `format: binary`; until then this is the documented upload idiom.
+ */
+type MediaUploadBody =
+  components['schemas']['Body_upload_media_route_praxes__praxis_id__media_post']
+type MediaBatchUploadBody =
+  components['schemas']['Body_upload_media_batch_route_praxes__praxis_id__media_batch_post']
+
 export async function uploadPraxisMedia(id: number, file: File): Promise<MediaItemOut> {
   const form = new FormData()
   form.append('file', file)
-  const { data } = await api.post<MediaItemOut>(`/praxes/${id}/media`, form)
+  const { data } = await apiPost('/praxes/{praxis_id}/media', {
+    params: { path: { praxis_id: id } },
+    body: form as unknown as MediaUploadBody,
+  })
   return data
 }
 
@@ -459,12 +524,17 @@ export async function uploadPraxisMediaBatch(
 ): Promise<MediaUploadResultOut[]> {
   const form = new FormData()
   for (const file of files) form.append('files', file)
-  const { data } = await api.post<MediaUploadResultOut[]>(`/praxes/${id}/media/batch`, form)
-  return data
+  const { data } = await apiPost('/praxes/{praxis_id}/media/batch', {
+    params: { path: { praxis_id: id } },
+    body: form as unknown as MediaBatchUploadBody,
+  })
+  return data.map(wireSent)
 }
 
 export async function deletePraxisMedia(id: number, mediaId: number): Promise<void> {
-  await api.delete(`/praxes/${id}/media/${mediaId}`)
+  await apiDelete('/praxes/{praxis_id}/media/{media_id}', {
+    params: { path: { praxis_id: id, media_id: mediaId } },
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -472,8 +542,9 @@ export async function deletePraxisMedia(id: number, mediaId: number): Promise<vo
 // ---------------------------------------------------------------------------
 
 export async function inviteToPraxis(id: number, inviteeId: number): Promise<PraxisInviteOut> {
-  const { data } = await api.post<PraxisInviteOut>(`/praxes/${id}/invite`, {
-    invitee_id: inviteeId,
+  const { data } = await apiPost('/praxes/{praxis_id}/invite', {
+    params: { path: { praxis_id: id } },
+    body: { invitee_id: inviteeId },
   })
   return data
 }
@@ -496,10 +567,10 @@ export async function respondToInvite(
   inviteId: number,
   accept: boolean,
 ): Promise<InviteResponseOut> {
-  const { data } = await api.post<InviteResponseOut>(
-    `/praxes/${praxisId}/invite/${inviteId}/respond`,
-    { accept },
-  )
+  const { data } = await apiPost('/praxes/{praxis_id}/invite/{invite_id}/respond', {
+    params: { path: { praxis_id: praxisId, invite_id: inviteId } },
+    body: { accept },
+  })
   // The invite left your requests bucket (accept → now awaiting your
   // submission; decline → gone). Refresh every feed surface (#updates-badge).
   notifyRequestsChanged()
@@ -511,7 +582,9 @@ export async function cancelInvite(
   praxisId: number,
   inviteId: number,
 ): Promise<void> {
-  await api.delete(`/praxes/${praxisId}/invite/${inviteId}`)
+  await apiDelete('/praxes/{praxis_id}/invite/{invite_id}', {
+    params: { path: { praxis_id: praxisId, invite_id: inviteId } },
+  })
 }
 
 /**
@@ -524,8 +597,10 @@ export async function kickMember(
   praxisId: number,
   memberId: number,
 ): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/kick/${memberId}`)
-  return data
+  const { data } = await apiPost('/praxes/{praxis_id}/kick/{member_id}', {
+    params: { path: { praxis_id: praxisId, member_id: memberId } },
+  })
+  return wireSent(data)
 }
 
 // ---------------------------------------------------------------------------
@@ -534,14 +609,17 @@ export async function kickMember(
 // ---------------------------------------------------------------------------
 
 export async function applyMetatask(praxisId: number, taskId: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/metatasks`, {
-    task_id: taskId,
+  const { data } = await apiPost('/praxes/{praxis_id}/metatasks', {
+    params: { path: { praxis_id: praxisId } },
+    body: { task_id: taskId },
   })
-  return data
+  return wireSent(data)
 }
 
 export async function removeMetatask(praxisId: number, taskId: number): Promise<void> {
-  await api.delete(`/praxes/${praxisId}/metatasks/${taskId}`)
+  await apiDelete('/praxes/{praxis_id}/metatasks/{task_id}', {
+    params: { path: { praxis_id: praxisId, task_id: taskId } },
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -554,8 +632,8 @@ export async function flagPraxis(
   reason: FlagReason,
   reasonDetail?: string,
 ): Promise<void> {
-  await api.post(`/praxes/${praxisId}/flag`, {
-    reason,
-    reason_detail: reasonDetail || null,
+  await apiPost('/praxes/{praxis_id}/flag', {
+    params: { path: { praxis_id: praxisId } },
+    body: { reason, reason_detail: reasonDetail || null },
   })
 }
