@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiGet, apiPost } from './client'
 import { noteEraStamp } from '../utils/cacheEpoch'
 
 /** A badge the character currently holds (ADR-0033). Evaluated on read by the
@@ -35,7 +35,13 @@ export interface CharacterOut {
 
 export interface CurrentUser {
   account_id: number
-  character: CharacterOut | null
+  /** Absent, not just null, when the account carries no life. `schemas/auth.py`
+   *  declares `character: Optional[CharacterOut] = None`, and a Pydantic field
+   *  with a default is *not required* in the OpenAPI schema — so the generated
+   *  type is `character?: CharacterOut | null` and this one used to disagree
+   *  (#1400). In practice the key is always serialized; the optionality is the
+   *  contract, and every reader already treats it as falsy-or-a-life. */
+  character?: CharacterOut | null
   is_admin: boolean
   // Server-computed capability flags. Admin short-circuits the propose/see
   // flags to true. Drive UI off these instead of comparing character.level.
@@ -62,7 +68,7 @@ export interface CurrentUser {
 }
 
 export async function getMe(): Promise<CurrentUser> {
-  const { data } = await api.get<CurrentUser>('/auth/me')
+  const { data } = await apiGet('/auth/me')
   // Every signed-in page load gates on this request, which makes it the earliest
   // and most frequent era stamp the client gets (ADR-0072). A disagreement with
   // the era already held drops the whole cache.
@@ -71,7 +77,7 @@ export async function getMe(): Promise<CurrentUser> {
 }
 
 export async function logout(): Promise<void> {
-  await api.post('/auth/logout')
+  await apiPost('/auth/logout')
 }
 
 /** Redirect the browser to start the Google OAuth flow */
@@ -81,5 +87,5 @@ export function loginWithGoogle(): void {
 
 /** Dev-only: log in as a test account without Google OAuth */
 export async function devLogin(): Promise<void> {
-  await api.post('/auth/dev-login')
+  await apiPost('/auth/dev-login')
 }
