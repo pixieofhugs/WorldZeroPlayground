@@ -40,7 +40,7 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 165
+UNCODED_RAISE_TOTAL = 164
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
@@ -137,9 +137,7 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/praxis.py::kick_member": 3,
     "services/praxis.py::leave_praxis": 1,
     "services/praxis.py::moderate_praxis": 1,
-    # 5, not 4: the bank-full 409 here is deliberately uncoded until a client
-    # site that reads `detail` raw is fixed. The reason is at the raise.
-    "services/praxis.py::respond_to_invite": 5,
+    "services/praxis.py::respond_to_invite": 4,
     "services/praxis.py::submit_praxis": 1,
     "services/praxis.py::unsubmit_praxis": 2,
 

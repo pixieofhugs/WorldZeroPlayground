@@ -14,6 +14,7 @@ import {
 } from "../../api/praxis";
 import { extractError } from "../../utils/errors";
 import { factionFill } from "../../utils/factions";
+import { isTaskBankFull } from "./bankFull";
 import FeedBadge from "./FeedBadge";
 import FeedBankFullModal from "./FeedBankFullModal";
 
@@ -74,16 +75,14 @@ export default function FeedCardCollabInvite({ item }: Props) {
     // hand back the raw axios error, and its `error` state is stale this tick.
     // Re-issue the accept directly so we can inspect the backend detail: when
     // the invitee's task bank is full, offer to drop one praxis and retry.
-    // Match on the detail SUBSTRING (bank-full is 409 on collab, 400 on the
-    // duel twin) — not the status code. Other errors stay on the hook's `error`.
+    // Match on the FAILURE, not the status code (bank-full is 409 on collab,
+    // 400 on the duel twin). Other errors stay on the hook's `error`.
     try {
       await respondToInvite(praxis_id, invite_id, true);
       // Raced free between the two calls — land on the collab like happy path.
       navigate(`/praxis/${praxis_id}/edit`);
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })
-        ?.response?.data?.detail;
-      if (typeof detail === "string" && detail.includes("Task bank is full")) {
+      if (isTaskBankFull(err)) {
         setDropError("");
         refetchActiveTasks();
         setShowDropModal(true);

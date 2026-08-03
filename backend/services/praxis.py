@@ -1651,20 +1651,10 @@ async def respond_to_invite(
     if not era.collab_invite_bypasses_task_bank and not already_member:
         in_progress_count = await _count_in_progress_praxes(character_id, session)
         if in_progress_count >= era.max_task_signups:
-            # DELIBERATELY UNCODED, and the only phase-1 gate left behind
-            # (#1401). `FeedCardCollabInvite` reads this response's `detail`
-            # RAW — `typeof detail === "string" && detail.includes("Task bank
-            # is full")` — outside `extractError`, which is the only reader
-            # #1581 taught to understand a coded body. Coding this here turns
-            # that check false and the drop-a-praxis-and-retry modal silently
-            # stops opening, with no test failing. Client first, then this.
-            #
-            # The duel twin (`respond_to_duel_challenge`) IS coded: its card
-            # reads the detail through `useRespondToRequest` -> `extractError`,
-            # which hands back `message`, so its substring match still holds.
-            raise HTTPException(
-                status_code=409,
-                detail=f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+            raise_coded(
+                409,
+                ErrorCode.task_bank_full,
+                f"Task bank is full ({era.max_task_signups} in-progress praxes).",
             )
 
     # Add member
