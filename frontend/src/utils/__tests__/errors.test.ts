@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractError } from '../errors'
+import { ErrorCode, extractError, extractErrorCode } from '../errors'
 
 /**
  * `extractError` has to read every shape the backend's `detail` field can take.
@@ -78,5 +78,35 @@ describe('extractError — status and network fallbacks', () => {
 
   it('uses the default fallback when the caller gives none', () => {
     expect(extractError(axiosError(400))).toBe('Something went wrong. Please try again.')
+  })
+})
+
+/**
+ * `extractErrorCode` exists so a caller can branch on *which* failure happened
+ * without reaching past this module for a raw `detail` and matching English
+ * prose — the exact drift that made a coded raise a silent UI break (#1598).
+ */
+describe('extractErrorCode', () => {
+  it('reads the code off a coded detail', () => {
+    const detail = { code: 'TASK_BANK_FULL', message: 'Task bank is full (20 in-progress praxes).' }
+    expect(extractErrorCode(axiosError(409, detail))).toBe(ErrorCode.taskBankFull)
+  })
+
+  it('reads a bare code, which extractError deliberately will not show', () => {
+    expect(extractErrorCode(axiosError(409, { code: 'TASK_BANK_FULL' }))).toBe(
+      ErrorCode.taskBankFull
+    )
+    expect(extractError(axiosError(409, { code: 'TASK_BANK_FULL' }), FALLBACK)).toBe(FALLBACK)
+  })
+
+  it('returns null for every uncoded shape, so callers need no narrowing', () => {
+    expect(extractErrorCode(axiosError(409, 'Task bank is full (20 in-progress praxes).'))).toBeNull()
+    expect(extractErrorCode(axiosError(422, [{ msg: 'Field required' }]))).toBeNull()
+    expect(extractErrorCode(axiosError(400, {}))).toBeNull()
+    expect(extractErrorCode(axiosError(400, { message: 'no code here' }))).toBeNull()
+    expect(extractErrorCode(axiosError(400, { code: 42 }))).toBeNull()
+    expect(extractErrorCode(axiosError(400))).toBeNull()
+    expect(extractErrorCode({ message: 'Network Error' })).toBeNull()
+    expect(extractErrorCode(undefined)).toBeNull()
   })
 })

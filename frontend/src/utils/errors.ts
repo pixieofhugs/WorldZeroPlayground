@@ -16,6 +16,18 @@ type ErrorDetail = string | ValidationDetail[] | CodedDetail
 const GENERIC_SERVER_PROSE = 'Internal Server Error'
 
 /**
+ * The `backend/errors.py::ErrorCode` values this client actually branches on.
+ *
+ * A mirror, not a copy: only the codes some component switches behaviour on
+ * belong here, and each one's string is the wire contract (renaming it on
+ * either side is a break). Codes that are merely *displayed* need no entry —
+ * `extractError` shows their `message` without knowing what they are.
+ */
+export const ErrorCode = {
+  taskBankFull: 'TASK_BANK_FULL',
+} as const
+
+/**
  * Pulls the displayable prose out of a `detail` body, whatever shape it takes.
  * Returns null when there is nothing worth showing, so the caller falls through
  * to its status-based messages.
@@ -79,4 +91,24 @@ export function extractError(
   }
 
   return fallback
+}
+
+/**
+ * Extracts the machine-readable `code` from an axios error, or null.
+ *
+ * The read side of `extractError`: that one answers "what do I show the
+ * player", this one answers "which failure was it". Both go through the same
+ * `detail` typing on purpose — the collab-invite card once reached past
+ * `extractError` for a raw `detail` and substring-matched English prose, which
+ * meant coding that raise would have silently killed its retry flow (#1598).
+ * A second reader is how that drifted, so there is one, here.
+ *
+ * Returns null for every uncoded shape (string, validation array, absent), so
+ * callers can compare against `ErrorCode.*` without narrowing first.
+ */
+export function extractErrorCode(err: unknown): string | null {
+  const detail = (err as AxiosError<{ detail?: ErrorDetail }>)?.response?.data
+    ?.detail
+  if (!detail || typeof detail === 'string' || Array.isArray(detail)) return null
+  return typeof detail.code === 'string' ? detail.code : null
 }
