@@ -61,7 +61,7 @@ const PERK_KEYS: ReadonlyArray<string> = [
 ]
 
 export interface AlbescentInvitationProps {
-  /** The account's roster (active + paused lives). */
+  /** The account's roster (every life but the banned ones). */
   lives: CharacterOut[]
   /**
    * Called after a successful join, to refresh what the PARENT owns — the
