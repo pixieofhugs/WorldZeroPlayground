@@ -667,6 +667,12 @@
             "title": "Location",
             "type": "string"
           },
+          "tagline": {
+            "default": "",
+            "maxLength": 140,
+            "title": "Tagline",
+            "type": "string"
+          },
           "username": {
             "anyOf": [
               {
@@ -749,6 +755,10 @@
             "title": "Status",
             "type": "string"
           },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          },
           "username": {
             "title": "Username",
             "type": "string"
@@ -759,6 +769,7 @@
           "username",
           "display_name",
           "bio",
+          "tagline",
           "avatar_url",
           "location",
           "level",
@@ -988,6 +999,18 @@
               }
             ],
             "title": "Location"
+          },
+          "tagline": {
+            "anyOf": [
+              {
+                "maxLength": 140,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tagline"
           }
         },
         "title": "CharacterUpdate",

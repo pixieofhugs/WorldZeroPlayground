@@ -41,6 +41,12 @@ class Character(TimestampMixin, Base):
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String, nullable=False)
     bio: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    # A one-line slogan for the profile header's identity slot, capped at 140 on
+    # the wire (``schemas.character``). Deliberately NOT a short bio: bio is 500
+    # characters of unstructured paragraph with its own About block, so rendering
+    # one in the other's slot is fifteen lines where a name should be (#1628).
+    # Never backfilled from bio — an empty slot is hidden, not filled.
+    tagline: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     avatar_url: Mapped[str] = mapped_column(String, nullable=False, server_default="")
     location: Mapped[str] = mapped_column(String, nullable=False, server_default="")
     # ADR-0019: characters are born Unaffiliated ("na"); factions are invite-gated.
