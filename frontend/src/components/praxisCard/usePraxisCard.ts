@@ -35,9 +35,10 @@ export function usePraxisCard(
   const [localPraxis, setLocalPraxis] = useState(praxis);
   const [moderateError, setModerateError] = useState<string | null>(null);
 
-  // Read off the card rather than restated by hand: the wire enum gained a
-  // fifth member (#1400), and a copied union is how that turns into a compile
-  // error in a file that has no opinion about moderation states.
+  // Read off the card rather than restated by hand: the wire enum always had
+  // five members and the frontend's copy of it was short one until #1400. A
+  // union copied by hand is how that discrepancy survives, silently, in a file
+  // that has no opinion about moderation states.
   const applyModeration = (status: PraxisCardOut["moderation_status"]) => {
     setLocalPraxis((prev) => ({ ...prev, moderation_status: status }));
   };

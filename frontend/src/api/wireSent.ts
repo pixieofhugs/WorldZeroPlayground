@@ -25,10 +25,20 @@
  * `TaskOut` rows and `PraxisMemberOut` rows, and each of those is serialized
  * whole by the same machinery for the same reason.
  *
- * ponytail: this disappears when the api modules stop hand-writing their
- * interfaces and alias `components['schemas'][…]` directly, at which point the
- * schema's optionality is simply what the app believes. Until then this is the
- * one place the difference is written down.
+ * ponytail: this disappears when the SCHEMA stops being imprecise, which is a
+ * backend change and a cheaper one than it looks — Pydantic's
+ * `ConfigDict(json_schema_serialization_defaults_required=True)` on a shared
+ * response base marks default-carrying fields required in the SERIALIZATION
+ * schema, which is the mode FastAPI generates response models in. Regenerate and
+ * `submitted_at?: string | null` becomes `submitted_at: string | null`, at which
+ * point every call below is a bare `return data` and this file deletes. Deleting
+ * the 26 `= None` defaults instead would risk a `ValidationError` at every
+ * construction site, so it is the wrong lever.
+ *
+ * The premise above is unguarded, and that is the risk worth knowing: add
+ * `response_model_exclude_none=True` to any route and this type would assert an
+ * absent field into existence, silently, everywhere it is used. Until then it is
+ * the one place the difference is written down.
  */
 
 /**

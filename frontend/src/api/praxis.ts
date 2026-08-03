@@ -7,7 +7,11 @@ import type { TaskOut } from './tasks'
 import type { FlagReason } from '../utils/flagReasons'
 
 // ---------------------------------------------------------------------------
-// Types — match backend schemas/praxis.py exactly
+// Types — hand-written mirrors of backend schemas/praxis.py, and NOT known to
+// match it. #1400 replaces them with aliases of the generated
+// `components['schemas'][…]`, which is what turns "matches exactly" into a fact
+// instead of a heading. Until then the mirror is close but demonstrably not
+// exact: the wire carries `PraxisOut.voter_count`, which is not declared here.
 // ---------------------------------------------------------------------------
 
 export type PraxisType = 'solo' | 'collab' | 'duel'
@@ -328,6 +332,12 @@ export async function listPraxes(filters?: {
   // FastAPI's `List[str] = Query(None)` reads and what the transport writes by
   // default — the axios serializer this replaced had to be told (#1366,
   // asserted in `__tests__/client.test.ts`).
+  //
+  // Note what the seam does NOT check: `filters` is a VARIABLE, so TypeScript's
+  // excess-property check does not apply and a query key the backend renamed or
+  // dropped stays silently assignable. Paths and bodies do become compile
+  // errors; query keys only have the runtime assertions in
+  // `__tests__/praxisRequests.test.ts`.
   const { data } = await apiGet('/praxes', { params: { query: filters } })
   // Server truth — drop any cast tally it supersedes, so a stale one can't
   // mask another player's later vote (#626, #1382).
