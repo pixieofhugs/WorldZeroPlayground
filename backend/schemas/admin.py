@@ -129,9 +129,79 @@ class AdminCharacterCreate(BaseModel):
     faction_slug: str | None = Field(default=None)
 
 
+class AdminCharacterOut(BaseModel):
+    """The character an admin just minted (``POST /admin/characters``).
+
+    Carries ``account_id`` on purpose. The "never expose account_id" rule
+    (SPEC-backend-architecture.md §4) governs the *public* API; the admin router
+    is the operator surface and already answers with raw account identity and
+    e-mail (``AccountSummary``). An admin who creates a character for an account
+    needs to see which account it landed on.
+
+    Deliberately not ``CharacterOut``: that shape is the player-facing profile
+    (score, level, badges, faction display), none of which exists yet at
+    creation time. This is the insert receipt.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    account_id: int
+    username: str
+    display_name: str
+    faction_slug: str
+    status: str
+    created_at: datetime
+
+
 # ---------------------------------------------------------------------------
 # Adjust Game State
 # ---------------------------------------------------------------------------
+
+
+class VoteSpendRepairOut(BaseModel):
+    """One character's ``votes_spent_this_era`` before and after a recompute.
+
+    The wire mirror of ``services.character_stats.VoteSpendRepair``. It is a
+    separate declaration rather than the dataclass itself because the response
+    shape is a published contract and the dataclass is an internal return type;
+    tying them together would make an internal rename a wire break.
+    """
+
+    character_id: int
+    before: int
+    after: int
+
+
+class VoteBudgetBackfillOut(BaseModel):
+    """Readout for ``POST /admin/characters/backfill-vote-budget``.
+
+    ``changes`` is the whole point of the endpoint's ``dry_run`` mode: an admin
+    ``votes_available`` grant writes the same counter a recompute rebuilds, and
+    nothing records that a row was hand-set, so an operator reads these
+    before/after pairs to spot a grant this pass would revert.
+    """
+
+    dry_run: bool
+    changed: int
+    changes: list[VoteSpendRepairOut]
+
+
+class StatsBackfillOut(BaseModel):
+    """Readout for ``POST /admin/characters/backfill-stats``.
+
+    ``recalculated`` counts *active* characters — banned ones are skipped — so
+    it will not match a headcount of the accounts table.
+    """
+
+    recalculated: int
+
+
+class EraResetOut(BaseModel):
+    """Readout for ``PUT /admin/era/reset``: the new era row and who it touched."""
+
+    era_id: int
+    characters_reset: int
 
 
 class CharacterStatsPatch(BaseModel):
@@ -198,6 +268,46 @@ class RoleAction(BaseModel):
 
 class SuspendAction(BaseModel):
     suspended: bool
+
+
+class BanAction(BaseModel):
+    banned: bool
+
+
+class RoleActionOut(BaseModel):
+    """Echo of an applied ``POST /admin/accounts/{id}/role``.
+
+    An echo rather than the account's full role set: the service applies one
+    grant/revoke and does not read the rest back, and inventing a fuller shape
+    here would mean a second query whose only consumer is the confirmation.
+    """
+
+    account_id: int
+    role: str
+    action: Literal["grant", "revoke"]
+
+
+class SuspendActionOut(BaseModel):
+    """Result of ``POST /admin/accounts/{id}/suspend``.
+
+    ``status`` is the account's resulting ``AccountStatus`` value, read back from
+    the row rather than echoed from the request — suspension is idempotent, so
+    the stored value is the one worth reporting.
+    """
+
+    account_id: int
+    status: str
+
+
+class BanActionOut(BaseModel):
+    """Result of ``POST /admin/characters/{id}/ban``.
+
+    Character-scoped: a ban lands on one character, not the account behind it
+    (ADR-0041). Suspending the account is the other endpoint.
+    """
+
+    character_id: int
+    banned: bool
 
 
 # ---------------------------------------------------------------------------

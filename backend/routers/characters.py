@@ -14,7 +14,12 @@ from models.account import Account
 from models.character import Character, CharacterStatus
 from models.praxis import Praxis, PraxisStatus
 from models.vote import Vote
-from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
+from schemas.character import (
+    CharacterCreate,
+    CharacterOut,
+    CharacterUpdate,
+    VotesReceivedOut,
+)
 from schemas.praxis import PraxisOut
 from services.auth import get_current_account
 from services.badge import list_badges_for_character
@@ -212,11 +217,11 @@ async def upload_avatar(
     return build_character_out(character, stats)
 
 
-@router.get("/{character_id}/stats/votes-received")
+@router.get("/{character_id}/stats/votes-received", response_model=VotesReceivedOut)
 async def get_votes_received_count(
     character_id: int,
     session: AsyncSession = Depends(get_db),
-) -> dict[str, int]:
+) -> VotesReceivedOut:
     """Votes received on the praxes this character **authored**.
 
     Deliberately still ``created_by_id`` after #1112 moved the praxis *record*
@@ -235,4 +240,4 @@ async def get_votes_received_count(
         .where(Praxis.created_by_id == character_id)
     )
     count = result.scalar_one()
-    return {"character_id": character_id, "votes_received": count}
+    return VotesReceivedOut(character_id=character_id, votes_received=count)

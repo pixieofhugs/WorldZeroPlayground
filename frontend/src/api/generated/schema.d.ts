@@ -720,6 +720,8 @@ export interface paths {
         /**
          * Auth Google Callback
          * @description Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
+         *
+         *     Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
          */
         get: operations["auth_google_callback_auth_google_callback_get"];
         put?: never;
@@ -1383,7 +1385,16 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Invite Member Route */
+        /**
+         * Invite Member Route
+         * @description Invite a character onto this praxis; answer the invite row.
+         *
+         *     The ``response_model=None`` this replaced (#1400) was a suppression, not a
+         *     description: ``_build_invite_out`` has always returned a ``PraxisInviteOut``,
+         *     so the only thing the annotation achieved was keeping the shape out of the
+         *     schema. Not to be confused with the *respond* route below, which answers an
+         *     ack rather than an invite.
+         */
         post: operations["invite_member_route_praxes__praxis_id__invite_post"];
         delete?: never;
         options?: never;
@@ -1957,6 +1968,39 @@ export interface components {
             /** Username */
             username: string;
         };
+        /**
+         * AdminCharacterOut
+         * @description The character an admin just minted (``POST /admin/characters``).
+         *
+         *     Carries ``account_id`` on purpose. The "never expose account_id" rule
+         *     (SPEC-backend-architecture.md §4) governs the *public* API; the admin router
+         *     is the operator surface and already answers with raw account identity and
+         *     e-mail (``AccountSummary``). An admin who creates a character for an account
+         *     needs to see which account it landed on.
+         *
+         *     Deliberately not ``CharacterOut``: that shape is the player-facing profile
+         *     (score, level, badges, faction display), none of which exists yet at
+         *     creation time. This is the insert receipt.
+         */
+        AdminCharacterOut: {
+            /** Account Id */
+            account_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
+            /** Id */
+            id: number;
+            /** Status */
+            status: string;
+            /** Username */
+            username: string;
+        };
         /** AdminFactionOut */
         AdminFactionOut: {
             /**
@@ -2051,6 +2095,19 @@ export interface components {
         BanAction: {
             /** Banned */
             banned: boolean;
+        };
+        /**
+         * BanActionOut
+         * @description Result of ``POST /admin/characters/{id}/ban``.
+         *
+         *     Character-scoped: a ban lands on one character, not the account behind it
+         *     (ADR-0041). Suspending the account is the other endpoint.
+         */
+        BanActionOut: {
+            /** Banned */
+            banned: boolean;
+            /** Character Id */
+            character_id: number;
         };
         /** Body_admin_import_tasks_csv_admin_tasks_import_csv_post */
         Body_admin_import_tasks_csv_admin_tasks_import_csv_post: {
@@ -2593,6 +2650,28 @@ export interface components {
             second_character_level_required: number;
         };
         /**
+         * DevLoginOut
+         * @description Result of the dev-only bot login (``POST /auth/dev-login``).
+         *
+         *     Exposes ``account_id``, which the public API never does — and this is not a
+         *     second exception beside ``/auth/me``. The endpoint 404s outside development
+         *     (``settings.ENVIRONMENT``), and the ids exist so e2e fixtures can invite and
+         *     credit by id without a second round trip. If this route ever becomes
+         *     reachable in production the leak is the route, not the field.
+         */
+        DevLoginOut: {
+            /** Account Id */
+            account_id: number;
+            /** Character Id */
+            character_id?: number | null;
+            /** Character Name */
+            character_name?: string | null;
+            /** Faction Slug */
+            faction_slug?: string | null;
+            /** Message */
+            message: string;
+        };
+        /**
          * DuelChallengeIn
          * @description Body for POST /duels/challenge — attach a duel to an existing praxis.
          */
@@ -2786,6 +2865,16 @@ export interface components {
             era_name: string;
             /** Era Notes */
             era_notes: string;
+        };
+        /**
+         * EraResetOut
+         * @description Readout for ``PUT /admin/era/reset``: the new era row and who it touched.
+         */
+        EraResetOut: {
+            /** Characters Reset */
+            characters_reset: number;
+            /** Era Id */
+            era_id: number;
         };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
@@ -3440,6 +3529,22 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * HealthOut
+         * @description ``GET /health`` — the liveness probe the host polls.
+         *
+         *     ``status`` is a ``Literal`` rather than a bare ``str`` because the endpoint
+         *     has exactly one success answer: it either returns ``"ok"`` or it does not
+         *     return. Typing it as an open string would put a value in the generated
+         *     client that nothing can ever produce, and invite a caller to branch on it.
+         */
+        HealthOut: {
+            /**
+             * Status
+             * @constant
+             */
+            status: "ok";
+        };
         /** InvitationLetterItem */
         InvitationLetterItem: {
             /** Actor Avatar Url */
@@ -3537,6 +3642,18 @@ export interface components {
             key: string;
             /** Kind */
             kind: string;
+        };
+        /**
+         * LogoutOut
+         * @description Acknowledgement for ``POST /auth/logout``.
+         *
+         *     The work of logging out is the ``Set-Cookie`` header that clears the JWT,
+         *     not the body; this exists so the body is a declared shape in the schema
+         *     rather than an untyped object the generated client cannot check.
+         */
+        LogoutOut: {
+            /** Message */
+            message: string;
         };
         /** MediaItemOut */
         MediaItemOut: {
@@ -4163,6 +4280,25 @@ export interface components {
             role: string;
         };
         /**
+         * RoleActionOut
+         * @description Echo of an applied ``POST /admin/accounts/{id}/role``.
+         *
+         *     An echo rather than the account's full role set: the service applies one
+         *     grant/revoke and does not read the rest back, and inventing a fuller shape
+         *     here would mean a second query whose only consumer is the confirmation.
+         */
+        RoleActionOut: {
+            /** Account Id */
+            account_id: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "grant" | "revoke";
+            /** Role */
+            role: string;
+        };
+        /**
          * SidebarOut
          * @description Everything the rail's three data panels draw, in one response.
          *
@@ -4190,10 +4326,35 @@ export interface components {
             /** Pending Requests Count */
             pending_requests_count: number;
         };
+        /**
+         * StatsBackfillOut
+         * @description Readout for ``POST /admin/characters/backfill-stats``.
+         *
+         *     ``recalculated`` counts *active* characters — banned ones are skipped — so
+         *     it will not match a headcount of the accounts table.
+         */
+        StatsBackfillOut: {
+            /** Recalculated */
+            recalculated: number;
+        };
         /** SuspendAction */
         SuspendAction: {
             /** Suspended */
             suspended: boolean;
+        };
+        /**
+         * SuspendActionOut
+         * @description Result of ``POST /admin/accounts/{id}/suspend``.
+         *
+         *     ``status`` is the account's resulting ``AccountStatus`` value, read back from
+         *     the row rather than echoed from the request — suspension is idempotent, so
+         *     the stored value is the one worth reporting.
+         */
+        SuspendActionOut: {
+            /** Account Id */
+            account_id: number;
+            /** Status */
+            status: string;
         };
         /** TaskCreate */
         TaskCreate: {
@@ -4392,6 +4553,23 @@ export interface components {
             votes_available: number;
         };
         /**
+         * VoteBudgetBackfillOut
+         * @description Readout for ``POST /admin/characters/backfill-vote-budget``.
+         *
+         *     ``changes`` is the whole point of the endpoint's ``dry_run`` mode: an admin
+         *     ``votes_available`` grant writes the same counter a recompute rebuilds, and
+         *     nothing records that a row was hand-set, so an operator reads these
+         *     before/after pairs to spot a grant this pass would revert.
+         */
+        VoteBudgetBackfillOut: {
+            /** Changed */
+            changed: number;
+            /** Changes */
+            changes: components["schemas"]["VoteSpendRepairOut"][];
+            /** Dry Run */
+            dry_run: boolean;
+        };
+        /**
          * VoteCastOut
          * @description The complete post-cast truth: everything the client used to reconstruct.
          *
@@ -4484,6 +4662,23 @@ export interface components {
             vote_id: number;
         };
         /**
+         * VoteSpendRepairOut
+         * @description One character's ``votes_spent_this_era`` before and after a recompute.
+         *
+         *     The wire mirror of ``services.character_stats.VoteSpendRepair``. It is a
+         *     separate declaration rather than the dataclass itself because the response
+         *     shape is a published contract and the dataclass is an internal return type;
+         *     tying them together would make an internal rename a wire break.
+         */
+        VoteSpendRepairOut: {
+            /** After */
+            after: number;
+            /** Before */
+            before: number;
+            /** Character Id */
+            character_id: number;
+        };
+        /**
          * VoteTallyOut
          * @description A praxis's vote aggregate, in the field names every praxis payload uses.
          *
@@ -4511,6 +4706,21 @@ export interface components {
             faction_slug: string;
             /** Value */
             value: number;
+        };
+        /**
+         * VotesReceivedOut
+         * @description Votes received on the praxes a character **authored**.
+         *
+         *     Author-scoped, not membership-scoped (ADR-0053) — see the route docstring in
+         *     ``routers/characters.py`` for why the two must not be conflated. It echoes
+         *     ``character_id`` so a caller batching several of these can tell the answers
+         *     apart.
+         */
+        VotesReceivedOut: {
+            /** Character Id */
+            character_id: number;
+            /** Votes Received */
+            votes_received: number;
         };
         /** ContactMessageOut */
         routers__admin__ContactMessageOut: {
@@ -4818,9 +5028,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["RoleActionOut"];
                 };
             };
             /** @description Validation Error */
@@ -4857,9 +5065,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["SuspendActionOut"];
                 };
             };
             /** @description Validation Error */
@@ -4928,9 +5134,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AdminCharacterOut"];
                 };
             };
             /** @description Validation Error */
@@ -4961,9 +5165,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["StatsBackfillOut"];
                 };
             };
             /** @description Validation Error */
@@ -4996,9 +5198,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["VoteBudgetBackfillOut"];
                 };
             };
             /** @description Validation Error */
@@ -5035,7 +5235,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["BanActionOut"];
                 };
             };
             /** @description Validation Error */
@@ -5202,9 +5402,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["EraResetOut"];
                 };
             };
             /** @description Validation Error */
@@ -5712,7 +5910,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DevLoginOut"];
                 };
             };
             /** @description Validation Error */
@@ -5736,13 +5934,11 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            302: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
         };
     };
@@ -5756,13 +5952,11 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            302: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
         };
     };
@@ -5781,7 +5975,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LogoutOut"];
                 };
             };
         };
@@ -6079,9 +6273,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: number;
-                    };
+                    "application/json": components["schemas"]["VotesReceivedOut"];
                 };
             };
             /** @description Validation Error */
@@ -6503,7 +6695,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HealthOut"];
                 };
             };
         };
@@ -7017,7 +7209,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PraxisInviteOut"];
                 };
             };
             /** @description Validation Error */

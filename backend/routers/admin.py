@@ -21,21 +21,30 @@ from schemas.admin import (
     AccountDetail,
     AccountSummary,
     AdminCharacterCreate,
+    AdminCharacterOut,
     AdminTaskPatch,
+    BanAction,
+    BanActionOut,
     CharacterStatsPatch,
     AdminFactionOut,
     CharacterStatsOut,
     CharacterSummary,
     CliTokenResponse,
+    EraResetOut,
     FactionCreate,
     FlaggedCommentOut,
     FlaggedPraxisOut,
     ModerationAction,
     OverviewStats,
     RoleAction,
+    RoleActionOut,
+    StatsBackfillOut,
     SuspendAction,
+    SuspendActionOut,
     TaskImportResult,
     TaskStatusAction,
+    VoteBudgetBackfillOut,
+    VoteSpendRepairOut,
 )
 from schemas.task import TaskCreate, TaskOut
 from schemas.praxis import PraxisOut
@@ -80,10 +89,6 @@ from services.scoring import compute_votes_available
 from services.auth import create_jwt
 
 router = APIRouter()
-
-
-class BanAction(BaseModel):
-    banned: bool
 
 
 class ContactMessageOut(BaseModel):
@@ -177,22 +182,22 @@ async def admin_create_faction(
     )
 
 
-@router.post("/characters", status_code=201)
+@router.post("/characters", response_model=AdminCharacterOut, status_code=201)
 async def admin_create_character_endpoint(
     data: AdminCharacterCreate,
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+) -> AdminCharacterOut:
     character = await admin_create_character(data, session)
-    return {
-        "id": character.id,
-        "account_id": character.account_id,
-        "username": character.username,
-        "display_name": character.display_name,
-        "faction_slug": character.faction_slug,
-        "status": character.status.value,
-        "created_at": character.created_at,
-    }
+    return AdminCharacterOut(
+        id=character.id,
+        account_id=character.account_id,
+        username=character.username,
+        display_name=character.display_name,
+        faction_slug=character.faction_slug,
+        status=character.status.value,
+        created_at=character.created_at,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -219,12 +224,16 @@ async def admin_patch_character_stats(
     )
 
 
-@router.post("/characters/backfill-vote-budget", status_code=200)
+@router.post(
+    "/characters/backfill-vote-budget",
+    response_model=VoteBudgetBackfillOut,
+    status_code=200,
+)
 async def backfill_vote_budget(
     dry_run: bool = False,
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+) -> VoteBudgetBackfillOut:
     """Rebuild ``votes_spent_this_era`` for the live era from the vote table (#1531).
 
     The repair half of the 2026-08-02 vote dedupe: migration
@@ -247,18 +256,22 @@ async def backfill_vote_budget(
     interleaving them risks one pass overwriting the other.
     """
     repairs = await recompute_votes_spent_this_era(session, dry_run=dry_run)
-    return {
-        "dry_run": dry_run,
-        "changed": len(repairs),
-        "changes": [dataclasses.asdict(repair) for repair in repairs],
-    }
+    return VoteBudgetBackfillOut(
+        dry_run=dry_run,
+        changed=len(repairs),
+        changes=[
+            VoteSpendRepairOut(**dataclasses.asdict(repair)) for repair in repairs
+        ],
+    )
 
 
-@router.post("/characters/backfill-stats", status_code=200)
+@router.post(
+    "/characters/backfill-stats", response_model=StatsBackfillOut, status_code=200
+)
 async def backfill_all_character_stats(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+) -> StatsBackfillOut:
     """Recompute CharacterStats for every character using current vote data.
 
     **Consumer-less on purpose — do not delete it (owner ruling, 2026-07-31).**
@@ -296,21 +309,21 @@ async def backfill_all_character_stats(
             character.id, session, era_row=era_row, emit_taunts=False
         )
     await session.flush()
-    return {"recalculated": len(characters)}
+    return StatsBackfillOut(recalculated=len(characters))
 
 
-@router.put("/era/reset", status_code=200)
+@router.put("/era/reset", response_model=EraResetOut, status_code=200)
 async def admin_era_reset(
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+) -> EraResetOut:
     """Trigger an era reset: new Era row + reset stats per EraConfig flags."""
     new_era_row = Era(name=CURRENT_ERA.name, config_key=CURRENT_ERA.config_key, started_by=admin.id)
     session.add(new_era_row)
     await session.flush()
     characters = await list_active_characters(session)
     await apply_era_reset(characters, new_era_row, session)
-    return {"era_id": new_era_row.id, "characters_reset": len(characters)}
+    return EraResetOut(era_id=new_era_row.id, characters_reset=len(characters))
 
 
 @router.post("/tasks/{task_id}/reactivate", response_model=TaskOut)
@@ -328,13 +341,13 @@ async def admin_reactivate_task(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/accounts/{account_id}/role", status_code=200)
+@router.post("/accounts/{account_id}/role", response_model=RoleActionOut, status_code=200)
 async def admin_manage_role(
     account_id: int,
     data: RoleAction,
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+) -> RoleActionOut:
     await assign_or_revoke_role(
         account_id=account_id,
         role_name=data.role,
@@ -342,18 +355,20 @@ async def admin_manage_role(
         admin_account_id=admin.id,
         session=session,
     )
-    return {"account_id": account_id, "role": data.role, "action": data.action}
+    return RoleActionOut(account_id=account_id, role=data.role, action=data.action)
 
 
-@router.post("/accounts/{account_id}/suspend", status_code=200)
+@router.post(
+    "/accounts/{account_id}/suspend", response_model=SuspendActionOut, status_code=200
+)
 async def admin_suspend_account(
     account_id: int,
     data: SuspendAction,
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+) -> SuspendActionOut:
     account = await suspend_account(account_id, data.suspended, session)
-    return {"account_id": account.id, "status": account.status.value}
+    return SuspendActionOut(account_id=account.id, status=account.status.value)
 
 
 # ---------------------------------------------------------------------------
@@ -538,19 +553,21 @@ async def retire_task(
     return await build_task_out(task, session)
 
 
-@router.post("/characters/{character_id}/ban", status_code=200)
+@router.post(
+    "/characters/{character_id}/ban", response_model=BanActionOut, status_code=200
+)
 async def ban_character(
     character_id: int,
     data: BanAction,
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
-):
+) -> BanActionOut:
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
     character.status = CharacterStatus.banned if data.banned else CharacterStatus.active
     await session.flush()
-    return {"character_id": character_id, "banned": data.banned}
+    return BanActionOut(character_id=character_id, banned=data.banned)
 
 
 @router.post("/tasks", response_model=TaskOut, status_code=201)
