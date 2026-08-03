@@ -351,7 +351,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             flexWrap: 'wrap',
           }}
         >
-          <span className="eyebrow" style={{ color: 'var(--color-warning)' }}>
+          <span className="label-caption" style={{ color: 'var(--color-warning)' }}>
             {t('detail.banners.flaggedLabel')}
           </span>
           <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
