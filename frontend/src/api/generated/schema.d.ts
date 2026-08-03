@@ -20,10 +20,12 @@ export interface paths {
          *     character has put away.
          *
          *     ``types`` is a **repeated bare key** — ``?types=nudge&types=global_task`` —
-         *     intersected with ``filter``'s own set. Clients must serialise it that way:
-         *     axios' default ``types[]=nudge`` arrives as a key FastAPI does not read, and
-         *     the endpoint answers 200 with an unfiltered list, so nothing anywhere fails.
-         *     ``frontend/src/api/`` sets ``paramsSerializer: { indexes: null }`` for this.
+         *     intersected with ``filter``'s own set, and clients must serialise it that
+         *     way. A client that brackets the key instead — ``types[]=nudge`` — sends a
+         *     name FastAPI reads nothing from, and this endpoint then answers 200 with an
+         *     unfiltered list: the filter is silently ignored and nothing fails anywhere.
+         *     That silence is why the rule is written down on the endpoint rather than
+         *     left to whatever a client's HTTP library does by default.
          *
          *     Both ``filter`` and ``types`` are tolerant of values the registry does not
          *     know — this is a read projection and a stale bookmark should degrade, not

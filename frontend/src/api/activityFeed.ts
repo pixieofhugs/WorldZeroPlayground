@@ -142,14 +142,13 @@ export async function getActivityFeed(params?: {
 }): Promise<ActivityFeedResponse> {
   const { data } = await apiGet('/activity-feed', { params: { query: params } })
   // The one place a `FeedCounts` enters the app, so the one place it has to be
-  // made true. See `normalizeFeedCounts`.
+  // made true. See `normalizeFeedCounts` — that one guards against an OLDER
+  // BACKEND, which is a deployment fact no schema change can retire.
   //
-  // `next_cursor` gets the same treatment for the same kind of reason: the
-  // schema has it non-required (`Optional[str] = None` on the response model),
-  // and an absent cursor means precisely what a null one means — no further
-  // page. Collapsing the two here rather than widening the field keeps
-  // `useUpdates`' `string | null` cursor state honest (#1400).
-  return { ...data, counts: normalizeFeedCounts(data?.counts), next_cursor: data.next_cursor ?? null }
+  // `next_cursor` used to be collapsed with `?? null` here because the schema
+  // called it optional. It is `string | null` and required now (#1400), so the
+  // coalesce was reading a case the wire cannot send.
+  return { ...data, counts: normalizeFeedCounts(data?.counts) }
 }
 
 /**
