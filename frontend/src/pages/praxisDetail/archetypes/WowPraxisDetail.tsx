@@ -401,7 +401,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             flexWrap: 'wrap',
           }}
         >
-          <span className="eyebrow" style={{ color: 'var(--color-warning)' }}>
+          <span className="label-caption" style={{ color: 'var(--color-warning)' }}>
             {t('detail.banners.flaggedLabel')}
           </span>
           <span

@@ -219,11 +219,11 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
   return (
     <div className="sidebar-card card-on-page mb-4" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+        <span className="label-heading">
           {t('detail.admin.eyebrow')}
         </span>
         <span
-          className="eyebrow"
+          className="label-caption"
           style={{
             padding: 'var(--space-xs) var(--space-sm)',
             border: '1px solid var(--color-border)',
@@ -361,7 +361,7 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
         >
           <TaskCrown size={34} ringInset={3} />
           <div>
-            <span className="eyebrow" style={{ display: 'block' }}>{t('detail.banners.crownLabel')}</span>
+            <span className="label-heading" style={{ display: 'block' }}>{t('detail.banners.crownLabel')}</span>
             <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
               {t('detail.banners.crownBody')}
             </span>
@@ -461,7 +461,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
         {!handsOff && (
-          <Link to={`/praxis/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
+          <Link to={`/praxis/${praxis.id}/edit`} className="font-body label-caption hover:underline">
             {t('detail.owner.edit')}
           </Link>
         )}
@@ -586,7 +586,7 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
        dialog mounts over it as a fixed overlay. Skinned by the TASK's
        faction, matching the composer's own dispatch. */
     <>
-      <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: wallInk(praxis, 'alarm') }}>
+      <button onClick={() => setShowWithdrawConfirm(true)} className="font-body label-caption" style={{ background: 'none', border: 'none', cursor: 'pointer', color: wallInk(praxis, 'alarm') }}>
         {t('duelForfeit.action')}
       </button>
       {showWithdrawConfirm && (
@@ -603,12 +603,12 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
       )}
     </>
   ) : !showWithdrawConfirm ? (
-    <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
+    <button onClick={() => setShowWithdrawConfirm(true)} className="font-body label-caption" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
       {t(unsubmitCopy.trigger)}
     </button>
   ) : (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-      <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t(unsubmitCopy.prompt)}</span>
+      <span className="label-caption">{t(unsubmitCopy.prompt)}</span>
       <button
         onClick={handleWithdraw}
         disabled={withdrawing}
@@ -639,10 +639,24 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
  *
  * That is enforced structurally rather than by convention: this component takes
  * `state` and nothing else, so there is no `style` seam to dress it through, and
- * every text node inside carries an explicit `--color-*` token or `.eyebrow`'s
- * own neutral colour — so it cannot inherit a skin's sheet colour by accident.
+ * every text node inside carries an explicit `--color-*` token or the label
+ * tier's neutral — so it cannot inherit a skin's sheet colour by accident.
  * `PraxisAdminBar` above is built the same way for the same reason. If a skin
  * ever needs this card to look different, that is an ADR change, not a prop.
+ *
+ * ONE THING THE #1307 SWEEP CHANGED ABOUT THAT LAST CLAUSE, AND IT IS A LOADED
+ * GUN RATHER THAN A BUG TODAY. `.eyebrow` HARDCODED `--color-text-tertiary`, so
+ * a label in here was neutral no matter what it was mounted inside.
+ * `.label-caption` reads `--label-ink`, which is a SEAM a faction frame is meant
+ * to set once on its own root (see its declaration in `index.css`) — and this
+ * card renders INSIDE that root. Nothing sets it yet, so every one of these
+ * labels still resolves to the same neutral; the moment a praxis-detail skin
+ * repoints it, the steward bar and the report card inherit the skin's quiet ink
+ * and ADR-0061's promise quietly breaks. The fix belongs to the token, not here:
+ * `.card-on-page` already names the stock these inks were measured on (#1413)
+ * and is the right place to pin `--label-ink` back to the neutral. Do not paper
+ * over it with an inline colour on each label — that is the per-component
+ * contradiction #1252 exists to stop.
  */
 export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
@@ -653,7 +667,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
     return (
       <div className="sidebar-card card-on-page flex items-center gap-3" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span className="eyebrow" style={{ color: 'var(--color-success)' }}>{t('detail.flag.flaggedOk')}</span>
+          <span className="label-caption" style={{ color: 'var(--color-success)' }}>{t('detail.flag.flaggedOk')}</span>
         </div>
         <div className="flex-1">
           <p className="font-body" style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.flaggedTitle')}</p>
@@ -669,7 +683,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
     <div className="sidebar-card card-on-page" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
       <div className="flex items-center gap-3">
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-danger-edge)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span className="eyebrow">{t('detail.flag.badge')}</span>
+          <span className="label-caption">{t('detail.flag.badge')}</span>
         </div>
         <div className="flex-1">
           <p className="font-body" style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.title')}</p>
