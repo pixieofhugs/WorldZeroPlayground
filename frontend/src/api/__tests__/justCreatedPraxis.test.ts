@@ -15,17 +15,33 @@
  * carries that part as a source ratchet.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+/**
+ * No server, no DOM — the slot is the subject.
+ *
+ * The stub goes in via `vi.hoisted`, not `beforeEach`: `openapi-fetch` binds
+ * `globalThis.fetch` when the client is CREATED, at `../client`'s top level,
+ * which happens during this file's imports. A later stub is never consulted and
+ * the suite silently posts to whatever is listening on localhost:8000 (see
+ * `client.test.ts`).
+ */
+const wire = vi.hoisted(() => {
+  let payload = '{}'
+
+  globalThis.fetch = (async () =>
+    new Response(payload, {
+      status: 201,
+      headers: { 'content-type': 'application/json' },
+    })) as unknown as typeof globalThis.fetch
+
+  return {
+    replyWith(next: unknown) {
+      payload = JSON.stringify(next)
+    },
+  }
+})
+
 import { createPraxis, takeJustCreatedPraxis, type PraxisOut } from '../praxis'
-
-const post = vi.fn()
-
-// Hoisted above the import above by vitest's transform, so `praxis.ts` binds
-// this instead of the real client. No server, no DOM — the slot is the subject.
-vi.mock('../axios', () => ({
-  default: {
-    post: (...args: unknown[]) => post(...args),
-  },
-}))
 
 /** Only the id is read by the slot; the rest of the row travels untouched. */
 function praxisRow(id: number): PraxisOut {
@@ -33,14 +49,13 @@ function praxisRow(id: number): PraxisOut {
 }
 
 beforeEach(() => {
-  post.mockReset()
   // Drain anything a previous test parked, so each case starts empty.
   takeJustCreatedPraxis(-1)
 })
 
 describe('takeJustCreatedPraxis', () => {
   it('hands the composer the row the signup just created', async () => {
-    post.mockResolvedValueOnce({ data: praxisRow(7) })
+    wire.replyWith(praxisRow(7))
     const created = await createPraxis({ task_id: 1, type: 'solo' })
 
     expect(takeJustCreatedPraxis(7)).toBe(created)
@@ -51,7 +66,7 @@ describe('takeJustCreatedPraxis', () => {
   })
 
   it('gives the row away once and only once', async () => {
-    post.mockResolvedValueOnce({ data: praxisRow(7) })
+    wire.replyWith(praxisRow(7))
     await createPraxis({ task_id: 1, type: 'solo' })
 
     expect(takeJustCreatedPraxis(7)).not.toBeNull()
@@ -61,14 +76,14 @@ describe('takeJustCreatedPraxis', () => {
   })
 
   it('refuses to hand one praxis row to a different praxis', async () => {
-    post.mockResolvedValueOnce({ data: praxisRow(7) })
+    wire.replyWith(praxisRow(7))
     await createPraxis({ task_id: 1, type: 'solo' })
 
     expect(takeJustCreatedPraxis(8)).toBeNull()
   })
 
   it('clears the slot on a miss, so a later id can never collect a stale row', async () => {
-    post.mockResolvedValueOnce({ data: praxisRow(7) })
+    wire.replyWith(praxisRow(7))
     await createPraxis({ task_id: 1, type: 'solo' })
 
     takeJustCreatedPraxis(8)
@@ -76,9 +91,9 @@ describe('takeJustCreatedPraxis', () => {
   })
 
   it('keeps only the latest create — two signups in a row cannot cross', async () => {
-    post.mockResolvedValueOnce({ data: praxisRow(7) })
+    wire.replyWith(praxisRow(7))
     await createPraxis({ task_id: 1, type: 'solo' })
-    post.mockResolvedValueOnce({ data: praxisRow(9) })
+    wire.replyWith(praxisRow(9))
     await createPraxis({ task_id: 2, type: 'solo' })
 
     expect(takeJustCreatedPraxis(7)).toBeNull()

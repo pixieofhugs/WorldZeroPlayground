@@ -1,4 +1,5 @@
-import api from './axios'
+import { apiGet, apiPost } from './client'
+import { wireSent } from './wireSent'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import { clearCastTallies } from '../components/vote/castTallies'
 
@@ -59,12 +60,14 @@ export interface DuelDetailOut {
 // ---------------------------------------------------------------------------
 
 export async function issueChallenge(data: DuelChallengeIn): Promise<DuelOut> {
-  const { data: result } = await api.post<DuelOut>('/duels/challenge', data)
+  const { data: result } = await apiPost('/duels/challenge', { body: data })
   return result
 }
 
 export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
-  const { data } = await api.get<DuelDetailOut>(`/duels/${duelId}/detail`)
+  const { data } = await apiGet('/duels/{duel_id}/detail', {
+    params: { path: { duel_id: duelId } },
+  })
   // Server truth for BOTH sides' `points_from_votes` — drop any cast tally it
   // supersedes (#1239). This payload is merged into, so it clears alongside the
   // praxis fetch; a tally that outlived its payload would keep masking another
@@ -74,11 +77,14 @@ export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
       (praxisId): praxisId is number => praxisId != null,
     ),
   )
-  return data
+  return wireSent(data)
 }
 
 export async function respondToChallenge(duelId: number, data: DuelRespondIn): Promise<DuelOut> {
-  const { data: result } = await api.post<DuelOut>(`/duels/${duelId}/respond`, data)
+  const { data: result } = await apiPost('/duels/{duel_id}/respond', {
+    params: { path: { duel_id: duelId } },
+    body: data,
+  })
   // The challenge left your requests bucket (accept → now awaiting your
   // submission; decline → gone). Refresh every feed surface (#updates-badge).
   notifyRequestsChanged()
@@ -86,6 +92,8 @@ export async function respondToChallenge(duelId: number, data: DuelRespondIn): P
 }
 
 export async function cancelChallenge(duelId: number): Promise<DuelOut> {
-  const { data } = await api.post<DuelOut>(`/duels/${duelId}/cancel`)
+  const { data } = await apiPost('/duels/{duel_id}/cancel', {
+    params: { path: { duel_id: duelId } },
+  })
   return data
 }

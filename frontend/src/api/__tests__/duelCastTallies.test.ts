@@ -14,10 +14,29 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// No network — the assertion is about what the client does with the response.
-vi.mock('../axios', () => ({ default: { get: vi.fn(), post: vi.fn() } }))
+/**
+ * No network. The stub goes in via `vi.hoisted` rather than `beforeEach`
+ * because `openapi-fetch` binds `globalThis.fetch` when the client is CREATED,
+ * at `../client`'s top level — i.e. during this file's imports. A later stub is
+ * never consulted and the suite quietly talks to whatever is listening on
+ * localhost:8000 (see `client.test.ts`).
+ */
+const wire = vi.hoisted(() => {
+  let payload = '{}'
 
-import api from '../axios'
+  globalThis.fetch = (async () =>
+    new Response(payload, {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })) as unknown as typeof globalThis.fetch
+
+  return {
+    replyWith(next: unknown) {
+      payload = JSON.stringify(next)
+    },
+  }
+})
+
 import type { DuelDetailOut, DuelSideOut } from '../duel'
 import { getDuelDetail } from '../duel'
 import {
@@ -58,13 +77,12 @@ function detail(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
 }
 
 function respondWith(payload: DuelDetailOut): void {
-  vi.mocked(api.get).mockResolvedValue({ data: payload })
+  wire.replyWith(payload)
 }
 
 describe('getDuelDetail clears cast tallies (#1239)', () => {
   beforeEach(() => {
     __resetCastTallies()
-    vi.mocked(api.get).mockReset()
   })
 
   it('retires a cast tally on EITHER side once the duel payload lands', async () => {
