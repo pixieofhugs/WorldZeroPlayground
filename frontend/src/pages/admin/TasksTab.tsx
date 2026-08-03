@@ -239,7 +239,7 @@ export default function TasksTab() {
                         {task.title}
                       </p>
                       <span
-                        className="eyebrow"
+                        className="label-caption"
                         style={{
                           padding: "var(--space-xs) var(--space-sm)",
                           border: "1px solid var(--color-border)",
