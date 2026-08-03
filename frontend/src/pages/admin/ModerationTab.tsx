@@ -100,7 +100,7 @@ interface ActionLogEntry {
 function ReasonBadge({ reason }: { reason: string }) {
   return (
     <span
-      className="eyebrow"
+      className="label-caption"
       style={{
         border: '1.5px solid var(--color-danger)',
         color: 'var(--color-danger)',
@@ -113,7 +113,9 @@ function ReasonBadge({ reason }: { reason: string }) {
 }
 
 /** Segmented content-type filter over the merged queue (#576). Mirrors the
- *  admin tab-bar's underline eyebrow language rather than the mobile pill. */
+ *  admin tab-bar's underline label language rather than the mobile pill — each
+ *  option names a region of the queue, so it is the heading tier (#1307) and
+ *  has to stay on whatever tier `pages/Admin.tsx`'s tab bar lands on. */
 function QueueFilterBar({
   value,
   onChange,
@@ -133,7 +135,7 @@ function QueueFilterBar({
           role="tab"
           aria-selected={value === option}
           onClick={() => onChange(option)}
-          className="eyebrow pb-1 transition-colors"
+          className="label-heading pb-1 transition-colors"
           style={{
             background: 'none',
             border: 'none',
@@ -164,7 +166,7 @@ function QueueCardFrame({
     <div className="card px-4 py-3">
       <div className="flex items-center gap-3 mb-2">
         <ReasonBadge reason={badgeReason} />
-        <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+        <span className="label-caption">
           {typeLabel} &middot; {relativeTime(when)}
         </span>
       </div>
@@ -302,11 +304,11 @@ export default function ModerationTab() {
       <div className="flex gap-4">
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
           <p className="font-display text-2xl font-bold">{queue.length}</p>
-          <p className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('moderation.stats.openReports')}</p>
+          <p className="label-caption">{t('moderation.stats.openReports')}</p>
         </div>
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
           <p className="font-display text-2xl font-bold">{activeMembers ?? '—'}</p>
-          <p className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('moderation.stats.activeMembers')}</p>
+          <p className="label-caption">{t('moderation.stats.activeMembers')}</p>
         </div>
       </div>
 
@@ -362,7 +364,7 @@ export default function ModerationTab() {
                       )}
                       <Link
                         to={`/praxis/${item.praxis.id}`}
-                        className="eyebrow"
+                        className="label-caption"
                         style={{ display: 'inline-block', marginTop: 'var(--space-sm)' }}
                       >
                         {t('moderation.queue.viewPraxis')}
@@ -443,7 +445,7 @@ export default function ModerationTab() {
                         to={item.comment.praxis_id != null
                           ? `/praxis/${item.comment.praxis_id}`
                           : `/tasks/${item.comment.task_id}`}
-                        className="eyebrow"
+                        className="label-caption"
                         style={{ display: 'inline-block', marginTop: 'var(--space-sm)' }}
                       >
                         {t('moderation.queue.viewThread')}

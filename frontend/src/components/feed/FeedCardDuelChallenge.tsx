@@ -236,10 +236,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           >
             {task_title}
           </span>
-          <span
-            className="eyebrow"
-            style={{ color: "var(--color-text-tertiary)" }}
-          >
+          <span className="label-caption">
             {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value })}
           </span>
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: crossed-swords dingbat used as an icon */}
@@ -316,7 +313,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             </button>
             {error && !showDropModal && (
               <span
-                className="eyebrow"
+                className="label-caption"
                 style={{ color: "var(--color-danger)" }}
               >
                 {error}
@@ -324,7 +321,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             )}
             {withdrawError && (
               <span
-                className="eyebrow"
+                className="label-caption"
                 style={{ color: "var(--color-danger)" }}
               >
                 {withdrawError}
@@ -335,10 +332,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
 
         {withdrawn && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
-            <span
-              className="eyebrow"
-              style={{ color: "var(--color-text-tertiary)" }}
-            >
+            <span className="label-caption">
               {i18n.t("feed:duelChallenge.withdrawn")}
             </span>
           </div>
@@ -348,7 +342,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
               to={`/praxis/${challenger_praxis_id}`}
-              className="eyebrow"
+              className="label-caption"
               style={{ color: "var(--badge-duel)", textDecoration: "none" }}
             >
               {i18n.t("feed:duelChallenge.accepted")}
@@ -357,10 +351,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
         )}
         {status === "declined" && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
-            <span
-              className="eyebrow"
-              style={{ color: "var(--color-text-tertiary)" }}
-            >
+            <span className="label-caption">
               {i18n.t("feed:duelChallenge.declined")}
             </span>
           </div>

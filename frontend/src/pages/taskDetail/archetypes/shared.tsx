@@ -49,7 +49,7 @@ export function LevelJumpBanner({ state }: { state: TaskDetailState }) {
       }}
     >
       <span
-        className="eyebrow"
+        className="label-caption"
         style={{ color: "var(--color-text-primary)" }}
       >
         {t("detail.levelJump.tag")}

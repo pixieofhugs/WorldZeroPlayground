@@ -187,10 +187,7 @@ export default function AccountsTab() {
               {/* Expanded: characters */}
               {expandedId === account.id && detail && (
                 <div className="mt-3 ml-4 border-l-2 border-border pl-4">
-                  <p
-                    className="eyebrow mb-2"
-                    style={{ color: "var(--color-text-tertiary)" }}
-                  >
+                  <p className="label-heading mb-2">
                     {t("accounts.charactersHeading", {
                       count: detail.characters.length,
                     })}
