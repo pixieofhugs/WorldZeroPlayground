@@ -17,7 +17,6 @@
     "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "axios": "^1.7.2",
     "i18next": "^26.3.6",
     "openapi-fetch": "^0.17.0",
     "react": "^18.3.1",
