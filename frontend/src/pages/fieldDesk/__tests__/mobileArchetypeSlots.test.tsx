@@ -43,15 +43,17 @@ const CHARACTER: CharacterOut = {
   id: 42,
   username: 'molly',
   display_name: 'Mollusk',
-  bio: null,
-  avatar_url: null,
-  location: null,
+  bio: '',
+  avatar_url: '',
+  location: '',
   level: 4,
   score: 340,
   all_time_score: 900,
   faction_slug: 'wow',
   status: 'active',
   created_at: '2026-01-01T00:00:00Z',
+  badges: [],
+  invitations: [],
 }
 
 const ACTIVE_TASK: PraxisCardOut = {
@@ -77,6 +79,20 @@ const ACTIVE_TASK: PraxisCardOut = {
   points_from_votes: 0,
   is_top_for_task: false,
   task_faction_slug: 'wow',
+  applied_metatasks: [],
+  body_text: null,
+  created_by_avatar_url: '',
+  created_by_faction_slug: null,
+  duel_id: null,
+  media_items: [],
+  members: [],
+  opponent_display_name: null,
+  opponent_faction_slug: null,
+  opponent_praxis_id: null,
+  submit_proposed_at: null,
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
 }
 
 function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeState {

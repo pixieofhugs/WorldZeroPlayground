@@ -19,12 +19,7 @@ export interface CharacterCreate {
   faction_slug?: string
 }
 
-export interface CharacterUpdate {
-  display_name?: string
-  bio?: string
-  avatar_url?: string
-  location?: string
-}
+export type CharacterUpdate = components['schemas']['CharacterUpdate']
 
 export async function listCharacters(params?: {
   search?: string

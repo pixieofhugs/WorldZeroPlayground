@@ -46,9 +46,11 @@ const TASK: TaskOut = {
   status: "active",
   task_type: "standard",
   created_by: 31,
-  primary_faction_slug: null,
+  primary_faction_slug: 'na',
   metatask_faction_slug: null,
   created_at: "2026-01-01T00:00:00Z",
+  created_by_avatar_url: "",
+  signup_reason: null,
   in_progress_count: 6,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: null,
@@ -71,8 +73,8 @@ const COMMENT: CommentOut = {
     id: 42,
     username: "ada",
     display_name: "Adabel",
-    avatar_url: null,
-    faction_slug: null,
+    avatar_url: "",
+    faction_slug: "na",
   },
   mentions: [],
 };
@@ -123,9 +125,12 @@ describe("task-detail comments slot", () => {
       expect(text.toLowerCase()).toContain(THREAD_ANCHOR);
     });
 
+    // `retired`, not `archived` — the latter is not a `TaskStatus` and never
+    // was. It only compiled because the hand-written mirror spelled `status`
+    // as a bare `string`; the generated type is the three-value enum (#1400).
     it(`${slug} drops the comment thread once the task is not active`, () => {
       const { text } = render(
-        <Archetype state={baseState({ task: { ...TASK, status: "archived" } })} />,
+        <Archetype state={baseState({ task: { ...TASK, status: "retired" } })} />,
       );
       expect(text.toLowerCase()).not.toContain(THREAD_ANCHOR);
     });

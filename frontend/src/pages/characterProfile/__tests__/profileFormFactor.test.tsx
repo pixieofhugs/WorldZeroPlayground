@@ -37,16 +37,17 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
     id: 7,
     username: 'reza',
     display_name: 'Reza',
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 7,
     score: 1880,
     all_time_score: 2400,
-    faction_slug: null,
+    faction_slug: 'na',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
     badges: [{ key: 'sock_puppet', name: 'Sock Puppet' }],
+    invitations: [],
     ...overrides,
   }
 }
@@ -75,6 +76,20 @@ function makePraxis(): PraxisCardOut {
     points_from_votes: 12,
     is_top_for_task: false,
     task_faction_slug: 'ephemerists',
+    applied_metatasks: [],
+    body_text: null,
+    created_by_avatar_url: '',
+    created_by_faction_slug: null,
+    duel_id: null,
+    media_items: [],
+    members: [],
+    opponent_display_name: null,
+    opponent_faction_slug: null,
+    opponent_praxis_id: null,
+    submit_proposed_at: null,
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voted_by_name: null,
   }
 }
 
@@ -91,6 +106,12 @@ function makeTask(): TaskOut {
     primary_faction_slug: 'ephemerists',
     metatask_faction_slug: null,
     created_at: '2026-01-01T00:00:00Z',
+    in_progress_count: 0,
+    created_by_display_name: '',
+    created_by_avatar_url: '',
+    created_by_faction_slug: null,
+    created_by_level: 0,
+    signup_reason: null,
     can_sign_up: true,
     allowed_modes: ['solo'],
     eligible_for_current_user: true,
@@ -133,7 +154,7 @@ describe('the profile surface is one responsive component per faction', () => {
 describe('na profile serves both form factors from DefaultProfileBody', () => {
   it('reaches the shipped mobile skin on a phone', () => {
     mocks.formFactor = 'mobile'
-    const html = renderBody({ faction_slug: null })
+    const html = renderBody({ faction_slug: 'na' })
     expect(html, 'the na mobile skin').toContain('data-testid="mobile-profile"')
   })
 
@@ -160,7 +181,7 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
   })
 
   it('still renders the desktop body on a wide viewport', () => {
-    const html = renderBody({ faction_slug: null })
+    const html = renderBody({ faction_slug: 'na' })
     expect(html).not.toContain('data-testid="mobile-profile"')
     expect(html, 'desktop na copy').toContain('Unaffiliated · faction pending')
   })

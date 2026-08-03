@@ -54,6 +54,8 @@ const MEMBER: PraxisMemberOut = {
   character_display_name: "Wren Abalone",
   has_submitted: true,
   joined_at: "2026-01-01T00:00:00Z",
+  nudged_at: null,
+  submitted_at: null,
 };
 
 const CO_MEMBER: PraxisMemberOut = {
@@ -63,6 +65,8 @@ const CO_MEMBER: PraxisMemberOut = {
   character_display_name: "Bram Quilling",
   has_submitted: true,
   joined_at: "2026-01-02T00:00:00Z",
+  nudged_at: null,
+  submitted_at: null,
 };
 
 // No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
@@ -109,6 +113,9 @@ const PRAXIS: PraxisOut = {
   duel_id: null,
   can_flag: true,
   applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voter_count: 0,
 };
 
 const VIEWER: CurrentUser = {
@@ -177,6 +184,7 @@ function duel(status: DuelDetailOut["status"]): DuelDetailOut {
     avatar_url: "",
     points_from_votes: votes,
     is_submitted: true,
+    nudged_at: null,
   });
   return {
     id: 5,
@@ -251,15 +259,21 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
             {
               id: 501,
               title: "Composting",
-              description: null,
+              description: '',
               point_value: 6,
               level_required: 0,
               status: "active",
               task_type: "metatask",
               created_by: 9,
-              primary_faction_slug: null,
+              primary_faction_slug: 'na',
               metatask_faction_slug: "ua",
               created_at: "2026-01-01T00:00:00Z",
+              in_progress_count: 0,
+              created_by_display_name: "",
+              created_by_avatar_url: "",
+              created_by_faction_slug: null,
+              created_by_level: 0,
+              signup_reason: null,
               can_sign_up: false,
               allowed_modes: [],
               eligible_for_current_user: false,

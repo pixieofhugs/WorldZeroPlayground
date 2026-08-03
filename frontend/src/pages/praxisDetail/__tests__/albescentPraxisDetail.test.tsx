@@ -55,6 +55,8 @@ const MEMBER: PraxisMemberOut = {
   character_display_name: "Ada",
   has_submitted: true,
   joined_at: "2026-01-01T00:00:00Z",
+  nudged_at: null,
+  submitted_at: null,
 };
 
 const CO_MEMBER: PraxisMemberOut = {
@@ -64,6 +66,8 @@ const CO_MEMBER: PraxisMemberOut = {
   character_display_name: "Beth",
   has_submitted: true,
   joined_at: "2026-01-02T00:00:00Z",
+  nudged_at: null,
+  submitted_at: null,
 };
 
 const PRAXIS: PraxisOut = {
@@ -108,20 +112,29 @@ const PRAXIS: PraxisOut = {
   duel_id: null,
   can_flag: true,
   applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voter_count: 0,
 };
 
 const SEAL: TaskOut = {
   id: 501,
   title: "Composting",
-  description: null,
+  description: '',
   point_value: 60,
   level_required: 0,
   status: "active",
   task_type: "metatask",
   created_by: 9,
-  primary_faction_slug: null,
+  primary_faction_slug: 'na',
   metatask_faction_slug: "snide",
   created_at: "2026-01-01T00:00:00Z",
+  in_progress_count: 0,
+  created_by_display_name: "",
+  created_by_avatar_url: "",
+  created_by_faction_slug: null,
+  created_by_level: 0,
+  signup_reason: null,
   can_sign_up: false,
   allowed_modes: [],
   eligible_for_current_user: false,
@@ -135,6 +148,7 @@ const MINE: DuelSideOut = {
   avatar_url: "",
   points_from_votes: 18,
   is_submitted: true,
+  nudged_at: null,
 };
 
 const RIVAL: DuelSideOut = {
@@ -145,6 +159,7 @@ const RIVAL: DuelSideOut = {
   avatar_url: "",
   points_from_votes: 15.4,
   is_submitted: true,
+  nudged_at: null,
 };
 
 const DUEL: DuelDetailOut = {

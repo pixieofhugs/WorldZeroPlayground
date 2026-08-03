@@ -33,6 +33,8 @@ function member(id: number, cast: boolean): PraxisMemberOut {
     character_display_name: `M${id}`,
     has_submitted: cast,
     joined_at: "2026-01-01T00:00:00Z",
+    nudged_at: null,
+    submitted_at: null,
   };
 }
 
@@ -100,6 +102,7 @@ function duelSide(characterId: number, submitted: boolean) {
     avatar_url: "",
     points_from_votes: 0,
     is_submitted: submitted,
+    nudged_at: null,
   };
 }
 

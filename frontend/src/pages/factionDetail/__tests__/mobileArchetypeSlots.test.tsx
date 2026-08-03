@@ -30,15 +30,17 @@ const MEMBER: CharacterOut = {
   id: 7,
   username: 'ada',
   display_name: 'Ada',
-  bio: null,
-  avatar_url: null,
-  location: null,
+  bio: '',
+  avatar_url: '',
+  location: '',
   level: 4,
   score: 120,
   all_time_score: 340,
   faction_slug: 'everymen',
   status: 'active',
   created_at: '2026-01-01T00:00:00Z',
+  badges: [],
+  invitations: [],
 }
 
 const PRAXIS: PraxisCardOut = {
@@ -64,6 +66,20 @@ const PRAXIS: PraxisCardOut = {
   points_from_votes: 4,
   is_top_for_task: false,
   task_faction_slug: 'everymen',
+  applied_metatasks: [],
+  body_text: null,
+  created_by_avatar_url: '',
+  created_by_faction_slug: null,
+  duel_id: null,
+  media_items: [],
+  members: [],
+  opponent_display_name: null,
+  opponent_faction_slug: null,
+  opponent_praxis_id: null,
+  submit_proposed_at: null,
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
 }
 
 function membership(overrides: Partial<Membership> = {}): Membership {
@@ -81,7 +97,7 @@ function baseState(overrides: Partial<FactionDetailState> = {}): FactionDetailSt
   return {
     slug: 'everymen',
     loading: false,
-    faction: { slug: 'everymen' },
+    faction: { slug: 'everymen', status: 'visible' },
     fetchError: null,
     members: [MEMBER],
     tasks: [],

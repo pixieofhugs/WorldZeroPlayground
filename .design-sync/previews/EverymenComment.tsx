@@ -24,7 +24,7 @@ function evComment(over: Partial<CommentOut>): CommentOut {
       id: 12,
       username: 'sam_okafor',
       display_name: 'Sam Okafor',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'everymen',
     },
     mentions: [],

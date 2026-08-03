@@ -32,7 +32,7 @@ export function HighLevelNoDescription() {
   const task = taskFor('singularity', {
     id: 208,
     title: 'Quantify one habit you cannot yet measure',
-    description: null,
+    description: '',
     level_required: 7,
     point_value: 88,
   })

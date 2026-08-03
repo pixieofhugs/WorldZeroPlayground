@@ -617,7 +617,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
                     task.primary_faction_slug,
                     factionConfigs,
                   )}
-                  inProgressCount={task.in_progress_count ?? 0}
+                  inProgressCount={task.in_progress_count}
                   onSignup={onSignup}
                 />
               ))

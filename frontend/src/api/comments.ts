@@ -1,47 +1,28 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from './client'
+import type { components } from './generated/schema'
 import type { FlagReason } from '../utils/flagReasons'
 
 /** A resolved @mention — the frontend linkifies these handles in the body. */
-export interface CommentMention {
-  character_id: number
-  username: string
-  display_name: string
-}
-
-/** Public author identity — drives the actor-scoped theming (author's faction). */
-export interface CommentAuthor {
-  id: number
-  username: string
-  display_name: string
-  avatar_url: string | null
-  faction_slug: string | null
-}
+export type CommentMention = components['schemas']['CommentMentionOut']
 
 /**
- * ponytail (#1400): `praxis_id` / `task_id` stay REQUIRED here where the
- * generated schema marks them optional, so the three reads below narrow with a
- * cast rather than this interface widening to match.
+ * Public author identity — drives the actor-scoped theming (author's faction).
  *
- * The schema is the imprecise one. Their Pydantic fields are `int | None = None`,
- * and openapi-typescript reads "has a default" as "may be absent" — but FastAPI
- * serializes the key regardless, so it is always on the wire as `number | null`.
- * Widening to `?` would hand every reader a `| undefined` that never arrives.
- *
- * Upgrade path: the alias slice of #1400 replaces this interface with
- * `components['schemas']['CommentOut']` outright; that is where the optionality
- * gets reconciled once, for every module, instead of per-field here.
+ * `avatar_url` and `faction_slug` are `string`, never null: both columns are
+ * `nullable=False, server_default=""` / `"na"` on `Character`, and
+ * `schemas/comment.py` declares them `str`, so a null could not survive
+ * serialization. The hand-written mirror this replaced said `string | null` and
+ * was simply wrong about the wire (#1400). An absent avatar is `""`; an
+ * unaffiliated author is `"na"`.
  */
-export interface CommentOut {
-  id: number
-  praxis_id: number | null
-  task_id: number | null
-  body_text: string
-  is_edited: boolean
-  created_at: string
-  updated_at: string
-  author: CommentAuthor
-  mentions: CommentMention[]
-}
+export type CommentAuthor = components['schemas']['CommentAuthor']
+
+/**
+ * `praxis_id` and `task_id` are nullable, not optional: exactly one is set
+ * (a `num_nonnulls(...) = 1` CHECK in migration 0005), and FastAPI serializes
+ * both keys regardless. Read them in order without a tie-break.
+ */
+export type CommentOut = components['schemas']['CommentOut']
 
 export type CommentTarget = 'praxes' | 'tasks'
 
@@ -57,7 +38,7 @@ export async function listComments(
     target === 'praxes'
       ? await apiGet('/praxes/{praxis_id}/comments', { params: { path: { praxis_id: id } } })
       : await apiGet('/tasks/{task_id}/comments', { params: { path: { task_id: id } } })
-  return data as CommentOut[]
+  return data
 }
 
 export async function createComment(
@@ -75,7 +56,7 @@ export async function createComment(
           params: { path: { task_id: id } },
           body: { body_text },
         })
-  return data as CommentOut
+  return data
 }
 
 export async function editComment(
@@ -86,7 +67,7 @@ export async function editComment(
     params: { path: { comment_id: commentId } },
     body: { body_text },
   })
-  return data as CommentOut
+  return data
 }
 
 /** Author-only soft-delete → the comment is withdrawn (204, no body). */

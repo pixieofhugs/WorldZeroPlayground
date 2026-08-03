@@ -1,33 +1,24 @@
 import { apiGet, apiPost } from './client'
+import type { components } from './generated/schema'
 import type { CurrentUser } from './auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 
 // Faction name/description prose is no longer backend-emitted (issue #461): the
-// server sends only the slug, and the frozen English words live in the
+// row is slug + status only (ADR-0038), and the frozen English words live in the
 // factions.json catalog. Resolve display copy with factionName(slug) /
 // factionDescription(slug) from utils/factions.
-export interface FactionOut {
-  slug: string
-}
+export type FactionOut = components['schemas']['FactionOut']
 
-export interface FactionStatusOut {
-  slug: string
-  status: string // member, invited, not_invited, defected, can_return
-}
+export type FactionStatusOut = components['schemas']['FactionStatusOut']
 
-export interface InvitationLetterOut {
-  faction_slug: string
-  delivered_at: string
-}
+export type InvitationLetterOut = components['schemas']['InvitationLetterOut']
 
-export interface FactionPageOut {
-  current_faction_slug: string
-  all_factions: FactionStatusOut[]
-  // #1384: the letters arrive with the status map. `GET /factions/invitations`
-  // ran the same query the status map was already built from, and every caller
-  // requested the pair, so there is no longer a second endpoint to call.
-  invitations: InvitationLetterOut[]
-}
+/**
+ * `invitations` arrives WITH the status map (#1384). `GET /factions/invitations`
+ * ran the same query the status map was already built from, and every caller
+ * requested the pair, so there is no longer a second endpoint to call.
+ */
+export type FactionPageOut = components['schemas']['FactionPageOut']
 
 export async function getFactions(): Promise<FactionOut[]> {
   const { data } = await apiGet('/factions')
@@ -55,12 +46,5 @@ export async function chooseFaction(factionSlug: string): Promise<CurrentUser> {
   // (ADR-0072), so the reveal has to be answered as the mutation it is — a timer
   // short enough to catch it would defeat the class.
   dropAllCaches()
-  // ponytail (#1400): the generated `CurrentUser` marks `character` optional
-  // (its Pydantic field is `CharacterOut | None = None`, and openapi-typescript
-  // reads a `None` default as "may be absent"), while `./auth.ts` declares it a
-  // required `CharacterOut | null` — which is what actually arrives, since
-  // FastAPI serializes the key either way. Narrowed here rather than widened
-  // there: `auth.ts` belongs to another slice of this migration, and `character`
-  // is read unguarded across the app. Goes away with the alias slice.
-  return data as CurrentUser
+  return data
 }

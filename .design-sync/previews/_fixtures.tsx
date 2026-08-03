@@ -57,6 +57,12 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     primary_faction_slug: 'ua',
     metatask_faction_slug: null,
     created_at: NOW,
+    in_progress_count: 0,
+    created_by_display_name: '',
+    created_by_avatar_url: '',
+    created_by_faction_slug: null,
+    created_by_level: 0,
+    signup_reason: null,
     can_sign_up: true,
     allowed_modes: ['solo', 'collab'],
     eligible_for_current_user: true,
@@ -100,7 +106,7 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
     username: 'ada_reed',
     display_name: 'Ada Reed',
     bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
-    avatar_url: null,
+    avatar_url: '',
     location: 'Portland, OR',
     level: 4,
     score: 320,
@@ -173,6 +179,8 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_display_name: 'Ada Reed',
     has_submitted: true,
     joined_at: EARLIER,
+    submitted_at: NOW,
+    nudged_at: null,
   },
   {
     id: 2,
@@ -181,6 +189,8 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_display_name: 'Sam Okafor',
     has_submitted: false,
     joined_at: EARLIER,
+    submitted_at: null,
+    nudged_at: null,
   },
 ]
 
@@ -253,6 +263,9 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     duel_id: null,
     can_flag: true,
     applied_metatasks: [],
+    voter_count: 3,
+    viewer_can_vote: true,
+    viewer_vote: null,
     ...overrides,
   }
 }
@@ -274,7 +287,7 @@ export const mockComments: CommentOut[] = [
       id: 12,
       username: 'sam_okafor',
       display_name: 'Sam Okafor',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'everymen',
     },
     mentions: [],
@@ -291,7 +304,7 @@ export const mockComments: CommentOut[] = [
       id: 19,
       username: 'pip_marigold',
       display_name: 'Pip Marigold',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'wow',
     },
     mentions: [{ character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
@@ -328,6 +341,20 @@ export const mockCollaboration: PraxisCardOut = {
   voter_count: 9,
   is_top_for_task: false,
   task_faction_slug: 'everymen',
+  body_text: null,
+  created_by_avatar_url: '',
+  created_by_faction_slug: 'everymen',
+  submit_proposed_at: null,
+  members: SAMPLE_MEMBERS,
+  media_items: SAMPLE_MEDIA,
+  applied_metatasks: [],
+  viewer_can_vote: true,
+  viewer_vote: null,
+  voted_by_name: null,
+  duel_id: null,
+  opponent_praxis_id: null,
+  opponent_display_name: null,
+  opponent_faction_slug: null,
 }
 
 // ---------------------------------------------------------------------------
@@ -441,8 +468,12 @@ export const noop = (): void => {}
 import type { FactionOut } from '../../frontend/src/api/factions'
 import type { FactionConfigOut } from '../../frontend/src/api/gameConfig'
 
-/** FactionOut is just a slug carrier; one per live faction. */
-export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({ slug }))
+/** One `FactionOut` per live faction. `GET /factions` answers only visible
+ *  rows, so that is what these carry. */
+export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({
+  slug,
+  status: 'visible',
+}))
 
 /** A neutral 1× config; overrides tune the multipliers. */
 export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
@@ -494,6 +525,20 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     voter_count: 8,
     is_top_for_task: true,
     task_faction_slug: slug,
+    body_text: PRAXIS_BODY_BY_SLUG[slug ?? 'ua'] ?? PRAXIS_BODY_BY_SLUG.ua,
+    created_by_avatar_url: '',
+    created_by_faction_slug: slug,
+    submit_proposed_at: null,
+    members: [],
+    media_items: SAMPLE_MEDIA,
+    applied_metatasks: [],
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voted_by_name: null,
+    duel_id: null,
+    opponent_praxis_id: null,
+    opponent_display_name: null,
+    opponent_faction_slug: null,
     ...overrides,
   }
 }
@@ -558,6 +603,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       avatar_url: '',
       points_from_votes: 42,
       is_submitted: true,
+      nudged_at: null,
     },
     opponent: {
       praxis_id: null,
@@ -567,6 +613,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       avatar_url: '',
       points_from_votes: 28,
       is_submitted: false,
+      nudged_at: null,
     },
     winner_character_id: null,
     challenger_final_points: null,

@@ -48,13 +48,15 @@ export function authorToCharacter(
     display_name: author.display_name,
     avatar_url: author.avatar_url,
     faction_slug: author.faction_slug,
-    bio: null,
-    location: null,
+    bio: '',
+    location: '',
     level: 0,
     score: 0,
     all_time_score: 0,
     status: 'active',
     created_at: '',
+    badges: [],
+    invitations: [],
   }
 }
 

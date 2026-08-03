@@ -32,7 +32,7 @@ export function HighLevelNoDescription() {
   const task = taskFor('everymen', {
     id: 209,
     title: 'Cook a week of meals for a family on the block',
-    description: null,
+    description: '',
     level_required: 5,
     point_value: 70,
   })

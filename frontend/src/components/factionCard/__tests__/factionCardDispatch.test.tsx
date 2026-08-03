@@ -26,8 +26,12 @@ import i18n from "../../../i18n";
 import { factionName } from "../../../utils/factions";
 import type { FactionOut } from "../../../api/factions";
 
+// `GET /factions` sends the slug and the row's own visibility, and nothing
+// else: #461 moved name/description into the factions.json catalog, and this
+// fixture went on asserting them behind an `as FactionOut` that hid the fact
+// (#1400). `factionName(slug)` is where the words come from now.
 function faction(slug: string): FactionOut {
-  return { slug, name: slug, description: "A cell of quiet arsonists." } as FactionOut;
+  return { slug, status: "visible" };
 }
 
 function markup(element: React.ReactElement): { html: string; text: string } {

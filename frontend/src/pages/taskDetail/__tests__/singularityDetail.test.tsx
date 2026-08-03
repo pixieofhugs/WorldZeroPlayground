@@ -45,6 +45,8 @@ const TASK: TaskOut = {
   primary_faction_slug: "singularity",
   metatask_faction_slug: null,
   created_at: "2026-01-01T00:00:00Z",
+  created_by_avatar_url: "",
+  signup_reason: null,
   in_progress_count: 17,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "singularity",

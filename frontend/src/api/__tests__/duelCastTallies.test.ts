@@ -58,6 +58,7 @@ function side(praxisId: number | null, characterId: number): DuelSideOut {
     avatar_url: '',
     points_from_votes: 4,
     is_submitted: true,
+    nudged_at: null,
   }
 }
 

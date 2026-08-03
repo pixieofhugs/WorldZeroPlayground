@@ -18,6 +18,8 @@ function member(characterId: number): PraxisMemberOut {
     character_display_name: `Character ${characterId}`,
     has_submitted: false,
     joined_at: "2026-01-01T00:00:00Z",
+    nudged_at: null,
+    submitted_at: null,
   };
 }
 
@@ -54,6 +56,9 @@ function praxis(members: PraxisMemberOut[]): PraxisOut {
     duel_id: null,
     can_flag: true,
     applied_metatasks: [],
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voter_count: 0,
   };
 }
 

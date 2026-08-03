@@ -2,7 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../../../utils/media'
-import { factionName } from '../../../utils/factions'
+import { UNAFFILIATED_FACTION_SLUG, factionName } from '../../../utils/factions'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import type { EditCharacterState } from '../useEditCharacter'
@@ -51,7 +51,16 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
 
   const initial = (displayName.trim()[0] || character.username[0] || '?').toUpperCase()
   const factionSlug = character.faction_slug
-  const factionHref = factionSlug ? `/factions/${factionSlug}` : '/factions'
+  // `na` goes to the directory, not to `/factions/na`. The column is
+  // `nullable=False` and every life starts unaffiliated, so the old `slug ? … :`
+  // test never fired — but `na` is seeded HIDDEN (`backend/seed.py`), `GET
+  // /factions` returns visible rows only, and `FactionDetail` derives from that
+  // list. So `/factions/na` renders "Faction not found" for the one population
+  // this branch exists to serve.
+  const factionHref =
+    factionSlug && factionSlug !== UNAFFILIATED_FACTION_SLUG
+      ? `/factions/${factionSlug}`
+      : '/factions'
   // A freshly cropped portrait (object URL) shows immediately, before Save (#985);
   // otherwise fall back to the persisted avatar.
   const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)

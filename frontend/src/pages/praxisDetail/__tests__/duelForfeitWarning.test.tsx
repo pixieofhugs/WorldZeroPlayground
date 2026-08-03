@@ -63,6 +63,8 @@ const MEMBER: PraxisMemberOut = {
   character_display_name: 'Ada',
   has_submitted: true,
   joined_at: '2026-01-01T00:00:00Z',
+  nudged_at: null,
+  submitted_at: null,
 }
 
 function praxis(): PraxisOut {
@@ -98,6 +100,9 @@ function praxis(): PraxisOut {
     duel_id: 5,
     can_flag: true,
     applied_metatasks: [],
+    viewer_can_vote: true,
+    viewer_vote: null,
+    voter_count: 0,
   }
 }
 
@@ -109,6 +114,7 @@ const ME: DuelSideOut = {
   avatar_url: '',
   points_from_votes: 4,
   is_submitted: true,
+  nudged_at: null,
 }
 const FOE: DuelSideOut = {
   praxis_id: 2,
@@ -118,6 +124,7 @@ const FOE: DuelSideOut = {
   avatar_url: '',
   points_from_votes: 9,
   is_submitted: true,
+  nudged_at: null,
 }
 
 function duel(status: DuelStatus, foeSubmitted: boolean): DuelDetailOut {
@@ -139,15 +146,17 @@ function character(): CharacterOut {
     id: 1,
     username: 'ada',
     display_name: 'Ada',
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 5,
     score: 0,
     all_time_score: 0,
     faction_slug: 'snide',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
   }
 }
 

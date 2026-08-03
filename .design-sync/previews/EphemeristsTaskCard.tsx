@@ -32,7 +32,7 @@ export function HighLevelNoDescription() {
   const task = taskFor('ephemerists', {
     id: 207,
     title: 'Transcribe the marginalia in the closed-stacks folio',
-    description: null,
+    description: '',
     level_required: 6,
     point_value: 80,
   })

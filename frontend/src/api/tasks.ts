@@ -1,74 +1,42 @@
 import { apiGet, apiPost } from './client'
-import type { PraxisType } from './praxis'
+import type { components } from './generated/schema'
 
-export type TaskType = 'standard' | 'metatask'
+export type TaskType = components['schemas']['TaskType']
 
-export interface TaskOut {
-  id: number
-  title: string
-  description: string | null
-  point_value: number
-  level_required: number
-  status: string
-  task_type: TaskType
-  created_by: number
-  primary_faction_slug: string | null
-  /**
-   * OPTIONAL as of #1400, because the generated schema says so: the backend
-   * declares it `str | None = None`, which makes the key non-required in the
-   * OpenAPI document even though a live response always serialises it. It sits
-   * beside `created_by_faction_slug`, which this interface already spelled the
-   * same way, so the file is now consistent with itself as well as the wire.
-   */
-  metatask_faction_slug?: string | null
-  created_at: string
-  // Derived, read-time count of characters actively working on this task —
-  // active-signup population (in_progress + pending), consistent with
-  // GET /tasks/{id}/signups (#1021). Always present on a live backend
-  // response; optional here (rather than a mechanical update of every
-  // existing TaskOut test fixture, which is out of this backend-scoped
-  // change's remit) so pre-#1021 mocks stay valid. Consumers should treat
-  // an absent value as 0.
-  in_progress_count?: number
-  // The proposing character, for the task-detail author row (#1029).
-  // `created_by` above stays the bare id (what a profile link needs); these
-  // four are the denormalised byline. Always present on a live backend
-  // response; optional here for the same reason `in_progress_count` is, so
-  // pre-#1029 mocks stay valid. Treat an absent name/avatar as '' and an
-  // absent level as 0.
-  created_by_display_name?: string
-  created_by_avatar_url?: string
-  // The author's MEMBER faction, not the task's `primary_faction_slug`.
-  created_by_faction_slug?: string | null
-  // The author's level in the current era.
-  created_by_level?: number
-  // Server-driven viewer-specific flags. Backend computes these for the
-  // authenticated viewer. Default to permissive values when absent (older
-  // clients / unauthenticated reads).
-  can_sign_up: boolean
-  allowed_modes: string[]
-  eligible_for_current_user: boolean
-  // Why sign-up is open or shut for this viewer — the flag above says whether,
-  // this says which, so the CTA can read "Begin again" without the client
-  // re-deriving a server rule (#1497). A live backend response ALWAYS carries the
-  // key (null when there is nothing to explain, e.g. an anonymous read); optional
-  // here for the same reason `in_progress_count` is — so existing TaskOut fixtures
-  // stay valid rather than taking a mechanical edit. `signupCtaKey` maps absent,
-  // null and unrecognised alike to the plain CTA, so the widening is inert.
-  signup_reason?: string | null
-}
+/** The three states an admin can move a task between. */
+export type TaskStatus = components['schemas']['TaskStatus']
 
-export interface TaskCreate {
-  title: string
-  description?: string
-  point_value: number
-  level_required: number
-  primary_faction_slug?: string
-  // Metatask branch — optional; when task_type='metatask' the backend
-  // expects metatask_faction_slug too.
-  task_type?: TaskType
-  metatask_faction_slug?: string
-}
+/**
+ * A task, as every read surface sees it.
+ *
+ * Field notes the generated type has nowhere to put:
+ *
+ * - `description` and `primary_faction_slug` are `string`, never null: both
+ *   columns are `nullable=False` on `Task` (`server_default=""` and `"na"`),
+ *   and `schemas/task.py` declares both `str`. A cross-faction task is
+ *   `'na'`, an undescribed one is `''`.
+ * - `in_progress_count` is the derived, read-time count of characters actively
+ *   working this task — the active-signup population (in_progress + pending),
+ *   the same set `GET /tasks/{id}/signups` exposes (#1021). `0` on a metatask
+ *   row, which is never a signup target.
+ * - `created_by_display_name` / `_avatar_url` / `_faction_slug` / `_level` are
+ *   the denormalised byline (#1029); `created_by` above stays the bare id,
+ *   which is what a profile link needs. `created_by_faction_slug` is the
+ *   author's MEMBER faction, not the task's `primary_faction_slug` — a Coven
+ *   member may propose an `na` task. `created_by_level` is the author's level
+ *   in the CURRENT era (ADR-0042). All four default (`''`/`''`/null/`0`) on a
+ *   metatask row in a praxis seal stack, which draws no byline.
+ * - `can_sign_up`, `allowed_modes` and `eligible_for_current_user` are
+ *   viewer-relative, computed server-side for the authenticated caller.
+ * - `signup_reason` says WHY sign-up is open or shut for this viewer, where
+ *   the flag above says whether — so the CTA can read "Begin again" without
+ *   the client re-deriving a server rule (#1497). Null when there is nothing
+ *   to explain, e.g. an anonymous read; `signupCtaKey` maps null and
+ *   unrecognised alike to the plain CTA.
+ */
+export type TaskOut = components['schemas']['TaskOut']
+
+export type TaskCreate = components['schemas']['TaskCreate']
 
 /**
  * The orderings `GET /tasks` accepts (#1364). An ABSENT sort still means
@@ -130,25 +98,11 @@ export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
 /**
  * One row of GET /tasks/{id}/signups.
  *
- * This mirrors the backend `TaskSignupOut`, which is now the route's real
- * `response_model` — it was `list[dict]`, so this type described a schema the
- * route did not actually return (#1051). The two fields that were wrong:
- * `status` was never emitted (the route sends the praxis's *type*), and
- * `signed_up_at` is really `joined_at`.
+ * `level` is the character's level in the CURRENT era (ADR-0042), for the
+ * roster row's "lvl N" (#1029); `praxis_type` is which kind of praxis they are
+ * working the task through; `joined_at` is `PraxisMember.joined_at`.
  */
-export interface TaskSignupOut {
-  character_id: number
-  display_name: string
-  avatar_url: string
-  faction_slug: string
-  // Current-era level, for the roster row's "lvl N" (#1029). Always present on
-  // a live backend response; optional here so pre-#1029 mocks stay valid.
-  level?: number
-  /** Which kind of praxis the character is working the task through. */
-  praxis_type: PraxisType
-  /** When the character joined the praxis (`PraxisMember.joined_at`). */
-  joined_at: string
-}
+export type TaskSignupOut = components['schemas']['TaskSignupOut']
 
 /**
  * No callers as of #1262, deliberately.

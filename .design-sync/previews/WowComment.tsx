@@ -24,7 +24,7 @@ function wowComment(over: Partial<CommentOut>): CommentOut {
       id: 19,
       username: 'pip_marigold',
       display_name: 'Pip Marigold',
-      avatar_url: null,
+      avatar_url: '',
       faction_slug: 'wow',
     },
     mentions: [],

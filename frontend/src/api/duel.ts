@@ -1,58 +1,33 @@
 import { apiGet, apiPost } from './client'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import { clearCastTallies } from '../components/vote/castTallies'
+import type { components } from './generated/schema'
 
 // ---------------------------------------------------------------------------
-// Types — match backend schemas/duel.py exactly (ADR-0011)
+// Types — aliases of the generated schema, so they match backend
+// schemas/duel.py by construction rather than by review (ADR-0011, #1400).
 // ---------------------------------------------------------------------------
 
-export type DuelStatus = 'pending' | 'active' | 'settled' | 'declined' | 'resolved'
+export type DuelStatus = components['schemas']['DuelStatus']
 
-export interface DuelOut {
-  id: number
-  task_id: number
-  challenger_praxis_id: number
-  opponent_character_id: number
-  opponent_praxis_id: number | null
-  status: DuelStatus
-  created_at: string
-}
+export type DuelOut = components['schemas']['DuelOut']
 
-export interface DuelChallengeIn {
-  challenger_praxis_id: number
-  opponent_character_id: number
-}
+export type DuelChallengeIn = components['schemas']['DuelChallengeIn']
 
-export interface DuelRespondIn {
-  accept: boolean
-}
+export type DuelRespondIn = components['schemas']['DuelRespondIn']
 
-export interface DuelSideOut {
-  praxis_id: number | null
-  character_id: number
-  display_name: string
-  faction_slug: string
-  avatar_url: string
-  points_from_votes: number
-  is_submitted: boolean
-  /** The duel twin of `PraxisMemberOut.nudged_at` (#1083); same server-owned window. */
-  nudged_at?: string | null
-}
+/** `nudged_at` is the duel twin of `PraxisMemberOut.nudged_at` (#1083); same
+ *  server-owned window. */
+export type DuelSideOut = components['schemas']['DuelSideOut']
 
-export interface DuelDetailOut {
-  id: number
-  task_id: number
-  status: DuelStatus
-  forfeited_by_character_id: number | null
-  challenger: DuelSideOut
-  opponent: DuelSideOut
-  // Frozen outcome, populated once the duel is `resolved` at era close
-  // (ADR-0052); null on live duels. A resolved rail renders these instead of the
-  // live vote tally. null winner on a resolved duel = tie, or no-contest.
-  winner_character_id: number | null
-  challenger_final_points: number | null
-  opponent_final_points: number | null
-}
+/**
+ * `winner_character_id`, `challenger_final_points` and `opponent_final_points`
+ * are the FROZEN outcome, populated once the duel is `resolved` at era close
+ * (ADR-0052) and null on live duels. A resolved rail renders these instead of
+ * the live vote tally; a null winner on a resolved duel means a tie, or a
+ * no-contest.
+ */
+export type DuelDetailOut = components['schemas']['DuelDetailOut']
 
 // ---------------------------------------------------------------------------
 // API functions

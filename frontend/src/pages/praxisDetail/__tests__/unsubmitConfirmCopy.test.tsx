@@ -53,6 +53,8 @@ function member(characterId: number, name: string, hasSubmitted: boolean): Praxi
     character_display_name: name,
     has_submitted: hasSubmitted,
     joined_at: '2026-01-01T00:00:00Z',
+    nudged_at: null,
+    submitted_at: null,
   }
 }
 
@@ -101,6 +103,7 @@ const ME: DuelSideOut = {
   avatar_url: '',
   points_from_votes: 0,
   is_submitted: true,
+  nudged_at: null,
 }
 const FOE: DuelSideOut = {
   praxis_id: 2,
@@ -110,6 +113,7 @@ const FOE: DuelSideOut = {
   avatar_url: '',
   points_from_votes: 0,
   is_submitted: false,
+  nudged_at: null,
 }
 
 function duel(status: DuelStatus): DuelDetailOut {
@@ -131,15 +135,17 @@ function user(): CurrentUser {
     id: 1,
     username: 'ada',
     display_name: 'Ada',
-    bio: null,
-    avatar_url: null,
-    location: null,
+    bio: '',
+    avatar_url: '',
+    location: '',
     level: 5,
     score: 0,
     all_time_score: 0,
     faction_slug: 'wow',
     status: 'active',
     created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
   }
   return {
     account_id: 1,

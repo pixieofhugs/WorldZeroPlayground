@@ -1,27 +1,23 @@
 import { apiGet } from './client'
+import type { components } from './generated/schema'
 import { noteEraStamp } from '../utils/cacheEpoch'
 
 // Faction name/description prose moved to the factions.json catalog (issue
 // #461); /game-config emits only the slug + numeric rules. Resolve display copy
 // with factionName(slug) / factionDescription(slug) from utils/factions.
-export interface FactionConfigOut {
-  slug: string
-  own_task_modifier: number
-  other_task_modifier: number
-  collab_own_modifier: number
-  collab_other_modifier: number
-  duel_win_modifier: number
-  duel_loss_modifier: number
-}
+export type FactionConfigOut = components['schemas']['FactionConfigOut']
 
 /**
- * ponytail (#1400): narrower than the schema, deliberately. The backend types
- * `LevelUnlockOut.kind` as a bare `str` (`schemas/game_config.py`), so the
- * generated type is `string` and `getGameConfig` narrows with a cast.
+ * ponytail: narrower than the schema, deliberately, which is why the three
+ * types below it stay hand-written where the rest of `api/` became aliases in
+ * #1400. The backend types `LevelUnlockOut.kind` as a bare `str`
+ * (`schemas/game_config.py`), so the generated type is `string` and
+ * `getGameConfig` narrows with a cast.
  *
  * Widening this to `string` would delete a real guarantee the UI branches on to
  * satisfy a backend annotation gap. Upgrade path is on the backend — make `kind`
- * a `StrEnum` so the schema carries the union — after which the cast goes.
+ * a `StrEnum` so the schema carries the union — after which the cast goes and
+ * `LevelUnlock` / `LevelProfile` / `GameConfigOut` can alias with it.
  */
 export type LevelUnlockKind = 'ability' | 'sense'
 
