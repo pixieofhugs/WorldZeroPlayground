@@ -234,7 +234,7 @@ export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Om
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <span style={{ width: 46, height: 46, borderRadius: "50%", border: `1.5px solid ${eph.BRASS}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <EphemeristsSigil size={26} color={eph.GOLD} stroke={1.4} />
+            <EphemeristsSigil size={26} color={eph.GOLD} />
           </span>
           <div>
             <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.24em", color: eph.GOLD }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>

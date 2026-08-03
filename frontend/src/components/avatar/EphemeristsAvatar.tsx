@@ -5,7 +5,9 @@ import { BAND, BRASS, CAPS, DISC, GOLD, INK, PLATE } from "../factionMarks/ephem
 /**
  * The Ephemerists avatar — the plate's medallion field ruled in brass, with the
  * night band's disc as the membership badge carrying the faction sigil (the
- * watching wanderer).
+ * kite). The badge glyph is 7-11px, so the sigil serves it with its
+ * reduced-detail cut (#1635); it no longer passes a stroke, because the mark
+ * floors its own rule at a device pixel from `size`.
  *
  * The one Ephemerists mark that renders inside components this faction does not
  * own — the praxis card's byline, rosters, the feed, the constellation — which
@@ -29,7 +31,7 @@ export default function EphemeristsAvatar({ character, size }: FactionAvatarProp
       initialFontSize={[11, 14]}
       badgeBg={BAND}
       badgeRing={PLATE}
-      glyph={(s, _color) => <EphemeristsSigil size={s} color={GOLD} stroke={1.4} />}
+      glyph={(s, _color) => <EphemeristsSigil size={s} color={GOLD} />}
     />
   );
 }
