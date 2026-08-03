@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next'
 
 import admin from './locales/en/admin.json'
 import common from './locales/en/common.json'
+import errors from './locales/en/errors.json'
 import factions from './locales/en/factions.json'
 import feed from './locales/en/feed.json'
 import forms from './locales/en/forms.json'
@@ -19,6 +20,7 @@ export const resources = {
   en: {
     admin,
     common,
+    errors,
     factions,
     feed,
     forms,
