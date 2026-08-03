@@ -81,11 +81,14 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * over it, where 18px/700 owes 4.5:1 (700 weight reaches the large-text 3:1
  * exemption only at 18.66px).
  *
- * BOTH HALVES OF THAT READING ARE HISTORY SINCE #1627; the conclusion is not.
- * The plate is night in both cascades and {@link WASH} is `none` in both, so the
- * raw hue reads 5.56:1 flat with no composite left to take it down — the miss
- * went away rather than being fixed. The repoint stays, because it was never
- * only a ratio: {@link NILE} is exactly the ink this faction declares for
+ * THE COMPOSITE HALF OF THAT READING IS HISTORY SINCE #1627; the miss is not.
+ * {@link WASH} is `none` in both cascades now, so there is nothing left to
+ * composite — but the faction hue is one of the few tokens that still flips
+ * (`#1d6e72` light, `#3aa0a4` dark), and on the night plate the light value
+ * reads **2.91:1**. The light miss got WORSE, not better; only the dark side
+ * clears, at 5.56. So the repoint is load-bearing, not a preference — and it
+ * was never only a ratio either: {@link NILE} is exactly the ink this faction
+ * declares for
  * "links", and the actor's name IS a link to that player. It measures 7.00:1 on
  * the plate. `-plate-quiet` clears too (5.98) and is still rejected for the
  * reason it always was — it is the MUTED role's ink, and painting the row's one

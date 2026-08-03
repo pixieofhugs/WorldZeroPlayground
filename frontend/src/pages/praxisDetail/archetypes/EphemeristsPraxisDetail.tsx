@@ -478,12 +478,17 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // the amber fails in the direction no walk-down reaches: it is a light-cascade
   // value landing on a dark sheet. `SingularityPraxisDetail` already deviates
   // here for exactly this reason — but it deviates ONTO `--color-warning`, which
-  // measures 3.88:1 on its own wall, so what the precedent settles is that the
-  // banner MAY be dressed, not what to dress it in. This takes the faction's own
-  // attention ink, which is what `-card-notice` is for and reads 11.07:1 on this
-  // ground in both themes. The border comes with it so the mark's ink and rule
-  // are one colour (#1449), and in DARK that is byte-identical to what shipped:
-  // `--color-warning` is #fbbf24 there, which is this token's value.
+  // measures only 3.78:1 on its own wall, so what the precedent settles is that
+  // the banner MAY be dressed, not what to dress it in. This takes the faction's
+  // own attention ink, which is what `-card-notice` is for and reads 11.07:1 on
+  // this ground in both themes. The border comes with it so the mark's ink and
+  // rule are one colour (#1449).
+  //
+  // The LABEL and BORDER are byte-identical in dark — `--color-warning` is
+  // #fbbf24 there, which is this token's value. The BODY span is not: it was
+  // `--color-text-secondary` (#988c78, 5.60:1) and is now the same amber as its
+  // label, which is how Singularity dresses both halves and is the point of
+  // dressing the banner at all.
   const NOTICE = "var(--faction-ephemerists-card-notice)";
   const banners = (
     <>

@@ -12,7 +12,7 @@
  *
  * The kit therefore names TWO quiet inks. `muted` is `-plate-quiet`, for the
  * body's plates and page; `headerMuted` is `-plate-band-quiet`, which is the
- * ink the band owns. They were one field until #1636, and the six quiet lines
+ * ink the band owns. They were one field until #1636, and the five quiet lines
  * inside `<header>` — eyebrow, handle, and the progression panel's four —
  * inherited the body's ink onto the band, where it read 2.07:1 in light.
  */

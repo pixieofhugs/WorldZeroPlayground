@@ -599,7 +599,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // THE PROFILE HEADER ADDS NO ROW, and that is the finding rather than an
   // omission. `EphemeristsProfileBody` handed `profileSkin` a kit whose `muted`
   // was `-plate-quiet` — the ink measured for the plate, the page and the panel
-  // cells — while its `headerStyle` grounds on the cornice BAND, so six quiet
+  // cells — while its `headerStyle` grounds on the cornice BAND, so five quiet
   // lines inside `<header>` sat on a sheet their ink was never chosen for and
   // read 2.07:1 in light, with every row in this file green.
   //
@@ -628,7 +628,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Undressed it read 3.01:1 (body, the app neutral) and 3.68:1 (label,
   // `--color-warning`) once `-plate-page` went dark: both halves failing, and
   // the amber failing as a light-cascade value on a night sheet. Singularity
-  // already deviates onto `--color-warning` at 3.88:1 on its own wall, so the
+  // already deviates onto `--color-warning` at 3.78:1 on its own wall, so the
   // precedent settles that the banner may be dressed and not what to dress it
   // in. This is the faction's own attention ink, which is what `-card-notice`
   // is for; the border takes it too, so the mark's ink and rule agree (#1449).

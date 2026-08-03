@@ -1516,16 +1516,20 @@
      WHAT THE PEERS SHARE WITH THIS IS POLARITY, NOT ONE PALETTE, and the
      difference matters because it makes this a first rather than a pattern.
      S.N.I.D.E. and Singularity are the other two skins that are dark in BOTH
-     cascades (§6) — but both are still TUNED per theme: Singularity restates all
-     seventeen `-term-*` tokens under `[data-theme="dark"]` with different values
-     (`-bg` #07130c against #050f08, `-ink` #22c55e against #4ade80), and
-     S.N.I.D.E.'s `-wall-*` family flips outright. Ephemerists is the FIRST skin
-     register in the repo with no night tuning at all: everything below has ONE
-     value and `[data-theme="dark"]` declares no plate token. That is a claim
-     about this palette — it was drawn for the dark and reads on both app
-     grounds — and not a house pattern to copy without measuring. What still
-     flips for this faction is the spine hue's fill, wash and border, which are
-     not the skin.
+     cascades (§6) — but both are still TUNED per theme: Singularity restates
+     seventeen of its nineteen `-term-*` tokens under `[data-theme="dark"]` with
+     different values (`-bg` #07130c against #050f08, `-ink` #22c55e against
+     #4ade80; only `-cta-bg` and `-cta-ink` hold), and S.N.I.D.E.'s `-wall-*`
+     family flips outright. Ephemerists is the FIRST skin REGISTER in the repo
+     that declares nothing under dark: everything below has ONE value and
+     `[data-theme="dark"]` carries no plate token. Mind the noun — several
+     ORNAMENT palettes already declare nothing under dark (`-coven-moon-*`,
+     `-wow-crest-*`, `-snide-amp-*`, `-singularity-vote-*`), but an ornament is
+     a few marks on a ground somebody else measured, and a register IS the
+     ground. That is a claim about this palette — it was drawn for the dark and
+     reads on both app grounds — and not a house pattern to copy without
+     measuring. What still flips for this faction is the spine hue's fill, wash
+     and border, which are not the skin.
 
      `-brass` STAYS A FRAME AND RULE COLOUR, never an ink, on both sides of the
      old cascade: it clears AA on the night plate (7.22:1) where it missed on the

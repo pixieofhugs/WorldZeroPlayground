@@ -503,7 +503,13 @@ export function ProfileSkin({
                           fontSize: 'var(--text-xs)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
-                          color: headerMuted,
+                          // `kit.muted`, not `headerMuted`: this label sits
+                          // inside the disc above, which grounds on
+                          // `kit.surface` — it is in the header, not ON the
+                          // header's band. The band ink is the wrong ink here
+                          // for the same reason the band ink was right for the
+                          // other five.
+                          color: kit.muted,
                         }}
                       >
                         {kit.ringLabel}
