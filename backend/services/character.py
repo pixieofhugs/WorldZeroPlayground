@@ -402,6 +402,7 @@ async def create_character(
                     f"Must reach level {era.second_character_level_required} "
                     "before creating additional characters."
                 ),
+                {"level": era.second_character_level_required},
             )
 
     # ADR-0019: born unaffiliated by default. A non-None faction must be one the
