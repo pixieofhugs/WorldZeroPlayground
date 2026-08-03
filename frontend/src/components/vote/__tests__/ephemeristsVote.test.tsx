@@ -135,6 +135,32 @@ describe('EphemeristsVote markup', () => {
     expect(html).toContain('width:50px;height:50px')
   })
 
+  /**
+   * #1633 — the bursts and sheens were colliding at the default gap.
+   *
+   * The seam is the plate's own declaration, because the collision itself is
+   * unobservable here: this harness has no DOM and no layout. What IS decidable
+   * from the component's constants is the CLEARANCE each disc's ornament needs,
+   * and the plate has to be at least that wide between rims.
+   *
+   * What costs a neighbour room is each burst's HORIZONTAL projection, not its
+   * longest ray — a ray pointing straight up reaches nothing sideways. An
+   * ordinary disc's 10 rays sit at 36° steps, so the one nearest horizontal is
+   * index 2 at 72°: `33.5·sin72° − 22 = 9.86`. Rank 5 carries 16, putting index
+   * 4 at exactly 90°: `39.5 − 25 = 14.5`. Side by side they need
+   * `9.86 + 14.5 = 24.36`px between rims and they had `--space-md` (12). The
+   * same figure has to hold at the plate's own edges, or the outermost bursts
+   * collide with the border instead of with each other.
+   */
+  it('holds the metals far enough apart for their bursts to clear (#1633)', () => {
+    mocks.user = currentUser()
+    const plate = render(5).match(/<div style="position:relative;display:flex[^"]*"/)?.[0] ?? ''
+    expect(plate).toContain('gap:var(--space-xl)')
+    // The side padding matches the gap: the end discs get the same room as the
+    // ones in the middle.
+    expect(plate).toContain('padding:var(--space-md) var(--space-xl)')
+  })
+
   it('lights only the reached discs, and leaves the rest idle', () => {
     mocks.user = currentUser()
     const html = render(3)
