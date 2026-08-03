@@ -105,7 +105,8 @@ export function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterO
     id: 7,
     username: 'ada_reed',
     display_name: 'Ada Reed',
-      // Deliberately a slogan, not the bio's first sentence — the two fields are
+    bio: 'Cartographer of small kindnesses. Plants trees she will not sit beneath.',
+    // Deliberately a slogan, not the bio's first sentence — the two fields are
     // separate jobs (#1628), and a fixture that blurred them would let a design
     // be built against a distinction the product does not make.
     tagline: 'Slow spells, strong tea.',
