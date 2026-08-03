@@ -7,6 +7,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -530,8 +531,11 @@ async def test_second_character_blocked_below_level4(
         headers=auth_headers,
     )
     assert resp.status_code == 403
-    # The error message must explicitly name the level-4 requirement
-    assert "4" in resp.json()["detail"]
+    # A code the client can branch on, plus prose that still names the level-4
+    # requirement — #1401 added the code without rewriting the copy.
+    detail = resp.json()["detail"]
+    assert detail["code"] == ErrorCode.second_character_level_too_low.value
+    assert "4" in detail["message"]
 
 
 @pytest.mark.asyncio

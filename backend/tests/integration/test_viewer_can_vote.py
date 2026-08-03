@@ -17,6 +17,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -240,7 +241,9 @@ async def test_out_of_budget_viewer_still_shows_module(
         f"/praxes/{praxis_id}/vote", json={"value": 3}, headers=auth_headers2
     )
     assert vote.status_code == 403
-    assert "budget" in vote.json()["detail"].lower()
+    detail = vote.json()["detail"]
+    assert detail["code"] == ErrorCode.vote_budget_exhausted.value
+    assert "budget" in detail["message"].lower()
 
 
 # ---------------------------------------------------------------------------

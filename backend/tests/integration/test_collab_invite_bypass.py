@@ -23,6 +23,7 @@ from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -180,7 +181,9 @@ async def test_wrong_faction_low_level_character_can_be_invited_and_submit(
         headers=invitee_headers,
     )
     assert signup_resp.status_code == 403, signup_resp.text
-    assert str(TASK_LEVEL_REQUIRED) in signup_resp.json()["detail"]
+    signup_detail = signup_resp.json()["detail"]
+    assert signup_detail["code"] == ErrorCode.task_level_too_low.value
+    assert str(TASK_LEVEL_REQUIRED) in signup_detail["message"]
 
     # The door that is open: invited into someone else's collab on it.
     praxis_id = await _create_collab(client, high_level_task, inviter_headers)
@@ -263,7 +266,8 @@ async def test_full_task_bank_still_refuses_on_accept(
             era=tight_bank,
         )
     assert excinfo.value.status_code == 409
-    assert "bank" in excinfo.value.detail.lower()
+    assert excinfo.value.detail["code"] == ErrorCode.task_bank_full.value
+    assert "bank" in excinfo.value.detail["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -306,7 +310,9 @@ async def test_existing_active_membership_still_refuses_the_invite(
         headers=second_inviter_headers,
     )
     assert refused.status_code == 409, refused.text
-    assert "active praxis" in refused.json()["detail"].lower()
+    refused_detail = refused.json()["detail"]
+    assert refused_detail["code"] == ErrorCode.invite_target_has_active_praxis.value
+    assert "active praxis" in refused_detail["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -335,7 +341,8 @@ async def test_level_bypass_flag_off_refuses_the_invite(
             era=strict,
         )
     assert excinfo.value.status_code == 403
-    assert str(TASK_LEVEL_REQUIRED) in excinfo.value.detail
+    assert excinfo.value.detail["code"] == ErrorCode.task_level_too_low.value
+    assert str(TASK_LEVEL_REQUIRED) in excinfo.value.detail["message"]
 
 
 @pytest.mark.asyncio

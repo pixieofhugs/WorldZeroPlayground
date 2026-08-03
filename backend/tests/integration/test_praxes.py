@@ -15,6 +15,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -104,7 +105,9 @@ async def test_create_solo_praxis_on_metatask_rejected(
         headers=auth_headers,
     )
     assert resp.status_code == 400
-    assert "metatask" in resp.json()["detail"].lower()
+    detail = resp.json()["detail"]
+    assert detail["code"] == ErrorCode.task_is_metatask.value
+    assert "metatask" in detail["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -1036,7 +1039,9 @@ async def test_create_collab_praxis_on_metatask_rejected(
         headers=auth_headers2,
     )
     assert resp.status_code == 400
-    assert "metatask" in resp.json()["detail"].lower()
+    detail = resp.json()["detail"]
+    assert detail["code"] == ErrorCode.task_is_metatask.value
+    assert "metatask" in detail["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -2045,7 +2050,9 @@ async def test_create_praxis_below_required_level_returns_403(
     )
     assert resp.status_code == 403
     # Error message must name the required level
-    assert "5" in resp.json()["detail"]
+    detail = resp.json()["detail"]
+    assert detail["code"] == ErrorCode.task_level_too_low.value
+    assert "5" in detail["message"]
 
 
 
@@ -2219,7 +2226,9 @@ async def test_create_praxis_duplicate_blocked_non_analog(
         headers=auth_headers,
     )
     assert second_resp.status_code == 409
-    assert "already submitted" in second_resp.json()["detail"].lower()
+    detail = second_resp.json()["detail"]
+    assert detail["code"] == ErrorCode.task_already_active_member.value
+    assert "already submitted" in detail["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -2386,7 +2395,9 @@ async def test_create_minimal_draft_blocks_duplicate_non_analog(
         headers=auth_headers,
     )
     assert second_resp.status_code == 409
-    assert "already submitted" in second_resp.json()["detail"].lower()
+    detail = second_resp.json()["detail"]
+    assert detail["code"] == ErrorCode.task_already_active_member.value
+    assert "already submitted" in detail["message"].lower()
 
 
 # ---------------------------------------------------------------------------
@@ -2423,7 +2434,9 @@ async def test_create_praxis_non_active_task_returns_403(
         headers=auth_headers,
     )
     assert resp.status_code == 403
-    assert task_status.value in resp.json()["detail"].lower()
+    detail = resp.json()["detail"]
+    assert detail["code"] == ErrorCode.task_not_open_for_signup.value
+    assert task_status.value in detail["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -2688,7 +2701,9 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
         headers=headers4,
     )
     assert re_invite.status_code == 409
-    assert "active praxis" in re_invite.json()["detail"].lower()
+    detail = re_invite.json()["detail"]
+    assert detail["code"] == ErrorCode.invite_target_has_active_praxis.value
+    assert "active praxis" in detail["message"].lower()
 
 
 @pytest.mark.asyncio
