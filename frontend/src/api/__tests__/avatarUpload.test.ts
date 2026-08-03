@@ -1,5 +1,6 @@
 /**
- * #1400 — the one call in this app that does not send JSON.
+ * #1400 — one of the two calls in this app that do not send JSON (the other is
+ * the admin CSV task import; see `adminCsvImport.test.ts`).
  *
  * `POST /characters/{id}/avatar` is multipart. `openapi-fetch`'s default body
  * serializer is written for JSON, and a `FormData` it decided to

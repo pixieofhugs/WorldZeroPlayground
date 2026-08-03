@@ -72,7 +72,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
       return;
     }
     // The hook swallowed the failure into `error` (rendered below) but doesn't
-    // hand back the raw axios error, and its `error` state is stale this tick.
+    // hand back the raw rejection, and its `error` state is stale this tick.
     // Re-issue the accept directly so we can inspect the backend detail: when
     // the invitee's task bank is full, offer to drop one praxis and retry.
     // Match on the FAILURE, not the status code (bank-full is 409 on collab,

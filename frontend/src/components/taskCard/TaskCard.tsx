@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import type { TaskOut } from '../../api/tasks'
+// Type-only, so the admin chunk stays out of every visitor's waterfall (#1141);
+// the value import below is still dynamic.
+import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
 import DefaultTaskCard from './DefaultTaskCard'
@@ -90,7 +93,7 @@ export default function TaskCard({
   // `api/admin` is loaded here rather than at module scope (#1141): a task card
   // renders for every visitor, and a static import put the admin chunk in every
   // logged-out `/tasks` waterfall for a control only a moderator can reach.
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: AdminTaskStatus) => {
     const { updateTaskStatus } = await import('../../api/admin')
     setModerated(await updateTaskStatus(task.id, newStatus))
   }

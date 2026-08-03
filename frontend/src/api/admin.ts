@@ -1,4 +1,5 @@
-import api from './axios'
+import { apiGet, apiPost, apiPut, apiPatch } from './client'
+import { wireSent } from './wireSent'
 import type { TaskOut } from './tasks'
 import type { PraxisOut } from './praxis'
 import type { CommentOut } from './comments'
@@ -45,6 +46,10 @@ export interface AccountDetail extends AccountSummary {
   characters: CharacterBrief[]
 }
 
+/** The two lives a character can be in (`models.character.CharacterStatus`).
+ *  `paused` was deleted in #1550 and nothing ever wrote it. */
+export type CharacterStatus = 'active' | 'banned'
+
 /** Full admin character row — matches backend schemas/admin.py CharacterSummary. */
 export interface AdminCharacterSummary {
   id: number
@@ -63,6 +68,10 @@ export interface AdminCharacterSummary {
  *  legacy free text / `other` notes surface via `reason_detail`. */
 export interface FlagOut {
   reason: string
+  /** Nullable, not optional. `Flag.reason_detail` is `Optional[str] = None` in
+   *  Pydantic, so the OpenAPI schema does not mark it *required* — but the wire
+   *  always carries it, and both readers of this type reach it through
+   *  `wireSent`, which is where that difference is written down (#1400). */
   reason_detail: string | null
   flagged_by_id: number
   flagged_by_name: string
@@ -82,44 +91,44 @@ export interface FlaggedCommentOut extends CommentOut {
 // ---------------------------------------------------------------------------
 
 export async function getOverview(): Promise<OverviewStats> {
-  const { data } = await api.get<OverviewStats>('/admin/overview')
+  const { data } = await apiGet('/admin/overview')
   return data
 }
 
 export async function getPendingTasks(): Promise<PendingTaskOut[]> {
-  const { data } = await api.get<PendingTaskOut[]>('/admin/tasks/pending')
+  const { data } = await apiGet('/admin/tasks/pending')
   return data
 }
 
 export async function getMessages(archived = false): Promise<ContactMessageOut[]> {
-  const { data } = await api.get<ContactMessageOut[]>('/admin/messages', { params: { archived } })
+  const { data } = await apiGet('/admin/messages', { params: { query: { archived } } })
   return data
 }
 
 export async function getFlaggedPraxes(): Promise<FlaggedPraxisOut[]> {
-  const { data } = await api.get<FlaggedPraxisOut[]>('/admin/praxes/flagged')
-  return data
+  const { data } = await apiGet('/admin/praxes/flagged')
+  return data.map(wireSent)
 }
 
 export async function getFlaggedComments(): Promise<FlaggedCommentOut[]> {
-  const { data } = await api.get<FlaggedCommentOut[]>('/admin/comments/flagged')
-  return data
+  const { data } = await apiGet('/admin/comments/flagged')
+  return data.map(wireSent)
 }
 
-export async function getAdminCharacters(status?: string): Promise<AdminCharacterSummary[]> {
-  const { data } = await api.get<AdminCharacterSummary[]>('/admin/characters', {
-    params: status ? { status } : {},
-  })
+export async function getAdminCharacters(status?: CharacterStatus): Promise<AdminCharacterSummary[]> {
+  const { data } = await apiGet('/admin/characters', { params: { query: { status } } })
   return data
 }
 
 export async function getAccounts(email?: string): Promise<AccountSummary[]> {
-  const { data } = await api.get<AccountSummary[]>('/admin/accounts', { params: email ? { email } : {} })
+  const { data } = await apiGet('/admin/accounts', { params: { query: { email } } })
   return data
 }
 
 export async function getAccountDetail(id: number): Promise<AccountDetail> {
-  const { data } = await api.get<AccountDetail>(`/admin/accounts/${id}`)
+  const { data } = await apiGet('/admin/accounts/{account_id}', {
+    params: { path: { account_id: id } },
+  })
   return data
 }
 
@@ -133,8 +142,8 @@ export async function getAccountDetail(id: number): Promise<AccountDetail> {
  * paginate.
  */
 export async function getAllTasks(): Promise<TaskOut[]> {
-  const { data } = await api.get<TaskOut[]>('/tasks', {
-    params: { status: 'all', limit: 500, sort: 'newest' },
+  const { data } = await apiGet('/tasks', {
+    params: { query: { status: 'all', limit: 500, sort: 'newest' } },
   })
   return data
 }
@@ -144,17 +153,27 @@ export async function getAllTasks(): Promise<TaskOut[]> {
 // ---------------------------------------------------------------------------
 
 export async function approveTask(id: number): Promise<TaskOut> {
-  const { data } = await api.put<TaskOut>(`/admin/tasks/${id}/approve`)
+  const { data } = await apiPut('/admin/tasks/{task_id}/approve', {
+    params: { path: { task_id: id } },
+  })
   return data
 }
 
 export async function retireTask(id: number): Promise<TaskOut> {
-  const { data } = await api.put<TaskOut>(`/admin/tasks/${id}/retire`)
+  const { data } = await apiPut('/admin/tasks/{task_id}/retire', {
+    params: { path: { task_id: id } },
+  })
   return data
 }
 
-export async function updateTaskStatus(id: number, status: string): Promise<TaskOut> {
-  const { data } = await api.put<TaskOut>(`/admin/tasks/${id}/status`, { status })
+/** The three states an admin can move a task between (`schemas.admin.TaskStatusAction`). */
+export type AdminTaskStatus = 'pending' | 'active' | 'retired'
+
+export async function updateTaskStatus(id: number, status: AdminTaskStatus): Promise<TaskOut> {
+  const { data } = await apiPut('/admin/tasks/{task_id}/status', {
+    params: { path: { task_id: id } },
+    body: { status },
+  })
   return data
 }
 
@@ -166,7 +185,10 @@ interface AdminTaskPatch {
 }
 
 export async function adminPatchTask(id: number, patch: AdminTaskPatch): Promise<TaskOut> {
-  const { data } = await api.patch<TaskOut>(`/admin/tasks/${id}`, patch)
+  const { data } = await apiPatch('/admin/tasks/{task_id}', {
+    params: { path: { task_id: id } },
+    body: patch,
+  })
   return data
 }
 
@@ -194,17 +216,30 @@ export interface TaskImportRowError {
 export async function importTasksCsv(file: File): Promise<TaskImportResult> {
   const form = new FormData()
   form.append('file', file)
-  const { data } = await api.post<TaskImportResult>('/admin/tasks/import-csv', form)
+  const { data } = await apiPost('/admin/tasks/import-csv', {
+    // The only non-JSON body in this module, and the cast is the whole reason
+    // it needs a comment. `openapi-typescript` renders `format: binary` as
+    // `string`, so the generated body type is `{ file: string }` — which no
+    // multipart upload can ever satisfy. `openapi-fetch` passes a `FormData`
+    // through its serializer untouched and then leaves Content-Type unset so
+    // the browser writes the boundary; `__tests__/adminCsvImport.test.ts`
+    // asserts both, because a silently JSON-stringified FormData reaches the
+    // server as `{}` with nothing in CI going red.
+    body: form as unknown as { file: string },
+  })
   return data
 }
 
 /**
  * Every per-row rejection from a failed `importTasksCsv`, or `[]` if the failure
  * was not a row-level one (network, 403, 500) — those go through `extractError`.
+ *
+ * Reads `ApiError.data`, which is where `client.ts` puts the parsed body — axios
+ * put it on `.response.data`, and a reader still looking there returns `[]` for
+ * every row-level 422 without a type, a test or a log saying so (#1400).
  */
 export function taskImportRowErrors(err: unknown): TaskImportRowError[] {
-  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
-    ?.detail
+  const detail = (err as { data?: { detail?: unknown } })?.data?.detail
   if (!Array.isArray(detail)) return []
   return detail.filter(
     (item): item is TaskImportRowError =>
@@ -212,37 +247,50 @@ export function taskImportRowErrors(err: unknown): TaskImportRowError[] {
   )
 }
 
+/** What a moderator can rule a praxis to be (`schemas.admin.ModerationAction`).
+ *  Note `failed`, which is not one of the comment verdicts. */
+export type PraxisModerationStatus = 'visible' | 'hidden' | 'failed'
+
 export async function moderatePraxis(
   id: number,
-  status: string,
+  status: PraxisModerationStatus,
   adminNote?: string,
 ): Promise<PraxisOut> {
-  const { data } = await api.patch<PraxisOut>(`/admin/praxes/${id}/moderate`, {
-    status,
-    admin_note: adminNote || null,
+  const { data } = await apiPatch('/admin/praxes/{praxis_id}/moderate', {
+    params: { path: { praxis_id: id } },
+    body: { status, admin_note: adminNote || null },
   })
-  return data
+  return wireSent(data)
 }
 
 export async function moderateComment(
   id: number,
   status: 'visible' | 'hidden' | 'deleted',
 ): Promise<CommentOut> {
-  const { data } = await api.patch<CommentOut>(`/admin/comments/${id}/moderate`, {
-    status,
+  const { data } = await apiPatch('/admin/comments/{comment_id}/moderate', {
+    params: { path: { comment_id: id } },
+    body: { status },
+  })
+  return wireSent(data)
+}
+
+export async function archiveMessage(id: number): Promise<ContactMessageOut> {
+  const { data } = await apiPatch('/admin/messages/{message_id}/archive', {
+    params: { path: { message_id: id } },
   })
   return data
 }
 
-export async function archiveMessage(id: number): Promise<ContactMessageOut> {
-  const { data } = await api.patch<ContactMessageOut>(`/admin/messages/${id}/archive`)
-  return data
-}
-
 export async function suspendAccount(id: number, suspended: boolean): Promise<void> {
-  await api.post(`/admin/accounts/${id}/suspend`, { suspended })
+  await apiPost('/admin/accounts/{account_id}/suspend', {
+    params: { path: { account_id: id } },
+    body: { suspended },
+  })
 }
 
 export async function banCharacter(id: number, banned: boolean): Promise<void> {
-  await api.post(`/admin/characters/${id}/ban`, { banned })
+  await apiPost('/admin/characters/{character_id}/ban', {
+    params: { path: { character_id: id } },
+    body: { banned },
+  })
 }

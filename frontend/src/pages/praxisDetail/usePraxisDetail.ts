@@ -18,6 +18,8 @@ import {
   kickMember,
   type PraxisOut,
 } from "../../api/praxis";
+// Type-only: `api/admin` still loads dynamically, when a moderator acts (#1141).
+import type { PraxisModerationStatus } from "../../api/admin";
 import { getVoters, type VoterDetail } from "../../api/votes";
 import { getDuelDetail, type DuelDetailOut } from "../../api/duel";
 import { listComments, type CommentOut } from "../../api/comments";
@@ -93,7 +95,7 @@ export interface PraxisDetailState {
   flagSubmitted: boolean;
 
   // Handlers
-  handleModerate: (status: string, note?: string) => Promise<void>;
+  handleModerate: (status: PraxisModerationStatus, note?: string) => Promise<void>;
   /**
    * Reopen a published praxis — the one direction this page moves it.
    *
@@ -166,7 +168,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
   // `api/admin` loads when a moderator acts, not when the page renders (#1141)
   // — the detail page is public, the admin bar is not.
-  const handleModerate = async (status: string, note?: string) => {
+  const handleModerate = async (status: PraxisModerationStatus, note?: string) => {
     if (!praxis) return;
     setModerating(true);
     setModerateError(null);

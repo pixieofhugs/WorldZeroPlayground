@@ -5,7 +5,7 @@
  *   - desktop → the existing wrapped card list (its intro copy, no mobile marker).
  * SSR (renderToStaticMarkup) never runs effects, so the feed sits in its loading
  * state — enough to prove which surface the dispatch selected. listPraxes is
- * mocked so no axios call is attempted.
+ * mocked so no request is attempted.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
