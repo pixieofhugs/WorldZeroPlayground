@@ -465,18 +465,38 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </nav>
   );
 
-  // ── Moderation banners — NEUTRAL CHROME, undressed ───────────────────────
+  // ── Moderation banners — neutral chrome, DRESSED ONLY WHERE IT MUST BE ───
   // The crown hero and the failed note are shared invariant chrome; the flagged
-  // notice has no shared slot, so it renders here, on `--color-*` tokens and the
-  // shared neutral words exactly as `DefaultPraxisDetail` draws it (ADR-0061 as
-  // amended). `PraxisAdminBar` is the steward bar and takes no dress.
+  // notice has no shared slot, so it renders here, with the shared neutral words
+  // exactly as `DefaultPraxisDetail` draws it (ADR-0061 as amended).
+  // `PraxisAdminBar` is the steward bar and takes no dress.
+  //
+  // ITS INKS ARE THE ONE DEVIATION, and #1627 forced it. The banner paints no
+  // ground of its own, so it sits directly on `-plate-page` — a night ground in
+  // both cascades now. The neutral body ink reads 3.01:1 there and
+  // `--color-warning` 3.68:1, so BOTH halves of an undressed banner fail, and
+  // the amber fails in the direction no walk-down reaches: it is a light-cascade
+  // value landing on a dark sheet. `SingularityPraxisDetail` already deviates
+  // here for exactly this reason — but it deviates ONTO `--color-warning`, which
+  // measures only 3.78:1 on its own wall, so what the precedent settles is that
+  // the banner MAY be dressed, not what to dress it in. This takes the faction's
+  // own attention ink, which is what `-card-notice` is for and reads 11.07:1 on
+  // this ground in both themes. The border comes with it so the mark's ink and
+  // rule are one colour (#1449).
+  //
+  // The LABEL and BORDER are byte-identical in dark — `--color-warning` is
+  // #fbbf24 there, which is this token's value. The BODY span is not: it was
+  // `--color-text-secondary` (#988c78, 5.60:1) and is now the same amber as its
+  // label, which is how Singularity dresses both halves and is the point of
+  // dressing the banner at all.
+  const NOTICE = "var(--faction-ephemerists-card-notice)";
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
       {praxis.moderation_status === "flagged" && (
         <div
           style={{
-            border: "2px solid var(--color-warning)",
+            border: `2px solid ${NOTICE}`,
             borderRadius: 8,
             padding: "var(--space-sm) var(--space-lg)",
             marginBottom: "var(--space-md)",
@@ -486,10 +506,10 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             flexWrap: "wrap",
           }}
         >
-          <span className="label-caption" style={{ color: "var(--color-warning)" }}>
+          <span className="label-caption" style={{ color: NOTICE }}>
             {t("detail.banners.flaggedLabel")}
           </span>
-          <span className="font-body content-text" style={{ color: "var(--color-text-secondary)" }}>
+          <span className="font-body content-text" style={{ color: NOTICE }}>
             {t("detail.banners.flaggedBody")}
           </span>
         </div>
@@ -820,7 +840,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
   return (
     <div className="py-8">
-      {/* The page IS the plate: the column carries the papyrus, headed by the
+      {/* The page IS the plate: the column carries the plate's own page stock —
+          night in both cascades since #1627, papyrus before it — headed by the
           cornice masthead flush to its own edges. There is deliberately no fixed
           full-bleed backdrop — see the `.eph-plate-sheet` note in index.css for
           what that pattern does to the sidebar beside it. */}

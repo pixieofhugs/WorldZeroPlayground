@@ -39,7 +39,7 @@ import {
   formatRatio,
   parseColor,
 } from "../contrast";
-import { readThemes, resolveVar, type Theme } from "./cssVars";
+import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
 const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
 const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
@@ -240,8 +240,11 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
  *                                                only honest scalar reading — the
  *                                                same call `ua leaf darkest stop` makes)
  *   coven        `--faction-coven-ward-card`     the ward panel, not the slip
- *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate (a WHOLE shade off
- *                                                `-card-bg` in dark: #171a26 vs #211a10)
+ *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate, which is a
+ *                                                different SHEET from the cornice
+ *                                                band `-card-bg` names — #171a26
+ *                                                against #0a0c15, in both cascades
+ *                                                since #1627
  *   wow          `--faction-wow-chronicle-bg`    same value as `-card-bg` today, a
  *                                                different token tomorrow (the reason
  *                                                the snide composer block gives)
@@ -593,6 +596,43 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
+  // THE PROFILE HEADER ADDS NO ROW, and that is the finding rather than an
+  // omission. `EphemeristsProfileBody` handed `profileSkin` a kit whose `muted`
+  // was `-plate-quiet` — the ink measured for the plate, the page and the panel
+  // cells — while its `headerStyle` grounds on the cornice BAND, so five quiet
+  // lines inside `<header>` sat on a sheet their ink was never chosen for and
+  // read 2.07:1 in light, with every row in this file green.
+  //
+  // The first fix written was a row for that crossing. It would have measured
+  // 6.73:1 and passed, and it would have recorded the WRONG (ink, ground) pair
+  // as the intended one: `-plate-band-quiet` is the ink the band owns, it only
+  // read 6.73 because #1627 repainted the ground under the bug, and the pairing
+  // that ships now — band-quiet on the band — is `ephemerists cornice band,
+  // quiet ink` further down, which has gated it since #1199. So the kit grew a
+  // `headerMuted` and this file gains nothing: a second name for one
+  // measurement is what the WOW block above warns about, and a row that
+  // certifies a bug is worse than no row at all.
+  //
+  // THE LOGGED-OUT VOTE GATE (#1627). `VoteShell`'s gate voice paints
+  // `--faction-ephemerists-card-accent`, and `EphemeristsVote` early-returns the
+  // gate BEFORE it draws its own night vote plate — so the ink lands on whatever
+  // the mounting surface painted, which for both the praxis card and the praxis
+  // detail's vote section is `-plate-bg`. A card ink on the plate: the same
+  // (ink, ground) crossing the row above records, one surface over, and likewise
+  // uncovered — it measured 3.75:1 in dark while `ephemerists card accent` was
+  // green against `-card-bg`, the sheet this gate never sits on.
+  { what: "ephemerists vote login gate, card accent on the plate", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-card-accent" },
+  // THE FLAGGED BANNER (#1636), on the praxis detail's page ground. Neutral
+  // chrome that paints no ground of its own — so it is the same shape as the
+  // gate above, and the one a dark-in-light move CREATES rather than exposes.
+  // Undressed it read 3.01:1 (body, the app neutral) and 3.68:1 (label,
+  // `--color-warning`) once `-plate-page` went dark: both halves failing, and
+  // the amber failing as a light-cascade value on a night sheet. Singularity
+  // already deviates onto `--color-warning` at 3.78:1 on its own wall, so the
+  // precedent settles that the banner may be dressed and not what to dress it
+  // in. This is the faction's own attention ink, which is what `-card-notice`
+  // is for; the border takes it too, so the mark's ink and rule agree (#1449).
+  { what: "ephemerists flagged banner, notice ink on the page ground", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-card-notice" },
 
   // …and the three surfaces task detail (#1032) added, where the plate stops
   // being one card on the app's ground and becomes the page. `-quiet` exists
@@ -777,7 +817,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
   { what: "snide seal stakes scrap, credit ink", surface: "--faction-snide-ink", text: "--faction-snide-card-credit" },
   // #1208 swept this dialog off the codex; the band is the plate's panel cell.
-  { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--color-success" },
+  // The INK moved too, in #1627: the panel cell is dark in both cascades now, so
+  // the light-theme `--color-success` lands on a night ground at 1.76:1 and the
+  // skin routes its own credit — S.N.I.D.E.'s and Singularity's call, made here
+  // for the third time and for the identical reason.
+  { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-card-credit" },
   { what: "ua seal stakes well, credit ink", surface: "--faction-ua-panel", text: "--color-success" },
 
   // ── THE STAKES PANEL'S MUTED INK (#1173) ─────────────────────────────────
@@ -800,8 +844,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // clearing on the body ground (CARD_PAIRS still measures it there). The
   // EPHEMERISTS panel needed nothing: #1208 moved that band off the codex onto
   // the Valley plate's inner cell, whose quiet ink `ephemerists panel cell,
-  // quiet ink` above already measures at 6.21 / 5.52 — the same pairing, so a
-  // second row here would be a second name for one measurement.
+  // quiet ink` above already measures — at 6.21 / 5.52 then, and at 5.52 in both
+  // cascades since #1627 made the register theme-invariant. The same pairing
+  // either way, so a second row here would be a second name for one measurement.
   { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-chronicle-quiet" },
   { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
 
@@ -1374,8 +1419,12 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   "light | everymen card accent": { ratio: 4.49, issue: 651 },
   "light | coven card accent": { ratio: 2.81, issue: 651 },
   "dark | everymen card accent": { ratio: 4.16, issue: 651 },
-  "dark | ephemerists card accent": { ratio: 3.72, issue: 651 },
-  // The same rubric vermilion, reached through its archetype-private primitive.
+  // (`dark | ephemerists card accent` stood here at 3.72:1 from the sweep until
+  // #1627 moved the card contract off the codex's rubric vermilion onto the
+  // plate's brass highlight — 11.98:1, in both cascades. The entry below is the
+  // SAME vermilion on the same vellum, reached through the archetype-private
+  // primitive; it survives because the `--eph-*` family is still declared, and
+  // it should go with the family's deletion rather than be fixed.)
   "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
   // (UA mono metadata labels on the legacy gilt sheet measured 3.06:1 in both
   // themes and were listed here until #853 deleted the legacy family, exactly
@@ -1754,4 +1803,149 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
       "`.eyebrow-sentence` was a caption wearing a heading's clothes (#850). The two-tier split is the rethink it should have had; keeping it is keeping a second thing to sync.",
     ).toBe(false);
   });
+});
+
+/**
+ * #1636 — A PROSE LINK'S INK IS A SEAM TOO.
+ *
+ * `.markdown-preview` is the only rule in the app that colours a link, and it
+ * carried ONE ink for every ground it is ever mounted on: `--color-text-
+ * secondary`, a warm brown in light, chosen against the app's near-white page.
+ * The praxis body is faction-skinned on all eight sheets, so that brown lands on
+ * S.N.I.D.E.'s photocopier black (3.06:1), Singularity's terminal (3.17:1) and —
+ * once the Valley plate is dark in both cascades — the Ephemerists' page ground,
+ * where it was ALREADY the tightest reading in the family at 4.23:1.
+ *
+ * This is #1307's shape one property over, and it takes #1307's answer: the ink
+ * becomes a seam a faction frame repoints once on its own root, defaulted at
+ * `:root` to the neutral so it renders exactly what it renders today everywhere
+ * else. NOTHING IS MINTED for the Ephemerists half — `-plate-nile` is declared
+ * "links, affirmations" and is already measured on all three of the plate's
+ * grounds by the rows above, which is why this block asserts the WIRING and adds
+ * no `Pair`. A second name for a measured value is a name pretending to be one.
+ *
+ * And the wiring is the only assertable half. Every ratio in this file stays
+ * green through a `.markdown-preview a` that hardcodes the neutral, because the
+ * pairing it creates is "a global ink on a faction ground" — the #694 shape a
+ * token-value manifest is structurally unable to name.
+ */
+describe("a prose link's ink is a seam (#1636)", () => {
+  it(".markdown-preview links paint the seam, not a hardcoded neutral", () => {
+    expect(
+      ruleBody(".markdown-preview a"),
+      "`.markdown-preview a` must read `var(--link-ink)`, or a faction whose sheet the neutral fails has no way to fix its own ground.",
+    ).toContain("color: var(--link-ink)");
+    expect(
+      ruleBody(".markdown-preview a:hover"),
+      "the hover ink needs the same seam: `--color-text-primary` is near-black in light, which is 1.3:1 on the Ephemerists plate.",
+    ).toContain("color: var(--link-ink-hover)");
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`--link-ink and --link-ink-hover unset are the measured neutrals (${theme})`, () => {
+      for (const [seam, neutral] of [
+        ["--link-ink", "--color-text-secondary"],
+        ["--link-ink-hover", "--color-text-primary"],
+      ]) {
+        const resolved = resolveColor(seam, theme);
+        expect(resolved.color, `${seam} (${theme}) resolved to "${resolved.raw}"`).not.toBeNull();
+        expect(
+          resolved.raw,
+          `a link outside a faction frame must render what it renders today — that is what keeps this a seam rather than a repaint.`,
+        ).toBe(resolveColor(neutral, theme).raw);
+      }
+    });
+  }
+
+  it("the Ephemerists plate repoints the seam onto its own two inks", () => {
+    const body = ruleBody(".eph-plate-sheet");
+    expect(
+      body,
+      "`.eph-plate-sheet` is the column both Ephemerists detail pages wear; it is one of the two roots the plate's link ink has to be set on.",
+    ).toContain("--link-ink: var(--faction-ephemerists-plate-nile)");
+    expect(body, "hover goes to the plate's body ink, the same relation the neutral pair has.").toContain(
+      "--link-ink-hover: var(--faction-ephemerists-plate-ink)",
+    );
+  });
+
+  // ...and the OTHER root, which is why this assertion is not one assertion.
+  // `.eph-plate-sheet` is worn by the two detail columns and nothing else, so
+  // the seam reached `MarkdownPreview` on the detail pages and missed it in the
+  // composer and the waiting surface — where `BodyPreview` renders the same
+  // `.markdown-preview` into a panel cell, at 2.60:1 with hover at 1.16:1. Both
+  // of those mount `dress.pageStyle`, which is the one Ephemerists root outside
+  // that column, so the seam is declared there. A ratio row cannot see this: the
+  // pairing it would name (`nile` on `-plate-inner`) is already green above,
+  // measured on a surface that was not reading it.
+  it("the composer and waiting surface set the same seam on their own root", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("../../pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx", import.meta.url)),
+      "utf8",
+    );
+    const pageStyle = source.slice(source.indexOf("pageStyle: {"), source.indexOf("breadcrumbInk:"));
+    expect(
+      pageStyle,
+      "`dress.pageStyle` is mounted by both `ComposerPage` and `PraxisWaitingSurface`; without the seam their prose links fall back to the app neutral on a night ground.",
+    ).toContain('["--link-ink" as string]: NILE');
+    expect(pageStyle, "and its hover partner, for the same reason").toContain(
+      '["--link-ink-hover" as string]: INK',
+    );
+  });
+});
+
+/**
+ * #1636 — A TRANSITIONED `background` SHORTHAND CANNOT CARRY A THEMED TOKEN.
+ *
+ * The shorthand resets `background-image`, `-position`, `-size` and `-repeat`
+ * along with the colour, and naming it in a `transition` names a list of
+ * longhands only one of which is interpolable. A ground that has to re-resolve
+ * through the `[data-theme]` cascade wants the colour in `background-color`,
+ * where it is one declaration that one transition can carry — the shape
+ * `.wow-detail-field` and `.ua-praxis-leaf` already use.
+ *
+ * Asserted on the declaration rather than on a render for the reason #1413
+ * gives: a ground that is not a ground leaves every ratio in this file green.
+ */
+describe("a themed ground is a longhand (#1636)", () => {
+  // A SCAN, NOT A LIST. This block began as four named selectors — the four
+  // grounds #1636 fixed — which is precisely the shape WORLD_ZERO_STYLE warns
+  // about two sections earlier: a per-file check leaves the fifth instance
+  // unguarded, and the fifth instance is the one nobody is looking at. The
+  // defect has an exact syntactic signature, so the whole stylesheet can be
+  // asked at once and every future rule is covered for free.
+  it("no rule transitions the `background` shorthand", () => {
+    const offenders = [...stripComments(CSS_TEXT).matchAll(/transition:[^;}]*/g)]
+      .map((match) => match[0].trim())
+      // `background-color`, `background-size` and friends are longhands and are
+      // exactly what this asks for; only the bare shorthand is the bug.
+      .filter((declaration) => /(^|[\s,:])background(\s|,|$)/.test(declaration));
+    expect(
+      offenders,
+      "a `transition` naming `background` animates a list of longhands only `background-color` interpolates, and the shorthand it goes with resets `-image`, `-position`, `-size` and `-repeat` every time the cascade re-resolves the token. Name the longhand.",
+    ).toEqual([]);
+  });
+
+  // ...and the other half of the same swap: a rule that transitions a ground
+  // must have a ground to transition. Also derived from the file rather than
+  // named, so it grows with it.
+  it("every rule that transitions a ground declares that ground", () => {
+    const css = stripComments(CSS_TEXT);
+    const bodies: string[] = [];
+    for (const match of css.matchAll(/transition:[^;}]*background-color/g)) {
+      const open = css.lastIndexOf("{", match.index);
+      bodies.push(css.slice(open + 1, css.indexOf("}", match.index)));
+    }
+    expect(bodies.length, "the four grounds #1636 split, at least").toBeGreaterThanOrEqual(4);
+    for (const body of bodies) {
+      expect(
+        body,
+        "a rule transitioning `background-color` without declaring it is transitioning whatever it inherited.",
+      ).toMatch(/background-color:\s*var\(--/);
+      expect(
+        body.replace(/background-color:[^;]*;/g, "").replace(/background-image:[^;]*;/g, ""),
+        "and it must not also carry a `background` shorthand — the shorthand wins by order and takes the longhand with it.",
+      ).not.toMatch(/(^|[\s;{])background:/);
+    }
+  });
+
 });

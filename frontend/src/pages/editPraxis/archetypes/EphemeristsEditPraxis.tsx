@@ -76,7 +76,7 @@
  * framing against ADR-0011 §Forfeit, and #718 had rejected it once before. The
  * duel clock is cut for the same reason: no expiry field exists to read.
  */
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
@@ -433,7 +433,20 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: BRASS,
     alarm: ALARM,
-    pageStyle: { fontFamily: DECO, color: INK },
+    /* The plate's LINK INKS, set once on the root both this composer and
+       `PraxisWaitingSurface` mount (#1636). `.markdown-preview a` reads
+       `--link-ink`, whose `:root` default is the app's warm neutral — chosen
+       against a near-white page, and 2.60:1 on the panel cell `BodyPreview`
+       renders into (hover 1.16:1). The detail column declares the identical
+       pair through `.eph-plate-sheet`; this is the same seam reached from the
+       one Ephemerists root that is not inside that column. NILE is the plate's
+       declared link hue and is measured on all three of its grounds. */
+    pageStyle: {
+      fontFamily: DECO,
+      color: INK,
+      ["--link-ink" as string]: NILE,
+      ["--link-ink-hover" as string]: INK,
+    } as CSSProperties,
     breadcrumbInk: QUIET,
     sheetStyle,
     masthead,

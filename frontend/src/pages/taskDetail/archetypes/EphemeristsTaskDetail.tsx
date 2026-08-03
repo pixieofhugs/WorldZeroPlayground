@@ -509,10 +509,13 @@ export default function EphemeristsTaskDetail({
     boxSizing: "border-box",
   };
   /**
-   * The page-ground label voice. `-quiet`, not `-caption`: the caption ink was
-   * measured against the PLATE (4.75:1) and only reaches 4.45:1 on the darker
-   * page this surface introduces. Labels that sit on a panel cell take
-   * `plateEyebrow` below, where the caption gold is both legal and better.
+   * The page-ground label voice. `-quiet`, not `-caption` — and the reason has
+   * expired without the choice changing. The caption ink was measured against
+   * the PLATE (4.75:1) and only reached 4.45:1 on the darker page this surface
+   * introduces; since #1627 took the register to its night values it clears the
+   * page at 7.71 and `-quiet` at 6.38, so both are legal and this is now a voice
+   * decision rather than a contrast one: the page's labels are the quiet tier,
+   * a panel cell's are the gold. Labels on a cell take `plateEyebrow` below.
    */
   const eyebrow: CSSProperties = {
     ...SMALL_CAPS,

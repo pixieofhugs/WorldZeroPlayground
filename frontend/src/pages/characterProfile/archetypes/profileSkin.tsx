@@ -55,8 +55,21 @@ export interface ProfileKit {
   pageOverlay?: string
   /** Ink color for headings + the display name. */
   ink: string
-  /** Secondary / meta ink. */
+  /** Secondary / meta ink, on the kit's `surface` and `pageBackground`. */
   muted: string
+  /** The same role ON THE HEADER'S OWN GROUND, for a kit whose
+   *  `headerStyle.background` is a different stock from `surface` (#1636).
+   *  Defaults to `muted`, so a kit whose header shares the body's ground says
+   *  nothing and renders exactly as before.
+   *
+   *  It exists because Ephemerists mounts its header on the Valley plate's
+   *  cornice BAND while `muted` is the ink measured for the plate, the page and
+   *  the panel cells — six header sites inherited a quiet ink chosen for a
+   *  ground they are not on, and the crossing read 2.07:1 in light. That is
+   *  WORLD_ZERO_STYLE §3's "when a surface gains a sheet, re-measure the inks it
+   *  already had" landing on a shared kit rather than on a skin: which stock the
+   *  header sits on is the kit's own knowledge, and nothing else can see it. */
+  headerMuted?: string
   /** Accent color (progression ring, accents). */
   accent: string
   /** Card / panel surface. */
@@ -264,6 +277,8 @@ export function ProfileSkin({
 }) {
   const { t } = useTranslation('common')
   const mobile = useFormFactor() === 'mobile'
+  /** Every quiet ink INSIDE `<header>` — see `ProfileKit.headerMuted`. */
+  const headerMuted = kit.headerMuted ?? kit.muted
   const { character, submissions, proposedTasks, progression, identityActions } = props
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
@@ -420,7 +435,7 @@ export function ProfileSkin({
                   fontSize: 'var(--text-sm)',
                   letterSpacing: '0.22em',
                   textTransform: 'uppercase',
-                  color: kit.muted,
+                  color: headerMuted,
                   marginBottom: 'var(--space-sm)',
                 }}
               >
@@ -447,7 +462,7 @@ export function ProfileSkin({
                   fontFamily: kit.bodyFont ?? kit.eyebrowFont,
                   // handle + join date: the handle is a name, so this is read, not scanned
                   fontSize: 'var(--text-content)',
-                  color: kit.muted,
+                  color: headerMuted,
                   marginTop: 'var(--space-md)',
                 }}
               >
@@ -488,6 +503,12 @@ export function ProfileSkin({
                           fontSize: 'var(--text-xs)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
+                          // `kit.muted`, not `headerMuted`: this label sits
+                          // inside the disc above, which grounds on
+                          // `kit.surface` — it is in the header, not ON the
+                          // header's band. The band ink is the wrong ink here
+                          // for the same reason the band ink was right for the
+                          // other five.
                           color: kit.muted,
                         }}
                       >
@@ -520,7 +541,7 @@ export function ProfileSkin({
                           fontFamily: kit.bodyFont ?? kit.eyebrowFont,
                           // points into level: a number the player cares about
                           fontSize: 'var(--text-content)',
-                          color: kit.muted,
+                          color: headerMuted,
                         }}
                       >
                         {pointsIntoLevel} / {levelSpan} {levelUnit}
@@ -531,7 +552,7 @@ export function ProfileSkin({
                           fontSize: 'var(--text-sm)',
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
-                          color: kit.muted,
+                          color: headerMuted,
                         }}
                       >
                         {kit.nextLevelLabel(progression.nextLevel)}
@@ -561,7 +582,7 @@ export function ProfileSkin({
                           fontFamily: kit.bodyFont ?? kit.eyebrowFont,
                           // absolute score toward the next threshold: read, not scanned
                           fontSize: 'var(--text-content)',
-                          color: kit.muted,
+                          color: headerMuted,
                           marginTop: 'var(--space-xs)',
                         }}
                       >

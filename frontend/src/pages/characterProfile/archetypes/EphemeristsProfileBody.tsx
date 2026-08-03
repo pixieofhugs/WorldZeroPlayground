@@ -3,11 +3,18 @@
  * the illuminated codex by #1208). The night-band header ruled in brass over a
  * ghost graticule, roman-numeral "GRADE" levels, and papyrus plates below.
  *
- * Structure is DefaultProfileBody's locked spine via ProfileSkin. Two grounds
- * carry ink: the band (`band-ink` 12.4:1, `gold` 9.4) and the plate under it
- * (`ink` 11.3, `quiet` 5.6, `nile` 5.0). The page beneath is `-plate-page`,
- * where only `ink`, `quiet` and `nile` clear — which is why the kit's `muted`
- * is `quiet` and not `-plate-muted`.
+ * Structure is DefaultProfileBody's locked spine via ProfileSkin. THREE grounds
+ * carry ink, and the header's is not the body's: the cornice band (`band-ink`
+ * 14.00:1, `band-quiet` 8.97), the plate under it (`ink` 13.91, `quiet` 5.98,
+ * `nile` 7.00) and the page beneath that (`ink` 14.84, `quiet` 6.38, `nile`
+ * 7.47). Since #1627 the whole register is theme-invariant, so each of those is
+ * one reading rather than two.
+ *
+ * The kit therefore names TWO quiet inks. `muted` is `-plate-quiet`, for the
+ * body's plates and page; `headerMuted` is `-plate-band-quiet`, which is the
+ * ink the band owns. They were one field until #1636, and the five quiet lines
+ * inside `<header>` — eyebrow, handle, and the progression panel's four —
+ * inherited the body's ink onto the band, where it read 2.07:1 in light.
  */
 import type { ReactNode } from 'react'
 
@@ -15,6 +22,7 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 import {
   BAND,
   BAND_INK,
+  BAND_QUIET,
   BRASS,
   BRASS_LIGHT,
   DECO,
@@ -65,6 +73,7 @@ const kit: ProfileKit = {
   pageOverlay: `radial-gradient(color-mix(in srgb, ${INK} 6%, transparent) 1px, transparent 1px)`,
   ink: INK,
   muted: QUIET,
+  headerMuted: BAND_QUIET,
   accent: NILE,
   surface: PLATE,
   border: BRASS,
