@@ -89,10 +89,10 @@ const DELIBERATE_MIRRORS: Record<string, string> = {
   // cannot say `'ability' | 'sense'`. The gap propagates up through
   // `LevelProfileOut` to here. Fix is a backend `StrEnum` on `kind`.
   GameConfigOut: 'LevelUnlockOut.kind is a bare str, not an enum',
-  // Same shape of gap: `type`, `status` and `display_status` are all bare `str`
+  // Same shape of gap, for two of the three: `type` and `status` are bare `str`
   // in `schemas/relationship.py` though only a fixed set is ever written, and
   // the UI branches on those sets. Fix is a backend `StrEnum` on each.
-  RelationshipListItem: 'type/status/display_status are bare str, not enums',
+  RelationshipListItem: 'type and status are bare str, not enums',
 }
 
 const API_MODULES = readdirSync(API_DIR)

@@ -148,14 +148,18 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(html, 'name input').toContain('value="Molly"')
     expect(text, 'tagline label (real bio field)').toContain('Tagline')
     expect(html, 'tagline value is the bio').toContain('value="Doing very human things."')
-    // Faction is read-only and links out to that faction's own page — and for
-    // an unaffiliated life that page is `/factions/na`, not the directory.
-    // This fixture used to carry `faction_slug: null` and assert `/factions`,
-    // which no live payload could produce: the column is `nullable=False` with
-    // the era's starting slug as its default, `na` is a seeded visible
-    // `Faction` row, and `/factions/:slug` resolves it (#1400). The skin's
-    // `: '/factions'` fallback is therefore unreachable in production.
-    expect(html, 'faction link-out').toContain('href="/factions/na"')
+    // Faction is read-only and links out — but an unaffiliated life goes to the
+    // DIRECTORY, not to `/factions/na`.
+    //
+    // This fixture used to carry `faction_slug: null`, which no live payload can
+    // produce: the column is `nullable=False` and every life starts on the era's
+    // starting slug (#1400). The assertion was right for the wrong reason, and
+    // aliasing the generated type is what exposed the fixture. `na` is seeded
+    // HIDDEN (`backend/seed.py`), `GET /factions` returns visible rows only, and
+    // `FactionDetail` derives from that list — so `/factions/na` renders
+    // "Faction not found" for every unaffiliated player.
+    expect(html, 'faction link-out').toContain('href="/factions"')
+    expect(html, 'not the hidden na detail page').not.toContain('href="/factions/na"')
     expect(text, 'unaffiliated').toContain('Unaffiliated')
     expect(text, 'delete affordance').toContain('Delete this character')
     expect(text, 'sticky save').toContain('Save Changes')

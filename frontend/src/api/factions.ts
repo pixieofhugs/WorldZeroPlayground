@@ -4,7 +4,7 @@ import type { CurrentUser } from './auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 
 // Faction name/description prose is no longer backend-emitted (issue #461): the
-// server sends only the slug, and the frozen English words live in the
+// row is slug + status only (ADR-0038), and the frozen English words live in the
 // factions.json catalog. Resolve display copy with factionName(slug) /
 // factionDescription(slug) from utils/factions.
 export type FactionOut = components['schemas']['FactionOut']
