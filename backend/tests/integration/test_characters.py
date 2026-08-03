@@ -1182,3 +1182,32 @@ async def test_tagline_and_bio_are_independent(
     data = resp.json()
     assert data["bio"] == "b" * 500
     assert data["tagline"] == "Evidence first. Apologies never."
+
+
+@pytest.mark.asyncio
+async def test_update_character_clears_bio_and_location(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """An explicit "" clears the column — setting a field must be undoable (#1644).
+
+    The seam is which keys reach the body, so it can only be guarded here: the
+    client used to send ``value || undefined``, ``exclude_unset=True`` read the
+    omission as "leave it alone", and the save appeared to succeed while the old
+    text survived. The empty PUT below is the request the form now makes.
+    """
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"bio": "Once wrote this down.", "location": "Portland"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"bio": "", "location": ""},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["bio"] == ""
+    assert data["location"] == ""
