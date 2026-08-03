@@ -29,6 +29,7 @@ locales/
 | `admin.json` | Admin and moderation screens |
 | `progression.json` | Level-up ranks + unlock names/descriptions (backend emits keys — ADR-0031) |
 | `taunts.json` | Foe-taunt templates per faction/trigger (backend emits keys — ADR-0031) |
+| `errors.json` | What a failed request tells the player, keyed by error code (backend emits keys — ADR-0031) |
 
 ## How a key works
 
@@ -126,6 +127,28 @@ never sends prose for taunts or ranks/unlocks.
   modulo pick means reordering silently reassigns which taunt an existing row
   renders, and deleting one shifts every later index. Adding to the end is safe.
 
+### Error messages (`errors.json`)
+
+When a request fails, the backend sends a machine-readable **error code** plus
+the runtime values its message needs; this catalog owns the wording (#1401).
+
+- **`codes.<ERROR_CODE>`** — the message for one failure, e.g.
+  `codes.TASK_BANK_FULL`. The key is the code exactly as the backend spells it,
+  in capitals; **never rename one** — it is a wire contract, not a label.
+- Placeholders are the values the backend sends: `{{level}}`, `{{limit}}`,
+  `{{max_megabytes}}`. **A placeholder with no value disables the whole entry** —
+  the player then sees the backend's plainer English instead. So keep every
+  placeholder that is already in a value, and never invent a new one.
+- **`codes.<ERROR_CODE>_<context>`** — a variant for one surface, where the same
+  failure needs different words in different places. `FLAG_LEVEL_TOO_LOW_comment`
+  and `FLAG_LEVEL_TOO_LOW_praxis` are the same gate worded for what you were
+  flagging. The plain `codes.<ERROR_CODE>` is the fallback for any surface with
+  no variant of its own, so it must stay, and it should stay generic.
+
+Reword any value freely. Adding or removing a key here needs a backend change
+too — `backend/tests/unit/test_i18n_catalog_coverage.py` fails if this catalog
+and the backend's error codes disagree.
+
 ### Faction names/descriptions (`factions.json`)
 
 Faction **name/description** prose is also backend-emitted-as-slug (ADR-0038):
@@ -144,9 +167,10 @@ add an entry when a new faction ships; don't drop a slug that config still emits
 
 A backend drift-guard test (`backend/tests/unit/test_i18n_catalog_coverage.py`)
 fails if the era config references a rank/unlock key, a
-`(faction_slug, trigger_type)` taunt combo, or a faction slug whose
-`names`/`descriptions` entry this catalog can't resolve — so a missing key is
-caught in CI, not at render time.
+`(faction_slug, trigger_type)` taunt combo, a faction slug whose
+`names`/`descriptions` entry this catalog can't resolve, or an error code whose
+`errors.json` entry is missing — so a missing key is caught in CI, not at render
+time.
 
 ## Rules of the road
 
