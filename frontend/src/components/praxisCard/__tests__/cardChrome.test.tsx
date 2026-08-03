@@ -123,6 +123,41 @@ describe('the byline portrait (#888)', () => {
   })
 })
 
+/**
+ * #1633 — the byline name was losing a letter against its own portrait.
+ *
+ * The seam is the NAME LINK's own declaration, and it has to be, because the
+ * clip is unobservable in this harness: renderToStaticMarkup gives no DOM, no
+ * fonts and no layout, so nothing here can see a glyph get shaved. What these
+ * pin is the pair of properties that decides it — how far the clip box runs
+ * past the text, and whether the name still yields when it genuinely does not
+ * fit. Both halves matter: the second is what the Ephemerists kit's own fix
+ * (`overflow: visible`) would have given away.
+ */
+describe('the byline name is not shaved against its portrait (#1633)', () => {
+  const nameLink = (html: string) => html.match(/<a [^>]*>/)?.[0] ?? ''
+  const byline = (name: string) =>
+    nameLink(render(<PraxisByline praxis={praxis({ created_by_display_name: name })} />))
+
+  it('carries the portrait separation as padding, so the clip box outruns the text', () => {
+    // `overflow: hidden` clips at the PADDING box while `text-overflow`
+    // measures the CONTENT box. With the 8px living on the row as `gap` the
+    // two edges coincided, so a display face's last glyph — the Ephemerists
+    // card sets this line in Poiret One — was cut off at the portrait.
+    expect(byline('Isolde')).toContain('padding-inline-end:var(--space-sm)')
+  })
+
+  it('still yields a long name to an ellipsis rather than over the portrait', () => {
+    const link = byline('Bartholomew Featherstonehaugh-Wentworth')
+    expect(link).toContain('overflow:hidden')
+    expect(link).toContain('text-overflow:ellipsis')
+    // The kit patched this to `visible`, which restores min-width:auto to
+    // min-content — the name then stops shrinking and paints over the portrait
+    // and the faction tag, which is the reported symptom, deliberately caused.
+    expect(link).not.toContain('overflow:visible')
+  })
+})
+
 describe('the meta line (#888)', () => {
   it('shows the level on a level-0 task, so the segment count never varies', () => {
     const zero = text(render(<PraxisStats praxis={praxis({ task_level_required: 0 })} />))
