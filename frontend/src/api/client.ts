@@ -21,8 +21,6 @@ import { ApiError, ApiNetworkError } from './apiError'
 import type { paths } from './generated/schema'
 import { returnToLandingIfSessionExpired } from './sessionRedirect'
 
-export { ApiError, ApiNetworkError } from './apiError'
-
 const client = createClient<paths>({
   baseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
   // The JWT is an httpOnly cookie. Without this every authenticated call goes
@@ -122,5 +120,3 @@ export const apiPost = throwOnFailure<'post'>(client.POST)
 export const apiPut = throwOnFailure<'put'>(client.PUT)
 export const apiPatch = throwOnFailure<'patch'>(client.PATCH)
 export const apiDelete = throwOnFailure<'delete'>(client.DELETE)
-
-export default client

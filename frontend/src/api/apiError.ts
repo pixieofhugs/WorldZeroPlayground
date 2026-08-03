@@ -3,9 +3,14 @@
  *
  * Its own module, and deliberately free of any import, because `utils/errors.ts`
  * reads these and `utils/errors.ts` is imported by most of the app. Declaring
- * them inside `client.ts` would put `openapi-fetch` — and the whole generated
- * schema module — on the initial-load path of every page, to carry two class
- * declarations.
+ * them inside `client.ts` would put `openapi-fetch` — and the `createClient`
+ * call at that module's top level — on the initial-load path of every page, to
+ * carry two class declarations. Not the generated schema: `generated/schema.d.ts`
+ * is a declaration file, imported `import type`, and weighs nothing at runtime
+ * wherever it lands. `openapi-fetch` is the weight.
+ *
+ * Which is why `client.ts` does not re-export these. One import path, and it is
+ * the one that stays cheap.
  */
 
 /**

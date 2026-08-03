@@ -188,7 +188,7 @@ describe('signing out never re-asks who the viewer is', () => {
   })
 
   it('clears the viewer locally instead of refetching a guaranteed 401', () => {
-    // `/auth/me` is a SESSION_PROBE (`api/axios.ts`), so the post-logout 401 was
+    // `/auth/me` is a SESSION_PROBE (`api/sessionRedirect.ts`), so the 401 was
     // swallowed rather than fatal — it just cost a round trip to arrive at the
     // `null` the caller had already caused. What keeps the client honest without
     // it: the provider sets the same `null` and the same session hint that a

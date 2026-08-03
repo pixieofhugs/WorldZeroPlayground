@@ -146,7 +146,7 @@ landed somewhere they had not asked for.
 No bundle work would ever have found that, and no byte budget would have flagged
 it. When a page feels slow, check what it actually *did* — a waterfall showing
 the document requested twice is a different bug from a waterfall that is simply
-wide. `shouldReturnToLanding` in `api/axios.ts` is now unit-tested for it.
+wide. `shouldReturnToLanding` in `api/sessionRedirect.ts` is now unit-tested for it.
 
 ## Preloading can make things much worse
 

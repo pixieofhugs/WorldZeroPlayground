@@ -12,7 +12,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-import { ApiError, ApiNetworkError, apiGet, apiPost } from '../client'
+import { ApiError, ApiNetworkError } from '../apiError'
+import { apiGet, apiPost } from '../client'
 import { extractError, extractErrorCode } from '../../utils/errors'
 
 const JSON_HEADERS = { 'content-type': 'application/json' }
@@ -111,6 +112,24 @@ describe('the request the client builds', () => {
     await apiGet('/tasks', {
       params: { query: { faction: undefined, status: undefined, sort: 'newest' } },
     })
+    expect(sentUrl().search).toBe('?sort=newest')
+  })
+
+  /**
+   * `undefined` is not the only way this filter arrives empty, and the other two
+   * are the ones a caller actually produces. `schema.d.ts` types the union as
+   * `string[] | null`, so `null` is what an explicitly-cleared filter has every
+   * right to be; `[]` is what clearing the last faction chip leaves behind.
+   *
+   * Both must vanish from the URL entirely. `?faction=null` and `?faction=` are
+   * each a slug FastAPI will dutifully match nothing against — the #1366 failure
+   * again, arriving as an empty list rather than an unfiltered one.
+   */
+  it('omits a null filter and an empty union, not just an undefined one', async () => {
+    await apiGet('/tasks', { params: { query: { faction: null, sort: 'newest' } } })
+    expect(sentUrl().search).toBe('?sort=newest')
+
+    await apiGet('/tasks', { params: { query: { faction: [], sort: 'newest' } } })
     expect(sentUrl().search).toBe('?sort=newest')
   })
 
