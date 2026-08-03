@@ -83,9 +83,15 @@ function Sentinel() {
  * faction dresses (ADR-0061). One responsive component, so it serves both form
  * factors and there is no mobile row to add beside it.
  *
- * SIX SURFACES ARE STILL UNCLAIMED, in two groups.
+ * and the `factionBody` beneath that hero — THE MUSTER PAGE: the charter, the
+ * muster roll, the two galleries and the enlist rail. Third of #951's four to
+ * ship. Derived rather than drawn, like the two above it: the ornaments come
+ * from `wowOrnament`, the section order from `mobileFactionPage`, and the copy
+ * was already sitting unread in `factions.json` from #900.
  *
- * `factionBody` and `factionCard` are PENDING DESIGN BUGS, tracked by #951.
+ * `factionCard` is the LAST unclaimed desktop surface.
+ *
+ * It is a PENDING DESIGN BUG, tracked by #951.
  * #899/#900/#840 scoped them out on a design-fidelity argument (the kit drew
  * WOW's cards and hero, not the desktop pages beneath them, so a page skin would
  * be invention), but the owner ruled (2026-07-23) that a faction missing a
@@ -93,9 +99,10 @@ function Sentinel() {
  * those pages. They fall to the neutral Default (N/A), never to Coven — which is
  * the point of pinning the set here. When #951 ships a skin, move that surface
  * into WOW_SKINNED and this list shrinks; `surfaceDispatch.test.ts` enforces the
- * same #951 allowlist. That shrink has now happened twice: `taskDetail` moved
- * down into WOW_SKINNED in #1037, and `praxisDetail` in #1121 — each out of both
- * allowlists in the same commit as its skin.
+ * same #951 allowlist. That shrink has now happened three times: `taskDetail`
+ * moved down into WOW_SKINNED in #1037, `praxisDetail` in #1121 and
+ * `factionBody` with the muster page — each out of both allowlists in the same
+ * commit as its skin.
  *
  * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
  * and `mobilePlayersDirectory` used to be listed here as Default-for-everyone
@@ -117,6 +124,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'vote',
   'editPraxis',
   'factionHero',
+  'factionBody',
   'backdrop',
   'profileBody',
   'factionSelectCard',

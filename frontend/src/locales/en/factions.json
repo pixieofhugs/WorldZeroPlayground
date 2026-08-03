@@ -555,20 +555,35 @@
     },
     "tasks": {
       "heading": "Quests Awaiting a Champion",
+      "kicker": "The herald's call",
       "empty": "No quests afoot. The realm is, briefly and tragically, sensible."
     },
     "praxis": {
-      "heading": "Chronicles of Proof"
+      "heading": "Chronicles of Proof",
+      "kicker": "Deeds set down",
+      "empty": "The chronicle stands open, its pages still blank."
     },
     "join": {
+      "heading": "THE MUSTER",
+      "memberTitle": "Thou art sworn",
+      "eligibleKicker": "the lists are open —",
       "eligibleTitle": "Enlist in the Crusade",
-      "eligibleBody": "the armour is one-size, the oath is for life"
+      "eligibleBody": "the armour is one-size, the oath is for life",
+      "joinButton": "TAKE THE OATH ⚔",
+      "joining": "SWEARING…",
+      "confirmButton": "CONFIRM",
+      "gateKicker": "Unsworn — for now",
+      "gateTitle": "Earn thy summons",
+      "gateBody": "Complete quests from {{faction}} and the Court will send a herald. Keep at it — deeds carry further than petitions."
     },
     "spotlight": {
-      "label": "Champion of the Fortnight"
+      "label": "Champion of the Fortnight",
+      "stat": "lvl {{level}} · {{score}} pts"
     },
     "roster": {
-      "heading": "The Muster Roll"
+      "heading": "The Muster Roll",
+      "emptyWithSpotlight": "No other knights mustered yet.",
+      "level": "lvl {{level}}"
     },
     "mobile": {
       "eyebrow": "The Field Pavilion",

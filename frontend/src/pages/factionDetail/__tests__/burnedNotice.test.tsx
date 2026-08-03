@@ -2,8 +2,9 @@
  * The burned notice on the faction detail page (#1305).
  *
  * Walks every desktop faction-body archetype plus the Default fallback (which
- * is what WOW and Albescent render — the surface the defect was reported on)
- * and pins the two non-actionable states apart:
+ * is what Albescent still renders — the surface the defect was reported on;
+ * WOW rendered it too until it got a body of its own) and pins the two
+ * non-actionable states apart:
  *
  *   - "gate"   → not invited YET (#454). "Keep doing tasks" is true here.
  *   - "burned" → left this faction this era; `can_join_faction` refuses the
@@ -54,9 +55,13 @@ function stateWith(slug: string, state: MembershipState): FactionDetailState {
   }
 }
 
-// The Default body is keyed to `wow` — the faction the defect was filed
-// against, which has no bespoke body of its own yet (#951).
-const bodies = { ...surfaceMap('factionBody'), wow: DefaultFactionBody }
+// Every registered body, plus the Default under `albescent` — the one faction
+// still falling through to it, and so the surface this defect was filed
+// against. `wow` USED to be pinned here too, overriding the surface map with
+// `DefaultFactionBody`; it now has a body of its own, and leaving the override
+// in would have quietly kept testing the Default under WOW's name — green, and
+// proving nothing about the page WOW actually renders.
+const bodies = { ...surfaceMap('factionBody'), albescent: DefaultFactionBody }
 
 describe('burned viewers are told the era is closed, not to keep tasking', () => {
   for (const [slug, Body] of Object.entries(bodies)) {
