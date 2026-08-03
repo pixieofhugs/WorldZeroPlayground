@@ -118,8 +118,23 @@ export default function EphemeristsVote({
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          gap: 'var(--space-md)',
-          padding: 'var(--space-md) var(--space-lg)',
+          /*
+           * The gap holds the BURSTS apart, not the discs (#1633). A ray leaves
+           * the rim at `radius + 3` and runs `rayLength` further, so the
+           * ornament reaches 11.5px past an ordinary disc and 14.5px past rank
+           * 5, whose filings also orbit 13px out — two neighbours want ~24px of
+           * clear rim-to-rim, and at `--space-md` (12) they had half that, so
+           * the bursts and the sheens ran into each other. `--space-xl` is the
+           * rung that clears it. The Ephemerists kit asked for 22px; the token
+           * scale has no 22, and this is the direction to round in — the raw
+           * value would also have failed the no-raw-style-values ratchet.
+           *
+           * The horizontal padding matches the gap for the same reason: rank 1
+           * and rank 5 burst toward the plate's border rather than toward a
+           * neighbour, and owe it the same room.
+           */
+          gap: 'var(--space-xl)',
+          padding: 'var(--space-md) var(--space-xl)',
           background:
             'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
           border: `1px solid ${BRASS}`,
