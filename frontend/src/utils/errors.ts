@@ -1,5 +1,6 @@
 import type { AxiosError } from 'axios'
 
+import { ApiError } from '../api/apiError'
 import i18n from '../i18n'
 import errorsCatalog from '../locales/en/errors.json'
 
@@ -158,8 +159,44 @@ function displayableDetail(detail: ErrorDetail | undefined): string | null {
   return message || null
 }
 
+/** The body every failing route answers with — FastAPI's `detail` envelope. */
+type ErrorBody = { detail?: ErrorDetail }
+
 /**
- * Extracts a user-friendly error message from an axios error.
+ * What a failed request tells us, whichever transport issued it (#1400).
+ *
+ * Two are live at once while `api/*.ts` migrates off axios module by module, so
+ * both readers below go through this rather than each growing a second branch.
+ * The transports agree on everything that matters here and disagree on where it
+ * sits: axios hangs `status` and the parsed body off `err.response`, the
+ * openapi-fetch client puts them on {@link ApiError} directly.
+ *
+ * `ApiError` is checked FIRST and deliberately. It carries a `response` too — a
+ * fetch `Response`, which has a `status` and no `data` — so the axios lens would
+ * half-read it: right status, `detail` silently always absent, and every coded
+ * backend error degraded to the caller's generic fallback with nothing failing.
+ */
+function failureOf(err: unknown): {
+  status: number | undefined
+  body: ErrorBody | undefined
+  unreachable: boolean
+} {
+  if (err instanceof ApiError) {
+    return { status: err.status, body: err.data as ErrorBody | undefined, unreachable: false }
+  }
+  const axiosError = err as AxiosError<ErrorBody>
+  return {
+    status: axiosError?.response?.status,
+    body: axiosError?.response?.data,
+    // `ApiNetworkError` sets this exact message for this exact reason, so a
+    // `fetch` that never got an answer reads the same as an axios one.
+    unreachable: axiosError?.message === 'Network Error' || !axiosError?.response,
+  }
+}
+
+/**
+ * Extracts a user-friendly error message from a failed request — an axios
+ * error, or an {@link ApiError} from the openapi-fetch client.
  *
  * Priority:
  *   1. FastAPI `detail` from the response body (skip generic "Internal Server Error"), as either
@@ -175,13 +212,10 @@ export function extractError(
   err: unknown,
   fallback = 'Something went wrong. Please try again.'
 ): string {
-  const e = err as AxiosError<{ detail?: ErrorDetail }>
-
-  const status = e?.response?.status
-  const detail = e?.response?.data?.detail
+  const { status, body, unreachable } = failureOf(err)
 
   // Surface meaningful detail from the backend (e.g. "Task requires level 3")
-  const message = displayableDetail(detail)
+  const message = displayableDetail(body?.detail)
   if (message) return message
 
   // 5xx with no useful detail — the server hit an unhandled error
@@ -195,7 +229,7 @@ export function extractError(
   }
 
   // No response object at all — genuine network failure
-  if (e?.message === 'Network Error' || !e?.response) {
+  if (unreachable) {
     return 'Unable to reach the server. Check your connection and try again.'
   }
 
@@ -203,7 +237,7 @@ export function extractError(
 }
 
 /**
- * Extracts the machine-readable `code` from an axios error, or null.
+ * Extracts the machine-readable `code` from a failed request, or null.
  *
  * The read side of `extractError`: that one answers "what do I show the
  * player", this one answers "which failure was it". Both go through the same
@@ -216,8 +250,7 @@ export function extractError(
  * callers can compare against `ErrorCode.*` without narrowing first.
  */
 export function extractErrorCode(err: unknown): string | null {
-  const detail = (err as AxiosError<{ detail?: ErrorDetail }>)?.response?.data
-    ?.detail
+  const detail = failureOf(err).body?.detail
   if (!detail || typeof detail === 'string' || Array.isArray(detail)) return null
   return typeof detail.code === 'string' ? detail.code : null
 }
