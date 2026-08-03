@@ -1,7 +1,7 @@
-import api from './axios'
+import { apiGet } from './client'
 import type { CharacterOut } from './auth'
 
 export async function getLeaderboard(params?: { limit?: number; offset?: number }): Promise<CharacterOut[]> {
-  const { data } = await api.get<CharacterOut[]>('/leaderboard', { params })
+  const { data } = await apiGet('/leaderboard', { params: { query: params } })
   return data
 }

@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiGet, apiPost, apiPatch, apiDelete } from './client'
 import type { FlagReason } from '../utils/flagReasons'
 
 /** A resolved @mention — the frontend linkifies these handles in the body. */
@@ -17,6 +17,20 @@ export interface CommentAuthor {
   faction_slug: string | null
 }
 
+/**
+ * ponytail (#1400): `praxis_id` / `task_id` stay REQUIRED here where the
+ * generated schema marks them optional, so the three reads below narrow with a
+ * cast rather than this interface widening to match.
+ *
+ * The schema is the imprecise one. Their Pydantic fields are `int | None = None`,
+ * and openapi-typescript reads "has a default" as "may be absent" — but FastAPI
+ * serializes the key regardless, so it is always on the wire as `number | null`.
+ * Widening to `?` would hand every reader a `| undefined` that never arrives.
+ *
+ * Upgrade path: the alias slice of #1400 replaces this interface with
+ * `components['schemas']['CommentOut']` outright; that is where the optionality
+ * gets reconciled once, for every module, instead of per-field here.
+ */
 export interface CommentOut {
   id: number
   praxis_id: number | null
@@ -31,12 +45,19 @@ export interface CommentOut {
 
 export type CommentTarget = 'praxes' | 'tasks'
 
+// The praxis and task threads are two routes, not one path built from a
+// variable: `/praxes/{praxis_id}/comments` and `/tasks/{task_id}/comments` are
+// separate keys in the schema, with differently-named slots. The branch is what
+// makes the target a checked choice instead of a string that happens to resolve.
 export async function listComments(
   target: CommentTarget,
   id: number,
 ): Promise<CommentOut[]> {
-  const { data } = await api.get<CommentOut[]>(`/${target}/${id}/comments`)
-  return data
+  const { data } =
+    target === 'praxes'
+      ? await apiGet('/praxes/{praxis_id}/comments', { params: { path: { praxis_id: id } } })
+      : await apiGet('/tasks/{task_id}/comments', { params: { path: { task_id: id } } })
+  return data as CommentOut[]
 }
 
 export async function createComment(
@@ -44,25 +65,33 @@ export async function createComment(
   id: number,
   body_text: string,
 ): Promise<CommentOut> {
-  const { data } = await api.post<CommentOut>(`/${target}/${id}/comments`, {
-    body_text,
-  })
-  return data
+  const { data } =
+    target === 'praxes'
+      ? await apiPost('/praxes/{praxis_id}/comments', {
+          params: { path: { praxis_id: id } },
+          body: { body_text },
+        })
+      : await apiPost('/tasks/{task_id}/comments', {
+          params: { path: { task_id: id } },
+          body: { body_text },
+        })
+  return data as CommentOut
 }
 
 export async function editComment(
   commentId: number,
   body_text: string,
 ): Promise<CommentOut> {
-  const { data } = await api.patch<CommentOut>(`/comments/${commentId}`, {
-    body_text,
+  const { data } = await apiPatch('/comments/{comment_id}', {
+    params: { path: { comment_id: commentId } },
+    body: { body_text },
   })
-  return data
+  return data as CommentOut
 }
 
 /** Author-only soft-delete → the comment is withdrawn (204, no body). */
 export async function deleteComment(commentId: number): Promise<void> {
-  await api.delete(`/comments/${commentId}`)
+  await apiDelete('/comments/{comment_id}', { params: { path: { comment_id: commentId } } })
 }
 
 /**
@@ -75,8 +104,8 @@ export async function flagComment(
   reason: FlagReason,
   reasonDetail?: string,
 ): Promise<void> {
-  await api.post(`/comments/${commentId}/flag`, {
-    reason,
-    reason_detail: reasonDetail || null,
+  await apiPost('/comments/{comment_id}/flag', {
+    params: { path: { comment_id: commentId } },
+    body: { reason, reason_detail: reasonDetail || null },
   })
 }

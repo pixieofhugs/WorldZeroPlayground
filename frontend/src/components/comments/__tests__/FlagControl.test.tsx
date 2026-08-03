@@ -9,15 +9,33 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 
-// Mock axios so the comments client exercises without a network.
-vi.mock('../../../api/axios', () => ({
-  default: { get: vi.fn(), post: vi.fn().mockResolvedValue({ data: {} }), patch: vi.fn(), delete: vi.fn() },
-}))
+/**
+ * Stub the wire so the comments client exercises without a network (#1400).
+ *
+ * `vi.hoisted`, NOT `beforeEach`: `openapi-fetch` binds `globalThis.fetch` when
+ * the client is CREATED, which happens at `api/client`'s top level — i.e. during
+ * this file's imports. A later `vi.stubGlobal('fetch', …)` is simply never
+ * consulted, and the failure is not a failure: the suite issues REAL requests to
+ * whatever is listening on localhost:8000 and asserts against its answers.
+ *
+ * This stub cannot go inert the way the `api/axios` module mock it replaces did.
+ * Every assertion below reads the request out of `wire.sent`, which only this
+ * stub writes to — so a request that escapes to the network leaves `sent` empty
+ * and the test throws rather than quietly passing.
+ */
+const wire = vi.hoisted(() => {
+  const sent: Request[] = []
+  globalThis.fetch = (async (input: Request) => {
+    sent.push(input)
+    return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
+  }) as unknown as typeof globalThis.fetch
+  return { sent }
+})
+
 // Control the signed-in viewer for the render cases.
 const authState = vi.hoisted(() => ({ user: null as unknown }))
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => authState }))
 
-import api from '../../../api/axios'
 import { flagComment } from '../../../api/comments'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 
@@ -49,10 +67,19 @@ describe('canFlagComment — viewer eligibility (#575)', () => {
 describe('flagComment — client body (#575)', () => {
   it('POSTs the reason + reason_detail to the comment flag route', async () => {
     await flagComment(7, 'spam', 'context')
-    expect(api.post).toHaveBeenCalledWith('/comments/7/flag', {
-      reason: 'spam',
-      reason_detail: 'context',
-    })
+
+    const request = wire.sent.at(-1)!
+    expect(request.method).toBe('POST')
+    expect(new URL(request.url).pathname).toBe('/comments/7/flag')
+    expect(await request.json()).toEqual({ reason: 'spam', reason_detail: 'context' })
+  })
+
+  // `reason_detail` only persists server-side with reason='other', but the field
+  // is always sent — an absent detail is an explicit null, not a missing key.
+  it('sends an explicit null detail when none is given', async () => {
+    await flagComment(7, 'spam')
+
+    expect(await wire.sent.at(-1)!.json()).toEqual({ reason: 'spam', reason_detail: null })
   })
 })
 
