@@ -4,8 +4,9 @@
  * A link that quietly lands unfiltered is this repo's most expensive class of
  * frontend bug: the page renders, the request 200s, the list is simply the whole
  * catalogue, and tsc, eslint, the render assertions and CI all pass over it (see
- * `FEED_PARAMS_SERIALIZER` in `api/activityFeed` for the version of this that
- * shipped). Asserting `href="/tasks?can_sign_up=1"` in a skin test only proves
+ * `api/__tests__/client.test.ts` for the version of this that shipped, and for
+ * the repeated-bare-key rule that now guards it). Asserting
+ * `href="/tasks?can_sign_up=1"` in a skin test only proves
  * the string was typed correctly — it says nothing about whether the destination
  * reads that key.
  *
