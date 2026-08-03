@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiGet, apiPost } from './client'
 import type { PraxisType } from './praxis'
 
 export type TaskType = 'standard' | 'metatask'
@@ -13,7 +13,14 @@ export interface TaskOut {
   task_type: TaskType
   created_by: number
   primary_faction_slug: string | null
-  metatask_faction_slug: string | null
+  /**
+   * OPTIONAL as of #1400, because the generated schema says so: the backend
+   * declares it `str | None = None`, which makes the key non-required in the
+   * OpenAPI document even though a live response always serialises it. It sits
+   * beside `created_by_faction_slug`, which this interface already spelled the
+   * same way, so the file is now consistent with itself as well as the wire.
+   */
+  metatask_faction_slug?: string | null
   created_at: string
   // Derived, read-time count of characters actively working on this task —
   // active-signup population (in_progress + pending), consistent with
@@ -74,8 +81,14 @@ export interface TaskFilters {
   status?: string
   /**
    * Repeated `?faction=` — a UNION, not an intersection (#1364). One slug
-   * narrows to one faction; none at all filters nothing. See
-   * {@link REPEATED_QUERY_PARAMS} for why the serializer is not the default.
+   * narrows to one faction; none at all filters nothing.
+   *
+   * REPEATED BARE keys, never `faction[]=` — the bracketed spelling is simply
+   * not the parameter FastAPI declared, so the union filter would do NOTHING
+   * while the request still answered 200 and the bar still showed its chips.
+   * This module carried a `paramsSerializer` to force that shape out of axios;
+   * `./client` writes it by default, and `__tests__/client.test.ts` pins the
+   * URL it builds for this very route rather than trusting the default (#1400).
    */
   faction?: string[]
   /**
@@ -99,30 +112,18 @@ export interface TaskFilters {
   offset?: number
 }
 
-/**
- * Axios renders an array param as `faction[]=a&faction[]=b` by default. FastAPI
- * reads a repeated `faction: list[str] = Query(None)` — the bracketed key is
- * simply not the parameter, so the union filter would silently do NOTHING and
- * the page would show an unfiltered list with faction chips on it.
- * `indexes: null` is axios's "repeat the bare key" mode.
- */
-export const REPEATED_QUERY_PARAMS = { indexes: null } as const
-
 export async function listTasks(filters?: TaskFilters): Promise<TaskOut[]> {
-  const { data } = await api.get<TaskOut[]>('/tasks', {
-    params: filters,
-    paramsSerializer: REPEATED_QUERY_PARAMS,
-  })
+  const { data } = await apiGet('/tasks', { params: { query: filters } })
   return data
 }
 
 export async function getTask(id: number): Promise<TaskOut> {
-  const { data } = await api.get<TaskOut>(`/tasks/${id}`)
+  const { data } = await apiGet('/tasks/{task_id}', { params: { path: { task_id: id } } })
   return data
 }
 
 export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
-  const { data } = await api.post<TaskOut>('/tasks', body)
+  const { data } = await apiPost('/tasks', { body })
   return data
 }
 
@@ -160,6 +161,8 @@ export interface TaskSignupOut {
  * means adding a round trip, so it wants a designed consumer, not a re-wire.
  */
 export async function getTaskSignups(taskId: number): Promise<TaskSignupOut[]> {
-  const { data } = await api.get<TaskSignupOut[]>(`/tasks/${taskId}/signups`)
+  const { data } = await apiGet('/tasks/{task_id}/signups', {
+    params: { path: { task_id: taskId } },
+  })
   return data
 }

@@ -16,6 +16,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ApiError } from "../api/apiError";
 import { getCharacter } from "../api/characters";
 import { listPraxes } from "../api/praxis";
 import { listTasks } from "../api/tasks";
@@ -104,17 +105,20 @@ export default function CharacterProfile() {
       // Handle 409 (already exists) gracefully — re-fetch existing relationship.
       // This one stays a list read: the write FAILED, so there is no response
       // body carrying the edge that already existed.
-      if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { status?: number } };
-        if (axiosErr.response?.status === 409) {
-          const rels = await listRelationships();
-          const match = rels.find(
-            (r) => r.to_character_id === character.id,
-          );
-          setRelationship(match ?? null);
-        } else {
-          setRelationshipError("Could not add relationship.");
-        }
+      //
+      // Read through `ApiError` rather than duck-typing a `.response.status`.
+      // The duck-typed form was written for axios and kept working here only by
+      // accident: `ApiError` happens to carry a field called `response` holding
+      // a fetch `Response`, which happens to expose `.status`. Two coincidences
+      // deep is not a contract, and `apiError.ts` is import-free precisely so a
+      // page can name the real type without pulling the transport onto its
+      // load path.
+      if (err instanceof ApiError && err.status === 409) {
+        const rels = await listRelationships();
+        const match = rels.find(
+          (r) => r.to_character_id === character.id,
+        );
+        setRelationship(match ?? null);
       } else {
         setRelationshipError("Could not add relationship.");
       }

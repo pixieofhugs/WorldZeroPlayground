@@ -1,4 +1,5 @@
-import api from './axios'
+import { apiGet, apiPost, apiPut, apiDelete } from './client'
+import type { components } from './generated/schema'
 import type { CharacterOut } from './auth'
 
 export type { CharacterOut }
@@ -39,22 +40,41 @@ export async function listCharacters(params?: {
   exclude_own_account?: boolean
   limit?: number
 }): Promise<CharacterOut[]> {
-  const { data } = await api.get<CharacterOut[]>('/characters', { params })
+  const { data } = await apiGet('/characters', { params: { query: params } })
   return data
 }
 
 export async function getCharacter(id: number): Promise<CharacterOut> {
-  const { data } = await api.get<CharacterOut>(`/characters/${id}`)
+  const { data } = await apiGet('/characters/{character_id}', {
+    params: { path: { character_id: id } },
+  })
   return data
 }
 
 export async function createCharacter(body: CharacterCreate): Promise<CharacterOut> {
-  const { data } = await api.post<CharacterOut>('/characters', body)
+  const { data } = await apiPost('/characters', {
+    // ponytail (#1400): the generated request type demands `bio`, `avatar_url`
+    // and `location`, which this payload legitimately omits.
+    //
+    // The backend declares all three `Field(default="")`, and openapi-typescript
+    // reads "has a default" as "always present" — a rule that is right for a
+    // RESPONSE and backwards for a request body, where a default is precisely
+    // what makes a field omissible. The server accepts `{display_name}` alone
+    // today and `buildCreatePayload` sends exactly that.
+    //
+    // Upgrade path: generate request bodies with defaults left optional (a flag
+    // on the shared `scripts/regen_api_client.py`, which regenerates the schema
+    // for every module at once), then drop this cast.
+    body: body as components['schemas']['CharacterCreate'],
+  })
   return data
 }
 
 export async function updateCharacter(id: number, body: CharacterUpdate): Promise<CharacterOut> {
-  const { data } = await api.put<CharacterOut>(`/characters/${id}`, body)
+  const { data } = await apiPut('/characters/{character_id}', {
+    params: { path: { character_id: id } },
+    body,
+  })
   return data
 }
 
@@ -62,12 +82,27 @@ export async function updateCharacter(id: number, body: CharacterUpdate): Promis
  *  deleting someone else's life; the account's active life is re-resolved on the
  *  next /auth/me refetch. */
 export async function deleteCharacter(id: number): Promise<void> {
-  await api.delete(`/characters/${id}`)
+  await apiDelete('/characters/{character_id}', { params: { path: { character_id: id } } })
 }
 
+/**
+ * The one multipart call in the app.
+ *
+ * `openapi-fetch`'s default body serializer returns a `FormData` untouched and
+ * leaves Content-Type unset, so the platform writes the boundary — verified, not
+ * assumed, in `__tests__/avatarUpload.test.ts`, because a serializer that chose
+ * to `JSON.stringify` this would send `{}` and fail only at runtime.
+ *
+ * The cast is the schema's limit, not a shortcut: OpenAPI renders a binary
+ * upload as `{ file: string }`, which is the shape of the multipart FIELD, and
+ * no TypeScript type for this route can describe the `FormData` that carries it.
+ */
 export async function uploadCharacterAvatar(id: number, file: File): Promise<CharacterOut> {
   const form = new FormData()
   form.append('file', file)
-  const { data } = await api.post<CharacterOut>(`/characters/${id}/avatar`, form)
+  const { data } = await apiPost('/characters/{character_id}/avatar', {
+    params: { path: { character_id: id } },
+    body: form as unknown as components['schemas']['Body_upload_avatar_characters__character_id__avatar_post'],
+  })
   return data
 }

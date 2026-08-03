@@ -87,8 +87,8 @@ describe('the request the client builds', () => {
    * `faction: list[str] = Query(None)`, which FastAPI reads from REPEATED bare
    * keys. Axios' default writes `faction[]=ua`, from which FastAPI reads
    * nothing at all: the request succeeds, the filter vanishes, and no test,
-   * type or log says a word. `api/tasks.ts` carries `REPEATED_QUERY_PARAMS`
-   * purely to undo that.
+   * type or log says a word. `api/tasks.ts` carried a `REPEATED_QUERY_PARAMS`
+   * serializer purely to undo that, until this client made it unnecessary.
    *
    * openapi-fetch defaults to `style: "form", explode: true`, which is the
    * shape FastAPI wants — but "the library's default happens to be right" is a

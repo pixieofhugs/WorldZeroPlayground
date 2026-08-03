@@ -1,4 +1,4 @@
-import api from './axios'
+import { apiGet, apiPost } from './client'
 import type { CurrentUser } from './auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
 
@@ -30,13 +30,13 @@ export interface FactionPageOut {
 }
 
 export async function getFactions(): Promise<FactionOut[]> {
-  const res = await api.get<FactionOut[]>('/factions')
-  return res.data
+  const { data } = await apiGet('/factions')
+  return data
 }
 
 export async function getFactionStatus(): Promise<FactionPageOut> {
-  const res = await api.get<FactionPageOut>('/factions/status')
-  return res.data
+  const { data } = await apiGet('/factions/status')
+  return data
 }
 
 /**
@@ -48,12 +48,19 @@ export async function getFactionStatus(): Promise<FactionPageOut> {
  * it straight to `applyUser()` instead of chasing it with `refetch()`.
  */
 export async function chooseFaction(factionSlug: string): Promise<CurrentUser> {
-  const res = await api.post<CurrentUser>('/factions/choose', { faction_slug: factionSlug })
+  const { data } = await apiPost('/factions/choose', { body: { faction_slug: factionSlug } })
   // `GET /factions` is viewer-scoped: Albescent is omitted until the account has
   // been revealed to it (ADR-0027), and joining is what reveals it. The
   // directory is otherwise deploy-scoped and held for the whole session
   // (ADR-0072), so the reveal has to be answered as the mutation it is — a timer
   // short enough to catch it would defeat the class.
   dropAllCaches()
-  return res.data
+  // ponytail (#1400): the generated `CurrentUser` marks `character` optional
+  // (its Pydantic field is `CharacterOut | None = None`, and openapi-typescript
+  // reads a `None` default as "may be absent"), while `./auth.ts` declares it a
+  // required `CharacterOut | null` — which is what actually arrives, since
+  // FastAPI serializes the key either way. Narrowed here rather than widened
+  // there: `auth.ts` belongs to another slice of this migration, and `character`
+  // is read unguarded across the app. Goes away with the alias slice.
+  return data as CurrentUser
 }
