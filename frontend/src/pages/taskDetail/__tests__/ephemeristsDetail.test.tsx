@@ -197,10 +197,22 @@ describe("the Valley plate's tokens", () => {
     expect(referenced.length).toBeGreaterThan(10);
   });
 
+  // The plate used to owe a value in BOTH cascades, and this block checked that
+  // token by token. #1627 took the register theme-INVARIANT — the papyrus half
+  // could not survive the card contract moving onto the cornice band, because
+  // one set of card ink names then had to serve two grounds of opposite
+  // polarity — so the question flips: every token is declared once in `:root`
+  // and none of them may reappear under `[data-theme="dark"]`. A stray dark
+  // override would resurrect the split this change exists to remove, and would
+  // do it silently: `factionContrast.test.ts` measures whatever is declared, so
+  // it would just go back to measuring two palettes, and pass.
   for (const token of referenced) {
-    it(`${token} is declared in both themes`, () => {
+    it(`${token} is declared once, in :root`, () => {
       expect(themes.light.has(token), "light / :root").toBe(true);
-      expect(themes.dark.has(token), '[data-theme="dark"]').toBe(true);
+      expect(
+        themes.dark.has(token),
+        'the Valley plate is theme-invariant (#1627) — a `[data-theme="dark"]` value splits it back in two',
+      ).toBe(false);
     });
   }
 });

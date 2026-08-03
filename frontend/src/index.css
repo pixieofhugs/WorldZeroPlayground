@@ -85,6 +85,26 @@
      measured is a name pretending to be a value (#1213). */
   --label-ink: var(--color-text-tertiary);
 
+  /* ── A PROSE LINK'S INK IS A SEAM TOO (#1636) ─────────────────────────────
+     Read by `.markdown-preview a` and by nothing else, declared here rather
+     than left to a fallback for the reason `--label-ink` gives above.
+
+     Same measurement, one property over. `.markdown-preview` is the only rule
+     in the app that colours a link, and the praxis body it renders is skinned
+     by all eight factions — so ONE ink was answering for the app's near-white
+     page, S.N.I.D.E.'s photocopier black (3.06:1), Singularity's terminal
+     (3.17:1) and the Ephemerists' plate, which since #1627 is a night ground in
+     both cascades (2.82:1 on the plate, 3.01 on its page, 2.60 in a panel cell;
+     the hover ink, being the near-black primary, reads 1.07:1 there). A colour
+     that must differ between two factions inside one theme is #694's shape.
+
+     NOTHING IS MINTED for the Ephemerists half: `-plate-nile` is declared
+     "links, affirmations" and is already measured on all three of the plate's
+     grounds (7.00 / 7.47 / 6.47), and hover goes to the plate's body ink, which
+     is the same relation the two neutrals below have to each other. */
+  --link-ink: var(--color-text-secondary);
+  --link-ink-hover: var(--color-text-primary);
+
   /* ── Borders ── */
   --color-border: rgba(0, 0, 0, 0.07);
   --color-border-strong: rgba(0, 0, 0, 0.15);
@@ -2618,24 +2638,26 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
+  /* The page stock is a LONGHAND (#1636): a `background` shorthand carrying a
+     themed token resets four other longhands with it, and naming the shorthand
+     in a `transition` animates a list only `background-color` interpolates. */
+  background-color: var(--color-bg-page);
+  background-image:
     radial-gradient(38% 44% at 8% 8%,   rgba(193,39,45,0.16),  transparent 70%),
     radial-gradient(34% 40% at 30% 4%,  rgba(202,138,4,0.15),  transparent 70%),
     radial-gradient(40% 46% at 94% 10%, rgba(37,99,235,0.16),  transparent 70%),
     radial-gradient(36% 42% at 6% 92%,  rgba(190,24,93,0.15),  transparent 70%),
-    radial-gradient(40% 46% at 88% 94%, rgba(22,163,74,0.15),  transparent 70%),
-    var(--color-bg-page);
-  transition: background 300ms;
+    radial-gradient(40% 46% at 88% 94%, rgba(22,163,74,0.15),  transparent 70%);
+  transition: background-color 300ms;
 }
 
 [data-theme="dark"] .na-backdrop {
-  background:
+  background-image:
     radial-gradient(38% 44% at 8% 8%,   rgba(239,83,80,0.14),   transparent 70%),
     radial-gradient(34% 40% at 30% 4%,  rgba(230,185,79,0.12),  transparent 70%),
     radial-gradient(40% 46% at 94% 10%, rgba(96,165,250,0.14),  transparent 70%),
     radial-gradient(36% 42% at 6% 92%,  rgba(244,114,182,0.12), transparent 70%),
-    radial-gradient(40% 46% at 88% 94%, rgba(74,222,128,0.12),  transparent 70%),
-    var(--color-bg-page);
+    radial-gradient(40% 46% at 88% 94%, rgba(74,222,128,0.12),  transparent 70%);
 }
 
 /* ── Dark mode: warmer gold text inside editable fields ── */
@@ -3428,12 +3450,15 @@
     @apply pl-3 italic mb-3;
     color: var(--color-text-secondary);
   }
+  /* The seam, not the neutral (#1636) — see `--link-ink` in :root. Unset it
+     resolves to exactly the two neutrals this rule used to name, so every
+     surface outside a faction frame renders what it rendered before. */
   .markdown-preview a {
     @apply underline;
-    color: var(--color-text-secondary);
+    color: var(--link-ink);
   }
   .markdown-preview a:hover {
-    color: var(--color-text-primary);
+    color: var(--link-ink-hover);
   }
 
   /* ── S.N.I.D.E. punk textures — shared utilities for faction surfaces ──
@@ -3778,30 +3803,33 @@
    inks this ground carries were walked down to a measured margin over the FLAT
    page value, and a darkening vignette eats that margin exactly where the page
    runs longest: `-nile` falls from 4.70 to 4.29 under a 5% black veil. That is
-   how a decorative gradient fails AA without anything reporting it. */
+   how a decorative gradient fails AA without anything reporting it.
+
+   THE STOCK IS A LONGHAND (#1636). It was a `background` shorthand carrying the
+   gradient and the token together, with `transition: background` over the top —
+   a declaration that resets four other longhands and animates a list only one
+   member of which interpolates. `.wow-detail-field` and `.ua-praxis-leaf` had
+   already settled the shape; this is the third ground to take it.
+
+   ONE RULE, NOT TWO. The dark twin existed to swap the bloom's gold for a
+   dimmer one over a night plate. The plate is night in both cascades since
+   #1627, so the twin's values are simply the values, and the LINK INKS the
+   column hands down (#1636) are declared here for the same reason a faction
+   frame sets `--label-ink` once on its own root. */
 .eph-plate-sheet {
-  background:
-    radial-gradient(58% 40% at 50% 0%, rgba(227, 197, 106, 0.16), transparent 72%),
-    var(--faction-ephemerists-plate-page);
-  transition: background 300ms;
-}
-[data-theme="dark"] .eph-plate-sheet {
-  background:
-    radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%),
-    var(--faction-ephemerists-plate-page);
+  --link-ink: var(--faction-ephemerists-plate-nile);
+  --link-ink-hover: var(--faction-ephemerists-plate-ink);
+  background-color: var(--faction-ephemerists-plate-page);
+  background-image: radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%);
+  transition: background-color 300ms;
 }
 
-/* The winged disc crowning the action panel (#1032). The design lifts the gold
-   off the papyrus with a hard night-blue offset plus a soft cast, and drops to a
-   plain soft cast on the dark plate where the hard edge would only smear. That
-   choice arrives here as a cascade rule rather than as the design's
-   `theme === 'dark' ? … : …` ternary in the component. */
+/* The winged disc crowning the action panel (#1032). The design lifted the gold
+   off the PAPYRUS with a hard night-blue offset plus a soft cast, and dropped to
+   a plain soft cast on the dark plate where the hard edge would only smear. Only
+   the second case survives #1627: there is no papyrus plate in either cascade
+   now, and a hard navy offset against a navy ground draws nothing. */
 .eph-plate-crown {
-  filter:
-    drop-shadow(0 2px 0 var(--faction-ephemerists-plate-band))
-    drop-shadow(0 6px 14px rgba(30, 34, 51, 0.45));
-}
-[data-theme="dark"] .eph-plate-crown {
   filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
 }
 
@@ -5050,8 +5078,9 @@
      only the ground and its blooms. `overflow: hidden` stays because the
      ::before bloom is inset -25% and must be clipped to the column. */
   overflow: hidden;
-  background: var(--faction-coven-ward-page);
-  transition: background 300ms;
+  /* A longhand, for the reason `.na-backdrop` gives (#1636). */
+  background-color: var(--faction-coven-ward-page);
+  transition: background-color 300ms;
 }
 /* The same wash on the VIEWPORT. `.coven-backdrop` is the `backdrop` surface,
    which `FactionBackdrop` mounts behind a Coven player's character profile —
@@ -5066,8 +5095,8 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: var(--faction-coven-ward-page);
-  transition: background 300ms;
+  background-color: var(--faction-coven-ward-page);
+  transition: background-color 300ms;
 }
 .coven-candle-backdrop::before,
 .coven-backdrop::before {
