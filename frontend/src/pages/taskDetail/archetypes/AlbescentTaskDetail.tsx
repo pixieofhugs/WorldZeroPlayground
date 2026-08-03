@@ -97,9 +97,7 @@ export default function AlbescentTaskDetail({
           flexWrap: "wrap",
         }}
       >
-        <span className="eyebrow" style={{ letterSpacing: "0.16em" }}>
-          {t("detail.points.base")}
-        </span>
+        <span className="label-caption">{t("detail.points.base")}</span>
         <span
           style={{
             fontFamily: "var(--font-accent)",
@@ -146,9 +144,8 @@ export default function AlbescentTaskDetail({
             {modifiedPoints}
           </span>
           <span
-            className="eyebrow"
+            className="label-caption"
             style={{
-              fontSize: "var(--text-xs)",
               marginTop: "var(--space-xs)",
               color: "var(--faction-default-gold)",
             }}
