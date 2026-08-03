@@ -369,7 +369,7 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
       ink={paint}
       subtitle={
         rival.praxis_id != null ? (
-          <span className="eyebrow" style={{ color: paint.muted }}>
+          <span className="label-caption" style={{ color: paint.muted }}>
             {t('duelCrossLink.readTheirPraxis')}
           </span>
         ) : undefined
