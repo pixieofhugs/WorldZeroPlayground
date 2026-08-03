@@ -225,4 +225,40 @@ def __getattr__(name: str):
         globals()["ERA_1_FACTIONS"] = _factions
         globals()["CURRENT_ERA"] = _era_1
         return globals()[name]
+    if name in ("ERA_2", "ERA_2_FACTIONS"):
+        # Era 2 (Metamorphosis) is authored, not activated: CURRENT_ERA stays
+        # Era 1 above.
+        from eras.era_2 import ERA_2 as _era_2
+        from eras.era_2 import ERA_2_FACTIONS as _factions
+        globals()["ERA_2"] = _era_2
+        globals()["ERA_2_FACTIONS"] = _factions
+        return globals()[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# The config_key -> EraConfig registry (#1623). A stored ``Era`` row records
+# which ruleset governed it via ``Era.config_key``; this is the only way back
+# from that key to the rules, and the reason the era announcement can label a
+# *past* era correctly instead of relabelling it with whatever CURRENT_ERA is.
+#
+# Deliberately a key -> ATTRIBUTE-NAME map rather than key -> EraConfig: reading
+# the config_key off an era file means importing every era file at module load,
+# which is exactly the eager import the __getattr__ above exists to avoid. The
+# duplication is one string per era, and a unit test asserts the two agree.
+_ERA_ATTRIBUTE_BY_CONFIG_KEY: dict[str, str] = {
+    "era_1": "ERA_1",
+    "era_2": "ERA_2",
+}
+
+
+def era_config_for_key(config_key: str) -> EraConfig | None:
+    """The EraConfig a stored ``Era.config_key`` names, or ``None`` if unknown.
+
+    ``None`` for an era whose config file has been deleted, or for a row written
+    by a newer version of the app. Callers own the fallback; the era announcement
+    falls back to the ``Era.name`` recorded on the row.
+    """
+    attribute_name = _ERA_ATTRIBUTE_BY_CONFIG_KEY.get(config_key)
+    if attribute_name is None:
+        return None
+    return globals().get(attribute_name) or __getattr__(attribute_name)

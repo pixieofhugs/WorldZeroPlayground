@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from game_config import ERA_1
+from game_config import ERA_1, ERA_2
 from models.praxis import ModerationStatus
 from services.duel_outcome import duel_winner
 from services.scoring import (
@@ -262,6 +262,61 @@ def test_collab_unaffiliated_task():
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
     assert result == ERA_1.factions["wow"].collab_own_modifier
+
+
+# ---------------------------------------------------------------------------
+# Era 2 (Metamorphosis): the 120/80 split is solo + duel, never collab (#1618)
+# ---------------------------------------------------------------------------
+# The same function under a second ruleset — the reason a second era exists at
+# all. Era 1 flattens every modifier to 1.0, so nothing above can tell "reads
+# the era's own/other fields" apart from "returns 1.0".
+
+
+def test_era_2_own_other_split_lands_on_solo_and_duel():
+    for mode in (COLLABORATION_MODE_SOLO, COLLABORATION_MODE_DUEL):
+        own = compute_faction_multiplier(
+            "snide", "snide", ERA_2, collaboration_mode=mode
+        )
+        other = compute_faction_multiplier(
+            "snide", "wow", ERA_2, collaboration_mode=mode
+        )
+        assert own == 1.2, mode
+        assert other == 0.8, mode
+
+
+def test_era_2_cross_faction_task_is_not_penalised():
+    """A `na` task belongs to no faction, so it takes the OWN modifier — the
+    0.8 is for another faction's work, not for generic work."""
+    assert compute_faction_multiplier("snide", "na", ERA_2) == 1.2
+
+
+def test_era_2_collab_stays_flat_both_ways():
+    """Deliberately asymmetric with the solo/duel pair above (owner ruling): a
+    collaboration on your own faction's task must not be worth less than doing
+    it alone, and a cross-faction collab is not penalised."""
+    for character_faction, task_faction in (("wow", "wow"), ("wow", "snide")):
+        assert compute_faction_multiplier(
+            character_faction, task_faction, ERA_2,
+            collaboration_mode=COLLABORATION_MODE_COLLAB,
+        ) == 1.0, (character_faction, task_faction)
+
+
+def test_era_2_duel_outcome_multiplies_on_top_of_the_split():
+    """The two multipliers are separate inputs to compute_praxis_score, so a
+    Snide duel win on another faction's task is base × 0.8 × 2.0."""
+    faction_multiplier = compute_faction_multiplier(
+        "snide", "wow", ERA_2, collaboration_mode=COLLABORATION_MODE_DUEL
+    )
+    duel_multiplier = compute_duel_multiplier(
+        "snide", "wow", is_winner=True, is_tied=False, era=ERA_2
+    )
+    score = compute_praxis_score(
+        task_point_value=10,
+        faction_multiplier=faction_multiplier,
+        total_stars=0,
+        duel_multiplier=duel_multiplier,
+    )
+    assert score == 10 * 0.8 * 2.0
 
 
 # ---------------------------------------------------------------------------
