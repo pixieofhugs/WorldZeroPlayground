@@ -44,6 +44,7 @@ const CHARACTER: CharacterOut = {
   username: 'molly',
   display_name: 'Mollusk',
   bio: '',
+  tagline: '',
   avatar_url: '',
   location: '',
   level: 4,

@@ -45,6 +45,7 @@ const CHARACTER: CharacterOut = {
   avatar_url: '',
   faction_slug: 'snide',
   bio: '',
+  tagline: '',
   location: '',
   level: 4,
   score: 0,

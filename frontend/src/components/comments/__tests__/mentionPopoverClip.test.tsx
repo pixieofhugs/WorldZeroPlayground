@@ -55,6 +55,7 @@ function character(slug: string): CharacterOut {
     avatar_url: '',
     faction_slug: slug,
     bio: '',
+    tagline: '',
     location: '',
     level: 3,
     score: 0,

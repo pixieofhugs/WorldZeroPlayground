@@ -35,6 +35,7 @@ const MOCK_USER: CurrentUser = {
     username: "wayfarer",
     display_name: "Wayfarer",
     bio: "",
+    tagline: "",
     avatar_url: "",
     location: "",
     level: 4,

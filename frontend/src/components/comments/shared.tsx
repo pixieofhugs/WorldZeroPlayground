@@ -49,6 +49,7 @@ export function authorToCharacter(
     avatar_url: author.avatar_url,
     faction_slug: author.faction_slug,
     bio: '',
+    tagline: '',
     location: '',
     level: 0,
     score: 0,

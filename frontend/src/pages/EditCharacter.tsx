@@ -7,6 +7,7 @@ import ImageEditModal from '../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useEditCharacter, type EditCharacterState } from './characterPaths/useEditCharacter'
+import { TAGLINE_MAX } from './characterPaths/useCreateCharacter'
 import PortraitPicker from './characterPaths/PortraitPicker'
 import DefaultEditCharacter from './characterPaths/mobileArchetypes/DefaultEditCharacter'
 
@@ -101,6 +102,8 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     setDisplayName,
     bio,
     setBio,
+    tagline,
+    setTagline,
     location,
     setLocation,
     avatarFile,
@@ -305,6 +308,27 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
             placeholder={t('editCharacter.storyPlaceholder')}
             style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }}
           />
+
+          {/* Tagline — the slogan line (#1628). It sits inside this card rather
+              than in one of its own so the two read as the pair they are: the
+              paragraph, and the line that goes above it. */}
+          <div style={{ marginTop: 'var(--space-lg)' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <span style={fieldLabel}>{t('editCharacter.taglineLabel')}</span>
+              <span className={`font-body text-xs ${tagline.length >= TAGLINE_MAX ? 'text-red-600' : 'text-muted'}`}>
+                {t('editCharacter.taglineCount', { count: tagline.length })}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              maxLength={TAGLINE_MAX}
+              placeholder={t('editCharacter.taglinePlaceholder')}
+              style={inputStyle}
+            />
+          </div>
+
           <div style={{ marginTop: 'var(--space-lg)' }}>
             <span style={fieldLabel}>
               {t('editCharacter.basedLabel')} <span style={{ color: 'var(--color-text-tertiary)' }}>{t('editCharacter.optional')}</span>

@@ -26,6 +26,7 @@ const MEMBER: CharacterOut = {
   username: 'ada',
   display_name: 'Ada Reed',
   bio: '',
+  tagline: '',
   avatar_url: '',
   location: '',
   level: 2,

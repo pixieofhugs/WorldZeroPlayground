@@ -38,6 +38,7 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
     username: 'reza',
     display_name: 'Reza',
     bio: '',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 7,

@@ -6,11 +6,12 @@ import { UNAFFILIATED_FACTION_SLUG, factionName } from '../../../utils/factions'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import type { EditCharacterState } from '../useEditCharacter'
+import { TAGLINE_MAX } from '../useCreateCharacter'
 
 /**
  * Default (na) MOBILE edit-character skin (#516). Single column: a photo ring
- * with Change photo, name + tagline (the real `bio` field) inputs, a read-only
- * faction row that links out to the Factions tab, a delete affordance (two-tap
+ * with Change photo, name / story (`bio`) / tagline inputs, a read-only faction
+ * row that links out to the Factions tab, a delete affordance (two-tap
  * confirm), and a sticky Save bar. Presentation-only — persist/delete live in
  * {@link useEditCharacter}; every faction falls through here.
  *
@@ -31,6 +32,8 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
     setDisplayName,
     bio,
     setBio,
+    tagline,
+    setTagline,
     avatarPreview,
     avatarSource,
     setAvatarSource,
@@ -126,9 +129,12 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
         />
       </div>
 
-      {/* Tagline — the real bio field */}
+      {/* Your story — the long-form bio. It wore the label "Tagline" until #1628
+          gave that name to a real, much shorter field one block down; it now
+          takes the desktop label so both surfaces call the same field the same
+          thing. */}
       <div>
-        <label style={label}>{t('editCharacter.mobile.taglineLabel')}</label>
+        <label style={label}>{t('editCharacter.storyLabel')}</label>
         <input
           value={bio}
           onChange={(e) => setBio(e.target.value)}
@@ -137,6 +143,22 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
           className="content-text"
           style={field}
         />
+      </div>
+
+      {/* Tagline — the slogan line (#1628), capped far below the bio above it. */}
+      <div>
+        <label style={label}>{t('editCharacter.taglineLabel')}</label>
+        <input
+          value={tagline}
+          onChange={(e) => setTagline(e.target.value)}
+          maxLength={TAGLINE_MAX}
+          placeholder={t('editCharacter.taglinePlaceholder')}
+          className="content-text"
+          style={field}
+        />
+        <div style={counterRow}>
+          {t('editCharacter.taglineCount', { count: tagline.length })}
+        </div>
       </div>
 
       {/* Faction — read-only link out to Factions */}
@@ -231,6 +253,10 @@ const factionRow: CSSProperties = {
   background: 'var(--color-bg-surface-alt)', border: '1px solid var(--color-border-strong)',
   borderRadius: 8, padding: 'var(--space-md)', textDecoration: 'none',
   fontFamily: 'var(--font-body)', color: 'var(--color-text-secondary)',
+}
+const counterRow: CSSProperties = {
+  textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+  color: 'var(--color-text-tertiary)', marginTop: 'var(--space-sm)',
 }
 const help: CSSProperties = {
   fontFamily: 'var(--font-body)', lineHeight: 1.6,

@@ -1093,3 +1093,92 @@ async def test_starting_faction_is_read_from_the_era_not_hardcoded(
     )
 
     assert result.character.faction_slug == "ua"
+
+
+# --- tagline (#1628) -------------------------------------------------------
+#
+# The 140-char cap is a *wire* contract, not a form affordance: the profile
+# header's identity slot is only safe to lay out because the field cannot grow
+# past it. The form counter is a courtesy; these are the guard. `bio` (500) and
+# `tagline` (140) are separately capped and must never be conflated.
+
+TAGLINE_MAX = 140
+
+
+@pytest.mark.asyncio
+async def test_create_character_accepts_tagline(
+    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+):
+    """A tagline set at creation round-trips back out on ``CharacterOut``."""
+    resp = await client.post(
+        "/characters",
+        json={"display_name": "Sloganeer", "tagline": "Slow spells, strong tea."},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201
+    assert resp.json()["tagline"] == "Slow spells, strong tea."
+
+
+@pytest.mark.asyncio
+async def test_create_character_defaults_tagline_empty(
+    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+):
+    """Omitting it lands "" — never null, and never seeded from bio (#1628)."""
+    resp = await client.post(
+        "/characters",
+        json={"display_name": "No Slogan", "bio": "A long and unstructured paragraph."},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201
+    assert resp.json()["tagline"] == ""
+
+
+@pytest.mark.asyncio
+async def test_create_character_rejects_overlong_tagline(
+    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+):
+    resp = await client.post(
+        "/characters",
+        json={"display_name": "Windbag", "tagline": "x" * (TAGLINE_MAX + 1)},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_update_character_tagline_boundary(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """Exactly 140 is accepted; 141 is refused. The boundary is the whole point."""
+    at_cap = "y" * TAGLINE_MAX
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"tagline": at_cap},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["tagline"] == at_cap
+
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"tagline": "y" * (TAGLINE_MAX + 1)},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_tagline_and_bio_are_independent(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """Editing one must not disturb the other — the split exists to end exactly
+    that confusion, and a 500-char bio must not become a 140-char tagline."""
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"bio": "b" * 500, "tagline": "Evidence first. Apologies never."},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["bio"] == "b" * 500
+    assert data["tagline"] == "Evidence first. Apologies never."

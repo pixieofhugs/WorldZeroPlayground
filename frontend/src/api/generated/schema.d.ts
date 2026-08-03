@@ -2170,6 +2170,11 @@ export interface components {
              * @default
              */
             location: string;
+            /**
+             * Tagline
+             * @default
+             */
+            tagline: string;
             /** Username */
             username?: string | null;
         };
@@ -2218,6 +2223,8 @@ export interface components {
             score: number;
             /** Status */
             status: string;
+            /** Tagline */
+            tagline: string;
             /** Username */
             username: string;
         };
@@ -2301,6 +2308,8 @@ export interface components {
             display_name?: string | null;
             /** Location */
             location?: string | null;
+            /** Tagline */
+            tagline?: string | null;
         };
         /** CliTokenResponse */
         CliTokenResponse: {

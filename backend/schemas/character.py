@@ -33,6 +33,7 @@ class CharacterOut(WireModel):
     username: str
     display_name: str
     bio: str
+    tagline: str
     avatar_url: str
     location: str
     level: int
@@ -55,6 +56,7 @@ class CharacterCreate(WireModel):
     username: str | None = Field(default=None, min_length=3, max_length=30)
     display_name: str = Field(..., min_length=1, max_length=50)
     bio: str = Field(default="", max_length=500)
+    tagline: str = Field(default="", max_length=140)
     avatar_url: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=100)
     # Optional starting faction. Omitted lands era.starting_faction_slug, which
@@ -84,5 +86,6 @@ class VotesReceivedOut(WireModel):
 class CharacterUpdate(WireModel):
     display_name: str | None = Field(None, max_length=50)
     bio: str | None = Field(None, max_length=500)
+    tagline: str | None = Field(None, max_length=140)
     avatar_url: str | None = Field(None, max_length=500)
     location: str | None = Field(None, max_length=100)

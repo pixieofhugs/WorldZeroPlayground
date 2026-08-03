@@ -31,6 +31,7 @@ function character(overrides: Partial<CharacterOut>): CharacterOut {
     username: 'molly',
     display_name: 'Molly',
     bio: 'Doing very human things.',
+    tagline: '',
     avatar_url: '',
     location: '',
     level: 4,
@@ -51,6 +52,8 @@ function createState(overrides: Partial<CreateCharacterState>): CreateCharacterS
     setDisplayName: () => {},
     bio: '',
     setBio: () => {},
+    tagline: '',
+    setTagline: () => {},
     factionSlug: '',
     setFactionSlug: () => {},
     invited: [],
@@ -82,6 +85,8 @@ function editState(overrides: Partial<EditCharacterState>): EditCharacterState {
     setDisplayName: () => {},
     bio: 'Doing very human things.',
     setBio: () => {},
+    tagline: 'Slow spells, strong tea.',
+    setTagline: () => {},
     location: '',
     setLocation: () => {},
     avatarFile: null,
@@ -103,20 +108,55 @@ function editState(overrides: Partial<EditCharacterState>): EditCharacterState {
 
 describe('buildCreatePayload — born unaffiliated (ADR-0019)', () => {
   it('sends no faction when none is picked', () => {
-    expect(buildCreatePayload('Wren', '', '', []).faction_slug).toBeUndefined()
+    expect(buildCreatePayload('Wren', '', '', '', []).faction_slug).toBeUndefined()
   })
 
   it('never sends a faction the account was not invited to', () => {
-    expect(buildCreatePayload('Wren', '', 'wow', []).faction_slug).toBeUndefined()
-    expect(buildCreatePayload('Wren', '', 'wow', ['everymen']).faction_slug).toBeUndefined()
+    expect(buildCreatePayload('Wren', '', '', 'wow', []).faction_slug).toBeUndefined()
+    expect(buildCreatePayload('Wren', '', '', 'wow', ['everymen']).faction_slug).toBeUndefined()
   })
 
   it('carries an invited faction when picked', () => {
-    expect(buildCreatePayload('Wren', '', 'wow', ['wow']).faction_slug).toBe('wow')
+    expect(buildCreatePayload('Wren', '', '', 'wow', ['wow']).faction_slug).toBe('wow')
   })
 
   it('trims the display name', () => {
-    expect(buildCreatePayload('  Wren  ', '', '', []).display_name).toBe('Wren')
+    expect(buildCreatePayload('  Wren  ', '', '', '', []).display_name).toBe('Wren')
+  })
+})
+
+describe('buildCreatePayload — tagline is its own field (#1628)', () => {
+  it('carries a tagline without touching bio', () => {
+    const payload = buildCreatePayload('Wren', 'A long paragraph.', 'Slow spells, strong tea.', '', [])
+    expect(payload.tagline).toBe('Slow spells, strong tea.')
+    expect(payload.bio, 'bio is untouched').toBe('A long paragraph.')
+  })
+
+  /**
+   * Desktop create is a two-row `textarea` — 140 characters want more than one
+   * row to read — while both edit surfaces are single-line `input`s. That makes
+   * it the only branch that can put a literal newline on the wire, and #1629
+   * lays this value into a 30px `max-width: 22ch` slot where it is meant to
+   * WRAP rather than carry breaks the author chose. `bio` is the field that
+   * keeps typed line breaks; that separation is why there are two fields.
+   */
+  it('collapses a typed newline rather than sending it', () => {
+    const payload = buildCreatePayload('Wren', '', 'Slow spells,\n  strong tea.', '', [])
+    expect(payload.tagline).toBe('Slow spells, strong tea.')
+  })
+
+  it('omits an empty tagline rather than sending whitespace', () => {
+    expect(buildCreatePayload('Wren', '', '', '', []).tagline).toBeUndefined()
+    expect(buildCreatePayload('Wren', '', '   ', '', []).tagline).toBeUndefined()
+  })
+
+  it('never seeds the tagline from bio — an empty slot stays empty', () => {
+    // The owner ruled the empty slot is hidden rather than filled. Copying a
+    // paragraph's opening into a slogan slot would truncate mid-sentence and
+    // make the two fields look like one, which is the confusion the split
+    // exists to end.
+    const payload = buildCreatePayload('Wren', 'Cartographer of small kindnesses.', '', '', [])
+    expect(payload.tagline).toBeUndefined()
   })
 })
 
@@ -143,11 +183,13 @@ describe('DefaultCreateCharacter mobile skin', () => {
 })
 
 describe('DefaultEditCharacter mobile skin', () => {
-  it('renders name, tagline, faction link-out, delete and sticky Save', () => {
+  it('renders name, story, tagline, faction link-out, delete and sticky Save', () => {
     const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
     expect(html, 'name input').toContain('value="Molly"')
-    expect(text, 'tagline label (real bio field)').toContain('Tagline')
-    expect(html, 'tagline value is the bio').toContain('value="Doing very human things."')
+    expect(text, 'story label').toContain('Your story')
+    expect(html, 'story value is the bio').toContain('value="Doing very human things."')
+    expect(text, 'tagline label').toContain('Tagline')
+    expect(html, 'tagline value is the tagline').toContain('value="Slow spells, strong tea."')
     // Faction is read-only and links out — but an unaffiliated life goes to the
     // DIRECTORY, not to `/factions/na`.
     //
@@ -163,6 +205,25 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(text, 'unaffiliated').toContain('Unaffiliated')
     expect(text, 'delete affordance').toContain('Delete this character')
     expect(text, 'sticky save').toContain('Save Changes')
+  })
+
+  // Until #1628 this skin labelled the 500-char `bio` input "Tagline". Now that
+  // a real 140-char tagline exists beside it, the two must be separately
+  // labelled, separately bound, and separately capped — one name over two
+  // fields is exactly the confusion the split was made to end.
+  it('keeps the story and the tagline as two distinct capped fields', () => {
+    const { html } = render(
+      <DefaultEditCharacter state={editState({ bio: 'B'.repeat(20), tagline: 'T'.repeat(20) })} />,
+    )
+    expect(html, 'the long-form field is capped at bio length').toContain('maxLength="500"')
+    expect(html, 'the slogan field is capped at 140').toContain('maxLength="140"')
+    expect(html, 'each input holds its own value').toContain(`value="${'B'.repeat(20)}"`)
+    expect(html).toContain(`value="${'T'.repeat(20)}"`)
+  })
+
+  it('counts the tagline against its cap', () => {
+    const { text } = render(<DefaultEditCharacter state={editState({ tagline: 'abcde' })} />)
+    expect(text).toContain('5 / 140')
   })
 
   it('links out to a joined faction detail page', () => {

@@ -16,6 +16,34 @@ import { useAvatarPicker } from './useAvatarPicker'
 
 export const NAME_MAX = 22
 export const BIO_MAX = 160
+/**
+ * Mirror of the server's cap (`schemas.character`, #1628). The server is the
+ * authority — this only stops the field growing past what the profile header's
+ * identity slot can hold before the request is spent.
+ *
+ * Shared with the edit path, which imports it from here: unlike NAME_MAX and
+ * BIO_MAX, whose edit-side twins are different numbers (50 and 500), one cap
+ * governs a tagline wherever it is typed, and two literals would be free to
+ * drift apart.
+ */
+export const TAGLINE_MAX = 140
+
+/**
+ * A tagline is one line, whatever it was typed into.
+ *
+ * Desktop create offers a two-row `textarea` — 140 characters want more than one
+ * row to read — while both edit surfaces are single-line `input`s. That makes
+ * create the only branch that can put a literal newline on the wire, and #1629
+ * lays this value into a 30px `max-width: 22ch` slot where it is meant to WRAP,
+ * not to carry breaks the author chose. `bio` is the field that keeps typed line
+ * breaks; that is the whole reason the two are separate (#1628).
+ *
+ * So the rows are an affordance for reading, not a promise about the value, and
+ * any run of whitespace collapses to a single space before it is sent.
+ */
+export function oneLine(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
+}
 
 /** Mirror of the server @handle derivation (services/character._derive_unique_username). */
 export function previewHandle(displayName: string): string {
@@ -29,6 +57,7 @@ export function previewHandle(displayName: string): string {
 export function buildCreatePayload(
   displayName: string,
   bio: string,
+  tagline: string,
   factionSlug: string,
   invited: string[],
 ): CharacterCreate {
@@ -36,6 +65,7 @@ export function buildCreatePayload(
   return {
     display_name: displayName.trim(),
     bio: bio || undefined,
+    tagline: oneLine(tagline) || undefined,
     faction_slug: picked,
   }
 }
@@ -45,6 +75,8 @@ export interface CreateCharacterState {
   setDisplayName: (value: string) => void
   bio: string
   setBio: (value: string) => void
+  tagline: string
+  setTagline: (value: string) => void
   factionSlug: string
   setFactionSlug: (value: string) => void
   invited: string[]
@@ -76,6 +108,7 @@ export function useCreateCharacter(): CreateCharacterState {
 
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
+  const [tagline, setTagline] = useState('')
   const [factionSlug, setFactionSlug] = useState<string>('') // '' = born na
   const [invited, setInvited] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -106,7 +139,9 @@ export function useCreateCharacter(): CreateCharacterState {
     setSubmitting(true)
     setError(null)
     try {
-      const character = await createCharacter(buildCreatePayload(displayName, bio, factionSlug, invited))
+      const character = await createCharacter(
+        buildCreatePayload(displayName, bio, tagline, factionSlug, invited),
+      )
       if (avatarFile) {
         await uploadCharacterAvatar(character.id, avatarFile)
       }
@@ -124,6 +159,8 @@ export function useCreateCharacter(): CreateCharacterState {
     setDisplayName,
     bio,
     setBio,
+    tagline,
+    setTagline,
     factionSlug,
     setFactionSlug,
     invited,

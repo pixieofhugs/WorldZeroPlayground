@@ -46,6 +46,7 @@ const CHARACTER: CharacterOut = {
   avatar_url: '',
   faction_slug: 'wow',
   bio: '',
+  tagline: '',
   location: '',
   level: 3,
   score: 0,

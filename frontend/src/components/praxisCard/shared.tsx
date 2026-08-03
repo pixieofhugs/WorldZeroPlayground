@@ -233,6 +233,7 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
     // says so now that it IS the generated type (#1400).
     faction_slug: praxis.created_by_faction_slug ?? "na",
     bio: "",
+    tagline: "",
     location: "",
     level: 0,
     score: 0,
