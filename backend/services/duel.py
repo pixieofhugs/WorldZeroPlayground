@@ -15,6 +15,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -206,26 +207,27 @@ async def issue_duel_challenge(
     if await _characters_share_account(
         challenger_character_id, opponent_character_id, session
     ):
-        raise HTTPException(status_code=400, detail=SELF_DUEL_DETAIL)
+        raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
     challenger_praxis = await get_praxis(challenger_praxis_id, session)
     if challenger_praxis.created_by_id != challenger_character_id:
         raise HTTPException(status_code=403, detail="You do not own this praxis.")
     if challenger_praxis.status != PraxisStatus.in_progress:
-        raise HTTPException(
-            status_code=422,
-            detail="A duel can only start from an in-progress praxis.",
+        raise_coded(
+            422,
+            ErrorCode.duel_requires_in_progress_praxis,
+            "A duel can only start from an in-progress praxis.",
         )
     # A duel side is a solo praxis (ADR-0011); duel and collab are mutually exclusive.
     if challenger_praxis.type != PraxisType.solo:
-        raise HTTPException(
-            status_code=422,
-            detail="Only a solo praxis can issue a duel challenge.",
+        raise_coded(
+            422,
+            ErrorCode.duel_requires_solo_praxis,
+            "Only a solo praxis can issue a duel challenge.",
         )
     if await get_duel_for_praxis(challenger_praxis_id, session) is not None:
-        raise HTTPException(
-            status_code=409,
-            detail="This praxis is already part of a duel.",
+        raise_coded(
+            409, ErrorCode.duel_already_exists, "This praxis is already part of a duel."
         )
 
     task = await session.get(Task, challenger_praxis.task_id)
@@ -241,18 +243,20 @@ async def issue_duel_challenge(
     # carve-out (#1511); dropping it silently resolved against CURRENT_ERA no
     # matter what this function was passed.
     if await is_active_member_of_task(opponent, task, session, era):
-        raise HTTPException(
-            status_code=409,
-            detail="The opponent already has an active praxis for this task.",
+        raise_coded(
+            409,
+            ErrorCode.duel_opponent_has_active_praxis,
+            "The opponent already has an active praxis for this task.",
         )
 
     # Challenger must meet duel level requirement.
     era_row = await get_current_era_row(session)
     challenger_stats = await get_or_create_stats(session, challenger_character_id, era_row.id)
     if challenger_stats.level < era.duel_level_required:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Duels require level {era.duel_level_required}.",
+        raise_coded(
+            403,
+            ErrorCode.duel_level_too_low,
+            f"Duels require level {era.duel_level_required}.",
         )
 
     # Create only the pending Duel row, pointing at the existing praxis.
@@ -316,7 +320,7 @@ async def respond_to_duel_challenge(
     if challenger_praxis is not None and await _characters_share_account(
         challenger_praxis.created_by_id, character_id, session
     ):
-        raise HTTPException(status_code=400, detail=SELF_DUEL_DETAIL)
+        raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
     task = await session.get(Task, duel.task_id)
     if task is None:
@@ -326,17 +330,19 @@ async def respond_to_duel_challenge(
     # in the window between challenge and accept). `era` threaded for the same
     # reason as in `issue_duel_challenge` above (#1511).
     if await is_active_member_of_task(opponent, task, session, era):
-        raise HTTPException(
-            status_code=409,
-            detail="You already have an active praxis for this task.",
+        raise_coded(
+            409,
+            ErrorCode.task_already_active_member,
+            "You already have an active praxis for this task.",
         )
 
     # Opponent bank cap check.
     in_progress_count = await _count_in_progress_praxes(character_id, session)
     if in_progress_count >= era.max_task_signups:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+        raise_coded(
+            400,
+            ErrorCode.task_bank_full,
+            f"Task bank is full ({era.max_task_signups} in-progress praxes).",
         )
 
     # Opponent level check.
@@ -348,9 +354,10 @@ async def respond_to_duel_challenge(
     era_row = await get_current_era_row(session)
     opponent_stats = await get_or_create_stats(session, character_id, era_row.id)
     if opponent_stats.level < era.duel_level_required:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Duels require level {era.duel_level_required}.",
+        raise_coded(
+            403,
+            ErrorCode.duel_level_too_low,
+            f"Duels require level {era.duel_level_required}.",
         )
 
     # Create the opponent's solo praxis.

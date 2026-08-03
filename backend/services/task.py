@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from faction_slugs import CROSS_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -64,9 +65,10 @@ async def propose_task(
 
     if task_type == TaskType.metatask:
         if not skip_level_check and stats.level < era.level_to_propose_metatask:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Must be level {era.level_to_propose_metatask} or above to propose metatasks.",
+            raise_coded(
+                403,
+                ErrorCode.metatask_proposal_level_too_low,
+                f"Must be level {era.level_to_propose_metatask} or above to propose metatasks.",
             )
         if not data.metatask_faction_slug:
             raise HTTPException(
@@ -75,9 +77,10 @@ async def propose_task(
             )
     else:
         if not skip_level_check and stats.level < era.level_to_propose_task:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Must be level {era.level_to_propose_task} or above to propose tasks.",
+            raise_coded(
+                403,
+                ErrorCode.task_proposal_level_too_low,
+                f"Must be level {era.level_to_propose_task} or above to propose tasks.",
             )
 
     task = Task(

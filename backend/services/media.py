@@ -16,6 +16,7 @@ from fastapi import HTTPException, UploadFile
 from PIL import Image
 
 from config import settings
+from errors import ErrorCode, raise_coded
 from models.praxis import MediaItem, MediaType
 
 
@@ -132,7 +133,7 @@ def _detect_media_type(content_type: str) -> MediaType:
         return MediaType.video
     if content_type.startswith("audio/"):
         return MediaType.audio
-    raise HTTPException(status_code=422, detail="Unsupported media type.")
+    raise_coded(422, ErrorCode.media_type_unsupported, "Unsupported media type.")
 
 
 async def process_and_save_avatar(
@@ -163,7 +164,7 @@ async def process_and_save_avatar(
     """
     content_type = upload.content_type or ""
     if not content_type.startswith("image/"):
-        raise HTTPException(status_code=422, detail="Avatar must be an image file.")
+        raise_coded(422, ErrorCode.avatar_must_be_image, "Avatar must be an image file.")
 
     relative_directory = os.path.join(str(character_id), "avatar", uuid.uuid4().hex)
     absolute_directory = os.path.join(settings.MEDIA_ROOT, relative_directory)
@@ -175,7 +176,7 @@ async def process_and_save_avatar(
         os.makedirs(absolute_directory, exist_ok=True)
         contents = await upload.read()
         if len(contents) > AVATAR_MAX_BYTES:
-            raise HTTPException(status_code=413, detail="Avatar too large (max 10 MB).")
+            raise_coded(413, ErrorCode.avatar_too_large, "Avatar too large (max 10 MB).")
 
         image = Image.open(io.BytesIO(contents))
         image = image.convert("RGB")
@@ -239,7 +240,7 @@ async def process_and_save_media(
         os.makedirs(absolute_directory, exist_ok=True)
         contents = await upload.read()
         if len(contents) > MEDIA_MAX_BYTES:
-            raise HTTPException(status_code=413, detail="File too large (max 100 MB).")
+            raise_coded(413, ErrorCode.media_too_large, "File too large (max 100 MB).")
         with open(absolute_path, "wb") as file_handle:
             file_handle.write(contents)
     except HTTPException:

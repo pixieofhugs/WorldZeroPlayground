@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -139,8 +140,10 @@ async def cast_or_update_vote(
     else:
         # New vote — deduct from budget via CharacterStats (on-read recomputation).
         if compute_votes_available(stats, era) <= 0:
-            raise HTTPException(
-                status_code=403, detail="No votes remaining in your budget."
+            raise_coded(
+                403,
+                ErrorCode.vote_budget_exhausted,
+                "No votes remaining in your budget.",
             )
 
         cast = Vote(

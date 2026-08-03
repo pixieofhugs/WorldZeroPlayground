@@ -33,6 +33,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import detail_message
 from models.duel import Duel, DuelStatus
 from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
@@ -318,7 +319,11 @@ async def _send_nudges(
                 else None
             ),
             error=(
-                str(refusals[to_character_id].detail)
+                # `detail_message`, not `str(...)`: `_refuse`'s bodies are not
+                # coded yet (#1401 phase 1 does not reach them), but the day one
+                # is, `str()` on a `{code, message}` dict would render its repr
+                # into a field a player reads.
+                detail_message(refusals[to_character_id].detail)
                 if to_character_id in refusals
                 else None
             ),

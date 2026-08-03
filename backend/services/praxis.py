@@ -14,6 +14,7 @@ from sqlalchemy import and_, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from errors import ErrorCode, coded_error, detail_message, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.flag import Flag, FlagReason, stored_flag_reason
@@ -717,15 +718,24 @@ async def signup_reason(
 def _signup_denial_to_http(
     reason: Optional[SignupDenialReason], task: Task, era: EraConfig
 ) -> HTTPException:
-    """Map a :class:`SignupDenialReason` to the route error it has always raised."""
+    """Map a :class:`SignupDenialReason` to the route error it has always raised.
+
+    Every branch carries an :class:`ErrorCode` (#1401). This helper *returns*
+    rather than raises, which is exactly the shape a ``raise HTTPException``
+    text scan cannot see — hence :func:`errors.coded_error` and hence the
+    ratchet's AST scan.
+    """
     if reason == SignupDenialReason.is_metatask:
-        return HTTPException(
-            status_code=400,
-            detail="Metatasks are applied to a praxis, not signed up for.",
+        return coded_error(
+            400,
+            ErrorCode.task_is_metatask,
+            "Metatasks are applied to a praxis, not signed up for.",
         )
     if reason == SignupDenialReason.below_level:
-        return HTTPException(
-            status_code=403, detail=f"This task requires level {task.level_required}."
+        return coded_error(
+            403,
+            ErrorCode.task_level_too_low,
+            f"This task requires level {task.level_required}.",
         )
     if reason == SignupDenialReason.task_status_closed:
         detail = (
@@ -733,15 +743,18 @@ def _signup_denial_to_http(
             if task.status == TaskStatus.retired
             else "This task is pending and is not open for new praxes."
         )
-        return HTTPException(status_code=403, detail=detail)
+        return coded_error(403, ErrorCode.task_not_open_for_signup, detail)
     if reason == SignupDenialReason.already_active_member:
-        return HTTPException(
-            status_code=409, detail="You have already submitted a praxis for this task."
+        return coded_error(
+            409,
+            ErrorCode.task_already_active_member,
+            "You have already submitted a praxis for this task.",
         )
     # bank_full (and the anonymous/None fallback, which create_praxis never hits).
-    return HTTPException(
-        status_code=400,
-        detail=f"Task bank is full ({era.max_task_signups} in-progress praxes). Complete or withdraw one first.",
+    return coded_error(
+        400,
+        ErrorCode.task_bank_full,
+        f"Task bank is full ({era.max_task_signups} in-progress praxes). Complete or withdraw one first.",
     )
 
 
@@ -778,12 +791,17 @@ async def _check_create_preconditions(
     stats = await get_or_create_stats(session, character_id, era_row.id)
     allowed = allowed_praxis_modes(character, stats.level, era)
     if praxis_type not in allowed:
-        _denial: dict[PraxisType, str] = {
-            PraxisType.collab: f"Collaborations require level {era.collaboration_level_required}.",
-        }
-        raise HTTPException(
-            status_code=403,
-            detail=_denial.get(praxis_type, "Praxis mode not available."),
+        # Only collab has prose of its own; anything else is a mode the era does
+        # not offer this character at all, and says so generically (#1401 keeps
+        # both strings byte-identical — it adds the code, not new copy).
+        if praxis_type == PraxisType.collab:
+            raise_coded(
+                403,
+                ErrorCode.collaboration_level_too_low,
+                f"Collaborations require level {era.collaboration_level_required}.",
+            )
+        raise_coded(
+            403, ErrorCode.praxis_mode_unavailable, "Praxis mode not available."
         )
 
     return task
@@ -997,9 +1015,10 @@ async def change_praxis_type(
         era_row = await get_current_era_row(session)
         stats = await get_or_create_stats(session, character_id, era_row.id)
         if stats.level < era.collaboration_level_required:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Collaborations require level {era.collaboration_level_required}.",
+            raise_coded(
+                403,
+                ErrorCode.collaboration_level_too_low,
+                f"Collaborations require level {era.collaboration_level_required}.",
             )
         praxis.type = PraxisType.collab
     else:
@@ -1108,7 +1127,10 @@ async def add_media_batch(
             results.append(
                 MediaUploadResultOut(
                     filename=filename,
-                    error=str(exception.detail),
+                    # `detail_message`, not `str(...)`: since #1401 the media
+                    # limits raise a coded `{code, message}` body, and `str()`
+                    # on that renders a dict repr into a field a player reads.
+                    error=detail_message(exception.detail),
                     status_code=exception.status_code,
                 )
             )
@@ -1446,9 +1468,10 @@ async def flag_praxis(
         )
 
     if not await can_flag_praxis(flagged_by, praxis, session, era):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Must be level {era.flag_level_required} or above to flag a praxis.",
+        raise_coded(
+            403,
+            ErrorCode.flag_level_too_low,
+            f"Must be level {era.flag_level_required} or above to flag a praxis.",
         )
 
     praxis.moderation_status = ModerationStatus.flagged
@@ -1503,16 +1526,20 @@ async def invite_to_praxis(
             detail="Invites are only for collab praxes. Duels use the challenge endpoint.",
         )
     if praxis.status == PraxisStatus.submitted:
-        raise HTTPException(status_code=400, detail="Cannot invite to a submitted praxis.")
+        raise_coded(
+            400, ErrorCode.invite_praxis_submitted, "Cannot invite to a submitted praxis."
+        )
 
     member_ids = {m.character_id for m in praxis.members}
     if inviter_id not in member_ids:
         raise HTTPException(status_code=403, detail="Only members can send invites.")
 
     if invitee_id == inviter_id:
-        raise HTTPException(status_code=400, detail="Cannot invite yourself.")
+        raise_coded(400, ErrorCode.invite_self, "Cannot invite yourself.")
     if invitee_id in member_ids:
-        raise HTTPException(status_code=409, detail="Player is already a member.")
+        raise_coded(
+            409, ErrorCode.invite_already_member, "Player is already a member."
+        )
 
     # Check for duplicate pending invite
     existing_result = await session.execute(
@@ -1524,9 +1551,10 @@ async def invite_to_praxis(
         )
     )
     if existing_result.scalar_one_or_none() is not None:
-        raise HTTPException(
-            status_code=409,
-            detail="A pending invite already exists. Resolve it before sending another.",
+        raise_coded(
+            409,
+            ErrorCode.invite_already_pending,
+            "A pending invite already exists. Resolve it before sending another.",
         )
 
     invitee = await session.get(Character, invitee_id)
@@ -1534,9 +1562,10 @@ async def invite_to_praxis(
         raise HTTPException(status_code=404, detail="Invitee not found.")
 
     if await is_active_member_of_task(invitee, praxis.task, session, era):
-        raise HTTPException(
-            status_code=409,
-            detail="This player already has an active praxis for this task and cannot be invited.",
+        raise_coded(
+            409,
+            ErrorCode.invite_target_has_active_praxis,
+            "This player already has an active praxis for this task and cannot be invited.",
         )
 
     # The two eligibility axes, each read from the era rather than skipped by
@@ -1550,16 +1579,18 @@ async def invite_to_praxis(
         # it. Upgrade path if an era ever wants it: pass available_level_reach(...)
         # here and consume_level_jump on accept, as create_praxis does.
         if not meets_task_level(invitee_stats.level, praxis.task):
-            raise HTTPException(
-                status_code=403,
-                detail=f"This task requires level {praxis.task.level_required}.",
+            raise_coded(
+                403,
+                ErrorCode.task_level_too_low,
+                f"This task requires level {praxis.task.level_required}.",
             )
     if not era.collab_invite_bypasses_faction and not faction_permits(
         invitee, praxis.task, era
     ):
-        raise HTTPException(
-            status_code=403,
-            detail="This player's faction may not act on this task.",
+        raise_coded(
+            403,
+            ErrorCode.invite_faction_not_permitted,
+            "This player's faction may not act on this task.",
         )
 
     invite = PraxisInvite(
@@ -1611,16 +1642,19 @@ async def respond_to_invite(
         raise HTTPException(status_code=404, detail="Praxis no longer exists.")
 
     if praxis.status == PraxisStatus.submitted:
-        raise HTTPException(status_code=400, detail="Cannot join a submitted praxis.")
+        raise_coded(
+            400, ErrorCode.invite_praxis_submitted, "Cannot join a submitted praxis."
+        )
 
     # Check bank capacity — unless this era's collab door lifts it too (#1511).
     already_member = any(m.character_id == character_id for m in praxis.members)
     if not era.collab_invite_bypasses_task_bank and not already_member:
         in_progress_count = await _count_in_progress_praxes(character_id, session)
         if in_progress_count >= era.max_task_signups:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+            raise_coded(
+                409,
+                ErrorCode.task_bank_full,
+                f"Task bank is full ({era.max_task_signups} in-progress praxes).",
             )
 
     # Add member
