@@ -48,6 +48,6 @@ a domain-exception hierarchy translated to HTTP in the router layer. Rejected be
 ## Consequences
 
 - "Refactor this to real DDD" is a **non-goal** — point here when it comes up.
-- **Revisit triggers are explicit** (`SPEC-backend-architecture.md §10`): add a repository layer
+- **Revisit triggers are explicit** (`SPEC-backend-architecture.md §11`): add a repository layer
   only if query duplication grows; add an event bus only if service-call chains grow.
 - New logic goes in a **service**, not on a model — models stay anemic by rule.
