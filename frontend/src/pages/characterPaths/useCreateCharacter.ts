@@ -28,6 +28,23 @@ export const BIO_MAX = 160
  */
 export const TAGLINE_MAX = 140
 
+/**
+ * A tagline is one line, whatever it was typed into.
+ *
+ * Desktop create offers a two-row `textarea` — 140 characters want more than one
+ * row to read — while both edit surfaces are single-line `input`s. That makes
+ * create the only branch that can put a literal newline on the wire, and #1629
+ * lays this value into a 30px `max-width: 22ch` slot where it is meant to WRAP,
+ * not to carry breaks the author chose. `bio` is the field that keeps typed line
+ * breaks; that is the whole reason the two are separate (#1628).
+ *
+ * So the rows are an affordance for reading, not a promise about the value, and
+ * any run of whitespace collapses to a single space before it is sent.
+ */
+export function oneLine(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
+}
+
 /** Mirror of the server @handle derivation (services/character._derive_unique_username). */
 export function previewHandle(displayName: string): string {
   return displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'wanderer'
@@ -48,7 +65,7 @@ export function buildCreatePayload(
   return {
     display_name: displayName.trim(),
     bio: bio || undefined,
-    tagline: tagline.trim() || undefined,
+    tagline: oneLine(tagline) || undefined,
     faction_slug: picked,
   }
 }

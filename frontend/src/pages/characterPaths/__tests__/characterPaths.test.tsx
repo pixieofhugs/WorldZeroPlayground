@@ -132,6 +132,19 @@ describe('buildCreatePayload — tagline is its own field (#1628)', () => {
     expect(payload.bio, 'bio is untouched').toBe('A long paragraph.')
   })
 
+  /**
+   * Desktop create is a two-row `textarea` — 140 characters want more than one
+   * row to read — while both edit surfaces are single-line `input`s. That makes
+   * it the only branch that can put a literal newline on the wire, and #1629
+   * lays this value into a 30px `max-width: 22ch` slot where it is meant to
+   * WRAP rather than carry breaks the author chose. `bio` is the field that
+   * keeps typed line breaks; that separation is why there are two fields.
+   */
+  it('collapses a typed newline rather than sending it', () => {
+    const payload = buildCreatePayload('Wren', '', 'Slow spells,\n  strong tea.', '', [])
+    expect(payload.tagline).toBe('Slow spells, strong tea.')
+  })
+
   it('omits an empty tagline rather than sending whitespace', () => {
     expect(buildCreatePayload('Wren', '', '', '', []).tagline).toBeUndefined()
     expect(buildCreatePayload('Wren', '', '   ', '', []).tagline).toBeUndefined()

@@ -3,11 +3,17 @@
 How World Zero keeps its Alembic chain short and recovers when a squash
 invalidates an existing DB. Read this before squashing migrations or resetting a DB.
 
-**Current baseline:** `0002_squashed` (`down_revision = None`, the squashed root and
-currently the *only* file in `versions/`; the head advances as new revisions stack on
-top) — squashed 2026-08-02 (#1398), collapsing `0001_squashed` + `0002`–`0011`.
+**Current baseline:** `0002_squashed` (`down_revision = None`, the squashed root;
+the head advances as new revisions stack on top) — squashed 2026-08-02 (#1398),
+collapsing `0001_squashed` + `0002`–`0011`.
 Its `upgrade()` builds the whole schema from the live ORM models via
 `Base.metadata.create_all`, so it can never drift from `models/`.
+
+**That `create_all` is why every new revision must be a carry-forward.** On a
+fresh database the root has already built your column by the time your revision
+runs, so a plain `ADD COLUMN` raises `DuplicateColumn` and the build dies before
+a single test does. Write `ADD COLUMN IF NOT EXISTS` — the same shape the
+collapsed `0002`–`0011` used, and the shape `0003_character_tagline` uses now.
 
 Every revision it replaced was a *carry-forward*: `0002`–`0011` existed only to bring
 already-deployed databases to a shape `create_all` had been producing on fresh ones
