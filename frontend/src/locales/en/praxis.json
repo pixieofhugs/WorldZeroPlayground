@@ -50,7 +50,13 @@
       "pointsShort": "pts",
       "tally": "TALLY",
       "group": "group",
-      "onTheRecord": "★ VERIFIED ★ ON THE RECORD "
+      "onTheRecord": "★ VERIFIED ★ ON THE RECORD ",
+      "ephemerists": {
+        "base": "基",
+        "points": "点",
+        "fromVotes": "票",
+        "fromVotesGloss": "from votes"
+      }
     },
     "mediaEmpty": "no proof attached",
     "adminStatus": {

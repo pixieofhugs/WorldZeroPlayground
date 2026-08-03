@@ -22,6 +22,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import CROSS_FACTION_SLUG
 from game_config import TaskDef
 from models.character import Character
 from models.era import Era
@@ -89,15 +90,8 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
     faction_ua: Faction,
 ):
     """The game-wide L0 onboarding task is seeded on every run, idempotently (#511)."""
-    # The onboarding task is faction="albescent"; seed that FK target.
-    from models.faction import FactionStatus
-
-    if (
-        await db_session.execute(select(Faction).where(Faction.slug == "albescent"))
-    ).scalar_one_or_none() is None:
-        db_session.add(Faction(slug="albescent", status=FactionStatus.visible))
-        await db_session.flush()
-
+    # The onboarding task is cross-faction (#1619 B5), so its FK target is the
+    # ``na`` row the ``faction_ua`` fixture already seeds.
     # Simulate a populated DB with era content (none of it level 0 anymore).
     await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
@@ -120,7 +114,7 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
     ).scalars().all()
     assert len(onboarding_rows) == 1
     assert onboarding_rows[0].level_required == 0
-    assert onboarding_rows[0].primary_faction_slug == "albescent"
+    assert onboarding_rows[0].primary_faction_slug == CROSS_FACTION_SLUG
     assert onboarding_rows[0].task_type == TaskType.standard
 
     # It is the only standard level-0 task in the database.

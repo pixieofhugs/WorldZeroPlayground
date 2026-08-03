@@ -292,10 +292,19 @@ const STATES = [
  * Every stamp labels the row from the same key, so one assertion covers all
  * eight: the label is present exactly when the resolver kept the figure.
  */
-function expectBaseRow(html: string, showsBase: boolean) {
-  if (showsBase) expect(html).toContain('base')
-  else expect(html).not.toContain('base')
+function expectBaseRow(html: string, showsBase: boolean, baseLabel = 'base') {
+  if (showsBase) expect(html).toContain(baseLabel)
+  else expect(html).not.toContain(baseLabel)
 }
+
+/**
+ * The Ephemerists' rows are the same rows under different NAMES (#1637): the
+ * labels are kanji and the English rides on `title`, which `text()` strips with
+ * the tag it lives on. So every shared row assertion below hands in the glyph
+ * the reader actually sees — passing the English would go quietly green on the
+ * NEGATIVE half ("no base row") while proving nothing about the positive one.
+ */
+const EPHEMERISTS_LABEL = { base: '基', points: '点', fromVotes: '票' } as const
 
 /**
  * The five conditional states of design v2, on both #841 stamps. The failure
@@ -322,8 +331,8 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       const html = text(
         renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({ ...fields })} />),
       )
-      expectBaseRow(html, showsBase)
-      expect(html).toContain('from votes')
+      expectBaseRow(html, showsBase, EPHEMERISTS_LABEL.base)
+      expect(html).toContain(EPHEMERISTS_LABEL.fromVotes)
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).not.toMatch(HEX)
     })
@@ -496,15 +505,21 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
  * waiting surface shows the moment you submit.
  */
 describe('the base row leaves every stamp when it restates the total (#1131)', () => {
+  /**
+   * Each stamp with the two words this case reads off it — the base label it
+   * would print, and the votes label it must still print. Seven say them in
+   * English; the Ephemerists say them in kanji (#1637), and handing in 'base'
+   * there would assert nothing at all.
+   */
   const STAMPS = [
-    ['the unaffiliated sheet', DefaultScoreStamp],
-    ['Everymen', EverymenScoreStamp],
-    ['the Ephemerists', EphemeristsScoreStamp],
-    ['S.N.I.D.E.', SnideScoreStamp],
-    ['Singularity', SingularityScoreStamp],
-    ['WOW', WowScoreStamp],
-    ['Coven', CovenScoreStamp],
-    ['UA', UaScoreStamp],
+    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/],
+    ['Everymen', EverymenScoreStamp, 'base', /votes/],
+    ['the Ephemerists', EphemeristsScoreStamp, EPHEMERISTS_LABEL.base, /票/],
+    ['S.N.I.D.E.', SnideScoreStamp, 'base', /votes/],
+    ['Singularity', SingularityScoreStamp, 'base', /votes/],
+    ['WOW', WowScoreStamp, 'base', /votes/],
+    ['Coven', CovenScoreStamp, 'base', /votes/],
+    ['UA', UaScoreStamp, 'base', /votes/],
   ] as const
 
   /** No multiplier, no metatask, no votes: base IS the total. */
@@ -516,17 +531,17 @@ describe('the base row leaves every stamp when it restates the total (#1131)', (
     score: 10,
   })
 
-  for (const [name, Stamp] of STAMPS) {
+  for (const [name, Stamp, baseLabel, votesLabel] of STAMPS) {
     it(`${name} states the figure once, and still says nobody has voted`, () => {
       const html = text(renderToStaticMarkup(<Stamp praxis={bare} />))
-      expect(html).not.toContain('base')
+      expect(html).not.toContain(baseLabel)
       // The total mark stays — under ADR-0049 it is the faction's signature
       // device, so it is the one number that never drops out. Singularity's
       // two-decimal `10.00` contains this too.
       expect(html).toContain('10.0')
       // And the votes row stays at +0: ADR-0047's declared exception, which the
       // owner re-affirmed against hiding it alongside base.
-      expect(html).toMatch(/votes/)
+      expect(html).toMatch(votesLabel)
       // The label is gone, not blanked: no orphaned figure left behind.
       expect(html).not.toMatch(/\b10\b(?!\.)/)
     })
@@ -686,5 +701,84 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
         pickVariant(surfaceMap('scoreStamp'), covenDetail.task_faction_slug, DefaultScoreStamp),
       ),
     ).toBe(CovenScoreStamp)
+  })
+})
+
+/**
+ * #1637 — the Ephemerists label their score in kanji, and ONLY the labels.
+ *
+ * The seam under test is the rendered label markup of the Ephemerists stamp:
+ * which string reaches the glyph slot, and what the reader can get back out of
+ * it. It is an i18n change, not a DOM one — the design walks every text node
+ * with a `TreeWalker` because a canvas cannot reach the components, and a sweep
+ * built from that would rewrite the word "base" anywhere on the page.
+ *
+ * The bound that makes the puzzle acceptable is asserted here as its own case:
+ * the cost of not decoding is losing a LABEL, never a number. So the numerals
+ * assertion is not a nicety — it is the rule. A future skin that renders 四 for
+ * a vote count would render fine, read beautifully, and be the defect.
+ */
+describe('the Ephemerists label their score in kanji (#1637)', () => {
+  /** A praxis with every row live, so all three substituted labels are drawn. */
+  const full = () =>
+    renderToStaticMarkup(
+      <EphemeristsScoreStamp
+        praxis={praxis({
+          task_point_value: 40,
+          display_multiplier: 1.2,
+          metatask_points: 0,
+          points_from_votes: 4,
+          score: 52,
+        })}
+      />,
+    )
+
+  it('prints the glyphs, and none of the English, in the visible text', () => {
+    const html = text(full())
+    expect(html).toContain('基')
+    expect(html).toContain('点')
+    expect(html).toContain('票')
+    expect(html).not.toContain('base')
+    expect(html).not.toContain('points')
+    expect(html).not.toContain('from votes')
+  })
+
+  it('leaves every numeral Western — undecoded, the arithmetic still checks out', () => {
+    const html = text(full())
+    expect(html).toContain('40')
+    expect(html).toContain('×1.20')
+    expect(html).toContain('+ 4 ')
+    expect(html).toContain('52.0')
+    // The one thing that would break the bound: a number written as a glyph.
+    expect(html).not.toMatch(/[〇一二三四五六七八九十百千万]/)
+  })
+
+  it('carries the English on one attribute, for hover, focus and assistive tech', () => {
+    const markup = full()
+    // `title` is the whole reveal: a pointer opens it as a tooltip and AT reads
+    // it out, so there is no second accessibility path that could drift.
+    for (const gloss of ['base', 'points', 'from votes']) {
+      expect(markup).toContain(`title="${gloss}"`)
+    }
+    // …and every substituted label is reachable, so FOCUS is a real gesture and
+    // not just a word in the ruling.
+    expect(markup.match(/tabindex="0"/g)).toHaveLength(3)
+    // `<abbr>` is the element that says "short form, expansion available" — it
+    // is what draws the native dotted underline hinting there is a lookup here.
+    expect(markup.match(/<abbr /g)).toHaveLength(3)
+  })
+
+  it('never uppercases a kanji, whatever voice the surrounding label wears', () => {
+    // SMALL_CAPS sets `text-transform: uppercase` for the plate's whole label
+    // voice; uppercasing does nothing to a kanji but cost it the override.
+    expect(full().match(/text-transform:none/g)).toHaveLength(3)
+  })
+
+  it('leaves every other faction reading in English', () => {
+    const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({})} />))
+    expect(html).toContain('base')
+    expect(html).toContain('points')
+    expect(html).toContain('from votes')
+    expect(html).not.toMatch(/[基点票計]/)
   })
 })
