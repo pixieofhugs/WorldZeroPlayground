@@ -7,7 +7,10 @@
  * re-deriving it here. What this file adds is the Valley plate at record size:
  * the same Deco × Egypt metaphor the v2 task card (#1023) and task detail
  * (#1032) wear, turned from a posting into the account of a deed done. A cavetto
- * cornice under a night band of incised registers, a winged sun disc, stepped
+ * cornice under a night band of incised registers, the ENGRAVED MASTHEAD (#1634,
+ * page scale on desktop and card scale on a phone, in place of the winged sun
+ * disc and the Poiret One wordmark it replaced, and in place of the brass
+ * cartouche that used to frame the breadcrumb's last crumb), stepped
  * octagon bylines, small caps for every label, and the write-up on a leaf with
  * an ochre margin rule. Poiret One display, Cinzel small caps, Spectral reading,
  * EB Garamond marginalia — the issue's four faces, all four already in the
@@ -114,16 +117,14 @@ import {
   SHADOW,
   SMALL_CAPS,
   Sign,
-  WASH,
-  WingedDisc,
   BAND,
   BAND_INK,
   BRASS_LIGHT,
 } from "../../../components/factionMarks/ephemeristsPlate";
+import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
-import { factionName } from "../../../utils/factions";
 import {
   PraxisAdminBar,
   PraxisStatusBanners,
@@ -144,8 +145,6 @@ interface SizeSet {
   /** Masthead band height, and the width its registers are drawn to fill. */
   masthead: number
   mastheadView: number
-  /** The masthead's winged disc. Geometry. */
-  wordmarkDisc: number
   /** A byline octagon. Geometry. */
   disc: number
   titleSize: string
@@ -161,7 +160,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     masthead: 84,
     mastheadView: 1200,
-    wordmarkDisc: 150,
     disc: 46,
     titleSize: "var(--text-display)",
     pagePadding: "var(--space-2xl)",
@@ -172,7 +170,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   mobile: {
     masthead: 68,
     mastheadView: 440,
-    wordmarkDisc: 124,
     disc: 40,
     titleSize: "var(--text-heading)",
     pagePadding: "var(--space-lg)",
@@ -330,7 +327,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </div>
   );
 
-  // ── The masthead: night band, one incised register, the winged disc ───────
+  // ── The masthead: night band, one incised register, the engraved title ────
   //
   // Shorter than the task page's: a record is filed ON the plate, not the plate
   // itself, so it carries one register rather than two.
@@ -340,14 +337,14 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         style={{
           position: "relative",
           overflow: "hidden",
-          height: size.masthead,
+          minHeight: size.masthead,
           background: BAND,
           color: BAND_INK,
         }}
       >
         <svg
           width="100%"
-          height={size.masthead}
+          height="100%"
           viewBox={`0 0 ${size.mastheadView} 84`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
@@ -361,31 +358,12 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           />
           <GlyphRegister width={size.mastheadView} y={72} strength={0.3} keyPrefix="rec" />
         </svg>
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "var(--space-xs)",
-          }}
-        >
-          <WingedDisc width={size.wordmarkDisc} height={32} />
-          <span
-            style={{
-              fontFamily: DECO,
-              fontSize: "var(--text-lg)",
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              color: BAND_INK,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {factionName(praxis.task_faction_slug)}
-          </span>
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <EphemeristsMasthead
+            slug={praxis.task_faction_slug}
+            scale={desktop ? "page" : "card"}
+            date={praxis.submitted_at ?? praxis.created_at}
+          />
         </div>
       </div>
       <Cornice glow />
@@ -421,24 +399,13 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
       <span aria-hidden style={eyebrow}>
         /
       </span>
-      {/* The cartouche — this record, ruled off at both ends. */}
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          padding: "var(--space-xs) var(--space-md)",
-          border: `1.5px solid ${BRASS}`,
-          borderRadius: 12,
-          background: WASH,
-        }}
-      >
-        <span aria-hidden style={{ width: 1.5, height: 12, background: BRASS }} />
-        <span style={{ ...SMALL_CAPS, fontWeight: 700, fontSize: "var(--text-base)", color: INK }}>
-          {t("detail.breadcrumb.current")}
-        </span>
-        <span aria-hidden style={{ width: 1.5, height: 12, background: BRASS }} />
-      </span>
+      {/* The last crumb was a brass CARTOUCHE pill, ruled off at both ends.
+          #1634 retired it: the engraved masthead directly above the crumb row
+          carries this record's own identity now, and a framed pill under it read
+          as a second masthead rather than as where-you-are. The crumb stays —
+          the trail's last step is still a fact — in the plain eyebrow its
+          siblings wear. */}
+      <span style={{ ...eyebrow, color: INK }}>{t("detail.breadcrumb.current")}</span>
     </nav>
   );
 
