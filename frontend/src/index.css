@@ -178,8 +178,10 @@
 
   /* ── Shared neutrals ── */
   --color-text-on-accent: #ffffff;
-  --color-overlay-weak: rgba(0, 0, 0, 0.08);
-  --color-overlay-medium: rgba(0, 0, 0, 0.15);
+  /* One rung, not a ladder: `-strong` is the modal scrim every dialog and sheet
+     shares. `-weak` and `-medium` were declared alongside it and never read by
+     anything, in either theme — deleted in #1661. Mint a rung when a surface
+     needs it, the way §3 says the functional families do. */
   --color-overlay-strong: rgba(0, 0, 0, 0.25);
   --color-surface-scrim: rgba(255, 255, 255, 0.9);
 
@@ -993,39 +995,32 @@
      contract — the family's one remaining reader, reaching it by indirection —
      moved onto the plate's cornice band in #1627. What survives the repoint is
      `--eph-display` and `--eph-serif`, both FACES, both still aliased by
-     `-card-font` / `-body-font` below. NINETEEN of the twenty-one names here are
-     declared and dead: the EIGHTEEN colours, and `--eph-script` (Cormorant
-     Garamond), a third face that lost its last reader earlier and is easy to
-     miss beside the two that survive. Deleting them is a follow-up, and it takes
-     the six `ephemerists vellum …` rows in `factionContrast.test.ts` with it —
-     one of which is still spending a #651 BASELINE entry on a vermilion nothing
-     prints. CONSTANTS (gold/rubric/lapis/verdigris/
-     ink) kept their role in both themes; the VELLUM surface + its text FLIPPED
-     in dark (see [data-theme="dark"]). */
+     `-card-font` / `-body-font` below. #1661 deleted the ten colours nothing
+     read at all, plus `--eph-script`. The EIGHT that remain are still dead as
+     PAINT and alive only as MEASUREMENTS: the six `ephemerists vellum …` rows in
+     `factionContrast.test.ts` name them, so retiring the rows is what retires
+     the colours — one of those rows is spending a #651 BASELINE entry on a
+     vermilion nothing prints. That is a judgement for a human, not a byte-shed.
+     CONSTANTS (gold/rubric/ink) kept their role in both themes; the VELLUM
+     surface + its text FLIPPED in dark (see [data-theme="dark"]). */
   --eph-gold: #b0863a; /* gold leaf / ochre */
-  --eph-gold-light: #d4ab55; /* burnished highlight */
-  --eph-gold-deep: #8a6622;
   --eph-rubric: #9c3622; /* vermilion rubrication red */
-  --eph-rubric-deep: #7c2718;
-  --eph-lapis: #1d4f6e; /* deep celestial blue */
-  --eph-lapis-deep: #143b54;
-  --eph-verdigris: #4a7d70; /* aged copper / astrolabe patina */
   --eph-ink: #2a1d12; /* iron-gall ink — stays dark in both themes */
   --eph-vellum: #e9dcbf; /* aged manuscript stock */
-  --eph-vellum-deep: #dccba2; /* shadowed / verso panel */
   --eph-vellum-text: #2a1d12; /* primary text on vellum */
   --eph-muted: #6f5c3e; /* faded marginalia ink */
   --eph-parchment: #f1e8cf; /* bright text on dark elements */
   --eph-field: #1d4f6e; /* lapis celestial-diagram field */
-  --eph-field-deep: #143b54;
-  /* Codex chrome (#841) — the folio is bound in GOLD, not in a neutral rule.
-     Paler than --eph-gold so the frame reads as leaf, not as ochre ink. */
-  --eph-frame: #cdae6a; /* card + score-box border */
-  --eph-stamp-bg: #f8f0d9; /* the score box's brighter leaf */
-  /* Ephemerist faces — Cinzel display caps, EB Garamond body, Cormorant flourishes */
+  /* #1661 took the ten codex colours nothing measured or painted: the -light /
+     -deep sub-tones (gold, rubric, lapis, vellum, field), --eph-lapis,
+     --eph-verdigris, the gilt --eph-frame, the --eph-stamp-bg score leaf, and
+     the third face --eph-script (Cormorant Garamond, reader-less since #841's
+     chrome went). The EIGHT above survive only because the six
+     `ephemerists vellum …` rows in factionContrast.test.ts still measure them;
+     retiring those rows retires these too, and is a decision for a human. */
+  /* Ephemerist faces — Cinzel display caps, EB Garamond body */
   --eph-display: "Cinzel", "Trajan Pro", Georgia, serif;
   --eph-serif: "EB Garamond", Georgia, serif;
-  --eph-script: "Cormorant Garamond", Georgia, serif;
 
   /* The UA LEGACY gilt-salon palette stood here until #853 deleted it: a
      fourteen-token second naming scheme (orange, gold, gilt, ink, sub, muted,
@@ -1474,9 +1469,10 @@
      is the guard that keeps it that way. The codex family stays DECLARED
      because the `--faction-ephemerists-card-font` / `-body-font` pair above
      still aliases two of its members — Cinzel and EB Garamond, both FACES. Its
-     colours have no reader left anywhere (#1627); deleting them is a follow-up
-     and takes the six now-self-referential `ephemerists vellum …` rows in
-     `factionContrast.test.ts` with it.
+     colours have no reader left anywhere (#1627); #1661 deleted the ten that
+     nothing named at all, and the eight the six now-self-referential
+     `ephemerists vellum …` rows in `factionContrast.test.ts` still measure go
+     when those rows do.
 
      THE PLATE IS THEME-INVARIANT (#1627 + #1636). It was papyrus by day and
      night-blue after dark until the card contract above moved onto it; that
@@ -1765,12 +1761,10 @@
   --faction-everymen-vote-glow-4: drop-shadow(0 0 6px rgba(235, 95, 20, 0.8));
   --faction-everymen-vote-glow-5: drop-shadow(0 1px 1px rgba(120, 60, 10, 0.55)) drop-shadow(0 0 7px rgba(235, 120, 20, 0.85));
 
-  /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
-  --vote-1: #c2410c;
-  --vote-2: #ca8a04;
-  --vote-3: #16a34a;
-  --vote-4: #2563eb;
-  --vote-5: #be185d;
+  /* The five `--vote-N` stamp colours stood here. Every vote control is a
+     faction skin now and paints from its own `--faction-{key}-vote-*` ramp (or,
+     for na, `--spectrum-glow-N`), so the global ladder had no reader in either
+     cascade and no dark half at all — deleted in #1661. */
 
   /* The `underline-1…6` cycling title/wordmark palette lived here. It was a
      SECOND six-hue rainbow — a resequenced near-copy of the na spectrum, with no
@@ -1836,15 +1830,13 @@
   --tab-bar-height: 3.5rem;
   --tab-bar-clearance: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
 
-  /* ── Leaderboard rank colors (podium — stable across themes) ── */
-  --rank-gold: #f59e0b;
+  /* ── Leaderboard rank colors (podium — stable across themes) ──
+     The podium became the Constellation / Meadow (#654, #684), which paint
+     their own crowns, so `--rank-gold` and `--rank-bronze` lost their readers
+     and went in #1661. Silver stays: `FeedCardEraAnnouncement` prints the era
+     kicker in it, which is not a podium use at all. The your-rank strip's
+     `--color-rank-accent` / `--rank-strip-*` trio went the same way. */
   --rank-silver: #c49a3a;
-  --rank-bronze: #888888;
-
-  /* ── Leaderboard rank accent (your-rank strip + score highlight) ── */
-  --color-rank-accent: #4f46e5;
-  --rank-strip-bg: rgba(79, 70, 229, 0.08);
-  --rank-strip-border: rgba(79, 70, 229, 0.25);
 
   /* ── Leaderboard table row hover ── */
   --leaderboard-row-hover: rgba(255, 255, 255, 0.55);
@@ -1898,9 +1890,9 @@
   --meadow-name-muted: #6b6553; /* faded/zero names + zero-state — AA 5.17:1 */
   --meadow-champion: #6d4b06; /* champion's score — AA 7.02:1 */
 
-  /* ── Level track node colors ── */
-  --color-level-inactive: #c8c0b0;
-  --level-node-incomplete: rgba(255, 255, 255, 0.5);
+  /* The level track's `--color-level-inactive` / `--level-node-incomplete` pair
+     stood here. The track draws its unreached nodes from the global border and
+     surface tokens now, so both were dead in both cascades — deleted in #1661. */
 
   /* ── Feed badge colors (stable — white text always legible) ── */
   --badge-friend: #14532d;
@@ -2283,26 +2275,14 @@
      inherit these through the :root var() rebind; since #1627 it rebinds to the
      Valley plate instead and this half has no reader either. ══ */
   --eph-gold: #cda24a;
-  --eph-gold-light: #e6c267;
-  --eph-gold-deep: #9c7626;
   --eph-rubric: #c0533a; /* rubric brightens on dark vellum */
-  --eph-rubric-deep: #93341f;
-  --eph-lapis: #4f8fb0; /* celestial blue lifts off near-black */
-  --eph-lapis-deep: #2d6285;
-  --eph-verdigris: #6aa597;
   --eph-ink: #0c0a06; /* element ink stays dark */
   --eph-vellum: #211a10; /* aged tobacco — a surface on the dark page */
-  --eph-vellum-deep: #181208;
   --eph-vellum-text: #efe3c6; /* text FLIPS to parchment */
   --eph-muted: #b6a079;
   --eph-parchment: #efe3c6;
   --eph-field: #102a3a; /* celestial field deepens */
-  --eph-field-deep: #0a1d2a;
-  /* Codex chrome (#841): the gilt binding would glare on the dark leaf, so the
-     frame goes to the faction's verdigris at low alpha — the design's own dark
-     value. The stamp leaf darkens with the vellum rather than lightening. */
-  --eph-frame: rgba(58, 160, 164, 0.35);
-  --eph-stamp-bg: #181208;
+  /* The night halves of the ten codex colours #1661 deleted went with them. */
 
   /* ══ Ephemerists — the Valley plate declares NOTHING here (#1627) ══
      The whole `--faction-ephemerists-plate-*` register used to have a night
@@ -2405,17 +2385,11 @@
   /* ── Shared tokens ── */
   --nav-blur: 8px;
 
-  /* ── Leaderboard rank accent (dark) ── */
-  --color-rank-accent: #818cf8;
-  --rank-strip-bg: rgba(129, 140, 248, 0.12);
-  --rank-strip-border: rgba(129, 140, 248, 0.3);
-
   /* ── Leaderboard table row hover (dark) ── */
   --leaderboard-row-hover: rgba(255, 255, 255, 0.03);
 
-  /* ── Level track node colors (dark) ── */
-  --color-level-inactive: rgba(255, 255, 255, 0.3);
-  --level-node-incomplete: rgba(255, 255, 255, 0.06);
+  /* The night halves of the rank-strip and level-track tokens went with their
+     light halves in #1661. */
 
   /* ══ Everymen (dark) — paper surface + text flip; red/field deepen ══ */
   --faction-everymen: #ef5350;
@@ -4886,15 +4860,10 @@
    and the whole crest family already ship from #838/#840/#896/#897.
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* The knobbed rod the decree hangs from. It FLIPS with the theme (the kit
-     draws a bright rod on its light scroll and a tarnished one on its dark
-     scroll), which is why it cannot simply reuse the avatar's ring stops — those
-     are struck metal and theme-invariant. The lit stop is the same gilt
-     highlight in light, so it points at the ring token rather than minting a
-     second #e9cb7e; dark redeclares all three. */
-  --faction-wow-rod-lit: var(--faction-wow-avatar-ring-lit);
-  --faction-wow-rod-deep: #c79a47;
-  --faction-wow-rod-edge: #6e3f1f; /* the drawn outline round rod and knobs */
+  /* The knobbed rod the decree hung from had a three-token family here. The
+     v2 task card redrew the surface without it ("the knobbed rod and the crest
+     seal are gone", `taskCard/WowTaskCard.tsx`), which left all six
+     declarations unread — deleted in #1661. */
 
   /* The chronicle hairline — the kit's #d9c589, the 1px rule it puts round
      inset plates, comment cards and the feed's points pill. Distinct from
@@ -4915,9 +4884,6 @@
   --faction-wow-quest-glisten: rgba(255, 248, 214, 0.85); /* the travelling band */
 }
 [data-theme="dark"] {
-  --faction-wow-rod-lit: #8a6e2a;
-  --faction-wow-rod-deep: #5e4715;
-  --faction-wow-rod-edge: #0f0a02;
   --faction-wow-chronicle-rule: #4a3a0e;
   --faction-wow-quest-border: #e1c877;
 }
