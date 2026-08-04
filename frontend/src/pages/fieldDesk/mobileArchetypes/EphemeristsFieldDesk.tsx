@@ -12,7 +12,7 @@ import {
   CTA_BG,
   CTA_INK,
   DECO,
-  FlutedRule,
+  RuneRule,
   INK,
   INNER,
   LINE,
@@ -123,7 +123,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
           {t('fieldDesk.home.ephemerists.masthead')}
         </h1>
         <div style={{ marginTop: 'var(--space-sm)' }}>
-          <FlutedRule />
+          <RuneRule />
         </div>
       </header>
 

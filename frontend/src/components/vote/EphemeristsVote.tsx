@@ -2,16 +2,13 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   BRASS,
-  BRASS_LIGHT,
-  DISC,
   GOLD,
   OCHRE,
   QUIET,
-  READING,
   DECO,
+  METAL_SIGILS,
   stepClip,
 } from '../factionMarks/ephemeristsPlate'
-import { toRoman } from '../../utils/roman'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -23,17 +20,30 @@ import { VOTE_REFRAMES } from './voteReframes'
  *
  * The 1–5 approval is a transmutation: five discs on a stepped night plate,
  * lead → copper → silver → gold → platinum, each carrying its own alchemical
- * sigil and its roman numeral. Reaching a rank lights every disc up to it in its
- * own metal — ray burst, sheen, shock ring — and rank 5 is haloed in gold with
- * iron filings orbiting it. `numeral: 'roman'` in `voteReframes` is what puts
- * I–V on the discs, and the tier WORDS are the metals themselves.
+ * sigil. Reaching a rank lights every disc up to it in its own metal — conic
+ * burst, sheen, shock ring — and rank 5 is haloed in gold with iron filings
+ * orbiting it. The tier WORDS are the metals themselves.
  *
- * THE PLATE IS A FIXED NIGHT SURFACE in both themes, as the constellation was.
- * The design paints the light-theme plate cream and keeps one set of metals for
- * both, on which silver/gold/platinum read 1.0–1.3:1 — a reached disc would be
- * FAINTER than the unreached ring beside it. The full measurement is recorded
- * at the token declaration in index.css. Only the caption ink flips, through the
- * plate family's own tokens; there is no `dark ? a : b` anywhere (§8).
+ * ## The metals ARE the scale (#1638)
+ *
+ * The plate used to carry three separate restatements of the rank it was
+ * already showing: a dashed track threading the discs, a roman numeral struck
+ * on each one, and an italic caption naming the hovered tier. All three are
+ * gone. What replaced them is not another label but a LEGIBLE burst — the ray
+ * fan (a flat 10 rays, 16 at rank 5) is now a conic ring whose spoke pitch is
+ * `METAL_SIGILS[n].burstStep`, 60° at lead down to 22.5° at platinum, so the
+ * ring visibly densifies as the metal improves. Rank is readable off the ring.
+ *
+ * Nothing was lost with the caption: each disc's `aria-label` names its metal,
+ * and `VoteSummary` below states the cast once it is made.
+ *
+ * ## THE PLATE IS A FIXED NIGHT SURFACE in both themes
+ *
+ * As the constellation was. The design paints the light-theme plate cream and
+ * keeps one set of metals for both, on which silver/gold/platinum read 1.0–1.3:1
+ * — a reached disc would be FAINTER than the unreached ring beside it. The full
+ * measurement is recorded at the token declaration in index.css. There is no
+ * `dark ? a : b` anywhere (§8).
  *
  * Every motion is a reduced-motion-gated CSS class (`.eph-metal-*`, index.css),
  * so the stilled state is a fully lit ladder — motion is decoration, never
@@ -44,55 +54,28 @@ import { VOTE_REFRAMES } from './voteReframes'
 const DISC_SIZE = 44
 const TOP_DISC_SIZE = 50
 
-/**
- * The five metals, in the tier order `VOTE_REFRAMES` declares. Each carries the
- * classical sigil for its metal on the plate's own 24-unit square — Saturn for
- * lead, Venus for copper, the crescent for silver, the sun for gold, and the
- * moon-and-Mercury compound for platinum.
- *
- * Local rather than in `ephemeristsPlate`: the kit is the plate's shared
- * ornament vocabulary (registers, cornice, cartouche, octagon), and these five
- * signs have exactly one reader — this widget.
- */
-const METALS = [
-  {
-    color: 'var(--faction-ephemerists-metal-lead)',
-    glyph: 'M6.2 7.4 C7.4 4.6 10.2 4.8 10.2 7.8 C10.2 10.8 9 14.6 9.4 17.6 C9.8 20.4 11.8 21 13.8 19.4 M6.4 10.8 H13.4',
-    weight: 1.5,
-  },
-  {
-    color: 'var(--faction-ephemerists-metal-copper)',
-    glyph: 'M12 4.4 a4.4 4.4 0 1 0 0.01 0 Z M12 13.2 V20.6 M8.8 17.4 H15.2',
-    weight: 1.5,
-  },
-  {
-    color: 'var(--faction-ephemerists-metal-silver)',
-    glyph: 'M15.8 4.4 A8 8 0 1 0 15.8 19.6 A6.3 6.3 0 1 1 15.8 4.4 Z',
-    weight: 1.3,
-  },
-  {
-    color: 'var(--faction-ephemerists-metal-gold)',
-    glyph: 'M12 5 a7 7 0 1 0 0.01 0 Z M12 10.4 a1.7 1.7 0 1 0 0.01 0 Z',
-    weight: 1.5,
-  },
-  {
-    color: 'var(--faction-ephemerists-metal-platinum)',
-    glyph: 'M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z',
-    weight: 1.3,
-  },
-]
-
 const TIERS = VOTE_REFRAMES['ephemerists'].tiers
 
-/** The ray burst's spread beyond the disc it surrounds. Ornament geometry. */
-const BURST_MARGIN = 30
+/**
+ * How far the conic burst spreads past the disc it rings. Ornament geometry,
+ * and the number the plate's own gap is set from: the ring box is
+ * `size + BURST_MARGIN`, so it overhangs the rim by `BURST_MARGIN / 2` in EVERY
+ * direction and at every tier — see the gap comment on the plate below.
+ */
+const BURST_MARGIN = 24
 /** How far the filings orbit past rank 5's edge. Ornament geometry. */
 const FILING_ORBIT = 13
-
-/** One phase of the burst: alternate rays are shorter and gold rather than metal. */
-function rayLength(index: number, top: boolean): number {
-  return (index % 2 ? 5 : 8.5) + (top ? 3 : 0)
-}
+/**
+ * The chamfer leg of the plate's stepped silhouette, and of the brass ground
+ * one pixel behind it. The inner leg is a pixel shorter so the two chamfers run
+ * parallel: a 1px inset with an equal leg would put the sheet's cut corner ON
+ * the ground's, and the frame would open at both corners exactly as the clipped
+ * border it replaces did. (Strictly the parallel leg is 6.41 — 1px of normal
+ * clearance across a 45° cut — so 6 draws the chamfer's hairline at 0.7px
+ * against the straights' 1px. That is a taper on a brass rule, not a gap.)
+ */
+const PLATE_STEP = 7
+const SHEET_STEP = 6
 
 export default function EphemeristsVote({
   praxisId,
@@ -109,77 +92,70 @@ export default function EphemeristsVote({
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.ephemerists.idle')
 
   return (
     <div onMouseLeave={() => setHovered(0)}>
+      {/*
+       * THE FRAME, AS A GROUND RATHER THAN A BORDER (#1638).
+       *
+       * `stepClip` chamfers the top-left and bottom-right corners, and a border
+       * painted at the border box is cut away along both chamfers — the plate
+       * shipped with two open corners and a brass rule that stopped short. So
+       * the brass is a GROUND here and the night sheet is laid one pixel inside
+       * it, stepped a pixel tighter: the frame is what shows through the inset,
+       * which means the clip carries the rule instead of shaving it.
+       */}
       <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          /*
-           * The gap holds the BURSTS apart, not the discs (#1633). What matters
-           * is each burst's HORIZONTAL projection, not its longest ray — a ray
-           * pointing straight up costs a neighbour nothing.
-           *
-           * An ordinary disc's 10 rays sit at 36° steps, so the one nearest
-           * horizontal is index 2 at 72°: `33.5·sin72° − 22 = 9.86`. Rank 5
-           * carries 16 rays, which puts index 4 at exactly 90°: `39.5 − 25 =
-           * 14.5`. Side by side they want `9.86 + 14.5 = 24.36`px rim-to-rim,
-           * and at `--space-md` (12) they had half that, so the bursts and the
-           * sheens ran into each other. `--space-xl` (24) is the rung that
-           * clears it, and the 0.36px it does not cover falls inside the rays'
-           * own taper. The Ephemerists kit asked for 22px; the token scale has
-           * no 22, up is the direction to round (`WORLD_ZERO_STYLE.md`), and a
-           * raw 22 would have failed the no-raw-style-values ratchet anyway.
-           *
-           * The horizontal padding matches the gap because rank 1 and rank 5
-           * burst toward the plate's border rather than toward a neighbour. The
-           * BLOCK padding deliberately does not: rank 5's index-0 ray points
-           * straight up and reaches 14.5px, which `stepClip(7)` already cuts.
-           * Giving it room is a dressing question and belongs to #1638.
-           */
-          gap: 'var(--space-xl)',
-          padding: 'var(--space-md) var(--space-xl)',
-          background:
-            'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
-          border: `1px solid ${BRASS}`,
-          boxShadow: 'inset 0 1px 8px rgba(30, 34, 51, 0.7)',
-          clipPath: stepClip(7),
-        }}
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the brass rule's stroke width, not spacing. The smallest space rung is 4px, which draws the plate a four-pixel brass mount.
+        style={{ background: BRASS, padding: 1, clipPath: stepClip(PLATE_STEP) }}
       >
-        {/* The rail the metals sit on — a dashed brass lead at rest, a gold
-            current running along it once a rank is reached. */}
-        <span
-          aria-hidden
-          className={active > 0 ? 'eph-metal-rail' : undefined}
+        <div
           style={{
-            position: 'absolute',
-            left: 14,
-            right: 14,
-            top: '50%',
-            height: 1.5,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: half the drawn 1.5px rail, centring the hairline on `top: 50%`. The offset IS the stroke; the smallest rung is 4px, which drops the rail below the metals it threads.
-            marginTop: -1,
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            /*
+             * The gap holds the BURSTS apart, not the discs (#1633), and the
+             * figure was re-derived for #1638's conic ring.
+             *
+             * #1633's arithmetic was trigonometry over a ray FAN — which spoke
+             * came nearest horizontal, since one pointing straight up costs a
+             * neighbour nothing. A ring has no nearest-horizontal spoke: it
+             * reaches its full radius in every direction. Its projection is
+             * therefore just the overhang, `BURST_MARGIN / 2` = 12px, and that
+             * is the same at every tier because the ring box grows with the
+             * disc it surrounds.
+             *
+             * Two rings side by side want 12 + 12 = 24px rim-to-rim, which is
+             * `--space-xl` exactly — the same rung the fan needed, now a clean
+             * fit rather than one 0.36px short. The horizontal padding matches
+             * the gap because rank 1 and rank 5 burst toward the plate's edge
+             * rather than toward a neighbour.
+             *
+             * The BLOCK padding now matches too, at the rung above: #1633 left
+             * this to #1638 because the fan's index-0 ray pointed straight up
+             * and reached 14.5px into 12px of padding, where the clip cut it.
+             * The ring reaches 12, and `--space-lg` (16) clears it by 4.
+             */
+            gap: 'var(--space-xl)',
+            padding: 'var(--space-lg) var(--space-xl)',
             background:
-              active > 0
-                ? `repeating-linear-gradient(90deg, ${GOLD} 0 6px, transparent 6px 12px)`
-                : `repeating-linear-gradient(90deg, ${BRASS} 0 3px, transparent 3px 9px)`,
-            backgroundSize: '12px 100%',
-            opacity: active > 0 ? 0.8 : 0.35,
+              'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
+            boxShadow: 'inset 0 1px 8px rgba(30, 34, 51, 0.7)',
+            clipPath: stepClip(SHEET_STEP),
           }}
-        />
+        >
+          {/* The dashed brass rail threading the metals stood here, carrying a
+              gold current once a rank was reached. #1638 struck it: it drew the
+              1–5 scale a second time, under a row of discs that already are it. */}
 
-        {TIERS.map((tier, index) => {
-          const metal = METALS[index]
+          {TIERS.map((tier, index) => {
+          const metal = METAL_SIGILS[index]
           const reached = active >= tier.value
           const picked = selected === tier.value
           const top = tier.value === 5
           const size = top ? TOP_DISC_SIZE : DISC_SIZE
           const radius = size / 2
-          const burst = size + BURST_MARGIN
-          const rayCount = top ? 16 : 10
           return (
             <button
               key={tier.value}
@@ -226,40 +202,36 @@ export default function EphemeristsVote({
 
               {reached && (
                 <>
-                  <svg
+                  {/*
+                   * THE PER-TIER BURST (#1638) — a conic ring of spokes at this
+                   * metal's own pitch, masked to a halo clear of the disc.
+                   *
+                   * The pitch is the point: 60° at lead is six spokes, 22.5° at
+                   * platinum is sixteen, so the burst densifies up the ladder
+                   * and carries the rank the struck numeral used to. The ring
+                   * is inked in its own metal rather than in one accent for the
+                   * whole plate.
+                   *
+                   * Pigment, mask and cycle are all `.eph-metal-burst` in
+                   * index.css; what arrives from here is geometry — the box,
+                   * the spoke pitch and the phase.
+                   */}
+                  <span
                     aria-hidden
-                    width={burst}
-                    height={burst}
-                    viewBox={`0 0 ${burst} ${burst}`}
-                    style={{
-                      position: 'absolute',
-                      left: (size - burst) / 2,
-                      top: (size - burst) / 2,
-                      pointerEvents: 'none',
-                      overflow: 'visible',
-                    }}
-                  >
-                    {Array.from({ length: rayCount }).map((_, ray) => (
-                      <line
-                        key={ray}
-                        className="eph-metal-ray"
-                        x1={burst / 2}
-                        y1={burst / 2 - (radius + 3)}
-                        x2={burst / 2}
-                        y2={burst / 2 - (radius + 3 + rayLength(ray, top))}
-                        stroke={ray % 2 ? GOLD : metal.color}
-                        strokeWidth={ray % 2 ? 0.9 : 1.3}
-                        strokeLinecap="round"
-                        transform={`rotate(${(ray / rayCount) * 360} ${burst / 2} ${burst / 2})`}
-                        style={
-                          {
-                            '--metal-dur': `${2.4 + (ray % 3) * 0.5}s`,
-                            '--metal-delay': `${(ray * 0.09).toFixed(2)}s`,
-                          } as CSSProperties
-                        }
-                      />
-                    ))}
-                  </svg>
+                    className="eph-metal-burst"
+                    style={
+                      {
+                        position: 'absolute',
+                        left: -BURST_MARGIN / 2,
+                        top: -BURST_MARGIN / 2,
+                        width: size + BURST_MARGIN,
+                        height: size + BURST_MARGIN,
+                        '--metal-ink': metal.color,
+                        '--metal-step': `${metal.burstStep}deg`,
+                        '--metal-delay': `${(tier.value * 0.16).toFixed(2)}s`,
+                      } as CSSProperties
+                    }
+                  />
 
                   {/* The shock ring leaving the disc as the metal strikes. */}
                   <span
@@ -358,85 +330,22 @@ export default function EphemeristsVote({
                   )
                 })}
 
-              {/*
-               * The rank's numeral, struck on a night disc at the metal's edge.
-               *
-               * DEVIATION: the design fills this badge with brass (pale cream
-               * numeral) for ranks I–IV. Cream on the light theme's brass is
-               * 3.5:1, and nothing in the family clears 4.5 on that mid-tone —
-               * so the fill is the plate's own night and the numeral is gold,
-               * which is 11:1 and is the register the masthead already sets
-               * gold-on-night in. Rank V keeps the design's ochre.
-               */}
-              <span
-                aria-hidden
-                style={{
-                  position: 'absolute',
-                  right: -2,
-                  bottom: -1,
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: reached && top ? OCHRE : 'var(--faction-ephemerists-vote-plate-to)',
-                  color: reached
-                    ? top
-                      ? DISC
-                      : GOLD
-                    : 'var(--faction-ephemerists-plate-band-quiet)',
-                  fontFamily: 'var(--font-faction-engraved)',
-                  fontWeight: 600,
-                  fontSize: 'var(--text-xs)',
-                  letterSpacing: '0.04em',
-                  lineHeight: 1,
-                  boxShadow: `0 0 0 1px ${reached ? BRASS_LIGHT : BRASS}`,
-                  transition: 'background 220ms ease, color 220ms ease',
-                }}
-              >
-                {toRoman(tier.value)}
-              </span>
+              {/* A 16px night badge struck with the rank's roman numeral sat
+                  here, at the metal's lower edge. #1638 struck it off: the
+                  burst's spoke pitch now carries the rank, and a numeral beside
+                  it was the ladder saying the same thing twice in two
+                  vocabularies. */}
             </button>
           )
         })}
+        </div>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 'var(--space-sm)',
-          marginTop: 'var(--space-md)',
-          minHeight: 20,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: READING,
-            fontStyle: 'italic',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the widget's tier word is part of the mark, set at the design's 15 in the plate's reading hand (design-fidelity.md standing carve-out)
-            fontSize: 15,
-            letterSpacing: '0.02em',
-            color: active ? OCHRE : QUIET,
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-xs)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: QUIET,
-            }}
-          >
-            {`· ${t('chrome.ephemerists.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The italic gloss caption naming the hovered tier — and its "· cast"
+          tag — stood here. #1638 struck both: each disc's `aria-label` already
+          names its metal, and `VoteSummary` below states the cast once it is
+          made, so the caption row was a third restatement of the row above it.
+          `votes:chrome.ephemerists.idle` and `.tag` went with it. */}
 
       <VoteSummary
         selected={selected}

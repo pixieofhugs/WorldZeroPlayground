@@ -59,9 +59,10 @@
  *   Its rows read the SHARED `card.stamp.*` vocabulary, which the praxis card
  *   reads too; re-labelling the votes row "Concord" here would fork one number's
  *   name between two surfaces showing the same number. The concordance is not
- *   lost: the voters panel below reads each vote back in the faction's own tier
- *   words through the shipped `reframeLabel`, in roman numerals as
- *   `VOTE_REFRAMES` already specifies for this faction.
+ *   lost: the voters panel below reads each vote back as THE STRUCK METAL
+ *   (#1638) — the sigil the vote widget puts on that rank, in a brass-ringed
+ *   disc — with the faction's own tier word from the shipped `reframeLabel`
+ *   carried to assistive tech on a visually-hidden label.
  * - **The comment composer's post button ("Inscribe").** The composer dispatches
  *   on the VIEWER's faction, not the page's — it is the author speaking, which
  *   ADR-0061 keeps out of scope for a page skin. `EphemeristsComment` already
@@ -94,7 +95,6 @@ import { reframeLabel } from "../../../components/vote/voteReframes";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
-import { toRoman } from "../../../utils/roman";
 import {
   BRASS,
   CAPS,
@@ -102,7 +102,8 @@ import {
   Cornice,
   DECO,
   DISC,
-  FlutedRule,
+  METAL_SIGILS,
+  RuneRule,
   GlyphRegister,
   INK,
   INNER,
@@ -140,6 +141,14 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 /** The page cap the epic settled on, and the aside track. Geometry. */
 const PAGE_WIDTH = 1200;
 const ASIDE_WIDTH = 330;
+
+/**
+ * The struck-metal disc at the end of a voter row, and the sigil cut into it
+ * (#1638). Ornament geometry: the sigil is sized to the disc it is struck in,
+ * not to the type ramp beside it.
+ */
+const VOTER_DISC = 28;
+const VOTER_SIGIL = 16;
 
 interface SizeSet {
   /** Masthead band height, and the width its registers are drawn to fill. */
@@ -323,7 +332,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
         {trailing}
       </div>
-      <FlutedRule />
+      <RuneRule />
     </div>
   );
 
@@ -657,11 +666,25 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   );
 
   // Per-voter values come straight off `GET /praxes/{id}/voters`, already
-  // fetched by `usePraxisDetail`. Each vote is read back in the faction's own
-  // tier word through the shipped `reframeLabel`, and its value as a roman
-  // numeral — `VOTE_REFRAMES` already declares `numeral: 'roman'` for this
-  // faction, so neither the words nor the numeral system is invented here. NO
-  // AVERAGE anywhere (ADR-0014): the standing is the sum and the count.
+  // fetched by `usePraxisDetail`. NO AVERAGE anywhere (ADR-0014): the standing
+  // is the sum and the count.
+  //
+  // Each vote is read back AS THE STRUCK METAL (#1638) rather than as a tier
+  // word beside a roman numeral: the alchemical sigil for the metal that voter
+  // cast, in the brass-ringed disc the plate cuts for a mark. It is the same
+  // drawing the vote widget strikes, out of the same `METAL_SIGILS`, so the
+  // mark a voter chose and the mark their vote is filed under cannot diverge.
+  //
+  // THE METAL'S NAME IS THE ONLY IDENTIFYING INFORMATION in the row, so it is
+  // carried by a VISUALLY-HIDDEN LABEL and not by `title`. That is a deliberate
+  // departure from `GlossedGlyph`, which the kit uses for the masthead's kanji:
+  // a `title` is a pointer affordance — unreliably announced, unreachable on
+  // touch — and `GlossedGlyph`'s own justification is that the English it hides
+  // is a BONUS already printed in full somewhere on screen, free to be a second
+  // copy only because it can be checked against the first. Here there is no
+  // first: hiding the word behind a hover would leave a screen-reader user a
+  // row that reads a name and stops. `reframeLabel` still produces the word —
+  // the vocabulary is not invented here, only its rendering.
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {sectionHead(
@@ -669,43 +692,67 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <span style={plateEyebrow}>{t("detail.voters.count", { count: voters.length })}</span>,
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-        {voters.map((voter) => (
-          <div
-            key={voter.character_id}
-            style={{ display: "flex", alignItems: "baseline", gap: "var(--space-sm)" }}
-          >
-            <Link
-              to={`/characters/${voter.character_id}`}
-              style={{
-                flex: "0 1 auto",
-                minWidth: 0,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                fontFamily: READING,
-                fontSize: "var(--text-content)",
-                color: INK,
-                textDecoration: "none",
-              }}
+        {voters.map((voter) => {
+          const metal = METAL_SIGILS[voter.value - 1] ?? METAL_SIGILS[0];
+          return (
+            <div
+              key={voter.character_id}
+              style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}
             >
-              {voter.display_name}
-            </Link>
-            <span aria-hidden style={{ flex: 1, minWidth: 10, height: 1, background: LINE }} />
-            <span style={{ ...gloss, flexShrink: 0 }}>
-              {reframeLabel(praxis.task_faction_slug, voter.value)}
-            </span>
-            <span
-              style={{
-                fontFamily: DECO,
-                fontSize: "var(--text-content)",
-                color: INK,
-                flexShrink: 0,
-              }}
-            >
-              {toRoman(voter.value)}
-            </span>
-          </div>
-        ))}
+              <Link
+                to={`/characters/${voter.character_id}`}
+                style={{
+                  flex: "0 1 auto",
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  fontFamily: READING,
+                  fontSize: "var(--text-content)",
+                  color: INK,
+                  textDecoration: "none",
+                }}
+              >
+                {voter.display_name}
+              </Link>
+              <span aria-hidden style={{ flex: 1, minWidth: 10, height: 1, background: LINE }} />
+              <span
+                style={{
+                  position: "relative",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: VOTER_DISC,
+                  height: VOTER_DISC,
+                  borderRadius: "50%",
+                  border: `1px solid ${BRASS}`,
+                  background: DISC,
+                }}
+              >
+                <svg
+                  width={VOTER_SIGIL}
+                  height={VOTER_SIGIL}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  style={{ display: "block" }}
+                >
+                  <path
+                    d={metal.glyph}
+                    fill="none"
+                    stroke={OCHRE}
+                    strokeWidth={metal.weight}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="sr-only">
+                  {reframeLabel(praxis.task_faction_slug, voter.value)}
+                </span>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

@@ -63,7 +63,7 @@ import { useAuth } from '../../../auth/AuthContext'
 import {
   CAPS,
   CAPTION,
-  FlutedRule,
+  RuneRule,
   INK,
   INNER,
   LINE,
@@ -128,7 +128,7 @@ function Leaf({
         {/* The cavetto flute at the head of the leaf — this sheet's answer to the
             na sheet's spectrum hairline, and the same mark the feed chassis wears
             under its masthead. Reused from `ephemeristsPlate`, not redrawn. */}
-        <FlutedRule />
+        <RuneRule />
         {/* The gold wash rides the leaf's own background: the dark plate takes no
             wash at all (`--plate-wash: none`), so there is nothing for a ternary
             or a positioned overlay to decide. NO `overflow: hidden` anywhere on

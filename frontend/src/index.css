@@ -3620,19 +3620,30 @@
 /* Ephemerists — THE METALS LADDER (#1207), which replaced the constellation
    plate and took `.eph-vote-star` / `.eph-vote-sparkle` with it.
 
-   Five marks a disc makes once its rank is reached: the ray burst around it,
-   the shock ring leaving it, the sheen wiping across it, the iron filings
-   orbiting rank 5, and the current running along the rail. The design writes
-   all five as inline `animation:` strings and stills them under `reduce`; here
-   each is a class, opt-in under `no-preference`, so the BASE state is the
-   stilled one — a reduced-motion reader still gets a fully lit ladder. Phase
-   and cycle arrive per element as `--metal-delay` / `--metal-dur`.
+   Four marks a disc makes once its rank is reached: the conic burst around it,
+   the shock ring leaving it, the sheen wiping across it, and the iron filings
+   orbiting rank 5. The design writes them as inline `animation:` strings and
+   stills them under `reduce`; here each is a class, opt-in under
+   `no-preference`, so the BASE state is the stilled one — a reduced-motion
+   reader still gets a fully lit ladder. Phase and cycle arrive per element as
+   `--metal-delay` / `--metal-dur`.
 
-   The ray keyframes carry OPACITY ONLY, against the design's opacity+scale. Each
-   ray is aimed by an SVG `transform` presentation attribute, and a CSS
-   `transform` keyframe replaces that attribute outright rather than composing
-   with it — the burst would collapse into a single unrotated spoke. */
-@keyframes eph-metal-ray { 0%, 100% { opacity: 0.14; } 45% { opacity: 0.5; } }
+   THE BURST (#1638) replaced a fan of SVG rays: a repeating conic gradient
+   whose spoke pitch arrives per disc as `--metal-step`, 60° at lead down to
+   22.5° at platinum, so the ring densifies up the ladder and carries the rank
+   the retired numeral used to. `--metal-ink` is the disc's own metal.
+
+   The mask is what makes it a HALO rather than a filled pinwheel: it punches
+   out everything inside 82% of the box, leaving the spokes only in the outer
+   rim. `#000` there is an alpha stencil, not a colour — a mask reads opacity,
+   so any opaque value does, and no token could be more correct than another.
+
+   Opacity only, no rotation. A spinning ring turns a rank readout into a
+   loading spinner, and the pitch is the meaning here.
+
+   `@keyframes eph-metal-ray` and `.eph-metal-rail` / `eph-metal-current` were
+   deleted with the fan and the dashed track (#1638). */
+@keyframes eph-metal-burst { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.68; } }
 @keyframes eph-metal-shock {
   0% { opacity: 0.38; transform: scale(0.94); }
   70%, 100% { opacity: 0; transform: scale(1.4); }
@@ -3647,15 +3658,24 @@
   0%, 100% { opacity: 0; transform: scale(0.5) translate(0, 0); }
   45% { opacity: 0.95; transform: scale(1) translate(2px, -2px); }
 }
-@keyframes eph-metal-current { to { background-position: 12px 0; } }
-.eph-metal-ray { opacity: 0.4; }
+.eph-metal-burst {
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.45;
+  background: repeating-conic-gradient(
+    var(--metal-ink) 0 1.6deg,
+    transparent 1.6deg var(--metal-step, 36deg)
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 0 82%, #000 84%);
+  mask: radial-gradient(closest-side, transparent 0 82%, #000 84%);
+}
 /* Pure motion: a shock ring and a wipe have no resting form to show. */
 .eph-metal-shock, .eph-metal-sheen { opacity: 0; }
 .eph-metal-filing { opacity: 0.55; }
 @media (prefers-reduced-motion: no-preference) {
-  .eph-metal-ray {
-    animation: eph-metal-ray var(--metal-dur, 2.4s) ease-in-out infinite;
-    animation-delay: var(--metal-delay, 0s);
+  .eph-metal-burst {
+    animation: eph-metal-burst 3.2s ease-in-out infinite;
+    animation-delay: var(--metal-delay);
   }
   .eph-metal-shock {
     animation: eph-metal-shock var(--metal-dur, 3s) ease-out infinite;
@@ -3669,7 +3689,6 @@
     animation: eph-metal-filing 3.2s ease-in-out infinite;
     animation-delay: var(--metal-delay, 0s);
   }
-  .eph-metal-rail { animation: eph-metal-current 1.6s linear infinite; }
 }
 
 /* S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU. */

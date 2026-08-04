@@ -4,6 +4,7 @@ import type { CardProps } from "./TaskCard";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { PLATINUM } from "../factionMarks/ephemeristsPlate";
 
 /**
  * The Ephemerists — THE VALLEY PLATE (task card v2, #1023). Deco × Egypt: the
@@ -51,8 +52,6 @@ interface SizeSet {
   discWidth: number;
   /** Medallion box. Geometry. */
   medallion: number;
-  /** How far the journal rule bleeds past the text column. Geometry. */
-  ruleBleed: number;
   bodyPad: string;
   titleSize: string;
   levelSize: string;
@@ -65,7 +64,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     masthead: 110,
     discWidth: 176,
     medallion: 104,
-    ruleBleed: 14,
     bodyPad: "0 var(--space-xl) var(--space-xl)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-display)",
@@ -76,7 +74,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     masthead: 98,
     discWidth: 154,
     medallion: 90,
-    ruleBleed: 11,
     bodyPad: "0 var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-heading)",
@@ -111,7 +108,11 @@ const GLYPHS: Record<string, string> = {
   chevrons: "M3 8 L12 3 L21 8 M3 14 L12 9 L21 14 M3 20 L12 15 L21 20", // deco, 1925
   alchemy: "M12 3 L21 19 H3 Z M6.6 13.6 H17.4", // alchemical fire — medieval
   hourglass: "M5 3 H19 M5 21 H19 M6.5 3 L12 12 L6.5 21 M17.5 3 L12 12 L17.5 21",
-  openEye: "M2 12 C6 5.4 18 5.4 22 12 M2 12 C6 18.6 18 18.6 22 12 M8.4 12 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 M10.7 12 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 M12 2.8 V5 M5 4.6 L6.8 6.6 M19 4.6 L17.2 6.6",
+  /* The summons mark since #1638 — the ladder's top metal, read from the kit
+     rather than copied, so the sign the vote plate strikes and the sign the
+     summons wears cannot drift apart. It replaced the open eye, which had no
+     other reader on this card and went with it. */
+  platinum: PLATINUM.glyph,
   planet: "M5.8 12 a6.2 6.2 0 1 0 12.4 0 a6.2 6.2 0 1 0 -12.4 0 M1.8 16.2 A10.8 3.7 -22 0 1 22.2 7.8 A10.8 3.7 -22 0 1 1.8 16.2", // Saturn
 };
 
@@ -241,37 +242,15 @@ function Cornice() {
   );
 }
 
-/** A fluted band ruling the journal leaf, bleeding past the text column. */
-function JournalRule({ bleed }: { bleed: number }) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: the lead between the journal rule's flutes.
-        gap: 3,
-        height: 7,
-        overflow: "hidden",
-        marginLeft: -bleed,
-        marginRight: -bleed,
-        marginBottom: "var(--space-md)",
-      }}
-    >
-      {Array.from({ length: 42 }).map((_, i) => (
-        <span
-          key={i}
-          style={{
-            flex: 1,
-            height: i % 2 ? 7 : 4,
-            background: "var(--faction-ephemerists-plate-brass)",
-            opacity: i % 2 ? 0.55 : 0.3,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+/* `JournalRule` stood here — this card's own fluted band, bleeding past the text
+   column between the description and the in-progress line.
+
+   #1638 converts the kit's fluted rules to RUNE BANDS, and this is the one mount
+   that is DROPPED rather than converted: the masthead 300px above it already
+   marches two full registers of the same signs, so a third row of them below the
+   description would read as the band repeating rather than as a divider. The
+   description's own bottom margin is the separation the rule was carrying, and
+   `ruleBleed` went with it — it measured nothing else. */
 
 export default function EphemeristsTaskCard({
   task,
@@ -502,8 +481,6 @@ export default function EphemeristsTaskCard({
               </p>
             )}
 
-            <JournalRule bleed={size.ruleBleed} />
-
             {inProgressCount > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
                 <svg width={15} height={15} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
@@ -556,7 +533,7 @@ export default function EphemeristsTaskCard({
             }}
           >
             <svg width={17} height={17} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
-              <path d={GLYPHS.openEye} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={GLYPHS.platinum} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>{i18n.t("feed:taskCard.ephemerists.signup")}</span>
             <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>

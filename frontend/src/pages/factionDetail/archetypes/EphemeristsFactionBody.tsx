@@ -17,7 +17,7 @@ import {
   CTA_BG,
   CTA_INK,
   DECO,
-  FlutedRule,
+  RuneRule,
   GOLD,
   INK,
   LINE,
@@ -53,7 +53,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  * SWEPT OFF THE CODEX (#1208). Every mark is the plate kit's rather than a
  * private drawing: the roster's circular vellum medallions are `AuthorOctagon`,
  * the level beside a keeper's name gains the `Tally`, and every section rule is
- * `FlutedRule`. Two grounds carry ink here — the plate (`ink` 11.3:1, `quiet`
+ * `RuneRule`. Two grounds carry ink here — the plate (`ink` 11.3:1, `quiet`
  * 5.6, `caption` 4.8, `nile` 5.0) and the night band under the spotlight
  * (`band-ink` 12.4, `gold` 9.4, `band-quiet` 8.6). The page beneath both is
  * `.eph-backdrop`, repainted onto `-plate-page` in the same issue; only `ink`,
@@ -96,7 +96,7 @@ function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <>
       <h2 style={SECTION_HEADING}>{children}</h2>
-      <FlutedRule />
+      <RuneRule />
     </>
   );
 }

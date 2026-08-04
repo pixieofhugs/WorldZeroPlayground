@@ -11,6 +11,9 @@
  * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so these
  * are assertions about markup given props — never interaction.
  */
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
@@ -168,6 +171,77 @@ describe('one card, both form factors (ADR-0067)', () => {
     // is the property this test exists to hold.
     expect(markup).toContain('flex:1 1 var(--praxis-card-basis, 394px)')
     expect(markup).not.toMatch(/(^|[^-])width:39\d/)
+  })
+})
+
+/**
+ * #1638 — FLUTED RULES BECOME SHIFTING RUNES, "on every surface that draws it".
+ *
+ * The seam is the SOURCE, not the markup, and that is the whole point of this
+ * block. `FlutedRule` had six mounts reachable by following imports and a
+ * SEVENTH declaration hand-copied into `EphemeristsTaskDetail` — so a sweep
+ * done through the import graph converts six surfaces, leaves two mounts on the
+ * old drawing, and every test still passes because each file renders fine.
+ *
+ * Rendering all seven here would need seven page harnesses to assert one
+ * ornament; grepping the tree costs nothing and catches the case rendering
+ * cannot see, which is a NEW hand-copy appearing later.
+ */
+describe('the fluted rule is retired kit-wide (#1638)', () => {
+  const SKINS = fileURLToPath(new URL('../../..', import.meta.url))
+
+  /**
+   * Every shipped `.ts`/`.tsx` under `src/`, with comments stripped and tests
+   * skipped. Both exclusions matter: the files that RETIRED the flute name it
+   * in prose so the next reader knows it was deleted rather than mislaid, and
+   * this very file names it in the assertions below.
+   */
+  const sources = (): string[] => {
+    const found: string[] = []
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === '__tests__') continue
+        const full = join(dir, entry.name)
+        if (entry.isDirectory()) walk(full)
+        else if (/\.tsx?$/.test(entry.name)) {
+          found.push(
+            readFileSync(full, 'utf8')
+              .replace(/\/\*[\s\S]*?\*\//g, '')
+              .replace(/^\s*\/\/.*$/gm, ''),
+          )
+        }
+      }
+    }
+    walk(SKINS)
+    return found
+  }
+
+  it('leaves no FlutedRule anywhere — not a mount, not a second declaration', () => {
+    expect(sources().filter((file) => file.includes('FlutedRule'))).toEqual([])
+  })
+
+  it('mounts the rune band on all seven surfaces the flute had', () => {
+    // Six imports plus the task page, whose local copy #1638 collapsed into the
+    // shared one. Counted as FILES rather than mounts because the task page
+    // draws it twice, and the number that can silently drift is how many
+    // surfaces reach the kit at all.
+    const mounts = sources().filter((file) => file.includes('<RuneRule'))
+    expect(mounts.length).toBe(7)
+  })
+
+  it('draws the band out of the kit register, in brass rather than gold', () => {
+    // Gold is the masthead's ink on a night band; on the papyrus page it is a
+    // stain. `-brass` is the plate's rule colour and never an ink.
+    const kit = readFileSync(
+      fileURLToPath(new URL('../../factionMarks/ephemeristsPlate.tsx', import.meta.url)),
+      'utf8',
+    )
+    const rule = kit.slice(kit.indexOf('export function RuneRule'))
+    expect(rule).toContain('<GlyphRegister')
+    expect(rule).toContain('color={BRASS}')
+    // The shift is the register's own `.epg-glyph` cycle, already gated on
+    // reduced-motion — the band declares no animation of its own.
+    expect(rule.slice(0, rule.indexOf('\n}'))).not.toContain('animation')
   })
 })
 
