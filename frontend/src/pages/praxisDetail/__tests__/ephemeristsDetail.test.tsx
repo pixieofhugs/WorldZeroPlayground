@@ -331,15 +331,27 @@ describe("Ephemerists praxis detail — the state axes", () => {
     expect(text, "total").toContain("16.0");
   });
 
-  it("reads each vote back in the faction's own tier word and numeral", () => {
-    const { text } = render(state());
-    // `reframeLabel` + `toRoman`, both already shipped — no invented copy.
-    // The metals ladder (#1207) renamed the tiers; the page reads whatever
-    // `reframeLabel` says, which is the point of asserting through it.
+  /**
+   * #1638 — "who voted" is THE STRUCK METAL: the sigil for the metal that voter
+   * cast, in a brass-ringed disc, with the tier WORD carried to assistive tech
+   * on a visually-hidden label rather than on `title`.
+   *
+   * The name reaching text is the load-bearing half, and it is the half the
+   * design's `title` would have failed silently: an attribute is not text
+   * content, so a `title`-only build renders identically and says nothing to a
+   * screen reader. This assertion is what tells the two apart.
+   */
+  it("strikes each vote as its metal, and keeps the metal's NAME reachable", () => {
+    const { text, html } = render(state());
+    // The word still comes from the shipped `reframeLabel` — no invented copy —
+    // and reaches the accessibility tree as text rather than as a tooltip.
+    expect(html, "visually hidden, not withheld").toContain('class="sr-only"');
     expect(text, "the tier for 5").toContain("platinum");
     expect(text, "the tier for 3").toContain("silver");
-    expect(text, "roman numerals, as VOTE_REFRAMES declares").toContain("V");
-    expect(text, "and III for the second voter").toContain("III");
+    expect(html, "and never as a hover-only title").not.toContain('title="platinum"');
+    // The roman numerals went with the vote plate's own pips: the sigil in the
+    // disc is what says which rank, on both surfaces.
+    expect(text, "no numeral beside the mark").not.toContain("III");
   });
 
   it("credits every co-author and shows the members section on a collab", () => {
