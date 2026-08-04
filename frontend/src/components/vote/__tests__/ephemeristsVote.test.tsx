@@ -328,7 +328,7 @@ describe('#1638 the metals burst sits behind the reduced-motion guard', () => {
     // burst's MEANING is its spoke pitch, which must survive the guard.
     const base = UNGUARDED.match(/\.eph-metal-burst\s*\{[^}]*\}/)?.[0] ?? ''
     expect(base).toContain('--metal-step')
-    expect(base).toContain('mask-image')
+    expect(base).toContain('mask:')
   })
 
   it('retired the ray fan and the rail with the scaffolding', () => {

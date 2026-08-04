@@ -371,33 +371,32 @@ export function Cornice({ glow }: { glow?: boolean }) {
  * opt-in under `prefers-reduced-motion: no-preference`. Nothing here declares
  * motion, so a stilled reader gets the signs rather than a blank strip.
  *
- * `slice` is what makes one drawing fit every column: the band is drawn at
- * {@link RUNE_VIEW} units wide and cropped to whatever it is mounted in, so a
- * 375px aside and an 880px page both get whole signs at one size rather than
- * the same eighteen stretched to fit.
+ * NO `viewBox`, deliberately, and this is the whole reason the band fits every
+ * column at one size. A viewBox plus `slice` scales by `max(w/vbW, h/vbH)`, and
+ * the height here is fixed, so `h/vbH` is 1 and any column WIDER than the
+ * viewBox blows every sign up — a 16px band of 32px glyphs on the 1200px task
+ * page, which is precisely the failure `EphemeristsTaskDetail` documented when
+ * it stopped using a fixed sign count. Without a viewBox, user units are CSS
+ * pixels, the signs are drawn at their own size at every width, and the SVG
+ * viewport crops the overspill for free. {@link RUNE_SPAN} is therefore a
+ * CEILING — enough signs to reach the widest column the site has (the 1200px
+ * page cap), not a count anyone reads.
  *
  * `rule` pairs the band with the brass hairline the write-up header carries
  * above it (`sectionHead` draws its own). A rune band mounted WITHOUT a heading
  * reads as a loose row of marks; the composer is the surface that does that, so
  * it asks for the rule and gets the same two-part divider the record has.
  */
-const RUNE_VIEW = 480;
+const RUNE_SPAN = 1280;
 const RUNE_HEIGHT = 16;
 
 export function RuneRule({ rule }: { rule?: boolean }) {
   return (
     <div aria-hidden="true">
       {rule && <div style={{ height: 1, background: BRASS, opacity: 0.5 }} />}
-      <svg
-        width="100%"
-        height={RUNE_HEIGHT}
-        viewBox={`0 0 ${RUNE_VIEW} ${RUNE_HEIGHT}`}
-        preserveAspectRatio="xMidYMid slice"
-        aria-hidden="true"
-        style={{ display: "block" }}
-      >
+      <svg width="100%" height={RUNE_HEIGHT} aria-hidden="true" style={{ display: "block" }}>
         <GlyphRegister
-          width={RUNE_VIEW}
+          width={RUNE_SPAN}
           y={RUNE_HEIGHT / 2}
           strength={0.42}
           keyPrefix="rune"
