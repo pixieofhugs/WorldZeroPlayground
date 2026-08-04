@@ -32,7 +32,7 @@
  * na/albescent and by any faction with no `profileBody` row, so a themed slug
  * gets its solid hue and na gets the rainbow.
  */
-import { useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { BadgeOut } from '../../../api/auth'
@@ -203,6 +203,34 @@ function laurelTarget(submissions: ProfileBodyProps['submissions']): number | nu
   return submissions.find((praxis) => (praxis.score ?? 0) === topScore)?.id ?? null
 }
 
+/**
+ * ① The level ring's filled arc, read in the SPECTRUM (#1630).
+ *
+ * ADR-0039 draws the line at expressibility: the unaffiliated identity is a
+ * gradient, so it appears wherever a gradient can go and stays neutral grey
+ * where one cannot. This arc was `conic-gradient(var(--color-text-primary)
+ * Ndeg, var(--color-border) 0)` — a single scalar sweep, which is precisely the
+ * shape §3 names as "a fill written as a border": it is a `background`, so the
+ * ramp was always expressible there and the ink was only ever chosen because a
+ * one-layer conic takes one colour per stop.
+ *
+ * TWO LAYERS, MASK ON TOP. The track paints over the UNFILLED sweep and leaves
+ * the filled arc transparent, so `fill` shows through exactly as far as the
+ * progress goes. Both ends behave: 0deg leaves the mask opaque all the way
+ * round (a bare track), 360deg leaves it transparent all the way round (the
+ * whole ramp). Note the mask must name its closing stop explicitly — the `0`
+ * shorthand the scalar form used means "same position as the previous stop",
+ * which is right for two stops and wrong the moment a layer sits under it.
+ *
+ * `fill` is a parameter rather than the token, because the two branches disagree
+ * about who can reach this component: the phone stack is also the fall-through
+ * for a themed slug with no `profileBody` row and routes its band and bar
+ * through `factionFill`, where the laptop is written na-first throughout.
+ */
+function spectrumRing(degrees: number, fill: string): string {
+  return `conic-gradient(transparent 0 ${degrees}deg, var(--color-border) ${degrees}deg 360deg), ${fill}`
+}
+
 /** ① progression numbers, shared by both branches (hidden until game config
  *  supplies thresholds). */
 function progressionFigures(
@@ -222,7 +250,27 @@ function progressionFigures(
   }
 }
 
-export default function DefaultProfileBody(props: ProfileBodyProps) {
+/**
+ * An inert ornament layer mounted INSIDE the identity band, at both widths.
+ *
+ * The one seam a skin-fallthrough faction needs and could not otherwise reach.
+ * Albescent renders this component whole (ADR-0048: `Default` PLUS a flourish,
+ * never a repaint), and its tell is the na spectrum frame coming alive — a
+ * flourish that lives ON the band, four pixels wide, which no wrapper outside
+ * this component can aim at. The alternative shapes are both worse: an overlay
+ * on a wrapper covers the whole page rather than the band, and a `slug ===
+ * 'albescent'` branch in here would put the society's name in the very file
+ * that exists to make it indistinguishable.
+ *
+ * Optional, so na and every unskinned slug render byte-identically — #1153's
+ * rule, and the same shape `DefaultTaskDetail`'s `worthSlot` and
+ * `DefaultPraxisDetail`'s `ornament` already take.
+ */
+export interface DefaultProfileBodyProps extends ProfileBodyProps {
+  identityOrnament?: ReactNode
+}
+
+export default function DefaultProfileBody(props: DefaultProfileBodyProps) {
   return useFormFactor() === 'mobile' ? (
     <MobileProfile {...props} />
   ) : (
@@ -236,7 +284,8 @@ function DesktopProfile({
   proposedTasks,
   progression,
   identityActions,
-}: ProfileBodyProps) {
+  identityOrnament,
+}: DefaultProfileBodyProps) {
   const { t } = useTranslation('common')
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
@@ -329,6 +378,7 @@ function DesktopProfile({
           marginBottom: 'var(--space-2xl)',
         }}
       >
+        {identityOrnament}
         <div
           style={{
             borderRadius: 12,
@@ -394,14 +444,14 @@ function DesktopProfile({
                   maxWidth: 440,
                 }}
               >
-                {/* level ring */}
+                {/* level ring — the filled arc reads in the spectrum (#1630) */}
                 <div
                   style={{
                     flexShrink: 0,
                     width: 60,
                     height: 60,
                     borderRadius: '50%',
-                    background: `conic-gradient(var(--color-text-primary) ${ringDegrees}deg, var(--color-border) 0)`,
+                    background: spectrumRing(ringDegrees, 'var(--faction-default-rainbow-conic)'),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -564,7 +614,8 @@ function MobileProfile({
   proposedTasks,
   progression,
   identityActions,
-}: ProfileBodyProps) {
+  identityOrnament,
+}: DefaultProfileBodyProps) {
   const { t } = useTranslation('common')
   const [segment, setSegment] = useState<Segment>('praxis')
   const badges = character.badges ?? []
@@ -597,6 +648,7 @@ function MobileProfile({
             boxShadow: '0 20px 50px -26px rgba(0,0,0,0.4)',
           }}
         >
+          {identityOrnament}
           <div
             style={{
               borderRadius: 12,
@@ -664,7 +716,13 @@ function MobileProfile({
                     width: 60,
                     height: 60,
                     borderRadius: '50%',
-                    background: `conic-gradient(var(--color-text-primary) ${ringDegrees}deg, var(--color-border) 0)`,
+                    // The spectrum arc (#1630), through `factionFill` like the
+                    // band and bar either side of it: na and albescent get the
+                    // conic ramp, a themed fall-through slug its solid hue.
+                    background: spectrumRing(
+                      ringDegrees,
+                      String(factionFill(character.faction_slug, 'dot').background),
+                    ),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

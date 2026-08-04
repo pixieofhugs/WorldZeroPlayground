@@ -46,6 +46,8 @@ const AlbescentPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/
 // #1203 — the feed-card unfreeze. Lazy like every wrapper above: it pulls in the
 // na chassis, which is exactly the weight route-splitting keeps off first load.
 const AlbescentFeedFrame = lazyArchetype(() => import('../components/feed/AlbescentFeedFrame'))
+// #1630 — the profile unfreeze, lazy for the same reason as every wrapper above.
+const AlbescentProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/AlbescentProfileBody'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -140,6 +142,25 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * for every faction (epic decision 6), so no exclusion is needed here.
    */
   feedFrame: () => AlbescentFeedFrame,
+
+  /**
+   * The profile tell (#1630, ADR-0048) — the SIXTH surface to unfreeze and the
+   * same "Default + light" shape as the five above. `AlbescentProfileBody` is a
+   * WRAPPER: it renders the whole na profile and hands one inert ornament layer
+   * to `DefaultProfileBody`'s `identityOrnament` slot, so the na spectrum band
+   * an unaffiliated player wears STATIC drifts here instead. That contrast is
+   * the entire delta — no token, no copy, no slot moves, and stripping the class
+   * leaves two byte-identical profiles.
+   *
+   * This is the seam the module docstring above has named from the start
+   * ("the animations that reveal the society to someone already looking, which
+   * unaffiliated does not have"), and it is the row `FactionProfileBody` used to
+   * say would never exist. That comment ruled out a SKIN and was right to: a
+   * profile IS where a secret society would give itself away, which is exactly
+   * why this row may only add motion. One row covers both form factors — the
+   * ornament mounts in each of Default's two branches.
+   */
+  profileBody: () => AlbescentProfileBody,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as

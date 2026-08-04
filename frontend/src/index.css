@@ -6178,3 +6178,52 @@
     text-align: center;
   }
 }
+
+/* ── #1630: identity-header flair, one treatment per faction ────────────────
+   Two of the seven are perpetual motions, so both live here behind the shared
+   `prefers-reduced-motion: no-preference` guard rather than in an inline
+   `animation:` a component could not opt out of (#1003). */
+
+/* Albescent — the PROFILE's tell (#1630, ADR-0048), the sixth surface to
+   unfreeze. `DefaultProfileBody`'s identity band is a 4px spectrum frame around
+   an opaque sheet; na wears it STILL and Albescent wears the same frame
+   drifting. The contrast is the whole treatment, so nothing here repaints
+   anything — strip the class and the two profiles are byte-identical.
+
+   A masked ring rather than a border, for the reason `.alb-task-edge` already
+   documents: the band belongs to a component this file cannot reach into, so
+   the drift is drawn as an overlay that lands exactly on Default's own frame
+   and reads as that frame moving. The `padding` must track the band's own inset
+   (--space-xs) and the radius its corner (16px); if either moves in
+   DefaultProfileBody, this follows.
+
+   The ramp is --faction-default-rainbow-loop, the spectrum's TILING cut whose
+   last stop is its first — which is what lets the position walk a full tile and
+   arrive back with no seam. At `background-size: 200% 100%` one tile is two
+   band-widths, so `0 → 200%` is exactly one loop; the design's 9s is the pace.
+   No dark half is declared because none is needed: the token flips on its own.
+
+   Stilled, this paints an ordinary static spectrum ring on top of an identical
+   static spectrum frame, i.e. nothing — so it can freeze outright where
+   `.alb-spark` had to park at a resting opacity. */
+@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
+.alb-profile-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 16px;
+  padding: var(--space-xs);
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 200% 100%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alb-profile-edge { animation: alb-profile-edge 9s linear infinite; }
+}
