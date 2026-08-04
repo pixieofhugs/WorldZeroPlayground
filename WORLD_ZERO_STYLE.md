@@ -613,6 +613,20 @@ Every faction sigil renders in `BadgedAvatar`'s membership badge, whose glyph is
 
 **Size it `100% 100% / no-repeat` even when that is a no-op.** It is, for a repeating gradient. It is exactly what a warped SVG needs, and it is the difference between swapping the warp in later as one declaration and revisiting every consumer.
 
+### A faction's HEAD is a component, and the fifth copy is what proves it (#1634)
+
+The Ephemerists drew one masthead — a winged sun disc over the faction's name in letterspaced Poiret One, centred on a night band — on four surfaces, in four copies that could not see each other: the praxis card, the praxis detail, the task detail and the composer. The task detail carried a *fifth* copy, of the disc itself, byte-identical to the shared kit's and invisible to it. §6's rule above says a device is drawn once; this is the same rule one level up, where what repeats is not a mark but **an arrangement of marks plus type**. `EphemeristsMasthead` is that arrangement, and the four skins now mount it.
+
+Four things generalise off it, none of them Ephemerists-specific.
+
+**A masthead's TWO SCALES are one prop, and everything else is a table.** `page` heads a page, `card` heads a sheet — and because #1635 made the sigil own its 486:560 ratio, the two scales differ by exactly one number per row. A `compact` boolean would have forked every internal (§1.2's rejected escape); a size *record* keyed by scale keeps them side by side where a typo in one is visible against the other.
+
+**A band that held a fixed-height stack becomes a FLOOR when the stack starts sizing itself.** All four mounts pinned their band (110 / 84 / 108 / 84–68 px) around content whose height they knew. A masthead built from its own padding does not fit inside a number chosen for something else, so `height` becomes `minHeight` and the band's background register moves to `height: 100%`. Where the band is a *shared* block — `ComposerMasthead`, mounted by eight composers — the skin relaxes it through `style`, which is spread after `height`, rather than the shared block growing a second prop for one caller.
+
+**A DATUM ROW is honest data or an honest egg, and never the thing in between.** The design hardcoded a plausible date and a plausible right ascension and declination *per surface*, which is decoration wearing the appearance of data — worse than either half. Owner ruling: the date is the surface's own (a praxis's submission, a task's filing), and the coordinates are **fixed**, pointing at one real place, derived rather than picked. Two consequences worth carrying. The derivation belongs in a comment at the constants, including the sign convention, or the next reader deletes two arbitrary numbers. And an egg is never labelled — a caption spends what noticing was supposed to buy. The corollary on the real half: a date formatter that renders a missing timestamp as the literal string `Invalid Date` puts an *invention* on the one row a player reads as data, so the guard belongs in the component rather than at each mount.
+
+**Retiring a mark is finished when its LAST caller is gone, and the last caller is rarely on the list.** The issue named the winged sun disc through one class (`.eph-plate-crown`) on one surface. Four of the disc's five call sites were the mastheads it crowned and went with them; the fifth was a feed row's 14px band ornament, on nobody's list, and leaving it would have shipped a faction wearing two marks with no way for a reader to tell which was deliberate. Grep for the *component*, not for the symptom the issue named. The mirror of that: `WingedDiscSign` is a **different drawing** on a 24-unit square for the metatask seal, and a retirement stops at the edge of a drawing it is not about.
+
 ---
 
 ## 7. Components
