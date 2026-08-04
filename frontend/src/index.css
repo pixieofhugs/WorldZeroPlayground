@@ -1146,22 +1146,13 @@
      hue of its own. */
   --faction-ua-vote-reading: var(--faction-ua-card-accent);
 
-  /* ── Warriors of Whimsy collage scrap layers (legacy — kept for back-compat) ── */
-  --faction-coven-scrap-deep: #fbcfe0;
-  --faction-coven-scrap-mid: #fce7ef;
-  --faction-coven-tape: rgba(250, 230, 130, 0.7);
-
-  /* ── Warriors of Whimsy lo-fi ".exe" window chrome (redesign) ── */
-  --faction-coven-win-border: #e487b5;
-  --faction-coven-title-from: #fbcfe2;
-  --faction-coven-title-to: #f3a6cb;
-  --faction-coven-title-text: #8e2f5c;
-  --faction-coven-body-bg: #fdeef6;
-  --faction-coven-notepad-bg: #fffdfa;
-  --faction-coven-notepad-border: #f3b6d2;
-  --faction-coven-dot: rgba(214, 90, 150, 0.2);
-  --faction-coven-ivy: #7cbf99;
-  --faction-coven-ivy-leaf: #9ad3b1;
+  /* The retired `coven.exe` window chrome and its collage scraps lived here —
+     `-scrap-*`, `-tape`, `-win-border`, `-title-*`, `-body-bg`, `-notepad-*`,
+     `-dot`, `-ivy*`. #1209 swept every surface onto the candlelit spell slip and
+     left them declared "because thirteen other surfaces still painted with
+     them"; none does now, and `__tests__/covenSpeaksOneIdentity.test.ts` is the
+     guard that keeps it that way. Its docstring called the deletion a separate
+     change; this is it (#1661). */
 
   /* ══ Praxis-card redesign (#821, repointed by #838, rebuilt by #840) ══
      WOW wears the cream/gold/plum CHRONICLE + the googly-balloon verdict; Coven
@@ -1188,25 +1179,9 @@
         OBJECT in the design (a tilted parchment plate; a dashed sticker), not
         the card ground reused. */
 
-  /* Coven — pink marker-sticker frame */
-  --faction-coven-sticker-bg: #fffdfa; /* sticker ground */
-  --faction-coven-sticker-border: #f3b6d2; /* the 1px hairline edge */
-  --faction-coven-sticker-accent: #ec5f99; /* rules, eyebrow, roster ring */
-  /* The design's metadata ink #a8728e pays only 3.80:1 on the near-white
-     ground; deepened one step to 5.22:1 so the meta line is real text. */
-  --faction-coven-sticker-muted: #8f5c78;
-  --faction-coven-sticker-shadow: rgba(214, 90, 150, 0.14);
-
-  /* Coven — the score STICKER: a dashed 2px card struck at -3deg, its own
-     object with its own ground, not a tint of the card's. */
-  --faction-coven-stamp-bg: #fff0f6;
-  --faction-coven-stamp-edge: #ec9cc0;
-  --faction-coven-stamp-shadow: rgba(236, 95, 153, 0.22);
-  /* The multiplier chip is the design's one non-pink note — a highlighter
-     yellow, carried into dark unchanged (it is a marker stroke, not a
-     surface). Its ink is the sticker's own heading plum-pink. */
-  --faction-coven-stamp-chip-bg: #ffe08a;
-  --faction-coven-stamp-chip-text: #8e2f5c;
+  /* Coven's pink marker-STICKER frame (`-sticker-*`) and its dashed score
+     STAMP (`-stamp-*`) were the second half of the retired lo-fi identity and
+     went with it in #1661; the slip and ward tokens below are the live ones. */
 
   /* Coven — moon-phase vote plate (night plate; same in both themes) */
   --faction-coven-moon-plate-from: #3a2352;
@@ -2336,22 +2311,8 @@
      for the polarity reason set out beside it there. This note stays so the
      absence reads as a decision rather than as an omission. */
 
-  /* ── Warriors of Whimsy collage scrap layers (dark) ── */
-  --faction-coven-scrap-deep: #091209;
-  --faction-coven-scrap-mid: #0d1a10;
-  --faction-coven-tape: rgba(250, 230, 130, 0.12);
-
-  /* ── Warriors of Whimsy ".exe" window chrome (dark) ── */
-  --faction-coven-win-border: #f472b6;
-  --faction-coven-title-from: #5e2a46;
-  --faction-coven-title-to: #41203a;
-  --faction-coven-title-text: #fbd6e8;
-  --faction-coven-body-bg: #2a0d1c;
-  --faction-coven-notepad-bg: #39152a;
-  --faction-coven-notepad-border: #7a3358;
-  --faction-coven-dot: rgba(244, 114, 182, 0.16);
-  --faction-coven-ivy: #5fa882;
-  --faction-coven-ivy-leaf: #7fc59e;
+  /* The night half of the retired `coven.exe` chrome and its scraps was deleted
+     with the light half in #1661. */
 
   /* ══ Praxis-card redesign (#821, repointed by #838) — dark ══
      Re-DERIVED against the pink/chronicle assignment, not translated from the
@@ -2360,21 +2321,8 @@
      balloon ramps are fixed surfaces that read in both themes, so only the frame
      chrome, the balloon plate and the caption inks are overridden here. */
 
-  /* Coven — pink marker-sticker frame (dark). NOT a cascade freebie: the design
-     draws this variant explicitly (a deep plum-black ground under a pink dashed
-     sticker), and every value below is read off it rather than derived. */
-  --faction-coven-sticker-bg: #2a0d1c;
-  --faction-coven-sticker-border: rgba(244, 114, 182, 0.28);
-  --faction-coven-sticker-accent: #f472b6;
-  --faction-coven-sticker-muted: #c98aa8;
-  --faction-coven-sticker-shadow: rgba(0, 0, 0, 0.5);
-  --faction-coven-stamp-bg: #3a1228;
-  --faction-coven-stamp-edge: #a84a7a;
-  --faction-coven-stamp-shadow: rgba(0, 0, 0, 0.35);
-  /* The highlighter chip does not darken — a marker stroke is the same ink on
-     either sheet — but its text flips to the sticker ground so it stays legible
-     on the yellow (#3a1228 on #ffe08a = 12.1:1). */
-  --faction-coven-stamp-chip-text: #3a1228;
+  /* The night half of Coven's retired `-sticker-*` / `-stamp-*` families was
+     deleted with the light half in #1661. */
   --faction-coven-vote-on: #f472b6;
   --faction-coven-vote-off: #c78aa6;
 
@@ -4692,18 +4640,12 @@
    already carries these hues under the --faction-<slug>-* namespace; the
    select cards reference the bare names, so alias them here. ── */
 :root {
-  /* GESTALT · whimsy.exe (light) */
-  --gestalt-card-bg: #fffdfa;
-  --gestalt-ink: #a83a6e;
-  --gestalt-ink-soft: #b5588a;
-  --gestalt-label: #a8728e;
-  --gestalt-pink: #ec5f99;
-  --gestalt-pink-lt: #fbcfe2;
-  --gestalt-glow: rgba(236, 95, 153, 0.32);
-  --gestalt-title-from: #fbcfe2;
-  --gestalt-title-to: #f3a6cb;
-  --gestalt-title-text: #8e2f5c;
-  --gestalt-win-border: #e487b5;
+  /* The `--gestalt-*` whimsy.exe alias family stood here (eleven names, both
+     cascades). `FactionSelectCard`'s COVEN tile was its entire readership and
+     #1209 rewrote that tile onto the spell slip's own tokens, leaving the family
+     declared and unread — see the guard in
+     `__tests__/covenSpeaksOneIdentity.test.ts`, which keeps the names retired.
+     Deleted in #1661; the guard is what stops them coming back. */
   /* S.N.I.D.E. · ransom dispatch (always-dark constants) */
   --snide-acid: #b6ff2e;
   --snide-ink: #14110b;
@@ -4736,20 +4678,9 @@
   --albescent-reveal-border-faint: rgba(0, 0, 0, 0.055);
   --albescent-reveal-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-[data-theme="dark"] {
-  /* GESTALT flips in dark; snide + albescent stay put */
-  --gestalt-card-bg: #2a0d1c;
-  --gestalt-ink: #fbcfe0;
-  --gestalt-ink-soft: #e58cb6;
-  --gestalt-label: #c78aa6;
-  --gestalt-pink: #f472b6;
-  --gestalt-pink-lt: #5e2a46;
-  --gestalt-glow: rgba(244, 114, 182, 0.45);
-  --gestalt-title-from: #5e2a46;
-  --gestalt-title-to: #41203a;
-  --gestalt-title-text: #fbd6e8;
-  --gestalt-win-border: #f472b6;
-}
+/* The dark half of the block above held nothing but the `--gestalt-*` flips,
+   so it went with them (#1661). snide + albescent are theme-invariant and never
+   had a dark body here. */
 
 /* ──────────────────────────────────────────────────────────────────────────
    WOW — THE LISTS (#895): the duel seal and the duel rail.
