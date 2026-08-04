@@ -18,7 +18,7 @@ from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
-from models.praxis import ModerationStatus, Praxis, PraxisType
+from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisType
 from models.task import Task
 from services.duel_outcome import duel_winner
 from services.meta_task import get_meta_task_points_bulk
@@ -71,7 +71,7 @@ async def compute_contributions(
     is pure scoring arithmetic over that set.
 
     Uses bulk queries: one task fetch, one vote tally, one duel query, one
-    opponent fetch — no N+1 in the praxis count.
+    opponent fetch, one habit-bonus fetch — no N+1 in the praxis count.
     """
     if not praxes:
         return {}
@@ -150,6 +150,23 @@ async def compute_contributions(
         praxis_ids, character_level=character_level, session=session
     )
 
+    # ── habit bonuses, as STAMPED at seal time (#1617) ───────────────────────
+    # Read, never derived: this function's two callers hold different praxis
+    # sets, so a bonus worked out from the list in hand would score the same
+    # praxis differently on a feed than in a stats recompute — see
+    # ``services.habit_bonus``. Scoped to THIS character's member rows: on a
+    # collab, each member was measured against their own history, so the other
+    # rows say nothing about this one. A query rather than ``praxis.members``
+    # because callers pass praxes built in-session, whose collections are not
+    # loaded (and lazy-loading one here raises ``MissingGreenlet``).
+    habit_result = await session.execute(
+        select(PraxisMember.praxis_id, PraxisMember.habit_bonus_points).where(
+            PraxisMember.praxis_id.in_(praxis_ids),
+            PraxisMember.character_id == character.id,
+        )
+    )
+    habit_bonus_by_praxis: dict[int, int] = dict(habit_result.all())
+
     # ── assemble contributions ───────────────────────────────────────────────
     contributions: dict[int, Contribution] = {}
     character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
@@ -163,18 +180,7 @@ async def compute_contributions(
         own_tally = get_tally(tallies, praxis.id)
         base_points = task.point_value
         metatask_points = meta_points.get(praxis.id, 0)
-        # #1617: read, never derive. ``Praxis.members`` is ``lazy="selectin"``,
-        # so this costs no query — and this character's own row is the only one
-        # that speaks for them, even on a collab where the other members were
-        # measured against their own histories.
-        habit_bonus_points = next(
-            (
-                member.habit_bonus_points
-                for member in praxis.members
-                if member.character_id == character.id
-            ),
-            0,
-        )
+        habit_bonus_points = habit_bonus_by_praxis.get(praxis.id, 0)
 
         if praxis.type == PraxisType.collab:
             faction_multiplier = compute_faction_multiplier(
