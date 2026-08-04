@@ -246,60 +246,18 @@ export function GlyphRegister({ width, y, strength, keyPrefix }: {
   );
 }
 
-/** One wing of the sun disc, drawn as deco stepped bars. */
-function Wing({ flip }: { flip?: boolean }) {
-  return (
-    <g transform={flip ? "scale(-1,1)" : undefined}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <rect
-          key={i}
-          x={13 + i * 11.4}
-          y={-6 + i * 1.5}
-          width={9.6}
-          height={8.4 - i * 1.4}
-          rx={1.4}
-          fill={GOLD}
-          opacity={0.9 - i * 0.13}
-        />
-      ))}
-      {[0, 1, 2, 3].map((i) => (
-        <rect
-          key={`covert-${i}`}
-          x={15 + i * 11.4}
-          y={4.2 + i * 1.6}
-          width={8}
-          height={3.4 - i * 0.5}
-          rx={1}
-          fill={BRASS_LIGHT}
-          opacity={0.62 - i * 0.11}
-        />
-      ))}
-    </g>
-  );
-}
+/* `Wing` and `WingedDisc` stood here — the winged sun disc, the mark that headed
+   every Ephemerists band and crowned the task detail's action panel.
 
-/** The winged sun disc, at whatever width it is asked for. */
-export function WingedDisc({ width, height, className }: {
-  width: number
-  height: number
-  className?: string
-}) {
-  return (
-    <svg
-      className={className}
-      width={width}
-      height={height}
-      viewBox="-88 -20 176 40"
-      aria-hidden="true"
-      style={{ display: "block", flex: "0 0 auto" }}
-    >
-      <Wing />
-      <Wing flip />
-      <circle r={11} fill={DISC} stroke={BRASS} strokeWidth="1.6" />
-      <circle r={5.5} fill={GOLD} opacity={0.85} />
-    </svg>
-  );
-}
+   #1634 retired it: the engraved masthead carries the kite SIGIL, and the kit
+   shows one mark rather than two. Its last caller was the feed row's band, which
+   is the shape WORLD_ZERO_STYLE §6 names — a device is drawn once and consumed
+   everywhere, so retiring it is one delete rather than five.
+
+   `WingedDiscSign` below is NOT this mark scaled down and does not go with it:
+   it is a separate drawing on the plate's 24-unit square, read by
+   `EmblemOctagon` for the metatask seal's indigo disc (#1207). That surface is
+   the seal epic's, not this one's. */
 
 /**
  * The cavetto cornice: fluted strokes under a stepped double rule.
@@ -378,12 +336,14 @@ export function LotusSign({ width, color }: { width: number; color: string }) {
 }
 
 /**
- * The winged sun disc at SIGN scale — the same emblem {@link WingedDisc} draws
- * across a masthead, redrawn on the plate's 24-unit square so it can sit in a
- * badge. Not a scaled-down copy: the masthead's is 176 units wide and would
- * come out a hairline at 24, so the wings are cut to three stepped bars a side.
+ * The winged sun disc at SIGN scale — redrawn on the plate's 24-unit square so
+ * it can sit in a badge. Never a scaled-down copy of the masthead's disc: that
+ * one was 176 units wide and would have come out a hairline at 24, so the wings
+ * are cut to three stepped bars a side.
  *
- * Its one reader today is the metatask seal's indigo disc (#1207).
+ * Its one reader is the metatask seal's indigo disc (#1207), and that is why it
+ * survived #1634's retirement of the full-size disc: the seal's mark is a
+ * different drawing on a surface this issue does not own.
  */
 export function WingedDiscSign({ size, color }: { size: number; color: string }) {
   return (

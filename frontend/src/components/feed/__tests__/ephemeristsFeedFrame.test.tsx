@@ -88,12 +88,22 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
     expect(frame()).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
-  it('reuses the plate ornament rather than drawing new marks', () => {
+  it('reuses the kit ornament rather than drawing new marks', () => {
     const html = frame()
-    // The winged disc's medallion (a `plate-disc` fill) and the incised register
-    // (`epg-glyph`, whose breathe cycle + reduced-motion gate live in index.css).
-    expect(html).toContain('--faction-ephemerists-plate-disc')
+    // The kite sigil (#1635) and the incised register (`epg-glyph`, whose
+    // breathe cycle + reduced-motion gate live in index.css). The band's mark
+    // was the winged sun disc until #1634 retired it kit-wide; this row was its
+    // last caller anywhere, so the disc's own `plate-disc` medallion fill must
+    // not survive here.
+    expect(html).toContain('M243 120 L55 272 L243 490 L425 272 Z')
+    expect(html).not.toContain('--faction-ephemerists-plate-disc')
     expect(html).toContain('epg-glyph')
+  })
+
+  it('takes the sigil at the REDUCED cut, since the band is 10-14px tall', () => {
+    // Both band heights sit under #1635's 20px threshold, so the mark drops its
+    // crossed axes and vertex discs rather than drawing them at half a pixel.
+    expect(frame()).not.toContain('M100 272 L392 272')
   })
 
   it('keeps its ornament stacking inside the card', () => {
