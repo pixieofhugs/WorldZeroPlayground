@@ -99,9 +99,7 @@ const kit: ProfileKit = {
       {card}
     </div>
   ),
-  nameSize: 60,
-  nameExtra: { transform: 'skewX(-5deg)', textShadow: `3px 3px 0 ${PINK}`, textTransform: 'uppercase' },
-  playerEyebrow: (faction) => `Player · ${faction}`,
+  taglineExtra: { transform: 'skewX(-5deg)', textShadow: `3px 3px 0 ${PINK}`, textTransform: 'uppercase' },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: INK,

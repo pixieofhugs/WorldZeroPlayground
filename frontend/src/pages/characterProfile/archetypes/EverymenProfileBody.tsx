@@ -97,9 +97,8 @@ const kit: ProfileKit = {
       />
     </>
   ),
-  nameSize: 72,
-  nameExtra: { color: CREAM, textShadow: '3px 3px 0 rgba(0,0,0,0.3)', letterSpacing: '0.02em' },
-  playerEyebrow: (faction) => `Player · The ${faction}`,
+  // CREAM, not `ink`: the slot is on the banner, not on the page.
+  taglineExtra: { color: CREAM, textShadow: '3px 3px 0 rgba(0,0,0,0.3)', letterSpacing: '0.02em' },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: INK,

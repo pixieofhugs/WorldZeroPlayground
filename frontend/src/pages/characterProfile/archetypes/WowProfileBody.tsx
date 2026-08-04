@@ -174,8 +174,6 @@ const kit: ProfileKit = {
       </div>
     </div>
   ),
-  nameSize: 48,
-  playerEyebrow: (faction) => `${faction} · the Court`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: PLATE,
