@@ -37,7 +37,13 @@ class Contribution:
     """Points one character earns from one praxis — a frozen breakdown.
 
     total = (base_points + metatask_points) × faction_multiplier
-            × duel_multiplier + points_from_votes
+            × duel_multiplier + points_from_votes + habit_bonus_points
+
+    ``habit_bonus_points`` (#1617) is read straight off *this character's*
+    ``PraxisMember`` row, where ``services.collab_consensus._apply_seal`` stamped
+    it at seal time. It is deliberately never recomputed here: this function has
+    two callers holding different praxis sets, and a derived habit bonus would
+    score the same praxis differently on a feed than in a stats recompute.
     """
 
     base_points: int
@@ -45,6 +51,7 @@ class Contribution:
     faction_multiplier: float
     duel_multiplier: float
     points_from_votes: int
+    habit_bonus_points: int
     total: float
 
 
@@ -156,6 +163,18 @@ async def compute_contributions(
         own_tally = get_tally(tallies, praxis.id)
         base_points = task.point_value
         metatask_points = meta_points.get(praxis.id, 0)
+        # #1617: read, never derive. ``Praxis.members`` is ``lazy="selectin"``,
+        # so this costs no query — and this character's own row is the only one
+        # that speaks for them, even on a collab where the other members were
+        # measured against their own histories.
+        habit_bonus_points = next(
+            (
+                member.habit_bonus_points
+                for member in praxis.members
+                if member.character_id == character.id
+            ),
+            0,
+        )
 
         if praxis.type == PraxisType.collab:
             faction_multiplier = compute_faction_multiplier(
@@ -243,6 +262,7 @@ async def compute_contributions(
             own_tally.points_from_votes,
             meta_task_points=metatask_points,
             duel_multiplier=duel_multiplier,
+            habit_bonus=habit_bonus_points,
         )
 
         contributions[praxis.id] = Contribution(
@@ -251,6 +271,7 @@ async def compute_contributions(
             faction_multiplier=faction_multiplier,
             duel_multiplier=duel_multiplier,
             points_from_votes=own_tally.points_from_votes,
+            habit_bonus_points=habit_bonus_points,
             total=total,
         )
 

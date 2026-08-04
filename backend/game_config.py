@@ -85,6 +85,14 @@ class FactionConfig:
     # Python predicate and the SQL the browse filters with) read that one
     # function, so they cannot drift.
     can_hold_multiple_memberships: bool = False
+    # The habit bonus (#1617): flat points a member earns on a praxis sealed
+    # within ``EraConfig.habit_window_days`` of another praxis of their own. It
+    # rewards showing up — tasking habitually, even when the tasks themselves
+    # are less impressive. 0 (the baseline) means the faction grants no such
+    # ability. Read via services.habit_bonus — never branch on a faction slug in
+    # a service. Stamped at seal time onto ``PraxisMember.habit_bonus_points``
+    # rather than derived on read; that module argues why.
+    habit_bonus_points: int = 0
 
 
 @dataclass(frozen=True)
@@ -147,6 +155,13 @@ class EraConfig:
     # ADR-0022: completed-task count (per faction) required to earn that faction's invite.
     # Defaulted so existing EraConfig constructions stay valid.
     invitation_task_threshold: int = 2
+
+    # How recently a member must have sealed another praxis for the next one to
+    # carry ``FactionConfig.habit_bonus_points`` (#1617). The *cadence* is the
+    # era's to set, so a later era can tighten or loosen "habitually" without
+    # touching a single faction's ability. Defaulted, but era files state it
+    # explicitly: an era owning its own cadence is the point of the field.
+    habit_window_days: int = 7
 
     # The faction a character is born into when creation names none (#1559).
     # ADR-0019 makes characters born unaffiliated and ADR-0030 makes `na` the

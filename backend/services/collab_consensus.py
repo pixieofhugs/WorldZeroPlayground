@@ -30,10 +30,11 @@ from services.character_stats import (
     recalculate_members_stats,
 )
 from services.era import get_current_era_row_safe, get_era_row_for_praxis
+from services.habit_bonus import stamp_habit_bonus
 from services.taunt_service import fan_out_taunt
 
 
-async def _apply_seal(praxis: Praxis, session: AsyncSession) -> None:
+async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
     """The transition into ``submitted``: mark the whole group submitted, clear
     the window, and needle each member's foes. Caller flushes and recalculates
     member stats.
@@ -54,6 +55,21 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession) -> None:
     re-attributes the praxis to the era it was really sealed in. Nothing reads
     the column yet; #1345's era-bounded score recalculation is the consumer, and
     rides its own PR.
+
+    It is the right place to stamp each member's ``habit_bonus_points`` (#1617)
+    for the same reason: whether a praxis was filed *habitually* is a seal-time
+    fact about the moment ``submitted_at`` records, not something a scorer should
+    re-derive later from whatever praxis list it happens to hold. Two consequences
+    follow, and are load-bearing rather than incidental:
+
+    - **Unsubmit-then-resubmit re-evaluates the bonus** against the new
+      ``submitted_at`` — exactly what ``era_id`` already does. A member who has
+      fallen out of the habit loses the points on re-seal; one who has picked it
+      up gains them.
+    - **A collab seals once for the group, but the bonus is per member.** Each is
+      measured against *their own* praxis history, never the author's, which is
+      why the stamp lives on ``PraxisMember`` and not on ``Praxis``. Three members
+      of one collab may legitimately hold three different values.
 
     Being the single such writer is also why the ADR-0068 ``praxis_complete``
     taunt fires here rather than at either call site: one taunt **per member**,
@@ -78,6 +94,9 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession) -> None:
         if not member.has_submitted:
             member.submitted_at = now
         member.has_submitted = True
+    # Same `now` the praxis sealed on, so the habit window is measured from the
+    # seal rather than from a second clock read.
+    await stamp_habit_bonus(praxis, now, session, era)
     # Second pass on purpose: the fan-out flushes, and the seal must be whole
     # before any of it reaches the database.
     for member in praxis.members:
@@ -89,7 +108,7 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
 
     Shared by the lazy-on-access timeout and the leave path.
     """
-    await _apply_seal(praxis, session)
+    await _apply_seal(praxis, session, era)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
 
@@ -163,7 +182,7 @@ async def on_submit(
     await session.refresh(praxis)
 
     if all(m.has_submitted for m in praxis.members):
-        await _apply_seal(praxis, session)
+        await _apply_seal(praxis, session, era)
         await session.flush()
         return True
     if praxis.type == PraxisType.collab:
