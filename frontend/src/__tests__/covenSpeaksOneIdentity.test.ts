@@ -25,9 +25,11 @@
  *    moon-phase plate stays, by decision on #1209. It is a night plate that
  *    reads in both themes and does not fight the ward.
  *
- * The declarations themselves stay in `index.css`; this test says nothing about
- * them. A token nobody reads costs a few bytes, and deleting a family is a
- * separate change from making it unread.
+ * The declarations themselves are GONE from `index.css` (#1661): "a token nobody
+ * reads costs a few bytes" stopped being cheap when the stylesheet had three
+ * bytes of budget left. This test still says nothing about declarations, and
+ * that is exactly why it survives the deletion — it guards the NAMES, so it goes
+ * on failing if a component reaches for one whether or not anything declares it.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'

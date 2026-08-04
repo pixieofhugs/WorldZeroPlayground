@@ -223,6 +223,24 @@ class PraxisMember(Base):
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    # The habit bonus this member earned on this praxis (#1617) — flat points,
+    # stamped at seal time beside ``Praxis.submitted_at`` / ``Praxis.era_id`` by
+    # ``services.collab_consensus._apply_seal``, the one writer of all three.
+    #
+    # It lives on the MEMBER, not on the praxis, because a collab seals once for
+    # the group but the bonus is per member: each is measured against their OWN
+    # praxis history, so three members of one collab can legitimately hold three
+    # different values. Solo and duel praxes have exactly one member — their
+    # author — so those lose nothing by the move.
+    #
+    # STAMPED rather than derived on read because
+    # ``services.praxis_scoring.compute_contributions`` has two callers holding
+    # DIFFERENT praxis sets (a character's whole history vs. one page of a
+    # feed), and a read-time derivation would score the same praxis differently
+    # depending on which surface asked. See ``services/habit_bonus.py``.
+    habit_bonus_points: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
 
     praxis: Mapped["Praxis"] = relationship(
         "Praxis", back_populates="members", lazy="raise"

@@ -17,12 +17,15 @@
  * fixture reaches, so one assertion covers every surface, present and future,
  * without instantiating any of them.
  *
- * The `--eph-*` DECLARATIONS stay in `index.css`, and this test says nothing
- * about them: two of them are still aliased by the `--faction-ephemerists-card-*`
- * contract every faction supplies (`card-bg`, `card-text`, `card-accent`,
- * `card-muted`, `card-font`, `body-font`), which the app reads through
- * `factionCssVar` on surfaces that are not Ephemerists skins at all. Deleting a
- * family is a separate change from making it unread.
+ * This test says nothing about the `--eph-*` DECLARATIONS, and #1661 thinned
+ * them without touching it: the ten colours with no reader at all went, as did
+ * the third face `--eph-script`. What is left is `--eph-display` / `--eph-serif`,
+ * still aliased by the `--faction-ephemerists-card-font` / `-body-font` half of
+ * the contract every faction supplies, and eight colours that are dead as PAINT
+ * and alive only as MEASUREMENTS — `factionContrast.test.ts` still runs six
+ * `ephemerists vellum …` rows against them. Retiring those rows is what retires
+ * the last eight, and that is a decision about a #651 baseline rather than a
+ * byte-shed.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'

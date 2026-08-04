@@ -18,7 +18,7 @@ from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
-from models.praxis import ModerationStatus, Praxis, PraxisType
+from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisType
 from models.task import Task
 from services.duel_outcome import duel_winner
 from services.meta_task import get_meta_task_points_bulk
@@ -37,7 +37,13 @@ class Contribution:
     """Points one character earns from one praxis — a frozen breakdown.
 
     total = (base_points + metatask_points) × faction_multiplier
-            × duel_multiplier + points_from_votes
+            × duel_multiplier + points_from_votes + habit_bonus_points
+
+    ``habit_bonus_points`` (#1617) is read straight off *this character's*
+    ``PraxisMember`` row, where ``services.collab_consensus._apply_seal`` stamped
+    it at seal time. It is deliberately never recomputed here: this function has
+    two callers holding different praxis sets, and a derived habit bonus would
+    score the same praxis differently on a feed than in a stats recompute.
     """
 
     base_points: int
@@ -45,6 +51,7 @@ class Contribution:
     faction_multiplier: float
     duel_multiplier: float
     points_from_votes: int
+    habit_bonus_points: int
     total: float
 
 
@@ -64,7 +71,7 @@ async def compute_contributions(
     is pure scoring arithmetic over that set.
 
     Uses bulk queries: one task fetch, one vote tally, one duel query, one
-    opponent fetch — no N+1 in the praxis count.
+    opponent fetch, one habit-bonus fetch — no N+1 in the praxis count.
     """
     if not praxes:
         return {}
@@ -143,6 +150,23 @@ async def compute_contributions(
         praxis_ids, character_level=character_level, session=session
     )
 
+    # ── habit bonuses, as STAMPED at seal time (#1617) ───────────────────────
+    # Read, never derived: this function's two callers hold different praxis
+    # sets, so a bonus worked out from the list in hand would score the same
+    # praxis differently on a feed than in a stats recompute — see
+    # ``services.habit_bonus``. Scoped to THIS character's member rows: on a
+    # collab, each member was measured against their own history, so the other
+    # rows say nothing about this one. A query rather than ``praxis.members``
+    # because callers pass praxes built in-session, whose collections are not
+    # loaded (and lazy-loading one here raises ``MissingGreenlet``).
+    habit_result = await session.execute(
+        select(PraxisMember.praxis_id, PraxisMember.habit_bonus_points).where(
+            PraxisMember.praxis_id.in_(praxis_ids),
+            PraxisMember.character_id == character.id,
+        )
+    )
+    habit_bonus_by_praxis: dict[int, int] = dict(habit_result.all())
+
     # ── assemble contributions ───────────────────────────────────────────────
     contributions: dict[int, Contribution] = {}
     character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
@@ -156,6 +180,7 @@ async def compute_contributions(
         own_tally = get_tally(tallies, praxis.id)
         base_points = task.point_value
         metatask_points = meta_points.get(praxis.id, 0)
+        habit_bonus_points = habit_bonus_by_praxis.get(praxis.id, 0)
 
         if praxis.type == PraxisType.collab:
             faction_multiplier = compute_faction_multiplier(
@@ -243,6 +268,7 @@ async def compute_contributions(
             own_tally.points_from_votes,
             meta_task_points=metatask_points,
             duel_multiplier=duel_multiplier,
+            habit_bonus=habit_bonus_points,
         )
 
         contributions[praxis.id] = Contribution(
@@ -251,6 +277,7 @@ async def compute_contributions(
             faction_multiplier=faction_multiplier,
             duel_multiplier=duel_multiplier,
             points_from_votes=own_tally.points_from_votes,
+            habit_bonus_points=habit_bonus_points,
             total=total,
         )
 

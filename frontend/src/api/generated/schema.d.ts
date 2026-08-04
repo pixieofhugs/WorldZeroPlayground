@@ -3168,6 +3168,11 @@ export interface components {
              * @default []
              */
             flags: components["schemas"]["FlagOut"][];
+            /**
+             * Habit Bonus Points
+             * @default 0
+             */
+            habit_bonus_points: number;
             /** Id */
             id: number;
             /** Invites */
@@ -3972,6 +3977,11 @@ export interface components {
             display_multiplier: number;
             /** Duel Id */
             duel_id: number | null;
+            /**
+             * Habit Bonus Points
+             * @default 0
+             */
+            habit_bonus_points: number;
             /** Id */
             id: number;
             /**
@@ -4146,6 +4156,11 @@ export interface components {
             duel_id: number | null;
             /** Flagged At */
             flagged_at: string | null;
+            /**
+             * Habit Bonus Points
+             * @default 0
+             */
+            habit_bonus_points: number;
             /** Id */
             id: number;
             /** Invites */

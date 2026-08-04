@@ -79,6 +79,7 @@ const MY_PRAXIS: PraxisCardOut = {
   metatask_points: 0,
   display_multiplier: 1.0,
   points_from_votes: 0,
+  habit_bonus_points: 0,
   is_top_for_task: false,
   task_faction_slug: "snide",
   applied_metatasks: [],

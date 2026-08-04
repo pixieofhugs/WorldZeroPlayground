@@ -35,6 +35,10 @@ ERA_1_FACTIONS = {
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
+        # UA rewards showing up (#1617): a flat +5 on any praxis sealed within
+        # the era's habit window of another of the member's own. Its modifiers
+        # all sit at the Era 1 baseline, so this is UA's only perk.
+        habit_bonus_points=5,
     ),
     # ua_masters cut from Era 1 (deferred to Era 2 per ADR-0004); its L4–L7
     # tasks below are reassigned to ua.
@@ -278,6 +282,10 @@ ERA_1 = EraConfig(
     albescent_level_required=8,
     invitation_point_threshold=50,   # ADR-0022: 50 points from a faction's tasks
     invitation_task_threshold=2,     # ADR-0022: 2 completed tasks for that faction
+    # "Habitually" means weekly in Era 1 (#1617). Stated here even though it
+    # matches the EraConfig default: the cadence is the era's rule, and a later
+    # era that disagrees should be able to see what it is disagreeing with.
+    habit_window_days=7,
     reset_score=True,
     reset_level=True,
     reset_faction=True,

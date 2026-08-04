@@ -178,8 +178,10 @@
 
   /* ── Shared neutrals ── */
   --color-text-on-accent: #ffffff;
-  --color-overlay-weak: rgba(0, 0, 0, 0.08);
-  --color-overlay-medium: rgba(0, 0, 0, 0.15);
+  /* One rung, not a ladder: `-strong` is the modal scrim every dialog and sheet
+     shares. `-weak` and `-medium` were declared alongside it and never read by
+     anything, in either theme — deleted in #1661. Mint a rung when a surface
+     needs it, the way §3 says the functional families do. */
   --color-overlay-strong: rgba(0, 0, 0, 0.25);
   --color-surface-scrim: rgba(255, 255, 255, 0.9);
 
@@ -993,39 +995,32 @@
      contract — the family's one remaining reader, reaching it by indirection —
      moved onto the plate's cornice band in #1627. What survives the repoint is
      `--eph-display` and `--eph-serif`, both FACES, both still aliased by
-     `-card-font` / `-body-font` below. NINETEEN of the twenty-one names here are
-     declared and dead: the EIGHTEEN colours, and `--eph-script` (Cormorant
-     Garamond), a third face that lost its last reader earlier and is easy to
-     miss beside the two that survive. Deleting them is a follow-up, and it takes
-     the six `ephemerists vellum …` rows in `factionContrast.test.ts` with it —
-     one of which is still spending a #651 BASELINE entry on a vermilion nothing
-     prints. CONSTANTS (gold/rubric/lapis/verdigris/
-     ink) kept their role in both themes; the VELLUM surface + its text FLIPPED
-     in dark (see [data-theme="dark"]). */
+     `-card-font` / `-body-font` below. #1661 deleted the ten colours nothing
+     read at all, plus `--eph-script`. The EIGHT that remain are still dead as
+     PAINT and alive only as MEASUREMENTS: the six `ephemerists vellum …` rows in
+     `factionContrast.test.ts` name them, so retiring the rows is what retires
+     the colours — one of those rows is spending a #651 BASELINE entry on a
+     vermilion nothing prints. That is a judgement for a human, not a byte-shed.
+     CONSTANTS (gold/rubric/ink) kept their role in both themes; the VELLUM
+     surface + its text FLIPPED in dark (see [data-theme="dark"]). */
   --eph-gold: #b0863a; /* gold leaf / ochre */
-  --eph-gold-light: #d4ab55; /* burnished highlight */
-  --eph-gold-deep: #8a6622;
   --eph-rubric: #9c3622; /* vermilion rubrication red */
-  --eph-rubric-deep: #7c2718;
-  --eph-lapis: #1d4f6e; /* deep celestial blue */
-  --eph-lapis-deep: #143b54;
-  --eph-verdigris: #4a7d70; /* aged copper / astrolabe patina */
   --eph-ink: #2a1d12; /* iron-gall ink — stays dark in both themes */
   --eph-vellum: #e9dcbf; /* aged manuscript stock */
-  --eph-vellum-deep: #dccba2; /* shadowed / verso panel */
   --eph-vellum-text: #2a1d12; /* primary text on vellum */
   --eph-muted: #6f5c3e; /* faded marginalia ink */
   --eph-parchment: #f1e8cf; /* bright text on dark elements */
   --eph-field: #1d4f6e; /* lapis celestial-diagram field */
-  --eph-field-deep: #143b54;
-  /* Codex chrome (#841) — the folio is bound in GOLD, not in a neutral rule.
-     Paler than --eph-gold so the frame reads as leaf, not as ochre ink. */
-  --eph-frame: #cdae6a; /* card + score-box border */
-  --eph-stamp-bg: #f8f0d9; /* the score box's brighter leaf */
-  /* Ephemerist faces — Cinzel display caps, EB Garamond body, Cormorant flourishes */
+  /* #1661 took the ten codex colours nothing measured or painted: the -light /
+     -deep sub-tones (gold, rubric, lapis, vellum, field), --eph-lapis,
+     --eph-verdigris, the gilt --eph-frame, the --eph-stamp-bg score leaf, and
+     the third face --eph-script (Cormorant Garamond, reader-less since #841's
+     chrome went). The EIGHT above survive only because the six
+     `ephemerists vellum …` rows in factionContrast.test.ts still measure them;
+     retiring those rows retires these too, and is a decision for a human. */
+  /* Ephemerist faces — Cinzel display caps, EB Garamond body */
   --eph-display: "Cinzel", "Trajan Pro", Georgia, serif;
   --eph-serif: "EB Garamond", Georgia, serif;
-  --eph-script: "Cormorant Garamond", Georgia, serif;
 
   /* The UA LEGACY gilt-salon palette stood here until #853 deleted it: a
      fourteen-token second naming scheme (orange, gold, gilt, ink, sub, muted,
@@ -1146,22 +1141,13 @@
      hue of its own. */
   --faction-ua-vote-reading: var(--faction-ua-card-accent);
 
-  /* ── Warriors of Whimsy collage scrap layers (legacy — kept for back-compat) ── */
-  --faction-coven-scrap-deep: #fbcfe0;
-  --faction-coven-scrap-mid: #fce7ef;
-  --faction-coven-tape: rgba(250, 230, 130, 0.7);
-
-  /* ── Warriors of Whimsy lo-fi ".exe" window chrome (redesign) ── */
-  --faction-coven-win-border: #e487b5;
-  --faction-coven-title-from: #fbcfe2;
-  --faction-coven-title-to: #f3a6cb;
-  --faction-coven-title-text: #8e2f5c;
-  --faction-coven-body-bg: #fdeef6;
-  --faction-coven-notepad-bg: #fffdfa;
-  --faction-coven-notepad-border: #f3b6d2;
-  --faction-coven-dot: rgba(214, 90, 150, 0.2);
-  --faction-coven-ivy: #7cbf99;
-  --faction-coven-ivy-leaf: #9ad3b1;
+  /* The retired `coven.exe` window chrome and its collage scraps lived here —
+     `-scrap-*`, `-tape`, `-win-border`, `-title-*`, `-body-bg`, `-notepad-*`,
+     `-dot`, `-ivy*`. #1209 swept every surface onto the candlelit spell slip and
+     left them declared "because thirteen other surfaces still painted with
+     them"; none does now, and `__tests__/covenSpeaksOneIdentity.test.ts` is the
+     guard that keeps it that way. Its docstring called the deletion a separate
+     change; this is it (#1661). */
 
   /* ══ Praxis-card redesign (#821, repointed by #838, rebuilt by #840) ══
      WOW wears the cream/gold/plum CHRONICLE + the googly-balloon verdict; Coven
@@ -1188,25 +1174,9 @@
         OBJECT in the design (a tilted parchment plate; a dashed sticker), not
         the card ground reused. */
 
-  /* Coven — pink marker-sticker frame */
-  --faction-coven-sticker-bg: #fffdfa; /* sticker ground */
-  --faction-coven-sticker-border: #f3b6d2; /* the 1px hairline edge */
-  --faction-coven-sticker-accent: #ec5f99; /* rules, eyebrow, roster ring */
-  /* The design's metadata ink #a8728e pays only 3.80:1 on the near-white
-     ground; deepened one step to 5.22:1 so the meta line is real text. */
-  --faction-coven-sticker-muted: #8f5c78;
-  --faction-coven-sticker-shadow: rgba(214, 90, 150, 0.14);
-
-  /* Coven — the score STICKER: a dashed 2px card struck at -3deg, its own
-     object with its own ground, not a tint of the card's. */
-  --faction-coven-stamp-bg: #fff0f6;
-  --faction-coven-stamp-edge: #ec9cc0;
-  --faction-coven-stamp-shadow: rgba(236, 95, 153, 0.22);
-  /* The multiplier chip is the design's one non-pink note — a highlighter
-     yellow, carried into dark unchanged (it is a marker stroke, not a
-     surface). Its ink is the sticker's own heading plum-pink. */
-  --faction-coven-stamp-chip-bg: #ffe08a;
-  --faction-coven-stamp-chip-text: #8e2f5c;
+  /* Coven's pink marker-STICKER frame (`-sticker-*`) and its dashed score
+     STAMP (`-stamp-*`) were the second half of the retired lo-fi identity and
+     went with it in #1661; the slip and ward tokens below are the live ones. */
 
   /* Coven — moon-phase vote plate (night plate; same in both themes) */
   --faction-coven-moon-plate-from: #3a2352;
@@ -1499,9 +1469,10 @@
      is the guard that keeps it that way. The codex family stays DECLARED
      because the `--faction-ephemerists-card-font` / `-body-font` pair above
      still aliases two of its members — Cinzel and EB Garamond, both FACES. Its
-     colours have no reader left anywhere (#1627); deleting them is a follow-up
-     and takes the six now-self-referential `ephemerists vellum …` rows in
-     `factionContrast.test.ts` with it.
+     colours have no reader left anywhere (#1627); #1661 deleted the ten that
+     nothing named at all, and the eight the six now-self-referential
+     `ephemerists vellum …` rows in `factionContrast.test.ts` still measure go
+     when those rows do.
 
      THE PLATE IS THEME-INVARIANT (#1627 + #1636). It was papyrus by day and
      night-blue after dark until the card contract above moved onto it; that
@@ -1790,12 +1761,10 @@
   --faction-everymen-vote-glow-4: drop-shadow(0 0 6px rgba(235, 95, 20, 0.8));
   --faction-everymen-vote-glow-5: drop-shadow(0 1px 1px rgba(120, 60, 10, 0.55)) drop-shadow(0 0 7px rgba(235, 120, 20, 0.85));
 
-  /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
-  --vote-1: #c2410c;
-  --vote-2: #ca8a04;
-  --vote-3: #16a34a;
-  --vote-4: #2563eb;
-  --vote-5: #be185d;
+  /* The five `--vote-N` stamp colours stood here. Every vote control is a
+     faction skin now and paints from its own `--faction-{key}-vote-*` ramp (or,
+     for na, `--spectrum-glow-N`), so the global ladder had no reader in either
+     cascade and no dark half at all — deleted in #1661. */
 
   /* The `underline-1…6` cycling title/wordmark palette lived here. It was a
      SECOND six-hue rainbow — a resequenced near-copy of the na spectrum, with no
@@ -1861,15 +1830,13 @@
   --tab-bar-height: 3.5rem;
   --tab-bar-clearance: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
 
-  /* ── Leaderboard rank colors (podium — stable across themes) ── */
-  --rank-gold: #f59e0b;
+  /* ── Leaderboard rank colors (podium — stable across themes) ──
+     The podium became the Constellation / Meadow (#654, #684), which paint
+     their own crowns, so `--rank-gold` and `--rank-bronze` lost their readers
+     and went in #1661. Silver stays: `FeedCardEraAnnouncement` prints the era
+     kicker in it, which is not a podium use at all. The your-rank strip's
+     `--color-rank-accent` / `--rank-strip-*` trio went the same way. */
   --rank-silver: #c49a3a;
-  --rank-bronze: #888888;
-
-  /* ── Leaderboard rank accent (your-rank strip + score highlight) ── */
-  --color-rank-accent: #4f46e5;
-  --rank-strip-bg: rgba(79, 70, 229, 0.08);
-  --rank-strip-border: rgba(79, 70, 229, 0.25);
 
   /* ── Leaderboard table row hover ── */
   --leaderboard-row-hover: rgba(255, 255, 255, 0.55);
@@ -1923,9 +1890,9 @@
   --meadow-name-muted: #6b6553; /* faded/zero names + zero-state — AA 5.17:1 */
   --meadow-champion: #6d4b06; /* champion's score — AA 7.02:1 */
 
-  /* ── Level track node colors ── */
-  --color-level-inactive: #c8c0b0;
-  --level-node-incomplete: rgba(255, 255, 255, 0.5);
+  /* The level track's `--color-level-inactive` / `--level-node-incomplete` pair
+     stood here. The track draws its unreached nodes from the global border and
+     surface tokens now, so both were dead in both cascades — deleted in #1661. */
 
   /* ── Feed badge colors (stable — white text always legible) ── */
   --badge-friend: #14532d;
@@ -2248,10 +2215,16 @@
   --faction-default-stop-5: #3aa0a4; /* teal */
   --faction-default-stop-6: #60a5fa; /* blue */
   --faction-default-stop-7: #f472b6; /* magenta */
-  --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
-  --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
+  /* The four ramps are NOT restated here, and the seven lines above are why
+     (#1661). `data-theme` is set on `document.documentElement`, so `:root` and
+     `[data-theme="dark"]` match the SAME element: a ramp declared once in the
+     light block computes its `var(--faction-default-stop-N)` against whichever
+     stop declaration wins on that element, which after dark is these. The dark
+     copies were byte-identical to the light ones — ~1 KB of source restating a
+     composition the cascade already performs — and, being copies, they were the
+     shape #1220 retired the brand palette for. Re-cutting the spectrum for dark
+     is still "edit these seven lines and nothing else"; it is now true of the
+     file as well as of the intent. */
   --faction-default-card-bg: #1c1b24;
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
@@ -2308,26 +2281,14 @@
      inherit these through the :root var() rebind; since #1627 it rebinds to the
      Valley plate instead and this half has no reader either. ══ */
   --eph-gold: #cda24a;
-  --eph-gold-light: #e6c267;
-  --eph-gold-deep: #9c7626;
   --eph-rubric: #c0533a; /* rubric brightens on dark vellum */
-  --eph-rubric-deep: #93341f;
-  --eph-lapis: #4f8fb0; /* celestial blue lifts off near-black */
-  --eph-lapis-deep: #2d6285;
-  --eph-verdigris: #6aa597;
   --eph-ink: #0c0a06; /* element ink stays dark */
   --eph-vellum: #211a10; /* aged tobacco — a surface on the dark page */
-  --eph-vellum-deep: #181208;
   --eph-vellum-text: #efe3c6; /* text FLIPS to parchment */
   --eph-muted: #b6a079;
   --eph-parchment: #efe3c6;
   --eph-field: #102a3a; /* celestial field deepens */
-  --eph-field-deep: #0a1d2a;
-  /* Codex chrome (#841): the gilt binding would glare on the dark leaf, so the
-     frame goes to the faction's verdigris at low alpha — the design's own dark
-     value. The stamp leaf darkens with the vellum rather than lightening. */
-  --eph-frame: rgba(58, 160, 164, 0.35);
-  --eph-stamp-bg: #181208;
+  /* The night halves of the ten codex colours #1661 deleted went with them. */
 
   /* ══ Ephemerists — the Valley plate declares NOTHING here (#1627) ══
      The whole `--faction-ephemerists-plate-*` register used to have a night
@@ -2336,22 +2297,8 @@
      for the polarity reason set out beside it there. This note stays so the
      absence reads as a decision rather than as an omission. */
 
-  /* ── Warriors of Whimsy collage scrap layers (dark) ── */
-  --faction-coven-scrap-deep: #091209;
-  --faction-coven-scrap-mid: #0d1a10;
-  --faction-coven-tape: rgba(250, 230, 130, 0.12);
-
-  /* ── Warriors of Whimsy ".exe" window chrome (dark) ── */
-  --faction-coven-win-border: #f472b6;
-  --faction-coven-title-from: #5e2a46;
-  --faction-coven-title-to: #41203a;
-  --faction-coven-title-text: #fbd6e8;
-  --faction-coven-body-bg: #2a0d1c;
-  --faction-coven-notepad-bg: #39152a;
-  --faction-coven-notepad-border: #7a3358;
-  --faction-coven-dot: rgba(244, 114, 182, 0.16);
-  --faction-coven-ivy: #5fa882;
-  --faction-coven-ivy-leaf: #7fc59e;
+  /* The night half of the retired `coven.exe` chrome and its scraps was deleted
+     with the light half in #1661. */
 
   /* ══ Praxis-card redesign (#821, repointed by #838) — dark ══
      Re-DERIVED against the pink/chronicle assignment, not translated from the
@@ -2360,21 +2307,8 @@
      balloon ramps are fixed surfaces that read in both themes, so only the frame
      chrome, the balloon plate and the caption inks are overridden here. */
 
-  /* Coven — pink marker-sticker frame (dark). NOT a cascade freebie: the design
-     draws this variant explicitly (a deep plum-black ground under a pink dashed
-     sticker), and every value below is read off it rather than derived. */
-  --faction-coven-sticker-bg: #2a0d1c;
-  --faction-coven-sticker-border: rgba(244, 114, 182, 0.28);
-  --faction-coven-sticker-accent: #f472b6;
-  --faction-coven-sticker-muted: #c98aa8;
-  --faction-coven-sticker-shadow: rgba(0, 0, 0, 0.5);
-  --faction-coven-stamp-bg: #3a1228;
-  --faction-coven-stamp-edge: #a84a7a;
-  --faction-coven-stamp-shadow: rgba(0, 0, 0, 0.35);
-  /* The highlighter chip does not darken — a marker stroke is the same ink on
-     either sheet — but its text flips to the sticker ground so it stays legible
-     on the yellow (#3a1228 on #ffe08a = 12.1:1). */
-  --faction-coven-stamp-chip-text: #3a1228;
+  /* The night half of Coven's retired `-sticker-*` / `-stamp-*` families was
+     deleted with the light half in #1661. */
   --faction-coven-vote-on: #f472b6;
   --faction-coven-vote-off: #c78aa6;
 
@@ -2457,17 +2391,11 @@
   /* ── Shared tokens ── */
   --nav-blur: 8px;
 
-  /* ── Leaderboard rank accent (dark) ── */
-  --color-rank-accent: #818cf8;
-  --rank-strip-bg: rgba(129, 140, 248, 0.12);
-  --rank-strip-border: rgba(129, 140, 248, 0.3);
-
   /* ── Leaderboard table row hover (dark) ── */
   --leaderboard-row-hover: rgba(255, 255, 255, 0.03);
 
-  /* ── Level track node colors (dark) ── */
-  --color-level-inactive: rgba(255, 255, 255, 0.3);
-  --level-node-incomplete: rgba(255, 255, 255, 0.06);
+  /* The night halves of the rank-strip and level-track tokens went with their
+     light halves in #1661. */
 
   /* ══ Everymen (dark) — paper surface + text flip; red/field deepen ══ */
   --faction-everymen: #ef5350;
@@ -4711,18 +4639,12 @@
    already carries these hues under the --faction-<slug>-* namespace; the
    select cards reference the bare names, so alias them here. ── */
 :root {
-  /* GESTALT · whimsy.exe (light) */
-  --gestalt-card-bg: #fffdfa;
-  --gestalt-ink: #a83a6e;
-  --gestalt-ink-soft: #b5588a;
-  --gestalt-label: #a8728e;
-  --gestalt-pink: #ec5f99;
-  --gestalt-pink-lt: #fbcfe2;
-  --gestalt-glow: rgba(236, 95, 153, 0.32);
-  --gestalt-title-from: #fbcfe2;
-  --gestalt-title-to: #f3a6cb;
-  --gestalt-title-text: #8e2f5c;
-  --gestalt-win-border: #e487b5;
+  /* The `--gestalt-*` whimsy.exe alias family stood here (eleven names, both
+     cascades). `FactionSelectCard`'s COVEN tile was its entire readership and
+     #1209 rewrote that tile onto the spell slip's own tokens, leaving the family
+     declared and unread — see the guard in
+     `__tests__/covenSpeaksOneIdentity.test.ts`, which keeps the names retired.
+     Deleted in #1661; the guard is what stops them coming back. */
   /* S.N.I.D.E. · ransom dispatch (always-dark constants) */
   --snide-acid: #b6ff2e;
   --snide-ink: #14110b;
@@ -4755,20 +4677,9 @@
   --albescent-reveal-border-faint: rgba(0, 0, 0, 0.055);
   --albescent-reveal-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-[data-theme="dark"] {
-  /* GESTALT flips in dark; snide + albescent stay put */
-  --gestalt-card-bg: #2a0d1c;
-  --gestalt-ink: #fbcfe0;
-  --gestalt-ink-soft: #e58cb6;
-  --gestalt-label: #c78aa6;
-  --gestalt-pink: #f472b6;
-  --gestalt-pink-lt: #5e2a46;
-  --gestalt-glow: rgba(244, 114, 182, 0.45);
-  --gestalt-title-from: #5e2a46;
-  --gestalt-title-to: #41203a;
-  --gestalt-title-text: #fbd6e8;
-  --gestalt-win-border: #f472b6;
-}
+/* The dark half of the block above held nothing but the `--gestalt-*` flips,
+   so it went with them (#1661). snide + albescent are theme-invariant and never
+   had a dark body here. */
 
 /* ──────────────────────────────────────────────────────────────────────────
    WOW — THE LISTS (#895): the duel seal and the duel rail.
@@ -4974,15 +4885,10 @@
    and the whole crest family already ship from #838/#840/#896/#897.
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* The knobbed rod the decree hangs from. It FLIPS with the theme (the kit
-     draws a bright rod on its light scroll and a tarnished one on its dark
-     scroll), which is why it cannot simply reuse the avatar's ring stops — those
-     are struck metal and theme-invariant. The lit stop is the same gilt
-     highlight in light, so it points at the ring token rather than minting a
-     second #e9cb7e; dark redeclares all three. */
-  --faction-wow-rod-lit: var(--faction-wow-avatar-ring-lit);
-  --faction-wow-rod-deep: #c79a47;
-  --faction-wow-rod-edge: #6e3f1f; /* the drawn outline round rod and knobs */
+  /* The knobbed rod the decree hung from had a three-token family here. The
+     v2 task card redrew the surface without it ("the knobbed rod and the crest
+     seal are gone", `taskCard/WowTaskCard.tsx`), which left all six
+     declarations unread — deleted in #1661. */
 
   /* The chronicle hairline — the kit's #d9c589, the 1px rule it puts round
      inset plates, comment cards and the feed's points pill. Distinct from
@@ -5003,9 +4909,6 @@
   --faction-wow-quest-glisten: rgba(255, 248, 214, 0.85); /* the travelling band */
 }
 [data-theme="dark"] {
-  --faction-wow-rod-lit: #8a6e2a;
-  --faction-wow-rod-deep: #5e4715;
-  --faction-wow-rod-edge: #0f0a02;
   --faction-wow-chronicle-rule: #4a3a0e;
   --faction-wow-quest-border: #e1c877;
 }
