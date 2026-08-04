@@ -96,6 +96,16 @@
     }
   },
   "ephemerists": {
+    "masthead": {
+      "starMark": "星",
+      "star": "Star",
+      "almanacMark": "暦",
+      "almanac": "Almanac",
+      "observationMark": "観",
+      "observation": "Observation",
+      "recordMark": "録",
+      "record": "Record"
+    },
     "apparatus": {
       "heading": "The Apparatus",
       "empty": "No apparatus recorded yet."
