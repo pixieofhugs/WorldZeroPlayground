@@ -304,6 +304,40 @@ async def test_recomputing_twice_does_not_move_the_total(
     assert once == round(active_task.point_value * 2 + UA_HABIT_BONUS)
 
 
+@pytest.mark.asyncio
+async def test_the_payload_can_still_explain_its_own_total(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    auth_headers: dict,
+):
+    """``score`` never gains a term the breakdown cannot name (ADR-0053).
+
+    The habit bonus is flat and sits outside ``display_multiplier``, so without a
+    field of its own the wire's documented invariant would quietly become false
+    for every UA praxis — a card and a detail page reading the same payload and
+    computing different sums is exactly what the one-number rule forbids.
+    """
+    first_id = await _seal_solo(client, active_task, auth_headers, "First")
+    await _backdate(db_session, first_id, days=1)
+    second_task = await _extra_task(db_session, character, "Second Task")
+    second_id = await _seal_solo(client, second_task, auth_headers, "Second")
+
+    detail = await client.get(f"/praxes/{second_id}", headers=auth_headers)
+    assert detail.status_code == 200, detail.text
+    body = detail.json()
+
+    assert body["habit_bonus_points"] == UA_HABIT_BONUS
+    assert body["score"] == (
+        (body["task_point_value"] + body["metatask_points"])
+        * body["display_multiplier"]
+        + body["points_from_votes"]
+        + body["habit_bonus_points"]
+    )
+
+
 # ---------------------------------------------------------------------------
 # per member, not per praxis
 # ---------------------------------------------------------------------------
