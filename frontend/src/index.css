@@ -2215,10 +2215,16 @@
   --faction-default-stop-5: #3aa0a4; /* teal */
   --faction-default-stop-6: #60a5fa; /* blue */
   --faction-default-stop-7: #f472b6; /* magenta */
-  --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-rainbow-vertical: linear-gradient(180deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
-  --faction-default-rainbow-loop: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
-  --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
+  /* The four ramps are NOT restated here, and the seven lines above are why
+     (#1661). `data-theme` is set on `document.documentElement`, so `:root` and
+     `[data-theme="dark"]` match the SAME element: a ramp declared once in the
+     light block computes its `var(--faction-default-stop-N)` against whichever
+     stop declaration wins on that element, which after dark is these. The dark
+     copies were byte-identical to the light ones — ~1 KB of source restating a
+     composition the cascade already performs — and, being copies, they were the
+     shape #1220 retired the brand palette for. Re-cutting the spectrum for dark
+     is still "edit these seven lines and nothing else"; it is now true of the
+     file as well as of the intent. */
   --faction-default-card-bg: #1c1b24;
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
