@@ -104,15 +104,28 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     // belongs to the sweep, not to this card.
   })
 
-  it('carries the night-band masthead: winged disc over an incised register', () => {
+  it('carries the night-band masthead: the engraved title over an incised register', () => {
     const markup = html()
     // The register's signs and the cornice are the kit's, not a second copy.
     expect(markup).toContain('class="epg-glyph"')
     expect(markup).toContain('var(--faction-ephemerists-plate-band)')
   })
 
-  it('heads the record with the cartouche, ruled off at both ends', () => {
-    expect(text(html())).toContain(i18n.t('praxis:card.masthead.ephemerists'))
+  it('heads the record with the engraved masthead, and says the wordmark ONCE', () => {
+    // #1634 replaced the winged disc + Poiret One wordmark with the engraved
+    // masthead, and retired the brass cartouche pill that repeated the faction's
+    // name 40px below it. Both halves are asserted here because a mount that
+    // adds the masthead and leaves the pill is the failure that still renders:
+    // it looks like a masthead with a subtitle.
+    const rendered = text(html())
+    expect(rendered).toContain(i18n.t('factions:names.ephemerists'))
+    // The pill's own copy, spelled out: `praxis:card.masthead.ephemerists` was
+    // deleted with the pill, and a key kept alive by a negative assertion is a
+    // key the next dead-key sweep cannot tell from a live one.
+    expect(rendered).not.toContain('Ephemeris · sealed entry')
+    // The masthead's own register, at the card scale's rung.
+    expect(rendered).toContain('星')
+    expect(html()).toContain('var(--faction-ephemerists-plate-band-quiet)')
   })
 
   it('reads the task through the plate gloss rather than as a bare reference', () => {

@@ -10,6 +10,7 @@ import {
   READING,
 } from "./ephemeristsPlate";
 import { factionName } from "../../utils/factions";
+import { formatDate } from "../../utils/dates";
 
 /**
  * THE ENGRAVED MASTHEAD (#1634) — the head of every Ephemerists surface, and the
@@ -81,15 +82,16 @@ const DECLINATION = "+44° 03′";
  * masthead a second time in a script most readers cannot spend.
  *
  * Each is a {@link GlossedGlyph}: the English is on `title`, so hover and focus
- * reveal it and assistive tech reads it out. Pairs rather than a template
- * literal, so every key survives a grep.
+ * reveal it and assistive tech reads it out. Written as literal pairs — never a
+ * template literal — so every key survives both a grep and the catalog's own
+ * key types, which a computed key silently widens out of.
  */
-const REGISTER: readonly (readonly [mark: string, gloss: string])[] = [
+const REGISTER = [
   ["ephemerists.masthead.starMark", "ephemerists.masthead.star"],
   ["ephemerists.masthead.almanacMark", "ephemerists.masthead.almanac"],
   ["ephemerists.masthead.observationMark", "ephemerists.masthead.observation"],
   ["ephemerists.masthead.recordMark", "ephemerists.masthead.record"],
-];
+] as const;
 
 export type MastheadScale = "page" | "card";
 
@@ -152,16 +154,32 @@ const SIZES: Record<MastheadScale, MastheadSize> = {
   },
 };
 
+/**
+ * The datum row's date cell, from the surface's own timestamp.
+ *
+ * Owner ruling: the date is REAL — a praxis's submission, a task's filing —
+ * where the surface has one, and the cell is left EMPTY where it has none. So
+ * the guard is not defensive tidiness, it is the ruling: `formatDate` renders an
+ * absent or malformed timestamp as the literal string "Invalid Date", which is
+ * an invention rather than a blank, and the masthead is exactly the surface a
+ * player would read it off as data. Guarded here rather than at each mount,
+ * because four mounts guarding separately is three chances to forget.
+ */
+function datumDate(iso: string | null | undefined): string | undefined {
+  if (!iso || Number.isNaN(new Date(iso).getTime())) return undefined;
+  return formatDate(iso);
+}
+
 export function EphemeristsMasthead({ slug, scale, date }: {
   /** The faction whose name the wordmark carries — the mounts' own slug. */
   slug: string | null | undefined;
   scale: MastheadScale;
   /**
-   * The surface's OWN date, already formatted. Optional because a surface may
-   * genuinely have none (the composer drafting a praxis that does not exist
-   * yet); the cell is then left empty rather than filled with an invention.
+   * The surface's OWN timestamp, ISO. Optional because a surface may genuinely
+   * have none (the composer drafting a praxis that does not exist yet); the cell
+   * is then left empty rather than filled with an invention.
    */
-  date?: string;
+  date?: string | null;
 }) {
   const { t } = useTranslation("factions");
   const size = SIZES[scale];
@@ -229,7 +247,7 @@ export function EphemeristsMasthead({ slug, scale, date }: {
             alignItems: "center",
           }}
         >
-          <span>{date}</span>
+          <span>{datumDate(date)}</span>
           <span>{RIGHT_ASCENSION}</span>
           <span>{DECLINATION}</span>
           <span style={{ justifySelf: "end" }}>

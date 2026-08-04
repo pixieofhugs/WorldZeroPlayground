@@ -17,19 +17,21 @@ import {
   READING,
   SHADOW,
   SMALL_CAPS,
-  WASH,
-  WingedDisc,
 } from "../../factionMarks/ephemeristsPlate";
-import { factionName } from "../../../utils/factions";
+import { EphemeristsMasthead } from "../../factionMarks/EphemeristsMasthead";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
  * The Ephemerists — THE FIELD-JOURNAL PLATE (#1207, the Valley plate at card
- * size). A papyrus leaf under a night-band masthead: a winged sun disc over an
- * incised register of glyphs, a cavetto cornice ruling it off, the entry's
- * cartouche, the Poiret One title over its Spectral gloss, and the tally cell
- * cut into the right column.
+ * size). A papyrus leaf under a night-band masthead: the ENGRAVED MASTHEAD at
+ * card scale (#1634) over an incised register of glyphs, a cavetto cornice
+ * ruling it off, the Poiret One title over its Spectral gloss, and the tally
+ * cell cut into the right column.
+ *
+ * The masthead replaced two things at once: the winged sun disc over a
+ * letterspaced Poiret One wordmark that headed the band, and the brass cartouche
+ * pill below the cornice that said "THE EPHEMERISTS" a second time.
  *
  * It replaces THE CODEX (#841) — the vellum folio painted out of the retired
  * `--eph-*` family. That family is still declared and still worn by every other
@@ -61,11 +63,11 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *    8 the codex folio used.
  */
 
-/** Masthead band, and the field its register is drawn across. Geometry (§4a). */
+/** Masthead band, and the field its register is drawn across. Geometry (§4a).
+ *  A FLOOR since #1634, not a height: the engraved masthead sizes itself from
+ *  its own padding, and a fixed band would crop it. */
 const MASTHEAD = 110;
 const MASTHEAD_VIEW = 340;
-/** The wordmark's winged disc, at the design's own span. Geometry. */
-const WORDMARK_DISC = 176;
 
 /**
  * The drifting strip above the vote block — a run of marks from the plate's
@@ -77,9 +79,6 @@ const DRIFT = [
   "‖", "ψ", "⟩", "∝", "Σ", "μ", "ν", "·", "⊗", "Δ", "λ", "≥", "ϖ", "·", "∫",
   "ρ", "∂",
 ];
-
-/** The cartouche's end rules. Ornament geometry, so it is shared, not repeated. */
-const cartoucheTick: CSSProperties = { width: 1.5, height: 12, background: BRASS };
 
 export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -101,19 +100,19 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         transition: "background 150ms, color 150ms",
       }}
     >
-      {/* The masthead: the winged sun disc over an incised register, on night. */}
+      {/* The masthead: the engraved title over an incised register, on night. */}
       <div
         style={{
           position: "relative",
           overflow: "hidden",
-          height: MASTHEAD,
+          minHeight: MASTHEAD,
           background: BAND,
           color: BAND_INK,
         }}
       >
         <svg
           width="100%"
-          height={MASTHEAD}
+          height="100%"
           viewBox={`0 0 ${MASTHEAD_VIEW} ${MASTHEAD}`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
@@ -127,31 +126,12 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           />
           <GlyphRegister width={MASTHEAD_VIEW} y={97} strength={0.3} keyPrefix="card" />
         </svg>
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "var(--space-xs)",
-          }}
-        >
-          <WingedDisc width={WORDMARK_DISC} height={40} />
-          <span
-            style={{
-              fontFamily: DECO,
-              fontSize: "var(--text-content)",
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              color: BAND_INK,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {factionName(praxis.task_faction_slug)}
-          </span>
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <EphemeristsMasthead
+            slug={praxis.task_faction_slug}
+            scale="card"
+            date={praxis.submitted_at ?? praxis.created_at}
+          />
         </div>
       </div>
       <Cornice />
@@ -165,34 +145,10 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
       >
         <AdminOverlay {...adminProps} />
 
-        {/* The entry's cartouche, ruled off at both ends. */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "var(--space-md) 0 var(--space-sm)" }}>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "var(--space-sm)",
-              padding: "var(--space-xs) var(--space-md)",
-              border: `1.5px solid ${BRASS}`,
-              borderRadius: 12,
-              background: WASH,
-            }}
-          >
-            <span aria-hidden style={cartoucheTick} />
-            <span
-              style={{
-                ...SMALL_CAPS,
-                fontWeight: 700,
-                fontSize: "var(--text-sm)",
-                color: INK,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {t("card.masthead.ephemerists")}
-            </span>
-            <span aria-hidden style={cartoucheTick} />
-          </span>
-        </div>
+        {/* The entry's cartouche stood here, a pill reading "THE EPHEMERISTS"
+            ruled off at both ends. #1634 retired it: the masthead directly above
+            now carries that wordmark in the engraved title, so the pill was the
+            same word said twice within 40px. */}
 
         <PraxisBody
           praxis={praxis}

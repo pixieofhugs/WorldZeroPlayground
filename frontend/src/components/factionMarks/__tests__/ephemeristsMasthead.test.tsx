@@ -29,7 +29,7 @@ import "../../../i18n";
 import { EphemeristsMasthead } from "../EphemeristsMasthead";
 
 const AXIS_H = "M100 272 L392 272";
-const render = (scale: "page" | "card", date?: string) =>
+const render = (scale: "page" | "card", date?: string | null) =>
   renderToStaticMarkup(<EphemeristsMasthead slug="ephemerists" scale={scale} date={date} />);
 
 describe("EphemeristsMasthead — the two scales", () => {
@@ -55,8 +55,18 @@ describe("EphemeristsMasthead — the two scales", () => {
 
 describe("EphemeristsMasthead — the datum row", () => {
   it("prints the surface's own date and leaves the cell empty when there is none", () => {
-    expect(render("page", "Aug 2, 2026")).toContain("Aug 2, 2026");
-    expect(render("page")).not.toContain("Aug 2, 2026");
+    expect(render("page", "2026-08-02T09:00:00Z")).toContain("2026");
+    expect(render("page")).not.toContain("2026");
+    expect(render("page", null)).not.toContain("2026");
+  });
+
+  it("prints nothing rather than 'Invalid Date' for a timestamp it cannot read", () => {
+    // The owner's ruling is that the date is REAL or the cell is empty, and
+    // `formatDate` renders an unparseable value as that literal string — an
+    // invention, on the one row a player would read as data.
+    for (const bad of ["", "not a date"]) {
+      expect(render("page", bad)).not.toContain("Invalid Date");
+    }
   });
 
   it("points both coordinates at one place, on every surface and both scales", () => {
