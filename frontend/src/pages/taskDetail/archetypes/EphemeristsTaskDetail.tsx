@@ -13,7 +13,14 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
-import { PLATINUM, RuneRule } from "../../../components/factionMarks/ephemeristsPlate";
+import {
+  Cornice,
+  GlyphRegister,
+  Octagon,
+  RuneRule,
+  Sign,
+  Tally,
+} from "../../../components/factionMarks/ephemeristsPlate";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -83,7 +90,10 @@ const QUIET = "var(--faction-ephemerists-plate-quiet)";
 const CAPTION = "var(--faction-ephemerists-plate-caption)";
 const BRASS = "var(--faction-ephemerists-plate-brass)";
 const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
-const GOLD = "var(--faction-ephemerists-plate-gold)";
+/* `GOLD` stood here. Its one reader was this page's copy of the kit's `Glyph`,
+   which #1654 deleted — and the kit's own already defaults its ink to the same
+   gold, so nothing has to hand it in. Gold is the masthead's ink on a night
+   band and a stain on the papyrus page; nothing else here wants it. */
 const BAND = "var(--faction-ephemerists-plate-band)";
 const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
 const DISC = "var(--faction-ephemerists-plate-disc)";
@@ -115,47 +125,13 @@ const GALLERY_PREVIEW = 3;
  */
 const BRIEF_LEADING = 32;
 
-/**
- * The glyph library — Egyptian signs beside later-era marks, drawn as deco
- * geometry on a 24-unit square, stroke-only so they read as incised rather than
- * illustrated.
- *
- * Duplicated from `components/taskCard/EphemeristsTaskCard.tsx`, which owns the
- * same set for the card. Deliberate under this issue's two-file scope; the
- * extraction target is `components/factionMarks/ephemeristsPlate.tsx`, and until the
- * two are merged a change to one sign has to be made twice.
- */
-const GLYPHS: Record<string, string> = {
-  ankh: "M12 22 V10 M6 15 H18 M12 10 a4 4 0 1 0 0.001 0 Z",
-  eye: "M3 12 C7 7 17 7 21 12 C17 16 7 16 3 12 M12 10.2 a1.8 1.8 0 1 0 .01 0 Z M15 15 L18 20 M8 15 L5 19",
-  feather: "M12 22 V4 M12 6 C15 7 17 10 17 13 M12 6 C9 7 7 10 7 13 M12 12 C14.6 12.8 16 14.6 16 17 M12 12 C9.4 12.8 8 14.6 8 17",
-  water: "M2 9 l4 3 4-3 4 3 4-3 4 3 M2 15 l4 3 4-3 4 3 4-3 4 3",
-  djed: "M12 22 V8 M6 8 H18 M6 12 H18 M7.5 4.6 H16.5 M9 2 H15",
-  reed: "M12 22 V7 C12 4 14 2.6 17 2.6 C17 6 15 7.4 12 7.4",
-  sun: "M12 12 a5 5 0 1 0 .01 0 Z M12 3 V6 M12 18 V21 M3 12 H6 M18 12 H21",
-  offering: "M4 8 H20 M6 8 V14 H18 V8 M9 14 V20 M15 14 V20 M4 20 H20",
-  scarab: "M12 4 C15.5 4 17.5 7 17.5 11 C17.5 16.6 15 20 12 20 C9 20 6.5 16.6 6.5 11 C6.5 7 8.5 4 12 4 M12 4 V20 M6.5 9 L2.5 6 M17.5 9 L21.5 6 M6.5 15 L2.5 18 M17.5 15 L21.5 18",
-  greekKey: "M2 20 V6 H16 V16 H8 V11 H12", // meander — Greek, c. 700 BC
-  chevrons: "M3 8 L12 3 L21 8 M3 14 L12 9 L21 14 M3 20 L12 15 L21 20", // deco, 1925
-  alchemy: "M12 3 L21 19 H3 Z M6.6 13.6 H17.4", // alchemical fire — medieval
-  hourglass: "M5 3 H19 M5 21 H19 M6.5 3 L12 12 L6.5 21 M17.5 3 L12 12 L17.5 21",
-  openEye: "M2 12 C6 5.4 18 5.4 22 12 M2 12 C6 18.6 18 18.6 22 12 M8.4 12 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 M10.7 12 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 M12 2.8 V5 M5 4.6 L6.8 6.6 M19 4.6 L17.2 6.6",
-  planet: "M5.8 12 a6.2 6.2 0 1 0 12.4 0 a6.2 6.2 0 1 0 -12.4 0 M1.8 16.2 A10.8 3.7 -22 0 1 22.2 7.8 A10.8 3.7 -22 0 1 1.8 16.2", // Saturn
-  /* The summons mark since #1638 — the ladder's top metal, read from the kit
-     rather than copied, so the sign the vote plate strikes and the sign the
-     summons wears cannot drift apart. */
-  platinum: PLATINUM.glyph,
-};
-
-/** The order the signs march in — the design's own register. */
-const REGISTER = [
-  "ankh", "water", "feather", "eye", "djed", "greekKey", "reed", "offering",
-  "alchemy", "chevrons", "scarab", "sun", "ankh", "water", "djed", "eye",
-];
-
-/** Distance between two signs in a register, in viewBox units. */
-const GLYPH_PITCH = 27.5;
-const GLYPH_SIZE = 13;
+/* The glyph library, its 16-sign register and their pitch stood here — a
+   transcription of the kit's, path for path, which is exactly the shape that
+   lets one surface keep drawing last month's mark. #1654 collapsed it along
+   with `Glyph`, `GlyphRegister`, `Octagon`, `Cornice`, `Tally` and `Sign`: all
+   seven now come from `factionMarks/ephemeristsPlate`, imported at the top of
+   this file. Nothing on this page draws differently — the kit's `GlyphRegister`
+   defaults its ink to the same gold the local one hardcoded. */
 
 /** Incised small caps — the plate's whole label voice. */
 const SMALL_CAPS: CSSProperties = {
@@ -165,154 +141,19 @@ const SMALL_CAPS: CSSProperties = {
   textTransform: "uppercase",
 };
 
-/** One incised sign, at its own strength and its own phase in the cycle. */
-function Glyph({ name, x, y, strength, delay }: {
-  name: string
-  x: number
-  y: number
-  strength: number
-  delay: number
-}) {
-  return (
-    <g
-      className="epg-glyph"
-      transform={`translate(${x} ${y}) scale(${GLYPH_SIZE / 24}) translate(-12 -12)`}
-      style={{ ["--epg-op"]: strength, ["--epg-delay"]: `${delay}s` } as CSSProperties}
-    >
-      <path
-        d={GLYPHS[name]}
-        fill="none"
-        stroke={GOLD}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </g>
-  );
-}
-
-/**
- * A register of signs marching the full width of the band. The count follows the
- * viewBox rather than the design's fixed 16: the masthead is page-wide here (up
- * to the 1200 cap) and a fixed count would either stop short of the edge or,
- * under `slice`, blow every sign up to a cartoon.
- */
-function GlyphRegister({ width, y, strength, keyPrefix }: {
-  width: number
-  y: number
-  strength: number
-  keyPrefix: string
-}) {
-  const count = Math.ceil(width / GLYPH_PITCH);
-  return (
-    <>
-      {Array.from({ length: count }).map((_, index) => (
-        <Glyph
-          key={`${keyPrefix}${index}`}
-          name={REGISTER[index % REGISTER.length]}
-          x={18 + index * GLYPH_PITCH}
-          y={y}
-          strength={strength * (index % 3 === 0 ? 1 : 0.7)}
-          delay={((index * 7) % 12) * 1.6}
-        />
-      ))}
-    </>
-  );
-}
-
 /* `Wing` and `WingedDisc` stood here — this page's LOCAL copy of the shared
    kit's winged sun disc (the two were byte-identical, which is how a duplicate
    survives review). #1634 retired the mark across the kit: the sigil is the only
    one now, and it arrives through `EphemeristsMasthead`. The copy goes with the
    original rather than outliving it. */
 
-/** A stepped octagon, inset from the medallion's edge. */
-function Octagon({ inset, stroke, width, fill }: {
-  inset: number
-  stroke: string
-  width: number
-  fill?: string
-}) {
-  return (
-    <path
-      d="M30 4 L70 4 L96 30 L96 70 L70 96 L30 96 L4 70 L4 30 Z"
-      fill={fill ?? "none"}
-      stroke={stroke}
-      strokeWidth={width}
-      transform={`translate(50,50) scale(${(100 - inset * 2) / 100}) translate(-50,-50)`}
-    />
-  );
-}
-
-/** The cavetto cornice: fluted strokes under a stepped double rule. */
-function Cornice() {
-  return (
-    <div aria-hidden="true" style={{ position: "relative", zIndex: 3, background: BAND }}>
-      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the lead between cornice flutes; rounding it to a rung reflows the fluting. */}
-      <div style={{ display: "flex", height: 7, alignItems: "flex-end", gap: 3, padding: "0 var(--space-sm)", overflow: "hidden" }}>
-        {Array.from({ length: 52 }).map((_, i) => (
-          <span
-            key={i}
-            style={{ flex: 1, height: i % 2 ? 6 : 3.5, background: BRASS_LIGHT, opacity: i % 2 ? 0.5 : 0.28 }}
-          />
-        ))}
-      </div>
-      <div style={{ height: 2, background: BRASS, opacity: 0.9 }} />
-      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the gap in the cornice's stepped double rule. */}
-      <div style={{ height: 1, marginTop: 2, background: BRASS_LIGHT, opacity: 0.55 }} />
-    </div>
-  );
-}
-
 /* The page's own hand-copied `FlutedRule` stood here — a second, byte-identical
    declaration of the kit's divider that no import-following sweep could see, so
    #1638's "fluted rules become shifting runes" would have converted six mounts
    and silently left this page's two on the old drawing. The rule is now
    `RuneRule` from `factionMarks/ephemeristsPlate`, imported at the top of this
-   file: one divider, seven mounts, one place to change it. The rest of this
-   file's local glyph library is still a copy and is still #1654's shape. */
-
-/** The level, struck as tally marks — every fifth stroke in ochre. */
-function Tally({ level }: { level: number }) {
-  const strokes = Math.min(9, Math.max(1, Math.round(level)));
-  return (
-    // eslint-disable-next-line local/no-raw-style-values -- ornament: the pitch of the tally strokes, drawn 1.6px wide.
-    <span aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 2.5, height: 11 }}>
-      {Array.from({ length: strokes }).map((_, i) => (
-        <span
-          key={i}
-          style={{
-            width: 1.6,
-            height: 11 - (i % 3) * 2,
-            opacity: 0.85,
-            background: i === 4 ? OCHRE : BRASS,
-          }}
-        />
-      ))}
-    </span>
-  );
-}
-
-/** One incised sign at label scale, set beside a line of type. */
-function Sign({ name, size, color, weight }: {
-  name: string
-  size: number
-  color: string
-  weight?: number
-}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
-      <path
-        d={GLYPHS[name]}
-        fill="none"
-        stroke={color}
-        strokeWidth={weight ?? 1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+   file: one divider, seven mounts, one place to change it. #1654 did the same
+   for the other eleven, so nothing in this file declares a mark any more. */
 
 interface SizeSet {
   /** Masthead band height. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */

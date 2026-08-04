@@ -34,6 +34,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import EphemeristsTaskDetail from "../archetypes/EphemeristsTaskDetail";
+import { PLATINUM } from "../../../components/factionMarks/ephemeristsPlate";
 import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { readThemes } from "../../../utils/__tests__/cssVars";
@@ -226,4 +227,44 @@ describe("the Valley plate's tokens", () => {
       ).toBe(false);
     });
   }
+});
+
+/**
+ * #1654 — the page draws the kit's marks, at the PAGE's densities.
+ *
+ * Seven of this file's declarations were transcriptions of `ephemeristsPlate`'s
+ * — `GLYPHS`, `Glyph`, `GlyphRegister`, `Octagon`, `Cornice`, `Tally`, `Sign` —
+ * so a mark redrawn in the kit left this page on the old one, silently. The
+ * source-tree guard against a fresh copy lives in
+ * `praxisCard/__tests__/ephemeristsPlateSurfaces.test.tsx`; what only rendering
+ * can say is that the collapse changed no ornament, and these are the counts a
+ * wrong import or a lost prop would move while everything still built.
+ */
+describe("the Valley page's ornament comes from the kit unchanged (#1654)", () => {
+  const page = () => render(<EphemeristsTaskDetail state={baseState()} />).html;
+
+  it("strikes the page cornice's 52 flutes", () => {
+    // Counted on the short flute the band alternates in — half of 52. The task
+    // CARD strikes 40 of them across its 384px band; the two densities are the
+    // two designs' and neither drifted from the other, so `Cornice` takes the
+    // count as a prop and this page takes the default.
+    expect(page().match(/height:3\.5px/g)).toHaveLength(26);
+  });
+
+  it("fills both masthead registers from the width, not a fixed 16", () => {
+    // `Math.ceil(1200 / 27.5)` = 44 signs a row, twice. A fixed count would
+    // stop short of the page edge at the 1200 cap; the design's own 16 is the
+    // number the local copy documented itself as NOT using. Sliced to the
+    // masthead's own svg so the page's rune bands — one per section head, and
+    // a section count this has no opinion about — cannot move it.
+    const masthead = page().slice(0, page().indexOf("</svg>"));
+    expect(masthead.match(/class="epg-glyph"/g)).toHaveLength(44 * 2);
+  });
+
+  it("strikes the summons in platinum, off the shared sign table", () => {
+    // The one entry the kit's `GLYPHS` did not have before this issue: both
+    // copies filed `PLATINUM.glyph` under a sign name privately, so the table
+    // took it in rather than the two call sites reaching around `Sign`.
+    expect(page()).toContain(PLATINUM.glyph);
+  });
 });
