@@ -632,6 +632,18 @@ Four things generalise off it, none of them Ephemerists-specific.
 
 **Retiring a mark is finished when its LAST caller is gone, and the last caller is rarely on the list.** The issue named the winged sun disc through one class (`.eph-plate-crown`) on one surface. Four of the disc's five call sites were the mastheads it crowned and went with them; the fifth was a feed row's 14px band ornament, on nobody's list, and leaving it would have shipped a faction wearing two marks with no way for a reader to tell which was deliberate. Grep for the *component*, not for the symptom the issue named. The mirror of that: `WingedDiscSign` is a **different drawing** on a 24-unit square for the metatask seal, and a retirement stops at the edge of a drawing it is not about.
 
+### A clip shaves the frame you gave it, so make the frame the GROUND (#1638)
+
+`clip-path` cuts the element, and a `border` is painted at the element's edge — so a stepped, torn or notched silhouette eats its own rule along exactly the edges the silhouette was for. The Ephemerists' vote plate shipped that way: `stepClip(7)` chamfered two corners and took the brass border off both of them, which reads as a printing slip rather than as a cut. An *inset* box-shadow fails identically and for the same reason.
+
+**Draw the frame as a ground and lay the surface a pixel inside it,** both clipped. The rule is then what shows through the inset, so the clip carries it instead of removing it. The inner chamfer's leg is one pixel *shorter*, not equal — an equal leg puts the two cut corners on top of each other and the frame opens again. (Strictly the parallel leg is `step − √2`; rounding down draws the chamfer's hairline slightly finer than the straights, which is a taper on a rule, not a gap.)
+
+### When the marks become legible, the labels around them are scaffolding (#1638)
+
+A vote plate is a scale, and a scale that has to be captioned is not one yet. The Ephemerists' metals ladder carried a dashed track threading the discs, a roman numeral struck on each, and an italic caption naming the hovered tier — three restatements of the row they sat on. What made them removable was not taste but a change to the marks: the ray burst went from a flat count to a **conic ring whose spoke pitch is set per tier**, so it visibly densifies up the ladder and rank is readable off the ornament. Earn the removal first — a plate that drops its labels without making its marks carry the rank has only got quieter.
+
+**A decorative mark's accessible name is a different question from a decodable one's.** The kit's `GlossedGlyph` hides its English on `title`, and that is right *because* the English is a bonus already printed somewhere on screen: the tooltip is a convenience over a fact the reader can otherwise obtain. Where the glyph is the **only** carrier of its information, `title` is not an option — it is a pointer affordance, unreliably announced and unreachable on touch. That case takes a visually-hidden label (`sr-only`, already in the bundle). The test is one question, *is this word printed anywhere else on the surface?*, and it is worth asking out loud, because the two cases look identical in a design.
+
 ---
 
 ## 7. Components

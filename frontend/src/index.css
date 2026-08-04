@@ -3735,12 +3735,11 @@
   pointer-events: none;
   opacity: 0.45;
   background: repeating-conic-gradient(
-    from 0deg,
-    var(--metal-ink) 0deg 1.6deg,
+    var(--metal-ink) 0 1.6deg,
     transparent 1.6deg var(--metal-step, 36deg)
   );
-  -webkit-mask-image: radial-gradient(closest-side, transparent 0 82%, #000 84%);
-  mask-image: radial-gradient(closest-side, transparent 0 82%, #000 84%);
+  -webkit-mask: radial-gradient(closest-side, transparent 0 82%, #000 84%);
+  mask: radial-gradient(closest-side, transparent 0 82%, #000 84%);
 }
 /* Pure motion: a shock ring and a wipe have no resting form to show. */
 .eph-metal-shock, .eph-metal-sheen { opacity: 0; }
@@ -3748,7 +3747,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .eph-metal-burst {
     animation: eph-metal-burst 3.2s ease-in-out infinite;
-    animation-delay: var(--metal-delay, 0s);
+    animation-delay: var(--metal-delay);
   }
   .eph-metal-shock {
     animation: eph-metal-shock var(--metal-dur, 3s) ease-out infinite;
