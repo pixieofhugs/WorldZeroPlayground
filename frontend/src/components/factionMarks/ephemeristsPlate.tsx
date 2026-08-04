@@ -15,12 +15,13 @@
  * dark override tuned for the plate's night-blue, and the plate's brass is a
  * rule colour that is never an ink.
  *
- * `EphemeristsTaskCard` and `EphemeristsTaskDetail` still carry their own copies
- * of the glyph library and the cornice; both are migration targets for a
- * follow-up whose whole diff is a delete and an import. They are deliberately
- * NOT rewired here — three faction skins are being built over the same shared
- * layout in parallel, and a same-wave edit to two files this issue does not own
- * is how a wave collides.
+ * `EphemeristsTaskCard` and `EphemeristsTaskDetail` carried their own copies of
+ * the glyph library, the cornice, the octagon and the tally — eleven local
+ * redefinitions of things declared here, transcribed rather than imported, so
+ * nothing failed when a mark was redrawn in one file and left standing in the
+ * others. #1654 collapsed all eleven. There is no second declaration of any of
+ * this vocabulary left in `src/`, and `ephemeristsPlateSurfaces.test.tsx` pins
+ * that against the SOURCE tree, because an import-graph sweep cannot see a copy.
  *
  * Every colour is a `--faction-ephemerists-plate-*` token; light/dark flips
  * through the `[data-theme="dark"]` cascade, never a ternary.
@@ -160,9 +161,76 @@ export const SMALL_CAPS: CSSProperties = {
 };
 
 /**
+ * THE FIVE METALS, and everything three surfaces need to strike one (#1638).
+ *
+ * Classical alchemical sigils on the plate's 24-unit square — Saturn for lead,
+ * Venus for copper, the crescent for silver, the sun for gold, and the
+ * moon-and-Mercury compound for platinum. They lived in `EphemeristsVote` while
+ * the ladder was their only reader; #1660 gave them two more (the voters panel
+ * strikes one per vote, and the sign-up summons strikes platinum), which is the
+ * threshold the kit exists for.
+ *
+ * `burstStep` is the DEGREE PITCH of the conic ring around a reached disc, and
+ * it is the ladder's whole legibility: the ring densifies as the metal improves
+ * (60° → 22.5°), so rank reads off the spoke count without a numeral. Geometry
+ * rather than style, which is why it is a number here and arrives at CSS as a
+ * custom property.
+ *
+ * Ordered exactly as `VOTE_REFRAMES.ephemerists.tiers`: index is `value - 1`.
+ *
+ * This block sits ABOVE {@link GLYPHS} only because that table files the
+ * platinum sigil under a sign name, and a const may not read a const declared
+ * below it.
+ */
+export const METAL_SIGILS = [
+  {
+    name: "lead",
+    color: "var(--faction-ephemerists-metal-lead)",
+    glyph: "M6.2 7.4 C7.4 4.6 10.2 4.8 10.2 7.8 C10.2 10.8 9 14.6 9.4 17.6 C9.8 20.4 11.8 21 13.8 19.4 M6.4 10.8 H13.4",
+    weight: 1.5,
+    burstStep: 60,
+  },
+  {
+    name: "copper",
+    color: "var(--faction-ephemerists-metal-copper)",
+    glyph: "M12 4.4 a4.4 4.4 0 1 0 0.01 0 Z M12 13.2 V20.6 M8.8 17.4 H15.2",
+    weight: 1.5,
+    burstStep: 45,
+  },
+  {
+    name: "silver",
+    color: "var(--faction-ephemerists-metal-silver)",
+    glyph: "M15.8 4.4 A8 8 0 1 0 15.8 19.6 A6.3 6.3 0 1 1 15.8 4.4 Z",
+    weight: 1.3,
+    burstStep: 36,
+  },
+  {
+    name: "gold",
+    color: "var(--faction-ephemerists-metal-gold)",
+    glyph: "M12 5 a7 7 0 1 0 0.01 0 Z M12 10.4 a1.7 1.7 0 1 0 0.01 0 Z",
+    weight: 1.5,
+    burstStep: 30,
+  },
+  {
+    name: "platinum",
+    color: "var(--faction-ephemerists-metal-platinum)",
+    glyph: "M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z",
+    weight: 1.3,
+    burstStep: 22.5,
+  },
+] as const;
+
+/** The top of the ladder — the mark the summons is struck with (#1638). */
+export const PLATINUM = METAL_SIGILS[4];
+
+/**
  * The glyph library — Egyptian signs beside later-era marks, drawn as deco
  * geometry on a 24-unit square, stroke-only so they read as incised rather than
  * illustrated.
+ *
+ * The ONE home for the set since #1654. The task card and the task page each
+ * carried a transcription of it, so a sign could be redrawn in one file and
+ * left standing in two with nothing failing; both now read this table.
  */
 export const GLYPHS: Record<string, string> = {
   ankh: "M12 22 V10 M6 15 H18 M12 10 a4 4 0 1 0 0.001 0 Z",
@@ -180,6 +248,11 @@ export const GLYPHS: Record<string, string> = {
   hourglass: "M5 3 H19 M5 21 H19 M6.5 3 L12 12 L6.5 21 M17.5 3 L12 12 L17.5 21",
   openEye: "M2 12 C6 5.4 18 5.4 22 12 M2 12 C6 18.6 18 18.6 22 12 M8.4 12 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 M10.7 12 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 M12 2.8 V5 M5 4.6 L6.8 6.6 M19 4.6 L17.2 6.6",
   planet: "M5.8 12 a6.2 6.2 0 1 0 12.4 0 a6.2 6.2 0 1 0 -12.4 0 M1.8 16.2 A10.8 3.7 -22 0 1 22.2 7.8 A10.8 3.7 -22 0 1 1.8 16.2", // Saturn
+  /* The summons mark since #1638 — the ladder's top metal, filed here under a
+     sign name rather than re-drawn, so `Sign name="platinum"` resolves on every
+     surface and the mark the vote plate strikes and the mark the summons wears
+     cannot drift apart. Both consumers already kept this entry privately. */
+  platinum: PLATINUM.glyph,
 };
 
 /** The order the signs march in — the design's own register. */
@@ -192,8 +265,15 @@ export const REGISTER = [
 const GLYPH_PITCH = 27.5;
 const GLYPH_SIZE = 13;
 
-/** One incised sign, at its own strength and its own phase in the cycle. */
-function Glyph({ name, x, y, strength, delay, color }: {
+/**
+ * One incised sign, at its own strength and its own phase in the cycle.
+ *
+ * Exported for the ONE caller that composes its own register rather than taking
+ * {@link GlyphRegister}: the task card's masthead marches two named 12-sign
+ * rows at its own pitch, which is the card design's drawing and not the page's.
+ * Everything else wants the register.
+ */
+export function Glyph({ name, x, y, strength, delay, color }: {
   name: string
   x: number
   y: number
@@ -254,65 +334,6 @@ export function GlyphRegister({ width, y, strength, keyPrefix, color }: {
   );
 }
 
-/**
- * THE FIVE METALS, and everything three surfaces need to strike one (#1638).
- *
- * Classical alchemical sigils on the plate's 24-unit square — Saturn for lead,
- * Venus for copper, the crescent for silver, the sun for gold, and the
- * moon-and-Mercury compound for platinum. They lived in `EphemeristsVote` while
- * the ladder was their only reader; this issue gave them two more (the voters
- * panel strikes one per vote, and the sign-up summons strikes platinum), which
- * is the threshold the kit exists for.
- *
- * `burstStep` is the DEGREE PITCH of the conic ring around a reached disc, and
- * it is the ladder's whole legibility: the ring densifies as the metal improves
- * (60° → 22.5°), so rank reads off the spoke count without a numeral. Geometry
- * rather than style, which is why it is a number here and arrives at CSS as a
- * custom property.
- *
- * Ordered exactly as `VOTE_REFRAMES.ephemerists.tiers`: index is `value - 1`.
- */
-export const METAL_SIGILS = [
-  {
-    name: "lead",
-    color: "var(--faction-ephemerists-metal-lead)",
-    glyph: "M6.2 7.4 C7.4 4.6 10.2 4.8 10.2 7.8 C10.2 10.8 9 14.6 9.4 17.6 C9.8 20.4 11.8 21 13.8 19.4 M6.4 10.8 H13.4",
-    weight: 1.5,
-    burstStep: 60,
-  },
-  {
-    name: "copper",
-    color: "var(--faction-ephemerists-metal-copper)",
-    glyph: "M12 4.4 a4.4 4.4 0 1 0 0.01 0 Z M12 13.2 V20.6 M8.8 17.4 H15.2",
-    weight: 1.5,
-    burstStep: 45,
-  },
-  {
-    name: "silver",
-    color: "var(--faction-ephemerists-metal-silver)",
-    glyph: "M15.8 4.4 A8 8 0 1 0 15.8 19.6 A6.3 6.3 0 1 1 15.8 4.4 Z",
-    weight: 1.3,
-    burstStep: 36,
-  },
-  {
-    name: "gold",
-    color: "var(--faction-ephemerists-metal-gold)",
-    glyph: "M12 5 a7 7 0 1 0 0.01 0 Z M12 10.4 a1.7 1.7 0 1 0 0.01 0 Z",
-    weight: 1.5,
-    burstStep: 30,
-  },
-  {
-    name: "platinum",
-    color: "var(--faction-ephemerists-metal-platinum)",
-    glyph: "M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z",
-    weight: 1.3,
-    burstStep: 22.5,
-  },
-] as const;
-
-/** The top of the ladder — the mark the summons is struck with (#1638). */
-export const PLATINUM = METAL_SIGILS[4];
-
 /* `Wing` and `WingedDisc` stood here — the winged sun disc, the mark that headed
    every Ephemerists band and crowned the task detail's action panel.
 
@@ -332,8 +353,16 @@ export const PLATINUM = METAL_SIGILS[4];
  * `glow` washes a slow gold bloom along the band — the praxis record's one piece
  * of motion. The pigment, the cycle and the reduced-motion gate all live on
  * `.eph-cornice-glow` in index.css; this only reserves the layer.
+ *
+ * `flutes` is the number of strokes, and it is a PROP because the two designs
+ * this cornice came out of drew different densities: the task-card design
+ * (#1023) struck 40 across a 384px card and the task-details design (#1041)
+ * struck 52 across the page. The flutes are `flex: 1`, so the count is the
+ * fluting's pitch — 52 on a card would close it up. Neither number drifted from
+ * the other; they were never the same drawing, and #1654 collapsed the two
+ * transcriptions without picking a winner.
  */
-export function Cornice({ glow }: { glow?: boolean }) {
+export function Cornice({ glow, flutes = 52 }: { glow?: boolean; flutes?: number }) {
   return (
     // `overflow: hidden` is load-bearing when `glow` is on: the bloom drifts on
     // a translate, so an unclipped band would wash gold past the sheet's edges.
@@ -344,7 +373,7 @@ export function Cornice({ glow }: { glow?: boolean }) {
       {glow && <span className="eph-cornice-glow" />}
       {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the lead between cornice flutes; rounding it to a rung reflows the fluting. */}
       <div style={{ position: "relative", display: "flex", height: 7, alignItems: "flex-end", gap: 3, padding: "0 var(--space-sm)", overflow: "hidden" }}>
-        {Array.from({ length: 52 }).map((_, i) => (
+        {Array.from({ length: flutes }).map((_, i) => (
           <span
             key={i}
             style={{ flex: 1, height: i % 2 ? 6 : 3.5, background: BRASS_LIGHT, opacity: i % 2 ? 0.5 : 0.28 }}
