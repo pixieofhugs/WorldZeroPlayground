@@ -110,6 +110,17 @@ export interface ProfileKit {
   progressionStyle: CSSProperties
   /** Small label above the level number inside the ring (e.g. "lvl", "ANNO"). */
   ringLabel: string
+  /** Ink for that label. Defaults to `muted` — which is the RIGHT default and
+   *  not a placeholder: the label sits inside the ring's disc, and the disc
+   *  grounds on `surface`, which is the stock `muted` was measured for.
+   *
+   *  Ephemerists is the one kit that overrides it (#1630): its grade ring is a
+   *  brass instrument, so the label reads in `-plate-brass-light` beside the
+   *  numeral rather than in the plate's quiet ink — 11.04:1 on the plate against
+   *  `-plate-quiet`'s 5.98, so this buys legibility as well as dress. A knob
+   *  rather than a repoint of `muted`, because `muted` is read on three other
+   *  grounds by six other lines (#1636). */
+  ringLabelInk?: string
   /** Fill for the points-into-level bar. */
   barFill: string
   /** Track behind the progression bar. */
@@ -602,8 +613,9 @@ export function ProfileSkin({
                           // `kit.surface` — it is in the header, not ON the
                           // header's band. The band ink is the wrong ink here
                           // for the same reason the band ink was right for the
-                          // other five.
-                          color: kit.muted,
+                          // other five. A kit may name a different ink for this
+                          // one line (#1630) without moving the other six.
+                          color: kit.ringLabelInk ?? kit.muted,
                         }}
                       >
                         {kit.ringLabel}

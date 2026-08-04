@@ -46,10 +46,55 @@ import {
   SHADOW,
   SOFT,
 } from '../../../components/factionMarks/covenSlip'
+import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
 const CHROME = 'var(--font-faction-rounded)' // Quicksand
 const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
+
+/**
+ * The candle catching the header (#1630) — eight of the faction's OWN sparkle
+ * scattered over the identity band, each twinkling on its own delay.
+ *
+ * `[left%, top%, size, delay]`, straight from the design. The positions and
+ * sizes are a hand-composed SCATTER, which is §4a's ornament case rather than a
+ * spacing decision: put these on the 8px rung and the field lands on a lattice,
+ * which is the one thing a scatter may not do. They are percentages precisely so
+ * the field re-flows with the band at both widths — nothing here is a fixed-px
+ * layout dimension.
+ *
+ * The mark is `CovenSigil` at --faction-coven-slip-gold, the token whose own
+ * declaration names "twinkles" as its job (§6: a faction's ornament is ONE
+ * primitive at named strengths — this is that primitive, not a second drawing of
+ * it). The design's #f6d76b is that token's dark value; light gets the warmer
+ * #f4c430 through the cascade, which is the point of not writing the hex.
+ */
+const SPARKS: ReadonlyArray<readonly [number, number, number, number]> = [
+  [7, 18, 22, 0],
+  [22, 72, 14, 1.4],
+  [41, 12, 17, 2.6],
+  [58, 64, 12, 0.7],
+  [72, 28, 20, 3.4],
+  [86, 78, 15, 1.9],
+  [93, 34, 11, 4.2],
+  [63, 88, 16, 2.2],
+]
+
+function Sparkfield() {
+  return (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+      {SPARKS.map(([left, top, size, delay]) => (
+        <span
+          key={`${left}-${top}`}
+          className="cvn-profile-spark"
+          style={{ left: `${left}%`, top: `${top}%`, ['--cvn-spark-delay' as string]: `${delay}s` }}
+        >
+          <CovenSigil size={size} color="var(--faction-coven-slip-gold)" />
+        </span>
+      ))}
+    </div>
+  )
+}
 
 /** The slow-turning pentagram, watermarking the identity banner. */
 function Watermark() {
@@ -115,7 +160,14 @@ const kit: ProfileKit = {
     marginBottom: 'var(--space-2xl)',
     boxShadow: SHADOW,
   },
-  headerDecoration: <Watermark />,
+  // Both decorations are inert `aria-hidden` layers behind the content, which
+  // `ProfileSkin` lifts to z-index 2. The watermark turns; the sparks twinkle.
+  headerDecoration: (
+    <>
+      <Watermark />
+      <Sparkfield />
+    </>
+  ),
   taglineExtra: { fontFamily: HAND },
   progressionStyle: {
     marginTop: 'var(--space-xl)',

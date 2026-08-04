@@ -6,6 +6,9 @@
  * default spectrum-band body remains the fallback for null / na / unknown, and
  * ③ Badges must render only when badges exist regardless of skin.
  */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -74,11 +77,15 @@ describe("FactionProfileBody dispatch", () => {
     // Each faction claims the surface in its own manifest; the dispatcher just
     // reads them, so this asserts the manifests still cover all seven.
     //
-    // Albescent is absent on purpose (#783): it claims no profile skin, so a
-    // member's profile IS the default one. That is the point — a profile is
-    // exactly where a secret society would give itself away.
+    // Albescent joined the list with #1630 and is NOT an eighth skin. It claims
+    // the row to hand `DefaultProfileBody` one inert ornament layer (ADR-0048's
+    // "Default PLUS a flourish"), which is the only way a flourish can land ON
+    // the na identity band rather than over the whole page. #783's ruling that a
+    // profile is exactly where a secret society would give itself away is what
+    // makes that the ceiling: motion, never a skin. The assertion directly below
+    // is the one that enforces it.
     expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
-      ["ephemerists", "everymen", "singularity", "snide", "ua", "coven", "wow"].sort(),
+      ["ephemerists", "everymen", "singularity", "snide", "ua", "coven", "wow", "albescent"].sort(),
     );
   });
 
@@ -322,3 +329,170 @@ describe.each(["desktop", "mobile"] as const)(
     );
   },
 );
+
+/**
+ * ① Identity-header FLAIR, one bespoke treatment per faction (#1630).
+ *
+ * The seam is the same one above occupies — the markup `FactionProfileBody`
+ * renders for a (slug × form factor) cell — and the failure mode these guard is
+ * not "the treatment is missing" but "the treatment LEAKED". Every one of these
+ * lands on a shared layer (`ProfileSkin` for seven kits, `DefaultProfileBody`
+ * for na / albescent), so the cheap mistake is a knob that dresses all nine
+ * profiles instead of one. Each row therefore asserts the fingerprint on its own
+ * slug AND its absence on the other eight.
+ *
+ * What is NOT assertable here (`renderToStaticMarkup`, no DOM, no effects, and
+ * axe cannot read a gradient or a `background-clip` — #651): whether any of this
+ * LOOKS right. Every one of these is an eyeball check in both themes, and the
+ * two animated ones in the reduced-motion state as well.
+ */
+const OTHER_SLUGS = (slug: string) => SLUGS.filter((other) => other !== slug);
+
+describe.each(["desktop", "mobile"] as const)(
+  "① header flair on %s (#1630)",
+  (formFactor) => {
+    const render = (slug: string) => {
+      mocks.formFactor = formFactor;
+      return renderBody({ faction_slug: slug, tagline: TAGLINE });
+    };
+
+    /** Present on `slug`, absent on every other slug. */
+    const onlyOn = (slug: string, fingerprint: string) => {
+      expect(render(slug), `${slug} is missing its own flair`).toContain(
+        fingerprint,
+      );
+      for (const other of OTHER_SLUGS(slug)) {
+        expect(render(other), `${slug}'s flair leaked onto ${other}`).not.toContain(
+          fingerprint,
+        );
+      }
+    };
+
+    // `progressPercent: 40` → 144deg. The mask is the top layer of the ring's
+    // background, so its own opening stop is the fingerprint; a themed faction
+    // keeps the single-scalar `conic-gradient(<accent> Ndeg, <track> 0)` arc.
+    const RING_MASK = "conic-gradient(transparent 0 144deg";
+
+    it("reads the level ring in the spectrum for na and albescent only", () => {
+      for (const slug of ["na", "albescent"]) {
+        const html = render(slug);
+        expect(html, `${slug} ring mask`).toContain(RING_MASK);
+        expect(html, `${slug} ring ramp`).toContain(
+          `${RING_MASK}, var(--color-border) 144deg 360deg), var(--faction-default-rainbow-conic)`,
+        );
+        // The scalar arc it replaces. Its survival would mean one branch moved
+        // and the other did not — this file's whole reason for a form-factor axis.
+        expect(html, `${slug} keeps the old scalar arc`).not.toContain(
+          "conic-gradient(var(--color-text-primary)",
+        );
+      }
+      for (const slug of SLUGS.filter((s) => !["na", "albescent"].includes(s))) {
+        expect(render(slug), `${slug} took na's ring`).not.toContain(RING_MASK);
+      }
+    });
+
+    it("drifts the spectrum frame for albescent and holds it still for na", () => {
+      // The contrast IS the treatment: Albescent is na plus MOTION (ADR-0048),
+      // so the class must be on exactly one of the two.
+      onlyOn("albescent", "alb-profile-edge");
+    });
+
+    it("scatters candle sparkles on the coven header only", () => {
+      onlyOn("coven", "cvn-profile-spark");
+      // Eight marks, each with its own delay — one shared delay would pulse the
+      // field in unison, which is the drawing this table exists to prevent.
+      const html = render("coven");
+      expect(html.split("cvn-profile-spark").length - 1).toBe(8);
+      expect(new Set([...html.matchAll(/--cvn-spark-delay:([^;"]+)/g)].map((m) => m[1])).size).toBe(8);
+    });
+
+    it("ghosts the lotus into the ua header only", () => {
+      // Lotus's own gradient id — the mark's fingerprint, not a class we chose.
+      onlyOn("ua", "wz-lotus-wash");
+    });
+
+    it("grounds singularity in a phosphor terminal, not graph paper", () => {
+      const html = render("singularity");
+      expect(html, "the phosphor raster").toContain(
+        "radial-gradient(120% 80% at 12% 0%",
+      );
+      // "the blue graph paper is the Ephemerists' plate" — the blue graticule is
+      // the thing being replaced, so its absence is half the assertion.
+      expect(html, "the blue graticule survived").not.toContain("rgba(37,99,235");
+      onlyOn("singularity", "radial-gradient(120% 80% at 12% 0%");
+    });
+
+    it("pastes the snide tagline up as a ransom slip", () => {
+      onlyOn("snide", "rotate(-0.7deg)");
+      const html = render("snide");
+      expect(html, "the acid ground").toContain(
+        "background:var(--faction-snide-acid)",
+      );
+      // The torn acid strip along the header top is dropped.
+      expect(html, "the torn strip survived").not.toContain("polygon(0 0,4% 40%");
+    });
+
+    it("reads the ephemerists grade label in brass", () => {
+      onlyOn(
+        "ephemerists",
+        "color:var(--faction-ephemerists-plate-brass-light)",
+      );
+    });
+  },
+);
+
+/**
+ * Every perpetual animation this issue adds sits behind the repo's shared
+ * `prefers-reduced-motion: no-preference` guard (the `ep-edge` / `ep-drift`
+ * pattern). Asserted against the STYLESHEET rather than the markup, because
+ * that is where the guard lives and a component cannot be asked about it.
+ *
+ * Brace-counted rather than regex-sliced on purpose: `@media` blocks nest, and
+ * a guard that only checks the class name appears "somewhere near" a
+ * no-preference block passes for a rule that sits just outside one.
+ */
+describe("#1630 motion sits behind the reduced-motion guard", () => {
+  const css = readFileSync(
+    fileURLToPath(new URL("../../../index.css", import.meta.url)),
+    "utf8",
+  );
+
+  /** The source split into (inside a no-preference block, outside it). */
+  const partitionByGuard = (source: string): [string, string] => {
+    const OPEN = "@media (prefers-reduced-motion: no-preference)";
+    let inside = "";
+    let outside = "";
+    let cursor = 0;
+    for (;;) {
+      const start = source.indexOf(OPEN, cursor);
+      if (start < 0) {
+        outside += source.slice(cursor);
+        return [inside, outside];
+      }
+      outside += source.slice(cursor, start);
+      let depth = 0;
+      let index = source.indexOf("{", start);
+      const bodyStart = index;
+      for (; index < source.length; index += 1) {
+        if (source[index] === "{") depth += 1;
+        else if (source[index] === "}") {
+          depth -= 1;
+          if (depth === 0) break;
+        }
+      }
+      inside += source.slice(bodyStart, index + 1);
+      cursor = index + 1;
+    }
+  };
+
+  const [GUARDED, UNGUARDED] = partitionByGuard(css);
+
+  it.each(["alb-profile-edge", "cvn-profile-spark"])(
+    "%s animates only under no-preference",
+    (className) => {
+      const animates = new RegExp(`\\.${className}\\s*\\{[^}]*animation`);
+      expect(animates.test(GUARDED), `${className} guarded rule`).toBe(true);
+      expect(animates.test(UNGUARDED), `${className} UNguarded rule`).toBe(false);
+    },
+  );
+});

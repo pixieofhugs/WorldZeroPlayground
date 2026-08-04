@@ -1,8 +1,9 @@
 /**
  * SnideProfileBody — S.N.I.D.E. ransom-note / crime-board player-profile skin
  * (#460). Ported from docs/design/profile/templates/SNIDE Profile.dc.html: hard
- * offset shadows, a jagged clip-path strip, skewed Impact headlines with a pink
- * drop-shadow, tape strips, halftone dot texture. SNIDE is ALWAYS DARK — its
+ * offset shadows, skewed Impact headlines with a pink drop-shadow, tape strips,
+ * halftone dot texture, and the tagline pasted up as a ransom slip (#1630, which
+ * also dropped the torn acid strip along the header top). SNIDE is ALWAYS DARK — its
  * --faction-snide-* tokens are identical in both themes, so the container scopes
  * data-theme="dark" to itself and never mutates the global theme.
  *
@@ -21,9 +22,6 @@ const PINK = 'var(--faction-snide-pink)' // hot zine pink
 const IMPACT = 'var(--faction-snide-font-impact)' // Anton
 const TYPE = 'var(--faction-snide-font-type)' // Special Elite
 const MARKER = 'var(--faction-snide-font-marker)' // Permanent Marker
-
-const JAGGED =
-  'polygon(0 0,4% 40%,8% 0,12% 40%,16% 0,20% 40%,24% 0,28% 40%,32% 0,36% 40%,40% 0,44% 40%,48% 0,52% 40%,56% 0,60% 40%,64% 0,68% 40%,72% 0,76% 40%,80% 0,84% 40%,88% 0,92% 40%,96% 0,100% 40%,100% 100%,0 100%)'
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
@@ -76,30 +74,49 @@ const kit: ProfileKit = {
     background: INK,
     border: `1px solid ${ACID}`,
     boxShadow: '8px 10px 0 rgba(0,0,0,0.55)',
-    padding: 'var(--space-3xl) var(--space-2xl) var(--space-2xl)',
+    // The torn acid strip along the top is dropped (#1630), and the 3xl top
+    // inset that was reserving room for it goes with it — a band sized for an
+    // absent ornament is #1138's shape (hiding the mark does not hide the SPACE
+    // it was given).
+    padding: 'var(--space-2xl)',
     marginBottom: 'var(--space-3xl)',
   },
-  headerDecoration: (
-    <div
-      aria-hidden
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 14,
-        background: ACID,
-        clipPath: JAGGED,
-        zIndex: 3,
-      }}
-    />
-  ),
   credentialFrame: (card) => (
     <div style={{ transform: 'rotate(-1.5deg)', filter: 'drop-shadow(6px 8px 0 rgba(0,0,0,0.5))' }}>
       {card}
     </div>
   ),
-  taglineExtra: { transform: 'skewX(-5deg)', textShadow: `3px 3px 0 ${PINK}`, textTransform: 'uppercase' },
+  /**
+   * The tagline PASTED UP as a ransom slip (#1630).
+   *
+   * The one slot on this page where the faction's metaphor is a physical object
+   * rather than a typeface: acid stock, photocopier ink, cut at a slight angle
+   * and stuck down with a hard offset shadow. `inline-block` is what makes it a
+   * slip instead of a band — the ground has to hug the words, and the shared
+   * `TaglineSlot` is a `<p>`.
+   *
+   * The ink is deliberately the INVERSE of every other line on this page: the
+   * page is near-black paper with acid headlines, so a slip is acid paper with
+   * near-black type, and the pairing is the same one measured either way round.
+   * The skewX and pink drop-shadow the slot wore before are gone — a slip that
+   * is both sheared AND rotated reads as a rendering error rather than a cut.
+   *
+   * The meta line beneath it needed nothing: `bodyFont` is already
+   * --faction-snide-font-type (Special Elite, declared in index.css and worn by
+   * six SNIDE surfaces), so the typewriter was there the whole time.
+   */
+  taglineExtra: {
+    display: 'inline-block',
+    background: ACID,
+    color: INK,
+    // 4px 12px 6px in the design; the bottom rounds to the 8px rung, since a
+    // 2px optical trim is not a spacing decision the scale needs to express.
+    padding: 'var(--space-xs) var(--space-md) var(--space-sm)',
+    transform: 'rotate(-0.7deg)',
+    boxShadow: '4px 4px 0 rgba(0,0,0,0.45)',
+    letterSpacing: '-0.01em',
+    textTransform: 'uppercase',
+  },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: INK,

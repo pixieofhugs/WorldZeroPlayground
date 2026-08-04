@@ -1,8 +1,9 @@
 /**
  * SingularityProfileBody — terminal / phosphor-on-void CRT player-profile skin
  * (#460). Ported from docs/design/profile/templates/Singularity Profile.dc.html:
- * a void panel with a faint blue graticule grid, green scanline overlay, `> `
- * command-prompt eyebrows, boxy hairline-blue borders, and a green-glow progress
+ * a void panel under a phosphor raster (#1630 swapped the blue graticule out —
+ * see PHOSPHOR_GROUND), green scanline overlay, `> ` command-prompt eyebrows,
+ * boxy hairline-blue borders, and a green-glow progress
  * bar. Singularity is ALWAYS DARK — its --faction-singularity-* tokens are
  * identical in both themes, so the container scopes data-theme="dark" to itself
  * and never mutates the global theme.
@@ -22,11 +23,28 @@ const BORDER = 'var(--faction-singularity-border-hard)'
 const FONT = 'var(--font-faction-terminal)' // Share Tech Mono
 
 const signal = (pct: number) => `color-mix(in srgb, ${SIGNAL} ${pct}%, transparent)`
+const phosphor = (pct: number) => `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`
 
-const GRID =
-  'repeating-linear-gradient(0deg, transparent, transparent 21px, rgba(37,99,235,0.10) 21px, rgba(37,99,235,0.10) 22px), repeating-linear-gradient(90deg, transparent, transparent 21px, rgba(37,99,235,0.10) 21px, rgba(37,99,235,0.10) 22px)'
+/**
+ * The page ground: a PHOSPHOR TERMINAL, not graph paper (#1630).
+ *
+ * This was a blue graticule — two crossed repeating-linear-gradients in
+ * `rgba(37,99,235,.10)` — which is the Ephemerists' ruled plate, drawn in
+ * Singularity's chrome blue. A faction whose whole identity is a CRT should not
+ * be grounded on somebody else's ruled paper, so the raster replaces it: hard
+ * scanlines on a 3px pitch over one faint bloom off the top-left corner, the way
+ * a phosphor tube lights unevenly.
+ *
+ * The design writes both as literal `rgba(74,222,128,·)`, which is the card
+ * accent's own hue with an alpha — #1169's "a raw rgba of a token's own hue is a
+ * hardcoded hex wearing a costume". Said as `color-mix` off the accent instead,
+ * they follow the token when the cascade flips the phosphor (§6: the chassis
+ * stays black, the phosphor moves), and the file loses two hand-written hexes.
+ */
+const PHOSPHOR_GROUND =
+  `repeating-linear-gradient(0deg, ${phosphor(5.5)} 0 1px, transparent 1px 3px), radial-gradient(120% 80% at 12% 0%, ${phosphor(12)}, transparent 60%)`
 const SCANLINES =
-  'repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.03) 2px, rgba(74,222,128,0.03) 4px)'
+  `repeating-linear-gradient(to bottom, transparent, transparent 2px, ${phosphor(3)} 2px, ${phosphor(3)} 4px)`
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
@@ -65,7 +83,7 @@ const kit: ProfileKit = {
   slug: 'singularity',
   dataTheme: 'dark',
   pageBackground: 'var(--faction-singularity-card-bg)',
-  pageOverlay: GRID,
+  pageOverlay: PHOSPHOR_GROUND,
   ink: PHOSPHOR,
   muted: signal(70),
   accent: PHOSPHOR,
