@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import {
@@ -7,6 +6,7 @@ import {
   CAPTION,
   DECO,
   DISC,
+  GlossedGlyph,
   INK,
   INNER,
   LotusSign,
@@ -56,67 +56,6 @@ import type { ScoreStampProps } from "./ScoreStamp";
 /** The octagon medallion, and its inner rule. Ornament geometry (§4a). */
 const MEDALLION = 104;
 const MEDALLION_INSET = 6;
-
-/**
- * The glyph's own voice, over whatever label voice it sits in (#1637).
- *
- * Three of the four properties exist to UNDO the surrounding voice rather than
- * to dress the glyph:
- *  • `textTransform` — `SMALL_CAPS` uppercases the plate's whole label tier, and
- *    uppercasing a kanji costs a `text-transform` and buys nothing. The design
- *    names this one out loud.
- *  • `fontStyle` — the tally line is set in italic Spectral, and a CJK fallback
- *    face has no italic, so the browser synthesises a slant. Undo it.
- *  • `fontSize` — the label tier is `--text-xs` (8px). A Latin label is scanned
- *    at that size; 基 is eleven strokes and simply fills in. `--text-xl` is the
- *    smallest token inside the 13-16px band the issue names as legible, and the
- *    labels are the only thing that grows: every figure keeps its own size.
- * `letterSpacing` is the design's 0.06em.
- */
-const GLYPH: CSSProperties = {
-  fontSize: "var(--text-xl)",
-  lineHeight: 1,
-  letterSpacing: "0.06em",
-  textTransform: "none",
-  fontStyle: "normal",
-};
-
-/**
- * A label the reader decodes (#1637): the kanji is what shows, and the English
- * is one gesture away on `title`.
- *
- * ONE attribute carries the whole reveal — a pointer opens it as a tooltip and
- * assistive tech reads it out — which is the owner's ruling and not an
- * incidental choice: a visually-hidden twin would be a second copy of the same
- * fact, free to drift from the one on screen. The gloss handed in here is
- * always the very string another faction's stamp prints, so the two cannot
- * disagree about what the row is called.
- *
- * `<abbr>` is the element for "short form, expansion available", and it is what
- * draws the native dotted underline — the only hint that there is anything to
- * look up. `tabIndex` is what makes FOCUS one of the gestures; without it the
- * glyph is pointer-only and the ruling's keyboard half is a word.
- *
- * ponytail: the reveal is the browser's own tooltip, so a sighted keyboard user
- * gets it only where focus tooltips are implemented. The upgrade is a
- * `:focus-visible` gloss reading `attr(title)` — that lives in `index.css`, is a
- * styling decision, and is not taken here.
- */
-function GlossedGlyph({
-  glyph,
-  gloss,
-  style,
-}: {
-  glyph: string;
-  gloss: string;
-  style?: CSSProperties;
-}) {
-  return (
-    <abbr title={gloss} tabIndex={0} style={{ ...style, ...GLYPH }}>
-      {glyph}
-    </abbr>
-  );
-}
 
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");

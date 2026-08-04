@@ -75,6 +75,73 @@ export const WASH = "var(--faction-ephemerists-plate-wash)";
 export const GRID = "var(--faction-ephemerists-grid)";
 
 /**
+ * The glyph's own voice, over whatever label voice it sits in (#1637).
+ *
+ * Three of the four properties exist to UNDO the surrounding voice rather than
+ * to dress the glyph:
+ *  • `textTransform` — {@link SMALL_CAPS} uppercases the plate's whole label
+ *    tier, and uppercasing a kanji costs a `text-transform` and buys nothing.
+ *  • `fontStyle` — the score stamp's tally line is set in italic Spectral, and a
+ *    CJK fallback face has no italic, so the browser synthesises a slant.
+ *  • `fontSize` — the label tier is `--text-xs` (8px). A Latin label is scanned
+ *    at that size; 基 is eleven strokes and simply fills in. `--text-xl` is the
+ *    smallest token inside the 13–16px band #1637 names as legible, so it is the
+ *    DEFAULT rather than the only value — a caller with its own ramp (the
+ *    masthead's two scales) passes `size` and keeps the three undos.
+ * `letterSpacing` is the design's 0.06em.
+ */
+const GLYPH_VOICE: CSSProperties = {
+  lineHeight: 1,
+  letterSpacing: "0.06em",
+  textTransform: "none",
+  fontStyle: "normal",
+};
+
+/**
+ * A label the reader decodes (#1637): the kanji is what shows, and the English
+ * is one gesture away on `title`.
+ *
+ * ONE attribute carries the whole reveal — a pointer opens it as a tooltip and
+ * assistive tech reads it out — which is the owner's ruling and not an
+ * incidental choice: a visually-hidden twin would be a second copy of the same
+ * fact, free to drift from the one on screen. The gloss handed in here is always
+ * the very string another surface prints in English, so the two cannot disagree
+ * about what the mark is called.
+ *
+ * `<abbr>` is the element for "short form, expansion available", and it is what
+ * draws the native dotted underline — the only hint that there is anything to
+ * look up. `tabIndex` is what makes FOCUS one of the gestures; without it the
+ * glyph is pointer-only and the ruling's keyboard half is a word.
+ *
+ * `.eph-gloss` in index.css is #1637's own ponytail taken up now that the
+ * component has a second consumer: a `:focus-visible` panel reading
+ * `attr(title)`, because the native tooltip is a POINTER affordance and a
+ * sighted keyboard user got nothing from it.
+ *
+ * The caller's `style` is overridden by the voice, not the other way round —
+ * every consumer hands in a label style whose casing, slant and size are exactly
+ * what the three undos exist to cancel.
+ */
+export function GlossedGlyph({ glyph, gloss, size, style }: {
+  glyph: string
+  gloss: string
+  /** The glyph's own optical size. Defaults to the smallest legible rung. */
+  size?: string
+  style?: CSSProperties
+}) {
+  return (
+    <abbr
+      className="eph-gloss"
+      title={gloss}
+      tabIndex={0}
+      style={{ ...style, ...GLYPH_VOICE, fontSize: size ?? "var(--text-xl)" }}
+    >
+      {glyph}
+    </abbr>
+  );
+}
+
+/**
  * The plate's STEPPED CORNER — top-left and bottom-right chamfered, so a cell
  * reads as cut from stone rather than rounded. The design draws it on the score
  * box (7), the ratio chip inside it (5), the byline cartouche (7) and the vote
