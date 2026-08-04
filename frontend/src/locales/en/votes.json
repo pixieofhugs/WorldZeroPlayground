@@ -68,9 +68,7 @@
     },
     "ephemerists": {
       "rateAria": "Cast {{label}}",
-      "prompt": "Cast your metal",
-      "idle": "cast your metal — lead to platinum",
-      "tag": "cast"
+      "prompt": "Cast your metal"
     },
     "everymen": {
       "rateAria": "Rate {{value}} — {{label}}",
