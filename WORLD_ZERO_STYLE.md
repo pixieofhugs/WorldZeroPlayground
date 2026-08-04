@@ -644,6 +644,16 @@ A vote plate is a scale, and a scale that has to be captioned is not one yet. Th
 
 **A decorative mark's accessible name is a different question from a decodable one's.** The kit's `GlossedGlyph` hides its English on `title`, and that is right *because* the English is a bonus already printed somewhere on screen: the tooltip is a convenience over a fact the reader can otherwise obtain. Where the glyph is the **only** carrier of its information, `title` is not an option — it is a pointer affordance, unreliably announced and unreachable on touch. That case takes a visually-hidden label (`sr-only`, already in the bundle). The test is one question, *is this word printed anywhere else on the surface?*, and it is worth asking out loud, because the two cases look identical in a design.
 
+### Two designs drawing one ornament at two densities is not drift (#1654)
+
+The Ephemerists' mark vocabulary lived in three files: the kit, plus a transcription in the task card and another in the task page — eleven local redefinitions, and a twelfth written out inline so no grep for a component *name* could see it. #849 above says why that happens; this is what to do when you find one, and the trap is in the second paragraph.
+
+**Diff every copy against the kit's before deleting it, because a copy that has drifted is a live defect and the kit's version may be the stale one.** Here nothing had: all sixteen glyph paths were byte-identical in all three tables, and both membership differences traced to a shipped issue.
+
+**But two numbers really did differ, and neither was wrong.** The card struck 40 cornice flutes and the page 52 — and the flutes are `flex: 1`, so the count *is* the fluting's pitch rather than a detail. Neither had drifted from the other: 40 came out of the task-card design and 52 out of the task-details design, months apart, and no shared source ever existed for them to diverge from. **A de-duplication that also picks a winner is a redesign wearing a refactor's clothes.** The count became a prop and both surfaces kept their drawing — which is #849's "parameterize what genuinely differs", with *genuinely* meaning traced to two designs rather than inferred from two numbers.
+
+**Sweep the PATH STRINGS, not the component names.** A transcription is invisible to the import graph and invisible to markup — both copies render perfectly — so the only seam that can hold it is the source tree, and a name check misses a copy that has been renamed, inlined or split up. The `d` string cannot be smuggled: `ephemeristsPlateSurfaces.test.tsx` asserts that each of the kit's glyph paths appears in exactly **one** file. The corollary for a reviewer is that a green suite proves nothing here — 118 tests passed over the eleven copies and passed again over the imports.
+
 ---
 
 ## 7. Components
