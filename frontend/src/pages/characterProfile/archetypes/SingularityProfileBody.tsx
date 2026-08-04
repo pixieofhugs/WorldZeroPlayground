@@ -87,13 +87,11 @@ const kit: ProfileKit = {
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: SCANLINES, zIndex: 3 }}
     />
   ),
-  nameSize: 48,
-  nameExtra: {
+  taglineExtra: {
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
     textShadow: '0 0 12px rgba(74,222,128,0.35)',
   },
-  playerEyebrow: (faction) => `> PLAYER: ${faction.toUpperCase()} // NODE STATUS: ONLINE`,
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: VOID,

@@ -41,13 +41,14 @@ import CredentialCard from '../../../components/CredentialCard'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
-import { factionFill, factionName, isKnownFaction } from '../../../utils/factions'
+import { factionFill, isKnownFaction } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import type { ProfileBodyProps } from '../FactionProfileBody'
-// The ② About block is shared with every faction kit — see profileSkin.tsx. This
-// is the one profile that does NOT delegate to `ProfileSkin`, so it mounts that
-// component itself rather than growing a second copy of the rule.
-import { AboutBlock } from './profileSkin'
+// The ② About block and the ① tagline slot are shared with every faction kit —
+// see profileSkin.tsx. This is the one profile that does NOT delegate to
+// `ProfileSkin`, so it mounts those components itself rather than growing a
+// second copy of either rule.
+import { AboutBlock, ProfileNameHeading, TaglineSlot } from './profileSkin'
 
 type Segment = 'praxis' | 'tasks'
 
@@ -237,7 +238,6 @@ function DesktopProfile({
   identityActions,
 }: ProfileBodyProps) {
   const { t } = useTranslation('common')
-  const isUnaffiliated = !character.faction_slug || character.faction_slug === 'na'
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
     month: 'short',
@@ -352,73 +352,31 @@ function DesktopProfile({
           </div>
 
           <div style={{ flex: 1, minWidth: 280 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
-              <span
-                aria-hidden
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  flex: 'none',
-                  background: 'var(--faction-default-rainbow-conic)',
-                  WebkitMask: 'radial-gradient(circle, transparent 38%, #000 40%)',
-                  mask: 'radial-gradient(circle, transparent 38%, #000 40%)',
-                }}
-              />
-              <span style={{ ...EYEBROW, color: 'var(--faction-default-card-muted)' }}>
-                {t('profile.playerFaction', {
-                  faction: isUnaffiliated ? t('profile.unaffiliated') : factionName(character.faction_slug),
-                })}
-              </span>
-            </div>
-
-            <h1
-              className="font-display italic"
+            {/* ① The column's display line (#1629). The spectrum-ring eyebrow,
+                the display name and the "Unaffiliated · faction pending"
+                caption all stood here; the credential card to the left says the
+                name and the faction, so the column carries the player's own
+                line and nothing else. Blank until someone writes one. The name
+                stays as the page's <h1>, for the outline only. */}
+            <ProfileNameHeading name={character.display_name} />
+            <TaglineSlot
+              tagline={character.tagline}
               style={{
-                fontSize: 'var(--text-display)',
-                lineHeight: 0.98,
-                margin: 0,
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
                 color: 'var(--faction-default-card-text)',
-                overflowWrap: 'anywhere',
               }}
-            >
-              {character.display_name}
-            </h1>
+            />
 
             <div
+              className="font-body"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-md)',
-                flexWrap: 'wrap',
+                fontSize: 'var(--text-content)',
+                color: 'var(--color-text-tertiary)',
                 marginTop: 'var(--space-md)',
               }}
             >
-              {isUnaffiliated && (
-                <>
-                  <span
-                    className="font-display italic"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
-                  >
-                    {t('profile.unaffiliatedPending')}
-                  </span>
-                  <span
-                    aria-hidden
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: '50%',
-                      background: 'var(--color-text-tertiary)',
-                    }}
-                  />
-                </>
-              )}
-              <span
-                className="font-body"
-                style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}
-              >
-                {t('profile.handleJoined', { username: character.username, joined })}
-              </span>
+              {t('profile.handleJoined', { username: character.username, joined })}
             </div>
 
             {/* progression panel */}
@@ -650,35 +608,10 @@ function MobileProfile({
               gap: 'var(--space-md)',
             }}
           >
-            {/* eyebrow: spectrum-ring dot + Player · Unaffiliated */}
-            <span
-              style={{
-                ...EYEBROW,
-                color: isUnaffiliated ? 'var(--faction-default-card-muted)' : 'var(--color-text-tertiary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 'var(--space-sm)',
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  flex: 'none',
-                  ...factionFill(character.faction_slug, 'dot'),
-                  WebkitMask: 'radial-gradient(circle, transparent 38%, #000 40%)',
-                  mask: 'radial-gradient(circle, transparent 38%, #000 40%)',
-                }}
-              />
-              {t('profile.playerFaction', {
-                faction: isUnaffiliated ? t('profile.unaffiliated') : factionName(character.faction_slug),
-              })}
-            </span>
-
             {/* identity header — the shared credential card (its Unaffiliated
-                state wears the spectrum ring; themed slugs keep their accent) */}
+                state wears the spectrum ring; themed slugs keep their accent).
+                The spectrum-dot "Player · Unaffiliated" eyebrow that sat above
+                it went with #1629, on the phone as on the laptop. */}
             <CredentialCard
               displayName={character.display_name}
               handle={character.username}
@@ -688,34 +621,28 @@ function MobileProfile({
               avatarUrl={character.avatar_url ? mediaUrl(character.avatar_url) : null}
             />
 
-            {/* subtitle: faction-pending (na only) + handle / joined */}
-            <div
+            {/* ① the column's display line, centred under the card — the same
+                shared slot the laptop mounts (#1629), over the same outline-only
+                <h1>. */}
+            <ProfileNameHeading name={character.display_name} />
+            <TaglineSlot
+              tagline={character.tagline}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-sm)',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                margin: '0 auto',
+                color: isUnaffiliated
+                  ? 'var(--faction-default-card-text)'
+                  : 'var(--color-text-primary)',
               }}
-            >
-              {isUnaffiliated && (
-                <>
-                  <span
-                    className="font-display italic"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
-                  >
-                    {t('profile.unaffiliatedPending')}
-                  </span>
-                  <span
-                    aria-hidden
-                    style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--color-text-tertiary)' }}
-                  />
-                </>
-              )}
-              <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}>
-                {t('profile.handleJoined', { username: character.username, joined })}
-              </span>
-            </div>
+            />
+
+            {/* subtitle: handle / joined. The "Unaffiliated · faction pending"
+                caption that led this line is gone (#1629). */}
+            <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}>
+              {t('profile.handleJoined', { username: character.username, joined })}
+            </span>
 
             {/* progression panel — level ring + points-into-level bar */}
             {progression && (

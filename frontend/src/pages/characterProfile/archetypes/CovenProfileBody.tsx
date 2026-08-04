@@ -116,13 +116,7 @@ const kit: ProfileKit = {
     boxShadow: SHADOW,
   },
   headerDecoration: <Watermark />,
-  nameSize: 56,
-  nameExtra: { fontFamily: HAND },
-  // #1291: this read "Player · Warriors of Whimsy" — WOW's name, carried over
-  // with the geometry when this body was ported from WOW's template. Resolved
-  // from `slug` through the factions.json catalog now (ADR-0038), so a future
-  // port cannot bring another faction's name with it.
-  playerEyebrow: (faction) => `Player · ${faction}`,
+  taglineExtra: { fontFamily: HAND },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: CARD,

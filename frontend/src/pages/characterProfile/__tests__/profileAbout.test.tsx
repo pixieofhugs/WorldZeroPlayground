@@ -82,12 +82,17 @@ beforeEach(() => {
   mocks.formFactor = 'desktop'
 })
 
-/** The three renderers, at both widths — `[case, slug, form factor]`. */
+/** The renderers, at both widths — `[case, slug, form factor]`. */
 const BRANCHES: Array<[string, string, 'desktop' | 'mobile']> = [
   ['the na desktop grid', 'na', 'desktop'],
   ['the MobileProfile phone stack', 'na', 'mobile'],
   ['a faction kit through ProfileSkin', 'coven', 'desktop'],
   ['a faction kit on a phone', 'coven', 'mobile'],
+  // The FOURTH renderer, missed when #1626 counted three: WOW's phone stack is
+  // a bespoke `MobileProfile` (#901) that routes through neither `ProfileSkin`
+  // nor `DefaultProfileBody`, so a WOW player on a phone could write a bio in
+  // Settings and never see it rendered anywhere. Same shared block, mounted.
+  ['the WOW pavilion phone stack', 'wow', 'mobile'],
 ]
 
 describe.each(BRANCHES)('② About on %s', (_case, slug, formFactor) => {

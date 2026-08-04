@@ -35,7 +35,6 @@ import { badgeArtFor } from '../../../components/badges/badgeArt'
 import CredentialCard from '../../../components/CredentialCard'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
-import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 
@@ -92,29 +91,19 @@ export interface ProfileKit {
   headerDecoration?: ReactNode
   /** Optional wrapper chrome placed AROUND the shared CredentialCard. */
   credentialFrame?: (card: ReactNode) => ReactNode
-  /** px font-size for the big display name (default 48).
-   *  ornament: masthead display type. Each archetype's name size is optical
-   *  compensation for its own display font (Bebas Neue at 72 and IM Fell
-   *  English at 56 read at the same optical weight) — it is the archetype's
-   *  identity (§270), sits far above the content floor, and so stays raw.
-   *  This is the ONE size a kit may carry; a kit's `badgeRow` `nameStyle`
-   *  must NOT set fontSize — the shared `BadgeRow` owns that. */
-  nameSize?: number
-  /** Optional CSS text-shadow / transform on the name. */
-  nameExtra?: CSSProperties
-  /** Eyebrow above the name, e.g. "Player · Cozy Coven".
+  /** Ink, face and any transform for the identity column's display line — the
+   *  {@link TaglineSlot}.
    *
-   *  Prefer the FUNCTION form: it is handed the faction's display name resolved
-   *  from `slug` through the factions.json catalog (ADR-0038), so the eyebrow
-   *  cannot name a faction other than the one it skins. Coven's eyebrow read
-   *  "Player · Warriors of Whimsy" for a year because it was a literal that rode
-   *  in with a ported template (#1291) — a literal replacement would only have
-   *  reset the same trap.
+   *  It was `nameExtra` until #1629, when the display NAME left the column and
+   *  the tagline took the slot. The dress carried over with the slot rather
+   *  than being re-derived: several of these are ink CORRECTIONS for a header
+   *  band that is a different stock from the kit's `surface` (#1636), and
+   *  dropping them would have put an ink measured for the panel back onto the
+   *  band. The `nameSize` knob did NOT carry over — the slot owns its size,
+   *  because a slogan is read where a masthead is looked at.
    *
-   *  A plain string is still accepted for the one eyebrow whose wording is not
-   *  derivable from the catalog (UA spells its institution out where the catalog
-   *  holds the initials). `factionProfileBody.test.tsx` guards either form. */
-  playerEyebrow: string | ((factionName: string) => string)
+   *  A kit must NOT set `fontSize` here; the shared slot owns it. */
+  taglineExtra?: CSSProperties
 
   /* ── progression panel ── */
   /** Style for the progression panel container. */
@@ -285,6 +274,80 @@ export function AboutBlock({
   )
 }
 
+/**
+ * ① The identity column's display line — `character.tagline` (#1629).
+ *
+ * It stands where the display NAME used to. The name already reads off the
+ * credential card pinned beside it, so the column repeated it; the slogan the
+ * player wrote is the one thing that slot could say that nothing else does.
+ *
+ * ONE SLOT, NOT NINE, on {@link AboutBlock}'s pattern: `ProfileSkin` mounts it
+ * for the seven kits and `DefaultProfileBody` mounts the same component in each
+ * of its two branches. A kit dresses it through `style` — ink, face, tracking,
+ * the header band's own corrections — and never re-implements it.
+ *
+ * The caller owns `margin` (the phone stack centres it); the SIZE and the
+ * MEASURE are the slot's own. `--text-heading` is the design's 30px landing on
+ * the type scale: a tagline is read, so §4a's ornament hatch does not cover it
+ * and it takes a tier rather than a raw number. 22ch keeps it a slogan — a
+ * measure in `ch` so it follows whatever face the kit hands it.
+ *
+ * Hidden when empty, per the house rule. No character has written one yet, so
+ * on day one this column is credential card, level ring and progression bar —
+ * that is the design, not a missing placeholder.
+ */
+export function TaglineSlot({
+  tagline,
+  style,
+}: {
+  tagline?: string | null
+  /** Ink + face for the line, from the kit or the na sheet. */
+  style?: CSSProperties
+}) {
+  const text = (tagline ?? '').trim()
+  if (!text) return null
+  return (
+    <p
+      style={{
+        fontFamily: 'var(--font-display)',
+        color: 'var(--color-text-primary)',
+        margin: 0,
+        ...style,
+        fontSize: 'var(--text-heading)',
+        lineHeight: 1.16,
+        maxWidth: '22ch',
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {text}
+    </p>
+  )
+}
+
+/**
+ * The page's top heading level, for the outline only.
+ *
+ * Deleting the identity column's display name (#1629) was right — the
+ * credential card beside it already says the name — but that name was also the
+ * ONLY `<h1>` this route rendered, on every profile but WOW's phone stack, and
+ * the route mounts no `PageTitle`. `CredentialCard`'s name is a `<div>`, so the
+ * card does not supply one either. That left a page with no top level to its
+ * document outline: a screen-reader user lost the "what page am I on" landmark
+ * that every other route hands them for free.
+ *
+ * VISUALLY HIDDEN, not small: making it visible would put back exactly the line
+ * the design removed. `sr-only` is Tailwind's own utility (already live in
+ * `RequestsQueue`), so nothing here hand-rolls a clip rect.
+ *
+ * ONE SLOT, NOT NINE, beside {@link TaglineSlot} — `ProfileSkin` for the seven
+ * kits, `DefaultProfileBody` in each of its two branches. WOW's phone header is
+ * the deliberate omission: it has no credential card (#901), so its name is a
+ * VISIBLE `<h1>` already, and a second one would be its own defect.
+ */
+export function ProfileNameHeading({ name }: { name: string }) {
+  return <h1 className="sr-only">{name}</h1>
+}
+
 /** Shared badge-row primitive: a skinnable medallion + the badge name. Kits
  *  pass their medallion chrome; the glyph is mapped client-side by badge key. */
 export function BadgeRow({
@@ -362,13 +425,6 @@ export function ProfileSkin({
     ? kit.formatLevel(character.level)
     : String(character.level)
   const levelUnit = kit.levelUnitLabel ?? 'pts this level'
-
-  // Resolved from the KIT's slug, not the character's: the kit is the archetype
-  // speaking about itself, and `character.faction_slug` is nullable.
-  const playerEyebrow =
-    typeof kit.playerEyebrow === 'function'
-      ? kit.playerEyebrow(factionName(kit.slug))
-      : kit.playerEyebrow
 
   const credential = (
     <CredentialCard
@@ -485,33 +541,15 @@ export function ProfileSkin({
                 266px credential, so it becomes a full-row basis and the header
                 wraps to one column instead of squeezing. */}
             <div style={{ flex: 1, minWidth: mobile ? '100%' : 300 }}>
-              <div
-                style={{
-                  fontFamily: kit.eyebrowFont,
-                  fontSize: 'var(--text-sm)',
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
-                  color: headerMuted,
-                  marginBottom: 'var(--space-sm)',
-                }}
-              >
-                {playerEyebrow}
-              </div>
-
-              <h1
-                style={{
-                  fontFamily: kit.displayFont,
-                  // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type, per-archetype identity (see ProfileKit.nameSize); §6 keeps each archetype's display cut rather than regularizing it.
-                  fontSize: kit.nameSize ?? 48,
-                  lineHeight: 0.98,
-                  margin: 0,
-                  color: kit.ink,
-                  overflowWrap: 'anywhere',
-                  ...kit.nameExtra,
-                }}
-              >
-                {character.display_name}
-              </h1>
+              {/* The "PLAYER · <FACTION>" eyebrow and the display name that sat
+                  here are gone (#1629): the credential card to the left says
+                  both, and the column carries the player's own line instead.
+                  The name stays as the page's <h1> for the outline only. */}
+              <ProfileNameHeading name={character.display_name} />
+              <TaglineSlot
+                tagline={character.tagline}
+                style={{ fontFamily: kit.displayFont, color: kit.ink, ...kit.taglineExtra }}
+              />
 
               <div
                 style={{

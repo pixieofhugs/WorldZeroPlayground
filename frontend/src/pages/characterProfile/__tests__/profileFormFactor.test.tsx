@@ -184,7 +184,11 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
   it('still renders the desktop body on a wide viewport', () => {
     const html = renderBody({ faction_slug: 'na' })
     expect(html).not.toContain('data-testid="mobile-profile"')
-    expect(html, 'desktop na copy').toContain('Unaffiliated · faction pending')
+    // The "Unaffiliated · faction pending" caption this used to look for was
+    // deleted by #1629 (guarded in factionProfileBody.test.tsx). The desktop
+    // branch's own mark is the praxis section heading, which the phone stack
+    // replaces with a segmented toggle.
+    expect(html, 'desktop na copy').toContain('sealed by Reza')
   })
 })
 

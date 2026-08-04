@@ -106,9 +106,9 @@ const kit: ProfileKit = {
       />
     </>
   ),
-  nameSize: 48,
-  nameExtra: { color: BAND_INK, letterSpacing: '0.08em', textTransform: 'uppercase' },
-  playerEyebrow: (faction) => `Player · ${faction}`,
+  // BAND_INK, not `ink`: the slot sits on the plate's cornice band, which is a
+  // different stock from the panel `ink` was measured for (#1636).
+  taglineExtra: { color: BAND_INK, letterSpacing: '0.08em', textTransform: 'uppercase' },
   progressionStyle: {
     marginTop: 'var(--space-xl)',
     background: 'transparent',

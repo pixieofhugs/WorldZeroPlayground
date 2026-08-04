@@ -8,9 +8,16 @@
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import type { CharacterOut } from "../../../api/auth";
+
+const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "mobile" | "desktop" }));
+
+vi.mock("../../../hooks/useFormFactor", () => ({
+  useFormFactor: () => mocks.formFactor,
+}));
+
 import FactionProfileBody, {
   type ProfileBodyProps,
 } from "../FactionProfileBody";
@@ -57,6 +64,10 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
     </MemoryRouter>,
   );
 }
+
+beforeEach(() => {
+  mocks.formFactor = "desktop";
+});
 
 describe("FactionProfileBody dispatch", () => {
   it("registers the seven bespoke faction skins (#460, #900)", () => {
@@ -106,7 +117,10 @@ describe("FactionProfileBody dispatch", () => {
   // this used to pass already landed.
   it("renders the default skin for an unaffiliated (na) character", () => {
     const html = renderBody({ faction_slug: "na" });
-    expect(html).toContain("Unaffiliated · faction pending");
+    // The "Unaffiliated · faction pending" caption this used to assert was
+    // deleted by #1629 — see the identity-header block below, which now guards
+    // its absence on every skin. The default skin is still identified here by
+    // its own empty-state copy.
     expect(html).toContain("Wren Aldercross");
     expect(html).toContain("No praxis sealed yet");
   });
@@ -123,13 +137,9 @@ describe("FactionProfileBody dispatch", () => {
       "na",
     ]) {
       const html = renderBody({ faction_slug: slug });
+      // Still the credential card's name — the identity column's copy of it
+      // went with #1629.
       expect(html, `${slug} renders a profile`).toContain("Wren Aldercross");
-      // The faction-pending line is unaffiliated-only copy.
-      if (slug !== "na") {
-        expect(html, `${slug} is not labelled faction-pending`).not.toContain(
-          "faction pending",
-        );
-      }
     }
   });
 
@@ -184,3 +194,131 @@ describe("FactionProfileBody dispatch", () => {
     expect(html).toContain("120 / 300 pts this level");
   });
 });
+
+/**
+ * The identity header, at both widths and on every skin (#1629).
+ *
+ * Three deletions and one arrival, all in the SHARED layer — `ProfileSkin` for
+ * the seven kits, `DefaultProfileBody`'s two branches for na / albescent / any
+ * unskinned slug. The sweep is one loop over the slugs rather than an assertion
+ * per skin, so the next bespoke body is covered the moment its manifest row
+ * lands; the form-factor axis is here because the phone stack is a separate
+ * component, not the same layout at a narrower width.
+ */
+const SLUGS = [
+  "na",
+  "albescent",
+  "ua",
+  "coven",
+  "snide",
+  "ephemerists",
+  "singularity",
+  "everymen",
+  "wow",
+];
+
+/** Every wording the deleted `playerEyebrow` knob ever produced. A skin that
+ *  grows the line back reads as one of these, whatever it calls it. */
+const EYEBROW_FRAGMENTS = ["Player ·", "PLAYER:", "Practising ·", "· the Court"];
+
+const TAGLINE = "Small acts, kept up.";
+
+/** The measure the shared slot sets — its fingerprint in the markup. */
+const TAGLINE_MEASURE = "max-width:22ch";
+
+/** The visually-hidden heading the shared layer mounts — stripped before any
+ *  assertion about what a SIGHTED reader meets. */
+const SR_HEADING = /<h1 class="sr-only">[\s\S]*?<\/h1>/g;
+
+const nameCount = (html: string) =>
+  html.replace(SR_HEADING, "").split("Wren Aldercross").length - 1;
+
+/** The text of every `<h1>` in the render, in document order. */
+const headings = (html: string) =>
+  [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)].map((match) =>
+    match[1].replace(/<[^>]*>/g, "").trim(),
+  );
+
+describe.each(["desktop", "mobile"] as const)(
+  "① identity header on %s (#1629)",
+  (formFactor) => {
+    const render = (overrides: Partial<CharacterOut> = {}) => {
+      mocks.formFactor = formFactor;
+      return renderBody(overrides);
+    };
+
+    it.each(SLUGS)(
+      "carries exactly one <h1>, and it is the display name — %s",
+      (slug) => {
+        // COUNT, not presence, and it is the whole test. Deleting the identity
+        // column's name (#1629) took the route's only <h1> with it on every
+        // skin but one, so a profile shipped with no top level to its document
+        // outline — a screen-reader user lost the "what page am I on" landmark
+        // and `CredentialCard`'s name is a <div>, so the card supplies nothing.
+        // The other half is the opposite defect: WOW's phone header already
+        // owns a VISIBLE <h1> (#901), so a shared heading mounted blindly would
+        // hand that one profile two. `toEqual` on the array fails both ways.
+        expect(
+          headings(render({ faction_slug: slug, tagline: TAGLINE })),
+          `${slug} <h1>s`,
+        ).toEqual(["Wren Aldercross"]);
+      },
+    );
+
+    it.each(SLUGS)("drops the PLAYER · FACTION eyebrow — %s", (slug) => {
+      const text = render({ faction_slug: slug }).replace(/<[^>]*>/g, " ");
+      for (const fragment of EYEBROW_FRAGMENTS) {
+        expect(text, `${slug} still wears "${fragment}"`).not.toContain(fragment);
+      }
+    });
+
+    it.each(SLUGS)("drops the affiliation caption — %s", (slug) => {
+      // na-only copy, but asserted everywhere: it is the line a ported template
+      // carries across (#1291), and nothing should reintroduce it.
+      expect(render({ faction_slug: slug })).not.toContain("faction pending");
+    });
+
+    it.each(SLUGS)("renders the tagline when there is one — %s", (slug) => {
+      const html = render({ faction_slug: slug, tagline: TAGLINE });
+      expect(html, "the tagline itself").toContain(TAGLINE);
+      expect(html, "the shared slot's measure").toContain(TAGLINE_MEASURE);
+    });
+
+    it.each(SLUGS)("hides the slot entirely when blank — %s", (slug) => {
+      // "" is the wire default and a whitespace-only draft is the other blank a
+      // player can type. Neither may leave an empty display line behind.
+      for (const tagline of ["", "   \n "]) {
+        const html = render({ faction_slug: slug, tagline });
+        expect(html, `${slug} slot on a blank tagline`).not.toContain(
+          TAGLINE_MEASURE,
+        );
+      }
+    });
+
+    it.each(SLUGS)(
+      "keeps the display name on the credential card and nowhere in the identity column — %s",
+      (slug) => {
+        const html = render({ faction_slug: slug, tagline: TAGLINE });
+        // VISIBLE sites only — `nameCount` strips the sr-only <h1>, which is
+        // the point of it: restoring the document outline must not restore the
+        // display line the design deleted.
+        //
+        // The name reads off the credential card, which is why the column no
+        // longer repeats it. Two remaining sites on a laptop: the card, and the
+        // praxis section's "sealed by {name}" eyebrow. The phone stack has no
+        // praxis eyebrow, so na / albescent are down to the card alone.
+        //
+        // WOW's phone skin is the one profile with NO credential card — its
+        // header IS an avatar hoop over an <h1> name (#901). Deleting that name
+        // would leave a nameless profile, which is the opposite of what the
+        // design asks for, so it keeps its one copy and takes the tagline under
+        // it. Flagged on the PR.
+        const praxisEyebrow =
+          formFactor === "desktop" || !["na", "albescent", "wow"].includes(slug);
+        expect(nameCount(html), `${slug} name sites`).toBe(
+          1 + (praxisEyebrow ? 1 : 0),
+        );
+      },
+    );
+  },
+);
