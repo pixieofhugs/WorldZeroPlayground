@@ -68,7 +68,13 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { useTranslation } from 'react-i18next'
 import type { ProfileBodyProps } from '../FactionProfileBody'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import {
+  BadgeRow,
+  ProfileSkin,
+  SpectrumLaurel,
+  TaglineSlot,
+  type ProfileKit,
+} from './profileSkin'
 
 type Segment = 'praxis' | 'tasks'
 
@@ -382,6 +388,23 @@ function MobileProfile({
           >
             {character.display_name}
           </h1>
+
+          {/* ① the shared tagline slot (#1629), centred under the name.
+              THE NAME STAYS HERE, and this is the one profile where it does:
+              the pavilion's phone header has no credential card (#901) — the
+              avatar hoop and this <h1> ARE the identity — so the delta that
+              deletes the column's name everywhere else would leave a nameless
+              profile. The eyebrow below is the pavilion's own motto, not the
+              retired `playerEyebrow` slot, so it stays too. */}
+          <TaglineSlot
+            tagline={character.tagline}
+            style={{
+              fontFamily: WOW_DISPLAY,
+              color: WOW_INK,
+              margin: 'var(--space-xs) auto 0',
+            }}
+          />
+
           <div
             style={{
               fontFamily: WOW_BODY,
