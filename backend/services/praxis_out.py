@@ -142,6 +142,7 @@ async def build_praxis_out(
         metatask_points,
         display_multiplier,
         points_from_votes,
+        habit_bonus_points,
         score,
     ) = _resolve_card_scoring(contribution, task_point_value, tally.points_from_votes)
 
@@ -232,6 +233,7 @@ async def build_praxis_out(
         metatask_points=metatask_points,
         display_multiplier=display_multiplier,
         points_from_votes=points_from_votes,
+        habit_bonus_points=habit_bonus_points,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         duel_id=duel_id,
@@ -498,20 +500,26 @@ async def duel_opponents_for(
 
 def _resolve_card_scoring(
     contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
-) -> tuple[int, float, int, float]:
+) -> tuple[int, float, int, int, float]:
     """Resolve the score fields from a Contribution (ADR-0053).
 
-    Returns ``(metatask_points, display_multiplier, points_from_votes, score)``.
-    ``display_multiplier`` is faction × duel collapsed into one value, and
-    ``score`` is the contribution's own total — for EVERY praxis type. There is
-    no collab carve-out: a collab praxis has exactly one author, so it has
-    exactly one faction and one multiplier (ADR-0053 supersedes ADR-0047, whose
-    collab branch contradicted its own author-scoping principle).
+    Returns ``(metatask_points, display_multiplier, points_from_votes,
+    habit_bonus_points, score)``. ``display_multiplier`` is faction × duel
+    collapsed into one value, and ``score`` is the contribution's own total — for
+    EVERY praxis type. There is no collab carve-out: a collab praxis has exactly
+    one author, so it has exactly one faction and one multiplier (ADR-0053
+    supersedes ADR-0047, whose collab branch contradicted its own author-scoping
+    principle).
 
     The invariant the payload upholds, with no exception::
 
         score = (task_point_value + metatask_points) × display_multiplier
-                + points_from_votes
+                + points_from_votes + habit_bonus_points
+
+    ``habit_bonus_points`` (#1617) joins that line rather than hiding inside
+    ``score``: it is flat, it is outside the multiplier, and a term that moves
+    the total without appearing in the breakdown is how a card and a detail page
+    start disagreeing.
 
     A duel side's multiplier is LIVE and PROVISIONAL — it moves when the
     opponent is voted, and a currently-behind Snide side reads ×0.0 (ADR-0052).
@@ -522,6 +530,7 @@ def _resolve_card_scoring(
             0,
             1.0,
             tally_votes_points,
+            0,
             float(task_point_value + tally_votes_points),
         )
 
@@ -529,6 +538,7 @@ def _resolve_card_scoring(
         contribution.metatask_points,
         contribution.faction_multiplier * contribution.duel_multiplier,
         contribution.points_from_votes,
+        contribution.habit_bonus_points,
         contribution.total,
     )
 
@@ -632,6 +642,7 @@ async def build_praxis_card_out(
         metatask_points,
         display_multiplier,
         points_from_votes,
+        habit_bonus_points,
         score,
     ) = _resolve_card_scoring(contribution, task_point_value, tally.points_from_votes)
 
@@ -685,6 +696,7 @@ async def build_praxis_card_out(
         metatask_points=metatask_points,
         display_multiplier=display_multiplier,
         points_from_votes=points_from_votes,
+        habit_bonus_points=habit_bonus_points,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         applied_metatasks=praxis_metatasks,

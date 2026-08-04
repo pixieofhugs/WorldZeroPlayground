@@ -160,14 +160,25 @@ def compute_praxis_score(
     total_stars: int,
     meta_task_points: int = 0,
     duel_multiplier: float = 1.0,
+    habit_bonus: int = 0,
 ) -> float:
     """Score for a single praxis or collaboration member.
 
-    Formula: (task_point_value + meta_task_points) × faction_multiplier × duel_multiplier + total_stars
+    Formula: (task_point_value + meta_task_points) × faction_multiplier × duel_multiplier
+             + total_stars + habit_bonus
 
     - Base points are awarded on publication.
     - Each star from community votes adds flat after all multipliers.
     - meta_task_points: flat bonus from an attached meta task (0 if none).
     - duel_multiplier: 1.0 for solo/collab; outcome-based for duels.
+    - habit_bonus: the #1617 faction habit ability, stamped at seal time onto
+      ``PraxisMember.habit_bonus_points``. **Flat, outside the parentheses**
+      (owner ruling): habit and faction alignment are different incentives, and
+      folding it inside would make the same ability worth 50% more under an era
+      with a 1.2 own-faction modifier than under Era 1's 1.0.
     """
-    return (task_point_value + meta_task_points) * faction_multiplier * duel_multiplier + total_stars
+    return (
+        (task_point_value + meta_task_points) * faction_multiplier * duel_multiplier
+        + total_stars
+        + habit_bonus
+    )

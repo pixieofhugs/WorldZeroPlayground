@@ -48,6 +48,7 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
     display_multiplier: 0.8,
     metatask_points: 0,
     points_from_votes: 4,
+    habit_bonus_points: 0,
     score: 13.6,
     ...overrides,
   } as PraxisCardOut
@@ -96,6 +97,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       display_multiplier: 1,
       metatask_points: 0,
       points_from_votes: 0,
+      habit_bonus_points: 0,
       score: 10,
     })
     expect(scoreBreakdown(bare)).toEqual({
@@ -124,6 +126,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       display_multiplier: 1,
       metatask_points: 0,
       points_from_votes: 0,
+      habit_bonus_points: 0,
       score: 99,
     })
     expect(scoreBreakdown(drifted).base).toBe(10)
@@ -528,6 +531,7 @@ describe('the base row leaves every stamp when it restates the total (#1131)', (
     display_multiplier: 1,
     metatask_points: 0,
     points_from_votes: 0,
+    habit_bonus_points: 0,
     score: 10,
   })
 
@@ -659,6 +663,7 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
     metatask_points: 0,
     display_multiplier: 0.8,
     points_from_votes: 4,
+    habit_bonus_points: 0,
     is_top_for_task: false,
     duel_id: null,
     can_flag: true,
@@ -728,6 +733,7 @@ describe('the Ephemerists label their score in kanji (#1637)', () => {
           display_multiplier: 1.2,
           metatask_points: 0,
           points_from_votes: 4,
+          habit_bonus_points: 0,
           score: 52,
         })}
       />,
