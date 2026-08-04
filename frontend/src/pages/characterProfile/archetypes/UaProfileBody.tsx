@@ -18,6 +18,7 @@ import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import Lotus from '../../../components/factionMarks/Lotus'
 import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/factionMarks/uaAtoms'
 
 const INK = 'var(--faction-ua-card-text)'
@@ -81,6 +82,37 @@ const kit: ProfileKit = {
     padding: 'var(--space-2xl) var(--space-3xl)',
     marginBottom: 'var(--space-3xl)',
   },
+  /**
+   * The lotus ghosted into the header's ground (#1630).
+   *
+   * The faction's third device, and the one the mandala's `strength` ruling does
+   * NOT govern (§6, #1023): the mandala is radial concentric geometry with a
+   * scope of its own, where the lotus is a ground wash — the same wash
+   * `UaPraxisCard` floats off its left edge. This is the header's version of it,
+   * bleeding off the right.
+   *
+   * Every number here is layout geometry rather than a spacing decision, which
+   * is why none of them is a `--space-*` rung: 340 is the mark's own drawn size
+   * (a `size` prop, not a style), and −40 is how far it bleeds past the band's
+   * edge before `ProfileSkin`'s `overflow: hidden` crops it. Inert and behind
+   * the content, which the shared header lifts to z-index 2.
+   */
+  headerDecoration: (
+    <div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        top: '50%',
+        right: -40,
+        transform: 'translateY(-50%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+        lineHeight: 0,
+      }}
+    >
+      <Lotus size={340} color="var(--faction-ua)" opacity={0.1} />
+    </div>
+  ),
   credentialFrame: (card) => (
     <div
       style={{

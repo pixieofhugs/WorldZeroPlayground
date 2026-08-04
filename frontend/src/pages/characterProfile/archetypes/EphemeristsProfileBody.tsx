@@ -120,6 +120,12 @@ const kit: ProfileKit = {
     maxWidth: 440,
   },
   ringLabel: 'grade',
+  // The grade ring is a brass instrument, so its label is engraved rather than
+  // whispered (#1630). Not free from #1645's card-* repoint, which is where this
+  // was expected to fall out: that landed `--faction-ephemerists-card-accent` on
+  // the brass, and this kit reads none of the `card-*` family — its accent is
+  // `-plate-nile` and this label was `-plate-quiet`. 11.04:1 on the plate.
+  ringLabelInk: BRASS_LIGHT,
   barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
   barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
   formatLevel: grade,

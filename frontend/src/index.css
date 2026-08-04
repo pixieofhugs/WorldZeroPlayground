@@ -6227,3 +6227,35 @@
 @media (prefers-reduced-motion: no-preference) {
   .alb-profile-edge { animation: alb-profile-edge 9s linear infinite; }
 }
+
+/* Coven — the candle catching the profile header (#1630). Eight CovenSigil
+   marks scattered over the identity band, twinkling on a 5.5s loop with a
+   per-mark delay so the field never pulses in unison.
+
+   The delay is the one thing that differs per instance, so it arrives as a
+   custom property set at the call site (`--cvn-spark-delay`) — the shape
+   `.alb-spark` and `--ev-spark-delay` already use, and the reason this is one
+   rule instead of eight.
+
+   Reduced motion parks the field at a steady low opacity rather than freezing
+   it: opacity .12 is the keyframe's own resting value and a spark stopped there
+   reads as dirt on the paper. Same call `.alb-spark` makes for the same
+   reason. */
+@keyframes cvn-profile-spark {
+  0%, 100% { opacity: 0.12; transform: scale(0.8); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+.cvn-profile-spark {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  line-height: 0;
+  opacity: 0.4;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-profile-spark {
+    opacity: 0.12;
+    animation: cvn-profile-spark 5.5s ease-in-out infinite;
+    animation-delay: var(--cvn-spark-delay, 0s);
+  }
+}
