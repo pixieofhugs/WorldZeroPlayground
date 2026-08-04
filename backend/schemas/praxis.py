@@ -100,12 +100,18 @@ class PraxisOut(WireModel):
     # The one authoritative number for this praxis (ADR-0053, supersedes
     # ADR-0047). Computed for the praxis AUTHOR, for every type incl. collab:
     #   score = (task_point_value + metatask_points) × display_multiplier
-    #           + points_from_votes
+    #           + points_from_votes + habit_bonus_points
     # "Merit" (base + votes, multipliers ignored) is retired.
     score: float                # populated by build_praxis_out; the computed total
     metatask_points: int = 0    # populated by build_praxis_out
     display_multiplier: float = 1.0  # faction × duel collapsed; 1.0 when nothing applies
     points_from_votes: int = 0  # populated by build_praxis_out
+    # The #1617 faction habit bonus, as stamped on the author's PraxisMember row
+    # at seal time. FLAT — it sits outside the multiplier, beside the votes. It
+    # is on the wire because it is a term of `score`, and a term that moves the
+    # total without appearing in the breakdown is how a card and a detail page
+    # start disagreeing. 0 for every faction that grants no such ability.
+    habit_bonus_points: int = 0  # populated by build_praxis_out
     voter_count: int = 0        # populated by build_praxis_out via vote_tally
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     # duel_id is set when this praxis is a side of a duel (ADR-0011).
@@ -155,7 +161,7 @@ class PraxisCardOut(WireModel):
     # ADR-0047). Computed for the praxis AUTHOR (created_by), not the viewer:
     # the card shows the points the praxis banked for whoever made it.
     #   score = (task_point_value + metatask_points) × display_multiplier
-    #           + points_from_votes
+    #           + points_from_votes + habit_bonus_points
     # ``display_multiplier`` is faction × duel collapsed into one value, for
     # every type including collab (one author → one faction → one multiplier).
     # Base is ``task_point_value`` above; there is no separate ``base_points``.
@@ -163,6 +169,9 @@ class PraxisCardOut(WireModel):
     metatask_points: int = 0
     display_multiplier: float = 1.0
     points_from_votes: int = 0
+    # The #1617 faction habit bonus for the AUTHOR, stamped at seal time. Flat,
+    # outside the multiplier — see ``PraxisOut.habit_bonus_points``.
+    habit_bonus_points: int = 0
     voter_count: int = 0
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     # The metatasks pinned to this praxis, as full TaskOut rows (not just the
