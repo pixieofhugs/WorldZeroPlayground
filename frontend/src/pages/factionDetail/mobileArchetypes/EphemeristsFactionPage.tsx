@@ -11,7 +11,7 @@ import {
   CTA_BG,
   CTA_INK,
   DECO,
-  FlutedRule,
+  RuneRule,
   INK,
   INNER,
   LINE,
@@ -66,7 +66,7 @@ function SectionHead({ children }: { children: ReactNode }) {
         </span>
         <span style={{ flex: 1, height: 1, background: BRASS, opacity: 0.5 }} />
       </div>
-      <FlutedRule />
+      <RuneRule />
     </div>
   )
 }

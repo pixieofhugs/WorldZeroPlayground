@@ -102,7 +102,7 @@ import {
   Cornice,
   DECO,
   DISC,
-  FlutedRule,
+  RuneRule,
   GlyphRegister,
   INK,
   INNER,
@@ -323,7 +323,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
         {trailing}
       </div>
-      <FlutedRule />
+      <RuneRule />
     </div>
   );
 

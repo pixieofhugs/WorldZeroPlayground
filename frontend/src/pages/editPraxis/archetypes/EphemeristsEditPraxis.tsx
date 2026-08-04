@@ -41,7 +41,7 @@
  *
  * ## Marks: reused, not redrawn (WORLD_ZERO_STYLE §6, "one primitive")
  *
- * The engraved masthead, the cornice, the fluted rule, the incised signs and the
+ * The engraved masthead, the cornice, the rune band, the incised signs and the
  * stepped octagon are all `components/factionMarks` — the module #1120 extracted
  * so the plate's ornament is shared rather than copied. This file draws no new
  * SVG apart from the two marks' arrangement. The winged sun disc that headed the
@@ -128,7 +128,7 @@ import {
   Cornice,
   DECO,
   DISC,
-  FlutedRule,
+  RuneRule,
   INK,
   INNER,
   LINE,
@@ -318,8 +318,17 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   const label = { fontFamily: CAPS, fontWeight: 500, letterSpacing: "0.24em" };
   /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION };
-  /** The flute is this skin's section rule (design: `rule: 'flute'`). */
-  const flute = <FlutedRule />;
+  /**
+   * The rune band is this skin's section rule (#1638, replacing the flute).
+   *
+   * PAIRED with the brass hairline, which the six other mounts are not: each of
+   * them sits under a section HEAD whose own filler rule already draws that
+   * line, while the composer's `rule` slot sits under a bare field label. On
+   * its own the band reads as a loose row of marks rather than as a divider, so
+   * this surface asks `RuneRule` for the two-part rule the write-up header gets
+   * out of its heading row.
+   */
+  const runes = <RuneRule rule />;
 
   /** Radius 0, borderW 1.5 — the skin's whole geometry row. */
   const fieldBox = {
@@ -439,7 +448,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     sheetStyle,
     masthead,
     ground,
-    rule: () => flute,
+    rule: () => runes,
     mark: statusMark,
     statusStyle: { ...label, color: INK },
     metaStyle: { fontFamily: READING, color: QUIET },
@@ -511,7 +520,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         />
 
         <ComposerSection
-          rule={flute}
+          rule={runes}
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           labelStyle={sectionLabel}
@@ -531,7 +540,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             house rule that an unusable control is not drawn disabled. */}
         {!state.controlsLocked && (
           <ComposerSection
-            rule={flute}
+            rule={runes}
             label={t("editPraxis.composer.modeLabel")}
             labelStyle={sectionLabel}
           >
@@ -574,7 +583,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             control draws both — `InviteSearch` switches on `state.duelMode`. */}
         {state.showInviteBox && (
           <ComposerSection
-            rule={flute}
+            rule={runes}
             label={
               // The roster names itself now — `Collaborators · N` sits on its
               // own header row inside the panel, beside the tally it used to
@@ -607,7 +616,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         {state.showSealStack && (
           <ComposerSection
-            rule={flute}
+            rule={runes}
             label={t("editPraxis.composer.sealsLabel")}
             labelStyle={sectionLabel}
           >
@@ -618,7 +627,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         {/* Write-up — the tabs sit in the section's meta slot, so the label row
             reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
         <ComposerSection
-          rule={flute}
+          rule={runes}
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
           labelStyle={sectionLabel}
@@ -701,7 +710,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         </ComposerSection>
 
         <ComposerSection
-          rule={flute}
+          rule={runes}
           label={t("editPraxis.composer.proofLabel")}
           labelStyle={sectionLabel}
         >
@@ -776,8 +785,8 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
         {/* The footer's own divider. `ComposerRule` hands its whole box over
-            when it is given children, so the flute replaces the hairline. */}
-        <ComposerRule>{flute}</ComposerRule>
+            when it is given children, so the rune band replaces the hairline. */}
+        <ComposerRule>{runes}</ComposerRule>
 
         {/* [Cancel] … [Submit] — the global order from #646. The cast is an
             inline button with the open eye following the word. */}

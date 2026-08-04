@@ -193,12 +193,13 @@ const GLYPH_PITCH = 27.5;
 const GLYPH_SIZE = 13;
 
 /** One incised sign, at its own strength and its own phase in the cycle. */
-function Glyph({ name, x, y, strength, delay }: {
+function Glyph({ name, x, y, strength, delay, color }: {
   name: string
   x: number
   y: number
   strength: number
   delay: number
+  color?: string
 }) {
   return (
     <g
@@ -209,7 +210,7 @@ function Glyph({ name, x, y, strength, delay }: {
       <path
         d={GLYPHS[name]}
         fill="none"
-        stroke={GOLD}
+        stroke={color ?? GOLD}
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -222,12 +223,18 @@ function Glyph({ name, x, y, strength, delay }: {
  * A register of signs marching the full width of a band. The count follows the
  * viewBox rather than a fixed number, so the register reaches the edge at any
  * width instead of stopping short or blowing every sign up under `slice`.
+ *
+ * `color` defaults to the gold every masthead band strikes its register in.
+ * {@link RuneRule} is the one caller that overrides it: a rune band rules a
+ * PAGE rather than a night band, and gold on papyrus is a stain where brass is
+ * a rule.
  */
-export function GlyphRegister({ width, y, strength, keyPrefix }: {
+export function GlyphRegister({ width, y, strength, keyPrefix, color }: {
   width: number
   y: number
   strength: number
   keyPrefix: string
+  color?: string
 }) {
   const count = Math.ceil(width / GLYPH_PITCH);
   return (
@@ -240,11 +247,71 @@ export function GlyphRegister({ width, y, strength, keyPrefix }: {
           y={y}
           strength={strength * (index % 3 === 0 ? 1 : 0.7)}
           delay={((index * 7) % 12) * 1.6}
+          color={color}
         />
       ))}
     </>
   );
 }
+
+/**
+ * THE FIVE METALS, and everything three surfaces need to strike one (#1638).
+ *
+ * Classical alchemical sigils on the plate's 24-unit square — Saturn for lead,
+ * Venus for copper, the crescent for silver, the sun for gold, and the
+ * moon-and-Mercury compound for platinum. They lived in `EphemeristsVote` while
+ * the ladder was their only reader; this issue gave them two more (the voters
+ * panel strikes one per vote, and the sign-up summons strikes platinum), which
+ * is the threshold the kit exists for.
+ *
+ * `burstStep` is the DEGREE PITCH of the conic ring around a reached disc, and
+ * it is the ladder's whole legibility: the ring densifies as the metal improves
+ * (60° → 22.5°), so rank reads off the spoke count without a numeral. Geometry
+ * rather than style, which is why it is a number here and arrives at CSS as a
+ * custom property.
+ *
+ * Ordered exactly as `VOTE_REFRAMES.ephemerists.tiers`: index is `value - 1`.
+ */
+export const METAL_SIGILS = [
+  {
+    name: "lead",
+    color: "var(--faction-ephemerists-metal-lead)",
+    glyph: "M6.2 7.4 C7.4 4.6 10.2 4.8 10.2 7.8 C10.2 10.8 9 14.6 9.4 17.6 C9.8 20.4 11.8 21 13.8 19.4 M6.4 10.8 H13.4",
+    weight: 1.5,
+    burstStep: 60,
+  },
+  {
+    name: "copper",
+    color: "var(--faction-ephemerists-metal-copper)",
+    glyph: "M12 4.4 a4.4 4.4 0 1 0 0.01 0 Z M12 13.2 V20.6 M8.8 17.4 H15.2",
+    weight: 1.5,
+    burstStep: 45,
+  },
+  {
+    name: "silver",
+    color: "var(--faction-ephemerists-metal-silver)",
+    glyph: "M15.8 4.4 A8 8 0 1 0 15.8 19.6 A6.3 6.3 0 1 1 15.8 4.4 Z",
+    weight: 1.3,
+    burstStep: 36,
+  },
+  {
+    name: "gold",
+    color: "var(--faction-ephemerists-metal-gold)",
+    glyph: "M12 5 a7 7 0 1 0 0.01 0 Z M12 10.4 a1.7 1.7 0 1 0 0.01 0 Z",
+    weight: 1.5,
+    burstStep: 30,
+  },
+  {
+    name: "platinum",
+    color: "var(--faction-ephemerists-metal-platinum)",
+    glyph: "M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z",
+    weight: 1.3,
+    burstStep: 22.5,
+  },
+] as const;
+
+/** The top of the ladder — the mark the summons is struck with (#1638). */
+export const PLATINUM = METAL_SIGILS[4];
 
 /* `Wing` and `WingedDisc` stood here — the winged sun disc, the mark that headed
    every Ephemerists band and crowned the task detail's action panel.
@@ -291,20 +358,52 @@ export function Cornice({ glow }: { glow?: boolean }) {
   );
 }
 
-/** The cavetto band reused as a divider — the rule under every section head. */
-export function FlutedRule() {
+/**
+ * THE RUNE BAND — the divider under every section head (#1638).
+ *
+ * It replaces `FlutedRule`, which was the cavetto band reused as a rule: 48
+ * brass strokes at alternating heights. The plate's own register of incised
+ * signs takes its place, so a section is divided by the kit's SIGNS rather than
+ * by a second drawing of its cornice — one ornament vocabulary reaching down
+ * from the masthead instead of two doing the same job.
+ *
+ * The band SHIFTS on `.epg-glyph`, the register's shared opacity cycle, already
+ * opt-in under `prefers-reduced-motion: no-preference`. Nothing here declares
+ * motion, so a stilled reader gets the signs rather than a blank strip.
+ *
+ * `slice` is what makes one drawing fit every column: the band is drawn at
+ * {@link RUNE_VIEW} units wide and cropped to whatever it is mounted in, so a
+ * 375px aside and an 880px page both get whole signs at one size rather than
+ * the same eighteen stretched to fit.
+ *
+ * `rule` pairs the band with the brass hairline the write-up header carries
+ * above it (`sectionHead` draws its own). A rune band mounted WITHOUT a heading
+ * reads as a loose row of marks; the composer is the surface that does that, so
+ * it asks for the rule and gets the same two-part divider the record has.
+ */
+const RUNE_VIEW = 480;
+const RUNE_HEIGHT = 16;
+
+export function RuneRule({ rule }: { rule?: boolean }) {
   return (
-    <div
-      aria-hidden="true"
-      // eslint-disable-next-line local/no-raw-style-values -- ornament: the lead between the fluted rule's strokes.
-      style={{ display: "flex", alignItems: "flex-start", gap: 3, height: 7, overflow: "hidden" }}
-    >
-      {Array.from({ length: 48 }).map((_, i) => (
-        <span
-          key={i}
-          style={{ flex: 1, height: i % 2 ? 7 : 4, background: BRASS, opacity: i % 2 ? 0.5 : 0.28 }}
+    <div aria-hidden="true">
+      {rule && <div style={{ height: 1, background: BRASS, opacity: 0.5 }} />}
+      <svg
+        width="100%"
+        height={RUNE_HEIGHT}
+        viewBox={`0 0 ${RUNE_VIEW} ${RUNE_HEIGHT}`}
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+        style={{ display: "block" }}
+      >
+        <GlyphRegister
+          width={RUNE_VIEW}
+          y={RUNE_HEIGHT / 2}
+          strength={0.42}
+          keyPrefix="rune"
+          color={BRASS}
         />
-      ))}
+      </svg>
     </div>
   );
 }

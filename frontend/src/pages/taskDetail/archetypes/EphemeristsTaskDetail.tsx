@@ -13,6 +13,7 @@ import {
   LevelJumpBanner,
   TaskDetailComments,
 } from "./shared";
+import { PLATINUM, RuneRule } from "../../../components/factionMarks/ephemeristsPlate";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -140,6 +141,10 @@ const GLYPHS: Record<string, string> = {
   hourglass: "M5 3 H19 M5 21 H19 M6.5 3 L12 12 L6.5 21 M17.5 3 L12 12 L17.5 21",
   openEye: "M2 12 C6 5.4 18 5.4 22 12 M2 12 C6 18.6 18 18.6 22 12 M8.4 12 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 M10.7 12 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 M12 2.8 V5 M5 4.6 L6.8 6.6 M19 4.6 L17.2 6.6",
   planet: "M5.8 12 a6.2 6.2 0 1 0 12.4 0 a6.2 6.2 0 1 0 -12.4 0 M1.8 16.2 A10.8 3.7 -22 0 1 22.2 7.8 A10.8 3.7 -22 0 1 1.8 16.2", // Saturn
+  /* The summons mark since #1638 — the ladder's top metal, read from the kit
+     rather than copied, so the sign the vote plate strikes and the sign the
+     summons wears cannot drift apart. */
+  platinum: PLATINUM.glyph,
 };
 
 /** The order the signs march in — the design's own register. */
@@ -259,23 +264,13 @@ function Cornice() {
   );
 }
 
-/** The cavetto band reused as a divider — the rule under every section head. */
-function FlutedRule() {
-  return (
-    <div
-      aria-hidden="true"
-      // eslint-disable-next-line local/no-raw-style-values -- ornament: the lead between the fluted rule's strokes.
-      style={{ display: "flex", alignItems: "flex-start", gap: 3, height: 7, overflow: "hidden" }}
-    >
-      {Array.from({ length: 48 }).map((_, i) => (
-        <span
-          key={i}
-          style={{ flex: 1, height: i % 2 ? 7 : 4, background: BRASS, opacity: i % 2 ? 0.5 : 0.28 }}
-        />
-      ))}
-    </div>
-  );
-}
+/* The page's own hand-copied `FlutedRule` stood here — a second, byte-identical
+   declaration of the kit's divider that no import-following sweep could see, so
+   #1638's "fluted rules become shifting runes" would have converted six mounts
+   and silently left this page's two on the old drawing. The rule is now
+   `RuneRule` from `factionMarks/ephemeristsPlate`, imported at the top of this
+   file: one divider, seven mounts, one place to change it. The rest of this
+   file's local glyph library is still a copy and is still #1654's shape. */
 
 /** The level, struck as tally marks — every fifth stroke in ochre. */
 function Tally({ level }: { level: number }) {
@@ -542,7 +537,7 @@ export default function EphemeristsTaskDetail({
         <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
         {gloss !== undefined && <span style={eyebrow}>{gloss}</span>}
       </div>
-      <FlutedRule />
+      <RuneRule />
     </div>
   );
 
@@ -865,7 +860,7 @@ export default function EphemeristsTaskDetail({
         <div>
           <LevelJumpBanner state={state} />
           <button onClick={handleSignup} style={primaryButton}>
-            <Sign name="openEye" size={15} color={CTA_INK} weight={1.4} />
+            <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
           </button>
@@ -1052,7 +1047,7 @@ export default function EphemeristsTaskDetail({
             {sortTab("recent", t("detail.gallery.sort.recent"))}
           </span>
         </div>
-        <FlutedRule />
+        <RuneRule />
       </div>
 
       {sortedSubmissions.length === 0 ? (
