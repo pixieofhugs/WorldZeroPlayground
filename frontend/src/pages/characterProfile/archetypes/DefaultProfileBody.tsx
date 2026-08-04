@@ -48,7 +48,7 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 // see profileSkin.tsx. This is the one profile that does NOT delegate to
 // `ProfileSkin`, so it mounts those components itself rather than growing a
 // second copy of either rule.
-import { AboutBlock, TaglineSlot } from './profileSkin'
+import { AboutBlock, ProfileNameHeading, TaglineSlot } from './profileSkin'
 
 type Segment = 'praxis' | 'tasks'
 
@@ -356,7 +356,9 @@ function DesktopProfile({
                 the display name and the "Unaffiliated · faction pending"
                 caption all stood here; the credential card to the left says the
                 name and the faction, so the column carries the player's own
-                line and nothing else. Blank until someone writes one. */}
+                line and nothing else. Blank until someone writes one. The name
+                stays as the page's <h1>, for the outline only. */}
+            <ProfileNameHeading name={character.display_name} />
             <TaglineSlot
               tagline={character.tagline}
               style={{
@@ -620,7 +622,9 @@ function MobileProfile({
             />
 
             {/* ① the column's display line, centred under the card — the same
-                shared slot the laptop mounts (#1629). */}
+                shared slot the laptop mounts (#1629), over the same outline-only
+                <h1>. */}
+            <ProfileNameHeading name={character.display_name} />
             <TaglineSlot
               tagline={character.tagline}
               style={{

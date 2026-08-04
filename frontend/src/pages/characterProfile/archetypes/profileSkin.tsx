@@ -324,6 +324,30 @@ export function TaglineSlot({
   )
 }
 
+/**
+ * The page's top heading level, for the outline only.
+ *
+ * Deleting the identity column's display name (#1629) was right — the
+ * credential card beside it already says the name — but that name was also the
+ * ONLY `<h1>` this route rendered, on every profile but WOW's phone stack, and
+ * the route mounts no `PageTitle`. `CredentialCard`'s name is a `<div>`, so the
+ * card does not supply one either. That left a page with no top level to its
+ * document outline: a screen-reader user lost the "what page am I on" landmark
+ * that every other route hands them for free.
+ *
+ * VISUALLY HIDDEN, not small: making it visible would put back exactly the line
+ * the design removed. `sr-only` is Tailwind's own utility (already live in
+ * `RequestsQueue`), so nothing here hand-rolls a clip rect.
+ *
+ * ONE SLOT, NOT NINE, beside {@link TaglineSlot} — `ProfileSkin` for the seven
+ * kits, `DefaultProfileBody` in each of its two branches. WOW's phone header is
+ * the deliberate omission: it has no credential card (#901), so its name is a
+ * VISIBLE `<h1>` already, and a second one would be its own defect.
+ */
+export function ProfileNameHeading({ name }: { name: string }) {
+  return <h1 className="sr-only">{name}</h1>
+}
+
 /** Shared badge-row primitive: a skinnable medallion + the badge name. Kits
  *  pass their medallion chrome; the glyph is mapped client-side by badge key. */
 export function BadgeRow({
@@ -519,7 +543,9 @@ export function ProfileSkin({
             <div style={{ flex: 1, minWidth: mobile ? '100%' : 300 }}>
               {/* The "PLAYER · <FACTION>" eyebrow and the display name that sat
                   here are gone (#1629): the credential card to the left says
-                  both, and the column carries the player's own line instead. */}
+                  both, and the column carries the player's own line instead.
+                  The name stays as the page's <h1> for the outline only. */}
+              <ProfileNameHeading name={character.display_name} />
               <TaglineSlot
                 tagline={character.tagline}
                 style={{ fontFamily: kit.displayFont, color: kit.ink, ...kit.taglineExtra }}

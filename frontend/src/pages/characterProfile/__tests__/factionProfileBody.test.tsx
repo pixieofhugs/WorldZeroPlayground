@@ -226,7 +226,18 @@ const TAGLINE = "Small acts, kept up.";
 /** The measure the shared slot sets — its fingerprint in the markup. */
 const TAGLINE_MEASURE = "max-width:22ch";
 
-const nameCount = (html: string) => html.split("Wren Aldercross").length - 1;
+/** The visually-hidden heading the shared layer mounts — stripped before any
+ *  assertion about what a SIGHTED reader meets. */
+const SR_HEADING = /<h1 class="sr-only">[\s\S]*?<\/h1>/g;
+
+const nameCount = (html: string) =>
+  html.replace(SR_HEADING, "").split("Wren Aldercross").length - 1;
+
+/** The text of every `<h1>` in the render, in document order. */
+const headings = (html: string) =>
+  [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)].map((match) =>
+    match[1].replace(/<[^>]*>/g, "").trim(),
+  );
 
 describe.each(["desktop", "mobile"] as const)(
   "① identity header on %s (#1629)",
@@ -235,6 +246,24 @@ describe.each(["desktop", "mobile"] as const)(
       mocks.formFactor = formFactor;
       return renderBody(overrides);
     };
+
+    it.each(SLUGS)(
+      "carries exactly one <h1>, and it is the display name — %s",
+      (slug) => {
+        // COUNT, not presence, and it is the whole test. Deleting the identity
+        // column's name (#1629) took the route's only <h1> with it on every
+        // skin but one, so a profile shipped with no top level to its document
+        // outline — a screen-reader user lost the "what page am I on" landmark
+        // and `CredentialCard`'s name is a <div>, so the card supplies nothing.
+        // The other half is the opposite defect: WOW's phone header already
+        // owns a VISIBLE <h1> (#901), so a shared heading mounted blindly would
+        // hand that one profile two. `toEqual` on the array fails both ways.
+        expect(
+          headings(render({ faction_slug: slug, tagline: TAGLINE })),
+          `${slug} <h1>s`,
+        ).toEqual(["Wren Aldercross"]);
+      },
+    );
 
     it.each(SLUGS)("drops the PLAYER · FACTION eyebrow — %s", (slug) => {
       const text = render({ faction_slug: slug }).replace(/<[^>]*>/g, " ");
@@ -270,6 +299,10 @@ describe.each(["desktop", "mobile"] as const)(
       "keeps the display name on the credential card and nowhere in the identity column — %s",
       (slug) => {
         const html = render({ faction_slug: slug, tagline: TAGLINE });
+        // VISIBLE sites only — `nameCount` strips the sr-only <h1>, which is
+        // the point of it: restoring the document outline must not restore the
+        // display line the design deleted.
+        //
         // The name reads off the credential card, which is why the column no
         // longer repeats it. Two remaining sites on a laptop: the card, and the
         // praxis section's "sealed by {name}" eyebrow. The phone stack has no

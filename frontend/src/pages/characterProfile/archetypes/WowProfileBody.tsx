@@ -69,6 +69,7 @@ import { mediaUrl } from '../../../utils/media'
 import { useTranslation } from 'react-i18next'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import {
+  AboutBlock,
   BadgeRow,
   ProfileSkin,
   SpectrumLaurel,
@@ -440,6 +441,19 @@ function MobileProfile({
           paddingRight: 'var(--space-lg)',
         }}
       >
+        {/* ── ② About — the shared block, in the pavilion's own dress.
+            #1626 mounted it in `ProfileSkin` and both `DefaultProfileBody`
+            branches and counted that as every renderer; this bespoke phone
+            stack (#901) routes through neither, so a WOW player could write a
+            bio in Settings and see it nowhere. Imported, not re-implemented:
+            hidden-when-empty, `pre-wrap` and the content tier are the block's,
+            and the kit only hands it a heading and its ink. ── */}
+        <AboutBlock
+          bio={character.bio}
+          heading={<WowSectionHead>{t('profile.aboutHeading')}</WowSectionHead>}
+          style={{ fontFamily: WOW_BODY, color: WOW_INK }}
+        />
+
         {/* ── the tally of deeds ── */}
         <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
           {stats.map((stat) => (
