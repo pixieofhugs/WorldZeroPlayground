@@ -23,6 +23,7 @@ import i18n from '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 import EphemeristsPraxisCard from '../desktop/EphemeristsPraxisCard'
+import { GLYPHS } from '../../factionMarks/ephemeristsPlate'
 import MetataskSeal from '../../metataskSeal/MetataskSeal'
 
 /** The retired illuminated-codex family. None of it may reach a plate surface. */
@@ -187,37 +188,39 @@ describe('one card, both form factors (ADR-0067)', () => {
  * ornament; grepping the tree costs nothing and catches the case rendering
  * cannot see, which is a NEW hand-copy appearing later.
  */
-describe('the fluted rule is retired kit-wide (#1638)', () => {
-  const SKINS = fileURLToPath(new URL('../../..', import.meta.url))
+const SKINS = fileURLToPath(new URL('../../..', import.meta.url))
+const KIT = fileURLToPath(new URL('../../factionMarks/ephemeristsPlate.tsx', import.meta.url))
 
-  /**
-   * Every shipped `.ts`/`.tsx` under `src/`, with comments stripped and tests
-   * skipped. Both exclusions matter: the files that RETIRED the flute name it
-   * in prose so the next reader knows it was deleted rather than mislaid, and
-   * this very file names it in the assertions below.
-   */
-  const sources = (): string[] => {
-    const found: string[] = []
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === '__tests__') continue
-        const full = join(dir, entry.name)
-        if (entry.isDirectory()) walk(full)
-        else if (/\.tsx?$/.test(entry.name)) {
-          found.push(
-            readFileSync(full, 'utf8')
-              .replace(/\/\*[\s\S]*?\*\//g, '')
-              .replace(/^\s*\/\/.*$/gm, ''),
-          )
-        }
+/**
+ * Every shipped `.ts`/`.tsx` under `src/`, with comments stripped and tests
+ * skipped. Both exclusions matter: the files that RETIRED a mark name it in
+ * prose so the next reader knows it was deleted rather than mislaid, and this
+ * very file names them in the assertions below.
+ */
+function sources(): { path: string; source: string }[] {
+  const found: { path: string; source: string }[] = []
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === '__tests__') continue
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) walk(full)
+      else if (/\.tsx?$/.test(entry.name)) {
+        found.push({
+          path: full,
+          source: readFileSync(full, 'utf8')
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/^\s*\/\/.*$/gm, ''),
+        })
       }
     }
-    walk(SKINS)
-    return found
   }
+  walk(SKINS)
+  return found
+}
 
+describe('the fluted rule is retired kit-wide (#1638)', () => {
   it('leaves no FlutedRule anywhere — not a mount, not a second declaration', () => {
-    expect(sources().filter((file) => file.includes('FlutedRule'))).toEqual([])
+    expect(sources().filter(({ source }) => source.includes('FlutedRule'))).toEqual([])
   })
 
   it('mounts the rune band on all seven surfaces the flute had', () => {
@@ -225,23 +228,74 @@ describe('the fluted rule is retired kit-wide (#1638)', () => {
     // shared one. Counted as FILES rather than mounts because the task page
     // draws it twice, and the number that can silently drift is how many
     // surfaces reach the kit at all.
-    const mounts = sources().filter((file) => file.includes('<RuneRule'))
+    const mounts = sources().filter(({ source }) => source.includes('<RuneRule'))
     expect(mounts.length).toBe(7)
   })
 
   it('draws the band out of the kit register, in brass rather than gold', () => {
     // Gold is the masthead's ink on a night band; on the papyrus page it is a
     // stain. `-brass` is the plate's rule colour and never an ink.
-    const kit = readFileSync(
-      fileURLToPath(new URL('../../factionMarks/ephemeristsPlate.tsx', import.meta.url)),
-      'utf8',
-    )
+    const kit = readFileSync(KIT, 'utf8')
     const rule = kit.slice(kit.indexOf('export function RuneRule'))
     expect(rule).toContain('<GlyphRegister')
     expect(rule).toContain('color={BRASS}')
     // The shift is the register's own `.epg-glyph` cycle, already gated on
     // reduced-motion — the band declares no animation of its own.
     expect(rule.slice(0, rule.indexOf('\n}'))).not.toContain('animation')
+  })
+})
+
+/**
+ * #1654 — the mark vocabulary has ONE home, and this is what says so.
+ *
+ * The task card and the task page each carried a transcription of the plate's
+ * marks: eleven local redefinitions between them, plus the tally written out
+ * inline. Nothing imported them, so nothing linked the copies — a sign redrawn
+ * in the kit left the other two standing, and every test stayed green while one
+ * surface drew last month's mark. That is the failure this pins, and it can
+ * only be pinned against the SOURCE tree: a second declaration is invisible to
+ * the import graph and invisible to markup, which renders perfectly either way.
+ *
+ * The path strings are the sharper half. A copy can be renamed, inlined, or
+ * split up and the component-name sweep below misses it; the ankh's `d` is the
+ * same 44 characters however it is smuggled.
+ */
+describe('the Ephemerists mark vocabulary is declared once (#1654)', () => {
+  it('draws each sign in exactly one file', () => {
+    const files = sources()
+    for (const [name, path] of Object.entries(GLYPHS)) {
+      const drawn = files.filter(({ source }) => source.includes(path))
+      expect(drawn.map((file) => file.path), `${name} is transcribed`).toEqual([KIT])
+    }
+  })
+
+  it('declares each mark COMPONENT once, and in the kit', () => {
+    // `Glyph` is exported for the task card, which composes its own register
+    // out of the sign rather than taking `GlyphRegister` — so the sign is kit
+    // and the ORDER is the card's. Word-bounded, or `AuthorOctagon`,
+    // `GlossedGlyph` and `LotusSign` would each answer for their base name.
+    const files = sources()
+    for (const mark of ['Glyph', 'GlyphRegister', 'Octagon', 'Cornice', 'Tally', 'Sign']) {
+      const declared = files.filter(({ source }) =>
+        new RegExp(`\\b(?:function|const)\\s+${mark}\\b`).test(source),
+      )
+      expect(declared.map((file) => file.path), `${mark} is redeclared`).toEqual([KIT])
+    }
+  })
+
+  it('keeps the two cornice densities apart — a prop, not two components', () => {
+    // 40 flutes is the task-card design's (#1023) across a 384px band and 52
+    // the task-details design's (#1041) across the page. The flutes are
+    // `flex: 1`, so the count IS the pitch and the two are not interchangeable.
+    // Neither drifted from the other — they were never one drawing — which is
+    // why the collapse parameterised the count instead of picking a winner.
+    const kit = readFileSync(KIT, 'utf8')
+    expect(kit).toContain('flutes = 52')
+    const card = readFileSync(
+      fileURLToPath(new URL('../../taskCard/EphemeristsTaskCard.tsx', import.meta.url)),
+      'utf8',
+    )
+    expect(card).toContain('<Cornice flutes={40} />')
   })
 })
 

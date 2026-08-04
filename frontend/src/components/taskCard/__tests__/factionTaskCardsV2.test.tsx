@@ -286,3 +286,42 @@ describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => 
       .not.toContain('--faction-albescent')
   })
 })
+
+/**
+ * #1654 — the Ephemerists card draws the kit's marks, at the CARD's densities.
+ *
+ * Its glyph table, its `Glyph`, its `Octagon` and its `Cornice` were local
+ * copies of the plate's, and its tally strokes were the plate's `Tally` written
+ * out inline. `ephemeristsPlateSurfaces.test.tsx` pins that none of them may be
+ * declared twice again; what is left, and what only rendering can say, is that
+ * the collapse kept the two numbers the card did NOT share with the page.
+ *
+ * Both are counts of ornament, so they are legible in the markup and nowhere
+ * else: neither is a token, neither is text, and a wrong one still renders a
+ * perfectly good cornice.
+ */
+describe('the Ephemerists card keeps its own ornament densities (#1654)', () => {
+  const card = () => render(SKINS.find((skin) => skin.slug === 'ephemerists')!).html
+
+  it('strikes 40 cornice flutes, not the page kit default of 52', () => {
+    // The flutes are `flex: 1`, so the count is the fluting's pitch: 52 across
+    // a 384px band closes it up. 40 is the task-card design's (#1023); 52 is
+    // the task-details design's (#1041). Counted on the SHORT flute, which the
+    // cornice alternates in and nothing else on the card draws — every other
+    // stroke, so 20 of them.
+    expect(card().match(/height:3\.5px/g)).toHaveLength(20)
+  })
+
+  it('marches two registers of 12 signs — the card order, not the page cycle', () => {
+    // The page fills its width from a cycled 16-sign register; the card names
+    // its two rows. `Glyph` is shared, the ORDER is not, which is why the kit
+    // exports the sign as well as the register.
+    expect(card().match(/class="epg-glyph"/g)).toHaveLength(24)
+  })
+
+  it('draws the level as the kit tally, one stroke per level', () => {
+    // TASK is level 2, and `Tally` clamps to 1..9. The inline copy this
+    // replaced carried the same clamp, and it came across with it.
+    expect(card().match(/width:1\.6px/g)).toHaveLength(2)
+  })
+})
