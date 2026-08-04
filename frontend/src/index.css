@@ -6208,9 +6208,10 @@
    `.alb-spark` had to park at a resting opacity. */
 @keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
 .alb-profile-edge {
+  /* No z-index: a positioned overlay already paints above the static sheet it
+     sits beside, whatever their DOM order. */
   position: absolute;
   inset: 0;
-  z-index: 1;
   pointer-events: none;
   border-radius: 16px;
   padding: var(--space-xs);
@@ -6245,11 +6246,10 @@
   0%, 100% { opacity: 0.12; transform: scale(0.8); }
   50% { opacity: 0.85; transform: scale(1.08); }
 }
+/* Positioning and inertness belong to the `inset: 0` wrapper the field mounts
+   in, so a mark carries only its own place and its resting opacity. */
 .cvn-profile-spark {
   position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  line-height: 0;
   opacity: 0.4;
 }
 @media (prefers-reduced-motion: no-preference) {
