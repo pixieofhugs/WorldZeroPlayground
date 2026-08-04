@@ -24,8 +24,14 @@
  * one surface — so the codex atoms leave the file rather than sit under the new
  * band.
  *
- * Every mark is REUSED from `ephemeristsPlate`, never redrawn: `WingedDisc`,
+ * Every mark is REUSED from the kit, never redrawn: `EphemeristsSigil`,
  * `Cornice`, `GlyphRegister`. No new SVG.
+ *
+ * The band's mark was the winged sun disc until #1634 retired it kit-wide — the
+ * sigil is the only mark, and this row was its last caller anywhere. It takes
+ * the sigil at the disc's own height, which is under #1635's 20px threshold, so
+ * what lands here is the reduced cut: the kite and its apex point, with the rule
+ * floored at a device pixel rather than fading to a grey smear.
  *
  * ## Two things the sheet draws that this card deliberately does not
  *
@@ -67,8 +73,8 @@ import {
   SHADOW,
   SMALL_CAPS,
   WASH,
-  WingedDisc,
 } from '../factionMarks/ephemeristsPlate'
+import { EphemeristsSigil } from '../sigil/EphemeristsSigil'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
@@ -101,8 +107,8 @@ interface BandSize {
   /** Masthead height, and the width its register is drawn to fill. Geometry. */
   height: number
   view: number
-  /** The winged disc crowning the band. Geometry. */
-  disc: number
+  /** The sigil at the head of the band. Its HEIGHT — the mark owns its ratio
+   *  (#1635) — so there is one number, not two. */
   discHeight: number
   /** Strength of the incised register behind the label. */
   register: number
@@ -116,7 +122,6 @@ const SIZES: Record<'desktop' | 'mobile', BandSize> = {
   desktop: {
     height: 30,
     view: 452,
-    disc: 58,
     discHeight: 14,
     register: 0.24,
     bandPadding: 'var(--space-xs) var(--space-md)',
@@ -125,7 +130,6 @@ const SIZES: Record<'desktop' | 'mobile', BandSize> = {
   mobile: {
     height: 26,
     view: 360,
-    disc: 42,
     discHeight: 10,
     register: 0.2,
     bandPadding: 'var(--space-xs) var(--space-sm)',
@@ -210,7 +214,7 @@ export default function EphemeristsFeedFrame({
             minWidth: 0,
           }}
         >
-          <WingedDisc width={size.disc} height={size.discHeight} />
+          <EphemeristsSigil size={size.discHeight} color={BAND_INK} />
           <span
             style={{
               ...SMALL_CAPS,

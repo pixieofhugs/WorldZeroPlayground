@@ -35,14 +35,18 @@
  * because it is not composer page copy but `collabCopy`'s override table, read
  * by `CollabRoster` on `/praxis/:id` too. The masthead's one word is the
  * faction's NAME out of `factions.json` (`factionName`), the same string the
- * praxis-detail masthead sets — a name, not a voice.
+ * praxis-detail masthead sets — a name, not a voice. Since #1634 that name is
+ * set by `EphemeristsMasthead` rather than here, which is the same string
+ * through the same lookup on one more surface.
  *
  * ## Marks: reused, not redrawn (WORLD_ZERO_STYLE §6, "one primitive")
  *
- * The winged disc, the cornice, the fluted rule, the incised signs and the
- * stepped octagon are all `components/factionMarks/ephemeristsPlate` — the module
- * #1120 extracted so the plate's ornament is shared rather than copied. This
- * file draws no new SVG apart from the two marks' arrangement.
+ * The engraved masthead, the cornice, the fluted rule, the incised signs and the
+ * stepped octagon are all `components/factionMarks` — the module #1120 extracted
+ * so the plate's ornament is shared rather than copied. This file draws no new
+ * SVG apart from the two marks' arrangement. The winged sun disc that headed the
+ * sky band was retired kit-wide by #1634: the sigil is the only mark, and it
+ * arrives inside the masthead.
  *
  * `RingMark` is deliberately NOT used for either mark. It is a ring with a
  * circular punch, and both of this design's marks are octagons — a stepped
@@ -79,7 +83,6 @@
 import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
-import { factionName } from "../../../utils/factions";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
@@ -139,8 +142,8 @@ import {
   SHADOW,
   SMALL_CAPS,
   Sign,
-  WingedDisc,
 } from "../../../components/factionMarks/ephemeristsPlate";
+import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -159,12 +162,12 @@ const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 
 /* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ──
  *
- * `EPH_BAND` is the design's own name for the sky band's height. The pairs
- * below are its desktop / mobile values, and the praxis-detail masthead's — one
- * plate, one masthead, drawn at the same two sizes on both surfaces. */
+ * `EPH_BAND` is the design's own name for the sky band's height, and since #1634
+ * it is a FLOOR rather than a height — the engraved masthead sizes the band from
+ * its own padding. The pair is its desktop / mobile values, and the
+ * praxis-detail masthead's: one plate, one masthead, at the same two sizes on
+ * both surfaces. `WORDMARK_DISC` went with the winged disc it measured. */
 const EPH_BAND = { desktop: 84, mobile: 68 };
-const WORDMARK_DISC = { desktop: 150, mobile: 124 };
-const WORDMARK_DISC_HEIGHT = 32;
 /** The journal ruling's leading, and where the ochre margin rule is struck. */
 const RULING = 25;
 const MARGIN_RULE = { desktop: 22, mobile: 13 };
@@ -374,36 +377,21 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               height={EPH_BAND[factor]}
               background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${NILE}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "var(--space-xs)",
+                // The engraved masthead sizes itself from its own padding, so
+                // the shared band's `height` becomes a FLOOR. `style` is spread
+                // after `height` in `ComposerMasthead`, which is what lets a skin
+                // relax it without the shared block growing a second prop.
+                height: "auto",
+                minHeight: EPH_BAND[factor],
                 overflow: "hidden",
                 color: BAND_INK,
               }}
             >
-              <WingedDisc
-                width={WORDMARK_DISC[factor]}
-                height={WORDMARK_DISC_HEIGHT}
+              <EphemeristsMasthead
+                slug={praxis.task_faction_slug}
+                scale={sizes.isMobile ? "card" : "page"}
+                date={praxis.submitted_at ?? praxis.created_at}
               />
-              <span
-                style={{
-                  fontFamily: DECO,
-                  // Chrome, not content: a wordmark is scanned. The design's
-                  // 19/16 land on the two nearest rungs.
-                  fontSize: sizes.isMobile
-                    ? "var(--text-xl)"
-                    : "var(--text-content)",
-                  letterSpacing: "0.3em",
-                  textTransform: "uppercase",
-                  lineHeight: 1,
-                  color: BAND_INK,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {factionName(praxis.task_faction_slug)}
-              </span>
             </ComposerMasthead>
             {/* The cavetto cornice, beneath the band, carrying the one motion. */}
             <Cornice glow />

@@ -3913,13 +3913,49 @@
   transition: background-color 300ms;
 }
 
-/* The winged disc crowning the action panel (#1032). The design lifted the gold
-   off the PAPYRUS with a hard night-blue offset plus a soft cast, and dropped to
-   a plain soft cast on the dark plate where the hard edge would only smear. Only
-   the second case survives #1627: there is no papyrus plate in either cascade
-   now, and a hard navy offset against a navy ground draws nothing. */
-.eph-plate-crown {
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
+/* `.eph-plate-crown` stood here — the drop-shadow lifting the winged sun disc
+   off the task detail's action panel (#1032). #1634 retired the disc across the
+   kit ("the sigil is the only mark"), so the shadow has nothing left to lift.
+
+   THE GLOSS PANEL (#1634, taking up #1637's ponytail). Every glossed kanji is an
+   `<abbr title>`, and a title is a POINTER affordance: hovering opens the
+   browser's tooltip and focusing opens nothing. `tabIndex={0}` put the glyph in
+   the tab order, which without this rule buys a focus ring around a mark whose
+   expansion the keyboard user still cannot read. The panel is the expansion,
+   drawn from `attr(title)` so it cannot drift from the tooltip beside it.
+
+   `:focus-visible` rather than `:focus`, so a pointer user who clicks a glyph
+   gets the tooltip they were already getting and not two copies of it.
+
+   The panel is theme-INVARIANT because every surface it can appear on is one of
+   the plate register's night grounds (#1627) — the score stamp's cut cell and
+   the masthead's cornice band. `-band` under `-band-ink` is the pairing the
+   masthead's own wordmark already runs at 14.00:1.
+
+   `white-space: nowrap` plus `pointer-events: none` keep it a readout: it never
+   wraps to two lines over the row beneath, and it cannot swallow a click meant
+   for whatever it is covering. */
+.eph-gloss {
+  position: relative;
+}
+.eph-gloss:focus-visible::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--space-xs));
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--faction-ephemerists-plate-brass);
+  background: var(--faction-ephemerists-plate-band);
+  color: var(--faction-ephemerists-plate-band-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* Ephemerists — THE SLOW GLOW ON THE CORNICE (praxis detail v2, #1120). A gold
