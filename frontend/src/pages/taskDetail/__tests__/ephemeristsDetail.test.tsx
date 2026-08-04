@@ -131,16 +131,27 @@ describe("Ephemerists task detail — the Valley plate", () => {
     }
   });
 
-  it("wears the Valley dress — masthead band, incised registers, crowned panel", () => {
+  it("wears the Valley dress — masthead band, incised registers, engraved title", () => {
     const { html, text } = render(<EphemeristsTaskDetail state={baseState()} />);
     expect(html, "papyrus page sheet").toContain("eph-plate-sheet");
     expect(html, "cornice masthead band").toContain("--faction-ephemerists-plate-band");
     expect(html, "incised glyph registers").toContain("epg-glyph");
-    expect(html, "the disc crowning the action panel").toContain("eph-plate-crown");
     expect(html, "the stepped octagon medallion").toContain("M30 4 L70 4 L96 30");
     expect(text, "the masthead wordmark").toContain("The Ephemerists");
+    expect(html, "the masthead's kite sigil").toContain("M243 120 L55 272 L243 490 L425 272 Z");
+    expect(text, "the masthead's four-kanji register").toContain("星暦観録");
     // The codex ground belongs to the OTHER Ephemerists surfaces now.
     expect(html, "retired illuminated-codex ground").not.toContain("--eph-vellum");
+  });
+
+  it("crowns the action panel with nothing — the sigil is the only mark (#1634)", () => {
+    // A 400px winged sun disc used to hang over the panel in reserved space, on
+    // this page's own LOCAL copy of the shared kit's disc. Both halves of that
+    // are asserted, because deleting the mark and leaving the reserve renders as
+    // a plate floating below a gap that nothing explains.
+    const { html } = render(<EphemeristsTaskDetail state={baseState()} />);
+    expect(html, "the retired crown's shadow class").not.toContain("eph-plate-crown");
+    expect(html, "the disc's own wing geometry").not.toContain('viewBox="-88 -20 176 40"');
   });
 
   it("renders the in-progress population as a header count", () => {

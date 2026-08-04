@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -21,11 +22,17 @@ import type { TaskDetailState } from "../useTaskDetail";
  *
  * Deco × Egypt, the same metaphor the v2 task card ships (#1023): a papyrus
  * field journal out of the Valley. A cavetto-cornice masthead whose night band
- * holds a winged sun disc between two incised registers of glyphs; the task
- * number in a cartouche; the level a numeral over tally strokes; the worth on a
- * stepped octagon medallion inside a panel crowned by a second winged disc; the
- * brief on a ruled leaf with a red margin rule. Poiret One display, Cinzel small
- * caps, Spectral reading.
+ * holds the ENGRAVED MASTHEAD (#1634, page scale on desktop and card scale on a
+ * phone) between two incised registers of glyphs; the level a numeral over tally
+ * strokes; the worth on a stepped octagon medallion; the brief on a ruled leaf
+ * with a red margin rule. Poiret One display, Cinzel small caps, Spectral
+ * reading.
+ *
+ * The winged sun disc appeared TWICE on this page — over the wordmark, and 400px
+ * wide crowning the action panel — from a local copy of the shared kit's mark.
+ * #1634 retired the disc across the kit: the sigil is the only mark, and it is
+ * in the masthead. The panel's reserved space and the `collapsedMinWidth` that
+ * kept the column from narrowing under it went with the crown.
  *
  * This REPLACES "The Discordant Map" — the 909-line illuminated-codex archetype
  * built on `credenceHeading` / `ephemeridesHeading` / `cartographersHeading` /
@@ -208,60 +215,11 @@ function GlyphRegister({ width, y, strength, keyPrefix }: {
   );
 }
 
-/** One wing of the sun disc, drawn as deco stepped bars. */
-function Wing({ flip }: { flip?: boolean }) {
-  return (
-    <g transform={flip ? "scale(-1,1)" : undefined}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <rect
-          key={i}
-          x={13 + i * 11.4}
-          y={-6 + i * 1.5}
-          width={9.6}
-          height={8.4 - i * 1.4}
-          rx={1.4}
-          fill={GOLD}
-          opacity={0.9 - i * 0.13}
-        />
-      ))}
-      {[0, 1, 2, 3].map((i) => (
-        <rect
-          key={`covert-${i}`}
-          x={15 + i * 11.4}
-          y={4.2 + i * 1.6}
-          width={8}
-          height={3.4 - i * 0.5}
-          rx={1}
-          fill={BRASS_LIGHT}
-          opacity={0.62 - i * 0.11}
-        />
-      ))}
-    </g>
-  );
-}
-
-/** The winged sun disc, at whatever width it is asked for. */
-function WingedDisc({ width, height, className }: {
-  width: number
-  height: number
-  className?: string
-}) {
-  return (
-    <svg
-      className={className}
-      width={width}
-      height={height}
-      viewBox="-88 -20 176 40"
-      aria-hidden="true"
-      style={{ display: "block", flex: "0 0 auto" }}
-    >
-      <Wing />
-      <Wing flip />
-      <circle r={11} fill={DISC} stroke={BRASS} strokeWidth="1.6" />
-      <circle r={5.5} fill={GOLD} opacity={0.85} />
-    </svg>
-  );
-}
+/* `Wing` and `WingedDisc` stood here — this page's LOCAL copy of the shared
+   kit's winged sun disc (the two were byte-identical, which is how a duplicate
+   survives review). #1634 retired the mark across the kit: the sigil is the only
+   one now, and it arrives through `EphemeristsMasthead`. The copy goes with the
+   original rather than outliving it. */
 
 /** A stepped octagon, inset from the medallion's edge. */
 function Octagon({ inset, stroke, width, fill }: {
@@ -369,9 +327,6 @@ interface SizeSet {
   /** The wordmark's winged disc. Geometry. */
   wordmarkDisc: number
   /** The disc crowning the action panel, and the room reserved above it. */
-  crownWidth: number
-  crownHeight: number
-  crownReserve: number
   /** The points medallion, and the ledger cell that holds it. Geometry. */
   medallion: number
   ledgerWidth: number
@@ -399,9 +354,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     masthead: 108,
     mastheadView: 1200,
     wordmarkDisc: 176,
-    crownWidth: 400,
-    crownHeight: 91,
-    crownReserve: 96,
     medallion: 104,
     ledgerWidth: 150,
     tapTarget: 32,
@@ -417,9 +369,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     masthead: 92,
     mastheadView: 440,
     wordmarkDisc: 150,
-    crownWidth: 290,
-    crownHeight: 66,
-    crownReserve: 74,
     medallion: 88,
     ledgerWidth: 116,
     tapTarget: 44,
@@ -597,21 +546,21 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── The masthead: the night band, its two registers, the winged disc ──
+  // ── The masthead: the night band, its two registers, the engraved title ──
   const masthead = (
     <div style={{ marginBottom: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
       <div
         style={{
           position: "relative",
           overflow: "hidden",
-          height: size.masthead,
+          minHeight: size.masthead,
           background: BAND,
           color: BAND_INK,
         }}
       >
         <svg
           width="100%"
-          height={size.masthead}
+          height="100%"
           viewBox={`0 0 ${size.mastheadView} 108`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
@@ -626,31 +575,12 @@ export default function EphemeristsTaskDetail({
           <GlyphRegister width={size.mastheadView} y={13} strength={0.34} keyPrefix="top" />
           <GlyphRegister width={size.mastheadView} y={95} strength={0.3} keyPrefix="bottom" />
         </svg>
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "var(--space-xs)",
-          }}
-        >
-          <WingedDisc width={size.wordmarkDisc} height={38} />
-          <span
-            style={{
-              fontFamily: DECO,
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              color: BAND_INK,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {factionName(slug)}
-          </span>
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <EphemeristsMasthead
+            slug={slug}
+            scale={desktop ? "page" : "card"}
+            date={task.created_at}
+          />
         </div>
       </div>
       <Cornice />
@@ -858,10 +788,12 @@ export default function EphemeristsTaskDetail({
       style={{
         ...cell,
         // Alone on the plate — no move for this viewer (#1138) — the ledger
-        // takes the width the crown reserves rather than sitting in one corner
-        // of it. The crown cannot narrow with the plate: it is absolutely
-        // positioned, so it adds nothing to a shrink-to-fit width and would
-        // overhang both edges. Hence `collapsedMinWidth` at the column below.
+        // spreads to the plate rather than sitting in one corner of it. Until
+        // #1634 the plate could not narrow to it: a 400px winged disc hung over
+        // the panel, absolutely positioned, so it added nothing to a
+        // shrink-to-fit width and would have overhung both edges. With the crown
+        // gone the panel really can go to its contents, so `collapsedMinWidth`
+        // at the column below is dropped rather than re-pointed.
         flex: hasAction ? "0 0 auto" : "1 1 auto",
         width: hasAction ? size.ledgerWidth : "auto",
         display: "flex",
@@ -988,23 +920,15 @@ export default function EphemeristsTaskDetail({
     </>
   );
 
-  // The worth beside the summons, one plate, crowned by a winged disc.
+  // The worth beside the summons, on one plate.
+  //
+  // A 400px winged sun disc used to hang over it, absolutely positioned in
+  // reserved space above the plate. #1634 retired it — the sigil is the kit's
+  // only mark, and it is in the masthead at the head of this page — which takes
+  // `crownWidth`/`crownHeight`/`crownReserve` with it. The panel is now an
+  // ordinary block: no reserve to pad, and nothing overhanging its edges.
   const actionPanel = (
-    <div style={{ position: "relative", paddingTop: size.crownReserve }}>
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 2,
-          pointerEvents: "none",
-          maxWidth: "100%",
-        }}
-      >
-        <WingedDisc className="eph-plate-crown" width={size.crownWidth} height={size.crownHeight} />
-      </div>
+    <div style={{ position: "relative" }}>
       <div
         style={{
           ...plate,
@@ -1197,16 +1121,11 @@ export default function EphemeristsTaskDetail({
             <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
             <div
               style={{
-                // 420 with a summons to answer; with none, the plate narrows to
-                // its crown (#1138) — the only skin in the set that cannot go to
-                // its contents' intrinsic width, because the winged disc is
-                // drawn 400 wide and does not participate in the layout.
-                ...actionColumnSize({
-                  desktop,
-                  hasAction,
-                  width: PANEL_WIDTH,
-                  collapsedMinWidth: size.crownWidth,
-                }),
+                // 420 with a summons to answer; with none, the plate goes to its
+                // contents like every other skin (#1138). This was the one
+                // exception, and only because a 400px winged disc hung over the
+                // panel without participating in the layout; #1634 retired it.
+                ...actionColumnSize({ desktop, hasAction, width: PANEL_WIDTH }),
                 maxWidth: "100%",
               }}
             >
