@@ -417,13 +417,13 @@ async def list_praxes(
     query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
     if moderation_status is not None:
         try:
-            mod_enum = ModerationStatus(moderation_status)
-        except ValueError:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Invalid moderation status: {moderation_status}",
+            query = query.where(
+                Praxis.moderation_status == ModerationStatus(moderation_status)
             )
-        query = query.where(Praxis.moderation_status == mod_enum)
+        except ValueError:
+            # Still ignored, as before — but now it only costs the caller their
+            # own filter. It used to also discard the hidden exclusion above.
+            pass
 
     if task_id is not None:
         query = query.where(Praxis.task_id == task_id)

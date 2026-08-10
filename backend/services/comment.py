@@ -134,17 +134,21 @@ async def _assert_commentable_target(
             detail="A comment targets exactly one of a praxis or a task.",
         )
     if praxis_id is not None:
-        praxis = await session.get(Praxis, praxis_id)
-        if praxis is None:
-            raise HTTPException(status_code=404, detail="Praxis not found.")
         # The write door must ask the same question as the read door. It used to
         # check only `moderation_status`, so any player could POST a comment into
         # someone else's `in_progress` draft (ADR-0024 makes those private) or a
         # live duel side (#999) — content they cannot themselves read back. That
-        # also made this an existence oracle: 201 for a draft, 404 only when the
+        # also made it an existence oracle: 201 for a draft, 404 only when the
         # row was absent. `list_praxis_comments` already gates on can_view_praxis;
-        # now both doors share the predicate, and 404 matches what a reader gets.
-        if author is not None and not await can_view_praxis(author, praxis, session):
+        # now both doors share the predicate.
+        #
+        # Absent and invisible collapse into ONE raise on purpose — two raises
+        # with the same status still differ in reachability, and that difference
+        # is the oracle we are closing.
+        praxis = await session.get(Praxis, praxis_id)
+        if praxis is None or (
+            author is not None and not await can_view_praxis(author, praxis, session)
+        ):
             raise HTTPException(status_code=404, detail="Praxis not found.")
         if praxis.moderation_status != ModerationStatus.visible:
             raise HTTPException(

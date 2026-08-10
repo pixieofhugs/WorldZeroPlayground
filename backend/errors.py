@@ -114,6 +114,12 @@ class ErrorCode(str, enum.Enum):
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
 
+    # -- Sign-in ------------------------------------------------------------
+    #: The provider returned an address it does not vouch for. Refused because
+    #: an unseen OAuth identity is linked to an existing account BY EMAIL, which
+    #: makes the claim an authentication decision rather than a profile detail.
+    oauth_email_unverified = "OAUTH_EMAIL_UNVERIFIED"
+
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
 #: greppable from Python and no raise site spells them as bare literals.

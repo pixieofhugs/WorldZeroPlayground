@@ -91,6 +91,7 @@ async def list_tasks(
         offset=offset,
         viewer=viewer,
         skip_level_check=is_admin,
+        is_admin=is_admin,
     )
     # One grouped query for the whole page (#1021) — never a per-task count.
     in_progress_counts = await in_progress_counts_for_tasks(
