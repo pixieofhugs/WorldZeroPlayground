@@ -28,19 +28,17 @@ async def list_voters(
     session: AsyncSession = Depends(get_db),
     viewer: Character | None = Depends(get_current_character_optional),
 ):
-    """The voter roster for a praxis the caller may actually see.
+    """The voter roster for a praxis the caller may see.
 
-    The existence check alone used to be the whole guard, so this answered for a
-    moderation-hidden praxis and for another character's ``in_progress`` draft or
-    a pre-seal duel side — all of which the detail route 404s. Votes *can* land on
-    a non-submitted praxis (``cast_vote_on_praxis`` refuses only ``hidden``), so
-    the roster was not empty in those cases. The 200/404 split also made it a
-    praxis-existence oracle for ids the detail door hides.
-
-    Gated on :func:`can_view_praxis` — the same predicate the detail route runs,
-    so the two cannot drift — and 404, not 403, so it says nothing the detail
-    route would not.
+    Visibility is :func:`can_view_praxis`, the same predicate the praxis detail
+    route runs, so the two doors cannot drift.
     """
+    # NB: this docstring is published verbatim into `backend/openapi.json`, which
+    # is a committed artifact in a public repo — keep it a description of what the
+    # endpoint does, not a history of what it used to do wrong.
+    #
+    # Votes can land on a non-submitted praxis (`cast_vote_on_praxis` refuses only
+    # `hidden`), so an ungated roster here was not merely theoretical.
     # One raise, deliberately: "no such praxis" and "not yours to see" must be
     # the same answer, or the difference between them is the oracle.
     praxis = await session.get(Praxis, praxis_id)

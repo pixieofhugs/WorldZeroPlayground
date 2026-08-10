@@ -1,3 +1,4 @@
+import hmac
 import dataclasses
 from datetime import datetime
 
@@ -383,9 +384,19 @@ async def admin_cli_token(
     session: AsyncSession = Depends(get_db),
 ) -> CliTokenResponse:
     """Return a JWT for the first admin account when the CLI secret matches."""
-    if not settings.ADMIN_CLI_SECRET:
-        raise HTTPException(status_code=403, detail="CLI token endpoint is disabled.")
-    if x_admin_cli_secret != settings.ADMIN_CLI_SECRET:
+    # One indistinguishable refusal for both "not configured" and "wrong
+    # secret". Two different messages told an unauthenticated prober whether
+    # ADMIN_CLI_SECRET is set at all, which is the reconnaissance step before
+    # attacking it — and this one header is the ENTIRE authentication boundary
+    # for a 7-day full-admin JWT.
+    #
+    # compare_digest, not `!=`: Python string comparison short-circuits on
+    # length and on the first differing block, so `!=` leaks the secret's shape
+    # through response timing. Impractical over a network, but the whole
+    # privilege of the endpoint rests on this single comparison.
+    if not settings.ADMIN_CLI_SECRET or not hmac.compare_digest(
+        x_admin_cli_secret, settings.ADMIN_CLI_SECRET
+    ):
         raise HTTPException(status_code=403, detail="Invalid CLI secret.")
 
     admins = await find_admin_accounts(session)
