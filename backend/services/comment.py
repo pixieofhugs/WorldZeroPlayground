@@ -21,6 +21,7 @@ from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.era import get_current_era_row, get_or_create_stats
+from services.praxis import can_view_praxis
 
 # @handle mentions: word chars matching Character.username. Unresolved handles
 # stay plain text — linkify at render runs against the resolved set only.
@@ -117,7 +118,10 @@ def _clean_body(body_text: str) -> str:
 
 
 async def _assert_commentable_target(
-    praxis_id: Optional[int], task_id: Optional[int], session: AsyncSession
+    praxis_id: Optional[int],
+    task_id: Optional[int],
+    session: AsyncSession,
+    author: Optional[Character] = None,
 ) -> None:
     """Exactly one target, and it must be open for comments.
 
@@ -132,6 +136,15 @@ async def _assert_commentable_target(
     if praxis_id is not None:
         praxis = await session.get(Praxis, praxis_id)
         if praxis is None:
+            raise HTTPException(status_code=404, detail="Praxis not found.")
+        # The write door must ask the same question as the read door. It used to
+        # check only `moderation_status`, so any player could POST a comment into
+        # someone else's `in_progress` draft (ADR-0024 makes those private) or a
+        # live duel side (#999) — content they cannot themselves read back. That
+        # also made this an existence oracle: 201 for a draft, 404 only when the
+        # row was absent. `list_praxis_comments` already gates on can_view_praxis;
+        # now both doors share the predicate, and 404 matches what a reader gets.
+        if author is not None and not await can_view_praxis(author, praxis, session):
             raise HTTPException(status_code=404, detail="Praxis not found.")
         if praxis.moderation_status != ModerationStatus.visible:
             raise HTTPException(
@@ -164,7 +177,7 @@ async def create_comment(
             {"level": era.comment_level_required},
         )
     body_text = _clean_body(body_text)
-    await _assert_commentable_target(praxis_id, task_id, session)
+    await _assert_commentable_target(praxis_id, task_id, session, author=author)
 
     comment = Comment(
         praxis_id=praxis_id,

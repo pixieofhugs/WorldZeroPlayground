@@ -12,7 +12,7 @@ from db import get_db
 from dependencies import get_current_character, get_current_character_optional
 from models.account import Account
 from models.character import Character, CharacterStatus
-from models.praxis import Praxis, PraxisStatus
+from models.praxis import ModerationStatus, Praxis, PraxisStatus
 from models.vote import Vote
 from schemas.character import (
     CharacterCreate,
@@ -178,6 +178,12 @@ async def get_character_praxes(
             praxis_membership_condition(character_id),
             Praxis.status == PraxisStatus.submitted,
             praxis_visibility_condition(viewer.id if viewer else None),
+            # The docstring above promises this stays in step with
+            # ``list_praxes``; it did not. ``list_praxes`` excludes
+            # moderation-hidden rows, this did not, so content an admin had
+            # taken off the site stayed readable — unauthenticated — from the
+            # author's own profile. The two spellings CAN drift, and did.
+            Praxis.moderation_status != ModerationStatus.hidden,
         )
         .order_by(Praxis.created_at.desc())
         .limit(limit)
