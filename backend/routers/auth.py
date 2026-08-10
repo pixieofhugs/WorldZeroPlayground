@@ -115,7 +115,9 @@ async def auth_google_callback(
         # Fail closed: Secure unless we KNOW this is local development.
         secure=not _is_development(),
         max_age=_COOKIE_MAX_AGE,
-        domain=settings.COOKIE_DOMAIN,
+        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
+        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        domain=settings.COOKIE_DOMAIN or None,
     )
     return response
 
@@ -143,7 +145,9 @@ async def auth_logout(response: Response) -> LogoutOut:
         samesite="lax",
         # Fail closed, and must match the flags the cookie was set with.
         secure=not _is_development(),
-        domain=settings.COOKIE_DOMAIN,
+        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
+        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        domain=settings.COOKIE_DOMAIN or None,
     )
     return LogoutOut(message="Logged out")
 
