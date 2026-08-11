@@ -98,7 +98,7 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
 
     current_era_row = await get_current_era_row_safe(session)
     if current_era_row is None:
-        print("ERROR: no era row for the current config — run seed.py before a rollover.")
+        print("ERROR: no era row for the current config - run seed.py before a rollover.")
         return 1
 
     characters = await list_active_characters(session)
