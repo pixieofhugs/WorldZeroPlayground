@@ -18,7 +18,6 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any, Callable, Optional, Sequence
 
-from fastapi import HTTPException
 from pydantic import ValidationError
 from sqlalchemy import (
     Select,
@@ -34,6 +33,7 @@ from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
 
+from errors import ErrorCode, raise_coded
 from game_config import era_config_for_key
 from models.character import Character
 from models.comment import Comment, CommentMention
@@ -1229,17 +1229,30 @@ def _normalise_filter(feed_filter: Optional[str]) -> str:
 def parse_item_key(item_key: str) -> tuple[str, int]:
     """Split an item key into ``(feed type, source row PK)``.
 
-    Raises ``HTTPException(400)`` on anything the registry does not recognise —
-    a malformed key, an unknown type, or a non-integer id. Callers that need the
-    "may this be archived?" rule as well should use ``parse_archivable_item_key``.
+    Raises a coded 400 on anything the registry does not recognise. The two
+    diagnoses are separate codes, not one code with a ``context``: "no such feed
+    type" and "that type with a non-integer id" are genuinely different
+    failures, and a client that wants to distinguish a stale bookmark from a
+    corrupted key can. Callers that need the "may this be archived?" rule as
+    well should use ``parse_archivable_item_key``.
     """
     item_type, separator, raw_id = item_key.partition(ITEM_KEY_SEPARATOR)
     if not separator or item_type not in FEED_ITEM_TYPES:
-        raise HTTPException(status_code=400, detail=f"Unknown feed item key: {item_key}")
+        raise_coded(
+            400,
+            ErrorCode.feed_item_key_unknown,
+            f"Unknown feed item key: {item_key}",
+            {"item_key": item_key},
+        )
     try:
         source_id = int(raw_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Malformed feed item key: {item_key}")
+        raise_coded(
+            400,
+            ErrorCode.feed_item_key_malformed,
+            f"Malformed feed item key: {item_key}",
+            {"item_key": item_key},
+        )
     return item_type, source_id
 
 
@@ -1254,12 +1267,12 @@ def parse_archivable_item_key(item_key: str) -> tuple[str, int]:
     """
     item_type, source_id = parse_item_key(item_key)
     if item_type in NON_ARCHIVABLE_ITEM_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Feed items of type '{item_type}' cannot be archived: they track "
-                "work still waiting on you and clear themselves once you file."
-            ),
+        raise_coded(
+            400,
+            ErrorCode.feed_item_not_archivable,
+            f"Feed items of type '{item_type}' cannot be archived: they track "
+            "work still waiting on you and clear themselves once you file.",
+            {"item_type": item_type},
         )
     return item_type, source_id
 
