@@ -39,7 +39,11 @@ judgement, not by fatigue — so the next reader does not re-derive it:
   catalog is going to render it. Converting them buys a key nobody reads.
   (``routers/admin.py`` and ``routers/auth.py::dev_login`` were additionally
   held back from #1652 because #1667 and #1676 were changing those functions —
-  that is sequencing, not a ruling that they are fine uncoded.)
+  that is sequencing, not a ruling that they are fine uncoded. #1667 has since
+  landed, and it resolved its share by **deletion**: eleven of these raises sat
+  in routes and services that were unreachable, so they left with the code
+  rather than being converted. ``routers/admin.py``'s remaining three scopes
+  were never #1667's to touch.)
 * **Auth and dependency plumbing.** ``services/auth.py``, ``dependencies.py``:
   401/403 with a status the client already switches on before it ever looks at
   a body.
@@ -68,7 +72,7 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 147
+UNCODED_RAISE_TOTAL = 136
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
@@ -76,7 +80,6 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "dependencies.py::require_admin": 1,
 
     "routers/admin.py::admin_cli_token": 2,
-    "routers/admin.py::admin_create_task": 3,
     "routers/admin.py::admin_import_tasks_csv": 1,
     "routers/admin.py::ban_character": 1,
 
@@ -91,17 +94,13 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
 
     "routers/tasks.py::get_task": 1,
     "routers/tasks.py::list_tasks": 1,
-    "routers/tasks.py::update_task_route": 1,
 
     "routers/votes.py::list_voters": 1,
 
-    "services/admin_service.py::admin_create_character": 2,
     "services/admin_service.py::admin_edit_task": 2,
     "services/admin_service.py::archive_message": 1,
     "services/admin_service.py::assign_or_revoke_role": 2,
-    "services/admin_service.py::create_faction": 1,
     "services/admin_service.py::get_account_detail": 1,
-    "services/admin_service.py::reactivate_task": 2,
     "services/admin_service.py::suspend_account": 1,
     "services/admin_service.py::update_task_status": 2,
 
@@ -165,10 +164,8 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/relationship_service.py::create_relationship": 3,
     "services/relationship_service.py::unblock_relationship": 2,
 
-    "services/task.py::list_signups_for_task": 1,
     "services/task.py::list_tasks": 2,
     "services/task.py::propose_task": 2,
-    "services/task.py::update_task": 1,
 
     "services/vote.py::cast_or_update_vote": 3,
     "services/vote.py::cast_vote_on_praxis": 1,
