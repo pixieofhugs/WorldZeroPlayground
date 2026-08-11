@@ -243,13 +243,13 @@ export function CollabRoster({
           has been asked, not somebody who is on it, and the tally beside it
           reads out of the same denominator. */}
       <div className="flex items-center justify-between gap-2">
-        <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+        <span className="label-heading">
           {t('editPraxis.composer.collaboratorsLabel', { count: gate.memberCount })}
         </span>
         {/* `awaiting` has nothing true to say here — a tally of one over one is
             not a gate anybody is waiting on (#1274). */}
         {!awaiting && (
-          <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+          <span className="label-caption">
             {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
           </span>
         )}
@@ -335,7 +335,7 @@ export function CollabRoster({
                     row.member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
                     { name: row.name },
                   )}
-                  className="eyebrow text-[12px]"
+                  className="label-caption"
                   style={{
                     padding: 'var(--space-xs) var(--space-sm)',
                     borderRadius: 4,
@@ -449,7 +449,7 @@ function StatusPill({
   const unanswered = row.state === 'invited' || row.state === 'declined'
   return (
     <span
-      className="eyebrow text-[12px]"
+      className="label-caption"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
