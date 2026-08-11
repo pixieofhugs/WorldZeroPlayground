@@ -445,6 +445,9 @@
       "cardMode": "single",
       "viewport": "480x320"
     },
+    "EverymenCard": {
+      "cardMode": "column"
+    },
     "EverymenDuelSealConfirm": {
       "cardMode": "single",
       "viewport": "700x680"
