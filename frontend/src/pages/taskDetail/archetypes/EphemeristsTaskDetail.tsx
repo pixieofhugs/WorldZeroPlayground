@@ -16,9 +16,11 @@ import {
 import {
   Cornice,
   GlyphRegister,
+  initialsOf,
   Octagon,
   RuneRule,
   Sign,
+  SMALL_CAPS,
   Tally,
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { signupCtaKey } from "../signupCta";
@@ -133,13 +135,12 @@ const BRIEF_LEADING = 32;
    this file. Nothing on this page draws differently — the kit's `GlyphRegister`
    defaults its ink to the same gold the local one hardcoded. */
 
-/** Incised small caps — the plate's whole label voice. */
-const SMALL_CAPS: CSSProperties = {
-  fontFamily: CAPS,
-  fontWeight: 500,
-  letterSpacing: "0.24em",
-  textTransform: "uppercase",
-};
+/* The page's own `SMALL_CAPS` stood here — the kit's constant to the byte, and
+   the last thing in this file that restated the plate's typography. It is now
+   imported at the top with the marks (#1664). The task CARD's copy is NOT this
+   one and deliberately stays local: it tracks at 0.26em, which is the card
+   design's drawing rather than a drift from this one — the same situation as the
+   cornice's 40 flutes against the page's 52. */
 
 /* `Wing` and `WingedDisc` stood here — this page's LOCAL copy of the shared
    kit's winged sun disc (the two were byte-identical, which is how a duplicate
@@ -227,16 +228,17 @@ const PAGE_WIDTH = 1200;
  */
 const PANEL_WIDTH = 420;
 
-/** Initials fallback for an author with no uploaded avatar. */
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
+/* The byline's `initialsOf` stood here, and it was the ONE transcription in this
+   file that was not a de-duplication: it agreed with the kit's on every input
+   except a display name that is nothing but whitespace, where the local copy
+   returned "" and the kit's returns "·". That case is reachable — creation
+   strips and rejects a blank name, but `CharacterUpdate.display_name` carries
+   only `max_length`, so a PATCH lands "   " in the column — so #1664 had to
+   choose rather than collapse, and chose the kit's mark: this page was the only
+   Ephemerists surface that answered the question differently, and every other
+   one (the praxis byline, the comment row, the roster monogram, all of them
+   `AuthorOctagon`) already strikes the "·". An empty disc reads as a failed
+   render; the mark reads as a character with no name, which is what it is. */
 
 export default function EphemeristsTaskDetail({
   state,
