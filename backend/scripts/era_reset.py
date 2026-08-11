@@ -14,7 +14,11 @@ the system: scores, levels, vote budgets and faction membership reset per the
 era's flags, every unresolved duel is frozen into a permanent result, and the
 whole board is retired. There is no undo. So the default run prints the plan and
 exits non-zero, and ``--yes`` is only ever the second thing you type —
-``scripts/reset_e2e_db.py`` guards itself the same way.
+``scripts/reset_e2e_db.py`` guards itself the same way. That gate is also the
+*only* thing standing between you and a second rollover: opening an era is not
+idempotent, so a confirmed re-run opens another one, exactly as re-calling the
+route did. Re-runnability here means "the plan-only run changes nothing", not
+"running it twice is free".
 
 ``USERNAME`` is the operator, and it is required because ``Era.started_by`` is
 the rollover's audit trail: a not-null FK recording *who* opened the era. This
