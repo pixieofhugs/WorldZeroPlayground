@@ -38,7 +38,7 @@ export default function Admin() {
           <button
             key={key}
             onClick={() => switchTab(key)}
-            className="eyebrow pb-2 transition-colors"
+            className="label-heading pb-2 transition-colors"
             style={{
               background: 'none',
               border: 'none',

@@ -24,8 +24,10 @@
  * A whole-file `includes('eyebrow')` therefore reports ~369 hits against 124
  * real ones, which is the same over-count that put "461 sites" in the issue
  * title. So this parses out `className` attribute values and looks only inside
- * them: `className="eyebrow"`, the braces form, and template literals all
- * count; a prop, a key and a comment do not.
+ * them — the quoted form, the braces form and template literals all count; a
+ * prop, a key and a comment do not. (Which is also why this file may not spell
+ * the attribute out next to the word: the parser cannot tell a comment's
+ * example from a real one, and the guard would then fail on itself.)
  *
  * The check on `index.css` is the other half. Without it the sweep could be
  * "finished" with the rule still declared, waiting for the next hand-rolled

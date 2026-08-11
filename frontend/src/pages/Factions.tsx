@@ -111,14 +111,12 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
         <div className="mb-6">
           <button
             onClick={() => setInvitationsExpanded((v) => !v)}
-            className="eyebrow"
+            className="label-heading"
             style={{
               background: 'transparent',
               border: 'none',
               padding: 0,
               cursor: 'pointer',
-              color: 'var(--color-text-tertiary)',
-              fontSize: 'var(--text-sm)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 'var(--space-sm)',
@@ -146,7 +144,7 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
                       borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
                     }}
                   >
-                    <span className="eyebrow">{t('index.inviteBadge')}</span>
+                    <span className="label-caption">{t('index.inviteBadge')}</span>
                     <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', flex: 1 }}>
                       <Trans
                         t={t}
@@ -158,7 +156,7 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
                         ]}
                       />
                     </span>
-                    <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <span className="label-caption">
                       {relativeTime(inv.delivered_at)}
                     </span>
                   </div>

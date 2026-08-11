@@ -152,7 +152,7 @@ export default function NavBar() {
           <button
             onClick={toggleAdminMode}
             title={adminMode ? t('nav.adminMode.disableTitle') : t('nav.adminMode.enableTitle')}
-            className="eyebrow"
+            className="label-caption"
             style={{
               background: 'none',
               border: adminMode ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
@@ -170,7 +170,7 @@ export default function NavBar() {
         {/* Theme toggle */}
         <button
           onClick={toggle}
-          className="eyebrow"
+          className="label-caption"
           style={{
             background: 'none',
             border: 'none',

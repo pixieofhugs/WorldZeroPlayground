@@ -137,7 +137,7 @@ export function DesktopLeaderboard({
       {/* ── The sky ── */}
       <section>
         <div className="flex items-center justify-between gap-4 mb-1">
-          <p className="eyebrow">{eyebrow}</p>
+          <p className="label-heading">{eyebrow}</p>
           <ScoreToggle mode={scoreMode} onChange={setScoreMode} />
         </div>
 
@@ -148,7 +148,7 @@ export function DesktopLeaderboard({
           {t('leaderboard.desktop.title')}
         </h1>
 
-        <p className="eyebrow mb-3">
+        <p className="label-caption mb-3">
           {t('leaderboard.desktop.playersCount', { count: characters.length })}
           {' · '}
           {t('leaderboard.desktop.factionsCount', { count: factionCount })}

@@ -266,12 +266,11 @@ export default function CharacterProfile() {
               <button
                 onClick={handleRemoveRelationship}
                 disabled={relationshipLoading}
-                className="eyebrow"
+                className="label-caption"
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--color-text-tertiary)",
                   textAlign: "center",
                 }}
               >
@@ -282,12 +281,11 @@ export default function CharacterProfile() {
               <button
                 onClick={handleUnblockRelationship}
                 disabled={relationshipLoading}
-                className="eyebrow"
+                className="label-caption"
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--color-text-tertiary)",
                   textAlign: "center",
                 }}
               >

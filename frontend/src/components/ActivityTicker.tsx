@@ -156,7 +156,7 @@ export default function ActivityTicker() {
         }}
       >
         <div
-          className="eyebrow"
+          className="label-heading"
           style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--faction-coven)' }}
         >
           <span
