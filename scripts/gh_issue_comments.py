@@ -186,6 +186,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo", help="OWNER/NAME (default: this checkout's remote)")
     arguments = parser.parse_args(argv)
 
+    # Issue bodies in this repo are full of em-dashes and `≤`, and Windows
+    # consoles default to cp1252, where printing one raises. That crash lands
+    # *after* the fetch, so it reads as "the wrapper is broken" and invites
+    # going around it — which is the one outcome this whole control exists to
+    # prevent. Found by running it against a real issue, not by a unit test.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     # Order is load-bearing. Establishing who is trusted comes first, so a
     # failed lookup means the comments are never read into this process at all.
     try:
