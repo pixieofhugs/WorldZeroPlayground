@@ -70,7 +70,10 @@ class ErrorCode(str, enum.Enum):
 
     Grouped by the gate that raises it. Phase 1 (#1401) covers the errors
     players actually hit: the vote budget, level gates, signup caps,
-    collab/duel eligibility, and media limits.
+    collab/duel eligibility, and media limits. #1652 adds the read-path
+    rejections a player reaches by URL rather than by button — the praxis
+    filters, the two 404s that share ``DELETE /praxes/{id}/media/{id}``, the
+    relationship-delete guard, and the feed-item key parser.
     """
 
     # -- Voting -------------------------------------------------------------
@@ -113,6 +116,26 @@ class ErrorCode(str, enum.Enum):
     media_too_large = "MEDIA_TOO_LARGE"
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
+
+    # -- Praxis reads: filters and missing rows (#1652) ----------------------
+    #: One failure — a query parameter naming a value no enum member matches —
+    #: worded per filter via :data:`DETAIL_CONTEXT_PARAM`. Five 422s on
+    #: ``GET /praxes`` that nothing but their prose used to tell apart.
+    praxis_filter_value_invalid = "PRAXIS_FILTER_VALUE_INVALID"
+    praxis_not_found = "PRAXIS_NOT_FOUND"
+    #: Distinct from :attr:`praxis_not_found` on purpose: ``DELETE
+    #: /praxes/{id}/media/{id}`` can 404 for either reason, and which one it was
+    #: is the difference between a dead link and a stale media list.
+    media_item_not_found = "MEDIA_ITEM_NOT_FOUND"
+
+    # -- Relationships ------------------------------------------------------
+    relationship_not_found = "RELATIONSHIP_NOT_FOUND"
+    relationship_not_declarer = "RELATIONSHIP_NOT_DECLARER"
+
+    # -- Activity feed ------------------------------------------------------
+    feed_item_key_unknown = "FEED_ITEM_KEY_UNKNOWN"
+    feed_item_key_malformed = "FEED_ITEM_KEY_MALFORMED"
+    feed_item_not_archivable = "FEED_ITEM_NOT_ARCHIVABLE"
 
     # -- Sign-in ------------------------------------------------------------
     #: The provider returned an address it does not vouch for. Refused because
