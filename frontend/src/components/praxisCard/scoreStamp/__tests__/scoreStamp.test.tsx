@@ -60,6 +60,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       base: 12,
       mult: 0.8,
       meta: null,
+      habit: null,
       votes: 4,
       total: 13.6,
     })
@@ -104,6 +105,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       base: null,
       mult: null,
       meta: null,
+      habit: null,
       votes: 0,
       total: 10,
     })
@@ -144,12 +146,58 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       scoreBreakdown(
         praxis({ task_point_value: null, points_from_votes: null, score: null }),
       ),
-    ).toEqual({ base: 0, mult: 0.8, meta: null, votes: 0, total: 0 })
+    ).toEqual({ base: 0, mult: 0.8, meta: null, habit: null, votes: 0, total: 0 })
   })
 
   it('formats the multiplier to two decimals', () => {
     expect(formatMult(0.8)).toBe('×0.80')
     expect(formatMult(2)).toBe('×2.00')
+  })
+})
+
+/**
+ * #1617 — UA's habit bonus, at the SHARED seam: `scoreBreakdown` row selection.
+ *
+ * The backend half (PR #1659) stamps `habit_bonus_points` at seal time and puts
+ * it on the wire; nothing read it. The issue's §4 is why that is a defect and
+ * not a nicety — *"a term that scores without appearing there is how a card and
+ * a detail page start disagreeing"*. A praxis whose total is 5 higher than its
+ * own working is a stamp that cannot be checked.
+ *
+ * The bonus is FLAT and sits OUTSIDE the multiplier (owner ruling, restated at
+ * `backend/schemas/praxis.py:173`): `(base + meta) × mult + votes + habit`. So
+ * it is its own term here, never folded into `base` and never multiplied.
+ */
+describe('the habit bonus is a term of the breakdown (#1617)', () => {
+  it('reads the bonus through as its own row', () => {
+    expect(scoreBreakdown(praxis({ habit_bonus_points: 5, score: 18.6 })).habit).toBe(5)
+  })
+
+  /**
+   * The meta rule, not the votes one. `+0 from votes` is ADR-0047's single
+   * declared exception because an absent row cannot say "nobody has voted yet";
+   * the habit bonus has no such statement to make. It is 0 for every faction
+   * but UA and for every character's FIRST praxis, so a permanent `+0 habit`
+   * would print on all but a handful of cards on the site and mean nothing.
+   */
+  it('hides the row at 0 or below — the default on every faction but UA', () => {
+    expect(scoreBreakdown(praxis({ habit_bonus_points: 0 })).habit).toBeNull()
+    expect(scoreBreakdown(praxis({ habit_bonus_points: null })).habit).toBeNull()
+    expect(scoreBreakdown(praxis({ habit_bonus_points: 5 })).habit).toBe(5)
+  })
+
+  it('brings the base row back when the bonus is the only term moving the figure', () => {
+    const habitOnly = praxis({
+      task_point_value: 10,
+      display_multiplier: 1,
+      metatask_points: 0,
+      points_from_votes: 0,
+      habit_bonus_points: 5,
+      score: 15,
+    })
+    // Without the base row the sheet would state 15 over `+ 5 habit bonus` and
+    // leave the other 10 unaccounted for.
+    expect(scoreBreakdown(habitOnly).base).toBe(10)
   })
 })
 
@@ -786,5 +834,79 @@ describe('the Ephemerists label their score in kanji (#1637)', () => {
     expect(html).toContain('points')
     expect(html).toContain('from votes')
     expect(html).not.toMatch(/[基点票計]/)
+  })
+})
+
+/**
+ * #1617 at the OTHER seam: the eight skins' rendered markup.
+ *
+ * `scoreBreakdown` deciding the row is only half of it — #1131 is the standing
+ * proof that each skin still has to ACT on the resolver, and a skin that ignores
+ * the term renders perfectly while stamping a total 5 points above its own
+ * working. So every registered stamp is asserted, not just UA's: the bonus is a
+ * `FactionConfig` field defaulted to 0, and the faction that holds it is an ERA's
+ * choice. UA is the only one in Era 1.
+ */
+describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
+  /**
+   * Each stamp with the label it prints and the figure it prints. Seven label it
+   * in English; the Ephemerists label it in kanji like every other row of theirs
+   * (#1637), and handing in 'habit' there would assert nothing. Singularity pads
+   * to two digits (`+05`) — the declared terminal notation, same as its votes row
+   * — which is why the figure is matched as a pattern rather than a literal.
+   */
+  const STAMPS = [
+    ['the unaffiliated sheet', DefaultScoreStamp, 'habit'],
+    ['Everymen', EverymenScoreStamp, 'habit'],
+    ['the Ephemerists', EphemeristsScoreStamp, '習'],
+    ['S.N.I.D.E.', SnideScoreStamp, 'habit'],
+    ['Singularity', SingularityScoreStamp, 'habit'],
+    ['WOW', WowScoreStamp, 'habit'],
+    ['Coven', CovenScoreStamp, 'habit'],
+    ['UA', UaScoreStamp, 'habit'],
+  ] as const
+
+  /** `12 × 0.8 + 4 votes + 5 habit = 18.6`. The multiplier is live on purpose. */
+  const banked = praxis({ habit_bonus_points: 5, score: 18.6 })
+  /** The same praxis without the bonus — the state of nearly every praxis. */
+  const none = praxis({ habit_bonus_points: 0, score: 13.6 })
+
+  for (const [name, Stamp, label] of STAMPS) {
+    it(`${name} prints the bonus, and drops the row at 0`, () => {
+      const html = text(renderToStaticMarkup(<Stamp praxis={banked} />))
+      expect(html).toContain(label)
+      // `+5`, `+ 5` or `+05` depending on the faction's notation — never `+4`,
+      // which is what folding the bonus inside the ×0.80 would print.
+      expect(html).toMatch(/\+ ?0?5\b/)
+      // The total mark never moves off the payload's own figure.
+      expect(html).toContain('18.6')
+
+      expect(text(renderToStaticMarkup(<Stamp praxis={none} />))).not.toContain(label)
+    })
+  }
+
+  /**
+   * The flat-vs-multiplied ruling, asserted on whole lines rather than numerals:
+   * `5 × 0.80 = 4` and 4 is already on this sheet as the votes figure, so a
+   * numeral assertion would go green on the bug.
+   */
+  it('prints the bonus flat — the multiplier never reaches it', () => {
+    const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={banked} />))
+    expect(html).toContain('+ 5 habit bonus')
+    expect(html).not.toContain('+ 4 habit bonus')
+    // …and it is not quietly rolled into the base figure either.
+    expect(html).toContain('base')
+    expect(html).not.toMatch(/\b17\b/)
+  })
+
+  it('leaves the Ephemerists numeral Western, like every other figure of theirs', () => {
+    const html = text(renderToStaticMarkup(<EphemeristsScoreStamp praxis={banked} />))
+    expect(html).toContain('+ 5')
+    expect(html).not.toMatch(/[〇一二三四五六七八九十百千万]/)
+  })
+
+  it('carries the English gloss on the kanji, for hover, focus and assistive tech', () => {
+    const markup = renderToStaticMarkup(<EphemeristsScoreStamp praxis={banked} />)
+    expect(markup).toContain('title="habit"')
   })
 })
