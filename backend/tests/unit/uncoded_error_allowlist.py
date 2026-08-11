@@ -40,14 +40,14 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 164
+UNCODED_RAISE_TOTAL = 163
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "dependencies.py::get_current_character": 1,
     "dependencies.py::require_admin": 1,
 
-    "routers/admin.py::admin_cli_token": 3,
+    "routers/admin.py::admin_cli_token": 2,
     "routers/admin.py::admin_create_task": 3,
     "routers/admin.py::admin_import_tasks_csv": 1,
     "routers/admin.py::ban_character": 1,

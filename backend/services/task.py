@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, false, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -457,6 +457,10 @@ async def list_tasks(
     offset: int = 0,
     viewer: Optional[Character] = None,
     skip_level_check: bool = False,
+    # Deliberately not folded into `skip_level_check`: that one answers "may this
+    # viewer see tasks above their level", this one answers "may they see the
+    # moderation queue". They happen to be true together today.
+    is_admin: bool = False,
     era: EraConfig = CURRENT_ERA,
 ) -> list[Task]:
     """Query tasks with optional filters, excluding hidden-faction tasks.
@@ -507,9 +511,20 @@ async def list_tasks(
 
     if status and status != "all":
         try:
-            query = query.where(Task.status == TaskStatus[status])
+            requested_status = TaskStatus[status]
         except KeyError:
             raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
+        # The comment below used to promise pending "stays hidden from all
+        # viewers", and that held only on the `created_by` branch — an explicit
+        # `?status=pending` routed straight around it and served the whole
+        # admin-review queue of player-written proposals to anyone, signed in or
+        # not. The guarantee now lives on the path that can actually enforce it.
+        if requested_status == TaskStatus.pending and not is_admin:
+            # An empty page rather than a 403: no new error code for a filter no
+            # legitimate client sends, and it says nothing about what is queued.
+            query = query.where(false())
+        else:
+            query = query.where(Task.status == requested_status)
     elif not status:
         if created_by is not None:
             # Proposer's profile: show approved tasks (active + retired); pending
@@ -517,7 +532,10 @@ async def list_tasks(
             query = query.where(Task.status != TaskStatus.pending)
         else:
             query = query.where(Task.status == TaskStatus.active)
-    # status == "all" -> no status filter, return tasks of every status
+    elif not is_admin:
+        # status == "all" is the other door onto the same rows: every status for
+        # an admin, everything-but-the-review-queue for everyone else.
+        query = query.where(Task.status != TaskStatus.pending)
 
     # Task type filter — default (None) means STANDARD-ONLY so metatasks never
     # leak into the ordinary browse (#1001); pass "all" to get every type, or

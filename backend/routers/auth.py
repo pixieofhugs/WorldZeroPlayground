@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
+from errors import ErrorCode, raise_coded
 from db import get_db
 from game_config import CURRENT_ERA
 from models.account import Account
@@ -19,7 +20,23 @@ from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
 
-_ENV_PRODUCTION = "production"
+#: The ONE value that unlocks the dev seams below. `ENVIRONMENT` is a free-form
+#: `str` defaulting to "development" (`config.py`), and the guards here used to
+#: be deny-lists against the literal "production" — so every value that was not
+#: exactly that ("prod", "Production", a trailing space, an env var dropped when
+#: a Render service is re-created, unset) simultaneously enabled an
+#: unauthenticated JWT mint AND stripped `Secure` from the session cookie. Both
+#: now fail closed: anything unrecognised is treated as production.
+#:
+#: Safe to invert — `.github/workflows/e2e.yml:42` sets `ENVIRONMENT: development`
+#: explicitly ("dev-login must be enabled"), the config default is "development",
+#: and `render.yaml:34` is "production".
+_ENV_DEVELOPMENT = "development"
+
+
+def _is_development() -> bool:
+    return settings.ENVIRONMENT == _ENV_DEVELOPMENT
+
 
 _OAUTH = OAuth()
 _OAUTH.register(
@@ -62,6 +79,22 @@ async def auth_google_callback(
     token = await _OAUTH.google.authorize_access_token(request)
     user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
 
+    # An unseen OAuth identity is attached to any EXISTING account holding the
+    # same email (`create_or_get_account`), which makes the email claim an
+    # authentication decision — so it has to be one the provider vouches for.
+    # Nothing checked `email_verified`, so any condition under which Google
+    # emits an address the bearer does not control (an unverified Workspace
+    # identity; a Workspace domain changing hands, letting a new admin mint
+    # `victim@thatdomain` with a fresh `sub`) linked a new provider row to the
+    # victim's account and minted a full session for it — their characters,
+    # their score — with no re-authentication and no notification.
+    if user_info.get("email_verified") is not True:
+        raise_coded(
+            403,
+            ErrorCode.oauth_email_unverified,
+            "Your Google account's email address is not verified.",
+        )
+
     # Google's access token is used here and then discarded (#1374): it proves
     # this sign-in, and nothing afterwards calls a Google API as the player. The
     # session that follows is World Zero's own JWT.
@@ -79,9 +112,12 @@ async def auth_google_callback(
         value=jwt_token,
         httponly=True,
         samesite="lax",
-        secure=settings.ENVIRONMENT == _ENV_PRODUCTION,
+        # Fail closed: Secure unless we KNOW this is local development.
+        secure=not _is_development(),
         max_age=_COOKIE_MAX_AGE,
-        domain=settings.COOKIE_DOMAIN,
+        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
+        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        domain=settings.COOKIE_DOMAIN or None,
     )
     return response
 
@@ -107,8 +143,11 @@ async def auth_logout(response: Response) -> LogoutOut:
         "access_token",
         httponly=True,
         samesite="lax",
-        secure=settings.ENVIRONMENT == "production",
-        domain=settings.COOKIE_DOMAIN,
+        # Fail closed, and must match the flags the cookie was set with.
+        secure=not _is_development(),
+        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
+        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        domain=settings.COOKIE_DOMAIN or None,
     )
     return LogoutOut(message="Logged out")
 
@@ -139,7 +178,7 @@ async def dev_login(
 
     Returns account_id + character_id so tests can invite/credit by id.
     """
-    if settings.ENVIRONMENT == _ENV_PRODUCTION:
+    if not _is_development():
         raise HTTPException(status_code=404, detail="Not found.")
 
     provider_user_id = "dev-user-1" if key == "1" else f"dev-{key}"

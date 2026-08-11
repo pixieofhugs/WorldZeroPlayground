@@ -140,7 +140,15 @@ async def find_admin_accounts(session: AsyncSession) -> list[Account]:
         select(Account)
         .join(AccountRole, AccountRole.account_id == Account.id)
         .join(Role, Role.id == AccountRole.role_id)
-        .where(Role.name == "admin")
+        # Active only. `/admin/cli-token` mints its JWT for `admins[0]`, so
+        # without this a SUSPENDED admin still yields a token. Nothing is
+        # exploitable today — `get_current_account` rejects a non-active account
+        # at token USE — but that means this fails closed only because a check
+        # in another module happens to catch it, and suspending a compromised
+        # admin would still hand out tokens bearing their `sub`. The CLI helper
+        # `import_tasks_csv._first_admin_account` already filters; these two
+        # disagreed.
+        .where(Role.name == "admin", Account.status == AccountStatus.active)
         .order_by(Account.id.asc())
     )
     return list(result.scalars().all())

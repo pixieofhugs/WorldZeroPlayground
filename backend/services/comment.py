@@ -21,6 +21,7 @@ from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.era import get_current_era_row, get_or_create_stats
+from services.praxis import can_view_praxis
 
 # @handle mentions: word chars matching Character.username. Unresolved handles
 # stay plain text — linkify at render runs against the resolved set only.
@@ -117,7 +118,10 @@ def _clean_body(body_text: str) -> str:
 
 
 async def _assert_commentable_target(
-    praxis_id: Optional[int], task_id: Optional[int], session: AsyncSession
+    praxis_id: Optional[int],
+    task_id: Optional[int],
+    session: AsyncSession,
+    author: Optional[Character] = None,
 ) -> None:
     """Exactly one target, and it must be open for comments.
 
@@ -130,8 +134,21 @@ async def _assert_commentable_target(
             detail="A comment targets exactly one of a praxis or a task.",
         )
     if praxis_id is not None:
+        # The write door must ask the same question as the read door. It used to
+        # check only `moderation_status`, so any player could POST a comment into
+        # someone else's `in_progress` draft (ADR-0024 makes those private) or a
+        # live duel side (#999) — content they cannot themselves read back. That
+        # also made it an existence oracle: 201 for a draft, 404 only when the
+        # row was absent. `list_praxis_comments` already gates on can_view_praxis;
+        # now both doors share the predicate.
+        #
+        # Absent and invisible collapse into ONE raise on purpose — two raises
+        # with the same status still differ in reachability, and that difference
+        # is the oracle we are closing.
         praxis = await session.get(Praxis, praxis_id)
-        if praxis is None:
+        if praxis is None or (
+            author is not None and not await can_view_praxis(author, praxis, session)
+        ):
             raise HTTPException(status_code=404, detail="Praxis not found.")
         if praxis.moderation_status != ModerationStatus.visible:
             raise HTTPException(
@@ -164,7 +181,7 @@ async def create_comment(
             {"level": era.comment_level_required},
         )
     body_text = _clean_body(body_text)
-    await _assert_commentable_target(praxis_id, task_id, session)
+    await _assert_commentable_target(praxis_id, task_id, session, author=author)
 
     comment = Comment(
         praxis_id=praxis_id,

@@ -45,6 +45,7 @@ from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
+from services.praxis import praxis_visibility_condition
 from models.task import Task, TaskStatus
 from models.taunt_message import TauntMessage
 from models.vote import Vote
@@ -368,6 +369,20 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
             .where(
                 Praxis.created_by_id.in_(character_ids),
                 Praxis.status == PraxisStatus.submitted,
+                # The feed is a read-time projection (ADR-0023), and a projection
+                # that forgets a visibility filter re-publishes what every other
+                # door refuses. Both doors this used to bypass matter, because a
+                # friend/foe edge is unilateral and instant — anyone can declare
+                # you a foe and then read this source:
+                #   * moderation `hidden` is "off the site entirely", stripped by
+                #     `list_praxes` and 404'd by the detail route — but the
+                #     `praxis_title` selected above shipped it verbatim, so
+                #     whatever got a praxis taken down came back in the title.
+                #   * a submitted side of a live duel is author-only until the
+                #     seal (#999); this handed the opponent the title the detail
+                #     route answers 404 for.
+                Praxis.moderation_status != ModerationStatus.hidden,
+                praxis_visibility_condition(ctx.character_id),
             )
         )
         if ctx.before is not None:

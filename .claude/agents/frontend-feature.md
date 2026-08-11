@@ -28,6 +28,7 @@ If a change needs real styling/design decisions beyond "reuse existing component
 - Reuse shared classes (`.card-footer`, `.card-meta`, `.card-description`) instead of inventing new ones. Each faction keeps its own card archetype — don't unify.
 - Hide controls a user can't use; don't render them disabled.
 - TypeScript: proper types for API responses; no unexplained `any`.
+- **Never edit `.github/`.** CI config is what gates merges to a branch that auto-deploys to production (`render.yaml` sets `autoDeploy: true`), so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
 
 ## Reporting back
 

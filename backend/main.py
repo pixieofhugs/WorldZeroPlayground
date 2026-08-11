@@ -72,6 +72,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_content_type_options(request: Request, call_next):
+    """Send ``X-Content-Type-Options: nosniff`` on everything.
+
+    The mount below serves player-uploaded bytes from the API's own origin, and
+    Starlette derives their ``Content-Type`` from the stored filename. Uploads
+    now get a server-chosen extension off an allow-list
+    (``services.media._with_safe_extension``), which is the actual fix; this is
+    the second lock. Without it a browser is still free to disregard a declared
+    ``image/jpeg`` and sniff HTML out of the bytes — and a script that runs here
+    runs same-origin with the session cookie, which `.worldzero.org` scoping
+    sends to every host under the domain.
+
+    Applied app-wide rather than to the mount alone: nothing this API serves
+    should ever be content-sniffed, and a header that covers one path is a
+    header someone has to remember to extend.
+    """
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    return response
+
+
 # Static file serving for local media uploads
 app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT, check_dir=False), name="media")
 

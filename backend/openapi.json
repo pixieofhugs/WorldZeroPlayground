@@ -5582,6 +5582,7 @@
           "description": {
             "anyOf": [
               {
+                "maxLength": 5000,
                 "type": "string"
               },
               {
@@ -5635,6 +5636,8 @@
             "title": "Task Type"
           },
           "title": {
+            "maxLength": 200,
+            "minLength": 1,
             "title": "Title",
             "type": "string"
           }
@@ -12203,6 +12206,7 @@
     },
     "/praxes/{praxis_id}/voters": {
       "get": {
+        "description": "The voter roster for a praxis the caller may see.\n\nVisibility is :func:`can_view_praxis`, the same predicate the praxis detail\nroute runs, so the two doors cannot drift.",
         "operationId": "list_voters_praxes__praxis_id__voters_get",
         "parameters": [
           {
@@ -12212,6 +12216,22 @@
             "schema": {
               "title": "Praxis Id",
               "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
             }
           }
         ],
@@ -12241,6 +12261,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Voters",
         "tags": [
           "votes"

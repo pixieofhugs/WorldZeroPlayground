@@ -32,8 +32,21 @@ services:
         value: https://worldzero.org,https://www.worldzero.org
       - key: ENVIRONMENT
         value: production
-      - key: COOKIE_DOMAIN
-        value: .worldzero.org
+      # COOKIE_DOMAIN is deliberately UNSET, so the session cookie is host-only
+      # on api.worldzero.org.
+      #
+      # It used to be `.worldzero.org`, which attaches a live 7-day JWT to every
+      # request to every host under the domain — present and future, including
+      # any preview/CDN/status subdomain and any dangling DNS record someone
+      # else can claim. A wildcard here buys nothing: the browser decides what
+      # to send from the REQUEST host, and the frontend's credentialed XHR goes
+      # to api.worldzero.org, which a host-only cookie still covers.
+      # worldzero.org and api.worldzero.org share a registrable domain, so
+      # SameSite=Lax treats them as same-site and does not block it either.
+      #
+      # Changing this logs everyone out once — the old `.worldzero.org` cookie
+      # and the new host-only one are different cookies. That is expected and
+      # was accepted deliberately.
 
   - type: web
     name: worldzero-frontend
