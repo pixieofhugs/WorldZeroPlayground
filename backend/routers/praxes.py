@@ -13,7 +13,6 @@ from fastapi import (
     Depends,
     File,
     Form,
-    HTTPException,
     Query,
     Response,
     UploadFile,
@@ -25,6 +24,7 @@ from sqlalchemy.orm import selectinload
 from config import settings
 from db import get_db
 from dependencies import get_current_character, get_current_character_optional
+from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.praxis import MediaItem, Praxis, PraxisType
@@ -132,18 +132,31 @@ async def list_praxes_route(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
+    # Five rejections of the same shape — a query parameter naming a value no
+    # enum member matches — so they share one code and name their field in
+    # `context`. Each raise spells its context as a literal on purpose: the
+    # catalog-coverage guard reads it from the AST, and a shared helper would
+    # hide all five siblings from it (`uncoded_error_scan._read_params`).
     praxis_sort: Optional[PraxisSort] = None
     if sort is not None:
         try:
             praxis_sort = PraxisSort(sort)
         except ValueError:
-            raise HTTPException(status_code=422, detail=f"Invalid praxis sort: {sort}")
+            raise_coded(
+                422,
+                ErrorCode.praxis_filter_value_invalid,
+                f"Invalid praxis sort: {sort}",
+                {DETAIL_CONTEXT_PARAM: "sort", "value": sort},
+            )
 
     try:
         era_scope_value = PraxisEraScope(era_scope)
     except ValueError:
-        raise HTTPException(
-            status_code=422, detail=f"Invalid praxis era scope: {era_scope}"
+        raise_coded(
+            422,
+            ErrorCode.praxis_filter_value_invalid,
+            f"Invalid praxis era scope: {era_scope}",
+            {DETAIL_CONTEXT_PARAM: "era_scope", "value": era_scope},
         )
 
     voted_filter: Optional[VotedFilter] = None
@@ -151,14 +164,24 @@ async def list_praxes_route(
         try:
             voted_filter = VotedFilter(voted)
         except ValueError:
-            raise HTTPException(status_code=422, detail=f"Invalid voted filter: {voted}")
+            raise_coded(
+                422,
+                ErrorCode.praxis_filter_value_invalid,
+                f"Invalid voted filter: {voted}",
+                {DETAIL_CONTEXT_PARAM: "voted", "value": voted},
+            )
 
     praxis_type: Optional[PraxisType] = None
     if type is not None:
         try:
             praxis_type = PraxisType(type)
         except ValueError:
-            raise HTTPException(status_code=422, detail=f"Invalid praxis type: {type}")
+            raise_coded(
+                422,
+                ErrorCode.praxis_filter_value_invalid,
+                f"Invalid praxis type: {type}",
+                {DETAIL_CONTEXT_PARAM: "type", "value": type},
+            )
 
     from models.praxis import PraxisStatus
     praxis_status: Optional[PraxisStatus] = None
@@ -166,7 +189,12 @@ async def list_praxes_route(
         try:
             praxis_status = PraxisStatus(status)
         except ValueError:
-            raise HTTPException(status_code=422, detail=f"Invalid praxis status: {status}")
+            raise_coded(
+                422,
+                ErrorCode.praxis_filter_value_invalid,
+                f"Invalid praxis status: {status}",
+                {DETAIL_CONTEXT_PARAM: "status", "value": status},
+            )
 
     praxes = await list_praxes(
         session=session,
@@ -201,7 +229,7 @@ async def get_praxis_route(
     # 404 (not 403) when not viewable — don't reveal existence of hidden or
     # of another character's in_progress draft (ADR-0024).
     if not await can_view_praxis(viewer, praxis, session):
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     return await build_praxis_out(praxis, session, viewer=viewer)
 
 
@@ -327,7 +355,7 @@ async def upload_media_route(
 ):
     praxis = await session.get(Praxis, praxis_id)
     if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     _require_member(praxis, character.id, "add media to")
     media_item = await process_and_save_media(
         file, praxis_id, character.id, display_order
@@ -384,7 +412,7 @@ async def upload_media_batch_route(
     """
     praxis = await session.get(Praxis, praxis_id)
     if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     _require_member(praxis, character.id, "add media to")
     return await add_media_batch(
         praxis=praxis,
@@ -404,11 +432,11 @@ async def delete_media_route(
 ):
     praxis = await session.get(Praxis, praxis_id)
     if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     _require_member(praxis, character.id, "delete media from")
     media_item = await session.get(MediaItem, media_id)
     if media_item is None or media_item.praxis_id != praxis_id:
-        raise HTTPException(status_code=404, detail="Media item not found.")
+        raise_coded(404, ErrorCode.media_item_not_found, "Media item not found.")
 
     # Through the shared predicate, not a bare join. `resolve_stored_media_path`
     # is documented as the one "is this a file we own?" gate every
@@ -584,7 +612,7 @@ async def kick_member_route(
     )
     praxis = result.scalar_one_or_none()
     if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     return await build_praxis_out(praxis, session, viewer=character)
 
 
