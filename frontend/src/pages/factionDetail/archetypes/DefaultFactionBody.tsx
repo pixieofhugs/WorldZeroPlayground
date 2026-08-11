@@ -54,7 +54,7 @@ export default function DefaultFactionBody({
           className="sidebar-card mb-6"
           style={{ padding: "var(--space-md) var(--space-lg)" }}
         >
-          <p className="eyebrow mb-1">{t("detail.burned.kicker")}</p>
+          <p className="label-heading mb-1">{t("detail.burned.kicker")}</p>
           <p className="font-body content-text text-ink">
             {t("detail.burned.body", { faction: factionName(faction.slug) })}
           </p>
@@ -63,7 +63,7 @@ export default function DefaultFactionBody({
 
       {/* ── Members ── PLACEHOLDER: design to restyle ── */}
       <section className="mb-8">
-        <h2 className="eyebrow mb-3">
+        <h2 className="label-heading mb-3">
           {t("detail.default.membersHeading", { total: members.length })}
         </h2>
         {members.length === 0 ? (
@@ -88,7 +88,7 @@ export default function DefaultFactionBody({
 
       {/* ── Tasks ── reuses the per-faction TaskCard archetype ── */}
       <section className="mb-8">
-        <h2 className="eyebrow mb-3">
+        <h2 className="label-heading mb-3">
           {t("detail.default.tasksHeading", { total: tasks.length })}
         </h2>
         {tasks.length === 0 ? (
@@ -113,7 +113,7 @@ export default function DefaultFactionBody({
 
       {/* ── Recently completed ── PLACEHOLDER: design to restyle ── */}
       <section className="mb-8">
-        <h2 className="eyebrow mb-3">{t("detail.default.recentHeading")}</h2>
+        <h2 className="label-heading mb-3">{t("detail.default.recentHeading")}</h2>
         {recentPraxis.length === 0 ? (
           <p className="font-body text-muted content-text">
             {t("detail.default.recentEmpty")}

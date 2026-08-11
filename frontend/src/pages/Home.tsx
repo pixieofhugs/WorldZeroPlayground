@@ -31,7 +31,7 @@ function SectionHeader({ title, href, linkLabel }: { title: string; href: string
       <button
         onClick={() => navigate(href)}
         className="label-caption"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         {linkLabel} →
       </button>

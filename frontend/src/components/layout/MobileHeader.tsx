@@ -79,7 +79,6 @@ export default function MobileHeader() {
             aria-label={t('settings.title')}
             className="label-caption"
             style={{
-              color: 'var(--color-text-secondary)',
               textDecoration: 'none',
               padding: 'var(--space-xs)',
             }}

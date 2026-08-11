@@ -101,7 +101,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
     <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
       {/* App-bar row: kicker + FieldDesk title */}
       <header>
-        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
+        <div className="label-heading">
           {t('nav.home')}
         </div>
         <h1 className="font-display italic" style={pageTitleStyle}>
@@ -284,13 +284,13 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         }}
       >
         <div className="flex items-center gap-2.5 mb-3">
-          <span className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
+          <span className="label-heading">
             {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, var(--color-border-strong), transparent)' }} />
           <Link
             to="/tasks"
-            className="eyebrow"
+            className="label-caption"
             style={{ color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
           >
             {t('fieldDesk.home.viewAll')}
@@ -340,7 +340,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   </div>
                 </div>
                 <span
-                  className="shrink-0 eyebrow"
+                  className="shrink-0 label-caption"
                   style={{
                     color: 'var(--faction-default-card-muted)',
                     padding: 'var(--space-xs) var(--space-sm)',
