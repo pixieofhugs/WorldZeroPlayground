@@ -83,7 +83,7 @@ function MultChip({ children }: { children: ReactNode }) {
 export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   return (
@@ -225,6 +225,26 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         >
           {t("card.stamp.fromVotes", { votes })}
         </div>
+
+        {/*
+         * The habit bonus (#1617) — UA's own ability, and the one plate on the
+         * site that routinely carries this line. It is written UNDER the tally
+         * and outside the grouped subtotal on purpose: the bonus is flat, and
+         * the plate's rule is where the multiplier stops applying. Vermilion
+         * like the metatask working, because both are points the sheet ADDS.
+         */}
+        {habit !== null && (
+          <div
+            style={{
+              ...workingStyle,
+              color: "var(--faction-ua-card-accent)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
+              marginTop: 3,
+            }}
+          >
+            + {habit} {t("card.stamp.habit")}
+          </div>
+        )}
       </div>
 
       {/*
