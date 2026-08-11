@@ -120,11 +120,11 @@ export default function RosterTable({ players, myCharId }: RosterTableProps) {
                 borderBottom: '2px solid var(--color-text-primary)',
               }}
             >
-              <span className="eyebrow">{t('leaderboard.desktop.roster.colRank')}</span>
-              <span className="eyebrow">{t('leaderboard.desktop.roster.colPlayer')}</span>
-              <span className="eyebrow">{t('leaderboard.desktop.roster.colBadges')}</span>
-              <span className="eyebrow">{t('leaderboard.desktop.roster.colLevel')}</span>
-              <span className="eyebrow" style={{ textAlign: 'right' }}>
+              <span className="label-heading">{t('leaderboard.desktop.roster.colRank')}</span>
+              <span className="label-heading">{t('leaderboard.desktop.roster.colPlayer')}</span>
+              <span className="label-heading">{t('leaderboard.desktop.roster.colBadges')}</span>
+              <span className="label-heading">{t('leaderboard.desktop.roster.colLevel')}</span>
+              <span className="label-heading" style={{ textAlign: 'right' }}>
                 {t('leaderboard.desktop.roster.colPoints')}
               </span>
             </div>
@@ -136,7 +136,7 @@ export default function RosterTable({ players, myCharId }: RosterTableProps) {
 
           {/* Pagination */}
           <div className="flex items-center justify-between mt-4">
-            <span className="eyebrow">
+            <span className="label-caption">
               {t('leaderboard.desktop.roster.showing', {
                 from: safePage * PAGE_SIZE + 1,
                 to: safePage * PAGE_SIZE + pageRows.length,
@@ -231,14 +231,14 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
           >
             {character.display_name}
           </Link>
-          <span className="eyebrow">{factionName(character.faction_slug)}</span>
+          <span className="label-caption">{factionName(character.faction_slug)}</span>
         </div>
       </div>
 
       {/* Badges */}
       <div className="flex items-center gap-1" style={{ color: 'var(--color-text-secondary)' }}>
         {badges.length === 0 ? (
-          <span className="eyebrow">—</span>
+          <span className="label-caption">—</span>
         ) : (
           badges.map((badge) => {
             const Art = badgeArtFor(badge.key)
