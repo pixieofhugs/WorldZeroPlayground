@@ -25,7 +25,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
 export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   const rowStyle = {
@@ -77,6 +77,18 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
     value: `+${String(votes).padStart(2, "0")}`,
     valueColor: "var(--faction-singularity-terminal-ink)",
   });
+  // The habit bonus prints after the multiplier and beside votes — it is flat,
+  // outside the parentheses (#1617) — and pads like every other line the machine
+  // writes. It is the one line below `BASE` that is also optional: the read-out
+  // omits a register the era never wrote to rather than printing `+00`.
+  if (habit !== null) {
+    lines.push({
+      key: "habit",
+      label: t("card.stamp.habit"),
+      value: `+${String(habit).padStart(2, "0")}`,
+      valueColor: "var(--faction-singularity-terminal-ink)",
+    });
+  }
 
   return (
     <div

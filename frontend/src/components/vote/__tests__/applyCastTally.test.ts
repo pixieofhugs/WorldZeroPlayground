@@ -181,6 +181,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
       base: 12,
       mult: null,
       meta: null,
+      habit: null,
       votes: 9,
       total: 21,
     })
@@ -206,6 +207,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
       metatask_points: 0,
       display_multiplier: 1.0,
       points_from_votes: 4,
+      habit_bonus_points: 0,
       score: 16,
     }
     const voted = applyCastTally(scoreOnly, firstCastOfFive())

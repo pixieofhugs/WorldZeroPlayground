@@ -50,7 +50,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
 export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** The working's voice — the coven's hand, in the margin. */
@@ -152,6 +152,14 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
       >
         {t("card.stamp.fromVotes", { votes })}
       </div>
+
+      {/* The habit bonus, written after the tally: flat, outside the multiplier
+          (#1617). It always has a line above it, so it always keeps its lead. */}
+      {habit !== null && (
+        <div style={workingStyle}>
+          {t("card.stamp.habit")} +{habit}
+        </div>
+      )}
 
       {/* The braid — what rules a Coven surface. */}
       <Braid style={{ margin: "var(--space-sm) 0 var(--space-xs)" }} />

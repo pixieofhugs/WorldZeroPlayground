@@ -12,6 +12,14 @@
     "foe": "Foe",
     "remove": "remove",
     "unblock": "unblock",
+    "block": "block",
+    "blockAria": "Block {{name}}",
+    "blockError": "Could not block.",
+    "blockConfirm": {
+      "title": "Block {{name}}?",
+      "body": "This tie stops driving your activity and taunts, and it reads as Blocked to both of you — World Zero does not hide a block. You can unblock at any time.",
+      "action": "Block"
+    },
     "addFriend": "Friend",
     "addFoe": "Foe"
   },
