@@ -57,7 +57,33 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
  * `sigil` the manifest wins and this line quietly stops mattering.
  */
 function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
-  return <AlbescentSigil size={size ?? 22} color={color} />;
+  /* #1658. A dispatched mount with no colour of its own gets the mark stroked
+     in the unaffiliated spectrum — the design's credential treatment, and the
+     same answer to #783 the adapter itself is: the spectrum is what na wears,
+     so a member's mark reads as camouflage rather than as a livery. A caller
+     that DID name an ink keeps it (the faction filter facet passes
+     `factionCssVar`), and a direct mount on the reveal register — the
+     invitation letter, the faction-select tile — never comes through here. */
+  return <AlbescentSigil size={size ?? 22} color={color} spectrum={!color} />;
+}
+
+/**
+ * The hoop a surface draws AROUND the mark, for the one slug whose mark has an
+ * opinion about it — `undefined` everywhere else, meaning "no opinion, keep
+ * your own accent" (#1658).
+ *
+ * It lives here for the reason the adapter above does: which ink belongs to
+ * which slug is this module's question, and `CredentialCard` — the only caller
+ * — must stay slug-blind. The design rings Albescent's cross-hair in `#60a5fa`,
+ * which #1657 established is not a literal to transcribe but
+ * --faction-default-stop-6's dark value; the token carries both halves of the
+ * cascade, and it is the spectrum's own blue, so the hoop and the strokes it
+ * encircles are cut from one ramp. NOT a second rainbow: a spectrum hoop around
+ * spectrum strokes at 42px is two ramps fighting over one mark, and the
+ * transcription asks for a gradient on the strokes only.
+ */
+export function factionSigilRing(slug: string | null | undefined): string | undefined {
+  return slug === "albescent" ? "var(--faction-default-stop-6)" : undefined;
 }
 
 function DefaultSigilAdapter({ size }: SigilVariantProps) {
