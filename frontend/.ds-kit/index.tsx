@@ -7,6 +7,7 @@ export { default as AlbescentFeedFrame } from "../src/components/feed/AlbescentF
 export { default as AlbescentInvitation } from "../src/components/AlbescentInvitation";
 export { default as AlbescentPraxisCard } from "../src/components/praxisCard/desktop/AlbescentPraxisCard";
 export { default as AlbescentPraxisDetail } from "../src/pages/praxisDetail/archetypes/AlbescentPraxisDetail";
+export { default as AlbescentProfileBody } from "../src/pages/characterProfile/archetypes/AlbescentProfileBody";
 export { default as AlbescentSeal } from "../src/components/metataskSeal/skins/AlbescentSeal";
 export { default as AlbescentSigil } from "../src/components/sigil/AlbescentSigil";
 export { default as AlbescentTaskCard } from "../src/components/taskCard/AlbescentTaskCard";
@@ -78,6 +79,7 @@ export { default as EphemeristsFactionHero } from "../src/components/factionHero
 export { default as EphemeristsFactionPage } from "../src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage";
 export { default as EphemeristsFeedFrame } from "../src/components/feed/EphemeristsFeedFrame";
 export { default as EphemeristsFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk";
+export { default as EphemeristsMasthead } from "../src/components/factionMarks/EphemeristsMasthead";
 export { default as EphemeristsPraxisCard } from "../src/components/praxisCard/desktop/EphemeristsPraxisCard";
 export { default as EphemeristsPraxisDetail } from "../src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail";
 export { default as EphemeristsProfileBody } from "../src/pages/characterProfile/archetypes/EphemeristsProfileBody";
@@ -238,6 +240,7 @@ export { default as WowBackdrop } from "../src/components/backdrop/WowBackdrop";
 export { default as WowComment } from "../src/components/comments/voices/WowComment";
 export { default as WowDuelSealConfirm } from "../src/components/duel/WowDuelSealConfirm";
 export { default as WowEditPraxis } from "../src/pages/editPraxis/archetypes/WowEditPraxis";
+export { default as WowFactionBody } from "../src/pages/factionDetail/archetypes/WowFactionBody";
 export { default as WowFactionHero } from "../src/components/factionHero/WowFactionHero";
 export { default as WowFactionPage } from "../src/pages/factionDetail/mobileArchetypes/WowFactionPage";
 export { default as WowFeedFrame } from "../src/components/feed/WowFeedFrame";
