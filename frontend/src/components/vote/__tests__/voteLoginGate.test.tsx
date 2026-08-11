@@ -57,9 +57,13 @@ describe('VoteLoginGate', () => {
       expect(html).not.toContain('<button')
       expect(html).not.toContain('disabled')
       expect(html).not.toContain('<svg')
-      // one element, and it is the eyebrow
+      // One element, and it is on the label tier's HEADING half (#1307). Not
+      // the caption: every treatment here overrides size, face and ink, so the
+      // only thing the class still contributes is the uppercase that four of
+      // the nine voices rely on — and `.label-caption` sets
+      // `text-transform: none`, which would silently un-shout them.
       expect(html.match(/</g)?.length).toBe(2)
-      expect(html).toContain('class="eyebrow"')
+      expect(html).toContain('class="label-heading"')
     }
   })
 
