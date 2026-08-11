@@ -21,6 +21,8 @@ export interface ScoredPraxis {
   metatask_points: number;
   display_multiplier: number;
   points_from_votes: number;
+  /** UA's habit bonus — flat, OUTSIDE the multiplier (#1617). See below. */
+  habit_bonus_points: number;
   score: number;
 }
 
@@ -39,6 +41,15 @@ export interface ScoreBreakdown {
   mult: number | null;
   /** Metatask points, or null when the meta row is hidden (`≤ 0`). */
   meta: number | null;
+  /**
+   * The habit bonus, or null when the row is hidden (`≤ 0`) — #1617.
+   *
+   * It is a FLAT term outside the multiplier, so a skin adds it beside `votes`
+   * and never inside the `(base + meta) × mult` group. Multiplying it would make
+   * the same faction ability worth more under an era with a non-neutral modifier
+   * than under Era 1's 1.0, which is the owner ruling this null carries.
+   */
+  habit: number | null;
   votes: number;
   total: number;
 }
@@ -53,6 +64,10 @@ export interface ScoreBreakdown {
  *    print the total a second time (#1131)
  *  - mult row only when `display_multiplier !== 1` (×1.0 moves nothing)
  *  - meta row only when `metatask_points > 0` (`+0` moves nothing)
+ *  - habit row only when `habit_bonus_points > 0`, by the same rule (#1617). It
+ *    is 0 for every faction but UA and for every character's FIRST praxis, so a
+ *    row drawn at 0 would print "+0 habit" on nearly every card on the site and
+ *    tell the viewer nothing the total does not already say.
  *  - votes row ALWAYS, `+0` included — the exception, re-affirmed in ADR-0047:
  *    an absent row cannot say "nobody has voted yet"
  *  - total to 1 decimal at the render sites
@@ -64,26 +79,29 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
   const rawBase = praxis.task_point_value ?? 0;
   const rawMult = praxis.display_multiplier ?? 1;
   const rawMeta = praxis.metatask_points ?? 0;
+  const rawHabit = praxis.habit_bonus_points ?? 0;
   const mult = rawMult !== 1 ? rawMult : null;
   const meta = rawMeta > 0 ? rawMeta : null;
+  const habit = rawHabit > 0 ? rawHabit : null;
   const votes = praxis.points_from_votes ?? 0;
   const total = praxis.score ?? 0;
 
   /**
    * #1131 — the empty state said `10.0 POINTS` and then `BASE 10`. Both halves
-   * of this test are load-bearing: the three terms decide whether any row could
+   * of this test are load-bearing: the terms decide whether any row could
    * explain a difference between base and total, and `total === rawBase` refuses
    * to hide a figure the payload itself disagrees with — a `score` that has
    * drifted from its terms must stay legible, not collapse silently into the
    * faction's total mark.
    */
   const baseRestatesTotal =
-    mult === null && meta === null && votes === 0 && total === rawBase;
+    mult === null && meta === null && habit === null && votes === 0 && total === rawBase;
 
   return {
     base: baseRestatesTotal ? null : rawBase,
     mult,
     meta,
+    habit,
     votes,
     total,
   };

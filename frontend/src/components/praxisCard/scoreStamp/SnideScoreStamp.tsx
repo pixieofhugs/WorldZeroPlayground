@@ -23,8 +23,20 @@ import type { ScoreStampProps } from "./ScoreStamp";
 export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
+
+  /** The tag's typed working line — meta, the tally, and the habit bonus. */
+  const typedLine = {
+    fontFamily: "var(--font-body)",
+    fontWeight: 700,
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: typewriter working on the tag, the design's 11 (§4a)
+    fontSize: 11,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase" as const,
+    color: "var(--faction-snide-acid)",
+    marginTop: "var(--space-xs)",
+  };
 
   return (
     <div
@@ -100,39 +112,26 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
-      {meta !== null && (
-        <div
-          style={{
-            fontFamily: "var(--font-body)",
-            fontWeight: 700,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: typewriter working on the tag, the design's 11 (§4a)
-            fontSize: 11,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "var(--faction-snide-acid)",
-            marginTop: "var(--space-xs)",
-          }}
-        >
-          {t("card.stamp.meta")} +{meta}
-        </div>
-      )}
+      {meta !== null && <div style={typedLine}>{t("card.stamp.meta")} +{meta}</div>}
 
       <div
         style={{
-          fontFamily: "var(--font-body)",
-          fontWeight: 700,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: typewriter working on the tag, the design's 11 (§4a)
-          fontSize: 11,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          color: "var(--faction-snide-acid)",
+          ...typedLine,
           // The lead is between typed LINES: none when the tally is the first
           // one on the tag (#1131).
-          marginTop: base !== null ? "var(--space-xs)" : undefined,
+          marginTop: base !== null ? typedLine.marginTop : undefined,
         }}
       >
         {t("card.stamp.fromVotes", { votes })}
       </div>
+
+      {/* The habit bonus, typed after the tally: flat, outside the multiplier
+          (#1617). It always has a line above it, so it always keeps its lead. */}
+      {habit !== null && (
+        <div style={typedLine}>
+          {t("card.stamp.habit")} +{habit}
+        </div>
+      )}
 
       {/* Torn-off perforation, then the total mark. */}
       <div
