@@ -849,21 +849,25 @@ describe('the Ephemerists label their score in kanji (#1637)', () => {
  */
 describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
   /**
-   * Each stamp with the label it prints and the figure it prints. Seven label it
-   * in English; the Ephemerists label it in kanji like every other row of theirs
-   * (#1637), and handing in 'habit' there would assert nothing. Singularity pads
-   * to two digits (`+05`) — the declared terminal notation, same as its votes row
-   * — which is why the figure is matched as a pattern rather than a literal.
+   * Each stamp with the LABEL it prints and the whole LINE it prints.
+   *
+   * The line is spelled out per faction rather than pattern-matched, because
+   * `5 × 0.80 = 4` is the bug this guards and 4 is already on every one of these
+   * sheets as the votes figure — a bare numeral assertion would go green on it.
+   * Seven label the row in English; the Ephemerists label it in kanji like every
+   * other row of theirs (#1637), and handing in 'habit' there would assert
+   * nothing. Singularity zero-pads (`+05`) — its declared terminal notation,
+   * the same one its votes row already uses.
    */
   const STAMPS = [
-    ['the unaffiliated sheet', DefaultScoreStamp, 'habit'],
-    ['Everymen', EverymenScoreStamp, 'habit'],
-    ['the Ephemerists', EphemeristsScoreStamp, '習'],
-    ['S.N.I.D.E.', SnideScoreStamp, 'habit'],
-    ['Singularity', SingularityScoreStamp, 'habit'],
-    ['WOW', WowScoreStamp, 'habit'],
-    ['Coven', CovenScoreStamp, 'habit'],
-    ['UA', UaScoreStamp, 'habit'],
+    ['the unaffiliated sheet', DefaultScoreStamp, 'habit', '+ 5 habit bonus'],
+    ['Everymen', EverymenScoreStamp, 'habit', 'habit+5'],
+    ['the Ephemerists', EphemeristsScoreStamp, '習', '+ 5 習'],
+    ['S.N.I.D.E.', SnideScoreStamp, 'habit', 'habit +5'],
+    ['Singularity', SingularityScoreStamp, 'habit', 'habit+05'],
+    ['WOW', WowScoreStamp, 'habit', 'habit +5'],
+    ['Coven', CovenScoreStamp, 'habit', 'habit +5'],
+    ['UA', UaScoreStamp, 'habit', '+ 5 habit'],
   ] as const
 
   /** `12 × 0.8 + 4 votes + 5 habit = 18.6`. The multiplier is live on purpose. */
@@ -871,33 +875,19 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
   /** The same praxis without the bonus — the state of nearly every praxis. */
   const none = praxis({ habit_bonus_points: 0, score: 13.6 })
 
-  for (const [name, Stamp, label] of STAMPS) {
-    it(`${name} prints the bonus, and drops the row at 0`, () => {
+  for (const [name, Stamp, label, line] of STAMPS) {
+    it(`${name} prints the bonus flat, and drops the row at 0`, () => {
       const html = text(renderToStaticMarkup(<Stamp praxis={banked} />))
-      expect(html).toContain(label)
-      // `+5`, `+ 5` or `+05` depending on the faction's notation — never `+4`,
-      // which is what folding the bonus inside the ×0.80 would print.
-      expect(html).toMatch(/\+ ?0?5\b/)
+      expect(html).toContain(line)
       // The total mark never moves off the payload's own figure.
       expect(html).toContain('18.6')
+      // …and the bonus is not quietly rolled into the base figure either: the
+      // sheet still states the task's own 12.
+      expect(html).not.toContain('17')
 
       expect(text(renderToStaticMarkup(<Stamp praxis={none} />))).not.toContain(label)
     })
   }
-
-  /**
-   * The flat-vs-multiplied ruling, asserted on whole lines rather than numerals:
-   * `5 × 0.80 = 4` and 4 is already on this sheet as the votes figure, so a
-   * numeral assertion would go green on the bug.
-   */
-  it('prints the bonus flat — the multiplier never reaches it', () => {
-    const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={banked} />))
-    expect(html).toContain('+ 5 habit bonus')
-    expect(html).not.toContain('+ 4 habit bonus')
-    // …and it is not quietly rolled into the base figure either.
-    expect(html).toContain('base')
-    expect(html).not.toMatch(/\b17\b/)
-  })
 
   it('leaves the Ephemerists numeral Western, like every other figure of theirs', () => {
     const html = text(renderToStaticMarkup(<EphemeristsScoreStamp praxis={banked} />))

@@ -35,7 +35,7 @@ const FIELD_WIDTH = 38;
 export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** Rows in working order. `ruled` draws the subtotal rule above the row. */
@@ -56,6 +56,12 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
     rows.push({ key: "mult", label: t("card.stamp.mult"), value: formatMult(mult), gold: true });
   }
   rows.push({ key: "votes", label: t("card.stamp.votes"), value: `+${votes}` });
+  // The habit bonus is filled in AFTER the multiplier and after the subtotal
+  // rule, beside votes, because it is flat and outside the parentheses (#1617).
+  // Unlike votes it leaves the form entirely at 0 — the form is still complete.
+  if (habit !== null) {
+    rows.push({ key: "habit", label: t("card.stamp.habit"), value: `+${habit}` });
+  }
 
   return (
     <div
