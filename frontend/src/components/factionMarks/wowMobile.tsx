@@ -134,7 +134,7 @@ export function WowPavilionHeader({
               marginBottom: "var(--space-sm)",
             }}
           >
-            <span className="eyebrow" style={{ fontFamily: WOW_DISPLAY, color: WOW_DEEP }}>
+            <span className="label-heading" style={{ fontFamily: WOW_DISPLAY, color: WOW_DEEP }}>
               {eyebrow}
             </span>
             <span

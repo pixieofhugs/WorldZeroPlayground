@@ -82,7 +82,7 @@ export default function WowFactionHero({
               the repo carries one, so WOW gets the house slot in its own display
               face rather than a Courier line the Court would never set. */}
           <div
-            className="eyebrow"
+            className="label-heading"
             style={{
               fontFamily: "var(--faction-wow-card-font)",
               color: "var(--faction-wow-accent-deep)",
@@ -162,7 +162,7 @@ export default function WowFactionHero({
                     {entry.value}
                   </div>
                   <div
-                    className="eyebrow"
+                    className="label-caption"
                     style={{
                       fontFamily: "var(--faction-wow-body-font)",
                       color: "var(--faction-wow-card-muted)",

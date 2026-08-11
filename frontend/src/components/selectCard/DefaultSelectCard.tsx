@@ -73,7 +73,7 @@ export default function DefaultSelectCard({
           {/* Rainbow 2 of 3: the seven-segment conic mark. */}
           <DefaultSigil size={40} />
           <div
-            className="eyebrow"
+            className="label-heading"
             style={{ letterSpacing: "0.2em", color: "var(--faction-default-card-muted)" }}
           >
             {i18n.t("feed:factionSelect.na.eyebrow")}

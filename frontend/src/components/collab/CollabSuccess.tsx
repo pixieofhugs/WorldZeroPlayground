@@ -66,7 +66,7 @@ export function CollabSuccess({
           borderRadius: isMobile ? 0 : 8,
         }}
       >
-        <span className="eyebrow" style={{ color: accent }}>
+        <span className="label-caption" style={{ color: accent }}>
           {collabCopy(factionSlug, 'castStatus', {
             cast: gate.castCount,
             total: gate.memberCount,

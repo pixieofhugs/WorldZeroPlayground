@@ -367,7 +367,7 @@ export function PraxisVotedByMarker({
   const { t } = useTranslation("praxis");
   if (!praxis.voted_by_name) return null;
   return (
-    <div className="eyebrow" style={{ marginTop: "var(--space-sm)", opacity: 0.75, ...style }}>
+    <div className="label-caption" style={{ marginTop: "var(--space-sm)", opacity: 0.75, ...style }}>
       {t("card.votedBy", { name: praxis.voted_by_name })}
     </div>
   );
@@ -905,7 +905,7 @@ export function AdminOverlay({
     <>
       {praxis.moderation_status === "flagged" && (
         <span
-          className="eyebrow"
+          className="label-caption"
           style={{
             ...badge,
             border: "1px solid var(--color-danger-edge)",
@@ -918,7 +918,7 @@ export function AdminOverlay({
       )}
       {praxis.moderation_status === "failed" && (
         <span
-          className="eyebrow"
+          className="label-caption"
           style={{
             ...badge,
             border: "1px solid var(--color-warning-edge)",
@@ -931,7 +931,7 @@ export function AdminOverlay({
       )}
       {praxis.moderation_status === "hidden" && (
         <span
-          className="eyebrow"
+          className="label-caption"
           style={{
             ...badge,
             border: `1px solid ${inkWash(muted, 40)}`,
@@ -967,7 +967,7 @@ export function AdminOverlay({
         >
           <button
             onClick={onHide}
-            className="eyebrow"
+            className="label-caption"
             style={{
               padding: "0 var(--space-xs)",
               border: "1px solid var(--color-danger-edge)",
@@ -980,7 +980,7 @@ export function AdminOverlay({
           </button>
           <button
             onClick={onFail}
-            className="eyebrow"
+            className="label-caption"
             style={{
               padding: "0 var(--space-xs)",
               border: "1px solid var(--color-warning-edge)",

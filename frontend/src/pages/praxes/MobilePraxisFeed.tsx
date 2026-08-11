@@ -50,7 +50,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
   return (
     <div data-feed="mobile" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
       <header>
-        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
+        <div className="label-heading">
           {tc('nav.praxis')}
         </div>
         <h1
@@ -59,7 +59,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         >
           {t('listPage.title')}
         </h1>
-        <p className="eyebrow" style={{ marginTop: 'var(--space-xs)' }}>
+        <p className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
           {t('listPage.count', { count: items.length })}
         </p>
         {/* A `?task_id=` feed is a subset (#1050) — say so, and offer the way

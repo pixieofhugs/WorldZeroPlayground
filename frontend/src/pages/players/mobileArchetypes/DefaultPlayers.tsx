@@ -87,7 +87,7 @@ export default function DefaultPlayers({ characters, loading, error, myCharId }:
   return (
     <div className="py-4" data-testid="mobile-players-directory">
       {/* ── Sky header ── */}
-      <p className="eyebrow mb-1">{eyebrow}</p>
+      <p className="label-heading mb-1">{eyebrow}</p>
 
       <h1
         className="font-display italic font-medium leading-tight mb-1"
@@ -96,7 +96,7 @@ export default function DefaultPlayers({ characters, loading, error, myCharId }:
         {t('leaderboard.desktop.title')}
       </h1>
 
-      <p className="eyebrow mb-2">
+      <p className="label-caption mb-2">
         {t('leaderboard.desktop.playersCount', { count: characters.length })}
         {' · '}
         {t('leaderboard.desktop.factionsCount', { count: factionCount })}
@@ -275,7 +275,7 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
           </div>
 
           <div className="flex flex-col items-center gap-3 mt-4">
-            <span className="eyebrow">
+            <span className="label-caption">
               {t('leaderboard.mobile.showing', { shown: shownRows.length, total: filtered.length })}
             </span>
             {hasMore && (
@@ -372,7 +372,7 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
           {character.display_name}
         </div>
         <div className="flex items-center flex-wrap mt-1" style={{ gap: 'var(--space-xs)' }}>
-          <span className="eyebrow">{factionName(character.faction_slug)}</span>
+          <span className="label-caption">{factionName(character.faction_slug)}</span>
           <LevelGem level={character.level} factionSlug={character.faction_slug} size={34} />
           {badges.map((badge) => {
             const Art = badgeArtFor(badge.key)
@@ -402,7 +402,7 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         >
           {points}
         </div>
-        <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+        <span className="label-caption">
           {t('leaderboard.mobile.points')}
         </span>
       </div>

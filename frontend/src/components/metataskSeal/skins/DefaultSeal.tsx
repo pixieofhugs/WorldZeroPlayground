@@ -64,7 +64,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
       )}
 
       <span
-        className="eyebrow block"
+        className="label-heading block"
         style={{ color: 'var(--faction-default-card-muted)' }}
       >
         {t('detail.seal.label', { faction })}

@@ -30,8 +30,8 @@ function SectionHeader({ title, href, linkLabel }: { title: string; href: string
       <div className="flex-1" style={{ height: 1, background: 'var(--color-border)' }} />
       <button
         onClick={() => navigate(href)}
-        className="eyebrow"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}
+        className="label-caption"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         {linkLabel} →
       </button>

@@ -126,7 +126,7 @@ export default function FactionsDirectoryView({
           which owns Accept/Decline (ADR-0030, #347). */}
       {invitations.length > 0 && (
         <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+          <span className="label-heading">
             {t('index.recentInvitations', { count: invitations.length })}
           </span>
           {invitations.map((inv) => (
@@ -143,7 +143,7 @@ export default function FactionsDirectoryView({
                 borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
               }}
             >
-              <span className="eyebrow">{t('index.inviteBadge')}</span>
+              <span className="label-caption">{t('index.inviteBadge')}</span>
               <span
                 className="font-body"
                 style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', flex: 1, lineHeight: 1.4 }}
@@ -158,7 +158,7 @@ export default function FactionsDirectoryView({
                   ]}
                 />
               </span>
-              <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+              <span className="label-caption">
                 {relativeTime(inv.delivered_at)}
               </span>
             </Link>

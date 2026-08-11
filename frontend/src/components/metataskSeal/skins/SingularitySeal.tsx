@@ -51,7 +51,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
       )}
 
       <span
-        className="eyebrow block"
+        className="label-heading block"
         style={{ color: 'var(--faction-singularity-card-muted)' }}
       >
         {'> '}

@@ -125,7 +125,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
           <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-amber)" }} />
           <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-green)" }} />
           <span
-            className="eyebrow"
+            className="label-heading"
             style={{
               marginLeft: "auto",
               letterSpacing: "0.14em",

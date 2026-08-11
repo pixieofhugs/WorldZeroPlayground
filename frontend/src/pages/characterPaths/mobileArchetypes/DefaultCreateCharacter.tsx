@@ -63,7 +63,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
         <button type="button" onClick={() => navigate('/')} style={backBtn} aria-label={t('createCharacter.cancel')}>
           ‹
         </button>
-        <span className="eyebrow">{t('createCharacter.mobile.title')}</span>
+        <span className="label-heading">{t('createCharacter.mobile.title')}</span>
         <span style={{ width: 28 }} />
       </div>
 
@@ -87,10 +87,10 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
             )}
           </span>
         </button>
-        <div className="eyebrow" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
+        <div className="label-caption" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
           {photoAction}
         </div>
-        <div className="eyebrow" style={{ marginTop: 'var(--space-sm)', color: 'var(--color-text-tertiary)' }}>
+        <div className="label-caption" style={{ marginTop: 'var(--space-sm)' }}>
           {t('createCharacter.mobile.step')}
         </div>
         {avatarError && <p className="content-text" style={{ ...errorBox, marginTop: 'var(--space-sm)' }}>{avatarError}</p>}

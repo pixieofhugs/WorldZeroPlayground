@@ -125,7 +125,7 @@ export default function RequestsQueue() {
     >
       <div className="requests-queue__head">
         <div>
-          <p className="eyebrow">{t('queue.eyebrow')}</p>
+          <p className="label-heading">{t('queue.eyebrow')}</p>
           <h2 id={TITLE_ID} className="font-display requests-queue__title">
             {t('queue.title')}
           </h2>
@@ -167,7 +167,7 @@ export default function RequestsQueue() {
               {/* #1421 authored this line already fixed: the design says
                   "No invitations, duels, mentions or submissions owed" and
                   a mention is not an obligation (decision 8). */}
-              <p className="eyebrow">{t('queue.doneBody')}</p>
+              <p className="label-caption">{t('queue.doneBody')}</p>
             </div>
           )}
         </div>

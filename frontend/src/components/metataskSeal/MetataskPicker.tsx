@@ -232,7 +232,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 <MetataskSeal metatasks={[mt]} />
                 {sealed && (
                   <span
-                    className="eyebrow block"
+                    className="label-caption block"
                     style={{
                       color: "var(--color-success)",
                       marginTop: "var(--space-xs)",

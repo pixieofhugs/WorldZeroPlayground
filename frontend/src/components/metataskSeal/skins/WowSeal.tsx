@@ -81,7 +81,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         )}
 
         <span
-          className="eyebrow block"
+          className="label-heading block"
           style={{
             fontFamily: 'var(--faction-wow-card-font)',
             letterSpacing: '0.14em',

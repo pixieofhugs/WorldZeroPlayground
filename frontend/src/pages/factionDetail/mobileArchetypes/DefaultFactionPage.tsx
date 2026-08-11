@@ -68,7 +68,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
 
       {membership.state === 'member' && (
         <p
-          className="eyebrow"
+          className="label-caption"
           style={{ marginTop: 'var(--space-md)', color: factionCssVar(faction.slug, 'border') }}
         >
           {t('mobile.memberBadge')}
@@ -77,7 +77,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
 
       {/* Top members */}
       <section className="mt-6">
-        <h2 className="eyebrow mb-2">{t('mobile.topMembers')}</h2>
+        <h2 className="label-heading mb-2">{t('mobile.topMembers')}</h2>
         {topMembers.length === 0 ? (
           <p className="font-body text-muted content-text">{t('mobile.membersEmpty')}</p>
         ) : (
@@ -91,7 +91,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
 
       {/* Recent praxis */}
       <section className="mt-6">
-        <h2 className="eyebrow mb-2">{t('mobile.recentPraxis')}</h2>
+        <h2 className="label-heading mb-2">{t('mobile.recentPraxis')}</h2>
         {recentPraxis.length === 0 ? (
           <p className="font-body text-muted content-text">{t('mobile.praxisEmpty')}</p>
         ) : (
@@ -244,7 +244,7 @@ function MemberRow({
       >
         {member.display_name}
       </span>
-      <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', flex: 'none' }}>
+      <span className="label-caption" style={{ flex: 'none' }}>
         {t('mobile.memberStat', {
           level: member.level,
           score: member.all_time_score.toLocaleString(),
