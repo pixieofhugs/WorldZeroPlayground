@@ -14,6 +14,7 @@ import pytest
 from fastapi import HTTPException, UploadFile
 from PIL import Image
 
+from models.praxis import MediaType
 from services import media
 from services.media import (
     AVATAR_MAX_SIZE,
@@ -162,10 +163,52 @@ def test_superseded_avatar_outside_media_root_is_refused(tmp_path, monkeypatch):
     outsider = tmp_path / "not-ours.jpg"
     outsider.write_bytes(b"someone else's file")
 
-    media.delete_stored_avatar(os.path.join("..", "not-ours.jpg"))
-    media.delete_stored_avatar(str(outsider))
+    media.delete_stored_avatar(os.path.join("..", "not-ours.jpg"), 42)
+    media.delete_stored_avatar(str(outsider), 42)
 
     assert outsider.exists()
+
+
+def test_avatar_belonging_to_another_character_is_refused(tmp_path, monkeypatch):
+    """Inside MEDIA_ROOT is not enough — it has to be OURS.
+
+    ``avatar_url`` is a free-form, player-writable column and every victim's
+    path is public (``CharacterOut.avatar_url``, ``MediaItemOut.file_path``), so
+    without this a player could point their own column at anyone's file and let
+    the next upload — or their own account deletion — unlink it. Traversal was
+    always refused; ownership was not checked at all.
+    """
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path / "media"))
+    victim_directory = tmp_path / "media" / "7" / "avatar" / "deadbeef"
+    os.makedirs(str(victim_directory), exist_ok=True)
+    victim_avatar = victim_directory / "avatar.jpg"
+    victim_avatar.write_bytes(b"character 7's avatar")
+
+    # Character 42 asks for character 7's file. Resolves cleanly inside
+    # MEDIA_ROOT — the old predicate would have unlinked it.
+    media.delete_stored_avatar("7/avatar/deadbeef/avatar.jpg", 42)
+    assert victim_avatar.exists()
+
+    # The owner may still delete their own.
+    media.delete_stored_avatar("7/avatar/deadbeef/avatar.jpg", 7)
+    assert not victim_avatar.exists()
+
+
+def test_uploaded_extension_cannot_make_the_api_serve_active_content():
+    """A player picks the stem; the server picks the extension.
+
+    ``/media`` is mounted on the API's own origin and Starlette guesses
+    Content-Type from the stored filename, so ``pwn.html`` declared as
+    ``image/png`` used to come back as ``text/html`` and execute same-origin.
+    """
+    assert media._with_safe_extension("pwn.html", MediaType.image) == "pwn.jpg"
+    # SVG carries script, so it is deliberately off the image allow-list.
+    assert media._with_safe_extension("logo.svg", MediaType.image) == "logo.jpg"
+    # Legitimate uploads keep their own extension, case-insensitively.
+    assert media._with_safe_extension("photo.JPG", MediaType.image) == "photo.JPG"
+    assert media._with_safe_extension("clip.mov", MediaType.video) == "clip.mov"
+    # The player-visible stem survives — the composer renders it as the caption.
+    assert media._with_safe_extension("holiday.html", MediaType.image) == "holiday.jpg"
 
 
 def test_filename_sanitization_strips_path_and_unsafe_chars():

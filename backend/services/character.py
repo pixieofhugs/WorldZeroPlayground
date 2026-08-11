@@ -560,8 +560,10 @@ async def soft_delete_character(
         await session.flush()
 
     # Last, and only after the cleared column has been flushed: see the docstring.
-    # A no-op when the column held a pasted remote URL rather than a path we wrote.
-    delete_stored_avatar(erased_avatar_url)
+    # A no-op when the column held a pasted remote URL rather than a path we wrote,
+    # and — since the column is player-writable — also when it points at a file
+    # belonging to some other character.
+    delete_stored_avatar(erased_avatar_url, character.id)
 
 
 def _character_stats_era_join(era_id: int | None) -> Select:

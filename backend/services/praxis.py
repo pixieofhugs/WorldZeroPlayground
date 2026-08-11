@@ -405,14 +405,25 @@ async def list_praxes(
             )
             query = query.where(~account_voted, ~account_member)
 
+    # Hidden is excluded unconditionally, and the caller's filter may only narrow
+    # within what is left. This used to sit in an `else`, so *any* value for the
+    # ungated `moderation_status` query param removed the exclusion — and
+    # `?moderation_status=hidden` then selected exactly the content an admin had
+    # taken off the site. An invalid value was worse: `except ValueError: pass`
+    # dropped the caller's filter *and* the default, so a typo also published it.
+    # The detail door (`can_view_praxis`) always refused hidden; only this list
+    # door leaked. Asking for `hidden` now yields an empty page, not a 422 —
+    # a distinguishable error would answer "does hidden content exist here?".
+    query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
     if moderation_status is not None:
         try:
-            mod_enum = ModerationStatus(moderation_status)
-            query = query.where(Praxis.moderation_status == mod_enum)
+            query = query.where(
+                Praxis.moderation_status == ModerationStatus(moderation_status)
+            )
         except ValueError:
+            # Still ignored, as before — but now it only costs the caller their
+            # own filter. It used to also discard the hidden exclusion above.
             pass
-    else:
-        query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
 
     if task_id is not None:
         query = query.where(Praxis.task_id == task_id)

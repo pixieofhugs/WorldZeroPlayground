@@ -21,6 +21,7 @@ You are the backend specialist for World Zero. You own everything under `backend
 ## Scope
 
 - Edit and create files under `backend/` only. Read anywhere; never edit outside `backend/`.
+- **Never edit `.github/`.** CI config is what gates merges to a branch that auto-deploys to production (`render.yaml` sets `autoDeploy: true`), so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
 - Run `pytest`, `alembic`, `uvicorn` via Bash. Test env notes live in `docs/spec/SPEC-testing.md`.
 
 ## Build conventions

@@ -71,9 +71,21 @@ class TaskOut(WireModel):
     signup_reason: Optional[str] = None
 
 
+#: Trust-boundary caps on the two free-text fields a player writes, matching the
+#: convention `CommentIn` already follows (ADR-0006). Both were unbounded, and
+#: the DB columns behind them are `String`/`Text` with no length either — so a
+#: task proposal could carry an arbitrarily long body. That body is read back by
+#: the admin moderation queue and by `mcp/worldzero-admin`'s `wz_list_pending_-
+#: tasks`, which returns it into an agent context that also holds `wz_manage_-
+#: role`. A cap is not a defence against prompt injection, but an unbounded
+#: field is a comfortable place to hide one.
+MAX_TASK_TITLE = 200
+MAX_TASK_DESCRIPTION = 5000
+
+
 class TaskCreate(WireModel):
-    title: str
-    description: Optional[str] = None
+    title: str = Field(..., min_length=1, max_length=MAX_TASK_TITLE)
+    description: Optional[str] = Field(None, max_length=MAX_TASK_DESCRIPTION)
     point_value: int = Field(..., gt=0)
     level_required: int = Field(0, ge=0)
     primary_faction_slug: Optional[str] = None

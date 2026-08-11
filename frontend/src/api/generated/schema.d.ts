@@ -1732,7 +1732,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Voters */
+        /**
+         * List Voters
+         * @description The voter roster for a praxis the caller may see.
+         *
+         *     Visibility is :func:`can_view_praxis`, the same predicate the praxis detail
+         *     route runs, so the two doors cannot drift.
+         */
         get: operations["list_voters_praxes__praxis_id__voters_get"];
         put?: never;
         post?: never;
@@ -7738,7 +7744,9 @@ export interface operations {
             path: {
                 praxis_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {

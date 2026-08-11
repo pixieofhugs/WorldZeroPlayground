@@ -61,6 +61,48 @@ def _sanitize_filename(raw: str) -> str:
     return cleaned
 
 
+#: Extensions we are willing to let a player put on a file that ``/media``
+#: serves from the API's own origin, keyed by the type we detected.
+#:
+#: This exists because the served ``Content-Type`` is guessed from the stored
+#: filename (Starlette's ``FileResponse`` calls ``mimetypes.guess_type``), and
+#: the filename used to be the player's, verbatim. Uploading ``pwn.html`` while
+#: declaring ``Content-Type: image/png`` passed ``_detect_media_type`` — which
+#: reads only the declared string — and then came back off ``/media`` as
+#: ``text/html``, executing on the API origin with the session cookie attached.
+#:
+#: ``.svg`` is deliberately absent from the image set: SVG carries script.
+_SAFE_EXTENSIONS: dict[MediaType, frozenset[str]] = {
+    MediaType.image: frozenset(
+        {".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif", ".bmp"}
+    ),
+    MediaType.video: frozenset({".mp4", ".webm", ".mov", ".m4v", ".ogv"}),
+    MediaType.audio: frozenset({".mp3", ".m4a", ".aac", ".ogg", ".oga", ".wav", ".flac"}),
+}
+
+#: What we fall back to when the player's extension is not on the list above.
+_CANONICAL_EXTENSION: dict[MediaType, str] = {
+    MediaType.image: ".jpg",
+    MediaType.video: ".mp4",
+    MediaType.audio: ".mp3",
+}
+
+
+def _with_safe_extension(filename: str, media_type: MediaType) -> str:
+    """Force ``filename``'s extension onto the allow-list for ``media_type``.
+
+    An allow-list rather than a deny-list of dangerous extensions: the set of
+    things a browser will execute is not fixed, and a deny-list is a promise to
+    keep up with it. The stem is preserved because it is player-visible — the
+    composer renders it as the attachment caption and as the remove button's
+    accessible name — so only the extension is rewritten.
+    """
+    stem, extension = os.path.splitext(filename)
+    if extension.lower() in _SAFE_EXTENSIONS[media_type]:
+        return filename
+    return f"{stem or 'upload'}{_CANONICAL_EXTENSION[media_type]}"
+
+
 def resolve_stored_media_path(
     stored_path: str, media_root: str | None = None
 ) -> str | None:
@@ -99,8 +141,8 @@ def resolve_stored_media_path(
     return resolved
 
 
-def delete_stored_avatar(stored_avatar_url: str | None) -> None:
-    """Unlink an avatar file we wrote, best-effort. Two callers, one rule.
+def delete_stored_avatar(stored_avatar_url: str | None, character_id: int) -> None:
+    """Unlink an avatar file **this character owns**, best-effort. Two callers, one rule.
 
     1. A fresh upload has superseded it (``process_and_save_avatar``). Called
        only once the replacement is safely on disk — an upload must never leave
@@ -114,9 +156,36 @@ def delete_stored_avatar(stored_avatar_url: str | None) -> None:
     raised, so a filesystem problem can never block the state change the caller
     is really making. The residue is an orphan, which
     ``scripts/sweep_orphan_media.py`` exists to collect.
+
+    ``character_id`` is the ownership half of the predicate, and it is the whole
+    point of this function. ``resolve_stored_media_path`` answers only "does this
+    resolve inside MEDIA_ROOT?" — it cannot answer "is this *ours*?", because it
+    is also used by the orphan sweep, which legitimately resolves every
+    character's paths. Containment alone was not enough: ``avatar_url`` is a
+    free-form, player-writable column (``update_character`` ``setattr``s whatever
+    ``CharacterUpdate`` carries), and victims' paths are public — ``CharacterOut.
+    avatar_url`` and ``MediaItemOut.file_path`` both ship the raw relative path.
+    So a player could point their own column at anyone's file and make the next
+    avatar upload, or their own account deletion, unlink it. Traversal was never
+    the gap; the guard correctly refuses ``..``, absolute paths and remote URLs.
+    Ownership was.
     """
     absolute_path = resolve_stored_media_path(stored_avatar_url or "")
     if absolute_path is None:
+        return
+    # Every avatar this server writes lands under `<character_id>/avatar/<uuid>/`
+    # (`process_and_save_avatar`). Anything else in the column came from a player,
+    # and is not ours to delete.
+    owner_directory = os.path.realpath(
+        os.path.join(settings.MEDIA_ROOT, str(character_id), "avatar")
+    )
+    if not absolute_path.startswith(owner_directory + os.sep):
+        logger.warning(
+            "Refusing to unlink %s for character %s: outside that character's "
+            "avatar directory.",
+            absolute_path,
+            character_id,
+        )
         return
     try:
         os.remove(absolute_path)
@@ -207,7 +276,7 @@ async def process_and_save_avatar(
         )
 
     # Only once the replacement is safely on disk.
-    delete_stored_avatar(previous_avatar_url)
+    delete_stored_avatar(previous_avatar_url, character_id)
 
     return relative_path
 
@@ -244,7 +313,12 @@ async def process_and_save_media(
         str(character_id), str(praxis_id), uuid.uuid4().hex
     )
     absolute_directory = os.path.join(settings.MEDIA_ROOT, relative_directory)
-    filename = _sanitize_filename(upload.filename or "upload")
+    # Sanitize the name, then force the extension onto the allow-list: `/media`
+    # serves these from the API's own origin and derives Content-Type from the
+    # stored filename, so the extension is a security decision, not cosmetics.
+    filename = _with_safe_extension(
+        _sanitize_filename(upload.filename or "upload"), media_type
+    )
     absolute_path = os.path.join(absolute_directory, filename)
     relative_path = os.path.join(relative_directory, filename)
 
