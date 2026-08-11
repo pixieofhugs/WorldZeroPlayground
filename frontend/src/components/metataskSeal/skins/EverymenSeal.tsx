@@ -48,7 +48,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
 
       <div className="flex-1" style={{ minWidth: 0 }}>
         <span
-          className="eyebrow block"
+          className="label-heading block"
           style={{ color: 'var(--everymen-muted)' }}
         >
           {t('detail.seal.label', { faction })}

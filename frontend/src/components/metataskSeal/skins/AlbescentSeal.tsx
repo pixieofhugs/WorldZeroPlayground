@@ -51,7 +51,7 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
       )}
 
       <span
-        className="eyebrow block"
+        className="label-heading block"
         style={{ color: 'var(--albescent-reveal-text-muted)' }}
       >
         {t('detail.seal.label', { faction })}

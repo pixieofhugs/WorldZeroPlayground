@@ -247,17 +247,20 @@ export function ownerRevealStyle(revealed: boolean): CSSProperties {
 
 // ── Meta-cluster affordance (edit · delete / withdraw-confirm) ────────────────
 
+/* No `color` here: these carry `.label-caption`, which paints `--label-ink`.
+   That IS the tertiary unset, so restating it would only cost a faction frame
+   the ability to repoint the tier (#1307). The `·` separators alongside are
+   plain spans and still name the neutral themselves. */
 const linkStyle = {
   background: 'none',
   border: 'none',
   cursor: 'pointer',
   padding: 0,
-  color: 'var(--color-text-tertiary)',
 } as const
 
 /**
  * Neutral text affordance for the meta cluster — mirrors the praxis owner "edit"
- * link (tertiary `.eyebrow`). Self-hides for non-authors and while editing (the
+ * link (the neutral caption tier). Self-hides for non-authors and while editing (the
  * inline editor owns Save/Cancel then).
  *
  * Pass `reveal` (from {@link useOwnerReveal}) to hover-gate it: the row then
@@ -298,7 +301,7 @@ export function OwnerControls({
         <button
           onClick={owner.confirmWithdraw}
           disabled={owner.withdrawing}
-          className="font-body eyebrow hover:underline"
+          className="font-body label-caption hover:underline"
           style={{ ...linkStyle, color: 'var(--color-danger)' }}
         >
           {t('comments.withdraw')}
@@ -308,7 +311,7 @@ export function OwnerControls({
         </span>
         <button
           onClick={owner.cancelConfirm}
-          className="font-body eyebrow hover:underline"
+          className="font-body label-caption hover:underline"
           style={linkStyle}
         >
           {t('comments.keep')}
@@ -327,7 +330,7 @@ export function OwnerControls({
       <button
         onClick={owner.startEdit}
         aria-label={t('comments.edit')}
-        className="font-body eyebrow hover:underline"
+        className="font-body label-caption hover:underline"
         style={linkStyle}
       >
         {t('comments.edit')}
@@ -338,7 +341,7 @@ export function OwnerControls({
       <button
         onClick={owner.startConfirm}
         aria-label={t('comments.delete')}
-        className="font-body eyebrow hover:underline"
+        className="font-body label-caption hover:underline"
         style={linkStyle}
       >
         {t('comments.delete')}

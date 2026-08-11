@@ -104,7 +104,7 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
       )}
 
       <span
-        className="eyebrow block relative"
+        className="label-heading block relative"
         style={{
           fontFamily: 'var(--faction-snide-font-type)',
           color: 'var(--faction-snide-acid)',
