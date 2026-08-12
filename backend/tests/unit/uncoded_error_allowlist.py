@@ -40,9 +40,11 @@ judgement, not by fatigue — so the next reader does not re-derive it:
   (``routers/admin.py`` and ``routers/auth.py::dev_login`` were additionally
   held back from #1652 because #1667 and #1676 were changing those functions —
   that is sequencing, not a ruling that they are fine uncoded. #1667 has since
-  landed, and it resolved its share by **deletion**: eleven of these raises sat
+  landed, and it resolved its share by **deletion**: ten of these raises sat
   in routes and services that were unreachable, so they left with the code
-  rather than being converted. ``routers/admin.py``'s remaining three scopes
+  rather than being converted. (``services/task.py::list_signups_for_task``
+  was an eleventh until the owner ruling of #1262/#1386 kept its route, so it
+  is back on the list unconverted, on the same footing as before.) ``routers/admin.py``'s remaining three scopes
   were never #1667's to touch.)
 * **Auth and dependency plumbing.** ``services/auth.py``, ``dependencies.py``:
   401/403 with a status the client already switches on before it ever looks at
@@ -72,7 +74,7 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 136
+UNCODED_RAISE_TOTAL = 137
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
@@ -164,6 +166,7 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/relationship_service.py::create_relationship": 3,
     "services/relationship_service.py::unblock_relationship": 2,
 
+    "services/task.py::list_signups_for_task": 1,
     "services/task.py::list_tasks": 2,
     "services/task.py::propose_task": 2,
 

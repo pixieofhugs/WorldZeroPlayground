@@ -1,4 +1,4 @@
-"""The fourteen unreachable endpoints deleted by #1667 stay deleted.
+"""The thirteen unreachable endpoints deleted by #1667 stay deleted.
 
 THE SEAM
 --------
@@ -62,7 +62,6 @@ DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
         ("post", "/admin/factions"),
         ("get", "/characters/{character_id}/praxes"),
         ("get", "/characters/{character_id}/stats/votes-received"),
-        ("get", "/tasks/{task_id}/signups"),
         ("put", "/tasks/{task_id}"),
     }
 )
@@ -78,13 +77,22 @@ SURVIVING_REPLACEMENTS: frozenset[tuple[str, str]] = frozenset(
     }
 )
 
-#: Deliberately unreachable and deliberately kept — owner's call, recorded in
-#: #1667's "Explicitly NOT this issue". A later dead-endpoint sweep will find
-#: these again; this is the note that says it already looked.
+#: Deliberately unreachable and deliberately kept — owner's call. The first two
+#: are recorded in #1667's "Explicitly NOT this issue"; the third is not, and
+#: that omission is exactly why it is here (see its comment). A later
+#: dead-endpoint sweep will find all three again; this is the note that says
+#: it already looked, and that the answer was no.
 KEPT_THOUGH_UNREACHABLE: frozenset[tuple[str, str]] = frozenset(
     {
         ("patch", "/admin/characters/{character_id}/stats"),
         ("put", "/relationships/{relationship_id}"),
+        # #1262 (2026-07-28), reaffirmed in #1386 and again when #1667 was
+        # built: "who signed up for this task" is a plausible future surface
+        # and costs nothing at rest. #1386 was explicit that the ruling covers
+        # the CLIENT too, so frontend/src/api/tasks.ts::getTaskSignups stays
+        # with it. #1667 listed this route for deletion without acknowledging
+        # either ruling; that was the error, and this line is the correction.
+        ("get", "/tasks/{task_id}/signups"),
     }
 )
 
@@ -130,7 +138,7 @@ def test_the_replacements_the_deletions_relied_on_survive() -> None:
     missing = sorted((SURVIVING_REPLACEMENTS | KEPT_THOUGH_UNREACHABLE) - published)
 
     assert not missing, (
-        "#1667 deleted fourteen operations on the grounds that these still "
+        "#1667 deleted thirteen operations on the grounds that these still "
         "cover the ground; they are gone:\n  "
         + "\n  ".join(f"{method.upper()} {path}" for method, path in missing)
         + "\n\nRemoving one of these is not a cleanup — it drops a capability "
