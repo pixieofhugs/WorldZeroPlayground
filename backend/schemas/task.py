@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import ConfigDict, Field
 from schemas.base import WireModel
 
+from models.praxis import PraxisType
 from models.task import TaskStatus, TaskType
 
 
@@ -93,3 +94,36 @@ class TaskCreate(WireModel):
     metatask_faction_slug: Optional[str] = None
 
 
+class TaskSignupOut(WireModel):
+    """One row of a task's in-progress roster (GET /tasks/{id}/signups).
+
+    This is the route's real response model (``response_model=list[TaskSignupOut]``).
+    It previously was not: the route declared ``list[dict]`` and hand-built rows,
+    so FastAPI validated nothing and the two drifted (#1051). The reconciliation
+    kept the names the *route* emitted, because those are the accurate ones:
+
+    * ``praxis_type`` is the praxis's :class:`PraxisType` (solo/collab/duel). The
+      schema used to call this ``status``, which was simply the wrong fact — a
+      praxis type is not a status, and the route never emitted a status.
+    * ``joined_at`` is ``PraxisMember.joined_at``, matching both the source column
+      and the ``joined_at`` already on praxis-member payloads. The schema used to
+      call it ``signed_up_at``; same fact, inconsistent name.
+
+    Neither of the schema's old names was consumed by anything (see #1051), so no
+    live reader depended on the drift.
+    """
+
+    character_id: int
+    display_name: str
+    avatar_url: str
+    faction_slug: str
+    # The signed-up character's level in the CURRENT era (CharacterStats.level,
+    # ADR-0042), for the roster row's "lvl N" (#1029). 0 when the character has
+    # no stats row for the current era.
+    level: int = 0
+    # Which kind of praxis the character is working the task through. Typed as the
+    # enum rather than ``str`` so the domain values are not bare string literals;
+    # Pydantic serialises it to its value ("solo"/"collab"/"duel") on the wire,
+    # exactly as PraxisOut.type does.
+    praxis_type: PraxisType
+    joined_at: datetime

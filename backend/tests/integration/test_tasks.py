@@ -19,6 +19,7 @@ from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
+from schemas.task import TaskSignupOut
 
 
 async def _set_character_level(
@@ -96,7 +97,7 @@ async def test_propose_task_level3(
 
 
 # ---------------------------------------------------------------------------
-# T.6 additions — filters, propose task, hidden factions
+# T.6 additions — filters, propose task, signups list, hidden factions
 # ---------------------------------------------------------------------------
 
 
@@ -551,6 +552,53 @@ async def test_propose_task_unauthenticated(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_list_task_signups_empty(client: AsyncClient, active_task: Task):
+    """GET /tasks/{id}/signups returns empty list when no one has a praxis."""
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+@pytest.mark.asyncio
+async def test_list_task_signups_populated(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """GET /tasks/{id}/signups returns characters with active praxes for the task."""
+    # character creates a solo praxis
+    await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo"},
+        headers=auth_headers,
+    )
+    # character2 creates a solo praxis for the same task (different praxis)
+    await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo"},
+        headers=auth_headers2,
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 2
+    character_ids = [entry["character_id"] for entry in data]
+    assert character.id in character_ids
+    assert character2.id in character_ids
+
+
+@pytest.mark.asyncio
+async def test_list_task_signups_not_found(client: AsyncClient):
+    """GET /tasks/99999/signups returns 404 when task does not exist."""
+    resp = await client.get("/tasks/99999/signups")
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_list_tasks_excludes_hidden_faction_tasks(
     client: AsyncClient,
     db_session: AsyncSession,
@@ -894,6 +942,37 @@ async def test_get_task_response_fields(client: AsyncClient, active_task: Task):
     # account_id and email must never be exposed
     assert "account_id" not in data
     assert "email" not in data
+
+
+@pytest.mark.asyncio
+async def test_list_task_signups_only_in_progress(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """GET /tasks/{id}/signups excludes characters whose praxis has been deleted."""
+    # Create a praxis for character via the API
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    # Delete (abandon) the praxis — it should then be absent from signups
+    delete_resp = await client.delete(
+        f"/praxes/{praxis_id}",
+        headers=auth_headers,
+    )
+    assert delete_resp.status_code == 204
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    assert resp.status_code == 200
+    character_ids = [entry["character_id"] for entry in resp.json()]
+    assert character.id not in character_ids
 
 
 # ---------------------------------------------------------------------------
@@ -2395,3 +2474,120 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
         if "FROM character LEFT OUTER JOIN character_stats" in statement
     ]
     assert len(author_selects) == 1
+
+
+@pytest.mark.asyncio
+async def test_task_signups_carry_current_era_level(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character2: Character,
+):
+    """The in-progress roster row carries the character's current-era level."""
+    await _add_praxis_member(
+        db_session, active_task.id, character2.id, PraxisStatus.in_progress
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    assert resp.status_code == 200
+    rows = resp.json()
+    assert len(rows) == 1
+    assert rows[0]["character_id"] == character2.id
+    assert rows[0]["level"] == 5  # character2 fixture is level 5
+
+
+# ---------------------------------------------------------------------------
+# #1051 — the signups route's wire format IS TaskSignupOut
+#
+# The route used to declare response_model=list[dict] and hand-build its rows, so
+# FastAPI validated nothing and the schema drifted (it said status/signed_up_at
+# while the route emitted praxis_type/joined_at) with no test able to notice.
+# These tests pin the response to the schema so the two cannot separate again.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_task_signups_response_keys_are_exactly_the_schema(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character2: Character,
+):
+    """Every roster row carries exactly TaskSignupOut's fields — no more, no less.
+
+    Derived from the schema rather than a hand-written literal: a field added to
+    TaskSignupOut without the builder populating it (or vice versa) fails here,
+    which is the drift #1051 was about.
+    """
+    await _add_praxis_member(
+        db_session, active_task.id, character2.id, PraxisStatus.in_progress
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    assert resp.status_code == 200
+    rows = resp.json()
+    assert len(rows) == 1
+    assert set(rows[0]) == set(TaskSignupOut.model_fields)
+
+
+@pytest.mark.asyncio
+async def test_task_signups_row_reports_praxis_type_and_joined_at(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character2: Character,
+):
+    """The praxis fields use the route's (accurate) names and serialise as values.
+
+    ``praxis_type`` is the PraxisType enum's *value* on the wire, not "PraxisType.solo";
+    ``joined_at`` is a timestamp. The schema's former ``status``/``signed_up_at``
+    must not reappear.
+    """
+    await _add_praxis_member(
+        db_session, active_task.id, character2.id, PraxisStatus.in_progress
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    row = resp.json()[0]
+    assert row["praxis_type"] == PraxisType.solo.value
+    assert row["joined_at"]
+    assert "status" not in row
+    assert "signed_up_at" not in row
+
+
+@pytest.mark.asyncio
+async def test_task_signups_never_expose_account_id_or_email(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character2: Character,
+):
+    """The roster row projects chosen Character columns — never account identity.
+
+    ``Character`` carries ``account_id``; the builder must not hand the ORM object
+    to the schema wholesale.
+    """
+    await _add_praxis_member(
+        db_session, active_task.id, character2.id, PraxisStatus.in_progress
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    body = resp.text
+    assert "account_id" not in body
+    assert "email" not in body
+
+
+def test_task_signups_openapi_documents_the_schema():
+    """The route's shape reaches the OpenAPI document.
+
+    ``list[dict]`` published an untyped object, so a client generator learned
+    nothing about the roster. Guards the half of #1051 that no request can show.
+    """
+    from main import app
+
+    schema = app.openapi()
+    response = schema["paths"]["/tasks/{task_id}/signups"]["get"]["responses"]["200"]
+    items = response["content"]["application/json"]["schema"]["items"]
+    assert items["$ref"].endswith("/TaskSignupOut")
+    documented = schema["components"]["schemas"]["TaskSignupOut"]["properties"]
+    assert set(documented) == set(TaskSignupOut.model_fields)

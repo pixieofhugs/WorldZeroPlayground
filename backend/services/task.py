@@ -13,7 +13,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
-from schemas.task import TaskCreate, TaskOut
+from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -298,6 +298,74 @@ async def build_task_out_for_viewer(
     return base
 
 
+async def list_signups_for_task(
+    task_id: int,
+    session: AsyncSession,
+) -> list[tuple[PraxisMember, Character, Praxis, int]]:
+    """List in-progress praxis members for a task (characters currently working on it).
+
+    Each row is ``(member, character, praxis, level)`` where ``level`` is the
+    character's CURRENT-era level (``CharacterStats.level``, ADR-0042) for the
+    roster row's "lvl N" (#1029), 0 when they have no stats row for this era.
+    It comes from an outer join in this same query, so the roster stays one
+    query however many characters are on it.
+
+    Raises 404 if the task does not exist.
+    """
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
+
+    era_row = await get_current_era_row_safe(session)
+    stats_join = CharacterStats.character_id == Character.id
+    if era_row is not None:
+        stats_join = and_(stats_join, CharacterStats.era_id == era_row.id)
+
+    result = await session.execute(
+        select(PraxisMember, Character, Praxis, CharacterStats.level)
+        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
+        .join(Character, PraxisMember.character_id == Character.id)
+        .outerjoin(CharacterStats, stats_join)
+        .where(
+            Praxis.task_id == task_id,
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+        )
+        .order_by(PraxisMember.joined_at.asc())
+    )
+    return [
+        (member, character, praxis, int(level or 0))
+        for member, character, praxis, level in result.all()
+    ]
+
+
+def build_task_signup_out(
+    member: PraxisMember,
+    character: Character,
+    praxis: Praxis,
+    level: int,
+) -> TaskSignupOut:
+    """Assemble one roster row from a :func:`list_signups_for_task` tuple.
+
+    Mirrors :func:`build_task_out` — the row is composed here in the service, not
+    in the route, and the route simply maps this over the query result (#1051).
+
+    Deliberately projects a *chosen* set of columns off ``character`` rather than
+    validating the ORM object wholesale: ``Character`` carries ``account_id``,
+    which must never reach a public response.
+    """
+    return TaskSignupOut(
+        character_id=character.id,
+        display_name=character.display_name,
+        avatar_url=character.avatar_url,
+        faction_slug=character.faction_slug,
+        # Current-era level for the roster row's "lvl N" (#1029); joined in
+        # list_signups_for_task, so the roster is still one query.
+        level=level,
+        praxis_type=praxis.type,
+        joined_at=member.joined_at,
+    )
+
+
 async def in_progress_counts_for_tasks(
     task_ids: Collection[int],
     session: AsyncSession,
@@ -305,14 +373,11 @@ async def in_progress_counts_for_tasks(
     """Grouped count of active signups per task, in ONE query.
 
     An "active signup" is a ``PraxisMember`` row on a ``Praxis`` whose status
-    is ``in_progress`` or ``pending``, counted and grouped across every
-    requested task id (#1021), so populating ``TaskOut.in_progress_count`` for
-    a page of tasks never becomes a per-task query.
-
-    This is now the *only* reader of that population. ``list_signups_for_task``
-    named the same set row by row for ``GET /tasks/{id}/signups``, which had no
-    caller and went with the route in #1667 — so the count is no longer one of
-    two spellings that could drift apart.
+    is ``in_progress`` or ``pending`` — the exact population
+    :func:`list_signups_for_task` lists for a single task, reduced to a count
+    here and grouped across every requested task id (#1021), so populating
+    ``TaskOut.in_progress_count`` for a page of tasks never becomes a
+    per-task query.
 
     Task ids with no active signups are simply absent from the returned map;
     callers should treat a missing entry as 0 (see :func:`build_task_out`).
