@@ -113,6 +113,14 @@ export type TaskSignupOut = components['schemas']['TaskSignupOut']
  * `TaskSignupOut` and this client survive because "who signed up for this task"
  * is a plausible future surface and they cost nothing at rest. Calling it again
  * means adding a round trip, so it wants a designed consumer, not a re-wire.
+ *
+ * The ruling was reaffirmed in #1386, which was explicit that it covers THIS
+ * CLIENT and not only the route. It has since survived the dead-endpoint sweep
+ * of #1667: that issue listed the route, `TaskSignupOut` and this wrapper for
+ * deletion on the correct observation that nothing imports it, and the owner
+ * reinstated all three. So a caller-count of zero is not new information here,
+ * and it is not the finding it looks like — it is the recorded state. Anything
+ * that removes this needs a fresh owner ruling, not a grep.
  */
 export async function getTaskSignups(taskId: number): Promise<TaskSignupOut[]> {
   const { data } = await apiGet('/tasks/{task_id}/signups', {
