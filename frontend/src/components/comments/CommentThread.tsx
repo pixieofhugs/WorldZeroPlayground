@@ -387,7 +387,7 @@ export default function CommentThread({
   return (
     <section style={{ marginTop: 'var(--space-xl)' }}>
       {showHeading && (
-        <h3 className="eyebrow" style={{ marginBottom: 'var(--space-md)' }}>
+        <h3 className="label-heading" style={{ marginBottom: 'var(--space-md)' }}>
           {t('comments.heading', { count: comments.length })}
         </h3>
       )}

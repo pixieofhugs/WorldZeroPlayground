@@ -443,22 +443,30 @@ async def test_resolution_is_sticky_across_a_second_era_close(
 
 
 @pytest.mark.asyncio
-async def test_admin_era_reset_endpoint_resolves_duels(
-    client, account: Account, auth_headers: dict, db_session: AsyncSession,
+async def test_era_reset_script_resolves_duels(
+    account: Account, character: Character, db_session: AsyncSession,
     era: Era, faction_ua: Faction,
 ):
-    """The freeze runs through the real admin endpoint, not just the service."""
-    from tests.integration.test_admin import _make_admin
+    """The freeze runs through the real entry point, not just the service.
 
-    await _make_admin(account, db_session)
+    That entry point was ``PUT /admin/era/reset`` until #1667 deleted it as
+    unreachable; the rollover is now ``scripts/era_reset.py`` (#1666). Composing
+    the two halves is the point of this test: the rest of this file proves
+    ``apply_era_reset`` freezes duels, and ``test_era_reset_script.py`` proves
+    the script opens an era — neither alone proves an operator's rollover
+    actually settles the board.
+    """
+    from tests.integration.test_era_reset_script import _make_admin
+    from scripts.era_reset import reset_era
+
+    await _make_admin(db_session, account)
     duel, challenger, _ = await _make_duel(
         db_session, era, label="api", status=DuelStatus.settled,
         challenger_votes=4, opponent_votes=1,
     )
     await db_session.commit()
 
-    response = await client.put("/admin/era/reset", headers=auth_headers)
-    assert response.status_code == 200
+    assert await reset_era(db_session, character.username, confirmed=True) == 0
 
     result = await db_session.execute(select(Duel).where(Duel.id == duel.id))
     resolved = result.scalar_one()

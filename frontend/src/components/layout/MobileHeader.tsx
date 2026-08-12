@@ -77,9 +77,8 @@ export default function MobileHeader() {
           <Link
             to="/settings"
             aria-label={t('settings.title')}
-            className="eyebrow"
+            className="label-caption"
             style={{
-              color: 'var(--color-text-secondary)',
               textDecoration: 'none',
               padding: 'var(--space-xs)',
             }}

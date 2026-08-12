@@ -804,7 +804,7 @@ export default function Sidebar() {
         </section>
       ) : (
         <section style={panelStyle}>
-          <p className="eyebrow text-center">{t('sidebar.characterCard.noCharacter')}</p>
+          <p className="label-caption text-center">{t('sidebar.characterCard.noCharacter')}</p>
         </section>
       )}
 

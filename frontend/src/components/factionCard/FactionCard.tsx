@@ -30,11 +30,8 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
   if (status === "member") {
     return (
       <span
-        className="eyebrow"
-        style={{
-          color: "var(--color-success)",
-          letterSpacing: "0.1em",
-        }}
+        className="label-caption"
+        style={{ color: "var(--color-success)" }}
       >
         {i18n.t("feed:factionCard.status.member")}
       </span>
@@ -43,11 +40,8 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
   if (status === "invited") {
     return (
       <span
-        className="eyebrow"
-        style={{
-          color: "var(--color-warning)",
-          letterSpacing: "0.1em",
-        }}
+        className="label-caption"
+        style={{ color: "var(--color-warning)" }}
       >
         {i18n.t("feed:factionCard.status.invited")}
       </span>
@@ -56,12 +50,11 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
   if (status === "burned" || status === "defected") {
     return (
       <span
-        className="eyebrow"
+        className="label-caption"
         style={{
           color: factionCssVar(slug, "card-muted"),
           background: factionCssVar(slug, "light"),
           border: `1px solid ${factionCssVar(slug, "border")}`,
-          letterSpacing: "0.1em",
           padding: "var(--space-xs) var(--space-sm)",
         }}
       >
@@ -72,11 +65,8 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
   if (status === "welcome_back" || status === "can_return") {
     return (
       <span
-        className="eyebrow"
-        style={{
-          color: factionCssVar(slug),
-          letterSpacing: "0.1em",
-        }}
+        className="label-caption"
+        style={{ color: factionCssVar(slug) }}
       >
         {i18n.t("feed:factionCard.status.welcomeBack")}
       </span>
@@ -90,7 +80,7 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
 function InvitationNote({ slug, note }: { slug: string; note: string }) {
   return (
     <div
-      className="eyebrow"
+      className="label-caption"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -99,7 +89,6 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
         background: factionCssVar(slug, "light"),
         border: `1px solid ${factionCssVar(slug, "border")}`,
         padding: "var(--space-xs) var(--space-sm)",
-        letterSpacing: "0.12em",
         marginBottom: "var(--space-sm)",
       }}
     >

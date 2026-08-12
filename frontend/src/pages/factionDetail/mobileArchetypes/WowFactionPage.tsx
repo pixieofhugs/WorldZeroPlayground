@@ -131,7 +131,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
               >
                 {entry.value}
               </div>
-              <div className="eyebrow" style={{ color: WOW_MUTED, marginTop: "var(--space-xs)" }}>
+              <div className="label-caption" style={{ color: WOW_MUTED, marginTop: "var(--space-xs)" }}>
                 {entry.label}
               </div>
             </div>
@@ -302,7 +302,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span className="eyebrow" style={{ flex: "none", color: WOW_DEEP }}>
+      <span className="label-caption" style={{ flex: "none", color: WOW_DEEP }}>
         {t("mobile.memberStat", {
           level: member.level,
           score: member.all_time_score.toLocaleString(),

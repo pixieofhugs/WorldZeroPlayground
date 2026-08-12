@@ -38,7 +38,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
 
   if (submitted) {
     return (
-      <span className="eyebrow text-[9px]" style={{ color: 'var(--color-success)' }}>
+      <span className="label-caption" style={{ color: 'var(--color-success)' }}>
         {t('detail.flag.flaggedTitle')}
       </span>
     )

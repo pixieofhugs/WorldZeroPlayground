@@ -131,9 +131,9 @@ function RubricHeading({ children }: { children: ReactNode }) {
     <div style={{ marginTop: 'var(--space-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
         <Rubric />
-        {/* .eyebrow owns the size (§4); this contributes the inscriptional face
-            and the rubrication red only. */}
-        <span className="eyebrow" style={{ fontFamily: CAPS, color: OCHRE }}>
+        {/* .label-heading owns the size (§4); this contributes the inscriptional
+            face and the rubrication red only. */}
+        <span className="label-heading" style={{ fontFamily: CAPS, color: OCHRE }}>
           {children}
         </span>
       </div>

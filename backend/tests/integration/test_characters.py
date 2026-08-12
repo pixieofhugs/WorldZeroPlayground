@@ -116,7 +116,7 @@ async def test_delete_character(
 
 
 # ---------------------------------------------------------------------------
-# T.5 additions — search/filter, stats fields, praxes, faction change, second char
+# T.5 additions — search/filter, stats fields, faction change, second char
 # ---------------------------------------------------------------------------
 
 
@@ -388,90 +388,6 @@ async def test_get_character_no_account_id_in_response(
 
 
 @pytest.mark.asyncio
-async def test_get_character_praxes_empty(client: AsyncClient, character: Character):
-    """GET /characters/{id}/praxes returns an empty list when no praxis exists."""
-    resp = await client.get(f"/characters/{character.id}/praxes")
-    assert resp.status_code == 200
-    assert resp.json() == []
-
-
-@pytest.mark.asyncio
-async def test_get_character_praxes_returns_list(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    active_task: Task,
-):
-    """GET /characters/{id}/praxes returns seeded praxis entries."""
-    from models.praxis import PraxisMember, PraxisStatus, PraxisType
-    praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
-        type=PraxisType.solo,
-        # submitted so it's publicly visible on the profile grid (ADR-0024), and
-        # because #1112 keeps in_progress off this record for every viewer.
-        status=PraxisStatus.submitted,
-        title="My Praxis",
-        body_text="Proof here",
-    )
-    db_session.add(praxis)
-    await db_session.flush()
-    # The record is scoped by MEMBERSHIP (#1112), so an ORM-seeded praxis needs
-    # the creator's PraxisMember row that ``create_praxis`` always writes.
-    db_session.add(
-        PraxisMember(praxis_id=praxis.id, character_id=character.id, has_submitted=True)
-    )
-    await db_session.commit()
-
-    resp = await client.get(f"/characters/{character.id}/praxes")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert len(data) == 1
-    assert data[0]["title"] == "My Praxis"
-
-
-@pytest.mark.asyncio
-async def test_get_character_praxes_pagination(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    active_task: Task,
-):
-    """GET /characters/{id}/praxes respects limit and offset."""
-    from models.praxis import PraxisMember, PraxisStatus, PraxisType
-    for index in range(3):
-        praxis = Praxis(
-            task_id=active_task.id,
-            created_by_id=character.id,
-            type=PraxisType.solo,
-            # submitted + a PraxisMember row: see returns_list test (ADR-0024, #1112).
-            status=PraxisStatus.submitted,
-            title=f"Praxis {index}",
-            body_text="proof",
-        )
-        db_session.add(praxis)
-        await db_session.flush()
-        db_session.add(
-            PraxisMember(
-                praxis_id=praxis.id, character_id=character.id, has_submitted=True
-            )
-        )
-    await db_session.commit()
-
-    resp_limited = await client.get(
-        f"/characters/{character.id}/praxes", params={"limit": 2, "offset": 0}
-    )
-    assert resp_limited.status_code == 200
-    assert len(resp_limited.json()) == 2
-
-    resp_offset = await client.get(
-        f"/characters/{character.id}/praxes", params={"limit": 10, "offset": 2}
-    )
-    assert resp_offset.status_code == 200
-    assert len(resp_offset.json()) == 1
-
-
-@pytest.mark.asyncio
 async def test_faction_change_via_choose_endpoint(
     client: AsyncClient,
     db_session: AsyncSession,
@@ -674,14 +590,6 @@ async def test_empty_display_name_rejected(
     """A non-empty display_name is required."""
     resp = await client.post("/characters", json={"display_name": "   "}, headers=auth_headers)
     assert resp.status_code in (400, 422)
-
-
-@pytest.mark.asyncio
-async def test_get_character_praxes_for_nonexistent_character(client: AsyncClient):
-    """GET /characters/99999/praxes returns an empty list (no character guard)."""
-    resp = await client.get("/characters/99999/praxes")
-    assert resp.status_code == 200
-    assert resp.json() == []
 
 
 # ---------------------------------------------------------------------------
@@ -994,59 +902,6 @@ async def test_character_relationships_endpoint_is_gone(
 
     resp = await client.get(f"/characters/{character.id}/relationships")
     assert resp.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# Votes-received stats endpoint
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_votes_received_zero(client: AsyncClient, character: Character):
-    """GET /characters/{id}/stats/votes-received returns 0 when no votes exist."""
-    resp = await client.get(f"/characters/{character.id}/stats/votes-received")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["character_id"] == character.id
-    assert data["votes_received"] == 0
-
-
-@pytest.mark.asyncio
-async def test_votes_received_with_votes(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-):
-    """GET /characters/{id}/stats/votes-received counts votes on that character's praxes."""
-    from models.praxis import PraxisType
-    from models.vote import Vote
-
-    praxis = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
-        type=PraxisType.solo,
-        title="Voted Praxis",
-        body_text="proof",
-    )
-    db_session.add(praxis)
-    await db_session.flush()
-
-    vote = Vote(
-        praxis_id=praxis.id,
-        voter_character_id=character2.id,
-        voter_account_id=character2.account_id,
-        value=4,
-    )
-    db_session.add(vote)
-    await db_session.commit()
-
-    resp = await client.get(f"/characters/{character.id}/stats/votes-received")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["character_id"] == character.id
-    assert data["votes_received"] == 1
 
 
 @pytest.mark.asyncio

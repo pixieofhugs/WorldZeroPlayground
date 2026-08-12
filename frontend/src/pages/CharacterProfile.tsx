@@ -25,9 +25,11 @@ import {
   listRelationships,
   createRelationship,
   deleteRelationship,
+  blockRelationship,
   unblockRelationship,
   type RelationshipListItem,
 } from "../api/relationships";
+import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
 import { extractError } from "../utils/errors";
@@ -141,6 +143,24 @@ export default function CharacterProfile() {
     }
   };
 
+  // ADR-0009 — a block is mutual, visible and reversible. The confirm that
+  // precedes this lives in RelationshipBlockControl; by the time it calls, the
+  // player has read what blocking does.
+  const handleBlockRelationship = async () => {
+    if (!relationship) return;
+    setRelationshipLoading(true);
+    setRelationshipError(null);
+    try {
+      // Same #1383 shape as unblock: the write answers the enriched edge, so
+      // the `Blocked` display status arrives without a re-list.
+      setRelationship(await blockRelationship(relationship.id));
+    } catch {
+      setRelationshipError(t("relationships.blockError"));
+    } finally {
+      setRelationshipLoading(false);
+    }
+  };
+
   const handleUnblockRelationship = async () => {
     if (!relationship || !character) return;
     setRelationshipLoading(true);
@@ -246,12 +266,11 @@ export default function CharacterProfile() {
               <button
                 onClick={handleRemoveRelationship}
                 disabled={relationshipLoading}
-                className="eyebrow"
+                className="label-caption"
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--color-text-tertiary)",
                   textAlign: "center",
                 }}
               >
@@ -262,18 +281,29 @@ export default function CharacterProfile() {
               <button
                 onClick={handleUnblockRelationship}
                 disabled={relationshipLoading}
-                className="eyebrow"
+                className="label-caption"
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--color-text-tertiary)",
                   textAlign: "center",
                 }}
               >
                 {t("relationships.unblock")}
               </button>
             )}
+            {/* ADR-0009 — either party may block, and the control hides
+                itself on the cases where it would be wrong (own profile, an
+                edge already blocked). */}
+            <RelationshipBlockControl
+              relationship={relationship}
+              viewerCharacterId={user?.character?.id}
+              targetCharacterId={character.id}
+              targetDisplayName={character.display_name}
+              factionSlug={character.faction_slug}
+              busy={relationshipLoading}
+              onBlock={handleBlockRelationship}
+            />
           </>
         ) : (
           <>

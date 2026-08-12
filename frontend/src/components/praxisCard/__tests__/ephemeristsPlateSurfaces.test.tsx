@@ -299,6 +299,60 @@ describe('the Ephemerists mark vocabulary is declared once (#1654)', () => {
   })
 })
 
+/**
+ * #1664 — the label VOICE and the monogram helper live in the kit too.
+ *
+ * Neither is a mark, so #1654 left both behind, and the task page's copies were
+ * the last of it: `SMALL_CAPS` byte-identical, `initialsOf` byte-identical
+ * except for the empty case, where it dropped the kit's "·" and rendered an
+ * empty disc. That is the shape a name-based sweep is worst at — the copy is
+ * correct enough to review clean and wrong in one input nobody types.
+ *
+ * So this sweeps by VALUE, and scopes to the surfaces that already reach the
+ * kit: a file importing `factionMarks/ephemeristsPlate` and then restating part
+ * of it is a copy, whatever it called the local. The scoping is what keeps this
+ * honest about the other factions — `covenSlip` declares the same initials
+ * helper for the Coven's own vocabulary, and the seven other task/praxis
+ * archetypes each carry a local one. Those are their kits' business, not the
+ * plate's, and a repo-wide equality here would either fail on them or quietly
+ * claim authority over drawings this file has never seen.
+ *
+ * The task CARD keeps its own `SMALL_CAPS` and is expected to: it tracks at
+ * 0.26em, which is the card design's drawing rather than a drift from the
+ * page's, exactly like the cornice's 40 flutes against the page's 52. The value
+ * sweep passes it for free — a different value is not a transcription.
+ */
+describe("the plate's label voice and monogram are declared once (#1664)", () => {
+  /** The kit's own values, spelled out. A copy can rename the const; it cannot
+   *  restate the voice without restating these four properties in this order. */
+  const LABEL_VOICE =
+    'fontFamily: CAPS, fontWeight: 500, letterSpacing: "0.24em", textTransform: "uppercase"'
+  /** The tail of `initialsOf` — the two-letter cut and the no-name mark. */
+  const INITIALS = '.slice(0, 2) .join("") .toUpperCase() || "·"'
+  const squash = (source: string) => source.replace(/\s+/g, ' ')
+
+  /** Every shipped surface that reaches the kit, the kit itself excepted. */
+  const plateSurfaces = () =>
+    sources().filter(({ path, source }) => path !== KIT && source.includes('factionMarks/ephemeristsPlate'))
+
+  it('is the kit that holds both values', () => {
+    // If a refactor moves or reformats either, this fails HERE rather than
+    // silently turning the sweep below into an assertion about nothing.
+    const kit = squash(readFileSync(KIT, 'utf8'))
+    expect(kit, 'SMALL_CAPS').toContain(LABEL_VOICE)
+    expect(kit, 'initialsOf').toContain(INITIALS)
+  })
+
+  it('leaves no plate surface restating them', () => {
+    const surfaces = plateSurfaces()
+    expect(surfaces.length, 'the sweep found the plate surfaces at all').toBeGreaterThan(10)
+    const restating = (value: string) =>
+      surfaces.filter(({ source }) => squash(source).includes(value)).map((file) => file.path)
+    expect(restating(LABEL_VOICE), 'SMALL_CAPS is transcribed').toEqual([])
+    expect(restating(INITIALS), 'initialsOf is transcribed').toEqual([])
+  })
+})
+
 describe('the Ephemerists metatask seal is a margin note on papyrus (#1207)', () => {
   const html = () => render(<MetataskSeal metatasks={[metatask()]} />)
 

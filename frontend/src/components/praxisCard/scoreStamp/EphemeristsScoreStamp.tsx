@@ -60,7 +60,7 @@ const MEDALLION_INSET = 6;
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** The cell's label voice: incised caps, at the plate's caption gold. */
@@ -181,6 +181,23 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
           gloss={t("card.stamp.ephemerists.fromVotesGloss")}
         />
       </div>
+
+      {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
+          Labelled 習 like every other row of this cell — the #1637 bound holds,
+          so the LABEL is encoded and the figure stays a Western numeral. */}
+      {habit !== null && (
+        <div
+          style={{
+            fontFamily: READING,
+            fontStyle: "italic",
+            fontSize: "var(--text-md)",
+            color: QUIET,
+            marginTop: "var(--space-xs)",
+          }}
+        >
+          + {habit} <GlossedGlyph glyph={t("card.stamp.ephemerists.habit")} gloss={t("card.stamp.habit")} />
+        </div>
+      )}
 
       {/* The total, struck in the stepped octagon on its lotus base. */}
       <div

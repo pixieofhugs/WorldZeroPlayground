@@ -16,7 +16,7 @@ export default function FilterLevelNodes({ levels, value, onChange }: Props) {
   const { t } = useTranslation('common')
   return (
     <div className="flex items-center">
-      <span className="eyebrow mr-2">{t('filters.level')}</span>
+      <span className="label-heading mr-2">{t('filters.level')}</span>
       {levels.map((level, index) => {
         const active = value === level
         return (
