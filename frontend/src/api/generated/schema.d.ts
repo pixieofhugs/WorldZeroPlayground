@@ -1596,6 +1596,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/{task_id}/signups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Task Signups
+         * @description List characters currently working on a task via praxis membership.
+         *
+         *     ``response_model`` is the real schema, not ``list[dict]`` (#1051): the rows
+         *     are now validated and the shape appears in the OpenAPI document, so the schema
+         *     can no longer drift away from the route unnoticed.
+         */
+        get: operations["list_task_signups_tasks__task_id__signups_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4053,6 +4077,46 @@ export interface components {
             task_type: components["schemas"]["TaskType"];
             /** Title */
             title: string;
+        };
+        /**
+         * TaskSignupOut
+         * @description One row of a task's in-progress roster (GET /tasks/{id}/signups).
+         *
+         *     This is the route's real response model (``response_model=list[TaskSignupOut]``).
+         *     It previously was not: the route declared ``list[dict]`` and hand-built rows,
+         *     so FastAPI validated nothing and the two drifted (#1051). The reconciliation
+         *     kept the names the *route* emitted, because those are the accurate ones:
+         *
+         *     * ``praxis_type`` is the praxis's :class:`PraxisType` (solo/collab/duel). The
+         *       schema used to call this ``status``, which was simply the wrong fact — a
+         *       praxis type is not a status, and the route never emitted a status.
+         *     * ``joined_at`` is ``PraxisMember.joined_at``, matching both the source column
+         *       and the ``joined_at`` already on praxis-member payloads. The schema used to
+         *       call it ``signed_up_at``; same fact, inconsistent name.
+         *
+         *     Neither of the schema's old names was consumed by anything (see #1051), so no
+         *     live reader depended on the drift.
+         */
+        TaskSignupOut: {
+            /** Avatar Url */
+            avatar_url: string;
+            /** Character Id */
+            character_id: number;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /**
+             * Level
+             * @default 0
+             */
+            level: number;
+            praxis_type: components["schemas"]["PraxisType"];
         };
         /**
          * TaskStatus
@@ -7176,6 +7240,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_task_signups_tasks__task_id__signups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSignupOut"][];
                 };
             };
             /** @description Validation Error */

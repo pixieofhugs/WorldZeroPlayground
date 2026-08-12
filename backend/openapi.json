@@ -5587,6 +5587,51 @@
         "title": "TaskOut",
         "type": "object"
       },
+      "TaskSignupOut": {
+        "description": "One row of a task's in-progress roster (GET /tasks/{id}/signups).\n\nThis is the route's real response model (``response_model=list[TaskSignupOut]``).\nIt previously was not: the route declared ``list[dict]`` and hand-built rows,\nso FastAPI validated nothing and the two drifted (#1051). The reconciliation\nkept the names the *route* emitted, because those are the accurate ones:\n\n* ``praxis_type`` is the praxis's :class:`PraxisType` (solo/collab/duel). The\n  schema used to call this ``status``, which was simply the wrong fact — a\n  praxis type is not a status, and the route never emitted a status.\n* ``joined_at`` is ``PraxisMember.joined_at``, matching both the source column\n  and the ``joined_at`` already on praxis-member payloads. The schema used to\n  call it ``signed_up_at``; same fact, inconsistent name.\n\nNeither of the schema's old names was consumed by anything (see #1051), so no\nlive reader depended on the drift.",
+        "properties": {
+          "avatar_url": {
+            "title": "Avatar Url",
+            "type": "string"
+          },
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "faction_slug": {
+            "title": "Faction Slug",
+            "type": "string"
+          },
+          "joined_at": {
+            "format": "date-time",
+            "title": "Joined At",
+            "type": "string"
+          },
+          "level": {
+            "default": 0,
+            "title": "Level",
+            "type": "integer"
+          },
+          "praxis_type": {
+            "$ref": "#/components/schemas/PraxisType"
+          }
+        },
+        "required": [
+          "character_id",
+          "display_name",
+          "avatar_url",
+          "faction_slug",
+          "level",
+          "praxis_type",
+          "joined_at"
+        ],
+        "title": "TaskSignupOut",
+        "type": "object"
+      },
       "TaskStatus": {
         "enum": [
           "pending",
@@ -11979,6 +12024,53 @@
         "summary": "Create Task Comment",
         "tags": [
           "comments"
+        ]
+      }
+    },
+    "/tasks/{task_id}/signups": {
+      "get": {
+        "description": "List characters currently working on a task via praxis membership.\n\n``response_model`` is the real schema, not ``list[dict]`` (#1051): the rows\nare now validated and the shape appears in the OpenAPI document, so the schema\ncan no longer drift away from the route unnoticed.",
+        "operationId": "list_task_signups_tasks__task_id__signups_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSignupOut"
+                  },
+                  "title": "Response List Task Signups Tasks  Task Id  Signups Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Task Signups",
+        "tags": [
+          "tasks"
         ]
       }
     }
