@@ -101,20 +101,6 @@ export async function getAllTasks(): Promise<TaskOut[]> {
 // Actions
 // ---------------------------------------------------------------------------
 
-export async function approveTask(id: number): Promise<TaskOut> {
-  const { data } = await apiPut('/admin/tasks/{task_id}/approve', {
-    params: { path: { task_id: id } },
-  })
-  return data
-}
-
-export async function retireTask(id: number): Promise<TaskOut> {
-  const { data } = await apiPut('/admin/tasks/{task_id}/retire', {
-    params: { path: { task_id: id } },
-  })
-  return data
-}
-
 /** The three states an admin can move a task between. */
 export type AdminTaskStatus = components['schemas']['TaskStatusAction']['status']
 

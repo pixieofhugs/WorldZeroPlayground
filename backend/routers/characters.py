@@ -4,23 +4,14 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from db import get_db
 from dependencies import get_current_character, get_current_character_optional
 from models.account import Account
 from models.character import Character, CharacterStatus
-from models.praxis import ModerationStatus, Praxis, PraxisStatus
-from models.vote import Vote
-from schemas.character import (
-    CharacterCreate,
-    CharacterOut,
-    CharacterUpdate,
-    VotesReceivedOut,
-)
-from schemas.praxis import PraxisOut
+from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
 from services.auth import get_current_account
 from services.badge import list_badges_for_character
 from services.character import (
@@ -34,12 +25,6 @@ from services.character import (
 )
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
-from services.praxis import (
-    praxis_membership_condition,
-    praxis_visibility_condition,
-)
-from services.praxis_out import build_praxis_out
-from services.vote_tally import crowned_praxis_ids
 
 router = APIRouter()
 
@@ -144,62 +129,6 @@ async def delete_character_route(
     await soft_delete_character(character_id, session)
 
 
-@router.get("/{character_id}/praxes", response_model=list[PraxisOut])
-async def get_character_praxes(
-    character_id: int,
-    limit: int = 50,
-    offset: int = 0,
-    session: AsyncSession = Depends(get_db),
-    viewer: Optional[Character] = Depends(get_current_character_optional),
-):
-    """A character's praxis record — the same contract as the profile grid (#1112).
-
-    Membership, not authorship: a finished collab is part of the record of every
-    member (ADR-0013 co-ownership), not only its creator's. Finished work only:
-    ``in_progress`` is excluded for every viewer, the character themselves
-    included — the record is public, and in-flight work is read from the sidebar
-    (``GET /praxes?member_id=..&status=in_progress``) instead.
-
-    Kept byte-for-byte in step with ``list_praxes(character_id=...)``, which is
-    what the profile page actually fetches; both AND the shared
-    :func:`praxis_membership_condition` onto the unchanged viewer gate
-    :func:`praxis_visibility_condition`, so the two spellings cannot drift.
-
-    One deliberate difference since #1362: this route is **all eras**, while
-    ``GET /praxes`` now defaults to
-    :class:`services.praxis.PraxisEraScope.this_era` (opt out with
-    ``?era_scope=all_eras``). A whole-career record has no era rail to set, so
-    it keeps the unbounded list.
-    """
-    result = await session.execute(
-        select(Praxis)
-        .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
-        .where(
-            praxis_membership_condition(character_id),
-            Praxis.status == PraxisStatus.submitted,
-            praxis_visibility_condition(viewer.id if viewer else None),
-            # The docstring above promises this stays in step with
-            # ``list_praxes``; it did not. ``list_praxes`` excludes
-            # moderation-hidden rows, this did not, so content an admin had
-            # taken off the site stayed readable — unauthenticated — from the
-            # author's own profile. The two spellings CAN drift, and did.
-            Praxis.moderation_status != ModerationStatus.hidden,
-        )
-        .order_by(Praxis.created_at.desc())
-        .limit(limit)
-        .offset(offset)
-    )
-    praxis_list = result.scalars().all()
-    # Task Crown (ADR-0028): one windowed query for the whole grid — not per card.
-    crowned = await crowned_praxis_ids(
-        {praxis.task_id for praxis in praxis_list}, session
-    )
-    return [
-        await build_praxis_out(praxis, session, crowned_ids=crowned)
-        for praxis in praxis_list
-    ]
-
-
 @router.post("/{character_id}/avatar", response_model=CharacterOut)
 async def upload_avatar(
     character_id: int,
@@ -221,29 +150,3 @@ async def upload_avatar(
     await session.refresh(character)
     stats = await load_current_era_stats(character_id, session)
     return build_character_out(character, stats)
-
-
-@router.get("/{character_id}/stats/votes-received", response_model=VotesReceivedOut)
-async def get_votes_received_count(
-    character_id: int,
-    session: AsyncSession = Depends(get_db),
-) -> VotesReceivedOut:
-    """Votes received on the praxes this character **authored**.
-
-    Deliberately still ``created_by_id`` after #1112 moved the praxis *record*
-    above to membership, for two reasons:
-
-    - It is not the grid's count. Nothing renders it beside the profile grid;
-      it feeds the Field Desk home "Votes" stat, so the two cannot disagree.
-    - Scoring is author-scoped (ADR-0053): a collab's votes bank to its one
-      author. Counting memberships would both credit co-members with votes they
-      did not earn and count a single vote once per member.
-    """
-    result = await session.execute(
-        select(func.count())
-        .select_from(Vote)
-        .join(Praxis, Vote.praxis_id == Praxis.id)
-        .where(Praxis.created_by_id == character_id)
-    )
-    count = result.scalar_one()
-    return VotesReceivedOut(character_id=character_id, votes_received=count)

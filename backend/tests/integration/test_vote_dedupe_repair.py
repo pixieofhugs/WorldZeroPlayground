@@ -30,21 +30,10 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.roles import AccountRole, Role
 from models.task import Task
 from models.vote import Vote
+from scripts.backfill_character_stats import backfill_character_stats
 from services.character_stats import recompute_votes_spent_this_era
-
-
-async def _grant_admin(account: Account, session: AsyncSession) -> None:
-    """Give ``account`` the admin role so it can reach ``/admin/*``."""
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    )
-    await session.commit()
 
 
 async def _load_stats(
@@ -352,51 +341,6 @@ async def test_recompute_refuses_an_era_that_carries_spend_forward(
     )
 
 
-@pytest.mark.asyncio
-async def test_admin_endpoint_applies_the_refund(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    account: Account,
-    character: Character,
-    character2: Character,
-    praxis_solo: Praxis,
-    era: Era,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """What an operator actually runs: dry run, read the diff, then apply."""
-    resp = await client.post(
-        f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
-    )
-    assert resp.status_code == 200, resp.text
-    await _drop_vote_like_the_migration(db_session, resp.json()["id"])
-    await _grant_admin(account, db_session)
-
-    preview = await client.post(
-        "/admin/characters/backfill-vote-budget?dry_run=true", headers=auth_headers
-    )
-    assert preview.status_code == 200, preview.text
-    assert preview.json()["dry_run"] is True
-    assert preview.json()["changes"] == [
-        {"character_id": character2.id, "before": 1, "after": 0}
-    ]
-    assert (await _load_stats(db_session, character2.id, era.id)).votes_spent_this_era == 1
-
-    applied = await client.post(
-        "/admin/characters/backfill-vote-budget", headers=auth_headers
-    )
-    assert applied.status_code == 200, applied.text
-    assert applied.json()["changed"] == 1
-    assert (await _load_stats(db_session, character2.id, era.id)).votes_spent_this_era == 0
-
-    # Idempotent: a second run has nothing left to say.
-    again = await client.post(
-        "/admin/characters/backfill-vote-budget", headers=auth_headers
-    )
-    assert again.status_code == 200
-    assert again.json()["changed"] == 0
-
-
 # ---------------------------------------------------------------------------
 # 2. Score and all_time_score — does the existing backfill repair both?
 # ---------------------------------------------------------------------------
@@ -406,15 +350,13 @@ async def test_admin_endpoint_applies_the_refund(
 async def test_backfill_stats_repairs_score_and_all_time_score(
     client: AsyncClient,
     db_session: AsyncSession,
-    account: Account,
     character: Character,
     character2: Character,
     praxis_solo: Praxis,
     era: Era,
-    auth_headers: dict,
     auth_headers2: dict,
 ):
-    """``/admin/characters/backfill-stats`` repairs BOTH — via the delta, not a recompute.
+    """``scripts/backfill_character_stats.py`` repairs BOTH — via the delta, not a recompute.
 
     ``all_time_score`` is lifetime-cumulative and is never re-derived
     (``_credit_all_time_score`` explains why: an era may declare a fresh
@@ -422,7 +364,12 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
     ``recalculate_character_stats`` credits it the same ``score_delta`` it just
     computed — so when a removed star drops the era score by five, lifetime falls
     by five too. This is the test that answers #1531's "check whether it also
-    repairs ``all_time_score``": it does, and no extra endpoint is needed.
+    repairs ``all_time_score``": it does, and no extra entry point is needed.
+
+    Driven through the script's own function rather than an HTTP call: this was
+    ``POST /admin/characters/backfill-stats`` until #1667 deleted that route as
+    unreachable, and the capability moved to the script in #1666. The behaviour
+    under test never was the route — it is ``recalculate_character_stats``.
     """
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
@@ -435,17 +382,13 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
     assert score_before > 5  # base task points plus the five stars
 
     await _drop_vote_like_the_migration(db_session, resp.json()["id"])
-    await _grant_admin(account, db_session)
 
     # Stale until something recomputes: the migration touched no stats row.
     stale = await _load_stats(db_session, character.id, era.id)
     assert stale.score == score_before
     assert stale.all_time_score == all_time_before
 
-    backfill = await client.post(
-        "/admin/characters/backfill-stats", headers=auth_headers
-    )
-    assert backfill.status_code == 200, backfill.text
+    assert await backfill_character_stats(db_session) == 0
 
     repaired = await _load_stats(db_session, character.id, era.id)
     assert score_before - repaired.score == 5
@@ -456,12 +399,10 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
 async def test_backfill_stats_repair_is_idempotent(
     client: AsyncClient,
     db_session: AsyncSession,
-    account: Account,
     character: Character,
     character2: Character,
     praxis_solo: Praxis,
     era: Era,
-    auth_headers: dict,
     auth_headers2: dict,
 ):
     """Running the score backfill twice must not charge the delta twice.
@@ -476,16 +417,13 @@ async def test_backfill_stats_repair_is_idempotent(
     )
     assert resp.status_code == 200, resp.text
     await _drop_vote_like_the_migration(db_session, resp.json()["id"])
-    await _grant_admin(account, db_session)
 
-    first = await client.post("/admin/characters/backfill-stats", headers=auth_headers)
-    assert first.status_code == 200, first.text
+    assert await backfill_character_stats(db_session) == 0
     after_first = await _load_stats(db_session, character.id, era.id)
     settled_score = after_first.score
     settled_all_time = after_first.all_time_score
 
-    second = await client.post("/admin/characters/backfill-stats", headers=auth_headers)
-    assert second.status_code == 200, second.text
+    assert await backfill_character_stats(db_session) == 0
     after_second = await _load_stats(db_session, character.id, era.id)
     assert after_second.score == settled_score
     assert after_second.all_time_score == settled_all_time

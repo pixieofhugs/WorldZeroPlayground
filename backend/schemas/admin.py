@@ -95,114 +95,8 @@ class OverviewStats(WireModel):
 
 
 # ---------------------------------------------------------------------------
-# Seed / Insert
-# ---------------------------------------------------------------------------
-
-
-# ADR-0038: faction name/description prose is not DB-owned. A faction row carries
-# slug + status only; the English words live in
-# frontend/src/locales/en/factions.json.
-class FactionCreate(WireModel):
-    slug: str = Field(..., min_length=2, max_length=30, pattern=r"^[a-z0-9_-]+$")
-    hidden: bool = False
-
-
-class AdminFactionOut(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    slug: str
-    status: str
-    created_at: datetime
-
-
-class AdminCharacterCreate(WireModel):
-    account_id: int
-    username: str = Field(..., min_length=3, max_length=30)
-    display_name: str = Field(..., max_length=50)
-    bio: str = Field(default="", max_length=500)
-    avatar_url: str = Field(default="", max_length=500)
-    location: str = Field(default="", max_length=100)
-    # Characters start unaffiliated (ADR-0019). An admin who wants to place a
-    # character straight into a faction passes the slug explicitly. Omitted here
-    # rather than defaulted to a literal so the era owns the answer: the service
-    # fills it from era.starting_faction_slug (#1559), which the admin door must
-    # agree with or the two creation paths drift.
-    faction_slug: str | None = Field(default=None)
-
-
-class AdminCharacterOut(WireModel):
-    """The character an admin just minted (``POST /admin/characters``).
-
-    Carries ``account_id`` on purpose. The "never expose account_id" rule
-    (SPEC-backend-architecture.md §4) governs the *public* API; the admin router
-    is the operator surface and already answers with raw account identity and
-    e-mail (``AccountSummary``). An admin who creates a character for an account
-    needs to see which account it landed on.
-
-    Deliberately not ``CharacterOut``: that shape is the player-facing profile
-    (score, level, badges, faction display), none of which exists yet at
-    creation time. This is the insert receipt.
-    """
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    account_id: int
-    username: str
-    display_name: str
-    faction_slug: str
-    status: str
-    created_at: datetime
-
-
-# ---------------------------------------------------------------------------
 # Adjust Game State
 # ---------------------------------------------------------------------------
-
-
-class VoteSpendRepairOut(WireModel):
-    """One character's ``votes_spent_this_era`` before and after a recompute.
-
-    The wire mirror of ``services.character_stats.VoteSpendRepair``. It is a
-    separate declaration rather than the dataclass itself because the response
-    shape is a published contract and the dataclass is an internal return type;
-    tying them together would make an internal rename a wire break.
-    """
-
-    character_id: int
-    before: int
-    after: int
-
-
-class VoteBudgetBackfillOut(WireModel):
-    """Readout for ``POST /admin/characters/backfill-vote-budget``.
-
-    ``changes`` is the whole point of the endpoint's ``dry_run`` mode: an admin
-    ``votes_available`` grant writes the same counter a recompute rebuilds, and
-    nothing records that a row was hand-set, so an operator reads these
-    before/after pairs to spot a grant this pass would revert.
-    """
-
-    dry_run: bool
-    changed: int
-    changes: list[VoteSpendRepairOut]
-
-
-class StatsBackfillOut(WireModel):
-    """Readout for ``POST /admin/characters/backfill-stats``.
-
-    ``recalculated`` counts *active* characters — banned ones are skipped — so
-    it will not match a headcount of the accounts table.
-    """
-
-    recalculated: int
-
-
-class EraResetOut(WireModel):
-    """Readout for ``PUT /admin/era/reset``: the new era row and who it touched."""
-
-    era_id: int
-    characters_reset: int
 
 
 class CharacterStatsPatch(WireModel):
@@ -262,30 +156,12 @@ class TaskImportResult(WireModel):
     warnings: list[str]
 
 
-class RoleAction(WireModel):
-    role: str = Field(..., min_length=1, max_length=50)
-    action: Literal["grant", "revoke"]
-
-
 class SuspendAction(WireModel):
     suspended: bool
 
 
 class BanAction(WireModel):
     banned: bool
-
-
-class RoleActionOut(WireModel):
-    """Echo of an applied ``POST /admin/accounts/{id}/role``.
-
-    An echo rather than the account's full role set: the service applies one
-    grant/revoke and does not read the rest back, and inventing a fuller shape
-    here would mean a second query whose only consumer is the confirmation.
-    """
-
-    account_id: int
-    role: str
-    action: Literal["grant", "revoke"]
 
 
 class SuspendActionOut(WireModel):
