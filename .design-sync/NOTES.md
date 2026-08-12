@@ -410,3 +410,12 @@ good.
   Upstream has not moved under it.
 - The ensō is still the only `url(/…)` app-served asset (`grep -rn "url(/" frontend/src`);
   `gen-kit-css.mjs` inlines it at ~41 KB. A new one would need the same treatment.
+
+### Upload record (2026-08-11)
+Atomic full-writes: 1,167 content files + sentinel + anchor, in 5 group-batched calls
+(≤256/call, `_vendor` isolated because `react.js` is ~1.1 MB). `deletePaths` 24 → 18
+deleted, 6 not-found (the `_preview/*.css` of floor-card components — the expected
+continue-past case). Post-upload `list_files` diff: **0 missing**, and the 61 remote
+extras are the same hand-uploaded handoffs as ever (`mobile-system/`, `templates/`,
+`screenshots/`, `design_handoff_*`, `uploads/`) plus app-generated `_ds_manifest.json`
+and `_adherence.oxlintrc.json`. Leave those alone — they are not converter output.
