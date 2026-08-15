@@ -286,6 +286,7 @@
       "modeCollab": "Collab",
       "modeDuel": "Duel",
       "collaboratorsLabel": "Collaborators · {{count}}",
+      "presentAria": "{{name}} is here now",
       "opponentLabel": "Opponent",
       "invitePlaceholder": "Search by name",
       "sealsLabel": "Seals",

@@ -60,6 +60,13 @@ export type { CollabGate, CollabState } from './collabGate'
 const AVATAR_SIZE = 34
 /** The design's 6px status dot. */
 const DOT_SIZE = 6
+/**
+ * The "here now" badge on the avatar's corner (#1744), and the ring that lifts
+ * it off the monogram's edge. Bigger than DOT_SIZE because it stands alone on a
+ * 34px circle rather than inside a pill that is already a word wide.
+ */
+const PRESENCE_DOT_SIZE = 10
+const PRESENCE_DOT_RING = 2
 
 /**
  * The ink for text sitting ON the faction's card-accent, declared once on the
@@ -91,6 +98,7 @@ export function CollabRoster({
   currentCharacterId,
   factionSlug,
   taskPointValue,
+  presentCharacterIds,
   onKick,
   onNudge,
   onRescindInvite,
@@ -123,6 +131,26 @@ export function CollabRoster({
   currentCharacterId: number | null | undefined
   factionSlug: string | null | undefined
   taskPointValue?: number | null
+  /**
+   * Who has this praxis's room open right now (#1744, ADR-0073) — a live dot on
+   * their row, answering "is he even here?".
+   *
+   * A PROP, never derived here. Only the composer mount sits inside
+   * `PraxisRoomProvider`; the eight praxis-detail mounts, the duel/collab
+   * waiting surface and the composer's own waiting stage have no room, and
+   * **absent must mean "nothing known", not "everyone away"** — an empty dot
+   * column on a public page would read as a crew that had left.
+   *
+   * Different SOURCE and different lifetime from `StatusPill`, and deliberately
+   * a different shape: this is ephemeral awareness that vanishes with a tab,
+   * while the pill is workflow state that must still be true tomorrow. Only the
+   * pill can tell you the publish is waiting on somebody.
+   *
+   * **Decoration, never authorization.** Awareness is self-reported by each
+   * client and relayed, so an id here is a claim, not a fact. Nothing may gate
+   * on it. Membership is the edit key and is checked server-side (#1740).
+   */
+  presentCharacterIds?: readonly number[]
   /**
    * Remove another member (#959). Receives the target's CHARACTER id. When
    * provided, a kick × renders on every OTHER member's row — but only if the
@@ -291,13 +319,48 @@ export function CollabRoster({
                 borderTop: index === 0 ? undefined : '1px solid var(--color-border)',
               }}
             >
-              <RosterAvatar
-                name={row.name}
-                size={AVATAR_SIZE}
-                borderColor={done ? accent : quiet}
-                dashed={row.state === 'invited'}
-                color={done ? accent : undefined}
-              />
+              {/* Identity, and whether they are here. The dot rides the
+                  AVATAR's corner — the universal online affordance, sitting
+                  with the face rather than beside the pill it must not be
+                  confused with. `RosterAvatar` stays a pure, aria-hidden leaf,
+                  so the badge is layered by this wrapper instead. Only a MEMBER
+                  can be in the room: an invited or declined row has no
+                  `row.member`, so it can never light up. */}
+              <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+                <RosterAvatar
+                  name={row.name}
+                  size={AVATAR_SIZE}
+                  borderColor={done ? accent : quiet}
+                  dashed={row.state === 'invited'}
+                  color={done ? accent : undefined}
+                />
+                {row.member != null &&
+                  presentCharacterIds?.includes(row.member.character_id) && (
+                    <span
+                      role="img"
+                      aria-label={t('editPraxis.composer.presentAria', { name: row.name })}
+                      title={t('editPraxis.composer.presentAria', { name: row.name })}
+                      style={{
+                        position: 'absolute',
+                        right: -1,
+                        bottom: -1,
+                        width: PRESENCE_DOT_SIZE,
+                        height: PRESENCE_DOT_SIZE,
+                        borderRadius: '50%',
+                        // `card-credit`, not `card-accent`: the row already
+                        // spends the accent on DONE, and a dot in that same ink
+                        // would read as a second, quieter claim about the same
+                        // thing (#694 measures both against this sheet).
+                        background: credit,
+                        // Cut out of the sheet the roster is mounted on, so the
+                        // badge reads as a separate mark rather than a bump on
+                        // the monogram's rule.
+                        border: `${PRESENCE_DOT_RING}px solid ${factionCssVar(factionSlug, 'card-bg')}`,
+                        boxSizing: 'content-box',
+                      }}
+                    />
+                  )}
+              </span>
 
               <span
                 className="font-body text-[13px]"
