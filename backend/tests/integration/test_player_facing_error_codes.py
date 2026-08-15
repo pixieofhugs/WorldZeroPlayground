@@ -272,14 +272,16 @@ async def test_commenting_on_a_missing_praxis_and_task_are_coded_apart(
 
 
 @pytest.mark.asyncio
-async def test_commenting_on_a_hidden_praxis_is_coded(
+async def test_commenting_on_a_flagged_praxis_is_coded(
     client: AsyncClient,
     db_session: AsyncSession,
     praxis_solo: Praxis,
     character2: Character,
     auth_headers2: dict,
 ):
-    praxis_solo.moderation_status = ModerationStatus.hidden
+    """``flagged``, not ``hidden``: a hidden praxis is unviewable, so it answers
+    the 404 above — this 403 is the one a player can actually reach."""
+    praxis_solo.moderation_status = ModerationStatus.flagged
     await db_session.commit()
 
     response = await client.post(

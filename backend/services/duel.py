@@ -352,7 +352,7 @@ async def respond_to_duel_challenge(
         raise_coded(
             400,
             ErrorCode.task_bank_full,
-            f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+            f"Task bank is full ({era.max_task_signups} in-progress praxis).",
             {"limit": era.max_task_signups},
         )
 

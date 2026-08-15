@@ -93,7 +93,7 @@ async def apply_metatask(
     if praxis.status != PraxisStatus.in_progress:
         raise HTTPException(
             status_code=422,
-            detail="Metatasks can only be applied to in-progress praxes.",
+            detail="Metatasks can only be applied to in-progress praxis.",
         )
 
     character = await session.get(Character, character_id)
