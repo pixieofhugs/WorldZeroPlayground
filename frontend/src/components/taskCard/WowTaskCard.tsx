@@ -221,7 +221,30 @@ export default function WowTaskCard({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "var(--space-xs)" }}>
-                  <span style={{ fontFamily: MED, fontSize: size.pointsSize, lineHeight: 0.8, color: GILT }}>
+                  {/* WOW hangs its points upside down (#1716) — an owner ruling,
+                      and only on the BROWSING marks: this plaque and the praxis
+                      card's total. The detail surfaces, where a player checks
+                      what they earned, stay upright.
+
+                      A TRANSFORM on the presentation, never reversed or
+                      substituted characters: the digits keep their reading
+                      order in the DOM, so the numeral is still announced and
+                      still selectable. It composes with the plaque's own
+                      two-degree strike for free — that tilt lives on the
+                      wrapper above, and a child's transform multiplies into its
+                      ancestor's rather than replacing it. `inline-block` is
+                      inert on a flex item (which blockifies it anyway) and is
+                      stated so the turn survives the row losing its flex. */}
+                  <span
+                    style={{
+                      fontFamily: MED,
+                      fontSize: size.pointsSize,
+                      lineHeight: 0.8,
+                      color: GILT,
+                      display: "inline-block",
+                      transform: "rotate(180deg)",
+                    }}
+                  >
                     {basePoints}
                   </span>
                   {/* The ✦ is a dingbat, not text (§4) — which is the only reason
