@@ -1,16 +1,5 @@
-import { useEffect, useRef, useState, type ComponentType } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Constellation, { type RankedPlayer } from './Constellation'
-
-/** What a visualization must accept to be swappable into this canvas. The
- *  Constellation and the Meadow are siblings on exactly these props (#684 §2). */
-export interface PlayersVizProps {
-  players: RankedPlayer[]
-  maxScore: number
-  myCharId: number | null
-  population?: number
-  stageWidth: number
-  stageHeight: number
-}
 
 /** Desktop cap. Uncapped the sky sprawls on an ultrawide and shoves the roster
  *  far down the page; 900px keeps it a hero, not a horizon (#730 §1). */
@@ -36,10 +25,6 @@ export interface SkyCanvasProps {
   /** Cap the stage; omit for the phone, where the column is the cap. */
   maxWidth?: number
   aspect?: number
-  /** Which viz to draw into the measured stage. Defaults to the Constellation,
-   *  so mobile (#657's concern, still sky-only) is untouched; the desktop
-   *  Leaderboard passes the Meadow under the light theme (#684 §§2, 10). */
-  viz?: ComponentType<PlayersVizProps>
 }
 
 /**
@@ -54,6 +39,10 @@ export interface SkyCanvasProps {
  * width is already the capped width — no second clamp in JS. Positions inside
  * Constellation stay in px measured from the stage centre, so equal offsets are
  * equal distances regardless of the fluid column width (epic #654 §1).
+ *
+ * It also carried a `viz` prop so the light theme could swap in the Meadow
+ * (#684 §2). One sky serves both themes now (#1700, ADR-0073), so the swap seam
+ * and its `PlayersVizProps` contract are gone with their only other consumer.
  */
 export default function SkyCanvas({
   players,
@@ -62,7 +51,6 @@ export default function SkyCanvas({
   population,
   maxWidth,
   aspect = DESKTOP_SKY_ASPECT,
-  viz: Viz = Constellation,
 }: SkyCanvasProps) {
   const ref = useRef<HTMLDivElement>(null)
   // Seeded, never 0: see FALLBACK_SKY_WIDTH. The measurement then corrects it on
@@ -84,7 +72,7 @@ export default function SkyCanvas({
 
   return (
     <div ref={ref} className="mx-auto" style={{ maxWidth }}>
-      <Viz
+      <Constellation
         players={players}
         maxScore={maxScore}
         myCharId={myCharId}

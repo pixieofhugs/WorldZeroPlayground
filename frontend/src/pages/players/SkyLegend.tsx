@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SkyCrown } from './Constellation'
-import { MeadowBloom } from './Meadow'
 
 /**
  * The sky's key, as three icon chips (#730 §3).
@@ -13,54 +12,36 @@ import { MeadowBloom } from './Meadow'
  * Each icon sits on a `--sky-bg` swatch so the crown and the orbs read exactly
  * as they do inside the sky; the page around the legend is ordinary page chrome,
  * so its labels use the page text tokens rather than the `--sky-*` ink.
+ *
+ * It also took a `variant` so it could key the Meadow in bloom words (#684).
+ * There is one viz in both themes now (#1700, ADR-0073), so the axis is gone —
+ * the legend keys the sky it is actually under, which is the property epic #654
+ * was grilled for in the first place.
  */
 export interface SkyLegendProps {
   scoreMode: 'era' | 'alltime'
-  /** Which viz the legend is the key TO. The three chips mean the same three
-   *  things in both, but the wording and the glyphs have to match what is
-   *  actually on the canvas — a "Crown = the lead" chip under a meadow that has
-   *  no crown is the mock-style lie epic #654 was grilled to prevent (#684). */
-  variant?: 'sky' | 'meadow'
 }
 
-export default function SkyLegend({ scoreMode, variant = 'sky' }: SkyLegendProps) {
+export default function SkyLegend({ scoreMode }: SkyLegendProps) {
   const { t } = useTranslation('common')
-  const meadow = variant === 'meadow'
-  const group = meadow ? 'meadowLegend' : 'legend'
 
   return (
     <ul
       className="flex flex-wrap items-center list-none mt-3 p-0 m-0"
       style={{ gap: 'var(--space-lg)' }}
     >
-      <LegendChip variant={variant} icon={<SigilScaleIcon variant={variant} />}>
+      <LegendChip icon={<SigilScaleIcon />}>
         {scoreMode === 'era'
-          ? t(`leaderboard.desktop.${group}.sizeEra`)
-          : t(`leaderboard.desktop.${group}.sizeAllTime`)}
+          ? t('leaderboard.desktop.legend.sizeEra')
+          : t('leaderboard.desktop.legend.sizeAllTime')}
       </LegendChip>
-      <LegendChip
-        variant={variant}
-        icon={meadow ? <MeadowBloom size={22} champion /> : <SkyCrown size={20} />}
-      >
-        {t(`leaderboard.desktop.${group}.crown`)}
-      </LegendChip>
-      <LegendChip variant={variant} icon={<FaintOrbIcon variant={variant} />}>
-        {t(`leaderboard.desktop.${group}.faint`)}
-      </LegendChip>
+      <LegendChip icon={<SkyCrown size={20} />}>{t('leaderboard.desktop.legend.crown')}</LegendChip>
+      <LegendChip icon={<FaintOrbIcon />}>{t('leaderboard.desktop.legend.faint')}</LegendChip>
     </ul>
   )
 }
 
-function LegendChip({
-  icon,
-  children,
-  variant,
-}: {
-  icon: ReactNode
-  children: ReactNode
-  variant: 'sky' | 'meadow'
-}) {
-  const meadow = variant === 'meadow'
+function LegendChip({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
     <li className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
       <span
@@ -71,8 +52,8 @@ function LegendChip({
           width: 34,
           height: 34,
           flex: 'none',
-          background: meadow ? 'var(--meadow-bg)' : 'var(--sky-bg)',
-          border: `1px solid ${meadow ? 'var(--meadow-field)' : 'var(--sky-ring)'}`,
+          background: 'var(--sky-bg)',
+          border: '1px solid var(--sky-ring)',
         }}
       >
         {icon}
@@ -84,34 +65,21 @@ function LegendChip({
   )
 }
 
-/** Two dots, small beside large — "bigger sigil/bloom = more points". */
-function SigilScaleIcon({ variant }: { variant: 'sky' | 'meadow' }) {
-  const meadow = variant === 'meadow'
+/** Two dots, small beside large — "bigger sigil = more points". */
+function SigilScaleIcon() {
   return (
     <svg width={24} height={20} viewBox="0 0 24 20" aria-hidden>
-      <circle cx={6} cy={13} r={3.5} fill={meadow ? 'var(--meadow-stem)' : 'var(--sky-name-muted)'} />
-      <circle
-        cx={16}
-        cy={10}
-        r={7}
-        fill={meadow ? 'var(--meadow-champion-petal)' : 'var(--sky-crown)'}
-        opacity={0.9}
-      />
+      <circle cx={6} cy={13} r={3.5} fill="var(--sky-name-muted)" />
+      <circle cx={16} cy={10} r={7} fill="var(--sky-crown)" opacity={0.9} />
     </svg>
   )
 }
 
-/** One barely-there orb/bloom — "faint = still at zero". */
-function FaintOrbIcon({ variant }: { variant: 'sky' | 'meadow' }) {
+/** One barely-there orb — "faint = still at zero". */
+function FaintOrbIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 20 20" aria-hidden>
-      <circle
-        cx={10}
-        cy={10}
-        r={7}
-        fill={variant === 'meadow' ? 'var(--meadow-name)' : 'var(--sky-name)'}
-        opacity={0.25}
-      />
+      <circle cx={10} cy={10} r={7} fill="var(--sky-name)" opacity={0.25} />
     </svg>
   )
 }
