@@ -86,7 +86,7 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 116
+UNCODED_RAISE_TOTAL = 115
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
@@ -162,7 +162,7 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/praxis.py::moderate_praxis": 1,
     "services/praxis.py::respond_to_invite": 4,
     "services/praxis.py::submit_praxis": 1,
-    "services/praxis.py::unsubmit_praxis": 2,
+    "services/praxis.py::unsubmit_praxis": 1,
 
     "services/praxis_metatask.py::apply_metatask": 8,
     "services/praxis_metatask.py::remove_metatask": 2,

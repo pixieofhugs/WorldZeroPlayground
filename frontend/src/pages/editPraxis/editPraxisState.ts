@@ -239,6 +239,22 @@ export interface EditPraxisState {
   autoSubmitDays: number | null;
 
   // Derived locked-state flags
+  /**
+   * The shared document is **frozen** (#1745): sealed for every member, the one
+   * who submitted included. Freeze, not lock — a lock is something one member
+   * holds against the others.
+   *
+   * Deliberately the same predicate the server enforces, `status !==
+   * 'in_progress'`, and not a rewording of it: the server drops the room
+   * messages that would change a frozen document, so a client that disagreed
+   * here would let a member type into an editor whose keystrokes go nowhere.
+   * Read-only is the honest half of a rule that is kept elsewhere.
+   *
+   * Distinct from `controlsLocked`, which is about a *moderated* praxis and
+   * covers the whole composer. A frozen document is a live collab mid-consensus,
+   * everything else about it still working.
+   */
+  documentFrozen: boolean;
   isPublished: boolean;
   /**
    * The composer is read-only. Since #1164 this means **"hand off"** rather than

@@ -2921,7 +2921,7 @@ async def test_pending_collab_appears_in_active_tasks(
 
 
 @pytest.mark.asyncio
-async def test_unsubmit_pending_clears_only_caller(
+async def test_unsubmit_pending_reopens_the_whole_group(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -2931,8 +2931,18 @@ async def test_unsubmit_pending_clears_only_caller(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """In a pending collab with two members submitted, one member's unsubmit clears
-    only their own part; the collab stays pending while the other remains in (#590)."""
+    """Reopening a pending collab is ADR-0012's hard reset, for any member (#1745).
+
+    #590 cleared only the caller's part and left the collab pending. That was
+    right while a member who had pulled back could still type — their first
+    keystroke ran the reset this skipped. Since #1745 the document is frozen for
+    the whole group until the praxis is drafting again, so a partial pull-back
+    would hand a member a write-up they still could not write in.
+
+    Which is also why the **holdout** is the one who reopens it here: they never
+    submitted, so under #590 they had nothing of their own to pull back and got
+    a 422 — and #1743 took away the typing that used to be their way in.
+    """
     create = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "Trio"},
@@ -2957,13 +2967,18 @@ async def test_unsubmit_pending_clears_only_caller(
     resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers3)
     assert resp.json()["status"] == "pending"
 
-    unsub = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2)
+    # `character` is the holdout: invited and accepted, never submitted.
+    unsub = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert unsub.status_code == 200
     data = unsub.json()
-    assert data["status"] == "pending"
+    assert data["status"] == "in_progress"
+    assert data["submit_proposed_at"] is None
     submitted = {m["character_id"]: m["has_submitted"] for m in data["members"]}
-    assert submitted[character2.id] is False
-    assert submitted[character3.id] is True
+    assert submitted == {
+        character.id: False,
+        character2.id: False,
+        character3.id: False,
+    }
 
 
 @pytest.mark.asyncio
