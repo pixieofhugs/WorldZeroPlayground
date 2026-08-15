@@ -136,12 +136,12 @@
     },
     "spotlight": {
       "label": "Keeper of the road",
-      "stat": "grade {{grade}} · {{score}} pvncta"
+      "stat": "level {{level}} · {{score}} pvncta"
     },
     "roster": {
       "heading": "The keepers",
       "emptyWithSpotlight": "No other names in the codex yet.",
-      "level": "grade {{grade}}"
+      "level": "level {{level}}"
     },
     "mobile": {
       "eyebrow": "The Codex"
@@ -352,7 +352,7 @@
       "eligibleKicker": "the door's open —",
       "eligibleTitle": "Come cause trouble",
       "eligibleBody": "No forms. No gods. No managers. Just show up and mean it.",
-      "joinButton": "I'M IN ↗",
+      "joinButton": "I'M IN",
       "joining": "BREAKING IN…",
       "confirmButton": "CONFIRM",
       "gateKicker": "not one of us — yet",

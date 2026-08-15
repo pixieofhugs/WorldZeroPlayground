@@ -222,7 +222,7 @@
     "na": {
       "levelCaption": "Level",
       "pointsUnit": "points",
-      "signup": "Sign up ↗"
+      "signup": "Sign up"
     },
     "albescent": {
       "eyebrow": "Albescent",
@@ -236,7 +236,7 @@
       "coordPolar": "r 47 · θ 31°",
       "vanishingLabel": "∞ · vanishing",
       "marginalia": "¼″ wider within than without †",
-      "grade": "grade {{grade}}",
+      "level": "level {{level}}",
       "points": "{{points}} pvncta",
       "footnote": "† the road does not return you to where you began — <1>see †</1>",
       "signup": "Triangulate the truth ▸",
@@ -250,12 +250,12 @@
       "points": "{{points}} PTS",
       "signup": "Report for duty",
       "billMasthead": "Help Wanted!",
-      "levelCaption": "Grade"
+      "levelCaption": "Level"
     },
     "snide": {
       "dispatchNumber": "dispatch №{{number}}",
       "scrawl": "your assignment, should you ignore it —",
-      "signup": "I'M IN ↗",
+      "signup": "I'M IN",
       "pointsUnit": "PTS",
       "levelCaption": "level"
     },
