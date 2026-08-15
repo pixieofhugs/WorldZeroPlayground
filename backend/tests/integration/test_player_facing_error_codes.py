@@ -435,14 +435,29 @@ async def test_responding_to_a_resolved_challenge_is_coded(
 
 @pytest.mark.asyncio
 async def test_creating_a_character_with_a_blank_name_is_coded(
-    client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
+    db_session: AsyncSession, account2, era, faction_ua
 ):
-    """Whitespace clears Pydantic's min_length; the service is what refuses."""
-    response = await client.post(
-        "/characters", json={"display_name": "   "}, headers=auth_headers2
-    )
-    assert response.status_code == 400, response.text
-    assert response.json()["detail"]["code"] == ErrorCode.character_name_required.value
+    """Tested at the service, because the wire now refuses first.
+
+    ``schemas.character.DisplayName`` strips and enforces ``min_length=1`` as of
+    #1696, so ``POST /characters`` answers 422 for a blank name and never
+    reaches this raise. The service keeps its own guard anyway — ``seed.py`` and
+    the scripts call ``create_character`` directly, with no Pydantic in front —
+    so it is coded like the rest of the scope and pinned where it is reachable.
+    """
+    from fastapi import HTTPException
+
+    from schemas.character import CharacterCreate
+    from services.character import create_character
+
+    # model_construct skips validation, which is exactly the door a non-HTTP
+    # caller comes through.
+    blank = CharacterCreate.model_construct(display_name="   ")
+    with pytest.raises(HTTPException) as raised:
+        await create_character(account2.id, blank, db_session)
+
+    assert raised.value.status_code == 400
+    assert raised.value.detail["code"] == ErrorCode.character_name_required.value
 
 
 @pytest.mark.asyncio
