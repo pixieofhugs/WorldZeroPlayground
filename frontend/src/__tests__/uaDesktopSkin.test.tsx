@@ -126,7 +126,7 @@ const hero = () =>
   routed(
     <UaFactionHero
       name="University of Asthmatics"
-      description="One true mark, then another."
+      description="One true piece, then another."
       members={214}
       tasks={9}
       praxes={1489}

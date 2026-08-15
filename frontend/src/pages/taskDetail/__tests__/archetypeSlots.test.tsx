@@ -14,8 +14,14 @@
  * (`/tasks`, `/praxis/:id`, `/praxis/:id/edit`). Distinctive fixture values keep the substring
  * checks from colliding with incidental markup. Submissions are left empty so
  * the test never has to mount the context-bound <PraxisCard> wrapper — the
- * praxis section is anchored instead by its always-present sort toggle, and
- * PraxisCard composition is guarded separately by factionCardSlots.test.tsx.
+ * praxis section is anchored instead by its heading, and PraxisCard composition
+ * is guarded separately by factionCardSlots.test.tsx.
+ *
+ * The anchor used to be the sort toggle, on the grounds that it was always
+ * present. #1704 made it conditional — a control that sorts nothing is not
+ * drawn — so the anchor moved to the one part of the section that is
+ * unconditional. Whether the toggle appears, and when, is pinned in
+ * `detailContract.test.tsx`.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { surfaceMap } from "../../../factions";
@@ -136,15 +142,15 @@ const archetypes = { ...surfaceMap('taskDetail'), __default__: DefaultTaskDetail
 
 describe("task-detail content-slot invariant", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
-    it(`${slug} renders title, description, breadcrumb + sort toggle`, () => {
+    it(`${slug} renders title, description, breadcrumb + praxis gallery`, () => {
       const { html, text } = render(
         <Archetype state={baseState({ canSignUp: true })} />,
       );
       expect(text, "title slot").toContain("Reforestation");
       expect(text, "description slot").toContain("Mangrove");
       expect(html, "all-tasks breadcrumb slot").toContain('href="/tasks"');
-      // Sort toggle: every archetype labels the recency option "recent".
-      expect(html.toLowerCase(), "sort-toggle slot").toContain("recent");
+      // Praxis gallery: every archetype heads it with the shared count copy.
+      expect(text, "praxis-gallery slot").toContain("completed praxis");
     });
 
     it(`${slug} renders the signup CTA when canSignUp`, () => {
