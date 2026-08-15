@@ -27,6 +27,7 @@ import pytest
 from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, detail_code
@@ -365,3 +366,40 @@ async def test_callback_admits_a_returning_identity_with_an_unverified_email(
     assert resp.cookies.get("access_token")
     assert await _account_count(db_session) == accounts_before
     assert len(await _provider_rows(db_session, _GOOGLE, "google-sub-returning")) == 1
+
+
+# ---------------------------------------------------------------------------
+# Case 8 - the pair every sign-in looks up cannot be duplicated (#1771)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_the_provider_pair_is_unique_in_the_database(
+    db_session: AsyncSession, account: Account, account2: Account
+):
+    """A second row for one pair is refused at insert, not discovered at login.
+
+    Without the constraint this insert succeeds and every case-1 lookup for that
+    identity raises ``MultipleResultsFound`` from then on - a permanently
+    unloggable account. Asserted against the database rather than the service
+    because the service is not what enforces it.
+    """
+    db_session.add(
+        OAuthProvider(
+            account_id=account.id,
+            provider=_GOOGLE,
+            provider_user_id="google-sub-dup",
+        )
+    )
+    await db_session.commit()
+
+    db_session.add(
+        OAuthProvider(
+            account_id=account2.id,
+            provider=_GOOGLE,
+            provider_user_id="google-sub-dup",
+        )
+    )
+    with pytest.raises(IntegrityError):
+        await db_session.flush()
+    await db_session.rollback()
