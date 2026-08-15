@@ -22,9 +22,10 @@
  *   reference · proof · write-up · members · metatasks.
  * - **Aside** — score · duel · vote · voters · flag.
  * - **The crown renders at BOTH form factors.** It is never form-factor gated:
- *   it comes from the shared `PraxisStatusBanners`, keyed only on
- *   `is_top_for_task`, mounted above the split so both layouts get it. One
- *   design (Everymen) draws `showCrownMobile: false`; that is the outlier too.
+ *   `ScoreStamp` draws it in the score block's corner, keyed only on
+ *   `is_top_for_task`, and the score block is in both layouts. #1710 retired
+ *   the hero banner it used to arrive in. One design (Everymen) draws
+ *   `showCrownMobile: false`; that is the outlier too.
  * - **The report/flag card and the steward bar are NOT skinned.** All eight
  *   faction designs leave them outside the costume, on their own neutral token
  *   set — so `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare here, taking
@@ -59,7 +60,7 @@
  *
  * ## Reused, not rebuilt
  *
- * `TaskCrown` (via the shared crown banner) · `ScoreStamp`, which since #1091
+ * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp`, which since #1091
  * carries the whole score rail — disc, ruled rows and votes tally — so this file
  * only mounts it · `VoteUI`, which dispatches the vote surface on the
  * TASK's faction so an unskinned faction still votes in its own voice ·
@@ -328,8 +329,9 @@ export default function DefaultPraxisDetail({
   )
 
   // ── Moderation banners ────────────────────────────────────────────────────
-  // The crown hero, the in-editing / pending-publish notice and the failed note
-  // (with its `admin_note`) are shared invariant chrome; the flagged notice is
+  // The failed note (with its `admin_note`) is shared invariant chrome; the
+  // crown hero and the in-editing / pending-publish notice are both gone
+  // (#1710, ADR-0062). The flagged notice is
   // the third moderation state the v2 contract asks for and has no shared slot,
   // so it renders here. `PraxisAdminBar` is the steward bar.
   const banners = (
@@ -480,8 +482,11 @@ export default function DefaultPraxisDetail({
     <section style={panel}>
       {sectionHead(t('detail.score.heading'))}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {/* The crown already has its own hero banner above; one mark per page. */}
-        <ScoreStamp praxis={praxis} showCrown={false} />
+        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
+            here because a bordered hero panel above already drew one. The panel
+            is gone (owner ruling: "just a fleur in the corner"), so the mark
+            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        <ScoreStamp praxis={praxis} />
       </div>
     </section>
   )
