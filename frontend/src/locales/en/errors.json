@@ -55,6 +55,7 @@
     "MEDIA_ITEM_NOT_FOUND": "Media item not found.",
     "TASK_NOT_FOUND": "Task not found.",
     "CHARACTER_NOT_FOUND": "Character not found.",
+    "TASK_FACTION_UNKNOWN": "That faction is not part of the current era.",
 
     "FACTION_NOT_FOUND": "Faction not found.",
     "FACTION_ALREADY_MEMBER": "Already a member of this faction.",

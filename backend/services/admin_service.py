@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
@@ -404,6 +405,7 @@ async def admin_edit_task(
     task_id: int,
     data: AdminTaskPatch,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Task:
     """Edit editable fields on a pending or retired task. Active tasks are locked."""
     task = await session.get(Task, task_id)
@@ -414,6 +416,18 @@ async def admin_edit_task(
             status_code=400,
             detail="Active tasks cannot be edited. Retire the task first.",
         )
+    if data.primary_faction_slug is not None:
+        # Config owns which factions exist (ADR-0042), so membership of
+        # ``era.factions`` is the question — including the cross-faction
+        # sentinel, which is one of its keys. Without this the unknown slug
+        # reaches the FK and surfaces as a 500.
+        if data.primary_faction_slug not in era.factions:
+            raise_coded(
+                422,
+                ErrorCode.task_faction_unknown,
+                f"Unknown faction: {data.primary_faction_slug}.",
+            )
+        task.primary_faction_slug = data.primary_faction_slug
     if data.title is not None:
         task.title = data.title
     if data.description is not None:

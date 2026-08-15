@@ -112,12 +112,10 @@ export async function updateTaskStatus(id: number, status: AdminTaskStatus): Pro
   return data
 }
 
-interface AdminTaskPatch {
-  title?: string
-  description?: string
-  point_value?: number
-  level_required?: number
-}
+/** Aliased to the generated schema (#1400) rather than restated: a hand-written
+ *  copy is how the wire and the client drift, and it did — the backend's
+ *  `primary_faction_slug` (#1714) was invisible to this file. */
+type AdminTaskPatch = components['schemas']['AdminTaskPatch']
 
 export async function adminPatchTask(id: number, patch: AdminTaskPatch): Promise<TaskOut> {
   const { data } = await apiPatch('/admin/tasks/{task_id}', {

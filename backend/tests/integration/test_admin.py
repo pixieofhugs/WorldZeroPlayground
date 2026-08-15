@@ -4,6 +4,8 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
+from faction_slugs import CROSS_FACTION_SLUG
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -756,6 +758,87 @@ async def test_admin_edit_pending_task(
     data = resp.json()
     assert data["title"] == "Updated Title"
     assert data["point_value"] == 20
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_task_faction(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """Admin can move a task to another of the era's factions (#1714).
+
+    ``primary_faction_slug`` decides which kit renders the task and who earns
+    the own-faction modifier, so a task filed against the wrong faction was
+    unfixable short of SQL before this.
+    """
+    await _make_admin(account, db_session)
+
+    task = Task(
+        title="Filed Against The Wrong Faction",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.pending,
+        created_by=character.id,
+        primary_faction_slug=CROSS_FACTION_SLUG,
+    )
+    db_session.add(task)
+    await db_session.commit()
+
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}",
+        json={"primary_faction_slug": "ua"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["primary_faction_slug"] == "ua"
+
+    await db_session.refresh(task)
+    assert task.primary_faction_slug == "ua"
+
+    # …and back to the cross-faction sentinel, which is a real slug in config.
+    back = await client.patch(
+        f"/admin/tasks/{task.id}",
+        json={"primary_faction_slug": CROSS_FACTION_SLUG},
+        headers=auth_headers,
+    )
+    assert back.status_code == 200
+    assert back.json()["primary_faction_slug"] == CROSS_FACTION_SLUG
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_task_unknown_faction_rejected(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """An unknown slug is a coded 422, not a 500 from the FK (#1714)."""
+    await _make_admin(account, db_session)
+
+    task = Task(
+        title="Untouched",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.pending,
+        created_by=character.id,
+    )
+    db_session.add(task)
+    await db_session.commit()
+
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}",
+        json={"primary_faction_slug": "not-a-faction"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["detail"]["code"] == ErrorCode.task_faction_unknown.value
+
+    await db_session.refresh(task)
+    assert task.primary_faction_slug == CROSS_FACTION_SLUG
 
 
 @pytest.mark.asyncio

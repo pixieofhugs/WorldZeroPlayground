@@ -135,6 +135,14 @@ class AdminTaskPatch(WireModel):
     description: str | None = None
     point_value: int | None = Field(None, ge=1)
     level_required: int | None = Field(None, ge=0)
+    #: The task's own faction — which kit renders it and who earns the
+    #: own-faction modifier (#1714). Validated against the era's factions in
+    #: :func:`services.admin_service.admin_edit_task`, not here, because the
+    #: allowed set is era config and a schema cannot read it (ADR-0042).
+    #: Deliberately NOT ``metatask_faction_slug``: that field answers a
+    #: different question (which faction may *apply* a metatask) and is bound
+    #: to ``task_type`` on create, so moving it is its own decision.
+    primary_faction_slug: str | None = Field(None, min_length=1, max_length=50)
 
 
 class TaskStatusAction(WireModel):
