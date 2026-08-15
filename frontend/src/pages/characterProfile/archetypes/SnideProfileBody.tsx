@@ -1,7 +1,7 @@
 /**
  * SnideProfileBody — S.N.I.D.E. ransom-note / crime-board player-profile skin
  * (#460). Ported from docs/design/profile/templates/SNIDE Profile.dc.html: hard
- * offset shadows, skewed Impact headlines with a pink drop-shadow, tape strips,
+ * offset shadows, skewed Impact headlines with a pink drop-shadow,
  * halftone dot texture, and the tagline pasted up as a ransom slip (#1630, which
  * also dropped the torn acid strip along the header top). SNIDE is ALWAYS DARK — its
  * --faction-snide-* tokens are identical in both themes, so the container scopes

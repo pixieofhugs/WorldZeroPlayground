@@ -11,7 +11,8 @@
  *
  * **Geometry — radius 0, borderW 0.** SNIDE is the one skin that draws no card
  * border at all, so the sheet is a hard-cornered rectangle with nothing around
- * it: what separates it from the page is the stock, the grain and the tape. The
+ * it: what separates it from the page is the stock and the grain. (It was the
+ * stock, the grain and the tape until #1708 took the strips.) The
  * shared sheet's default 10px radius is overridden here rather than inherited.
  *
  * **Masthead** — a near-black bar carrying the wordmark in acid, a dashed acid
@@ -20,10 +21,13 @@
  * underneath it. The zine says DRAFT twice on purpose; a screen reader hears it
  * once.
  *
- * **Ground** — the photocopier raster plus two tape strips, both running off the
- * sheet's edge. They can only do that because `ComposerSheet` owns the
+ * **Ground** — the photocopier raster, flush with the sheet. It carried two tape
+ * strips running off the sheet's edge until #1708, an owner override of a seam
+ * the design kit specifies (`edit-praxis.jsx:349-350`); do not put them back on
+ * a fidelity pass. They could run off at all because `ComposerSheet` owns the
  * `overflow: hidden` clip: the ground is the COLUMN's, never the viewport's
- * (#1028, the trap six of eight task-detail skins fell into).
+ * (#1028, the trap six of eight task-detail skins fell into), and that clip is
+ * still what keeps the raster inside the stock.
  *
  * **Section rule** — the censor stripe, a solid redaction bar rather than a
  * hairline.
@@ -247,7 +251,7 @@ export default function SnideEditPraxis({ state }: Props) {
 
   /* The chrome, named once and mounted twice: the composer below, and the
      waiting surface once your part is in (#1189). The same ELEMENTS both
-     times, so the acid bar, the raster and the tape cannot drift between the
+     times, so the acid bar and the raster cannot drift between the
      two stages. The masthead's stage word travels with them — it reads
      SUBMITTED, not DRAFT, once your part is filed. */
   /* radius 0, borderW 0 — the sheet has no edge but its own stock. */
@@ -334,33 +338,12 @@ export default function SnideEditPraxis({ state }: Props) {
   const ground = (
           <ComposerGround
             background={`repeating-linear-gradient(0deg, ${GRAIN} 0 1px, transparent 1px 3px)`}
-            /* Flush, not overhanging: the raster is printed on the sheet, and
-               only the tape is allowed to run off it. */
+            /* Flush, not overhanging: the raster is printed ON the sheet, so it
+               stops where the stock does. It shared this layer with two tape
+               strips that ran off the edge, which is what the negative default
+               inset is for; #1708 took them and the raster keeps the flush 0. */
             inset={0}
-          >
-            <span
-              className="snide-tape"
-              style={{
-                width: 110,
-                height: 26,
-                right: -26,
-                top: 64,
-                transform: "rotate(-38deg)",
-                opacity: 0.75,
-              }}
-            />
-            <span
-              className="snide-tape"
-              style={{
-                width: 96,
-                height: 22,
-                left: -30,
-                bottom: 96,
-                transform: "rotate(34deg)",
-                opacity: 0.6,
-              }}
-            />
-          </ComposerGround>
+          />
   );
 
   const dress: ComposerDress = {

@@ -4,7 +4,8 @@ import { factionName } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 
 /**
- * S.N.I.D.E. seal — a photocopier-ink ransom note taped to the host praxis.
+ * S.N.I.D.E. seal — a photocopier-ink ransom note slapped on the host praxis.
+ * It was taped on until #1708 took the two strips off its head.
  * Same three-field contract as every seal (label / condition / bonus) but in
  * S.N.I.D.E.'s own voice: Archivo Black + Anton for the demand, Special Elite
  * for the eyebrow, acid-green on ink with a hot-pink tear.
@@ -79,9 +80,6 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
       }}
     >
       <div className="ht-dots" style={{ position: 'absolute', inset: 0, color: 'rgba(182,255,46,0.08)', pointerEvents: 'none' }} />
-      <div className="snide-tape" style={{ top: -12, left: 18, transform: 'rotate(-7deg)' }} />
-      <div className="snide-tape" style={{ top: -10, right: 14, transform: 'rotate(6deg)' }} />
-
       {removable && (
         <button
           type="button"

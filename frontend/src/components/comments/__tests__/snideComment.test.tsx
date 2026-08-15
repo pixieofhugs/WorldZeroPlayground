@@ -89,10 +89,13 @@ describe('SnideComment — the slip tells', () => {
     expect(html).toContain('--faction-snide-font-black')
   })
 
-  it('tapes the slip down and rasters the stock', () => {
+  it('rasters the stock, and no longer tapes the slip down (#1708)', () => {
     const html = row()
-    expect(html).toContain('snide-tape')
     expect(html).toContain('--faction-snide-slip-grain')
+    // The two strips at the head came off — an owner override of a seam the
+    // design kit specifies. The namespace-wide guard is
+    // `src/__tests__/snideWearsNoTape.test.ts`; this is the rendered half of it.
+    expect(html).not.toContain('snide-tape')
   })
 
   it('sits on the FLIPPING stock, not the theme-invariant photocopier card', () => {
