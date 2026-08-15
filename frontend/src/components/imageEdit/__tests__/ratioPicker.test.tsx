@@ -30,36 +30,45 @@ function markup(aspect?: number): string {
   )
 }
 
-const label = (key: string): string => i18n.t(`imageEdit.${key}`, { ns: 'common' })
+const RATIO_KEYS = [
+  'imageEdit.ratioOriginal',
+  'imageEdit.ratio1x1',
+  'imageEdit.ratio4x3',
+  'imageEdit.ratio16x9',
+] as const
+
+type CopyKey =
+  | (typeof RATIO_KEYS)[number]
+  | 'imageEdit.ratioGroupAria'
+  | 'imageEdit.rotateLeft'
+  | 'imageEdit.rotateRight'
+
+const label = (key: CopyKey): string => i18n.t(key, { ns: 'common' })
 
 describe('crop-shape picker — praxis media only (#1713)', () => {
   it('offers every ratio when nothing is locked', () => {
     const html = markup(undefined)
-    for (const key of ['ratioOriginal', 'ratio1x1', 'ratio4x3', 'ratio16x9']) {
-      expect(html).toContain(label(key))
-    }
+    for (const key of RATIO_KEYS) expect(html).toContain(label(key))
   })
 
   it('lands on Original, so the pre-#1713 shape is still the default', () => {
     const html = markup(undefined)
     // The only pressed button in the group is the one labelled Original.
     const pressed = html.match(/aria-pressed="true"[^>]*>([^<]*)</)
-    expect(pressed?.[1]).toBe(label('ratioOriginal'))
+    expect(pressed?.[1]).toBe(label('imageEdit.ratioOriginal'))
   })
 
   it('shows no picker for an avatar — the 1:1 lock stays a lock', () => {
     const html = markup(AVATAR_ASPECT)
-    expect(html).not.toContain(label('ratioGroupAria'))
-    for (const key of ['ratioOriginal', 'ratio1x1', 'ratio4x3', 'ratio16x9']) {
-      expect(html).not.toContain(label(key))
-    }
+    expect(html).not.toContain(label('imageEdit.ratioGroupAria'))
+    for (const key of RATIO_KEYS) expect(html).not.toContain(label(key))
   })
 
   it('leaves rotation alone on both call sites — still two 90° buttons', () => {
     for (const aspect of [undefined, AVATAR_ASPECT]) {
       const html = markup(aspect)
-      expect(html).toContain(label('rotateLeft'))
-      expect(html).toContain(label('rotateRight'))
+      expect(html).toContain(label('imageEdit.rotateLeft'))
+      expect(html).toContain(label('imageEdit.rotateRight'))
     }
   })
 })
