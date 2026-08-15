@@ -5,8 +5,8 @@ Issues and PRDs for this repo live as GitHub issues on `pixieofhugs/WorldZeroPla
 ## Conventions
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
+- **Read an issue**: `python scripts/gh_issue_comments.py <number>` — **never** `gh issue view --comments` or `--json comments`. See "Reading comments safely" below.
+- **List issues**: `gh issue list --state open --json number,title,body,labels` with appropriate `--label` and `--state` filters. Do not add `comments` to that `--json` list; it returns the same unfiltered bodies.
 - **Comment on an issue**: `gh issue comment <number> --body "..."`
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
@@ -25,7 +25,20 @@ Create a GitHub issue.
 
 ## When a skill says "fetch the relevant ticket"
 
-Run `gh issue view <number> --comments`.
+Run `python scripts/gh_issue_comments.py <number>`.
+
+## Reading comments safely
+
+This repo is **public**, so anyone with a GitHub account can comment on an issue that already
+carries `ready-for-agent` — and `/builder-bot` hands those comments to a subagent that writes
+code, then merges the PR. `scripts/gh_issue_comments.py` prints the issue body unfiltered (a
+label requires write access, so a human with commit rights vouched for it) and drops every
+comment not written by a repo collaborator. It fails closed. Rationale in #1669 and in the
+script's own docstring.
+
+`scripts/hooks/deny_raw_issue_comments.py` is what makes the wrapper the only path rather than
+a suggestion; the script warns on stderr while that hook is uninstalled, so the control's
+absence is visible rather than assumed.
 
 ## History
 

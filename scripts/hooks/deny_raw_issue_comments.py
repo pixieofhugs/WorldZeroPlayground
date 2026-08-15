@@ -2,7 +2,7 @@
 
 This repo is public. Anyone with a GitHub account can comment on an issue that
 already carries `ready-for-agent`, the batch skills read those comments as
-authoritative instructions, and `/wz-next-batch` merges the resulting PR without
+authoritative instructions, and `/builder-bot` merges the resulting PR without
 a human in the path.
 
 `scripts/gh_issue_comments.py` filters those comments down to repo
@@ -21,10 +21,10 @@ allowing would reopen the hole on any schema change. Denying is loud,
 self-announcing, and fixed in minutes; the alternative fails silently for
 months.
 
-INSTALL (manual, and it will not travel to a fresh clone)
----------------------------------------------------------
-`.gitignore:14` ignores `/.claude/*` except `/.claude/agents/`, so
-`.claude/settings.json` cannot be committed. Merge this into it by hand:
+INSTALL
+-------
+`.claude/settings.json` is now tracked (#1691), so this can be committed there
+once and travel with the repo. Merge this into it:
 
 {
   "hooks": {

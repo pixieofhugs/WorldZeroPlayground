@@ -107,9 +107,7 @@ This repo is configured for the engineering skill set (`triage`, `qa`, `review`,
 ### Scoped subagents
 For file-editing work, dispatch to a specialist that loads only its own context: `backend`, `frontend-feature`, `frontend-style`. Definitions and the dispatch shape are in `.claude/agents/README.md`. Orchestration (clarify + dispatch) is this main session's job, not a subagent.
 
-`/wz-next-issue` picks up where `/triage` stops: it selects the best unblocked `ready-for-agent` issue (dependency-aware), builds it in a worktree, and opens a draft PR — commenting on the issue and stopping if it needs a human.
-
-`/wz-next-batch` is the multi-issue sibling: it shapes a whole batch (dependency-aware, grouped by **file footprint** so only disjoint work runs in parallel), grills anything ungrilled, dispatches each issue to a scoped subagent in its own worktree, then waits for CI and **merges** each PR. Use it for a wave/batch; use `/wz-next-issue` for a single issue.
+`/builder-bot` picks up where `/triage` stops. It shapes a whole batch (dependency-aware, grouped by **file footprint** so only disjoint work runs in parallel), asks of each issue whether it should exist at all, grills anything ungrilled, dispatches each issue to a scoped subagent in its own worktree, then gates every merge on CI **and** a review pass. A merge ships to production — `main` auto-deploys.
 
 ### Issue tracker
 Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
