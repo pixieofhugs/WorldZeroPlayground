@@ -2,24 +2,36 @@
  * Warriors of Whimsy hang their points upside down (#1716) — an owner ruling,
  * deliberate whimsy rather than a defect.
  *
- * Two BROWSING marks turn: the task card's crowned gilt plaque and the praxis
- * card's total. The CHECKING surfaces — task detail, praxis detail, the
- * composer's waiting slip — stay upright, and that split is the whole reason
- * this file exists, because the stamp is ONE component (ADR-0049) mounted on
- * all three. So the flip is set by the MOUNT through an inherited custom
- * property (`--wow-total-flip`, the `--praxis-card-basis` shape from #1137),
- * never by a variant prop; unset resolves to `0deg` and renders exactly what it
- * rendered before.
+ * The ruling draws a line by SURFACE, not by component: a player who is
+ * SCANNING may be played with; a player CHECKING what they earned may not. So
+ * the marks turn on the tasks list, the field desk and home, and stay upright
+ * on the character profile, the faction page, the task detail, the praxis
+ * detail and the composer's waiting slip — even though several of those mount
+ * the very same card.
+ *
+ * That is why nothing here decides its own angle. Both marks read
+ * `rotate(var(--wow-points-flip, 0deg))` and the MOUNT declares the value —
+ * `.scanning-surface` in `index.css` for the browsing pages, `WowPraxisCard`'s
+ * own frame for the praxis total (the checking surfaces mount the shared stamp
+ * directly, never the card). This is §1.2's inherited-custom-property rule
+ * (#1137) spent on a rotation instead of a width. The direction matters: unset
+ * is upright, so an exempt surface — and any page built tomorrow — is right way
+ * up BY CONSTRUCTION rather than by an exclusion list someone has to maintain.
  *
  * The a11y contract is the other half. A rotation is a TRANSFORM on the
  * presentation: the characters keep their reading order in the DOM, so the
  * numeral is still announced correctly and still selectable. Every case below
- * pins the literal digits inside the turned element for exactly that reason —
+ * pins the literal figure inside the turned element for exactly that reason —
  * a skin that "flips" by reversing or substituting characters passes an
  * eyeball check and fails here.
  *
- * Harness: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
+ * Harness: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md). No CSS
+ * engine either, which is why the mount half is asserted against the SOURCE:
+ * markup can only show that the knob is read and where it is declared.
  */
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -35,6 +47,8 @@ vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => mocks.formFac
 const { default: WowTaskCard } = await import('../taskCard/WowTaskCard')
 const { default: WowScoreStamp } = await import('../praxisCard/scoreStamp/WowScoreStamp')
 const { WowPraxisCard } = await import('../praxisCard/desktop/WowPraxisCard')
+
+const SRC = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..')
 
 const TASK: TaskOut = {
   id: 7,
@@ -85,51 +99,58 @@ const render = (node: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>)
 
 /**
- * The turned element, with its digits still inside it and still in order.
+ * The deferring element, with its digits still inside it and still in order.
  * Written as one regex rather than two `toContain`s on purpose: "the markup
- * contains a 180deg rotation somewhere" and "the numeral reads 18" are both
- * true of a card that turned the wrong box.
+ * reads the knob somewhere" and "the numeral reads 18" are both true of a card
+ * that wired up the wrong box.
  */
-const turnedNumeral = (figure: string) =>
-  new RegExp(`<span style="[^"]*transform:rotate\\(180deg\\)[^"]*">${figure}</span>`)
-
-/** The same shape for the stamp, whose angle is deferred to its mount. */
 const flippableNumeral = (figure: string) =>
   new RegExp(
-    `<span style="[^"]*transform:rotate\\(var\\(--wow-total-flip, 0deg\\)\\)[^"]*">${figure}</span>`,
+    `<span style="[^"]*transform:rotate\\(var\\(--wow-points-flip, 0deg\\)\\)[^"]*">${figure}</span>`,
   )
 
-describe('the WOW task card hangs its points plaque numeral upside down (#1716)', () => {
+/** Every `.ts`/`.tsx` under `frontend/src`, tests included. */
+function sourceFiles(dir: string = SRC): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) return sourceFiles(path)
+    return /\.tsx?$/.test(entry.name) ? [path] : []
+  })
+}
+
+describe('the WOW marks defer their angle to the mount (#1716)', () => {
   for (const formFactor of ['desktop', 'mobile'] as const) {
-    it(`turns the numeral and keeps the plaque's two-degree tilt — ${formFactor}`, () => {
+    it(`the task card reads the knob and keeps the plaque's two-degree tilt — ${formFactor}`, () => {
       mocks.formFactor = formFactor
       const html = render(
         <WowTaskCard task={TASK} basePoints={18} multiplier={1} inProgressCount={0} />,
       )
 
-      // The whimsy: the figure itself, turned in place.
-      expect(html).toMatch(turnedNumeral('18'))
+      // The figure itself is what turns, and only when a mount says so.
+      expect(html).toMatch(flippableNumeral('18'))
       // The plaque's own strike survives — this composes with it, on a
       // separate element, rather than replacing it.
       expect(html).toContain('transform:rotate(-2deg)')
       // ...and the plaque is still the thing wearing the tilt, not the numeral.
-      expect(html).not.toContain('rotate(-2deg) rotate(180deg)')
+      expect(html).not.toContain('rotate(-2deg) rotate(')
       mocks.formFactor = 'desktop'
     })
   }
 
-  it('turns nothing else on the card', () => {
+  it('the task card declares no angle of its own, so an unlisted mount is upright', () => {
+    // The character profile, the faction page and the task detail all mount
+    // this card and are exempt. None of them is named anywhere in the card —
+    // they are upright because the card asks rather than decides.
     const html = render(
       <WowTaskCard task={TASK} basePoints={18} multiplier={1} inProgressCount={4} />,
     )
-    expect(html.match(/rotate\(180deg\)/g)).toHaveLength(1)
+    expect(html).not.toContain('180deg')
+    expect(html.match(/--wow-points-flip/g)).toHaveLength(1)
   })
-})
 
-describe('the WOW praxis CARD turns its total; the shared stamp defaults upright (#1716)', () => {
   it('the stamp reads the flip off its mount and resolves to 0deg unset', () => {
     const bare = renderToStaticMarkup(<WowScoreStamp praxis={PRAXIS} />)
-    // The figure is inside the turned element, digits in reading order.
+    // The figure is inside the deferring element, digits in reading order.
     expect(bare).toMatch(flippableNumeral('13\\.6'))
     // The fallback is today's render: a stamp nobody flips is upright, which is
     // what the praxis detail and the composer's waiting slip mount.
@@ -138,7 +159,7 @@ describe('the WOW praxis CARD turns its total; the shared stamp defaults upright
     expect(bare).toContain('transform:rotate(-2deg)')
   })
 
-  it('the card mount sets the flip', () => {
+  it('the praxis CARD declares the flip, because only a browsing surface mounts it', () => {
     const html = render(
       <WowPraxisCard
         praxis={PRAXIS}
@@ -152,8 +173,37 @@ describe('the WOW praxis CARD turns its total; the shared stamp defaults upright
         showCrown
       />,
     )
-    expect(html).toContain('--wow-total-flip:180deg')
+    expect(html).toContain('--wow-points-flip:180deg')
     // And the figure is still the figure: 13.6, in that order, in the DOM.
     expect(html.replace(/<[^>]*>/g, '')).toContain('13.6')
+  })
+})
+
+describe('only the browsing surfaces declare the flip (#1716)', () => {
+  it('`.scanning-surface` is what carries the angle', () => {
+    const css = readFileSync(join(SRC, 'index.css'), 'utf8')
+    expect(css).toMatch(/\.scanning-surface\s*\{[^}]*--wow-points-flip:\s*180deg/)
+  })
+
+  /**
+   * The opt-in list, asserted as an EXACT set. A browsing page that loses the
+   * class silently stops being whimsical; a checking page that gains one
+   * silently starts. Both are the same failure and this is the only place that
+   * can see either, because there is no CSS engine in this harness.
+   */
+  it('exactly the tasks list, the field desk and home opt in', () => {
+    // The class WORN, not merely named — several files discuss it in prose.
+    const worn = /className="[^"]*\bscanning-surface\b/
+    const wearers = sourceFiles()
+      .filter((path) => worn.test(readFileSync(path, 'utf8')))
+      .map((path) => path.slice(SRC.length + 1).replace(/\\/g, '/'))
+      .sort()
+
+    expect(wearers).toEqual([
+      'pages/FieldDesk.tsx',
+      'pages/Home.tsx',
+      'pages/Tasks.tsx',
+      'pages/tasks/mobileArchetypes/DefaultTasks.tsx',
+    ])
   })
 })

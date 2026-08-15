@@ -31,12 +31,18 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * THE CARD IS WHAT TURNS THE TOTAL (#1716). WOW hangs its points upside down
  * where a player is browsing, and upright where they are checking what they
  * earned — but `WowScoreStamp` is ADR-0049's single mount for all of them, so
- * the angle cannot live in the stamp. `--wow-total-flip` is set HERE, on the
+ * the angle cannot live in the stamp. `--wow-points-flip` is set HERE, on the
  * card frame, and inherits into the stamp's `var()`; the praxis-detail rail and
  * the composer's waiting slip set nothing and resolve to the `0deg` fallback.
  * This is §1.2's mount-sets-a-custom-property rule (#1137), and for the same
  * reason: a variant prop would have to thread through the dispatcher and every
  * one of the eight sibling stamps to answer a question about the container.
+ *
+ * The card declares it, rather than the page, because unlike the TASK card this
+ * one has no exempt mount: a praxis card only ever appears in a feed or a
+ * gallery, and every surface where a player checks a score mounts the stamp
+ * directly. The task card, which does mount on exempt pages, defers instead to
+ * `.scanning-surface` on the browsing page. Same knob, same ruling.
  */
 export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -61,7 +67,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         fontFamily: "var(--faction-wow-body-font)",
         transition: "background 150ms, color 150ms",
         // The browsing surface's whimsy — see the note above.
-        "--wow-total-flip": "180deg",
+        "--wow-points-flip": "180deg",
       } as CSSProperties}
     >
       {/* The running head: a woven gold/plum stripe. No text — see the note above. */}

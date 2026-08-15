@@ -222,9 +222,16 @@ export default function WowTaskCard({
               >
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "var(--space-xs)" }}>
                   {/* WOW hangs its points upside down (#1716) — an owner ruling,
-                      and only on the BROWSING marks: this plaque and the praxis
-                      card's total. The detail surfaces, where a player checks
-                      what they earned, stay upright.
+                      and only where a player is BROWSING. This card mounts on
+                      the tasks list AND on the character profile, the faction
+                      page and the task detail, which are exempt, so the angle
+                      is not the card's to decide: it asks its mount. A browsing
+                      surface answers with `.scanning-surface` (index.css); an
+                      exempt one says nothing and gets the `0deg` fallback,
+                      which renders exactly what this rendered before the flip
+                      existed. That direction is the point — a page built
+                      tomorrow is upright until it opts in, rather than turning
+                      unless someone remembers to add it to a list.
 
                       A TRANSFORM on the presentation, never reversed or
                       substituted characters: the digits keep their reading
@@ -242,7 +249,7 @@ export default function WowTaskCard({
                       lineHeight: 0.8,
                       color: GILT,
                       display: "inline-block",
-                      transform: "rotate(180deg)",
+                      transform: "rotate(var(--wow-points-flip, 0deg))",
                     }}
                   >
                     {basePoints}
