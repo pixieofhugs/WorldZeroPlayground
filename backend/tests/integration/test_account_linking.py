@@ -247,3 +247,54 @@ async def test_callback_rejects_an_unverified_email(
     assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
     assert await _account_count(db_session) == accounts_before
     assert await _provider_rows(db_session, _GOOGLE, "google-sub-unverified") == []
+
+
+# ---------------------------------------------------------------------------
+# Case 6 — the gate does not apply to a returning identity (#1771)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_callback_admits_a_returning_identity_with_an_unverified_email(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    account: Account,
+):
+    """A known provider pair signs in even while the provider says unverified.
+
+    The case-5 gate defends the *email-matching* branch; this player never
+    reaches it. Their ``provider_user_id`` already names their Account, so a
+    transient ``verified: false`` window at the provider (changing a Discord
+    email re-sends a verification mail) must not lock them out.
+    """
+    db_session.add(
+        OAuthProvider(
+            account_id=account.id,
+            provider=_GOOGLE,
+            provider_user_id="google-sub-returning",
+        )
+    )
+    await db_session.commit()
+    accounts_before = await _account_count(db_session)
+
+    from routers import auth as auth_router
+
+    monkeypatch.setattr(
+        auth_router._OAUTH,
+        "google",
+        _StubGoogleClient(
+            {
+                "sub": "google-sub-returning",
+                "email": account.email,
+                "email_verified": False,
+            }
+        ),
+    )
+
+    resp = await client.get("/auth/google/callback")
+
+    assert resp.status_code == 302
+    assert resp.cookies.get("access_token")
+    assert await _account_count(db_session) == accounts_before
+    assert len(await _provider_rows(db_session, _GOOGLE, "google-sub-returning")) == 1
