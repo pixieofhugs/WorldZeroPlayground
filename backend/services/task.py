@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, false, func, or_, select
+from sqlalchemy import and_, false, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -461,6 +462,12 @@ async def list_tasks(
     two thresholds for the ``/auth/me`` flags the UI gates its filter tabs on, so
     a tab is offered exactly when the query behind it will answer.
 
+    ``pending`` carries one further rule (#1695): the level unlock only reaches a
+    proposal once it is ``era.pending_task_admin_review_hours`` old, so an admin
+    has a window to edit or reject it first. Admins are exempt, ``is_admin``
+    being the same bypass the level gate takes; anonymous callers are below both
+    and stay there.
+
     ``q`` is a free-text ``ilike`` over the task title, its description (#661),
     AND the proposing character's handle / display name (#681), mirroring the
     praxis-feed search in :func:`services.praxis.list_praxes`. A leading ``@``
@@ -547,6 +554,47 @@ async def list_tasks(
     )
     viewer_sees_pending = is_admin or viewer_level >= era.level_to_see_pending_tasks
 
+    # #1695 — the second half of the pending rule, and the one that made a
+    # per-viewer boolean insufficient. The level unlock above says WHO may watch
+    # the review queue; `era.pending_task_admin_review_hours` says WHEN, so an
+    # admin gets the first look at a proposal and can edit or reject it before
+    # other players read it. It is a per-ROW fact — the same level-3 player sees
+    # the ripe rows and not the fresh ones — so it is a WHERE clause, not a third
+    # boolean.
+    #
+    # Written ONCE and applied unconditionally below, which is the whole reason
+    # it is a clause: every branch of the status logic is downstream of this
+    # `where`, so there is no door it can be forgotten at. That is the failure
+    # this file already carries a comment about — a gate written at only one door
+    # is not a gate — and the redundant `status == "all"` restatement of the
+    # level rule is gone because this clause subsumes it.
+    #
+    # The clock is `created_at`, never `updated_at` (owner ruling on #1695): the
+    # window is "time for an admin to look", not "time since last touched", so an
+    # edit at hour 47 must not restart it and make the go-live time
+    # unpredictable. `Task` has no other timestamp, and it does not need one — a
+    # task can re-enter `pending` from `active`, but only an admin can move it
+    # (`services.admin_service.update_task_status`), so on that path the "no
+    # admin has looked yet" premise this window protects is already false.
+    #
+    # ponytail: if a NON-admin path ever sends a task back to `pending`,
+    # `created_at` stops being the proposal clock and this wants a dedicated
+    # `pending_since` column stamped on every transition into the status.
+    if is_admin:
+        # Exempt, not merely early: the window exists to give admins the first
+        # look, so holding it against them defeats the feature.
+        pending_visibility = true()
+    elif viewer_sees_pending:
+        pending_visibility = or_(
+            Task.status != TaskStatus.pending,
+            Task.created_at
+            <= datetime.now(timezone.utc)
+            - timedelta(hours=era.pending_task_admin_review_hours),
+        )
+    else:
+        pending_visibility = Task.status != TaskStatus.pending
+    query = query.where(pending_visibility)
+
     if status and status != "all":
         try:
             requested_status = TaskStatus[status]
@@ -577,9 +625,9 @@ async def list_tasks(
             query = query.where(Task.status == TaskStatus.active)
     else:
         # status == "all" is the other door onto the same rows. Whatever a gate
-        # withholds from an explicit status it must withhold here too.
-        if not viewer_sees_pending:
-            query = query.where(Task.status != TaskStatus.pending)
+        # withholds from an explicit status it must withhold here too — pending
+        # by the `pending_visibility` clause above, which every branch here is
+        # downstream of, retired by the one line below.
         if not viewer_sees_retired:
             query = query.where(Task.status != TaskStatus.retired)
 
