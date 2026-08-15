@@ -827,6 +827,7 @@
         "type": "object"
       },
       "CharacterUpdate": {
+        "description": "A partial edit. Absent fields are left alone (``exclude_unset`` downstream).\n\n``display_name`` is the one field that cannot be blanked (#1686): omitting it\nand sending an explicit ``null`` both mean \"leave unchanged\", and ``\"\"``,\n``\"   \"`` and ``\"\\t\"`` are rejected here rather than stored. The other fields\nkeep their existing semantics, where a ``null`` clears the value — a player\nis allowed to have no bio, and is not allowed to have no name.",
         "properties": {
           "avatar_url": {
             "anyOf": [
@@ -856,6 +857,7 @@
             "anyOf": [
               {
                 "maxLength": 50,
+                "minLength": 1,
                 "type": "string"
               },
               {

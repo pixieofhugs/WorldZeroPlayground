@@ -1953,7 +1953,16 @@ export interface components {
             /** Votes Available */
             votes_available: number;
         };
-        /** CharacterUpdate */
+        /**
+         * CharacterUpdate
+         * @description A partial edit. Absent fields are left alone (``exclude_unset`` downstream).
+         *
+         *     ``display_name`` is the one field that cannot be blanked (#1686): omitting it
+         *     and sending an explicit ``null`` both mean "leave unchanged", and ``""``,
+         *     ``"   "`` and ``"\t"`` are rejected here rather than stored. The other fields
+         *     keep their existing semantics, where a ``null`` clears the value — a player
+         *     is allowed to have no bio, and is not allowed to have no name.
+         */
         CharacterUpdate: {
             /** Avatar Url */
             avatar_url?: string | null;

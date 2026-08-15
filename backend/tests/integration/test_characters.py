@@ -88,6 +88,77 @@ async def test_update_character(
 
 
 @pytest.mark.asyncio
+async def test_update_character_trims_display_name(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """Creation strips before storing; the update path now agrees (#1686)."""
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"display_name": "  Padded Name  "},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["display_name"] == "Padded Name"
+
+
+@pytest.mark.parametrize("blank", ["", "   ", "\t", "\n"])
+@pytest.mark.asyncio
+async def test_update_character_blank_display_name_rejected(
+    client: AsyncClient, character: Character, auth_headers: dict, blank: str
+):
+    """A rename to whitespace is refused at the wire, as creation already refuses it.
+
+    A display name is drawn on bylines, rosters, comment attributions and avatar
+    monograms; a blank one makes every one of those surfaces invent a fallback
+    (#1686).
+    """
+    original = character.display_name
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"display_name": blank},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+    read_back = await client.get(f"/characters/{character.id}")
+    assert read_back.json()["display_name"] == original
+
+
+@pytest.mark.asyncio
+async def test_update_character_explicit_null_display_name_leaves_it_unchanged(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """An explicit ``null`` means "leave unchanged", not "blank it" (#1686).
+
+    Before the fix the service coerced every ``None`` in the body to ``""``, so
+    this stored an empty name — the same defect as the blank-string case wearing
+    a different hat.
+    """
+    original = character.display_name
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"display_name": None, "bio": "still edited"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["display_name"] == original
+    assert resp.json()["bio"] == "still edited"
+
+
+@pytest.mark.asyncio
+async def test_update_character_omitted_display_name_leaves_it_unchanged(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    original = character.display_name
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"bio": "only the bio moved"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["display_name"] == original
+
+
+@pytest.mark.asyncio
 async def test_update_character_wrong_owner(
     client: AsyncClient,
     character: Character,
