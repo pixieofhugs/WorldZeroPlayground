@@ -479,7 +479,7 @@ function RosterAvatar({
         background: paper,
         border: `1.5px solid ${accent}`,
         color: accent,
-        fontSize: "var(--text-xs)",
+        fontSize: "var(--text-md)",
         fontWeight: 700,
         lineHeight: 1,
       }}
@@ -594,7 +594,7 @@ export function PraxisDuelBanner({
         style={{
           // A LABEL, not running text — the same tier and tracking the duel mode
           // chip above it uses, so the two read as one mark.
-          fontSize: "var(--text-sm)",
+          fontSize: "var(--text-md)",
           fontFamily: fonts?.display,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
@@ -654,7 +654,7 @@ export function PraxisModeChip({
     // A chip is a LABEL, not running text: it keeps the label tier (#888 leaves
     // `.eyebrow`/`--text-sm` alone by design), but at the 9px step rather than
     // the 8px floor the meta line just left.
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     fontFamily: fonts?.display,
     letterSpacing: "0.14em",
     textTransform: "uppercase",
@@ -746,7 +746,7 @@ export function PraxisMediaGallery({
           background: `color-mix(in srgb, ${accent} 4%, transparent)`,
           color: accent,
           // Label tier, at the eyebrow step rather than the 8px floor (#888).
-          fontSize: "var(--text-sm)",
+          fontSize: "var(--text-md)",
           fontFamily: fonts?.body,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
@@ -795,7 +795,7 @@ export function PraxisMediaGallery({
                 <span
                   style={{
                     // Label tier, eyebrow step rather than the 8px floor (#888).
-                    fontSize: "var(--text-sm)",
+                    fontSize: "var(--text-md)",
                     fontFamily: fonts?.body,
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",

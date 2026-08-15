@@ -493,7 +493,7 @@ export default function DefaultTaskDetail({
           <span
             className="font-body"
             style={{
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",

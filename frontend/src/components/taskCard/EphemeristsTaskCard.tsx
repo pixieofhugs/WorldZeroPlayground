@@ -282,7 +282,7 @@ export default function EphemeristsTaskCard({
                 and the cartouche held nothing else, so both are gone. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-md) 0 var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)", lineHeight: 1 }}>
-                <span style={{ ...SMALL_CAPS, fontSize: "var(--text-sm)", color: "var(--faction-ephemerists-plate-caption)" }}>
+                <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: "var(--faction-ephemerists-plate-caption)" }}>
                   {i18n.t("feed:taskCard.ephemerists.levelCaption")}
                 </span>
                 <span style={{ fontFamily: DECO, fontSize: size.levelSize, lineHeight: 0.8 }}>
@@ -332,7 +332,7 @@ export default function EphemeristsTaskCard({
                   >
                     {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
                   </span>
-                  <span style={{ ...SMALL_CAPS, fontSize: "var(--text-xs)", color: "var(--faction-ephemerists-plate-caption)" }}>
+                  <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: "var(--faction-ephemerists-plate-caption)" }}>
                     {i18n.t("feed:taskCard.modifierCaption")}
                   </span>
                 </div>

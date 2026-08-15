@@ -102,7 +102,7 @@ function SectionHeading({ children, right }: { children: ReactNode; right?: Reac
 
 const KICKER: CSSProperties = {
   fontFamily: MONO,
-  fontSize: "var(--text-sm)",
+  fontSize: "var(--text-md)",
   letterSpacing: "0.2em",
   textTransform: "uppercase",
   color: MUTED,
@@ -168,7 +168,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
         <div style={{ ...PAPER_FRAME, padding: "var(--space-xl) var(--space-2xl)" }}>
           <Halftone />
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
-            <span style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
+            <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
               {t("everymen.charter.heading")}
             </span>
             <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
@@ -286,7 +286,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
                       {t("everymen.roll.eligibleKicker")}
                     </div>
                     <div
@@ -363,7 +363,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       <button
                         onClick={() => setConfirming(false)}
                         disabled={membership.joining}
-                        style={{ fontFamily: MONO, fontSize: "var(--text-sm)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, background: "transparent", border: `1.5px solid color-mix(in srgb, ${INK} 30%, transparent)`, padding: "var(--space-md) var(--space-lg)", cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{ fontFamily: MONO, fontSize: "var(--text-md)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, background: "transparent", border: `1.5px solid color-mix(in srgb, ${INK} 30%, transparent)`, padding: "var(--space-md) var(--space-lg)", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {t("detail.join.cancel")}
                       </button>
@@ -373,7 +373,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
                       {burned
                         ? t("detail.burned.kicker")
                         : t("everymen.roll.gateKicker")}
@@ -414,7 +414,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5, background: `repeating-conic-gradient(from 0deg at 50% 30%, color-mix(in srgb, var(--everymen-red-deep) 60%, transparent) 0deg 8deg, transparent 8deg 16deg)` }}
                 />
                 <div style={{ position: "relative", zIndex: 2, padding: "var(--space-xl) var(--space-lg) var(--space-lg)" }}>
-                  <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-md)" }}>
+                  <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-md)" }}>
                     {t("everymen.spotlight.label")}
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
@@ -432,7 +432,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   >
                     {spot.display_name}
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.08em", textTransform: "uppercase", color: GOLD, marginTop: "var(--space-sm)" }}>
+                  <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: GOLD, marginTop: "var(--space-sm)" }}>
                     {t("everymen.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
@@ -445,7 +445,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
           <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
             <Halftone />
-            <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
+            <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
               {t("everymen.roster.heading")}
             </div>
             {roster.length === 0 ? (

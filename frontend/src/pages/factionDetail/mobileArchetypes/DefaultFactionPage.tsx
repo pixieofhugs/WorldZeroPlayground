@@ -191,7 +191,7 @@ function HeroStat({ value, label }: { value: number; label: string }) {
       </b>
       <span
         style={{
-          fontSize: 'var(--text-xs)',
+          fontSize: 'var(--text-md)',
           letterSpacing: '0.16em',
           textTransform: 'uppercase',
           opacity: 0.85,

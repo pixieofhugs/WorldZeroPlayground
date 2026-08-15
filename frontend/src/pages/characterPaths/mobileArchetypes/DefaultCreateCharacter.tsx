@@ -195,7 +195,7 @@ const ringInner: CSSProperties = {
   background: 'var(--color-bg-surface-alt)',
 }
 const label: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.16em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
 }
 const field: CSSProperties = {

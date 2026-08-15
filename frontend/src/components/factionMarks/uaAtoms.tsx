@@ -187,7 +187,7 @@ export function UaEnsoScore({
           <span
             style={{
               ...UA_EYEBROW,
-              fontSize: "var(--text-sm)",
+              fontSize: "var(--text-md)",
               lineHeight: 1,
               whiteSpace: "nowrap",
               ...(unitColor ? { color: unitColor } : {}),

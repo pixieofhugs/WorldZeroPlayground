@@ -230,7 +230,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               disabled={loading}
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-sm)",
+                fontSize: "var(--text-md)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
@@ -248,7 +248,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               disabled={loading}
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-sm)",
+                fontSize: "var(--text-md)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",

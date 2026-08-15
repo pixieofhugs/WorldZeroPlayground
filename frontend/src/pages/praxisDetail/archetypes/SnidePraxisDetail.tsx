@@ -266,7 +266,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   /** Special Elite, uppercase, wide — every micro-label on the wall. */
   const eyebrow: CSSProperties = {
     fontFamily: TYPE,
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     letterSpacing: "0.2em",
     textTransform: "uppercase",
     color: MUTED,

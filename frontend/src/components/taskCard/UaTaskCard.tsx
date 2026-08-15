@@ -133,7 +133,7 @@ export default function UaTaskCard({
 
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
-                <span style={{ ...UA_EYEBROW, fontSize: "var(--text-sm)", marginBottom: "var(--space-xs)" }}>
+                <span style={{ ...UA_EYEBROW, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
                   {i18n.t("feed:taskCard.ua.levelCaption")}
                 </span>
                 <span style={{ fontFamily: UA_DISPLAY, fontWeight: 700, fontSize: size.levelSize, lineHeight: 0.9 }}>
@@ -163,7 +163,7 @@ export default function UaTaskCard({
                   >
                     {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
                   </span>
-                  <span style={{ ...UA_EYEBROW, fontSize: "var(--text-xs)" }}>
+                  <span style={{ ...UA_EYEBROW, fontSize: "var(--text-md)" }}>
                     {i18n.t("feed:taskCard.modifierCaption")}
                   </span>
                 </div>

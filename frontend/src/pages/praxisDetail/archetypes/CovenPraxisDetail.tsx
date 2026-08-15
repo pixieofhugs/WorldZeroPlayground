@@ -142,7 +142,7 @@ const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
 const CAPTION: CSSProperties = {
   fontFamily: CHROME,
   fontWeight: 700,
-  fontSize: 'var(--text-sm)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
   color: LABEL,

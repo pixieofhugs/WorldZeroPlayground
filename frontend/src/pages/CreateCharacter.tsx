@@ -215,7 +215,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
 
 const backLink: CSSProperties = {
   background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', padding: 0, marginBottom: 'var(--space-lg)',
+  fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)', padding: 0, marginBottom: 'var(--space-lg)',
 }
 const twoCol: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4xl)', alignItems: 'flex-start' }
 const titleStyle: CSSProperties = {
@@ -223,7 +223,7 @@ const titleStyle: CSSProperties = {
   fontSize: 'var(--text-heading)', lineHeight: 1.02, color: 'var(--color-text-primary)', margin: '0 0 var(--space-xl)',
 }
 const eyebrow: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.16em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
 }
 const nameInput: CSSProperties = {
@@ -240,7 +240,7 @@ const bioInput: CSSProperties = {
 }
 const metaRow: CSSProperties = {
   display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-sm)',
-  fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)',
 }
 const pickerGrid: CSSProperties = {
   display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', marginTop: 'var(--space-md)',
@@ -262,5 +262,5 @@ const primaryBtn: CSSProperties = {
 }
 const cancelBtn: CSSProperties = {
   cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'var(--font-body)',
-  fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)',
+  fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)',
 }

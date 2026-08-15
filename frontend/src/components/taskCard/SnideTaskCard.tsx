@@ -255,7 +255,7 @@ export default function SnideTaskCard({
                 <span
                   style={{
                     fontFamily: TYPE,
-                    fontSize: "var(--text-sm)",
+                    fontSize: "var(--text-md)",
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
                     color: MUTED,
@@ -293,7 +293,7 @@ export default function SnideTaskCard({
                   <span
                     style={{
                       fontFamily: TYPE,
-                      fontSize: "var(--text-xs)",
+                      fontSize: "var(--text-md)",
                       letterSpacing: "0.16em",
                       textTransform: "uppercase",
                       color: MUTED,

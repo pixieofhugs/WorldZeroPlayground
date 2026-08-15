@@ -72,7 +72,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           <span
             style={{
               fontFamily: "var(--font-body)",
-              fontSize: "var(--text-sm)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               color: "var(--faction-snide-vote-off)",
@@ -159,7 +159,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         <span
           style={{
             fontFamily: "var(--font-body)",
-            fontSize: "var(--text-xs)",
+            fontSize: "var(--text-md)",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             color: "var(--faction-snide-card-muted)",

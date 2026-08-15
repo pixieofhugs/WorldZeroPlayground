@@ -86,7 +86,7 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
       </div>
       <div
         className="font-body"
-        style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)', lineHeight: 1 }}
+        style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-tertiary)', lineHeight: 1 }}
       >
         {t(entry.verbKey)}
       </div>

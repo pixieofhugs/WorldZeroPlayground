@@ -332,7 +332,7 @@ export default function EverymenTaskDetail({
             className="font-body"
             style={{
               display: "inline-block",
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -619,7 +619,7 @@ export default function EverymenTaskDetail({
           <span
             style={{
               ...label,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.22em",
               color: ACCENT,
               marginTop: "var(--space-xs)",

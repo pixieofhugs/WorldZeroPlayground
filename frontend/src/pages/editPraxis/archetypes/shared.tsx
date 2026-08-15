@@ -43,7 +43,7 @@ export function Breadcrumb({
     <nav
       className="font-body"
       style={{
-        fontSize: "var(--text-sm)",
+        fontSize: "var(--text-md)",
         letterSpacing: "0.1em",
         color: tone,
         marginBottom: "var(--space-md)",

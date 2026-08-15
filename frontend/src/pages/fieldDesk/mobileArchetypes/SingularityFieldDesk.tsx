@@ -44,7 +44,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 
 const kicker: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -77,7 +77,7 @@ const actionPillStyle: CSSProperties = {
 /** The baseline row under the track — the terminal's signal voice. */
 const trackMetaStyle: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -199,7 +199,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(60) }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(60) }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>
           </div>
@@ -313,7 +313,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
                   <div className="truncate" style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1.2, color: PHOSPHOR }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -322,7 +322,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: AMBER, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${signal(30)}` }}
+                  style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: AMBER, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${signal(30)}` }}
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>

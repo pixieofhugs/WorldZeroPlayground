@@ -277,7 +277,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
    *  PLATE and does not clear on the darker page this surface introduces. */
   const eyebrow: CSSProperties = {
     ...SMALL_CAPS,
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     color: QUIET,
   };
   /** The same label voice on a panel cell, where the caption gold clears. */

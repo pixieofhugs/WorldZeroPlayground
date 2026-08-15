@@ -106,7 +106,7 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
           left: DISC_SIZE + DISC_INSET + 8,
           ...SMALL_CAPS,
           fontWeight: 600,
-          fontSize: 'var(--text-xs)',
+          fontSize: 'var(--text-md)',
           color: BAND_INK,
           background: BAND,
           padding: '0 var(--space-sm)',

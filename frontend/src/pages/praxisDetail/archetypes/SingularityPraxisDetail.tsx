@@ -177,7 +177,7 @@ const CREW_INK = {
 /** Terminal caption voice — every label on the chassis speaks in it. */
 const LABEL: CSSProperties = {
   fontFamily: MONO,
-  fontSize: "var(--text-sm)",
+  fontSize: "var(--text-md)",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
   color: DIM,

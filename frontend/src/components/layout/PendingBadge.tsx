@@ -25,7 +25,7 @@ const BADGE_STYLE: CSSProperties = {
   height: 15,
   padding: '0 var(--space-xs)',
   borderRadius: 999,
-  fontSize: 'var(--text-sm)',
+  fontSize: 'var(--text-md)',
   fontWeight: 700,
   lineHeight: 1,
   color: 'var(--color-text-on-accent)',

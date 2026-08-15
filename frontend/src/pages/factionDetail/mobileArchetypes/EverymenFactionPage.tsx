@@ -33,7 +33,7 @@ const BODY_FONT = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: BODY_FONT,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,

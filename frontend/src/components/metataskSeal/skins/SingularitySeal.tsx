@@ -40,7 +40,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
             background: 'transparent',
             border: '1px solid var(--faction-singularity-card-accent)',
             color: 'var(--faction-singularity-card-accent)',
-            fontSize: 'var(--text-xs)',
+            fontSize: 'var(--text-md)',
             lineHeight: 1,
             padding: '0 var(--space-xs)',
             cursor: 'pointer',
