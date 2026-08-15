@@ -54,6 +54,7 @@ import {
   wowMobilePage,
 } from "../../../components/factionMarks/wowMobile";
 import CharacterSwitcherSheet from "../../../components/CharacterSwitcherSheet";
+import FactionSigil from "../../../components/sigil/FactionSigil";
 import { factionName } from "../../../utils/factions";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
 import PendingRowPill from '../PendingRowPill'
@@ -61,6 +62,11 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /** Every tappable row clears the faction's 46px thumb target. */
 const TAP = 46;
+
+/** The task-faction mark on a quest chit (#1711). 15 rather than 14: the frame
+ *  is the roomiest of the eight, and WOW's own mark is a struck coin that needs
+ *  every pixel it can get before its motto band drops out. */
+const ROW_SIGIL = 15;
 
 /**
  * Characters / Edit as real controls (#1553) — a gilt-framed chit on the crest.
@@ -321,16 +327,33 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                       color: "inherit",
                     }}
                   >
+                    {/* The quest's own house, marked (#1711). This frame drew no
+                        faction mark at all; the sigil leads the title line, and
+                        the italic line below still names the faction in words,
+                        so the mark is decorative. `flex-start` rather than
+                        `center` because a quest title wraps. */}
                     <div
                       style={{
-                        fontFamily: WOW_DISPLAY,
-                        fontSize: "var(--text-content)",
-                        lineHeight: 1.15,
-                        color: WOW_INK,
-                        overflowWrap: "anywhere",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "var(--space-sm)",
                       }}
                     >
-                      {praxis.task_title}
+                      <span aria-hidden style={{ display: "flex", flex: "none" }}>
+                        <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                      </span>
+                      <div
+                        style={{
+                          fontFamily: WOW_DISPLAY,
+                          fontSize: "var(--text-content)",
+                          lineHeight: 1.15,
+                          color: WOW_INK,
+                          overflowWrap: "anywhere",
+                          minWidth: 0,
+                        }}
+                      >
+                        {praxis.task_title}
+                      </div>
                     </div>
                     <div
                       style={{

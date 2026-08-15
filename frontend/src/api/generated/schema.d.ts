@@ -1666,7 +1666,7 @@ export interface components {
         ActivityFeedResponse: {
             counts: components["schemas"]["FeedCounts"];
             /** Items */
-            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -1678,6 +1678,8 @@ export interface components {
             level_required?: number | null;
             /** Point Value */
             point_value?: number | null;
+            /** Primary Faction Slug */
+            primary_faction_slug?: string | null;
             /** Title */
             title?: string | null;
         };
@@ -3131,6 +3133,8 @@ export interface components {
             level_thresholds: number[];
             /** Max Task Signups */
             max_task_signups: number;
+            /** Pending Task Admin Review Hours */
+            pending_task_admin_review_hours: number;
         };
         /** GlobalTaskItem */
         GlobalTaskItem: {
@@ -3963,7 +3967,7 @@ export interface components {
             /** Active Praxes */
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
-            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Pending Requests Count */
             pending_requests_count: number;
         };
@@ -4219,6 +4223,51 @@ export interface components {
             viewer_vote: number;
             /** Voter Character Id */
             voter_character_id: number;
+        };
+        /**
+         * VoteChangedOnMineItem
+         * @description A voter went back and re-rated the viewer's praxis (#1712).
+         *
+         *     Same payload as ``VoteOnMineItem`` — ``value``/``points_earned`` are the
+         *     numbers that stand *now* — and deliberately no "changed from" fields: no
+         *     prior value is stored. The two are distinct types rather than one type with
+         *     a flag because the item KEY has to differ, so archiving the original cannot
+         *     silence the change.
+         */
+        VoteChangedOnMineItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /**
+             * Context Faction Slug
+             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             *
+             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
+             *     frontend frame dispatches on a single value: the actor's member faction,
+             *     else the task's faction (task-context events like ``global_task`` carry no
+             *     actor), else None — a neutral card (e.g. ``era_announcement``).
+             *
+             *     ``getattr`` rather than a field, because only eight of the fourteen
+             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
+             *     this used to be, and the six without a task still resolve to None.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["VoteOnMinePayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "vote_changed_on_mine";
         };
         /** VoteOnMineItem */
         VoteOnMineItem: {

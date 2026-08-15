@@ -2,7 +2,7 @@
 
 **The seam under test** is ``GET /activity-feed`` →
 :func:`services.activity_feed.get_activity_feed`. That call fans out over the
-fifteen-entry ``FEED_SOURCES`` registry twice: once to fetch rows, once to count
+sixteen-entry ``FEED_SOURCES`` registry twice: once to fetch rows, once to count
 badges. Every one of those sub-queries takes its **own session** from
 ``session_factory``, so the statement count is also, in production, the number of
 pooled connections one page load asks for at the same time.
@@ -12,7 +12,7 @@ Two numbers, and they are different things:
 - **total statements** — the whole request, pre-fetch included. Pins the size of
   the fan-out so it cannot silently regrow.
 - **badge-count statements** — how many round trips the six tab badges cost on
-  their own. This was one COUNT per registry source (fifteen); ADR-0036 only
+  their own. This was one COUNT per registry source (one each); ADR-0036 only
   requires that a badge derive from the *same* windowed Select as its rows, and a
   ``UNION ALL`` of those COUNTs preserves that while costing one.
 
@@ -46,15 +46,20 @@ from services.activity_feed import (
 #: the auth lookup, the five pre-fetch round trips, one fetch per registry
 #: source, and the badge counts. Before #1532 this was 33 — fifteen of them were
 #: the badge COUNTs. Change it only with the reason in the PR body.
-EXPECTED_FEED_LOAD_STATEMENTS = 19
+#:
+#: 19 → 20 in #1712: ``vote_changed_on_mine`` is a sixteenth registry source, so
+#: the fetch fan-out costs one more statement. The badge counts do not — they
+#: are one ``UNION ALL`` however many sources there are, which is the property
+#: the two constants below exist to hold.
+EXPECTED_FEED_LOAD_STATEMENTS = 20
 
-#: Round trips the six tab badges cost. One ``UNION ALL`` over the same fifteen
-#: windowed Selects the fetch fan-out runs (#1532). Was 15.
+#: Round trips the six tab badges cost. One ``UNION ALL`` over the same windowed
+#: Selects the fetch fan-out runs, whatever the registry's size (#1532). Was 15.
 EXPECTED_BADGE_COUNT_STATEMENTS = 1
 
 #: Sessions a feed load takes from ``session_factory`` — i.e. pooled connections
-#: it holds *on top of* the request's own. Every one of the fifteen fetches and
-#: fifteen counts used to take one, so a single page load reached for ~30 against
+#: it holds *on top of* the request's own. Every one of the fetches and every one
+#: of the counts used to take one, so a single page load reached for ~30 against
 #: a pool of 15 and the surplus queued on ``pool_timeout`` (#1532). Only the
 #: badge UNION takes one now. This is the assertion the bug was actually about:
 #: statement count alone would not have caught it.

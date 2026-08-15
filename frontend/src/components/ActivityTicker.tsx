@@ -21,6 +21,7 @@ const VERB_KEYS = {
   friend_signup: 'ticker.verbs.friend_signup',
   global_task: 'ticker.verbs.global_task',
   vote_on_mine: 'ticker.verbs.vote_on_mine',
+  vote_changed_on_mine: 'ticker.verbs.vote_changed_on_mine',
   collab_invite: 'ticker.verbs.collab_invite',
   duel_challenge: 'ticker.verbs.duel_challenge',
   era_announcement: 'ticker.verbs.era_announcement',

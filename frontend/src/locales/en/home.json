@@ -64,6 +64,7 @@
       "friend_signup": "signed up for",
       "global_task": "new task",
       "vote_on_mine": "voted on",
+      "vote_changed_on_mine": "changed their vote on",
       "collab_invite": "started a collab on",
       "duel_challenge": "challenged a duel on",
       "era_announcement": "new era"

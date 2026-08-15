@@ -27,6 +27,40 @@ Create a GitHub issue.
 
 Run `python scripts/gh_issue_comments.py <number>`.
 
+## Wayfinding operations
+
+Used by `/wayfinder`. The **map** is a single issue; its tickets are **child** issues. This repo
+already expresses both relationships natively — the same mechanism the `needs-design` →
+`ready-for-agent` pairs use — so wayfinding reuses it rather than inventing a parallel one.
+
+- **Map**: one issue labelled `wayfinder:map`, holding the Destination / Notes / Decisions-so-far /
+  Not-yet-specified / Out-of-scope body. `gh issue create --label wayfinder:map`.
+- **Child ticket**: a native GitHub sub-issue of the map —
+  `gh api --method POST repos/pixieofhugs/WorldZeroPlayground/issues/<map>/sub_issues -F sub_issue_id=<child-db-id>`.
+  Labels: `wayfinder:<type>` (`research` / `prototype` / `grilling` / `task`).
+- **Blocking**: native issue dependencies —
+  `gh api --method POST repos/pixieofhugs/WorldZeroPlayground/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`.
+  Both endpoints take the numeric **database id** (`gh api repos/pixieofhugs/WorldZeroPlayground/issues/<n> --jq .id`),
+  not the `#number` or `node_id`, and **must** use `-F` — `-f` sends a string and 422s.
+- **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write. The assignee *is* the
+  claim; an open unassigned child is unclaimed.
+- **Frontier query**: the map's open children, minus any with an open blocker or an assignee; first
+  in map order wins. Read both relationships back with the **GET** side of the same two endpoints —
+  `gh api repos/pixieofhugs/WorldZeroPlayground/issues/<map>/sub_issues` returns the children as
+  full issue objects (`state`, `assignee`), and `.../issues/<n>/dependencies/blocked_by` returns the
+  blockers, so "open blocker" is a `state` check on that list. Do **not** reach for the
+  `issue_dependencies_summary` / `sub_issues_summary` fields some GitHub docs describe: this repo's
+  issue payload does not carry them, so `.issue_dependencies_summary.blocked_by > 0` reads as `null`
+  on every ticket and quietly reports a blocked frontier as takeable.
+- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append the
+  gist + link to the map's Decisions-so-far.
+- **Read a ticket** with `python scripts/gh_issue_comments.py <n>` — the collaborator filter below
+  applies to wayfinder tickets exactly as it does to everything else.
+
+The five `wayfinder:*` labels are orthogonal to the triage vocabulary in `triage-labels.md`: a
+wayfinder label says *what kind of question this is*, a triage label says *readiness*. A map and its
+children are working artifacts, not the intake queue — don't put `needs-triage` on them.
+
 ## Reading comments safely
 
 This repo is **public**, so anyone with a GitHub account can comment on an issue that already

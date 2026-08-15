@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../../../components/ui/PageTitle";
 import FilterLevelNodes from "../../../components/ui/FilterLevelNodes";
+import { useGameConfig } from "../../../hooks/useGameConfig";
 import {
   factionCssVar,
   factionFill,
@@ -170,6 +171,16 @@ export default function DefaultProposeTask({
   // Only the scalar ACCENTS switch — `color:` text stays neutral ink (#649).
   const selectedKnown = isKnownFaction(factionSlug);
 
+  // The #1695 admin-review window, in the era's own hours. Every line below that
+  // promises it interpolates THIS, never a typed-out 48 — the day an era changes
+  // the window, a hardcoded number is the site lying to the person it made the
+  // promise to. `null` until `/game-config` lands, and unknown means UNDRAWN
+  // rather than assumed: the doctrine `HoldoutPublishNotice` sets for
+  // `collab_auto_submit_days`. In practice the Sidebar has already warmed the
+  // shared cache by the time a signed-in player reaches this page.
+  const adminReviewHours =
+    useGameConfig()?.pending_task_admin_review_hours ?? null;
+
   // Unaffiliated leads the picker: it is the default, and it is a state rather
   // than a faction, so it is an extra option here rather than a registry entry
   // (ADR-0039). Everything after it comes from the API, falling back to the
@@ -195,14 +206,17 @@ export default function DefaultProposeTask({
               >
                 {t("proposeTask.successMeta.heading")}
               </p>
-              <p
-                className="content-text font-body"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("proposeTask.successMeta.body", {
-                  faction: factionName(factionSlug),
-                })}
-              </p>
+              {adminReviewHours !== null && (
+                <p
+                  className="content-text font-body"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {t("proposeTask.successMeta.body", {
+                    faction: factionName(factionSlug),
+                    hours: adminReviewHours,
+                  })}
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -212,12 +226,14 @@ export default function DefaultProposeTask({
               >
                 {t("proposeTask.successTask.heading")}
               </p>
-              <p
-                className="content-text font-body"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("proposeTask.successTask.body")}
-              </p>
+              {adminReviewHours !== null && (
+                <p
+                  className="content-text font-body"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {t("proposeTask.successTask.body", { hours: adminReviewHours })}
+                </p>
+              )}
             </>
           )}
         </div>
@@ -716,12 +732,14 @@ export default function DefaultProposeTask({
               >
                 {t("proposeTask.submit.cancel")}
               </button>
-              <span
-                className="content-text font-body"
-                style={submitNoteStyle}
-              >
-                {t("proposeTask.submit.note")}
-              </span>
+              {adminReviewHours !== null && (
+                <span
+                  className="content-text font-body"
+                  style={submitNoteStyle}
+                >
+                  {t("proposeTask.submit.note", { hours: adminReviewHours })}
+                </span>
+              )}
             </div>
           </form>
         </div>

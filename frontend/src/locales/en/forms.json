@@ -454,11 +454,11 @@
     "pageTitle": "Propose a Task",
     "successTask": {
       "heading": "Task proposed!",
-      "body": "An admin will review it soon."
+      "body": "An admin will review it soon. Only admins can see it for its first {{hours}} hours; other players see it after that."
     },
     "successMeta": {
       "heading": "Meta task proposed!",
-      "body": "An admin will review it. Once activated, {{faction}} players can apply it to their praxis for a points bonus."
+      "body": "An admin will review it, and only admins can see it for its first {{hours}} hours; other players see it after that. Once activated, {{faction}} players can apply it to their praxis for a points bonus."
     },
     "factionSelectorLabel": "Choose a faction for this task, or leave it open to everyone",
     "factionDescriptor": {
@@ -523,7 +523,7 @@
       "meta": "Propose meta task",
       "task": "Submit proposal",
       "cancel": "Cancel",
-      "note": "Your proposal goes to admin for review."
+      "note": "Your proposal goes to admin for review. Only admins can see it for its first {{hours}} hours; other players see it after that."
     },
     "tips": {
       "goodTaskHeading": "What makes a good task",

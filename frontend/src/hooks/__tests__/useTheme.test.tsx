@@ -8,9 +8,23 @@
  * propagates to every consumer by construction, so asserting it would be
  * testing React, not this codebase.
  */
+import { existsSync, readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
-import { resolveInitialTheme, nextTheme, ThemeProvider, useTheme } from '../useTheme'
+import {
+  resolveInitialTheme,
+  nextTheme,
+  ThemeProvider,
+  useTheme,
+  THEME_STORAGE_KEY,
+} from '../useTheme'
+
+const INDEX_HTML = readFileSync(
+  fileURLToPath(new URL('../../../index.html', import.meta.url)),
+  'utf8',
+)
 
 describe('nextTheme — the toggle flip', () => {
   it('returns the opposite theme', () => {
@@ -19,19 +33,54 @@ describe('nextTheme — the toggle flip', () => {
   })
 })
 
-describe('resolveInitialTheme — unchanged resolution order', () => {
-  it('honours a stored choice over the system preference', () => {
-    expect(resolveInitialTheme('light', true)).toBe('light')
-    expect(resolveInitialTheme('dark', false)).toBe('dark')
+/**
+ * #1698 — dark is the default, light is opt-in. The OS preference is no longer
+ * an input at all, which is why these cases take one argument: "no stored value
+ * + a light-mode OS" is expressible only as "no stored value", because there is
+ * nowhere left for the OS to enter. The other half of that claim — that the
+ * pre-paint bootstrap doesn't read the OS either — is the mirror suite below.
+ */
+describe('resolveInitialTheme — dark unless the visitor chose light', () => {
+  it('honours a stored choice', () => {
+    expect(resolveInitialTheme('light')).toBe('light')
+    expect(resolveInitialTheme('dark')).toBe('dark')
   })
 
-  it('falls back to the system preference when nothing is stored', () => {
-    expect(resolveInitialTheme(null, true)).toBe('dark')
-    expect(resolveInitialTheme(null, false)).toBe('light')
+  it('defaults to dark when nothing is stored, whatever the OS prefers', () => {
+    expect(resolveInitialTheme(null)).toBe('dark')
   })
 
-  it('ignores a junk stored value and asks the system', () => {
-    expect(resolveInitialTheme('chartreuse', true)).toBe('dark')
+  it('ignores a junk stored value and defaults to dark', () => {
+    expect(resolveInitialTheme('chartreuse')).toBe('dark')
+  })
+})
+
+/**
+ * The inline bootstrap in `index.html` runs before React exists, so nothing in
+ * the bundle can observe it — but it decides the same question this module
+ * does, and a disagreement is a visible theme flip on hydration. It is a string
+ * to us, so a string is what we assert on.
+ */
+describe('index.html pre-paint bootstrap — mirrors this module', () => {
+  it('reads the same storage key', () => {
+    expect(INDEX_HTML).toContain(`'${THEME_STORAGE_KEY}'`)
+  })
+
+  it('does not consult the OS colour scheme', () => {
+    expect(INDEX_HTML).not.toContain('prefers-color-scheme')
+  })
+
+  it('defaults to dark', () => {
+    expect(INDEX_HTML).toMatch(/theme\s*=\s*'dark'/)
+    expect(INDEX_HTML, 'no light fallback left in the bootstrap').not.toMatch(
+      /theme\s*=\s*'light'/,
+    )
+  })
+
+  it('names the sibling it mirrors by a filename that exists', () => {
+    const named = /src\/hooks\/useTheme\.tsx?/.exec(INDEX_HTML)?.[0]
+    expect(named, 'bootstrap points at its sibling').toBeTruthy()
+    expect(existsSync(new URL(`../../../${named}`, import.meta.url))).toBe(true)
   })
 })
 
