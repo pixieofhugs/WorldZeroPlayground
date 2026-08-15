@@ -36,6 +36,13 @@ from models.praxis import (
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.badge import build_badge_contexts, list_badges_for_character
+from tests.integration.factories import (
+    cast_vote,
+    make_character,
+    make_duel,
+    make_solo_praxis,
+    make_task,
+)
 
 DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}
 
@@ -43,135 +50,6 @@ DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
-
-
-async def _make_character(
-    session: AsyncSession, era: Era, *, username: str, faction_slug: str = "ua"
-) -> Character:
-    account = Account(email=f"{username}@example.com")
-    session.add(account)
-    await session.flush()
-    character = Character(
-        account_id=account.id,
-        username=username,
-        display_name=username,
-        faction_slug=faction_slug,
-    )
-    session.add(character)
-    await session.flush()
-    session.add(
-        CharacterStats(
-            character_id=character.id,
-            era_id=era.id,
-            score=0,
-            all_time_score=0,
-            level=0,
-            votes_spent_this_era=0,
-        )
-    )
-    await session.flush()
-    return character
-
-
-async def _make_task(session: AsyncSession, creator: Character) -> Task:
-    task = Task(
-        title="duel task",
-        description="proof",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        created_by=creator.id,
-        primary_faction_slug="ua",
-    )
-    session.add(task)
-    await session.flush()
-    return task
-
-
-async def _make_solo(
-    session: AsyncSession, task: Task, author: Character
-) -> Praxis:
-    praxis = Praxis(
-        task_id=task.id,
-        created_by_id=author.id,
-        type=PraxisType.solo,
-        status=PraxisStatus.submitted,
-        title="side",
-        body_text="proof",
-    )
-    session.add(praxis)
-    await session.flush()
-    session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id))
-    await session.flush()
-    return praxis
-
-
-async def _cast_vote(
-    session: AsyncSession, praxis: Praxis, voter: Character, value: int
-) -> None:
-    session.add(
-        Vote(
-            praxis_id=praxis.id,
-            voter_character_id=voter.id,
-            voter_account_id=voter.account_id,
-            value=value,
-        )
-    )
-    await session.flush()
-
-
-async def _make_duel(
-    session: AsyncSession,
-    era: Era,
-    *,
-    label: str,
-    challenger_votes: int = 0,
-    opponent_votes: int = 0,
-    status: DuelStatus = DuelStatus.settled,
-    forfeiter: Optional[str] = None,
-    winner_character_id: Optional[int] = None,
-    challenger_faction: str = "ua",
-    opponent_faction: str = "ua",
-    challenger_moderation: ModerationStatus = ModerationStatus.visible,
-    opponent_moderation: ModerationStatus = ModerationStatus.visible,
-) -> tuple[Duel, Character, Character]:
-    """Two fresh characters + their two solo praxes, linked as one duel."""
-    challenger = await _make_character(
-        session, era, username=f"{label}ch", faction_slug=challenger_faction
-    )
-    opponent = await _make_character(
-        session, era, username=f"{label}op", faction_slug=opponent_faction
-    )
-    voter = await _make_character(session, era, username=f"{label}v")
-    task = await _make_task(session, challenger)
-    challenger_praxis = await _make_solo(session, task, challenger)
-    opponent_praxis = await _make_solo(session, task, opponent)
-    challenger_praxis.moderation_status = challenger_moderation
-    opponent_praxis.moderation_status = opponent_moderation
-
-    if challenger_votes:
-        await _cast_vote(session, challenger_praxis, voter, challenger_votes)
-    if opponent_votes:
-        await _cast_vote(session, opponent_praxis, voter, opponent_votes)
-
-    forfeited_by = None
-    if forfeiter == "challenger":
-        forfeited_by = challenger.id
-    elif forfeiter == "opponent":
-        forfeited_by = opponent.id
-
-    duel = Duel(
-        task_id=task.id,
-        challenger_praxis_id=challenger_praxis.id,
-        opponent_character_id=opponent.id,
-        opponent_praxis_id=opponent_praxis.id,
-        status=status,
-        forfeited_by_character_id=forfeited_by,
-        winner_character_id=winner_character_id,
-    )
-    session.add(duel)
-    await session.commit()
-    return duel, challenger, opponent
 
 
 async def _badge_keys(
@@ -189,9 +67,8 @@ async def _badge_keys(
 async def test_strictly_leading_side_is_a_duelist(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    _, challenger, opponent = await _make_duel(
-        db_session, era, label="lead", challenger_votes=4, opponent_votes=3
-    )
+    _, challenger, opponent = await make_duel(
+        db_session, era, label="lead", challenger_votes=4, opponent_votes=3, commit=True)
     assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 
@@ -200,9 +77,8 @@ async def test_strictly_leading_side_is_a_duelist(
 async def test_a_tie_is_not_a_win(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    _, challenger, opponent = await _make_duel(
-        db_session, era, label="tie", challenger_votes=3, opponent_votes=3
-    )
+    _, challenger, opponent = await make_duel(
+        db_session, era, label="tie", challenger_votes=3, opponent_votes=3, commit=True)
     assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == []
 
@@ -222,15 +98,14 @@ async def test_snide_wins_the_tie_and_earns_the_badge(
     db_session.add(Faction(slug="snide", status=FactionStatus.visible))
     await db_session.commit()
 
-    _, challenger, opponent = await _make_duel(
+    _, challenger, opponent = await make_duel(
         db_session,
         era,
         label="snidetie",
         challenger_votes=3,
         opponent_votes=3,
         challenger_faction="snide",
-        opponent_faction="ua",
-    )
+        opponent_faction="ua", commit=True)
     assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 
@@ -240,7 +115,7 @@ async def test_an_unvoted_duel_has_no_duelist(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
     """Zero-zero is a tie, not a challenger win."""
-    _, challenger, opponent = await _make_duel(db_session, era, label="quiet")
+    _, challenger, opponent = await make_duel(db_session, era, label="quiet", commit=True)
     assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == []
 
@@ -250,14 +125,13 @@ async def test_forfeit_hands_the_badge_to_the_other_side(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
     """The forfeiter loses even while holding the *higher* tally (#824 finding)."""
-    _, challenger, opponent = await _make_duel(
+    _, challenger, opponent = await make_duel(
         db_session,
         era,
         label="ff",
         challenger_votes=9,
         opponent_votes=1,
-        forfeiter="challenger",
-    )
+        forfeiter="challenger", commit=True)
     assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == ["duelist"]
 
@@ -267,14 +141,13 @@ async def test_resolved_duel_grants_the_badge_to_its_frozen_winner(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
     """The badge survives era close: "won or winning" (owner ruling 2026-07-21)."""
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session,
         era,
         label="past",
         challenger_votes=5,
         opponent_votes=0,
-        status=DuelStatus.active,
-    )
+        status=DuelStatus.active, commit=True)
     duel.status = DuelStatus.resolved
     duel.winner_character_id = challenger.id
     await db_session.commit()
@@ -287,14 +160,13 @@ async def test_resolved_duel_grants_the_badge_to_its_frozen_winner(
 async def test_resolved_duel_frozen_to_the_opponent_leaves_the_loser_bare(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session,
         era,
         label="lost",
         challenger_votes=0,
         opponent_votes=5,
-        status=DuelStatus.active,
-    )
+        status=DuelStatus.active, commit=True)
     duel.status = DuelStatus.resolved
     duel.winner_character_id = opponent.id
     await db_session.commit()
@@ -308,14 +180,13 @@ async def test_resolved_duel_with_no_frozen_winner_grants_nothing(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
     """A tie / no-contest froze `winner_character_id` as NULL — nobody won."""
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session,
         era,
         label="draw",
         challenger_votes=3,
         opponent_votes=3,
-        status=DuelStatus.active,
-    )
+        status=DuelStatus.active, commit=True)
     duel.status = DuelStatus.resolved
     duel.winner_character_id = None
     await db_session.commit()
@@ -334,15 +205,14 @@ async def test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge(
     challenger as winner on the lower score. Comparing points would hand the
     badge to the wrong side.
     """
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session,
         era,
         label="ffpast",
         challenger_votes=1,
         opponent_votes=9,
         status=DuelStatus.active,
-        forfeiter="opponent",
-    )
+        forfeiter="opponent", commit=True)
     duel.status = DuelStatus.resolved
     duel.winner_character_id = challenger.id
     await db_session.commit()
@@ -360,14 +230,13 @@ async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
     No forfeit is recorded, so `duel_winner` over the tally would name the
     opponent. Only reading `Duel.winner_character_id` gets this right.
     """
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session,
         era,
         label="drift",
         challenger_votes=1,
         opponent_votes=9,
-        status=DuelStatus.active,
-    )
+        status=DuelStatus.active, commit=True)
     duel.status = DuelStatus.resolved
     duel.winner_character_id = challenger.id
     await db_session.commit()
@@ -380,13 +249,12 @@ async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
 async def test_active_forfeited_duel_still_counts(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    _, challenger, opponent = await _make_duel(
+    _, challenger, opponent = await make_duel(
         db_session,
         era,
         label="act",
         status=DuelStatus.active,
-        forfeiter="opponent",
-    )
+        forfeiter="opponent", commit=True)
     assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 
@@ -401,14 +269,13 @@ async def test_failed_side_is_not_a_duelist_even_while_leading(
     two. If it kept deciding on the tally alone, a praxis an admin ruled failed
     would still wear "Duelist" while its score said it lost.
     """
-    _, challenger, opponent = await _make_duel(
+    _, challenger, opponent = await make_duel(
         db_session,
         era,
         label="failbadge",
         challenger_votes=9,
         opponent_votes=1,
-        challenger_moderation=ModerationStatus.failed,
-    )
+        challenger_moderation=ModerationStatus.failed, commit=True)
     assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == ["duelist"]
 
@@ -417,9 +284,8 @@ async def test_failed_side_is_not_a_duelist_even_while_leading(
 async def test_uninvolved_character_earns_nothing(
     db_session: AsyncSession, era: Era, character: Character, faction_ua: Faction
 ):
-    await _make_duel(
-        db_session, era, label="else", challenger_votes=4, opponent_votes=1
-    )
+    await make_duel(
+        db_session, era, label="else", challenger_votes=4, opponent_votes=1, commit=True)
     assert await _badge_keys(db_session, character) == []
 
 
@@ -427,9 +293,8 @@ async def test_uninvolved_character_earns_nothing(
 async def test_endpoint_surfaces_the_duelist_badge(
     client, db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    _, challenger, _opponent = await _make_duel(
-        db_session, era, label="api", challenger_votes=4, opponent_votes=2
-    )
+    _, challenger, _opponent = await make_duel(
+        db_session, era, label="api", challenger_votes=4, opponent_votes=2, commit=True)
     resp = await client.get(f"/characters/{challenger.id}")
     assert resp.status_code == 200
     assert resp.json()["badges"] == [DUELIST_BADGE]
@@ -451,18 +316,14 @@ async def test_batch_path_is_constant_query_count(
     mixes live and `resolved` duels, so the frozen-vs-live split must not cost a
     query either.
     """
-    _, one_challenger, one_opponent = await _make_duel(
-        db_session, era, label="b1", challenger_votes=5, opponent_votes=1
-    )
-    _, two_challenger, two_opponent = await _make_duel(
-        db_session, era, label="b2", challenger_votes=1, opponent_votes=5
-    )
-    _, three_challenger, three_opponent = await _make_duel(
-        db_session, era, label="b3", forfeiter="challenger"
-    )
-    four_duel, four_challenger, four_opponent = await _make_duel(
-        db_session, era, label="b4", challenger_votes=2, opponent_votes=7
-    )
+    _, one_challenger, one_opponent = await make_duel(
+        db_session, era, label="b1", challenger_votes=5, opponent_votes=1, commit=True)
+    _, two_challenger, two_opponent = await make_duel(
+        db_session, era, label="b2", challenger_votes=1, opponent_votes=5, commit=True)
+    _, three_challenger, three_opponent = await make_duel(
+        db_session, era, label="b3", forfeiter="challenger", commit=True)
+    four_duel, four_challenger, four_opponent = await make_duel(
+        db_session, era, label="b4", challenger_votes=2, opponent_votes=7, commit=True)
     four_duel.status = DuelStatus.resolved
     four_duel.winner_character_id = four_challenger.id
     await db_session.commit()

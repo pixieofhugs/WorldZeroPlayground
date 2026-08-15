@@ -29,152 +29,18 @@ from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.duel_outcome import duel_winner
 from services.era import apply_era_reset
+from tests.integration.factories import (
+    cast_vote,
+    make_character,
+    make_duel,
+    make_solo_praxis,
+    make_task,
+)
 
 
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
-
-
-async def _make_character(
-    session: AsyncSession, era: Era, *, username: str, email: str,
-    faction_slug: str = "ua",
-) -> Character:
-    account = Account(email=email)
-    session.add(account)
-    await session.flush()
-    character = Character(
-        account_id=account.id,
-        username=username,
-        display_name=username,
-        faction_slug=faction_slug,
-    )
-    session.add(character)
-    await session.flush()
-    session.add(
-        CharacterStats(
-            character_id=character.id,
-            era_id=era.id,
-            score=0,
-            all_time_score=0,
-            level=0,
-            votes_spent_this_era=0,
-        )
-    )
-    await session.flush()
-    return character
-
-
-async def _make_task(session: AsyncSession, creator: Character) -> Task:
-    task = Task(
-        title="duel task",
-        description="proof",
-        point_value=10,
-        level_required=0,
-        status=TaskStatus.active,
-        created_by=creator.id,
-        primary_faction_slug="ua",
-    )
-    session.add(task)
-    await session.flush()
-    return task
-
-
-async def _make_solo(
-    session: AsyncSession,
-    task: Task,
-    author: Character,
-    *,
-    status: PraxisStatus = PraxisStatus.submitted,
-    moderation: ModerationStatus = ModerationStatus.visible,
-) -> Praxis:
-    praxis = Praxis(
-        task_id=task.id,
-        created_by_id=author.id,
-        type=PraxisType.solo,
-        status=status,
-        moderation_status=moderation,
-        title="side",
-        body_text="proof",
-    )
-    session.add(praxis)
-    await session.flush()
-    session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id))
-    await session.flush()
-    return praxis
-
-
-async def _cast_vote(
-    session: AsyncSession, praxis: Praxis, voter: Character, value: int
-) -> None:
-    """Direct Vote insert — bypasses the service-layer budget/anti-vote checks."""
-    session.add(
-        Vote(
-            praxis_id=praxis.id,
-            voter_character_id=voter.id,
-            voter_account_id=voter.account_id,
-            value=value,
-        )
-    )
-    await session.flush()
-
-
-async def _make_duel(
-    session: AsyncSession,
-    era: Era,
-    *,
-    label: str,
-    status: DuelStatus,
-    challenger_votes: int | None,
-    opponent_votes: int | None,
-    forfeiter: str | None = None,
-    challenger_faction: str = "ua",
-    opponent_faction: str = "ua",
-    challenger_moderation: ModerationStatus = ModerationStatus.visible,
-    opponent_moderation: ModerationStatus = ModerationStatus.visible,
-) -> tuple[Duel, Character, Character]:
-    """Build a full duel: two characters, two solo praxes, optional votes."""
-    challenger = await _make_character(
-        session, era, username=f"{label}_ch", email=f"{label}_ch@x.com",
-        faction_slug=challenger_faction,
-    )
-    opponent = await _make_character(
-        session, era, username=f"{label}_op", email=f"{label}_op@x.com",
-        faction_slug=opponent_faction,
-    )
-    voter = await _make_character(
-        session, era, username=f"{label}_v", email=f"{label}_v@x.com"
-    )
-    task = await _make_task(session, challenger)
-    challenger_praxis = await _make_solo(
-        session, task, challenger, moderation=challenger_moderation
-    )
-    opponent_praxis = await _make_solo(
-        session, task, opponent, moderation=opponent_moderation
-    )
-
-    if challenger_votes:
-        await _cast_vote(session, challenger_praxis, voter, challenger_votes)
-    if opponent_votes:
-        await _cast_vote(session, opponent_praxis, voter, opponent_votes)
-
-    forfeited_by = None
-    if forfeiter == "challenger":
-        forfeited_by = challenger.id
-    elif forfeiter == "opponent":
-        forfeited_by = opponent.id
-
-    duel = Duel(
-        task_id=task.id,
-        challenger_praxis_id=challenger_praxis.id,
-        opponent_character_id=opponent.id,
-        opponent_praxis_id=opponent_praxis.id,
-        status=status,
-        forfeited_by_character_id=forfeited_by,
-    )
-    session.add(duel)
-    await session.flush()
-    return duel, challenger, opponent
 
 
 async def _close_the_era(session: AsyncSession, starter: Account) -> Era:
@@ -245,19 +111,19 @@ async def test_era_reset_freezes_a_mix_of_duels(
     db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
 ):
     """One reset resolves clear-leader, forfeit, tie and incomplete duels together."""
-    leader_duel, leader_ch, leader_op = await _make_duel(
+    leader_duel, leader_ch, leader_op = await make_duel(
         db_session, era, label="lead", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=2,
     )
-    forfeit_duel, forfeit_ch, forfeit_op = await _make_duel(
+    forfeit_duel, forfeit_ch, forfeit_op = await make_duel(
         db_session, era, label="forf", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=1, forfeiter="challenger",
     )
-    tie_duel, tie_ch, tie_op = await _make_duel(
+    tie_duel, tie_ch, tie_op = await make_duel(
         db_session, era, label="tie", status=DuelStatus.settled,
         challenger_votes=3, opponent_votes=3,
     )
-    incomplete_duel, incomplete_ch, incomplete_op = await _make_duel(
+    incomplete_duel, incomplete_ch, incomplete_op = await make_duel(
         db_session, era, label="inc", status=DuelStatus.active,
         challenger_votes=None, opponent_votes=None,
     )
@@ -309,7 +175,7 @@ async def test_era_reset_freezes_the_snide_tie_to_snide(
     db_session.add(Faction(slug="snide", status=FactionStatus.visible))
     await db_session.commit()
 
-    duel, challenger, _opponent = await _make_duel(
+    duel, challenger, _opponent = await make_duel(
         db_session, era, label="snidefreeze", status=DuelStatus.settled,
         challenger_votes=3, opponent_votes=3,
         challenger_faction="snide", opponent_faction="ua",
@@ -329,7 +195,7 @@ async def test_era_reset_wins_for_the_opponent_side_too(
     db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
 ):
     """The winner is not biased to the challenger — the opponent can win outright."""
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session, era, label="opwin", status=DuelStatus.settled,
         challenger_votes=1, opponent_votes=4,
     )
@@ -353,7 +219,7 @@ async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
     path is covered in ``test_praxis_card_breakdown``, and the two must agree
     because they share one rule.
     """
-    duel, _challenger, opponent = await _make_duel(
+    duel, _challenger, opponent = await make_duel(
         db_session, era, label="failwin", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=1,
         challenger_moderation=ModerationStatus.failed,
@@ -375,7 +241,7 @@ async def test_era_reset_freezes_no_winner_when_both_sides_failed(
     db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
 ):
     """Nobody won. A NULL winner, not the higher tally and not the tiebreak."""
-    duel, _challenger, _opponent = await _make_duel(
+    duel, _challenger, _opponent = await make_duel(
         db_session, era, label="bothfail", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=1,
         challenger_moderation=ModerationStatus.failed,
@@ -394,11 +260,11 @@ async def test_era_reset_leaves_pending_and_declined_duels_untouched(
     db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
 ):
     """A duel that was never accepted was never a contest — it is not resolved."""
-    pending_duel, _, _ = await _make_duel(
+    pending_duel, _, _ = await make_duel(
         db_session, era, label="pend", status=DuelStatus.pending,
         challenger_votes=None, opponent_votes=None,
     )
-    declined_duel, _, _ = await _make_duel(
+    declined_duel, _, _ = await make_duel(
         db_session, era, label="decl", status=DuelStatus.declined,
         challenger_votes=None, opponent_votes=None,
     )
@@ -418,7 +284,7 @@ async def test_resolution_is_sticky_across_a_second_era_close(
     db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
 ):
     """A resolved duel is terminal: later votes and later resets never move it."""
-    duel, challenger, opponent = await _make_duel(
+    duel, challenger, opponent = await make_duel(
         db_session, era, label="stick", status=DuelStatus.settled,
         challenger_votes=5, opponent_votes=2,
     )
@@ -428,11 +294,11 @@ async def test_resolution_is_sticky_across_a_second_era_close(
     frozen_at = duel.resolved_at
 
     # Votes keep arriving (they are never reset) — the frozen outcome must hold.
-    late_voter = await _make_character(
+    late_voter = await make_character(
         db_session, era, username="late", email="late@x.com"
     )
     opponent_praxis = await db_session.get(Praxis, duel.opponent_praxis_id)
-    await _cast_vote(db_session, opponent_praxis, late_voter, 5)
+    await cast_vote(db_session, opponent_praxis, late_voter, 5)
 
     await _close_the_era(db_session, account)
 
@@ -456,11 +322,11 @@ async def test_era_reset_script_resolves_duels(
     the script opens an era — neither alone proves an operator's rollover
     actually settles the board.
     """
-    from tests.integration.test_era_reset_script import _make_admin
+    from tests.integration.factories import make_admin
     from scripts.era_reset import reset_era
 
-    await _make_admin(db_session, account)
-    duel, challenger, _ = await _make_duel(
+    await make_admin(db_session, account)
+    duel, challenger, _ = await make_duel(
         db_session, era, label="api", status=DuelStatus.settled,
         challenger_votes=4, opponent_votes=1,
     )
