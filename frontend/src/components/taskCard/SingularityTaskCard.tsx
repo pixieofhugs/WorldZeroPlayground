@@ -188,7 +188,7 @@ export default function SingularityTaskCard({
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
-                <span style={{ ...LABEL, fontSize: "var(--text-sm)", marginBottom: "var(--space-xs)" }}>
+                <span style={{ ...LABEL, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
                   {i18n.t("feed:taskCard.singularity.levelCaption")}
                 </span>
                 <span style={{ fontFamily: MONO, fontSize: size.levelSize, lineHeight: 0.85, color: BRIGHT }}>
@@ -217,7 +217,7 @@ export default function SingularityTaskCard({
                   >
                     {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
                   </span>
-                  <span style={{ ...LABEL, fontSize: "var(--text-xs)" }}>
+                  <span style={{ ...LABEL, fontSize: "var(--text-md)" }}>
                     {i18n.t("feed:taskCard.modifierCaption")}
                   </span>
                 </div>

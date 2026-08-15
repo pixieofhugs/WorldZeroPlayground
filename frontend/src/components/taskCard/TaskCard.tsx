@@ -128,7 +128,7 @@ export default function TaskCard({
           <span
             style={{
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 'var(--text-xs)',
+              fontSize: 'var(--text-md)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.15em',
@@ -147,7 +147,7 @@ export default function TaskCard({
               background: factionCssVar(shown.metatask_faction_slug, 'light'),
               color: factionCssVar(shown.metatask_faction_slug),
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 'var(--text-xs)',
+              fontSize: 'var(--text-md)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',

@@ -153,7 +153,7 @@ const kit: ProfileKit = {
   },
   badgeChipStyle: {
     fontFamily: TYPE,
-    fontSize: 'var(--text-sm)',
+    fontSize: 'var(--text-md)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     color: PINK,

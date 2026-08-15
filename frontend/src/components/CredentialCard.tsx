@@ -122,7 +122,7 @@ export default function CredentialCard({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          fontSize: 'var(--text-xs)',
+          fontSize: 'var(--text-md)',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           color: 'var(--fc-muted)',
@@ -268,7 +268,7 @@ export default function CredentialCard({
           <span
             style={{
               fontFamily: 'var(--font-body)',
-              fontSize: 'var(--text-xs)',
+              fontSize: 'var(--text-md)',
               marginLeft: 'var(--space-xs)',
               color: 'var(--fc-muted)',
               letterSpacing: '0.06em',

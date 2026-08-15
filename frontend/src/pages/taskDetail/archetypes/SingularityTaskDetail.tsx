@@ -91,7 +91,7 @@ const GALLERY_PREVIEW = 3;
 /** Terminal caption voice — every label on the chassis speaks in it. */
 const LABEL: CSSProperties = {
   fontFamily: MONO,
-  fontSize: "var(--text-sm)",
+  fontSize: "var(--text-md)",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
   color: DIM,
@@ -343,7 +343,7 @@ export default function SingularityTaskDetail({
           <span
             style={{
               fontFamily: MONO,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -519,7 +519,7 @@ export default function SingularityTaskDetail({
       {showBreakdown && (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-            <span style={{ ...LABEL, fontSize: "var(--text-xs)" }}>
+            <span style={{ ...LABEL, fontSize: "var(--text-md)" }}>
               {t("detail.points.base")}
             </span>
             <span

@@ -237,11 +237,11 @@ const rowName: CSSProperties = {
   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 }
 const rowMeta: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.14em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)',
 }
 const rowTapHint: CSSProperties = {
-  fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase',
+  fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase',
   color: 'var(--color-text-tertiary)', flex: 'none',
 }
 const sheetAction: CSSProperties = {

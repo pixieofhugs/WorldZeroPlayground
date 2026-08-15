@@ -436,7 +436,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   >
                     {spot.display_name}
                   </div>
-                  <div style={{ ...SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.14em", color: BAND_QUIET, marginTop: "var(--space-sm)" }}>
+                  <div style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: BAND_QUIET, marginTop: "var(--space-sm)" }}>
                     {t("ephemerists.spotlight.stat", {
                       level: romanLevel(spot.level),
                       score: spot.all_time_score.toLocaleString(),

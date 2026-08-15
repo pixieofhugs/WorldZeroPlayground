@@ -334,7 +334,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                     style={{
                       marginTop: 'var(--space-xs)',
                       fontFamily: 'var(--font-body)',
-                      fontSize: 'var(--text-sm)',
+                      fontSize: 'var(--text-md)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       color: 'var(--color-text-secondary)',

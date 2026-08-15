@@ -248,7 +248,7 @@ export default function CharacterProfile() {
                       : "var(--color-danger)",
                 color: "var(--color-text-on-accent)",
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-xs)",
+                fontSize: "var(--text-md)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 padding: "var(--space-xs) 0",
@@ -312,7 +312,7 @@ export default function CharacterProfile() {
               disabled={relationshipLoading}
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-xs)",
+                fontSize: "var(--text-md)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 padding: "var(--space-xs) 0",
@@ -333,7 +333,7 @@ export default function CharacterProfile() {
                 background: "none",
                 color: "var(--color-danger)",
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-xs)",
+                fontSize: "var(--text-md)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 padding: "var(--space-xs) 0",

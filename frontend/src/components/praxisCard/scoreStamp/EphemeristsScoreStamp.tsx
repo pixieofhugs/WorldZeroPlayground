@@ -64,7 +64,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** The cell's label voice: incised caps, at the plate's caption gold. */
-  const label = { ...SMALL_CAPS, fontSize: "var(--text-xs)", color: CAPTION };
+  const label = { ...SMALL_CAPS, fontSize: "var(--text-md)", color: CAPTION };
 
   return (
     <div
@@ -146,7 +146,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             style={{
               ...SMALL_CAPS,
               fontWeight: 600,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.16em",
               color: DISC,
               background: OCHRE,

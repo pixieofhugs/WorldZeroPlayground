@@ -93,7 +93,7 @@ const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 /** Incised small caps at label tier — every mark on the sheet that is not prose. */
 const LABEL = {
   ...SMALL_CAPS,
-  fontSize: 'var(--text-sm)',
+  fontSize: 'var(--text-md)',
   color: CAPTION,
 } as const
 

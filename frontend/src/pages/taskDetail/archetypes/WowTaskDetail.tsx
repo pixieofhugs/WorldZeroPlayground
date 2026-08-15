@@ -587,7 +587,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <span
             style={{
               ...EYEBROW,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
               borderRadius: 4,
@@ -791,7 +791,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 onClick={() => setSubmissionSort(sort)}
                 style={{
                   ...EYEBROW,
-                  fontSize: "var(--text-sm)",
+                  fontSize: "var(--text-md)",
                   cursor: "pointer",
                   border: "none",
                   borderRadius: 6,

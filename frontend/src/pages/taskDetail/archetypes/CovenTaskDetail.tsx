@@ -309,7 +309,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  const eyebrow: CSSProperties = { ...CAPTION, fontSize: "var(--text-sm)" };
+  const eyebrow: CSSProperties = { ...CAPTION, fontSize: "var(--text-md)" };
   const innerBox: CSSProperties = {
     background: PAGE,
     border: `1.5px solid ${BORDER}`,
@@ -633,7 +633,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: CHROME,
               fontWeight: 700,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -845,7 +845,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                   onClick={() => setSubmissionSort(sort)}
                   style={{
                     ...CAPTION,
-                    fontSize: "var(--text-sm)",
+                    fontSize: "var(--text-md)",
                     letterSpacing: "0.14em",
                     cursor: "pointer",
                     border: "none",

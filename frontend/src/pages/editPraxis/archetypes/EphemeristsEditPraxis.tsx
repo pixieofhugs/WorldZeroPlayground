@@ -252,7 +252,7 @@ function PointsMark({ points, unit }: { points: number; unit: string }) {
           right: 0,
           bottom: "7%",
           textAlign: "center",
-          fontSize: "var(--text-xs)",
+          fontSize: "var(--text-md)",
           letterSpacing: "0.2em",
           color: CAPTION,
         }}

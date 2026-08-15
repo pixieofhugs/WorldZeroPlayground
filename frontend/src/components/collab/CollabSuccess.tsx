@@ -108,7 +108,7 @@ export function CollabSuccess({
               <span
                 className="font-body"
                 style={{
-                  fontSize: 'var(--text-xs)',
+                  fontSize: 'var(--text-lg)',
                   fontWeight: member.character_id === currentCharacterId ? 700 : 400,
                 }}
               >
@@ -118,7 +118,7 @@ export function CollabSuccess({
                 <span
                   className="font-body"
                   style={{
-                    fontSize: 'var(--text-xs)',
+                    fontSize: 'var(--text-lg)',
                     fontWeight: 700,
                     // Not --color-success: the global green is 2.07:1 on
                     // S.N.I.D.E.'s sheet and 2.14:1 on Singularity's (#694).

@@ -194,7 +194,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
                     aria-pressed={selected}
                   >
                     <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, lineHeight: 1.1 }}>{life.display_name}</span>
-                    <span style={{ ...monoCaps, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', marginTop: 'var(--space-xs)' }}>
+                    <span style={{ ...monoCaps, fontSize: 'var(--text-md)', letterSpacing: '0.08em', marginTop: 'var(--space-xs)' }}>
                       {t('albescent.letter.lifeMeta', { username: life.username, faction: factionName(life.faction_slug) })}
                     </span>
                     {/* eslint-disable-next-line local/no-raw-style-values -- ornament: bullet/arrow dingbat marking the selected life */}
