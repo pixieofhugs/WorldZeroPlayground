@@ -212,6 +212,9 @@ export default function UaEditPraxis({ state }: Props) {
     style: {
       background: FIELD,
       border: `1px solid ${RULE}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACCENT}`,
       borderRadius: RADIUS,
       padding: "var(--space-lg)",
     },
@@ -339,7 +342,7 @@ export default function UaEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={rule}
+          rule={false}
           meta={<TitleCounter length={state.title.length} color={MUTED} />}
           labelStyle={labelStyle}
         >
@@ -362,7 +365,7 @@ export default function UaEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={rule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <ModePicker
@@ -413,7 +416,7 @@ export default function UaEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={rule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <InviteSearch
@@ -437,7 +440,7 @@ export default function UaEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={rule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <MetataskSealStack state={state} />
@@ -449,7 +452,7 @@ export default function UaEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={rule}
+          rule={false}
           labelStyle={labelStyle}
           meta={
             <WriteUpTabs
@@ -537,7 +540,7 @@ export default function UaEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={rule}
+          rule={false}
           labelStyle={labelStyle}
         >
           <div
@@ -588,7 +591,9 @@ export default function UaEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1px dashed ${FILL}`,
                     borderRadius: RADIUS,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: MUTED,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

@@ -282,6 +282,9 @@ export default function WowEditPraxis({ state }: Props) {
     style: {
       background: SHEET,
       border: `1.5px solid ${GOLD}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${PLUM}`,
       borderRadius: 6,
       padding: "var(--space-lg)",
     },
@@ -414,7 +417,7 @@ export default function WowEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={<Zig id="title" />}
+          rule={false}
           meta={<TitleCounter length={state.title.length} color={LABEL} />}
           labelStyle={LABEL_STYLE}
         >
@@ -433,7 +436,7 @@ export default function WowEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={<Zig id="mode" />}
+            rule={false}
             labelStyle={LABEL_STYLE}
           >
             <ModePicker
@@ -484,7 +487,7 @@ export default function WowEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={<Zig id="invite" />}
+            rule={false}
             labelStyle={LABEL_STYLE}
           >
             <InviteSearch
@@ -513,7 +516,7 @@ export default function WowEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={<Zig id="seals" />}
+            rule={false}
             labelStyle={LABEL_STYLE}
           >
             <MetataskSealStack state={state} />
@@ -525,7 +528,7 @@ export default function WowEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={<Zig id="writeup" />}
+          rule={false}
           labelStyle={LABEL_STYLE}
           meta={
             <WriteUpTabs
@@ -617,7 +620,7 @@ export default function WowEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={<Zig id="proof" />}
+          rule={false}
           labelStyle={LABEL_STYLE}
         >
           <div
@@ -668,7 +671,9 @@ export default function WowEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1.5px dashed ${GOLD}`,
                     borderRadius: 6,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: LABEL,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

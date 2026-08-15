@@ -356,6 +356,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     style: {
       background: INNER,
       border: `1.5px solid ${LINE}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${BRASS}`,
       borderRadius: 0,
       padding: "var(--space-lg)",
     },
@@ -519,7 +522,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         />
 
         <ComposerSection
-          rule={runes}
+          rule={false}
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           labelStyle={sectionLabel}
@@ -539,7 +542,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             house rule that an unusable control is not drawn disabled. */}
         {!state.controlsLocked && (
           <ComposerSection
-            rule={runes}
+            rule={false}
             label={t("editPraxis.composer.modeLabel")}
             labelStyle={sectionLabel}
           >
@@ -581,7 +584,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             control draws both — `InviteSearch` switches on `state.duelMode`. */}
         {state.showInviteBox && (
           <ComposerSection
-            rule={runes}
+            rule={false}
             label={
               // The roster names itself now — `Collaborators · N` sits on its
               // own header row inside the panel, beside the tally it used to
@@ -614,7 +617,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         {state.showSealStack && (
           <ComposerSection
-            rule={runes}
+            rule={false}
             label={t("editPraxis.composer.sealsLabel")}
             labelStyle={sectionLabel}
           >
@@ -625,7 +628,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         {/* Write-up — the tabs sit in the section's meta slot, so the label row
             reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
         <ComposerSection
-          rule={runes}
+          rule={false}
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
           labelStyle={sectionLabel}
@@ -708,7 +711,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         </ComposerSection>
 
         <ComposerSection
-          rule={runes}
+          rule={false}
           label={t("editPraxis.composer.proofLabel")}
           labelStyle={sectionLabel}
         >
@@ -760,7 +763,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1.5px dashed ${BRASS}`,
                     borderRadius: 0,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: CAPTION,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

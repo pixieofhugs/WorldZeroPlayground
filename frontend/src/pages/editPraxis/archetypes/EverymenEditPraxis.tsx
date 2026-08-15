@@ -295,6 +295,9 @@ export default function EverymenEditPraxis({ state }: Props) {
     style: {
       background: PANEL,
       border: `2px solid ${FRAME}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACCENT}`,
       borderRadius: 0,
       padding: "var(--space-lg)",
     },
@@ -497,7 +500,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={dashRule}
+          rule={false}
           meta={<TitleCounter length={state.title.length} color={MUTED} />}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
         >
@@ -520,7 +523,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={dashRule}
+            rule={false}
             labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           >
             <ModePicker
@@ -571,7 +574,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={dashRule}
+            rule={false}
             labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           >
             <InviteSearch
@@ -596,7 +599,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={dashRule}
+            rule={false}
             labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           >
             <MetataskSealStack state={state} />
@@ -608,7 +611,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={dashRule}
+          rule={false}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           meta={
             <WriteUpTabs
@@ -695,7 +698,7 @@ export default function EverymenEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={dashRule}
+          rule={false}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
         >
           <div
@@ -748,7 +751,9 @@ export default function EverymenEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `2px dashed ${RED}`,
                     borderRadius: 0,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: INK,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

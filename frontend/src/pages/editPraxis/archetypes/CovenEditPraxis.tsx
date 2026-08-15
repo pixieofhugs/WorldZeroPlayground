@@ -500,6 +500,9 @@ export default function CovenEditPraxis({ state }: Props) {
     style: {
       background: FIELD,
       border: RULE,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${INK}`,
       borderRadius: FIELD_RADIUS,
       padding: "var(--space-lg)",
     },
@@ -680,7 +683,7 @@ export default function CovenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={braidRule}
+          rule={false}
           meta={<TitleCounter length={state.title.length} color={LABEL} />}
           labelStyle={labelStyle}
         >
@@ -699,7 +702,7 @@ export default function CovenEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={braidRule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <ModePicker
@@ -753,7 +756,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={braidRule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <InviteSearch
@@ -778,7 +781,7 @@ export default function CovenEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={braidRule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <MetataskSealStack state={state} />
@@ -790,7 +793,7 @@ export default function CovenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={braidRule}
+          rule={false}
           labelStyle={labelStyle}
           meta={
             <WriteUpTabs
@@ -880,7 +883,7 @@ export default function CovenEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={braidRule}
+          rule={false}
           labelStyle={labelStyle}
         >
           <div
@@ -932,7 +935,9 @@ export default function CovenEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1.5px dashed ${BORDER}`,
                     borderRadius: FIELD_RADIUS,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: DEEP,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),
@@ -952,6 +957,12 @@ export default function CovenEditPraxis({ state }: Props) {
         </ComposerSection>
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
+
+        {/* The composer's ONE braid (#1707). The design calls its rule exactly
+            once, right above the footer; every other region is separated by the
+            sheet's own gap. Six braids read as a chain of dividers rather than
+            as the mark that closes the page. */}
+        {braidRule}
 
         {/* [Cancel] … [Submit] — the global order from #646, stacked here
             because Coven's cast is a full-bleed band rather than an inline

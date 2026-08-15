@@ -146,6 +146,14 @@ const BAND = "var(--faction-default-rainbow-loop)";
 const TITLE_FACE = "var(--font-display)";
 
 const labelStyle = { color: MUTED };
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 const panelStyle = {
   background: FIELD,
   border: `1px solid ${BORDER}`,
@@ -187,6 +195,9 @@ const slip = {
   style: {
     background: FIELD,
     border: `1px solid ${BORDER}`,
+    /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+       border shorthand on purpose: a shorthand spread last would erase it. */
+    borderLeft: `2px solid ${INK}`,
     borderRadius: 10,
     padding: "var(--space-lg)",
   },
@@ -316,7 +327,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          meta={<TitleCounter length={state.title.length} color={FAINT} />}
+          rule={false}
           labelStyle={labelStyle}
         >
           <TitleField
@@ -338,6 +349,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
+            rule={false}
             labelStyle={labelStyle}
           >
             <ModePicker
@@ -387,6 +399,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
+            rule={false}
             labelStyle={labelStyle}
           >
             <InviteSearch
@@ -410,6 +423,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
+            rule={false}
             labelStyle={labelStyle}
           >
             <MetataskSealStack state={state} />
@@ -417,59 +431,56 @@ export default function DefaultEditPraxis({ state }: Props) {
         )}
 
         {/* Write-up — the tabs sit in the section's meta slot, so the label row
-            reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
+            reads `Write-up … N words [Write|Preview]` exactly as the design
+            draws it. The word count rides the same row (#1706); it used to hang
+            under the textarea, where the design has nothing at all. */}
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
+          rule={false}
           labelStyle={labelStyle}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 999,
-                    border: `1px solid ${active ? BORDER : "transparent"}`,
-                    background: active ? FIELD : "transparent",
-                    color: active ? INK : FAINT,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span style={{ color: FAINT }}>
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 999,
+                      border: `1px solid ${active ? BORDER : "transparent"}`,
+                      background: active ? FIELD : "transparent",
+                      color: active ? INK : FAINT,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form, and drawing
               both would put the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.7,
-                    fontFamily: TITLE_FACE,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
-                  color: FAINT,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.7,
+                  fontFamily: TITLE_FACE,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -499,6 +510,7 @@ export default function DefaultEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
+          rule={false}
           labelStyle={labelStyle}
         >
           <div
@@ -548,7 +560,9 @@ export default function DefaultEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1px dashed ${BORDER}`,
                     borderRadius: 10,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: MUTED,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

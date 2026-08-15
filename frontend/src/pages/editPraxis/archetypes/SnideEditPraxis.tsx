@@ -257,6 +257,9 @@ export default function SnideEditPraxis({ state }: Props) {
     style: {
       background: FIELD,
       border: `1px solid ${RULE}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACID_INK}`,
       borderRadius: 0,
       padding: "var(--space-lg)",
     },
@@ -465,7 +468,7 @@ export default function SnideEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={censorStripe}
+          rule={false}
           meta={<TitleCounter length={state.title.length} color={FAINT} />}
           labelStyle={{ color: MUTED }}
         >
@@ -484,7 +487,7 @@ export default function SnideEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={censorStripe}
+            rule={false}
             labelStyle={{ color: MUTED }}
           >
             <ModePicker
@@ -524,7 +527,7 @@ export default function SnideEditPraxis({ state }: Props) {
         {/* The mode block: the collaborator roster, or the duel pair. */}
         {state.showInviteBox && (
           <ComposerSection
-            rule={censorStripe}
+            rule={false}
             label={
               // The roster names itself now — `Collaborators · N` sits on its
               // own header row inside the panel, beside the tally it used to
@@ -558,7 +561,7 @@ export default function SnideEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={censorStripe}
+            rule={false}
             labelStyle={{ color: MUTED }}
           >
             <MetataskSealStack state={state} />
@@ -568,7 +571,7 @@ export default function SnideEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={censorStripe}
+          rule={false}
           labelStyle={{ color: MUTED }}
           meta={
             <WriteUpTabs
@@ -652,7 +655,7 @@ export default function SnideEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={censorStripe}
+          rule={false}
           labelStyle={{ color: MUTED }}
         >
           <div
@@ -702,7 +705,9 @@ export default function SnideEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1px dashed ${RULE}`,
                     borderRadius: 0,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: MUTED,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),
@@ -722,6 +727,12 @@ export default function SnideEditPraxis({ state }: Props) {
         </ComposerSection>
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
+
+        {/* The composer's ONE censor stripe (#1707). The design calls its rule
+            exactly once, right above the footer; every other region is separated
+            by the sheet's own gap. Five stripes redacted the page's rhythm along
+            with its sections. */}
+        {censorStripe}
 
         {/* [Cancel] … [Submit] — the global order from #646, stacked rather than
             ranged because SNIDE's cast is a bar and not a button. The exits keep

@@ -265,6 +265,9 @@ export default function SingularityEditPraxis({ state }: Props) {
     style: {
       background: PANEL,
       border: `1px solid ${BORDER}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACCENT}`,
       borderRadius: RADIUS,
       padding: "var(--space-lg)",
       flexDirection: sizes.isMobile ? ("column" as const) : ("row" as const),
@@ -483,7 +486,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={hairRule}
+          rule={false}
           meta={<TitleCounter length={state.title.length} color={MUTED} />}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
           metaStyle={{ fontFamily: FACE }}
@@ -503,7 +506,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={hairRule}
+            rule={false}
             labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
             <ModePicker
@@ -554,7 +557,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={hairRule}
+            rule={false}
             labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
             <InviteSearch
@@ -579,7 +582,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={hairRule}
+            rule={false}
             labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
             <MetataskSealStack state={state} />
@@ -591,7 +594,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={hairRule}
+          rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
           meta={
             <WriteUpTabs
@@ -676,7 +679,7 @@ export default function SingularityEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={hairRule}
+          rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
         >
           <div
@@ -726,7 +729,9 @@ export default function SingularityEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1px dashed ${BORDER}`,
                     borderRadius: RADIUS,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: ACCENT,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),
