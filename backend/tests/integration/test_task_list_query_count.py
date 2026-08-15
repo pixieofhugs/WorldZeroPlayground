@@ -184,7 +184,11 @@ async def test_batched_flags_equal_the_per_task_predicates(
     per row rather than uniformly.
     """
     stats = await get_or_create_stats(db_session, character.id, era.id)
-    stats.level = 1
+    # At (not above) era.level_to_see_retired_tasks: the page below deliberately
+    # includes a retired row, and the archive gate would otherwise withhold it
+    # before any flag could be compared. Still well under `too_hard`'s level 99,
+    # so the above-your-level row it is mixed with still answers differently.
+    stats.level = CURRENT_ERA.level_to_see_retired_tasks
     await db_session.commit()
 
     plain = await _add_tasks(db_session, character2, 3)

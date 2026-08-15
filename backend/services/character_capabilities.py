@@ -86,7 +86,21 @@ def compute_capabilities(
     return CharacterCapabilities(
         can_propose_task=character_level >= era.level_to_propose_task,
         can_propose_metatask=character_level >= era.level_to_propose_metatask,
-        can_see_retired_tasks=character_level >= era.level_to_see_retired_tasks,
+        # Both thresholds are enforced by ``services.task.list_tasks``, which is
+        # what makes these two flags honest. They were not: retired was gated
+        # here and by nothing there (anonymous callers could read the archive),
+        # and pending was gated here by level but there by ``is_admin`` alone
+        # (#1672), so a level-3 player was offered a filter tab that always
+        # answered nothing.
+        #
+        # The faction clause mirrors the same clause in ``list_tasks`` — a
+        # faction the era lets work retired tasks can reach them from level 0,
+        # so the tab must be offered from level 0 too, or the flag is lying
+        # again in the other direction.
+        can_see_retired_tasks=(
+            character_level >= era.level_to_see_retired_tasks
+            or faction_slug in era.allow_praxis_on_retired_task_factions
+        ),
         can_see_pending_tasks=character_level >= era.level_to_see_pending_tasks,
         can_comment=character_level >= era.comment_level_required,
         level_jump_reach=granted_reach,

@@ -452,6 +452,15 @@ async def list_tasks(
     spec's "below level 6 cannot see the metatask list". ``skip_level_check``
     is the admin escape hatch, mirroring :func:`propose_task`.
 
+    ``retired`` and ``pending`` rows are gated the same way, by
+    ``era.level_to_see_retired_tasks`` and ``era.level_to_see_pending_tasks``.
+    Both are advertised level unlocks, and both were out of step with what this
+    function did — retired was withheld from nobody, pending from everybody
+    below admin. They are enforced at every door here, and
+    :func:`services.character_capabilities.compute_capabilities` states the same
+    two thresholds for the ``/auth/me`` flags the UI gates its filter tabs on, so
+    a tab is offered exactly when the query behind it will answer.
+
     ``q`` is a free-text ``ilike`` over the task title, its description (#661),
     AND the proposing character's handle / display name (#681), mirroring the
     praxis-feed search in :func:`services.praxis.list_praxes`. A leading ``@``
@@ -486,19 +495,70 @@ async def list_tasks(
     if created_by is not None:
         query = query.where(Task.created_by == created_by)
 
+    # The viewer's current-era stats, read ONCE for the whole request: the two
+    # status gates below want the level, the metatask visibility gate wants the
+    # level, and the can_sign_up filter wants the level plus the level-jump
+    # stamp. Several consumers, one query — the admin browse with the filter off
+    # still reads nothing.
+    viewer_stats: Optional[CharacterStats] = None
+    if viewer is not None and (can_sign_up or not skip_level_check):
+        era_row = await get_current_era_row(session)
+        viewer_stats = await get_or_create_stats(session, viewer.id, era_row.id)
+    # Anonymous viewers sit below every gate, which is the point: both abilities
+    # below are things a *character* earns, so there is no level to read.
+    viewer_level = viewer_stats.level if viewer_stats is not None else -1
+
+    # The two status gates, stated once and applied at BOTH doors — an explicit
+    # `?status=X` and the `?status=all` catch-all reach the same rows, and a gate
+    # written at only one of them is not a gate. That is exactly how the pending
+    # queue leaked before #1672: the promise lived on a branch an explicit status
+    # routed around.
+    #
+    # `retired` is the level-2 "the archive opens" unlock (`era_1.py`,
+    # `progression.json`). It had NO enforcement at all — anonymous callers could
+    # read the whole archive — so the ability was advertised and never withheld,
+    # and `services.era.retire_all_tasks`'s "the board un-hides itself as players
+    # climb" was describing a gate that did not exist. It is a level gate, so
+    # `skip_level_check` is what bypasses it.
+    #
+    # `pending` is the level-3 "watch proposals move through review" unlock, and
+    # is the moderation queue, so `is_admin` bypasses it rather than
+    # `skip_level_check` (the two answer different questions — see the parameter
+    # docs). #1672 made it admin-ONLY, which silently killed the level-3 reward
+    # while `/auth/me` went on advertising it; the level is restored here as a
+    # deliberate decision, NOT as a revert of that fix. What #1672 closed was
+    # "anyone, signed in or not". Level 3 is 170 points of investment and an
+    # account, so pre-moderation proposals are still withheld from the anonymous
+    # web — but they ARE now visible to established players before an admin has
+    # ruled on them, and that is the trade being made.
+    # The faction clause is not an exception to the archive gate, it is the only
+    # way the perk means anything: a faction the era lets work retired tasks
+    # cannot be forbidden from finding them. Without it an Ephemerist below level
+    # 2 lost their faction's entire reason for existing, and the ``can_sign_up``
+    # parity suite catches it. ``services.era.retire_all_tasks`` already names
+    # this interaction — "an era listing a faction in
+    # allow_praxis_on_retired_task_factions leaks a second way, for that faction
+    # only" — so it is stated here rather than left to be rediscovered.
+    viewer_sees_retired = (
+        skip_level_check
+        or viewer_level >= era.level_to_see_retired_tasks
+        or (viewer is not None
+            and viewer.faction_slug in era.allow_praxis_on_retired_task_factions)
+    )
+    viewer_sees_pending = is_admin or viewer_level >= era.level_to_see_pending_tasks
+
     if status and status != "all":
         try:
             requested_status = TaskStatus[status]
         except KeyError:
             raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
-        # The comment below used to promise pending "stays hidden from all
-        # viewers", and that held only on the `created_by` branch — an explicit
-        # `?status=pending` routed straight around it and served the whole
-        # admin-review queue of player-written proposals to anyone, signed in or
-        # not. The guarantee now lives on the path that can actually enforce it.
-        if requested_status == TaskStatus.pending and not is_admin:
+        gate_closed = (
+            requested_status == TaskStatus.pending and not viewer_sees_pending
+        ) or (requested_status == TaskStatus.retired and not viewer_sees_retired)
+        if gate_closed:
             # An empty page rather than a 403: no new error code for a filter no
-            # legitimate client sends, and it says nothing about what is queued.
+            # legitimate client sends, and it says nothing about what is behind
+            # the gate.
             query = query.where(false())
         else:
             query = query.where(Task.status == requested_status)
@@ -506,13 +566,22 @@ async def list_tasks(
         if created_by is not None:
             # Proposer's profile: show approved tasks (active + retired); pending
             # rows are admin-review submissions and stay hidden from all viewers.
+            #
+            # Deliberately NOT gated on `viewer_sees_retired`. The level-2 unlock
+            # opens *the archive* — the browse — not every mention of a retired
+            # task anywhere on the site. This surface is one character's own
+            # proposals, reached by knowing their id, and hiding a proposer's
+            # accepted work from newcomers reads as a bug rather than a reward.
             query = query.where(Task.status != TaskStatus.pending)
         else:
             query = query.where(Task.status == TaskStatus.active)
-    elif not is_admin:
-        # status == "all" is the other door onto the same rows: every status for
-        # an admin, everything-but-the-review-queue for everyone else.
-        query = query.where(Task.status != TaskStatus.pending)
+    else:
+        # status == "all" is the other door onto the same rows. Whatever a gate
+        # withholds from an explicit status it must withhold here too.
+        if not viewer_sees_pending:
+            query = query.where(Task.status != TaskStatus.pending)
+        if not viewer_sees_retired:
+            query = query.where(Task.status != TaskStatus.retired)
 
     # Task type filter — default (None) means STANDARD-ONLY so metatasks never
     # leak into the ordinary browse (#1001); pass "all" to get every type, or
@@ -529,22 +598,10 @@ async def list_tasks(
     else:
         query = query.where(Task.task_type == TaskType.standard)
 
-    # The viewer's current-era stats, read ONCE for the whole request: the
-    # metatask visibility gate wants the level and the can_sign_up filter wants
-    # the level plus the level-jump stamp. Two consumers, one query — the admin
-    # browse with the filter off still reads nothing.
-    viewer_stats: Optional[CharacterStats] = None
-    if viewer is not None and (can_sign_up or not skip_level_check):
-        era_row = await get_current_era_row(session)
-        viewer_stats = await get_or_create_stats(session, viewer.id, era_row.id)
-
     # Metatask visibility gate (#453): the metatask list only opens at
     # era.level_to_see_metatasks. Anonymous viewers are always below the gate.
     if not skip_level_check:
-        viewer_sees_metatasks = (
-            viewer_stats is not None
-            and viewer_stats.level >= era.level_to_see_metatasks
-        )
+        viewer_sees_metatasks = viewer_level >= era.level_to_see_metatasks
         if not viewer_sees_metatasks:
             query = query.where(Task.task_type != TaskType.metatask)
 
