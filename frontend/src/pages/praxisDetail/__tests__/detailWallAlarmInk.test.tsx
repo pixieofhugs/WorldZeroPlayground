@@ -219,9 +219,16 @@ describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
     // nine skins. The INK claim is unchanged and is the half that matters here:
     // a later skin reaching for `wallInk` in these two blocks would be undoing
     // both issues at once.
-    expect(SHARED_SOURCE).toContain(
-      "className=\"sidebar-card card-on-page mb-4\" style={{ padding: 'var(--space-md) var(--space-lg)' }}",
-    )
+    // Every neutral-chrome mount in this file, not just the steward bar's:
+    // `PraxisFlagBlock` has two, and a new one added without the class is the
+    // silent way back to the old ground. #1606 made the class carry
+    // `--label-ink` as well, so a mount that drops it now loses the INK too —
+    // which is why this counts mounts rather than quoting one of them.
+    const mounts = SHARED_SOURCE.match(/className="sidebar-card[^"]*"/g) ?? []
+    expect(mounts.length).toBeGreaterThan(0)
+    for (const mount of mounts) {
+      expect(mount, 'a `.sidebar-card` here is moderation chrome and owes ADR-0061 the app\'s own ground AND ink').toContain('card-on-page')
+    }
     for (const block of ['PraxisAdminBar', 'PraxisFlagBlock']) {
       const body = SHARED_SOURCE.slice(SHARED_SOURCE.indexOf(`export function ${block}`))
       expect(body.slice(0, body.indexOf('\n}\n'))).toContain('var(--color-danger)')
