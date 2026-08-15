@@ -74,7 +74,8 @@ const KICKER: CSSProperties = {
   fontStyle: "italic",
   // eslint-disable-next-line local/no-raw-style-values -- ornament: marginal gloss under the section title, not copy.
   fontSize: 13,
-  color: QUIET,
+  // The PAGE's ink, not the plate's (#1675). See SECTION_HEADING below.
+  color: "var(--color-text-secondary)",
   margin: "var(--space-xs) 0 var(--space-lg)",
 };
 
@@ -88,7 +89,22 @@ const SECTION_HEADING: CSSProperties = {
   fontSize: 30,
   letterSpacing: "0.04em",
   margin: 0,
-  color: INK,
+  /**
+   * THE PAGE'S INK, NOT THE PLATE'S (#1675).
+   *
+   * `INK` is `-plate-ink`, #f0e6c8 — a cream cut for the night plate the CARDs
+   * paint (`-plate-bg`, #171a26), where it measures 11.3:1. The section titles
+   * and their kickers are the two things on this page that sit OUTSIDE a card,
+   * so in light mode they landed cream-on-cream at **1.13:1** against 3:1 — a
+   * 30px heading effectively invisible, on every section, since #1023.
+   *
+   * The header above this file says "the page beneath both is `.eph-backdrop`",
+   * and that is the assumption that rotted: nothing applies `.eph-backdrop`
+   * here. The root is a bare `.wz-faction-grid`, so the ground is the app's, and
+   * the ink has to be the app's too. Both tokens flip through the
+   * `[data-theme="dark"]` cascade, which is why dark mode never showed this.
+   */
+  color: "var(--color-text-primary)",
 };
 
 /** Section title in the plate's display face, over the design's fluted rule. */
