@@ -1,10 +1,10 @@
 # ADR-0073 — A praxis is written in a room, and the room is not the record
 
-**Status:** Accepted — **built, except freeze.** The room server and its two
-auth doors (#1740), the CodeMirror binding (#1742) and the one write path —
+**Status:** Accepted — **built, except presence.** The room server and its two
+auth doors (#1740), the CodeMirror binding (#1742), the one write path —
 `body_text` as a derived column, the `PUT` deleted, offline in `y-indexeddb`
-(#1743) — are live. Still design only: freeze-on-pending and discarding the
-document on publish (#1745), and presence (#1744).
+(#1743) — and the freeze, with the publish-time discard (#1745), are live.
+Still design only: presence (#1744).
 **Date:** 2026-08-14
 **Relates to:** ADR-0011 (a duel is two solo praxes), ADR-0012 (lazy consensus;
 "an edit means we're not done"), ADR-0013 (any member may edit), ADR-0059
@@ -78,6 +78,17 @@ edit is:
   consensus. ADR-0059 established that re-entry is not a raw write; this makes
   that the only door.
 
+Making it the only door changed it (#1745). `pullBack` on a *pending* collab
+cleared the caller's submission alone and left the others' standing, so the
+praxis often stayed pending. That was coherent only while typing was the second
+door: a member who had pulled back could still write, and their first keystroke
+ran ADR-0012's hard reset. With the document frozen until the praxis is drafting
+again, a partial pull-back hands a member a write-up they still cannot write in
+— and it never had anything to offer the **holdout**, who never submitted and so
+had nothing of their own to take back. So reopening a pending collab *is* the
+edit ADR-0012 resets on: the window closes, everyone's `has_submitted` clears,
+and any member may do it.
+
 ### The document is discarded on publish
 
 On publish, the text is flattened to `body_text` and the room's stored document
@@ -87,6 +98,17 @@ server-side seed.
 A CRDT retains **tombstones** — text a player typed and deleted stays in the
 document's history. Praxes are permanent; their drafts are not, and text a
 player removed should not outlive the draft they removed it from.
+
+Squashing is not that guarantee, and it looks enough like one to be worth
+writing down (#1745). Folding a document's history re-encodes it and Yjs does
+garbage-collect deleted content on the way out — but only once the document
+passes the squash threshold, so the raw tail beneath it holds every recent
+retraction verbatim. A player who cuts a sentence and submits is exactly the
+case that never reaches a squash. Deleting the rows is the only complete answer,
+which is why the discard is a delete and never an archive. The **client's** copy
+goes with it: `y-indexeddb` holds the same document, tombstones included, and a
+surviving local copy merged into the re-seeded room is the duplication footgun
+arriving by its back door.
 
 ### Authorization has two doors
 

@@ -55,6 +55,7 @@ from services.era import (
     get_or_create_stats,
 )
 from services.level_jump import available_level_reach, consume_level_jump
+import services.praxis_room as praxis_room
 from services.praxis_room import close_member_sockets
 from models.duel import Duel, DuelStatus
 
@@ -965,30 +966,29 @@ async def unsubmit_praxis(
 ) -> Praxis:
     """Unsubmit a praxis back to editing. Any member may act (ADR-0013). #590.
 
-    Three cases by status:
+    Since #1745 this is **the one door back into a sealed document**, which is
+    what ADR-0059 already said re-entry after submitting had to be. Three cases
+    by status:
     - ``submitted``: the whole group reopens. Votes are preserved but stop scoring
       until resubmitted; every member's ``has_submitted`` clears. Unsubmitting a
       *settled* duel side forfeits the contest permanently (ADR-0011 §Forfeit):
       the opponent wins by default and the duel stays ``settled``.
-    - ``pending`` (a collab mid-consensus) where the caller has already submitted:
-      only the caller's part is pulled back (``on_member_unsubmit``); other members'
-      submissions stand. Pending praxes are unscored — no stat recalc.
-    - anything else (a fresh ``in_progress`` praxis, or ``pending`` where the caller
-      has not submitted): 422 — nothing of theirs to pull back.
+    - ``pending`` (a collab mid-consensus): ADR-0012's hard reset. The window
+      closes, *everyone's* ``has_submitted`` clears, and the room thaws. Pending
+      praxes are unscored — no stat recalc.
+    - ``in_progress``: 422 — the document is already open, and this is the only
+      status in which it is.
     """
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, "reopen")
 
-    # Pending collab: pull back only the caller's own submission.
+    # Pending collab: the document is frozen for every member, so reopening it
+    # is not a per-member pull-back but the edit that ADR-0012 resets on — see
+    # the note where ``on_member_unsubmit`` used to be. Any member may open it,
+    # the holdout included: they never submitted, so there is nothing of *theirs*
+    # to pull back, and until #1743 they reopened the collab simply by typing.
     if praxis.status == PraxisStatus.pending:
-        caller = next(
-            (m for m in praxis.members if m.character_id == character_id), None
-        )
-        if caller is None or not caller.has_submitted:
-            raise HTTPException(
-                status_code=422, detail="Praxis is already in editing mode."
-            )
-        await collab_consensus.on_member_unsubmit(praxis, character_id, session, era)
+        await collab_consensus.on_member_edit(praxis, session, era)
         return await get_praxis(praxis_id, session)
 
     if praxis.status != PraxisStatus.submitted:
@@ -1019,6 +1019,9 @@ async def unsubmit_praxis(
     for member in praxis.members:
         member.has_submitted = False
     await session.flush()
+    # Back to drafting, so the room thaws — and the document it thaws is a fresh
+    # one, seeded from the ``body_text`` this praxis published with (#1745).
+    praxis_room.follow_praxis_status(praxis)
 
     # Recalc *every* member: on a collab, co-authors' scores also counted this
     # praxis while it was submitted, so all of them must drop (the submit paths

@@ -840,6 +840,12 @@ export function BodyTextarea({
   const viewRef = useRef<EditorView | null>(null);
   // Stable across the editor's life; reconfigured rather than remounted.
   const editableSlot = useRef(new Compartment()).current;
+  // Two separate reasons the editor may refuse a keystroke, and they are not the
+  // same thing. `seeded` is "not yet" — the document has not arrived. Frozen is
+  // "not now" — it has arrived and is sealed for the whole group until somebody
+  // reopens it (#1745). The server drops the update messages either way; this
+  // only stops the member typing into a void.
+  const writable = seeded && !state.documentFrozen;
   const setBodyRef = useRef(state.setBody);
   setBodyRef.current = state.setBody;
 
@@ -869,7 +875,7 @@ export function BodyTextarea({
         keymap.of([...yUndoManagerKeymap, ...defaultKeymap]),
         cmPlaceholder(skin.placeholder ?? ""),
         BODY_EDITOR_BASE_THEME,
-        editableSlot.of(EditorView.editable.of(seeded)),
+        editableSlot.of(EditorView.editable.of(writable)),
         EditorView.contentAttributes.of(contentAttributes),
         // `null` awareness: carets and collaborator colours are #1744, and
         // passing it here is what would draw them.
@@ -890,9 +896,9 @@ export function BodyTextarea({
 
   useEffect(() => {
     viewRef.current?.dispatch({
-      effects: editableSlot.reconfigure(EditorView.editable.of(seeded)),
+      effects: editableSlot.reconfigure(EditorView.editable.of(writable)),
     });
-  }, [seeded, editableSlot]);
+  }, [writable, editableSlot]);
 
   // ---- The room's text → `state.body` ----
   //
@@ -951,7 +957,7 @@ export function BodyTextarea({
 
   return (
     <div>
-      {skin.hideToolbar || awaitingRoom ? null : (
+      {skin.hideToolbar || awaitingRoom || state.documentFrozen ? null : (
       <div
         role="toolbar"
         aria-label={t("editPraxis.toolbar.label")}
@@ -1000,6 +1006,42 @@ export function BodyTextarea({
         >
           {t("editPraxis.composer.bodyConnecting")}
         </p>
+      )}
+      {/* Said where it is felt (#1745). This is the member who has just tried to
+          type and found nothing happening, and the difference between a rule and
+          a broken editor is entirely whether anyone told them. The way out is in
+          the same breath, because `pullBack` is the only one — and it is right
+          here rather than in the footer because the footer's button belongs to
+          whoever has already cast, and the member most likely to be reading this
+          is the holdout, who has not. */}
+      {state.documentFrozen && (
+        <div
+          className="flex flex-col items-start gap-1"
+          style={{ marginTop: "var(--space-xs)" }}
+        >
+          <p
+            className="label-caption"
+            style={{ color: "var(--color-text-tertiary)" }}
+          >
+            {t("editPraxis.composer.bodyFrozen")}
+          </p>
+          <button
+            type="button"
+            className="label-caption"
+            onClick={() => void state.reopenForEdit()}
+            disabled={state.submitting}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              color: "var(--color-text-secondary)",
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            {t("editPraxis.composer.bodyFrozenAction")}
+          </button>
+        </div>
       )}
     </div>
   );

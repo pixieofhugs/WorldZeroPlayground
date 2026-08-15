@@ -44,6 +44,7 @@ import {
 } from "../../api/duel";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
+import { discardRoomStore } from "./praxisRoom";
 import {
   deleteCollabConfirm,
   dropTaskConfirm,
@@ -596,7 +597,21 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   );
 
   // ---- Derived ----
+  // The freeze (#1745), stated as the server states it. Drafting is the only
+  // status in which the room accepts a change, so it is the only status in
+  // which the editor may accept a keystroke.
+  const documentFrozen = !!praxis && praxis.status !== "in_progress";
   const isPublished = praxis?.status === "submitted";
+
+  // A published praxis has no room document any more — the server destroyed it
+  // (#1745). Drop this browser's copy with it, or `pullBack` merges the old
+  // document into the freshly seeded one and the body appears twice. Keyed on
+  // the status rather than on `publish()` so that a co-author who learns of the
+  // publication by loading the page clears theirs too.
+  const publishedPraxisId = isPublished ? (praxis?.id ?? null) : null;
+  useEffect(() => {
+    if (publishedPraxisId !== null) discardRoomStore(publishedPraxisId);
+  }, [publishedPraxisId]);
   const isModerated =
     praxis?.moderation_status === "hidden" ||
     praxis?.moderation_status === "failed";
@@ -727,6 +742,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setAutosaveAt,
 
     autoSubmitDays,
+    documentFrozen,
     isPublished: !!isPublished,
     controlsLocked,
     modeIsLocked,

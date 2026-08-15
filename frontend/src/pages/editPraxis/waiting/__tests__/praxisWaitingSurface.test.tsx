@@ -191,6 +191,18 @@ describe("collab — my part is in, the crew is not", () => {
     expect(html).not.toContain("<input");
   });
 
+  it("says why the write-up is sealed, not merely that it is (#1745)", () => {
+    // Read-only here is not this surface being a status page: the document is
+    // frozen for the whole crew, the viewer who submitted included, and the
+    // reason is that their submission would otherwise be consent to words that
+    // could still change under it. A member who is told only "you cannot edit"
+    // reads a lock — one member holding it against the others — which is the
+    // one thing this rule is not. Apostrophes are HTML-escaped in the emitted
+    // markup, so these are punctuation-free fragments.
+    expect(html).toContain("frozen");
+    expect(html).toContain("seals it for everyone");
+  });
+
   it("offers the authoring re-entry, and says what it costs the crew first", () => {
     expect(html).toContain(collabCopy(SLUG, "awaitingEditAction"));
     // The pending-publish window is cancelled by any edit (ADR-0012) — the
