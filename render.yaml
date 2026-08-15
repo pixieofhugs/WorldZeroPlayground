@@ -5,6 +5,17 @@ services:
     dockerfilePath: ./backend/Dockerfile
     branch: main
     autoDeploy: true
+    # NO instance count is declared here, and that is deliberate: this service
+    # must run as exactly ONE instance. A praxis is co-edited in a "room" whose
+    # CRDT document lives in this process's memory (ADR-0073), so two instances
+    # would hold two divergent documents for one praxis and flush both to
+    # `body_text`. ADR-0012's lazy-on-access timeout leans on the same fact.
+    #
+    # The rule is enforced, not merely written down: the app takes a Postgres
+    # session-level advisory lock at boot and a second instance exits loudly
+    # (`services/praxis_room.acquire_single_instance_lock`). Scaling out needs a
+    # broker, or advisory-lock room ownership, BEFORE the second instance —
+    # turning it on here just fails the new instance's deploy.
     disk:
       name: media-storage
       mountPath: /app/media
