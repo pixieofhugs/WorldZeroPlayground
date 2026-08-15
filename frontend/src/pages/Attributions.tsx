@@ -42,6 +42,27 @@ const attributions = [
     url: 'https://authlib.org',
     description: 'OAuth library used for Google authentication.',
   },
+  // The praxis room (ADR-0073). Versions and licences read off the installed
+  // packages, not off the issue that proposed them: yjs 13.6.32,
+  // y-websocket 3.1.0, y-codemirror.next 0.3.5, @codemirror/{state,view,
+  // commands} 6.x — all MIT, as are the transitive lib0, y-protocols and
+  // style-mod they bring. `pycrdt` is the server half.
+  {
+    name: 'Yjs',
+    url: 'https://yjs.dev',
+    description:
+      'CRDT library behind live co-editing of a praxis, with y-websocket and y-codemirror.next.',
+  },
+  {
+    name: 'CodeMirror',
+    url: 'https://codemirror.net',
+    description: 'Plain-text editor the praxis write-up is composed in.',
+  },
+  {
+    name: 'pycrdt',
+    url: 'https://github.com/y-crdt/pycrdt',
+    description: 'Python CRDT bindings holding the server side of a praxis room.',
+  },
 ]
 
 export default function Attributions() {

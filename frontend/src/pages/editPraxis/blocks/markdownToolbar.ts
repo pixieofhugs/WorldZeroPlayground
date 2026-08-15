@@ -184,3 +184,48 @@ export function applyMarkdown(
     }
   }
 }
+
+/** A single-range document edit, in the shape CodeMirror's `dispatch` takes. */
+export interface TextReplacement {
+  from: number;
+  to: number;
+  insert: string;
+}
+
+/**
+ * The narrowest edit that turns `before` into `after` (#1742).
+ *
+ * `applyMarkdown` returns a whole new document, which was the only thing a
+ * `<textarea>` could be handed. A CodeMirror document bound to a CRDT is not:
+ * replacing all of it deletes every character a co-author is standing on —
+ * their caret jumps, their concurrent insert lands beside a corpse, and the
+ * deletions stay in the document forever as tombstones. A toolbar press changes
+ * a few characters, so this sends a few characters.
+ *
+ * ponytail: common prefix and common suffix, so ONE range. A wrap (`**word**`)
+ * therefore re-sends the wrapped word between the two markers it really added.
+ * That is a few characters instead of the whole praxis, and it is what a single
+ * `changes` spec can say. The ceiling is a co-author standing inside the wrapped
+ * word itself; the upgrade path is a real diff emitting the two insertions as
+ * separate ranges, which CodeMirror's `changes` already accepts as an array.
+ */
+export function minimalReplacement(
+  before: string,
+  after: string,
+): TextReplacement {
+  const shorter = Math.min(before.length, after.length);
+  let start = 0;
+  while (start < shorter && before[start] === after[start]) start += 1;
+  let end = 0;
+  while (
+    end < shorter - start &&
+    before[before.length - 1 - end] === after[after.length - 1 - end]
+  ) {
+    end += 1;
+  }
+  return {
+    from: start,
+    to: before.length - end,
+    insert: after.slice(start, after.length - end),
+  };
+}

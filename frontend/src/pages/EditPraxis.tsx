@@ -18,6 +18,8 @@ import { preloadArchetype } from "../factions/lazyArchetype";
 import {
   useEditPraxis,
 } from "./editPraxis/useEditPraxis";
+import { PraxisRoomProvider } from "./editPraxis/praxisRoom";
+import { isWaitingStage } from "./editPraxis/editPraxisPhase";
 import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import MetataskPicker from "../components/metataskSeal/MetataskPicker";
 import MetataskRemoveConfirm from "../components/metataskSeal/MetataskRemoveConfirm";
@@ -98,7 +100,23 @@ export default function EditPraxis() {
   return (
     <>
       <PageTitle title="Edit Praxis" />
-      <Archetype state={state} />
+      {/* Every praxis is written in a room (ADR-0073) — solo, collab and duel
+          part alike, so the composer has one authoring path and not two. Opened
+          here rather than inside an archetype because the title and the body
+          are two controls in one document, and both are the archetype's
+          children.
+
+          Wherever the composer's own regions are drawn, and only there: once
+          your part is filed the archetype draws the waiting surface instead
+          (ADR-0059), which has no title box and no write-up box, and a socket
+          opened for a surface with no editor on it is a socket for nothing.
+          A moderated praxis is NOT that case — it renders the composer locked,
+          write-up and all, and that box still has to have the text in it. */}
+      <PraxisRoomProvider
+        praxisId={isWaitingStage(state.phase) ? null : state.praxis.id}
+      >
+        <Archetype state={state} />
+      </PraxisRoomProvider>
       {/* The cast that closes a collab's consensus gate earns a standalone beat
           rather than a silent redirect (#591). Rendered here, over whichever
           archetype is mounted, so it's one shared screen for every faction and

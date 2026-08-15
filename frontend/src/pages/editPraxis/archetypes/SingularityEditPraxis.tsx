@@ -639,7 +639,6 @@ export default function SingularityEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 id: "composer-body",
-                rows: 10,
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
                   ...fieldBox,

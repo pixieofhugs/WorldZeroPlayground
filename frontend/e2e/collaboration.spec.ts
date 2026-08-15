@@ -259,11 +259,14 @@ test.describe('collaboration UI (clicked buttons)', () => {
       //    Alice reloads so her roster reflects Bob's membership (her cast label
       //    depends on the live member count) before she casts.
       await aPage.goto(`/praxis/${praxisId}/edit`)
-      await aPage.locator('textarea').first().fill('Alice weaves her part')
+      // The body is a CodeMirror editor bound to the praxis room since #1742,
+      // not a textarea. Playwright fills a contenteditable, and auto-waits for
+      // it to become editable -- which is the room finishing its first sync.
+      await aPage.locator('.cm-content').first().fill('Alice weaves her part')
       await aPage.getByRole('button', { name: SNIDE_CAST }).click()
 
       await bPage.goto(`/praxis/${praxisId}/edit`)
-      await bPage.locator('textarea').first().fill('Bob weaves his part')
+      await bPage.locator('.cm-content').first().fill('Bob weaves his part')
       await bPage.getByRole('button', { name: SNIDE_CAST }).click()
 
       // The last cast seals consensus → the closing beat renders for Bob.

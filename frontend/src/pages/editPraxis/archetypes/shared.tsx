@@ -592,7 +592,11 @@ export function ComposerSection({
           }}
         >
           {htmlFor ? (
-            <label htmlFor={htmlFor} style={heading}>
+            // The id is what a control that is NOT a labelable element reaches
+            // for: since #1742 the body is a CodeMirror editor, and `for` does
+            // nothing for a contenteditable div — it names itself with
+            // `aria-labelledby="<htmlFor>-label"` instead.
+            <label id={`${htmlFor}-label`} htmlFor={htmlFor} style={heading}>
               {label}
             </label>
           ) : (

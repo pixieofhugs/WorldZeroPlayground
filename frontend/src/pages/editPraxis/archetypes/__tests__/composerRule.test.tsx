@@ -212,10 +212,16 @@ describe("the last two archetype seams of #1706", () => {
     const words = i18n.t("forms:editPraxis.composer.wordCount", { words: 4 });
     // The header row is the one holding the Write/Preview tablist. Both live
     // inside the section's `meta` span, so the count sits before the tablist
-    // and — the part that used to be false — before the textarea.
+    // and — the part that used to be false — before the body box.
+    //
+    // `data-composer-body` is that box since #1742: the body is a CodeMirror
+    // editor built into this host on mount, so there is no `<textarea>` left to
+    // name and nothing inside the host to see in a DOM-less render.
     expect(count(markup, words)).toBe(1);
     expect(markup.indexOf(words)).toBeLessThan(markup.indexOf('role="tablist"'));
-    expect(markup.indexOf(words)).toBeLessThan(markup.indexOf("<textarea"));
+    expect(markup.indexOf(words)).toBeLessThan(
+      markup.indexOf("data-composer-body"),
+    );
   });
 
   it("the drop target's label carries the design's second line", () => {
