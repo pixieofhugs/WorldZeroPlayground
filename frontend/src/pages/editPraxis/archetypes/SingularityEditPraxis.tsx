@@ -31,9 +31,10 @@
  * The one neutral shared `editPraxis.composer.*` set. `editPraxis.singularity`'s
  * page keys — the whole `terminal.*` command line, the `--solo/--networked/
  * --adversarial` flags, `TRANSMIT SIGNAL`, `[esc] :q`, `rm`, `+ attach` — are
- * deleted with this issue. `editPraxis.singularity.collab` SURVIVES: that is
- * `collabCopy`'s override table, a different resolver that also feeds
- * `CollabRoster` on the read page, and `collabCopy.test.ts` pins it.
+ * deleted with this issue. `editPraxis.singularity.collab` survived it — that
+ * was `collabCopy`'s override table rather than page copy — but #1812 then
+ * deleted all eight of those: collab submission status speaks one vocabulary on
+ * every faction. `collabCopy.test.ts` pins the absence.
  *
  * Two strings here are untranslated and that is deliberate: `praxis.proc` on
  * the window bar and `[ok]` as the status mark are ORNAMENT, in the same class

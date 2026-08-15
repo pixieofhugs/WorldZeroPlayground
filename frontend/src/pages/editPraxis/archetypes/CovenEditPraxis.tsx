@@ -24,10 +24,12 @@
  * strings an unaffiliated player reads. Coven's own composer vocabulary
  * (`windowTitle`, `pageTitle` "edit praxis", `modeLabel` "how are you walking?",
  * `bodyLabel` "field notes", `publishIdle` "cast it into the world", …) is
- * deleted with this issue. `editPraxis.coven.collab` STAYS: that block is
- * `collabCopy`'s override table, a different resolver, and it also feeds
- * `CollabRoster` on the read page — deleting it would restyle a surface this
- * epic is not touching.
+ * deleted with this issue. `editPraxis.coven.collab` was kept back then — it
+ * was `collabCopy`'s override table rather than composer page copy, and it also
+ * fed `CollabRoster` on a read page this epic was not touching. #1812 has since
+ * deleted it too, on a ruling of its own: collab submission status is a
+ * mechanical fact and speaks one vocabulary on every faction. There is no
+ * `editPraxis.coven` block at all now.
  *
  * The one word this page draws that is not from the neutral set is the
  * MASTHEAD WORDMARK, and it is not composer copy: it is Coven's own wordmark,
