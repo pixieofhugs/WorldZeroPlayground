@@ -1705,6 +1705,27 @@ describe("the frost is a layer, not a ground (#1413)", () => {
       "`.card-on-page` is what the praxis detail's steward bar and report card wear (#1118: a block whose ink you do not control gets the stock that ink was measured on).",
     ).toContain("--card-ground: var(--color-bg-page)");
   });
+
+  /**
+   * #1606 — the same promise, second property. `.eyebrow` HARDCODED
+   * `--color-text-tertiary`, so a label inside the steward bar or the report
+   * card was neutral whatever it was mounted in. #1307 replaced it with two
+   * tiers that read `--label-ink`, a SEAM a faction frame is meant to set once
+   * on its own root — and ADR-0061 mounts both of those cards BARE inside that
+   * root. `WowFactionBody` already repoints the seam (on the faction detail
+   * page, which holds no neutral chrome); the first praxis-detail skin to do
+   * the same would tint moderation chrome on its wall and nowhere else.
+   *
+   * Pinning it here rather than colouring each label is the rule at the tiers'
+   * own declaration: a per-label colour is the per-component contradiction
+   * #1252 exists to stop, and it is invisible to every ratio in this file.
+   */
+  it("the neutral chrome keeps the app's own label ink too (#1606)", () => {
+    expect(
+      ruleBody(".card-on-page"),
+      "`.card-on-page` must pin `--label-ink` back to the neutral. Without it, the first faction frame to repoint the seam tints the praxis detail's steward bar and report card — which ADR-0061 mounts bare on nine walls precisely so moderation chrome reads the same everywhere.",
+    ).toContain("--label-ink: var(--color-text-tertiary)");
+  });
 });
 
 /**
