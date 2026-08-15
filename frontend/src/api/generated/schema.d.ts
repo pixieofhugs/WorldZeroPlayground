@@ -155,23 +155,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/accounts/{account_id}/role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Admin Manage Role */
-        post: operations["admin_manage_role_admin_accounts__account_id__role_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/accounts/{account_id}/suspend": {
         parameters: {
             query?: never;
@@ -199,95 +182,7 @@ export interface paths {
         /** Admin List Characters */
         get: operations["admin_list_characters_admin_characters_get"];
         put?: never;
-        /** Admin Create Character Endpoint */
-        post: operations["admin_create_character_endpoint_admin_characters_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/characters/backfill-stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Backfill All Character Stats
-         * @description Recompute CharacterStats for every character using current vote data.
-         *
-         *     **Consumer-less on purpose — do not delete it (owner ruling, 2026-07-31).**
-         *     Nothing in the frontend or the admin MCP calls this, so a dead-endpoint sweep
-         *     finds it and proposes removal; #1386 did exactly that and was told to keep it.
-         *     It is a break-glass operations tool, and the value of one is that it is there
-         *     on the day you need it rather than on the day someone thought to add it.
-         *
-         *     It earns that standing: scoring is recomputed rather than stored as a running
-         *     total, so a bug in the recalc path leaves every score wrong until something
-         *     recomputes them. #1345 (the era bound) and #1373 (failed praxes score zero)
-         *     are both changes whose backfill this is.
-         *
-         *     Silent: ``emit_taunts=False`` (ADR-0068). Recomputing a score everyone
-         *     already had is not an overtake, and a backfill must never mail the whole
-         *     playerbase a volley of taunts about history.
-         *
-         *     **It repairs ``all_time_score`` too** — asked and answered in #1531, because
-         *     that field is lifetime-cumulative and moved by delta rather than re-derived
-         *     (``_credit_all_time_score``), which looks like it would be left holding
-         *     points whose votes are gone. It is not: the delta this recalc applies is
-         *     ``recomputed - stored``, so a score that falls by five stars drags lifetime
-         *     down five as well, and a second run applies zero. Pinned by
-         *     ``tests/integration/test_vote_dedupe_repair.py``.
-         *
-         *     Two limits worth knowing before leaning on it as a repair tool: it recalcs
-         *     the CURRENT era row only, so a change to a closed era's praxis needs
-         *     ``recalculate_character_stats`` with that ``era_row``; and it skips banned
-         *     characters (``list_active_characters``).
-         */
-        post: operations["backfill_all_character_stats_admin_characters_backfill_stats_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/characters/backfill-vote-budget": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Backfill Vote Budget
-         * @description Rebuild ``votes_spent_this_era`` for the live era from the vote table (#1531).
-         *
-         *     The repair half of the 2026-08-02 vote dedupe: migration
-         *     ``0011_vote_unique_per_account`` deleted 13 surplus vote rows, and their
-         *     casters are still charged for them because the spend is a stored counter.
-         *     (That revision no longer exists as a file — #1398 collapsed the chain into
-         *     ``0002_squashed`` — but this endpoint outlives it: anything that removes a
-         *     vote row behind the service's back leaves the same drift.) See
-         *     :func:`services.character_stats.recompute_votes_spent_this_era` for the
-         *     identity this rests on and the two ways it can fail.
-         *
-         *     **``dry_run=true`` first.** The same counter is what an admin
-         *     ``votes_available`` grant writes (``set_character_stats``), and a row does
-         *     not record that it was hand-set — so a recompute silently reverts such a
-         *     grant. The response lists every before/after pair precisely so an operator
-         *     can spot one before applying.
-         *
-         *     **Run this BEFORE ``/admin/characters/backfill-stats``, not with it.** Both
-         *     write ``CharacterStats``; the budget repair does not depend on scores, but
-         *     interleaving them risks one pass overwriting the other.
-         */
-        post: operations["backfill_vote_budget_admin_characters_backfill_vote_budget_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -385,43 +280,6 @@ export interface paths {
         patch: operations["admin_moderate_comment_admin_comments__comment_id__moderate_patch"];
         trace?: never;
     };
-    "/admin/era/reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Admin Era Reset
-         * @description Trigger an era reset: new Era row + reset stats per EraConfig flags.
-         */
-        put: operations["admin_era_reset_admin_era_reset_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/factions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Admin Create Faction */
-        post: operations["admin_create_faction_admin_factions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/messages": {
         parameters: {
             query?: never;
@@ -510,26 +368,6 @@ export interface paths {
         patch: operations["admin_moderate_praxis_admin_praxes__praxis_id__moderate_patch"];
         trace?: never;
     };
-    "/admin/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Admin Create Task
-         * @description Admin-only: create a task directly in active status.
-         */
-        post: operations["admin_create_task_admin_tasks_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/tasks/import-csv": {
         parameters: {
             query?: never;
@@ -587,57 +425,6 @@ export interface paths {
         head?: never;
         /** Admin Patch Task */
         patch: operations["admin_patch_task_admin_tasks__task_id__patch"];
-        trace?: never;
-    };
-    "/admin/tasks/{task_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Approve Task */
-        put: operations["approve_task_admin_tasks__task_id__approve_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/tasks/{task_id}/reactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Admin Reactivate Task */
-        post: operations["admin_reactivate_task_admin_tasks__task_id__reactivate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/tasks/{task_id}/retire": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Retire Task */
-        put: operations["retire_task_admin_tasks__task_id__retire_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/admin/tasks/{task_id}/status": {
@@ -844,72 +631,6 @@ export interface paths {
         put?: never;
         /** Upload Avatar */
         post: operations["upload_avatar_characters__character_id__avatar_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/characters/{character_id}/praxes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Character Praxes
-         * @description A character's praxis record — the same contract as the profile grid (#1112).
-         *
-         *     Membership, not authorship: a finished collab is part of the record of every
-         *     member (ADR-0013 co-ownership), not only its creator's. Finished work only:
-         *     ``in_progress`` is excluded for every viewer, the character themselves
-         *     included — the record is public, and in-flight work is read from the sidebar
-         *     (``GET /praxes?member_id=..&status=in_progress``) instead.
-         *
-         *     Kept byte-for-byte in step with ``list_praxes(character_id=...)``, which is
-         *     what the profile page actually fetches; both AND the shared
-         *     :func:`praxis_membership_condition` onto the unchanged viewer gate
-         *     :func:`praxis_visibility_condition`, so the two spellings cannot drift.
-         *
-         *     One deliberate difference since #1362: this route is **all eras**, while
-         *     ``GET /praxes`` now defaults to
-         *     :class:`services.praxis.PraxisEraScope.this_era` (opt out with
-         *     ``?era_scope=all_eras``). A whole-career record has no era rail to set, so
-         *     it keeps the unbounded list.
-         */
-        get: operations["get_character_praxes_characters__character_id__praxes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/characters/{character_id}/stats/votes-received": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Votes Received Count
-         * @description Votes received on the praxes this character **authored**.
-         *
-         *     Deliberately still ``created_by_id`` after #1112 moved the praxis *record*
-         *     above to membership, for two reasons:
-         *
-         *     - It is not the grid's count. Nothing renders it beside the profile grid;
-         *       it feeds the Field Desk home "Votes" stat, so the two cannot disagree.
-         *     - Scoring is author-scoped (ADR-0053): a collab's votes bank to its one
-         *       author. Counting memberships would both credit co-members with votes they
-         *       did not earn and count a single vote once per member.
-         */
-        get: operations["get_votes_received_count_characters__character_id__stats_votes_received_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1849,8 +1570,7 @@ export interface paths {
         };
         /** Get Task */
         get: operations["get_task_tasks__task_id__get"];
-        /** Update Task Route */
-        put: operations["update_task_route_tasks__task_id__put"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1949,77 +1669,6 @@ export interface components {
             items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
-        };
-        /** AdminCharacterCreate */
-        AdminCharacterCreate: {
-            /** Account Id */
-            account_id: number;
-            /**
-             * Avatar Url
-             * @default
-             */
-            avatar_url: string;
-            /**
-             * Bio
-             * @default
-             */
-            bio: string;
-            /** Display Name */
-            display_name: string;
-            /** Faction Slug */
-            faction_slug?: string | null;
-            /**
-             * Location
-             * @default
-             */
-            location: string;
-            /** Username */
-            username: string;
-        };
-        /**
-         * AdminCharacterOut
-         * @description The character an admin just minted (``POST /admin/characters``).
-         *
-         *     Carries ``account_id`` on purpose. The "never expose account_id" rule
-         *     (SPEC-backend-architecture.md §4) governs the *public* API; the admin router
-         *     is the operator surface and already answers with raw account identity and
-         *     e-mail (``AccountSummary``). An admin who creates a character for an account
-         *     needs to see which account it landed on.
-         *
-         *     Deliberately not ``CharacterOut``: that shape is the player-facing profile
-         *     (score, level, badges, faction display), none of which exists yet at
-         *     creation time. This is the insert receipt.
-         */
-        AdminCharacterOut: {
-            /** Account Id */
-            account_id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Display Name */
-            display_name: string;
-            /** Faction Slug */
-            faction_slug: string;
-            /** Id */
-            id: number;
-            /** Status */
-            status: string;
-            /** Username */
-            username: string;
-        };
-        /** AdminFactionOut */
-        AdminFactionOut: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Slug */
-            slug: string;
-            /** Status */
-            status: string;
         };
         /** AdminTaskPatch */
         AdminTaskPatch: {
@@ -2883,16 +2532,6 @@ export interface components {
             /** Era Notes */
             era_notes: string;
         };
-        /**
-         * EraResetOut
-         * @description Readout for ``PUT /admin/era/reset``: the new era row and who it touched.
-         */
-        EraResetOut: {
-            /** Characters Reset */
-            characters_reset: number;
-            /** Era Id */
-            era_id: number;
-        };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
             /** Faction Slug */
@@ -2912,16 +2551,6 @@ export interface components {
             other_task_modifier: number;
             /** Own Task Modifier */
             own_task_modifier: number;
-            /** Slug */
-            slug: string;
-        };
-        /** FactionCreate */
-        FactionCreate: {
-            /**
-             * Hidden
-             * @default false
-             */
-            hidden: boolean;
             /** Slug */
             slug: string;
         };
@@ -4301,35 +3930,6 @@ export interface components {
          * @enum {string}
          */
         RelationshipTypeEnum: "friend" | "foe";
-        /** RoleAction */
-        RoleAction: {
-            /**
-             * Action
-             * @enum {string}
-             */
-            action: "grant" | "revoke";
-            /** Role */
-            role: string;
-        };
-        /**
-         * RoleActionOut
-         * @description Echo of an applied ``POST /admin/accounts/{id}/role``.
-         *
-         *     An echo rather than the account's full role set: the service applies one
-         *     grant/revoke and does not read the rest back, and inventing a fuller shape
-         *     here would mean a second query whose only consumer is the confirmation.
-         */
-        RoleActionOut: {
-            /** Account Id */
-            account_id: number;
-            /**
-             * Action
-             * @enum {string}
-             */
-            action: "grant" | "revoke";
-            /** Role */
-            role: string;
-        };
         /**
          * SidebarOut
          * @description Everything the rail's three data panels draw, in one response.
@@ -4357,17 +3957,6 @@ export interface components {
             global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Pending Requests Count */
             pending_requests_count: number;
-        };
-        /**
-         * StatsBackfillOut
-         * @description Readout for ``POST /admin/characters/backfill-stats``.
-         *
-         *     ``recalculated`` counts *active* characters — banned ones are skipped — so
-         *     it will not match a headcount of the accounts table.
-         */
-        StatsBackfillOut: {
-            /** Recalculated */
-            recalculated: number;
         };
         /** SuspendAction */
         SuspendAction: {
@@ -4585,23 +4174,6 @@ export interface components {
             votes_available: number;
         };
         /**
-         * VoteBudgetBackfillOut
-         * @description Readout for ``POST /admin/characters/backfill-vote-budget``.
-         *
-         *     ``changes`` is the whole point of the endpoint's ``dry_run`` mode: an admin
-         *     ``votes_available`` grant writes the same counter a recompute rebuilds, and
-         *     nothing records that a row was hand-set, so an operator reads these
-         *     before/after pairs to spot a grant this pass would revert.
-         */
-        VoteBudgetBackfillOut: {
-            /** Changed */
-            changed: number;
-            /** Changes */
-            changes: components["schemas"]["VoteSpendRepairOut"][];
-            /** Dry Run */
-            dry_run: boolean;
-        };
-        /**
          * VoteCastOut
          * @description The complete post-cast truth: everything the client used to reconstruct.
          *
@@ -4694,23 +4266,6 @@ export interface components {
             vote_id: number;
         };
         /**
-         * VoteSpendRepairOut
-         * @description One character's ``votes_spent_this_era`` before and after a recompute.
-         *
-         *     The wire mirror of ``services.character_stats.VoteSpendRepair``. It is a
-         *     separate declaration rather than the dataclass itself because the response
-         *     shape is a published contract and the dataclass is an internal return type;
-         *     tying them together would make an internal rename a wire break.
-         */
-        VoteSpendRepairOut: {
-            /** After */
-            after: number;
-            /** Before */
-            before: number;
-            /** Character Id */
-            character_id: number;
-        };
-        /**
          * VoteTallyOut
          * @description A praxis's vote aggregate, in the field names every praxis payload uses.
          *
@@ -4738,21 +4293,6 @@ export interface components {
             faction_slug: string;
             /** Value */
             value: number;
-        };
-        /**
-         * VotesReceivedOut
-         * @description Votes received on the praxes a character **authored**.
-         *
-         *     Author-scoped, not membership-scoped (ADR-0053) — see the route docstring in
-         *     ``routers/characters.py`` for why the two must not be conflated. It echoes
-         *     ``character_id`` so a caller batching several of these can tell the answers
-         *     apart.
-         */
-        VotesReceivedOut: {
-            /** Character Id */
-            character_id: number;
-            /** Votes Received */
-            votes_received: number;
         };
         /** ContactMessageOut */
         routers__admin__ContactMessageOut: {
@@ -5037,43 +4577,6 @@ export interface operations {
             };
         };
     };
-    admin_manage_role_admin_accounts__account_id__role_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                account_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleAction"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleActionOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     admin_suspend_account_admin_accounts__account_id__suspend_post: {
         parameters: {
             query?: never;
@@ -5132,105 +4635,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CharacterSummary"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_create_character_endpoint_admin_characters_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminCharacterCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminCharacterOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    backfill_all_character_stats_admin_characters_backfill_stats_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StatsBackfillOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    backfill_vote_budget_admin_characters_backfill_vote_budget_post: {
-        parameters: {
-            query?: {
-                dry_run?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VoteBudgetBackfillOut"];
                 };
             };
             /** @description Validation Error */
@@ -5417,72 +4821,6 @@ export interface operations {
             };
         };
     };
-    admin_era_reset_admin_era_reset_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EraResetOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_create_faction_admin_factions_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FactionCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminFactionOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     admin_list_messages_admin_messages_get: {
         parameters: {
             query?: {
@@ -5648,41 +4986,6 @@ export interface operations {
             };
         };
     };
-    admin_create_task_admin_tasks_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     admin_import_tasks_csv_admin_tasks_import_csv_post: {
         parameters: {
             query?: never;
@@ -5765,105 +5068,6 @@ export interface operations {
                 "application/json": components["schemas"]["AdminTaskPatch"];
             };
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    approve_task_admin_tasks__task_id__approve_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_reactivate_task_admin_tasks__task_id__reactivate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retire_task_admin_tasks__task_id__retire_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -6239,73 +5443,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CharacterOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_character_praxes_characters__character_id__praxes_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                character_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PraxisOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_votes_received_count_characters__character_id__stats_votes_received_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VotesReceivedOut"];
                 };
             };
             /** @description Validation Error */
@@ -8027,43 +7164,6 @@ export interface operations {
             };
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_task_route_tasks__task_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskCreate"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -39,12 +39,15 @@
      THE FIX SPENDS NO CONTRAST — every neutral ground gains a little:
        page 5.37 -> 5.40 · frost 5.74 -> 5.78 · surface-alt 5.04 -> 5.07 ·
        filter-well 4.75 -> 4.78.  ΔE from secondary 3.4 -> 29.5 (dark: 38.3).
-     All four clear AA for body text at any size, which matters because
-     `.eyebrow` prints this ink at 9px on ~460 sites.
+     All four clear AA for body text at any size, which matters because the
+     label tier prints this ink -- via `--label-ink` -- on every surface in the
+     app. (It was `.eyebrow` at 9px on ~460 sites when this was measured; #1307
+     retired that class into `.label-heading` / `.label-caption`, which is a
+     larger tier on the same ink and so cannot invalidate the numbers.)
 
      Cool-on-warm recedes at equal luminance, so "quieter" survives as a
      perception even though it is no longer a ratio. That is the claim #1307
-     builds its label-tier redesign on: the eyebrow's ink is legible on every
+     builds its label-tier redesign on: the label ink is legible on every
      neutral stock and is no longer competing with secondary — what it does NOT
      have is headroom to be walked further down. Measured in
      `factionContrast.test.ts`, both cascades, with a ΔE floor beside the
@@ -1920,7 +1923,7 @@
      one weight — ΔE 38.3, and 6.21:1 against 5.63:1 on the page, so if
      anything it is the LOUDER of the two. Light was brought to this hue rather
      than this hue being softened toward light, because dark is the cascade
-     that works and a repaint here would move ~460 `.eyebrow` sites for no
+     that works and a repaint here would move the whole label tier for no
      defect. Note the direction that leaves: neither cascade makes tertiary
      dimmer than secondary, and dark has even less room to than light does —
      secondary is 4.87:1 on `--color-bg-surface-alt` here, so a rung below it
@@ -2667,8 +2670,8 @@
 :root {
   /* ── Label tier (issue #627, split in two by #1307) ──
      A size ramp, deliberately t-shirt-named. Backs .label-heading and
-     .label-caption below, the legacy .eyebrow, and every label-tier surface:
-     pills, badges, stamps, bylines, button chrome.
+     .label-caption below and every label-tier surface: pills, badges, stamps,
+     bylines, button chrome.
 
      "Small on purpose — this text is scanned, not read" was the rule for the
      whole tier and is now the HEADING half's alone. A caption is a small FACT
@@ -3096,24 +3099,15 @@
     border-color: var(--color-text-primary);
   }
 
-  /* ── Eyebrow / label text ── */
-
-  .eyebrow {
-    @apply font-body;
-    font-size: var(--text-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--color-text-tertiary);
-  }
-
   /* ── The label tier is TWO roles, not one (#1307) ──────────────────────────
-     `.eyebrow` above covers five jobs — section headings, metadata captions,
-     status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the
-     weakest neutral. Four legibility costs stacked on one string, and the file
-     had already admitted the stack half-fails: `.eyebrow-sentence` lived here
-     (deleted by #1307) precisely because "a sentence set that way is a wall".
-     That was a CAPTION wearing a heading's clothes, and a variant rather than
-     the rethink it should have had. The five jobs are two intents:
+     `.eyebrow` — DELETED HERE, by the last of #1307's sweeps — covered five
+     jobs: section headings, metadata captions, status chips, counts, bylines,
+     all at 9px uppercase on 0.15em tracking in the weakest neutral. Four
+     legibility costs stacked on one string, and the file had already admitted
+     the stack half-fails: `.eyebrow-sentence` lived here (deleted earlier in
+     #1307) precisely because "a sentence set that way is a wall". That was a
+     CAPTION wearing a heading's clothes, and a variant rather than the rethink
+     it should have had. The five jobs are two intents:
 
        .label-heading   THIS NAMES A REGION. "COLLABORATORS · 4", "WRITE-UP",
                         "IN PROGRESS TASKS". 11px, uppercase, tracked. Being
@@ -3135,15 +3129,16 @@
      COLOUR IS `--label-ink`, WHICH IS NOT DECLARED HERE. Its measurement and
      the reason a faction repoints it (three light-mode sheets the neutral
      cannot clear) are at its declaration, up with the text tiers. Unset it is
-     `--color-text-tertiary`, so a label outside a faction frame renders what
-     `.eyebrow` renders today. Both tiers read the SAME property: they land on
-     one AA floor, so one measurement serves the pair, and a frame that had to
-     repoint two properties would eventually repoint one.
+     `--color-text-tertiary`, which is the ink `.eyebrow` hardcoded — so a label
+     outside a faction frame is unchanged by the retirement. Both tiers read the
+     SAME property: they land on one AA floor, so one measurement serves the
+     pair, and a frame that had to repoint two properties would eventually
+     repoint one.
 
      PURGE, AND ONE FRAGILE THING ABOUT IT. These live in @layer components, so
      Tailwind emits a class only once it sees the literal string in a scanned
-     file — same as `.content-text` and `.eyebrow`, and it means a name
-     assembled at runtime is a name that never ships. Write both as literals.
+     file — same as `.content-text`, and it means a name assembled at runtime is
+     a name that never ships. Write both as literals.
      Both tiers now have real callers across propose-task, praxis detail, task
      detail, the feed and admin (#1601, #1603, #1604, #1605, #1602), so neither
      depends any longer on `factionContrast.test.ts` quoting it to survive the
@@ -3156,8 +3151,14 @@
      a star-slash, which ENDS a CSS comment, and postcss then fails on the
      remains of the sentence rather than on the thing you typed.)
 
-     `.eyebrow` stays declared and in use; #1307's per-area sweeps are what
-     retire it, and deleting it is the last of them. */
+     `.eyebrow` is GONE — 124 class sites across 61 files went to one of these
+     two, and the rule went with the last of them. What is left of the name in
+     this file is prose and one token (`--faction-default-eyebrow-rainbow`,
+     which names a three-stop cut of the spectrum and not this class). The
+     sweep's own guard is `src/__tests__/labelTierSweep.test.ts`, which counts
+     the name inside `className` values rather than in the file, because the
+     whole-string count is ~369 and that over-count is what put "461 sites" in
+     the issue title. */
 
   /* Written as two whole rules rather than a grouped selector plus two
      role rules: the shared face and ink LOOK like 29 raw bytes of duplication,
@@ -3280,7 +3281,7 @@
      Note: these live in @layer components, so Tailwind only emits a class once
      it sees the literal string in a scanned file. Until the sweeps land a real
      caller, probing one in devtools will show it doing nothing — that's the
-     purge, not a broken rule. Same as .eyebrow. It also means a class name
+     purge, not a broken rule. Same as the label tier. It also means a class name
      assembled at runtime gets purged: write it as a literal. */
 
   .content-text {

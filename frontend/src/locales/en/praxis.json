@@ -42,6 +42,8 @@
       "base": "base",
       "mult": "mult",
       "meta": "meta",
+      "habit": "habit",
+      "habitBonus": "+ {{points}} habit bonus",
       "votes": "votes",
       "total": "total",
       "totalShort": "tot",
@@ -55,7 +57,8 @@
         "base": "基",
         "points": "点",
         "fromVotes": "票",
-        "fromVotesGloss": "from votes"
+        "fromVotesGloss": "from votes",
+        "habit": "習"
       }
     },
     "mediaEmpty": "no proof attached",

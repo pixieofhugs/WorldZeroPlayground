@@ -2,8 +2,10 @@
 
 Seam: ``GET /praxes?character_id=<id>`` — the fetch the character-profile page
 actually makes (``CharacterProfile.tsx`` → ``listPraxes({ character_id })``).
-NOT ``GET /characters/{id}/praxes``, which no client calls; that endpoint is
-pinned separately in ``test_characters.py``.
+It is now the ONLY spelling: ``GET /characters/{id}/praxes`` returned the same
+rows, had no client, and was deleted in #1667, taking its parallel pins in
+``test_characters.py`` and ``test_praxis_visibility.py`` with it. This file is
+what stops the rules below from going unwatched.
 
 Two owner-settled rules, both exercised here:
 

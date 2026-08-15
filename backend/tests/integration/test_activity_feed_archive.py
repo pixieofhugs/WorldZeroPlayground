@@ -17,6 +17,7 @@ from httpx import AsyncClient
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from models.character import Character
 from models.comment import Comment, CommentMention
 from models.duel import Duel, DuelStatus
@@ -524,10 +525,38 @@ async def test_dismissing_awaiting_submission_is_rejected(
         "/activity-feed/dismiss", json={"item_key": target}, headers=auth_headers
     )
     assert response.status_code == 400, response.text
-    assert "cannot be archived" in response.json()["detail"]
+    detail = response.json()["detail"]
+    assert detail["code"] == ErrorCode.feed_item_not_archivable.value
+    assert "cannot be archived" in detail["message"]
 
     still_there = await _feed(client, auth_headers, REQUESTS_FILTER)
     assert target in [item["item_key"] for item in still_there["items"]]
+
+
+@pytest.mark.parametrize(
+    "item_key, expected_code",
+    [
+        ("no_such_type:1", ErrorCode.feed_item_key_unknown),
+        ("no-separator", ErrorCode.feed_item_key_unknown),
+        (f"{FEED_ITEM_TYPE_NUDGE}{ITEM_KEY_SEPARATOR}not-a-number",
+         ErrorCode.feed_item_key_malformed),
+    ],
+)
+@pytest.mark.asyncio
+async def test_bad_item_keys_are_told_apart_by_code(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    item_key: str,
+    expected_code: ErrorCode,
+):
+    """Three 400s on one route — an unknown type, a key with no separator, and a
+    non-integer id. Before #1652 only the English sentence told them apart."""
+    response = await client.post(
+        "/activity-feed/dismiss", json={"item_key": item_key}, headers=auth_headers
+    )
+    assert response.status_code == 400, response.text
+    assert response.json()["detail"]["code"] == expected_code.value
 
 
 @pytest.mark.asyncio

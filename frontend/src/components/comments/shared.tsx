@@ -268,7 +268,7 @@ export function ComposerControls({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="font-body eyebrow hover:underline"
+              className="font-body label-caption hover:underline"
               style={{
                 background: 'none',
                 border: 'none',

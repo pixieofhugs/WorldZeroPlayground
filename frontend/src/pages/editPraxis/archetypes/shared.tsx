@@ -84,12 +84,11 @@ export function TitleCounter({ length, color }: TitleCounterProps) {
   const isDanger = length >= 180;
   return (
     <span
-      className="eyebrow"
-      style={{
-        color: isDanger
-          ? "var(--color-danger)"
-          : (color ?? "var(--color-text-tertiary)"),
-      }}
+      className="label-caption"
+      // The neutral fallback went with `.eyebrow`: `.label-caption` paints
+      // `--label-ink`, which IS the tertiary unset, so restating it here would
+      // only stop a frame that repoints the seam from reaching this counter.
+      style={{ color: isDanger ? "var(--color-danger)" : color }}
     >
       {length}/200
     </span>

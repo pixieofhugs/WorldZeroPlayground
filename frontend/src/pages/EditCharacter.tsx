@@ -149,7 +149,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
               <DefaultSigil size={34} />
               <div>
                 <div
-                  className="eyebrow"
+                  className="label-heading"
                   style={{ color: 'var(--faction-default-card-muted)', marginBottom: 0 }}
                 >
                   {t('editCharacter.eyebrow')}
@@ -163,7 +163,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
 
         {/* ── Portrait ── */}
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
-          <div className="eyebrow" style={{ marginBottom: 'var(--space-lg)' }}>{t('editCharacter.portraitHeading')}</div>
+          <div className="label-heading" style={{ marginBottom: 'var(--space-lg)' }}>{t('editCharacter.portraitHeading')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xl)', flexWrap: 'wrap' }}>
             {/* Spectrum-framed portrait — the DefaultAvatar look at portrait size
                 (reuses DefaultSigil for the corner mark). Every path still open. */}
@@ -246,7 +246,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
 
         {/* ── Identity ── */}
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
-          <div className="eyebrow" style={{ marginBottom: 'var(--space-lg)' }}>{t('editCharacter.identityHeading')}</div>
+          <div className="label-heading" style={{ marginBottom: 'var(--space-lg)' }}>{t('editCharacter.identityHeading')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
             <label style={{ display: 'block' }}>
               <span style={fieldLabel}>
@@ -285,7 +285,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
               >
                 <span style={{ fontFamily: 'var(--font-body)' }}>@{character.username}</span>
               </div>
-              <span className="eyebrow" style={{ display: 'block', marginTop: 'var(--space-sm)', color: 'var(--color-text-tertiary)' }}>
+              <span className="label-caption" style={{ display: 'block', marginTop: 'var(--space-sm)' }}>
                 {t('editCharacter.handleHint')}
               </span>
             </div>
@@ -295,7 +295,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
         {/* ── Your story ── */}
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
-            <span className="eyebrow">{t('editCharacter.storyLabel')}</span>
+            <span className="label-heading">{t('editCharacter.storyLabel')}</span>
             <span className={`font-body text-xs ${bio.length >= 450 ? 'text-red-600' : 'text-muted'}`}>
               {t('editCharacter.storyCount', { count: bio.length })}
             </span>

@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import FactionSigil from './sigil/FactionSigil'
+import FactionSigil, { factionSigilRing } from './sigil/FactionSigil'
 import { factionName, isKnownFaction } from '../utils/factions'
 
 /**
@@ -231,7 +231,11 @@ export default function CredentialCard({
             the mark. Unaffiliated and unknown slugs are not a hole — they get
             `FactionSigil`'s spectrum `DefaultSigil` and the name `na` resolves
             to. The card stays slug-blind: which sigil belongs to which slug is
-            `FactionSigil`'s dispatch to answer, including albescent's. */}
+            `FactionSigil`'s dispatch to answer, including albescent's — and
+            since #1658 the hoop is the same question, so it is asked the same
+            way. `factionSigilRing` answers `undefined` for everyone but the one
+            mark that rings itself, which is how the card keeps its accent
+            without a branch it would have to maintain. */}
         <span
           role="img"
           aria-label={factionName(factionSlug)}
@@ -243,7 +247,7 @@ export default function CredentialCard({
             width: 42,
             height: 42,
             borderRadius: '50%',
-            border: '2px solid var(--fc-accent)',
+            border: `2px solid ${factionSigilRing(factionSlug) ?? 'var(--fc-accent)'}`,
             background: 'transparent',
           }}
         >

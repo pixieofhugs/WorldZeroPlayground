@@ -27,7 +27,6 @@ from services.task import (
     list_tasks as service_list_tasks,
     propose_task,
     TaskSort,
-    update_task,
 )
 
 router = APIRouter()
@@ -159,16 +158,3 @@ async def propose_task_route(
     is_admin = await account_has_admin_role(account.id, session)
     task = await propose_task(character, data, session, skip_level_check=is_admin)
     return await build_task_out(task, session)
-
-
-@router.put("/{task_id}", response_model=TaskOut)
-async def update_task_route(
-    task_id: int,
-    data: TaskCreate,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    task = await session.get(Task, task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found.")
-    return await build_task_out(await update_task(task, data, character, session), session)

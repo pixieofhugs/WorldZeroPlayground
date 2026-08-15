@@ -15,6 +15,7 @@
     "AlbescentInvitation": "src/components/AlbescentInvitation.tsx",
     "AlbescentPraxisCard": "src/components/praxisCard/desktop/AlbescentPraxisCard.tsx",
     "AlbescentPraxisDetail": "src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx",
+    "AlbescentProfileBody": "src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx",
     "AlbescentSeal": "src/components/metataskSeal/skins/AlbescentSeal.tsx",
     "AlbescentSigil": "src/components/sigil/AlbescentSigil.tsx",
     "AlbescentTaskCard": "src/components/taskCard/AlbescentTaskCard.tsx",
@@ -235,6 +236,7 @@
     "WowComment": "src/components/comments/voices/WowComment.tsx",
     "WowDuelSealConfirm": "src/components/duel/WowDuelSealConfirm.tsx",
     "WowEditPraxis": "src/pages/editPraxis/archetypes/WowEditPraxis.tsx",
+    "WowFactionBody": "src/pages/factionDetail/archetypes/WowFactionBody.tsx",
     "WowFactionHero": "src/components/factionHero/WowFactionHero.tsx",
     "WowFactionPage": "src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx",
     "WowFeedFrame": "src/components/feed/WowFeedFrame.tsx",
@@ -252,6 +254,7 @@
     "SidebarColumn": "src/components/layout/SidebarColumn.tsx",
     "CanSignUpEmpty": "src/pages/tasks/CanSignUpEmpty.tsx",
     "EphemeristsFieldDesk": "src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx",
+    "EphemeristsMasthead": "src/components/factionMarks/EphemeristsMasthead.tsx",
     "EverymenFieldDesk": "src/pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx",
     "SingularityFieldDesk": "src/pages/fieldDesk/mobileArchetypes/SingularityFieldDesk.tsx",
     "SnideFieldDesk": "src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx",
@@ -272,6 +275,10 @@
       "cardMode": "column"
     },
     "AlbescentPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "AlbescentProfileBody": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
@@ -437,6 +444,9 @@
     "EverymenBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
+    },
+    "EverymenCard": {
+      "cardMode": "column"
     },
     "EverymenDuelSealConfirm": {
       "cardMode": "single",
@@ -681,6 +691,10 @@
       "cardMode": "column"
     },
     "WowPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "WowFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
     },

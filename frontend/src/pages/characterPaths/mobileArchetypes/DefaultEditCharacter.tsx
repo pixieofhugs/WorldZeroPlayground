@@ -75,7 +75,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
         <button type="button" onClick={() => navigate(`/characters/${id}`)} style={backBtn} aria-label={t('editCharacter.cancel')}>
           ‹
         </button>
-        <span className="eyebrow">{t('editCharacter.heading')}</span>
+        <span className="label-heading">{t('editCharacter.heading')}</span>
         <span style={{ width: 28 }} />
       </div>
 
@@ -109,7 +109,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
             )}
           </span>
         </button>
-        <div className="eyebrow" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
+        <div className="label-caption" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
           {t('editCharacter.mobile.changePhoto')}
         </div>
         {avatarError && <p className="content-text" style={{ ...errorBox, marginTop: 'var(--space-sm)' }}>{avatarError}</p>}

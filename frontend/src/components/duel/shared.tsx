@@ -47,7 +47,7 @@
  * the 18px content floor. `DuelSlotTheme` deliberately carries no size field: a
  * skin owns font, colour and ornament, never type size (WORLD_ZERO_STYLE §4a).
  * Genuine Label-tier bits keep their own token explicitly — the tile captions
- * stay on `.eyebrow`, the seal buttons on `--text-sm` as button chrome.
+ * stay on the caption tier, the seal buttons on `--text-sm` as button chrome.
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -219,7 +219,7 @@ function Tile({
         minWidth: 0,
       }}
     >
-      <span className="eyebrow" style={{ color: theme.muted ?? DEFAULT_THEME.muted }}>
+      <span className="label-caption" style={{ color: theme.muted ?? DEFAULT_THEME.muted }}>
         {label}
       </span>
       {/* The figure is a score — "numbers a player cares about" are content tier

@@ -52,7 +52,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
       >
         {tc('nav.tasks')}
       </h1>
-      <p className="eyebrow mb-3">{t('mobile.count', { count: tasks.length })}</p>
+      <p className="label-caption mb-3">{t('mobile.count', { count: tasks.length })}</p>
 
       {/* The affordance that left the Field Desk (#1556). Full width because the
           mobile path stacks single-column (#494) and this is a thumb target;

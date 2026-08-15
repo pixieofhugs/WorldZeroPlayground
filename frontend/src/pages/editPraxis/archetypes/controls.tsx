@@ -98,7 +98,7 @@ function DuelPairSide({
         {side.display_name}
       </span>
       <span
-        className="eyebrow text-[12px]"
+        className="label-caption"
         style={{ color: side.is_submitted ? accent : quiet }}
       >
         {mine && (
@@ -162,7 +162,7 @@ function DuelPair({
       style={{ flex: "1 1 100%", fontFamily: skin.fontFamily }}
     >
       <span
-        className="eyebrow text-[12px]"
+        className="label-caption"
         style={{
           padding: "var(--space-xs) var(--space-sm)",
           borderRadius: 4,
@@ -183,7 +183,7 @@ function DuelPair({
             accent={accent}
             quiet={quiet}
           />
-          <span className="eyebrow text-[12px]" style={{ color: quiet }}>
+          <span className="label-caption" style={{ color: quiet }}>
             {t("editPraxis.invite.duelVersus")}
           </span>
           <DuelPairSide
@@ -223,7 +223,7 @@ function DuelPair({
               type="button"
               onClick={() => void state.dissolveDuel()}
               aria-label={t("editPraxis.invite.dissolveDuelAria")}
-              className="eyebrow text-[12px]"
+              className="label-caption"
               style={{
                 background: "transparent",
                 border: `1px solid ${quiet}`,
@@ -337,7 +337,7 @@ export function InviteSearch({
           // reader while leaving a voice-control user asking for a control whose
           // name they cannot see.
           title={t("editPraxis.invite.addDescription")}
-          className="eyebrow text-[12px]"
+          className="label-caption"
           style={{
             padding: "var(--space-xs) var(--space-md)",
             borderRadius: 4,
@@ -458,7 +458,7 @@ export function InviteSearch({
           // Spelling out the outcome next to a delete control that reads
           // superficially similar: this one only removes you (#1074).
           title={collabCopy(praxis.task_faction_slug, "leaveDescription")}
-          className="font-body eyebrow hover:underline"
+          className="font-body label-caption hover:underline"
           style={{
             display: "block",
             marginTop: "var(--space-sm)",
@@ -616,7 +616,7 @@ export function SaveDraftButton({
       // Not while a publish or a mode switch is in flight: both end up writing
       // the same fields, and both change where the player should be sent.
       disabled={state.submitting || state.switchingMode !== null}
-      className={skin?.className ?? "font-body eyebrow hover:underline"}
+      className={skin?.className ?? "font-body label-caption hover:underline"}
       style={{
         background: "none",
         border: "none",

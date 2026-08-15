@@ -53,7 +53,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           padding: 'var(--space-lg)',
         }}
       >
-        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
+        <div className="label-heading" style={{ marginBottom: 'var(--space-md)' }}>
           {t('settings.account.eyebrow')}
         </div>
         {character ? (
@@ -110,9 +110,8 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
             </div>
             <Link
               to={`/characters/${character.id}`}
-              className="shrink-0 eyebrow"
+              className="shrink-0 label-caption"
               style={{
-                color: 'var(--color-text-secondary)',
                 textDecoration: 'none',
                 border: '1px solid var(--color-border-strong)',
                 borderRadius: 999,
@@ -169,7 +168,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           padding: 'var(--space-lg)',
         }}
       >
-        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
+        <div className="label-heading" style={{ marginBottom: 'var(--space-md)' }}>
           {t('settings.appearance.eyebrow')}
         </div>
         <div className="flex items-center gap-3">

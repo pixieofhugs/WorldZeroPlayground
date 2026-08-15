@@ -38,6 +38,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *     neutralises it to 1.0 for every faction, so the row is dark today and
  *     lights up on its own if an era ever configures one.
  *   - the META row appears only when metatask points are > 0.
+ *   - the HABIT row appears only when a habit bonus was banked (#1617), and sits
+ *     under the tally's rule with the votes — both are flat terms added after
+ *     the multiplier, never inside it.
  *   - the VOTES tally is drawn ALWAYS, including `+0` — an absent row cannot
  *     say "nobody has voted yet".
  * Nothing is derived by subtraction; that was the bug ADR-0053 retired.
@@ -69,7 +72,7 @@ const STAMP_WIDTH = 150;
 export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** The working out, in reading order. Selection belongs to scoreBreakdown. */
@@ -239,7 +242,12 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
       {/* The tally, under a rule of its own. Always drawn: `+ 0 from votes` is a
           fact about this praxis, not a missing row. Its rule separates it from
           the working above — with no working (the #1131 empty state) there is
-          nothing to separate, and the rule would hang under the disc alone. */}
+          nothing to separate, and the rule would hang under the disc alone.
+
+          The habit bonus joins it BELOW that rule rather than in the ruled rows
+          above, because the rule is the multiplier's edge: everything over it is
+          inside `(base + meta) × mult` and everything under it is flat (#1617).
+          Unlike the tally it goes when it is 0 — the vast majority of praxes. */}
       <div
         style={{
           borderTop: rows.length > 0 ? "1px solid var(--faction-default-card-line)" : undefined,
@@ -251,7 +259,8 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           color: "var(--faction-default-card-muted)",
         }}
       >
-        {t("card.stamp.fromVotes", { votes })}
+        <div>{t("card.stamp.fromVotes", { votes })}</div>
+        {habit !== null && <div>{t("card.stamp.habitBonus", { points: habit })}</div>}
       </div>
     </div>
   );
