@@ -3934,8 +3934,36 @@
    dimmer one over a night plate. The plate is night in both cascades since
    #1627, so the twin's values are simply the values, and the LINK INKS the
    column hands down (#1636) are declared here for the same reason a faction
-   frame sets `--label-ink` once on its own root. */
+   frame sets `--label-ink` once on its own root.
+
+   AND THE LABEL INK IS NOW ONE OF THEM (#1754). The seam was declared for this
+   sheet and never spent on it: unset, the label tier inherits the global
+   tertiary, which on this column's three night grounds reads 2.15 (page) /
+   2.01 (plate) / 1.86 (panel cell) in light. #1715's lift to AAA made those
+   worse rather than better — they were 3.12 / 2.92 / 2.70 — because lifting a
+   neutral in the LIGHT cascade means darkening it, and this register is night
+   in both. That is not a regression to revert: 2.92:1 was already far under
+   the floor, and the answer the seam exists for is a per-faction ink.
+
+   NOT `-card-muted`, which is the default the seam's own declaration names.
+   The Ephemerists card sheet is the cornice band, so `-card-muted` is
+   `-plate-band-quiet` — an ink measured on #0a0c15. This column's grounds are
+   the page, the plate and the panel cell, and `-plate-quiet` is the sibling
+   minted for exactly those three (#1173), clearing them at 6.38 / 5.98 / 5.52
+   in BOTH cascades. It is also what the plate's own quiet prose already reads,
+   so the label tier joins the register rather than adding a fourth warm tone
+   to one sheet. Dark spends ~2.3 points for that (8.33 -> 5.98 on the plate)
+   and stays well over the 4.5 floor; a faction ink is not the most-painted
+   neutral in the repo, which is the surface #1715 argued to AAA.
+
+   NEUTRAL CHROME IS UNAFFECTED: `.card-on-page` pins the seam back to the
+   global (#1606), and ADR-0061 mounts the steward bar and the report card in
+   it. What this DOES repaint is the comment leaves' owner controls and the
+   thread heading, which read the seam bare on `-plate-bg` — i.e. the labels
+   that were sitting at 2.01:1. Measured in `factionContrast.test.ts`; the
+   three pairings it creates were already gated there. */
 .eph-plate-sheet {
+  --label-ink: var(--faction-ephemerists-plate-quiet);
   --link-ink: var(--faction-ephemerists-plate-nile);
   --link-ink-hover: var(--faction-ephemerists-plate-ink);
   background-color: var(--faction-ephemerists-plate-page);
