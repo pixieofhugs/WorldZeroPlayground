@@ -106,16 +106,14 @@ export default function EditPraxis() {
           are two controls in one document, and both are the archetype's
           children.
 
-          Only where there is authoring to do: the archetype draws the waiting
-          surface instead of its own regions once your part is filed (ADR-0059),
-          and a moderated praxis renders the composer locked. Neither mounts an
-          editor, and a socket per reader is a socket for nothing. */}
+          Wherever the composer's own regions are drawn, and only there: once
+          your part is filed the archetype draws the waiting surface instead
+          (ADR-0059), which has no title box and no write-up box, and a socket
+          opened for a surface with no editor on it is a socket for nothing.
+          A moderated praxis is NOT that case — it renders the composer locked,
+          write-up and all, and that box still has to have the text in it. */}
       <PraxisRoomProvider
-        praxisId={
-          state.controlsLocked || isWaitingStage(state.phase)
-            ? null
-            : state.praxis.id
-        }
+        praxisId={isWaitingStage(state.phase) ? null : state.praxis.id}
       >
         <Archetype state={state} />
       </PraxisRoomProvider>

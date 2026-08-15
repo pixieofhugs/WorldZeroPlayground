@@ -938,9 +938,16 @@ export function BodyTextarea({
     ...skin.toolbarButtonStyle,
   };
 
+  // The room exists but has not told us what the praxis says yet. The editor is
+  // read-only until it does (#1742), so the toolbar is a set of controls the
+  // player cannot use — hidden, not drawn disabled. It would not merely look
+  // wrong: `dispatch` writes past `editable`, so a press here would put markdown
+  // into a document still waiting for its seed.
+  const awaitingRoom = ytext !== null && !synced;
+
   return (
     <div>
-      {skin.hideToolbar ? null : (
+      {skin.hideToolbar || awaitingRoom ? null : (
       <div
         role="toolbar"
         aria-label={t("editPraxis.toolbar.label")}
@@ -982,8 +989,11 @@ export function BodyTextarea({
         className="content-text"
         style={{ ...BODY_EDITOR_HOST_STYLE, ...skin.textareaStyle }}
       />
-      {ytext !== null && !synced && (
-        <p className="label-caption" style={{ color: "var(--color-text-tertiary)" }}>
+      {awaitingRoom && (
+        <p
+          className="label-caption"
+          style={{ color: "var(--color-text-tertiary)" }}
+        >
           {t("editPraxis.composer.bodyConnecting")}
         </p>
       )}
