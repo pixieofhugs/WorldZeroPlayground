@@ -159,6 +159,7 @@ class Praxis(TimestampMixin, Base):
         back_populates="praxis",
         lazy="selectin",
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     # invites, votes, media_items, and flags are load-on-demand. Only the
     # praxis detail view and admin-moderation flows read them, so the list
@@ -166,23 +167,41 @@ class Praxis(TimestampMixin, Base):
     # sites that need them must use ``.options(selectinload(Praxis.foo))``;
     # accessing these attributes on an un-loaded Praxis raises.
     #
-    # CASCADE INVARIANT: any relationship declared with
-    # ``cascade='all, delete-orphan'`` MUST be eagerly loaded wherever
-    # ``session.delete(praxis)`` is called (see ``services/praxis.get_praxis``).
-    # Otherwise SQLAlchemy cannot cascade the delete and the orphaned rows
-    # remain. If you add a new cascade, update ``get_praxis`` to selectin-load
-    # it too.
+    # DELETE INVARIANT: every collection here is ``cascade='all, delete-orphan'``
+    # + ``passive_deletes=True``, and every FK behind them is ``ON DELETE
+    # CASCADE`` (see ``MediaItem.praxis_id``). Both halves are load-bearing, and
+    # they answer different halves of the question:
+    #
+    # * ``delete-orphan`` says what a child *is* — a part of the praxis, not an
+    #   independent row that outlives it. Without it SQLAlchemy's default for a
+    #   loaded collection is to de-associate: ``UPDATE ... SET praxis_id = NULL``,
+    #   which is what "drop task" used to write into ``media_item``'s NOT NULL
+    #   column. ``passive_deletes=True`` does NOT prevent that on its own — it
+    #   stops SQLAlchemy *loading* a collection in order to null it, but a
+    #   collection already in the session (``get_praxis`` selectin-loads
+    #   ``media_items`` for the detail view) is still processed.
+    # * ``passive_deletes=True`` then says the database will handle the children
+    #   SQLAlchemy has *not* loaded, so ``lazy='raise'`` collections are left
+    #   alone instead of being fetched to be deleted one by one.
+    #
+    # ``members`` and ``invites`` additionally rely on orphan-removal in place —
+    # ``kick_member`` and ``leave_praxis`` do ``praxis.members.remove(...)`` and
+    # expect the DELETE to follow. That is a separate mechanism from the
+    # parent-delete one and is unaffected by ``passive_deletes``.
     invites: Mapped[List["PraxisInvite"]] = relationship(
         "PraxisInvite",
         back_populates="praxis",
         lazy="raise",
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     votes: Mapped[List["Vote"]] = relationship(
         "Vote",
         foreign_keys="Vote.praxis_id",
         back_populates="praxis",
         lazy="raise",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     media_items: Mapped[List["MediaItem"]] = relationship(
         "MediaItem",
@@ -190,12 +209,16 @@ class Praxis(TimestampMixin, Base):
         back_populates="praxis",
         order_by="MediaItem.display_order",
         lazy="raise",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     flags: Mapped[List["Flag"]] = relationship(
         "Flag",
         foreign_keys="Flag.praxis_id",
         back_populates="praxis",
         lazy="raise",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
 
@@ -206,8 +229,9 @@ class PraxisMember(Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=False
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
     character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
@@ -258,8 +282,31 @@ class MediaItem(CreatedAtMixin, Base):
     __table_args__ = (Index("ix_media_item_praxis_id", "praxis_id"),)
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # ON DELETE CASCADE, and the reference note for every other FK into
+    # ``praxis.id`` that carries it (comment, flag, nudge, praxis_meta_task,
+    # praxis_member, praxis_invite, vote).
+    #
+    # Deleting a praxis used to be impossible once anything hung off it. Every
+    # one of these FKs was NO ACTION, so ``session.delete(praxis)`` in
+    # ``services.praxis.delete_praxis`` either hit a foreign-key violation (for
+    # a child the session had not loaded) or — for THIS column, which
+    # ``get_praxis`` eagerly loads for the detail view and which has no
+    # ``delete-orphan`` cascade — made SQLAlchemy try to de-associate the child
+    # by writing ``praxis_id = NULL``, straight into this NOT NULL. Players got
+    # a raw asyncpg not-null violation from "drop task" and the drop silently
+    # failed.
+    #
+    # The rule is in the DB rather than in eight ``cascade='all,
+    # delete-orphan'`` declarations because those only fire for collections the
+    # session has already loaded — which would mean six more ``selectinload``s
+    # in ``get_praxis``, paid by every praxis *detail view*, to make delete
+    # work. The FK covers every caller and costs no reads.
+    #
+    # ``duel.challenger_praxis_id`` / ``opponent_praxis_id`` are deliberately
+    # NOT in the set: a duel is a contract between two players, not a part of
+    # either side, and it should refuse the delete rather than vanish with it.
     praxis_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=False
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
     type: Mapped[MediaType] = mapped_column(
         Enum(MediaType, create_type=False), nullable=False
@@ -276,8 +323,9 @@ class PraxisInvite(CreatedAtMixin, Base):
     __tablename__ = "praxis_invite"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=False
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
     inviter_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False

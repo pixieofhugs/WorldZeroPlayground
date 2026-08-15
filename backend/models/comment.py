@@ -58,8 +58,10 @@ class Comment(TimestampMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # ON DELETE CASCADE: a comment on a praxis is part of that praxis. See the
+    # note on ``MediaItem.praxis_id`` for why every such FK carries it.
     praxis_id: Mapped[Optional[int]] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=True
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=True
     )
     task_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("task.id"), nullable=True
