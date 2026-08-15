@@ -1,7 +1,25 @@
 from datetime import datetime
+from typing import Annotated, Any
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, StringConstraints, model_validator
 from schemas.base import WireModel
+
+# The one statement of what a display name may be (#1686). Creation and renaming
+# used to say it separately, and the renaming one forgot ``min_length`` — so a
+# character created as "Molly" could be renamed to "" or "   " and the server
+# stored it, leaving every byline, roster, comment attribution and avatar
+# monogram to invent its own answer for what a blank name looks like.
+#
+# ponytail: the strip is on this alias rather than ``str_strip_whitespace`` on
+# WireModel. That flag would be the fix-once seam if display names were the only
+# strings on this wire, but WireModel is the base for *every* request and
+# response model — praxis bodies, comment bodies, search terms — and response
+# models validate from ORM attributes, so it would also rewrite text on read.
+# Upgrade path if more identity-ish fields want this: widen the alias's reach,
+# not WireModel's.
+DisplayName = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)
+]
 
 
 class BadgeOut(WireModel):
@@ -54,7 +72,7 @@ class CharacterCreate(WireModel):
     # username is optional: the server derives a unique @handle from display_name
     # when absent (ADR-0019). An explicit one is still accepted for back-compat.
     username: str | None = Field(default=None, min_length=3, max_length=30)
-    display_name: str = Field(..., min_length=1, max_length=50)
+    display_name: DisplayName
     bio: str = Field(default="", max_length=500)
     tagline: str = Field(default="", max_length=140)
     avatar_url: str = Field(default="", max_length=500)
@@ -71,8 +89,33 @@ class ActiveCharacterIn(WireModel):
 
 
 class CharacterUpdate(WireModel):
-    display_name: str | None = Field(None, max_length=50)
+    """A partial edit. Absent fields are left alone (``exclude_unset`` downstream).
+
+    ``display_name`` is the one field that cannot be blanked (#1686): omitting it
+    and sending an explicit ``null`` both mean "leave unchanged", and ``""``,
+    ``"   "`` and ``"\\t"`` are rejected here rather than stored. The other fields
+    keep their existing semantics, where a ``null`` clears the value — a player
+    is allowed to have no bio, and is not allowed to have no name.
+    """
+
+    display_name: DisplayName | None = None
     bio: str | None = Field(None, max_length=500)
     tagline: str | None = Field(None, max_length=140)
     avatar_url: str | None = Field(None, max_length=500)
     location: str | None = Field(None, max_length=100)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _null_display_name_means_unchanged(cls, data: Any) -> Any:
+        """Drop an explicit ``display_name: null`` so it reads as omitted.
+
+        The update service coerces every ``None`` it is handed to ``""``, so a
+        client sending an explicit null blanked the name by the back door. Making
+        the field simply *unset* is what routes both spellings of "I am not
+        editing this" through the same ``exclude_unset`` gate — and it keeps the
+        rule in the schema, where the wire can enforce it, rather than adding a
+        second statement of it in the service.
+        """
+        if isinstance(data, dict) and data.get("display_name", ...) is None:
+            data = {key: value for key, value in data.items() if key != "display_name"}
+        return data
