@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.praxis_room as praxis_room
 from config import settings
+from main import app as fastapi_app
 from models.character import Character
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.praxis_room import PraxisRoomUpdate
@@ -44,6 +45,18 @@ from services.praxis_room import (
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
 _TIMEOUT_SECONDS = 5.0
+
+#: The mount ``main.py`` puts the room app behind, read off the live app rather
+#: than restated here — the prefix is the mount's to own, and a test holding its
+#: own copy of it would keep passing after the mount moved.
+ROOM_MOUNT = next(
+    route for route in fastapi_app.routes if getattr(route, "name", None) == "praxis-rooms"
+)
+
+
+def mounted_room_path(praxis_id: int) -> str:
+    """The URL a browser opens — what the *outermost* app is asked for."""
+    return f"{ROOM_MOUNT.path}/praxis/{praxis_id}"
 
 
 # ---------------------------------------------------------------------------
@@ -172,8 +185,15 @@ class _Rooms:
         origin: str | None = ALLOWED_ORIGIN,
         path: str | None = None,
         raw_token: str | None = None,
+        through: Any | None = None,
     ) -> _Socket:
-        """Start a handshake. Returns once the app has accepted or refused it."""
+        """Start a handshake. Returns once the app has accepted or refused it.
+
+        ``through`` drives some other ASGI app than the room's own — in practice
+        the whole FastAPI app, so that the handshake goes through the **mount**
+        (see :func:`mounted_room_path`). Passing it means passing ``path`` too:
+        a browser asks for the mounted URL, prefix and all.
+        """
         socket = _Socket(path or f"/praxis/{praxis_id}")
         headers: list[tuple[bytes, bytes]] = [(b"host", b"api.worldzero.test")]
         if origin is not None:
@@ -181,10 +201,22 @@ class _Rooms:
         token = raw_token or (None if account_id is None else create_jwt(account_id))
         if token is not None:
             headers.append((b"cookie", f"access_token={token}".encode()))
-        scope = {"type": "websocket", "path": socket.path, "headers": headers}
+        scope = {
+            "type": "websocket",
+            "path": socket.path,
+            "raw_path": socket.path.encode(),
+            "query_string": b"",
+            "scheme": "ws",
+            # As a server hands it to the outermost app: empty, and grown by
+            # each mount on the way down.
+            "root_path": "",
+            "headers": headers,
+        }
 
         self._tasks.append(
-            asyncio.create_task(self.app(scope, socket.receive, socket.send))
+            asyncio.create_task(
+                (through or self.app)(scope, socket.receive, socket.send)
+            )
         )
         await socket.connect()
         await _wait_for(
@@ -227,6 +259,11 @@ async def running_rooms(
         flush_debounce_seconds=flush_debounce_seconds,
     )
     monkeypatch.setattr(praxis_room, "PRAXIS_ROOM_SERVER", server)
+    # The *mounted* app holds its own reference to the server it was built
+    # with, so patching the module global alone would leave a handshake driven
+    # through ``main.app`` talking to the process-wide server — and to the
+    # process-wide database session.
+    monkeypatch.setattr(praxis_room.PRAXIS_ROOM_APP, "rooms", server)
     rooms = _Rooms(server, sessions)
     async with server:
         try:
@@ -476,6 +513,81 @@ async def test_socket_for_an_unknown_praxis_is_rejected(
 async def test_unknown_path_is_rejected(db_session, collab, account, monkeypatch) -> None:
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(collab.id, account.id, path="/praxis/not-a-number")
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
+
+
+# ---------------------------------------------------------------------------
+# The mount — how a browser actually reaches door one
+# ---------------------------------------------------------------------------
+#
+# Every test above hands the room app a scope it built itself, with the path
+# the mount was assumed to leave behind. It does not: Starlette's ``Mount``
+# sets ``root_path`` on the child scope and never touches ``path``, so the room
+# app is really asked for ``/rooms/praxis/12``. Reading the raw path refused
+# every handshake in production while the suite stayed green, because nothing
+# in it went through ``main.app``. These do.
+
+
+async def test_member_handshake_through_the_mount_is_accepted(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(
+            collab.id,
+            account.id,
+            path=mounted_room_path(collab.id),
+            through=fastapi_app,
+        )
+        assert socket.accepted.is_set()
+        assert not socket.closed.is_set()
+        # Accepted is not the same as served, and the outage's symptom was a
+        # composer nobody could type in — so the document has to arrive too.
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "a client behind the mount")
+
+
+async def test_non_member_handshake_through_the_mount_is_refused(
+    db_session, collab, account3, character3, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(
+            collab.id,
+            account3.id,
+            path=mounted_room_path(collab.id),
+            through=fastapi_app,
+        )
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
+
+
+async def test_foreign_origin_handshake_through_the_mount_is_refused(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(
+            collab.id,
+            account.id,
+            origin="https://evil.example",
+            path=mounted_room_path(collab.id),
+            through=fastapi_app,
+        )
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
+
+
+async def test_missing_origin_handshake_through_the_mount_is_refused(
+    db_session, collab, account, monkeypatch
+) -> None:
+    assert settings.ROOM_ALLOW_MISSING_ORIGIN is False
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(
+            collab.id,
+            account.id,
+            origin=None,
+            path=mounted_room_path(collab.id),
+            through=fastapi_app,
+        )
         assert socket.closed.is_set()
         assert not socket.accepted.is_set()
 

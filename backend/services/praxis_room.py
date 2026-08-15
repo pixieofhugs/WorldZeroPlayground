@@ -54,6 +54,7 @@ from pycrdt.websocket.asgi_server import ASGIWebsocket
 from sqlalchemy import delete, func, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+from starlette.routing import get_route_path
 
 from config import settings
 from db import AsyncSessionLocal
@@ -87,7 +88,9 @@ ROOM_TITLE_KEY = "title"
 # has to beat a player finishing their write-up and going to look at it.
 _FLUSH_DEBOUNCE_SECONDS = 2.0
 
-# The socket's path, relative to the mount in ``main.py`` — ``/rooms/praxis/12``.
+# The socket's path *below* the mount in ``main.py``, which serves it at
+# ``/rooms/praxis/12``. The prefix is deliberately not here: it belongs to the
+# mount, and a sub-app that spelled it out would break the day the mount moved.
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 
 # RFC 6455 "policy violation": the close code for a socket refused or revoked on
@@ -653,7 +656,14 @@ class PraxisRoomASGIServer(ASGIServer):
         if message["type"] != "websocket.connect":
             return
 
-        match = _ROOM_PATH.match(scope.get("path", ""))
+        # ``get_route_path``, not ``scope["path"]``: a mounted ASGI app is
+        # handed the **full** path (``/rooms/praxis/12``) with the prefix it was
+        # mounted under recorded in ``root_path`` — Starlette's ``Mount`` sets
+        # that and never rewrites the path. Reading the path raw refused every
+        # handshake in production (#1740). This is the same helper ``Mount``
+        # itself matches with, so the two cannot disagree about where the mount
+        # ends, and it is what keeps the prefix ``main.py``'s to own.
+        match = _ROOM_PATH.match(get_route_path(scope))
         if match is None:
             await self._refuse(send)
             return
