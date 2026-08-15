@@ -243,7 +243,7 @@ export function selectUpdatesEmptyState(filters: UpdatesFilters): EmptyStateKind
 /**
  * Every feed type, in facet order, mapped to its label key.
  *
- * Thirteen of the fifteen point at `feed:kicker.*` — the eyebrow a card already
+ * Fourteen of the sixteen point at `feed:kicker.*` — the eyebrow a card already
  * prints for that type, which is the same question the facet row asks ("what
  * kind of update is this") and exactly the wording the design chose for these
  * rows. Two do not: `friend_completion` and `foe_completion` share the single
@@ -266,6 +266,7 @@ export function selectUpdatesEmptyState(filters: UpdatesFilters): EmptyStateKind
  */
 export const FEED_TYPE_LABEL_KEY = {
   vote_on_mine: 'feed:kicker.vote_on_mine',
+  vote_changed_on_mine: 'feed:kicker.vote_changed_on_mine',
   friend_completion: 'feed:filter.typeName.friendCompletion',
   foe_completion: 'feed:filter.typeName.foeCompletion',
   friend_signup: 'feed:kicker.friend_signup',

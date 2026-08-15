@@ -182,6 +182,7 @@ describe('every type the backend emits, inside this chassis', () => {
     'friend_signup',
     'friend_defection',
     'vote_on_mine',
+    'vote_changed_on_mine',
     'foe_taunt',
     'global_task',
     'collaborator_submitted',
@@ -192,7 +193,7 @@ describe('every type the backend emits, inside this chassis', () => {
     'collab_invite',
   ]
 
-  it('dresses all thirteen in the proclamation, kicker and all', () => {
+  it('dresses all fourteen in the proclamation, kicker and all', () => {
     for (const type of TYPES) {
       const html = card(type)
       expect(html, `${type} is proclaimed`).toContain(RIBBON)

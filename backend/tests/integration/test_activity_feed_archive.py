@@ -4,10 +4,10 @@ Everything here runs against the real feed service and the real routes — the
 whole point of the issue is that item identity is *derived*, so a mocked feed
 would prove nothing about it.
 
-``full_feed`` seeds one item of all fifteen feed types for ``character``. It is
-deliberately heavy: the acceptance criterion is "every one of the 15 types
+``full_feed`` seeds one item of all sixteen feed types for ``character``. It is
+deliberately heavy: the acceptance criterion is "every one of the 16 types
 yields a stable ``item_key``", and there is no way to check that without all
-fifteen actually present.
+sixteen actually present.
 """
 from datetime import datetime, timezone
 
@@ -71,10 +71,10 @@ REQUESTS_FILTER = "requests"
 # registry membership. Archived is unaffected — see
 # ``test_archived_still_shows_the_requests_the_stream_hides``.
 SEEDED_ITEM_COUNTS = {
-    ALL_FILTER: 11,
+    ALL_FILTER: 12,
     FRIENDS_FILTER: 3,
     FOES_FILTER: 2,
-    YOUR_STUFF_FILTER: 4,
+    YOUR_STUFF_FILTER: 5,
     GLOBAL_FILTER: 2,
     REQUESTS_FILTER: 4,
 }
@@ -101,7 +101,7 @@ async def full_feed(
     active_task: Task,
     faction_ephemerists,
 ) -> dict:
-    """Seed exactly one feed item of every one of the 15 types for ``character``.
+    """Seed exactly one feed item of every one of the 16 types for ``character``.
 
     Returns a handful of the seeded rows the tests need to assert against.
     """
@@ -148,6 +148,23 @@ async def full_feed(
             value=3,
         )
     )
+
+    # --- vote_changed_on_mine: a SECOND voter who went back and re-rated -----
+    # It has to be a second account: one vote per account per praxis
+    # (``uq_vote_praxis_account``). Seeded by actually re-rating the row rather
+    # than by hand-setting a timestamp, because ``updated_at > created_at`` is
+    # the whole predicate the source partitions on (#1712) — writing the two
+    # columns directly would seed the assertion instead of the behaviour.
+    changed_vote = Vote(
+        praxis_id=my_praxis.id,
+        voter_character_id=character3.id,
+        voter_account_id=character3.account_id,
+        value=2,
+    )
+    db_session.add(changed_vote)
+    await db_session.flush()
+    changed_vote.value = 4
+    await db_session.flush()
     mention_comment = Comment(
         praxis_id=my_praxis.id,
         created_by_id=character2.id,
@@ -334,9 +351,9 @@ def _key_of(feed: dict, item_type: str) -> str:
 async def test_every_feed_type_yields_a_stable_item_key(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """All 15 types are present, keyed, and identical across two requests.
+    """All 16 types are present, keyed, and identical across two requests.
 
-    ADR-0070 split the live surface in two: the eleven news types live in the
+    ADR-0070 split the live surface in two: the twelve news types live in the
     stream, the four request types live in the queue. Between them the registry
     is still fully covered.
     """

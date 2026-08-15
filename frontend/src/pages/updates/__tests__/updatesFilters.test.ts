@@ -274,8 +274,8 @@ describe('the type facet', () => {
     expect(typeFacet({}, [], () => {}).label).toBe('Type')
   })
 
-  it('covers all fifteen feed types', () => {
-    expect(Object.keys(FEED_TYPE_LABEL_KEY)).toHaveLength(15)
+  it('covers all sixteen feed types', () => {
+    expect(Object.keys(FEED_TYPE_LABEL_KEY)).toHaveLength(16)
   })
 
   it('gives the two completion types DISTINCT labels', () => {
