@@ -278,6 +278,20 @@ class VoteOnMineItem(FeedItemBase):
     payload: VoteOnMinePayload
 
 
+class VoteChangedOnMineItem(FeedItemBase):
+    """A voter went back and re-rated the viewer's praxis (#1712).
+
+    Same payload as ``VoteOnMineItem`` — ``value``/``points_earned`` are the
+    numbers that stand *now* — and deliberately no "changed from" fields: no
+    prior value is stored. The two are distinct types rather than one type with
+    a flag because the item KEY has to differ, so archiving the original cannot
+    silence the change.
+    """
+
+    type: Literal["vote_changed_on_mine"]
+    payload: VoteOnMinePayload
+
+
 class FriendCompletionItem(FeedItemBase):
     type: Literal["friend_completion"]
     payload: CompletionPayload
@@ -361,6 +375,7 @@ class NudgeItem(FeedItemBase):
 ActivityFeedItem = Annotated[
     Union[
         VoteOnMineItem,
+        VoteChangedOnMineItem,
         FriendCompletionItem,
         FoeCompletionItem,
         FoeTauntItem,
