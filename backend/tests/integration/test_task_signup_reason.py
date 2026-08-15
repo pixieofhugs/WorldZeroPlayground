@@ -28,6 +28,7 @@ from services.praxis import (
     gather_signup_facts,
 )
 from services.task import build_task_out_for_viewer
+from tests.integration.factories import make_task
 
 # The faction Era 1 grants Double Dipper to. Needed as a real row for the FK; the
 # *ability* is asserted off the config below, never assumed from the slug.
@@ -67,22 +68,14 @@ async def _seed_in_progress_praxis(
 
 
 async def _make_task(db_session: AsyncSession, author: Character) -> Task:
-    task = Task(
+    return await make_task(
+        db_session,
+        author,
         title="Another Task",
         description="",
         point_value=5,
-        level_required=0,
-        status=TaskStatus.active,
-        task_type=TaskType.standard,
-        created_by=author.id,
-        primary_faction_slug="ua",
+        commit=True,
     )
-    db_session.add(task)
-    await db_session.commit()
-    await db_session.refresh(task)
-    return task
-
-
 @pytest.mark.asyncio
 async def test_perk_holder_already_on_the_task_gets_the_allowed_reason(
     db_session: AsyncSession,

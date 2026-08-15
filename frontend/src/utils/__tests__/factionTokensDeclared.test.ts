@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { readThemes } from "./cssVars";
+import { readThemes, stripComments } from "./cssVars";
 
 /**
  * Guard for the "looks tokenized, is not" failure class (#806, widened by #879).
@@ -50,8 +50,6 @@ const DECLARED_IN_STYLE_OBJECT =
  */
 const REFERENCE = /var\(\s*(--[A-Za-z0-9_-]+)\s*[,)]/g;
 
-const COMMENT = /\/\*[\s\S]*?\*\//g;
-
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
@@ -68,9 +66,8 @@ function collectSourceFiles(directory: string): string[] {
 }
 
 /** Comments quote token names as prose; a mention is not a declaration. */
-function stripComments(source: string): string {
-  return source.replace(COMMENT, "");
-}
+// `stripComments` comes from `cssVars` — the CSS-only stripper, which leaves
+// `//` alone. That matters the moment a `url(https://…)` appears.
 
 function matchAll(text: string, pattern: RegExp): string[] {
   return [...text.matchAll(pattern)].map((match) => match[1]);

@@ -22,16 +22,8 @@ from models.era import Era
 from models.faction import Faction
 from models.roles import AccountRole, Role
 from scripts.era_reset import reset_era
+from tests.integration.factories import make_admin
 
-
-async def _make_admin(session: AsyncSession, account: Account) -> None:
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    )
-    await session.flush()
 
 
 async def _era_count(session: AsyncSession) -> int:
@@ -47,7 +39,7 @@ async def test_without_confirmation_nothing_is_written(
     faction_ua: Faction,
 ):
     """The plan prints, the rollover does not happen, and the exit code says so."""
-    await _make_admin(db_session, account)
+    await make_admin(db_session, account, commit=False)
     eras_before = await _era_count(db_session)
 
     exit_code = await reset_era(db_session, character.username, confirmed=False)
@@ -65,7 +57,7 @@ async def test_confirmed_run_opens_a_new_era_and_reseeds_stats(
     faction_ua: Faction,
 ):
     """Same rows the deleted route produced: a new Era, stamped with the operator."""
-    await _make_admin(db_session, account)
+    await make_admin(db_session, account, commit=False)
 
     exit_code = await reset_era(db_session, character.username, confirmed=True)
 

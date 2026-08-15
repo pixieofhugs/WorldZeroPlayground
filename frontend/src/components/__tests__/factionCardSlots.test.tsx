@@ -23,8 +23,8 @@ import { DefaultComment } from "../comments/CommentThread";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import type { PraxisCardOut, PraxisMemberOut, MediaItemOut } from "../../api/praxis";
-import type { TaskOut } from "../../api/tasks";
 import type { CommentOut } from "../../api/comments";
+import { aPraxisCard, aTask } from '../../test/fixtures'
 
 function markup(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -36,45 +36,18 @@ function markup(element: ReactElement): { html: string; text: string } {
 
 // ─── Praxis cards ─────────────────────────────────────────────────────────────
 
-const PRAXIS: PraxisCardOut = {
+const PRAXIS = aPraxisCard({
   id: 1,
-  task_id: 7,
   task_title: "Reforestation",
   task_point_value: 10,
   task_level_required: 1,
-  type: "solo",
-  status: "submitted",
   title: "Photosynthesis",
-  moderation_status: "visible",
   created_by_id: 3,
   created_by_display_name: "Ada",
-  created_at: "2026-01-01T00:00:00Z",
-  updated_at: "2026-01-01T00:00:00Z",
-  submitted_at: "2026-01-02T00:00:00Z",
-  member_count: 1,
   score: 4.2,
-  voter_count: 0,
-  metatask_points: 0,
-  display_multiplier: 1.0,
   points_from_votes: 0,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
   task_faction_slug: "ua",
-  applied_metatasks: [],
-  body_text: null,
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  duel_id: null,
-  media_items: [],
-  members: [],
-  opponent_display_name: null,
-  opponent_faction_slug: null,
-  opponent_praxis_id: null,
-  submit_proposed_at: null,
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voted_by_name: null,
-};
+});
 
 const PRAXIS_ADMIN = {
   praxis: PRAXIS,
@@ -166,20 +139,18 @@ function member(id: number, name: string): PraxisMemberOut {
 }
 
 // Solo proof carrying a body excerpt + one image tile, no crew.
-const SOLO_RICH: PraxisCardOut = {
-  ...PRAXIS,
+const SOLO_RICH = aPraxisCard({
   body_text: "Grew a whole canopy from a single seedling.",
   media_items: [IMAGE_MEDIA],
-};
+});
 
 // Collab of three, mid pending-publish window.
-const COLLAB: PraxisCardOut = {
-  ...PRAXIS,
+const COLLAB = aPraxisCard({
   type: "collab",
   member_count: 3,
   members: [member(3, "Ada"), member(4, "Græce"), member(5, "Kepler")],
   submit_proposed_at: "2026-01-03T00:00:00Z",
-};
+});
 
 // Duel side — a mode chip, no crew roster. A duel side is stored type='solo' +
 // a non-null duel_id (ADR-0011, #992), NOT type='duel'; the chip gates on
@@ -187,15 +158,14 @@ const COLLAB: PraxisCardOut = {
 const DUEL: PraxisCardOut = { ...PRAXIS, type: "solo", duel_id: 42 };
 
 // Four images → gallery caps at three tiles with a "+1" overflow badge.
-const OVERFLOW: PraxisCardOut = {
-  ...PRAXIS,
+const OVERFLOW = aPraxisCard({
   media_items: [
     IMAGE_MEDIA,
     { ...IMAGE_MEDIA, id: 92 },
     { ...IMAGE_MEDIA, id: 93 },
     { ...IMAGE_MEDIA, id: 94 },
   ],
-};
+});
 
 const COLLAB_LABEL = i18n.t("common:collaborationCard.collaboration");
 const DUEL_LABEL = i18n.t("common:collaborationCard.duel");
@@ -271,28 +241,13 @@ describe("praxis-card byline author faction (#587)", () => {
 
 // ─── Task cards ───────────────────────────────────────────────────────────────
 
-const TASK: TaskOut = {
-  id: 7,
-  title: "Photosynthesis",
-  description: '',
+const TASK = aTask({
   point_value: 4242,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 3,
   primary_faction_slug: "ua",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  in_progress_count: 0,
   created_by_display_name: "",
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 const taskArchetypes = {
   ...surfaceMap('taskCard'),

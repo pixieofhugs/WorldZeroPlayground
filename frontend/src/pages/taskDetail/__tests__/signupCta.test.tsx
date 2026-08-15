@@ -33,72 +33,33 @@ import {
   signupCtaKey,
 } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
-import type { PraxisCardOut } from "../../../api/praxis";
+import { aPraxisCard, aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 91,
   title: "Repair the towpath bridge",
   description: "Two planks and a weekend.",
   point_value: 30,
   level_required: 1,
-  status: "active",
-  task_type: "standard",
   created_by: 3,
   primary_faction_slug: "everymen",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  in_progress_count: 0,
   created_by_display_name: "",
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 /** A praxis the viewer already filed on this very task — the state the mirror keyed on. */
-const MY_PRAXIS: PraxisCardOut = {
+const MY_PRAXIS = aPraxisCard({
   id: 501,
   task_id: TASK.id,
   task_title: TASK.title,
   task_point_value: 30,
   task_level_required: 1,
-  type: "solo",
-  status: "submitted",
   title: "First go",
-  moderation_status: "visible",
   created_by_id: 3,
   created_by_display_name: "Wren",
-  created_at: "2026-01-01T00:00:00Z",
-  updated_at: "2026-01-01T00:00:00Z",
-  submitted_at: "2026-01-02T00:00:00Z",
-  member_count: 1,
   score: 4,
   voter_count: 1,
-  metatask_points: 0,
-  display_multiplier: 1.0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
   task_faction_slug: "everymen",
-  applied_metatasks: [],
-  body_text: null,
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  duel_id: null,
-  media_items: [],
-  members: [],
-  opponent_display_name: null,
-  opponent_faction_slug: null,
-  opponent_praxis_id: null,
-  submit_proposed_at: null,
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voted_by_name: null,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

@@ -19,7 +19,7 @@ import DefaultFactionPage from '../mobileArchetypes/DefaultFactionPage'
 import DefaultFactionsDirectory from '../../factions/mobileArchetypes/DefaultFactionsDirectory'
 import type { FactionDetailState, Membership } from '../useFactionDetail'
 import type { CharacterOut } from '../../../api/auth'
-import type { PraxisCardOut } from '../../../api/praxis'
+import { aPraxisCard } from '../../../test/fixtures'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -44,45 +44,19 @@ const MEMBER: CharacterOut = {
   invitations: [],
 }
 
-const PRAXIS: PraxisCardOut = {
-  id: 55,
+const PRAXIS = aPraxisCard({
   task_id: 11,
   task_title: 'Plant a tree',
   task_point_value: 20,
-  task_level_required: 2,
-  type: 'solo',
-  status: 'submitted',
   title: 'My sapling',
-  moderation_status: 'visible',
   created_by_id: 7,
   created_by_display_name: 'Ada',
   created_at: '2026-01-02T00:00:00Z',
   updated_at: '2026-01-02T00:00:00Z',
-  submitted_at: '2026-01-02T00:00:00Z',
-  member_count: 1,
   score: 24,
   voter_count: 3,
-  metatask_points: 0,
-  display_multiplier: 1.0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
   task_faction_slug: 'everymen',
-  applied_metatasks: [],
-  body_text: null,
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  duel_id: null,
-  media_items: [],
-  members: [],
-  opponent_display_name: null,
-  opponent_faction_slug: null,
-  opponent_praxis_id: null,
-  submit_proposed_at: null,
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voted_by_name: null,
-}
+})
 
 function membership(overrides: Partial<Membership> = {}): Membership {
   return {

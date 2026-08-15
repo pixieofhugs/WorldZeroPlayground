@@ -13,9 +13,10 @@
  *  2. Nobody has re-introduced a surface-owned slug→component registry, which is
  *     the exact regression this refactor exists to prevent.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, relative } from 'node:path'
+import { sourceFiles as scanSource } from '../../test/sourceScan'
 
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -103,15 +104,7 @@ function isAllowed(path: string): boolean {
   return path.includes('__tests__')
 }
 
-function sourceFiles(directory: string): string[] {
-  const found: string[] = []
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    const full = join(directory, entry.name)
-    if (entry.isDirectory()) found.push(...sourceFiles(full))
-    else if (/\.tsx?$/.test(entry.name)) found.push(full)
-  }
-  return found
-}
+const sourceFiles = (directory: string) => scanSource({ dir: directory, includeTests: true })
 
 describe('no surface-owned faction registry', () => {
   it('finds no slug→component map outside the faction manifests', () => {

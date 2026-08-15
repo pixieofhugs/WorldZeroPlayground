@@ -31,30 +31,21 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import SingularityTaskDetail from "../archetypes/SingularityTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 208,
   title: "Log one week of your resting heart rate",
   description: "One reading each morning before you rise.",
   point_value: 24,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "singularity",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 17,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "singularity",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

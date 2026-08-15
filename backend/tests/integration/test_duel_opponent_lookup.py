@@ -33,6 +33,7 @@ from models.era import Era
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.praxis_out import duel_opponents_for
+from tests.integration.factories import make_task
 
 
 @contextmanager
@@ -53,22 +54,15 @@ def _count_selects(db_connection):
 
 
 async def _make_task(db_session: AsyncSession, author: Character) -> Task:
-    task = Task(
+    # `ua` is the only faction the shared fixtures seed a row for, and the
+    # slug is not what is under test here — the lookup never reads it.
+    return await make_task(
+        db_session,
+        author,
         title="Wheatpaste an original poem on a condemned wall",
         description="",
-        point_value=10,
         level_required=1,
-        status=TaskStatus.active,
-        created_by=author.id,
-        # `ua` is the only faction the shared fixtures seed a row for, and the
-        # slug is not what is under test here — the lookup never reads it.
-        primary_faction_slug="ua",
     )
-    db_session.add(task)
-    await db_session.flush()
-    return task
-
-
 async def _make_praxis(db_session: AsyncSession, task: Task, author: Character) -> Praxis:
     """A duel side is stored ``type='solo'`` (ADR-0011) — there is no
     ``type='duel'`` row, which is exactly why the card cannot gate on type."""

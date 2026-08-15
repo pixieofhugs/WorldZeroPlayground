@@ -28,12 +28,11 @@
  *    segment. `votes.json`'s `Mark {{value}}` DOES, and is exempted by name
  *    below, for a reason that is about grammar rather than about UA.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
+import { SRC_DIR, readStripped, sourceFiles, toRelative } from '../test/sourceScan'
 
-const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
 const LOCALE_DIR = join(SRC_DIR, 'locales', 'en')
 
 /** The word, never a fragment: `upgrade`/`degrade` are not this ruling. */
@@ -48,18 +47,8 @@ const catalogs = (): string[] =>
     .filter((entry) => entry.endsWith('.json'))
     .map((entry) => join(LOCALE_DIR, entry))
 
-const sourceFiles = (dir: string): string[] =>
-  readdirSync(dir).flatMap((entry: string) => {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return entry === '__tests__' ? [] : sourceFiles(path)
-    return /\.tsx?$/.test(entry) ? [path] : []
-  })
-
-/** Docstrings may name a retired word; only what ships to a screen counts. */
-const stripComments = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-
-const toRelative = (path: string) => relative(SRC_DIR, path).split('\\').join('/')
+// Docstrings may name a retired word; only what ships to a screen counts, which
+// is what the shared `readStripped` is for.
 
 /** Every leaf string in a catalog, paired with the dotted key path that reaches it. */
 function leaves(node: unknown, path: string[] = []): Array<[string, string]> {
@@ -89,8 +78,8 @@ describe('a character has a level, never a grade (#1702)', () => {
   })
 
   it('no component says grade outside a comment', () => {
-    const offenders = sourceFiles(SRC_DIR)
-      .filter((path) => GRADE.test(stripComments(readFileSync(path, 'utf8'))))
+    const offenders = sourceFiles()
+      .filter((path) => GRADE.test(readStripped(path)))
       .map(toRelative)
     expect(offenders).toEqual([])
   })
@@ -131,11 +120,12 @@ describe('the University of Asthmatics counts points, not marks (#1702)', () => 
 
   it("UA's inline profile copy says it too — a locale grep cannot see this one", () => {
     const path = join(SRC_DIR, 'pages', 'characterProfile', 'archetypes', 'UaProfileBody.tsx')
-    expect(MARK.test(stripComments(readFileSync(path, 'utf8')))).toBe(false)
+    expect(MARK.test(readStripped(path))).toBe(false)
   })
 
-  it('scans a non-empty set, so neither sweep can pass by finding nothing', () => {
+  it('reads a non-empty set of UA keys, so the sweep cannot pass by finding nothing', () => {
+    // The catalog half only. The source-scan half is asserted once, with the
+    // shared walk, in `src/test/__tests__/sourceScan.test.ts`.
     expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThan(50)
-    expect(sourceFiles(SRC_DIR).length).toBeGreaterThan(100)
   })
 })

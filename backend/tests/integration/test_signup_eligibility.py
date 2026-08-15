@@ -20,6 +20,7 @@ from services.praxis import (
     can_sign_up_for_task,
     evaluate_signup,
 )
+from tests.integration.factories import make_task
 
 
 async def _seed_in_progress_praxis(
@@ -46,22 +47,17 @@ async def _make_task(
     status: TaskStatus = TaskStatus.active,
     task_type: TaskType = TaskType.standard,
 ) -> Task:
-    task = Task(
+    return await make_task(
+        db_session,
+        character,
         title="Extra Task",
         description="",
         point_value=5,
         level_required=level_required,
         status=status,
         task_type=task_type,
-        created_by=character.id,
-        primary_faction_slug="ua",
+        commit=True,
     )
-    db_session.add(task)
-    await db_session.commit()
-    await db_session.refresh(task)
-    return task
-
-
 @pytest.mark.asyncio
 async def test_evaluate_signup_allowed(
     db_session: AsyncSession, character: Character, active_task: Task, era: Era, faction_ua: Faction

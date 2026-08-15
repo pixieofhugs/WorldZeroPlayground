@@ -33,31 +33,22 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import EverymenTaskDetail from "../archetypes/EverymenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
 import type { PraxisCardOut } from "../../../api/praxis";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 207,
   title: "Organize a neighborhood tool library",
   description: "Pool what the block already owns and lend it out.",
   point_value: 45,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "everymen",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 23,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "everymen",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 /** Four filed praxis — one more than the gallery preview, so "view all" shows. */
 const PRAXIS: PraxisCardOut[] = [1, 2, 3, 4].map((n) => ({

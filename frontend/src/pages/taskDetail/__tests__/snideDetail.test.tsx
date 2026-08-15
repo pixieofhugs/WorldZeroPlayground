@@ -30,7 +30,7 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import SnideTaskDetail from "../archetypes/SnideTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
 /** Deliberately multi-word: the headline cuts one word per <span>. */
 const TITLE = "Name the thing everyone is pretending not to notice";
@@ -38,28 +38,19 @@ const TITLE = "Name the thing everyone is pretending not to notice";
 const BRIEF =
   "Write it down, photograph the evidence, and post it before anyone can talk you out of it.";
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 305,
   title: TITLE,
   description: BRIEF,
   point_value: 120,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "snide",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 9,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "snide",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

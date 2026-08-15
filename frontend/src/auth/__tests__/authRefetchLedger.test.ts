@@ -21,12 +21,11 @@
  * re-read, which is exactly the discipline the sweep exists to leave behind.
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { SRC_DIR, readStripped, sourceFiles, toRelative } from '../../test/sourceScan'
 import { runSignOut } from '../AuthContext'
 
-const SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 
 type Verdict =
   /** The mutation genuinely changed `CurrentUser` and nothing cheaper exists. */
@@ -92,21 +91,9 @@ const LEDGER: LedgerEntry[] = [
   },
 ]
 
-/** Source files, tests excluded — a test may name `refetch()` freely. */
-function sourceFiles(directory: string): string[] {
-  return readdirSync(directory).flatMap((entry) => {
-    const full = path.join(directory, entry)
-    if (statSync(full).isDirectory()) {
-      return entry === '__tests__' ? [] : sourceFiles(full)
-    }
-    return /\.tsx?$/.test(entry) ? [full] : []
-  })
-}
-
-/** Comments say `refetch()` too, and they are not call sites. */
-function withoutComments(source: string): string {
-  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
-}
+// Source files with tests excluded (a test may name `refetch()` freely) and
+// comments stripped (they say `refetch()` too, and they are not call sites) —
+// both are what the shared scan does by default.
 
 /**
  * Files that bind `refetch` off `useAuth()` itself, mapped to their call count.
@@ -117,8 +104,8 @@ function withoutComments(source: string): string {
  */
 function measureAuthRefetches(): Map<string, number> {
   const measured = new Map<string, number>()
-  for (const file of sourceFiles(SOURCE_ROOT)) {
-    const code = withoutComments(readFileSync(file, 'utf8'))
+  for (const file of sourceFiles()) {
+    const code = readStripped(file)
     // `[^{}]` and not `[^}]`: the latter happily starts the match at an earlier
     // brace and swallows the real destructuring pattern whole.
     const bindsRefetch = [...code.matchAll(/\{([^{}]*)\}\s*=\s*useAuth\(\)/g)].some((binding) =>
@@ -130,7 +117,7 @@ function measureAuthRefetches(): Map<string, number> {
     if (!bindsRefetch) continue
     const calls = code.match(/\brefetch\(\)/g)?.length ?? 0
     if (calls > 0) {
-      measured.set(path.relative(SOURCE_ROOT, file).split(path.sep).join('/'), calls)
+      measured.set(toRelative(file), calls)
     }
   }
   return measured
@@ -174,7 +161,7 @@ describe('the useAuth().refetch() inventory matches the ledger', () => {
 })
 
 describe('signing out never re-asks who the viewer is', () => {
-  const files = sourceFiles(SOURCE_ROOT)
+  const files = sourceFiles()
 
   it('routes every sign-out through AuthContext, which alone imports `logout`', () => {
     // A component that imports `logout` has to clear the auth state itself, and
@@ -183,7 +170,7 @@ describe('signing out never re-asks who the viewer is', () => {
     const importsLogout = /import\s*\{[^}]*\blogout\b[^}]*\}\s*from\s*['"][^'"]*api\/auth['"]/
     const importers = files
       .filter((file) => importsLogout.test(readFileSync(file, 'utf8')))
-      .map((file) => path.relative(SOURCE_ROOT, file).split(path.sep).join('/'))
+      .map(toRelative)
     expect(importers).toEqual(['auth/AuthContext.tsx'])
   })
 
@@ -193,9 +180,7 @@ describe('signing out never re-asks who the viewer is', () => {
     // `null` the caller had already caused. What keeps the client honest without
     // it: the provider sets the same `null` and the same session hint that a
     // failed `/auth/me` would have set.
-    const source = withoutComments(
-      readFileSync(path.join(SOURCE_ROOT, 'auth', 'AuthContext.tsx'), 'utf8'),
-    )
+    const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
     expect(source).toMatch(/runSignOut\(logout,/)
     expect(source).toMatch(/setUser\(null\)/)
     expect(source).toMatch(/rememberSession\(false\)/)

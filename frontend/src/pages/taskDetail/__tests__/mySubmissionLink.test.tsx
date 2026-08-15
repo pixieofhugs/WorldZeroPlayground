@@ -24,31 +24,18 @@ import "../../../i18n";
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
 import type { PraxisCardOut } from "../../../api/praxis";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 207,
   title: "A Very Human Thing",
   description: "Make something small and honest.",
-  point_value: 18,
-  level_required: 2,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
-  primary_faction_slug: 'na',
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 6,
   created_by_display_name: "Wren Abalone",
-  created_by_faction_slug: null,
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 /** The viewer's own row out of the submissions gallery — always `submitted`. */
 const MY_SUBMISSION = {

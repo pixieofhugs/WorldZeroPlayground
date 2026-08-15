@@ -49,8 +49,8 @@ import { surfaceMap } from '../../../factions'
 import { factionCssVar } from '../../../utils/factions'
 import DefaultPraxisDetail from '../archetypes/DefaultPraxisDetail'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import type { PraxisOut } from '../../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
+import { aPraxis } from '../../../test/fixtures'
 
 /**
  * Three genuinely different opponents — the same three the retired rail guard
@@ -60,43 +60,17 @@ import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
  */
 const OPPONENTS = ['snide', 'singularity', 'everymen'] as const
 
-const PRAXIS: PraxisOut = {
-  id: 1,
-  task_id: 7,
+const PRAXIS = aPraxis({
   task_title: 'A Chore Nobody Logged',
-  task_point_value: 12,
-  task_level_required: 2,
-  task_faction_slug: null,
   type: 'duel',
-  status: 'submitted',
-  title: 'The Long Way Round',
-  body_text: 'Walked the whole ridge before dark.',
-  moderation_status: 'visible',
-  admin_note: null,
-  flagged_at: null,
-  submitted_at: '2026-01-03T00:00:00Z',
-  submit_proposed_at: null,
   created_by_id: 3,
   created_by_display_name: 'Ada',
-  created_by_faction_slug: null,
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-03T00:00:00Z',
   members: [],
-  invites: [],
   media_items: [],
   score: 30,
-  metatask_points: 0,
-  display_multiplier: 1.0,
   points_from_votes: 18,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
   duel_id: 5,
-  can_flag: true,
-  applied_metatasks: [],
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voter_count: 0,
-}
+})
 
 /**
  * A live (`settled`) duel — the reading that prints both names, both totals and

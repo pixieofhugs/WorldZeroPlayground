@@ -32,31 +32,18 @@ import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import { frameBase } from "../../../components/praxisCard/desktop/shared";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
 import type { PraxisCardOut } from "../../../api/praxis";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
-  id: 7,
+const TASK = aTask({
   title: "Reforestation",
   description: "Mangrove",
   point_value: 30,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 3,
   primary_faction_slug: "snide",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  in_progress_count: 0,
   created_by_display_name: "",
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 /** Four filed praxis — one past the 3-card preview, so the gallery is populated. */
 const PRAXIS: PraxisCardOut[] = [1, 2, 3, 4].map((n) => ({

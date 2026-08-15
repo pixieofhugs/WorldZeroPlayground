@@ -33,29 +33,13 @@ vi.mock('../../../auth/AdminModeContext', () => ({
 
 // Imported after the mocks are registered.
 import TaskCard, { displayedTask } from '../TaskCard'
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
-  id: 7,
-  title: 'Photosynthesis',
+const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
-  point_value: 18,
-  level_required: 2,
-  status: 'active',
-  task_type: 'standard',
   created_by: 3,
-  primary_faction_slug: 'na',
-  metatask_faction_slug: null,
-  created_at: '2026-01-01T00:00:00Z',
   created_by_display_name: '',
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  in_progress_count: 0,
-  can_sign_up: true,
-  allowed_modes: ['solo'],
-  eligible_for_current_user: true,
-}
+})
 
 function card(task: TaskOut): string {
   return renderToStaticMarkup(

@@ -22,12 +22,12 @@
  * live cast. The resolver is what's testable, and it's what broke.
  */
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { PraxisCardOut, PraxisOut } from '../../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { VoteTallyOut } from '../../../api/votes'
 import { scoreBreakdown, type ScoredPraxis } from '../../praxisCard/scoreStamp/scoreBreakdown'
 import { applyCastTally, applyDuelCastTally } from '../useVotedPraxis'
 import { __resetCastTallies, castTally, recordCastTally } from '../castTallies'
+import { aPraxis, aPraxisCard } from '../../../test/fixtures'
 
 const PRAXIS_ID = 7
 
@@ -39,84 +39,30 @@ const PRAXIS_ID = 7
  * only the hand-written mirror omitted it. Since #1400 `PraxisOut` IS the
  * generated schema, so it is here.
  */
-const DETAIL: PraxisOut = {
+const DETAIL = aPraxis({
   id: PRAXIS_ID,
   task_id: 2,
   task_title: 'Walk the ridge',
-  task_point_value: 12,
   task_level_required: 1,
-  task_faction_slug: null,
-  type: 'solo',
-  status: 'submitted',
-  title: 'The Long Way Round',
-  body_text: 'Walked the whole ridge before dark.',
-  moderation_status: 'visible',
-  admin_note: null,
-  flagged_at: null,
-  submitted_at: '2026-01-03T00:00:00Z',
-  submit_proposed_at: null,
   created_by_id: 3,
   created_by_display_name: 'Ada',
-  created_by_faction_slug: null,
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-03T00:00:00Z',
   members: [],
-  invites: [],
   media_items: [],
-  score: 16,
-  metatask_points: 0,
-  display_multiplier: 1.0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
-  duel_id: null,
-  can_flag: true,
-  applied_metatasks: [],
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voter_count: 0,
-}
+})
 
 /** A card payload: same numbers, plus the voter count only cards carry. */
-const CARD: PraxisCardOut = {
+const CARD = aPraxisCard({
   id: PRAXIS_ID,
   task_id: 2,
   task_title: 'Walk the ridge',
-  task_point_value: 12,
   task_level_required: 1,
-  type: 'solo',
-  status: 'submitted',
   title: 'The Long Way Round',
-  moderation_status: 'visible',
   created_by_id: 3,
   created_by_display_name: 'Ada',
-  created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-03T00:00:00Z',
   submitted_at: '2026-01-03T00:00:00Z',
-  member_count: 1,
-  score: 16,
   voter_count: 2,
-  metatask_points: 0,
-  display_multiplier: 1.0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
-  task_faction_slug: null,
-  applied_metatasks: [],
-  body_text: null,
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  duel_id: null,
-  media_items: [],
-  members: [],
-  opponent_display_name: null,
-  opponent_faction_slug: null,
-  opponent_praxis_id: null,
-  submit_proposed_at: null,
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voted_by_name: null,
-}
+})
 
 /** The other side of the duel — the one a spectator's cast used to leave stale. */
 const RIVAL_PRAXIS_ID = 8
