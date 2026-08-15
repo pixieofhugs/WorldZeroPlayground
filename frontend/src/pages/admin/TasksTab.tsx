@@ -12,6 +12,8 @@ import { mergeAdminTaskRows } from "./adminTaskRows";
 import type { AdminTaskRow } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
 import { extractError } from "../../utils/errors";
+import { useGameConfig } from "../../hooks/useGameConfig";
+import { factionName, UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
 
 type StatusFilter = "all" | "pending" | "active" | "retired";
 
@@ -22,6 +24,10 @@ interface EditState {
   description: string;
   point_value: string;
   level_required: string;
+  /** The task's OWN faction — which kit renders it and who earns the
+   *  own-faction modifier (#1714). Not the metatask faction, which answers a
+   *  different question and has no admin edit. */
+  primary_faction_slug: string;
 }
 
 const TASK_STATUSES = ["active", "pending", "retired"] as const;
@@ -37,6 +43,18 @@ export default function TasksTab() {
       | undefined;
     return known ? t(`tasks.status.${known}`) : status;
   };
+  const gameConfig = useGameConfig();
+  // The era's factions, in config order. `na` is among them and is a legitimate
+  // choice for a task: for a TASK the slug means cross-faction (open to all),
+  // not "unaffiliated player", so it gets the tab's existing cross-faction
+  // wording rather than the faction catalog's player-facing name.
+  const factionOptions = (gameConfig?.factions ?? []).map(
+    (faction) => faction.slug,
+  );
+  const factionOptionLabel = (slug: string): string =>
+    slug === UNAFFILIATED_FACTION_SLUG
+      ? t("tasks.crossFaction")
+      : factionName(slug);
   const [tasks, setTasks] = useState<AdminTaskRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [loading, setLoading] = useState(true);
@@ -80,6 +98,8 @@ export default function TasksTab() {
       description: task.description ?? "",
       point_value: String(task.point_value),
       level_required: String(task.level_required),
+      primary_faction_slug:
+        task.primary_faction_slug ?? UNAFFILIATED_FACTION_SLUG,
     });
   };
 
@@ -104,6 +124,7 @@ export default function TasksTab() {
           editState.level_required !== ""
             ? Number(editState.level_required)
             : undefined,
+        primary_faction_slug: editState.primary_faction_slug || undefined,
       });
       setEditingId(null);
       setEditState(null);
@@ -214,6 +235,30 @@ export default function TasksTab() {
                         }
                       />
                     </label>
+                    {/* Options come from the era config the app already loads
+                        — no admin-only endpoint for the list. Hidden while it
+                        is in flight rather than shown empty. */}
+                    {factionOptions.length > 0 && (
+                      <label className="font-body text-xs text-muted flex items-center gap-1">
+                        {t("tasks.factionLabel")}
+                        <select
+                          className="font-body content-text border border-border bg-surface px-2 py-1"
+                          value={editState.primary_faction_slug}
+                          onChange={(e) =>
+                            setEditState({
+                              ...editState,
+                              primary_faction_slug: e.target.value,
+                            })
+                          }
+                        >
+                          {factionOptions.map((slug) => (
+                            <option key={slug} value={slug}>
+                              {factionOptionLabel(slug)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
