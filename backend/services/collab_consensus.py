@@ -31,6 +31,7 @@ from services.character_stats import (
 )
 from services.era import get_current_era_row_safe, get_era_row_for_praxis
 from services.habit_bonus import stamp_habit_bonus
+from services.praxis_room import discard_room_document, follow_praxis_status
 from services.taunt_service import fan_out_taunt
 
 
@@ -77,7 +78,15 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
     member's rivals and a duel side needles its own (ADR-0013 co-ownership).
     Unsubmit-then-resubmit fires again — accepted, rather than carry a praxis
     reference on the taunt row purely to deduplicate.
+
+    Being the single writer is finally why the room's document is **discarded**
+    here (#1745, ADR-0073 rule 7). It is flattened into ``body_text`` first, in
+    this transaction, which is also the only thing that makes a praxis sealed
+    mid-sentence hold that sentence: the room's own flush is on a trailing-edge
+    debounce, and a player who submits two seconds after their last full stop
+    would otherwise publish without it.
     """
+    await discard_room_document(praxis, session)
     praxis.status = PraxisStatus.submitted
     now = datetime.now(timezone.utc)
     praxis.submitted_at = now
@@ -144,7 +153,13 @@ async def on_member_edit(
 
     Cancels the pending-publish window, clears *everyone's* ``has_submitted``, and
     returns the collab to drafting. No-op for solo/duel, or a collab that is neither
-    pending nor Live. Used by title/body edits and media add/remove.
+    pending nor Live.
+
+    Two kinds of caller, and the second is why this reads oddly for its name:
+    media add/remove, which really are discrete edits; and ``pullBack``, which
+    since #1745 *is* the edit event for the write-up. A CRDT has none of its own
+    — text simply moves — so submitting freezes the document and reopening it is
+    the act that says "we're not done". Returning to drafting thaws the room.
     """
     if praxis.type != PraxisType.collab:
         return
@@ -157,6 +172,7 @@ async def on_member_edit(
         member.has_submitted = False
         member.submitted_at = None
     await session.flush()
+    follow_praxis_status(praxis)
     if was_live:
         # Leaving Live changes scoring — recompute every member's stats.
         await recalculate_members_stats(praxis, session, era)
@@ -193,6 +209,10 @@ async def on_submit(
         if praxis.submit_proposed_at is None:
             praxis.submit_proposed_at = datetime.now(timezone.utc)
         await session.flush()
+        # Pending publish seals the document for everyone (#1745). Nothing has
+        # to be reset while nothing can change, which is what lets ADR-0012's
+        # hard reset stand verbatim over a CRDT.
+        follow_praxis_status(praxis)
     return False
 
 
@@ -295,26 +315,17 @@ async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()
+    follow_praxis_status(praxis)
 
 
-async def on_member_unsubmit(
-    praxis: Praxis, character_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
-) -> None:
-    """Pull back a single member's submission from a pending collab (#590).
-
-    Only the caller's ``has_submitted`` clears. If anyone else is still in, the
-    collab stays ``pending``; if the caller was the last hold-out it returns to
-    ``in_progress`` and the silence-is-consent window closes. Pending collabs are
-    unscored, so no stat recalc is needed. Solo/duel never reach ``pending``.
-    """
-    for member in praxis.members:
-        if member.character_id == character_id:
-            member.has_submitted = False
-            member.submitted_at = None
-            break
-    if any(m.has_submitted for m in praxis.members):
-        praxis.status = PraxisStatus.pending
-    else:
-        praxis.status = PraxisStatus.in_progress
-        praxis.submit_proposed_at = None
-    await session.flush()
+# ``on_member_unsubmit`` — #590's *partial* pull-back, where one member's
+# submission cleared and the others' stood — is gone (#1745).
+#
+# It only ever made sense while typing was the reset trigger. A member who
+# pulled back from a collab that stayed ``pending`` had a document they could
+# still write in, and their first keystroke ran the hard reset that this
+# skipped. Freezing the document on pending removes that second door: leaving
+# the praxis pending would leave the member who just reopened it unable to type,
+# and would leave the holdout — who never submitted, and so had nothing to pull
+# back — with no door at all. So reopening a pending collab is ADR-0012's hard
+# reset, for any member, and that is :func:`on_member_edit`.

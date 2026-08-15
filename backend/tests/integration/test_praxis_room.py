@@ -31,7 +31,12 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
 from services.auth import create_jwt
-from services.praxis import kick_member, leave_praxis
+from services.praxis import (
+    kick_member,
+    leave_praxis,
+    submit_praxis,
+    unsubmit_praxis,
+)
 from services.praxis_room import (
     ROOM_BODY_KEY,
     ROOM_META_KEY,
@@ -973,3 +978,189 @@ async def test_the_last_edit_before_a_room_closes_still_lands(
             "the closing flush",
             body_text=f"last words {SEED_BODY}",
         )
+
+
+# ---------------------------------------------------------------------------
+# The freeze — submitting seals the document (#1745, ADR-0012)
+# ---------------------------------------------------------------------------
+
+
+async def _stored_updates(rooms: _Rooms, praxis_id: int) -> list[bytes]:
+    async with rooms.sessions() as session:
+        rows = await session.execute(
+            select(PraxisRoomUpdate.update)
+            .where(PraxisRoomUpdate.praxis_id == praxis_id)
+            .order_by(PraxisRoomUpdate.id)
+        )
+        return list(rows.scalars().all())
+
+
+async def _every_stored_update(rooms: _Rooms) -> list[bytes]:
+    """Every retained document byte in the table, not only this praxis's."""
+    async with rooms.sessions() as session:
+        rows = await session.execute(select(PraxisRoomUpdate.update))
+        return list(rows.scalars().all())
+
+
+async def _settle() -> None:
+    """Long enough that a message which was going to land would have landed."""
+    for _ in range(25):
+        await asyncio.sleep(0.01)
+
+
+async def test_a_pending_praxis_refuses_every_member_s_edits(
+    db_session, collab, account, account2, character, monkeypatch
+) -> None:
+    """The freeze is a server rule, and it binds the submitter too.
+
+    The before/after inside one test is the point: the same socket that lands a
+    keystroke while the collab is drafting lands nothing once it is pending. A
+    test asserting only the second half would pass against a dead transport.
+    """
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        first = await rooms.open(collab.id, account.id)
+        second = await rooms.open(collab.id, account2.id)
+        async with client_doc(first) as first_doc, client_doc(second) as second_doc:
+            await _wait_for_body(first_doc, SEED_BODY, "the first client")
+            await _wait_for_body(second_doc, SEED_BODY, "the second client")
+
+            first_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "drafting ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"drafting {SEED_BODY}", "the room"
+            )
+
+            # `character` is `account`'s, so the first client is the submitter.
+            await submit_praxis(collab.id, character.id, db_session)
+            frozen = f"drafting {SEED_BODY}"
+
+            second_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "holdout ")
+            first_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "submitter ")
+            await _settle()
+
+            assert _body(rooms.room_doc(collab.id)) == frozen
+
+
+async def test_pull_back_thaws_the_room_and_clears_the_group_s_consent(
+    db_session, collab, account2, character, character2, monkeypatch
+) -> None:
+    """``pullBack`` is the one door back in, and it is ADR-0012's hard reset.
+
+    Any member may open it — the holdout most of all, because until #1743 they
+    reopened the collab simply by typing, and that trigger is gone. Here the
+    member who pulls back (``character2``) is not the one who submitted.
+    """
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        await submit_praxis(collab.id, character.id, db_session)
+        reopened = await unsubmit_praxis(collab.id, character2.id, db_session)
+
+        assert reopened.status == PraxisStatus.in_progress
+        assert [member.has_submitted for member in reopened.members] == [False, False]
+        assert reopened.submit_proposed_at is None
+
+        socket = await rooms.open(collab.id, account2.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the reopening client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "thawed ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"thawed {SEED_BODY}", "the thawed room"
+            )
+
+
+async def test_publishing_discards_the_document_and_keeps_the_body(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The document becomes the record and is then destroyed.
+
+    The debounce is set past the test's life, so only the publish-time flatten
+    can put the typed sentence in ``body_text``: a praxis that sealed with the
+    room's last words missing would be the visible half of this bug.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "final ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"final {SEED_BODY}", "the room"
+            )
+            assert await _stored_updates(rooms, collab.id) != []
+
+            await submit_praxis(collab.id, character.id, db_session)
+            published = await submit_praxis(collab.id, character2.id, db_session)
+
+        assert published.status == PraxisStatus.submitted
+        assert await _stored_updates(rooms, collab.id) == []
+        assert await _record(rooms, collab.id) == ("Collab Praxis", f"final {SEED_BODY}")
+
+
+async def test_reopening_a_published_praxis_seeds_a_fresh_document_once(
+    db_session, collab, account, account2, character, character2, monkeypatch
+) -> None:
+    """The discard hands ``pullBack`` back to the one server-side seed (#1740).
+
+    The duplication footgun arrives here by a second door: a surviving document
+    merged into a freshly seeded one holds the body twice, and it is the same
+    body either way, so nothing but this assertion would notice.
+    """
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "published ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"published {SEED_BODY}", "the room"
+            )
+            await submit_praxis(collab.id, character.id, db_session)
+            await submit_praxis(collab.id, character2.id, db_session)
+
+        await unsubmit_praxis(collab.id, character2.id, db_session)
+
+        rejoined = await rooms.open(collab.id, account2.id)
+        async with client_doc(rejoined) as doc:
+            await _wait_for_body(doc, f"published {SEED_BODY}", "the rejoining client")
+            assert _body(rooms.room_doc(collab.id)) == f"published {SEED_BODY}"
+
+
+async def test_text_a_member_deleted_does_not_outlive_the_draft(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The privacy half: a CRDT keeps what you deleted, so the rows have to go.
+
+    Run under the **real** squash policy, because the tempting answer is that
+    compaction already handles this. It half does and that is the trap: folding
+    the history re-encodes it, and Yjs garbage-collects deleted content on the
+    way out — but only once a document passes ``_SQUASH_UPDATES_ABOVE``, so the
+    raw tail below that threshold always holds the retraction verbatim. A draft
+    a player retracts a sentence from and then submits is exactly the case that
+    never reaches a squash. Deleting the rows is the only complete answer, which
+    is why the discard is a delete and never an archive.
+    """
+    secret = "MY NEIGHBOURS REAL NAME"
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            body = doc.get(ROOM_BODY_KEY, type=Text)
+            body.insert(0, secret)
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"{secret}{SEED_BODY}", "the room"
+            )
+            del body[0 : len(secret)]
+            await _wait_for_body(rooms.room_doc(collab.id), SEED_BODY, "the retraction")
+
+            # The premise, asserted rather than assumed: the retracted text is
+            # still on disk — squashed — while the draft lives. Without this the
+            # test would pass against a store that never held the secret at all.
+            stored = await _stored_updates(rooms, collab.id)
+            assert any(secret.encode() in update for update in stored), (
+                "the tombstone premise failed: no retained update holds the deleted "
+                "text, so this test would pass without discarding anything"
+            )
+
+            await submit_praxis(collab.id, character.id, db_session)
+            await submit_praxis(collab.id, character2.id, db_session)
+
+        assert await _stored_updates(rooms, collab.id) == []
+        for update in await _every_stored_update(rooms):
+            assert secret.encode() not in update
+        assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
