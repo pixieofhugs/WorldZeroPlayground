@@ -91,6 +91,11 @@ player removed should not outlive the draft they removed it from.
   the existing member check against the praxis id in the path, and **validates
   `Origin` by hand** — `CORSMiddleware` does not apply to WebSockets, so the
   allowlist that protects every REST route would silently not protect the room.
+  The allowlist is the existing `CORS_ORIGINS` value — one list read in two
+  places, never a second copy. A handshake carrying **no `Origin` at all fails
+  closed** (non-browser clients send none) unless an explicit test/dev setting
+  allows it: cross-site hijacking is browser-only, so this costs nothing real
+  and keeps the production rule "a valid known `Origin`, or nothing".
 - **At revoke:** kick and leave **close the socket**. A gate checked only on
   the way in is the capability-flag/enforcement drift this codebase has shipped
   before; a removed member must stop writing at removal, not at tab close.
@@ -113,9 +118,16 @@ caret and selection in their own faction's hue, plus a live dot in
 Rooms live in-process, so **exactly one backend instance may run**. ADR-0012's
 lazy-on-access timeout already depends on this same fact. It is therefore
 stated **once**, here, and cited by both — not restated in two places that can
-drift. `render.yaml` declares no instance count and gets a comment saying why;
-startup asserts it, so a second instance fails loudly rather than diverging two
-copies of a praxis and flushing both.
+drift.
+
+Enforcement is a **Postgres session-level advisory lock** taken at boot: an
+instance that cannot acquire it exits loudly. A process cannot see its own
+replica count, so a bare startup assertion would only catch the multi-*worker*
+mistake, not the multi-*instance* one — two replicas each pass their own check
+happily. The lock catches a scale-out however it arises (a Render setting, a
+stray local uvicorn, a blue-green deploy overlap), at the cost of one
+connection held for process life. `render.yaml` declares no instance count and
+gets a comment saying why, for the human reading the config.
 
 ## Consequences
 
