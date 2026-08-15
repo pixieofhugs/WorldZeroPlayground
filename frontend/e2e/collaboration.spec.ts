@@ -378,3 +378,89 @@ test.describe('collaboration UI (clicked buttons)', () => {
     }
   })
 })
+
+/**
+ * Presence (#1744) — the only assertions in this repo that can see a caret.
+ *
+ * Everything else about presence is unit-testable: the derivation, the paint
+ * and the sanitizing proxy in `roomPresence.test.ts`, the roster dot in
+ * `CollabRoster.test.tsx`. What no unit test can reach is the actual claim —
+ * that two real browsers in one room draw each other, and that closing one
+ * takes its caret away. That needs two contexts, a live WebSocket and the
+ * CodeMirror plugin, so it lives here (nightly, `.github/workflows/e2e.yml`).
+ *
+ * Locators are the library's own class names: `.cm-ySelectionCaret` is the
+ * widget span, `.cm-ySelectionInfo` the hover label carrying the name. Each
+ * page sees only the OTHER player's caret — `y-codemirror.next` skips the local
+ * client id, which is also why a solo author alone in their room draws nothing.
+ *
+ * A block rather than a new file: `login` / `seedCollabDraft` are module-local
+ * helpers, and exporting them to reuse them elsewhere would be a wider change
+ * than the tests are worth.
+ */
+test.describe('presence: carets and the roster dot', () => {
+  test('P1: each member sees the other caret, and it goes when they leave', async ({
+    browser,
+  }) => {
+    const seed = await seedCollabDraft(browser, 'presence')
+    try {
+      const aPage = await seed.alice.ctx.newPage()
+      const bPage = await seed.bob.ctx.newPage()
+      await aPage.goto(`/praxis/${seed.praxisId}/edit`)
+      await bPage.goto(`/praxis/${seed.praxisId}/edit`)
+
+      // A caret exists only once its owner's cursor is IN the document, so both
+      // have to put a selection there. `fill` auto-waits on the editor becoming
+      // editable, which is the room finishing its first sync.
+      await aPage.locator('.cm-content').first().fill('Alice is typing')
+      await bPage.locator('.cm-content').first().fill('Bob is typing')
+
+      // Alice sees exactly one remote caret: Bob's, labelled with his name.
+      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(1)
+      await expect(aPage.locator('.cm-ySelectionInfo')).toHaveText(seed.bob.name)
+      await expect(bPage.locator('.cm-ySelectionInfo')).toHaveText(seed.alice.name)
+
+      // The roster's live dot names the same fact in words, on Bob's row.
+      await expect(
+        aPage.getByRole('img', { name: `${seed.bob.name} is here now` }),
+      ).toBeVisible()
+
+      // Presence is ephemeral: closing the tab closes the socket, and the caret
+      // must go with it. This is the half that distinguishes "he's not here"
+      // from the persistent workflow state beside it.
+      await bPage.close()
+      await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0)
+      await expect(
+        aPage.getByRole('img', { name: `${seed.bob.name} is here now` }),
+      ).toHaveCount(0)
+    } finally {
+      await seed.alice.ctx.close()
+      await seed.bob.ctx.close()
+    }
+  })
+
+  // Presence chrome must not appear for an audience of one (ADR-0073). Nothing
+  // gates on the praxis type: the plugin skips the local client, so a solo
+  // author is alone in a room that draws nobody.
+  test('P2: a solo author alone in their room draws no caret', async ({ browser }) => {
+    const s = pairSeq++
+    const solo = await login(browser, `p-${RUN}-${s}`, `P${s}-${RUN}`, 0)
+    const task = await pickOpenTask(solo)
+    try {
+      const created = await solo.ctx.request.post(`${API}/praxes`, {
+        data: { task_id: task.id, type: 'solo', title: `Solo ${s}`, body_text: 'draft' },
+      })
+      expect(created.ok(), `solo create failed: ${await created.text()}`).toBeTruthy()
+      const praxis = await created.json()
+
+      const page = await solo.ctx.newPage()
+      await page.goto(`/praxis/${praxis.id}/edit`)
+      await page.locator('.cm-content').first().fill('Just me in here')
+      await expect(page.locator('.cm-ySelectionCaret')).toHaveCount(0)
+      // And no roster at all, which `CollabRoster` already gates on positively.
+      await expect(page.getByRole('img', { name: /is here now/ })).toHaveCount(0)
+    } finally {
+      await solo.ctx.close()
+    }
+  })
+})
