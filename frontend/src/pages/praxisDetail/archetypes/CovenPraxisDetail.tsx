@@ -29,8 +29,8 @@
  *   ONE responsive component (ADR-0063) — `useFormFactor()` picks the size set;
  *   there is no mobile twin, and no block is drawn twice and hidden.
  * - The crown renders at **both** form factors. It is not this file's decision:
- *   `PraxisStatusBanners` draws it off `is_top_for_task`, mounted above the
- *   split so both layouts get it.
+ *   `ScoreStamp` draws it off `is_top_for_task` in the score block's corner,
+ *   and that block is in both layouts (#1710 retired the hero banner above).
  * - The **report card and the steward bar are NOT dressed** (ADR-0061).
  *   `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare, wearing none of the
  *   panel dress every block beside them wears, and they take no style prop to
@@ -330,7 +330,9 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   )
 
   // ── Moderation banners — NEUTRAL, in Coven's dress (ADR-0061) ───
-  // The crown hero and the failed note are the shared banners; the flagged
+  // The failed note is the shared banner — the crown hero that used to lead it
+  // went with #1710, and the mark is the score stamp's corner fleur now. The
+  // flagged
   // notice has no shared slot, so it renders here — on the same `--color-*`
   // warning tokens `DefaultPraxisDetail` uses, deliberately not on the ward's
   // pinks. `PraxisAdminBar` is the steward bar, mounted bare for the same
@@ -500,8 +502,11 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         }}
       />
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-        {/* The crown already has its own hero banner above; one mark per page. */}
-        <ScoreStamp praxis={praxis} showCrown={false} />
+        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
+            here because a bordered hero panel above already drew one. The panel
+            is gone (owner ruling: "just a fleur in the corner"), so the mark
+            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        <ScoreStamp praxis={praxis} />
       </div>
     </section>
   )

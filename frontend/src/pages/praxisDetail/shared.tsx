@@ -7,8 +7,9 @@
  *
  * Invariant slots owned here:
  *   - Admin moderation bar
- *   - Crown hero + failed note (ADR-0062 removed the open-state banners: detail
- *     is published-only, so there is no IN EDITING / PENDING PUBLISH to draw)
+ *   - Failed note (ADR-0062 removed the open-state banners: detail is
+ *     published-only, so there is no IN EDITING / PENDING PUBLISH to draw; the
+ *     crown hero went with #1710 and the mark lives on the score stamp)
  *   - Owner actions (edit / reopen)
  *   - Comments region (ADR-0061)
  *   - Voter breakdown
@@ -31,7 +32,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { TaskCrown } from '../../components/factionMarks/TaskCrown'
 import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
@@ -344,30 +344,23 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           and went with #1089. The composer's own roster (#1071) is where "who
           still owes their part" is answered, and a published praxis has the
           byline crediting every co-author instead. */}
-      {/* Task Crown hero (ADR-0028) — this praxis is the task's top submitted
-          entry, computed live. Invariant chrome, so every archetype shows it. */}
-      {praxis.is_top_for_task && (
-        <div
-          style={{
-            border: '2px solid var(--color-border)',
-            borderRadius: 8,
-            padding: 'var(--space-sm) var(--space-lg)',
-            marginBottom: 'var(--space-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-md)',
-            background: 'var(--color-bg-surface)',
-          }}
-        >
-          <TaskCrown size={34} ringInset={3} />
-          <div>
-            <span className="label-heading" style={{ display: 'block' }}>{t('detail.banners.crownLabel')}</span>
-            <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
-              {t('detail.banners.crownBody')}
-            </span>
-          </div>
-        </div>
-      )}
+      {/* THE TASK CROWN HERO IS GONE; THE FLEUR MOVED TO THE CORNER (#1710).
+          A bordered panel led this block — a 34px `TaskCrown`, a "TASK CROWN"
+          label and a sentence explaining it — and because it existed, all nine
+          archetypes passed `showCrown={false}` to their `ScoreStamp` to keep the
+          page to one mark. Owner ruling, 2026-08-14: "Task crown as a box on the
+          top should not exist. Just a fleur in the corner." So the panel goes
+          and the stamps draw the mark again — the SAME `TaskCrown`, unrestyled
+          and still keyed on `is_top_for_task`, so ADR-0028 and ADR-0054 are
+          untouched and the "one mark per page" rule is preserved.
+
+          One narrow consequence: `ScoreStamp` draws nothing on an unscored
+          praxis (#1444, `failed` / `hidden`), and `crowned_praxis_ids` ranks on
+          `Praxis.status == submitted` without reading `moderation_status` — so a
+          FAILED praxis that still holds its task's crown now shows no crown on
+          this page. That is the right trade: its honest signal is the failed
+          banner below, and a crown floating over a failed entry was the louder
+          of the two lies. */}
       {/* The "IN EDITING" / "PENDING PUBLISH" pair used to sit here. Both are
           gone with ADR-0062: detail redirects `in_progress` AND `pending` to the
           composer, so neither banner could ever paint again. An open praxis now
