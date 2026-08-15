@@ -34,10 +34,11 @@ from errors import ErrorCode, detail_code
 from models.account import Account, AuthProvider, OAuthProvider
 from services.auth import create_or_get_account
 
-#: The two provider names the OAuth legs write (``routers/auth.py``). Values of
+#: The provider names the OAuth legs write (``routers/auth.py``). Values of
 #: the :class:`AuthProvider` enum since #1771; the column stays a plain string.
 _GOOGLE = AuthProvider.GOOGLE
 _DEV = AuthProvider.DEV
+_DISCORD = AuthProvider.DISCORD
 
 
 async def _account_count(session: AsyncSession) -> int:
@@ -403,3 +404,223 @@ async def test_the_provider_pair_is_unique_in_the_database(
     with pytest.raises(IntegrityError):
         await db_session.flush()
     await db_session.rollback()
+
+
+# ---------------------------------------------------------------------------
+# Case 9 — Discord is the second provider the rules above were written for
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_discord_identity_links_onto_an_existing_google_account(
+    db_session: AsyncSession, account: Account
+):
+    """The payoff of ADR-0075, with the two providers it was written about.
+
+    Case 4 proved the property with ``dev``; this is the real pair. A player who
+    signed up with Google and later presses "Continue with Discord" reaches the
+    Account they already have, rather than minting a second one beside it.
+    """
+    db_session.add(
+        OAuthProvider(
+            account_id=account.id,
+            provider=_GOOGLE,
+            provider_user_id="google-sub-also-discord",
+        )
+    )
+    await db_session.commit()
+    accounts_before = await _account_count(db_session)
+
+    resolved = await create_or_get_account(
+        provider=_DISCORD,
+        # A snowflake, always a JSON string — see the callback's comment.
+        provider_user_id="1070000000000000000",
+        email=account.email,
+        email_verified=True,
+        session=db_session,
+    )
+
+    assert resolved.id == account.id
+    assert await _account_count(db_session) == accounts_before
+
+    linked = await _provider_rows(db_session, _DISCORD, "1070000000000000000")
+    assert len(linked) == 1
+    assert linked[0].account_id == account.id
+
+
+# ---------------------------------------------------------------------------
+# Case 10 — the Discord callback reads the profile, and what it does with it
+# ---------------------------------------------------------------------------
+
+
+class _StubDiscordResponse:
+    def __init__(self, payload: dict) -> None:
+        self._payload = payload
+
+    def json(self) -> dict:
+        return self._payload
+
+
+class _StubDiscordClient:
+    """Stands in for ``_OAUTH.discord``. Unlike Google's stub, it serves a GET.
+
+    Discord returns no ``id_token`` on its documented OAuth2 path, so authlib
+    never populates ``token["userinfo"]`` and the callback has to fetch
+    ``users/@me`` itself. Recording the path is the point: it is what proves the
+    callback asks the API rather than reading a claim off a token that has none.
+
+    The relative path is also where the trailing slash on ``api_base_url``
+    matters in production — authlib joins them with ``urljoin``. A stub cannot
+    observe that join, which is exactly why it is argued in a comment at the
+    registration instead of asserted here.
+    """
+
+    def __init__(self, user_info: dict) -> None:
+        self._user_info = user_info
+        self.requested_paths: list[str] = []
+
+    async def authorize_access_token(self, request) -> dict:
+        # Shaped like Discord's real answer: a bearer token and an expiry, and
+        # no id_token. The callback keeps none of it.
+        return {
+            "access_token": "discord-access-token",
+            "refresh_token": "discord-refresh-token",
+            "expires_in": 604800,
+        }
+
+    async def get(self, path: str, token=None) -> _StubDiscordResponse:
+        self.requested_paths.append(path)
+        return _StubDiscordResponse(self._user_info)
+
+
+@pytest.mark.asyncio
+async def test_discord_callback_signs_in_a_newcomer_keyed_on_the_snowflake(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """The happy path, and the two facts about it that are easy to get wrong.
+
+    The link row must key on Discord's ``id`` — ``username`` and ``email`` are
+    both mutable — and the profile must come from ``users/@me`` rather than the
+    token.
+    """
+    from routers import auth as auth_router
+
+    stub = _StubDiscordClient(
+        {
+            "id": "1070000000000000001",
+            "username": "newcomer",
+            "email": "discord-newcomer@example.com",
+            "verified": True,
+        }
+    )
+    monkeypatch.setattr(auth_router._OAUTH, "discord", stub)
+
+    accounts_before = await _account_count(db_session)
+
+    resp = await client.get("/auth/discord/callback")
+
+    assert resp.status_code == 302
+    assert resp.cookies.get("access_token")
+    assert stub.requested_paths == ["users/@me"]
+    assert await _account_count(db_session) == accounts_before + 1
+
+    linked = await _provider_rows(db_session, _DISCORD, "1070000000000000001")
+    assert len(linked) == 1
+
+
+# ---------------------------------------------------------------------------
+# Case 11 — no usable email: the two shapes of "absent", and "not verified"
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "user_info",
+    [
+        pytest.param(
+            {"id": "1070000000000000002", "username": "no-email"}, id="key-absent"
+        ),
+        pytest.param(
+            {"id": "1070000000000000002", "username": "no-email", "email": None},
+            id="explicit-null",
+        ),
+    ],
+)
+async def test_discord_callback_rejects_a_profile_with_no_email(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: dict,
+):
+    """Discord's ``email`` field is *both* optional and nullable.
+
+    Its own docs on the ``email`` scope say the object comes back with an email
+    "if the user has one", so an email-less account is a real answer and both
+    JSON shapes have to be handled. ``create_or_get_account`` takes ``email:
+    str`` and would otherwise be handed ``None`` — which the email branch would
+    then look up, matching any Account whose email is NULL.
+    """
+    from routers import auth as auth_router
+
+    monkeypatch.setattr(
+        auth_router._OAUTH, "discord", _StubDiscordClient(user_info)
+    )
+
+    accounts_before = await _account_count(db_session)
+
+    resp = await client.get("/auth/discord/callback")
+
+    assert resp.status_code == 403
+    assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
+    assert await _account_count(db_session) == accounts_before
+    assert await _provider_rows(db_session, _DISCORD, "1070000000000000002") == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "verified",
+    [
+        pytest.param(False, id="explicitly-false"),
+        pytest.param(None, id="claim-absent"),
+        # `verified` is optional; a provider may answer with anything at all.
+        pytest.param("true", id="stringy-true"),
+    ],
+)
+async def test_discord_callback_rejects_an_unverified_email(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    account: Account,
+    verified,
+):
+    """The takeover ADR-0075 names, arriving through the second provider.
+
+    The email here is an existing Account's, so an admitted sign-in would hand
+    over that player's characters and score. The callback does not decide this —
+    it normalises the claim and forwards it, and the service's gate refuses
+    (#1771). Asserted through the route anyway, because "the fact reaches the
+    gate" is the part a second provider can get wrong.
+    """
+    from routers import auth as auth_router
+
+    user_info = {
+        "id": "1070000000000000003",
+        "username": "impostor",
+        "email": account.email,
+    }
+    if verified is not None:
+        user_info["verified"] = verified
+    monkeypatch.setattr(
+        auth_router._OAUTH, "discord", _StubDiscordClient(user_info)
+    )
+
+    accounts_before = await _account_count(db_session)
+
+    resp = await client.get("/auth/discord/callback")
+
+    assert resp.status_code == 403
+    assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
+    assert await _account_count(db_session) == accounts_before
+    assert await _provider_rows(db_session, _DISCORD, "1070000000000000003") == []
