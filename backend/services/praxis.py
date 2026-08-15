@@ -766,7 +766,7 @@ def _signup_denial_to_http(
         return coded_error(
             403,
             ErrorCode.task_not_open_for_signup,
-            f"This task is {status_context} and is not open for new praxes.",
+            f"This task is {status_context} and is not open for new praxis.",
             {DETAIL_CONTEXT_PARAM: status_context},
         )
     if reason == SignupDenialReason.already_active_member:
@@ -780,7 +780,7 @@ def _signup_denial_to_http(
     return coded_error(
         400,
         ErrorCode.task_bank_full,
-        f"Task bank is full ({era.max_task_signups} in-progress praxes). Complete or withdraw one first.",
+        f"Task bank is full ({era.max_task_signups} in-progress praxis). Complete or withdraw one first.",
         {"limit": era.max_task_signups, DETAIL_CONTEXT_PARAM: "signup"},
     )
 
@@ -1603,7 +1603,7 @@ async def invite_to_praxis(
     if praxis.type != PraxisType.collab:
         raise HTTPException(
             status_code=400,
-            detail="Invites are only for collab praxes. Duels use the challenge endpoint.",
+            detail="Invites are only for collab praxis. Duels use the challenge endpoint.",
         )
     if praxis.status == PraxisStatus.submitted:
         raise_coded(
@@ -1741,7 +1741,7 @@ async def respond_to_invite(
             raise_coded(
                 409,
                 ErrorCode.task_bank_full,
-                f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+                f"Task bank is full ({era.max_task_signups} in-progress praxis).",
                 {"limit": era.max_task_signups},
             )
 

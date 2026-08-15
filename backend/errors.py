@@ -73,7 +73,9 @@ class ErrorCode(str, enum.Enum):
     collab/duel eligibility, and media limits. #1652 adds the read-path
     rejections a player reaches by URL rather than by button — the praxis
     filters, the two 404s that share ``DELETE /praxes/{id}/media/{id}``, the
-    relationship-delete guard, and the feed-item key parser.
+    relationship-delete guard, and the feed-item key parser — and then, in its
+    second slice, the service-layer gates behind the buttons themselves:
+    defection, commenting, duel challenge and response, character creation.
     """
 
     # -- Voting -------------------------------------------------------------
@@ -127,6 +129,46 @@ class ErrorCode(str, enum.Enum):
     #: /praxes/{id}/media/{id}`` can 404 for either reason, and which one it was
     #: is the difference between a dead link and a stale media list.
     media_item_not_found = "MEDIA_ITEM_NOT_FOUND"
+
+    # -- Tasks and characters as targets (#1652 slice two) -------------------
+    #: A task id that resolves to nothing. Distinct from
+    #: :attr:`praxis_not_found` because ``POST /praxes/{id}/comments`` and
+    #: ``POST /tasks/{id}/comments`` are sibling routes answering the same 404
+    #: for different reasons — the code is what says which id was wrong.
+    task_not_found = "TASK_NOT_FOUND"
+    character_not_found = "CHARACTER_NOT_FOUND"
+
+    # -- Factions: joining, defecting, and the letters that gate both --------
+    faction_not_found = "FACTION_NOT_FOUND"
+    faction_already_member = "FACTION_ALREADY_MEMBER"
+    #: The unaffiliated sentinel is a start state, not a destination
+    #: (ADR-0019/0030).
+    faction_not_selectable = "FACTION_NOT_SELECTABLE"
+    faction_rejoin_forbidden = "FACTION_REJOIN_FORBIDDEN"
+    #: #454. Raised from two surfaces — defecting and character creation —
+    #: because it is one rule: you hold the current era's letter or you do not.
+    faction_invitation_required = "FACTION_INVITATION_REQUIRED"
+    #: ADR-0021. Albescent is joined in the field once the *account* qualifies…
+    faction_albescent_not_eligible = "FACTION_ALBESCENT_NOT_ELIGIBLE"
+    #: …and never at character creation, which is a different answer to a
+    #: different question and so a different code.
+    faction_albescent_not_at_creation = "FACTION_ALBESCENT_NOT_AT_CREATION"
+
+    # -- Character creation --------------------------------------------------
+    character_name_required = "CHARACTER_NAME_REQUIRED"
+
+    # -- Praxis ownership and comment threads --------------------------------
+    praxis_not_owner = "PRAXIS_NOT_OWNER"
+    praxis_not_open_for_comments = "PRAXIS_NOT_OPEN_FOR_COMMENTS"
+    task_not_open_for_comments = "TASK_NOT_OPEN_FOR_COMMENTS"
+    #: The service's exactly-one-target guard. Unreachable from the two comment
+    #: routes, which each pass one target; it answers any future caller that
+    #: passes both or neither, and the DB CHECK behind it.
+    comment_target_ambiguous = "COMMENT_TARGET_AMBIGUOUS"
+
+    # -- Duel challenge lifecycle --------------------------------------------
+    duel_challenge_not_yours = "DUEL_CHALLENGE_NOT_YOURS"
+    duel_challenge_already_resolved = "DUEL_CHALLENGE_ALREADY_RESOLVED"
 
     # -- Relationships ------------------------------------------------------
     relationship_not_found = "RELATIONSHIP_NOT_FOUND"
