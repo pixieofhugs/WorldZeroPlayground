@@ -60,10 +60,15 @@ import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
  * #1560 was written when `/` was ONLY the roster, so it asked for the route to
  * be gated. Since #1557 landed, `/` also carries "continue where you left off"
  * and the browse — a pre-gate player still needs those. So the seam is the
- * ROSTER SECTION (chip, heading, rule, cards, dossier, closing line), which is
- * hidden as one piece unless it has a choice to offer. `rosterOffersAChoice`
- * below is that rule, and the create-your-first-life path is inside it: an
- * account with zero lives ALWAYS sees the roster, or signup dead-ends.
+ * ROSTER SECTION (chip, cards, dossier, closing line), which is hidden as one
+ * piece unless it has a choice to offer. `rosterOffersAChoice` below is that
+ * rule, and the create-your-first-life path is inside it: an account with zero
+ * lives ALWAYS sees the roster, or signup dead-ends.
+ *
+ * The page TITLE is deliberately not in that piece (#1794): `/` is the
+ * authenticated home and must have a level-1 heading in every gate state, so
+ * the `<h1>` and its rule sit outside and the heading changes what it says
+ * instead of disappearing.
  *
  * The Albescent letter (#395) is deliberately OUTSIDE the gate. It converts an
  * existing life rather than adding one, so it is a real control for a
@@ -145,6 +150,19 @@ export default function FieldDesk() {
   // does, the carried life is the best proof there is: an account playing
   // someone has at least one. Keeps the heading from swapping under the viewer.
   const drawerEmpty = lives === null ? !carriesALife : lives.length === 0
+  // The page's <h1>, which is the PAGE's and not the roster's (#1794): it used
+  // to be drawn inside the gated block, so the commonest state of all — one
+  // life, gate shut — served `/` with an outline starting at level 2.
+  //
+  // With the roster hidden the page is no longer asking whose shoes; its subject
+  // is the life being carried, so the heading names it (owner ruling
+  // 2026-08-15). No new string — the name is data already on the page. A shut
+  // gate implies `carriesALife`, so `active` is always there to name; the `&&`
+  // is what the type-checker needs to see it, and a blank display name falls to
+  // the handle rather than to an empty heading.
+  const heading = !showRoster && active
+    ? active.display_name || `@${active.username}`
+    : drawerEmpty ? t('fieldDesk.headingFirstLife') : t('fieldDesk.heading')
 
   // Phone + a carried life → the mobile-native home skin for that faction.
   if (formFactor === 'mobile' && homeState) {
@@ -155,70 +173,69 @@ export default function FieldDesk() {
   return (
     <div className="page" style={pageStyle}>
       {/* ── The roster (#1560: only when it has a choice to offer) ─────────── */}
+      {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No
+          account handle. Inside the gate — a count is an invitation to make
+          it bigger, which is the thing being kept back. */}
       {showRoster && (
-        <>
-          {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No
-              account handle. Inside the gate — a count is an invitation to make
-              it bigger, which is the thing being kept back. */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
-            {active && lives !== null && (
-              <div style={pillStyle}>
-                {active.avatar_url ? (
-                  <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
-                ) : (
-                  <span style={{ ...pillAvatar, display: 'inline-block' }} />
-                )}
-                <span style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)' }}>
-                  @{active.username} ·{' '}
-                  <b style={{ color: 'var(--color-text-primary)' }}>
-                    {t('fieldDesk.livesInPlay', { count: lives.length })}
-                  </b>
-                </span>
-              </div>
-            )}
-          </div>
-
-          <h1 style={headingStyle}>
-            {/* "Whose shoes today?" presumes shoes. An account with none is being
-                asked to cut its first pair, not to choose between pairs. */}
-            {drawerEmpty ? t('fieldDesk.headingFirstLife') : t('fieldDesk.heading')}
-          </h1>
-          <div style={rainbowUnderline} />
-
-          {lives === null ? (
-            <p className="font-body text-muted" style={{ marginTop: 'var(--space-xl)' }}>{t('fieldDesk.loading')}</p>
-          ) : (
-            <div style={rosterRow}>
-              {lives.map((life, index) => (
-                <button
-                  key={life.id}
-                  type="button"
-                  onClick={() => enterLife(life.id)}
-                  disabled={switching != null}
-                  className="fielddesk-life"
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                  title={t('fieldDesk.stepInto', { name: life.display_name })}
-                >
-                  <CredentialCard
-                    displayName={life.display_name}
-                    handle={life.username}
-                    factionSlug={life.faction_slug}
-                    level={life.level}
-                    score={life.score}
-                    avatarUrl={mediaUrl(life.avatar_url)}
-                    rotation={TILTS[index % TILTS.length]}
-                  />
-                </button>
-              ))}
-
-              {/* "Begin a new self" — the dossier has no locked face any more
-                  (#1560). Either the slot is open and the card is here, or the
-                  offer is not made at all. */}
-              {canBeginNewSelf && <NewSelfDossier onBegin={() => navigate('/characters/create')} />}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
+          {active && lives !== null && (
+            <div style={pillStyle}>
+              {active.avatar_url ? (
+                <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
+              ) : (
+                <span style={{ ...pillAvatar, display: 'inline-block' }} />
+              )}
+              <span style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)' }}>
+                @{active.username} ·{' '}
+                <b style={{ color: 'var(--color-text-primary)' }}>
+                  {t('fieldDesk.livesInPlay', { count: lives.length })}
+                </b>
+              </span>
             </div>
           )}
-        </>
+        </div>
       )}
+
+      {/* Outside the gate (#1794). The title and its rule travel together — the
+          rule is the title's, not the roster's — so the gate-open drawing is
+          unchanged: pill, title, rule, roster. See `heading` above for what it
+          says once the roster is gone. */}
+      <h1 style={headingStyle}>{heading}</h1>
+      <div style={rainbowUnderline} />
+
+      {showRoster &&
+        (lives === null ? (
+          <p className="font-body text-muted" style={{ marginTop: 'var(--space-xl)' }}>{t('fieldDesk.loading')}</p>
+        ) : (
+          <div style={rosterRow}>
+            {lives.map((life, index) => (
+              <button
+                key={life.id}
+                type="button"
+                onClick={() => enterLife(life.id)}
+                disabled={switching != null}
+                className="fielddesk-life"
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                title={t('fieldDesk.stepInto', { name: life.display_name })}
+              >
+                <CredentialCard
+                  displayName={life.display_name}
+                  handle={life.username}
+                  factionSlug={life.faction_slug}
+                  level={life.level}
+                  score={life.score}
+                  avatarUrl={mediaUrl(life.avatar_url)}
+                  rotation={TILTS[index % TILTS.length]}
+                />
+              </button>
+            ))}
+
+            {/* "Begin a new self" — the dossier has no locked face any more
+                (#1560). Either the slot is open and the card is here, or the
+                offer is not made at all. */}
+            {canBeginNewSelf && <NewSelfDossier onBegin={() => navigate('/characters/create')} />}
+          </div>
+        ))}
 
       {/* The order's correspondence (#395) — account-collective invitation
           (ADR-0021), shown only while the server flag holds. Deliberately no
