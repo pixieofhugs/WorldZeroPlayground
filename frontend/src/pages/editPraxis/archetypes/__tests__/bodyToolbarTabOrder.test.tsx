@@ -53,9 +53,24 @@ describe("body markdown toolbar", () => {
     expect(markup).toMatch(/role="toolbar"[^>]*aria-label="[^"]+"/);
   });
 
-  it("leaves the textarea itself tabbable", () => {
-    const textarea = html().match(/<textarea[^>]*>/)?.[0] ?? "";
-    expect(textarea, "textarea renders").not.toEqual("");
-    expect(textarea, "body must remain the next tab stop").not.toContain("tabindex");
+  /**
+   * #1742 replaced the `<textarea>` with a CodeMirror editor, which builds its
+   * own DOM into this host on mount. The tab stop is therefore CodeMirror's
+   * contenteditable — focusable by default and NOT observable here, because
+   * this harness runs the `node` environment with no DOM and no effects.
+   *
+   * What is still testable is the half of #693 that lives in this file's own
+   * markup: the toolbar draws before the body, and the body's host is really
+   * there for the editor to mount into. Asserting the tab stop itself needs a
+   * browser, and it belongs to the nightly Playwright suite.
+   */
+  it("draws the body's host after the toolbar, for the editor to mount into", () => {
+    const markup = html();
+    const host = markup.indexOf("data-composer-body");
+    expect(host, "the body's host renders").toBeGreaterThan(-1);
+    expect(
+      markup.indexOf('role="toolbar"'),
+      "the toolbar is drawn before the body",
+    ).toBeLessThan(host);
   });
 });

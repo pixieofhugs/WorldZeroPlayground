@@ -294,6 +294,7 @@
       "tabPreview": "Preview",
       "tabsAria": "Switch between write and preview",
       "bodyPlaceholder": "Say what you did and how it went.",
+    "bodyConnecting": "Opening the shared write-up…",
       "wordCount": "{{words}} words · markdown ok",
       "proofLabel": "Proof",
       "proofButton": "Drop a photo of the work\nor browse files",
