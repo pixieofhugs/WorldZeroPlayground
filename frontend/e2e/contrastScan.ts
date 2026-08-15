@@ -71,6 +71,15 @@ export type Finding = {
  *     decorative content, and at least one such element (the Albescent mono
  *     masthead, `AlbescentFeedFrame.tsx`) is intentionally ghosted — design
  *     confirmed it stays.
+ *
+ *     Text inside an INACTIVE control is ignored for the same reason (#1675) —
+ *     see {@link inertControl}. That one is WCAG's own words, not a judgement
+ *     call: 1.4.3 names inactive components as exempt.
+ *
+ * Behaviour 1 was AMENDED by #1675 — an unmeasurable backdrop is no longer a
+ * failure. It is reported, loudly, and ratcheted. The reasoning lives on the
+ * assertions in `contrast.spec.ts`; nothing in THIS file changed, because the
+ * scanner's job is to say honestly that it could not measure, and it still does.
  */
 export function scanPageForContrast(): Finding[] {
   type Rgba = { r: number; g: number; b: number; a: number };
@@ -173,6 +182,28 @@ export function scanPageForContrast(): Finding[] {
     return false;
   }
 
+  /**
+   * Text inside an INACTIVE control. WCAG 1.4.3 exempts it by name — "text or
+   * images of text that are part of an inactive user interface component have
+   * no contrast requirement" — and a dimmed `:disabled` button is the shape the
+   * exemption was written for. `RosterTable`'s pagination arrows are ours: a
+   * `disabled ? 0.4 : 1` wash the scanner was reading as two AA failures on
+   * every faction and theme, for a control nobody can reach.
+   *
+   * Walked up the tree, not read off the node, because the wash and the text
+   * are rarely the same element.
+   */
+  function inertControl(element: Element): boolean {
+    let node: Element | null = element;
+    while (node) {
+      if (node.matches("button:disabled, input:disabled, select:disabled, textarea:disabled, fieldset:disabled, [aria-disabled='true']")) {
+        return true;
+      }
+      node = node.parentElement;
+    }
+    return false;
+  }
+
   function ownText(element: Element): string {
     let text = "";
     for (const child of Array.from(element.childNodes)) {
@@ -254,6 +285,7 @@ export function scanPageForContrast(): Finding[] {
     const text = ownText(element);
     if (!text) continue;
     if (ariaHidden(element)) continue;
+    if (inertControl(element)) continue;
 
     const box = element.getBoundingClientRect();
     if (box.width < 1 || box.height < 1) continue;

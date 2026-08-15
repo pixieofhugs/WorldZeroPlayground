@@ -22,12 +22,13 @@
      had every reason to hardcode a grey instead.
 
      THE WEIGHT RUNG DOES NOT EXIST, and that is a measurement rather than a
-     preference. Secondary bottoms out at 4.96:1 on `--filter-well`, the darkest
-     neutral stock either quiet ink lands on, so a genuinely quieter third rung
-     that still clears AA has the band [4.50, 4.96] to live in — a 1.10x span,
-     against the 3.0x that separates primary from secondary. There is no room
-     below secondary for a rung anyone could see. Walking tertiary down there
-     would buy an invisible step and spend the whole AA margin for it.
+     preference. Secondary bottomed out at 4.05:1 on the SELECTED FILTER ROW,
+     the darkest neutral stock either quiet ink lands on, so a genuinely quieter
+     third rung that still cleared AA had nowhere at all to stand. There is no
+     room below secondary for a rung anyone could see. Walking tertiary down
+     there would buy an invisible step and spend the whole AA margin for it.
+     (#1549 wrote that band as [4.50, 4.96] off `--filter-well`; #1715 found the
+     row one wash deeper and the band was already empty.)
 
      So the axis is the one with room, and DARK ALREADY CHOSE IT: its tertiary
      is a lavender (h 296°, C 27) against a warm-grey secondary (h 85°), at
@@ -36,14 +37,25 @@
      against the outgoing 42.5. Chroma is dialled back from dark's because a
      mid-tone at C 27 reads as a COLOUR on cream and as a tint on near-black.
 
-     THE FIX SPENDS NO CONTRAST — every neutral ground gains a little:
-       page 5.37 -> 5.40 · frost 5.74 -> 5.78 · surface-alt 5.04 -> 5.07 ·
-       filter-well 4.75 -> 4.78.  ΔE from secondary 3.4 -> 29.5 (dark: 38.3).
-     All four clear AA for body text at any size, which matters because the
-     label tier prints this ink -- via `--label-ink` -- on every surface in the
-     app. (It was `.eyebrow` at 9px on ~460 sites when this was measured; #1307
-     retired that class into `.label-heading` / `.label-caption`, which is a
-     larger tier on the same ink and so cannot invalidate the numbers.)
+     #1549 SPENT NO CONTRAST AND #1715 SPENT L*. The hue swing above left every
+     neutral ground a fraction higher (page 5.37 -> 5.40, surface-alt 5.04 ->
+     5.07) and both tiers then sat there, AA-clear and no more, on stocks that
+     print this ink -- via `--label-ink` -- on every surface in the app. The
+     dark cascade's block says why that is not good enough; light is walked the
+     same distance in the same measurement, DOWN in L* rather than up, since
+     here the ground is the pale one:
+       #6b6050 -> #554b3c (L* 41.3 -> 32.5)   secondary
+       #656081 -> #4d4868 (L* 42.3 -> 32.3)   tertiary
+       page 7.78 / 7.83 · surface-alt 7.31 / 7.35 · filter-well 6.89 / 6.93 ·
+       selected filter row 5.63 / 5.66
+     THE GATING GROUND IS `--color-bg-surface-alt` (#f0ede6), not the page —
+     the profile's panels are drawn on it, and it closes on the ink in BOTH
+     cascades for opposite reasons (a darker sheet in light, a lighter one in
+     dark). The two filter grounds are AA rows: they carry `--text-lg` at 12px,
+     and both inks were under AA on the selected row before this (4.05 / 3.90).
+
+     ΔE from secondary 3.4 -> 29.6 (dark: 32.2); from primary 26.9, and light
+     has room to spare where dark does not (see that block).
 
      Cool-on-warm recedes at equal luminance, so "quieter" survives as a
      perception even though it is no longer a ratio. That is the claim #1307
@@ -54,8 +66,8 @@
      ratios (#1449's shape: a guard that measures an ink against a ground is
      blind to an ink measured against its NEIGHBOUR). */
   --color-text-primary: #1a1209;
-  --color-text-secondary: #6b6050;
-  --color-text-tertiary: #656081;
+  --color-text-secondary: #554b3c;
+  --color-text-tertiary: #4d4868;
 
   /* ── The label tier's ink is a SEAM, not a constant (#1307) ───────────────
      Read by .label-heading and .label-caption and by nothing else. Declared
@@ -70,12 +82,33 @@
      the tier's floor (both tiers are under WCAG's large-text threshold, so
      both owe 4.5:1) on every neutral stock in both cascades and on all eight
      card sheets in DARK — but it fails on three sheets in LIGHT, and the
-     reason is polarity rather than taste. S.N.I.D.E. 3.18:1 and Singularity
-     3.29:1 are near-black in BOTH themes (§6), so no light-cascade neutral can
-     clear them; Ephemerists' vellum is the darkest light sheet at 4.36:1 (its
-     praxis plate 4.35). That is #694's shape exactly: a colour that must
-     differ between two factions WITHIN one theme is a faction question, not a
-     global one.
+     reason is polarity rather than taste: S.N.I.D.E., Singularity and, since
+     #1627, the Ephemerists plate are near-black in BOTH themes (§6), so no
+     light-cascade neutral can clear them. That is #694's shape exactly: a
+     colour that must differ between two factions WITHIN one theme is a
+     faction question, not a global one.
+
+     #1715 WIDENED THAT GAP AND DID NOT CLOSE IT, which is the honest version
+     of the same finding. Lifting the neutral to AAA on the app's own stocks
+     darkens it in light, so the three always-dark sheets go the other way:
+     S.N.I.D.E. 3.18 -> 2.19, Singularity 3.29 -> 2.27, the Ephemerists plate
+     2.92 -> 2.01 (its page 3.12 -> 2.15). Every LIGHT PAPER sheet gains about
+     two ratio points at the same time — UA 4.89 -> 7.09, everymen 4.56 -> 6.61,
+     na 5.83 -> 8.46 — and dark gains everywhere (worst UA, 5.50 -> 7.93). The
+     three that lose are the three that were already unreachable, and the fix
+     for them is the per-faction ink this block describes rather than a softer
+     global: #1307 measured the mint and deferred it, #1715 is forbidden from
+     making it (a per-faction repoint is exactly what that issue rules out), so
+     it is still owed. Two of the three are covered in practice — the S.N.I.D.E.
+     comment voice moved its shared slots onto the flipping slip stock (7.61:1)
+     and both Singularity chassis repoint the global inks outright — which
+     leaves the Ephemerists plate as the one surface where a `.label-caption`
+     actually lands on this number in light.
+
+     (The figures this block used to carry — "vellum 4.36, praxis plate 4.35" —
+     were stale before #1715 touched them: #1627 took the plate to a night
+     ground in both cascades and nothing re-measured. A ratio in prose is a
+     claim about two tokens, and it expires when EITHER of them moves.)
 
      A faction frame therefore sets this ONCE on its own root and every label
      underneath follows — no per-label style, and no faction contradicting the
@@ -95,11 +128,15 @@
      Same measurement, one property over. `.markdown-preview` is the only rule
      in the app that colours a link, and the praxis body it renders is skinned
      by all eight factions — so ONE ink was answering for the app's near-white
-     page, S.N.I.D.E.'s photocopier black (3.06:1), Singularity's terminal
-     (3.17:1) and the Ephemerists' plate, which since #1627 is a night ground in
-     both cascades (2.82:1 on the plate, 3.01 on its page, 2.60 in a panel cell;
-     the hover ink, being the near-black primary, reads 1.07:1 there). A colour
+     page, S.N.I.D.E.'s photocopier black, Singularity's terminal and the
+     Ephemerists' plate, which since #1627 is a night ground in both cascades
+     (the hover ink, being the near-black primary, reads 1.07:1 there). A colour
      that must differ between two factions inside one theme is #694's shape.
+     #1636 measured 3.06 / 3.17 / 2.82; #1715's lift takes the light neutral
+     down to 2.20 / 2.28 / 2.03 on the same three, for the reason the
+     `--label-ink` block above works through in full — the sheets that lose are
+     the always-dark ones, which no light-cascade neutral could ever have
+     served, and this seam is precisely how they escape it.
 
      NOTHING IS MINTED for the Ephemerists half: `-plate-nile` is declared
      "links, affirmations" and is already measured on all three of the plate's
@@ -478,7 +515,11 @@
      derivation at its declarations rather than a summary here (#1214). */
   --faction-default-dot-ring: #d6cfbf;
   --faction-default-vote-on: #c2541f;
-  --faction-default-vote-off: #a8895a;
+  /* #a8895a until #1675, which measured it at 3.23:1 carrying "cast a vote" —
+     the widget's own call to action, 15px, not an inactive control and so owed
+     the full 4.5. Same tan, walked down to 4.68:1 on the card's #fffdf9. The
+     dark twin below already clears on its own ground and is unchanged. */
+  --faction-default-vote-off: #886f49;
   /* The unaffiliated PLAIN CREAM SHEET (#842). The design's card is a quiet
      sheet, and the rainbow appears in exactly four places on it — the eyebrow
      text-clip, the score-box rule, the total, and one 2px divider. The
@@ -1917,21 +1958,44 @@
   --color-bg-surface: rgba(255, 255, 255, 0.04);
   --color-bg-surface-alt: rgba(255, 255, 255, 0.06);
 
-  /* ── Text ── ─ UNCHANGED BY #1549, AND IT IS THE REFERENCE. This cascade
-     already answered the question the light one was failing to: tertiary is a
-     lavender (h 296°, C 27) against a warm-grey secondary (h 85°) at roughly
-     one weight — ΔE 38.3, and 6.21:1 against 5.63:1 on the page, so if
-     anything it is the LOUDER of the two. Light was brought to this hue rather
-     than this hue being softened toward light, because dark is the cascade
-     that works and a repaint here would move the whole label tier for no
-     defect. Note the direction that leaves: neither cascade makes tertiary
-     dimmer than secondary, and dark has even less room to than light does —
-     secondary is 4.87:1 on `--color-bg-surface-alt` here, so a rung below it
-     would be under AA before it was visible. "Tertiary" names a role, not a
-     rank in a contrast ladder; see the `:root` block for the whole argument. */
+  /* ── Text ── ─ #1549 SET THE HUES, #1715 SET THE WEIGHT. The hue argument is
+     unchanged and this cascade is still where it came from: tertiary is a
+     lavender (h 295°) against a warm-grey secondary (h 85°) at one weight, and
+     light was walked to this relation rather than the other way round.
+
+     WHAT MOVED IS L*, AND ONLY BECAUSE THE GROUND WAS MEASURED WRONG. Both
+     inks read comfortably on `--color-bg-page`, which is the measurement that
+     kept them where they were (6.21 / 5.63). The profile does not draw on the
+     page — it draws on `--color-bg-surface-alt`, which is ALPHA here, so the
+     ground is 6% white over #13121a = #212028, not #13121a. On the sheet the
+     text is actually on, secondary was 4.87:1: clearing AA by 0.37 while
+     carrying `23 / 60 pts this level`. AA is the line below which text is a
+     defect, not where the app's most-painted ink should live, so both tiers
+     now clear AAA 7:1 there. #988c78 -> #b9ac97, #9490c0 -> #b3b0d6.
+
+     THE LIFT IS BOUNDED ABOVE, and this is the number to know before touching
+     it again: `--color-text-primary` is a warm cream at L* 91.5 and secondary
+     is the same hue family, so the two are separated by lightness alone. The
+     lift spends 12 of the 32.7 ΔE that separated them and lands at 20.7 —
+     #1549's tier floor is 20. There is ~1 L* of headroom left. A further lift
+     of secondary is not available without moving primary, which is a different
+     issue with a much larger blast radius.
+
+     CHROMA FALLS AS L* RISES, on purpose. Tertiary lands at C 20.7 where it
+     was C 27, because the same chroma at L* 73 reads as a saturated periwinkle
+     rather than the tint the role wants — the inverse of the note in `:root`
+     about C 27 reading as a colour on cream. It also puts both cascades'
+     tertiary at the same chroma, which the hue argument always implied.
+
+     Measured in `factionContrast.test.ts` on four neutral grounds:
+       page 8.33 / 8.94 · surface-alt 7.21 / 7.74 · filter-well 7.34 / 7.88 ·
+       selected filter row 5.63 / 6.04  (secondary / tertiary)
+     The last is the tightest neutral stock in the app — two washes of
+     `--color-text-primary` — and both inks were UNDER AA on it (3.80 / 4.19)
+     before this lift. */
   --color-text-primary: #f0e6d0;
-  --color-text-secondary: #988c78;
-  --color-text-tertiary: #9490c0;
+  --color-text-secondary: #b9ac97;
+  --color-text-tertiary: #b3b0d6;
 
   /* ── Borders ── */
   --color-border: rgba(255, 255, 255, 0.07);
@@ -4810,7 +4874,13 @@
       LIGHT ships the kit's ground unchanged (it measures 5.75:1, against a
       5.99:1 baseline); only its glow comes down, .24 -> .13, the same order as
       UaBackdrop's stated 6-8% ceiling. A backdrop's job is to be felt, not
-      seen. */
+      seen.
+
+      Every figure above is a PRE-#1715 reading and every one of them moved up:
+      that issue lifted both quiet inks away from the AA floor, brightening them
+      on this night ground and darkening them on the cream one. The margins named
+      here are the floors the ground was chosen against, not ceilings — the
+      ground choice stands on its own (the kit's #241c0b failed at any glow). */
 :root {
   /* the ground — the cream sweep both the hero plate and the page sit on */
   --faction-wow-ground-from: #fbf4e0;
@@ -5429,7 +5499,8 @@
      over the page is a lift in light (#eae6e0) and in dark (#202025, within a
      shade of the design's #1b1a24), so one declaration covers both themes and
      nothing drifts when the page ground moves. --color-text-secondary reads
-     4.82:1 on the light well and 5.04:1 on the dark one. */
+     6.89:1 on the light well and 7.34:1 on the dark one (4.96 / 4.96 before
+     #1715 lifted the neutral tiers; both grounds are `Pair` rows now). */
   --filter-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
 
   /* The sliding thumb: a neutral highlight, never a hue. Same reasoning — one
@@ -5834,14 +5905,19 @@
 /* A selected row inverts to the thumb fill, and the count follows the label
    into the warm family there so the whole row reads as one selected object.
 
-   ponytail (#1549): the original reason given was "tertiary is too faint
-   against the thumb", and that was never worth much — measured, the thumb
-   (10% primary over `--filter-well`) reads secondary at 4.05:1 and tertiary at
-   3.90:1 in light, and secondary at 3.80:1 against tertiary's 4.19:1 in DARK,
-   where this rule therefore costs contrast rather than buying it. Both inks
-   are under AA on that stock at `--text-lg` in both themes, so the fix is the
-   GROUND (a selected row wants more than a 10% lift) and not the ink, which
-   puts it outside a token-tier change. Left as-is here, measured, and named. */
+   ponytail (#1549, closed out by #1715): the original reason given was
+   "tertiary is too faint against the thumb", and that was never worth much —
+   measured, the thumb (10% primary over `--filter-well`) read secondary at
+   4.05:1 and tertiary at 3.90:1 in light, and secondary at 3.80:1 against
+   tertiary's 4.19:1 in DARK, where this rule therefore cost contrast rather
+   than buying it. Both inks were under AA on that stock at `--text-lg` in both
+   themes. #1549 called the fix the GROUND rather than the ink and left it; the
+   ink turned out to be short on every neutral stock, and lifting it to AAA on
+   the two the app owns carries this one over AA as a side effect — 5.63 / 5.66
+   light, 5.63 / 6.04 dark. The rule stays because it is about reading the row
+   as one object, not about contrast, and it no longer costs any. #1579 owns
+   the dark half of it. Both stocks are `Pair` rows now, so the next repaint of
+   `--color-text-primary` (which IS this ground, twice) has to answer for them. */
 .filter-factions__row[data-on] .filter-factions__count {
   color: var(--color-text-secondary);
 }

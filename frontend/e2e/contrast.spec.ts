@@ -64,6 +64,37 @@ type ViewportName = keyof typeof VIEWPORTS
  */
 const SHARED_ROUTES = ['/', '/tasks', '/praxis', '/leaderboard', '/factions']
 
+/**
+ * The unmeasurable ratchet (#1675, owner ruling 2026-08-14).
+ *
+ * An unresolved backdrop used to FAIL. It cannot: the scanner is reporting that
+ * it could not measure, not that it measured something bad, and "give every
+ * gradient a solid backdrop" fights the faction skins the design system exists
+ * to have. So an unmeasurable surface is now REPORTED instead — loudly, with a
+ * count and a list, because a silent skip turns a red suite into a green one
+ * that checks less.
+ *
+ * The ceiling is what stops that from being a hole. A NEW unmeasurable surface
+ * is a regression in coverage even though it is not a contrast defect, so the
+ * count may only ever go down. These numbers are the deduped unresolved count
+ * per test in nightly run 31779247838 — measured, not chosen. They are
+ * independent of THEME (identical light and dark, all seven factions), which is
+ * what you would expect of fills that are the same shape in both.
+ *
+ * Lower one whenever a fix retires a surface. Raising one is a decision, not a
+ * chore: it means a new fill is now hiding text from the sweep.
+ */
+const UNMEASURABLE_CEILING: Record<string, Record<ViewportName, number>> = {
+  // WOW's title bars and UA's gilt wordmark are the two kits with extra fills.
+  wow: { desktop: 22, mobile: 25 },
+  ua: { desktop: 19, mobile: 14 },
+  default: { desktop: 16, mobile: 14 },
+}
+
+function ceilingFor(faction: Faction, viewport: ViewportName): number {
+  return (UNMEASURABLE_CEILING[faction] ?? UNMEASURABLE_CEILING.default)[viewport]
+}
+
 // This spec opts out of the shared bot's saved cookie: it re-logs per faction
 // against its own dev account so it can't leave other specs' bot in Snide.
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -119,6 +150,7 @@ for (const faction of FACTIONS) {
         const routes = [...SHARED_ROUTES, `/factions/${faction}`]
         const failures: string[] = []
         const passing: string[] = []
+        const unmeasurable: string[] = []
 
         for (const route of routes) {
           await page.goto(route)
@@ -142,17 +174,41 @@ for (const faction of FACTIONS) {
             }
             if (allowed) continue
             emitBaseline(key, finding, faction, theme, viewport)
+            // The one branch #1675 added: a backdrop the scanner could not
+            // resolve is a hole in COVERAGE, not a contrast defect, so it is
+            // counted and printed rather than failed. See UNMEASURABLE_CEILING.
+            if (finding.background === null) {
+              unmeasurable.push(describeFinding(finding))
+              continue
+            }
             failures.push(describeFinding(finding))
           }
         }
 
+        // LOUD, always — including on a green run. The whole risk of the #1675
+        // ruling is a suite that looks greener because it checks less, and the
+        // only defence against that is printing what went unchecked every time.
+        const unchecked = [...new Set(unmeasurable)]
+        const ceiling = ceilingFor(faction, viewport)
+        console.log(
+          `\n${faction}/${theme}/${viewport}: ${unchecked.length} unmeasurable surface(s), ` +
+            `ceiling ${ceiling}.\n` +
+            (unchecked.length ? `${unchecked.join('\n\n')}\n` : '  (none)\n'),
+        )
+
         expect(
           [...new Set(failures)],
-          `${faction}/${theme}/${viewport}: text below WCAG AA.\n` +
-            `An UNRESOLVED BACKDROP is a failure, not a skip — text over an opaque-stop gradient or an image ` +
-            `cannot be measured, so it must be given a solid backdrop (or the fill hoisted behind an opaque card).\n\n` +
+          `${faction}/${theme}/${viewport}: text below WCAG AA.\n\n` +
             [...new Set(failures)].join('\n\n'),
         ).toHaveLength(0)
+
+        expect(
+          unchecked.length,
+          `${faction}/${theme}/${viewport}: ${unchecked.length} unmeasurable surfaces, up from ${ceiling}. ` +
+            `A new opaque-stop fill is now hiding text from the sweep — that is lost coverage, not a style bug. ` +
+            `Give the text a solid backdrop, or raise this faction's entry in UNMEASURABLE_CEILING deliberately.\n\n` +
+            unchecked.join('\n\n'),
+        ).toBeLessThanOrEqual(ceiling)
 
         expect(
           [...new Set(passing)],
