@@ -104,7 +104,6 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -133,6 +132,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* The practice's inks, named for the ROLE each plays in the design's skin row.
  * Every one carries both themes in `index.css`. */
@@ -179,9 +187,13 @@ export default function UaEditPraxis({ state }: Props) {
     ? { lotus: 300, lotusLeft: -122, lotusTop: -94, enso: 208, ensoRight: -66, ensoBottom: -58 }
     : { lotus: 420, lotusLeft: -170, lotusTop: -130, enso: 300, ensoRight: -96, ensoBottom: -84 };
 
-  /* UA does not replace the divider — it is the shared hairline in UA's ink.
-   * The shared default reads the `na` hair token, which is a colour measured on
-   * another faction's paper, so the ink (and only the ink) is overridden. */
+  /* UA does not replace the rule — it is the shared hairline in UA's ink. The
+   * shared default reads the `na` hair token, which is a colour measured on
+   * another faction's paper, so the ink (and only the ink) is overridden.
+   *
+   * Kept for the dress the waiting surface wears. On THIS page the hairline is
+   * drawn once, above the footer (#1707), and the regions part by the sheet's
+   * own gap. */
   const rule = <ComposerRule style={{ background: HAIR }} />;
 
   /* The label tier's face and colour are the skin's; its geometry (uppercase,
@@ -212,6 +224,9 @@ export default function UaEditPraxis({ state }: Props) {
     style: {
       background: FIELD,
       border: `1px solid ${RULE}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACCENT}`,
       borderRadius: RADIUS,
       padding: "var(--space-lg)",
     },
@@ -339,8 +354,7 @@ export default function UaEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={rule}
-          meta={<TitleCounter length={state.title.length} color={MUTED} />}
+          rule={false}
           labelStyle={labelStyle}
         >
           <TitleField
@@ -362,7 +376,7 @@ export default function UaEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={rule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <ModePicker
@@ -413,7 +427,7 @@ export default function UaEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={rule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <InviteSearch
@@ -437,7 +451,7 @@ export default function UaEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={rule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <MetataskSealStack state={state} />
@@ -449,65 +463,64 @@ export default function UaEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={rule}
+          rule={false}
           labelStyle={labelStyle}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    fontFamily: UA_TEXT,
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: RADIUS,
-                    border: `1px solid ${active ? RULE : "transparent"}`,
-                    background: active ? FIELD : "transparent",
-                    color: active ? INK : MUTED,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={composerLabelStyle({
+                  fontFamily: UA_TEXT,
+                  color: MUTED,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      fontFamily: UA_TEXT,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: RADIUS,
+                      border: `1px solid ${active ? RULE : "transparent"}`,
+                      background: active ? FIELD : "transparent",
+                      color: active ? INK : MUTED,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form, and drawing
               both would put the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  toolbarButtonStyle: {
-                    fontFamily: UA_TEXT,
-                    background: FIELD,
-                    color: MUTED,
-                    border: `1px solid ${RULE}`,
-                    borderRadius: RADIUS,
-                  },
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.7,
-                    fontFamily: UA_TEXT,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                toolbarButtonStyle: {
                   fontFamily: UA_TEXT,
+                  background: FIELD,
                   color: MUTED,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+                  border: `1px solid ${RULE}`,
+                  borderRadius: RADIUS,
+                },
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.7,
+                  fontFamily: UA_TEXT,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -537,7 +550,7 @@ export default function UaEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={rule}
+          rule={false}
           labelStyle={labelStyle}
         >
           <div
@@ -588,7 +601,9 @@ export default function UaEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1px dashed ${FILL}`,
                     borderRadius: RADIUS,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: MUTED,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

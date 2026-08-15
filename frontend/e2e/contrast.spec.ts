@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import { appendFileSync } from 'node:fs'
 
-import { RENDERED_BASELINE, baselineKey, unresolvedKey, type BaselineEntry } from './contrastBaseline'
+import { baselineKey, triageFindings } from './contrastBaseline'
 import { scanPageForContrast, type Finding } from './contrastScan'
 
 /**
@@ -23,9 +23,16 @@ import { scanPageForContrast, type Finding } from './contrastScan'
  * + backend + seed + Playwright. No new CI job.
  *
  * REGENERATING THE BASELINE. Set `CONTRAST_BASELINE_OUT=<path>` and run the
- * suite; every failure is appended there as a ready-to-paste entry. The list
- * is machine-produced on purpose — hand-typed ratios would be wrong within a
- * week, which is the whole thesis of this issue.
+ * suite; every MEASURED failure is appended there as a ready-to-paste entry.
+ * The list is machine-produced on purpose — hand-typed ratios would be wrong
+ * within a week, which is the whole thesis of this issue. Unmeasurable
+ * backdrops are NOT baseline entries (#1762), so nothing is emitted for them;
+ * their ceiling comes off the report this prints on every run.
+ *
+ * The policy itself — which finding fails, which is reported, which allowlist
+ * entry has gone stale — is `triageFindings` in contrastBaseline.ts, so that
+ * `src/utils/__tests__/contrastTriage.test.ts` can exercise it in a PR without
+ * a browser. This file drives the pages and prints; it decides nothing.
  */
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
@@ -76,23 +83,47 @@ const SHARED_ROUTES = ['/', '/tasks', '/praxis', '/leaderboard', '/factions']
  *
  * The ceiling is what stops that from being a hole. A NEW unmeasurable surface
  * is a regression in coverage even though it is not a contrast defect, so the
- * count may only ever go down. These numbers are the deduped unresolved count
- * per test in nightly run 31779247838 — measured, not chosen. They are
- * independent of THEME (identical light and dark, all seven factions), which is
- * what you would expect of fills that are the same shape in both.
+ * count may only ever go down.
+ *
+ * A SURFACE, NOT A FINDING (#1762). The unit is one distinct `backdropCss`,
+ * however many text nodes sit on it. Counting findings made the ceiling churn
+ * on every copy edit — add a line of body text to a card on the gilt wordmark
+ * and the number moves — while the thing worth ratcheting, a NEW region of the
+ * app going unchecked, is exactly one new surface. The report prints both, so
+ * the node count is still visible; only the assertion is coarser.
+ *
+ * ponytail: these are the per-test surface counts read off nightly run
+ * 31779247838, which is the last run before #1749 landed. They are the best
+ * numbers available in a subagent worktree — no Playwright browsers, no seeded
+ * Postgres, so they were NOT regenerated here. That run measured with the 56
+ * `ratio: null` allowlist entries still in force, and #1762 deletes those, so
+ * any of the 22 distinct surfaces they named that both still renders AND was
+ * genuinely being filtered will now reach the report and push a count up. The
+ * breadcrumbs on those 56 entries put the exposure at up to +4 on wow
+ * desktop/mobile and up to +2 on ua and ephemerists desktop; the other four
+ * factions had no such entries at all, so their numbers cannot move for this
+ * reason. They are deliberately NOT pre-raised by that allowance — a ceiling
+ * set too high is silent, which is the disease #1762 is treating, and a ceiling
+ * set too low fails the nightly with the exact number to paste. Correct these
+ * from the first real run's output, not from arithmetic.
  *
  * Lower one whenever a fix retires a surface. Raising one is a decision, not a
  * chore: it means a new fill is now hiding text from the sweep.
  */
 const UNMEASURABLE_CEILING: Record<string, Record<ViewportName, number>> = {
   // WOW's title bars and UA's gilt wordmark are the two kits with extra fills.
-  wow: { desktop: 22, mobile: 25 },
-  ua: { desktop: 19, mobile: 14 },
-  default: { desktop: 16, mobile: 14 },
+  wow: { desktop: 8, mobile: 7 },
+  ua: { desktop: 8, mobile: 5 },
+  default: { desktop: 7, mobile: 5 },
+}
+
+/** Which row of the table governs this faction — named, so the failure message can quote it. */
+function ceilingKeyFor(faction: Faction): string {
+  return faction in UNMEASURABLE_CEILING ? faction : 'default'
 }
 
 function ceilingFor(faction: Faction, viewport: ViewportName): number {
-  return (UNMEASURABLE_CEILING[faction] ?? UNMEASURABLE_CEILING.default)[viewport]
+  return UNMEASURABLE_CEILING[ceilingKeyFor(faction)][viewport]
 }
 
 // This spec opts out of the shared bot's saved cookie: it re-logs per faction
@@ -116,26 +147,38 @@ async function useTheme(page: Page, theme: Theme): Promise<void> {
   }, theme)
 }
 
-function keyOf(theme: Theme, finding: Finding): string {
-  return finding.background === null
-    ? unresolvedKey(theme, finding.text, finding.backdropCss ?? 'unknown', finding.required)
-    : baselineKey(theme, finding.text, finding.background, finding.required)
-}
-
 function describeFinding(finding: Finding): string {
   const size = `${finding.fontSizePx}px/${finding.fontWeight}`
-  if (finding.background === null) {
-    return `  UNRESOLVED BACKDROP (${finding.unresolvedKind}) — ${finding.where} (${size})\n    "${finding.sample}"\n    ${finding.unresolved}`
-  }
   return `  ${finding.ratio.toFixed(2)}:1 (needs ${finding.required}:1) — ${finding.text} on ${finding.background}\n    ${finding.where} (${size}) "${finding.sample}"`
 }
 
+/**
+ * One line per surface the scanner refused to measure: how many text nodes sit
+ * on it, and one of them so a human can go and look. The CSS is the identity,
+ * so it leads. Printing every finding instead repeated the same gradient 14-25
+ * times per test, which is a report nobody reads.
+ */
+function describeSurface(css: string, over: Finding[]): string {
+  const example = over[0]
+  return (
+    `  ${over.length} node(s) over ${css.slice(0, 120)}${css.length > 120 ? '…' : ''}\n` +
+    `    e.g. ${example.where} (${example.fontSizePx}px/${example.fontWeight}) "${example.sample}"`
+  )
+}
+
 /** Emit a ready-to-paste BASELINE entry when regenerating (see header). */
-function emitBaseline(key: string, finding: Finding, faction: Faction, theme: Theme, viewport: ViewportName): void {
-  if (!BASELINE_OUT) return
-  const ratio = finding.background === null ? 'null' : finding.ratio.toFixed(2)
+function emitBaseline(finding: Finding, faction: Faction, theme: Theme, viewport: ViewportName): void {
+  // An unmeasurable backdrop has no ratio to record and is ratcheted by count,
+  // not allowlisted — emitting one would recreate the second mechanism #1762
+  // deleted. `triageFindings` only ever puts measured findings in `failures`;
+  // the guard is belt-and-braces for a hand-called regeneration.
+  if (!BASELINE_OUT || finding.background === null) return
+  const key = baselineKey(theme, finding.text, finding.background, finding.required)
   const where = `${faction}/${theme}/${viewport} ${finding.where}`.replace(/'/g, '')
-  appendFileSync(BASELINE_OUT, `  ${JSON.stringify(key)}: { ratio: ${ratio}, issue: 651, where: '${where}' },\n`)
+  appendFileSync(
+    BASELINE_OUT,
+    `  ${JSON.stringify(key)}: { ratio: ${finding.ratio.toFixed(2)}, issue: 651, where: '${where}' },\n`,
+  )
 }
 
 for (const faction of FACTIONS) {
@@ -147,10 +190,9 @@ for (const faction of FACTIONS) {
         await useTheme(page, theme)
         await loginAs(page, faction)
 
+        const combination = `${faction}/${theme}/${viewport}`
         const routes = [...SHARED_ROUTES, `/factions/${faction}`]
-        const failures: string[] = []
-        const passing: string[] = []
-        const unmeasurable: string[] = []
+        const findings: Finding[] = []
 
         for (const route of routes) {
           await page.goto(route)
@@ -159,59 +201,47 @@ for (const faction of FACTIONS) {
           await page.waitForLoadState('networkidle')
           await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
 
-          const findings = (await page.evaluate(scanPageForContrast)) as Finding[]
-          for (const finding of findings) {
-            const ok = finding.background !== null && finding.ratio >= finding.required
-            const key = keyOf(theme, finding)
-            const allowed: BaselineEntry | undefined = RENDERED_BASELINE[key]
-
-            if (ok) {
-              // A pair that now passes but is still allowlisted is debt that
-              // got fixed without the list being updated. Catch it: an
-              // allowlist that outlives its bug stops being a ratchet.
-              if (allowed) passing.push(`${key} now measures ${finding.ratio.toFixed(2)}:1 (owned by #${allowed.issue})`)
-              continue
-            }
-            if (allowed) continue
-            emitBaseline(key, finding, faction, theme, viewport)
-            // The one branch #1675 added: a backdrop the scanner could not
-            // resolve is a hole in COVERAGE, not a contrast defect, so it is
-            // counted and printed rather than failed. See UNMEASURABLE_CEILING.
-            if (finding.background === null) {
-              unmeasurable.push(describeFinding(finding))
-              continue
-            }
-            failures.push(describeFinding(finding))
-          }
+          findings.push(...((await page.evaluate(scanPageForContrast)) as Finding[]))
         }
+
+        const { failures, stale, unmeasurable } = triageFindings(theme, findings)
+        for (const finding of failures) emitBaseline(finding, faction, theme, viewport)
 
         // LOUD, always — including on a green run. The whole risk of the #1675
         // ruling is a suite that looks greener because it checks less, and the
         // only defence against that is printing what went unchecked every time.
-        const unchecked = [...new Set(unmeasurable)]
         const ceiling = ceilingFor(faction, viewport)
+        const uncheckedNodes = [...unmeasurable.values()].reduce((total, over) => total + over.length, 0)
         console.log(
-          `\n${faction}/${theme}/${viewport}: ${unchecked.length} unmeasurable surface(s), ` +
-            `ceiling ${ceiling}.\n` +
-            (unchecked.length ? `${unchecked.join('\n\n')}\n` : '  (none)\n'),
+          `\n[contrast] ${combination}: ${unmeasurable.size} unmeasurable surface(s) ` +
+            `(ceiling ${ceiling}), ${uncheckedNodes} text node(s) unchecked.\n` +
+            (unmeasurable.size
+              ? `${[...unmeasurable].map(([css, over]) => describeSurface(css, over)).join('\n')}\n`
+              : '  (none)\n'),
         )
 
+        const describedFailures = [...new Set(failures.map(describeFinding))]
         expect(
-          [...new Set(failures)],
-          `${faction}/${theme}/${viewport}: text below WCAG AA.\n\n` +
-            [...new Set(failures)].join('\n\n'),
+          describedFailures,
+          `${combination}: text below WCAG AA.\n\n` + describedFailures.join('\n\n'),
         ).toHaveLength(0)
 
+        // Gaining a surface is a coverage regression, not a contrast defect: a
+        // region of the app just stopped being checked at all. Losing one is
+        // progress, and only asks for the ceiling to come down.
         expect(
-          unchecked.length,
-          `${faction}/${theme}/${viewport}: ${unchecked.length} unmeasurable surfaces, up from ${ceiling}. ` +
-            `A new opaque-stop fill is now hiding text from the sweep — that is lost coverage, not a style bug. ` +
-            `Give the text a solid backdrop, or raise this faction's entry in UNMEASURABLE_CEILING deliberately.\n\n` +
-            unchecked.join('\n\n'),
+          unmeasurable.size,
+          `${combination}: ${unmeasurable.size} unmeasurable surfaces, up from ${ceiling}. ` +
+            `A new opaque-stop fill is now hiding text from the sweep — that is lost coverage, not a style bug.\n\n` +
+            `TO CORRECT THIS CEILING from this run: the surfaces printed above are the whole population, so ` +
+            `set '${ceilingKeyFor(faction)}'.${viewport} in UNMEASURABLE_CEILING ` +
+            `to ${unmeasurable.size} — but only after checking the new surface against the list above. ` +
+            `If it is one you can give a solid backdrop, do that instead; the ceiling only ever comes down.\n\n` +
+            [...unmeasurable.keys()].join('\n'),
         ).toBeLessThanOrEqual(ceiling)
 
         expect(
-          [...new Set(passing)],
+          [...new Set(stale)],
           `These pairs are in RENDERED_BASELINE but now clear AA — delete their entries in contrastBaseline.ts. ` +
             `The list only ever shrinks.`,
         ).toHaveLength(0)

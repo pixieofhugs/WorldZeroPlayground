@@ -5506,10 +5506,10 @@
   --filter-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --filter-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
 
-  /* The rail's inner padding. Read by SegmentedRail's thumb maths as well as by
-     .filter-rail, because the design writes that maths as
-     `calc(i * (100% - 6px) / n + 3px)` — the 6 and the 3 ARE this value, and a
-     number restated in a stylesheet and a module is a number that drifts. */
+  /* The rail's inner padding, and the height of the bar's spectrum strip.
+     SegmentedRail used to read this too, to write the design's
+     `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the
+     active segment instead, so the number is back to living in one file. */
   --filter-rail-pad: 3px;
 
   --filter-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
@@ -5640,8 +5640,15 @@
   position: relative;
   display: flex;
   align-items: center;
-  flex: 1 1 248px;
-  min-width: 220px;
+  /* Sized by its labels, not by a number (#1726). The old `flex: 1 1 248px;
+     min-width: 220px` described four equal shares of a fixed box, and at 220px
+     a share was 53.5px against a 58.8px "Retired". A rail is now as wide as
+     what is written on it and never wider than the row it sits in; past that
+     it wraps to a second line rather than spilling out of the bar, and the
+     thumb is measured, so it lands on the active segment's row either way. */
+  flex: 0 1 auto;
+  max-width: 100%;
+  flex-wrap: wrap;
   padding: var(--filter-rail-pad);
   border-radius: 999px;
   border: 1.5px solid transparent;
@@ -5653,22 +5660,31 @@
     var(--faction-default-rainbow) border-box;
 }
 
+/* All four edges come from SegmentedRail's measurement of the active segment
+   (#1726) — there is no `top`/`bottom` here, because a rail that wraps has no
+   single row to pin them to. Width transitions alongside left now that the
+   thumb changes size from segment to segment; without it the pill would snap
+   its width while sliding. */
 .filter-rail__thumb {
   position: absolute;
-  top: var(--filter-rail-pad);
-  bottom: var(--filter-rail-pad);
   border-radius: 999px;
   background: var(--filter-thumb);
   box-shadow: inset 0 0 0 1px var(--filter-thumb-edge);
-  transition: left 220ms cubic-bezier(0.4, 1.4, 0.5, 1);
+  transition-property: left, top, width, height;
+  transition-duration: 220ms;
+  transition-timing-function: cubic-bezier(0.4, 1.4, 0.5, 1);
   pointer-events: none;
 }
 
 .filter-rail__segment {
   position: relative;
-  flex: 1;
+  /* Grow into whatever slack the rail has, from a CONTENT basis — never
+     `flex: 1`, whose 0 basis is the equal share that cut "Pending" off. The
+     horizontal padding is the breathing room between one label and the next;
+     nothing else separates them. */
+  flex: 1 1 auto;
   min-height: 38px;
-  padding: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-md);
   border: 0;
   background: none;
   cursor: pointer;
@@ -6167,14 +6183,16 @@
   }
 
   .filter-rail {
-    flex: 1 1 auto;
     width: 100%;
-    min-width: 0;
   }
 
+  /* Tighter horizontal padding than the desktop rail: the phone has a real
+     width budget (see the arithmetic on RAIL_SEGMENTS_MAX in filterState.ts),
+     and the segments grow into the full-width rail's slack anyway. */
   .filter-rail__segment {
     min-height: 44px;
     font-size: var(--text-lg);
+    padding: var(--space-sm);
   }
 
   .filter-factions__trigger {
