@@ -31,6 +31,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  AAA_NORMAL,
   AA_LARGE,
   AA_NORMAL,
   compositeOver,
@@ -85,8 +86,15 @@ type Pair = {
    * which is the wrong question the moment anything is laid over the sheet —
    * and "the pair measured is not the pair on screen" is precisely the shape of
    * bug that got past both guards in #694.
+   *
+   * AN ARRAY IS A STACK, applied outermost-last (#1715). A selected faction
+   * filter row is page -> `--filter-well` -> `--filter-thumb` -> ink: two washes
+   * of the same token at two alphas, and it is the tightest neutral ground in
+   * the app. One wash short is how this issue's first measurement read the
+   * profile card as fine — the answer moves by ~0.5 of a ratio point per layer,
+   * which is the whole margin at stake.
    */
-  veil?: Veil;
+  veil?: Veil | Veil[];
   /** AA floor. Defaults to 4.5; set AA_LARGE only where the role is large display type. */
   floor?: number;
 };
@@ -1313,17 +1321,60 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // swing at held weight and reads a fraction HIGHER on every one of them
   // (page 5.37 -> 5.40, alt 5.04 -> 5.07). The tier separation itself is not a
   // ratio and is asserted at the bottom of this file.
+  //
+  // ── AND THEY OWE AAA, NOT AA (#1715) ─────────────────────────────────────
+  //
+  // The rows above landed at AA and the tokens then settled ONTO it: dark
+  // secondary read 4.87:1 on the alt surface, clearing the floor by 0.37 while
+  // carrying `23 / 60 pts this level` on the profile. AA is the line below
+  // which text is a defect, and the most-painted ink in the repo should not be
+  // resting on it — so the two neutral stocks take `AAA_NORMAL`.
+  //
+  // THE ALT SURFACE IS THE ONE THAT GATES, in both cascades and for opposite
+  // reasons: in light it is a DARKER sheet than the page (#f0ede6 against
+  // #f7f4ee) and in dark it is a LIGHTER one (0.06 white over #13121a composites
+  // to #212028), so either way it closes on the ink. The first measurement of
+  // #1715 used the page and read the profile as fine; the profile's panels are
+  // this token.
+  //
+  // The two filter grounds are AA rows, not AAA ones, and that is a size call
+  // rather than a shrug: the well and the selected row carry `--text-lg` at
+  // 12px, so 4.5:1 is what WCAG asks. They are here because they are the
+  // TIGHTEST neutral stocks in the app — the selected row is two washes of
+  // `--color-text-primary` deep — and both inks failed AA on it before the lift
+  // (light 4.05 / 3.90, dark 3.80 / 4.19). The lift is what fixes them; #1579
+  // owns the row's dark promotion separately.
   ...(
     [
       ["secondary", "--color-text-secondary"],
       ["tertiary", "--color-text-tertiary"],
     ] as const
   ).flatMap(([role, text]) => [
-    { what: `app page, ${role} ink`, surface: "--color-bg-page", text },
+    { what: `app page, ${role} ink`, surface: "--color-bg-page", text, floor: AAA_NORMAL },
     {
       what: `app alt surface, ${role} ink`,
       surface: "--color-bg-page",
       veil: "--color-bg-surface-alt" as Veil,
+      text,
+      floor: AAA_NORMAL,
+    },
+    // `--filter-well` is `color-mix(in srgb, --color-text-primary 6%, --color-bg-page)`,
+    // which is that token at 6% alpha over the page — the same arithmetic the
+    // `{ token, alpha }` veil already does, and the only way to reach a
+    // `color-mix()` at all (`parseColor` returns null for one, by design).
+    {
+      what: `filter well, ${role} ink`,
+      surface: "--color-bg-page",
+      veil: { token: "--color-text-primary", alpha: 0.06 } as Veil,
+      text,
+    },
+    {
+      what: `selected filter row, ${role} ink`,
+      surface: "--color-bg-page",
+      veil: [
+        { token: "--color-text-primary", alpha: 0.06 },
+        { token: "--color-text-primary", alpha: 0.1 },
+      ] as Veil[],
       text,
     },
   ]),
@@ -1475,12 +1526,12 @@ describe("faction token contrast (WCAG AA)", () => {
           // A veil is composited onto the surface before the text is, so what
           // the ink is measured against is what a viewer actually sees.
           let ground = surface.color!;
-          if (pair.veil) {
+          for (const layer of pair.veil === undefined ? [] : [pair.veil].flat()) {
             // A token-at-an-alpha wash resolves the token, then scales its alpha
             // — which is what `color-mix(in srgb, <token> N%, transparent)`
             // computes. A literal parses as-is. See `Veil`.
-            const name = typeof pair.veil === "string" ? pair.veil : pair.veil.token;
-            const alpha = typeof pair.veil === "string" ? 1 : pair.veil.alpha;
+            const name = typeof layer === "string" ? layer : layer.token;
+            const alpha = typeof layer === "string" ? 1 : layer.alpha;
             const spec = name.startsWith("--") ? resolveColor(name, theme).raw : name;
             const parsed = spec === null ? null : parseColor(spec);
             expect(parsed, `veil "${name}" (${pair.what}) is not a solid color`).not.toBeNull();
