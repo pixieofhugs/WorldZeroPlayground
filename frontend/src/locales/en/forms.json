@@ -400,12 +400,12 @@
         "progressAria": "{{cast}} of {{total}} hands have signed the work",
         "bannerWaiting": "You have signed. The other hands have yet to.",
         "bannerHoldout": "The other hands are waiting on you — sign the work.",
-        "bannerPublished": "Signed by every hand. The mark stands.",
+        "bannerPublished": "Signed by every hand. The work stands.",
         "castAction": "Sign the work",
-        "castFinalAction": "Sign — seal the mark",
+        "castFinalAction": "Sign — seal the work",
         "pullBackAction": "Withdraw my signature",
         "successHeading": "Sealed",
-        "successBody": "Every hand has signed. The mark stands.",
+        "successBody": "Every hand has signed. The work stands.",
         "successContinue": "View the work"
       }
     },
@@ -459,7 +459,7 @@
     "factionSelectorLabel": "Choose a faction for this task, or leave it open to everyone",
     "factionDescriptor": {
       "na": "Anyone",
-      "ua": "Practise with us — one true mark a day.",
+      "ua": "Practise with us — one true piece a day.",
       "coven": "Circle",
       "wow": "Knights who take the ridiculous with total seriousness.",
       "everymen": "Mobilize",

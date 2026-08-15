@@ -16,7 +16,7 @@
   },
   "ua": {
     "score_overtake": [
-      "{{from_name}} has passed {{to_name}}. The mark is the same either way.",
+      "{{from_name}} has passed {{to_name}}. The work is the same either way.",
       "{{to_name}}, {{from_name}} is ahead today. Tomorrow is another sheet."
     ],
     "level_up": [
@@ -24,7 +24,7 @@
       "A quieter hand, {{from_name}}. Well drawn."
     ],
     "praxis_complete": [
-      "{{from_name}} sealed a mark. It stands.",
+      "{{from_name}} sealed a piece. It stands.",
       "One more true thing from {{from_name}}."
     ]
   },

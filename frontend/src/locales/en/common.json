@@ -76,16 +76,6 @@
         "crown": "Crown = the lead",
         "faint": "Faint = still at zero"
       },
-      "meadowTaglineEra": "The nearer the front of the field, the higher you've climbed this era.",
-      "meadowTaglineAllTime": "The nearer the front of the field, the higher you've climbed of all time.",
-      "meadowLegend": {
-        "sizeEra": "Bigger bloom = more era points",
-        "sizeAllTime": "Bigger bloom = more all-time points",
-        "crown": "Golden bloom, out front = the lead",
-        "faint": "Pale bloom = still at zero"
-      },
-      "meadowZeroState": "The season is young — the seeds are sown, but nothing has bloomed yet.",
-      "meadowLabel": "The standings, drawn as a sunlit field of players.",
       "zeroState": "The era is young — no one has climbed yet.",
       "skyLabel": "The standings, drawn as a night sky of players.",
       "you": "You",
@@ -166,7 +156,7 @@
         "questsHeading": "quests"
       },
       "ua": {
-        "masthead": "One mark today. Begin.",
+        "masthead": "One true piece today. Begin.",
         "questsHeading": "On the sheet"
       },
       "singularity": {

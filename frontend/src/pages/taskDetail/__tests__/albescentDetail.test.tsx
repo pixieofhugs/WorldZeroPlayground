@@ -124,7 +124,11 @@ describe("Albescent task detail — Default plus the light", () => {
       "Sign up",
       "Level",
       "people working on this",
-      "base",
+      // `base` is NOT in this list any more: #1704 drops the base row at the
+      // identity multiplier, on this skin's own worth slot as on Default's, so
+      // at ×1.00 the ring's total is the only worth text. The row's inheritance
+      // is asserted below, where a real factor makes it say something.
+      "POINTS",
     ]) {
       expect(text, `inherited slot: ${shared}`).toContain(shared);
     }
@@ -132,6 +136,16 @@ describe("Albescent task detail — Default plus the light", () => {
     expect(text).toContain(BRIEF);
     // The faction line resolves from factions.json by slug, like every skin.
     expect(text).toContain("Albescent");
+  });
+
+  it("inherits the base row once a factor makes it worth saying", () => {
+    const { text } = render(
+      <AlbescentTaskDetail
+        state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })}
+      />,
+    );
+    expect(text).toContain("base");
+    expect(text).toContain("×1.25");
   });
 
   it("adds the light layers and nothing else structural", () => {
