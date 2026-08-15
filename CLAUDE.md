@@ -109,6 +109,8 @@ For file-editing work, dispatch to a specialist that loads only its own context:
 
 `/builder-bot` picks up where `/triage` stops. It shapes a whole batch (dependency-aware, grouped by **file footprint** so only disjoint work runs in parallel), asks of each issue whether it should exist at all, grills anything ungrilled, dispatches each issue to a scoped subagent in its own worktree, then gates every merge on CI **and** a review pass. A merge ships to production — `main` auto-deploys.
 
+`/git-reaper` sweeps what those batches leave behind — stale worktrees, squash-merged branches, orphaned metadata — and reclaims the disk. It surveys and classifies before deleting anything, and it knows the traps this repo has (a `node_modules` junction that takes main's copy down with it, squash merges that defeat `--merged`).
+
 ### Issue tracker
 Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
 
