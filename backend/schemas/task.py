@@ -71,8 +71,8 @@ class TaskOut(WireModel):
     signup_reason: Optional[str] = None
 
 
-#: Trust-boundary caps on the two free-text fields a player writes, matching the
-#: convention `CommentIn` already follows (ADR-0006). Both were unbounded, and
+#: Trust-boundary caps on the three free-text fields a player writes, matching
+#: the convention `CommentIn` already follows (ADR-0006). All were unbounded, and
 #: the DB columns behind them are `String`/`Text` with no length either — so a
 #: task proposal could carry an arbitrarily long body. That body is read back by
 #: the admin moderation queue and by `mcp/worldzero-admin`'s `wz_list_pending_-
@@ -81,6 +81,11 @@ class TaskOut(WireModel):
 #: field is a comfortable place to hide one.
 MAX_TASK_TITLE = 200
 MAX_TASK_DESCRIPTION = 5000
+#: The proposer's note to the reviewing admin (#1823). It lands in exactly the
+#: same admin queue and the same agent context as the description above, so it
+#: is capped for exactly the same reason. Smaller because it answers one narrow
+#: question ("why should this exist?") instead of specifying the task.
+MAX_TASK_NOTES = 2000
 
 
 class TaskCreate(WireModel):
@@ -89,6 +94,12 @@ class TaskCreate(WireModel):
     point_value: int = Field(..., gt=0)
     level_required: int = Field(0, ge=0)
     primary_faction_slug: Optional[str] = None
+    # Context for the reviewing admin; not part of the task. One field serves
+    # both proposal kinds — a metatask proposal is this same body with
+    # ``task_type="metatask"`` (the client's `MetataskProposal` is a frontend
+    # convenience type, not a second endpoint). The form only collects notes for
+    # standard tasks today; the schema needs no opinion about that.
+    notes: Optional[str] = Field(None, max_length=MAX_TASK_NOTES)
     # Metatask fields — optional; defaults to a standard task.
     task_type: Optional[str] = None
     metatask_faction_slug: Optional[str] = None
