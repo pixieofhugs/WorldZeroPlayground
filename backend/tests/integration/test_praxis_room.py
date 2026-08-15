@@ -19,7 +19,7 @@ from typing import Any, AsyncIterator, Callable
 
 import pytest
 import pytest_asyncio
-from pycrdt import Doc, Provider, Text
+from pycrdt import Doc, Map, Provider, Text
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +33,8 @@ from services.auth import create_jwt
 from services.praxis import kick_member, leave_praxis
 from services.praxis_room import (
     ROOM_BODY_KEY,
+    ROOM_META_KEY,
+    ROOM_TITLE_KEY,
     PraxisRoomASGIServer,
     PraxisRoomServer,
     acquire_single_instance_lock,
@@ -148,9 +150,18 @@ class _SharedSessionFactory:
 class _Rooms:
     """A running room server plus the ASGI app in front of it."""
 
-    def __init__(self, server: PraxisRoomServer) -> None:
+    def __init__(
+        self, server: PraxisRoomServer, sessions: _SharedSessionFactory
+    ) -> None:
         self.server = server
         self.app = PraxisRoomASGIServer(server)
+        #: The room's own session factory. A test that reads the database while
+        #: rooms are running MUST go through this rather than touching
+        #: ``db_session`` directly: one savepoint-backed session serves both
+        #: sides here, and using it from two tasks at once raises
+        #: "concurrent operations are not permitted" out of a room task, where
+        #: it reads as a room bug rather than as the harness bug it is.
+        self.sessions = sessions
         self._tasks: list[asyncio.Task] = []
 
     async def open(
@@ -201,6 +212,7 @@ async def running_rooms(
     db_session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
     squash_updates_above: int = 200,
+    flush_debounce_seconds: float = 2.0,
 ) -> AsyncIterator[_Rooms]:
     """A room server for one test, standing in for the module singleton.
 
@@ -208,12 +220,14 @@ async def running_rooms(
     every call, so patching it here is what puts the kick/leave revoke door
     under test rather than a copy of it.
     """
+    sessions = _SharedSessionFactory(db_session)
     server = PraxisRoomServer(
-        session_factory=_SharedSessionFactory(db_session),
+        session_factory=sessions,
         squash_updates_above=squash_updates_above,
+        flush_debounce_seconds=flush_debounce_seconds,
     )
     monkeypatch.setattr(praxis_room, "PRAXIS_ROOM_SERVER", server)
-    rooms = _Rooms(server)
+    rooms = _Rooms(server, sessions)
     async with server:
         try:
             yield rooms
@@ -584,3 +598,241 @@ async def _update_count(session: AsyncSession, praxis_id: int) -> int:
         .select_from(PraxisRoomUpdate)
         .where(PraxisRoomUpdate.praxis_id == praxis_id)
     )
+
+
+# ---------------------------------------------------------------------------
+# The flush — the room is the only way a body is written (#1743)
+# ---------------------------------------------------------------------------
+
+
+async def _record(rooms: _Rooms, praxis_id: int) -> tuple[str | None, str | None]:
+    """``(title, body_text)`` straight from the row, past any identity map."""
+    async with rooms.sessions() as session:
+        row = (
+            await session.execute(
+                select(Praxis.title, Praxis.body_text).where(Praxis.id == praxis_id)
+            )
+        ).one()
+    return row[0], row[1]
+
+
+async def _wait_for_record(
+    rooms: _Rooms,
+    praxis_id: int,
+    description: str,
+    *,
+    title: str | None = None,
+    body_text: str | None = None,
+) -> None:
+    """Poll the row until the named columns match. Only what is passed is checked."""
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + _TIMEOUT_SECONDS
+    while True:
+        stored_title, stored_body = await _record(rooms, praxis_id)
+        if (title is None or stored_title == title) and (
+            body_text is None or stored_body == body_text
+        ):
+            return
+        if loop.time() >= deadline:
+            raise AssertionError(
+                f"timed out waiting for {description}: the row holds "
+                f"title={stored_title!r} body_text={stored_body!r}"
+            )
+        await asyncio.sleep(0.02)
+
+
+async def test_an_edit_in_a_room_lands_in_body_text(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """The whole point of #1743: no ``PUT``, and the praxis is still written."""
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "typed ")
+            await _wait_for_record(
+                rooms,
+                collab.id,
+                "the debounced flush",
+                body_text=f"typed {SEED_BODY}",
+            )
+
+
+async def test_flushed_body_text_is_the_markdown_the_document_holds(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """``body_text`` stays markdown, byte for byte (ADR-0073).
+
+    Praxis detail, the feed, search and every ``react-markdown`` reader read
+    this column, and this epic deliberately changes none of them. A flush that
+    normalized whitespace, trimmed, or re-wrapped would change all of them at
+    once, and no assertion about the socket would notice.
+    """
+    markdown = "# A heading\n\n- one\n- two\n\n> quoted  \n\n**bold** and `code`\n"
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            body = doc.get(ROOM_BODY_KEY, type=Text)
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            del body[0 : len(SEED_BODY)]
+            body.insert(0, markdown)
+            await _wait_for_record(
+                rooms, collab.id, "the flush", body_text=markdown
+            )
+            _, stored = await _record(rooms, collab.id)
+            assert stored == str(body)
+
+
+async def test_two_clients_editing_converge_into_one_body_text(
+    db_session, collab, account, account2, monkeypatch
+) -> None:
+    """Concurrent edits converge; they do not clobber.
+
+    This is the defect the ADR exists for. Under the retired ``PUT`` the second
+    writer's text simply replaced the first's with no signal to either of them,
+    so what matters is that BOTH insertions survive in the column — not merely
+    that the column changed.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        first = await rooms.open(collab.id, account.id)
+        second = await rooms.open(collab.id, account2.id)
+        async with client_doc(first) as first_doc, client_doc(second) as second_doc:
+            await _wait_for_body(first_doc, SEED_BODY, "the first client")
+            await _wait_for_body(second_doc, SEED_BODY, "the second client")
+
+            first_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "one ")
+            second_doc.get(ROOM_BODY_KEY, type=Text).insert(len(SEED_BODY), " two")
+
+            await _wait_for(
+                lambda: _body(first_doc) == _body(second_doc)
+                and "one " in _body(first_doc)
+                and " two" in _body(first_doc),
+                "both clients to converge",
+            )
+            converged = _body(first_doc)
+            assert SEED_BODY in converged
+            await _wait_for_record(
+                rooms, collab.id, "the converged flush", body_text=converged
+            )
+
+
+async def test_opening_a_room_alone_leaves_the_record_untouched(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """Open, sync, close. Nothing was typed, so nothing may be rewritten."""
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+        await socket.disconnect()
+        await _wait_for(
+            lambda: rooms.room_doc(collab.id) is None, "the empty room to be dropped"
+        )
+    assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
+
+
+async def test_a_praxis_whose_room_never_opened_keeps_its_body_text(
+    db_session, collab, account, active_task, character, monkeypatch
+) -> None:
+    """The neighbouring praxis is not collateral: only the edited room flushes."""
+    untouched = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Untouched",
+        body_text="Never opened in a room.",
+    )
+    db_session.add(untouched)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=untouched.id, character_id=character.id))
+    await db_session.commit()
+
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "edited ")
+            await _wait_for_record(
+                rooms,
+                collab.id,
+                "the edited praxis",
+                body_text=f"edited {SEED_BODY}",
+            )
+
+    assert await _record(rooms, untouched.id) == (
+        "Untouched",
+        "Never opened in a room.",
+    )
+
+
+async def test_the_title_key_flushes_to_praxis_title(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """The title is one last-write-wins map key, and it reaches the record too.
+
+    Without this the retired ``PUT`` would still be the only way to rename a
+    praxis — the second write path the ADR refuses to keep.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_META_KEY, type=Map)[ROOM_TITLE_KEY] = "A renamed praxis"
+            await _wait_for_record(
+                rooms,
+                collab.id,
+                "the title flush",
+                title="A renamed praxis",
+                body_text=SEED_BODY,
+            )
+
+
+async def test_an_absent_title_key_never_blanks_the_praxis_title(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """Nothing seeds the title key, so absent means "no remote value yet".
+
+    Reading absence as "the title is empty" would blank every praxis the
+    instant anybody typed one character of body text.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "body only ")
+            await _wait_for_record(
+                rooms,
+                collab.id,
+                "the flush",
+                title="Collab Praxis",
+                body_text=f"body only {SEED_BODY}",
+            )
+
+
+async def test_the_last_edit_before_a_room_closes_still_lands(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """A tab closed inside the debounce window must not strand the keystrokes.
+
+    The room's own store keeps them either way, and reopening would show them —
+    but ``body_text`` is what every *read* surface reads, and a praxis detail
+    page missing the sentence its author typed a minute ago is the visible half
+    of "the record is derived". The debounce here is long enough that only the
+    closing flush can satisfy this.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "last words ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"last words {SEED_BODY}", "the room"
+            )
+        await socket.disconnect()
+        await _wait_for_record(
+            rooms,
+            collab.id,
+            "the closing flush",
+            body_text=f"last words {SEED_BODY}",
+        )
