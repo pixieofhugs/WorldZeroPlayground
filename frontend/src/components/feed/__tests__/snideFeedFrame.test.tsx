@@ -86,8 +86,8 @@ describe('SnideFeedFrame — the stock flips, and acid stays a drawn thing', () 
   })
 
   it('prints no faction name (epic decision 5 — the skin is the identification)', () => {
-    // TEXT nodes only: token names and the `.snide-tape` class carry the slug by
-    // necessity, and neither is copy. What must not appear is a visible label.
+    // TEXT nodes only: token names carry the slug by necessity, and a token name
+    // is not copy. What must not appear is a visible label.
     const text = frame({ tag: 'Still waiting' })
       .replace(/<[^>]*>/g, ' ')
       .toLowerCase()

@@ -315,7 +315,6 @@ export function SnideCard({
           clipPath: SNIDE_TORN_CLIP,
         }}
       />
-      <div className="snide-tape" style={{ top: -10, left: 22, transform: "rotate(-8deg)" }} />
       <SnideMasthead subtitle={i18n.t("feed:factionCard.snide.subtitle")} />
       {invitationNote && (
         <InvitationNote slug={faction.slug} note={invitationNote} />

@@ -694,7 +694,11 @@
   --faction-snide-paper: #f4f1e8; /* warm xerox paper */
   --faction-snide-pink: #ff2d8b; /* hot zine pink */
   --faction-snide-pink-deep: #be185d;
-  --faction-snide-tape: rgba(228, 214, 120, 0.62);
+  /* `--faction-snide-tape` stood here. It and the always-dark `--snide-tape`
+     below held the SAME rgba, which is exactly the drift #1708 took with them.
+     Tape is SPECIFIED for this faction — a first-class token in both design
+     palettes, and epic #1179's seam table names it — and the owner retired it
+     anyway on 2026-08-14. Do not mint it back on a fidelity pass. */
   --faction-snide-wall: #efece3; /* flyposted xerox-paper wall (FLIP in dark) */
   --faction-snide-wall-deep: #e0ddd1;
   --faction-snide-wall-text: #14110b;
@@ -792,9 +796,10 @@
   --faction-snide-note-shadow: 0 12px 28px -14px rgba(20, 17, 11, 0.55);
 
   /* ══ S.N.I.D.E. — THE FLYPOSTED SHEET (edit-praxis composer, #1184) ══
-     The composer is a xerox sheet taped to the wall: grain raster, two tape
-     strips, a near-black masthead bar with the wordmark in acid, censor stripes
-     for section rules, and a full-bleed acid submit bar at the foot.
+     The composer is a xerox sheet flyposted to the wall: grain raster, a
+     near-black masthead bar with the wordmark in acid, censor stripes for
+     section rules, and a full-bleed acid submit bar at the foot. (Two tape
+     strips ran off its edge until #1708 retired tape from SNIDE entirely.)
 
      THIS FAMILY FLIPS, for the same reason `-note-*` above does and NOT for the
      reason `-card-*` doesn't: a sheet of paper is the whole conceit, so it goes
@@ -845,9 +850,10 @@
 
   /* ══ S.N.I.D.E. — THE INTERCEPTED SLIP (feed chassis + comment sheet, #1198) ══
      Design: `Snide Comment + Update Cards.dc.html` — a flyposted xerox slip
-     taped to the wall at half a degree off true, with a near-black intake bar
-     typed across its head, an acid sprocket stripe down its left edge, and the
-     halftone raster over the whole stock.
+     flyposted at half a degree off true, with a near-black intake bar typed
+     across its head, an acid sprocket stripe down its left edge, and the
+     halftone raster over the whole stock. (Taped down at the head as well,
+     until #1708 retired tape from SNIDE entirely.)
 
      THIS FAMILY FLIPS, and here that is a bug fix rather than only a dress
      choice. §3's "a block whose ink you do not control gets the stock that ink
@@ -3551,29 +3557,11 @@
     background-size: 3px 3px, 4px 4px;
     background-position: 0 0, 2px 1px;
   }
-  .snide-tape {
-    position: absolute;
-    height: 26px;
-    width: 64px;
-    background: var(--faction-snide-tape);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-    opacity: 0.9;
-  }
-  .snide-tape::before,
-  .snide-tape::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 3px);
-  }
-  .snide-tape::before {
-    left: 0;
-  }
-  .snide-tape::after {
-    right: 0;
-  }
+  /* `.snide-tape` — the strip, with its serrated ::before/::after edges — stood
+     here until #1708. Eleven surfaces wore it; the owner retired the whole
+     family, and both tokens behind it went with the class (see the two notes in
+     the token blocks above and below). `frontend/src/__tests__/snideWearsNoTape.test.ts`
+     is what keeps it retired. */
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -4745,7 +4733,8 @@
   --snide-ink: #14110b;
   --snide-paper: #f4f1e8;
   --snide-pink: #ff2d8b;
-  --snide-tape: rgba(228, 214, 120, 0.62);
+  /* `--snide-tape` stood here — the always-dark twin of `--faction-snide-tape`,
+     same rgba, retired with it in #1708. */
   /* ALBESCENT · vellum correspondence — THE REVEAL SURFACES ONLY (#783).
      Always-light, the same mechanism Singularity uses to stay always-dark.
 

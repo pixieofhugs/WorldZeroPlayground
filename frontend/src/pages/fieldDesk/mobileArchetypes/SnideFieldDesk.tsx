@@ -12,8 +12,8 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
- * The carried life and its open jobs become dark ransom cards taped down on a
- * near-black desk: Bebas mastheads over an acid rule, halftone dot screens, hard
+ * The carried life and its open jobs become dark ransom cards slapped down on
+ * a near-black desk: Bebas mastheads over an acid rule, halftone dot screens, hard
  * offset shadows, a hot-pink primary. Same content slots as the Default mobile
  * home (the identity block — name, level, era points and the level track —
  * active-tasks list, primary actions) — only the paste-up changes. Grounds on the `--faction-snide-*`
@@ -29,7 +29,6 @@ const MUTED = 'var(--faction-snide-card-muted)'
 const ACID = 'var(--faction-snide-card-accent)'
 const ACCENT_WALL = 'var(--faction-snide)'
 const PINK = 'var(--faction-snide-pink)'
-const TAPE = 'var(--faction-snide-tape)'
 const LINE = 'var(--faction-snide-border)'
 const COND = 'var(--faction-snide-font-cond)'
 const IMPACT = 'var(--faction-snide-font-impact)'
@@ -53,7 +52,7 @@ const kicker: CSSProperties = {
 }
 
 /**
- * Characters / Edit as real controls (#1553) — a cut-out chip taped to the
+ * Characters / Edit as real controls (#1553) — a cut-out chip stuck to the
  * file. They were bare caps with no box: a sub-20px hit target on a phone. 44
  * is the WCAG 2.5.5 target floor and is GEOMETRY, not spacing.
  */
@@ -88,7 +87,7 @@ const trackMetaStyle: CSSProperties = {
 /** The operative's own ramp: hot pink burning up into acid (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${PINK}, ${ACID})`
 
-/** Dark ransom card — taped, halftoned, hard-shadowed, slightly askew. */
+/** Dark ransom card — halftoned, hard-shadowed, slightly askew. */
 function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: number }) {
   return (
     <div
@@ -106,10 +105,6 @@ function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: numbe
       <span
         aria-hidden
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: HALFTONE, backgroundSize: '5px 5px' }}
-      />
-      <span
-        aria-hidden
-        style={{ position: 'absolute', top: -10, left: 22, width: 60, height: 22, background: TAPE, transform: 'rotate(-4deg)', opacity: 0.92 }}
       />
       <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
     </div>

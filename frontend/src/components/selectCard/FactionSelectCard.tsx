@@ -180,7 +180,6 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
     }}>
       <div style={{ position: "absolute", top: -40, right: -40, width: 130, height: 130, borderRadius: "50%",
         background: "radial-gradient(circle, var(--snide-acid) 0%, transparent 62%)", opacity: 0.22, filter: "blur(2px)" }} />
-      <div style={{ position: "absolute", top: 14, left: 22, width: 74, height: 20, background: "var(--snide-tape)", transform: "rotate(-6deg)", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <SnideSigil size={40} color="var(--snide-acid)" />

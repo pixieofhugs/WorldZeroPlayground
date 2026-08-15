@@ -14,7 +14,8 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *  • the TORN-PAPER top/bottom edges (a 25-point clip-path). The design's slab
  *    is guillotined — square corners, unbroken acid rule. The tearing read as
  *    the Updates feed's aged-paper foe note;
- *  • the TAPE strip;
+ *  • the TAPE strip (and there is no strip to reconsider: #1708 retired tape
+ *    from every SNIDE surface);
  *  • the `Special Elite` MASTHEAD block. The design's running head is a single
  *    Courier eyebrow line in acid, inside the text column, where it stops at
  *    the score tag instead of running under it — so it is passed to

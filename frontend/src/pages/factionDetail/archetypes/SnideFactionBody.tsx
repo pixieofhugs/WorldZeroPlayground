@@ -17,7 +17,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  * Same shape as Everymen/UaFactionBody — Tasks/Praxis reuse the app-wide
  * per-faction cards (TaskCard/PraxisCard already dispatch to the SNIDE
  * archetypes); this file only owns the cut-and-paste chrome the design adds:
- * the two-column layout, taped photocopier frames, halftone dots, the fixed
+ * the two-column layout, tilted photocopier frames, halftone dots, the fixed
  * "Tasks"/"Praxis" titles with marker kickers, the join/gate "re: you"
  * dispatch, the "WANTED" spotlight + dashed "rap sheet", and the FDL laurel on
  * the single top-scoring praxis.
@@ -34,7 +34,6 @@ const INK = "var(--faction-snide-ink)";
 const PAPER = "var(--faction-snide-paper)";
 const PINK = "var(--faction-snide-pink)";
 const PINK_DEEP = "var(--faction-snide-pink-deep)";
-const TAPE = "var(--faction-snide-tape)";
 const MUTED = "var(--faction-snide-card-muted)";
 
 const IMPACT = "var(--faction-snide-font-impact)";
@@ -78,24 +77,6 @@ function Halftone({ on = "ink" }: { on?: "ink" | "paper" }) {
             ? "radial-gradient(color-mix(in srgb, var(--faction-snide-acid) 8%, transparent) 32%, transparent 34%)"
             : "radial-gradient(color-mix(in srgb, var(--faction-snide-ink) 5%, transparent) 32%, transparent 34%)",
         backgroundSize: "5px 5px",
-      }}
-    />
-  );
-}
-
-/** A strip of packing tape slapped across a corner. */
-function Tape({ style }: { style: CSSProperties }) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: "absolute",
-        height: 26,
-        width: 66,
-        background: TAPE,
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,.25)",
-        zIndex: 3,
-        ...style,
       }}
     />
   );
@@ -204,17 +185,15 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② ABOUT — taped xerox flyer */}
+        {/* ② ABOUT — tilted xerox flyer */}
         <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-          <Tape style={{ top: -11, left: 28, transform: "rotate(-7deg)" }} />
-          <Tape style={{ top: -9, right: 32, transform: "rotate(6deg)" }} />
           <div style={{ ...PAPER_PANEL, padding: "var(--space-xl)" }}>
             <Halftone on="paper" />
             <div
               style={{
                 position: "relative",
                 fontFamily: MARKER,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl heading on the taped xerox flyer.
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl heading on the xerox flyer.
                 fontSize: 26,
                 color: GREEN,
                 transform: "rotate(-1deg)",
@@ -293,11 +272,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
       {/* ── RIGHT RAIL ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ③ RE: YOU — join / gate / standing (taped dispatch) */}
+        {/* ③ RE: YOU — join / gate / standing (tilted dispatch) */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: half the 60px tape strip, centring it over the dispatch panel's head. The offset IS the drawn strip's width; a rung slides the tape off-centre. */}
-            <Tape style={{ top: -10, left: "50%", marginLeft: -30, width: 60, transform: "rotate(-5deg)" }} />
             <div style={{ ...INK_PANEL, padding: "var(--space-xl)" }}>
               <Halftone on="ink" />
               <div
@@ -503,7 +480,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
-                <Tape style={{ top: -9, left: 26, width: 56, height: 22, transform: "rotate(-6deg)" }} />
                 <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 rgba(0,0,0,.3)", padding: "var(--space-lg)", textAlign: "center" }}>
                   <Halftone on="ink" />
                   <div

@@ -8,9 +8,10 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  *
  * Design: `Snide Comment + Update Cards.dc.html` (+ its `- Dark` companion),
  * epic #1192 / #1198. An INTERCEPTED SLIP: a xerox photocopy flyposted on the
- * wall, taped down at the head, half a degree off true, dusted with the halftone
- * raster, with an acid sprocket stripe ruled down its left edge and a near-black
- * intake bar typed across its top.
+ * wall half a degree off true, dusted with the halftone raster, with an acid
+ * sprocket stripe ruled down its left edge and a near-black intake bar typed
+ * across its top. It was taped down at the head too, until #1708 — an owner
+ * override of a seam the design kit specifies. Do not put the strip back.
  *
  * ── WHAT THIS LAYER OWNS ────────────────────────────────────────────────────
  * The outside of the card and the four chrome slots of {@link FeedFrameProps},
@@ -96,7 +97,9 @@ export default function SnideFeedFrame({
     // Printed, not floating — a hard offset with no blur.
     boxShadow: mobile ? undefined : 'var(--faction-snide-slip-shadow)',
     transform: mobile ? undefined : 'rotate(-0.6deg)',
-    // Clips the tape to a half-strip, as if it were applied from behind.
+    // The stock is guillotined: the sprocket stripe and the over-inked intake
+    // bar run to the cut edge and stop there, never past it. (It also clipped
+    // the tape to a half-strip; the tape came off in #1708, this did not.)
     overflow: 'hidden',
   }
 
@@ -118,13 +121,6 @@ export default function SnideFeedFrame({
       />
 
       <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-        {/* A strip of tape pinning the slip to the wall. */}
-        <div
-          className="snide-tape"
-          aria-hidden="true"
-          style={{ top: -9, right: 40, width: 64, height: 20, transform: 'rotate(5deg)' }}
-        />
-
         {/* ── THE INTAKE BAR ── the kicker band, over-inked across the head of
             the slip. It carries three of the four chrome slots and tints the
             fourth: `archive` paints in `currentColor`, so setting `color` here
