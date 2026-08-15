@@ -60,6 +60,7 @@
     "descriptionPlaceholder": "Description",
     "pointsLabel": "Points",
     "levelLabel": "Level req.",
+    "factionLabel": "Faction",
     "meta": "{{points}} pts · lvl {{level}} · {{faction}}",
     "crossFaction": "cross-faction",
     "proposedBy": "Proposed by {{name}}",

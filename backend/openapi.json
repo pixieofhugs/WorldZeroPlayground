@@ -220,6 +220,19 @@
             ],
             "title": "Point Value"
           },
+          "primary_faction_slug": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Faction Slug"
+          },
           "title": {
             "anyOf": [
               {

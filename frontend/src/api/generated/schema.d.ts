@@ -1678,6 +1678,8 @@ export interface components {
             level_required?: number | null;
             /** Point Value */
             point_value?: number | null;
+            /** Primary Faction Slug */
+            primary_faction_slug?: string | null;
             /** Title */
             title?: string | null;
         };
