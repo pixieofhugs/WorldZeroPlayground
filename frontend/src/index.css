@@ -1905,34 +1905,13 @@
   --sky-name-muted: #8a8070; /* faded/zero names + zero-state — AA 4.94:1 */
   --sky-you: rgba(239, 230, 212, 0.7); /* "you" ring around the viewer's own orb (#684 §7) */
 
-  /* ── Meadow field (Players redesign, #684) ──
-     The Constellation's LIGHT-theme sibling. The --sky-* tokens above are
-     measured against a night canvas and invert into AA failures on a daylit
-     field, so this is a separate family rather than a re-point (#684 §9). The
-     Meadow only ever renders under the light theme (the dispatch in
-     Leaderboard.tsx hands dark to the Constellation), so these live in :root —
-     light's own scope — and are deliberately NOT repeated under
-     [data-theme="dark"].
-
-     Decorative tokens (bg/glow/field/stem/pollen/petal/you-ring) carry no AA
-     duty — the same carve-out the sky's ornament tokens got. Petal colour comes
-     from the faction palette at render time; NAMES ARE INK, never a faction
-     hue, exactly as the sky keeps names near-white and faction colour in the
-     orb border. The three text-bearing tokens are measured against
-     --meadow-bg (#eef4e2, relative luminance 0.8835) and clear AA:
-       --meadow-name        #1e1c17 → 15.13:1
-       --meadow-champion    #6d4b06 →  7.02:1 (champion's printed score)
-       --meadow-name-muted  #6b6553 →  5.17:1 (zero-score names + zero-state copy) */
-  --meadow-bg: #eef4e2; /* daylit field canvas */
-  --meadow-glow: rgba(255, 236, 168, 0.55); /* low sun glow behind the front bloom */
-  --meadow-field: rgba(140, 178, 108, 0.28); /* receding grass bands */
-  --meadow-stem: #7fa05a; /* flower stems */
-  --meadow-pollen: rgba(214, 168, 40, 0.55); /* drifting pollen motes */
-  --meadow-champion-petal: #f0c85a; /* golden bloom petals — decorative, not text */
-  --meadow-you: rgba(45, 40, 30, 0.55); /* "you" ring around the viewer's own bloom (#684 §7) */
-  --meadow-name: #1e1c17; /* bloom name — AA 15.13:1 */
-  --meadow-name-muted: #6b6553; /* faded/zero names + zero-state — AA 5.17:1 */
-  --meadow-champion: #6d4b06; /* champion's score — AA 7.02:1 */
+  /* A `--meadow-*` family stood here: the Constellation's LIGHT-theme sibling,
+     a daylit field with its own AA measurements (#684 §9). #1700 retires the
+     Meadow (ADR-0074) and the sky above serves both themes, so the family had
+     no readers left. The night-in-both-themes note on --sky-bg is the whole
+     rule now — a light-theme reader gets a dark stage on a light page, which is
+     deliberate and, because the stage is painted rather than inherited, costs
+     no contrast. */
 
   /* The level track's `--color-level-inactive` / `--level-node-incomplete` pair
      stood here. The track draws its unreached nodes from the global border and
@@ -3400,6 +3379,35 @@
 
   .praxis-gallery {
     --praxis-card-basis: 320px;
+  }
+
+  /* ── Scanning surfaces (issue #1716) ──
+     A surface where a player is BROWSING a list of things, as opposed to one
+     where they are CHECKING what they earned. Warriors of Whimsy hang their
+     points upside down, and that is the line the owner drew: the tasks list,
+     the field desk and home turn the figure; the character profile, the faction
+     page, the task detail and the praxis detail do not — even though the first
+     three of those mount the very same <TaskCard>.
+
+     Which is why the answer lives on the CONTAINER, the `--praxis-card-basis`
+     shape above. A mark cannot know what page it is on, and a `browsing` prop
+     would have to thread through the dispatcher to every skin to say something
+     about the surface. A custom property inherits, so the page states it once
+     and the mark reads `rotate(var(--wow-points-flip, 0deg))`.
+
+     The direction is the durable half: UNSET IS UPRIGHT. An exempt page is
+     right way up because it says nothing, and a page built tomorrow is upright
+     until it opts in. The inverse — turn by default, list the exceptions — is a
+     list that rots the first time someone adds a surface. Adding a browsing
+     page? Put this class on the list container. `wowPointsUpsideDown.test.tsx`
+     pins the set of files that wear it, in both directions.
+
+     Faction-agnostic on purpose despite having exactly one tenant: the class
+     names the AXIS, and any later mark that may only misbehave while a player
+     is scanning declares itself here rather than inventing a second knob. */
+
+  .scanning-surface {
+    --wow-points-flip: 180deg;
   }
 
   /* ── Pennant shape (faction filter tabs) ── */

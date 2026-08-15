@@ -32,7 +32,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
-import "../../../i18n";
+import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import type { DuelDetailOut, DuelSideOut } from "../../../api/duel";
@@ -374,9 +374,13 @@ describe("Albescent praxis detail keeps the light and loses the words", () => {
   it("shows the crown at both form factors", () => {
     // ADR-0054 + the owner's #1140 ruling: never form-factor gated, never
     // restyled out of the page, even where the design hides it on a phone.
+    // The mark is the score stamp's corner fleur now — #1710 retired the
+    // hero banner. The score block is in both layouts, so it is still never
+    // form-factor gated, and it is still the one canonical `TaskCrown`.
+    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(AlbescentPraxisDetail, crowned, "desktop")).toContain("TASK CROWN");
-    expect(render(AlbescentPraxisDetail, crowned, "mobile")).toContain("TASK CROWN");
-    expect(render(AlbescentPraxisDetail, state(), "mobile")).not.toContain("TASK CROWN");
+    expect(render(AlbescentPraxisDetail, crowned, "desktop")).toContain(crown);
+    expect(render(AlbescentPraxisDetail, crowned, "mobile")).toContain(crown);
+    expect(render(AlbescentPraxisDetail, state(), "mobile")).not.toContain(crown);
   });
 });

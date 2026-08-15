@@ -114,7 +114,7 @@ export interface ProfileKit {
    *  not a placeholder: the label sits inside the ring's disc, and the disc
    *  grounds on `surface`, which is the stock `muted` was measured for.
    *
-   *  Ephemerists is the one kit that overrides it (#1630): its grade ring is a
+   *  Ephemerists is the one kit that overrides it (#1630): its level ring is a
    *  brass instrument, so the label reads in `-plate-brass-light` beside the
    *  numeral rather than in the plate's quiet ink — 11.04:1 on the plate against
    *  `-plate-quiet`'s 5.98, so this buys legibility as well as dress. A knob

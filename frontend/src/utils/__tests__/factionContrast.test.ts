@@ -576,8 +576,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
   // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
   { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
-  // The "Grade" label. Olive on the paper was never measured before this card
-  // set a label in it.
+  // The bill's level caption ("Grade" until #1702 renamed it). Olive on the
+  // paper was never measured before this card set a label in it.
   { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-olive" },
   {
     // The seal's points numeral. Red on the paper is 4.49:1 — a hair under the

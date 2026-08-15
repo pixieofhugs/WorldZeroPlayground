@@ -12,6 +12,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import CommentThread from "../../../components/comments/CommentThread";
+import { isNeutralMultiplier } from "../../../utils/points";
 import type { TaskDetailState } from "../useTaskDetail";
 
 interface ErrorBannerProps {
@@ -146,6 +147,31 @@ export function actionColumnSize({
     return { flex: "0 0 auto", width: "auto", minWidth: collapsedMinWidth };
   }
   return { flex: `0 0 ${width}px`, width };
+}
+
+/**
+ * showWorthBreakdown — does the worth readout have a second row to draw? (#1704)
+ *
+ * Every skin's readout is `base N` · `×mult` · `N POINTS`. The chip was already
+ * gated on the factor being real (ADR-0055), but the `base` row above it was
+ * drawn unconditionally — so at `era_1`'s neutralised ×1.00, which is every
+ * task today, the panel said the same number twice: `base 18` and then
+ * `18 POINTS`.
+ *
+ * That is the row policy `components/praxisCard/scoreStamp/scoreBreakdown.ts`
+ * states for the praxis stamp (ADR-0049, ADR-0053): *a row exists when it tells
+ * the viewer something the total mark does not already say*. #1131 fixed this
+ * exact shape there. This applies the policy WITHOUT calling that selector — a
+ * task has no votes, no metatask points and no habit bonus, so forcing a
+ * `ScoredPraxis` on it would be a lie about what a task is.
+ *
+ * One gate, not two: the chip lives inside the row in every skin, and its
+ * condition is this same one, so the row drops as a unit with nothing orphaned
+ * (`scoreBreakdown`'s own note: a null base always coincides with a null mult).
+ * The total keeps its own label and stands alone.
+ */
+export function showWorthBreakdown(factionMultiplier: number): boolean {
+  return !isNeutralMultiplier(factionMultiplier);
 }
 
 export function ErrorBanner({ message, style }: ErrorBannerProps) {

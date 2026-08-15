@@ -19,7 +19,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
-import "../../../i18n";
+import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import type { DuelDetailOut } from "../../../api/duel";
@@ -222,11 +222,15 @@ describe("Ephemerists praxis detail — the inherited layout contract", () => {
   });
 
   it("shows the crown at BOTH form factors on a crowned praxis", () => {
+    // The mark is the score stamp's corner fleur now — #1710 retired the
+    // hero banner. The score block is in both layouts, so it is still never
+    // form-factor gated, and it is still the one canonical `TaskCrown`.
+    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned, "desktop").text, "crown on desktop").toContain("TASK CROWN");
-    expect(render(crowned, "mobile").text, "crown on mobile too").toContain("TASK CROWN");
-    expect(render(state(), "mobile").text, "and only when crowned").not.toContain(
-      "TASK CROWN",
+    expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
+    expect(render(crowned, "mobile").html, "crown on mobile too").toContain(crown);
+    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(
+      crown,
     );
   });
 
