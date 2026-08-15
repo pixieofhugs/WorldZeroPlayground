@@ -447,12 +447,33 @@ export default function EphemeristsEditPraxis({ state }: Props) {
        renders into (hover 1.16:1). The detail column declares the identical
        pair through `.eph-plate-sheet`; this is the same seam reached from the
        one Ephemerists root that is not inside that column. NILE is the plate's
-       declared link hue and is measured on all three of its grounds. */
+       declared link hue and is measured on all three of its grounds.
+
+       AND THE LABEL SEAM, for the identical reason, one issue later (#1754 fixed
+       the sheet, #1800 this root — the #1754 agent found this one and was scoped
+       out of `editPraxis/**` at the time). Unset, `.label-caption` and
+       `.label-heading` inherit the global tertiary: on the sheet's `PLATE` that
+       is 2.01:1 in light and in a panel cell's `INNER` 1.86:1. QUIET is
+       `-plate-quiet`, the same ink `.eph-plate-sheet` names, so both Ephemerists
+       roots land on one value — 5.98 on the sheet, 5.52 in a cell, in both
+       cascades.
+
+       THE COMPOSER'S PAGE GROUND IS NOT THE PLATE'S, which is worth saying
+       because the plate's numbers do not transfer wholesale. `ComposerPage`
+       renders a bare `<div style={style}>` with no background, so what is under
+       the sheet here is the APP's `--color-bg-page` — near-white in light, where
+       QUIET reads 2.64:1 (the #1793 defect, on the faction page). Every label
+       this seam reaches renders inside `ComposerSheet` or a panel, and the one
+       thing on the bare page, the breadcrumb, takes `breadcrumbInk` explicitly.
+       A `.label-caption` mounted directly on this page would need the app's own
+       tier instead; there is none today, and the guard in
+       `factionContrast.test.ts` records why. */
     pageStyle: {
       fontFamily: DECO,
       color: INK,
       ["--link-ink" as string]: NILE,
       ["--link-ink-hover" as string]: INK,
+      ["--label-ink" as string]: QUIET,
     } as CSSProperties,
     breadcrumbInk: QUIET,
     sheetStyle,
