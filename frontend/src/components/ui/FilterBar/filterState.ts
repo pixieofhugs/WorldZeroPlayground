@@ -93,36 +93,85 @@ export interface AppliedChip {
  * ponytail: no runtime guard, and 6 is a measurement rather than a limit the
  * code enforces. There is no ellipsis on `.filter-rail__segment` — it is
  * `white-space: nowrap` with no `overflow`/`text-overflow`, and a flex item's
- * `min-width` is `auto`, so a segment never shrinks below its label. The
- * failure mode past the ceiling is therefore clipping (`.filter-bar` is
- * `overflow: hidden`), not an ellipsis. Courier Prime advances 0.6em, segments
- * carry no horizontal padding, and the rail costs 9px of pad and border, so a
- * rail of C characters is `0.6 * fontSize * C + 9` wide at its narrowest.
- * The 5-segment relationship rail is 30 characters: 261px at the desktop
- * `--text-xl` (14px), 225px at the phone's `--text-lg` (12px) against a 240px
- * content box at a 320px viewport (`.page` is `px-4`, `.filter-bar__body` is
- * `--space-xl`). It fits, with ~15px to spare at 320px and ~70px at 375px.
- * Widening past 6 — or past ~32 characters on a five-up — means re-running that
- * arithmetic, not deleting this comment.
+ * `min-width` is `auto`, so a segment never shrinks below its label. Since
+ * #1726 a segment is sized to its own label plus horizontal padding, so a rail
+ * of C characters over S segments is `0.6 * fontSize * C + 2 * pad * S + 9`
+ * wide at its narrowest (Courier Prime advances 0.6em; the rail itself costs
+ * 9px of pad and border). At the phone's `--text-lg` (12px) and `--space-sm`
+ * (8px) of segment padding, the widest rail the site mounts — the praxis sort,
+ * 33 characters over 4 segments — is 311px against a 311px content box at a
+ * 375px viewport (`.page` is `px-4`, `.filter-bar__body` is `--space-lg` on the
+ * phone). Past that the rail WRAPS to a second row rather than overflowing the
+ * page: `.filter-rail` is `flex-wrap: wrap` with `max-width: 100%`, and the
+ * thumb is measured, so it lands on the active segment's row either way.
+ * Widening past 6 means re-running that arithmetic, not deleting this comment.
  */
 export const RAIL_SEGMENTS_MIN = 2
 export const RAIL_SEGMENTS_MAX = 6
 
-// The rail's inner padding, as the token `.filter-rail` is drawn with. The
-// design writes this maths as `calc(i * (100% - 6px) / n + 3px)`; the literal
-// 6/3 is that padding doubled and single, so it is read from index.css here
-// instead of restated — a number in two files is a number that drifts.
-const RAIL_PAD = 'var(--filter-rail-pad)'
-const TRACK = `(100% - 2 * ${RAIL_PAD})`
-
-/** Left edge of the sliding thumb over segment `index` of `segmentCount`. */
-export function thumbOffset(index: number, segmentCount: number): string {
-  return `calc(${index} * ${TRACK} / ${segmentCount} + ${RAIL_PAD})`
+/**
+ * One measured segment, in CSS px relative to the rail's padding box — that is,
+ * `offsetLeft`/`offsetTop`/`offsetWidth`/`offsetHeight` against the rail, which
+ * is the same origin an absolutely positioned thumb resolves `left`/`top`
+ * against. Deliberately plain numbers: the measuring is the component's job,
+ * and everything decided FROM a measurement lives here where a DOM-less harness
+ * can reach it.
+ */
+export interface SegmentBox {
+  left: number
+  top: number
+  width: number
+  height: number
 }
 
-/** Width of the sliding thumb — one nth of the track. */
-export function thumbWidth(segmentCount: number): string {
-  return `calc(${TRACK} / ${segmentCount})`
+/** Inline geometry for the sliding thumb. */
+export interface ThumbGeometry {
+  left: string
+  top: string
+  width: string
+  height: string
+}
+
+/**
+ * Where the thumb goes: exactly over the measured active segment (#1726).
+ *
+ * `null` means "not measurable yet" and the caller must draw no thumb at all —
+ * before layout there is no honest answer, and any fallback (zero width, an
+ * assumed 1/n share) IS the first-paint flash. The rail is viewer-gated, so the
+ * render that changes the segment count arrives before the re-measure does;
+ * that is the out-of-range case, not an error.
+ */
+export function thumbGeometry(
+  boxes: SegmentBox[],
+  activeIndex: number,
+): ThumbGeometry | null {
+  const box = boxes[activeIndex]
+  if (!box || box.width <= 0 || box.height <= 0) return null
+  return {
+    left: `${box.left}px`,
+    top: `${box.top}px`,
+    width: `${box.width}px`,
+    height: `${box.height}px`,
+  }
+}
+
+/**
+ * Did anything actually move? A `ResizeObserver` fires once per observed
+ * element the moment it is observed, so a re-measure that always stores a fresh
+ * array would re-render on every observation for no reason. Holding the old
+ * array when the numbers match keeps that to one render.
+ */
+export function sameBoxes(before: SegmentBox[], after: SegmentBox[]): boolean {
+  return (
+    before.length === after.length &&
+    before.every(
+      (box, index) =>
+        box.left === after[index].left &&
+        box.top === after[index].top &&
+        box.width === after[index].width &&
+        box.height === after[index].height,
+    )
+  )
 }
 
 /** Selected rows to the top, list order preserved inside each group. */
