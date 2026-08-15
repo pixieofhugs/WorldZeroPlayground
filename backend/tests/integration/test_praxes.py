@@ -1453,61 +1453,14 @@ async def test_collab_all_submit_transitions_to_submitted(
 
 
 # ---------------------------------------------------------------------------
-# Edit praxis
+# Edit praxis — moved wholesale to the room (#1743)
+#
+# There is no edit *endpoint* left to test here. Title and body are written in
+# the praxis's room and flushed to the record by the room server, so both the
+# capability and its member check live at that seam now and are tested there
+# (``test_praxis_room.py``): the flush itself, ADR-0013's "any member may edit",
+# and the non-member refusal that used to be this file's 403.
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_edit_praxis(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """PUT /praxes/{id} updates title and body_text."""
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Original"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    edit_resp = await client.put(
-        f"/praxes/{praxis_id}",
-        json={"title": "Updated Title", "body_text": "New body"},
-        headers=auth_headers,
-    )
-    assert edit_resp.status_code == 200
-    data = edit_resp.json()
-    assert data["title"] == "Updated Title"
-    assert data["body_text"] == "New body"
-
-
-@pytest.mark.asyncio
-async def test_edit_praxis_wrong_owner_returns_403(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-    character2: Character,
-):
-    """Editing another character's praxis returns 403."""
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo", "title": "Mine"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    resp = await client.put(
-        f"/praxes/{praxis_id}",
-        json={"title": "Hacked"},
-        headers=auth_headers2,
-    )
-    assert resp.status_code == 403
 
 
 # ---------------------------------------------------------------------------
@@ -1544,27 +1497,8 @@ async def _two_member_collab(
     return praxis_id
 
 
-@pytest.mark.asyncio
-async def test_collab_non_creator_can_edit(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """A non-creator member can edit a collab's title/body (ADR-0013)."""
-    # character2 creates, character (non-creator) edits.
-    praxis_id = await _two_member_collab(
-        client, active_task, auth_headers2, character.id, auth_headers
-    )
-    resp = await client.put(
-        f"/praxes/{praxis_id}",
-        json={"title": "Edited by member", "body_text": "ours"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["title"] == "Edited by member"
+# "A non-creator member can edit" (ADR-0013) is now a room rule, asserted where
+# it is enforced: ``test_a_non_creator_members_edit_reaches_the_record``.
 
 
 @pytest.mark.asyncio
@@ -1722,31 +1656,11 @@ async def test_collab_all_submit_clears_window(
     assert data["submit_proposed_at"] is None
 
 
-@pytest.mark.asyncio
-async def test_collab_edit_cancels_pending_publish(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """An edit while pending hard-resets: window cancelled, everyone un-submitted."""
-    praxis_id = await _two_member_collab(
-        client, active_task, auth_headers2, character.id, auth_headers
-    )
-    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
-
-    resp = await client.put(
-        f"/praxes/{praxis_id}",
-        json={"body_text": "second thoughts"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["status"] == "in_progress"
-    assert data["submit_proposed_at"] is None
-    assert all(not m["has_submitted"] for m in data["members"])
+# A *text* edit no longer cancels a pending publish. ADR-0012's hard reset needs
+# a discrete edit event and a CRDT has none, so ADR-0073 answers it with freeze:
+# submitting freezes the room read-only and ``pullBack`` is the one door back in
+# (#1745). The reset MECHANISM is unchanged and still triggered by media edits —
+# ``test_praxis_media_batch.py`` holds those assertions.
 
 
 @pytest.mark.asyncio
@@ -1780,13 +1694,17 @@ async def test_roster_row_carries_when_each_member_filed(
     # The member who has not filed is still NULL — one row moved, not the pair.
     assert rows[character.id]["submitted_at"] is None
 
-    # An edit while pending hard-resets everyone (ADR-0012); the timestamp has
-    # to go with the flag.
-    reset = await client.put(
-        f"/praxes/{praxis_id}",
-        json={"body_text": "second thoughts"},
-        headers=auth_headers,
+    # ...and NULL again when that part is pulled back. The trigger used to be a
+    # praxis PUT and its ADR-0012 hard reset; since #1743 there is no PUT, so it
+    # is the door ADR-0059 leaves open — ``pullBack``, which on a pending collab
+    # retracts only the caller's own part (#590). The claim is unchanged: a
+    # "when they filed" that outlived the filing would be worse than never
+    # shipping the field.
+    reset = await client.post(
+        f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2
     )
+    assert reset.status_code == 200, reset.text
+    assert all(not m["has_submitted"] for m in reset.json()["members"])
     assert all(m["submitted_at"] is None for m in reset.json()["members"])
 
 
@@ -2344,33 +2262,8 @@ async def test_create_praxis_minimal_body_starts_as_draft(
     assert data["media_items"] == []
 
 
-@pytest.mark.asyncio
-async def test_edit_minimal_draft_adds_content(
-    client: AsyncClient,
-    character: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """A praxis created with a minimal body can be filled in later via PUT."""
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-    praxis_id = create_resp.json()["id"]
-
-    edit_resp = await client.put(
-        f"/praxes/{praxis_id}",
-        json={"title": "Finally a title", "body_text": "Here is what I did."},
-        headers=auth_headers,
-    )
-    assert edit_resp.status_code == 200
-    data = edit_resp.json()
-    assert data["title"] == "Finally a title"
-    assert data["body_text"] == "Here is what I did."
-    # Status stays in_progress — editing does not submit
-    assert data["status"] == "in_progress"
+# Filling in a minimal draft later is the room's job now, and lands in
+# ``body_text`` through the flush: ``test_an_edit_in_a_room_lands_in_body_text``.
 
 
 @pytest.mark.asyncio

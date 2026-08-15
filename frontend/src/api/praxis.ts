@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost, apiPut } from './client'
+import { apiDelete, apiGet, apiPost } from './client'
 import { clearCastTallies } from '../components/vote/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { components } from './generated/schema'
@@ -166,7 +166,8 @@ export type PraxisCardOut = components['schemas']['PraxisCardOut']
  */
 export type PraxisCreate = components['schemas']['PraxisCreate']
 
-export type PraxisUpdate = components['schemas']['PraxisUpdate']
+// There is no `PraxisUpdate`. A praxis body is written in its room and flushed
+// to the record server-side (ADR-0073, #1743) — see `pages/editPraxis/praxisRoom`.
 
 // ---------------------------------------------------------------------------
 // List / detail
@@ -273,14 +274,6 @@ export async function createPraxis(data: PraxisCreate): Promise<PraxisOut> {
   const { data: created } = await apiPost('/praxes', { body: data })
   justCreatedPraxis = created
   return created
-}
-
-export async function updatePraxis(id: number, data: PraxisUpdate): Promise<PraxisOut> {
-  const { data: result } = await apiPut('/praxes/{praxis_id}', {
-    params: { path: { praxis_id: id } },
-    body: data,
-  })
-  return result
 }
 
 export async function deletePraxis(id: number): Promise<void> {

@@ -40,7 +40,6 @@ from models.vote import Vote
 from schemas.praxis import (
     MediaItemOut,
     MediaUploadResultOut,
-    PraxisUpdate,
 )
 from services import collab_consensus
 from services.character_stats import (
@@ -943,29 +942,19 @@ async def create_praxis(
     return await get_praxis(praxis.id, session)
 
 
-async def update_praxis(
-    praxis_id: int,
-    data: PraxisUpdate,
-    character_id: int,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-) -> Praxis:
-    """Update title/body_text. Any member may edit (ADR-0013).
-
-    On a collab, an edit cancels any pending-publish window and un-submits everyone
-    (ADR-0012 hard reset).
-    """
-    praxis = await get_praxis(praxis_id, session)
-    _require_member(praxis, character_id, "edit")
-    if data.title is not None:
-        praxis.title = data.title
-    if data.body_text is not None:
-        praxis.body_text = data.body_text
-    await session.flush()
-    await collab_consensus.on_member_edit(praxis, session, era)
-    # Re-fetch rather than session.refresh(praxis): refresh expires the
-    # lazy='raise' relationships and breaks the subsequent build_praxis_out.
-    return await get_praxis(praxis_id, session)
+# ``update_praxis`` — the debounced autosave's write — is gone (#1743,
+# ADR-0073). ``praxis.title`` and ``praxis.body_text`` are derived columns now,
+# written only by the praxis's room (``services/praxis_room.py``).
+#
+# ``_require_member(praxis, character_id, "edit")`` is unchanged and still the
+# one implementation of ADR-0013's "any member may edit" — the room's door one
+# calls it at connect, which is where it moved to, not where it was duplicated.
+#
+# The text edit no longer triggers ADR-0012's hard reset. That is deliberate and
+# is the ADR's "freeze, not reset": a CRDT has no discrete edit event to key on,
+# so submitting freezes the document instead and ``pullBack`` is the one door
+# back in (#1745). Media edits still call ``on_member_edit`` — the reset
+# mechanism is intact, it simply has one fewer trigger until the freeze lands.
 
 
 async def unsubmit_praxis(
@@ -2025,6 +2014,5 @@ __all__ = [
     "SignupEligibility",
     "SignupFacts",
     "submit_praxis",
-    "update_praxis",
     "unsubmit_praxis",
 ]

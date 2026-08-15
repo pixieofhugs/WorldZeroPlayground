@@ -156,7 +156,7 @@ function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     dismissConfirm: () => {},
     cancel: async () => {},
     autosaveAt: null,
-    saveStatus: "idle",
+    setAutosaveAt: () => {},
     autoSubmitDays: 10,
     isPublished: false,
     controlsLocked: false,

@@ -24,8 +24,6 @@ import type { CharacterOut } from "../../api/characters";
 import type { EditPraxisPhase } from "./editPraxisPhase";
 import type { CrewNudgeResult } from "./useComposerRoster";
 
-export type SaveStatus = "idle" | "saving" | "saved" | "error";
-
 export interface EditPraxisState {
   // Routing / loading
   loading: boolean;
@@ -214,9 +212,20 @@ export interface EditPraxisState {
   /** Escape, backdrop, or "Never mind" — the handler returns without acting. */
   dismissConfirm: () => void;
 
-  // Autosave
+  /**
+   * When the room last took an update — local or a co-author's (#1743).
+   *
+   * The composer's "Saved …" line, and the only honest thing it can say now
+   * that no client-side request writes the praxis: an update the room has
+   * acknowledged is already in `praxis_room_update`, and `praxis.body_text`
+   * follows it on the server's own debounce.
+   */
   autosaveAt: Date | null;
-  saveStatus: SaveStatus;
+  /**
+   * Stamped by `PraxisRoomProvider` on every document update. `EditPraxis.tsx`
+   * hands it over as the provider's `onUpdate`; nothing else calls it.
+   */
+  setAutosaveAt: (value: Date | null) => void;
 
   /**
    * The ADR-0012 pending-publish window length, in days, from `/game-config`

@@ -226,11 +226,6 @@ class PraxisCreate(WireModel):
     body_text: Optional[str] = None
 
 
-class PraxisUpdate(WireModel):
-    title: Optional[str] = None
-    body_text: Optional[str] = None
-
-
 class PraxisTypeChange(WireModel):
     """Body for the in-place solo↔collab mode switch (#321)."""
 

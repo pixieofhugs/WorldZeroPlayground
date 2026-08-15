@@ -1,4 +1,8 @@
-"""The thirteen unreachable endpoints deleted by #1667 stay deleted.
+"""Endpoints deleted on purpose stay deleted.
+
+Thirteen unreachable ones went in #1667; ``PUT /praxes/{praxis_id}`` went in
+#1743 for a different reason — it was very much reachable, and that was the
+problem.
 
 THE SEAM
 --------
@@ -33,6 +37,16 @@ WHAT EACH GROUP WAS
   creates that ``seed.py`` or another route already does, and a task update the
   admin ``PATCH`` supersedes.
 
+* **One write path, deleted so there is only one** (#1743). ``PUT /praxes/{id}``
+  took a title and a body and was the composer's debounced autosave. Every
+  praxis is now written in a *room* (ADR-0073) — a server-held CRDT the composer
+  binds to — and the room server flushes that document into ``praxis.title`` and
+  ``praxis.body_text``. Keeping the ``PUT`` as a fallback was considered and
+  refused: it is the second write path wearing a different hat, and it would
+  need a reconciliation rule for a ``PUT`` landing behind the room's document.
+  A rule stated twice and never reconciled is what shipped three production bugs
+  in #1692.
+
 If you are here because you want one of these back, the honest move is a new
 route with a new name and a caller in the same PR — not a revert of this list.
 """
@@ -43,10 +57,12 @@ from pathlib import Path
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 COMMITTED_SCHEMA = BACKEND_ROOT / "openapi.json"
 
-#: ``(method, path)`` for every operation #1667 removed. Methods are lowercase
-#: because that is how an OpenAPI path item keys them.
+#: ``(method, path)`` for every operation deliberately removed. Methods are
+#: lowercase because that is how an OpenAPI path item keys them.
 DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
     {
+        # #1743: the composer's debounced autosave. The room is the write path.
+        ("put", "/praxes/{praxis_id}"),
         # The four-way task-status duplicate, minus the one that survived.
         ("put", "/admin/tasks/{task_id}/approve"),
         ("put", "/admin/tasks/{task_id}/retire"),
@@ -123,8 +139,7 @@ def test_deleted_routes_are_absent_from_the_contract() -> None:
     resurrected = sorted(DELETED_OPERATIONS & _published_operations())
 
     assert not resurrected, (
-        "These operations were deleted as unreachable in #1667 and are published "
-        "again:\n  "
+        "These operations were deleted on purpose and are published again:\n  "
         + "\n  ".join(f"{method.upper()} {path}" for method, path in resurrected)
         + "\n\nEach one had a live replacement at the time it was removed — read "
         "this module's docstring for which. If the replacement genuinely no "

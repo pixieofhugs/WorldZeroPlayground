@@ -5,7 +5,7 @@ plus the members currently connected. It mounts as an ASGI WebSocket route
 inside this same FastAPI app (``main.py``) — one process, one deploy, no second
 service.
 
-Four rules live here, and all four are here rather than in a client because a
+Five rules live here, and all five are here rather than in a client because a
 rule that runs on the client is not a rule:
 
 1. **The server seeds the document exactly once**, from ``praxis.body_text``,
@@ -17,19 +17,24 @@ rule that runs on the client is not a rule:
 2. **The document persists to Postgres.** ``pycrdt-websocket``'s bundled stores
    are SQLite/file only, so :class:`PostgresYStore` is ours, with a squash
    policy — a Y store appends every update forever otherwise.
-3. **Authorization has two doors.** At connect, ``Origin`` is validated by hand
+3. **The room is the only way a praxis body is written** (#1743). The debounced
+   ``PUT`` is gone, not kept as a fallback, so ``praxis.title`` and
+   ``praxis.body_text`` are **derived columns**: :class:`_RoomFlusher` copies
+   the document into them once the typing stops. That direction is one-way and
+   the seed above is the only path back — a room that read the record it writes
+   would seed itself.
+4. **Authorization has two doors.** At connect, ``Origin`` is validated by hand
    (``CORSMiddleware`` does not apply to WebSockets, so the allowlist that
    protects every REST route would silently not protect this one) and the
    praxis's existing member check runs against the cookie's account. At revoke,
    kick and leave *close the socket*: a gate checked only on the way in lets a
    removed member keep writing until they close the tab.
-4. **Exactly one backend instance may run**, because rooms live in-process.
+5. **Exactly one backend instance may run**, because rooms live in-process.
    Enforced by :func:`acquire_single_instance_lock`. ADR-0073 states the
    constraint once; ADR-0012's lazy-on-access timeout depends on the same fact.
 
-What is deliberately *not* here: ``praxis.body_text`` is still written by the
-existing debounced ``PUT`` (retired in #1743), and nothing freezes a room on
-submit yet (#1745).
+What is deliberately *not* here: nothing freezes a room on submit yet, and the
+document is not discarded on publish (#1745).
 """
 
 import logging
@@ -42,11 +47,12 @@ from typing import Any
 import anyio
 from anyio import Event, Lock
 from fastapi import HTTPException
-from pycrdt import Doc, Text
+from pycrdt import Doc, Map, Text
 from pycrdt.store import BaseYStore, YDocNotFound
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
 from pycrdt.websocket.asgi_server import ASGIWebsocket
 from sqlalchemy import delete, func, select
+from sqlalchemy import update as sql_update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 
 from config import settings
@@ -59,11 +65,27 @@ from services.character import resolve_active_character
 
 logger = logging.getLogger(__name__)
 
-# The co-edited body inside a room's document — the one root type this issue
-# seeds. #1742 binds CodeMirror to it; #1743 flushes it back to
-# ``praxis.body_text``. The title is a last-write-wins map key (ADR-0073) and
-# arrives with the editor that needs it.
+# The co-edited body inside a room's document — the one root type the server
+# seeds, and the one CodeMirror binds to (#1742).
 ROOM_BODY_KEY = "body"
+
+# The title, as **one last-write-wins map key** rather than co-edited text
+# (ADR-0073): a praxis title is 200 characters, and interleaving two people
+# typing one character-by-character produces garbage more often than it helps.
+#
+# Nothing seeds it. ``_load_or_seed`` writes ``body`` alone, so the key does not
+# exist until a co-author edits a title — which is why :meth:`_RoomFlusher.write`
+# reads its absence as "no room value yet" and never as "the title is empty".
+ROOM_META_KEY = "meta"
+ROOM_TITLE_KEY = "title"
+
+# How long a room sits still before its document is copied into the praxis.
+#
+# The record is derived, so this is not "how long until your work is safe" —
+# every update is already durable in ``praxis_room_update`` before this timer
+# starts. It is how long until the *read* surfaces catch up, and the answer only
+# has to beat a player finishing their write-up and going to look at it.
+_FLUSH_DEBOUNCE_SECONDS = 2.0
 
 # The socket's path, relative to the mount in ``main.py`` — ``/rooms/praxis/12``.
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
@@ -196,6 +218,107 @@ class PostgresYStore(BaseYStore):
 
 
 # ---------------------------------------------------------------------------
+# The flush — the document becomes the record
+# ---------------------------------------------------------------------------
+
+
+class _RoomFlusher:
+    """Copies one room's document into ``praxis.title`` / ``praxis.body_text``.
+
+    Since #1743 this is the **only** writer of those two columns. There is no
+    ``PUT`` behind it and no reconciliation rule to state, which is the point:
+    two ways to persist a body means every future rule about saving has to be
+    written twice and kept in step (ADR-0073, #1692).
+
+    The copy is one-way. Nothing here re-reads the columns it writes — the
+    server's single seed in :meth:`PraxisRoomServer._load_or_seed` is the only
+    path from the record back into a document, and a flush that read as well as
+    wrote would be that second seed.
+    """
+
+    def __init__(
+        self,
+        room: YRoom,
+        praxis_id: int,
+        session_factory: SessionFactory,
+        debounce_seconds: float,
+        log: logging.Logger,
+    ) -> None:
+        self._room = room
+        self._praxis_id = praxis_id
+        self._session_factory = session_factory
+        self._debounce_seconds = debounce_seconds
+        self._log = log
+        self._changed = Event()
+        self._pending = False
+        self._cancel_scope: anyio.CancelScope | None = None
+
+    def mark_changed(self) -> None:
+        """The document moved. Safe from the observer: it only sets a flag."""
+        self._pending = True
+        self._changed.set()
+
+    async def run(self) -> None:
+        """Flush once the room has been quiet for the whole debounce window.
+
+        Trailing edge, deliberately. A leading-edge flush would write the first
+        character of every sentence and then nothing until the writer paused
+        anyway, which is more statements for a column nobody is reading yet.
+        """
+        with anyio.CancelScope() as cancel_scope:
+            self._cancel_scope = cancel_scope
+            while True:
+                await self._changed.wait()
+                # Re-armed *before* the wait, so a keystroke arriving during it
+                # restarts the quiet window instead of being swallowed by it.
+                self._changed = Event()
+                await anyio.sleep(self._debounce_seconds)
+                if self._changed.is_set():
+                    continue
+                await self.write()
+
+    async def close(self) -> None:
+        """Stop, after one last flush if the room stopped mid-window.
+
+        A tab closed two seconds after the last sentence would otherwise leave
+        that sentence in the room's store and out of ``body_text``, where every
+        read surface would look for it.
+        """
+        if self._cancel_scope is not None:
+            self._cancel_scope.cancel()
+        if self._pending:
+            await self.write()
+
+    async def write(self) -> None:
+        """One UPDATE, from whatever the document says right now.
+
+        A Core statement rather than an ORM load: the entity's relationships are
+        ``lazy='raise'``, and a room task has no business waking the identity map
+        of a session that a request may also be holding.
+        """
+        document = self._room.ydoc
+        values: dict[str, str] = {
+            "body_text": str(document.get(ROOM_BODY_KEY, type=Text))
+        }
+        title = document.get(ROOM_META_KEY, type=Map).get(ROOM_TITLE_KEY)
+        # ABSENT is "the room has no title yet", never "the title was cleared" —
+        # nothing seeds this key, so it arrives with the first co-author to type
+        # in the title box and not before. Reading it the other way would blank
+        # the title of every praxis whose body someone edited.
+        if isinstance(title, str):
+            values["title"] = title
+
+        async with self._session_factory() as session:
+            await session.execute(
+                sql_update(Praxis).where(Praxis.id == self._praxis_id).values(**values)
+            )
+            await session.commit()
+        # Only once the write is committed: cancelled halfway, the room still
+        # owes the praxis this text and :meth:`close` has to know it.
+        self._pending = False
+
+
+# ---------------------------------------------------------------------------
 # Authorization — door one, at connect
 # ---------------------------------------------------------------------------
 
@@ -314,6 +437,7 @@ class PraxisRoomServer(WebsocketServer):
         session_factory: SessionFactory = AsyncSessionLocal,
         log: logging.Logger | None = None,
         squash_updates_above: int = _SQUASH_UPDATES_ABOVE,
+        flush_debounce_seconds: float = _FLUSH_DEBOUNCE_SECONDS,
     ) -> None:
         super().__init__(
             rooms_ready=False,
@@ -325,7 +449,9 @@ class PraxisRoomServer(WebsocketServer):
         )
         self._session_factory = session_factory
         self._squash_updates_above = squash_updates_above
+        self._flush_debounce_seconds = flush_debounce_seconds
         self._connections: set[_RoomConnection] = set()
+        self._flushers: dict[str, _RoomFlusher] = {}
         self.__open_lock: Lock | None = None
 
     @property
@@ -365,9 +491,29 @@ class PraxisRoomServer(WebsocketServer):
             self.rooms[name] = room
             await self.start_room(room)
             await self._load_or_seed(room, name)
+            self._start_flusher(room, name)
             # Only now may clients synchronize against it.
             room.ready = True
             return room
+
+    def _start_flusher(self, room: YRoom, name: str) -> None:
+        """Watch this room's document and copy it into the praxis (#1743).
+
+        Subscribed *after* the seed on purpose. The seed is the record's own
+        text arriving in the document; flushing it straight back would be a
+        write nobody asked for, on every room that opens.
+        """
+        assert self._task_group is not None  # start_room above proves it
+        flusher = _RoomFlusher(
+            room,
+            _praxis_id_of(name),
+            self._session_factory,
+            self._flush_debounce_seconds,
+            self.log,
+        )
+        self._flushers[name] = flusher
+        room.ydoc.observe(lambda _event: flusher.mark_changed())
+        self._task_group.start_soon(flusher.run)
 
     async def _load_or_seed(self, room: YRoom, name: str) -> None:
         store = room.ystore
@@ -403,6 +549,9 @@ class PraxisRoomServer(WebsocketServer):
             async with self._open_lock:
                 room = self.rooms.get(connection.room_name)
                 if room is not None and not room.clients:
+                    flusher = self._flushers.pop(connection.room_name, None)
+                    if flusher is not None:
+                        await flusher.close()
                     await self.delete_room(room=room)
 
     def revoke(self, praxis_id: int, character_id: int) -> None:

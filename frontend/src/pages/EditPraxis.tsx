@@ -114,6 +114,7 @@ export default function EditPraxis() {
           write-up and all, and that box still has to have the text in it. */}
       <PraxisRoomProvider
         praxisId={isWaitingStage(state.phase) ? null : state.praxis.id}
+        onUpdate={state.setAutosaveAt}
       >
         <Archetype state={state} />
       </PraxisRoomProvider>

@@ -76,7 +76,7 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     duel: null,
     submitting: false,
     autosaveAt: null,
-    saveStatus: "idle",
+    setAutosaveAt: () => {},
     isPublished: false,
     controlsLocked: false,
     modeIsLocked: false,

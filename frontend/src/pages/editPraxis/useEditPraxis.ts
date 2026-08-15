@@ -8,7 +8,7 @@
  * `EditPraxisState` all nine archetypes, the waiting surface and the dispatcher
  * read:
  *
- *   `useComposerDraft`   — title, body, the 2s autosave, the flush
+ *   `useComposerDraft`   — title and body, as a view of the room's document
  *   `useComposerMedia`   — the tray: pick, edit, upload, remove
  *   `useMetataskApply`   — the applied seal stack, picker and peel-off
  *   `useComposerRoster`  — the search box, invites, challenge, kick, nudge
@@ -79,7 +79,7 @@ export { MAX_FILE_SIZE } from "./useComposerMedia";
  * because every importer — nine archetypes, the waiting surface, the seal
  * components, the dispatcher — reaches for both names by this path.
  */
-export type { EditPraxisState, SaveStatus } from "./editPraxisState";
+export type { EditPraxisState } from "./editPraxisState";
 import type { EditPraxisState } from "./editPraxisState";
 
 /**
@@ -99,18 +99,11 @@ export {
  * one string for `window.confirm`, and it belongs beside the other six confirms
  * the composer asks for. */
 
-/**
- * The draft's own machinery — the 2s debounced autosave, the cancel-then-write
- * flush, and the three predicates that decide whether a write is owed — moved
- * to `useComposerDraft.ts` (#1392). Re-exported here because
- * `useEditPraxis.test.ts` calls all three directly: the harness runs no
- * effects, so calling them is the only way the ordering is provable.
- */
-export {
-  draftNeedsTitle,
-  flushEdits,
-  hasUnsavedEdits,
-} from "./useComposerDraft";
+/* The draft's save machinery — the 2s debounced autosave, the cancel-then-write
+ * flush, and the three predicates that decided whether a write was owed — was
+ * re-exported here so a test could call it directly. It is gone (#1743): the
+ * praxis is written in its room, so there is no client-side write to order and
+ * no "unsaved" for anything to be dirty against. */
 
 /**
  * The invite/opponent search box, the two sends that clear it, and the roster
@@ -193,7 +186,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const duelLevelRequired = gameConfig?.duel_level_required ?? null;
   const autoSubmitDays = gameConfig?.collab_auto_submit_days ?? null;
 
-  // ---- Draft text + autosave (#360, #1081, #1164) ----
+  // ---- Draft text ----
+  // A view of the room's document, not a copy waiting to be sent: the room is
+  // the one write path since #1743, so nothing here persists anything.
   const {
     title,
     setTitle,
@@ -202,14 +197,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     wordCount,
     autosaveAt,
     setAutosaveAt,
-    saveStatus,
-    setSaveStatus,
     hydrate: hydrateDraft,
-    cancelQueuedAutosave,
-    persistEdits,
-    isDirty,
-    needsTitle,
-  } = useComposerDraft(praxis, setPraxis);
+  } = useComposerDraft();
 
   // ---- Initial load ----
   useEffect(() => {
@@ -335,7 +324,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setError("");
     try {
       const praxisId = parseInt(idParam, 10);
-      await persistEdits(praxisId);
+      // No flush first. The text is already in the room and already durable
+      // there (#1743); the record catches up on the room's own debounce, and
+      // #1745 makes the freeze flatten it at exactly this moment instead.
       await submitPraxis(praxisId);
       let refreshed: PraxisOut | null = null;
       let refreshedDuel: DuelDetailOut | null = duel;
@@ -389,56 +380,27 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     } finally {
       setSubmitting(false);
     }
-  }, [idParam, title, persistEdits, navigate, refetch, user?.character?.id, duel]);
+  }, [idParam, title, navigate, refetch, user?.character?.id, duel]);
 
   // The third exit (#1081). Publish files the praxis and Drop destroys it; this
   // is the one that keeps the draft and simply leaves.
   //
-  // Almost every byte is already persisted by the time it's pressed — title and
-  // body on the 2s debounce, media the moment it's picked — so the work here is
-  // the flush, not a save: the queued autosave is cancelled and the text in hand
-  // written in its place, exactly as publish does. Without that, the keystrokes
-  // typed inside the debounce window would be discarded by the unmount.
+  // It leaves, and that is all it does. It used to carry the flush — cancel the
+  // queued autosave, write the text in hand — because keystrokes typed inside
+  // the 2s debounce window would otherwise be discarded by the unmount. There
+  // is no window to lose them in now: every keystroke is in the room's store
+  // before the socket acknowledges it (#1743), so there is nothing to save, no
+  // request that can fail, and no reason to refuse a blank title on the way out.
   //
   // Destination is the player's own profile, whose praxis grid shows them their
   // own `in_progress` work (`praxis_visibility_condition` ORs in the viewer's
-  // member praxes) — i.e. the draft they just saved, waiting where they left it.
+  // member praxes) — i.e. the draft they just left, waiting where they left it.
   const saveDraft = useCallback(async () => {
     if (!idParam) return;
-    if (needsTitle()) {
-      // Stay put: the body is still in the box, and leaving would strand it.
-      setError(i18n.t("forms:editPraxis.errors.titleRequired"));
-      return;
-    }
-    const dirty = isDirty();
     setError("");
-    if (dirty) setSaveStatus("saving");
-    try {
-      await persistEdits(parseInt(idParam, 10));
-    } catch (err) {
-      // The write failed, so the only copy of this text is the one on screen.
-      // Report and hold — navigating now would be the data loss the flush exists
-      // to prevent.
-      if (dirty) setSaveStatus("error");
-      setError(extractError(err, i18n.t("forms:editPraxis.errors.saveDraft")));
-      return;
-    }
-    if (dirty) {
-      setAutosaveAt(new Date());
-      setSaveStatus("saved");
-    }
     const characterId = user?.character?.id;
     navigate(characterId != null ? `/characters/${characterId}` : "/tasks");
-  }, [
-    idParam,
-    needsTitle,
-    isDirty,
-    persistEdits,
-    setAutosaveAt,
-    setSaveStatus,
-    navigate,
-    user?.character?.id,
-  ]);
+  }, [idParam, navigate, user?.character?.id]);
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
@@ -536,7 +498,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         : dropTaskConfirm(),
     );
     if (!confirmed) return;
-    cancelQueuedAutosave();
     try {
       await deletePraxis(praxis.id);
     } catch (err) {
@@ -544,7 +505,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       return;
     }
     navigate("/tasks");
-  }, [praxis, navigate, askConfirm, cancelQueuedAutosave]);
+  }, [praxis, navigate, askConfirm]);
 
   // ---- Mode switching ----
   const changeMode = useCallback(
@@ -763,7 +724,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     dismissConfirm,
 
     autosaveAt,
-    saveStatus,
+    setAutosaveAt,
 
     autoSubmitDays,
     isPublished: !!isPublished,

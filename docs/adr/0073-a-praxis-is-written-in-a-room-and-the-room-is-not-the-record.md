@@ -1,7 +1,10 @@
 # ADR-0073 — A praxis is written in a room, and the room is not the record
 
-**Status:** Accepted — **designed, not built.** The vocabulary and the decisions
-below are the design; no room server, no CRDT and no editor swap exist yet.
+**Status:** Accepted — **built, except freeze.** The room server and its two
+auth doors (#1740), the CodeMirror binding (#1742) and the one write path —
+`body_text` as a derived column, the `PUT` deleted, offline in `y-indexeddb`
+(#1743) — are live. Still design only: freeze-on-pending and discarding the
+document on publish (#1745), and presence (#1744).
 **Date:** 2026-08-14
 **Relates to:** ADR-0011 (a duel is two solo praxes), ADR-0012 (lazy consensus;
 "an edit means we're not done"), ADR-0013 (any member may edit), ADR-0059

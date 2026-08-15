@@ -20,24 +20,36 @@
  * it contains, so nothing can be typed *in front of* the seed and nothing can
  * be flushed over the praxis on the strength of an empty editor.
  *
+ * ## The room is the record's only writer
+ *
+ * There is no debounced `PUT` behind this any more (#1743). The document goes
+ * to the server, which flushes it into `praxis.title` and `praxis.body_text`;
+ * nothing on this side writes the praxis, which is why nothing on this side has
+ * a dirty check, a flush order or an "unsaved" state to get wrong.
+ *
+ * Updates are held locally in IndexedDB as well, so a composer that loses the
+ * network keeps taking text and merges it on reconnect — where the `PUT` simply
+ * failed and lost the paragraph.
+ *
  * ## What is deliberately not here
  *
  * Carets, collaborator colours and the presence roster (#1744) — the provider's
  * own awareness channel exists (it is y-websocket's keep-alive) but nothing
- * reads it yet. Freeze-on-pending (#1745). Offline persistence and the retiring
- * of the debounced `PUT` (#1743): until then the room is a *live view*, and
- * `useComposerDraft`'s `PUT` is still the only thing that writes the record.
+ * reads it yet. Freeze-on-pending and discarding the document on publish
+ * (#1745).
  */
 import {
   createContext,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
+import { IndexeddbPersistence } from "y-indexeddb";
 
 /**
  * The body's root key — `ROOM_BODY_KEY` in `praxis_room.py`. The server seeds a
@@ -80,18 +92,34 @@ function roomServerUrl(): string {
   return `${apiBase.replace(/^http/, "ws")}${ROOM_PATH}`;
 }
 
+/** The IndexedDB database holding one praxis's offline copy of its document. */
+function roomStoreName(praxisId: number): string {
+  return `praxis-room-${praxisId}`;
+}
+
 export interface PraxisRoom {
   /** The co-edited markdown body. Bound to CodeMirror by `BodyTextarea`. */
   body: Y.Text;
   /** The last-write-wins map holding {@link ROOM_TITLE_KEY}. */
   meta: Y.Map<string>;
   /**
-   * The server's document has arrived at least once.
+   * The document has arrived — from the socket, or from the offline store.
    *
-   * Until it has, the editor shows an empty document that means nothing, so the
-   * composer holds the body read-only. It goes back to `false` on disconnect.
+   * Until it has, the editor holds an empty document that means nothing, and
+   * the composer keeps the body read-only (`BodyTextarea`). #1742 kept that
+   * gate because a keystroke landing in front of the seed could be flushed over
+   * the praxis by the still-live `PUT`. That `PUT` is gone, and the gate is
+   * kept for a reason that survives it: the server seeds the document exactly
+   * once, so text typed *before* the seed is merged into text the player has
+   * never seen, at whatever positions the CRDT picks. Nothing is lost, but the
+   * result is a document nobody wrote.
+   *
+   * **It latches.** Seeding is a once-per-document event, so a dropped socket
+   * does not un-seed anything — and if this went back to `false` on
+   * disconnect, a wifi blip would freeze the editor mid-sentence and offline
+   * authoring, the whole point of the local store, could never happen.
    */
-  synced: boolean;
+  seeded: boolean;
 }
 
 const PraxisRoomContext = createContext<PraxisRoom | null>(null);
@@ -113,23 +141,39 @@ export function usePraxisRoom(): PraxisRoom | null {
  */
 export function PraxisRoomProvider({
   praxisId,
+  onUpdate,
   children,
 }: {
   praxisId: number | null;
+  /**
+   * The room took an update — the composer's one honest "Saved …" signal
+   * (#1743).
+   *
+   * Fires for a co-author's typing as well as your own, which is the point: an
+   * update the room has is already in `praxis_room_update`, and
+   * `praxis.body_text` follows it on the server's own debounce. Passed in
+   * rather than exposed on the context because the archetypes read it off
+   * `EditPraxisState`, and `useEditPraxis` runs outside this provider.
+   */
+  onUpdate?: (at: Date) => void;
   children: ReactNode;
 }) {
-  // The shared types, kept apart from `synced` so their identity survives a
-  // sync flip — `BodyTextarea` keys its editor on `body`, and a new identity
-  // there would tear the editor down and rebuild it the moment the seed lands.
+  // The shared types, kept apart from `seeded` so their identity survives the
+  // seed landing — `BodyTextarea` keys its editor on `body`, and a new identity
+  // there would tear the editor down and rebuild it at that moment.
   const [types, setTypes] = useState<{ body: Y.Text; meta: Y.Map<string> } | null>(
     null,
   );
-  const [synced, setSynced] = useState(false);
+  const [seeded, setSeeded] = useState(false);
+  // Read through a ref so a caller passing an inline callback does not tear the
+  // socket down and rebuild it on every render.
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   useEffect(() => {
     if (praxisId == null) {
       setTypes(null);
-      setSynced(false);
+      setSeeded(false);
       return;
     }
     const doc = new Y.Doc();
@@ -137,6 +181,18 @@ export function PraxisRoomProvider({
     // seeded `body` already, and a second seed merges as a second copy.
     const body = doc.getText(ROOM_BODY_KEY);
     const meta = doc.getMap<string>(ROOM_META_KEY);
+    // Offline authoring (#1743). Not a cache and not a second seed: it is the
+    // SAME document, replayed from the browser and merged by the CRDT on
+    // reconnect. What it replaces — a `PUT` that simply failed when the network
+    // was down, losing the paragraph outright — is why this is strictly better
+    // rather than a nicety. The room is still the only thing that writes the
+    // record; this only decides where the updates wait.
+    //
+    // #1745 discards the server's document on publish and re-seeds a fresh one
+    // through `pullBack`. When it does, it has to `clearData()` this store in
+    // the same beat: a stale local copy merging back into a re-seeded document
+    // is the duplication footgun by another route.
+    const offline = new IndexeddbPersistence(roomStoreName(praxisId), doc);
     const provider = new WebsocketProvider(
       roomServerUrl(),
       String(praxisId),
@@ -149,22 +205,48 @@ export function PraxisRoomProvider({
       },
     );
     setTypes({ body, meta });
-    setSynced(provider.synced);
-    const onSync = (isSynced: boolean) => setSynced(isSynced);
+
+    // Latch, never unlatch — see `PraxisRoom.seeded`.
+    const markSeeded = () => setSeeded(true);
+    if (provider.synced) markSeeded();
+    const onSync = (isSynced: boolean) => {
+      if (isSynced) markSeeded();
+    };
     provider.on("sync", onSync);
 
+    // The offline store counts as the seed arriving, but ONLY when it restored
+    // something. An empty store is a praxis whose room this browser has never
+    // opened, and unlocking the editor for it would let a first-ever offline
+    // visit type in front of a seed that has not happened yet. An empty
+    // document's state vector is one byte; a seeded one names the server's
+    // client id, so this asks "did anything come back?" without reaching into
+    // y-indexeddb's internals.
+    const onOfflineLoaded = () => {
+      if (Y.encodeStateVector(doc).byteLength > 1) markSeeded();
+    };
+    offline.on("synced", onOfflineLoaded);
+
+    const onDocUpdate = () => onUpdateRef.current?.(new Date());
+    doc.on("update", onDocUpdate);
+
     return () => {
+      doc.off("update", onDocUpdate);
       provider.off("sync", onSync);
+      offline.off("synced", onOfflineLoaded);
       provider.destroy();
+      // `destroy()` closes the store; `clearData()` is what would delete it,
+      // and must not be called here — the point of the store is that it
+      // outlives the tab.
+      void offline.destroy();
       doc.destroy();
       setTypes(null);
-      setSynced(false);
+      setSeeded(false);
     };
   }, [praxisId]);
 
   const room = useMemo<PraxisRoom | null>(
-    () => (types === null ? null : { ...types, synced }),
-    [types, synced],
+    () => (types === null ? null : { ...types, seeded }),
+    [types, seeded],
   );
 
   return (

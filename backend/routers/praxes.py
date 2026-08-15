@@ -39,7 +39,6 @@ from schemas.praxis import (
     PraxisInviteOut,
     PraxisOut,
     PraxisTypeChange,
-    PraxisUpdate,
     PraxisVoteIn,
 )
 
@@ -91,7 +90,6 @@ from services.praxis import (
     VotedFilter,
     respond_to_invite,
     submit_praxis,
-    update_praxis,
     unsubmit_praxis,
 )
 from services.praxis_metatask import apply_metatask, remove_metatask
@@ -256,21 +254,11 @@ async def create_praxis_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-@router.put("/{praxis_id}", response_model=PraxisOut)
-async def update_praxis_route(
-    praxis_id: int,
-    data: PraxisUpdate,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    praxis = await update_praxis(
-        praxis_id=praxis_id,
-        data=data,
-        character_id=character.id,
-        session=session,
-        era=CURRENT_ERA,
-    )
-    return await build_praxis_out(praxis, session, viewer=character)
+# `PUT /praxes/{praxis_id}` was the composer's debounced autosave and is gone
+# (#1743, ADR-0073). Title and body are now written in the praxis's room and
+# flushed to the record by the room server, so there is one write path for a
+# praxis body and not two — see `tests/test_deleted_routes_stay_deleted.py`
+# for why re-adding it is the argument to answer, not the fix.
 
 
 @router.post("/{praxis_id}/change-type", response_model=PraxisOut)
