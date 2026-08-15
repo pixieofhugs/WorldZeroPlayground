@@ -105,12 +105,13 @@ async def get_praxis(
     this helper ultimately feeds a ``build_praxis_out`` caller. The list
     endpoint uses :func:`list_praxes` which loads only what the card needs.
 
-    INVARIANT: must eagerly load every Praxis relationship with
-    ``cascade='all, delete-orphan'`` — currently just ``invites`` — because
-    :func:`delete_praxis` does ``session.delete(praxis)`` which needs those
-    collections loaded in the session for the cascade to fire. The other
-    relationships are ``lazy='raise'`` (see ``models/praxis.py``); dropping a
-    ``selectinload`` here silently breaks delete.
+    The loads here are for the *detail view* only. Deleting a praxis no longer
+    depends on them: the FKs into ``praxis.id`` are ``ON DELETE CASCADE`` and
+    the collections are ``passive_deletes=True``, so :func:`delete_praxis`
+    works whether or not a collection is loaded. It is the inverse that used to
+    bite — eagerly loading ``media_items``, which has no ``delete-orphan``
+    cascade, is what made ``session.delete(praxis)`` try to write
+    ``praxis_id = NULL`` into a NOT NULL column. See ``MediaItem.praxis_id``.
     """
     result = await session.execute(
         select(Praxis)
@@ -834,6 +835,51 @@ async def _check_create_preconditions(
     return task
 
 
+#: Namespace for :func:`_lock_signups_for_character`'s advisory lock. Postgres
+#: advisory locks share one global 64-bit space across the whole database, so a
+#: bare ``character_id`` would collide with any other feature that ever locks on
+#: an id. The two-argument form takes an explicit namespace instead.
+#:
+#: ponytail: that form is ``(int4, int4)``, so it presumes ``character.id`` fits
+#: in 32 bits. It is a BIGINT column; past 2^31 characters this needs the
+#: one-argument int8 form with the namespace folded into the high half.
+_SIGNUP_LOCK_NAMESPACE = 0x5A19
+
+
+async def _lock_signups_for_character(character_id: int, session: AsyncSession) -> None:
+    """Serialise one character's task signups for the rest of this transaction.
+
+    :func:`_check_create_preconditions` is a read-then-write: it SELECTs whether
+    the character already holds an active membership on the task (and how full
+    their bank is), then INSERTs on the strength of that answer. Nothing in the
+    schema can catch a second signup that slips between the two — the
+    "one active membership per character per task" rule spans ``praxis_member``
+    and ``praxis.status``/``task_id``, so it is not expressible as a unique
+    index without denormalising ``task_id`` onto the membership.
+
+    That gap is not theoretical. In production four praxes were created for one
+    character on one task inside 110 milliseconds — two of them 2ms apart — by a
+    single tap on a phone that fired four requests. All four ran the membership
+    check before any of them committed, so all four were told they were the
+    first.
+
+    An advisory lock rather than ``SELECT ... FOR UPDATE`` on the character row:
+    the thing being serialised is a *decision spanning several tables*, not a
+    mutation of ``character``, and taking a row lock for it would mean anything
+    else touching that row inherits the contention. ``xact`` releases at
+    commit or rollback, so no path can leak it. Contention is per character, so
+    two different players never wait on each other.
+
+    ponytail: the client is not fixed here — four ``handleSignup`` copies would
+    each need an in-flight guard, and every one of them would still be advisory.
+    The server has to refuse regardless. Add the client guard when the wasted
+    round-trips are worth four diffs.
+    """
+    await session.execute(
+        select(func.pg_advisory_xact_lock(_SIGNUP_LOCK_NAMESPACE, character_id))
+    )
+
+
 async def create_praxis(
     task_id: int,
     praxis_type: PraxisType,
@@ -851,7 +897,12 @@ async def create_praxis(
     - Bank cap: era.max_task_signups = max concurrent in_progress praxes per character
     - Duel/collab type requires minimum level
     - Spends the faction level-jump allowance if the claim needed it (#811)
+
+    Every one of those gates is a *read* followed by a write, so they only hold
+    against one signup at a time — see :func:`_lock_signups_for_character`.
     """
+    await _lock_signups_for_character(character_id, session)
+
     task = await _check_create_preconditions(
         task_id, praxis_type, character_id, session, era
     )

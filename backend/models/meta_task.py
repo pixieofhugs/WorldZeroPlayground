@@ -19,8 +19,9 @@ class PraxisMetaTask(Base):
 
     # The only composite primary key in the schema, and so the only table with
     # no `Identity()`: both halves are foreign keys, and the pair IS the fact.
+    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), primary_key=True
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), primary_key=True
     )
     task_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("task.id"), primary_key=True

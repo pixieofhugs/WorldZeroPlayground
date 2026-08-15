@@ -37,13 +37,28 @@ app = FastAPI(title="World Zero", version="1.0.0", lifespan=lifespan)
 
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+    """Turn a constraint violation into something a player can read.
+
+    The ``else`` branch used to be ``detail = msg`` — the lower-cased driver
+    exception, shipped verbatim to the browser. A "drop task" that tripped the
+    praxis-delete bug answered with the asyncpg exception class, the statement,
+    and the failing row's column values. That is unreadable *and* a disclosure:
+    the message names tables, columns and stored data.
+
+    Only the two recognised shapes get bespoke copy; everything else is a bug in
+    us, not a mistake by the player, so it reads like one and the real exception
+    goes to the log where it belongs.
+    """
     msg = str(exc.orig).lower()
     if "username" in msg:
         detail = "That username is already taken. Please choose a different one."
     elif "unique" in msg or "duplicate" in msg:
         detail = "That value is already in use. Please try a different one."
     else:
-        detail = msg
+        logger.exception(
+            "Unhandled integrity error on %s %s", request.method, request.url.path
+        )
+        detail = "That didn't go through — something on our end refused it. Please try again."
     return JSONResponse(status_code=409, content={"detail": detail})
 
 

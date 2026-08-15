@@ -76,8 +76,9 @@ class Flag(CreatedAtMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
     praxis_id: Mapped[Optional[int]] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=True
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=True
     )
     comment_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("comment.id"), nullable=True

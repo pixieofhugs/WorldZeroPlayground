@@ -47,8 +47,9 @@ class Nudge(CreatedAtMixin, Base):
         BigInteger, ForeignKey("character.id"), nullable=False
     )
     # The praxis the recipient still owes — see the module docstring.
+    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=False
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
 
     __table_args__ = (

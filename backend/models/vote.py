@@ -33,8 +33,9 @@ class Vote(Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # ON DELETE CASCADE — see the note on ``MediaItem.praxis_id``.
     praxis_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("praxis.id"), nullable=False
+        BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
     voter_character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
