@@ -12,6 +12,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from dependencies import account_has_admin_role
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -20,6 +21,7 @@ from models.flag import Flag, FlagReason, stored_flag_reason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
+from services.character_capabilities import compute_capabilities
 from services.era import get_current_era_row, get_or_create_stats
 from services.praxis import can_view_praxis
 
@@ -46,13 +48,29 @@ async def can_comment(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """True if viewer is authenticated and at/above era.comment_level_required.
+    """Whether ``viewer`` may post a comment — the enforcement half of the
+    ``can_comment`` flag ``/auth/me`` carries.
 
-    Mirrors :func:`services.praxis.can_flag_praxis`.
+    Derived from :func:`services.character_capabilities.compute_capabilities`
+    rather than restated, because restating it is what broke. This used to read
+    the level alone, while the flag the frontend gates the composer on
+    short-circuits to True for admins. An admin below
+    ``era.comment_level_required`` was therefore shown a comment box and got a
+    403 from every submit — which is how a production database reached zero
+    comments with an admin repeatedly trying to leave one.
+
+    That is the same trap :func:`services.praxis.can_sign_up_for_task` is built
+    to avoid ("one predicate, so the can_sign_up flag can't drift from
+    enforcement"). One predicate here too.
     """
     if viewer is None:
         return False
-    return await _character_level(viewer.id, session) >= era.comment_level_required
+    capabilities = compute_capabilities(
+        await _character_level(viewer.id, session),
+        await account_has_admin_role(viewer.account_id, session),
+        era,
+    )
+    return capabilities.can_comment
 
 
 async def get_comment(comment_id: int, session: AsyncSession) -> Comment:

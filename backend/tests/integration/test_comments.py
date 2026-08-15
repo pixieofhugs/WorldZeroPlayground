@@ -10,11 +10,13 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.comment import MAX_COMMENT_BODY, Comment
 from models.era import Era
 from models.praxis import Praxis
+from models.roles import AccountRole, Role
 from models.task import Task
 from services.comment import create_comment
 
@@ -519,3 +521,48 @@ async def test_body_stored_over_the_cap_still_reads_in_full(
     resp = await client.get(f"/praxes/{praxis_solo.id}/comments")
     assert resp.status_code == 200, resp.text
     assert [len(c["body_text"]) for c in resp.json()] == [legacy_length]
+
+
+@pytest.mark.asyncio
+async def test_an_admin_below_the_level_gate_can_actually_post(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """The ``can_comment`` flag and the enforcement behind it must agree.
+
+    ``compute_capabilities`` short-circuits every flag to True for an admin, and
+    the composer is shown on exactly that flag — but ``services.comment.
+    can_comment`` used to restate the rule as a bare level check with no admin
+    branch. An admin below ``comment_level_required`` was therefore given a
+    comment box and a 403 from every submit. That is not hypothetical: it is why
+    a production database held zero comments while an admin kept trying to leave
+    one.
+
+    ``character`` is level 0 here, well under the gate, which is the whole point
+    — the admin short-circuit is the only thing that can make this pass.
+    """
+    role = Role(name="admin", description="Administrator")
+    db_session.add(role)
+    await db_session.flush()
+    db_session.add(
+        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
+    )
+    await db_session.commit()
+
+    me_response = await client.get("/auth/me", headers=auth_headers)
+    assert me_response.status_code == 200, me_response.text
+    assert me_response.json()["can_comment"] is True
+
+    post_response = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "the box said I could"},
+        headers=auth_headers,
+    )
+    assert post_response.status_code == 201, (
+        "the /auth/me flag says this viewer may comment and the write door "
+        f"disagreed: {post_response.text}"
+    )
