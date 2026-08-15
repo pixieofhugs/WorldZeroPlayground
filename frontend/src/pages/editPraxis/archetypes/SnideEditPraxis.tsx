@@ -25,8 +25,8 @@
  * `overflow: hidden` clip: the ground is the COLUMN's, never the viewport's
  * (#1028, the trap six of eight task-detail skins fell into).
  *
- * **Section rule** — the censor stripe, a solid redaction bar rather than a
- * hairline.
+ * **Rule** — the censor stripe, a solid redaction bar rather than a hairline,
+ * struck ONCE above the footer (#1707) rather than between the sections.
  *
  * **The two marks** are one hand-drawn blob at two sizes: the points blob with
  * its numeral and `PTS` caption, and the status blob with a check struck through
@@ -244,8 +244,9 @@ export default function SnideEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  /* The censor stripe, this skin's section divider. Every section gets its own
-   * (the shared block draws a hairline otherwise). */
+  /* The censor stripe, this skin's rule. Struck once, above the footer (#1707):
+   * the design calls its rule there and lets whitespace part the regions, and
+   * five redaction bars redacted the page's rhythm along with its sections. */
   const censorStripe = <ComposerRule style={{ height: 10, background: BAR }} />;
 
   /* The submit bar's bleed: the sheet's own side padding, negated. Not a value

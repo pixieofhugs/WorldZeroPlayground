@@ -187,9 +187,13 @@ export default function UaEditPraxis({ state }: Props) {
     ? { lotus: 300, lotusLeft: -122, lotusTop: -94, enso: 208, ensoRight: -66, ensoBottom: -58 }
     : { lotus: 420, lotusLeft: -170, lotusTop: -130, enso: 300, ensoRight: -96, ensoBottom: -84 };
 
-  /* UA does not replace the divider — it is the shared hairline in UA's ink.
-   * The shared default reads the `na` hair token, which is a colour measured on
-   * another faction's paper, so the ink (and only the ink) is overridden. */
+  /* UA does not replace the rule — it is the shared hairline in UA's ink. The
+   * shared default reads the `na` hair token, which is a colour measured on
+   * another faction's paper, so the ink (and only the ink) is overridden.
+   *
+   * Kept for the dress the waiting surface wears. On THIS page the hairline is
+   * drawn once, above the footer (#1707), and the regions part by the sheet's
+   * own gap. */
   const rule = <ComposerRule style={{ background: HAIR }} />;
 
   /* The label tier's face and colour are the skin's; its geometry (uppercase,

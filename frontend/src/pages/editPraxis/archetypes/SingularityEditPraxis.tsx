@@ -233,8 +233,9 @@ export default function SingularityEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  /* The section divider: a dashed hair, not a solid rule. One node, handed to
-     every section, so the rhythm cannot drift between regions. */
+  /* The rule: a dashed hair, not a solid line. One node, drawn ONCE above the
+     footer (#1707) — the design calls its rule there and nowhere else, and the
+     regions above it separate by the sheet's own gap. */
   const hairRule = (
     <ComposerRule
       style={{

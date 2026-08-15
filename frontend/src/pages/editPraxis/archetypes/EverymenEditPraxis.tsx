@@ -4,7 +4,7 @@
  *
  * The union's WORK ORDER: a red masthead plate flanked by two counter-rotating
  * cogs, poster rays fanning from behind it over a gold and an olive corner glow,
- * dashed red rules between every region, a rubber-stamp points seal, and a
+ * one dashed red rule above the footer, a rubber-stamp points seal, and a
  * full-width report bar for the cast. Bebas Neue carries every headline and
  * label; Courier Prime carries everything read.
  *
@@ -281,7 +281,11 @@ export default function EverymenEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  /** The broadsheet's divider — one element, drawn between every region. */
+  /**
+   * The broadsheet's rule — one element, drawn ONCE, above the footer (#1707).
+   * The design calls its rule once and separates the regions with the sheet's
+   * own gap; seven dashed reds read as a form to be filled in, not a work order.
+   */
   const dashRule = (
     <ComposerRule
       style={{ height: 0, background: "transparent", borderTop: `2px dashed ${RED}` }}

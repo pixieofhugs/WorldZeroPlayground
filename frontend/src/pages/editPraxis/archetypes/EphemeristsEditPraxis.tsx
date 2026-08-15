@@ -326,14 +326,14 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION };
   /**
-   * The rune band is this skin's section rule (#1638, replacing the flute).
+   * The rune band is this skin's rule (#1638, replacing the flute), drawn ONCE
+   * above the footer (#1707) rather than at the head of every section — the
+   * design calls its rule once and parts the regions with the sheet's own gap.
    *
-   * PAIRED with the brass hairline, which the six other mounts are not: each of
-   * them sits under a section HEAD whose own filler rule already draws that
-   * line, while the composer's `rule` slot sits under a bare field label. On
-   * its own the band reads as a loose row of marks rather than as a divider, so
-   * this surface asks `RuneRule` for the two-part rule the write-up header gets
-   * out of its heading row.
+   * PAIRED with the brass hairline, which the plate's other mounts are not:
+   * each of those sits under a section HEAD whose own filler rule already draws
+   * that line, while the composer's rule closes a column of bare field labels.
+   * On its own the band reads as a loose row of marks rather than as a rule.
    */
   const runes = <RuneRule rule />;
 

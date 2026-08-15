@@ -5,8 +5,8 @@
  *
  * The shared composer layout (`shared.tsx`) wearing Coven's dress: a centred
  * masthead of a turning pentacle disc under a twinkle field, a glow-and-lavender
- * ground carrying the coven wheel and a scatter of arcane glyphs, braided thread
- * for every section rule, an 88px haloed ward for the points, a 40px pentacle
+ * ground carrying the coven wheel and a scatter of arcane glyphs, one braid of
+ * thread closing the sheet, an 88px haloed ward for the points, a 40px pentacle
  * for the stage mark, and a full-bleed band for the cast.
  *
  * ## This REPLACES the `wow.exe` window wholesale
@@ -485,7 +485,8 @@ export default function CovenEditPraxis({ state }: Props) {
     outline: "none",
     boxSizing: "border-box",
   } as const;
-  /* Every section is headed by the braid. */
+  /* The braid, for the dress the waiting surface wears. On THIS page the one
+     braid the design allows (#1707) is the footer's own, drawn below. */
   const braidRule = (
     <ComposerRule>
       <Braid />

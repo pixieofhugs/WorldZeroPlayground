@@ -22,6 +22,15 @@
  * `[Cancel] … [Submit]` order settled in #646. A skin varies neither the order
  * nor the presence of a region — only its dress.
  *
+ * **The rule is a footer mark, not a section divider (#1707).** Every section
+ * passes `rule={false}`; the one rule on the page sits immediately above the
+ * footer, and the regions are parted by the content column's own `gap` — which
+ * is `ComposerSheet`'s, so the rhythm cannot drift between skins. Eight
+ * composers had read the shared `rule` slot as "draw one per section", and a
+ * ladder of six or seven ornaments is most of what made them read heavier than
+ * the design. `dress.rule` survives for `PraxisWaitingSurface`, which is a
+ * different page.
+ *
  * ## One responsive component, no mobile twin (ADR-0065 §2)
  *
  * `useComposerSizes()` picks the size set; there is one tree at two widths.

@@ -8,7 +8,7 @@
  * dry. `WowTaskDetail` is the parchment field the decree is posted on,
  * `WowPraxisDetail` is the finished entry; this is the writing desk between
  * them, and it wears the same three things all three share: a barber ribbon at
- * the head, a gilt frame, and wavy gold→plum rules dividing every section.
+ * the head, a gilt frame, and one wavy gold→plum rule closing the sheet.
  *
  * ## What this file owns, and what it does not (ADR-0065)
  *
@@ -54,7 +54,11 @@
  *   tucked into the bottom-right corner. Both live on `ComposerGround`, which
  *   the sheet CLIPS — the site background still shows around the column and no
  *   ornament here can reach the viewport (#1028).
- * - **Section rule.** The zigzag: `Zig`, from the faction's one ornament module.
+ * - **Rule.** The zigzag: `Zig`, from the faction's one ornament module. Drawn
+ *   ONCE, above the footer (#1707) — the design calls its rule once and lets
+ *   whitespace separate the regions; six zigzags made a ladder of the sheet.
+ *   `dress.rule` still takes a key, because the waiting surface asks for its
+ *   own instance and two `<linearGradient>`s may not share an id.
  * - **Points mark.** A plaque struck at -2.5deg in a 2px gold frame: the figure
  *   in burnt gold beside a gold ✦, with the unit in plum italic beneath.
  * - **Status mark.** A ✦ in the title face, at gold.
