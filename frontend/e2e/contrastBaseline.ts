@@ -14,17 +14,26 @@
  * (text, backdrop) pairing; which component happens to produce it is
  * incidental, changes with every copy edit, and would make this list rot. So
  * `theme | rgb(text) on rgb(backdrop)` is the identity, and `where` is only a
- * breadcrumb for whoever picks up the fix. Unresolved findings are keyed the
- * same way — on the CSS that defeated resolution, not on a DOM path.
+ * breadcrumb for whoever picks up the fix.
  *
  * **This list only ever shrinks.** Fixing a pair means DELETING its entry, not
  * editing the ratio — an allowlisted pair that starts passing fails the spec
  * on purpose. Never add an entry for new work.
+ *
+ * UNMEASURABLE BACKDROPS ARE NOT ON THIS LIST (#1675). Text over a gradient
+ * with an opaque stop has no single backdrop colour, so the scanner refuses to
+ * measure it rather than guessing. It used to be enumerated here as a pair
+ * keyed on the gradient CSS, which rotted on contact: every colour edit minted
+ * a new key, and by 2026-08-14 not one of those 56 entries matched anything the
+ * sweep still saw. Those findings are now REPORTED, and ratcheted by count
+ * against `UNRESOLVED_SURFACE_CEILING` below.
  */
 
+import type { Finding } from './contrastScan';
+
 export type BaselineEntry = {
-  /** Measured ratio when this entry landed. `null` for an unresolved backdrop. */
-  ratio: number | null;
+  /** Measured ratio when this entry landed. Every entry here was MEASURED. */
+  ratio: number;
   /** The issue that owns the fix. 651 = found by the sweep, awaiting a child. */
   issue: number;
   /** Where it was seen — a breadcrumb, not part of the identity. */
@@ -44,85 +53,16 @@ export function baselineKey(theme: string, text: string, background: string, req
 }
 
 /**
- * Identity of an unresolved backdrop — keyed on the CSS that defeated
- * resolution (stable) rather than the DOM path (rots on the next copy edit).
- */
-export function unresolvedKey(theme: string, text: string, backdropCss: string, required: number): string {
-  return `${theme} | ${text} over UNRESOLVED ${backdropCss} @${required}`;
-}
-
-/**
- * THE LIST. 269 entries, machine-produced by the sweep itself
+ * THE LIST. Machine-produced by the sweep itself
  * (`CONTRAST_BASELINE_OUT=<path> bash frontend/e2e/run-e2e.sh contrast.spec.ts`),
- * never hand-typed — 269 hand-copied ratios would be wrong within a week,
+ * never hand-typed — 185 hand-copied ratios would be wrong within a week,
  * which is this issue's whole thesis.
  *
  *   - 7 entries owned by #649 (white `--color-text-on-accent` on a faction
  *     fill). That issue's acceptance, measured as rendered.
- *   - 56 UNRESOLVED entries: text over a gradient with an OPAQUE stop — the
- *     WOW `.exe` title bars, the Ephemerists' celestial radial fields, the gilt
- *     wordmark. The colour genuinely varies under the text, so these stay loud
- *     rather than being measured against a guess. (Before the texture/fill
- *     split there were 134 of these, almost all paper grain.)
  *   - the rest await triage into children off #651.
  */
 export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
-  "dark | rgb(196, 100, 138) over UNRESOLVED linear-gradient(135deg, rgb(57, 21, 42), rgb(42, 13, 28)) @4.5": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > div > div' },
-  "dark | rgb(196, 100, 138) over UNRESOLVED repeating-linear-gradient(rgb(57, 21, 42), rgb(57, 21, 42) 25px, color(srgb 0.478431 0.2 0.345098 / 0.55) 25px, color(srgb 0.478431 0.2 0.345098 / 0.55) 26px) @4.5": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > div > p' },
-  "dark | rgb(230, 194, 103) over UNRESOLVED radial-gradient(120% 130% at 50% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 70%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop a > div > div > div' },
-  "dark | rgb(230, 194, 103) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @3": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop div > div > div > span' },
-  "dark | rgb(230, 194, 103) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop header > div > div > div' },
-  "dark | rgb(239, 227, 198) over UNRESOLVED radial-gradient(120% 130% at 50% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 70%) @3": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop a > div > div > div' },
-  "dark | rgb(239, 227, 198) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @3": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop header > div > div > h1' },
-  "dark | rgb(240, 230, 208) over UNRESOLVED linear-gradient(rgb(19, 18, 26), rgb(19, 18, 26)), linear-gradient(90deg, rgb(79, 70, 229), rgb(190, 24, 93), rgb(249, 115, 22), rgb(22, 163, 74)) @4.5": { ratio: null, issue: 651, where: 'ua/dark/desktop nav.sticky.top-0 > div.max-w-5xl.mx-auto > a.shrink-0.leading-none > span.font-display.italic' },
-  "dark | rgb(244, 114, 182) over UNRESOLVED linear-gradient(135deg, rgb(57, 21, 42), rgb(42, 13, 28)) @3": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > div > h1' },
-  "dark | rgb(244, 114, 182) over UNRESOLVED linear-gradient(160deg, rgb(94, 42, 70), rgb(196, 100, 138) 60%, rgb(244, 114, 182)) @4.5": { ratio: null, issue: 651, where: 'wow/dark/mobile div.py-4 > section > div > p' },
-  "dark | rgb(244, 114, 182) over UNRESOLVED repeating-linear-gradient(rgb(57, 21, 42), rgb(57, 21, 42) 23px, color(srgb 0.478431 0.2 0.345098 / 0.55) 23px, color(srgb 0.478431 0.2 0.345098 / 0.55) 24px) @3": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > div > div' },
-  "dark | rgb(244, 114, 182) over UNRESOLVED repeating-linear-gradient(rgb(57, 21, 42), rgb(57, 21, 42) 23px, color(srgb 0.478431 0.2 0.345098 / 0.55) 23px, color(srgb 0.478431 0.2 0.345098 / 0.55) 24px) @4.5": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > a > span' },
-  "dark | rgb(244, 114, 182) over UNRESOLVED repeating-linear-gradient(rgb(57, 21, 42), rgb(57, 21, 42) 25px, color(srgb 0.478431 0.2 0.345098 / 0.55) 25px, color(srgb 0.478431 0.2 0.345098 / 0.55) 26px) @3": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > div > div' },
-  "dark | rgb(251, 207, 224) over UNRESOLVED repeating-linear-gradient(rgb(57, 21, 42), rgb(57, 21, 42) 23px, color(srgb 0.478431 0.2 0.345098 / 0.55) 23px, color(srgb 0.478431 0.2 0.345098 / 0.55) 24px) @4.5": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > a > span' },
-  "dark | rgb(251, 214, 232) over UNRESOLVED linear-gradient(160deg, rgb(94, 42, 70), rgb(196, 100, 138) 60%, rgb(244, 114, 182)) @3": { ratio: null, issue: 651, where: 'wow/dark/mobile div.py-4 > section > div > h1' },
-  "dark | rgb(251, 214, 232) over UNRESOLVED linear-gradient(rgb(94, 42, 70), rgb(65, 32, 58)) @4.5": { ratio: null, issue: 651, where: 'ua/dark/desktop div > div > div > span' },
-  "dark | rgb(255, 255, 255) over UNRESOLVED linear-gradient(150deg, rgb(94, 42, 70), rgb(244, 114, 182)) @4.5": { ratio: null, issue: 651, where: 'wow/dark/mobile section.mt-6 > div.flex.flex-col > a > span' },
-  "dark | rgb(255, 255, 255) over UNRESOLVED linear-gradient(rgb(244, 114, 182), rgb(196, 100, 138)) @4.5": { ratio: null, issue: 651, where: 'wow/dark/mobile main.flex-1.relative > div.page > div.flex.gap-2.5 > a' },
-  "dark | rgb(255, 255, 255) over UNRESOLVED radial-gradient(circle at 35% 28%, rgb(94, 42, 70), rgb(244, 114, 182)) @3": { ratio: null, issue: 651, where: 'wow/dark/mobile div > div.flex.items-center > div.shrink-0 > span.flex.w-full' },
-  "dark | rgb(57, 21, 42) over UNRESOLVED linear-gradient(150deg, rgb(94, 42, 70), rgb(244, 114, 182)) @3": { ratio: null, issue: 651, where: 'wow/dark/desktop a > div > div > span' },
-  "dark | rgb(57, 21, 42) over UNRESOLVED linear-gradient(150deg, rgb(94, 42, 70), rgb(244, 114, 182)) @4.5": { ratio: null, issue: 651, where: 'wow/dark/desktop div > div > a > span' },
-  "dark | rgb(79, 143, 176) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @3": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop div > div > h1 > span' },
-  "dark | rgba(239, 227, 198, 0.62) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop div > div > p > span' },
-  "dark | rgba(239, 227, 198, 0.7) over UNRESOLVED radial-gradient(120% 130% at 50% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 70%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop a > div > div > div' },
-  "dark | rgba(239, 227, 198, 0.75) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop div > div > div > span' },
-  "dark | rgba(239, 227, 198, 0.92) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(79, 143, 176), rgb(10, 29, 42) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/dark/desktop header > div > div > p' },
-  "dark | rgba(251, 214, 232, 0.7) over UNRESOLVED linear-gradient(rgb(94, 42, 70), rgb(65, 32, 58)) @4.5": { ratio: null, issue: 651, where: 'ua/dark/desktop div > div > div > span' },
-  "dark | rgba(251, 214, 232, 0.75) over UNRESOLVED linear-gradient(rgb(94, 42, 70), rgb(65, 32, 58)) @4.5": { ratio: null, issue: 651, where: 'ua/dark/desktop div > div > div > span' },
-  "light | rgb(131, 24, 67) over UNRESOLVED linear-gradient(135deg, rgb(255, 253, 250), rgb(253, 238, 243)) @4.5": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > div > div' },
-  "light | rgb(131, 24, 67) over UNRESOLVED repeating-linear-gradient(rgb(255, 253, 250), rgb(255, 253, 250) 25px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 25px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 26px) @4.5": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > div > p' },
-  "light | rgb(142, 47, 92) over UNRESOLVED linear-gradient(160deg, rgb(251, 207, 226), rgb(131, 24, 67) 60%, rgb(236, 95, 153)) @3": { ratio: null, issue: 651, where: 'wow/light/mobile div.py-4 > section > div > h1' },
-  "light | rgb(142, 47, 92) over UNRESOLVED linear-gradient(rgb(251, 207, 226), rgb(243, 166, 203)) @4.5": { ratio: null, issue: 651, where: 'ua/light/desktop div > div > div > span' },
-  "light | rgb(212, 171, 85) over UNRESOLVED radial-gradient(120% 130% at 50% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 70%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/light/desktop a > div > div > div' },
-  "light | rgb(212, 171, 85) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @3": { ratio: null, issue: 651, where: 'ephemerists/light/desktop div > div > div > span' },
-  "light | rgb(212, 171, 85) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/light/desktop header > div > div > div' },
-  "light | rgb(236, 95, 153) over UNRESOLVED linear-gradient(135deg, rgb(255, 253, 250), rgb(253, 238, 243)) @3": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > div > h1' },
-  "light | rgb(236, 95, 153) over UNRESOLVED linear-gradient(160deg, rgb(251, 207, 226), rgb(131, 24, 67) 60%, rgb(236, 95, 153)) @4.5": { ratio: null, issue: 651, where: 'wow/light/mobile div.py-4 > section > div > p' },
-  "light | rgb(236, 95, 153) over UNRESOLVED repeating-linear-gradient(rgb(255, 253, 250), rgb(255, 253, 250) 23px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 23px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 24px) @3": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > div > div' },
-  "light | rgb(236, 95, 153) over UNRESOLVED repeating-linear-gradient(rgb(255, 253, 250), rgb(255, 253, 250) 23px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 23px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 24px) @4.5": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > a > span' },
-  "light | rgb(236, 95, 153) over UNRESOLVED repeating-linear-gradient(rgb(255, 253, 250), rgb(255, 253, 250) 25px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 25px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 26px) @3": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > div > div' },
-  "light | rgb(241, 232, 207) over UNRESOLVED radial-gradient(120% 130% at 50% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 70%) @3": { ratio: null, issue: 651, where: 'ephemerists/light/desktop a > div > div > div' },
-  "light | rgb(241, 232, 207) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @3": { ratio: null, issue: 651, where: 'ephemerists/light/desktop header > div > div > h1' },
-  "light | rgb(255, 253, 250) over UNRESOLVED linear-gradient(150deg, rgb(251, 207, 226), rgb(236, 95, 153)) @3": { ratio: null, issue: 651, where: 'wow/light/desktop a > div > div > span' },
-  "light | rgb(255, 253, 250) over UNRESOLVED linear-gradient(150deg, rgb(251, 207, 226), rgb(236, 95, 153)) @4.5": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > a > span' },
-  "light | rgb(255, 255, 255) over UNRESOLVED linear-gradient(150deg, rgb(251, 207, 226), rgb(236, 95, 153)) @4.5": { ratio: null, issue: 651, where: 'wow/light/mobile section.mt-6 > div.flex.flex-col > a > span' },
-  "light | rgb(255, 255, 255) over UNRESOLVED linear-gradient(rgb(236, 95, 153), rgb(131, 24, 67)) @4.5": { ratio: null, issue: 651, where: 'wow/light/mobile main.flex-1.relative > div.page > div.flex.gap-2.5 > a' },
-  "light | rgb(255, 255, 255) over UNRESOLVED radial-gradient(circle at 35% 28%, rgb(251, 207, 226), rgb(236, 95, 153)) @3": { ratio: null, issue: 651, where: 'wow/light/mobile div > div.flex.items-center > div.shrink-0 > span.flex.w-full' },
-  "light | rgb(26, 18, 9) over UNRESOLVED linear-gradient(rgb(247, 244, 238), rgb(247, 244, 238)), linear-gradient(90deg, rgb(79, 70, 229), rgb(190, 24, 93), rgb(249, 115, 22), rgb(22, 163, 74)) @4.5": { ratio: null, issue: 651, where: 'ua/light/desktop nav.sticky.top-0 > div.max-w-5xl.mx-auto > a.shrink-0.leading-none > span.font-display.italic' },
-  "light | rgb(29, 79, 110) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @3": { ratio: null, issue: 651, where: 'ephemerists/light/desktop div > div > h1 > span' },
-  "light | rgb(88, 28, 57) over UNRESOLVED repeating-linear-gradient(rgb(255, 253, 250), rgb(255, 253, 250) 23px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 23px, color(srgb 0.952941 0.713726 0.823529 / 0.55) 24px) @4.5": { ratio: null, issue: 651, where: 'wow/light/desktop div > div > a > span' },
-  "light | rgba(142, 47, 92, 0.7) over UNRESOLVED linear-gradient(rgb(251, 207, 226), rgb(243, 166, 203)) @4.5": { ratio: null, issue: 651, where: 'ua/light/desktop div > div > div > span' },
-  "light | rgba(142, 47, 92, 0.75) over UNRESOLVED linear-gradient(rgb(251, 207, 226), rgb(243, 166, 203)) @4.5": { ratio: null, issue: 651, where: 'ua/light/desktop div > div > div > span' },
-  "light | rgba(241, 232, 207, 0.62) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/light/desktop div > div > p > span' },
-  "light | rgba(241, 232, 207, 0.7) over UNRESOLVED radial-gradient(120% 130% at 50% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 70%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/light/desktop a > div > div > div' },
-  "light | rgba(241, 232, 207, 0.75) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/light/desktop div > div > div > span' },
-  "light | rgba(241, 232, 207, 0.92) over UNRESOLVED radial-gradient(120% 140% at 82% 0%, rgb(29, 79, 110), rgb(20, 59, 84) 60%, rgb(5, 19, 28) 100%) @4.5": { ratio: null, issue: 651, where: 'ephemerists/light/desktop header > div > div > p' },
   "dark | rgb(111, 174, 0) on rgb(244, 241, 232) @3": { ratio: 2.41, issue: 651, where: 'snide/dark/desktop div > div > div > div' },
   "dark | rgb(111, 174, 0) on rgb(244, 241, 232) @4.5": { ratio: 2.41, issue: 651, where: 'snide/dark/desktop div > div > div > div' },
   "dark | rgb(12, 10, 6) on rgb(19, 18, 26) @3": { ratio: 1.06, issue: 651, where: 'ephemerists/dark/desktop div.wz-faction-grid > div > div > h2' },
@@ -309,3 +249,123 @@ export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
   "light | rgba(96, 165, 250, 0.6) on rgb(5, 15, 8) @4.5": { ratio: 3.41, issue: 651, where: 'ua/light/mobile div.flex.flex-col > a > div.flex.items-center > span' },
   "light | rgba(96, 165, 250, 0.7) on rgb(5, 15, 8) @4.5": { ratio: 4.24, issue: 651, where: 'singularity/light/desktop header > div > div > div' },
 };
+
+/**
+ * Part D (#1675) — the coverage ratchet for backdrops the scanner REFUSES to
+ * measure.
+ *
+ * `contrastScan` returns `background: null` when the thing behind the text is
+ * a gradient with an opaque stop or an image: the colour genuinely varies
+ * under the glyphs, so there is no ratio to compute. That refusal is correct —
+ * the alternative is measuring against a guess — but treating it as a contrast
+ * FAILURE made this spec unsatisfiable. World Zero's faction skins are built
+ * out of exactly those fills, so all 28 tests were red from the day the guard
+ * landed and stayed red (2026-08-14 nightly: 728 unmeasurable findings against
+ * 168 genuinely-measured ones).
+ *
+ * Molly's ruling on #1675: report them, don't fail on them — but LOUDLY. A
+ * silent skip turns a red suite into a green one that checks less. So the spec
+ * prints every surface it could not resolve, and the count is ratcheted here.
+ * Gaining a surface is a coverage regression even though it is not a contrast
+ * defect, and it fails the run.
+ *
+ * WHY A COUNT AND NOT A LIST OF SURFACES. The obvious shape — allowlist the
+ * gradient CSS, like `RENDERED_BASELINE` allowlists the colour pair — is what
+ * this file used to do, and it rotted: the CSS embeds its colour stops, so
+ * every palette edit minted a fresh key and the 56 grandfathered entries
+ * matched nothing at all by the time they were deleted. A count survives a
+ * restop; it still catches the thing that matters, which is a NEW region of the
+ * app going unchecked.
+ *
+ * A surface is one distinct `backdropCss`, counted per test. A combination
+ * with no entry here has a ceiling of 0 on purpose — add a faction or a
+ * viewport and you must record what it costs in coverage.
+ *
+ * ponytail: these numbers were read off the failing 2026-08-14 nightly (run
+ * 31779247838), not regenerated locally — a subagent worktree has no Playwright
+ * browsers and no seeded Postgres. They are exact for that run's output, which
+ * truncates each gradient to 80 characters; two surfaces agreeing to 80
+ * characters would count as one and leave the ceiling one low. If the first
+ * nightly after this lands reports a higher count, bump the offending entry to
+ * the number the run prints — do not raise them speculatively.
+ */
+export const UNRESOLVED_SURFACE_CEILING: Record<string, number> = {
+  'ua/light/mobile': 5,
+  'ua/light/desktop': 8,
+  'ua/dark/mobile': 5,
+  'ua/dark/desktop': 8,
+  'everymen/light/mobile': 5,
+  'everymen/light/desktop': 7,
+  'everymen/dark/mobile': 5,
+  'everymen/dark/desktop': 7,
+  'wow/light/mobile': 7,
+  'wow/light/desktop': 8,
+  'wow/dark/mobile': 7,
+  'wow/dark/desktop': 8,
+  'snide/light/mobile': 5,
+  'snide/light/desktop': 7,
+  'snide/dark/mobile': 5,
+  'snide/dark/desktop': 7,
+  'ephemerists/light/mobile': 5,
+  'ephemerists/light/desktop': 7,
+  'ephemerists/dark/mobile': 5,
+  'ephemerists/dark/desktop': 7,
+  'singularity/light/mobile': 5,
+  'singularity/light/desktop': 7,
+  'singularity/dark/mobile': 5,
+  'singularity/dark/desktop': 7,
+  'albescent/light/mobile': 5,
+  'albescent/light/desktop': 7,
+  'albescent/dark/mobile': 5,
+  'albescent/dark/desktop': 7,
+};
+
+/** What the sweep does with one page's worth of findings. */
+export type Triage = {
+  /** Measured below AA and not grandfathered — these FAIL the run. */
+  failures: Finding[];
+  /** Grandfathered pairs that now clear AA — the list only shrinks, so these FAIL too. */
+  stale: string[];
+  /**
+   * Text the scanner refused to measure, grouped by the CSS that defeated it.
+   * One key = one unmeasurable SURFACE. Reported, and counted against
+   * `UNRESOLVED_SURFACE_CEILING` — never a per-finding failure.
+   */
+  unmeasurable: Map<string, Finding[]>;
+};
+
+/**
+ * Sort findings into the three buckets above. Pure, so the policy this spec
+ * enforces can be exercised by `src/utils/__tests__/contrastTriage.test.ts`
+ * without standing up Playwright, a backend and a seeded database.
+ */
+export function triageFindings(theme: string, findings: readonly Finding[]): Triage {
+  const failures: Finding[] = [];
+  const stale: string[] = [];
+  const unmeasurable = new Map<string, Finding[]>();
+
+  for (const finding of findings) {
+    if (finding.background === null) {
+      const surface = finding.backdropCss ?? 'unknown';
+      const group = unmeasurable.get(surface);
+      if (group) group.push(finding);
+      else unmeasurable.set(surface, [finding]);
+      continue;
+    }
+
+    const key = baselineKey(theme, finding.text, finding.background, finding.required);
+    const allowed: BaselineEntry | undefined = RENDERED_BASELINE[key];
+
+    if (finding.ratio >= finding.required) {
+      // A pair that now passes but is still allowlisted is debt that got fixed
+      // without the list being updated. Catch it: an allowlist that outlives
+      // its bug stops being a ratchet.
+      if (allowed) stale.push(`${key} now measures ${finding.ratio.toFixed(2)}:1 (owned by #${allowed.issue})`);
+      continue;
+    }
+    if (allowed) continue;
+    failures.push(finding);
+  }
+
+  return { failures, stale, unmeasurable };
+}

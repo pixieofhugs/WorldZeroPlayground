@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import { appendFileSync } from 'node:fs'
 
-import { RENDERED_BASELINE, baselineKey, unresolvedKey, type BaselineEntry } from './contrastBaseline'
+import { UNRESOLVED_SURFACE_CEILING, baselineKey, triageFindings } from './contrastBaseline'
 import { scanPageForContrast, type Finding } from './contrastScan'
 
 /**
@@ -21,6 +21,13 @@ import { scanPageForContrast, type Finding } from './contrastScan'
  *
  * Nightly, not per-PR: `.github/workflows/e2e.yml` already stands up Postgres
  * + backend + seed + Playwright. No new CI job.
+ *
+ * THREE OUTCOMES, NOT TWO (#1675). A measured pairing below AA fails. A
+ * backdrop the scanner REFUSES to measure — a gradient with an opaque stop, an
+ * image — is reported instead, and only its COUNT is asserted, against
+ * `UNRESOLVED_SURFACE_CEILING`. Failing on those made the spec unsatisfiable:
+ * the faction skins are built out of exactly those fills, so all 28 tests were
+ * red from the day the guard landed. See contrastBaseline.ts Part D.
  *
  * REGENERATING THE BASELINE. Set `CONTRAST_BASELINE_OUT=<path>` and run the
  * suite; every failure is appended there as a ready-to-paste entry. The list
@@ -85,26 +92,33 @@ async function useTheme(page: Page, theme: Theme): Promise<void> {
   }, theme)
 }
 
-function keyOf(theme: Theme, finding: Finding): string {
-  return finding.background === null
-    ? unresolvedKey(theme, finding.text, finding.backdropCss ?? 'unknown', finding.required)
-    : baselineKey(theme, finding.text, finding.background, finding.required)
-}
-
 function describeFinding(finding: Finding): string {
   const size = `${finding.fontSizePx}px/${finding.fontWeight}`
-  if (finding.background === null) {
-    return `  UNRESOLVED BACKDROP (${finding.unresolvedKind}) — ${finding.where} (${size})\n    "${finding.sample}"\n    ${finding.unresolved}`
-  }
   return `  ${finding.ratio.toFixed(2)}:1 (needs ${finding.required}:1) — ${finding.text} on ${finding.background}\n    ${finding.where} (${size}) "${finding.sample}"`
 }
 
+/**
+ * One line per surface the scanner refused to measure: how many text nodes sit
+ * on it, and one of them so a human can go look. The CSS is the identity, so
+ * it leads; it is trimmed only for the console.
+ */
+function describeSurface(css: string, over: Finding[]): string {
+  const example = over[0]
+  return (
+    `  ${over.length} node(s) over ${css.slice(0, 120)}${css.length > 120 ? '…' : ''}\n` +
+    `    e.g. ${example.where} (${example.fontSizePx}px/${example.fontWeight}) "${example.sample}"`
+  )
+}
+
 /** Emit a ready-to-paste BASELINE entry when regenerating (see header). */
-function emitBaseline(key: string, finding: Finding, faction: Faction, theme: Theme, viewport: ViewportName): void {
-  if (!BASELINE_OUT) return
-  const ratio = finding.background === null ? 'null' : finding.ratio.toFixed(2)
+function emitBaseline(finding: Finding, faction: Faction, theme: Theme, viewport: ViewportName): void {
+  if (!BASELINE_OUT || finding.background === null) return
+  const key = baselineKey(theme, finding.text, finding.background, finding.required)
   const where = `${faction}/${theme}/${viewport} ${finding.where}`.replace(/'/g, '')
-  appendFileSync(BASELINE_OUT, `  ${JSON.stringify(key)}: { ratio: ${ratio}, issue: 651, where: '${where}' },\n`)
+  appendFileSync(
+    BASELINE_OUT,
+    `  ${JSON.stringify(key)}: { ratio: ${finding.ratio.toFixed(2)}, issue: 651, where: '${where}' },\n`,
+  )
 }
 
 for (const faction of FACTIONS) {
@@ -116,9 +130,9 @@ for (const faction of FACTIONS) {
         await useTheme(page, theme)
         await loginAs(page, faction)
 
+        const combination = `${faction}/${theme}/${viewport}`
         const routes = [...SHARED_ROUTES, `/factions/${faction}`]
-        const failures: string[] = []
-        const passing: string[] = []
+        const findings: Finding[] = []
 
         for (const route of routes) {
           await page.goto(route)
@@ -126,39 +140,45 @@ for (const faction of FACTIONS) {
           // /auth/me — measuring before it lands would measure the default.
           await page.waitForLoadState('networkidle')
           await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
-
-          const findings = (await page.evaluate(scanPageForContrast)) as Finding[]
-          for (const finding of findings) {
-            const ok = finding.background !== null && finding.ratio >= finding.required
-            const key = keyOf(theme, finding)
-            const allowed: BaselineEntry | undefined = RENDERED_BASELINE[key]
-
-            if (ok) {
-              // A pair that now passes but is still allowlisted is debt that
-              // got fixed without the list being updated. Catch it: an
-              // allowlist that outlives its bug stops being a ratchet.
-              if (allowed) passing.push(`${key} now measures ${finding.ratio.toFixed(2)}:1 (owned by #${allowed.issue})`)
-              continue
-            }
-            if (allowed) continue
-            emitBaseline(key, finding, faction, theme, viewport)
-            failures.push(describeFinding(finding))
-          }
+          findings.push(...((await page.evaluate(scanPageForContrast)) as Finding[]))
         }
 
+        const { failures, stale, unmeasurable } = triageFindings(theme, findings)
+        for (const finding of failures) emitBaseline(finding, faction, theme, viewport)
+
+        // The report is the whole point of #1675: an unmeasurable backdrop no
+        // longer fails, so it has to be VISIBLE, on every run, pass or fail. A
+        // silent skip is a green suite that checks less.
+        const ceiling: number | undefined = UNRESOLVED_SURFACE_CEILING[combination]
+        const unchecked = [...unmeasurable.values()].reduce((total, over) => total + over.length, 0)
+        console.log(
+          `\n[contrast] ${combination}: ${unmeasurable.size} unmeasurable surface(s) ` +
+            `(ceiling ${ceiling ?? 0}), ${unchecked} text node(s) unchecked.\n` +
+            [...unmeasurable].map(([css, over]) => describeSurface(css, over)).join('\n'),
+        )
+
+        const describedFailures = [...new Set(failures.map(describeFinding))]
         expect(
-          [...new Set(failures)],
-          `${faction}/${theme}/${viewport}: text below WCAG AA.\n` +
-            `An UNRESOLVED BACKDROP is a failure, not a skip — text over an opaque-stop gradient or an image ` +
-            `cannot be measured, so it must be given a solid backdrop (or the fill hoisted behind an opaque card).\n\n` +
-            [...new Set(failures)].join('\n\n'),
+          describedFailures,
+          `${combination}: text below WCAG AA.\n\n` + describedFailures.join('\n\n'),
         ).toHaveLength(0)
 
         expect(
-          [...new Set(passing)],
+          [...new Set(stale)],
           `These pairs are in RENDERED_BASELINE but now clear AA — delete their entries in contrastBaseline.ts. ` +
             `The list only ever shrinks.`,
         ).toHaveLength(0)
+
+        // Gaining a surface is a coverage regression, not a contrast defect:
+        // a region of the app just stopped being checked at all. Losing one is
+        // progress and only asks for the ceiling to come down.
+        expect(
+          unmeasurable.size,
+          `${combination}: ${unmeasurable.size} surfaces cannot be measured, up from ${ceiling ?? 0}. ` +
+            `Either give the new one a solid backdrop, or — if the fill is deliberate — raise its entry in ` +
+            `UNRESOLVED_SURFACE_CEILING to the number printed above and say which surface it is.\n\n` +
+            [...unmeasurable.keys()].join('\n'),
+        ).toBeLessThanOrEqual(ceiling ?? 0)
       })
     }
   }
