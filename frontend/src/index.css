@@ -3011,9 +3011,31 @@
      the case that forced it: ADR-0061 mounts them BARE on nine faction walls
      precisely so moderation chrome reads the same everywhere, which is a promise
      the frost was quietly breaking. Worst reading on this ground is 4.71:1
-     (danger, light), against 2.54 on the terminal. */
+     (danger, light), against 2.54 on the terminal.
+
+     THE INK IS THE SAME PROMISE, ONE PROPERTY OVER (#1606). The ground was only
+     half of what kept these cards neutral. `.eyebrow` HARDCODED
+     `--color-text-tertiary`, so a label in the steward bar read the app's own
+     quiet ink whatever it was mounted inside; #1307 retired it into
+     `.label-heading` / `.label-caption`, which read `--label-ink` — a SEAM a
+     faction frame is meant to set ONCE on its own root, and these cards render
+     inside that root. So the neutral survived the sweep by accident, and the
+     first praxis-detail skin to repoint the seam (three light sheets cannot
+     clear the neutral, so one is coming) would tint moderation chrome on its
+     wall and nowhere else. `WowFactionBody` already repoints it — on the
+     faction detail page, which mounts no neutral chrome, so nothing renders
+     wrong today and this is pre-emptive.
+
+     Pinning it HERE is what the tiers' own declaration asks for: the alternative
+     is an inline colour on each label, which is the per-component contradiction
+     #1252 exists to stop and is invisible to every ratio in
+     `factionContrast.test.ts`. The neutral is already measured on this exact
+     ground for the tier's floor — both tiers sit under WCAG's large-text
+     threshold and so owe 4.5:1; tertiary on the page reads 5.40:1 light and
+     6.21:1 dark. Gated beside the ground, in the same file. */
   .card-on-page {
     --card-ground: var(--color-bg-page);
+    --label-ink: var(--color-text-tertiary);
   }
 
   .card {
