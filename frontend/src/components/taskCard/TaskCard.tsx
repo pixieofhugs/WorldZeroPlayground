@@ -197,7 +197,7 @@ function AdminStatusButton({
   return (
     <button
       onClick={onClick}
-      className="eyebrow"
+      className="label-caption"
       style={{
         padding: 'var(--space-xs) var(--space-sm)',
         border: `1px solid color-mix(in srgb, ${toneVar} 30%, transparent)`,

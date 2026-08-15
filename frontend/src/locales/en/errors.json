@@ -44,6 +44,23 @@
     "INVITE_PRAXIS_SUBMITTED_invite": "Cannot invite to a submitted praxis.",
     "INVITE_PRAXIS_SUBMITTED_join": "Cannot join a submitted praxis.",
 
+    "PRAXIS_FILTER_VALUE_INVALID": "Invalid praxis filter value: {{value}}",
+    "PRAXIS_FILTER_VALUE_INVALID_sort": "Invalid praxis sort: {{value}}",
+    "PRAXIS_FILTER_VALUE_INVALID_era_scope": "Invalid praxis era scope: {{value}}",
+    "PRAXIS_FILTER_VALUE_INVALID_voted": "Invalid voted filter: {{value}}",
+    "PRAXIS_FILTER_VALUE_INVALID_type": "Invalid praxis type: {{value}}",
+    "PRAXIS_FILTER_VALUE_INVALID_status": "Invalid praxis status: {{value}}",
+
+    "PRAXIS_NOT_FOUND": "Praxis not found.",
+    "MEDIA_ITEM_NOT_FOUND": "Media item not found.",
+
+    "RELATIONSHIP_NOT_FOUND": "Relationship not found.",
+    "RELATIONSHIP_NOT_DECLARER": "Only the declaring party can delete a relationship.",
+
+    "FEED_ITEM_KEY_UNKNOWN": "Unknown feed item key: {{item_key}}",
+    "FEED_ITEM_KEY_MALFORMED": "Malformed feed item key: {{item_key}}",
+    "FEED_ITEM_NOT_ARCHIVABLE": "Feed items of type '{{item_type}}' cannot be archived: they track work still waiting on you and clear themselves once you file.",
+
     "MEDIA_TYPE_UNSUPPORTED": "Unsupported media type.",
     "MEDIA_TOO_LARGE": "File too large (max {{max_megabytes}} MB).",
     "AVATAR_MUST_BE_IMAGE": "Avatar must be an image file.",

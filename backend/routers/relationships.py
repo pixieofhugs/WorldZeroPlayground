@@ -1,9 +1,10 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
+from errors import ErrorCode, raise_coded
 from dependencies import get_current_character
 from models.character import Character
 from models.relationship import RelationshipType
@@ -99,8 +100,12 @@ async def delete_relationship(
 
     relationship = await session.get(Relationship, relationship_id)
     if relationship is None:
-        raise HTTPException(status_code=404, detail="Relationship not found.")
+        raise_coded(404, ErrorCode.relationship_not_found, "Relationship not found.")
     if relationship.from_character_id != character.id:
-        raise HTTPException(status_code=403, detail="Only the declaring party can delete a relationship.")
+        raise_coded(
+            403,
+            ErrorCode.relationship_not_declarer,
+            "Only the declaring party can delete a relationship.",
+        )
     await session.delete(relationship)
     await session.flush()

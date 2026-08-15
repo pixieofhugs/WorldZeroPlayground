@@ -11,7 +11,7 @@ import { factionFill } from '../../utils/factions'
 export function ChipRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center gap-2 mb-2">
-      <span className="eyebrow" style={{ flex: 'none' }}>
+      <span className="label-heading" style={{ flex: 'none' }}>
         {label}
       </span>
       <div className="flex gap-2 pb-0.5" style={{ overflowX: 'auto', scrollbarWidth: 'none' }}>

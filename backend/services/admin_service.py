@@ -8,7 +8,6 @@ from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
-from models.faction import Faction, FactionStatus
 from models.roles import AccountRole, Role
 from models.contact import ContactMessage
 from models.flag import Flag, normalize_flag_reason
@@ -18,12 +17,10 @@ from models.vote import Vote
 from schemas.admin import (
     AccountDetail,
     AccountSummary,
-    AdminCharacterCreate,
     AdminTaskPatch,
     CharacterBrief,
     CharacterStatsPatch,
     CharacterSummary,
-    FactionCreate,
     FlagOut,
     OverviewStats,
 )
@@ -255,71 +252,6 @@ async def flags_for_comments(
 # ---------------------------------------------------------------------------
 
 
-async def create_faction(data: FactionCreate, session: AsyncSession) -> Faction:
-    existing = await session.get(Faction, data.slug)
-    if existing is not None:
-        raise HTTPException(status_code=409, detail=f"Faction with slug '{data.slug}' already exists.")
-
-    faction = Faction(
-        slug=data.slug,
-        status=FactionStatus.hidden if data.hidden else FactionStatus.visible,
-    )
-    session.add(faction)
-    await session.flush()
-    await session.refresh(faction)
-    return faction
-
-
-async def admin_create_character(
-    data: AdminCharacterCreate,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-) -> Character:
-    """Create a character on any account, bypassing the level-3 gate."""
-    account = await session.get(Account, data.account_id)
-    if account is None:
-        raise HTTPException(status_code=404, detail="Account not found.")
-
-    # Verify username is unique
-    existing = await session.execute(
-        select(Character).where(Character.username == data.username)
-    )
-    if existing.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=409, detail=f"Username '{data.username}' is already taken.")
-
-    era_row = await get_current_era_row(session)
-
-    character = Character(
-        account_id=data.account_id,
-        username=data.username,
-        display_name=data.display_name,
-        bio=data.bio,
-        avatar_url=data.avatar_url,
-        location=data.location,
-        # ADR-0019 read through the era (#1559): omitting a slug lands the era's
-        # starting faction, the same answer services.character.create_character
-        # gives. Two creation doors, one rule.
-        faction_slug=data.faction_slug or era.starting_faction_slug,
-    )
-    session.add(character)
-    await session.flush()
-
-    await get_or_create_stats(
-        session,
-        character_id=character.id,
-        era_id=era_row.id,
-    )
-
-    await session.flush()
-    await session.refresh(character)
-    return character
-
-
-# ---------------------------------------------------------------------------
-# Adjust Game State
-# ---------------------------------------------------------------------------
-
-
 async def set_character_stats(
     character_id: int,
     patch: CharacterStatsPatch,
@@ -351,23 +283,6 @@ async def set_character_stats(
     await session.flush()
     await session.refresh(stats)
     return stats
-
-
-async def reactivate_task(task_id: int, session: AsyncSession) -> Task:
-    task = await session.get(Task, task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found.")
-    if task.status != TaskStatus.retired:
-        raise HTTPException(status_code=422, detail="Only retired tasks can be reactivated.")
-    task.status = TaskStatus.active
-    await session.flush()
-    await session.refresh(task)
-    return task
-
-
-# ---------------------------------------------------------------------------
-# Role & Account Management
-# ---------------------------------------------------------------------------
 
 
 async def assign_or_revoke_role(

@@ -22,6 +22,40 @@ a missing row is a perfectly reasonable thing to leave uncoded forever; leaving
 it *here* costs nothing and keeps one number honest, whereas a second
 "permanently exempt" list would need its own guard against growth.
 
+WHAT #1652 LEFT, AND WHY
+------------------------
+The drawdown converted what a **player reads**: a failure where an English
+sentence was the only thing telling one 4xx from another on the same route, or
+where the copy is something they can act on. What remains is remainder by
+judgement, not by fatigue — so the next reader does not re-derive it:
+
+* **Sole 404s for a missing row.** ``routers/tasks.py::get_task``,
+  ``routers/characters.py::get_character``, ``routers/comments.py`` and their
+  kin raise exactly one 404 in the scope. The status *is* the code; a client
+  branching on "gone" already has everything it needs. This is the class the
+  paragraph above blesses forever.
+* **Admin-only surfaces.** ``routers/admin.py`` and ``services/admin_service.py``
+  answer a staff console, not a player. Their prose is a diagnostic, and no
+  catalog is going to render it. Converting them buys a key nobody reads.
+  (``routers/admin.py`` and ``routers/auth.py::dev_login`` were additionally
+  held back from #1652 because #1667 and #1676 were changing those functions —
+  that is sequencing, not a ruling that they are fine uncoded. #1667 has since
+  landed, and it resolved its share by **deletion**: ten of these raises sat
+  in routes and services that were unreachable, so they left with the code
+  rather than being converted. (``services/task.py::list_signups_for_task``
+  was an eleventh until the owner ruling of #1262/#1386 kept its route, so it
+  is back on the list unconverted, on the same footing as before.) ``routers/admin.py``'s remaining three scopes
+  were never #1667's to touch.)
+* **Auth and dependency plumbing.** ``services/auth.py``, ``dependencies.py``:
+  401/403 with a status the client already switches on before it ever looks at
+  a body.
+* **Service-layer gates whose surface is unsettled.** ``services/praxis.py``,
+  ``services/comment.py``, ``services/duel.py``, ``services/nudge.py`` and
+  friends still hold the bulk of the list. These *are* player-facing and are
+  the next slice worth taking; they are here because they need per-code
+  judgement about which failures a client should branch on, not because they
+  were judged fine.
+
 KEY SHAPE
 ---------
 ``"<path relative to backend/>::<qualified name of the enclosing function>"``
@@ -40,7 +74,7 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 163
+UNCODED_RAISE_TOTAL = 137
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
@@ -48,7 +82,6 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "dependencies.py::require_admin": 1,
 
     "routers/admin.py::admin_cli_token": 2,
-    "routers/admin.py::admin_create_task": 3,
     "routers/admin.py::admin_import_tasks_csv": 1,
     "routers/admin.py::ban_character": 1,
 
@@ -61,31 +94,15 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
 
     "routers/comments.py::list_praxis_comments": 1,
 
-    "routers/praxes.py::delete_media_route": 2,
-    "routers/praxes.py::get_praxis_route": 1,
-    "routers/praxes.py::kick_member_route": 1,
-    "routers/praxes.py::list_praxes_route": 5,
-    "routers/praxes.py::upload_media_batch_route": 1,
-    "routers/praxes.py::upload_media_route": 1,
-
-    "routers/relationships.py::delete_relationship": 2,
-
     "routers/tasks.py::get_task": 1,
     "routers/tasks.py::list_tasks": 1,
-    "routers/tasks.py::update_task_route": 1,
 
     "routers/votes.py::list_voters": 1,
 
-    "services/activity_feed.py::parse_archivable_item_key": 1,
-    "services/activity_feed.py::parse_item_key": 2,
-
-    "services/admin_service.py::admin_create_character": 2,
     "services/admin_service.py::admin_edit_task": 2,
     "services/admin_service.py::archive_message": 1,
     "services/admin_service.py::assign_or_revoke_role": 2,
-    "services/admin_service.py::create_faction": 1,
     "services/admin_service.py::get_account_detail": 1,
-    "services/admin_service.py::reactivate_task": 2,
     "services/admin_service.py::suspend_account": 1,
     "services/admin_service.py::update_task_status": 2,
 
@@ -152,7 +169,6 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/task.py::list_signups_for_task": 1,
     "services/task.py::list_tasks": 2,
     "services/task.py::propose_task": 2,
-    "services/task.py::update_task": 1,
 
     "services/vote.py::cast_or_update_vote": 3,
     "services/vote.py::cast_vote_on_praxis": 1,

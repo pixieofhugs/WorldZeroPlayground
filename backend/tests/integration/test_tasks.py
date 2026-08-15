@@ -97,7 +97,7 @@ async def test_propose_task_level3(
 
 
 # ---------------------------------------------------------------------------
-# T.6 additions — filters, propose/edit task, signups list, hidden factions
+# T.6 additions — filters, propose task, signups list, hidden factions
 # ---------------------------------------------------------------------------
 
 
@@ -552,75 +552,6 @@ async def test_propose_task_unauthenticated(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_edit_pending_task_by_proposer(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character2: Character,
-    auth_headers2: dict,
-):
-    """The proposer can edit their own pending task."""
-    create_resp = await client.post(
-        "/tasks",
-        json={"title": "Original Title", "point_value": 10, "level_required": 0},
-        headers=auth_headers2,
-    )
-    assert create_resp.status_code == 201
-    task_id = create_resp.json()["id"]
-
-    edit_resp = await client.put(
-        f"/tasks/{task_id}",
-        json={"title": "Updated Title", "point_value": 20, "level_required": 1},
-        headers=auth_headers2,
-    )
-    assert edit_resp.status_code == 200
-    data = edit_resp.json()
-    assert data["title"] == "Updated Title"
-    assert data["point_value"] == 20
-    assert data["level_required"] == 1
-    assert data["status"] == "pending"
-
-
-@pytest.mark.asyncio
-async def test_edit_task_wrong_owner(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character2: Character,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """A character who did not propose the task cannot edit it."""
-    create_resp = await client.post(
-        "/tasks",
-        json={"title": "Someone Else's Task", "point_value": 10, "level_required": 0},
-        headers=auth_headers2,
-    )
-    assert create_resp.status_code == 201
-    task_id = create_resp.json()["id"]
-
-    edit_resp = await client.put(
-        f"/tasks/{task_id}",
-        json={"title": "Hijacked", "point_value": 5, "level_required": 0},
-        headers=auth_headers,
-    )
-    assert edit_resp.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_edit_active_task_rejected(
-    client: AsyncClient,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """Cannot edit an active (non-pending) task even if you are the proposer."""
-    resp = await client.put(
-        f"/tasks/{active_task.id}",
-        json={"title": "New Title", "point_value": 5, "level_required": 0},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
-
-
-@pytest.mark.asyncio
 async def test_list_task_signups_empty(client: AsyncClient, active_task: Task):
     """GET /tasks/{id}/signups returns empty list when no one has a praxis."""
     resp = await client.get(f"/tasks/{active_task.id}/signups")
@@ -885,21 +816,6 @@ async def test_list_tasks_can_sign_up_is_empty_for_anonymous(
     resp = await client.get("/tasks", params={"can_sign_up": "true"})
     assert resp.status_code == 200
     assert resp.json() == []
-
-
-@pytest.mark.asyncio
-async def test_edit_task_not_found(
-    client: AsyncClient,
-    auth_headers2: dict,
-    character2: Character,
-):
-    """PUT /tasks/99999 returns 404 when the task does not exist."""
-    resp = await client.put(
-        "/tasks/99999",
-        json={"title": "Ghost Task", "point_value": 5, "level_required": 0},
-        headers=auth_headers2,
-    )
-    assert resp.status_code == 404
 
 
 @pytest.mark.asyncio

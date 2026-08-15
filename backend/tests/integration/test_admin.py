@@ -72,64 +72,6 @@ async def test_admin_list_pending_tasks(
 
 
 @pytest.mark.asyncio
-async def test_admin_approve_task(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await _make_admin(account, db_session)
-
-    task = Task(
-        title="To Approve",
-        point_value=5,
-        level_required=0,
-        status=TaskStatus.pending,
-        created_by=character.id,
-    )
-    db_session.add(task)
-    await db_session.commit()
-
-    resp = await client.put(f"/admin/tasks/{task.id}/approve", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "active"
-
-
-@pytest.mark.asyncio
-async def test_admin_retire_task(
-    client: AsyncClient,
-    account: Account,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await _make_admin(account, db_session)
-    resp = await client.put(f"/admin/tasks/{active_task.id}/retire", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "retired"
-
-
-@pytest.mark.asyncio
-async def test_admin_reactivate_task(
-    client: AsyncClient,
-    account: Account,
-    active_task: Task,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """Retire a task, then reactivate it."""
-    await _make_admin(account, db_session)
-
-    # Retire first
-    await client.put(f"/admin/tasks/{active_task.id}/retire", headers=auth_headers)
-
-    resp = await client.post(f"/admin/tasks/{active_task.id}/reactivate", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "active"
-
-
-@pytest.mark.asyncio
 async def test_admin_update_task_status(
     client: AsyncClient,
     account: Account,
@@ -157,7 +99,14 @@ async def test_admin_can_move_task_freely_between_states(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Admin can move a task pending → retired → pending → active without restrictions."""
+    """Admin can move a task pending → retired → pending → active without restrictions.
+
+    Every hop goes through ``PUT /admin/tasks/{id}/status``, which is the whole
+    claim #1667 rests on: ``/approve``, ``/retire`` and ``/reactivate`` each
+    passed one fixed ``TaskStatus`` to the same ``update_task_status`` call this
+    one takes as a parameter, so they were three routes spelling three of this
+    route's arguments. Two of the hops below had no dedicated route at all.
+    """
     await _make_admin(account, db_session)
 
     task = Task(
@@ -170,12 +119,16 @@ async def test_admin_can_move_task_freely_between_states(
     db_session.add(task)
     await db_session.commit()
 
-    # pending → retired (previously rejected by /retire)
-    resp = await client.put(f"/admin/tasks/{task.id}/retire", headers=auth_headers)
+    # pending → retired (the hop the old /retire route rejected)
+    resp = await client.put(
+        f"/admin/tasks/{task.id}/status",
+        json={"status": "retired"},
+        headers=auth_headers,
+    )
     assert resp.status_code == 200
     assert resp.json()["status"] == "retired"
 
-    # retired → pending (new: previously no path)
+    # retired → pending (never had a dedicated route)
     resp = await client.put(
         f"/admin/tasks/{task.id}/status",
         json={"status": "pending"},
@@ -184,8 +137,12 @@ async def test_admin_can_move_task_freely_between_states(
     assert resp.status_code == 200
     assert resp.json()["status"] == "pending"
 
-    # pending → active via /approve
-    resp = await client.put(f"/admin/tasks/{task.id}/approve", headers=auth_headers)
+    # pending → active (what /approve did)
+    resp = await client.put(
+        f"/admin/tasks/{task.id}/status",
+        json={"status": "active"},
+        headers=auth_headers,
+    )
     assert resp.status_code == 200
     assert resp.json()["status"] == "active"
 
@@ -196,29 +153,6 @@ async def test_admin_can_move_task_freely_between_states(
         headers=auth_headers,
     )
     assert resp.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_admin_create_task(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """Admin can create a task directly in active status."""
-    await _make_admin(account, db_session)
-
-    resp = await client.post(
-        "/admin/tasks",
-        json={"title": "Admin-created", "point_value": 50, "level_required": 0},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 201
-    data = resp.json()
-    assert data["title"] == "Admin-created"
-    assert data["status"] == "active"
-    assert data["point_value"] == 50
 
 
 # ---------------------------------------------------------------------------
@@ -381,22 +315,6 @@ async def test_admin_patch_character_stats(
     assert data["votes_available"] == 50
 
 
-@pytest.mark.asyncio
-async def test_admin_backfill_stats(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """Backfill recomputes stats for all characters."""
-    await _make_admin(account, db_session)
-
-    resp = await client.post("/admin/characters/backfill-stats", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["recalculated"] >= 1
-
-
 # ---------------------------------------------------------------------------
 # Character ban
 # ---------------------------------------------------------------------------
@@ -528,49 +446,6 @@ async def test_admin_list_characters(
 
 
 @pytest.mark.asyncio
-async def test_admin_create_character_defaults_to_unaffiliated(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era: Era,
-    faction_ua: Faction,
-):
-    """Admin-created characters start unaffiliated unless a slug is given.
-
-    Pins ADR-0019 on the admin surface: omitting ``faction_slug`` must land
-    ``na``, and passing one explicitly must still be honoured.
-    """
-    await _make_admin(account, db_session)
-
-    # ponytail: both halves in one test — they pin the two sides of one default.
-    resp = await client.post(
-        "/admin/characters",
-        json={
-            "account_id": account.id,
-            "username": "defaultslug",
-            "display_name": "Default Slug",
-        },
-        headers=auth_headers,
-    )
-    assert resp.status_code == 201
-    assert resp.json()["faction_slug"] == "na"
-
-    resp = await client.post(
-        "/admin/characters",
-        json={
-            "account_id": account.id,
-            "username": "explicitslug",
-            "display_name": "Explicit Slug",
-            "faction_slug": "ua",
-        },
-        headers=auth_headers,
-    )
-    assert resp.status_code == 201
-    assert resp.json()["faction_slug"] == "ua"
-
-
-@pytest.mark.asyncio
 async def test_admin_suspend_account(
     client: AsyncClient,
     account: Account,
@@ -587,27 +462,6 @@ async def test_admin_suspend_account(
     )
     assert resp.status_code == 200
     assert resp.json()["status"] == "suspended"
-
-
-@pytest.mark.asyncio
-async def test_admin_manage_role(
-    client: AsyncClient,
-    account: Account,
-    account2: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """Admin can grant and revoke roles."""
-    await _make_admin(account, db_session)
-
-    # Grant moderator role
-    resp = await client.post(
-        f"/admin/accounts/{account2.id}/role",
-        json={"role": "moderator", "action": "grant"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["action"] == "grant"
 
 
 # ---------------------------------------------------------------------------
@@ -867,62 +721,6 @@ async def test_admin_list_characters_no_results(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_admin_era_reset(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era: Era,
-):
-    """Era reset creates a new era row and resets character stats."""
-    from sqlalchemy import select
-    from models.character_stats import CharacterStats
-
-    await _make_admin(account, db_session)
-
-    # Record pre-reset score for character2 (level 5, score 500)
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character2.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    old_stats = result.scalar_one()
-    assert old_stats.score == 500
-
-    resp = await client.put("/admin/era/reset", headers=auth_headers)
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "era_id" in data
-    assert data["era_id"] != era.id  # New era row created
-    assert data["characters_reset"] >= 2  # At least character + character2
-
-    new_era_id = data["era_id"]
-    # Both characters should have new stat rows with reset values
-    result2 = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character2.id,
-            CharacterStats.era_id == new_era_id,
-        )
-    )
-    new_stats = result2.scalar_one()
-    # ERA_1 has reset_score=True
-    assert new_stats.score == 0
-
-
-@pytest.mark.asyncio
-async def test_admin_era_reset_requires_admin(
-    client: AsyncClient,
-    auth_headers: dict,
-):
-    """Non-admin gets 403 on era reset."""
-    resp = await client.put("/admin/era/reset", headers=auth_headers)
-    assert resp.status_code == 403
-
-
 # ---------------------------------------------------------------------------
 # Admin edit task (PATCH /admin/tasks/{id})
 # ---------------------------------------------------------------------------
@@ -1068,15 +866,28 @@ async def test_admin_era_reset_zeros_votes_spent_this_era(
     # against a different config.
     assert CURRENT_ERA.reset_vote_budget is True
 
-    reset_resp = await client.put("/admin/era/reset", headers=auth_headers)
-    assert reset_resp.status_code == 200
-    new_era_id = reset_resp.json()["era_id"]
+    # Driven through the service, exactly as the preservation test below does.
+    # This ran against PUT /admin/era/reset until #1667 deleted that route as
+    # unreachable; the rollover's entry point is now scripts/era_reset.py, and
+    # the behaviour under test was never the route's -- it is apply_era_reset's
+    # reset_vote_budget branch (R.5).
+    from models.era import Era as EraModel
+    from services.era import apply_era_reset
+
+    new_era_row = EraModel(
+        name=CURRENT_ERA.name,
+        config_key=CURRENT_ERA.config_key,
+        started_by=account.id,
+    )
+    db_session.add(new_era_row)
+    await db_session.flush()
+    await apply_era_reset([character], new_era_row, db_session)
 
     # Fetch the new-era stats row
     new_result = await db_session.execute(
         select(CharacterStats).where(
             CharacterStats.character_id == character.id,
-            CharacterStats.era_id == new_era_id,
+            CharacterStats.era_id == new_era_row.id,
         )
     )
     new_stats = new_result.scalar_one()

@@ -80,7 +80,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
           }}
           eyebrow={
             <div
-              className="eyebrow"
+              className="label-heading"
               style={{
                 fontFamily: "var(--faction-wow-card-font)",
                 letterSpacing: "0.14em",

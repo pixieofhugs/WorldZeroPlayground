@@ -131,7 +131,7 @@ export function OptionOverlay({
       aria-label={label}
     >
       <div className="filter-factions__panel-head">
-        <span className="eyebrow">{label}</span>
+        <span className="label-heading">{label}</span>
         <button
           type="button"
           className="filter-bar__link"

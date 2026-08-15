@@ -290,7 +290,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             trailing={
               <Link
                 to="/tasks"
-                className="eyebrow"
+                className="label-caption"
                 style={{ color: WOW_DEEP, textDecoration: "none", whiteSpace: "nowrap" }}
               >
                 {t("fieldDesk.home.viewAll")}

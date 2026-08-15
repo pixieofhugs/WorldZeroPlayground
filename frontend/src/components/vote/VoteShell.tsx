@@ -33,7 +33,7 @@ interface GateTreatment {
   /** Off the `--text-*` label ramp; the gate is label tier, not content tier. */
   fontSize: string
   letterSpacing?: string
-  /** Overrides `.eyebrow`'s uppercase where the faction speaks in its own case. */
+  /** Overrides `.label-heading`'s uppercase where the faction speaks in its own case. */
   textTransform?: CSSProperties['textTransform']
   fontWeight?: CSSProperties['fontWeight']
   /** Solid ink. Mutually exclusive with `gradient`. */
@@ -145,7 +145,7 @@ export function VoteLoginGate({ factionSlug }: { factionSlug?: string | null } =
 
   return (
     <p
-      className="eyebrow"
+      className="label-heading"
       style={{
         margin: 0,
         fontFamily: treatment.fontFamily,

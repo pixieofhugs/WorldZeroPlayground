@@ -68,7 +68,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         }}
         eyebrow={
           <div
-            className="eyebrow"
+            className="label-heading"
             style={{
               letterSpacing: "0.16em",
               color: "var(--faction-snide-acid)",

@@ -123,13 +123,54 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     const unaffiliated = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="na" level={1} score={0} />,
     )
-    expect(albescent, "albescent's always-light reveal ink").toContain('--albescent-reveal-text')
+    // Its own mark, and since #1658 its own ink: the cross-hair is stroked from
+    // the spectrum's stops rather than the flat reveal ink. Asserted at the
+    // dispatcher in factionSigil.test.tsx; this only pins that the card is
+    // still handed it.
+    expect(albescent, "albescent's spectrum-stroked mark").toContain('--faction-default-stop-1')
     // na wears the spectrum TWICE — portrait hoop and sigil. Albescent keeps the
     // hoop (it is unthemed on purpose, #783) and the sigil is the one thing that
     // differs, so counting the ring is what tells the two apart.
     expect(rings(unaffiliated), 'na: hoop + sigil').toBe(2)
     expect(rings(albescent), 'albescent: hoop only, the sigil is its own').toBe(1)
   })
+})
+
+/**
+ * The 42px sigil slot's hoop (#1658 — the second half of #1630's albescent
+ * treatment, which lands here because the slot is the card's, not the profile's).
+ *
+ * Seam: the card's rendered markup. The card is still slug-blind — it asks
+ * `factionSigilRing` the same way it asks `FactionSigil` for a mark, and takes
+ * what it is given — so what is asserted is the ANSWER, per slug, and the
+ * failure mode guarded is the leak: a hoop that changes for anyone but
+ * albescent means the override was written into the card instead of the mark.
+ */
+describe('CredentialCard sigil slot hoop (#1658)', () => {
+  // The SLOT's border, read off the labelled `role="img"` span — not the first
+  // `border:` in the markup, which is the card's own frame and carries the
+  // faction accent on every skinned slug.
+  const hoop = (slug: string | null) => {
+    const html = renderToStaticMarkup(
+      <CredentialCard displayName="Wren" handle="wren" factionSlug={slug} level={1} score={0} />,
+    )
+    const slot = /<span role="img"[^>]*style="([^"]*)"/.exec(html)?.[1] ?? ''
+    return /border:2px solid ([^;"]+)/.exec(slot)?.[1]
+  }
+
+  it('rings the albescent mark in the spectrum blue', () => {
+    // The design's `#60a5fa` is not a literal to transcribe: it is
+    // --faction-default-stop-6's DARK value (#1657), so the token is what
+    // carries it and light mode gets #2563eb for free.
+    expect(hoop('albescent')).toBe('var(--faction-default-stop-6)')
+  })
+
+  it.each(['ua', 'coven', 'snide', 'everymen', 'singularity', 'wow', 'ephemerists', 'na', null])(
+    'leaves the hoop on the card accent for %s',
+    (slug) => {
+      expect(hoop(slug)).toBe('var(--fc-accent)')
+    },
+  )
 })
 
 /**

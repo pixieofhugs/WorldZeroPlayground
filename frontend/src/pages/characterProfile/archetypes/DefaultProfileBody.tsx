@@ -804,7 +804,7 @@ function MobileProfile({
               <h2 className="font-display italic" style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}>
                 {t('profile.badgesHeading')}
               </h2>
-              <span className="eyebrow" style={{ marginLeft: 'auto', color: 'var(--color-text-tertiary)' }}>
+              <span className="label-caption" style={{ marginLeft: 'auto' }}>
                 {t('profile.badgesEarned', { count: badges.length })}
               </span>
             </div>

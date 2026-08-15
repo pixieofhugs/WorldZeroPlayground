@@ -34,7 +34,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import EphemeristsTaskDetail from "../archetypes/EphemeristsTaskDetail";
-import { PLATINUM } from "../../../components/factionMarks/ephemeristsPlate";
+import { initialsOf, PLATINUM } from "../../../components/factionMarks/ephemeristsPlate";
 import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { readThemes } from "../../../utils/__tests__/cssVars";
@@ -266,5 +266,42 @@ describe("the Valley page's ornament comes from the kit unchanged (#1654)", () =
     // copies filed `PLATINUM.glyph` under a sign name privately, so the table
     // took it in rather than the two call sites reaching around `Sign`.
     expect(page()).toContain(PLATINUM.glyph);
+  });
+});
+
+/**
+ * #1664 — the byline monogram is the KIT's, including its empty case.
+ *
+ * The seam is the rendered byline. This page carried its own `initialsOf`, and
+ * it agreed with `ephemeristsPlate`'s on every input but one: given a display
+ * name that is nothing but whitespace, the local copy returned `""` and the
+ * kit's returns `"·"`. So the same character rendered a MARK in their monogram
+ * on the praxis card, the comment row and the faction page, and an EMPTY disc
+ * here — a slot that reads as a rendering failure rather than as "no name".
+ *
+ * That case is reachable: `CharacterCreate.display_name` is `min_length=1` and
+ * `create_character` strips before rejecting, but `CharacterUpdate.display_name`
+ * carries only `max_length=50` and `update_character` writes the value through
+ * verbatim (mapping an explicit `null` to `""`). `PATCH /characters/{id}` with
+ * `"   "` therefore lands a whitespace-only name in the column, and this page
+ * shows it — `""` is caught by the byline's own truthiness gate, `"   "` is not.
+ */
+describe("the byline monogram, when the author has no name (#1664)", () => {
+  /** The disc behind the byline initials — the medallion's octagon paints its
+   *  own disc as an SVG `fill` attribute, so this matches one span. */
+  const monogram = (html: string) =>
+    html.match(/background:var\(--faction-ephemerists-plate-disc\)[^>]*>([^<]*)</)?.[1];
+
+  it("strikes the kit's mark rather than leaving the disc empty", () => {
+    const named = render(<EphemeristsTaskDetail state={baseState()} />).html;
+    expect(monogram(named), "an ordinary name is unchanged").toBe("WA");
+
+    const blank = render(
+      <EphemeristsTaskDetail
+        state={baseState({ task: { ...TASK, created_by_display_name: "   " } })}
+      />,
+    ).html;
+    expect(monogram(blank)).toBe(initialsOf("   "));
+    expect(monogram(blank), "the plate's no-name mark").toBe("·");
   });
 });

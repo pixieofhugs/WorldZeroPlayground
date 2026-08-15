@@ -1,5 +1,4 @@
 import hmac
-import dataclasses
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
@@ -12,43 +11,30 @@ from sqlalchemy.orm import selectinload
 from config import settings
 from db import get_db
 from dependencies import require_admin
-from faction_slugs import CROSS_FACTION_SLUG
-from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character, CharacterStatus
-from models.era import Era
 from models.praxis import ModerationStatus, Praxis
-from models.task import Task, TaskStatus, TaskType
+from models.task import TaskStatus
 from schemas.admin import (
     AccountDetail,
     AccountSummary,
-    AdminCharacterCreate,
-    AdminCharacterOut,
     AdminTaskPatch,
     BanAction,
     BanActionOut,
     CharacterStatsPatch,
-    AdminFactionOut,
     CharacterStatsOut,
     CharacterSummary,
     CliTokenResponse,
-    EraResetOut,
-    FactionCreate,
     FlaggedCommentOut,
     FlaggedPraxisOut,
     ModerationAction,
     OverviewStats,
-    RoleAction,
-    RoleActionOut,
-    StatsBackfillOut,
     SuspendAction,
     SuspendActionOut,
     TaskImportResult,
     TaskStatusAction,
-    VoteBudgetBackfillOut,
-    VoteSpendRepairOut,
 )
-from schemas.task import TaskCreate, TaskOut
+from schemas.task import TaskOut
 from schemas.praxis import PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
 from services.praxis import moderate_praxis
@@ -57,35 +43,24 @@ from services.vote_tally import crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
-    admin_create_character,
     admin_edit_task,
     archive_message,
-    assign_or_revoke_role,
-    create_faction,
     find_admin_accounts,
     flags_for_comments,
     flags_for_praxes,
     game_overview,
     get_account_detail,
     list_accounts,
-    list_active_characters,
     list_characters,
     list_contact_messages,
     list_pending_tasks_with_proposer,
-    reactivate_task,
     set_character_stats,
     suspend_account,
     update_task_status,
 )
-from services.character_stats import (
-    recalculate_character_stats,
-    recompute_votes_spent_this_era,
-)
-from services.era import apply_era_reset, get_current_era_row
 from services.task_import import (
     TaskImportError,
     import_tasks_from_csv,
-    resolve_admin_character,
 )
 from services.scoring import compute_votes_available
 from services.auth import create_jwt
@@ -166,43 +141,6 @@ async def admin_list_characters(
 
 
 # ---------------------------------------------------------------------------
-# Seed / Insert
-# ---------------------------------------------------------------------------
-
-
-@router.post("/factions", response_model=AdminFactionOut, status_code=201)
-async def admin_create_faction(
-    data: FactionCreate,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> AdminFactionOut:
-    faction = await create_faction(data, session)
-    return AdminFactionOut(
-        slug=faction.slug,
-        status=faction.status.value,
-        created_at=faction.created_at,
-    )
-
-
-@router.post("/characters", response_model=AdminCharacterOut, status_code=201)
-async def admin_create_character_endpoint(
-    data: AdminCharacterCreate,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> AdminCharacterOut:
-    character = await admin_create_character(data, session)
-    return AdminCharacterOut(
-        id=character.id,
-        account_id=character.account_id,
-        username=character.username,
-        display_name=character.display_name,
-        faction_slug=character.faction_slug,
-        status=character.status.value,
-        created_at=character.created_at,
-    )
-
-
-# ---------------------------------------------------------------------------
 # Adjust Game State
 # ---------------------------------------------------------------------------
 
@@ -226,138 +164,9 @@ async def admin_patch_character_stats(
     )
 
 
-@router.post(
-    "/characters/backfill-vote-budget",
-    response_model=VoteBudgetBackfillOut,
-    status_code=200,
-)
-async def backfill_vote_budget(
-    dry_run: bool = False,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> VoteBudgetBackfillOut:
-    """Rebuild ``votes_spent_this_era`` for the live era from the vote table (#1531).
-
-    The repair half of the 2026-08-02 vote dedupe: migration
-    ``0011_vote_unique_per_account`` deleted 13 surplus vote rows, and their
-    casters are still charged for them because the spend is a stored counter.
-    (That revision no longer exists as a file — #1398 collapsed the chain into
-    ``0002_squashed`` — but this endpoint outlives it: anything that removes a
-    vote row behind the service's back leaves the same drift.) See
-    :func:`services.character_stats.recompute_votes_spent_this_era` for the
-    identity this rests on and the two ways it can fail.
-
-    **``dry_run=true`` first.** The same counter is what an admin
-    ``votes_available`` grant writes (``set_character_stats``), and a row does
-    not record that it was hand-set — so a recompute silently reverts such a
-    grant. The response lists every before/after pair precisely so an operator
-    can spot one before applying.
-
-    **Run this BEFORE ``/admin/characters/backfill-stats``, not with it.** Both
-    write ``CharacterStats``; the budget repair does not depend on scores, but
-    interleaving them risks one pass overwriting the other.
-    """
-    repairs = await recompute_votes_spent_this_era(session, dry_run=dry_run)
-    return VoteBudgetBackfillOut(
-        dry_run=dry_run,
-        changed=len(repairs),
-        changes=[
-            VoteSpendRepairOut(**dataclasses.asdict(repair)) for repair in repairs
-        ],
-    )
-
-
-@router.post(
-    "/characters/backfill-stats", response_model=StatsBackfillOut, status_code=200
-)
-async def backfill_all_character_stats(
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> StatsBackfillOut:
-    """Recompute CharacterStats for every character using current vote data.
-
-    **Consumer-less on purpose — do not delete it (owner ruling, 2026-07-31).**
-    Nothing in the frontend or the admin MCP calls this, so a dead-endpoint sweep
-    finds it and proposes removal; #1386 did exactly that and was told to keep it.
-    It is a break-glass operations tool, and the value of one is that it is there
-    on the day you need it rather than on the day someone thought to add it.
-
-    It earns that standing: scoring is recomputed rather than stored as a running
-    total, so a bug in the recalc path leaves every score wrong until something
-    recomputes them. #1345 (the era bound) and #1373 (failed praxes score zero)
-    are both changes whose backfill this is.
-
-    Silent: ``emit_taunts=False`` (ADR-0068). Recomputing a score everyone
-    already had is not an overtake, and a backfill must never mail the whole
-    playerbase a volley of taunts about history.
-
-    **It repairs ``all_time_score`` too** — asked and answered in #1531, because
-    that field is lifetime-cumulative and moved by delta rather than re-derived
-    (``_credit_all_time_score``), which looks like it would be left holding
-    points whose votes are gone. It is not: the delta this recalc applies is
-    ``recomputed - stored``, so a score that falls by five stars drags lifetime
-    down five as well, and a second run applies zero. Pinned by
-    ``tests/integration/test_vote_dedupe_repair.py``.
-
-    Two limits worth knowing before leaning on it as a repair tool: it recalcs
-    the CURRENT era row only, so a change to a closed era's praxis needs
-    ``recalculate_character_stats`` with that ``era_row``; and it skips banned
-    characters (``list_active_characters``).
-    """
-    characters = await list_active_characters(session)
-    era_row = await get_current_era_row(session)
-    for character in characters:
-        await recalculate_character_stats(
-            character.id, session, era_row=era_row, emit_taunts=False
-        )
-    await session.flush()
-    return StatsBackfillOut(recalculated=len(characters))
-
-
-@router.put("/era/reset", response_model=EraResetOut, status_code=200)
-async def admin_era_reset(
-    admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> EraResetOut:
-    """Trigger an era reset: new Era row + reset stats per EraConfig flags."""
-    new_era_row = Era(name=CURRENT_ERA.name, config_key=CURRENT_ERA.config_key, started_by=admin.id)
-    session.add(new_era_row)
-    await session.flush()
-    characters = await list_active_characters(session)
-    await apply_era_reset(characters, new_era_row, session)
-    return EraResetOut(era_id=new_era_row.id, characters_reset=len(characters))
-
-
-@router.post("/tasks/{task_id}/reactivate", response_model=TaskOut)
-async def admin_reactivate_task(
-    task_id: int,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> TaskOut:
-    task = await reactivate_task(task_id, session)
-    return await build_task_out(task, session)
-
-
 # ---------------------------------------------------------------------------
 # Role & Account Management
 # ---------------------------------------------------------------------------
-
-
-@router.post("/accounts/{account_id}/role", response_model=RoleActionOut, status_code=200)
-async def admin_manage_role(
-    account_id: int,
-    data: RoleAction,
-    admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-) -> RoleActionOut:
-    await assign_or_revoke_role(
-        account_id=account_id,
-        role_name=data.role,
-        action=data.action,
-        admin_account_id=admin.id,
-        session=session,
-    )
-    return RoleActionOut(account_id=account_id, role=data.role, action=data.action)
 
 
 @router.post(
@@ -545,26 +354,6 @@ async def list_pending_tasks(
     ]
 
 
-@router.put("/tasks/{task_id}/approve", response_model=TaskOut)
-async def approve_task(
-    task_id: int,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-):
-    task = await update_task_status(task_id, TaskStatus.active, session)
-    return await build_task_out(task, session)
-
-
-@router.put("/tasks/{task_id}/retire", response_model=TaskOut)
-async def retire_task(
-    task_id: int,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-):
-    task = await update_task_status(task_id, TaskStatus.retired, session)
-    return await build_task_out(task, session)
-
-
 @router.post(
     "/characters/{character_id}/ban", response_model=BanActionOut, status_code=200
 )
@@ -580,50 +369,6 @@ async def ban_character(
     character.status = CharacterStatus.banned if data.banned else CharacterStatus.active
     await session.flush()
     return BanActionOut(character_id=character_id, banned=data.banned)
-
-
-@router.post("/tasks", response_model=TaskOut, status_code=201)
-async def admin_create_task(
-    data: TaskCreate,
-    admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db),
-):
-    """Admin-only: create a task directly in active status."""
-    character = await resolve_admin_character(admin, session)
-    if character is None:
-        raise HTTPException(status_code=422, detail="Admin must have an active character.")
-
-    # Resolve task_type; admins can create metatask rows directly.
-    task_type = TaskType.standard
-    if data.task_type:
-        try:
-            task_type = TaskType(data.task_type)
-        except ValueError:
-            raise HTTPException(
-                status_code=422, detail=f"Invalid task_type: {data.task_type}"
-            )
-    if task_type == TaskType.metatask and not data.metatask_faction_slug:
-        raise HTTPException(
-            status_code=422,
-            detail="metatask_faction_slug is required for metatask creation.",
-        )
-    task = Task(
-        title=data.title,
-        description=data.description or "",
-        point_value=data.point_value,
-        level_required=data.level_required,
-        primary_faction_slug=data.primary_faction_slug or CROSS_FACTION_SLUG,
-        metatask_faction_slug=(
-            data.metatask_faction_slug if task_type == TaskType.metatask else None
-        ),
-        task_type=task_type,
-        created_by=character.id,
-        status=TaskStatus.active,
-    )
-    session.add(task)
-    await session.flush()
-    await session.refresh(task)
-    return await build_task_out(task, session)
 
 
 @router.post("/tasks/import-csv", response_model=TaskImportResult, status_code=201)

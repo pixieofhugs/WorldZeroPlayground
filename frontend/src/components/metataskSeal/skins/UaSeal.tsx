@@ -63,7 +63,7 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
       )}
 
       <span
-        className="eyebrow block"
+        className="label-heading block"
         style={{
           fontFamily: 'var(--faction-ua-card-font)',
           color: 'var(--faction-ua-card-accent)',

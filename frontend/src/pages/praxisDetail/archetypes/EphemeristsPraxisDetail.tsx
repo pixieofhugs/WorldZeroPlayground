@@ -105,6 +105,7 @@ import {
   METAL_SIGILS,
   RuneRule,
   GlyphRegister,
+  initialsOf,
   INK,
   INNER,
   LINE,
@@ -188,19 +189,11 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
 };
 
-/** Initials fallback for an author with no uploaded avatar. */
-function initialsOf(name: string): string {
-  return (
-    name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((word) => word[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "·"
-  );
-}
+/* This page's own `initialsOf` stood here — the kit's helper to the byte, "·"
+   and all. #1664 collapsed it along with the task page's (which had drifted on
+   exactly that fallback), so the plate's monogram is one function again. The
+   octagon BELOW is deliberately still local: the kit's `AuthorOctagon` sizes its
+   monogram from a `fontSize` prop, and this page sets it from the type ramp. */
 
 /**
  * One author's monogram, struck in a stepped octagon cartouche. Collab bylines

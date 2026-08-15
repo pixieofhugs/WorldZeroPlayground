@@ -127,7 +127,7 @@ export default function FilterBar({
 
         {chips.length > 0 && (
           <div className="filter-bar__applied">
-            <span className="eyebrow">{t('filters.bar.filteringBy')}</span>
+            <span className="label-heading">{t('filters.bar.filteringBy')}</span>
             {chips.map((chip) => (
               <button
                 key={chip.key}

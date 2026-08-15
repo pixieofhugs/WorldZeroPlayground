@@ -94,7 +94,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
-        className="eyebrow"
+        className="label-heading"
         style={{
           fontFamily: DISPLAY,
           letterSpacing: '0.14em',
@@ -420,7 +420,7 @@ function MobileProfile({
               level: character.level,
             })}
           </div>
-          <div className="eyebrow" style={{ fontFamily: WOW_DISPLAY, color: WOW_DEEP }}>
+          <div className="label-heading" style={{ fontFamily: WOW_DISPLAY, color: WOW_DEEP }}>
             {t('profile.wow.eyebrow')}
           </div>
 
@@ -475,7 +475,7 @@ function MobileProfile({
               >
                 {stat.value}
               </div>
-              <div className="eyebrow" style={{ color: WOW_MUTED, marginTop: 'var(--space-xs)' }}>
+              <div className="label-caption" style={{ color: WOW_MUTED, marginTop: 'var(--space-xs)' }}>
                 {stat.label}
               </div>
             </div>

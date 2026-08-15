@@ -57,7 +57,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         }}
         eyebrow={
           <div
-            className="eyebrow"
+            className="label-heading"
             style={{
               letterSpacing: "0.16em",
               // Rainbow appearance 1 of 4: the running head, clipped to type.
