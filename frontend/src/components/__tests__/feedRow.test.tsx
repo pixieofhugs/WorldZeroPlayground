@@ -155,6 +155,33 @@ describe('normalizeFeedItem', () => {
     expect(row.headline).not.toContain('napping')
   })
 
+  // ── vote_changed_on_mine (#1712) ───────────────────────────────────────────
+  //
+  // Same payload as `vote_on_mine`, same slots, one different sentence — and
+  // that sentence is the feature. A re-rate used to reach the author as the
+  // ORIGINAL card quietly restating a new number, so a changed row that reads
+  // "voted on your praxis" beside `+25 pts` is the bug with extra steps.
+
+  it('says the vote CHANGED, and shows the points that stand now', () => {
+    const payload = { vote_id: 4, value: 5, praxis_id: 9, praxis_title: 'Reforest', task_point_value: 5, points_earned: 25 }
+    const changed = normalizeFeedItem(item('vote_changed_on_mine', payload))!
+    const cast = normalizeFeedItem(item('vote_on_mine', payload))!
+
+    expect(changed.action).toBe('changed their vote on your praxis')
+    expect(changed.action).not.toBe(cast.action)
+    // Everything else is the vote row verbatim — one sentence is the whole delta.
+    expect({ ...changed, action: null }).toEqual({ ...cast, action: null })
+    expect(changed.points).toBe('+25 pts')
+    expect(changed.headlineHref).toBe('/praxis/9')
+  })
+
+  it('renders the changed row rather than dropping it', () => {
+    // A type missing from FACTION_ROW_TYPES normalizes to null and the router
+    // renders NOTHING — a blank row, not a loud failure. That is how
+    // `comment_mention` shipped broken (below), so the new type asserts it too.
+    expect(FACTION_ROW_TYPES.has('vote_changed_on_mine')).toBe(true)
+  })
+
   // ── comment_mention (#1196) ────────────────────────────────────────────────
   //
   // The type shipped with a correct query, a complete payload and NO case here,

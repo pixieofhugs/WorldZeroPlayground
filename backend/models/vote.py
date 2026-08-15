@@ -47,8 +47,20 @@ class Vote(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # ``updated_at > created_at`` is the ONE signal that a voter changed their
+    # mind (#1712) — the activity feed partitions this table on it — so the two
+    # columns have to be able to disagree. ``now()`` is Postgres's
+    # *transaction* timestamp and is constant for the whole transaction, which
+    # made a re-rate inside one transaction indistinguishable from a fresh cast.
+    # ``clock_timestamp()`` is the wall clock at the moment of the write, which
+    # is what "last updated" meant all along. INSERT still takes the ``now()``
+    # server default, so a vote nobody has touched has the two equal to the
+    # microsecond. Not DDL — ``onupdate`` is rendered into the UPDATE statement,
+    # so this needs no migration.
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.clock_timestamp(),
     )
 
     praxis: Mapped["Praxis"] = relationship(

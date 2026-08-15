@@ -114,7 +114,7 @@ describe('the slot asks for it', () => {
     expect(source).not.toContain('feed:archive.archived')
   })
 
-  it('still restores with one sentence for all fifteen types', () => {
+  it('still restores with one sentence for all sixteen types', () => {
     // Restoring is the same act whatever the type — the row comes back. Only
     // the dismiss direction takes overrides.
     expect(source).toContain("feed:archive.restored")

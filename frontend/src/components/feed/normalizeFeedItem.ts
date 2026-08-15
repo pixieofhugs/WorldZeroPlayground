@@ -27,6 +27,7 @@ export const FACTION_ROW_TYPES = new Set([
   'friend_completion',
   'foe_completion',
   'vote_on_mine',
+  'vote_changed_on_mine',
   'foe_taunt',
   'friend_signup',
   'friend_defection',
@@ -344,11 +345,22 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         actions: buildMentionActions(p),
       }
     case 'vote_on_mine':
+    case 'vote_changed_on_mine':
+      // One row shape, two sentences. The payload is identical — `points_earned`
+      // is the score that stands right now either way — and the ONLY thing that
+      // differs is whether this is news of a vote or news of a vote moving
+      // (#1712). The changed row must not pose as a fresh vote: the author has
+      // already been told a number, and "voted on your praxis" beside a
+      // different one is the silent rewrite this type exists to end.
       return {
         slug,
         actor,
         actorHref: null,
-        action: i18n.t('feed:row.action.votedOnYourPraxis'),
+        action: i18n.t(
+          item.type === 'vote_changed_on_mine'
+            ? 'feed:row.action.changedTheirVote'
+            : 'feed:row.action.votedOnYourPraxis',
+        ),
         badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
         headline: p.praxis_title ?? null,
         headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,

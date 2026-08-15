@@ -118,6 +118,7 @@ class ActivityFeedResponseDC:
 
 # --- Feed item types --------------------------------------------------------
 FEED_ITEM_TYPE_VOTE_ON_MINE = "vote_on_mine"
+FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE = "vote_changed_on_mine"
 FEED_ITEM_TYPE_FRIEND_COMPLETION = "friend_completion"
 FEED_ITEM_TYPE_FOE_TAUNT = "foe_taunt"
 FEED_ITEM_TYPE_GLOBAL_TASK = "global_task"
@@ -303,48 +304,103 @@ async def _get_my_task_ids(
 # an ActivityFeedItemDC. Counts wrap the same Select in a COUNT subquery.
 # ---------------------------------------------------------------------------
 
-def _vote_on_mine_query(ctx: FeedContext) -> Select:
-    """Votes cast on the current character's praxis."""
-    voter_char = Character.__table__.alias("voter_char")
-    query = (
-        select(
-            Vote.id,
-            Vote.value,
-            Vote.created_at,
-            Vote.praxis_id,
-            Praxis.title.label("praxis_title"),
-            Task.point_value.label("task_point_value"),
-            voter_char.c.display_name.label("voter_display_name"),
-            voter_char.c.faction_slug.label("voter_faction_slug"),
-            voter_char.c.avatar_url.label("voter_avatar_url"),
+# A vote is a row that gets EDITED in place — ``cast_or_update_vote`` re-rates
+# the existing row rather than inserting a second one — and the feed is a
+# read-time projection over live rows (ADR-0023). So the two facts about a vote
+# are two different pieces of news, and the vote table is partitioned between
+# two sources on ``updated_at > created_at``:
+#
+#   * ``vote_on_mine``          — a vote as cast, never since touched.
+#   * ``vote_changed_on_mine``  — a vote its voter went back and re-rated.
+#
+# The partition is exhaustive and disjoint, and that is the point (#1712).
+# Leaving a re-rated vote in the first source is what let an already-read row
+# silently restate a NEW number under its old headline: the author was told
+# "+3", the voter moved to 5, and the same card just started saying "+5" with
+# no event anywhere. A vote now leaves the cast stream at the moment it stops
+# being true and reappears as its own item, timestamped when it moved.
+_VOTE_WAS_CHANGED = Vote.updated_at > Vote.created_at
+
+
+def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
+    """Build the cast-vote or changed-vote query — they differ only in time.
+
+    Both select the identical row shape; ``changed`` picks which side of the
+    partition to take and, with it, which timestamp *is* the news. A cast is
+    news when it was cast; a change is news when it changed, so the cursor and
+    the ORDER BY follow the same column the item's timestamp comes from.
+    """
+    moment = Vote.updated_at if changed else Vote.created_at
+
+    def build(ctx: FeedContext) -> Select:
+        voter_char = Character.__table__.alias("voter_char")
+        query = (
+            select(
+                Vote.id,
+                Vote.value,
+                moment.label("moment"),
+                Vote.praxis_id,
+                Praxis.title.label("praxis_title"),
+                Task.point_value.label("task_point_value"),
+                voter_char.c.display_name.label("voter_display_name"),
+                voter_char.c.faction_slug.label("voter_faction_slug"),
+                voter_char.c.avatar_url.label("voter_avatar_url"),
+            )
+            .join(Praxis, Vote.praxis_id == Praxis.id)
+            .join(Task, Praxis.task_id == Task.id)
+            .join(voter_char, Vote.voter_character_id == voter_char.c.id)
+            .where(
+                Praxis.created_by_id == ctx.character_id,
+                _VOTE_WAS_CHANGED if changed else ~_VOTE_WAS_CHANGED,
+            )
         )
-        .join(Praxis, Vote.praxis_id == Praxis.id)
-        .join(Task, Praxis.task_id == Task.id)
-        .join(voter_char, Vote.voter_character_id == voter_char.c.id)
-        .where(Praxis.created_by_id == ctx.character_id)
-    )
-    if ctx.before is not None:
-        query = query.where(Vote.created_at < ctx.before)
-    return query.order_by(Vote.created_at.desc()).limit(SUB_QUERY_LIMIT)
+        if ctx.before is not None:
+            query = query.where(moment < ctx.before)
+        return query.order_by(moment.desc()).limit(SUB_QUERY_LIMIT)
+
+    return build
 
 
-def _vote_on_mine_item(row: Any) -> ActivityFeedItemDC:
-    return ActivityFeedItemDC(
-        type=FEED_ITEM_TYPE_VOTE_ON_MINE,
-        item_key=build_item_key(FEED_ITEM_TYPE_VOTE_ON_MINE, row.id),
-        timestamp=row.created_at,
-        actor_display_name=row.voter_display_name,
-        actor_faction_slug=row.voter_faction_slug,
-        actor_avatar_url=row.voter_avatar_url,
-        payload=VoteOnMinePayload(
-            vote_id=row.id,
-            value=row.value,
-            praxis_id=row.praxis_id,
-            praxis_title=row.praxis_title,
-            task_point_value=row.task_point_value,
-            points_earned=row.value * row.task_point_value,
-        ),
-    )
+def _vote_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
+    """Both vote sources carry the same payload — the value that stands now.
+
+    **Repeated changes to the same vote collapse into one notification thread.**
+    The key is ``{type}:{vote.id}`` — per *vote*, not per *revision* — so a
+    voter who changes their mind five times produces one changed-vote item that
+    updates in place, not five cards. That is a deliberate trade, not an
+    oversight: telling the five apart needs a revision column on ``Vote`` and a
+    migration to carry it, and five cards saying the same person keeps moving
+    the same number mostly reads as spam. One item, always showing the value
+    that stands, is the thing the author actually needs to know.
+
+    ponytail: the ceiling is that the item cannot say what the vote changed
+    *from* — no prior value is stored anywhere, so the copy says "changed their
+    vote" and prints the new total. The upgrade path is a ``previous_value``
+    column on ``Vote`` set in ``cast_or_update_vote``, which would also let the
+    row distinguish a raise from a drop. Same column would fix the one false
+    positive here: an alt character re-rating with an IDENTICAL value still
+    writes ``voter_character_id``, which moves ``updated_at`` and reads as a
+    change (see the attribution note on ``uq_vote_praxis_account``).
+    """
+    def build(row: Any) -> ActivityFeedItemDC:
+        return ActivityFeedItemDC(
+            type=item_type,
+            item_key=build_item_key(item_type, row.id),
+            timestamp=row.moment,
+            actor_display_name=row.voter_display_name,
+            actor_faction_slug=row.voter_faction_slug,
+            actor_avatar_url=row.voter_avatar_url,
+            payload=VoteOnMinePayload(
+                vote_id=row.id,
+                value=row.value,
+                praxis_id=row.praxis_id,
+                praxis_title=row.praxis_title,
+                task_point_value=row.task_point_value,
+                points_earned=row.value * row.task_point_value,
+            ),
+        )
+
+    return build
 
 
 def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext], Select]:
@@ -1033,8 +1089,23 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         item_type=FEED_ITEM_TYPE_VOTE_ON_MINE,
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
         needs=frozenset(),
-        query=_vote_on_mine_query,
-        to_item=_vote_on_mine_item,
+        query=_vote_query_factory(changed=False),
+        to_item=_vote_item_factory(FEED_ITEM_TYPE_VOTE_ON_MINE),
+        source_id_column=Vote.id,
+    ),
+    FeedSource(
+        # The other half of the vote partition. Same tabs, same payload, its own
+        # item key — which is the whole reason it is a type rather than a
+        # re-ordered query: ``FeedDismissal`` is unique on
+        # ``(character_id, item_key)``, so a change resurfacing under
+        # ``vote_on_mine:{id}`` would arrive already-archived for anyone who had
+        # read the original. An event, not standing state, so it stays
+        # dismissible — it is deliberately NOT in NON_ARCHIVABLE_ITEM_TYPES.
+        item_type=FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_vote_query_factory(changed=True),
+        to_item=_vote_item_factory(FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE),
         source_id_column=Vote.id,
     ),
     FeedSource(
