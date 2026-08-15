@@ -234,10 +234,14 @@ describe("WOW composer — the dress", () => {
     expect(markup).toContain("wow-balloon-bunch");
   });
 
-  it("divides its sections with the zigzag, not a hairline", () => {
+  it("closes the sheet with the zigzag, not a hairline", () => {
+    // The zigzag is the FOOTER's mark, not a section divider (#1707): the
+    // design calls its rule once, above the footer, and the regions above
+    // separate by whitespace. `composerRule.test.tsx` owns the count; what is
+    // WOW's alone is that the one rule drawn is the zigzag.
     const markup = render();
-    expect(markup).toContain("wow-zig-writeup");
-    expect(markup).toContain("wow-zig-proof");
+    expect(markup).toContain("wow-zig-footer");
+    expect(markup).not.toContain("wow-zig-writeup");
   });
 
   it("strikes the points plaque off-square with the figure in gold ink", () => {

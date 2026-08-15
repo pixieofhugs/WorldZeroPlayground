@@ -135,7 +135,11 @@ function state(): EditPraxisState {
   } as unknown as EditPraxisState;
 }
 
-function render(slug: string | null): string {
+function render(
+  slug: string | null,
+  formFactor: "desktop" | "mobile" = "desktop",
+): string {
+  mocks.formFactor = formFactor;
   const Archetype = resolvedArchetype(
     pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
   )!;
@@ -171,10 +175,14 @@ const ORNAMENT: Record<string, string> = {
 };
 
 const SLUGS = Object.keys(ORNAMENT);
+const WIDTHS = ["desktop", "mobile"] as const;
+const AT_BOTH = SLUGS.flatMap((slug) => WIDTHS.map((w) => [slug, w] as const));
 
 describe("the faction rule is drawn once, above the footer (#1707)", () => {
-  it.each(SLUGS)("%s draws exactly one rule", (slug) => {
-    const markup = render(slug === "na" ? null : slug);
+  // Both form factors: there is one tree at two widths (ADR-0065 §2), and the
+  // issue asks for the count at both.
+  it.each(AT_BOTH)("%s draws exactly one rule on %s", (slug, width) => {
+    const markup = render(slug === "na" ? null : slug, width);
     expect(count(markup, ORNAMENT[slug])).toBe(1);
   });
 
