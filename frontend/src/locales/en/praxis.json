@@ -131,8 +131,6 @@
       "flagReasonMissing": "Pick a reason first."
     },
     "banners": {
-      "crownLabel": "TASK CROWN",
-      "crownBody": "The top-scoring praxis for this task — held until another entry out-votes it.",
       "failedTitle": "This praxis was marked as failed.",
       "flaggedLabel": "FLAGGED",
       "flaggedBody": "This praxis is flagged and awaiting admin review."
