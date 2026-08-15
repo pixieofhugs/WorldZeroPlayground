@@ -1,0 +1,18 @@
+{
+  "enabledPlugins": {
+    "ponytail@ponytail": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/hooks/deny_raw_issue_comments.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
