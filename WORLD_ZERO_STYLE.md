@@ -693,6 +693,16 @@ Owner ruling, and the first thing to know about it is that **it is deliberate**:
 
 **Opt IN, never opt out — the direction is the durable half.** "Turn by default, list the pages that must not" is an exclusion list, and it is wrong the first afternoon somebody adds a surface: a new page mounting a WOW card would silently start flipping, and nothing would fail. Unset being upright inverts that. The exempt pages are correct because they say nothing, not because anyone remembered them, and the cost of the whimsy reaching a new browsing page is one class. It is also the smaller edit today — four browsing mounts against twelve exempt ones — but the count is the lesser reason, and it would still be the right direction if the counts were reversed.
 
+### S.N.I.D.E. wears no tape, and it was SPECIFIED (#1708)
+
+Owner ruling, dated 2026-08-14, and the reason it is written down is that every piece of evidence a later editor will find says the opposite. `tape` is a first-class token in **both** SNIDE palettes in the design kit, `ground()` draws two strips in the composer design, and epic #1179's seam table names it outright ("ground() — SNIDE grain + tape"). **A fidelity pass that restores it is undoing deliberate work, not fixing a regression.** Eleven strips came off nine SNIDE files and two shared ones, and `--faction-snide-tape`, `--snide-tape` and `.snide-tape` went with them; `frontend/src/__tests__/snideWearsNoTape.test.ts` is what keeps them gone.
+
+**Deleting the class first is what makes the removal hold.** Leaving a declared token behind is an invitation: the next surface that wants a strip reaches for the name that already exists, and the metaphor is back on one file at a time with nothing failing. The two tokens here also held the *identical* rgba in two namespaces — latent drift that only ever got a chance to diverge because both were still declared.
+
+**A strip can be carrying more than ornament, so check each removal site rather than sweeping the draw calls.** Ten of the eleven were absolutely positioned decoration and left nothing behind. The eleventh was not: the faction hero's eyebrow printed in the press's near-black *because* it sat on a tape ground, and that near-black is the wall it would have been dropped onto — an invisible line, not a plainer one. It takes the faction's xerox paper as ink instead, an existing token repointed rather than a new value. The same shape appears in the composer, where `ComposerGround`'s default negative inset exists so a layer can overhang the sheet: the strips were the only thing allowed to run off, so the ground stays pinned at `inset={0}` and the raster stays inside the stock.
+
+**Not everything called tape is this tape.** SNIDE's task detail draws diagonal HAZARD stripes on its action plate, and its praxis detail hangs "taped-up clippings" along a rail. Both are different visual families, both stay, and neither reaches for the retired name — which is why the guard needs no exceptions list. The test for the ruling is "does it look like a strip of tape", never "does the identifier contain the string".
+
 ---
 
 ## 7. Components
