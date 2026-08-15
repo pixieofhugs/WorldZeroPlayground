@@ -23,8 +23,14 @@
  * this vocabulary left in `src/`, and `ephemeristsPlateSurfaces.test.tsx` pins
  * that against the SOURCE tree, because an import-graph sweep cannot see a copy.
  *
- * Every colour is a `--faction-ephemerists-plate-*` token; light/dark flips
- * through the `[data-theme="dark"]` cascade, never a ternary.
+ * Every colour is a `--faction-ephemerists-plate-*` token, never a ternary — but
+ * do not expect a theme flip. This register is THEME-INVARIANT BY DESIGN (#1627
+ * + #1636): every plate var is declared once at `:root`, and `[data-theme="dark"]`
+ * declares no plate token at all. The dark block in `index.css` says so where
+ * the night half used to be — the half was removed because "the register is
+ * theme-invariant and lives entirely in `:root`", the polarity argument being
+ * set out beside the `:root` declarations. The register IS the design's night
+ * half, so these values already read on the dark page.
  */
 import type { CSSProperties } from "react";
 
