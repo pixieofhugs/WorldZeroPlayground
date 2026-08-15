@@ -29,9 +29,10 @@
  * engine either, which is why the mount half is asserted against the SOURCE:
  * markup can only show that the knob is read and where it is declared.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { sourceFiles as scanSource } from '../../test/sourceScan'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -110,13 +111,7 @@ const flippableNumeral = (figure: string) =>
   )
 
 /** Every `.ts`/`.tsx` under `frontend/src`, tests included. */
-function sourceFiles(dir: string = SRC): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) return sourceFiles(path)
-    return /\.tsx?$/.test(entry.name) ? [path] : []
-  })
-}
+const sourceFiles = () => scanSource({ dir: SRC, includeTests: true })
 
 describe('the WOW marks defer their angle to the mount (#1716)', () => {
   for (const formFactor of ['desktop', 'mobile'] as const) {

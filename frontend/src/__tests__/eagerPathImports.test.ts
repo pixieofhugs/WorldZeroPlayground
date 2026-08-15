@@ -24,27 +24,13 @@
  * Same posture as `noInjectedStylesheets.test.ts`: one assertion covers every
  * module, present and future, without instantiating any of them.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
-
-const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
-
-/** Shipped modules only — a test's imports are never in a visitor's bundle,
- *  and this file names both guarded specifiers in its own fixtures. */
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry: string) => {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return entry === '__tests__' ? [] : sourceFiles(path)
-    return /\.tsx?$/.test(entry) ? [path] : []
-  })
-}
-
-const stripComments = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-
-const toRelative = (path: string) => relative(SRC_DIR, path).split('\\').join('/')
+// Shipped modules only — `sourceFiles` skips `__tests__` by default, which is
+// what this file needs: a test's imports are never in a visitor's bundle, and
+// this file names both guarded specifiers in its own fixtures.
+import { SRC_DIR, sourceFiles, stripComments, toRelative } from '../test/sourceScan'
 
 /**
  * Modules a file imports a runtime *value* from. `import type` is erased by
@@ -70,7 +56,7 @@ function valueImportSpecifiers(source: string): string[] {
 
 /** Files that legitimately hold a static import of the module under guard. */
 function offendersFor(matches: RegExp, allowed: (path: string) => boolean): string[] {
-  return sourceFiles(SRC_DIR)
+  return sourceFiles()
     .filter((path) => valueImportSpecifiers(readFileSync(path, 'utf8')).some((s) => matches.test(s)))
     .map(toRelative)
     .filter((path) => !allowed(path))
@@ -97,10 +83,9 @@ describe('/game-config is fetched once per load (#1141)', () => {
 })
 
 describe('the scan sees the codebase', () => {
-  it('reads a non-empty file set, so it cannot pass by finding nothing', () => {
-    expect(sourceFiles(SRC_DIR).length).toBeGreaterThan(100)
-  })
-
+  // The "reads a non-empty file set" half now lives once, with the shared walk,
+  // in `src/test/__tests__/sourceScan.test.ts`. What stays here is the part
+  // that is this file's own: the import parser.
   it('still recognises a static value import when it sees one', () => {
     expect(valueImportSpecifiers("import { a } from '../api/admin'")).toEqual(['../api/admin'])
     expect(valueImportSpecifiers("import type { A } from '../api/admin'")).toEqual([])

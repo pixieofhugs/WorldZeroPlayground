@@ -21,12 +21,11 @@
  * under a branch no fixture reaches, so one assertion covers every component,
  * present and future, without instantiating any of them.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-
-const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
+// Components only — `sourceFiles` skips `__tests__` by default, and `__tests__`
+// holds this guard, which names `<style>` itself. Comments are stripped for the
+// same reason (this file's own header mentions the element).
+import { readStripped, sourceFiles, toRelative } from '../test/sourceScan'
 
 /**
  * Grandfathered injections, keyed by path relative to `frontend/src`. This list
@@ -39,38 +38,21 @@ const GRANDFATHERED: readonly string[] = [
   'components/LevelUpPopup.tsx',
 ]
 
-/** Components only — `__tests__` holds this guard, which names `<style>` itself. */
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry: string) => {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return entry === '__tests__' ? [] : sourceFiles(path)
-    return /\.tsx?$/.test(entry) ? [path] : []
-  })
-}
-
-/** Comments legitimately mention `<style>` (this file's own header does). */
-const stripComments = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-
-const toRelative = (path: string) => relative(SRC_DIR, path).split('\\').join('/')
+const injectors = (): string[] =>
+  sourceFiles()
+    .filter((path) => /<style[\s>]/.test(readStripped(path)))
+    .map(toRelative)
 
 describe('components never inject a stylesheet (#911, widened from #867)', () => {
   it('renders no <style> element anywhere under frontend/src', () => {
-    const offenders = sourceFiles(SRC_DIR)
-      .filter((path) => /<style[\s>]/.test(stripComments(readFileSync(path, 'utf8'))))
-      .map(toRelative)
-      .filter((path) => !GRANDFATHERED.includes(path))
-    expect(offenders).toEqual([])
+    expect(injectors().filter((path) => !GRANDFATHERED.includes(path))).toEqual([])
   })
 
   it('every grandfathered entry still exists and still injects, so the list stays honest', () => {
-    const stillInjecting = sourceFiles(SRC_DIR)
-      .filter((path) => /<style[\s>]/.test(stripComments(readFileSync(path, 'utf8'))))
-      .map(toRelative)
+    const stillInjecting = injectors()
     expect(GRANDFATHERED.filter((path) => !stillInjecting.includes(path))).toEqual([])
   })
 
-  it('scans a non-empty set, so the guard cannot pass by finding nothing', () => {
-    expect(sourceFiles(SRC_DIR).length).toBeGreaterThan(100)
-  })
+  // "scans a non-empty set" is asserted once, with the shared walk, in
+  // `src/test/__tests__/sourceScan.test.ts`.
 })
