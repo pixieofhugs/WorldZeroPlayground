@@ -367,6 +367,28 @@ describe("mode picker gates, unchanged by the collapse (#311, #877)", () => {
     expect(markup).not.toContain(DUEL);
   });
 
+  /**
+   * #1709 — the composer used to fail OPEN. Every archetype derived
+   * `task?.allowed_modes ?? ["solo", "collab", "duel"]`, so while the task was
+   * still loading (or its fetch had failed) the picker offered Collab to a
+   * viewer the backend gates out of it by level. The list is now derived once,
+   * inside ModePicker, from the state the picker already holds — and an unknown
+   * task yields no modes at all.
+   */
+  it.each(WIDTHS)("offers no modes on %s while the task is unknown", (width) => {
+    const markup = render(width, baseState({ task: null }));
+    expect(segmentCount(markup)).toBe(0);
+    expect(markup).not.toContain(SOLO);
+    expect(markup).not.toContain(COLLAB);
+  });
+
+  it.each(WIDTHS)("offers exactly the task's modes on %s once it arrives", (width) => {
+    const markup = render(width, baseState({ task: task(["solo"]) }));
+    expect(segmentCount(markup)).toBe(1);
+    expect(markup).toContain(SOLO);
+    expect(markup).not.toContain(COLLAB);
+  });
+
   it.each(WIDTHS)("collapses to the single active option on %s once locked", (width) => {
     const markup = render(
       width,
