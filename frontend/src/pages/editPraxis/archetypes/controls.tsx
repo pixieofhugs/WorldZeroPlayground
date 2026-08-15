@@ -969,9 +969,6 @@ export interface ModeOptionRenderArgs {
 export interface ModePickerSkin<O extends { key: PraxisType }> {
   containerStyle?: CSSProperties;
   options: O[];
-  /** The task's allowed modes. Typed as `string[]` to match TaskOut.allowed_modes;
-   * each option whose `key` is present is rendered. */
-  allowedModes: readonly string[];
   renderOption: (option: O, args: ModeOptionRenderArgs) => ReactNode;
 }
 
@@ -983,6 +980,14 @@ export function ModePicker<O extends { key: PraxisType }>({
   skin: ModePickerSkin<O>;
 }) {
   const praxis = state.praxis!;
+  // The allowed modes are the TASK's, computed server-side against the viewer's
+  // level (`allowed_praxis_modes`). An unknown task means unknown permission, so
+  // this FAILS CLOSED (#1709): no options until the task lands. Each of the
+  // eight archetypes used to derive this line for itself and fall back to all
+  // three modes, which handed a level-0 viewer the Collab the API would refuse.
+  // Derived here, from the state the picker already holds, so there is one
+  // statement of the rule and nothing left to drift.
+  const allowedModes = state.task?.allowed_modes ?? [];
   return (
     <div style={skin.containerStyle}>
       {skin.options
@@ -991,7 +996,7 @@ export function ModePicker<O extends { key: PraxisType }>({
           // it's gated on the viewer's level instead (#311). Hide, don't disable.
           option.key === "duel"
             ? state.duelChipVisible
-            : skin.allowedModes.includes(option.key),
+            : allowedModes.includes(option.key),
         )
         .map((option, index) => {
           // A duel side stays type='solo' + duel_id, so the duel chip's active

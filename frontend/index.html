@@ -10,20 +10,22 @@
       // Applies the persisted [data-theme] before first paint so a mobile
       // refresh (MobileLayout never mounts useTheme) doesn't revert to light,
       // and desktop doesn't flash light before React hydrates. Keep this in
-      // sync with THEME_STORAGE_KEY ('wz-theme') in src/hooks/useTheme.ts.
+      // sync with THEME_STORAGE_KEY ('wz-theme') and DEFAULT_THEME in
+      // src/hooks/useTheme.tsx — a disagreement is a visible flip on hydration.
+      // Dark is the default and light is opt-in via the toggle (#1698), so the
+      // OS scheme is deliberately not consulted. The attribute must be written
+      // even when storage throws: the CSS default is light, so leaving it unset
+      // would hand a private-mode visitor the theme this bootstrap exists to
+      // prevent.
       (function () {
+        var theme = 'dark'
         try {
           var stored = localStorage.getItem('wz-theme')
-          var theme =
-            stored === 'light' || stored === 'dark'
-              ? stored
-              : window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light'
-          document.documentElement.setAttribute('data-theme', theme)
+          if (stored === 'light' || stored === 'dark') theme = stored
         } catch (error) {
-          /* localStorage/matchMedia can throw; fall back to CSS default. */
+          /* localStorage can throw (private mode, blocked storage) — keep the default. */
         }
+        document.documentElement.setAttribute('data-theme', theme)
       })()
     </script>
     <!-- The API is a separate origin in production, so the first data request
