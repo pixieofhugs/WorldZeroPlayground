@@ -3625,6 +3625,11 @@ export interface components {
             level_required: number;
             /** Metatask Faction Slug */
             metatask_faction_slug: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
             /** Point Value */
             point_value: number;
             /** Primary Faction Slug */
@@ -4040,6 +4045,8 @@ export interface components {
             level_required: number;
             /** Metatask Faction Slug */
             metatask_faction_slug?: string | null;
+            /** Notes */
+            notes?: string | null;
             /** Point Value */
             point_value: number;
             /** Primary Faction Slug */
