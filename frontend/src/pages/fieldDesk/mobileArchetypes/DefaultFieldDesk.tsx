@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import FactionSigil from '../../../components/sigil/FactionSigil'
@@ -342,7 +343,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   >
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
-                      points: praxis.task_point_value,
+                      points: formatPoints(praxis.score),
                     })}
                   </div>
                 </div>

@@ -11,9 +11,8 @@
  *
  * **Geometry — radius 0, borderW 0.** SNIDE is the one skin that draws no card
  * border at all, so the sheet is a hard-cornered rectangle with nothing around
- * it: what separates it from the page is the stock and the grain. (It was the
- * stock, the grain and the tape until #1708 took the strips.) The
- * shared sheet's default 10px radius is overridden here rather than inherited.
+ * it: what separates it from the page is the stock and the grain. The shared
+ * sheet's default 10px radius is overridden here rather than inherited.
  *
  * **Masthead** — a near-black bar carrying the wordmark in acid, a dashed acid
  * rule that flexes to fill, and the stage word. All three are ornament: the bar
@@ -21,13 +20,13 @@
  * underneath it. The zine says DRAFT twice on purpose; a screen reader hears it
  * once.
  *
- * **Ground** — the photocopier raster, flush with the sheet. It carried two tape
- * strips running off the sheet's edge until #1708, an owner override of a seam
- * the design kit specifies (`edit-praxis.jsx:349-350`); do not put them back on
- * a fidelity pass. They could run off at all because `ComposerSheet` owns the
- * `overflow: hidden` clip: the ground is the COLUMN's, never the viewport's
- * (#1028, the trap six of eight task-detail skins fell into), and that clip is
- * still what keeps the raster inside the stock.
+ * **Ground** — the photocopier raster, flush with the sheet, and nothing else on
+ * that layer. Grain only is what the design kit draws as well — its own comment
+ * on this ground reads "Grain only; the tape strips are dropped" — so shipped
+ * and kit agree, and a fidelity pass has nothing to restore here. The raster
+ * stays inside the stock because `ComposerSheet` owns the `overflow: hidden`
+ * clip: the ground is the COLUMN's, never the viewport's (#1028, the trap six of
+ * eight task-detail skins fell into).
  *
  * **Rule** — the censor stripe, a solid redaction bar rather than a hairline,
  * struck ONCE above the footer (#1707) rather than between the sections.
@@ -351,9 +350,9 @@ export default function SnideEditPraxis({ state }: Props) {
           <ComposerGround
             background={`repeating-linear-gradient(0deg, ${GRAIN} 0 1px, transparent 1px 3px)`}
             /* Flush, not overhanging: the raster is printed ON the sheet, so it
-               stops where the stock does. It shared this layer with two tape
-               strips that ran off the edge, which is what the negative default
-               inset is for; #1708 took them and the raster keeps the flush 0. */
+               stops where the stock does. The shared component's negative
+               default inset is for grounds that overhang their stock; this one
+               is grain only — the kit's ground too — so it takes a flush 0. */
             inset={0}
           />
   );

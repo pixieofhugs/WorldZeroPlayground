@@ -41,6 +41,7 @@ import {
   parseColor,
   relativeLuminance,
 } from "../contrast";
+import { readStripped, sourceFiles, toRelative } from "../../test/sourceScan";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
 const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
@@ -1436,6 +1437,50 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--albescent-reveal-surface",
     text: "--albescent-reveal-text",
   },
+
+  // ── Three accents used as TEXT on grounds that are not their fill (#1766) ──
+  //
+  // The nightly sweep found these RENDERED; these rows are the same pairings
+  // asserted at the value level, so a repaint of any of these grounds is caught
+  // here rather than overnight. All three fixes are site by site, per the
+  // 2026-08-14 owner ruling: no per-faction on-page ink tier is minted.
+  //
+  // na's POINTS caption was the whole light half of the sweep on its own — it
+  // failed all FOURTEEN light combinations, because `--faction-default-gold` is
+  // site chrome rather than one faction's hue and every walked route paints it.
+  // It was `var(--faction-default-stop-3)`, a ramp position read back as type:
+  // 2.94:1 on the white score plate, 2.89:1 on the card sheet. The stop is
+  // untouched — seven surfaces are cut from it — and the ink walked down.
+  //
+  // The PLATE is the tighter of the two grounds and the one that gates: pure
+  // white by day, and a stock the sheet does not share.
+  { what: "na score plate, POINTS caption", surface: "--faction-default-stamp-bg", text: "--faction-default-gold" },
+  { what: "na card sheet, points caption", surface: "--faction-default-card-bg", text: "--faction-default-gold" },
+  // The consumer that could not come along. Singularity's roster readouts read
+  // the same gold, on a terminal that is near-black in BOTH themes, so the two
+  // grounds want opposite directions — §3's "these inks flip on the SHEET's
+  // polarity, not on the theme". The band is provably EMPTY: white needs
+  // luminance <= 0.183 and the terminal >= 0.191. `--faction-singularity-amber`
+  // carries what the alias resolved to, so nothing on that surface repaints;
+  // the row exists so the split cannot be quietly re-collapsed.
+  { what: "singularity terminal, credits amber", surface: "--faction-singularity-card-bg", text: "--faction-singularity-amber" },
+  // Everymen's mobile field desk stamps its Characters / Edit chits out of the
+  // DEEP stock, where red-as-text is 3.75:1. This is the family's third
+  // (role, ground) split after `-sheet-accent` (the broadsheet panel) and
+  // `-paper-accent` (#1341's paper); the token's own comment records why
+  // neither of those survives this stock in both themes.
+  { what: "everymen deep stock, accent ink", surface: "--everymen-paper-deep", text: "--everymen-deep-accent" },
+  // Not a row: the same page's "view all" link is 11px on the Plate's PAPER, at
+  // 4.49 / 4.16 in the bare red — the pairing #1341 already minted
+  // `-paper-accent` for, and a site that ink had not reached. It now takes it,
+  // and `everymen paper, actor name` above is that measurement already.
+  //
+  // Also not a row: UA's member-row rank numeral, item 2 of #1766. It was
+  // `--faction-ua-vermil` ("large display type only") at 14px/600, 4.12:1 on the
+  // dark sheet, and now takes `--faction-ua-card-accent` — which `ua card
+  // accent` in CARD_PAIRS has measured on that exact ground since #848. A
+  // second `what` for one measurement measures nothing; the guard that the ink
+  // stays in scope is the reader allowlist below.
 ];
 
 const PAIRS: Pair[] = [
@@ -2217,5 +2262,56 @@ describe("the Ephemerists faction page paints the page's ink outside its cards (
       floorOnPlate,
       "if this ever stops holding, `-plate-quiet` CAN serve both grounds and the split above is no longer necessary — delete it rather than working around it.",
     ).toBeGreaterThan(ceilingOnPage);
+  });
+});
+
+/**
+ * A token scoped to LARGE display type has to stay there (#1766).
+ *
+ * `--faction-ua-vermil` is declared "the ensō score numeral — large display type
+ * only", and the manifest above measures it at `AA_LARGE` for exactly that
+ * reason. Item 2 of #1766 was the mobile faction page painting it on a 14px/600
+ * member-row rank — 4.12:1 on the dark sheet, a real AA failure that every ratio
+ * in this file stayed green through, because the pairing the manifest asserts is
+ * the one the DECLARATION describes and not the one a component drew.
+ *
+ * So the guard is a reader allowlist rather than a ratio, in the shape #1449 and
+ * #1413 already set here: a scope written in a comment is a rule a future editor
+ * has to remember, and a list the suite reads is one it cannot forget. Adding a
+ * reader is fine — it is a line of diff that makes you say the numeral is at
+ * display size. `--faction-ua` and `--faction-ua-glow` are not covered: the fill
+ * has legitimate non-text uses everywhere, and the glow is ornament with no text
+ * pairing at all.
+ */
+describe("UA's display-only vermilion stays on display type (#1766)", () => {
+  const VERMIL = "--faction-ua-vermil";
+
+  /** Every shipped file allowed to paint it, and what it draws there. */
+  const READERS: Record<string, string> = {
+    "pages/characterProfile/archetypes/UaProfileBody.tsx": "a gradient stop, not text",
+    "pages/editPraxis/archetypes/UaEditPraxis.tsx": "the composer's errorColor",
+    "pages/taskDetail/archetypes/UaTaskDetail.tsx": "the ensō numeral, display size",
+  };
+
+  it("is read only where the numeral is display type or the mark is not text", () => {
+    const found = sourceFiles()
+      .filter((path) => readStripped(path).includes(VERMIL))
+      .map(toRelative);
+    expect(
+      found.filter((path) => !(path in READERS)),
+      `${VERMIL} is scoped in index.css to large display type. A new reader owes 4.5:1, not the large-text 3:1 — take --faction-ua-card-accent (5.18 / 6.58 on the sheet) and, if the numeral really is display size, add the file here.`,
+    ).toEqual([]);
+  });
+
+  it("keeps a reader for every file the allowlist names", () => {
+    const found = new Set(
+      sourceFiles()
+        .filter((path) => readStripped(path).includes(VERMIL))
+        .map(toRelative),
+    );
+    expect(
+      Object.keys(READERS).filter((path) => !found.has(path)),
+      "an allowlist entry with no reader is a scope nobody is spending — delete the line with the last draw call, the way #1293 deletes an unread font token.",
+    ).toEqual([]);
   });
 });
