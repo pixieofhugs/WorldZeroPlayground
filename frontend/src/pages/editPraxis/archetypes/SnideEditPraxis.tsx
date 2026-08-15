@@ -599,7 +599,6 @@ export default function SnideEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 id: "composer-body",
-                rows: 8,
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 toolbarButtonStyle: {
                   background: FIELD,

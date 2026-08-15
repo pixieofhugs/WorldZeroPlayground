@@ -1077,8 +1077,7 @@ export interface paths {
         };
         /** Get Praxis Route */
         get: operations["get_praxis_route_praxes__praxis_id__get"];
-        /** Update Praxis Route */
-        put: operations["update_praxis_route_praxes__praxis_id__put"];
+        put?: never;
         post?: never;
         /** Delete Praxis Route */
         delete: operations["delete_praxis_route_praxes__praxis_id__delete"];
@@ -3938,13 +3937,6 @@ export interface components {
         PraxisTypeChange: {
             type: components["schemas"]["PraxisType"];
         };
-        /** PraxisUpdate */
-        PraxisUpdate: {
-            /** Body Text */
-            body_text?: string | null;
-            /** Title */
-            title?: string | null;
-        };
         /** PraxisVoteIn */
         PraxisVoteIn: {
             /** Value */
@@ -6263,43 +6255,6 @@ export interface operations {
             };
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PraxisOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_praxis_route_praxes__praxis_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                praxis_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PraxisUpdate"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {

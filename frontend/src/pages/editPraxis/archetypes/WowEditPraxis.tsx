@@ -572,7 +572,6 @@ export default function WowEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 id: "composer-body",
-                rows: 10,
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 toolbarButtonStyle: {
                   background: FIELD,

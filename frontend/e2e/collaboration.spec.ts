@@ -84,11 +84,17 @@ async function seedCollabDraft(browser: Browser, suffix: string) {
   return { alice, bob, task, praxisId: praxis.id as number }
 }
 
-/** Both members edit then submit; consensus seals to `submitted` on the last submit. */
-async function bothEditAndSubmit(seed: Awaited<ReturnType<typeof seedCollabDraft>>) {
+/**
+ * Both members submit; consensus seals to `submitted` on the last submit.
+ *
+ * It used to write a contribution each with `PUT /praxes/{id}` first. That
+ * endpoint is gone (#1743) — a praxis body is written in its room, over a
+ * WebSocket CRDT this suite has no way to drive — and no assertion downstream
+ * ever read the text it wrote. `seedCollabDraft` gives the praxis a body at
+ * create time, which is the part these tests actually depend on.
+ */
+async function bothSubmit(seed: Awaited<ReturnType<typeof seedCollabDraft>>) {
   const { alice, bob, praxisId } = seed
-  await alice.ctx.request.put(`${API}/praxes/${praxisId}`, { data: { body_text: 'Alice contribution' } })
-  await bob.ctx.request.put(`${API}/praxes/${praxisId}`, { data: { body_text: 'Alice + Bob contribution' } })
   await alice.ctx.request.post(`${API}/praxes/${praxisId}/submit`)
   const last = await bob.ctx.request.post(`${API}/praxes/${praxisId}/submit`)
   return (await last.json()).status as string
@@ -103,7 +109,7 @@ test.describe('collaboration lifecycle', () => {
   test('full lifecycle publishes the praxis with both players as members', async ({ browser }) => {
     const seed = await seedCollabDraft(browser, 'life')
     try {
-      const status = await bothEditAndSubmit(seed)
+      const status = await bothSubmit(seed)
       expect(status).toBe('submitted')
 
       // Data: the published praxis records BOTH collaborators as members.
@@ -163,7 +169,7 @@ test.describe('collaboration lifecycle', () => {
     test.fail()
     const seed = await seedCollabDraft(browser, 'credit')
     try {
-      await bothEditAndSubmit(seed)
+      await bothSubmit(seed)
       const page = await seed.bob.ctx.newPage()
       await page.goto(`/praxis/${seed.praxisId}`)
       // Scope to main: the collaborator's name must appear in the praxis CONTENT,
@@ -259,11 +265,14 @@ test.describe('collaboration UI (clicked buttons)', () => {
       //    Alice reloads so her roster reflects Bob's membership (her cast label
       //    depends on the live member count) before she casts.
       await aPage.goto(`/praxis/${praxisId}/edit`)
-      await aPage.locator('textarea').first().fill('Alice weaves her part')
+      // The body is a CodeMirror editor bound to the praxis room since #1742,
+      // not a textarea. Playwright fills a contenteditable, and auto-waits for
+      // it to become editable -- which is the room finishing its first sync.
+      await aPage.locator('.cm-content').first().fill('Alice weaves her part')
       await aPage.getByRole('button', { name: SNIDE_CAST }).click()
 
       await bPage.goto(`/praxis/${praxisId}/edit`)
-      await bPage.locator('textarea').first().fill('Bob weaves his part')
+      await bPage.locator('.cm-content').first().fill('Bob weaves his part')
       await bPage.getByRole('button', { name: SNIDE_CAST }).click()
 
       // The last cast seals consensus → the closing beat renders for Bob.

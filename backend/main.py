@@ -10,9 +10,15 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import settings
+from db import engine
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
 from routers import comments, contact, me
 from schemas.system import HealthOut
+from services.praxis_room import (
+    PRAXIS_ROOM_APP,
+    PRAXIS_ROOM_SERVER,
+    acquire_single_instance_lock,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +35,18 @@ async def lifespan(app: FastAPI):
         os.path.isdir(media_path),
         file_count,
     )
-    yield
+
+    # Praxis rooms hold their CRDT documents in this process, so exactly one
+    # instance may run (ADR-0073). Claim that right before serving anything;
+    # a second instance raises here and the deploy fails loudly.
+    single_instance_lock = await acquire_single_instance_lock(engine)
+    try:
+        # The room server's task group has to outlive every socket it serves,
+        # which means it belongs to the app's lifespan, not to a request.
+        async with PRAXIS_ROOM_SERVER:
+            yield
+    finally:
+        await single_instance_lock.close()
 
 
 app = FastAPI(title="World Zero", version="1.0.0", lifespan=lifespan)
@@ -74,14 +91,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 # Session middleware is required by Authlib for OAuth state management
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
-# CORS — allow frontend origin; configured via env in production
-_cors_origins = os.environ.get(
-    "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
-).split(",")
-
+# CORS — allow frontend origin; configured via env in production.
+# The same list also guards the praxis room's WebSocket handshake, which this
+# middleware does not cover (see ``Settings.CORS_ORIGINS``).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _cors_origins],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -111,6 +126,11 @@ async def add_content_type_options(request: Request, call_next):
 
 # Static file serving for local media uploads
 app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT, check_dir=False), name="media")
+
+# Praxis rooms — one WebSocket per open composer, at /rooms/praxis/{praxis_id}
+# (ADR-0073). Not a FastAPI router: it is a raw ASGI app that speaks the Y
+# protocol, so it carries no OpenAPI schema and no HTTP surface.
+app.mount("/rooms", PRAXIS_ROOM_APP, name="praxis-rooms")
 
 # Routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])

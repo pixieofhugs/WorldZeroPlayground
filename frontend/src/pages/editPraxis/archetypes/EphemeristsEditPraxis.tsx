@@ -677,7 +677,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 id: "composer-body",
-                rows: 8,
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
                   ...fieldBox,

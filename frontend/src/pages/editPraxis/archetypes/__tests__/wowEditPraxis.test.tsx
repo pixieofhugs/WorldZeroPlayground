@@ -109,7 +109,7 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     leaveCollab: async () => {},
     cancel: async () => {},
     autosaveAt: null,
-    saveStatus: "idle",
+    setAutosaveAt: () => {},
     autoSubmitDays: 10,
     isPublished: false,
     controlsLocked: false,

@@ -146,7 +146,7 @@ function state(slug: string | null, phase: "composing" | "waiting"): EditPraxisS
     dismissConfirm: () => {},
     cancel: async () => {},
     autosaveAt: null,
-    saveStatus: "idle",
+    setAutosaveAt: () => {},
     autoSubmitDays: 10,
     isPublished: false,
     controlsLocked: false,
