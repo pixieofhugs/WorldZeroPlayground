@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -84,6 +85,10 @@ const trackMetaStyle: CSSProperties = {
 
 /** The node's own ramp: signal blue climbing into phosphor (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${signal(85)}, ${PHOSPHOR})`
+
+/** The task-faction mark on a readout row (#1711) — the caret it replaces was
+ *  set at 13px, and the mark holds the same line. */
+const ROW_SIGIL = 13
 
 /** Blinking terminal cursor block. */
 function Cursor() {
@@ -294,8 +299,16 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${signal(14)}`, textDecoration: 'none' }}
               >
-                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the prompt caret is a list bullet glyph, not text */}
-                <span className="shrink-0" style={{ fontFamily: FONT, fontSize: 13, color: PHOSPHOR }}>›</span>
+                {/* The row's lead slot carries the TASK's faction (#1711). It
+                    held a prompt caret in the terminal's own phosphor, the same
+                    glyph for every task alike; the slot takes one mark, so the
+                    faction's is the one that says something. The terminal reads
+                    on regardless — SingularitySigil IS a prompt caret with its
+                    cursor block, so a singularity task's row is unchanged. The
+                    line under the title names the faction: decorative. */}
+                <span className="shrink-0 flex" aria-hidden>
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1.2, color: PHOSPHOR }}>
                     {praxis.task_title}
