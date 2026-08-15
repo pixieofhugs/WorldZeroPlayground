@@ -16,6 +16,7 @@
  * renderToStaticMarkup needs no DOM, matching the rest of this suite.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
@@ -79,10 +80,18 @@ const slipPraxis = {
 } as unknown as PraxisOut;
 
 describe("task slip", () => {
-  it("sets the description beside the level pill, not under it", () => {
-    const markup = renderToStaticMarkup(
-      <TaskSlip praxis={slipPraxis} task={slipTask} />,
+  // #1705 made the slip title a Link, so the slip now needs router context.
+  // MemoryRouter adds no markup of its own, so the assertions below are
+  // unchanged by it — they still read the slip's own structure.
+  const renderSlip = (task: TaskOut) =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <TaskSlip praxis={slipPraxis} task={task} />
+      </MemoryRouter>,
     );
+
+  it("sets the description beside the level pill, not under it", () => {
+    const markup = renderSlip(slipTask);
     const level = i18n.t("forms:editPraxis.composer.levelLabel", { level: 1 });
     // One flex row opening immediately before the pill and closing straight
     // after the description: the two are siblings on a line of their own.
@@ -94,9 +103,7 @@ describe("task slip", () => {
   });
 
   it("still draws the pill when the task has no description", () => {
-    const markup = renderToStaticMarkup(
-      <TaskSlip praxis={slipPraxis} task={{ ...slipTask, description: "" }} />,
-    );
+    const markup = renderSlip({ ...slipTask, description: "" });
     expect(markup).toContain(
       i18n.t("forms:editPraxis.composer.levelLabel", { level: 1 }),
     );
