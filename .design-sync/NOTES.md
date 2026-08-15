@@ -314,3 +314,108 @@ config, re-applied their renames. Diff verdict: 8 added / 14 removed / 0 renderH
 5 FieldDesk renames + 2 render-churn canaries re-graded good. Upload 2: full writes (1,172),
 232 regroup deletePaths (216 deleted, 16 _preview/*.css not-found - expected), fresh anchor.
 Remote verified as an exact mirror both directions.
+
+---
+
+## [2026-08-11] Re-sync after ~2 weeks of drift (253 → 252)
+
+First pass in this file's history where **the component map needed no repair**: 0 dead
+paths, 0 case-renames. #1404/#1407's habit of maintaining `.design-sync` on main has
+held, and the four components deleted upstream since the last anchor
+(`FactionSigilRow`, `FilterFactionTabs`, `FilterStamps`, `MobileUpdates`) were already
+out of the map. Don't skip the check — just expect it to pass now.
+
+### Three families were a sibling short
+`AlbescentProfileBody`, `WowFactionBody` and `EphemeristsMasthead` landed upstream after
+the last sync into directories where every other member was already mapped (8 of 9
+profile bodies, 7 of 8 faction bodies, 1 of 2 mastheads). Added with the overrides their
+siblings use (`single`/`1200x900` for the two page bodies; none for the masthead, like
+`SnideMasthead`) plus an authored preview for the masthead. **On any re-sync, diff the
+archetype directories against `componentSrcMap` — a new faction skin is a silent gap,
+not an error.** The two page bodies ship the floor card, consistent with their families.
+
+### Resolved since last time
+- **The `AlbescentInvitation` duplicate-key risk is GONE.** `factions.json` no longer has
+  a duplicated `albescent.invitation`; the key was restructured into `sealed`/`letter`.
+  The letter renders real copy and the component grades good, exactly as the old note
+  predicted. That entry in the 2026-07-15 risk list is dead — ignore it.
+- **`i18next` + `react-i18next` are real dependencies now.** The old
+  `npm install --no-save i18next@^26 react-i18next@^17` workaround is obsolete; a plain
+  `npm ci` in `frontend/` is enough.
+
+### Running this sync inside the Claude Code web sandbox (READ THIS FIRST)
+This environment has no browser egress, and that shapes the whole verification step.
+
+- **Do NOT run `npx playwright install`.** `cdn.playwright.dev` is 403 by egress policy,
+  and the installer still **exits 0** after failing — it will lie to you. Browsers are
+  pre-baked at `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH` is already set).
+- **The cached build is `chromium-1194`, which pins playwright `1.56.0`.** The repo's own
+  `@playwright/test` is 1.61.1 and pins chromium 1228, which is NOT present. Install the
+  matching one for the converter: `cd .ds-sync && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i playwright@1.56.0`.
+  (Revision → version map, if the cache ever moves: 1178=1.53, 1181=1.54, 1187=1.55,
+  1194=1.56, 1200=1.57, 1208=1.58.)
+- **Chromium cannot reach the network at all**, so the kit's remote Google-Fonts `@import`
+  in `_ds_bundle.css` hangs ~12.9s per page and then `ERR_CONNECTION_RESET`. Everything
+  local loads in ~120ms; the font request is the entire cost. A full 252-preview render
+  check therefore takes ~50 minutes.
+- **Things that do NOT fix it — don't burn an hour rediscovering this:** `/etc/hosts`
+  (chromium uses its own resolver), `--host-resolver-rules` even as `MAP *`, playwright's
+  `proxy:` launch option, and shimming the `chrome` / `headless_shell` binaries. The flag
+  never reaches the browser process; the container's HTTPS proxy reaches
+  `fonts.googleapis.com` fine from curl, but chromium bypasses it.
+- **Consequence for grading:** local screenshots render in **fallback fonts**. The shipped
+  CSS is untouched and the DS pane loads the real faction webfonts, so this is a
+  verification limit, not a product defect — but text wraps differently in the sheets
+  (e.g. `EverymenFactionHero` breaking "Everyme/n"), and **typography is the one thing you
+  cannot grade in this environment**. Grade layout, tokens, colour and composition.
+- **`validate` uses `waitUntil: 'networkidle'` with a 15s cap**, so the ~12.9s font stall
+  leaves only ~2s of headroom and a page near the margin fails spuriously. This run
+  `AlbescentFeedFrame` tripped `[RENDER] page.goto: Timeout 15000ms` and was fine on
+  individual re-check (1325 chars of DOM). **A lone `[RENDER]` timeout here is a flake —
+  re-verify it individually before treating it as a defect.**
+
+### Known render warns (this run, all triaged legitimate)
+- `FeedArchiveButton` (4.8 KB) and `MediaArt` (4.7 KB) trip the <5KB blank threshold —
+  the first is a small icon button by nature, the second is unauthored and paints an
+  empty media frame with no src.
+- `CommentThread` — `variants render identically`: it fetches its own comments and previews
+  have no network, so both cells show the composer/empty state. Long-standing, not new.
+- The sigils (`Albescent`, `Coven`, `Ephemerists`, `Everymen`, `Snide`) and `Lotus` report
+  `mounts have no text and paint nothing` — they are pure SVG marks with no text node.
+- `PointsRoundel`, `ChipRow`, `CovenFeedFrame`, `FeedChassisBand`, `FeedUndoStrip` report
+  `mounted text is just "<Name>"` — unauthored, crash-prevention props fill the label slots
+  with the component name. Floor tier, not failures.
+- `[FONT_REMOTE]` and `[TOKENS_MISSING]` (33 `--tw-*` vars set at runtime by Tailwind) —
+  both expected, both non-blocking.
+
+### Grading basis this run
+126 of 252 components had a genuinely changed `renderHash` (unlike the 2026-07-15 pass,
+where the churn was purely `sourceKey`). All 16 tiled contact sheets cover every component;
+8 were read closely across all 8 factions, plus individual review sheets for
+`EphemeristsMasthead` (new), `EverymenCard` (override changed), `AlbescentInvitation`
+(previously needs-work) and `CommentThread` (warn). 361 cells across 153 components graded
+good.
+
+### Re-sync risks (2026-08-11)
+- **The render check is time-expensive and slightly flaky here** (above). Budget ~50 min and
+  expect to hand-verify the odd `[RENDER]` timeout. If a future environment has browser
+  egress, both problems vanish.
+- **`EverymenCard` now carries `cardMode: column`** because its three stories are wider than
+  a grid cell. If the recruiting poster ever narrows, the override becomes unnecessary.
+- The generated inputs still must be regenerated before every build, unchanged from before:
+  `gen-kit-css.mjs`, the `tsc --declaration` tree into `frontend/ds-types/`, then
+  `gen-barrel.mjs`. All three are gitignored.
+- `.design-sync/overrides/source-kit.mjs` is still exactly 2 deltas from the bundled
+  `lib/source-kit.mjs` (header comment + relative imports, and the widened `GENERIC_DIR`).
+  Upstream has not moved under it.
+- The ensō is still the only `url(/…)` app-served asset (`grep -rn "url(/" frontend/src`);
+  `gen-kit-css.mjs` inlines it at ~41 KB. A new one would need the same treatment.
+
+### Upload record (2026-08-11)
+Atomic full-writes: 1,167 content files + sentinel + anchor, in 5 group-batched calls
+(≤256/call, `_vendor` isolated because `react.js` is ~1.1 MB). `deletePaths` 24 → 18
+deleted, 6 not-found (the `_preview/*.css` of floor-card components — the expected
+continue-past case). Post-upload `list_files` diff: **0 missing**, and the 61 remote
+extras are the same hand-uploaded handoffs as ever (`mobile-system/`, `templates/`,
+`screenshots/`, `design_handoff_*`, `uploads/`) plus app-generated `_ds_manifest.json`
+and `_adherence.oxlintrc.json`. Leave those alone — they are not converter output.
