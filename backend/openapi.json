@@ -3398,6 +3398,10 @@
           "max_task_signups": {
             "title": "Max Task Signups",
             "type": "integer"
+          },
+          "pending_task_admin_review_hours": {
+            "title": "Pending Task Admin Review Hours",
+            "type": "integer"
           }
         },
         "required": [
@@ -3405,6 +3409,7 @@
           "level_thresholds",
           "duel_level_required",
           "collab_auto_submit_days",
+          "pending_task_admin_review_hours",
           "max_task_signups",
           "factions",
           "level_profiles"

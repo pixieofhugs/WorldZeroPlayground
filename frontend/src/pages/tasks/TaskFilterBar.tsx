@@ -6,6 +6,7 @@ import FilterBar, {
   type FilterRail,
 } from '../../components/ui/FilterBar'
 import CanSignUpEmpty from './CanSignUpEmpty'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import {
   appliedFilterCount,
   TASK_SORT_DEFAULT,
@@ -154,16 +155,43 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
 }
 
 /**
- * Which of the three empty states an empty task list gets (#1361 ruling 9).
+ * Which empty state an empty task list gets (#1361 ruling 9).
  *
  * `caughtUp` stays `CanSignUpEmpty`'s job: a full task bank empties the eligible
  * list wholesale, and "you already hold twenty" is a different sentence from
  * "nothing matches" — see that component for why the count is the client's own.
+ *
+ * The pending branch (#1695) is the fourth, and it is `selectEmptyState`'s
+ * `caughtUp` guard applied to a different axis rather than a fourth kind in that
+ * shared function: the praxis feed has no status rail, so this reason for an
+ * empty list is the task page's alone. A proposal is admin-only for its first
+ * `pending_task_admin_review_hours`, so a level-3 player can open the tab their
+ * unlock earned them, find nothing that has ripened yet, and read "No tasks
+ * match your filters" as a broken filter — the false-affordance class
+ * `CanSignUpEmpty` exists for.
+ *
+ * Two guards on the claim, for the reason `selectEmptyState` states: with any
+ * SECOND filter applied, "nothing has ripened" is unknowable from here and the
+ * generic filtered sentence is the honest one; and with the window unknown
+ * (`/game-config` not landed) the sentence has no number to give, so it is not
+ * drawn at all rather than assuming one.
  */
 export function TaskListEmpty({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
-  const kind = selectEmptyState(appliedFilterCount(state), state.canSignUp)
+  const appliedCount = appliedFilterCount(state)
+  const kind = selectEmptyState(appliedCount, state.canSignUp)
+  const adminReviewHours =
+    useGameConfig()?.pending_task_admin_review_hours ?? null
 
+  if (state.status === 'pending' && appliedCount === 1 && adminReviewHours !== null) {
+    return (
+      <FilterBarEmpty
+        title={t('listPage.emptyPending')}
+        hint={t('listPage.emptyPendingHint', { hours: adminReviewHours })}
+        onClearAll={state.clearFilters}
+      />
+    )
+  }
   if (kind === 'caughtUp') return <CanSignUpEmpty onClearAll={state.clearFilters} />
   if (kind === 'filtered') {
     return (

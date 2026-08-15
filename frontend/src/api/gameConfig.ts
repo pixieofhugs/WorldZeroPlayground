@@ -39,6 +39,8 @@ export interface GameConfigOut {
   level_thresholds: number[]
   duel_level_required: number
   collab_auto_submit_days: number
+  /** #1695: how long a fresh proposal stays admin-only, in hours. */
+  pending_task_admin_review_hours: number
   max_task_signups: number
   factions: FactionConfigOut[]
   level_profiles: LevelProfile[]

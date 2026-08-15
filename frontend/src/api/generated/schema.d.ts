@@ -3131,6 +3131,8 @@ export interface components {
             level_thresholds: number[];
             /** Max Task Signups */
             max_task_signups: number;
+            /** Pending Task Admin Review Hours */
+            pending_task_admin_review_hours: number;
         };
         /** GlobalTaskItem */
         GlobalTaskItem: {
