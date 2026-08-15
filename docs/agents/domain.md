@@ -1,7 +1,7 @@
 # Domain Docs
 
 How the engineering skills consume this repo's domain knowledge. This repo is
-multi-context: a `backend/` context and a `frontend/` context.
+single-context: one root `CONTEXT.md`, one `docs/adr/`.
 
 ## Where the domain knowledge lives
 
