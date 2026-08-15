@@ -104,7 +104,6 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -133,6 +132,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* The practice's inks, named for the ROLE each plays in the design's skin row.
  * Every one carries both themes in `index.css`. */
@@ -343,7 +351,6 @@ export default function UaEditPraxis({ state }: Props) {
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           rule={false}
-          meta={<TitleCounter length={state.title.length} color={MUTED} />}
           labelStyle={labelStyle}
         >
           <TitleField
@@ -455,62 +462,61 @@ export default function UaEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={labelStyle}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    fontFamily: UA_TEXT,
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: RADIUS,
-                    border: `1px solid ${active ? RULE : "transparent"}`,
-                    background: active ? FIELD : "transparent",
-                    color: active ? INK : MUTED,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={composerLabelStyle({
+                  fontFamily: UA_TEXT,
+                  color: MUTED,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      fontFamily: UA_TEXT,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: RADIUS,
+                      border: `1px solid ${active ? RULE : "transparent"}`,
+                      background: active ? FIELD : "transparent",
+                      color: active ? INK : MUTED,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form, and drawing
               both would put the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  toolbarButtonStyle: {
-                    fontFamily: UA_TEXT,
-                    background: FIELD,
-                    color: MUTED,
-                    border: `1px solid ${RULE}`,
-                    borderRadius: RADIUS,
-                  },
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.7,
-                    fontFamily: UA_TEXT,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                toolbarButtonStyle: {
                   fontFamily: UA_TEXT,
+                  background: FIELD,
                   color: MUTED,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+                  border: `1px solid ${RULE}`,
+                  borderRadius: RADIUS,
+                },
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.7,
+                  fontFamily: UA_TEXT,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}

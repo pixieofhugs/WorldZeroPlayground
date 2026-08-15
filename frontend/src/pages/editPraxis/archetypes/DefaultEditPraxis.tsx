@@ -86,7 +86,6 @@ import {
   ErrorBanner,
   RingMark,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,

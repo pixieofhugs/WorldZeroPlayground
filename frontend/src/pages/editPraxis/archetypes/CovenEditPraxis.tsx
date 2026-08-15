@@ -82,7 +82,6 @@ import {
   ErrorBanner,
   RingMark,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -108,6 +107,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* The two faces the design names. Both are SURFACE faces on shared
  * `--font-faction-*` tokens rather than Coven's `card-font` (still Caveat), for
@@ -684,7 +692,6 @@ export default function CovenEditPraxis({ state }: Props) {
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           rule={false}
-          meta={<TitleCounter length={state.title.length} color={LABEL} />}
           labelStyle={labelStyle}
         >
           <TitleField
@@ -796,64 +803,63 @@ export default function CovenEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={labelStyle}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    fontFamily: CHROME,
-                    fontWeight: 700,
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 999,
-                    border: active ? RULE : "1.5px solid transparent",
-                    background: active ? FIELD : "transparent",
-                    // The active chip is filled with FIELD, i.e. the ward PAGE
-                    // ground, so its ink is INK rather than DEEP (#1295).
-                    color: active ? INK : LABEL,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={composerLabelStyle({
+                  fontFamily: CHROME,
+                  color: LABEL,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      fontFamily: CHROME,
+                      fontWeight: 700,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 999,
+                      border: active ? RULE : "1.5px solid transparent",
+                      background: active ? FIELD : "transparent",
+                      // The active chip is filled with FIELD, i.e. the ward PAGE
+                      // ground, so its ink is INK rather than DEEP (#1295).
+                      color: active ? INK : LABEL,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.7,
-                    fontFamily: CHROME,
-                  },
-                  toolbarButtonStyle: {
-                    background: FIELD,
-                    // Label-sized text on the ward PAGE ground — INK (#1295).
-                    color: INK,
-                    border: RULE,
-                    borderRadius: 8,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.7,
                   fontFamily: CHROME,
-                  color: LABEL,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+                },
+                toolbarButtonStyle: {
+                  background: FIELD,
+                  // Label-sized text on the ward PAGE ground — INK (#1295).
+                  color: INK,
+                  border: RULE,
+                  borderRadius: 8,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}

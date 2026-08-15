@@ -82,7 +82,6 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -109,6 +108,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* THE SHEET — flips with the theme (xerox stock by day, photocopier black by
  * night), so nothing below branches on it. */
@@ -469,7 +477,6 @@ export default function SnideEditPraxis({ state }: Props) {
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           rule={false}
-          meta={<TitleCounter length={state.title.length} color={FAINT} />}
           labelStyle={{ color: MUTED }}
         >
           <TitleField
@@ -574,58 +581,57 @@ export default function SnideEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={{ color: MUTED }}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  punkLabel({
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 0,
-                    border: `1px solid ${active ? RULE : "transparent"}`,
-                    background: active ? FIELD : "transparent",
-                    color: active ? INK : FAINT,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={punkLabel({
+                  color: FAINT,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    punkLabel({
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 0,
+                      border: `1px solid ${active ? RULE : "transparent"}`,
+                      background: active ? FIELD : "transparent",
+                      color: active ? INK : FAINT,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* One panel at a time: a hidden textarea is still a tab stop and
               still submits, and drawing both puts the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  toolbarButtonStyle: {
-                    background: FIELD,
-                    color: INK,
-                    border: `1px solid ${RULE}`,
-                    borderRadius: 0,
-                  },
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.7,
-                    fontFamily: BODY_FACE,
-                  },
-                }}
-              />
-              <div
-                style={punkLabel({
-                  color: FAINT,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                toolbarButtonStyle: {
+                  background: FIELD,
+                  color: INK,
+                  border: `1px solid ${RULE}`,
+                  borderRadius: 0,
+                },
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.7,
+                  fontFamily: BODY_FACE,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
