@@ -7,10 +7,9 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from errors import ErrorCode, raise_coded
 from db import get_db
 from game_config import CURRENT_ERA
-from models.account import Account
+from models.account import Account, AuthProvider
 from schemas.auth import CurrentUser, DevLoginOut, LogoutOut
 from schemas.character import CharacterCreate
 from services.auth import create_jwt, create_or_get_account, get_current_account
@@ -79,29 +78,21 @@ async def auth_google_callback(
     token = await _OAUTH.google.authorize_access_token(request)
     user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
 
-    # An unseen OAuth identity is attached to any EXISTING account holding the
-    # same email (`create_or_get_account`), which makes the email claim an
-    # authentication decision — so it has to be one the provider vouches for.
-    # Nothing checked `email_verified`, so any condition under which Google
-    # emits an address the bearer does not control (an unverified Workspace
-    # identity; a Workspace domain changing hands, letting a new admin mint
-    # `victim@thatdomain` with a fresh `sub`) linked a new provider row to the
-    # victim's account and minted a full session for it — their characters,
-    # their score — with no re-authentication and no notification.
-    if user_info.get("email_verified") is not True:
-        raise_coded(
-            403,
-            ErrorCode.oauth_email_unverified,
-            "Your Google account's email address is not verified.",
-        )
-
     # Google's access token is used here and then discarded (#1374): it proves
     # this sign-in, and nothing afterwards calls a Google API as the player. The
     # session that follows is World Zero's own JWT.
+    #
+    # `email_verified` is forwarded, not enforced here (#1771): it only matters
+    # on the branch that resolves an account *by email*, and the service owns
+    # that branch. Gating here would also have rejected a returning player whose
+    # provider says "unverified" while an address change is in flight — someone
+    # their `sub` already identifies. The claim is normalised to a real bool at
+    # the edge because a provider may answer with anything at all.
     account = await create_or_get_account(
-        provider="google",
+        provider=AuthProvider.GOOGLE,
         provider_user_id=user_info["sub"],
         email=user_info["email"],
+        email_verified=user_info.get("email_verified") is True,
         session=session,
     )
 
@@ -185,9 +176,12 @@ async def dev_login(
     email = "dev@localhost" if key == "1" else f"dev-{key}@localhost"
 
     account = await create_or_get_account(
-        provider="dev",
+        provider=AuthProvider.DEV,
         provider_user_id=provider_user_id,
         email=email,
+        # This seam mints its own `@localhost` addresses and is 404 outside
+        # development, so there is no provider to ask — the fact is asserted.
+        email_verified=True,
         session=session,
     )
 

@@ -9,33 +9,34 @@ three rules that nothing else enforces:
    **without consulting email at all**;
 2. an unknown pair whose email matches an existing Account *links* to that
    Account rather than minting a second one;
-3. an unknown pair with an unknown email mints both rows.
+3. an unknown pair with an unknown email mints both rows;
+4. neither of those last two happens on an unverified email claim (#1771).
 
 Rule 1 is the load-bearing one: the email a provider asserts is only an
-authentication decision on the *linking* path, and any future gate on that claim
-(#1771) must not start rejecting returning players. These tests pin that down.
+authentication decision on the *linking* path, so rule 4's gate sits behind
+rule 1's early return and a returning player never meets it (ADR-0075).
 
 Tested at the service, not through authlib: the rules live in the service, and
 mocked OAuth transport would only put ceremony between the test and the
-assertions. The single route-level test at the bottom covers the one rule that
-does live in the router today — the ``email_verified`` gate.
-
-No behaviour change accompanies this file; it describes what the code already
-does, so that two queued changes to it have a baseline.
+assertions. The two route-level cases at the bottom stub the Google client to
+prove the callback forwards the claim rather than deciding on it — one that the
+gate still rejects an unverified newcomer end to end, one that it admits a
+returning identity the provider currently calls unverified.
 """
 import pytest
+from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, detail_code
-from models.account import Account, OAuthProvider
+from models.account import Account, AuthProvider, OAuthProvider
 from services.auth import create_or_get_account
 
-#: The two provider names in service today (``routers/auth.py``). Free-form
-#: strings on the model for now; #1771 replaces them with an enum.
-_GOOGLE = "google"
-_DEV = "dev"
+#: The two provider names the OAuth legs write (``routers/auth.py``). Values of
+#: the :class:`AuthProvider` enum since #1771; the column stays a plain string.
+_GOOGLE = AuthProvider.GOOGLE
+_DEV = AuthProvider.DEV
 
 
 async def _account_count(session: AsyncSession) -> int:
@@ -83,6 +84,7 @@ async def test_returning_identity_ignores_the_email_claim(
         provider=_GOOGLE,
         provider_user_id="google-sub-1",
         email=account2.email,
+        email_verified=True,
         session=db_session,
     )
 
@@ -108,6 +110,7 @@ async def test_new_identity_with_known_email_links_to_that_account(
         provider=_GOOGLE,
         provider_user_id="google-sub-new",
         email=account.email,
+        email_verified=True,
         session=db_session,
     )
 
@@ -134,6 +137,7 @@ async def test_unknown_identity_and_email_creates_account_and_link(
         provider=_GOOGLE,
         provider_user_id="google-sub-fresh",
         email="newcomer@example.com",
+        email_verified=True,
         session=db_session,
     )
 
@@ -167,12 +171,14 @@ async def test_two_providers_sharing_an_email_resolve_to_one_account(
         provider=_GOOGLE,
         provider_user_id="google-sub-2",
         email=account.email,
+        email_verified=True,
         session=db_session,
     )
     second = await create_or_get_account(
         provider=_DEV,
         provider_user_id="dev-sub-2",
         email=account.email,
+        email_verified=True,
         session=db_session,
     )
 
@@ -191,13 +197,74 @@ async def test_two_providers_sharing_an_email_resolve_to_one_account(
             provider=provider,
             provider_user_id=provider_user_id,
             email=account.email,
+            email_verified=True,
             session=db_session,
         )
         assert again.id == account.id
 
 
 # ---------------------------------------------------------------------------
-# Case 5 — the router's email_verified gate
+# Case 5 — the email branch refuses an unverified claim, both halves of it
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "email_verified",
+    [
+        pytest.param(False, id="explicitly-false"),
+        # A provider may answer with anything; only the boolean True is a yes.
+        pytest.param("true", id="stringy-true"),
+    ],
+)
+async def test_unverified_email_cannot_link_to_an_existing_account(
+    db_session: AsyncSession, account: Account, email_verified
+):
+    """The takeover the gate exists to stop: linking into someone else's Account."""
+    accounts_before = await _account_count(db_session)
+
+    with pytest.raises(HTTPException) as excinfo:
+        await create_or_get_account(
+            provider=_GOOGLE,
+            provider_user_id="google-sub-attacker",
+            email=account.email,
+            email_verified=email_verified,
+            session=db_session,
+        )
+
+    assert excinfo.value.status_code == 403
+    assert detail_code(excinfo.value.detail) == ErrorCode.oauth_email_unverified.value
+    assert await _account_count(db_session) == accounts_before
+    assert await _provider_rows(db_session, _GOOGLE, "google-sub-attacker") == []
+
+
+@pytest.mark.asyncio
+async def test_unverified_email_cannot_mint_an_account_either(
+    db_session: AsyncSession,
+):
+    """Minting is gated too — it is the same takeover, one sign-in later.
+
+    An Account created under an address its holder never proved control of is
+    exactly what case 2 then links the real owner into.
+    """
+    accounts_before = await _account_count(db_session)
+
+    with pytest.raises(HTTPException) as excinfo:
+        await create_or_get_account(
+            provider=_GOOGLE,
+            provider_user_id="google-sub-squatter",
+            email="not-mine@example.com",
+            email_verified=False,
+            session=db_session,
+        )
+
+    assert excinfo.value.status_code == 403
+    assert await _account_count(db_session) == accounts_before
+    assert await _provider_rows(db_session, _GOOGLE, "google-sub-squatter") == []
+
+
+# ---------------------------------------------------------------------------
+# Case 6 — the callback forwards the claim, and the gate still bites end to end
 # ---------------------------------------------------------------------------
 
 
@@ -250,7 +317,7 @@ async def test_callback_rejects_an_unverified_email(
 
 
 # ---------------------------------------------------------------------------
-# Case 6 — the gate does not apply to a returning identity (#1771)
+# Case 7 — the gate does not apply to a returning identity (#1771)
 # ---------------------------------------------------------------------------
 
 

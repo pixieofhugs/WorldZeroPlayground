@@ -1,7 +1,15 @@
 import enum
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import BigInteger, Boolean, Enum, ForeignKey, Identity, String
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Enum,
+    ForeignKey,
+    Identity,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -24,6 +32,30 @@ class AccountStatus(enum.Enum):
 
     active = "active"
     suspended = "suspended"
+
+
+class AuthProvider(enum.StrEnum):
+    """The identity providers World Zero accepts, as written to ``OAuthProvider.provider``.
+
+    A ``StrEnum`` and **not** a Postgres enum on purpose. ADR-0041 promises that
+    adding a provider is "a new handler + a row — no schema change"; a DB-level
+    enum would make every future provider an ``ALTER TYPE`` migration and a
+    deploy-ordering problem. The column stays ``String`` and this is the
+    application-level constraint, which is where the rest of the domain values
+    in this codebase live too.
+
+    ``DISCORD`` has no handler yet (#1772). It is listed here because the enum
+    is the complete vocabulary of the column, not an inventory of what is wired
+    up — which is also why ``DEMO`` is here: ``scripts/seed_demo_praxes.py``
+    writes it for the demo roster, and those rows exist only so the seeded
+    characters have the Account every character needs. Nothing signs in through
+    it (the dev bypass mints ``DEV`` rows).
+    """
+
+    GOOGLE = "google"
+    DISCORD = "discord"
+    DEV = "dev"
+    DEMO = "demo"
 
 
 class Account(TimestampMixin, Base):
@@ -66,10 +98,22 @@ class Account(TimestampMixin, Base):
 class OAuthProvider(TimestampMixin, Base):
     __tablename__ = "oauth_provider"
 
+    # ``(provider, provider_user_id)`` is the pair every sign-in looks up, with
+    # ``scalar_one_or_none()`` (``services/auth.py``). Two rows for one pair —
+    # two concurrent first logins being the obvious route — would make that call
+    # raise ``MultipleResultsFound`` on every *subsequent* login for that
+    # account, permanently, with no self-service recovery. The constraint makes
+    # the race lose loudly at insert time instead, and turns the lookup into an
+    # index seek. Unique on the pair, not on ``provider_user_id`` alone: two
+    # providers may hand out the same opaque id.
+    __table_args__ = (UniqueConstraint("provider", "provider_user_id"),)
+
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     account_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
     )
+    # Values come from :class:`AuthProvider`; the column is a plain ``String``
+    # so a new provider stays "a handler + a row" (ADR-0041).
     provider: Mapped[str] = mapped_column(String, nullable=False)
     provider_user_id: Mapped[str] = mapped_column(String, nullable=False)
     # No `access_token` (#1374). The Google token was written once at sign-in
