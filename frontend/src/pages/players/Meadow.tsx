@@ -395,7 +395,10 @@ function Bloom({
         style={{
           position: 'relative',
           lineHeight: 0,
-          opacity: faded ? 0.45 : 1,
+          // 0.72 for the same reason the Constellation's orb carries it
+          // (#1675): the bloom's monogram fallback is text, and an ancestor
+          // opacity lands in its alpha. 0.45 measured as low as 2.5:1.
+          opacity: faded ? 0.72 : 1,
           // The "you" ring: a soft outline, present only when the viewer is
           // actually in the field (#684 §7).
           borderRadius: '50%',

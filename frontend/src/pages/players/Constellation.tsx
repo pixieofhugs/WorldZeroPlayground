@@ -310,7 +310,13 @@ function SkyNode({
         style={{
           position: 'relative',
           lineHeight: 0,
-          opacity: faded ? 0.4 : 1,
+          // 0.72, not the 0.4 this used to be (#1675). The orb is a
+          // `FactionAvatar`, and its monogram fallback is TEXT — an ancestor
+          // opacity folds straight into that letter's alpha, which put every
+          // pointless player's initial between 2.5:1 and 3.9:1. 0.72 is the
+          // lowest step that clears 4.5:1 on all seven faction grounds in both
+          // themes (worst case 0.68, UA light), and still reads as receded.
+          opacity: faded ? 0.72 : 1,
           // The "you" ring, symmetric with the Meadow's (#684 §7). The sky had
           // no self-marker at all — `isMe` only ever fed the deleted pin.
           borderRadius: '50%',

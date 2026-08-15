@@ -515,7 +515,11 @@
      derivation at its declarations rather than a summary here (#1214). */
   --faction-default-dot-ring: #d6cfbf;
   --faction-default-vote-on: #c2541f;
-  --faction-default-vote-off: #a8895a;
+  /* #a8895a until #1675, which measured it at 3.23:1 carrying "cast a vote" —
+     the widget's own call to action, 15px, not an inactive control and so owed
+     the full 4.5. Same tan, walked down to 4.68:1 on the card's #fffdf9. The
+     dark twin below already clears on its own ground and is unchanged. */
+  --faction-default-vote-off: #886f49;
   /* The unaffiliated PLAIN CREAM SHEET (#842). The design's card is a quiet
      sheet, and the rainbow appears in exactly four places on it — the eyebrow
      text-clip, the score-box rule, the total, and one 2px divider. The
