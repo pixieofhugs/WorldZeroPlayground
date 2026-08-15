@@ -2151,8 +2151,8 @@ describe("a themed ground is a longhand (#1636)", () => {
  * WHY THE TOKEN DOES NOT MOVE, which is the answer this block exists to record
  * so the next reader does not re-run the search. `-plate-quiet` has to clear
  * 4.5:1 on the plate register's loosest ground, `-plate-inner` (#1d2130), which
- * puts a floor under its relative luminance of 0.1937; clearing 4.5:1 on the
- * light page ground (#f7f4ee) puts a CEILING on it of 0.1611. The intervals do
+ * puts a floor under its relative luminance of 0.2453; clearing 4.5:1 on the
+ * light page ground (#f7f4ee) puts a CEILING on it of 0.1626. The intervals do
  * not overlap, so no sRGB value satisfies both and the search is not "pick a
  * better hex" — it is "this ink is not for this ground". Same conclusion the
  * Ephemerists register itself reached one cascade over, in the `-plate-bg`

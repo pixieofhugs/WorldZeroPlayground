@@ -1640,8 +1640,8 @@
      two empty states were painted in it on the app's own near-white page and the
      nightly sweep measured them there. They now take `--color-text-secondary`,
      because NO value of this token could have served both: clearing the panel
-     cell (#1d2130) needs relative luminance >= 0.1937 and clearing the light
-     page needs <= 0.1611, and the intervals do not meet. Same shape of finding
+     cell (#1d2130) needs relative luminance >= 0.2453 and clearing the light
+     page needs <= 0.1626, and the intervals do not meet. Same shape of finding
      as the `-plate-bg` block above, one axis over — there it was two themes,
      here it is two page grounds.
 

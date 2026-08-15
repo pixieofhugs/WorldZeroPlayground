@@ -53,9 +53,12 @@ import type { FactionDetailState } from "../useFactionDetail";
  * SWEPT OFF THE CODEX (#1208). Every mark is the plate kit's rather than a
  * private drawing: the roster's circular vellum medallions are `AuthorOctagon`,
  * the level beside a keeper's name gains the `Tally`, and every section rule is
- * `RuneRule`. Two grounds carry ink here — the plate (`ink` 11.3:1, `quiet`
- * 5.98, `caption` 4.8, `nile` 5.0) and the night band under the spotlight
- * (`band-ink` 14.00, `gold` 9.4, `band-quiet` 8.97).
+ * `RuneRule`. Two faction grounds carry ink here — the plate (`ink` 13.91:1,
+ * `quiet` 5.98, `caption` 7.22, `nile` 7.00) and the night band under the
+ * spotlight (`band-ink` 14.00, `gold` 14.00, `band-quiet` 8.97). Every one of
+ * those eight numbers was stale when #1793 re-derived them: they were measured
+ * on the PAPYRUS plate, and #1627 turned the whole register night without
+ * anything asking this comment to keep up.
  *
  * THE THIRD GROUND IS THE APP'S OWN PAGE, and no plate ink may be spent on it
  * (#1675, #1793). This header used to say "the page beneath both is
@@ -75,7 +78,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  * `QUIET` is #a2977a, minted for the Valley plate's three NIGHT grounds (page
  * 6.38, plate 5.98, panel cell 5.52). On the app's light page it is 2.64:1, and
  * no value of that token could be both: clearing the panel cell needs relative
- * luminance >= 0.1937, clearing the light page needs <= 0.1611, and the
+ * luminance >= 0.2453, clearing the light page needs <= 0.1626, and the
  * intervals do not meet. So the ink changes rather than the token — 7.78:1 in
  * light, 8.33:1 in dark, and the same tier `KICKER` beside it already reads.
  * Both readings are gated in `factionContrast.test.ts`.
