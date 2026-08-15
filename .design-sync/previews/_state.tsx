@@ -282,7 +282,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     acceptConfirm: noop,
     dismissConfirm: noop,
     autosaveAt: null,
-    saveStatus: 'idle',
+    setAutosaveAt: () => {},
     autoSubmitDays: null,
     isPublished: false,
     controlsLocked: false,

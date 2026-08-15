@@ -835,7 +835,7 @@ export function BodyTextarea({
   const { t } = useTranslation("forms");
   const room = usePraxisRoom();
   const ytext = room?.body ?? null;
-  const synced = room?.synced ?? false;
+  const seeded = room?.seeded ?? false;
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   // Stable across the editor's life; reconfigured rather than remounted.
@@ -869,7 +869,7 @@ export function BodyTextarea({
         keymap.of([...yUndoManagerKeymap, ...defaultKeymap]),
         cmPlaceholder(skin.placeholder ?? ""),
         BODY_EDITOR_BASE_THEME,
-        editableSlot.of(EditorView.editable.of(synced)),
+        editableSlot.of(EditorView.editable.of(seeded)),
         EditorView.contentAttributes.of(contentAttributes),
         // `null` awareness: carets and collaborator colours are #1744, and
         // passing it here is what would draw them.
@@ -890,16 +890,17 @@ export function BodyTextarea({
 
   useEffect(() => {
     viewRef.current?.dispatch({
-      effects: editableSlot.reconfigure(EditorView.editable.of(synced)),
+      effects: editableSlot.reconfigure(EditorView.editable.of(seeded)),
     });
-  }, [synced, editableSlot]);
+  }, [seeded, editableSlot]);
 
   // ---- The room's text → `state.body` ----
   //
-  // One direction only. `state.body` still feeds `BodyPreview`, the word count
-  // and the debounced `PUT` (#1743 retires that last one), so it has to follow
-  // the document — but nothing may push it back the other way, or the praxis
-  // would seed the room it is supposed to be seeded BY.
+  // One direction only, and now the ONLY direction: `state.body` feeds
+  // `BodyPreview` and the word count, and nothing else. Since #1743 no client
+  // write exists to feed, so there is not even a reason to be tempted — and
+  // nothing may push `state.body` back into the document, or the praxis would
+  // seed the room it is supposed to be seeded BY.
   useEffect(() => {
     if (!ytext) return;
     const mirror = () => setBodyRef.current(ytext.toString());
@@ -941,11 +942,12 @@ export function BodyTextarea({
   };
 
   // The room exists but has not told us what the praxis says yet. The editor is
-  // read-only until it does (#1742), so the toolbar is a set of controls the
-  // player cannot use — hidden, not drawn disabled. It would not merely look
-  // wrong: `dispatch` writes past `editable`, so a press here would put markdown
-  // into a document still waiting for its seed.
-  const awaitingRoom = ytext !== null && !synced;
+  // read-only until it does (#1742, re-derived in #1743 — see `PraxisRoom.seeded`
+  // for the reason that outlived the retired `PUT`), so the toolbar is a set of
+  // controls the player cannot use: hidden, not drawn disabled. It would not
+  // merely look wrong — `dispatch` writes past `editable`, so a press here would
+  // put markdown into a document still waiting for its seed.
+  const awaitingRoom = ytext !== null && !seeded;
 
   return (
     <div>
