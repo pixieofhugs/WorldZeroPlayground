@@ -6,6 +6,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
   AVATAR_ASPECT,
+  CROP_RATIO_CHOICES,
+  DEFAULT_CROP_RATIO,
   applyImageEdit,
   blobToFile,
   cropOutputSize,
@@ -15,6 +17,7 @@ import {
   originalUpload,
   partitionByEditability,
   rotateSize,
+  showsRatioPicker,
 } from '../imageEditHelpers'
 import type { Area } from 'react-easy-crop'
 
@@ -58,7 +61,7 @@ describe('cropOutputSize — final canvas rect', () => {
   })
 })
 
-describe('effectiveAspect — avatar locks 1:1, praxis is free-form', () => {
+describe('effectiveAspect — avatar locks 1:1, praxis picks its ratio', () => {
   it('locks to the avatar aspect even for a wide image', () => {
     expect(effectiveAspect(AVATAR_ASPECT, 1.78)).toBe(1)
   })
@@ -67,12 +70,50 @@ describe('effectiveAspect — avatar locks 1:1, praxis is free-form', () => {
     expect(AVATAR_ASPECT).toBe(1)
   })
 
-  it('follows the natural ratio when unlocked (free-form praxis)', () => {
+  it('follows the natural ratio on the default "original" choice', () => {
     expect(effectiveAspect(undefined, 1.5)).toBe(1.5)
+    expect(effectiveAspect(undefined, 1.5, DEFAULT_CROP_RATIO)).toBe(1.5)
   })
 
   it('falls back to square before the media reports its size', () => {
     expect(effectiveAspect(undefined, undefined)).toBe(1)
+  })
+
+  /**
+   * #1713: the crop frame used to be the photo's own shape and nothing else, so
+   * a 4:3 iPhone photo could never yield a square. A picked ratio must beat the
+   * natural one.
+   */
+  it('a picked ratio overrides the photo’s own shape (#1713)', () => {
+    const iphonePortrait = 3 / 4
+    expect(effectiveAspect(undefined, iphonePortrait, '1:1')).toBe(1)
+    expect(effectiveAspect(undefined, iphonePortrait, '4:3')).toBeCloseTo(4 / 3)
+    expect(effectiveAspect(undefined, iphonePortrait, '16:9')).toBeCloseTo(16 / 9)
+  })
+
+  it('a picked ratio still loses to a caller lock — avatars stay square', () => {
+    for (const choice of CROP_RATIO_CHOICES) {
+      expect(effectiveAspect(AVATAR_ASPECT, 1.78, choice)).toBe(1)
+    }
+  })
+
+  it('a picked ratio needs no natural aspect to be usable', () => {
+    expect(effectiveAspect(undefined, undefined, '16:9')).toBeCloseTo(16 / 9)
+  })
+
+  it('defaults to "original", so today’s behaviour is what you land on', () => {
+    expect(DEFAULT_CROP_RATIO).toBe('original')
+    expect(CROP_RATIO_CHOICES[0]).toBe('original')
+  })
+})
+
+describe('showsRatioPicker — only the unlocked (praxis) call site gets it', () => {
+  it('shows for praxis media, which supplies no aspect', () => {
+    expect(showsRatioPicker(undefined)).toBe(true)
+  })
+
+  it('hides for avatars, which lock 1:1 — every avatar frame assumes square', () => {
+    expect(showsRatioPicker(AVATAR_ASPECT)).toBe(false)
   })
 })
 

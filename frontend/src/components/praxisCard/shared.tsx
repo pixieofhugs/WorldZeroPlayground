@@ -400,7 +400,13 @@ export function PraxisStats({
       className="flex items-center gap-2 font-body"
       style={{ fontSize: "var(--text-xl)", fontFamily: fonts?.body, ...style }}
     >
-      <span style={{ fontWeight: 600, opacity: 0.75 }}>
+      {/* No `opacity` on either of the two quiet segments (#1675). The meta line
+          already inherits the card's MUTED ink — 6.05:1 light, 5.44:1 dark — so
+          the 0.75/0.65 washes were muting a muted token, and they dropped the
+          level to 3.48:1 and the date to 2.84:1 on every faction in both themes.
+          Clearing AA here would have taken 0.88, which is not a visible mute at
+          all; the hierarchy the wash was reaching for is the token's job. */}
+      <span style={{ fontWeight: 600 }}>
         {t("card.level", { level: praxis.task_level_required })}
       </span>
       <span aria-hidden>·</span>
@@ -410,7 +416,7 @@ export function PraxisStats({
       {submittedDate && (
         <>
           <span aria-hidden>·</span>
-          <span style={{ opacity: 0.65 }}>{submittedDate}</span>
+          <span>{submittedDate}</span>
         </>
       )}
     </div>
