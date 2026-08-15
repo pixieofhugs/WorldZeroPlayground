@@ -489,12 +489,12 @@ foes — the feed item type `foe_taunt` names the one kind there is).
 ### Account & Character
 
 **Account**:
-The login identity — one Google OAuth2 → JWT principal, one email. Owns one or more
-**Characters** and never appears on public game surfaces (`account_id` and `email` are
-private). The Account is the unit of all *cross-character* rules: the multi-character cap,
-the account-pooled invite gate (see **Faction invite**), the account-collective
-Albescent unlock, and account-scoped anti-self-voting (a character cannot vote on a praxis
-authored by any character sharing its account).
+The login identity — one verified email, reachable through one or more identity providers
+(ADR-0075). Owns one or more **Characters** and never appears on public game surfaces
+(`account_id` and `email` are private). The Account is the unit of all *cross-character*
+rules: the multi-character cap, the account-pooled invite gate (see **Faction invite**),
+the account-collective Albescent unlock, and account-scoped anti-self-voting (a character
+cannot vote on a praxis authored by any character sharing its account).
 _Avoid_: user, player (the *player* is the human; the *account* is their credential record).
 
 **Character**:
