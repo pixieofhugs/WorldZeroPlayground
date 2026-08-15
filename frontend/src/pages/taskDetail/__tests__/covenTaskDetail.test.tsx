@@ -163,7 +163,7 @@ describe("Coven task detail — the copy", () => {
     expect(text).toContain("author · lvl 4");
     expect(html).toContain('href="/characters/31"');
     expect(text).toContain("Level");
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
   });
 
   it("draws the brief in full — no clamp, no truncation", () => {
@@ -192,7 +192,7 @@ describe("Coven task detail — the contract", () => {
 
   it("renders the in-progress population as a header count", () => {
     const { text } = render(<CovenTaskDetail state={baseState()} />);
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
     expect(text).toContain("9");
   });
 

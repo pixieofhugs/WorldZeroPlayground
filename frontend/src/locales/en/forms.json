@@ -262,15 +262,11 @@
       "label": "formatting",
       "bold": "bold",
       "italic": "italic",
-      "strikethrough": "strikethrough",
       "heading": "heading",
+      "blockquote": "quote",
       "unorderedList": "bulleted list",
       "orderedList": "numbered list",
-      "link": "link",
-      "blockquote": "quote",
-      "inlineCode": "inline code",
-      "codeBlock": "code block",
-      "table": "table"
+      "link": "link"
     },
     "dropTask": "drop task",
     "saveDraft": "save draft",

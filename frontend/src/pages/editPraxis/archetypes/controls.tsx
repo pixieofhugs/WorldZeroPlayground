@@ -712,15 +712,20 @@ export interface BodyTextareaSkin {
 // Toolbar buttons in render order. Each glyph is referenced through
 // `button.glyph` (an identifier expression, not JSX text) so it never trips
 // i18next/no-literal-string; the accessible name comes from the t() labelKey.
+//
+// SEVEN, not eleven (#1706). The design draws bold, italic, heading, quote,
+// bullets, numbers and link, and the four it leaves out — strikethrough, inline
+// code, code block, table — are the four a player is least likely to reach for
+// on a write-up about a real-world act. Cutting them costs no capability: the
+// toolbar is already optional (`hideToolbar` below) and every command it fires
+// is also typeable as plain markdown, which is the same argument #693 made when
+// it took the buttons out of the tab order. `applyMarkdown` still implements the
+// four — the toolbar is one caller of that vocabulary, not its definition.
 const BODY_TOOLBAR_BUTTONS = [
   { command: "bold", glyph: "B", labelKey: "editPraxis.toolbar.bold" },
   { command: "italic", glyph: "I", labelKey: "editPraxis.toolbar.italic" },
-  {
-    command: "strikethrough",
-    glyph: "S",
-    labelKey: "editPraxis.toolbar.strikethrough",
-  },
   { command: "heading", glyph: "H", labelKey: "editPraxis.toolbar.heading" },
+  { command: "blockquote", glyph: "❝", labelKey: "editPraxis.toolbar.blockquote" },
   {
     command: "unorderedList",
     glyph: "•",
@@ -732,14 +737,6 @@ const BODY_TOOLBAR_BUTTONS = [
     labelKey: "editPraxis.toolbar.orderedList",
   },
   { command: "link", glyph: "🔗", labelKey: "editPraxis.toolbar.link" },
-  { command: "blockquote", glyph: "❝", labelKey: "editPraxis.toolbar.blockquote" },
-  {
-    command: "inlineCode",
-    glyph: "</>",
-    labelKey: "editPraxis.toolbar.inlineCode",
-  },
-  { command: "codeBlock", glyph: "{ }", labelKey: "editPraxis.toolbar.codeBlock" },
-  { command: "table", glyph: "▦", labelKey: "editPraxis.toolbar.table" },
 ] as const satisfies ReadonlyArray<{
   command: MarkdownCommand;
   glyph: string;
@@ -804,7 +801,7 @@ export function BodyTextarea({
             key={button.command}
             type="button"
             // #693: keep the formatting buttons out of the natural tab order so
-            // Tab runs title → body instead of stopping on all eleven glyphs.
+            // Tab runs title → body instead of stopping on every glyph.
             // Every command is also typeable as plain markdown, so keyboard
             // users lose no capability. (Roving tabindex was considered and
             // declined: it still leaves a tab stop between title and body.)
@@ -969,9 +966,6 @@ export interface ModeOptionRenderArgs {
 export interface ModePickerSkin<O extends { key: PraxisType }> {
   containerStyle?: CSSProperties;
   options: O[];
-  /** The task's allowed modes. Typed as `string[]` to match TaskOut.allowed_modes;
-   * each option whose `key` is present is rendered. */
-  allowedModes: readonly string[];
   renderOption: (option: O, args: ModeOptionRenderArgs) => ReactNode;
 }
 
@@ -983,6 +977,14 @@ export function ModePicker<O extends { key: PraxisType }>({
   skin: ModePickerSkin<O>;
 }) {
   const praxis = state.praxis!;
+  // The allowed modes are the TASK's, computed server-side against the viewer's
+  // level (`allowed_praxis_modes`). An unknown task means unknown permission, so
+  // this FAILS CLOSED (#1709): no options until the task lands. Each of the
+  // eight archetypes used to derive this line for itself and fall back to all
+  // three modes, which handed a level-0 viewer the Collab the API would refuse.
+  // Derived here, from the state the picker already holds, so there is one
+  // statement of the rule and nothing left to drift.
+  const allowedModes = state.task?.allowed_modes ?? [];
   return (
     <div style={skin.containerStyle}>
       {skin.options
@@ -991,7 +993,7 @@ export function ModePicker<O extends { key: PraxisType }>({
           // it's gated on the viewer's level instead (#311). Hide, don't disable.
           option.key === "duel"
             ? state.duelChipVisible
-            : skin.allowedModes.includes(option.key),
+            : allowedModes.includes(option.key),
         )
         .map((option, index) => {
           // A duel side stays type='solo' + duel_id, so the duel chip's active

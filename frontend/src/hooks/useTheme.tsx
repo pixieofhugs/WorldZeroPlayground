@@ -23,28 +23,31 @@ export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme)
 }
 
+/** What a visitor who has never touched the toggle gets (#1698). */
+export const DEFAULT_THEME: Theme = 'dark'
+
 /**
  * Theme resolution, extracted pure so it is testable in the repo's DOM-less node
- * env: a stored choice wins, otherwise fall back to the system preference.
- * Unchanged semantics — only the browser reads moved out to `getInitialTheme`.
+ * env: a stored choice wins, otherwise dark.
+ *
+ * The OS `prefers-color-scheme` used to decide the unstored case; #1698 removed
+ * it, so light is reachable only through the toggle. That is why there is no
+ * system-preference argument to pass — a light-mode OS is not an input.
  */
-export function resolveInitialTheme(stored: string | null, prefersDark: boolean): Theme {
+export function resolveInitialTheme(stored: string | null): Theme {
   if (stored === 'light' || stored === 'dark') return stored
-  return prefersDark ? 'dark' : 'light'
+  return DEFAULT_THEME
 }
 
-/** Read the browser's answer for the initial theme (localStorage → system pref). */
+/** Read the browser's answer for the initial theme (localStorage → default). */
 export function getInitialTheme(): Theme {
   // Defensive so the provider can also be mounted in a DOM-less render (SSR,
-  // node tests). In a browser both reads always succeed, so behaviour is
+  // node tests). In a browser the read always succeeds, so behaviour is
   // identical to the pre-provider hook.
   try {
-    return resolveInitialTheme(
-      localStorage.getItem(THEME_STORAGE_KEY),
-      window.matchMedia('(prefers-color-scheme: dark)').matches,
-    )
+    return resolveInitialTheme(localStorage.getItem(THEME_STORAGE_KEY))
   } catch {
-    return 'light'
+    return DEFAULT_THEME
   }
 }
 

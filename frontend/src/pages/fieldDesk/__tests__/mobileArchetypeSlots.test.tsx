@@ -28,6 +28,7 @@ import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import { CAST_VOTES_LINK, FIND_TASK_LINK, UPDATES_LINK } from '../homeDestinations'
 import { REQUESTS_QUEUE_LINK } from '../../updates/requestsQueueAnchor'
@@ -111,6 +112,35 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
 
 const archetypes = { ...surfaceMap('mobileFieldDesk'), __default__: DefaultFieldDesk }
 
+/**
+ * The lead mark on an in-progress row is the TASK's faction sigil (#1711).
+ *
+ * Probed by DIFFERENCE rather than by presence: a skin draws its own faction's
+ * mark all over its own page (Coven's sparkle rule, WOW's crest), so
+ * "the coven sparkle is in the markup" would pass on CovenFieldDesk however the
+ * row is drawn. Rendering the same skin twice with two different TASK factions
+ * and requiring the count to move by exactly one is the assertion that only
+ * holds if the row dispatches on `task_faction_slug`.
+ *
+ * The mark is identified by its path geometry, taken from `FactionSigil` itself
+ * rather than transcribed — a re-drawn sigil moves both sides together, a row
+ * that stops asking for one does not.
+ */
+function sigilPath(slug: string): string {
+  const html = renderToStaticMarkup(<FactionSigil slug={slug} />)
+  const match = html.match(/ d="([^"]+)"/)
+  if (!match) throw new Error(`the ${slug} sigil draws no path to probe`)
+  return match[1]
+}
+
+function occurrences(haystack: string, needle: string): number {
+  return haystack.split(needle).length - 1
+}
+
+function withTaskFaction(slug: string): FieldDeskHomeState {
+  return baseState({ activeTasks: [{ ...ACTIVE_TASK, task_faction_slug: slug }] })
+}
+
 describe('mobile FieldDesk-home content-slot invariant', () => {
   for (const [slug, Skin] of Object.entries(archetypes)) {
     it(`${slug} renders the identity block`, () => {
@@ -141,6 +171,30 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       const { html, text } = render(<Skin state={baseState()} />)
       expect(text, 'active task title slot').toContain('Sunday Soup')
       expect(html, 'continue-in-progress slot').toContain('href="/praxis/55/edit"')
+    })
+
+    /**
+     * #1711. Five skins marked the row with their OWN fixed accent (a red
+     * square, an acid square, an ochre square, a gilt sparkle) and three drew
+     * no faction mark at all; only Default's dot tracked the task. The mark now
+     * says the same true thing on all eight.
+     */
+    it(`${slug} marks the in-progress row with the TASK's faction`, () => {
+      // Probed inside the test, not at module scope: the faction manifests
+      // register as their modules evaluate, and a `sigilPath` call during this
+      // file's own import would resolve every slug to the fallback.
+      const COVEN_MARK = sigilPath('coven')
+      const SNIDE_MARK = sigilPath('snide')
+      const coven = render(<Skin state={withTaskFaction('coven')} />).html
+      const snide = render(<Skin state={withTaskFaction('snide')} />).html
+      expect(
+        occurrences(coven, COVEN_MARK),
+        'a coven task draws the coven mark',
+      ).toBe(occurrences(snide, COVEN_MARK) + 1)
+      expect(
+        occurrences(snide, SNIDE_MARK),
+        'a snide task draws the snide mark',
+      ).toBe(occurrences(coven, SNIDE_MARK) + 1)
     })
 
     it(`${slug} renders the empty state when no active tasks`, () => {

@@ -28,7 +28,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
-import "../../../i18n";
+import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
@@ -138,17 +138,34 @@ describe("praxis-read content-slot invariant", () => {
   }
 });
 
-// ─── Task Crown hero (ADR-0028) ──────────────────────────────────────────────
-// The crown banner lives in the shared PraxisStatusBanners chrome, so every
-// archetype shows it on a crowned praxis and hides it otherwise.
+// ─── Task Crown: ONE fleur, in the stamp's corner (ADR-0028, #1710) ──────────
+//
+// The crown used to lead this page as a bordered hero panel — a 34px medallion,
+// a "TASK CROWN" label and a sentence of explanation — mounted in the shared
+// `PraxisStatusBanners` chrome. Every archetype then passed `showCrown={false}`
+// to its `ScoreStamp` so the page would not carry the mark twice. Owner ruling
+// on #1710: *"Task crown as a box on the top should not exist. Just a fleur in
+// the corner."* The banner is gone and the stamps draw the mark again.
+//
+// ADR-0054's "one canonical mark" is unchanged, so the count is the assertion:
+// a crowned page renders EXACTLY ONE `TaskCrown`, never zero and never two. It
+// is counted off the medallion's `title` — the one string the component always
+// emits, at any size, in any skin.
+const CROWN_TITLE = i18n.t("feed:taskCrown.title");
 
-describe("praxis-read Task Crown hero", () => {
+function crownCount(html: string): number {
+  return html.split(`title="${CROWN_TITLE}"`).length - 1;
+}
+
+describe("praxis-read Task Crown", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
-    it(`${slug} shows the crown hero iff is_top_for_task`, () => {
+    it(`${slug} wears exactly one crown iff is_top_for_task`, () => {
       const crowned = state();
       crowned.praxis = { ...PRAXIS, is_top_for_task: true };
-      expect(render(<Archetype state={crowned} />).text).toContain("TASK CROWN");
-      expect(render(<Archetype state={state()} />).text).not.toContain("TASK CROWN");
+      const { html, text } = render(<Archetype state={crowned} />);
+      expect(crownCount(html), "one mark per page").toBe(1);
+      expect(text, "and no hero panel around it").not.toContain("TASK CROWN");
+      expect(crownCount(render(<Archetype state={state()} />).html)).toBe(0);
     });
   }
 });

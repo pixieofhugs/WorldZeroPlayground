@@ -21,6 +21,19 @@ export type Rgba = { r: number; g: number; b: number; a: number };
 export const AA_NORMAL = 4.5;
 export const AA_LARGE = 3;
 
+/**
+ * WCAG 1.4.6 AAA for normal text (#1715).
+ *
+ * Not a blanket target — the faction sheets are hand-mixed paper stocks and
+ * several of their inks have nowhere to go. It is the floor the app's own
+ * NEUTRAL text tiers are held to, because those two tokens print on every
+ * surface in the app and had settled onto the AA floor (dark secondary was
+ * 4.87:1 on the composited `--color-bg-surface-alt`). AA is the line below
+ * which text is a defect; it is not where the most-painted ink in the repo
+ * should live.
+ */
+export const AAA_NORMAL = 7;
+
 const HEX_SHORT = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
 const HEX_LONG = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
 const HEX_LONG_ALPHA = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
