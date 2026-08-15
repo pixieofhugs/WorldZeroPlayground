@@ -843,7 +843,6 @@ export default function CovenEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 id: "composer-body",
-                rows: 8,
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
                   ...fieldBox,

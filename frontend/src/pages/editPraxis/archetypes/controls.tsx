@@ -4,15 +4,24 @@
  * (paperclips, customs stamps, sticky notes); these are the inner essentials
  * that must always render: file picker, member chips, search dropdown.
  */
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Compartment } from "@codemirror/state";
+import { EditorView, keymap, placeholder as cmPlaceholder } from "@codemirror/view";
+import { defaultKeymap } from "@codemirror/commands";
+import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
 import type { DuelSideOut } from "../../../api/duel";
 import MarkdownPreview from "../blocks/MarkdownPreview";
-import { applyMarkdown } from "../blocks/markdownToolbar";
+import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
+import { usePraxisRoom, ROOM_TITLE_KEY } from "../praxisRoom";
+import {
+  BODY_EDITOR_BASE_THEME,
+  BODY_EDITOR_HOST_STYLE,
+} from "./bodyEditorTheme";
 import type { EditPraxisState } from "../useEditPraxis";
 import { duelSides } from "../../../components/duel/shared";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
@@ -655,6 +664,17 @@ export interface TitleFieldSkin {
   ariaLabel?: string;
 }
 
+/**
+ * How long a title sits still before it is published to the room (#1742).
+ *
+ * The title is one **last-write-wins** map key, not co-edited text: 200
+ * characters interleaved character-by-character between two people produces
+ * garbage more often than it helps (ADR-0073). Publishing on a debounce and on
+ * blur, rather than on every keystroke, is what keeps a co-author's typing from
+ * arriving inside yours.
+ */
+const TITLE_PUBLISH_DEBOUNCE_MS = 600;
+
 export function TitleField({
   state,
   skin,
@@ -662,18 +682,75 @@ export function TitleField({
   state: EditPraxisState;
   skin: TitleFieldSkin;
 }) {
+  const room = usePraxisRoom();
+  const meta = room?.meta ?? null;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const publishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Read through refs so the observer below can be installed once per room
+  // rather than re-subscribed on every keystroke.
+  const setTitleRef = useRef(state.setTitle);
+  setTitleRef.current = state.setTitle;
+  const titleRef = useRef(state.title);
+  titleRef.current = state.title;
+
+  const publish = (value: string) => {
+    if (publishTimerRef.current) clearTimeout(publishTimerRef.current);
+    publishTimerRef.current = null;
+    // The key may not exist yet — nothing seeds it server-side — so this is
+    // also what creates it. Writing the same value again would still broadcast.
+    if (meta && meta.get(ROOM_TITLE_KEY) !== value) meta.set(ROOM_TITLE_KEY, value);
+  };
+
+  // Remote title → the box.
+  useEffect(() => {
+    if (!meta) return;
+    const apply = () => {
+      const remote = meta.get(ROOM_TITLE_KEY);
+      // ABSENT is "no remote value yet", never "remote cleared the title":
+      // #1740 seeds only `body`, so the key arrives with the first co-author to
+      // edit a title and not before.
+      if (remote === undefined || remote === titleRef.current) return;
+      // Never while the player is in the field. Last-write-wins is fine between
+      // edits and unbearable during one.
+      if (inputRef.current !== null && document.activeElement === inputRef.current) {
+        return;
+      }
+      setTitleRef.current(remote);
+    };
+    meta.observe(apply);
+    apply();
+    return () => meta.unobserve(apply);
+  }, [meta]);
+
+  useEffect(
+    () => () => {
+      if (publishTimerRef.current) clearTimeout(publishTimerRef.current);
+    },
+    [],
+  );
+
   return (
     // The role class owns the type size; the skin keeps font/colour/ornament
     // only (§4a). Inline style wins over class, so the size lands as soon as the
     // skin stops setting fontSize.
     <input
+      ref={inputRef}
       type="text"
       maxLength={200}
       id={skin.id}
       aria-label={skin.ariaLabel}
       className="content-text"
       value={state.title}
-      onChange={(event) => state.setTitle(event.target.value)}
+      onChange={(event) => {
+        const next = event.target.value;
+        state.setTitle(next);
+        if (publishTimerRef.current) clearTimeout(publishTimerRef.current);
+        publishTimerRef.current = setTimeout(
+          () => publish(next),
+          TITLE_PUBLISH_DEBOUNCE_MS,
+        );
+      }}
+      onBlur={(event) => publish(event.target.value)}
       placeholder={skin.placeholder}
       style={skin.inputStyle}
     />
@@ -687,8 +764,13 @@ export function TitleField({
 /* binding.                                                                    */
 /* -------------------------------------------------------------------------- */
 export interface BodyTextareaSkin {
+  /**
+   * The body's box. Dresses the editor's host (#1742) exactly as it dressed the
+   * `<textarea>` before it — ground, rule, radius, padding, min-height, ink,
+   * face — and everything inheritable reaches CodeMirror's own DOM from there.
+   * See `bodyEditorTheme.ts` for the two rules that make that true.
+   */
   textareaStyle: CSSProperties;
-  rows?: number;
   placeholder?: string;
   /** Optional override for the toolbar wrapper (e.g. archetype spacing). */
   toolbarStyle?: CSSProperties;
@@ -751,22 +833,96 @@ export function BodyTextarea({
   skin: BodyTextareaSkin;
 }) {
   const { t } = useTranslation("forms");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const room = usePraxisRoom();
+  const ytext = room?.body ?? null;
+  const synced = room?.synced ?? false;
+  const hostRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
+  // Stable across the editor's life; reconfigured rather than remounted.
+  const editableSlot = useRef(new Compartment()).current;
+  const setBodyRef = useRef(state.setBody);
+  setBodyRef.current = state.setBody;
+
+  const contentAttributes = useMemo(() => {
+    const attributes: Record<string, string> = {};
+    // `<label for>` does nothing for a contenteditable div, so the section's
+    // label reaches the editor as `aria-labelledby` instead (ComposerSection
+    // gives that label its id).
+    if (skin.id) attributes["aria-labelledby"] = `${skin.id}-label`;
+    if (skin.ariaLabel) attributes["aria-label"] = skin.ariaLabel;
+    return attributes;
+  }, [skin.id, skin.ariaLabel]);
+
+  // ---- The editor, bound to the ROOM's text (never seeded from here) ----
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || !ytext) return;
+    const view = new EditorView({
+      // The room's current text, which is empty until the server's seed lands.
+      // Deliberately not `state.body`: a client that writes the praxis body
+      // into the document ends up merging a second copy of it (ADR-0073).
+      doc: ytext.toString(),
+      parent: host,
+      extensions: [
+        // Prose, not code: wrap long lines the way the textarea did.
+        EditorView.lineWrapping,
+        keymap.of([...yUndoManagerKeymap, ...defaultKeymap]),
+        cmPlaceholder(skin.placeholder ?? ""),
+        BODY_EDITOR_BASE_THEME,
+        editableSlot.of(EditorView.editable.of(synced)),
+        EditorView.contentAttributes.of(contentAttributes),
+        // `null` awareness: carets and collaborator colours are #1744, and
+        // passing it here is what would draw them.
+        yCollab(ytext, null),
+      ],
+    });
+    viewRef.current = view;
+    return () => {
+      view.destroy();
+      viewRef.current = null;
+    };
+    // Only the bound text may rebuild the editor. Everything else below
+    // reconfigures it in place — a rebuild would drop the caret and the undo
+    // history mid-sentence.
+  }, [ytext]);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: editableSlot.reconfigure(EditorView.editable.of(synced)),
+    });
+  }, [synced, editableSlot]);
+
+  // ---- The room's text → `state.body` ----
+  //
+  // One direction only. `state.body` still feeds `BodyPreview`, the word count
+  // and the debounced `PUT` (#1743 retires that last one), so it has to follow
+  // the document — but nothing may push it back the other way, or the praxis
+  // would seed the room it is supposed to be seeded BY.
+  useEffect(() => {
+    if (!ytext) return;
+    const mirror = () => setBodyRef.current(ytext.toString());
+    ytext.observe(mirror);
+    return () => ytext.unobserve(mirror);
+  }, [ytext]);
 
   const runCommand = (command: MarkdownCommand) => {
-    const el = textareaRef.current;
-    if (!el) return;
+    const view = viewRef.current;
+    if (!view) return;
+    const text = view.state.doc.toString();
+    const selection = view.state.selection.main;
     const result = applyMarkdown(command, {
-      text: state.body,
-      selectionStart: el.selectionStart,
-      selectionEnd: el.selectionEnd,
+      text,
+      selectionStart: selection.from,
+      selectionEnd: selection.to,
     });
-    state.setBody(result.text);
-    // Restore the caret/selection after React commits the new value.
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(result.selectionStart, result.selectionEnd);
+    // The narrowest edit that gets there, not a whole-document replacement: in
+    // a CRDT the latter deletes every character a co-author is standing on and
+    // leaves the deletions behind as tombstones.
+    view.dispatch({
+      changes: minimalReplacement(text, result.text),
+      selection: { anchor: result.selectionStart, head: result.selectionEnd },
     });
+    view.focus();
   };
 
   const buttonStyle: CSSProperties = {
@@ -815,18 +971,22 @@ export function BodyTextarea({
         ))}
       </div>
       )}
-      {/* Role class owns the size; the skin gives up only fontSize (§4a). */}
-      <textarea
-        ref={textareaRef}
+      {/* The editor's host. CodeMirror builds its own DOM inside this on mount,
+          which is why the box is empty in a server render — and why the binding
+          itself is not observable in this DOM-less harness (#1742).
+          Role class owns the size; the skin gives up only fontSize (§4a). */}
+      <div
+        ref={hostRef}
         id={skin.id}
-        aria-label={skin.ariaLabel}
+        data-composer-body
         className="content-text"
-        value={state.body}
-        onChange={(event) => state.setBody(event.target.value)}
-        rows={skin.rows}
-        placeholder={skin.placeholder}
-        style={skin.textareaStyle}
+        style={{ ...BODY_EDITOR_HOST_STYLE, ...skin.textareaStyle }}
       />
+      {ytext !== null && !synced && (
+        <p className="label-caption" style={{ color: "var(--color-text-tertiary)" }}>
+          {t("editPraxis.composer.bodyConnecting")}
+        </p>
+      )}
     </div>
   );
 }
