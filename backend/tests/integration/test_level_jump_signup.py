@@ -21,6 +21,7 @@ from services.praxis import (
     delete_praxis,
     evaluate_signup,
 )
+from tests.integration.factories import make_task
 
 WOW = "wow"
 JUMPER_LEVEL = 3
@@ -57,21 +58,14 @@ async def _set_faction_and_level(
 async def _make_task(
     db_session: AsyncSession, character: Character, level_required: int
 ) -> Task:
-    task = Task(
+    return await make_task(
+        db_session,
+        character,
         title=f"Level {level_required} task",
         description="",
-        point_value=10,
         level_required=level_required,
-        status=TaskStatus.active,
-        created_by=character.id,
-        primary_faction_slug="ua",
+        commit=True,
     )
-    db_session.add(task)
-    await db_session.commit()
-    await db_session.refresh(task)
-    return task
-
-
 # --- the gate ---------------------------------------------------------------
 
 @pytest.mark.asyncio

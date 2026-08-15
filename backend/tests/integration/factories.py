@@ -27,7 +27,7 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.roles import AccountRole, Role
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 
 
@@ -109,6 +109,7 @@ async def make_task(
     point_value: int = 10,
     level_required: int = 0,
     status: TaskStatus = TaskStatus.active,
+    task_type: TaskType = TaskType.standard,
     faction_slug: str = "ua",
     commit: bool = False,
 ) -> Task:
@@ -116,6 +117,9 @@ async def make_task(
 
     ``ua`` is the default slug because it is the only faction the shared
     fixtures seed a row for, and most callers do not read the slug at all.
+
+    ``commit`` (with a refresh) for the suites that drive a route in a second
+    session and need the row durably visible to it; a flush is enough otherwise.
     """
     task = Task(
         title=title,
@@ -123,6 +127,7 @@ async def make_task(
         point_value=point_value,
         level_required=level_required,
         status=status,
+        task_type=task_type,
         created_by=creator.id,
         primary_faction_slug=faction_slug,
     )
