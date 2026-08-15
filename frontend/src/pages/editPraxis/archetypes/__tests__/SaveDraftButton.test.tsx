@@ -1,10 +1,11 @@
 /**
  * SaveDraftButton (#1081) — the composer's third exit: keep the draft and go.
  *
- * The button itself is thin on purpose (the flush lives in the hook, proved in
- * `useEditPraxis.test.ts`), so what's worth pinning here is where it does and
- * does not appear: a cast or moderated praxis has no draft to save, and per the
- * house rule that state hides the control rather than greying it out.
+ * The button itself is thin on purpose — thinner since #1743, which left the
+ * hook's `saveDraft` with nothing to do but navigate — so what's worth pinning
+ * here is where it does and does not appear: a cast or moderated praxis has no
+ * draft to keep, and per the house rule that state hides the control rather
+ * than greying it out.
  */
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
