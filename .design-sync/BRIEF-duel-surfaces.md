@@ -13,7 +13,57 @@ should look.
 
 ---
 
+## CORRECTION — read this before anything below it
+
+**This brief was written as a spec for surfaces that were then built differently.**
+It described what was going to ship; #718, #1071 and #1090 shipped something else, and
+that something else is what is on main. The brief has already misled one design (the
+Singularity grill, #723). It is kept as a record of *intent* and of the game mechanics
+in §5, which are still true. It is not a spec.
+
+**Read the code before you design.** For every duel string:
+`frontend/src/locales/en/praxis.json` — the `duelBanner`, `duelCrossLink`, `duelForfeit`,
+`duelRoster`, `duelSeal` and `duelStakes` key families. For the components:
+`frontend/src/components/duel/` (the seal dialog and its skins) and
+`frontend/src/pages/praxisDetail/DuelCard.tsx`.
+
+**Mocks are visual references.** Design the chrome; never transcribe the words. A skin
+mounts the shared slots and calls typed `t()` keys, so a mock's copy cannot reach the
+screen either way.
+
+### What is stale, section by section
+
+- **§0 — the "never verbal" rule has one shipped exception.** WOW skins its duel copy:
+  `duelSeal.wow.*` gives it *Take the Field*, *Yield the Field*, *The Roster*, *The
+  Stakes* and a ribbon line, mounted by `components/duel/wowLists.tsx`. Faction-neutral
+  is still the default for the other six; it is not the absolute §0 claims.
+- **§2 — there are five states, not four.** `DuelStatus` is
+  `pending | active | settled | declined | resolved`. The brief's "live" is `settled`.
+  `resolved` is new: at era close the pair freezes, so §2's and §6's "nothing is ever
+  final" is now true only *before* era close.
+- **§3 — the duel rail no longer exists.** See the marker on that section.
+- **§4 — the copy was never built.** See the marker on that section.
+- **§5 — still true.** Verified against `backend/eras/era_1.py`: per-faction
+  `duel_win_modifier` / `duel_loss_modifier`, Snide at 2.0× / **0.0×**, figures are base
+  points before crowd votes.
+
+### Three things the Singularity mock got wrong
+
+1. **Skins dispatch on the *task's* faction, not the viewer's.** "The Everymen skin"
+   means duels on Everymen tasks —
+   `pickVariant(surfaceMap('duelSeal'), taskFactionSlug, …)`. Only the figures follow the
+   viewer, off their own multipliers. The brief itself had this backwards.
+2. **`pending` shows no stakes tiles.** `StakesTiles` emits the single
+   `duelStakes.soloFallback` sentence instead, so a pending mock drawing a win/lose pair
+   is unbuildable.
+3. **The seal dialog is one responsive component** (#1313), not a desktop file and a
+   phone file. `DuelSealSheet` owns the only form-factor branch.
+
+---
+
 ## 0. The one rule
+
+> **§0 is not absolute — WOW ships per-faction duel copy. See the CORRECTION above.**
 
 > **Faction identity is visual. It is never verbal.**
 
@@ -50,6 +100,10 @@ gallery. Until both have submitted, neither can read the other's entry at all.
 
 ## 2. The four states — this is where the last mock went wrong
 
+> **There are five.** `DuelStatus` is `pending | active | settled | declined | resolved`;
+> "live" below is `settled`, and `resolved` freezes the pair at era close. See the
+> CORRECTION at the top of this file.
+
 | State | What's true | Can I back out? |
 |---|---|---|
 | **pending** | Challenge sent. Opponent hasn't answered. Only your entry exists. | **Yes, freely.** |
@@ -79,6 +133,26 @@ gallery. Until both have submitted, neither can read the other's entry at all.
 ---
 
 ## 3. The two surfaces
+
+> **SUPERSEDED — the rail was retired (#1090) and the run-up moved off detail (#1071,
+> ADR-0059).** What exists today:
+>
+> - **The seal dialog** — `components/duel/DuelSealConfirm.tsx` plus a skin per faction,
+>   dispatched on the **task's** faction through `surfaceMap('duelSeal')`. Its shared
+>   slots are `StakesTiles`, `RaceRoster` and `SealActions` from
+>   `components/duel/shared.tsx`. There is no `NextStepLine` and no `SubmitActions`;
+>   `NextStepLine` was deleted with the rail.
+> - **The praxis-detail duel card** — `pages/praxisDetail/DuelCard.tsx`. It is *not* a
+>   dispatched duel surface: it is one card mounted by the praxis-detail archetype, which
+>   dresses it through three seams (`style`, `heading`, `ink`). It draws only `settled`
+>   and `resolved` — outcomes. `declined`, `pending` and `active` draw nothing here.
+> - **The run-up** — `pages/editPraxis/waiting/PraxisWaitingSurface.tsx` narrates waiting
+>   for the opponent. That beat belongs to the composer now, not to detail.
+>
+> **The accent rule below is inverted.** The card may never carry the opponent's faction
+> hue as an ink or a ground; only as an edge or a ring (`DuelCardInk`, guarded by
+> `praxisDetail/__tests__/duelCardOpponentInk.test.tsx`). Design the *frame* as your
+> faction and do not plan for a foreign palette in your text colours.
 
 ### A. Submit confirm — `DuelSubmitConfirm`
 
@@ -117,6 +191,16 @@ completely. You may not drop one, merge two, or add a fifth.
 ---
 
 ## 4. The exact copy
+
+> **SUPERSEDED — none of these strings were built.** #718 shipped a different vocabulary.
+> Read `frontend/src/locales/en/praxis.json` — `duelBanner`, `duelCrossLink`,
+> `duelForfeit`, `duelRoster`, `duelSeal`, `duelStakes` — and use those. This section is
+> kept as a record of intent, not as an instruction.
+>
+> **The "words that are wrong" table is the wrong half.** The shipped copy says *Seal the
+> duel?*, *sealed ✓*, *Casting now seals the duel*, *Won by default*, *{{name}} won*,
+> *final — frozen at era close*, and WOW's cancel is *Withdraw*. The words are correct;
+> the table banning them is not.
 
 Use these strings verbatim in your mocks. `{{name}}` etc. are runtime substitutions —
 render them with a plausible example (`Rax Vandal`, `Snide`) but keep the surrounding
