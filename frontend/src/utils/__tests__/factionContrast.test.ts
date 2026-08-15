@@ -1891,6 +1891,57 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
       "`.eyebrow-sentence` was a caption wearing a heading's clothes (#850). The two-tier split is the rethink it should have had; keeping it is keeping a second thing to sync.",
     ).toBe(false);
   });
+
+  /**
+   * #1754 — THE SEAM IS SPENT, ON THE ONE SHEET THAT NEEDED IT.
+   *
+   * #1307 measured the mint and deferred it; #1715 lifted the neutral to AAA on
+   * the app's own stocks and, being forbidden from patching around its own
+   * global, reported the casualty instead. This is that report accepted. The
+   * light neutral on the plate's three grounds measures 2.15 (page) / 2.01
+   * (sheet) / 1.86 (inner cell) — it was 3.12 / 2.92 / 2.70 before the lift, so
+   * the lift DEEPENED a surface that was already far under the floor rather than
+   * breaking a passing one.
+   *
+   * The other two always-dark sheets cover themselves and are deliberately not
+   * touched: the S.N.I.D.E. comment voice moved its shared slots onto flipping
+   * slip stock, and both Singularity chassis repoint the global inks outright.
+   *
+   * WHY `-plate-quiet` AND NOT `-card-muted`, which is the default the seam's
+   * own declaration names. The Ephemerists card sheet is the CORNICE BAND, so
+   * `--faction-ephemerists-card-muted` is `-plate-band-quiet` — an ink measured
+   * on #0a0c15. `.eph-plate-sheet`'s grounds are the page, the plate and the
+   * panel cell, and `-plate-quiet` is the sibling minted for exactly those three
+   * (#1173: `-quiet` is the standing name for "same role, second ground"). It
+   * clears them at 6.38 / 5.98 / 5.52 in BOTH cascades — the plate register is
+   * theme-invariant since #1627 — and it is what the plate's own quiet prose
+   * already reads, so the label tier joins the register instead of introducing a
+   * fourth warm tone on the same sheet. Dark gives up ~2.3 points (8.33 -> 5.98
+   * on the sheet) to hold one ink across a register that declares nothing under
+   * dark; the floor is 4.5 and this is a faction ink, not the most-painted
+   * neutral in the repo that #1715 argued to AAA.
+   *
+   * NO `Pair` ROW IS ADDED, for the reason this file keeps giving. All three
+   * pairings are already gated above — `ephemerists page ground, quiet ink`,
+   * `ephemerists plate, quiet ink`, `ephemerists panel cell, quiet ink` — and a
+   * fourth row named for the label tier would be a second name for one
+   * measurement. What a ratio row CANNOT see is the wiring: every number in this
+   * file stays green through an `.eph-plate-sheet` that drops this declaration,
+   * because the pairing that restores is "a global neutral on a faction ground",
+   * which a token-value manifest is structurally unable to name (#694).
+   *
+   * The VELLUM sheet was checked at the same time and needs nothing: the codex
+   * stock flips with the theme, so the neutral reads 6.33:1 on it in light and
+   * 8.28:1 in dark. It also has no reader left in the app since #1627 — the
+   * "vellum 4.36" figure the seam's declaration used to carry was measured on
+   * the old tertiary AND on a surface nothing paints any more.
+   */
+  it("the Ephemerists plate repoints the label seam onto its own quiet ink (#1754)", () => {
+    expect(
+      ruleBody(".eph-plate-sheet"),
+      "`.eph-plate-sheet` is the column both Ephemerists detail pages wear, and it is the one sheet in the kit where a bare `.label-caption` lands on the global neutral over a night ground — the comment leaves' owner controls and the thread heading at 2.01:1 in light. Without this the plate has no way to fix its own sheet.",
+    ).toContain("--label-ink: var(--faction-ephemerists-plate-quiet)");
+  });
 });
 
 /**
