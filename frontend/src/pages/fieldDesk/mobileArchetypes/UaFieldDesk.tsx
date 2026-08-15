@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import UaMandala from '../../../components/factionMarks/UaMandala'
 import { UaSigil } from '../../../components/sigil/UaSigil'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -81,6 +82,11 @@ const trackMetaStyle: CSSProperties = { ...smallCaps }
 
 /** The practice's own ramp: the sienna fill drawn out to its accent (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${FILL}, ${ACCENT})`
+
+/** The task-faction mark on a practice row (#1711). The dot it replaces was
+ *  7px; a drawn mark needs more room, but this sheet is the quietest of the
+ *  eight, so it takes the smallest of the row sizes. */
+const ROW_SIGIL = 13
 
 /** A sheet: one surface, one hairline. What is left after the gilt frame. */
 function Sheet({ children }: { children: ReactNode }) {
@@ -297,7 +303,12 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid var(--faction-ua-hair)`, textDecoration: 'none' }}
               >
-                <span className="shrink-0" style={{ width: 7, height: 7, borderRadius: '50%', background: FILL }} />
+                {/* The TASK's faction, not the sheet's own fill (#1711). The
+                    small-caps line under the title names it, so the mark is
+                    decorative. */}
+                <span className="shrink-0 flex" aria-hidden>
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'var(--text-content)', lineHeight: 1.15, color: INK }}>
                     {praxis.task_title}

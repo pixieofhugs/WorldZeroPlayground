@@ -148,10 +148,12 @@ export default function EditPraxis() {
           onDismiss={state.dismissConfirm}
         />
       )}
-      {/* Praxis images crop/rotate in place before upload (#514), free-form so
-          nothing is force-cropped. Sequential: keyed on identity so each queued
-          image gets a fresh modal. A failure reports on the tray's file-error
-          line rather than uploading the unprocessed image (#1545). */}
+      {/* Praxis images crop/rotate in place before upload (#514). No `aspect`,
+          which is what earns the crop-shape picker (#1713): the frame starts on
+          the photo's own ratio so nothing is force-cropped, and the player can
+          re-lock it to 1:1 / 4:3 / 16:9. Sequential: keyed on identity so each
+          queued image gets a fresh modal. A failure reports on the tray's
+          file-error line rather than uploading the unprocessed image (#1545). */}
       {state.pendingImage && (
         <ImageEditModal
           key={`${state.pendingImage.name}-${state.pendingImage.lastModified}`}
