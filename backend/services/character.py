@@ -379,7 +379,9 @@ async def create_character(
 
     display_name = (data.display_name or "").strip()
     if not display_name:
-        raise HTTPException(status_code=400, detail="A chosen name is required.")
+        raise_coded(
+            400, ErrorCode.character_name_required, "A chosen name is required."
+        )
 
     requested_faction_slug = (data.faction_slug or "").strip().lower() or None
 
@@ -413,16 +415,18 @@ async def create_character(
     if requested_faction_slug is None:
         starting_faction_slug = era.starting_faction_slug
     elif requested_faction_slug == ALBESCENT_FACTION_SLUG:
-        raise HTTPException(
-            status_code=400,
-            detail="Albescent is joined in the field, not chosen at creation.",
+        raise_coded(
+            400,
+            ErrorCode.faction_albescent_not_at_creation,
+            "Albescent is joined in the field, not chosen at creation.",
         )
     else:
         invited = await get_account_invited_faction_slugs(account_id, session, era)
         if requested_faction_slug not in invited:
-            raise HTTPException(
-                status_code=400,
-                detail="You don't hold an invitation for that faction.",
+            raise_coded(
+                400,
+                ErrorCode.faction_invitation_required,
+                "You don't hold an invitation for that faction.",
             )
         starting_faction_slug = requested_faction_slug
 

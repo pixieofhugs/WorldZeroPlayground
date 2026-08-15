@@ -53,6 +53,26 @@
 
     "PRAXIS_NOT_FOUND": "Praxis not found.",
     "MEDIA_ITEM_NOT_FOUND": "Media item not found.",
+    "TASK_NOT_FOUND": "Task not found.",
+    "CHARACTER_NOT_FOUND": "Character not found.",
+
+    "FACTION_NOT_FOUND": "Faction not found.",
+    "FACTION_ALREADY_MEMBER": "Already a member of this faction.",
+    "FACTION_NOT_SELECTABLE": "This faction cannot be chosen directly.",
+    "FACTION_REJOIN_FORBIDDEN": "Cannot rejoin a faction you have left.",
+    "FACTION_INVITATION_REQUIRED": "You don't hold an invitation for that faction.",
+    "FACTION_ALBESCENT_NOT_ELIGIBLE": "The order has not extended its hand to you.",
+    "FACTION_ALBESCENT_NOT_AT_CREATION": "Albescent is joined in the field, not chosen at creation.",
+
+    "CHARACTER_NAME_REQUIRED": "A chosen name is required.",
+
+    "PRAXIS_NOT_OWNER": "You do not own this praxis.",
+    "PRAXIS_NOT_OPEN_FOR_COMMENTS": "This praxis is not open for comments.",
+    "TASK_NOT_OPEN_FOR_COMMENTS": "This task is not open for comments.",
+    "COMMENT_TARGET_AMBIGUOUS": "A comment targets exactly one of a praxis or a task.",
+
+    "DUEL_CHALLENGE_NOT_YOURS": "This challenge is not for you.",
+    "DUEL_CHALLENGE_ALREADY_RESOLVED": "Challenge has already been resolved.",
 
     "RELATIONSHIP_NOT_FOUND": "Relationship not found.",
     "RELATIONSHIP_NOT_DECLARER": "Only the declaring party can delete a relationship.",

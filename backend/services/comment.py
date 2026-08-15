@@ -147,9 +147,10 @@ async def _assert_commentable_target(
     The DB CHECK also guards exactly-one; this gives a clean 4xx before the insert.
     """
     if (praxis_id is None) == (task_id is None):
-        raise HTTPException(
-            status_code=422,
-            detail="A comment targets exactly one of a praxis or a task.",
+        raise_coded(
+            422,
+            ErrorCode.comment_target_ambiguous,
+            "A comment targets exactly one of a praxis or a task.",
         )
     if praxis_id is not None:
         # The write door must ask the same question as the read door. It used to
@@ -167,18 +168,22 @@ async def _assert_commentable_target(
         if praxis is None or (
             author is not None and not await can_view_praxis(author, praxis, session)
         ):
-            raise HTTPException(status_code=404, detail="Praxis not found.")
+            raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
         if praxis.moderation_status != ModerationStatus.visible:
-            raise HTTPException(
-                status_code=403, detail="This praxis is not open for comments."
+            raise_coded(
+                403,
+                ErrorCode.praxis_not_open_for_comments,
+                "This praxis is not open for comments.",
             )
     else:
         task = await session.get(Task, task_id)
         if task is None:
-            raise HTTPException(status_code=404, detail="Task not found.")
+            raise_coded(404, ErrorCode.task_not_found, "Task not found.")
         if task.status != TaskStatus.active:
-            raise HTTPException(
-                status_code=403, detail="This task is not open for comments."
+            raise_coded(
+                403,
+                ErrorCode.task_not_open_for_comments,
+                "This task is not open for comments.",
             )
 
 

@@ -1,9 +1,9 @@
 """Faction lifecycle: defection and invitation letters."""
 
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
@@ -147,30 +147,33 @@ async def defect_to_faction(
     bar (level + full faction coverage).
     """
     if character.faction_slug == target_slug:
-        raise HTTPException(
-            status_code=422,
-            detail="Already a member of this faction.",
+        raise_coded(
+            422,
+            ErrorCode.faction_already_member,
+            "Already a member of this faction.",
         )
 
     # `na` is the unaffiliated sentinel, not a joinable destination (ADR-0019/0030).
     if target_slug == UNAFFILIATED_FACTION_SLUG:
-        raise HTTPException(
-            status_code=422,
-            detail="This faction cannot be chosen directly.",
+        raise_coded(
+            422,
+            ErrorCode.faction_not_selectable,
+            "This faction cannot be chosen directly.",
         )
 
     faction_config = era.factions.get(target_slug)
     if faction_config is None:
-        raise HTTPException(status_code=404, detail="Faction not found.")
+        raise_coded(404, ErrorCode.faction_not_found, "Faction not found.")
 
     era_row = await get_current_era_row(session)
 
     if not await can_join_faction(
         character.id, target_slug, era_row.id, session, era
     ):
-        raise HTTPException(
-            status_code=403,
-            detail="Cannot rejoin a faction you have left.",
+        raise_coded(
+            403,
+            ErrorCode.faction_rejoin_forbidden,
+            "Cannot rejoin a faction you have left.",
         )
 
     # #454: switching into a faction requires holding that faction's invitation
@@ -181,9 +184,10 @@ async def defect_to_faction(
     if not faction_config.can_always_rejoin and not await has_invitation(
         character.id, target_slug, era_row.id, session
     ):
-        raise HTTPException(
-            status_code=403,
-            detail="You don't hold an invitation for that faction.",
+        raise_coded(
+            403,
+            ErrorCode.faction_invitation_required,
+            "You don't hold an invitation for that faction.",
         )
 
     # ADR-0021: Albescent is joined in the field via defection, but only once the
@@ -192,9 +196,10 @@ async def defect_to_faction(
     if target_slug == ALBESCENT_FACTION_SLUG and not await can_start_as_albescent(
         character.account_id, session, era
     ):
-        raise HTTPException(
-            status_code=403,
-            detail="The order has not extended its hand to you.",
+        raise_coded(
+            403,
+            ErrorCode.faction_albescent_not_eligible,
+            "The order has not extended its hand to you.",
         )
 
     # Record defection from current faction (if it's a real faction, not na)
