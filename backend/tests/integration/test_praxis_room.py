@@ -160,14 +160,15 @@ class _Rooms:
         *,
         origin: str | None = ALLOWED_ORIGIN,
         path: str | None = None,
+        raw_token: str | None = None,
     ) -> _Socket:
         """Start a handshake. Returns once the app has accepted or refused it."""
         socket = _Socket(path or f"/praxis/{praxis_id}")
         headers: list[tuple[bytes, bytes]] = [(b"host", b"api.worldzero.test")]
         if origin is not None:
             headers.append((b"origin", origin.encode()))
-        if account_id is not None:
-            token = create_jwt(account_id)
+        token = raw_token or (None if account_id is None else create_jwt(account_id))
+        if token is not None:
             headers.append((b"cookie", f"access_token={token}".encode()))
         scope = {"type": "websocket", "path": socket.path, "headers": headers}
 
@@ -440,6 +441,24 @@ async def test_missing_origin_is_allowed_when_configured(
         assert socket.accepted.is_set()
 
 
+async def test_socket_with_an_unreadable_token_is_rejected(
+    db_session, collab, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(collab.id, None, raw_token="not-a-jwt")
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
+
+
+async def test_socket_for_an_unknown_praxis_is_rejected(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(collab.id + 10_000, account.id)
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
+
+
 async def test_unknown_path_is_rejected(db_session, collab, account, monkeypatch) -> None:
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(collab.id, account.id, path="/praxis/not-a-number")
@@ -496,13 +515,30 @@ async def test_a_second_instance_refuses_to_start(test_engine) -> None:
     held = await acquire_single_instance_lock(test_engine)
     try:
         with pytest.raises(RuntimeError, match="single-instance"):
-            await acquire_single_instance_lock(test_engine)
+            await acquire_single_instance_lock(test_engine, wait_seconds=0)
     finally:
         await held.close()
 
     # ...and the lock is released with the connection, so a redeploy can start.
     reacquired = await acquire_single_instance_lock(test_engine)
     await reacquired.close()
+
+
+async def test_the_lock_waits_out_a_departing_predecessor(
+    test_engine, monkeypatch
+) -> None:
+    """A restart must not crash-loop on the previous container's dying session."""
+    monkeypatch.setattr(praxis_room, "_LOCK_RETRY_SECONDS", 0.05)
+    predecessor = await acquire_single_instance_lock(test_engine)
+
+    async def let_go() -> None:
+        await asyncio.sleep(0.1)
+        await predecessor.close()
+
+    release = asyncio.create_task(let_go())
+    successor = await acquire_single_instance_lock(test_engine, wait_seconds=5)
+    await release
+    await successor.close()
 
 
 # ---------------------------------------------------------------------------

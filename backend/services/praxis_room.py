@@ -85,6 +85,8 @@ _SQUASH_UPDATES_ABOVE = 200
 # A named, session-level advisory lock. Any constant would do; this one reads as
 # the issue number so a human finding it in ``pg_locks`` can find the reason.
 _SINGLE_INSTANCE_LOCK_KEY = 17400073
+_LOCK_WAIT_SECONDS = 30.0
+_LOCK_RETRY_SECONDS = 2.0
 
 SessionFactory = Callable[[], AbstractAsyncContextManager[AsyncSession]]
 
@@ -552,7 +554,9 @@ def close_member_sockets(praxis_id: int, character_id: int) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def acquire_single_instance_lock(engine: AsyncEngine) -> AsyncConnection:
+async def acquire_single_instance_lock(
+    engine: AsyncEngine, wait_seconds: float = _LOCK_WAIT_SECONDS
+) -> AsyncConnection:
     """Claim the right to be the only backend instance, or refuse to start.
 
     Rooms live in-process, so two instances would hold two divergent documents
@@ -561,27 +565,46 @@ async def acquire_single_instance_lock(engine: AsyncEngine) -> AsyncConnection:
 
     A startup *assertion* cannot express this: a process cannot see its own
     replica count, so two replicas would each pass their own check happily. A
-    session-level advisory lock is held by one database session at a time, so
-    the second instance — however it arose: a Render setting, a stray local
-    ``uvicorn``, a blue-green deploy overlap — fails loudly instead. The cost is
-    one pooled connection held for the life of the process.
+    session-level advisory lock is held by one database session at a time, so a
+    second instance — however it arose: a Render setting, a stray local
+    ``uvicorn``, a deploy overlap — fails loudly instead. The cost is one pooled
+    connection held for the life of the process.
+
+    It retries for ``wait_seconds`` first, because the commonest way to meet
+    this lock is not a second instance at all: a restarted container can beat
+    the database's notice that the *previous* one's session is gone, and a
+    service that crash-looped on its own predecessor's ghost would be a worse
+    failure than the one this prevents.
 
     Returns:
         The connection holding the lock. Keep it; closing it releases the lock.
+
+    Raises:
+        RuntimeError: if another live session still holds the lock.
     """
-    connection = await engine.connect()
-    acquired = await connection.scalar(
-        select(func.pg_try_advisory_lock(_SINGLE_INSTANCE_LOCK_KEY))
-    )
-    # Commit so the connection does not sit idle-in-transaction for the life of
-    # the process. The lock is session-scoped and outlives the transaction.
-    await connection.commit()
-    if not acquired:
-        await connection.close()
-        raise RuntimeError(
-            "Another World Zero backend instance already holds the single-instance "
-            "lock on this database. Praxis rooms live in-process (ADR-0073), so a "
-            "second instance would diverge one praxis into two documents. Refusing "
-            "to start."
+    deadline = anyio.current_time() + wait_seconds
+    while True:
+        connection = await engine.connect()
+        acquired = await connection.scalar(
+            select(func.pg_try_advisory_lock(_SINGLE_INSTANCE_LOCK_KEY))
         )
-    return connection
+        # Commit so the connection does not sit idle-in-transaction for the
+        # life of the process. The lock is session-scoped and outlives the
+        # transaction.
+        await connection.commit()
+        if acquired:
+            return connection
+
+        await connection.close()
+        if anyio.current_time() >= deadline:
+            raise RuntimeError(
+                "Another World Zero backend instance already holds the single-instance "
+                "lock on this database. Praxis rooms live in-process (ADR-0073), so a "
+                "second instance would diverge one praxis into two documents. Refusing "
+                "to start."
+            )
+        logger.warning(
+            "Single-instance lock is held by another session; retrying for up to %.0fs",
+            wait_seconds,
+        )
+        await anyio.sleep(_LOCK_RETRY_SECONDS)
