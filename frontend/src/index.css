@@ -548,12 +548,37 @@
      geometry decision, the hues are not. */
   --faction-default-card-line: #e6ddc8;
   --faction-default-stamp-bg: #ffffff;
-  /* Stop 3 as an INK. Same value as the yellow stop in light, and it tracks the
-     stop through the theme, but it is named for the caption it paints (and for
-     the Singularity credits accent that #1220 pointed here) rather than for a
-     position in a ramp — a gradient must not read it back, or a ramp ends up
-     composed from a text colour. */
-  --faction-default-gold: var(--faction-default-stop-3);
+  /* The POINTS caption's INK — and no longer stop 3 (#1766). This was declared
+     `var(--faction-default-stop-3)`, and the borrow WAS the defect: a gradient
+     stop is picked to sit between its neighbours, not to be read, and #ca8a04
+     as type paid 2.94:1 on --faction-default-stamp-bg (the score plate is pure
+     white) and 2.89:1 on --faction-default-card-bg. The nightly sweep failed it
+     in all fourteen LIGHT combinations — it was the second-largest contributor
+     in the suite — because this family is the site's default chrome rather than
+     one faction's hue, so every route walks it.
+
+     Same amber, hue held exactly (h 40.6°, the channels scaled on lightness)
+     and walked down until it clears the WHITEST ground it has: 5.00:1 on the
+     score plate, 4.92:1 on the card sheet, 4.56:1 on --color-bg-page. Dark's
+     rendered value does not move — the brightened stop already read 8.23:1 on
+     the plate — but it is now DECLARED in the dark cascade below, because
+     breaking the alias took the tracking with it.
+
+     THE STOP ITSELF IS DELIBERATELY UNMOVED. --faction-default-stop-3 is live in
+     -rainbow, -rainbow-vertical, -rainbow-loop, -rainbow-conic, -total-rainbow,
+     --badge-victor-stop-4 and two radial washes; darkening it to fix one caption
+     would smear seven surfaces to mend one. The comment this replaces said a
+     gradient must not read this ink back. The other half of that rule is what
+     #1766 found: an INK must not be a gradient stop either.
+
+     The Singularity credits accent that used to share this token now has its own
+     (--faction-singularity-amber). It had to: the two consumers' grounds are
+     opposite polarities — a white plate and a near-black terminal — and §3's
+     "these inks flip on the SHEET's polarity, not on the theme" says no single
+     value can serve both. The band is provably EMPTY, not merely awkward: white
+     wants luminance <= 0.183 and the terminal wants >= 0.191. Walked far enough
+     for the plate, this amber reads 3.89:1 on the terminal. */
+  --faction-default-gold: #966603;
   /* The chip restates its two hues, and this is the one place in the family
      where that is correct. It has NO dark override: the pill is a saturated
      green→blue in either theme, and --faction-default-chip-text is white
@@ -981,6 +1006,23 @@
   --faction-singularity-led-red: #ff5f56;
   --faction-singularity-led-amber: #f0c400;
   --faction-singularity-led-green: #4ade80;
+  /* The CREDITS ACCENT — the roster's level/score readouts on the faction body,
+     the mobile faction page and the mobile field desk. Not an LED: -led-amber
+     above is a 6px dot on the window bar and this is type.
+
+     Three files carried `const AMBER = 'var(--faction-default-gold)'` and a
+     comment saying "if Singularity's credits panel ever wants its own gold, that
+     is a --faction-singularity-* token, not a brand one". #1766 is that day. The
+     shared token had to walk down to clear na's near-white score plate, and this
+     ground is the terminal — near-black in BOTH themes — so the two consumers
+     want opposite directions and §3's polarity rule applies verbatim.
+
+     RENDERED VALUE UNCHANGED, on purpose: these are exactly what the gold
+     resolved to before the split, so nothing on a Singularity surface repaints.
+     6.63:1 on the terminal by day, 10.59:1 by night. Declared per cascade rather
+     than aliased back to the spectrum, so a re-cut of na's ramp cannot move a
+     faction's ink — which is the coupling #1766 removed. */
+  --faction-singularity-amber: #ca8a04;
 
   /* ══ Singularity — THE TERMINAL SESSION (task card v2, #1023) ══
      A windowed terminal: a chrome bar with three LEDs, a boot line, a LEVEL +
@@ -1711,6 +1753,20 @@
      and those are unaffected: this is a SIBLING, minted so `--everymen-red`
      keeps all of them. Walked down until it clears with room: 5.09:1. */
   --everymen-paper-accent: #b32227;
+  /* The DEEP STOCK's accent ink (#1766) — the third and last rung of the split
+     the two comments above describe, and it exists because the family's three
+     tans are three grounds. Red as TEXT reads 4.95:1 on the sheet panel, 4.49:1
+     on the paper and 3.75:1 on `--everymen-paper-deep`, which is the stock the
+     mobile field desk stamps its Characters / Edit chits out of. That last one
+     is a real miss, not a near one.
+
+     Neither existing rung survives it: `--everymen-paper-accent` is 4.25:1 here,
+     and `--everymen-red-deep` clears by day (5.82:1) and collapses to 2.92:1 at
+     night. So the same red again, walked to 5.03:1 on the deep stock and 6.02:1
+     back on the paper. A SIBLING, per #1173: `--everymen-red` keeps every fill
+     and rule it has, and the feed row's actor name keeps `-paper-accent`, which
+     was measured on a different sheet and is still right there. */
+  --everymen-deep-accent: #a01c21;
   --everymen-field: #c1272d;
   --everymen-field-deep: #8d1c20;
   --faction-everymen-card-bg: var(--everymen-paper);
@@ -1873,7 +1929,10 @@
      rule / ability rows / confetti / seal) took the seven stops; the four narrow
      marks took --faction-default-total-rainbow / -eyebrow-rainbow, which are cut
      for exactly that width; and the three Singularity credit accents took
-     --faction-default-gold, which is what they were actually asking for. */
+     --faction-default-gold, which is what they were actually asking for.
+     (#1766 moved that last group once more, onto --faction-singularity-amber:
+     "the spectrum's yellow as an ink" turned out to be two inks, because na's
+     score plate and the terminal are opposite polarities.) */
 
   /* ── Watercolor splash opacities ── */
   --wc-opacity-blob: 0.3;
@@ -2220,6 +2279,10 @@
   --faction-snide-slip-shadow: 3px 4px 0 rgba(0, 0, 0, 0.6);
   --faction-snide-slip-scrap-shadow: rgba(0, 0, 0, 0.6);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
+  /* The credits accent at night (#1766) — the value the retired
+     --faction-default-gold alias already resolved to here, so the roster
+     readouts render byte-identically. 10.59:1 on the terminal. */
+  --faction-singularity-amber: #e6b94f;
 
   /* ── Singularity terminal session, lights out (#1023) ──
      The chassis stays black (§6) — what moves is the phosphor. Every ink here is
@@ -2341,18 +2404,28 @@
      rather than by a second declaration (see below). */
   --faction-default-card-line: rgba(255, 255, 255, 0.14);
   --faction-default-stamp-bg: #26252f;
-  /* --faction-default-gold, -total-rainbow and -eyebrow-rainbow need no dark
-     entry any more: since #1220 all three compose from --faction-default-stop-*,
-     which this block rebinds above, so the `:root` declarations re-resolve to
-     the brightened spectrum on their own. Same argument the UA parchment
-     gradient makes further up. Restating them here would be three lines that
-     have to be remembered whenever the light cut changes.
+  /* -total-rainbow and -eyebrow-rainbow need no dark entry: since #1220 both
+     compose from --faction-default-stop-*, which this block rebinds above, so
+     the `:root` declarations re-resolve to the brightened spectrum on their own.
+     Same argument the UA parchment gradient makes further up. Restating them
+     here would be lines that have to be remembered whenever the light cut
+     changes.
+
+     --faction-default-gold was a third member of that list until #1766 took it
+     off the stop (see :root for why an ink may not be a ramp position). Breaking
+     the alias broke the tracking with it, so the dark half is declared. THE
+     RENDERED VALUE DOES NOT MOVE — #e6b94f is what the dark stop resolved to,
+     reading 8.23:1 on the dark score plate and 9.27:1 on the sheet, and the
+     caption was never in trouble at night. If the spectrum is ever re-cut, this
+     line no longer follows it, which is the price of the split and is why it
+     says so here.
 
      #1220 corrected one drift on the way: the dark gold and the dark total's
      yellow were both #e6b34a, a hair off the dark yellow STOP (#e6b94f) the
      comment above claimed they took. One hue, one source — the delta is ~6/255
      on one channel and lifts the POINTS caption's contrast on the dark sheet
      rather than lowering it. */
+  --faction-default-gold: #e6b94f;
   /* The composer's three tiers, lights out (#1181). The field LIFTS off the
      sheet here rather than sinking into it — the same inversion --faction-
      default-stamp-bg already makes one block up — and both hairlines become
@@ -2524,6 +2597,13 @@
      the reason the slip/note/composer families are declared apart: same value
      today, a different stock's contract tomorrow. 6.09:1. */
   --everymen-paper-accent: #f4726c;
+  /* The deep stock's accent ink at night (#1766). The light half is a DARKENED
+     red for a tan panel; on the near-black deep stock that value reads 2.39:1,
+     so this half lifts, exactly as `-paper-accent` and `-sheet-accent` do one
+     line up and one block down. Same lifted red all three take: 6.66:1 (against
+     4.55:1 for a bare `--everymen-red`, which clears but with nothing to spare).
+     Declared rather than aliased, for the reason `-paper-accent` gives. */
+  --everymen-deep-accent: #f4726c;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
