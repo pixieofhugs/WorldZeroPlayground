@@ -1,9 +1,3 @@
-# Vault context
-@../../../CLAUDE.md
-@../../../MEMORY.md
-
----
-
 # World Zero — Agent Instructions
 
 A pointer document. It tells you *where* the rules live, not what they are.
@@ -14,8 +8,6 @@ FastAPI (Python) + React community game. Players make Characters, complete
 real-world tasks, post proof ("praxis"), earn points via star-rating votes.
 
 ## Stack
-FastAPI · SQLAlchemy (async) · Alembic · PostgreSQL · React · openapi-fetch ·
-Google OAuth2 → JWT · local-fs media (relative paths) · pytest + GitHub Actions.
 Deeper notes: `docs/spec/SPEC-backend-architecture.md` (backend posture);
 identity + era-as-ruleset in ADR-0041 / ADR-0042.
 
@@ -64,24 +56,9 @@ Read only what your task needs.
   inside a service body.
 - Never hardcode a value that lives in `EraConfig`. Read `era.*`.
 
-## Python conventions
-- async/await throughout FastAPI routes; Pydantic for request/response bodies
-- Models in `models/`, business logic in `services/`. Routes stay thin.
-- Frozen dataclasses over tuples/dicts unless mutation is required
-- ALL_CAPS for module-level constants/singletons
-- Full names, no abbreviations (`task` not `t`, `index` not `idx`)
-- Type-annotate every parameter and return
-- No bare string literals for domain values — use a constant or Enum
-
-## Frontend conventions
-- Read `WORLD_ZERO_STYLE.md` before any UI work
-- Color values live only in `index.css` (CSS vars). Never hardcode hex.
-- Faction config: `factions.ts`. Use `factionCssVar()` for styles.
-- Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
-- Each faction has its own card archetype; don't unify
-- Reuse `.card-meta`, `.card-description` for repeated patterns
-- Hide unusable controls; don't show them disabled
-- Form factor (#494): a new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.
+## Language conventions
+Python conventions live in `backend/CLAUDE.md`; frontend conventions in
+`frontend/CLAUDE.md`. Each loads when you work under that directory.
 
 ## Do NOT
 - Duplicate game rules into this file, services, tests, or docs — read `era.*` or cite the spec
@@ -96,7 +73,7 @@ Read only what your task needs.
 
 ## Running locally
 - Backend: `uvicorn main:app --reload` from `/backend`
-- Frontend: `npm start` from `/frontend`
+- Frontend: `npm run dev` from `/frontend`
 - DB: `docker-compose up -d`; `alembic upgrade head` after pulling
 - Tests: `pytest --cov=. --cov-fail-under=80` from `/backend`
 
@@ -107,9 +84,8 @@ This repo is configured for the engineering skill set (`triage`, `qa`, `review`,
 ### Scoped subagents
 For file-editing work, dispatch to a specialist that loads only its own context: `backend`, `frontend-feature`, `frontend-style`. Definitions and the dispatch shape are in `.claude/agents/README.md`. Orchestration (clarify + dispatch) is this main session's job, not a subagent.
 
-`/builder-bot` picks up where `/triage` stops. It shapes a whole batch (dependency-aware, grouped by **file footprint** so only disjoint work runs in parallel), asks of each issue whether it should exist at all, grills anything ungrilled, dispatches each issue to a scoped subagent in its own worktree, then gates every merge on CI **and** a review pass. A merge ships to production — `main` auto-deploys.
-
-`/git-reaper` sweeps what those batches leave behind — stale worktrees, squash-merged branches, orphaned metadata — and reclaims the disk. It surveys and classifies before deleting anything, and it knows the traps this repo has (a `node_modules` junction that takes main's copy down with it, squash merges that defeat `--merged`).
+`/builder-bot` batches and ships issues; `/git-reaper` sweeps up after. A merge
+ships to production — `main` auto-deploys.
 
 ### Issue tracker
 Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
