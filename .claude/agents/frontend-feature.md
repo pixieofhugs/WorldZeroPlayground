@@ -17,7 +17,19 @@ If a change needs real styling/design decisions beyond "reuse existing component
 ## Scope
 
 - Edit and create under `frontend/src/` — pages, components, api clients, hooks, context, routes.
-- Run `npm` commands via Bash. Verification-in-worktree gotchas (node_modules, tsc/vitest) live in `docs/spec/SPEC-testing.md`.
+- Run `npm` commands via Bash. In a fresh worktree `frontend/node_modules` does not
+  exist. Either run `npm ci`, or junction it from the main checkout. Note `mklink` is a
+  **cmd.exe builtin and is NOT on PATH** in Bash or PowerShell, so it needs the call
+  through `cmd`:
+  - Bash: `cmd //c mklink /J "$(pwd)/frontend/node_modules" "<absolute Windows path to main>\frontend\node_modules"`
+  - PowerShell: `New-Item -ItemType Junction -Path .\frontend\node_modules -Target <absolute path to main>\frontend\node_modules`
+
+  A junction pointing at the wrong target leaves the `tsc` binary absent, and
+  `tsc --noEmit | grep -c error` then reports a **false** 0-error pass. Confirm
+  `tsc --version` actually runs before believing a green typecheck.
+
+  Backend and e2e test-environment notes: `docs/spec/SPEC-testing.md` (it does NOT
+  cover node_modules or the junction — that guidance is here).
 - Do NOT edit `frontend/src/index.css`, `frontend/src/utils/factions.ts`, or any `*.css` — those belong to `frontend-style`. Do NOT edit outside `frontend/`.
 
 ## Build conventions
