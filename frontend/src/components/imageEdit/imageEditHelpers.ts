@@ -43,18 +43,63 @@ export function cropOutputSize(cropArea: Pick<Area, 'width' | 'height'>): Size {
 }
 
 /**
+ * The crop shapes the ratio picker offers when nothing is locked (#1713).
+ * `original` is the image's own ratio — the pre-#1713 behaviour, and still the
+ * default, so the picker unlocks rather than changes what you land on.
+ *
+ * ponytail: there is no `free` (drag-any-rectangle) choice. react-easy-crop
+ * 6.2.2 — the installed version — takes `aspect` as a plain number with a
+ * default and exposes no resize handles, so a user-draggable rect is not in its
+ * API at all; its one escape hatch, `cropSize`, is documented "you should
+ * probably not use this option" and is still not user-draggable. A free crop
+ * therefore needs a different cropper, which is a dependency decision, not this
+ * fix. Upgrade path: swap the cropper, then add 'free' here and let
+ * {@link effectiveAspect} return undefined for it.
+ */
+export const CROP_RATIO_CHOICES = ['original', '1:1', '4:3', '16:9'] as const
+
+export type CropRatioChoice = (typeof CROP_RATIO_CHOICES)[number]
+
+/** Land on the image's own shape — what every praxis crop did before #1713. */
+export const DEFAULT_CROP_RATIO: CropRatioChoice = 'original'
+
+/** The numeric aspect each named ratio locks to. `original` has none — it defers. */
+const RATIO_ASPECTS: Readonly<Record<CropRatioChoice, number | undefined>> = {
+  original: undefined,
+  '1:1': 1,
+  '4:3': 4 / 3,
+  '16:9': 16 / 9,
+}
+
+/**
  * The aspect the crop frame should lock to. A caller-supplied `lockAspect`
- * (e.g. 1 for a square avatar) always wins; otherwise the frame follows the
- * image's natural ratio so nothing is force-cropped (the "free-form" praxis
- * case). Falls back to square before the media reports its size.
+ * (e.g. 1 for a square avatar) always wins. Otherwise the player's picked ratio
+ * decides, and `original` — the default — follows the image's natural ratio so
+ * nothing is force-cropped. Falls back to square before the media reports its
+ * size.
+ *
+ * Before #1713 there was no picked ratio: the frame was the photo's own shape
+ * and only ever that, so a 4:3 phone photo could never yield a square.
  */
 export function effectiveAspect(
   lockAspect: number | undefined,
   naturalAspect: number | undefined,
+  ratioChoice: CropRatioChoice = DEFAULT_CROP_RATIO,
 ): number {
   if (lockAspect && lockAspect > 0) return lockAspect
+  const picked = RATIO_ASPECTS[ratioChoice]
+  if (picked && picked > 0) return picked
   if (naturalAspect && naturalAspect > 0) return naturalAspect
   return 1
+}
+
+/**
+ * Whether the modal offers the ratio picker. Only the call site that locks
+ * nothing gets it: avatars pass {@link AVATAR_ASPECT} and stay square, because a
+ * non-square avatar would need every avatar frame on the site to cope (#1713).
+ */
+export function showsRatioPicker(lockAspect: number | undefined): boolean {
+  return !(lockAspect && lockAspect > 0)
 }
 
 /** True when a picked file is an image — only images get the edit modal. */

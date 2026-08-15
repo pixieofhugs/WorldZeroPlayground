@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   Braid,
   CAPTION,
@@ -52,6 +53,10 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
  */
 
 const CHROME = 'var(--font-faction-rounded)' // Quicksand
+
+/** The task-faction mark on a quest row (#1711) — a shade larger than the gilt
+ *  sparkle it replaces, which was a filled shape where this is drawn line. */
+const ROW_SIGIL = 14
 
 /** The reading voice — every prose line on the page. */
 const PROSE: CSSProperties = {
@@ -381,7 +386,13 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                     textDecoration: 'none',
                   }}
                 >
-                  <CovenSigil size={12} color={GOLD} />
+                  {/* The lead mark is the TASK's faction, not the coven's own
+                      sparkle in gold (#1711) — this row showed the same mark
+                      whoever owned the task. The caption below names the
+                      faction, so the mark is decorative. */}
+                  <span className="shrink-0 flex" aria-hidden>
+                    <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate" style={{ fontFamily: HAND, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
                       {praxis.task_title}

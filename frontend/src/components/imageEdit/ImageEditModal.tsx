@@ -10,8 +10,9 @@
  * reports through `onError` rather than uploading the unprocessed file behind
  * their back (#1527) — the decision table lives in `applyImageEdit`.
  *
- * One reusable component drives both call sites: praxis media (free-form frame
- * that follows the image's natural ratio) and character avatars (locked 1:1).
+ * One reusable component drives both call sites: praxis media (no locked
+ * aspect, so it gets the crop-shape picker — #1713) and character avatars
+ * (locked 1:1, no picker: every avatar frame on the site assumes square).
  *
  * Modal chrome mirrors LevelUpPopup / InvitationLetterPopup: fixed radial-dim
  * overlay, role="dialog", Escape closes, the primary action autofocuses, no
@@ -23,14 +24,17 @@ import Cropper from 'react-easy-crop'
 import type { Area, MediaSize, Point } from 'react-easy-crop'
 import { useTranslation } from 'react-i18next'
 import {
+  CROP_RATIO_CHOICES,
+  DEFAULT_CROP_RATIO,
   applyImageEdit,
   cropOutputSize,
   effectiveAspect,
   originalUpload,
   rotateSize,
+  showsRatioPicker,
   toRadians,
 } from './imageEditHelpers'
-import type { ApplyFailureReason } from './imageEditHelpers'
+import type { ApplyFailureReason, CropRatioChoice } from './imageEditHelpers'
 
 const PAPER = 'var(--color-bg-page)'
 const INK = 'var(--color-text-primary)'
@@ -44,6 +48,15 @@ const MIN_ZOOM = 1
 const MAX_ZOOM = 4
 const ZOOM_STEP = 0.01
 const ROTATE_STEP = 90
+const NO_PAN: Point = { x: 0, y: 0 }
+
+/** Ratio button copy — keys, not strings, so the catalog stays the only text (ADR-0032). */
+const RATIO_LABEL_KEY = {
+  original: 'imageEdit.ratioOriginal',
+  '1:1': 'imageEdit.ratio1x1',
+  '4:3': 'imageEdit.ratio4x3',
+  '16:9': 'imageEdit.ratio16x9',
+} as const satisfies Record<CropRatioChoice, string>
 
 export interface ImageEditModalProps {
   /** The picked source image. */
@@ -135,9 +148,10 @@ export default function ImageEditModal({
 }: ImageEditModalProps) {
   const { t } = useTranslation('common')
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
-  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
+  const [crop, setCrop] = useState<Point>(NO_PAN)
   const [zoom, setZoom] = useState(MIN_ZOOM)
   const [rotation, setRotation] = useState(0)
+  const [ratioChoice, setRatioChoice] = useState<CropRatioChoice>(DEFAULT_CROP_RATIO)
   const [naturalAspect, setNaturalAspect] = useState<number | undefined>(undefined)
   const [applying, setApplying] = useState(false)
   const croppedAreaRef = useRef<Area | null>(null)
@@ -170,6 +184,20 @@ export default function ImageEditModal({
   const rotateBy = (delta: number) =>
     setRotation((previous) => (previous + delta + 360) % 360)
 
+  /**
+   * Picking a ratio re-locks the frame. "Original" is also the reset the owner
+   * asked for (#1713) — back to the photo's own shape, upright and unzoomed —
+   * so it clears zoom, rotation and pan even when it is already selected.
+   */
+  const pickRatio = (choice: CropRatioChoice) => {
+    setRatioChoice(choice)
+    if (choice === DEFAULT_CROP_RATIO) {
+      setZoom(MIN_ZOOM)
+      setRotation(0)
+      setCrop(NO_PAN)
+    }
+  }
+
   const failureMessage = (reason: ApplyFailureReason): string =>
     reason === 'not-ready' ? t('imageEdit.errorNotReady') : t('imageEdit.errorFailed')
 
@@ -199,7 +227,7 @@ export default function ImageEditModal({
     }
   }
 
-  const frameAspect = effectiveAspect(aspect, naturalAspect)
+  const frameAspect = effectiveAspect(aspect, naturalAspect, ratioChoice)
 
   const card = (
     <div
@@ -229,6 +257,32 @@ export default function ImageEditModal({
           />
         )}
       </div>
+
+      {/* Crop shape (#1713) — only where nothing is locked. Before this the frame
+          was the photo's own ratio and only ever that, so an iPhone's 4:3 could
+          never yield a square. Avatars lock 1:1 and show no picker: every avatar
+          frame on the site assumes square. */}
+      {showsRatioPicker(aspect) && (
+        <div style={controlRowStyle}>
+          <span style={controlLabelStyle}>{t('imageEdit.ratioLabel')}</span>
+          <div role="group" aria-label={t('imageEdit.ratioGroupAria')} style={ratioGroupStyle}>
+            {CROP_RATIO_CHOICES.map((choice) => (
+              <button
+                key={choice}
+                type="button"
+                aria-pressed={choice === ratioChoice}
+                aria-label={
+                  choice === DEFAULT_CROP_RATIO ? t('imageEdit.ratioOriginalAria') : undefined
+                }
+                onClick={() => pickRatio(choice)}
+                style={choice === ratioChoice ? selectedRatioButtonStyle : ratioButtonStyle}
+              >
+                {t(RATIO_LABEL_KEY[choice])}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Zoom */}
       <label style={controlRowStyle}>
@@ -353,6 +407,30 @@ const controlLabelStyle: CSSProperties = {
   color: FAINT,
   flex: 'none',
   width: 56,
+}
+const ratioGroupStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 'var(--space-sm)',
+}
+// Same ghost button, tightened so four of them fit beside the label.
+const ratioButtonStyle: CSSProperties = {
+  fontFamily: FONT_BODY,
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+  fontSize: 'var(--text-base)',
+  padding: 'var(--space-xs) var(--space-md)',
+  border: `1px solid ${BORDER}`,
+  background: 'transparent',
+  color: INK,
+  cursor: 'pointer',
+}
+// Selection reads as the same ink/paper inversion the primary action uses.
+const selectedRatioButtonStyle: CSSProperties = {
+  ...ratioButtonStyle,
+  background: INK,
+  color: PAPER,
+  fontWeight: 700,
 }
 const actionRowStyle: CSSProperties = {
   display: 'flex',

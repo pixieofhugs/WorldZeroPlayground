@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { relativeTime } from '../../utils/dates'
-import { factionCssVar } from '../../utils/factions'
+import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import type { PraxisCardOut } from '../../api/praxis'
@@ -17,10 +17,15 @@ import { praxisModeLabel } from '../../utils/praxis'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { useLevelTrack } from '../../hooks/useLevelTrack'
 import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
+import FactionSigil from '../sigil/FactionSigil'
 import { feedKicker, feedItemTitle } from '../feed/feedItemLabels'
 import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
+
+/** The task-faction mark on an in-progress row (#1711), set to the row's own
+ *  type size so it reads as part of the line rather than as an emblem. */
+const ROW_SIGIL = 14
 
 /**
  * Each reorderable panel's heading key.
@@ -354,21 +359,33 @@ function ActiveTasksBody({
               >
                 {praxis.task_title}
               </Link>
-              <span
-                className="shrink-0"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 'var(--text-sm)',
-                  letterSpacing: '0.16em',
-                  textTransform: 'uppercase',
-                  color: 'var(--faction-default-card-muted)',
-                  padding: 'var(--space-xs) var(--space-sm)',
-                  border: '1px solid var(--color-border-strong)',
-                  borderRadius: 999,
-                }}
-              >
-                {praxisModeLabel(praxis, t)}
-              </span>
+              <div className="shrink-0 flex items-center gap-2">
+                <span
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 'var(--text-sm)',
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    color: 'var(--faction-default-card-muted)',
+                    padding: 'var(--space-xs) var(--space-sm)',
+                    border: '1px solid var(--color-border-strong)',
+                    borderRadius: 999,
+                  }}
+                >
+                  {praxisModeLabel(praxis, t)}
+                </span>
+                {/* Whose faction the TASK belongs to, beside what kind of praxis
+                    it is (#1711) — two different facts, so the pill stays. This
+                    row spells the faction out nowhere else, so unlike the mobile
+                    FieldDesk rows the mark is NAMED rather than hidden. */}
+                <span
+                  className="flex"
+                  role="img"
+                  aria-label={factionName(praxis.task_faction_slug)}
+                >
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
+              </div>
             </div>
           ))}
         </div>
