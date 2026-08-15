@@ -7,7 +7,11 @@
  * effects — so the parts worth guarding are the ones that are functions of
  * state rather than of a pointer:
  *
- *   - thumbOffset / thumbWidth for each (index, segment count) pair, 2..6
+ *   - thumbGeometry / sameBoxes — the pure half of the measured thumb (#1726).
+ *     The MEASUREMENT is not reachable here and never will be: `offsetLeft` and
+ *     `ResizeObserver` need a real layout. What is reachable is the decision
+ *     taken from a set of measured boxes, and the fact that an unmeasured rail
+ *     draws no thumb at all.
  *   - deriveChips from a filter-state object, facet chips first, with and
  *     without an ornament
  *   - the applied-count badge, which is chips.length rendered
@@ -33,17 +37,16 @@ import FilterBar from '..'
 import { factionFacet, filterRoster } from '../factionFacet'
 import {
   deriveChips,
+  sameBoxes,
   selectEmptyState,
   selectedFirst,
-  thumbOffset,
-  thumbWidth,
+  thumbGeometry,
   toggleOption,
   type FilterFacet,
   type FilterRail,
+  type SegmentBox,
 } from '../filterState'
 import type { FactionOut } from '../../../../api/factions'
-
-const PAD = 'var(--filter-rail-pad)'
 
 const sortRail = (value: string, onChange = () => {}): FilterRail => ({
   key: 'sort',
@@ -86,50 +89,78 @@ const typeFacet = (
   onChange,
 })
 
-describe('thumbOffset / thumbWidth — the sliding thumb geometry', () => {
-  // The design's maths is `calc(i * (100% - 6px) / n + 3px)`; the 3px rail
-  // padding is a token here so the CSS and the JS cannot drift.
-  it('places a 2-segment thumb at either end', () => {
-    expect(thumbOffset(0, 2)).toBe(`calc(0 * (100% - 2 * ${PAD}) / 2 + ${PAD})`)
-    expect(thumbOffset(1, 2)).toBe(`calc(1 * (100% - 2 * ${PAD}) / 2 + ${PAD})`)
+describe('thumbGeometry — the thumb sits on the MEASURED active segment (#1726)', () => {
+  // The tasks status rail as a viewer who can see all four states measures it:
+  // "All" is 3 characters and "Pending" is 7, so the boxes are UNEQUAL. The old
+  // `calc(i * track / n)` arithmetic could only say "one nth", which is what
+  // forced `flex: 1` on the segment and made "Retired"/"Pending" overflow.
+  const statusBoxes: SegmentBox[] = [
+    { left: 3, top: 3, width: 49, height: 38 },
+    { left: 52, top: 3, width: 74, height: 38 },
+    { left: 126, top: 3, width: 83, height: 38 },
+    { left: 209, top: 3, width: 83, height: 38 },
+  ]
+
+  it('takes the active segment box whole, unequal widths and all', () => {
+    expect(thumbGeometry(statusBoxes, 0)).toEqual({
+      left: '3px',
+      top: '3px',
+      width: '49px',
+      height: '38px',
+    })
+    expect(thumbGeometry(statusBoxes, 3)).toEqual({
+      left: '209px',
+      top: '3px',
+      width: '83px',
+      height: '38px',
+    })
   })
 
-  it('places a 3-segment thumb (the tasks sort rail: level / newest / oldest)', () => {
-    expect(thumbOffset(0, 3)).toBe(`calc(0 * (100% - 2 * ${PAD}) / 3 + ${PAD})`)
-    expect(thumbOffset(1, 3)).toBe(`calc(1 * (100% - 2 * ${PAD}) / 3 + ${PAD})`)
-    expect(thumbOffset(2, 3)).toBe(`calc(2 * (100% - 2 * ${PAD}) / 3 + ${PAD})`)
+  // 2 segments logged out, 3 or 4 signed in: the same function, no segment
+  // count anywhere in it.
+  it('places the thumb at either end of a 2-segment rail', () => {
+    const twoUp: SegmentBox[] = [
+      { left: 3, top: 3, width: 90, height: 38 },
+      { left: 93, top: 3, width: 140, height: 38 },
+    ]
+    expect(thumbGeometry(twoUp, 1)?.left).toBe('93px')
+    expect(thumbGeometry(twoUp, 1)?.width).toBe('140px')
   })
 
-  it('places a 4-segment thumb (the praxis sort rail)', () => {
-    for (const index of [0, 1, 2, 3]) {
-      expect(thumbOffset(index, 4)).toBe(
-        `calc(${index} * (100% - 2 * ${PAD}) / 4 + ${PAD})`,
-      )
-    }
+  it('carries top and height too, so a wrapped rail still lands on its row', () => {
+    const wrapped: SegmentBox[] = [
+      { left: 3, top: 3, width: 90, height: 44 },
+      { left: 3, top: 47, width: 90, height: 44 },
+    ]
+    expect(thumbGeometry(wrapped, 1)?.top).toBe('47px')
   })
 
-  // #1446 widened RAIL_SEGMENTS_MAX to 6 for Updates' relationship rail
-  // (All / Your Stuff / Friends / Foes / Global).
-  it('places a 5-segment thumb (the relationship rail)', () => {
-    for (const index of [0, 1, 2, 3, 4]) {
-      expect(thumbOffset(index, 5)).toBe(
-        `calc(${index} * (100% - 2 * ${PAD}) / 5 + ${PAD})`,
-      )
-    }
+  it('is null before the rail has been measured — first paint draws no thumb', () => {
+    expect(thumbGeometry([], 0)).toBeNull()
   })
 
-  it('places a 6-segment thumb — the widened ceiling', () => {
-    for (const index of [0, 1, 2, 3, 4, 5]) {
-      expect(thumbOffset(index, 6)).toBe(
-        `calc(${index} * (100% - 2 * ${PAD}) / 6 + ${PAD})`,
-      )
-    }
+  it('is null for a zero-width measurement (a hidden or unlaid-out rail)', () => {
+    expect(thumbGeometry([{ left: 0, top: 0, width: 0, height: 0 }], 0)).toBeNull()
   })
 
-  it('sizes the thumb to one nth of the track for 2 through 6 segments', () => {
-    for (const count of [2, 3, 4, 5, 6]) {
-      expect(thumbWidth(count)).toBe(`calc((100% - 2 * ${PAD}) / ${count})`)
-    }
+  it('is null when the active index is past the measured set', () => {
+    // The rail is viewer-gated: signing out drops two segments, and the render
+    // that shrinks the set runs before the re-measure.
+    expect(thumbGeometry(statusBoxes.slice(0, 2), 3)).toBeNull()
+  })
+})
+
+describe('sameBoxes — the re-measure guard', () => {
+  const box = (left: number): SegmentBox => ({ left, top: 3, width: 49, height: 38 })
+
+  it('holds the old array when nothing moved, so a ResizeObserver cannot loop', () => {
+    expect(sameBoxes([box(3), box(52)], [box(3), box(52)])).toBe(true)
+  })
+
+  it('sees a move, a resize and a change of segment count', () => {
+    expect(sameBoxes([box(3)], [box(4)])).toBe(false)
+    expect(sameBoxes([box(3)], [{ ...box(3), width: 50 }])).toBe(false)
+    expect(sameBoxes([box(3)], [box(3), box(52)])).toBe(false)
   })
 })
 
@@ -223,6 +254,22 @@ describe('the applied-count badge', () => {
   it('counts facet chips and rail chips together', () => {
     const html = render(['ua', 'coven'], 'all')
     expect(html).toContain('>3<')
+  })
+})
+
+describe('the rail before it has been measured (#1726)', () => {
+  it('draws its segments but no thumb', () => {
+    // The thumb is a function of a measured rect since #1726, and this harness
+    // runs no effects, so the FIRST render carries no thumb at all. That is the
+    // shipped behaviour too: a thumb rendered before layout would flash at the
+    // wrong place or at zero width, and `useLayoutEffect` puts the real one in
+    // before the browser paints. If a thumb ever appears in this markup, some
+    // fallback geometry has been reintroduced — that fallback IS the flash.
+    const html = renderToStaticMarkup(
+      <FilterBar rails={[eraRail('current')]} facets={[]} onClearAll={() => {}} />,
+    )
+    expect(html).toContain('filter-rail__segment')
+    expect(html).not.toContain('filter-rail__thumb')
   })
 })
 
