@@ -7,6 +7,7 @@ import { UaSigil } from '../../../components/sigil/UaSigil'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
@@ -316,7 +317,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
                   <div className="truncate" style={{ ...smallCaps, marginTop: 'var(--space-xs)' }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
-                      points: praxis.task_point_value,
+                      points: formatPoints(praxis.score),
                     })}
                   </div>
                 </div>
