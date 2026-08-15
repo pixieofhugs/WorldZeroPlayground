@@ -270,10 +270,10 @@
     },
     "ua": {
       "estLine": "A daily practice",
-      "pointsLine": "{{points}} marks",
+      "pointsLine": "{{points}} points",
       "signup": "Sign up",
       "levelCaption": "Level",
-      "pointsUnit": "marks"
+      "pointsUnit": "points"
     },
     "coven": {
       "signup": "sign up",
@@ -375,11 +375,11 @@
     },
     "ua": {
       "eyebrow": "World Zero · A daily practice",
-      "descriptionFallback": "One true mark, then another. The satisfaction is in the making, not the tally.",
+      "descriptionFallback": "One true piece, then another. The satisfaction is in the making, not the tally.",
       "stats": {
         "members": "practising",
-        "tasks": "marks open",
-        "praxes": "marks sealed"
+        "tasks": "sheets open",
+        "praxes": "pieces sealed"
       }
     },
     "coven": {
@@ -407,12 +407,12 @@
     "ua": {
       "masthead": "World Zero · Nº I",
       "wordmark": "UA",
-      "subtitle": "A daily practice of making marks.",
-      "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the mark itself. Come sit with the work.",
+      "subtitle": "A daily practice of making things.",
+      "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the making itself. Come sit with the work.",
       "status": {
         "locked": "Seal work worth holding up to earn your place.",
         "eligible": "A seat is kept for you.",
-        "member": "Practising — one true mark a day."
+        "member": "Practising — one true piece a day."
       },
       "members_one": "{{count}} practising",
       "members_other": "{{count}} practising",
