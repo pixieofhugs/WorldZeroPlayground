@@ -43,6 +43,9 @@ export interface ProposalFields {
   metaBonusValue: string;
   levelRequired: number | "";
   factionSlug: string;
+  /** Free-text note to the reviewing admin. Only the standard-task branch
+   *  reads it — the form hides the textarea for metatasks (#1823). */
+  notes: string;
 }
 
 /** Which endpoint {@link handleSubmit} will hit, plus its ready-built body. */
@@ -60,6 +63,10 @@ export type ProposalPlan =
  * `primary_faction_slug` and a metatask's issuing `metatask_faction_slug`. Any
  * slug routes through unchanged, including `na` (Unaffiliated = anyone); the
  * backend only requires a truthy slug and metatasks are faction-open (#894).
+ *
+ * `notes` rides the standard branch only, because that is the only branch whose
+ * form renders the textarea (#1823). Both branches POST /tasks and both are
+ * validated as `TaskCreate`, so the omission is a UI fact, not a wire limit.
  */
 export function planProposalSubmission(fields: ProposalFields): ProposalPlan {
   const level = fields.levelRequired === "" ? 0 : fields.levelRequired;
@@ -83,6 +90,7 @@ export function planProposalSubmission(fields: ProposalFields): ProposalPlan {
       point_value: parseInt(fields.pointValue) || 10,
       level_required: level,
       primary_faction_slug: fields.factionSlug || undefined,
+      notes: fields.notes || undefined,
     },
   };
 }
@@ -169,6 +177,7 @@ export function useProposeTask(): ProposeTaskState {
         metaBonusValue,
         levelRequired,
         factionSlug,
+        notes,
       });
       if (plan.kind === "metatask") {
         await proposeMetatask(plan.body);

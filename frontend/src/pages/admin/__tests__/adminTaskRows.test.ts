@@ -49,6 +49,7 @@ const PENDING_METATASK: PendingTaskOut = {
     title: "Chart the coven's tasks",
   }),
   created_by_name: "mollusk",
+  notes: "",
 };
 
 describe("mergeAdminTaskRows", () => {

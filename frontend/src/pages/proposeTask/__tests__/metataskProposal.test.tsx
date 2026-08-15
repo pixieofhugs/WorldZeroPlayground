@@ -85,6 +85,7 @@ describe('planProposalSubmission — checkbox routes to proposeMetatask', () => 
     pointValue: '10',
     metaBonusValue: '25',
     levelRequired: 3 as number | '',
+    notes: '',
   }
 
   it('routes a checked proposal through the metatask endpoint with the picked faction', () => {

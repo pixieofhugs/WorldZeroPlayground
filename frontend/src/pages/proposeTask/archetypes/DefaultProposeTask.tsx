@@ -576,11 +576,16 @@ export default function DefaultProposeTask({
                 >
                   {t("proposeTask.fields.notes.label")}
                 </span>
+                {/* maxLength mirrors schemas.task.MAX_TASK_NOTES, which stays
+                    the authority and still rejects an over-long body. Stated
+                    as a literal for the same reason the title and description
+                    fields above state 200 / 5000. */}
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={submitting}
+                  maxLength={2000}
                   placeholder={t("proposeTask.fields.notes.placeholder")}
                   className="content-text"
                   style={notesTextareaStyle}
