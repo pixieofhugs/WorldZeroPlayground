@@ -25,10 +25,15 @@
  *
  * The arithmetic is `waitingClock.ts`, unchanged and shared with the ring — the
  * countdown is computed from the props at render, so it recomputes whenever the
- * praxis payload does. That matters most for this viewer: typing is what
- * CANCELS the window (`cancel_pending_publish_on_edit`), so the holdout warned
- * about a deadline is also the player most likely to make it obsolete. The
- * autosave takes the PUT's response payload for exactly this reason.
+ * praxis payload does.
+ *
+ * What that used to buy is gone, and the caption had to change with it (#1745).
+ * Typing was what cancelled the window, so the holdout warned about a deadline
+ * was also the player most likely to make it obsolete mid-sentence. The write-up
+ * is now **frozen** for the whole crew while the window runs, so this viewer's
+ * way out is to reopen it — which is the same cancellation, said out loud. The
+ * reopen affordance itself sits in the write-up region rather than here, next to
+ * the editor that is refusing them.
  */
 import type { PraxisMemberOut } from "../../../api/praxis";
 import { deriveCollabGate } from "../../../components/collab/CollabRoster";
