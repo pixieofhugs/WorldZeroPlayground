@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
 import { EphemeristsSigil } from '../../../components/sigil/EphemeristsSigil'
 import FactionSigil from '../../../components/sigil/FactionSigil'
@@ -303,7 +304,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
                   <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: QUIET }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
-                      points: praxis.task_point_value,
+                      points: formatPoints(praxis.score),
                     })}
                   </div>
                 </div>

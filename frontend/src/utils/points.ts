@@ -58,6 +58,20 @@ export function isNeutralMultiplier(multiplier: number): boolean {
 }
 
 /**
+ * A points figure for a one-line stamp: whole numbers stay whole, anything else
+ * takes one decimal — never a raw float with fifteen digits of arithmetic noise
+ * on it. A praxis score is a weighted sum, so that noise is the normal case.
+ *
+ * Lives here rather than beside any one surface because the duel stakes tiles,
+ * the desktop FieldDesk's "continue" rows and all eight mobile field desks print
+ * the same kind of figure, and three private copies of one `toFixed` is how the
+ * rounding rule drifts (#1834).
+ */
+export function formatPoints(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
+/**
  * Compute the display point value for a task given the viewing player's
  * faction — base points with {@link computeFactionMultiplier} already applied,
  * rounded to an integer.
