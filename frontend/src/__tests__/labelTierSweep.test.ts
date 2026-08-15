@@ -117,3 +117,81 @@ describe('the label tier is two classes, and `.eyebrow` is not one of them (#130
     expect(css).toMatch(/^\s*\.label-caption\s*\{/m)
   })
 })
+
+/**
+ * #1608 — the half of the tier the census above CANNOT see.
+ *
+ * The guard at the top counts `className` values, and that is the right
+ * instrument for a class. It is the wrong one for the second population doing
+ * the same job: a local `const eyebrow: CSSProperties` declared inside an
+ * archetype and spread onto elements, which never names any class. 213 such
+ * declarations across 99 files carried the tier's two smallest steps while
+ * #1307 closed green, because a value laundered through a data structure is
+ * invisible to a sweep that greps a NAME.
+ *
+ * So this one greps the SIZE TOKEN instead, which is the one thing every member
+ * of that population has in common. It deliberately counts the raw string
+ * rather than parsing a `fontSize:` property, because the shapes vary — a
+ * ternary, a spread override, a plain declaration — and a parser tuned to the
+ * shapes we happened to find is the same mistake one layer down.
+ *
+ * The allow-list is the point of the file, not an exemption from it. Each entry
+ * is a site where the two steps survive for a reason that is NOT "we missed
+ * it", and the reason is written next to it. Adding a row here should feel like
+ * an argument you have to make.
+ */
+const SMALLEST_STEPS = /var\(--text-(?:sm|xs)\)/g
+
+/** file → how many hits are there on purpose, and why. */
+const ALLOWED: Record<string, { readonly hits: number; readonly why: string }> = {
+  'pages/praxisDetail/shared.tsx': {
+    hits: 16,
+    why:
+      'Moderation and flag controls carrying `.btn-primary`/`.btn-outline`, whose ' +
+      'own size IS this token — the inline value restates the class rather than ' +
+      'laundering one. Two more are the notice body under a --text-base title, ' +
+      'which raising alone would invert. Both belong to a button/content pass.',
+  },
+  'components/duel/shared.tsx': {
+    hits: 3,
+    why:
+      'Two `.btn-*` restatements on the seal actions, which #769 settled as ' +
+      'button chrome, plus one mention in the prose that records that decision.',
+  },
+  'components/collab/CollabSuccess.tsx': {
+    hits: 2,
+    why:
+      'One `.btn-primary` restatement, and one paragraph of body copy — content, ' +
+      'not a label, so the label tier is not where its size comes from.',
+  },
+  'pages/admin/AccountsTab.tsx': {
+    hits: 2,
+    why: 'Both `.btn-outline` restatements on the ban/unban control.',
+  },
+  'components/praxisCard/desktop/EphemeristsPraxisCard.tsx': {
+    hits: 1,
+    why:
+      'The glyph strip alternates two sizes as ornament. It is drawing, not ' +
+      'label text, and the sizes are a rhythm rather than a tier.',
+  },
+  'components/praxisCard/__tests__/cardChrome.test.tsx': {
+    hits: 1,
+    why: 'A NEGATIVE assertion — it exists to prove the token is absent.',
+  },
+}
+
+describe('the label tier left its two smallest steps, objects included (#1608)', () => {
+  it('names --text-sm/--text-xs only where a reason is written down', () => {
+    const here = fileURLToPath(import.meta.url)
+    const carrying = sources()
+      .filter(({ path }) => path !== here)
+      .map(({ path, source }) => ({
+        file: path.slice(SRC.length).replace(/\\/g, '/'),
+        hits: source.match(SMALLEST_STEPS)?.length ?? 0,
+      }))
+      .filter(({ hits }) => hits > 0)
+
+    const unexplained = carrying.filter(({ file, hits }) => ALLOWED[file]?.hits !== hits)
+    expect(unexplained).toEqual([])
+  })
+})
