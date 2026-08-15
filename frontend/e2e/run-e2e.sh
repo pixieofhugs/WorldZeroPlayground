@@ -100,4 +100,9 @@ echo "==> playwright"
 cd "$FRONTEND_DIR"
 export E2E_API_URL="http://localhost:$E2E_BACKEND_PORT"
 export E2E_WEB_PORT
+# A spec that needs an admin-only operation runs the backend script (era reset is
+# scripts/era_reset.py since #1667, not a route) — it needs this interpreter, and
+# DATABASE_URL (exported above) both to reach the e2e db and to prove it IS the
+# e2e db before doing anything destructive. See duel-zzz-resolved.spec.ts.
+export E2E_PYTHON="$PYTHON_BIN"
 npx playwright test "$@"
