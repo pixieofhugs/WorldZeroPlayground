@@ -881,10 +881,12 @@ export function BodyTextarea({
       view.destroy();
       viewRef.current = null;
     };
-    // Only the bound text may rebuild the editor. Everything else below
-    // reconfigures it in place — a rebuild would drop the caret and the undo
-    // history mid-sentence.
-  }, [ytext]);
+    // Only the bound text and the placeholder rebuild the editor. Everything
+    // else below reconfigures it in place — a rebuild would drop the caret and
+    // the undo history mid-sentence. The placeholder is a translated string, so
+    // it changes exactly once, on a language switch, where a rebuild costs
+    // nothing: the text itself lives in the room, not in the editor.
+  }, [ytext, skin.placeholder]);
 
   useEffect(() => {
     viewRef.current?.dispatch({
