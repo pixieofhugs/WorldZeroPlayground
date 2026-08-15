@@ -39,6 +39,7 @@ import {
   deltaE76,
   formatRatio,
   parseColor,
+  relativeLuminance,
 } from "../contrast";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
@@ -1514,6 +1515,22 @@ function ruleBody(selector: string): string {
   return CSS_TEXT.slice(at, CSS_TEXT.indexOf("}", at));
 }
 
+/** A component's source, for the same reason `ruleBody` exists. */
+function sourceOf(relative: string): string {
+  return readFileSync(fileURLToPath(new URL(`../../${relative}`, import.meta.url)), "utf8");
+}
+
+/**
+ * `dress.pageStyle` out of `EphemeristsEditPraxis` — THE SECOND EPHEMERISTS
+ * ROOT, and the one two separate seams (#1636's links, #1800's labels) have now
+ * had to be declared on. One reader, so the third seam does not re-derive the
+ * slice.
+ */
+function ephemeristsComposerPageStyle(): string {
+  const source = sourceOf("pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx");
+  return source.slice(source.indexOf("pageStyle: {"), source.indexOf("breadcrumbInk:"));
+}
+
 describe("faction token contrast (WCAG AA)", () => {
   for (const theme of BOTH_THEMES) {
     describe(theme, () => {
@@ -1942,6 +1959,39 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
       "`.eph-plate-sheet` is the column both Ephemerists detail pages wear, and it is the one sheet in the kit where a bare `.label-caption` lands on the global neutral over a night ground — the comment leaves' owner controls and the thread heading at 2.01:1 in light. Without this the plate has no way to fix its own sheet.",
     ).toContain("--label-ink: var(--faction-ephemerists-plate-quiet)");
   });
+
+  /**
+   * #1800 — AND THE OTHER ROOT, which is the same finding #1636 made one
+   * property over and the reason that block's assertion is not one assertion.
+   * `.eph-plate-sheet` is worn by the two DETAIL columns and nothing else;
+   * `EphemeristsEditPraxis`'s `dress.pageStyle` is the one Ephemerists root
+   * outside that column, mounted by both `ComposerPage` and
+   * `PraxisWaitingSurface`. Unset there, every `.label-caption` inside the
+   * composer sheet reads the global tertiary on `-plate-bg` (2.01:1 light) and
+   * inside a panel cell on `-plate-inner` (1.86:1) — the same numbers #1754
+   * measured, on the column it was scoped out of.
+   *
+   * The composer's PAGE ground is not the plate's, and that is worth stating
+   * because it is the trap: `ComposerPage` renders a bare `<div style={style}>`
+   * with no background, so the ground under the sheet is the APP's
+   * `--color-bg-page`, where `-plate-quiet` reads 2.64:1 in light. Nothing is
+   * broken by that today — every `.label-caption` this root cascades to renders
+   * inside `ComposerSheet` (`-plate-bg`) or a panel (`-plate-inner`), and the
+   * breadcrumb, the one thing on the bare page, takes `breadcrumbInk`
+   * explicitly. A label mounted directly on the composer page would be the
+   * exception, and it would be the same defect #1793 fixed on the faction page.
+   */
+  it("the composer and waiting surface set the same label seam on their own root (#1800)", () => {
+    const pageStyle = ephemeristsComposerPageStyle();
+    expect(
+      pageStyle,
+      "`dress.pageStyle` is the second Ephemerists root. Without the seam, every `.label-caption` in the composer and the waiting surface reads the global tertiary on a night sheet — 2.01:1 on the plate, 1.86:1 in a panel cell.",
+    ).toContain('["--label-ink" as string]: QUIET');
+    expect(
+      ruleBody(".eph-plate-sheet"),
+      "both Ephemerists roots must land on ONE ink, or the label tier reads two different quiets depending on which page you are on.",
+    ).toContain("--label-ink: var(--faction-ephemerists-plate-quiet)");
+  });
 });
 
 /**
@@ -2018,11 +2068,7 @@ describe("a prose link's ink is a seam (#1636)", () => {
   // pairing it would name (`nile` on `-plate-inner`) is already green above,
   // measured on a surface that was not reading it.
   it("the composer and waiting surface set the same seam on their own root", () => {
-    const source = readFileSync(
-      fileURLToPath(new URL("../../pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx", import.meta.url)),
-      "utf8",
-    );
-    const pageStyle = source.slice(source.indexOf("pageStyle: {"), source.indexOf("breadcrumbInk:"));
+    const pageStyle = ephemeristsComposerPageStyle();
     expect(
       pageStyle,
       "`dress.pageStyle` is mounted by both `ComposerPage` and `PraxisWaitingSurface`; without the seam their prose links fall back to the app neutral on a night ground.",
@@ -2088,4 +2134,88 @@ describe("a themed ground is a longhand (#1636)", () => {
     }
   });
 
+});
+
+/**
+ * #1793 — A NIGHT-PLATE INK ON THE APP'S OWN PAGE.
+ *
+ * `EphemeristsFactionBody`'s root is a bare `.wz-faction-grid`, so the ground
+ * under everything it does NOT put inside a `CARD` is `--color-bg-page`. #1675
+ * already found this once, for the section headings and their kickers, and
+ * repainted those onto the app's own tiers with the ruling that names the shape:
+ * "the root is a bare `.wz-faction-grid`, so the ground is the app's, and the
+ * ink has to be the app's too." Three quiet paragraphs on the same page were
+ * left behind — the tasks and praxis empty states, which the nightly rendered
+ * sweep then caught at 2.64:1.
+ *
+ * WHY THE TOKEN DOES NOT MOVE, which is the answer this block exists to record
+ * so the next reader does not re-run the search. `-plate-quiet` has to clear
+ * 4.5:1 on the plate register's loosest ground, `-plate-inner` (#1d2130), which
+ * puts a floor under its relative luminance of 0.2453; clearing 4.5:1 on the
+ * light page ground (#f7f4ee) puts a CEILING on it of 0.1626. The intervals do
+ * not overlap, so no sRGB value satisfies both and the search is not "pick a
+ * better hex" — it is "this ink is not for this ground". Same conclusion the
+ * Ephemerists register itself reached one cascade over, in the `-plate-bg`
+ * comment in index.css.
+ *
+ * ASSERTED ON THE SOURCE, not on a ratio, for the reason #1413 and #1307 give:
+ * the pairing "a faction ink on the app's page" is one a token-value manifest is
+ * structurally unable to name, and every row above stays green through it.
+ */
+describe("the Ephemerists faction page paints the page's ink outside its cards (#1793)", () => {
+  const SOURCE = sourceOf("pages/factionDetail/archetypes/EphemeristsFactionBody.tsx");
+
+  // The two strings the nightly sweep measured, plus the roster's — the third
+  // is INSIDE a `CARD` and is here to prove the guard can tell them apart.
+  for (const key of ["ephemerists.tasks.empty", "ephemerists.praxis.empty"]) {
+    it(`\`${key}\` reads the page's quiet ink, not the plate's`, () => {
+      const at = SOURCE.indexOf(`t("${key}")`);
+      expect(at, `no \`t("${key}")\` call in EphemeristsFactionBody`).toBeGreaterThan(-1);
+      const element = SOURCE.slice(at - 400, at);
+      expect(
+        element,
+        "an empty state outside a `CARD` sits on `--color-bg-page`, where the plate's quiet ink is 2.64:1 in light. `PAGE_QUIET` is the app's own second tier — 7.78:1 light, 8.33:1 dark — and it is what the kicker beside it already reads (#1675).",
+      ).toContain("color: PAGE_QUIET");
+      expect(
+        element,
+        "`QUIET` is `-plate-quiet`, minted for the three NIGHT grounds of the Valley plate. On the app's light page it is the defect this issue reports.",
+      ).not.toContain("color: QUIET");
+    });
+  }
+
+  it("prose that IS inside a card keeps the plate's ink", () => {
+    const at = SOURCE.indexOf('t("ephemerists.roster.emptyWithSpotlight")');
+    expect(at, "no roster empty state in EphemeristsFactionBody").toBeGreaterThan(-1);
+    expect(
+      SOURCE.slice(at - 400, at),
+      "the roster empty state renders inside `CARD`, whose ground is `-plate-bg`. Repainting it too would swap a 5.98:1 faction ink for a neutral on a night sheet — the mistake in the other direction.",
+    ).toContain("color: QUIET");
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`the ink it takes instead clears AA on the app's page (${theme})`, () => {
+      const ink = resolveColor("--color-text-secondary", theme);
+      const page = resolveColor("--color-bg-page", theme);
+      expect(ink.color, `--color-text-secondary (${theme}) resolved to "${ink.raw}"`).not.toBeNull();
+      expect(page.color, `--color-bg-page (${theme}) resolved to "${page.raw}"`).not.toBeNull();
+      const ratio = contrastRatio(ink.color!, page.color!);
+      expect(ratio, `18px content prose owes 4.5:1; measured ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL);
+    });
+  }
+
+  it("no value of `-plate-quiet` could have cleared both registers", () => {
+    // The search #1793 asks for, run rather than asserted in prose. The plate's
+    // loosest ground and the app's light page bound the ink's luminance from
+    // opposite sides, and a ratio is monotonic in luminance — so if the floor
+    // the one imposes is above the ceiling the other imposes, the set is empty
+    // whatever the hue.
+    const plate = resolveColor("--faction-ephemerists-plate-inner", "light").color!;
+    const page = resolveColor("--color-bg-page", "light").color!;
+    const floorOnPlate = AA_NORMAL * (relativeLuminance(plate) + 0.05) - 0.05;
+    const ceilingOnPage = (relativeLuminance(page) + 0.05) / AA_NORMAL - 0.05;
+    expect(
+      floorOnPlate,
+      "if this ever stops holding, `-plate-quiet` CAN serve both grounds and the split above is no longer necessary — delete it rather than working around it.",
+    ).toBeGreaterThan(ceilingOnPage);
+  });
 });

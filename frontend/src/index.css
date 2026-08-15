@@ -1567,7 +1567,19 @@
      gold, which is likewise never painted as text. */
   --faction-ephemerists-plate-bg: #171a26;
   --faction-ephemerists-plate-ink: #f0e6c8;
-  --faction-ephemerists-plate-muted: #a2977a; /* brief + in-progress */
+  /* Brief + in-progress, on the task card. THE SAME HEX AS `-plate-quiet` below,
+     which is a fact worth stating rather than leaving to be rediscovered: #1793
+     re-derived this twin when it caught that one's comment lying, and this one
+     is sound. It is painted as text in exactly one file
+     (`EphemeristsTaskCard.tsx`) on exactly two grounds — the plate 5.98:1 and
+     the medallion disc 6.28:1 — both of which are the register's own night
+     stocks, so it is never off-register the way `-plate-quiet` was.
+
+     Two names for one value is normally what this file warns about; they are
+     kept apart because they are two roles that happen to have converged, and
+     collapsing them would decide for the card what the page decided. If a
+     repaint ever walks one, walk it knowing the other does not follow. */
+  --faction-ephemerists-plate-muted: #a2977a;
   --faction-ephemerists-plate-caption: #c9a24b; /* small-caps labels */
   --faction-ephemerists-plate-brass: #c9a24b; /* rules, borders — never an ink */
   --faction-ephemerists-plate-brass-light: #e6c877;
@@ -1585,7 +1597,17 @@
   --faction-ephemerists-plate-disc: #12151f; /* the medallion's field */
   --faction-ephemerists-plate-ochre: #d9744c; /* the fifth tally stroke */
   /* The CTA bar swaps ends against the light plate it replaced: a BRASS bar
-     carrying dark ink, where the papyrus had a dark bar and gold ink. */
+     carrying dark ink, where the papyrus had a dark bar and gold ink.
+
+     NO LABEL TIER CAN SIT ON THIS BAR (noted while measuring #1800; nothing is
+     broken, this is a record so nobody tries). It is a mid-luminance brass, and
+     the label seam is a QUIET ink by definition — the app's tertiary reads
+     3.58:1 on it in light and 1.15:1 in dark, and `-plate-quiet`, the ink both
+     Ephemerists roots point `--label-ink` at, is 1.21:1. There is no quiet
+     neutral this bar can carry, in either cascade. What works is the dark
+     partner the bar was drawn with: `-plate-cta-ink`, 7.59:1. Every CTA site
+     sets that explicitly today, which is why the seam's value never lands here
+     — keep it that way rather than repointing the seam for one bar. */
   --faction-ephemerists-plate-cta-bg: #c9a24b;
   --faction-ephemerists-plate-cta-ink: #12151f;
   /* The gold wash behind the cartouche and the ratio chip is GONE, not dimmed —
@@ -1606,7 +1628,26 @@
      collapsed onto it rather than onto its twin. */
   --faction-ephemerists-plate-page: #101320; /* the page ground under the plate */
   --faction-ephemerists-plate-inner: #1d2130; /* the action panel's two cells */
-  --faction-ephemerists-plate-quiet: #a2977a; /* quiet ink — AA on all 3 grounds */
+  /* Quiet ink for the register's THREE NIGHT GROUNDS, and only those: the page
+     6.38:1, the plate 5.98, the panel cell 5.52 — one reading each, since the
+     register declares nothing under dark (#1627). It also clears the two grounds
+     the family added later, the medallion disc 6.28 and the cornice band 6.73,
+     though the band has its own second tier in `-plate-band-quiet`.
+
+     WHAT IT IS NOT AA ON (#1793). The APP's page ground: 2.64:1 on #f7f4ee in
+     light. This line used to read "AA on all 3 grounds" full stop, and a bare
+     `.wz-faction-grid` is not one of those three — `EphemeristsFactionBody`'s
+     two empty states were painted in it on the app's own near-white page and the
+     nightly sweep measured them there. They now take `--color-text-secondary`,
+     because NO value of this token could have served both: clearing the panel
+     cell (#1d2130) needs relative luminance >= 0.2453 and clearing the light
+     page needs <= 0.1626, and the intervals do not meet. Same shape of finding
+     as the `-plate-bg` block above, one axis over — there it was two themes,
+     here it is two page grounds.
+
+     The rule for the next reader: this ink belongs to a surface this register
+     paints. Off the register, the ground is the app's and so is the ink. */
+  --faction-ephemerists-plate-quiet: #a2977a;
   --faction-ephemerists-plate-nile: #5fb3a6; /* links, affirmations, the eye */
   --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12); /* journal ruling */
   --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28); /* hairline borders */
