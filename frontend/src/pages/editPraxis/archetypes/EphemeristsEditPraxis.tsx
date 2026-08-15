@@ -98,7 +98,6 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -149,6 +148,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* The cast's own pair. Not exported by the plate module because no other
  * surface has a primary button; declared in `index.css` in both themes. */
@@ -318,14 +326,14 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION };
   /**
-   * The rune band is this skin's section rule (#1638, replacing the flute).
+   * The rune band is this skin's rule (#1638, replacing the flute), drawn ONCE
+   * above the footer (#1707) rather than at the head of every section — the
+   * design calls its rule once and parts the regions with the sheet's own gap.
    *
-   * PAIRED with the brass hairline, which the six other mounts are not: each of
-   * them sits under a section HEAD whose own filler rule already draws that
-   * line, while the composer's `rule` slot sits under a bare field label. On
-   * its own the band reads as a loose row of marks rather than as a divider, so
-   * this surface asks `RuneRule` for the two-part rule the write-up header gets
-   * out of its heading row.
+   * PAIRED with the brass hairline, which the plate's other mounts are not:
+   * each of those sits under a section HEAD whose own filler rule already draws
+   * that line, while the composer's rule closes a column of bare field labels.
+   * On its own the band reads as a loose row of marks rather than as a rule.
    */
   const runes = <RuneRule rule />;
 
@@ -356,6 +364,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     style: {
       background: INNER,
       border: `1.5px solid ${LINE}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${BRASS}`,
       borderRadius: 0,
       padding: "var(--space-lg)",
     },
@@ -519,11 +530,10 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         />
 
         <ComposerSection
-          rule={runes}
+          rule={false}
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           labelStyle={sectionLabel}
-          meta={<TitleCounter length={state.title.length} color={QUIET} />}
         >
           <TitleField
             state={state}
@@ -539,7 +549,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             house rule that an unusable control is not drawn disabled. */}
         {!state.controlsLocked && (
           <ComposerSection
-            rule={runes}
+            rule={false}
             label={t("editPraxis.composer.modeLabel")}
             labelStyle={sectionLabel}
           >
@@ -581,7 +591,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             control draws both — `InviteSearch` switches on `state.duelMode`. */}
         {state.showInviteBox && (
           <ComposerSection
-            rule={runes}
+            rule={false}
             label={
               // The roster names itself now — `Collaborators · N` sits on its
               // own header row inside the panel, beside the tally it used to
@@ -614,7 +624,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         {state.showSealStack && (
           <ComposerSection
-            rule={runes}
+            rule={false}
             label={t("editPraxis.composer.sealsLabel")}
             labelStyle={sectionLabel}
           >
@@ -625,60 +635,59 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         {/* Write-up — the tabs sit in the section's meta slot, so the label row
             reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
         <ComposerSection
-          rule={runes}
+          rule={false}
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
           labelStyle={sectionLabel}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    ...label,
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 0,
-                    border: `1px solid ${active ? BRASS : "transparent"}`,
-                    background: active ? INNER : "transparent",
-                    color: active ? INK : QUIET,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={composerLabelStyle({
+                  ...label,
+                  color: QUIET,
+                  letterSpacing: "0.14em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      ...label,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 0,
+                      border: `1px solid ${active ? BRASS : "transparent"}`,
+                      background: active ? INNER : "transparent",
+                      color: active ? INK : QUIET,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form, and drawing
               both would put the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.85,
-                    fontFamily: READING,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
-                  ...label,
-                  color: QUIET,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.14em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.85,
+                  fontFamily: READING,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -708,7 +717,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         </ComposerSection>
 
         <ComposerSection
-          rule={runes}
+          rule={false}
           label={t("editPraxis.composer.proofLabel")}
           labelStyle={sectionLabel}
         >
@@ -760,7 +769,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1.5px dashed ${BRASS}`,
                     borderRadius: 0,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: CAPTION,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

@@ -4,8 +4,8 @@ import { getLeaderboard } from '../api/leaderboard'
 import { useResource } from '../hooks/useResource'
 import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
-import { FACTION_RAINBOW_ORDER, factionCssVar } from '../utils/factions'
 import type { CharacterOut, CurrentUser } from '../api/auth'
+import PageTitle from '../components/ui/PageTitle'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { type RankedPlayer } from './players/Constellation'
 import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from './players/SkyCanvas'
@@ -127,36 +127,21 @@ export function DesktopLeaderboard({
     <div className="py-8">
       {/* ── The sky ── */}
       <section>
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <p className="label-heading">{eyebrow}</p>
+        {/* The shared page header (#1699). This page hand-rolled an <h1> that
+            copied PageTitle's classes but dropped the per-letter rainbow, then
+            drew a full-width rainbow rule of its own — two spellings of one
+            ornament. PageTitle brings the rainbow, so the rule is gone and the
+            score toggle moves to the row below the title. */}
+        <PageTitle title={t('leaderboard.desktop.title')} eyebrow={eyebrow} />
+
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <p className="label-caption">
+            {t('leaderboard.desktop.playersCount', { count: characters.length })}
+            {' · '}
+            {t('leaderboard.desktop.factionsCount', { count: factionCount })}
+          </p>
           <ScoreToggle mode={scoreMode} onChange={setScoreMode} />
         </div>
-
-        <h1
-          className="font-display italic font-medium leading-tight"
-          style={{ fontSize: 'var(--text-display)', color: 'var(--color-text-primary)' }}
-        >
-          {t('leaderboard.desktop.title')}
-        </h1>
-
-        <p className="label-caption mb-3">
-          {t('leaderboard.desktop.playersCount', { count: characters.length })}
-          {' · '}
-          {t('leaderboard.desktop.factionsCount', { count: factionCount })}
-        </p>
-
-        {/* Rainbow rule — the faction spectrum, in canonical order. */}
-        <div
-          aria-hidden
-          className="mb-3"
-          style={{
-            height: 3,
-            borderRadius: 2,
-            background: `linear-gradient(90deg, ${FACTION_RAINBOW_ORDER.map((slug) =>
-              factionCssVar(slug),
-            ).join(', ')})`,
-          }}
-        />
 
         <p
           className="mb-4"

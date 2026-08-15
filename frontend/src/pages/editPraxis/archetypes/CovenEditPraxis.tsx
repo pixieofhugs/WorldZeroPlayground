@@ -5,8 +5,8 @@
  *
  * The shared composer layout (`shared.tsx`) wearing Coven's dress: a centred
  * masthead of a turning pentacle disc under a twinkle field, a glow-and-lavender
- * ground carrying the coven wheel and a scatter of arcane glyphs, braided thread
- * for every section rule, an 88px haloed ward for the points, a 40px pentacle
+ * ground carrying the coven wheel and a scatter of arcane glyphs, one braid of
+ * thread closing the sheet, an 88px haloed ward for the points, a 40px pentacle
  * for the stage mark, and a full-bleed band for the cast.
  *
  * ## This REPLACES the `wow.exe` window wholesale
@@ -82,7 +82,6 @@ import {
   ErrorBanner,
   RingMark,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -108,6 +107,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* The two faces the design names. Both are SURFACE faces on shared
  * `--font-faction-*` tokens rather than Coven's `card-font` (still Caveat), for
@@ -477,7 +485,8 @@ export default function CovenEditPraxis({ state }: Props) {
     outline: "none",
     boxSizing: "border-box",
   } as const;
-  /* Every section is headed by the braid. */
+  /* The braid, for the dress the waiting surface wears. On THIS page the one
+     braid the design allows (#1707) is the footer's own, drawn below. */
   const braidRule = (
     <ComposerRule>
       <Braid />
@@ -500,6 +509,9 @@ export default function CovenEditPraxis({ state }: Props) {
     style: {
       background: FIELD,
       border: RULE,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${INK}`,
       borderRadius: FIELD_RADIUS,
       padding: "var(--space-lg)",
     },
@@ -680,8 +692,7 @@ export default function CovenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={braidRule}
-          meta={<TitleCounter length={state.title.length} color={LABEL} />}
+          rule={false}
           labelStyle={labelStyle}
         >
           <TitleField
@@ -699,7 +710,7 @@ export default function CovenEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={braidRule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <ModePicker
@@ -753,7 +764,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={braidRule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <InviteSearch
@@ -778,7 +789,7 @@ export default function CovenEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={braidRule}
+            rule={false}
             labelStyle={labelStyle}
           >
             <MetataskSealStack state={state} />
@@ -790,67 +801,66 @@ export default function CovenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={braidRule}
+          rule={false}
           labelStyle={labelStyle}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    fontFamily: CHROME,
-                    fontWeight: 700,
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 999,
-                    border: active ? RULE : "1.5px solid transparent",
-                    background: active ? FIELD : "transparent",
-                    // The active chip is filled with FIELD, i.e. the ward PAGE
-                    // ground, so its ink is INK rather than DEEP (#1295).
-                    color: active ? INK : LABEL,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={composerLabelStyle({
+                  fontFamily: CHROME,
+                  color: LABEL,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      fontFamily: CHROME,
+                      fontWeight: 700,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 999,
+                      border: active ? RULE : "1.5px solid transparent",
+                      background: active ? FIELD : "transparent",
+                      // The active chip is filled with FIELD, i.e. the ward PAGE
+                      // ground, so its ink is INK rather than DEEP (#1295).
+                      color: active ? INK : LABEL,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 8,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 180,
-                    lineHeight: 1.7,
-                    fontFamily: CHROME,
-                  },
-                  toolbarButtonStyle: {
-                    background: FIELD,
-                    // Label-sized text on the ward PAGE ground — INK (#1295).
-                    color: INK,
-                    border: RULE,
-                    borderRadius: 8,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 8,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 180,
+                  lineHeight: 1.7,
                   fontFamily: CHROME,
-                  color: LABEL,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+                },
+                toolbarButtonStyle: {
+                  background: FIELD,
+                  // Label-sized text on the ward PAGE ground — INK (#1295).
+                  color: INK,
+                  border: RULE,
+                  borderRadius: 8,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -880,7 +890,7 @@ export default function CovenEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={braidRule}
+          rule={false}
           labelStyle={labelStyle}
         >
           <div
@@ -932,7 +942,9 @@ export default function CovenEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1.5px dashed ${BORDER}`,
                     borderRadius: FIELD_RADIUS,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: DEEP,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),
@@ -953,7 +965,13 @@ export default function CovenEditPraxis({ state }: Props) {
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
-        {/* [Cancel] … [Submit] — the global order from #646, stacked here
+        {/* The composer's ONE braid (#1707) is the one the footer already opens
+            with, just below — no second one is added here. The design calls its
+            rule exactly once, immediately above the footer; every other region
+            is separated by the sheet's own gap. Six braids read as a chain of
+            dividers rather than as the mark that closes the page.
+
+            [Cancel] … [Submit] — the global order from #646, stacked here
             because Coven's cast is a full-bleed band rather than an inline
             button: the exits read first, the band closes the sheet. */}
         <ComposerFooter
