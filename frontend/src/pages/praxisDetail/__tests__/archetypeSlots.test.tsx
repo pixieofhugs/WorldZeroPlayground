@@ -32,8 +32,7 @@ import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { PraxisOut } from "../../../api/praxis";
-import type { TaskOut } from "../../../api/tasks";
+import { aPraxis, aTask } from '../../../test/fixtures'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -43,44 +42,24 @@ function render(element: ReactElement): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, "") };
 }
 
-const PRAXIS: PraxisOut = {
-  id: 1,
-  task_id: 7,
+const PRAXIS = aPraxis({
   task_title: "Mangrove",
   task_point_value: 30,
   task_level_required: 3,
   task_faction_slug: "ua",
-  type: "solo",
-  status: "submitted",
   title: "Reforestation",
   body_text: "Seedlings planted along the estuary.",
-  moderation_status: "visible",
-  admin_note: null,
-  flagged_at: null,
   submitted_at: "2026-01-02T00:00:00Z",
-  submit_proposed_at: null,
   created_by_id: 3,
   created_by_display_name: "Ada",
   created_by_faction_slug: "ua",
-  created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-02T00:00:00Z",
   members: [],
-  invites: [],
   media_items: [],
   // score = (base 30 + meta 0) × 1.0 + vote points 16 = 46 — the common case.
   score: 46,
-  metatask_points: 0,
-  display_multiplier: 1.0,
   points_from_votes: 16,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
-  duel_id: null,
-  can_flag: true,
-  applied_metatasks: [],
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voter_count: 0,
-};
+});
 
 /** Minimal state — the read archetypes take every number they show off the
  *  praxis payload (`scoreBreakdown`, ADR-0053); behavior-slot state is left in
@@ -256,28 +235,19 @@ function multiplierState(): PraxisDetailState {
 // faction (here `snide`), not the host archetype's — a UA-hosted page shows a
 // Snide-issued seal. Its condition line is the metatask title, the anchor below.
 
-const SEAL_METATASK: TaskOut = {
+const SEAL_METATASK = aTask({
   id: 501,
   title: "Composting",
-  description: '',
   point_value: 60,
   level_required: 0,
-  status: "active",
   task_type: "metatask",
   created_by: 9,
-  primary_faction_slug: 'na',
   metatask_faction_slug: "snide",
-  created_at: "2026-01-01T00:00:00Z",
-  in_progress_count: 0,
   created_by_display_name: "",
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
   can_sign_up: false,
   allowed_modes: [],
   eligible_for_current_user: false,
-};
+});
 
 /** Same praxis, now carrying one applied metatask seal. */
 function sealedState(): PraxisDetailState {

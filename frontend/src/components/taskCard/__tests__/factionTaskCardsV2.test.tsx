@@ -22,7 +22,6 @@ import type { ComponentType, ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
-import type { TaskOut } from '../../../api/tasks'
 import type { CardProps } from '../TaskCard'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
@@ -42,29 +41,14 @@ import UaTaskCard from '../UaTaskCard'
 import WowTaskCard from '../WowTaskCard'
 import DefaultTaskCard from '../DefaultTaskCard'
 import { surfaceMap } from '../../../factions'
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
-  id: 7,
-  title: 'Photosynthesis',
+const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
-  point_value: 18,
-  level_required: 2,
-  status: 'active',
-  task_type: 'standard',
   created_by: 3,
-  primary_faction_slug: 'na',
-  metatask_faction_slug: null,
-  created_at: '2026-01-01T00:00:00Z',
   created_by_display_name: '',
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
   in_progress_count: 6,
-  can_sign_up: true,
-  allowed_modes: ['solo'],
-  eligible_for_current_user: true,
-}
+})
 
 interface Skin {
   slug: string

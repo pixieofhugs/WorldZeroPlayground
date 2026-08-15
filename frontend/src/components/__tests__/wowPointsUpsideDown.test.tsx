@@ -38,8 +38,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../../i18n'
-import type { TaskOut } from '../../api/tasks'
-import type { PraxisCardOut } from '../../api/praxis'
+import { aPraxisCard, aTask } from '../../test/fixtures'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
 vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => mocks.formFactor }))
@@ -51,50 +50,22 @@ const { WowPraxisCard } = await import('../praxisCard/desktop/WowPraxisCard')
 
 const SRC = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..')
 
-const TASK: TaskOut = {
-  id: 7,
-  title: 'Photosynthesis',
-  description: '',
-  point_value: 18,
-  level_required: 2,
-  status: 'active',
-  task_type: 'standard',
+const TASK = aTask({
   created_by: 3,
   primary_faction_slug: 'wow',
-  metatask_faction_slug: null,
-  created_at: '2026-01-01T00:00:00Z',
   created_by_display_name: '',
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  in_progress_count: 0,
-  can_sign_up: true,
-  allowed_modes: ['solo'],
-  eligible_for_current_user: true,
-}
+})
 
-const PRAXIS: PraxisCardOut = {
+const PRAXIS = aPraxisCard({
   id: 1,
   created_by_id: 7,
   created_by_display_name: 'Isolde',
   created_by_faction_slug: 'wow',
-  created_by_avatar_url: '',
   task_faction_slug: 'wow',
   task_title: 'Photosynthesis',
-  task_level_required: 2,
-  task_point_value: 12,
-  display_multiplier: 1,
-  metatask_points: 0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  member_count: 1,
   score: 13.6,
   voter_count: 3,
-  moderation_status: 'visible',
-  is_top_for_task: false,
-  applied_metatasks: [],
-} as unknown as PraxisCardOut
+})
 
 const render = (node: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>)

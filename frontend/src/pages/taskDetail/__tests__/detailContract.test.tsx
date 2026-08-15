@@ -31,34 +31,21 @@ import { describe, it, expect } from "vitest";
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
 import type { CommentOut } from "../../../api/comments";
+import { aTask } from '../../../test/fixtures'
 
 /** The comment thread's pre-fetch state — present iff the thread mounted. */
 const THREAD_ANCHOR = "loading…";
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 207,
   title: "A Very Human Thing",
   description: "Make something small and honest.",
-  point_value: 18,
-  level_required: 2,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
-  primary_faction_slug: 'na',
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 6,
   created_by_display_name: "Wren Abalone",
-  created_by_faction_slug: null,
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 /** One row the page fetched alongside the task (#1281). */
 const COMMENT: CommentOut = {

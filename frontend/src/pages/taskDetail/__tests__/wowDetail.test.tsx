@@ -24,9 +24,9 @@ import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import WowTaskDetail from "../archetypes/WowTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 663,
   // No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
   // `&#x27;`, which survives the tag-strip and breaks a plain substring check.
@@ -34,22 +34,13 @@ const TASK: TaskOut = {
   description: "Take the whole block, not only your bin.",
   point_value: 12,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "wow",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 4,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "wow",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

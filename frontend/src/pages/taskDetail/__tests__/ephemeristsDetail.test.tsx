@@ -39,30 +39,21 @@ import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { readThemes } from "../../../utils/__tests__/cssVars";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 305,
   title: "Catalogue every bench along the river walk",
   description: "Walk the water from the lock to the last lamp.",
   point_value: 30,
   level_required: 4,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "ephemerists",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 9,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "ephemerists",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

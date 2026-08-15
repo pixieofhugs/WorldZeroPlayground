@@ -27,7 +27,7 @@ import "../../../i18n";
 import AlbescentTaskDetail from "../archetypes/AlbescentTaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
 const TITLE = "Sit with something until it turns pale";
 const BRIEF =
@@ -54,28 +54,17 @@ const CUT_VOCABULARY = [
   "standing met",
 ];
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 207,
   title: TITLE,
   description: BRIEF,
-  point_value: 18,
-  level_required: 2,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "albescent",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 6,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "albescent",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

@@ -17,30 +17,17 @@ import "../../../i18n"; // initialise i18next with the real catalogs (throws on 
 import { isLevelJumpSignup } from "../levelJump";
 import { LevelJumpBanner } from "../archetypes/shared";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
-const TASK_ABOVE: TaskOut = {
+const TASK_ABOVE = aTask({
   id: 1,
   title: "Knight a houseplant",
-  description: '',
   point_value: 20,
-  level_required: 4, // one above a level-3 viewer
-  status: "active",
-  task_type: "standard",
+  level_required: 4, // one above a level-3 viewer,
   created_by: 1,
   primary_faction_slug: "snide",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  in_progress_count: 0,
   created_by_display_name: "",
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 describe("isLevelJumpSignup — the three states", () => {
   it("state 1: reachable BECAUSE of the allowance -> true", () => {
