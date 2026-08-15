@@ -40,6 +40,10 @@ class GameConfigOut(WireModel):
     level_thresholds: list[int]
     duel_level_required: int
     collab_auto_submit_days: int
+    # #1695: here because two copy surfaces promise the window in words — the
+    # propose-task page and the empty pending list — and a sentence that types
+    # out "48" starts lying the day the era changes it.
+    pending_task_admin_review_hours: int
     max_task_signups: int
     factions: list[FactionConfigOut]
     level_profiles: list[LevelProfileOut]

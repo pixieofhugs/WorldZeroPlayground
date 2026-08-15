@@ -43,6 +43,7 @@ async def get_game_config() -> GameConfigOut:
         level_thresholds=list(CURRENT_ERA.level_thresholds),
         duel_level_required=CURRENT_ERA.duel_level_required,
         collab_auto_submit_days=CURRENT_ERA.collab_auto_submit_days,
+        pending_task_admin_review_hours=CURRENT_ERA.pending_task_admin_review_hours,
         max_task_signups=CURRENT_ERA.max_task_signups,
         factions=factions,
         level_profiles=level_profiles,

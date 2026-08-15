@@ -2,12 +2,14 @@ import { useTranslation } from 'react-i18next'
 import FilterBar, {
   factionFacet,
   FilterBarEmpty,
-  selectEmptyState,
   type FilterRail,
 } from '../../components/ui/FilterBar'
 import CanSignUpEmpty from './CanSignUpEmpty'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import {
   appliedFilterCount,
+  PENDING_WINDOW_EMPTY,
+  selectTaskEmptyState,
   TASK_SORT_DEFAULT,
   TASK_STATUS_DEFAULT,
   TASK_TYPE_DEFAULT,
@@ -154,16 +156,37 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
 }
 
 /**
- * Which of the three empty states an empty task list gets (#1361 ruling 9).
+ * Which empty state an empty task list gets (#1361 ruling 9).
  *
  * `caughtUp` stays `CanSignUpEmpty`'s job: a full task bank empties the eligible
  * list wholesale, and "you already hold twenty" is a different sentence from
  * "nothing matches" — see that component for why the count is the client's own.
+ *
+ * The pending branch (#1695) is the fourth, and it lives in
+ * `selectTaskEmptyState` rather than in the shared `selectEmptyState`: the
+ * praxis feed has no status rail, so this reason for an empty list is the task
+ * page's alone. See that function for the two guards on the claim.
  */
 export function TaskListEmpty({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
-  const kind = selectEmptyState(appliedFilterCount(state), state.canSignUp)
+  const adminReviewHours =
+    useGameConfig()?.pending_task_admin_review_hours ?? null
+  const kind = selectTaskEmptyState(
+    state.status,
+    appliedFilterCount(state),
+    state.canSignUp,
+    adminReviewHours,
+  )
 
+  if (kind === PENDING_WINDOW_EMPTY) {
+    return (
+      <FilterBarEmpty
+        title={t('listPage.emptyPending')}
+        hint={t('listPage.emptyPendingHint', { hours: adminReviewHours })}
+        onClearAll={state.clearFilters}
+      />
+    )
+  }
   if (kind === 'caughtUp') return <CanSignUpEmpty onClearAll={state.clearFilters} />
   if (kind === 'filtered') {
     return (

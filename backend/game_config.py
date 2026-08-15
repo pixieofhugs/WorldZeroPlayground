@@ -120,6 +120,14 @@ class EraConfig:
     level_to_see_metatasks: int
     level_to_see_retired_tasks: int
     level_to_see_pending_tasks: int
+    # The companion to the gate above, and NOT a level: how long a freshly
+    # proposed task stays admin-only before the level gate can reach it (#1695).
+    # `level_to_see_pending_tasks` says WHO may watch the review queue; this says
+    # WHEN, so an admin gets the first look at a proposal and can edit or reject
+    # it before other players read it. Admins are exempt — the window exists for
+    # them. Enforced per-ROW in `services.task.list_tasks`; surfaced on
+    # /game-config so the two copy surfaces that promise it can say the number.
+    pending_task_admin_review_hours: int
 
     # Praxis / moderation / metatask gates (enforced in services/praxis.py)
     duel_level_required: int              # min level to create a duel praxis
