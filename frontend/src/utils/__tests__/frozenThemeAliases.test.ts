@@ -53,11 +53,15 @@ const CSS = readFileSync(
  *  - **composed neutrals** (`--filter-*`, `--label-ink`, `--link-ink*`) —
  *    `color-mix()` off the page ground so there is one declaration to re-tune
  *    rather than two (WORLD_ZERO_STYLE.md §3, #1365).
+ *
+ * `--faction-default-gold` was a fourth spectrum-cut entry until #1766 (#1822)
+ * took it off `--faction-default-stop-3` and gave it a literal in each cascade.
+ * It leaves this list by ceasing to be an alias at all — the opposite direction
+ * from the WOW fix, and a reminder that the sweep tracks a SHAPE, not a set.
  */
 const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-default-aurora",
   "--faction-default-eyebrow-rainbow",
-  "--faction-default-gold",
   "--faction-default-rainbow",
   "--faction-default-rainbow-conic",
   "--faction-default-rainbow-loop",
