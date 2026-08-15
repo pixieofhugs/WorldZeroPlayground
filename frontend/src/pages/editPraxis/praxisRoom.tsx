@@ -31,12 +31,17 @@
  * network keeps taking text and merges it on reconnect — where the `PUT` simply
  * failed and lost the paragraph.
  *
- * ## What is deliberately not here
+ * ## Presence rides the same socket (#1744)
  *
- * Carets, collaborator colours and the presence roster (#1744) — the provider's
- * own awareness channel exists (it is y-websocket's keep-alive) but nothing
- * reads it yet. Freeze-on-pending and discarding the document on publish
- * (#1745).
+ * The provider's awareness channel — y-websocket's keep-alive — now also
+ * carries who is in the room. This file publishes the viewer's identity into it
+ * and derives {@link PraxisRoom.present} out of it; the caret paint and the
+ * sanitizing seam that makes a remote's claimed state safe to render live next
+ * door in `roomPresence.ts`.
+ *
+ * Awareness is **self-reported by each client and relayed**, so nothing derived
+ * from it may reach an authorization branch. Membership is the edit key and the
+ * server checks it at connect and at revoke (#1740).
  */
 import {
   createContext,
@@ -50,6 +55,13 @@ import {
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { IndexeddbPersistence } from "y-indexeddb";
+import type { Awareness } from "y-protocols/awareness";
+import { useAuth } from "../../auth/AuthContext";
+import {
+  presentCharacterIds,
+  publishPresence,
+  samePresence,
+} from "./roomPresence";
 
 /**
  * The body's root key — `ROOM_BODY_KEY` in `praxis_room.py`. The server seeds a
@@ -127,6 +139,21 @@ export interface PraxisRoom {
   /** The last-write-wins map holding {@link ROOM_TITLE_KEY}. */
   meta: Y.Map<string>;
   /**
+   * The room's presence channel, already carrying this client's identity.
+   *
+   * Handed to `yCollab` — through `paintedAwareness()`, never raw — so
+   * co-authors' carets draw in their own faction's hue (#1744). Anything else
+   * reading it should read {@link present} instead.
+   */
+  awareness: Awareness;
+  /**
+   * The character ids with this room open, including the viewer's own. Sorted,
+   * deduped across tabs, and stable while only cursors move.
+   *
+   * **Decoration, never authorization** — see the file docblock.
+   */
+  present: readonly number[];
+  /**
    * The document has arrived — from the socket, or from the offline store.
    *
    * Until it has, the editor holds an empty document that means nothing, and
@@ -182,13 +209,25 @@ export function PraxisRoomProvider({
   onUpdate?: (at: Date) => void;
   children: ReactNode;
 }) {
-  // The shared types, kept apart from `seeded` so their identity survives the
-  // seed landing — `BodyTextarea` keys its editor on `body`, and a new identity
-  // there would tear the editor down and rebuild it at that moment.
-  const [types, setTypes] = useState<{ body: Y.Text; meta: Y.Map<string> } | null>(
-    null,
-  );
+  // The room's long-lived handles, kept apart from `seeded` and `present` so
+  // their identity survives both landing — `BodyTextarea` keys its editor on
+  // `body` AND on `awareness`, and a new identity on either would tear the
+  // editor down and rebuild it mid-sentence.
+  const [types, setTypes] = useState<{
+    body: Y.Text;
+    meta: Y.Map<string>;
+    awareness: Awareness;
+  } | null>(null);
   const [seeded, setSeeded] = useState(false);
+  const [present, setPresent] = useState<readonly number[]>([]);
+  // The viewer, for the identity this client publishes. Narrowed to the three
+  // fields rather than held as `user`, because `/auth/me` mints a fresh object
+  // on every refetch and an effect keyed on the whole thing re-runs for each
+  // one (#1390).
+  const character = useAuth().user?.character ?? null;
+  const characterId = character?.id ?? null;
+  const characterName = character?.display_name ?? null;
+  const characterFaction = character?.faction_slug ?? null;
   // Read through a ref so a caller passing an inline callback does not tear the
   // socket down and rebuild it on every render.
   const onUpdateRef = useRef(onUpdate);
@@ -198,6 +237,7 @@ export function PraxisRoomProvider({
     if (praxisId == null) {
       setTypes(null);
       setSeeded(false);
+      setPresent([]);
       return;
     }
     const doc = new Y.Doc();
@@ -227,7 +267,19 @@ export function PraxisRoomProvider({
         shouldReconnect: (event) => event.code !== WS_POLICY_VIOLATION,
       },
     );
-    setTypes({ body, meta });
+    const awareness = provider.awareness;
+    setTypes({ body, meta, awareness });
+
+    // Who is in the room (#1744). `change` fires on every remote cursor move,
+    // so the derivation is sorted and compared BY VALUE — otherwise a co-author
+    // holding a key re-renders the roster, and every composer archetype under
+    // it, once per keystroke.
+    const syncPresence = () => {
+      const next = presentCharacterIds(awareness.getStates());
+      setPresent((current) => (samePresence(current, next) ? current : next));
+    };
+    awareness.on("change", syncPresence);
+    syncPresence();
 
     // Latch, never unlatch — see `PraxisRoom.seeded`.
     const markSeeded = () => setSeeded(true);
@@ -255,7 +307,10 @@ export function PraxisRoomProvider({
     return () => {
       doc.off("update", onDocUpdate);
       provider.off("sync", onSync);
+      awareness.off("change", syncPresence);
       offline.off("synced", onOfflineLoaded);
+      // Also drops this client's awareness state — the socket closing is what
+      // takes the dot off everyone else's roster.
       provider.destroy();
       // `destroy()` closes the store; `clearData()` is what would delete it,
       // and must not be called here — the point of the store is that it
@@ -264,12 +319,30 @@ export function PraxisRoomProvider({
       doc.destroy();
       setTypes(null);
       setSeeded(false);
+      setPresent([]);
     };
   }, [praxisId]);
 
+  // Say who is typing. A SECOND effect, keyed on the viewer rather than on the
+  // praxis, so switching character re-publishes an identity without tearing the
+  // socket — and its document — down and rebuilding it. `user` is a
+  // last-write-wins awareness field, so a re-publish costs one small broadcast.
+  //
+  // Nothing is published without a character: there is no identity to claim,
+  // and a room only opens on a page that already required one.
+  useEffect(() => {
+    const awareness = types?.awareness;
+    if (!awareness || characterId == null) return;
+    publishPresence(awareness, {
+      id: characterId,
+      display_name: characterName ?? "",
+      faction_slug: characterFaction ?? "",
+    });
+  }, [types, characterId, characterName, characterFaction]);
+
   const room = useMemo<PraxisRoom | null>(
-    () => (types === null ? null : { ...types, seeded }),
-    [types, seeded],
+    () => (types === null ? null : { ...types, seeded, present }),
+    [types, seeded, present],
   );
 
   return (
