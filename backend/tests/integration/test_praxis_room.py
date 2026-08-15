@@ -658,6 +658,31 @@ async def test_an_edit_in_a_room_lands_in_body_text(
             )
 
 
+async def test_a_non_creator_members_edit_reaches_the_record(
+    db_session, collab, account2, monkeypatch
+) -> None:
+    """Any member may edit, creator or not (ADR-0013) — inherited from the ``PUT``.
+
+    The membership rule has one implementation, ``_require_member(.., "edit")``,
+    and door one calls it: the rule moved to the room's handshake rather than
+    being copied there. ``account2`` is a member of ``collab`` and did not
+    create it, which is the case ``test_collab_non_creator_can_edit`` used to
+    make against the retired endpoint.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account2.id)
+        assert socket.accepted.is_set()
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the non-creator member")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "theirs too ")
+            await _wait_for_record(
+                rooms,
+                collab.id,
+                "the non-creator's flush",
+                body_text=f"theirs too {SEED_BODY}",
+            )
+
+
 async def test_flushed_body_text_is_the_markdown_the_document_holds(
     db_session, collab, account, monkeypatch
 ) -> None:

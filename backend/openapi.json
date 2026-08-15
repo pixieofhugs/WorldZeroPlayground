@@ -5107,34 +5107,6 @@
         "title": "PraxisTypeChange",
         "type": "object"
       },
-      "PraxisUpdate": {
-        "properties": {
-          "body_text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Body Text"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          }
-        },
-        "title": "PraxisUpdate",
-        "type": "object"
-      },
       "PraxisVoteIn": {
         "properties": {
           "value": {
@@ -9837,77 +9809,6 @@
           }
         ],
         "summary": "Get Praxis Route",
-        "tags": [
-          "praxes"
-        ]
-      },
-      "put": {
-        "operationId": "update_praxis_route_praxes__praxis_id__put",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "praxis_id",
-            "required": true,
-            "schema": {
-              "title": "Praxis Id",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PraxisUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PraxisOut"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Update Praxis Route",
         "tags": [
           "praxes"
         ]
