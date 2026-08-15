@@ -39,7 +39,7 @@ const { WowPraxisCard } = await import('../praxisCard/desktop/WowPraxisCard')
 const TASK: TaskOut = {
   id: 7,
   title: 'Photosynthesis',
-  description: null,
+  description: '',
   point_value: 18,
   level_required: 2,
   status: 'active',
@@ -48,10 +48,16 @@ const TASK: TaskOut = {
   primary_faction_slug: 'wow',
   metatask_faction_slug: null,
   created_at: '2026-01-01T00:00:00Z',
+  created_by_display_name: '',
+  created_by_avatar_url: '',
+  created_by_faction_slug: null,
+  created_by_level: 0,
+  signup_reason: null,
+  in_progress_count: 0,
   can_sign_up: true,
   allowed_modes: ['solo'],
   eligible_for_current_user: true,
-} as TaskOut
+}
 
 const PRAXIS: PraxisCardOut = {
   id: 1,

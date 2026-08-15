@@ -399,6 +399,22 @@ describe("WOW praxis detail — the dress", () => {
     expect(html, "motion is never inline").not.toContain("animation:");
   });
 
+  /**
+   * #1716 — WOW hangs its points upside down where a player is BROWSING, and
+   * this page is where they CHECK what they earned, so the total stays upright.
+   * The guard is here rather than in the flip's own file because `ScoreStamp`
+   * is one component (ADR-0049) shared with the card that DOES turn: the angle
+   * arrives through `--wow-total-flip`, which only the card mount sets, and a
+   * skin that set it here — or a stamp that hardcoded 180deg — would turn the
+   * total on a surface the ruling exempts. `frontend/src/components/__tests__/
+   * wowPointsUpsideDown.test.tsx` pins the other side.
+   */
+  it("keeps the score rail's total the right way up (#1716)", () => {
+    const { html } = render(state());
+    expect(html, "the mount sets no flip").not.toContain("--wow-total-flip:");
+    expect(html, "and nothing here turns").not.toContain("rotate(180deg)");
+  });
+
   it("carries no unaffiliated spectrum of its own", () => {
     // The na tell is `--faction-default-rainbow`. A WOW page that leaks one is
     // a Default that has not actually been replaced.
