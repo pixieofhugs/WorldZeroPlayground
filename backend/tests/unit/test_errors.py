@@ -112,6 +112,60 @@ def test_every_error_code_is_emitted_with_prose() -> None:
     )
 
 
+def test_signup_denial_prose_matches_the_catalog_copy() -> None:
+    """#1614: both halves of the same failure must read the same.
+
+    The backend ``message`` is not decorative — ``extractError`` falls back to
+    it whenever the catalog has no entry, which in practice means the window
+    between the API deploying and the frontend deploying. When the catalog copy
+    moved to "praxis" (``praxisPlural.test.ts``, CONTEXT.md: *one praxis, many
+    praxis*) the Python prose stayed on "praxes", so a player hitting a full
+    task bank read one plural or the other depending on which half of the
+    deploy they were on.
+
+    Pinned on the two branches that say it — the bank-full denial and the
+    closed-task denial — by rendering the catalog entry with this raise site's
+    own ``params`` and demanding the two strings agree.
+    """
+    import json
+    import re
+    from pathlib import Path
+
+    from game_config import CURRENT_ERA
+    from models.task import Task, TaskStatus
+    from services.praxis import SignupDenialReason, _signup_denial_to_http
+    from errors import DETAIL_CONTEXT_PARAM, DETAIL_PARAMS_KEY
+
+    catalog = json.loads(
+        (
+            Path(__file__).resolve().parents[3]
+            / "frontend" / "src" / "locales" / "en" / "errors.json"
+        ).read_text(encoding="utf-8")
+    )["codes"]
+
+    def rendered(error: HTTPException) -> str:
+        """The catalog string the client would show, interpolated as i18next does."""
+        detail = error.detail
+        params = dict(detail.get(DETAIL_PARAMS_KEY, {}))
+        context = params.pop(DETAIL_CONTEXT_PARAM, None)
+        code = detail[DETAIL_CODE_KEY]
+        key = f"{code}_{context}" if context and f"{code}_{context}" in catalog else code
+        return re.sub(
+            r"\{\{(\w+)\}\}", lambda match: str(params[match.group(1)]), catalog[key]
+        )
+
+    retired_task = Task(status=TaskStatus.retired, level_required=0)
+    for reason, task in (
+        (SignupDenialReason.bank_full, retired_task),
+        (SignupDenialReason.task_status_closed, retired_task),
+    ):
+        error = _signup_denial_to_http(reason, task, CURRENT_ERA)
+        assert error.detail[DETAIL_MESSAGE_KEY] == rendered(error), (
+            f"{reason} renders differently depending on whether the catalog "
+            f"resolved — the fallback prose and the catalog copy disagree"
+        )
+
+
 def test_every_error_code_has_a_raise_site() -> None:
     """An ``ErrorCode`` nothing raises is a name a client would wait forever for."""
     emitted = {

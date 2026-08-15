@@ -17,8 +17,12 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from models.character import Character
-from models.praxis import Praxis, PraxisStatus, PraxisType
+from models.duel import Duel, DuelStatus
+from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
+from models.task import Task, TaskStatus
+from services.character import ALBESCENT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -154,3 +158,319 @@ async def test_deleting_a_missing_relationship_is_coded(
     )
     assert response.status_code == 404, response.text
     assert response.json()["detail"]["code"] == ErrorCode.relationship_not_found.value
+
+
+# ---------------------------------------------------------------------------
+# Slice two (#1652): the service-layer gates a player walks into
+#
+# The route sweep above missed these because they live one layer down — in
+# services/, behind a thin handler. They are still things a player does and
+# reads the rejection of, which is the same argument, so they get the same
+# treatment.
+# ---------------------------------------------------------------------------
+
+# POST /factions/choose — six refusals on one button
+#
+# ``character`` starts in ``ua``, so every case below is a real defection
+# attempt. Six different reasons answer three statuses; before #1652 the prose
+# was the only thing telling them apart.
+
+
+@pytest.mark.asyncio
+async def test_defecting_to_your_current_faction_is_coded(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    response = await client.post(
+        "/factions/choose", json={"faction_slug": "ua"}, headers=auth_headers
+    )
+    assert response.status_code == 422, response.text
+    assert response.json()["detail"]["code"] == ErrorCode.faction_already_member.value
+
+
+@pytest.mark.asyncio
+async def test_defecting_to_the_unaffiliated_sentinel_is_coded(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """``na`` is a start state, not a destination (ADR-0019/0030)."""
+    response = await client.post(
+        "/factions/choose",
+        json={"faction_slug": UNAFFILIATED_FACTION_SLUG},
+        headers=auth_headers,
+    )
+    assert response.status_code == 422, response.text
+    assert response.json()["detail"]["code"] == ErrorCode.faction_not_selectable.value
+
+
+@pytest.mark.asyncio
+async def test_defecting_to_an_unknown_faction_is_coded(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    response = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "no-such-faction"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 404, response.text
+    assert response.json()["detail"]["code"] == ErrorCode.faction_not_found.value
+
+
+@pytest.mark.asyncio
+async def test_defecting_without_an_invitation_is_coded(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """#454: switching in needs that faction's current-era invitation letter."""
+    response = await client.post(
+        "/factions/choose", json={"faction_slug": "snide"}, headers=auth_headers
+    )
+    assert response.status_code == 403, response.text
+    assert (
+        response.json()["detail"]["code"]
+        == ErrorCode.faction_invitation_required.value
+    )
+
+
+@pytest.mark.asyncio
+async def test_defecting_to_albescent_unqualified_is_coded(
+    client: AsyncClient, character: Character, auth_headers: dict
+):
+    """ADR-0021: Albescent skips the invitation gate and has its own bar."""
+    response = await client.post(
+        "/factions/choose",
+        json={"faction_slug": ALBESCENT_FACTION_SLUG},
+        headers=auth_headers,
+    )
+    assert response.status_code == 403, response.text
+    assert (
+        response.json()["detail"]["code"]
+        == ErrorCode.faction_albescent_not_eligible.value
+    )
+
+
+# POST /praxes/{id}/comments and /tasks/{id}/comments — two 404s that are not
+# the same 404. ``character2`` is level 5, clearing era.comment_level_required.
+
+
+@pytest.mark.asyncio
+async def test_commenting_on_a_missing_praxis_and_task_are_coded_apart(
+    client: AsyncClient, character2: Character, auth_headers2: dict
+):
+    on_praxis = await client.post(
+        f"/praxes/{MISSING_ID}/comments",
+        json={"body_text": "hello"},
+        headers=auth_headers2,
+    )
+    assert on_praxis.status_code == 404, on_praxis.text
+    assert on_praxis.json()["detail"]["code"] == ErrorCode.praxis_not_found.value
+
+    on_task = await client.post(
+        f"/tasks/{MISSING_ID}/comments",
+        json={"body_text": "hello"},
+        headers=auth_headers2,
+    )
+    assert on_task.status_code == 404, on_task.text
+    assert on_task.json()["detail"]["code"] == ErrorCode.task_not_found.value
+
+
+@pytest.mark.asyncio
+async def test_commenting_on_a_hidden_praxis_is_coded(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    praxis_solo: Praxis,
+    character2: Character,
+    auth_headers2: dict,
+):
+    praxis_solo.moderation_status = ModerationStatus.hidden
+    await db_session.commit()
+
+    response = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "hello"},
+        headers=auth_headers2,
+    )
+    assert response.status_code == 403, response.text
+    assert (
+        response.json()["detail"]["code"]
+        == ErrorCode.praxis_not_open_for_comments.value
+    )
+
+
+@pytest.mark.asyncio
+async def test_commenting_on_a_retired_task_is_coded(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character2: Character,
+    auth_headers2: dict,
+):
+    """ADR-0006: only an active task carries a comment thread."""
+    active_task.status = TaskStatus.retired
+    await db_session.commit()
+
+    response = await client.post(
+        f"/tasks/{active_task.id}/comments",
+        json={"body_text": "hello"},
+        headers=auth_headers2,
+    )
+    assert response.status_code == 403, response.text
+    assert (
+        response.json()["detail"]["code"] == ErrorCode.task_not_open_for_comments.value
+    )
+
+
+# POST /duels/challenge and /duels/{id}/respond
+
+
+@pytest.mark.asyncio
+async def test_challenging_with_someone_elses_praxis_is_coded(
+    client: AsyncClient,
+    praxis_solo: Praxis,
+    character: Character,
+    character2: Character,
+    auth_headers2: dict,
+):
+    response = await client.post(
+        "/duels/challenge",
+        json={
+            "challenger_praxis_id": praxis_solo.id,
+            "opponent_character_id": character.id,
+        },
+        headers=auth_headers2,
+    )
+    assert response.status_code == 403, response.text
+    assert response.json()["detail"]["code"] == ErrorCode.praxis_not_owner.value
+
+
+@pytest.mark.asyncio
+async def test_challenging_a_missing_character_is_coded(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character: Character,
+    auth_headers: dict,
+):
+    draft = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Draft",
+        body_text="wip",
+    )
+    db_session.add(draft)
+    await db_session.commit()
+
+    response = await client.post(
+        "/duels/challenge",
+        json={
+            "challenger_praxis_id": draft.id,
+            "opponent_character_id": MISSING_ID,
+        },
+        headers=auth_headers,
+    )
+    assert response.status_code == 404, response.text
+    assert response.json()["detail"]["code"] == ErrorCode.character_not_found.value
+
+
+@pytest.mark.asyncio
+async def test_responding_to_someone_elses_challenge_is_coded(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    praxis_solo: Praxis,
+    character2: Character,
+    character3: Character,
+    auth_headers3: dict,
+):
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=praxis_solo.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.pending,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    response = await client.post(
+        f"/duels/{duel.id}/respond", json={"accept": True}, headers=auth_headers3
+    )
+    assert response.status_code == 403, response.text
+    assert (
+        response.json()["detail"]["code"] == ErrorCode.duel_challenge_not_yours.value
+    )
+
+
+@pytest.mark.asyncio
+async def test_responding_to_a_resolved_challenge_is_coded(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    praxis_solo: Praxis,
+    character2: Character,
+    auth_headers2: dict,
+):
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=praxis_solo.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.declined,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    response = await client.post(
+        f"/duels/{duel.id}/respond", json={"accept": True}, headers=auth_headers2
+    )
+    assert response.status_code == 400, response.text
+    assert (
+        response.json()["detail"]["code"]
+        == ErrorCode.duel_challenge_already_resolved.value
+    )
+
+
+# POST /characters — the three refusals on the creation form. ``account2`` holds
+# no character yet, so the second-character level gate is not what answers.
+
+
+@pytest.mark.asyncio
+async def test_creating_a_character_with_a_blank_name_is_coded(
+    client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
+):
+    """Whitespace clears Pydantic's min_length; the service is what refuses."""
+    response = await client.post(
+        "/characters", json={"display_name": "   "}, headers=auth_headers2
+    )
+    assert response.status_code == 400, response.text
+    assert response.json()["detail"]["code"] == ErrorCode.character_name_required.value
+
+
+@pytest.mark.asyncio
+async def test_creating_a_character_in_albescent_is_coded(
+    client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
+):
+    response = await client.post(
+        "/characters",
+        json={"display_name": "Newcomer", "faction_slug": ALBESCENT_FACTION_SLUG},
+        headers=auth_headers2,
+    )
+    assert response.status_code == 400, response.text
+    assert (
+        response.json()["detail"]["code"]
+        == ErrorCode.faction_albescent_not_at_creation.value
+    )
+
+
+@pytest.mark.asyncio
+async def test_creating_a_character_in_an_uninvited_faction_is_coded(
+    client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
+):
+    """The same failure as defecting without a letter, and the same code."""
+    response = await client.post(
+        "/characters",
+        json={"display_name": "Newcomer", "faction_slug": "snide"},
+        headers=auth_headers2,
+    )
+    assert response.status_code == 400, response.text
+    assert (
+        response.json()["detail"]["code"]
+        == ErrorCode.faction_invitation_required.value
+    )
