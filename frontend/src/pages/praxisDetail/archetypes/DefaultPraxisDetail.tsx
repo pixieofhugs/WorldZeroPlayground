@@ -115,6 +115,7 @@ import {
   MemberByline,
   orderedMembers,
   scoreWasBanked,
+  taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -457,9 +458,7 @@ export default function DefaultPraxisDetail({
           {praxis.task_title}
         </Link>
         <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--faction-default-card-muted)' }}>
-          {t('detail.taskRef.level', { level: praxis.task_level_required })}
-          {' · '}
-          {t('detail.taskRef.points', { points: praxis.task_point_value })}
+          {taskRefMeta(praxis, t)}
         </span>
       </div>
     </>
