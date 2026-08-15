@@ -8,7 +8,7 @@
  * dry. `WowTaskDetail` is the parchment field the decree is posted on,
  * `WowPraxisDetail` is the finished entry; this is the writing desk between
  * them, and it wears the same three things all three share: a barber ribbon at
- * the head, a gilt frame, and wavy gold→plum rules dividing every section.
+ * the head, a gilt frame, and one wavy gold→plum rule closing the sheet.
  *
  * ## What this file owns, and what it does not (ADR-0065)
  *
@@ -54,7 +54,11 @@
  *   tucked into the bottom-right corner. Both live on `ComposerGround`, which
  *   the sheet CLIPS — the site background still shows around the column and no
  *   ornament here can reach the viewport (#1028).
- * - **Section rule.** The zigzag: `Zig`, from the faction's one ornament module.
+ * - **Rule.** The zigzag: `Zig`, from the faction's one ornament module. Drawn
+ *   ONCE, above the footer (#1707) — the design calls its rule once and lets
+ *   whitespace separate the regions; six zigzags made a ladder of the sheet.
+ *   `dress.rule` still takes a key, because the waiting surface asks for its
+ *   own instance and two `<linearGradient>`s may not share an id.
  * - **Points mark.** A plaque struck at -2.5deg in a 2px gold frame: the figure
  *   in burnt gold beside a gold ✦, with the unit in plum italic beneath.
  * - **Status mark.** A ✦ in the title face, at gold.
@@ -121,7 +125,6 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -147,6 +150,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* ── WOW's two faces (§3) ── */
 /** MedievalSharp — the chronicle's display hand. */
@@ -282,6 +294,9 @@ export default function WowEditPraxis({ state }: Props) {
     style: {
       background: SHEET,
       border: `1.5px solid ${GOLD}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${PLUM}`,
       borderRadius: 6,
       padding: "var(--space-lg)",
     },
@@ -414,8 +429,7 @@ export default function WowEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={<Zig id="title" />}
-          meta={<TitleCounter length={state.title.length} color={LABEL} />}
+          rule={false}
           labelStyle={LABEL_STYLE}
         >
           <TitleField
@@ -433,7 +447,7 @@ export default function WowEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={<Zig id="mode" />}
+            rule={false}
             labelStyle={LABEL_STYLE}
           >
             <ModePicker
@@ -484,7 +498,7 @@ export default function WowEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={<Zig id="invite" />}
+            rule={false}
             labelStyle={LABEL_STYLE}
           >
             <InviteSearch
@@ -513,7 +527,7 @@ export default function WowEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={<Zig id="seals" />}
+            rule={false}
             labelStyle={LABEL_STYLE}
           >
             <MetataskSealStack state={state} />
@@ -525,62 +539,57 @@ export default function WowEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={<Zig id="writeup" />}
+          rule={false}
           labelStyle={LABEL_STYLE}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  composerLabelStyle({
-                    fontFamily: MED,
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 6,
-                    border: `1.5px solid ${active ? GOLD : "transparent"}`,
-                    background: active ? FIELD : "transparent",
-                    color: active ? INK : LABEL,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span style={composerLabelStyle(QUIET_STYLE)}>
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    composerLabelStyle({
+                      fontFamily: MED,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 6,
+                      border: `1.5px solid ${active ? GOLD : "transparent"}`,
+                      background: active ? FIELD : "transparent",
+                      color: active ? INK : LABEL,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* One panel at a time: a hidden textarea is still a tab stop and
               still submits, and drawing both puts the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 10,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  toolbarButtonStyle: {
-                    background: FIELD,
-                    color: INK,
-                    border: `1.5px solid ${GOLD}`,
-                    borderRadius: 6,
-                    fontFamily: LORA,
-                  },
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 200,
-                    lineHeight: 1.7,
-                    fontFamily: LORA,
-                  },
-                }}
-              />
-              <div
-                style={composerLabelStyle({
-                  ...QUIET_STYLE,
-                  marginTop: "var(--space-sm)",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 10,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                toolbarButtonStyle: {
+                  background: FIELD,
+                  color: INK,
+                  border: `1.5px solid ${GOLD}`,
+                  borderRadius: 6,
+                  fontFamily: LORA,
+                },
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 200,
+                  lineHeight: 1.7,
+                  fontFamily: LORA,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -617,7 +626,7 @@ export default function WowEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={<Zig id="proof" />}
+          rule={false}
           labelStyle={LABEL_STYLE}
         >
           <div
@@ -668,7 +677,9 @@ export default function WowEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1.5px dashed ${GOLD}`,
                     borderRadius: 6,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: LABEL,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),

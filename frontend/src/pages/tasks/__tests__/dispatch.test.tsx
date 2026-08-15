@@ -255,6 +255,10 @@ describe('can-sign-up filter (#1130)', () => {
  * so it must sit on its default and raise no chip on a fresh load.
  */
 describe('the task rails', () => {
+  /** How many rail segments the page drew, across every rail it mounted. */
+  const segmentCount = (markup: string) =>
+    markup.split('filter-rail__segment').length - 1
+
   const SEES_EVERYTHING: CurrentUser = {
     ...VIEWER,
     can_see_retired_tasks: true,
@@ -271,9 +275,8 @@ describe('the task rails', () => {
     expect(out, 'no pending segment').not.toContain(
       `>${i18n.t('tasks:browse.status.pending')}<`,
     )
-    expect(out, 'no rail is four segments wide').not.toContain(
-      'width:calc((100% - 2 * var(--filter-rail-pad)) / 4)',
-    )
+    // type (2) + sort (3) + status (2). No eligibility rail logged out.
+    expect(segmentCount(out), 'seven segments across three rails').toBe(7)
   })
 
   it('widens the status rail to four for a viewer allowed the extra states', () => {
@@ -288,9 +291,11 @@ describe('the task rails', () => {
     // the API expects, which is what `statusFilters` above carries.
     expect(out).toContain(`>${i18n.t('tasks:browse.status.retired')}<`)
     expect(out).toContain(`>${i18n.t('tasks:browse.status.pending')}<`)
-    expect(out, 'a 4-segment thumb').toContain(
-      'width:calc((100% - 2 * var(--filter-rail-pad)) / 4)',
-    )
+    // type (2) + sort (3) + status (4) + eligibility (2).
+    expect(segmentCount(out), 'the status rail grew by two').toBe(11)
+    // The thumb is a measured rect since #1726 and this harness runs no
+    // effects, so its placement is not observable here — see
+    // components/ui/FilterBar/__tests__ for the half that is.
   })
 
   it('opens on `level`, raising no applied chip', () => {
