@@ -30,9 +30,11 @@ import { scanPageForContrast, type Finding } from './contrastScan'
  * red from the day the guard landed. See contrastBaseline.ts Part D.
  *
  * REGENERATING THE BASELINE. Set `CONTRAST_BASELINE_OUT=<path>` and run the
- * suite; every failure is appended there as a ready-to-paste entry. The list
- * is machine-produced on purpose — hand-typed ratios would be wrong within a
- * week, which is the whole thesis of this issue.
+ * suite; every MEASURED failure is appended there as a ready-to-paste entry.
+ * The list is machine-produced on purpose — hand-typed ratios would be wrong
+ * within a week, which is the whole thesis of this issue. Unmeasurable
+ * backdrops are not baseline entries any more, so nothing is emitted for them;
+ * their ceiling comes off the report this prints on every run.
  */
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
