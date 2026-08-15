@@ -49,12 +49,24 @@ judgement, not by fatigue — so the next reader does not re-derive it:
 * **Auth and dependency plumbing.** ``services/auth.py``, ``dependencies.py``:
   401/403 with a status the client already switches on before it ever looks at
   a body.
-* **Service-layer gates whose surface is unsettled.** ``services/praxis.py``,
+* **Service-layer gates behind a button.** ``services/praxis.py``,
   ``services/comment.py``, ``services/duel.py``, ``services/nudge.py`` and
-  friends still hold the bulk of the list. These *are* player-facing and are
-  the next slice worth taking; they are here because they need per-code
-  judgement about which failures a client should branch on, not because they
-  were judged fine.
+  friends still hold the bulk of the list. Slice two took the five heaviest —
+  ``faction_service.py::defect_to_faction``,
+  ``comment.py::_assert_commentable_target``, both duel challenge scopes and
+  ``character.py::create_character``, 21 raises — on the argument the issue
+  body makes for ``list_praxes_route``, applied one layer down: defection,
+  commenting, duel challenge/response and character creation are all things a
+  player does and reads the rejection of. What is left in these files is the
+  tail: scopes where the status already says everything a client needs, or
+  where nothing renders the prose as its own failure (``nudge.py::_refuse``
+  reports per item into a plain string field). They want per-code judgement one
+  at a time, and none is a failure a player currently tells apart by reading.
+
+**Where that leaves the number.** 164 at #1401, 137 after slice one, 116 after
+slice two. #1652 closes here rather than at zero: converting the rest would
+mean minting a code for every missing-row 404 in the app, which no client
+branches on and no catalog would word differently.
 
 KEY SHAPE
 ---------
@@ -74,7 +86,7 @@ from __future__ import annotations
 #: Sum of :data:`UNCODED_RAISE_ALLOWLIST`. Duplicated on purpose: this is the
 #: one number a reviewer reads to see how far a PR moved the ratchet, and the
 #: test asserts the two agree so it cannot drift.
-UNCODED_RAISE_TOTAL = 137
+UNCODED_RAISE_TOTAL = 116
 
 #: ``"file::scope" -> count``. Grouped by file, sorted; see the module docstring.
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
@@ -109,14 +121,12 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/auth.py::decode_jwt": 2,
     "services/auth.py::get_current_account": 2,
 
-    "services/character.py::create_character": 3,
     "services/character.py::set_active_character": 2,
     "services/character.py::soft_delete_character": 1,
     "services/character.py::update_character": 1,
 
     "services/character_stats.py::recompute_votes_spent_this_era": 1,
 
-    "services/comment.py::_assert_commentable_target": 5,
     "services/comment.py::_clean_body": 2,
     "services/comment.py::edit_comment": 1,
     "services/comment.py::flag_comment": 1,
@@ -126,12 +136,8 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
 
     "services/duel.py::cancel_duel_challenge": 2,
     "services/duel.py::get_duel": 1,
-    "services/duel.py::issue_duel_challenge": 3,
-    "services/duel.py::respond_to_duel_challenge": 4,
 
     "services/era.py::get_current_era_row": 1,
-
-    "services/faction_service.py::defect_to_faction": 6,
 
     "services/media.py::process_and_save_avatar": 1,
     "services/media.py::process_and_save_media": 1,

@@ -211,7 +211,7 @@ async def issue_duel_challenge(
 
     challenger_praxis = await get_praxis(challenger_praxis_id, session)
     if challenger_praxis.created_by_id != challenger_character_id:
-        raise HTTPException(status_code=403, detail="You do not own this praxis.")
+        raise_coded(403, ErrorCode.praxis_not_owner, "You do not own this praxis.")
     if challenger_praxis.status != PraxisStatus.in_progress:
         raise_coded(
             422,
@@ -232,11 +232,13 @@ async def issue_duel_challenge(
 
     task = await session.get(Task, challenger_praxis.task_id)
     if task is None:
-        raise HTTPException(status_code=404, detail="Task no longer exists.")
+        raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
 
     opponent = await session.get(Character, opponent_character_id)
     if opponent is None:
-        raise HTTPException(status_code=404, detail="Opponent character not found.")
+        raise_coded(
+            404, ErrorCode.character_not_found, "Opponent character not found."
+        )
 
     # Opponent eligibility: must not already have an active praxis for this task.
     # `era` is threaded through because the predicate carries the Double Dipper
@@ -291,10 +293,16 @@ async def respond_to_duel_challenge(
     duel = await get_duel(duel_id, session)
 
     if duel.opponent_character_id != character_id:
-        raise HTTPException(status_code=403, detail="This challenge is not for you.")
+        raise_coded(
+            403, ErrorCode.duel_challenge_not_yours, "This challenge is not for you."
+        )
 
     if duel.status != DuelStatus.pending:
-        raise HTTPException(status_code=400, detail="Challenge has already been resolved.")
+        raise_coded(
+            400,
+            ErrorCode.duel_challenge_already_resolved,
+            "Challenge has already been resolved.",
+        )
 
     now = datetime.now(timezone.utc)
 
@@ -306,7 +314,7 @@ async def respond_to_duel_challenge(
 
     opponent = await session.get(Character, character_id)
     if opponent is None:
-        raise HTTPException(status_code=404, detail="Character not found.")
+        raise_coded(404, ErrorCode.character_not_found, "Character not found.")
 
     # Account-level self-duel guard (ADR-0041, #1237). The invitation check above
     # only proves the responder is the invited *character*; it says nothing about
@@ -325,7 +333,7 @@ async def respond_to_duel_challenge(
 
     task = await session.get(Task, duel.task_id)
     if task is None:
-        raise HTTPException(status_code=404, detail="Task no longer exists.")
+        raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
 
     # Opponent must still be eligible (they could have signed up for the task
     # in the window between challenge and accept). `era` threaded for the same
@@ -344,7 +352,7 @@ async def respond_to_duel_challenge(
         raise_coded(
             400,
             ErrorCode.task_bank_full,
-            f"Task bank is full ({era.max_task_signups} in-progress praxes).",
+            f"Task bank is full ({era.max_task_signups} in-progress praxis).",
             {"limit": era.max_task_signups},
         )
 
