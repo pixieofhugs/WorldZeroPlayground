@@ -1,8 +1,9 @@
 /**
- * Roman numerals — grades, vote tiers, entry numbers.
+ * Roman numerals — levels, vote tiers, entry numbers.
  *
- * Two factions set a level as a numeral: the Ephemerists call it a *grade* and
- * UA calls it an *anno*. This lived in `components/cards/ephemeristsAtoms.tsx`
+ * Two factions set a level as a numeral: the Ephemerists print it plain (it was
+ * their *grade* until #1702 retired the word) and UA calls it an *anno*. This
+ * lived in `components/cards/ephemeristsAtoms.tsx`
  * until #1208 deleted that module, which had UA importing a formatter out of
  * another faction's ornament kit; a numeral is neither faction's dress.
  */

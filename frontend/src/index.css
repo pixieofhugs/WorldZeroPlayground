@@ -5902,32 +5902,24 @@
    rather than the choice — the third tier is a cooler ink at roughly
    secondary's weight, not a dimmer one, because the palette has no room below
    secondary that still clears AA. What sets the count apart from the label is
-   its temperature and its size, and that is the whole of it. */
+   its temperature and its size, and that is the whole of it.
+
+   ONE INK, SELECTED OR NOT (#1579). A selected row inverts to `--filter-thumb`
+   and this used to promote the count to secondary there, on the stated grounds
+   that tertiary was "too faint against the thumb". Measured, that was backwards
+   in dark — tertiary was already the louder ink on that stock — so the
+   promotion bought ~10% in light and SPENT contrast in dark. #1715's lift
+   settles it: on the thumb (10% primary over `--filter-well`, the tightest
+   neutral stock in the app) tertiary now reads 5.66:1 light and 6.04:1 dark
+   against secondary's 5.63:1 in both, so the plain rule is both the simpler and
+   the higher-contrast one. Both inks are `Pair` rows in the contrast sweep, so
+   the next repaint of `--color-text-primary` (which IS this ground, twice) has
+   to answer for them. */
 .filter-factions__count {
   flex: none;
   font-size: var(--text-lg);
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
-}
-
-/* A selected row inverts to the thumb fill, and the count follows the label
-   into the warm family there so the whole row reads as one selected object.
-
-   ponytail (#1549, closed out by #1715): the original reason given was
-   "tertiary is too faint against the thumb", and that was never worth much —
-   measured, the thumb (10% primary over `--filter-well`) read secondary at
-   4.05:1 and tertiary at 3.90:1 in light, and secondary at 3.80:1 against
-   tertiary's 4.19:1 in DARK, where this rule therefore cost contrast rather
-   than buying it. Both inks were under AA on that stock at `--text-lg` in both
-   themes. #1549 called the fix the GROUND rather than the ink and left it; the
-   ink turned out to be short on every neutral stock, and lifting it to AAA on
-   the two the app owns carries this one over AA as a side effect — 5.63 / 5.66
-   light, 5.63 / 6.04 dark. The rule stays because it is about reading the row
-   as one object, not about contrast, and it no longer costs any. #1579 owns
-   the dark half of it. Both stocks are `Pair` rows now, so the next repaint of
-   `--color-text-primary` (which IS this ground, twice) has to answer for them. */
-.filter-factions__row[data-on] .filter-factions__count {
-  color: var(--color-text-secondary);
 }
 
 .filter-factions__done {

@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -7,12 +6,19 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * `na` and for any task faction without a bespoke archetype.
  *
  * The point of this skin is restraint: it is a quiet sheet, and the community
- * rainbow appears in exactly FOUR places on it — the eyebrow's text-clip, the
- * score box's hairline rule, the total, and one 2px divider above the vote
- * widget. #820 read "the spectrum card" as a full-bleed rainbow BAND wrapped
- * around the frame plus a `DefaultSigil` masthead row; neither exists in the
- * prototype, and together they made the least-marked faction the loudest card
- * on the page. Both are gone.
+ * rainbow appears in exactly THREE places on it — the score box's hairline rule
+ * and the total (both in `DefaultScoreStamp`), and one 2px divider above the
+ * vote widget. #820 read "the spectrum card" as a full-bleed rainbow BAND
+ * wrapped around the frame plus a `DefaultSigil` masthead row; neither exists in
+ * the prototype, and together they made the least-marked faction the loudest
+ * card on the page. Both are gone.
+ *
+ * NO RUNNING HEAD (#1701). This card is the one archetype that passes no
+ * `eyebrow` — the title is the first thing read. The other eight factions still
+ * fill the slot from `card.masthead.*`, so the slot stays; what went is this
+ * one caller's use of it plus the `default` string that fed it — spelling that
+ * key out here would only leave a dead-key sweep something to find. It took the
+ * rainbow's fourth appearance (the running head clipped to type) with it.
  *
  * The title is set in Bebas Neue (`--faction-default-card-font`), the design's
  * unaffiliated face. It had been resolving to Lora through the shared
@@ -22,7 +28,6 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * `[data-theme="dark"]` cascade with no `dark ?` branch.
  */
 export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -55,28 +60,12 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
           lineHeight: 1,
           color: "var(--faction-default-card-text)",
         }}
-        eyebrow={
-          <div
-            className="label-heading"
-            style={{
-              letterSpacing: "0.16em",
-              // Rainbow appearance 1 of 4: the running head, clipped to type.
-              background: "var(--faction-default-eyebrow-rainbow)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-              marginBottom: "var(--space-xs)",
-            }}
-          >
-            {t("card.masthead.default")}
-          </div>
-        }
         voteRule={
           <div
             aria-hidden
             style={{
               height: 2,
-              // Rainbow appearance 4 of 4: the one divider on the sheet. The
+              // Rainbow appearance 3 of 3: the one divider on the sheet. The
               // opacity sits between the design's light (0.4) and dark (0.5)
               // values — a single number keeps this off a `dark ?` branch, and
               // the difference is one step of a wash behind a 2px rule.

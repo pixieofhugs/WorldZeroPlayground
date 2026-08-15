@@ -120,7 +120,6 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -146,6 +145,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* The terminal's two-theme contract (#1023/#1034), named for the ROLE each
  * plays in this design's skin row rather than for its colour. Both halves are
@@ -225,8 +233,9 @@ export default function SingularityEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  /* The section divider: a dashed hair, not a solid rule. One node, handed to
-     every section, so the rhythm cannot drift between regions. */
+  /* The rule: a dashed hair, not a solid line. One node, drawn ONCE above the
+     footer (#1707) — the design calls its rule there and nowhere else, and the
+     regions above it separate by the sheet's own gap. */
   const hairRule = (
     <ComposerRule
       style={{
@@ -265,6 +274,9 @@ export default function SingularityEditPraxis({ state }: Props) {
     style: {
       background: PANEL,
       border: `1px solid ${BORDER}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACCENT}`,
       borderRadius: RADIUS,
       padding: "var(--space-lg)",
       flexDirection: sizes.isMobile ? ("column" as const) : ("row" as const),
@@ -483,10 +495,8 @@ export default function SingularityEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={hairRule}
-          meta={<TitleCounter length={state.title.length} color={MUTED} />}
+          rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
-          metaStyle={{ fontFamily: FACE }}
         >
           <TitleField
             state={state}
@@ -503,7 +513,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={hairRule}
+            rule={false}
             labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
             <ModePicker
@@ -554,7 +564,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={hairRule}
+            rule={false}
             labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
             <InviteSearch
@@ -579,7 +589,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={hairRule}
+            rule={false}
             labelStyle={{ fontFamily: FACE, color: MUTED }}
           >
             <MetataskSealStack state={state} />
@@ -591,62 +601,61 @@ export default function SingularityEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={hairRule}
+          rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  termLabel({
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: RADIUS,
-                    border: `1px solid ${active ? BORDER : "transparent"}`,
-                    background: active ? PANEL : "transparent",
-                    color: active ? ACCENT : MUTED,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={termLabel({
+                  color: MUTED,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    termLabel({
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: RADIUS,
+                      border: `1px solid ${active ? BORDER : "transparent"}`,
+                      background: active ? PANEL : "transparent",
+                      color: active ? ACCENT : MUTED,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Both panels are mounted only one at a time: a hidden textarea would
               still be a tab stop and still be submitted by a form, and drawing
               both would put the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 10,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 200,
-                    lineHeight: 1.7,
-                  },
-                  toolbarButtonStyle: {
-                    background: PANEL,
-                    color: MUTED,
-                    border: `1px solid ${BORDER}`,
-                    borderRadius: RADIUS,
-                    fontFamily: FACE,
-                  },
-                }}
-              />
-              <div
-                style={termLabel({
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 10,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 200,
+                  lineHeight: 1.7,
+                },
+                toolbarButtonStyle: {
+                  background: PANEL,
                   color: MUTED,
-                  marginTop: "var(--space-sm)",
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+                  border: `1px solid ${BORDER}`,
+                  borderRadius: RADIUS,
+                  fontFamily: FACE,
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -676,7 +685,7 @@ export default function SingularityEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={hairRule}
+          rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
         >
           <div
@@ -726,7 +735,9 @@ export default function SingularityEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `1px dashed ${BORDER}`,
                     borderRadius: RADIUS,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: ACCENT,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),
