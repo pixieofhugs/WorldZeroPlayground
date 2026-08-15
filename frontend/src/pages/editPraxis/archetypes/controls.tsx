@@ -442,7 +442,7 @@ export function InviteSearch({
                 <span style={{ fontWeight: 700 }}>
                   {character.display_name}
                 </span>
-                <span style={{ marginLeft: "auto", fontSize: "var(--text-sm)", opacity: 0.7 }}>
+                <span style={{ marginLeft: "auto", fontSize: "var(--text-lg)", opacity: 0.7 }}>
                   {factionName(character.faction_slug)}
                 </span>
               </button>

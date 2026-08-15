@@ -168,7 +168,7 @@ export default function FieldDesk() {
                 ) : (
                   <span style={{ ...pillAvatar, display: 'inline-block' }} />
                 )}
-                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                <span style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)' }}>
                   @{active.username} ·{' '}
                   <b style={{ color: 'var(--color-text-primary)' }}>
                     {t('fieldDesk.livesInPlay', { count: lives.length })}
@@ -475,7 +475,7 @@ function ContinueRow({
         className="shrink-0"
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 'var(--text-sm)',
+          fontSize: 'var(--text-md)',
           letterSpacing: '0.16em',
           textTransform: 'uppercase',
           color: 'var(--faction-default-card-muted)',
@@ -597,7 +597,11 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
       ) : items.length === 0 ? (
         <p className="font-body text-muted">{t(`signedIn.browse.empty.${tab}`)}</p>
       ) : (
+        /* `scanning-surface`: the desk's browse grid (#1716) — a WOW card hangs
+           its points upside down here, and upright wherever no mount says
+           otherwise. See index.css. */
         <div
+          className="scanning-surface"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
@@ -735,7 +739,7 @@ const medallion: CSSProperties = {
   marginBottom: 'var(--space-lg)',
 }
 const slotOpen: CSSProperties = {
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   color: 'var(--color-success)',

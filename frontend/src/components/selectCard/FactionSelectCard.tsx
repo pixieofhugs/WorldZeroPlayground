@@ -180,7 +180,6 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
     }}>
       <div style={{ position: "absolute", top: -40, right: -40, width: 130, height: 130, borderRadius: "50%",
         background: "radial-gradient(circle, var(--snide-acid) 0%, transparent 62%)", opacity: 0.22, filter: "blur(2px)" }} />
-      <div style={{ position: "absolute", top: 14, left: 22, width: 74, height: 20, background: "var(--snide-tape)", transform: "rotate(-6deg)", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <SnideSigil size={40} color="var(--snide-acid)" />
@@ -230,14 +229,14 @@ export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Om
       <svg width="100%" height={26} viewBox="0 0 360 26" preserveAspectRatio="xMinYMid slice" aria-hidden="true" style={{ position: "absolute", left: 0, bottom: 62, opacity: 0.55 }}>
         <eph.GlyphRegister width={360} y={13} strength={0.5} keyPrefix="sel" />
       </svg>
-      <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-sm)", letterSpacing: "0.1em", color: eph.BAND_QUIET, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
+      <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-md)", letterSpacing: "0.1em", color: eph.BAND_QUIET, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <span style={{ width: 46, height: 46, borderRadius: "50%", border: `1.5px solid ${eph.BRASS}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <EphemeristsSigil size={26} color={eph.GOLD} />
           </span>
           <div>
-            <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.24em", color: eph.GOLD }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
+            <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.24em", color: eph.GOLD }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
             <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.BAND_INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
           </div>
@@ -476,7 +475,7 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
       <div style={{ position: "absolute", inset: 12, border: "1px solid var(--albescent-reveal-border-faint)", pointerEvents: "none" }} />
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-2xl) 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.34em", color: "var(--albescent-reveal-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.34em", color: "var(--albescent-reveal-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
           <AlbescentSigil size={26} color="var(--albescent-reveal-ink)" />
         </div>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: vellum-letter name — the archetype's calligraphic display type */}
@@ -487,7 +486,7 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
         </p>
       </div>
       <div style={{ position: "relative", padding: "var(--space-lg) var(--space-2xl) var(--space-xl)" }}>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.06em", color: "var(--albescent-reveal-text-muted)", marginBottom: "var(--space-md)", textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
+        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.06em", color: "var(--albescent-reveal-text-muted)", marginBottom: "var(--space-md)", textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--albescent-reveal-text)", background: "transparent", color: "var(--albescent-reveal-text)",
           fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.22em", padding: "var(--space-md)", textTransform: "uppercase", transition: "background 140ms, color 140ms",

@@ -1,7 +1,7 @@
 /**
  * EphemeristsProfileBody — the VALLEY PLATE player-profile skin (#460, swept off
  * the illuminated codex by #1208). The night-band header ruled in brass over a
- * ghost graticule, roman-numeral "GRADE" levels, and papyrus plates below.
+ * ghost graticule, roman-numeral levels, and papyrus plates below.
  *
  * Structure is DefaultProfileBody's locked spine via ProfileSkin. THREE grounds
  * carry ink, and the header's is not the body's: the cornice band (`band-ink`
@@ -44,7 +44,7 @@ import { toRoman } from '../../../utils/roman'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
 /** Level 0 shows a mid-dot rather than a numeral — the codex's own convention. */
-const grade = (value: number): string => (value > 0 ? toRoman(value) : '\u00b7')
+const romanLevel = (value: number): string => (value > 0 ? toRoman(value) : '\u00b7')
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
@@ -119,8 +119,8 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'grade',
-  // The grade ring is a brass instrument, so its label is engraved rather than
+  ringLabel: 'level',
+  // The level ring is a brass instrument, so its label is engraved rather than
   // whispered (#1630). Not free from #1645's card-* repoint, which is where this
   // was expected to fall out: that landed `--faction-ephemerists-card-accent` on
   // the brass, and this kit reads none of the `card-*` family — its accent is
@@ -128,9 +128,9 @@ const kit: ProfileKit = {
   ringLabelInk: BRASS_LIGHT,
   barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
   barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
-  formatLevel: grade,
-  levelUnitLabel: 'pvncta this grade',
-  nextLevelLabel: (next) => `next · grade ${grade(next)}`,
+  formatLevel: romanLevel,
+  levelUnitLabel: 'pvncta this level',
+  nextLevelLabel: (next) => `next · level ${romanLevel(next)}`,
   sectionHeading: heading,
   praxisEyebrow: (name) => `Filed to the codex by ${name}`,
   praxisEmpty: {
@@ -152,7 +152,7 @@ const kit: ProfileKit = {
   },
   badgeChipStyle: {
     ...SMALL_CAPS,
-    fontSize: 'var(--text-sm)',
+    fontSize: 'var(--text-md)',
     letterSpacing: '0.14em',
     color: QUIET,
     marginLeft: 'auto',

@@ -84,7 +84,7 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
                 onClick={loadMore}
                 className="font-body uppercase"
                 style={{
-                  fontSize: 'var(--text-sm)',
+                  fontSize: 'var(--text-md)',
                   letterSpacing: '0.1em',
                   padding: 'var(--space-sm) var(--space-lg)',
                   border: '1px solid var(--color-border-strong)',

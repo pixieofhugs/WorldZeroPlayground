@@ -6,11 +6,11 @@ import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wow
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -262,7 +262,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -319,20 +319,20 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         gap: "var(--space-md)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "center",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.points.base")}</span>
-        <span style={{ fontFamily: MED, fontSize: size.base, lineHeight: 1, color: INK }}>
-          {basePoints}
-        </span>
-        {showMultiplier && (
+      {showBreakdown && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "center",
+            gap: "var(--space-sm)",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.points.base")}</span>
+          <span style={{ fontFamily: MED, fontSize: size.base, lineHeight: 1, color: INK }}>
+            {basePoints}
+          </span>
           <span
             style={{
               fontFamily: MED,
@@ -348,8 +348,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* The plaque, struck two degrees off true. */}
       <div
@@ -587,7 +587,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <span
             style={{
               ...EYEBROW,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
               borderRadius: 4,
@@ -772,37 +772,41 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         </span>
         <BalloonBunch size={34} />
         <Zig id="gallery" style={{ flex: 1 }} />
-        <span
-          style={{
-            display: "flex",
-            gap: "var(--space-xs)",
-            padding: "var(--space-xs)",
-            border: `2px solid ${GOLD}`,
-            borderRadius: 8,
-            background: CARD,
-          }}
-        >
-          {(["score", "recent"] as const).map((sort) => (
-            <button
-              key={sort}
-              onClick={() => setSubmissionSort(sort)}
-              style={{
-                ...EYEBROW,
-                fontSize: "var(--text-sm)",
-                cursor: "pointer",
-                border: "none",
-                borderRadius: 6,
-                padding: "var(--space-sm) var(--space-md)",
-                color: submissionSort === sort ? ON_PLUM : LABEL,
-                background: submissionSort === sort ? PLUM_SURFACE : "transparent",
-              }}
-            >
-              {sort === "score"
-                ? t("detail.gallery.sort.top")
-                : t("detail.gallery.sort.recent")}
-            </button>
-          ))}
-        </span>
+        {/* Nothing to sort until something is filed (#1704). The heading and the
+            balloon-framed empty panel below stay; only the control goes. */}
+        {sortedSubmissions.length > 0 && (
+          <span
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
+              border: `2px solid ${GOLD}`,
+              borderRadius: 8,
+              background: CARD,
+            }}
+          >
+            {(["score", "recent"] as const).map((sort) => (
+              <button
+                key={sort}
+                onClick={() => setSubmissionSort(sort)}
+                style={{
+                  ...EYEBROW,
+                  fontSize: "var(--text-md)",
+                  cursor: "pointer",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "var(--space-sm) var(--space-md)",
+                  color: submissionSort === sort ? ON_PLUM : LABEL,
+                  background: submissionSort === sort ? PLUM_SURFACE : "transparent",
+                }}
+              >
+                {sort === "score"
+                  ? t("detail.gallery.sort.top")
+                  : t("detail.gallery.sort.recent")}
+              </button>
+            ))}
+          </span>
+        )}
       </div>
 
       {sortedSubmissions.length === 0 ? (

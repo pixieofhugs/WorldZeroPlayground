@@ -202,7 +202,7 @@ export default function EverymenFactionHero({
               <span
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-sm)",
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   color: CREAM,

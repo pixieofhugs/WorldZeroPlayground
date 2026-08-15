@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import DefaultTaskDetail from "./DefaultTaskDetail";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { isNeutralMultiplier } from "../../../utils/points";
+import { showWorthBreakdown } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -55,7 +55,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  * arrangement, not data: `worthSlot` (see {@link DefaultTaskDetail}) takes the
  * node below, which is built from the SAME `state` forwarded to Default, so the
  * two can never disagree about what a task is worth. The `×mult` badge follows
- * the same rule as everywhere else — raw factor, hidden at 1.0 (ADR-0055).
+ * the same rule as everywhere else — raw factor, hidden at 1.0 (ADR-0055) — and
+ * so does the `base` row carrying it: this is the ONE piece of worth markup
+ * Albescent owns rather than inherits, so it needs the shared gate by name
+ * (`showWorthBreakdown`, #1704). Neutral, the ring stands alone above nothing.
  *
  * index.css owns every class here, both theme halves and the reduced-motion
  * guard; a component may not inject a stylesheet (#911). Stilled, the page is a
@@ -75,7 +78,7 @@ export default function AlbescentTaskDetail({
   // renders around an empty page.
   if (!task) return null;
 
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const ringSize = desktop ? 92 : 74;
 
   // The prism-ring worth readout — the design's one departure from na's anatomy.
@@ -88,27 +91,27 @@ export default function AlbescentTaskDetail({
         gap: "var(--space-sm)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "center",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-        }}
-      >
-        <span className="label-caption">{t("detail.points.base")}</span>
-        <span
+      {showBreakdown && (
+        <div
           style={{
-            fontFamily: "var(--font-accent)",
-            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-            lineHeight: 1,
-            color: "var(--faction-default-card-text)",
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "center",
+            gap: "var(--space-sm)",
+            flexWrap: "wrap",
           }}
         >
-          {basePoints}
-        </span>
-        {showMultiplier && (
+          <span className="label-caption">{t("detail.points.base")}</span>
+          <span
+            style={{
+              fontFamily: "var(--font-accent)",
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              lineHeight: 1,
+              color: "var(--faction-default-card-text)",
+            }}
+          >
+            {basePoints}
+          </span>
           <span
             className="font-display"
             style={{
@@ -126,8 +129,8 @@ export default function AlbescentTaskDetail({
               multiplier: factionMultiplier.toFixed(2),
             })}
           </span>
-        )}
-      </div>
+        </div>
+      )}
       <span
         className="alb-detail-ring"
         style={{ width: ringSize, height: ringSize }}

@@ -115,7 +115,7 @@ export default function SingularityFactionHero({
           {/* boot lines */}
           <div
             style={{
-              fontSize: "var(--text-sm)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.18em",
               color: signal(55),
               marginBottom: "var(--space-lg)",
@@ -226,7 +226,7 @@ export default function SingularityFactionHero({
           >
             <div
               style={{
-                fontSize: "var(--text-xs)",
+                fontSize: "var(--text-md)",
                 letterSpacing: "0.2em",
                 color: signal(55),
                 textTransform: "uppercase",
@@ -250,7 +250,7 @@ export default function SingularityFactionHero({
               >
                 <span
                   style={{
-                    fontSize: "var(--text-xs)",
+                    fontSize: "var(--text-md)",
                     letterSpacing: "0.14em",
                     color: signal(50),
                     textTransform: "uppercase",

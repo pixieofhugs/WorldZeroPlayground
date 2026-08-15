@@ -315,7 +315,6 @@ export function SnideCard({
           clipPath: SNIDE_TORN_CLIP,
         }}
       />
-      <div className="snide-tape" style={{ top: -10, left: 22, transform: "rotate(-8deg)" }} />
       <SnideMasthead subtitle={i18n.t("feed:factionCard.snide.subtitle")} />
       {invitationNote && (
         <InvitationNote slug={faction.slug} note={invitationNote} />
@@ -414,7 +413,7 @@ export function EphemeristsCard({
           <div
             style={{
               ...eph.SMALL_CAPS,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.26em",
               color: eph.GOLD,
               marginBottom: "var(--space-xs)",
@@ -580,7 +579,7 @@ export function SingularityCard({
         )}
         <div
           style={{
-            fontSize: "var(--text-xs)",
+            fontSize: "var(--text-md)",
             color: "var(--faction-singularity-card-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.15em",

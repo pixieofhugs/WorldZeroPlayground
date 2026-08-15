@@ -186,7 +186,7 @@ export default function EphemeristsFactionHero({
                   borderTop: i > 0 ? `1px solid color-mix(in srgb, ${BRASS} 45%, transparent)` : undefined,
                 }}
               >
-                <span style={{ ...SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.14em", color: BAND_QUIET }}>
+                <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: BAND_QUIET }}>
                   {s.label}
                 </span>
                 <span className="content-title" style={{ fontFamily: DECO, lineHeight: 0.85, color: GOLD }}>

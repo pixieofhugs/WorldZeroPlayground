@@ -108,21 +108,22 @@ export default function SnideFactionHero({
       >
         {/* identity — eyebrow + wordmark + motto + blurb */}
         <div style={{ flex: 1, minWidth: 300 }}>
-          {/* eyebrow on tape */}
+          {/* eyebrow, typed straight onto the wall (#1708 took the tape) */}
           <div
             style={{
               display: "inline-block",
               width: "fit-content",
               whiteSpace: "nowrap",
-              background: "var(--faction-snide-tape)",
-              color: "var(--faction-snide-ink)",
+              // The strip carried this line's ink as well as its ground: on the
+              // tape it printed in the press's near-black, which IS the wall.
+              // Xerox paper is the faction's own on-ink type colour and needs no
+              // new value; the padding and the paste-up shadow went with the
+              // strip, so the eyebrow sets flush with the wordmark below it.
+              color: "var(--faction-snide-paper)",
               fontFamily: "var(--faction-snide-font-type)",
               fontSize: "var(--text-base)",
               letterSpacing: "0.05em",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the eyebrow on its tape strip; rounding reflows the tape.
-              padding: "3px 12px",
               transform: "rotate(-1.5deg)",
-              boxShadow: "1px 1px 0 rgba(0,0,0,0.3)",
             }}
           >
             {i18n.t("feed:factionHero.snide.eyebrow")}
@@ -229,19 +230,6 @@ export default function SnideFactionHero({
               />
               <SnideSigil size={54} color="var(--faction-snide)" />
             </div>
-            <div
-              style={{
-                position: "absolute",
-                top: -9,
-                left: "50%",
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: half the 52px tape strip, centring it on the sigil disc's crown. The offset IS the drawn strip's width; a rung slides the tape off-centre.
-                marginLeft: -26,
-                width: 52,
-                height: 18,
-                background: "var(--faction-snide-tape)",
-                transform: "rotate(-7deg)",
-              }}
-            />
           </div>
 
           {/* staggered acid stat chits — not a clean band */}
@@ -274,7 +262,7 @@ export default function SnideFactionHero({
               <div
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-xs)",
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: "#cfcdbf",

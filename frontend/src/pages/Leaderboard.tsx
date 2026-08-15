@@ -4,12 +4,10 @@ import { getLeaderboard } from '../api/leaderboard'
 import { useResource } from '../hooks/useResource'
 import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
-import { FACTION_RAINBOW_ORDER, factionCssVar } from '../utils/factions'
 import type { CharacterOut, CurrentUser } from '../api/auth'
+import PageTitle from '../components/ui/PageTitle'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { useTheme } from '../hooks/useTheme'
-import Constellation, { type RankedPlayer } from './players/Constellation'
-import Meadow from './players/Meadow'
+import { type RankedPlayer } from './players/Constellation'
 import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from './players/SkyCanvas'
 import SkyLegend from './players/SkyLegend'
 import RosterTable from './players/RosterTable'
@@ -51,7 +49,7 @@ export default function Leaderboard() {
 
 /** Exported for the players tests: `<Leaderboard/>` renders its Loading branch
  *  under `renderToStaticMarkup` (no effect ever resolves the fetch), so asserting
- *  the theme→viz dispatch through the page wrapper would pass vacuously. */
+ *  what the board draws through the page wrapper would pass vacuously. */
 export function DesktopLeaderboard({
   characters,
   loading,
@@ -64,16 +62,13 @@ export function DesktopLeaderboard({
   user: CurrentUser | null
 }) {
   const { t } = useTranslation('common')
-  const { theme } = useTheme()
   const [scoreMode, setScoreMode] = useState<ScoreMode>('era')
   const myCharId = user?.character?.id ?? null
 
-  // The viz is THEME-BOUND, not a user toggle (#684 §1): a night sky for dark,
-  // a sunlit field for light. `useTheme` is the shared reactive cell (#701), so
-  // flipping the theme swaps the viz live. Same props either way — the two are
-  // siblings, not a component and its re-skin.
-  const meadow = theme === 'light'
-
+  // One sky in both themes (#1700, ADR-0074). #684 §1 made the viz theme-bound
+  // — the Meadow for light, the Constellation for dark — and that is withdrawn:
+  // the Constellation paints its own `--sky-bg` stage, so it never inherits the
+  // page ground and needs no light sibling.
   const pointsOf = (character: CharacterOut) =>
     scoreMode === 'era' ? character.score : character.all_time_score
 
@@ -95,13 +90,9 @@ export function DesktopLeaderboard({
     scoreMode === 'era'
       ? t('leaderboard.desktop.eyebrowEra', { era: user?.era_name ?? '' })
       : t('leaderboard.desktop.eyebrowAllTime')
-  // The tagline names the ENCODING, so it has to follow the viz: the sky's
-  // "closer to the sun" is a lie over a field where rank is depth, not radius.
-  const tagline = meadow
-    ? scoreMode === 'era'
-      ? t('leaderboard.desktop.meadowTaglineEra')
-      : t('leaderboard.desktop.meadowTaglineAllTime')
-    : scoreMode === 'era'
+  // The tagline names the ENCODING, so it follows the viz.
+  const tagline =
+    scoreMode === 'era'
       ? t('leaderboard.desktop.taglineEra')
       : t('leaderboard.desktop.taglineAllTime')
 
@@ -136,36 +127,21 @@ export function DesktopLeaderboard({
     <div className="py-8">
       {/* ── The sky ── */}
       <section>
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <p className="label-heading">{eyebrow}</p>
+        {/* The shared page header (#1699). This page hand-rolled an <h1> that
+            copied PageTitle's classes but dropped the per-letter rainbow, then
+            drew a full-width rainbow rule of its own — two spellings of one
+            ornament. PageTitle brings the rainbow, so the rule is gone and the
+            score toggle moves to the row below the title. */}
+        <PageTitle title={t('leaderboard.desktop.title')} eyebrow={eyebrow} />
+
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <p className="label-caption">
+            {t('leaderboard.desktop.playersCount', { count: characters.length })}
+            {' · '}
+            {t('leaderboard.desktop.factionsCount', { count: factionCount })}
+          </p>
           <ScoreToggle mode={scoreMode} onChange={setScoreMode} />
         </div>
-
-        <h1
-          className="font-display italic font-medium leading-tight"
-          style={{ fontSize: 'var(--text-display)', color: 'var(--color-text-primary)' }}
-        >
-          {t('leaderboard.desktop.title')}
-        </h1>
-
-        <p className="label-caption mb-3">
-          {t('leaderboard.desktop.playersCount', { count: characters.length })}
-          {' · '}
-          {t('leaderboard.desktop.factionsCount', { count: factionCount })}
-        </p>
-
-        {/* Rainbow rule — the faction spectrum, in canonical order. */}
-        <div
-          aria-hidden
-          className="mb-3"
-          style={{
-            height: 3,
-            borderRadius: 2,
-            background: `linear-gradient(90deg, ${FACTION_RAINBOW_ORDER.map((slug) =>
-              factionCssVar(slug),
-            ).join(', ')})`,
-          }}
-        />
 
         <p
           className="mb-4"
@@ -187,10 +163,9 @@ export function DesktopLeaderboard({
           myCharId={myCharId}
           population={DESKTOP_SKY_POPULATION}
           maxWidth={DESKTOP_SKY_MAX_WIDTH}
-          viz={meadow ? Meadow : Constellation}
         />
 
-        <SkyLegend scoreMode={scoreMode} variant={meadow ? 'meadow' : 'sky'} />
+        <SkyLegend scoreMode={scoreMode} />
       </section>
 
       {/* ── Full roster ── */}

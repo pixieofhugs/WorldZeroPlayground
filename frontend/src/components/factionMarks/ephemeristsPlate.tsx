@@ -84,7 +84,7 @@ export const GRID = "var(--faction-ephemerists-grid)";
  *    tier, and uppercasing a kanji costs a `text-transform` and buys nothing.
  *  • `fontStyle` — the score stamp's tally line is set in italic Spectral, and a
  *    CJK fallback face has no italic, so the browser synthesises a slant.
- *  • `fontSize` — the label tier is `--text-xs` (8px). A Latin label is scanned
+ *  • `fontSize` — the label tier is `--text-md` (11px, #1608). A Latin label is scanned
  *    at that size; 基 is eleven strokes and simply fills in. `--text-xl` is the
  *    smallest token inside the 13–16px band #1637 names as legible, so it is the
  *    DEFAULT rather than the only value — a caller with its own ramp (the

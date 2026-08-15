@@ -6,11 +6,11 @@ import { EphemeristsMasthead } from "../../../components/factionMarks/Ephemerist
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import {
@@ -279,7 +279,7 @@ export default function EphemeristsTaskDetail({
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -306,7 +306,7 @@ export default function EphemeristsTaskDetail({
    */
   const eyebrow: CSSProperties = {
     ...SMALL_CAPS,
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     color: QUIET,
   };
   /** The same label voice on a panel cell, where the caption gold clears. */
@@ -461,7 +461,7 @@ export default function EphemeristsTaskDetail({
           <span
             style={{
               ...SMALL_CAPS,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               fontWeight: 600,
               letterSpacing: "0.16em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -640,18 +640,21 @@ export default function EphemeristsTaskDetail({
         gap: "var(--space-md)",
       }}
     >
-      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-        {ledgerRow(<span style={plateEyebrow}>{t("detail.points.base")}</span>, basePoints)}
-        {/* The modifier row — absent at ×1.00, so invisible under era_1's
-            neutralised modifiers and automatic the day one moves (ADR-0055).
-            The design labels it "Bonus"; ADR-0057 leaves no shared word for it,
-            so the label slot takes an incised ankh instead of an invented one. */}
-        {showMultiplier &&
-          ledgerRow(
+      {/* The ledger — both rows or neither (#1704). The modifier row is absent
+          at ×1.00, so under era_1's neutralised modifiers the base row was left
+          reading out the same figure the medallion below already strikes; the
+          ledger comes back whole the day a modifier moves (ADR-0055). The design
+          labels the second row "Bonus"; ADR-0057 leaves no shared word for it, so
+          the label slot takes an incised ankh instead of an invented one. */}
+      {showBreakdown && (
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+          {ledgerRow(<span style={plateEyebrow}>{t("detail.points.base")}</span>, basePoints)}
+          {ledgerRow(
             <Sign name="ankh" size={11} color={BRASS} weight={1.4} />,
             t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) }),
           )}
-      </div>
+        </div>
+      )}
 
       {/* The stepped octagon medallion. */}
       <div
@@ -682,7 +685,7 @@ export default function EphemeristsTaskDetail({
           <span
             style={{
               ...SMALL_CAPS,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.2em",
               marginTop: "var(--space-xs)",
               color: CAPTION,
@@ -859,7 +862,7 @@ export default function EphemeristsTaskDetail({
         cursor: "pointer",
         border: "none",
         padding: "var(--space-xs) var(--space-md)",
-        fontSize: "var(--text-sm)",
+        fontSize: "var(--text-md)",
         background: submissionSort === sort ? CTA_BG : "transparent",
         color: submissionSort === sort ? CTA_INK : QUIET,
       }}
@@ -884,11 +887,15 @@ export default function EphemeristsTaskDetail({
             {t("detail.gallery.heading", { count: submissions.length })}
           </h2>
           <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the 2px reveal that reads as an engraved frame around the two tabs. */}
-          <span style={{ display: "flex", gap: 2, border: `1px solid ${LINE}`, padding: 2 }}>
-            {sortTab("score", t("detail.gallery.sort.top"))}
-            {sortTab("recent", t("detail.gallery.sort.recent"))}
-          </span>
+          {/* Nothing to sort until something is filed (#1704). The heading and
+              the empty line below stay; only the control goes. */}
+          {sortedSubmissions.length > 0 && (
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the 2px reveal that reads as an engraved frame around the two tabs.
+            <span style={{ display: "flex", gap: 2, border: `1px solid ${LINE}`, padding: 2 }}>
+              {sortTab("score", t("detail.gallery.sort.top"))}
+              {sortTab("recent", t("detail.gallery.sort.recent"))}
+            </span>
+          )}
         </div>
         <RuneRule />
       </div>

@@ -12,7 +12,7 @@ import type { FactionDetailState } from '../useFactionDetail'
  * same single-column slots as the Default mobile faction page (a hero with real
  * member/task counts, top members, recent praxis, and the invite-gated Join
  * model via `state.membership`, ADR-0019) — only the paste-up changes: a dark
- * ransom masthead over an acid rule, taped rows, hot-pink Join. Grounds on the
+ * ransom masthead over an acid rule, hot-pink Join. Grounds on the
  * `--faction-snide-*` tokens; native-dark. Reuses the shared `mobile.*` faction
  * copy so the slot contract holds. Presentation-only — all data + the join
  * handler arrive via {@link FactionDetailState}.
@@ -28,7 +28,6 @@ const MUTED = 'var(--faction-snide-card-muted)'
 const ACID = 'var(--faction-snide-card-accent)'
 const ACCENT_WALL = 'var(--faction-snide)'
 const PINK = 'var(--faction-snide-pink)'
-const TAPE = 'var(--faction-snide-tape)'
 const LINE = 'var(--faction-snide-border)'
 const PAPER = 'var(--faction-snide-paper)'
 const COND = 'var(--faction-snide-font-cond)'
@@ -41,7 +40,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -127,7 +126,6 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       {/* Hero — dark ransom masthead */}
       <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 'var(--space-xl) var(--space-lg)', transform: 'rotate(-0.6deg)', overflow: 'hidden' }}>
         <span aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(182,255,46,0.08) 32%, transparent 34%)', backgroundSize: '5px 5px' }} />
-        <span aria-hidden style={{ position: 'absolute', top: -11, left: 26, width: 64, height: 24, background: TAPE, transform: 'rotate(-5deg)', opacity: 0.92 }} />
         <div style={{ position: 'relative' }}>
           <div style={{ ...kicker, color: ACID }}>{t('snide.mobile.eyebrow')}</div>
           <h1
@@ -281,7 +279,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: MUTED, flex: 'none' }}>
+      <span style={{ fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.06em', color: MUTED, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

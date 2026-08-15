@@ -5,11 +5,11 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -195,7 +195,7 @@ export default function EverymenTaskDetail({
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -332,7 +332,7 @@ export default function EverymenTaskDetail({
             className="font-body"
             style={{
               display: "inline-block",
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -529,47 +529,51 @@ export default function EverymenTaskDetail({
         gap: "var(--space-sm)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-        }}
-      >
-        <span className="label-caption" style={{ color: MUTED }}>
-          {t("detail.points.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: BEBAS,
-            fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
-            lineHeight: 0.8,
-            color: INK,
-          }}
-        >
-          {basePoints}
-        </span>
-        {showMultiplier && (
-          <span
+      {/* The docket line and its perforation go together (#1704): with no
+          modifier to itemise it only restated the stamped total below. */}
+      {showBreakdown && (
+        <>
+          <div
             style={{
-              marginLeft: "auto",
-              ...label,
-              fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
-              letterSpacing: "0.04em",
-              color: MULT_INK,
-              border: `2px solid ${GOLD}`,
-              borderRadius: 2,
-              padding: "var(--space-xs) var(--space-sm)",
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
             }}
           >
-            {t("detail.points.multiplier", {
-              multiplier: factionMultiplier.toFixed(2),
-            })}
-          </span>
-        )}
-      </div>
-      {dashRule()}
+            <span className="label-caption" style={{ color: MUTED }}>
+              {t("detail.points.base")}
+            </span>
+            <span
+              style={{
+                fontFamily: BEBAS,
+                fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+                lineHeight: 0.8,
+                color: INK,
+              }}
+            >
+              {basePoints}
+            </span>
+            <span
+              style={{
+                marginLeft: "auto",
+                ...label,
+                fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+                letterSpacing: "0.04em",
+                color: MULT_INK,
+                border: `2px solid ${GOLD}`,
+                borderRadius: 2,
+                padding: "var(--space-xs) var(--space-sm)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t("detail.points.multiplier", {
+                multiplier: factionMultiplier.toFixed(2),
+              })}
+            </span>
+          </div>
+          {dashRule()}
+        </>
+      )}
       <div
         style={{
           display: "flex",
@@ -615,7 +619,7 @@ export default function EverymenTaskDetail({
           <span
             style={{
               ...label,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.22em",
               color: ACCENT,
               marginTop: "var(--space-xs)",
@@ -871,9 +875,11 @@ export default function EverymenTaskDetail({
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
     >
+      {/* Nothing to sort until something is filed (#1704) — the heading keeps
+          its rule and the empty line below stays; only the control goes. */}
       {sectionHead(
         t("detail.gallery.heading", { count: submissions.length }),
-        sortToggle,
+        sortedSubmissions.length > 0 ? sortToggle : undefined,
       )}
 
       {sortedSubmissions.length === 0 ? (

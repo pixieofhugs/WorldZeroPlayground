@@ -242,7 +242,7 @@ export default function EverymenTaskCard({
                     >
                       {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
                     </span>
-                    <span style={{ ...LABEL, fontSize: "var(--text-xs)", color: "var(--everymen-muted)" }}>
+                    <span style={{ ...LABEL, fontSize: "var(--text-md)", color: "var(--everymen-muted)" }}>
                       {i18n.t("feed:taskCard.modifierCaption")}
                     </span>
                   </div>

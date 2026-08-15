@@ -5,11 +5,11 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -304,12 +304,12 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  const eyebrow: CSSProperties = { ...CAPTION, fontSize: "var(--text-sm)" };
+  const eyebrow: CSSProperties = { ...CAPTION, fontSize: "var(--text-md)" };
   const innerBox: CSSProperties = {
     background: PAGE,
     border: `1.5px solid ${BORDER}`,
@@ -389,20 +389,20 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         gap: "var(--space-md)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "center",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={eyebrow}>{t("detail.points.base")}</span>
-        <span style={{ fontFamily: READING, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1, color: INK }}>
-          {basePoints}
-        </span>
-        {showMultiplier && (
+      {showBreakdown && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "center",
+            gap: "var(--space-sm)",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={eyebrow}>{t("detail.points.base")}</span>
+          <span style={{ fontFamily: READING, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1, color: INK }}>
+            {basePoints}
+          </span>
           <span
             style={{
               fontFamily: CHROME,
@@ -421,8 +421,8 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
           </span>
-        )}
-      </div>
+        </div>
+      )}
       <Ward
         size={size.ward}
         points={modifiedPoints}
@@ -633,7 +633,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: CHROME,
               fontWeight: 700,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -824,43 +824,47 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
         <Braid style={{ flex: 1 }} />
-        <span
-          style={{
-            display: "flex",
-            gap: "var(--space-xs)",
-            padding: "var(--space-xs)",
-            border: `1.5px solid ${BORDER}`,
-            borderRadius: 10,
-            background: CARD,
-          }}
-        >
-          {(["score", "recent"] as const).map((sort) => {
-            const on = submissionSort === sort;
-            return (
-              <button
-                key={sort}
-                onClick={() => setSubmissionSort(sort)}
-                style={{
-                  ...CAPTION,
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.14em",
-                  cursor: "pointer",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "var(--space-xs) var(--space-sm)",
-                  color: on ? "var(--faction-coven-slip-cta-ink)" : LABEL,
-                  background: on
-                    ? "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))"
-                    : "transparent",
-                }}
-              >
-                {sort === "score"
-                  ? t("detail.gallery.sort.top")
-                  : t("detail.gallery.sort.recent")}
-              </button>
-            );
-          })}
-        </span>
+        {/* Nothing to sort until something is filed (#1704). The heading and the
+            empty line below stay; only the control goes. */}
+        {sortedSubmissions.length > 0 && (
+          <span
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
+              border: `1.5px solid ${BORDER}`,
+              borderRadius: 10,
+              background: CARD,
+            }}
+          >
+            {(["score", "recent"] as const).map((sort) => {
+              const on = submissionSort === sort;
+              return (
+                <button
+                  key={sort}
+                  onClick={() => setSubmissionSort(sort)}
+                  style={{
+                    ...CAPTION,
+                    fontSize: "var(--text-md)",
+                    letterSpacing: "0.14em",
+                    cursor: "pointer",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "var(--space-xs) var(--space-sm)",
+                    color: on ? "var(--faction-coven-slip-cta-ink)" : LABEL,
+                    background: on
+                      ? "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))"
+                      : "transparent",
+                  }}
+                >
+                  {sort === "score"
+                    ? t("detail.gallery.sort.top")
+                    : t("detail.gallery.sort.recent")}
+                </button>
+              );
+            })}
+          </span>
+        )}
       </div>
 
       {sortedSubmissions.length === 0 ? (

@@ -19,7 +19,7 @@ import {
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 const breadcrumbStyle: CSSProperties = {
-  fontSize: "var(--text-sm)",
+  fontSize: "var(--text-md)",
   letterSpacing: "0.1em",
   color: "var(--color-text-tertiary)",
 };
@@ -94,7 +94,7 @@ const submitDashStyle: CSSProperties = {
 const basePennantStyle: CSSProperties = {
   display: "block",
   fontFamily: "'Courier Prime', monospace",
-  fontSize: "var(--text-xs)",
+  fontSize: "var(--text-md)",
   fontWeight: 700,
   textTransform: "uppercase",
   letterSpacing: "0.07em",

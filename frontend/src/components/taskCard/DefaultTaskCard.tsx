@@ -135,7 +135,7 @@ export default function DefaultTaskCard({
               }}
             >
               <span
-                style={{ ...CAPTION, fontSize: "var(--text-sm)", marginBottom: "var(--space-xs)" }}
+                style={{ ...CAPTION, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}
               >
                 {i18n.t("feed:taskCard.na.levelCaption")}
               </span>
@@ -181,7 +181,7 @@ export default function DefaultTaskCard({
                   {basePoints}
                 </span>
                 <span
-                  style={{ ...CAPTION, fontSize: "var(--text-xs)", marginTop: "var(--space-xs)" }}
+                  style={{ ...CAPTION, fontSize: "var(--text-md)", marginTop: "var(--space-xs)" }}
                 >
                   {i18n.t("feed:taskCard.na.pointsUnit")}
                 </span>
@@ -215,7 +215,7 @@ export default function DefaultTaskCard({
                 >
                   {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
                 </span>
-                <span style={{ ...CAPTION, fontSize: "var(--text-xs)" }}>
+                <span style={{ ...CAPTION, fontSize: "var(--text-md)" }}>
                   {i18n.t("feed:taskCard.modifierCaption")}
                 </span>
               </div>

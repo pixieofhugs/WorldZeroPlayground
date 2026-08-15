@@ -60,7 +60,7 @@ export default function AlbescentSecretPlaceholder() {
         <div
           style={{
             fontFamily: MONO,
-            fontSize: 'var(--text-xs)',
+            fontSize: 'var(--text-md)',
             letterSpacing: '0.28em',
             textTransform: 'uppercase',
             color: ink(30),

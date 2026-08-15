@@ -31,7 +31,8 @@
  *   duel are built ONCE and moved by where they are mounted, never drawn twice
  *   and hidden.
  * - **The crown renders at both form factors.** It is never form-factor gated —
- *   it comes from the shared `PraxisStatusBanners`, keyed on `is_top_for_task`.
+ *   `ScoreStamp` draws it in the score block's corner off `is_top_for_task`,
+ *   and that block is in both layouts (#1710 retired the hero banner).
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare,
  *   wearing none of the plate dress every panel beside them wears. All eight
@@ -70,7 +71,7 @@
  *
  * ## Reused, not rebuilt
  *
- * `TaskCrown` (via the shared banners) · `ScoreStamp` · `DuelCard`, which
+ * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp` · `DuelCard`, which
  * narrates outcomes only and draws nothing on a declined challenge · the
  * Ephemerists' own `VoteUI` widget · `CollabRoster` · `MediaGallery` ·
  * `MetataskSeal`, read-only: `apply_metatask` requires `in_progress`, so the
@@ -276,7 +277,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
    *  PLATE and does not clear on the darker page this surface introduces. */
   const eyebrow: CSSProperties = {
     ...SMALL_CAPS,
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     color: QUIET,
   };
   /** The same label voice on a panel cell, where the caption gold clears. */
@@ -435,7 +436,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   );
 
   // ── Moderation banners — neutral chrome, DRESSED ONLY WHERE IT MUST BE ───
-  // The crown hero and the failed note are shared invariant chrome; the flagged
+  // The failed note is shared invariant chrome — the crown hero that used to
+  // lead it went with #1710, and the mark is the score stamp's corner fleur.
+  // The flagged
   // notice has no shared slot, so it renders here, with the shared neutral words
   // exactly as `DefaultPraxisDetail` draws it (ADR-0061 as amended).
   // `PraxisAdminBar` is the steward bar and takes no dress.
@@ -604,8 +607,11 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The crown already has its own hero banner above; one mark per page. */}
-        <ScoreStamp praxis={praxis} showCrown={false} />
+        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
+            here because a bordered hero panel above already drew one. The panel
+            is gone (owner ruling: "just a fleur in the corner"), so the mark
+            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        <ScoreStamp praxis={praxis} />
       </div>
     </section>
   );

@@ -85,8 +85,15 @@ function DesktopTasks({ state }: { state: TasksState }) {
               <MetataskSeal metatasks={tasks} />
             </div>
           ) : (
-            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
+            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6).
+               `scanning-surface` declares this a browsing list (#1716): a WOW
+               card hangs its points upside down here, and upright on the
+               profile / faction / detail pages that mount the same card and
+               declare nothing. See the class in index.css. */
+            <div
+              className="scanning-surface"
+              style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}
+            >
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -105,7 +112,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
                 onClick={loadMore}
                 className="font-body uppercase"
                 style={{
-                  fontSize: 'var(--text-sm)',
+                  fontSize: 'var(--text-md)',
                   letterSpacing: '0.1em',
                   padding: 'var(--space-sm) var(--space-lg)',
                   border: '1px solid var(--color-border-strong)',

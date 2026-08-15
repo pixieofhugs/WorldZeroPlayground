@@ -224,7 +224,7 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
         {selected > 0 && (
           <span
             style={{
-              fontSize: 'var(--text-xs)',
+              fontSize: 'var(--text-md)',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: 'var(--everymen-muted)',

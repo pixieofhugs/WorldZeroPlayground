@@ -5,11 +5,11 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -61,7 +61,9 @@ function initialsOf(name: string): string {
  * - **The `×mult` badge only renders when the factor is not 1.0** — `era_1`
  *   neutralises every faction, so it is invisible today across every skin. That
  *   is correct (ADR-0055), and the factor comes raw off the state contract,
- *   never reconstructed as `modifiedPoints / basePoints`.
+ *   never reconstructed as `modifiedPoints / basePoints`. The `base` row it sits
+ *   in shares that one gate and goes with it, so a neutral task shows the total
+ *   alone rather than the same number twice — see {@link showWorthBreakdown}.
  *
  * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
  * the size set and drops the two-column split. The separate mobile skin this
@@ -129,7 +131,7 @@ export default function DefaultTaskDetail({
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -197,53 +199,57 @@ export default function DefaultTaskDetail({
     </div>
   );
 
-  // ── Score readout: base, the (usually absent) ×mult badge, and the total ──
+  // ── Score readout: base + the ×mult badge (both usually absent), and the
+  //    total. The breakdown row and its hairline go together — with nothing
+  //    above it the rule would divide the total from nothing (#1704).
   const scoreBody = (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-        <span className="label-caption">{t("detail.points.base")}</span>
-        <span
-          style={{
-            fontFamily: "var(--font-accent)",
-            fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
-            lineHeight: 0.8,
-            color: "var(--faction-default-card-text)",
-          }}
-        >
-          {basePoints}
-        </span>
-        {showMultiplier && (
-          <span
-            style={{
-              marginLeft: "auto",
-              display: "block",
-              padding: "var(--space-xs)",
-              borderRadius: 7,
-              backgroundImage: SPECTRUM,
-            }}
-          >
+      {showBreakdown && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+            <span className="label-caption">{t("detail.points.base")}</span>
             <span
               style={{
-                display: "block",
                 fontFamily: "var(--font-accent)",
-                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-                lineHeight: 0.95,
-                letterSpacing: "0.02em",
+                fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+                lineHeight: 0.8,
                 color: "var(--faction-default-card-text)",
-                background: "var(--color-bg-page)",
-                borderRadius: 5,
-                padding: "var(--space-xs) var(--space-sm)",
-                whiteSpace: "nowrap",
               }}
             >
-              {t("detail.points.multiplier", {
-                multiplier: factionMultiplier.toFixed(2),
-              })}
+              {basePoints}
             </span>
-          </span>
-        )}
-      </div>
-      <div aria-hidden style={{ height: 1, backgroundImage: SPECTRUM }} />
+            <span
+              style={{
+                marginLeft: "auto",
+                display: "block",
+                padding: "var(--space-xs)",
+                borderRadius: 7,
+                backgroundImage: SPECTRUM,
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  fontFamily: "var(--font-accent)",
+                  fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+                  lineHeight: 0.95,
+                  letterSpacing: "0.02em",
+                  color: "var(--faction-default-card-text)",
+                  background: "var(--color-bg-page)",
+                  borderRadius: 5,
+                  padding: "var(--space-xs) var(--space-sm)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t("detail.points.multiplier", {
+                  multiplier: factionMultiplier.toFixed(2),
+                })}
+              </span>
+            </span>
+          </div>
+          <div aria-hidden style={{ height: 1, backgroundImage: SPECTRUM }} />
+        </>
+      )}
       <div
         style={{
           display: "flex",
@@ -487,7 +493,7 @@ export default function DefaultTaskDetail({
           <span
             className="font-body"
             style={{
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -711,39 +717,43 @@ export default function DefaultTaskDetail({
             opacity: 0.55,
           }}
         />
-        <span
-          style={{
-            display: "flex",
-            gap: "var(--space-xs)",
-            padding: "var(--space-xs)",
-            border: "1px solid var(--color-border)",
-            borderRadius: 8,
-          }}
-        >
-          {(["score", "recent"] as const).map((sort) => (
-            <button
-              key={sort}
-              onClick={() => setSubmissionSort(sort)}
-              className="label-caption"
-              style={{
-                cursor: "pointer",
-                border: "none",
-                borderRadius: 6,
-                padding: "var(--space-xs) var(--space-sm)",
-                background:
-                  submissionSort === sort ? "var(--color-text-primary)" : "transparent",
-                color:
-                  submissionSort === sort
-                    ? "var(--color-bg-page)"
-                    : "var(--color-text-tertiary)",
-              }}
-            >
-              {sort === "score"
-                ? t("detail.gallery.sort.top")
-                : t("detail.gallery.sort.recent")}
-            </button>
-          ))}
-        </span>
+        {/* Nothing to sort until something is filed (#1704). The heading and the
+            empty line below stay; only the control goes. */}
+        {sortedSubmissions.length > 0 && (
+          <span
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 8,
+            }}
+          >
+            {(["score", "recent"] as const).map((sort) => (
+              <button
+                key={sort}
+                onClick={() => setSubmissionSort(sort)}
+                className="label-caption"
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "var(--space-xs) var(--space-sm)",
+                  background:
+                    submissionSort === sort ? "var(--color-text-primary)" : "transparent",
+                  color:
+                    submissionSort === sort
+                      ? "var(--color-bg-page)"
+                      : "var(--color-text-tertiary)",
+                }}
+              >
+                {sort === "score"
+                  ? t("detail.gallery.sort.top")
+                  : t("detail.gallery.sort.recent")}
+              </button>
+            ))}
+          </span>
+        )}
       </div>
 
       {sortedSubmissions.length === 0 ? (

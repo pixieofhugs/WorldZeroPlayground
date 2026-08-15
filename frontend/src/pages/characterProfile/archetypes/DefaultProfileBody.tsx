@@ -470,7 +470,7 @@ function DesktopProfile({
                       lineHeight: 1,
                     }}
                   >
-                    <span style={{ ...EYEBROW, fontSize: 'var(--text-xs)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
+                    <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
                     <span
                       className="font-display italic"
                       style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
@@ -496,7 +496,7 @@ function DesktopProfile({
                     >
                       {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
                     </span>
-                    <span style={{ ...EYEBROW, fontSize: 'var(--text-sm)', letterSpacing: '0.08em' }}>
+                    <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
                       {t('profile.nextLevel', { level: progression.nextLevel })}
                     </span>
                   </div>
@@ -564,7 +564,7 @@ function DesktopProfile({
               <span
                 style={{
                   ...EYEBROW,
-                  fontSize: 'var(--text-sm)',
+                  fontSize: 'var(--text-md)',
                   letterSpacing: '0.1em',
                   marginLeft: 'auto',
                   border: '1px solid var(--color-border-strong)',
@@ -741,7 +741,7 @@ function MobileProfile({
                       lineHeight: 1,
                     }}
                   >
-                    <span style={{ ...EYEBROW, fontSize: 'var(--text-xs)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
+                    <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
                     <span
                       className="font-display italic"
                       style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
@@ -762,7 +762,7 @@ function MobileProfile({
                     <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
                       {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
                     </span>
-                    <span style={{ ...EYEBROW, fontSize: 'var(--text-sm)', letterSpacing: '0.08em' }}>
+                    <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
                       {t('profile.nextLevel', { level: progression.nextLevel })}
                     </span>
                   </div>

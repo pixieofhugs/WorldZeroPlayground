@@ -41,9 +41,10 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  * - Mobile: one stacked column; the score and duel blocks move above the proof.
  *   They are built ONCE and moved by where they are mounted — never drawn twice
  *   and hidden. The 330px TRACK is desktop-only; its contents are not.
- * - **The crown renders at BOTH form factors**, never gated. It arrives from the
- *   shared `PraxisStatusBanners`, keyed only on `is_top_for_task`, mounted above
- *   the split (ADR-0054 — one canonical `TaskCrown`, unrestyled and unmoved).
+ * - **The crown renders at BOTH form factors**, never gated. It arrives in the
+ *   score stamp's corner, keyed only on `is_top_for_task`, and the score block
+ *   is in both layouts (ADR-0054 — one canonical `TaskCrown`, unrestyled; #1710
+ *   retired the hero banner it used to arrive in).
  * - **The report card and the steward bar are NOT skinned.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` are mounted bare, wearing none of the panel dress the
  *   score / vote / voters blocks wear, on their own neutral `.sidebar-card`
@@ -82,7 +83,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  *
  * ## Reused, not rebuilt
  *
- * `TaskCrown` via the shared banners · `ScoreStamp`, which since #1091 owns the
+ * `TaskCrown` via `ScoreStamp`'s corner (#1710) · `ScoreStamp`, which since #1091 owns the
  * whole score rail (disc, ruled rows, votes tally) and dispatches to this
  * faction's own terminal read-out · `VoteUI`, dispatching to `SingularityVote` ·
  * `CollabRoster` · `MediaGallery` · `MetataskSeal`, read-only (`apply_metatask`
@@ -176,7 +177,7 @@ const CREW_INK = {
 /** Terminal caption voice — every label on the chassis speaks in it. */
 const LABEL: CSSProperties = {
   fontFamily: MONO,
-  fontSize: "var(--text-sm)",
+  fontSize: "var(--text-md)",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
   color: DIM,
@@ -392,8 +393,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   );
 
   // ── Moderation banners ────────────────────────────────────────────────────
-  // Neutral by rule, mounted bare: the crown hero and the failed note come from
-  // the shared banners, the flagged notice has no shared slot so it renders
+  // Neutral by rule, mounted bare: the failed note comes from the shared
+  // banners (the crown hero went with #1710 — the mark is the score stamp's
+  // corner fleur now), the flagged notice has no shared slot so it renders
   // here on the shared `--color-warning`, and `PraxisAdminBar` is the steward
   // bar. Nothing in this block wears the costume (ADR-0061).
   const banners = (
@@ -535,8 +537,11 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The crown already has its own hero banner above; one mark per page. */}
-        <ScoreStamp praxis={praxis} showCrown={false} />
+        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
+            here because a bordered hero panel above already drew one. The panel
+            is gone (owner ruling: "just a fleur in the corner"), so the mark
+            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        <ScoreStamp praxis={praxis} />
       </div>
     </section>
   );

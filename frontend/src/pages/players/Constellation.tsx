@@ -316,9 +316,13 @@ function SkyNode({
           // pointless player's initial between 2.5:1 and 3.9:1. 0.72 is the
           // lowest step that clears 4.5:1 on all seven faction grounds in both
           // themes (worst case 0.68, UA light), and still reads as receded.
+          // It binds harder since #1700: this sky is now the only one, so a
+          // light-theme reader meets it too.
           opacity: faded ? 0.72 : 1,
-          // The "you" ring, symmetric with the Meadow's (#684 §7). The sky had
-          // no self-marker at all — `isMe` only ever fed the deleted pin.
+          // The "you" ring (#684 §7). The sky had no self-marker at all before
+          // it — `isMe` only ever fed the deleted pin. It arrived as the twin of
+          // the Meadow's ring; the Meadow is retired (#1700, ADR-0074) and this
+          // is now the only one.
           borderRadius: '50%',
           boxShadow: isMe ? '0 0 0 2px var(--sky-you)' : undefined,
         }}
@@ -339,7 +343,7 @@ function SkyNode({
             background: 'var(--sky-bg)',
             border: '1px solid var(--sky-ring)',
             color: 'var(--sky-name)',
-            fontSize: 'var(--text-sm)',
+            fontSize: 'var(--text-md)',
             lineHeight: 1,
           }}
         >

@@ -151,7 +151,7 @@ export default function DefaultVote({
         {selected > 0 && (
           <span
             style={{
-              fontSize: 'var(--text-xs)',
+              fontSize: 'var(--text-md)',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: 'var(--faction-default-vote-off)',

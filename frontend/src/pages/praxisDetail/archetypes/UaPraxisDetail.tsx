@@ -106,8 +106,9 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  * - Score and duel are built ONCE and MOVED by where they are mounted, never
  *   drawn twice and hidden at the other breakpoint.
  * - **The crown renders at both form factors.** It is not form-factor gated: it
- *   comes from the shared `PraxisStatusBanners`, keyed only on
- *   `is_top_for_task`. Where a design hides it on a phone, it shows anyway.
+ *   comes from `ScoreStamp`'s corner, keyed only on `is_top_for_task`, and the
+ *   score block is in both layouts (#1710 retired the hero banner it used to
+ *   come from). Where a design hides it on a phone, it shows anyway.
  * - The duel panel and the comment thread are SLOTS THIS PAGE OWNS, not
  *   dispatcher mounts (ADR-0064) — a skin that forgets one simply loses it.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
@@ -134,7 +135,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  *
  * ## Reused, not rebuilt
  *
- * `TaskCrown` (via the shared banners) · `ScoreStamp`, which since #1091 carries
+ * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp`, which since #1091 carries
  * the whole score rail and resolves UA's own ensō stamp — `scoreBreakdown()` is
  * the arithmetic authority (ADR-0053) and this file adds no second strip ·
  * `VoteUI`, which dispatches UA's growing mandala · `CollabRoster`, which paints
@@ -409,8 +410,9 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
   // ── Moderation banners — NOT dressed (ADR-0061) ───────────────────────────
   //
-  // The crown hero and the failed note come from the shared `PraxisStatusBanners`
-  // on their own neutral `--color-*` tokens; the flagged notice has no shared
+  // The failed note comes from the shared `PraxisStatusBanners` on its own
+  // neutral `--color-*` tokens — the crown hero went with #1710 and the mark is
+  // the score stamp's corner fleur now. The flagged notice has no shared
   // slot, so it renders here in the SAME neutral vocabulary rather than in
   // sienna on vellum. The steward bar below is `PraxisAdminBar`, equally bare.
   // Every word of all three is the shared neutral block: this is the platform
@@ -576,8 +578,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
     <section style={panel}>
       {panelHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The crown already has its own hero banner above; one mark per page. */}
-        <ScoreStamp praxis={praxis} showCrown={false} />
+        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
+            here because a bordered hero panel above already drew one. The panel
+            is gone (owner ruling: "just a fleur in the corner"), so the mark
+            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        <ScoreStamp praxis={praxis} />
       </div>
     </section>
   );

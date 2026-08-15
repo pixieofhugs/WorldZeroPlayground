@@ -188,7 +188,7 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
         {isSense ? '✦' : '■'}
       </span>
       <div>
-        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-xs)' }}>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-xs)' }}>
           {isSense ? t('popup.senseEyebrow') : t('popup.abilityEyebrow')}
         </div>
         <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-content)', lineHeight: 1.2, color: INK }}>
@@ -308,14 +308,14 @@ function MobileLevelUpCard({
       >
         <SealStamp level={level} sealRing={sealRing} />
 
-        <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
           {t('popup.levelReached')}
         </p>
         <RainbowText text={rank} fontSize={28} />
 
         <RainbowRule style={{ margin: 'var(--space-lg) 0' }} />
 
-        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-lg)' }}>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-lg)' }}>
           {t('popup.nowUnlocked')}
         </div>
 
@@ -417,14 +417,14 @@ export default function LevelUpPopup({
     >
       <SealStamp level={level} sealRing={sealRing} />
 
-      <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
+      <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
         {t('popup.levelReached')}
       </p>
       <RainbowText text={rank} />
 
       <RainbowRule style={{ margin: 'var(--space-lg) 0' }} />
 
-      <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-lg)' }}>
+      <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-lg)' }}>
         {t('popup.nowUnlocked')}
       </div>
 

@@ -23,7 +23,10 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * same object: a xerox photocopy taped to the wall, half a degree off true,
  * dusted with the halftone raster, the author's name cut letter-by-letter out of
  * five different scraps. Rows and the composer share one shape so a thread reads
- * as a run of flyposted slips rather than a list plus a form.
+ * as a run of flyposted slips rather than a list plus a form. Flyposted, but no
+ * longer with the tape DRAWN: the two strips at the head came off in #1708, an
+ * owner override of a seam the design kit specifies. The tilt, the hard printed
+ * shadow and the raster are what say "stuck to a wall" now.
  *
  * Six states, one responsive component (ADR-0056 / 0058 / 0063 — no mobile
  * twin): row · default | row · mention | row · edited | row · yours (hover) |
@@ -156,15 +159,6 @@ function slip(mobile: boolean): CSSProperties {
   }
 }
 
-function Tape() {
-  return (
-    <>
-      <div className="snide-tape" aria-hidden="true" style={{ top: -8, left: 28, transform: 'rotate(-8deg)' }} />
-      <div className="snide-tape" aria-hidden="true" style={{ top: -8, right: 22, transform: 'rotate(7deg)' }} />
-    </>
-  )
-}
-
 /** Typewriter label voice — the timestamp, the edited mark, the composer hint. */
 const TYPED: CSSProperties = {
   fontFamily: 'var(--faction-snide-font-type)',
@@ -193,7 +187,6 @@ export default function SnideComment(props: CommentProps) {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
       <div style={slip(mobile)} aria-busy={submitting}>
-        <Tape />
         <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -251,7 +244,6 @@ export default function SnideComment(props: CommentProps) {
 
   return (
     <div style={slip(mobile)} {...reveal.containerProps}>
-      <Tape />
       <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>

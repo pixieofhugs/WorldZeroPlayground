@@ -42,3 +42,62 @@ describe('.filter-bar does not clip its overflow (#1506)', () => {
     expect(bodies.some((body) => /border-(top-(left|right)-radius|radius)\s*:/.test(body))).toBe(true)
   })
 })
+
+/**
+ * #1726 — a segment must never be narrower than its own label.
+ *
+ * `.filter-rail__segment` used to be `flex: 1` with zero horizontal padding, so
+ * every label got the same box no matter how long it was. In Courier Prime a
+ * label's width is exactly its character count, and at the rail's own
+ * `min-width` a four-segment status rail gave each label 53.5px against a
+ * 58.8px "Retired" — it overflowed. Only a signed-in viewer allowed `retired`
+ * and `pending` ever saw four segments, which is why it survived.
+ *
+ * The measurement itself is not reachable from this harness (no DOM), so what
+ * is guarded here is the CSS half of the fix: content-sized segments with real
+ * horizontal padding, and a thumb whose WIDTH is animated now that it changes
+ * from segment to segment.
+ */
+describe('.filter-rail sizes segments to their labels (#1726)', () => {
+  const segmentBodies = ruleBodies(css, '.filter-rail__segment')
+
+  it('never gives a segment an equal 1/n share', () => {
+    expect(segmentBodies.length).toBeGreaterThan(0)
+    for (const body of segmentBodies) {
+      // `flex: 1` is shorthand for `1 1 0%` — a zero basis, i.e. an equal share
+      // that ignores the label. `flex: 1 1 auto` (grow into slack from a
+      // CONTENT basis) is the fix and must keep passing.
+      expect(body).not.toMatch(/flex\s*:\s*1\s*(?:1\s*(?:0|0%|0px)\s*)?;/)
+      expect(body).not.toMatch(/flex-basis\s*:\s*(0|0%|0px)\s*;/)
+    }
+  })
+
+  it('pads every segment horizontally, in both form factors', () => {
+    // One shorthand with a horizontal component, or an explicit inline pair.
+    // A single-value `padding: X` counts — it pads all four sides.
+    for (const body of segmentBodies) {
+      const shorthand = /padding\s*:\s*([^;]+);/.exec(body)
+      const inline = /padding-(inline|left|right)[^:]*:\s*([^;]+);/.test(body)
+      expect(
+        inline || (shorthand !== null && horizontalPadding(shorthand[1]) !== '0'),
+        `a .filter-rail__segment body pads no horizontal side: ${body.trim()}`,
+      ).toBe(true)
+    }
+  })
+
+  it('animates the thumb\'s width, not only its left edge', () => {
+    // The thumb is now as wide as the segment under it, so a transition that
+    // names only `left` slides the pill while snapping its width.
+    const bodies = ruleBodies(css, '.filter-rail__thumb')
+    expect(bodies.length).toBeGreaterThan(0)
+    const transitions = bodies.join('\n')
+    expect(transitions).toMatch(/transition[^;]*\bleft\b/)
+    expect(transitions).toMatch(/transition[^;]*\bwidth\b/)
+  })
+})
+
+/** The horizontal component of a `padding` shorthand: 1/2/3/4 values. */
+function horizontalPadding(shorthand: string): string {
+  const parts = shorthand.trim().split(/\s+/)
+  return parts.length === 1 ? parts[0] : parts[1]
+}

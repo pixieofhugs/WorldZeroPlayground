@@ -43,7 +43,7 @@ export function Breadcrumb({
     <nav
       className="font-body"
       style={{
-        fontSize: "var(--text-sm)",
+        fontSize: "var(--text-md)",
         letterSpacing: "0.1em",
         color: tone,
         marginBottom: "var(--space-md)",
@@ -764,7 +764,23 @@ export function TaskSlip({
             ...titleStyle,
           }}
         >
-          {praxis.task_title}
+          {/* The title is the task, so it goes where the breadcrumb already
+              goes (#1705) — it is the line a player actually reads and tries
+              to click. The link sits INSIDE the styled box rather than
+              replacing it: `titleStyle` is the skin's dress (ADR-0065) and
+              every one of the eight sets a face and an ink, so the anchor
+              inherits it whole instead of racing it. Leaving the page is safe
+              — the composer autosaves, so no confirm belongs here. The
+              affordance is the hover underline, the same one the praxis card's
+              task link uses; a colour would be the skin's to give, not this
+              component's. */}
+          <Link
+            to={`/tasks/${praxis.task_id}`}
+            className="hover:underline"
+            style={{ color: "inherit" }}
+          >
+            {praxis.task_title}
+          </Link>
         </div>
         {task != null && (
           // One row for the slip's second line (#1706): the level pill and the
