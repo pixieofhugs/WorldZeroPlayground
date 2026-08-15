@@ -197,6 +197,9 @@ ERA_N = EraConfig(
     level_to_see_metatasks=6,
     level_to_see_retired_tasks=2,
     level_to_see_pending_tasks=3,
+    # How long a fresh proposal stays admin-only, in hours (#1695) — the WHEN
+    # to the gate above's WHO. Admins are exempt.
+    pending_task_admin_review_hours=48,
 
     # Praxis / moderation / metatask gates
     duel_level_required=2,

@@ -143,6 +143,8 @@ ERA_2 = EraConfig(
     level_to_see_metatasks=5,
     level_to_see_retired_tasks=2,
     level_to_see_pending_tasks=3,
+    # Admin-only window on a fresh proposal, in hours (#1695).
+    pending_task_admin_review_hours=48,
     # Praxis / moderation / metatask gates
     duel_level_required=2,
     collaboration_level_required=1,
