@@ -1655,11 +1655,19 @@ describe("the card sheet's alarm and notice inks stay apart (#1449)", () => {
  *
  * WHY A DISTANCE AND NOT A RATIO-GAP. The obvious guard — "tertiary must be N
  * ratio points quieter than secondary" — encodes an assumption #1549 measured
- * and rejected. Secondary bottoms out at 4.96:1 on `--filter-well` in light and
- * 4.87:1 on `--color-bg-surface-alt` in dark, so a rung genuinely below it and
- * still above AA has nowhere to stand in either theme. The third tier is a
- * TEMPERATURE (a lavender against warm greys, in both cascades now), and
- * temperature is a distance, not a ratio.
+ * and rejected. Secondary bottomed out UNDER AA on the selected filter row
+ * (4.05:1 light, 3.80:1 dark), so a rung genuinely below it and still above AA
+ * had nowhere at all to stand. The third tier is a TEMPERATURE (a lavender
+ * against warm greys, in both cascades), and temperature is a distance, not a
+ * ratio.
+ *
+ * #1715 LIFTED BOTH TIERS AND THE FLOOR BELOW IS NOW THE BINDING CONSTRAINT IN
+ * DARK, which is worth knowing before the next repaint reaches for more. Dark
+ * primary is a warm cream and dark secondary is the same hue family, so the two
+ * are separated by lightness alone: the AAA lift spends 12 of the 32.7 ΔE
+ * between them and lands at 20.7, against this block's floor of 20. Tertiary
+ * escapes by hue and has 36.9 to spend. There is about 1 L* of room left on
+ * secondary, and after that a lift has to move primary.
  *
  * THE FLOOR IS 20, well under the 29.5 the tightest shipped pair measures and
  * an order of magnitude over the 3.4 that failed. It is deliberately not set
@@ -1792,12 +1800,15 @@ describe("the frost is a layer, not a ground (#1413)", () => {
  * serves the pair. `--color-text-tertiary` clears that floor on the app's two
  * stocks — already gated above, "app page / app alt surface, tertiary ink"
  * (#1549) — and on all eight card sheets in dark. It fails on three sheets in
- * LIGHT, and the reason is polarity rather than taste: S.N.I.D.E. 3.18:1 and
- * Singularity 3.29:1 are near-black sheets in BOTH themes, and Ephemerists'
- * vellum is the darkest light sheet at 4.36:1 (its praxis plate 4.35). No
+ * LIGHT, and the reason is polarity rather than taste: S.N.I.D.E., Singularity
+ * and — since #1627 — the Ephemerists plate are near-black in BOTH themes. No
  * light-cascade neutral clears a near-black sheet, so this is #694's shape: a
  * colour that must differ between two factions within one theme is a faction
- * question.
+ * question. #1715's AAA lift darkens the light neutral and so widens exactly
+ * that gap (2.19 / 2.27 / 2.01 where they were 3.18 / 3.29 / 2.92) while every
+ * light PAPER sheet gains about two ratio points. The three that lose are the
+ * three no global value could serve; the mint below is still the answer, and it
+ * is still deferred.
  *
  * And that faction question already has an answer with a name and a row.
  * `--faction-{key}-card-muted` IS the measured quiet ink for this role on that
@@ -1812,7 +1823,7 @@ describe("the frost is a layer, not a ground (#1413)", () => {
  * WHAT IS LEFT IS STRUCTURAL, and it is the #1449 / #1413 shape: a guard that
  * measures an ink against a ground is blind to the ink not being reachable.
  * Every ratio in this file stays green through a `.label-caption` that
- * hardcodes `--color-text-tertiary` — and that version puts 3.18:1 back on the
+ * hardcodes `--color-text-tertiary` — and that version puts 2.19:1 back on the
  * S.N.I.D.E. sheet with no faction able to do anything about it, because the
  * seam a frame repoints would no longer be read. Likewise every ratio stays
  * green through a `.label-caption` that goes back to uppercase on 0.15em
@@ -1824,7 +1835,7 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
     it(`${selector} paints the seam, not a hardcoded neutral`, () => {
       expect(
         ruleBody(selector),
-        `${selector} must read \`var(--label-ink)\`. Hardcoding the neutral is invisible to every ratio in this file and leaves S.N.I.D.E. (3.18:1), Singularity (3.29:1) and Ephemerists (4.36:1) in light with no way to fix their own sheet.`,
+        `${selector} must read \`var(--label-ink)\`. Hardcoding the neutral is invisible to every ratio in this file and leaves S.N.I.D.E. (2.19:1), Singularity (2.27:1) and the Ephemerists plate (2.01:1) in light with no way to fix their own sheet.`,
       ).toContain("color: var(--label-ink)");
     });
   }
@@ -1884,7 +1895,8 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
  * carried ONE ink for every ground it is ever mounted on: `--color-text-
  * secondary`, a warm brown in light, chosen against the app's near-white page.
  * The praxis body is faction-skinned on all eight sheets, so that brown lands on
- * S.N.I.D.E.'s photocopier black (3.06:1), Singularity's terminal (3.17:1) and —
+ * S.N.I.D.E.'s photocopier black (3.06:1 then, 2.20:1 since #1715's lift),
+ * Singularity's terminal (3.17:1 / 2.28:1) and —
  * once the Valley plate is dark in both cascades — the Ephemerists' page ground,
  * where it was ALREADY the tightest reading in the family at 4.23:1.
  *
