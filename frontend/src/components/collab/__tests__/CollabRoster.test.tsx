@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { PraxisInviteOut, PraxisMemberOut } from '../../../api/praxis'
 import { CollabRoster, deriveCollabGate } from '../CollabRoster'
+import { collabCopy } from '../collabCopy'
 
 function member(id: number, cast: boolean): PraxisMemberOut {
   return {
@@ -118,17 +119,22 @@ describe('CollabRoster render', () => {
     expect(html).toContain('1 of 2 submitted')
   })
 
-  // The cast / pull-back action moved to the footer's PublishButton (#646); the
-  // roster is pure display. Its faction-voiced button copy is now covered by
-  // PublishButton.test.tsx (and collabCopy.test.ts for the words themselves).
-  it('speaks the task faction voice for its display copy', () => {
+  // #1812 — the roster used to reframe every state in the task faction's voice
+  // ("signed off" / "still on the clock" / "Waiting on the rest of the crew."
+  // for the Everymen). Submission status is a mechanical fact a player has to
+  // read correctly in order to act, so it reads the same everywhere now; this
+  // is that ruling at the render seam, where the player meets it. The catalog
+  // half of the guard is in collabCopy.test.ts.
+  it('reads the same on a faction task as on an unaffiliated one', () => {
     const html = renderToStaticMarkup(
       <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug="everymen" />,
     )
-    expect(html).toContain('signed off')
-    expect(html).toContain('still on the clock')
-    expect(html).toContain('Waiting on the rest of the crew.')
-    expect(html).not.toContain('not submitted')
+    expect(html).toContain(collabCopy(null, 'pillCast'))
+    expect(html).toContain(collabCopy(null, 'pillWeaving'))
+    expect(html).toContain(collabCopy(null, 'castStatus', { cast: 1, total: 2 }))
+    for (const voiced of ['signed off', 'still on the clock', 'rest of the crew']) {
+      expect(html, voiced).not.toContain(voiced)
+    }
   })
 })
 

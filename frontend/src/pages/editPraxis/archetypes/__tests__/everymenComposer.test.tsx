@@ -9,9 +9,10 @@
  *    deleted from `forms.json`, so a re-introduction would have to re-add the
  *    keys — but a hardcoded string in the archetype would not, and that is what
  *    this asserts against.
- * 2. **`editPraxis.everymen.collab` survives.** It is not composer copy: it is
- *    `collabCopy`'s override table, read by `CollabRoster` on the read page.
- *    Deleting the block alongside the page keys is the easy mistake.
+ * 2. **`editPraxis.everymen` is gone entirely.** Its `collab` sub-block used to
+ *    survive this epic — it was `collabCopy`'s override table rather than
+ *    composer copy — but #1812 deleted all eight of those for a reason of its
+ *    own: collab submission status speaks one vocabulary on every faction.
  * 3. **One component, both widths, and the ground stays in its column.** The
  *    old build painted `minHeight: 100vh` on the page — the #1028 trap the
  *    shared `ComposerSheet` now exists to make impossible.
@@ -137,11 +138,8 @@ describe("Everymen composer copy is the neutral set (ADR-0065 §3)", () => {
     expect(render("desktop")).toContain(i18n.t("factions:names.everymen"));
   });
 
-  it("keeps editPraxis.everymen.collab, which is not composer copy", () => {
-    // collabCopy's override table, also read by CollabRoster on /praxis/:id.
-    expect(i18n.t("forms:editPraxis.everymen.collab.castAction")).toBe(
-      "Sign off on my part",
-    );
+  it("has no editPraxis.everymen block left, collab included (#1812)", () => {
+    expect(i18n.exists("forms:editPraxis.everymen")).toBe(false);
   });
 });
 

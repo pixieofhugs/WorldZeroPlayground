@@ -11,11 +11,10 @@
  * and kicking clears casts that were already made. A single generic sentence
  * over all three would be wrong twice.
  *
- * Collab wording resolves through `collabCopy`, so a faction may voice any of
- * it; the shared block carries the default. Every key these builders reach for
- * is listed in `SHARED_DEFAULT_COLLAB_KEYS` — see that constant's docstring for
- * why a warning about destroying somebody else's cast ships in one shared voice
- * rather than eight.
+ * Collab wording resolves through `collabCopy`, which since #1812 speaks one
+ * voice for everybody. These keys were shared before that ruling generalised
+ * it: a warning about destroying somebody else's work is the worst place in the
+ * composer to be in character.
  *
  * The mode-switch and duel confirms are not collab copy and stay on plain
  * `forms:editPraxis.confirm.*` keys.

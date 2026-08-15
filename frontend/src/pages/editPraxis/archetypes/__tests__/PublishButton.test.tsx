@@ -220,15 +220,17 @@ describe("PublishButton — collab cast/pull-back gate (#646)", () => {
     );
   });
 
-  it("resolves the idle label through collabCopy in the task faction's voice", () => {
+  it("resolves the idle label through collabCopy, in the one shared voice", () => {
     const state = collabState([member(1, false), member(2, false)], {
       factionSlug: "everymen",
     });
     const html = renderToStaticMarkup(renderButton(state));
 
-    // Everymen overrides castAction; the button speaks its voice, not the shared one.
-    expect(html).toContain(collabCopy("everymen", "castAction"));
-    expect(html).not.toContain(collabCopy(null, "castAction"));
+    // The Everymen used to override castAction ("Sign off on my part"); #1812
+    // deleted all eight blocks, so the footer button reads the same on every
+    // faction. The resolver is still the seam — that is what this asserts.
+    expect(html).toContain(collabCopy(null, "castAction"));
+    expect(html).not.toContain("Sign off on my part");
   });
 
   it("keeps the archetype's own idle label for a solo praxis", () => {
