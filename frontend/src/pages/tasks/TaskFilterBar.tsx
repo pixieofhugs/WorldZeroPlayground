@@ -2,13 +2,14 @@ import { useTranslation } from 'react-i18next'
 import FilterBar, {
   factionFacet,
   FilterBarEmpty,
-  selectEmptyState,
   type FilterRail,
 } from '../../components/ui/FilterBar'
 import CanSignUpEmpty from './CanSignUpEmpty'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import {
   appliedFilterCount,
+  PENDING_WINDOW_EMPTY,
+  selectTaskEmptyState,
   TASK_SORT_DEFAULT,
   TASK_STATUS_DEFAULT,
   TASK_TYPE_DEFAULT,
@@ -161,29 +162,23 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
  * list wholesale, and "you already hold twenty" is a different sentence from
  * "nothing matches" — see that component for why the count is the client's own.
  *
- * The pending branch (#1695) is the fourth, and it is `selectEmptyState`'s
- * `caughtUp` guard applied to a different axis rather than a fourth kind in that
- * shared function: the praxis feed has no status rail, so this reason for an
- * empty list is the task page's alone. A proposal is admin-only for its first
- * `pending_task_admin_review_hours`, so a level-3 player can open the tab their
- * unlock earned them, find nothing that has ripened yet, and read "No tasks
- * match your filters" as a broken filter — the false-affordance class
- * `CanSignUpEmpty` exists for.
- *
- * Two guards on the claim, for the reason `selectEmptyState` states: with any
- * SECOND filter applied, "nothing has ripened" is unknowable from here and the
- * generic filtered sentence is the honest one; and with the window unknown
- * (`/game-config` not landed) the sentence has no number to give, so it is not
- * drawn at all rather than assuming one.
+ * The pending branch (#1695) is the fourth, and it lives in
+ * `selectTaskEmptyState` rather than in the shared `selectEmptyState`: the
+ * praxis feed has no status rail, so this reason for an empty list is the task
+ * page's alone. See that function for the two guards on the claim.
  */
 export function TaskListEmpty({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
-  const appliedCount = appliedFilterCount(state)
-  const kind = selectEmptyState(appliedCount, state.canSignUp)
   const adminReviewHours =
     useGameConfig()?.pending_task_admin_review_hours ?? null
+  const kind = selectTaskEmptyState(
+    state.status,
+    appliedFilterCount(state),
+    state.canSignUp,
+    adminReviewHours,
+  )
 
-  if (state.status === 'pending' && appliedCount === 1 && adminReviewHours !== null) {
+  if (kind === PENDING_WINDOW_EMPTY) {
     return (
       <FilterBarEmpty
         title={t('listPage.emptyPending')}

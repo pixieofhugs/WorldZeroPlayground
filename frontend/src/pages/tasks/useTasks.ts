@@ -38,6 +38,10 @@ import {
 import { createPraxis } from '../../api/praxis'
 import type { FactionOut } from '../../api/factions'
 import type { FactionConfigOut } from '../../api/gameConfig'
+import {
+  selectEmptyState,
+  type EmptyStateKind,
+} from '../../components/ui/FilterBar'
 import { useFactions } from '../../hooks/useFactions'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { extractError } from '../../utils/errors'
@@ -207,6 +211,37 @@ export function appliedFilterCount(state: TasksState): number {
     (state.canSignUp ? 1 : 0) +
     (state.query.trim() ? 1 : 0)
   )
+}
+
+/** The task browse's own empty state, beside the three `selectEmptyState` owns. */
+export const PENDING_WINDOW_EMPTY = 'pendingWindow' as const
+
+/**
+ * Which empty state the TASK list gets — `selectEmptyState` plus one axis only
+ * this page has (#1695).
+ *
+ * A proposal is admin-only for its first `pending_task_admin_review_hours`, so a
+ * level-3 player can open the pending tab their unlock earned them, find nothing
+ * ripe, and read the generic "No tasks match your filters" as a broken filter.
+ *
+ * Two guards, both for the reason `selectEmptyState` states about `caughtUp`:
+ * with a SECOND filter applied, "nothing has ripened" is unknowable from here,
+ * so the honest answer is the filtered sentence; and with the window unknown
+ * (`/game-config` not landed) the sentence has no number to give, so it defers
+ * rather than assuming one. Split out of `TaskListEmpty` so the decision is a
+ * pure function — the harness runs no effects, so a hook-shaped version of this
+ * branch could never be driven.
+ */
+export function selectTaskEmptyState(
+  status: string,
+  appliedCount: number,
+  canSignUp: boolean,
+  adminReviewHours: number | null,
+): EmptyStateKind | typeof PENDING_WINDOW_EMPTY {
+  if (status === 'pending' && appliedCount === 1 && adminReviewHours !== null) {
+    return PENDING_WINDOW_EMPTY
+  }
+  return selectEmptyState(appliedCount, canSignUp)
 }
 
 export interface SignupMessage {
