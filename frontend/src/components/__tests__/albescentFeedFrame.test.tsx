@@ -31,6 +31,7 @@ const ALL_FEED_TYPES = [
   'friend_completion',
   'foe_completion',
   'vote_on_mine',
+  'vote_changed_on_mine',
   'foe_taunt',
   'friend_signup',
   'friend_defection',
