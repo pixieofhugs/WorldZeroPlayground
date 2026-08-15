@@ -137,6 +137,12 @@ class ErrorCode(str, enum.Enum):
     #: for different reasons — the code is what says which id was wrong.
     task_not_found = "TASK_NOT_FOUND"
     character_not_found = "CHARACTER_NOT_FOUND"
+    #: #1714. An admin edit naming a faction slug the current era does not
+    #: define. Config owns which factions exist (ADR-0042), so this is a
+    #: config-membership answer, not a row lookup — hence not
+    #: :attr:`faction_not_found`, which reports a missing ``Faction`` row to a
+    #: player joining one.
+    task_faction_unknown = "TASK_FACTION_UNKNOWN"
 
     # -- Factions: joining, defecting, and the letters that gate both --------
     faction_not_found = "FACTION_NOT_FOUND"
