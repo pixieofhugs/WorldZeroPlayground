@@ -11,8 +11,15 @@ htmlcov/
 *.egg-info/
 dist/
 .pytest_cache/
+# /.claude/* is ignored by default; anything an agent READS to decide how to work is
+# re-included, so it is reviewable in a PR and identical in every worktree.
+# settings.local.json stays ignored — that is the per-machine override, by design (#1678).
 /.claude/*
 !/.claude/agents/
+!/.claude/skills/
+!/.claude/commands/
+!/.claude/settings.json
+!/.claude/launch.json
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
