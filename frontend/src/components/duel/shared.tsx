@@ -53,6 +53,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
 import { useGameConfig } from '../../hooks/useGameConfig'
+import { formatPoints } from '../../utils/points'
 
 /**
  * The per-faction voice each slot dresses itself in. Every value is a CSS var.
@@ -189,10 +190,6 @@ export function useDuelStakes(
   }
 }
 
-/** Points render as integers where they are whole, one decimal otherwise. */
-export function formatPoints(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1)
-}
 
 /* -------------------------------------------------------------------------- */
 /* StakesTiles — what winning and losing are worth                            */

@@ -12,7 +12,7 @@ import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import { mediaUrl } from '../utils/media'
 import { pickVariant } from '../utils/factionDispatch'
-import { computeFactionMultiplier } from '../utils/points'
+import { computeFactionMultiplier, formatPoints } from '../utils/points'
 import { praxisModeLabel } from '../utils/praxis'
 import { extractError } from '../utils/errors'
 import { surfaceMap } from '../factions'
@@ -397,15 +397,6 @@ const metaLine: CSSProperties = {
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
-}
-
-/**
- * A praxis score for a one-line meta stamp. Same rule the duel surfaces use:
- * whole numbers stay whole, anything else takes one decimal — never a raw float
- * with fifteen digits of arithmetic noise on it.
- */
-function formatPoints(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1)
 }
 
 /**
