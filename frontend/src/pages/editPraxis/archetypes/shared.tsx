@@ -764,34 +764,73 @@ export function TaskSlip({
             ...titleStyle,
           }}
         >
-          {praxis.task_title}
+          {/* The title is the task, so it goes where the breadcrumb already
+              goes (#1705) — it is the line a player actually reads and tries
+              to click. The link sits INSIDE the styled box rather than
+              replacing it: `titleStyle` is the skin's dress (ADR-0065) and
+              every one of the eight sets a face and an ink, so the anchor
+              inherits it whole instead of racing it. Leaving the page is safe
+              — the composer autosaves, so no confirm belongs here. The
+              affordance is the hover underline, the same one the praxis card's
+              task link uses; a colour would be the skin's to give, not this
+              component's. */}
+          <Link
+            to={`/tasks/${praxis.task_id}`}
+            className="hover:underline"
+            style={{ color: "inherit" }}
+          >
+            {praxis.task_title}
+          </Link>
         </div>
         {task != null && (
+          // One row for the slip's second line (#1706): the level pill and the
+          // task's own prose beside each other, rather than the description
+          // stacked under the pill on a third. The row carries the top margin
+          // both parts used to set for themselves, so a skin that repaints
+          // either cannot shift the spacing.
+          //
+          // `1 1 50%` rather than `1 1 auto`: a basis of zero-or-auto never
+          // wraps, so a slip squeezed narrow (the phone, a long level word, a
+          // wide points mark) would go on shaving the description's column
+          // instead of letting it drop below the pill.
           <div
-            style={composerLabelStyle({
-              display: "inline-block",
-              marginTop: "var(--space-sm)",
-              padding: "var(--space-xs) var(--space-sm)",
-              border: "1px solid currentColor",
-              borderRadius: 999,
-              ...pillStyle,
-            })}
-          >
-            {t("editPraxis.composer.levelLabel", { level: task.level_required })}
-          </div>
-        )}
-        {task?.description && (
-          <p
             style={{
-              // The task's own prose: content, so the floor governs it (§4).
-              fontSize: "var(--text-content)",
-              lineHeight: 1.55,
-              margin: "var(--space-sm) 0 0",
-              ...descriptionStyle,
+              display: "flex",
+              gap: "var(--space-md)",
+              alignItems: "baseline",
+              flexWrap: "wrap",
+              marginTop: "var(--space-sm)",
             }}
           >
-            {task.description}
-          </p>
+            <div
+              style={composerLabelStyle({
+                padding: "var(--space-xs) var(--space-sm)",
+                border: "1px solid currentColor",
+                borderRadius: 999,
+                flexShrink: 0,
+                ...pillStyle,
+              })}
+            >
+              {t("editPraxis.composer.levelLabel", {
+                level: task.level_required,
+              })}
+            </div>
+            {task.description && (
+              <p
+                style={{
+                  // The task's own prose: content, so the floor governs it (§4).
+                  fontSize: "var(--text-content)",
+                  lineHeight: 1.55,
+                  margin: 0,
+                  flex: "1 1 50%",
+                  minWidth: 0,
+                  ...descriptionStyle,
+                }}
+              >
+                {task.description}
+              </p>
+            )}
+          </div>
         )}
       </div>
       {mark}

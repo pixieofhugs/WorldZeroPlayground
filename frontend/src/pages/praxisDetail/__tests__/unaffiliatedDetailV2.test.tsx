@@ -16,7 +16,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
-import "../../../i18n";
+import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import type { DuelDetailOut } from "../../../api/duel";
@@ -252,14 +252,17 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   });
 
   it("shows the crown at BOTH form factors on a crowned praxis", () => {
-    // Never form-factor gated: it comes from the shared banners, keyed only on
-    // `is_top_for_task` and mounted above the split. One design (Everymen)
-    // draws `showCrownMobile: false`; that is the outlier.
+    // Never form-factor gated, keyed only on `is_top_for_task`. One design
+    // (Everymen) draws `showCrownMobile: false`; that is the outlier.
+    // The mark is the score stamp's corner fleur now — #1710 retired the
+    // hero banner. The score block is in both layouts, so it is still never
+    // form-factor gated, and it is still the one canonical `TaskCrown`.
+    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned, "desktop").text, "crown on desktop").toContain("TASK CROWN");
-    expect(render(crowned, "mobile").text, "crown on mobile too").toContain("TASK CROWN");
-    expect(render(state(), "mobile").text, "and only when crowned").not.toContain(
-      "TASK CROWN",
+    expect(render(crowned, "desktop").html, "crown on desktop").toContain(crown);
+    expect(render(crowned, "mobile").html, "crown on mobile too").toContain(crown);
+    expect(render(state(), "mobile").html, "and only when crowned").not.toContain(
+      crown,
     );
   });
 
@@ -379,9 +382,12 @@ describe("Unaffiliated praxis detail — the state axes", () => {
       "The photo is of a different ridge.",
     );
 
+    // The crown axis is the score stamp's corner fleur now (#1710); this page
+    // no longer carries a banner for it, so only the mark is asserted.
+    const crown = `title="${i18n.t("feed:taskCrown.title")}"`;
     const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
-    expect(render(crowned).text).toContain("TASK CROWN");
-    expect(render(state()).text).not.toContain("TASK CROWN");
+    expect(render(crowned).html).toContain(crown);
+    expect(render(state()).html).not.toContain(crown);
   });
 
   it("credits every co-author and shows the members section on a published collab", () => {

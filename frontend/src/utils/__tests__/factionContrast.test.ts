@@ -576,8 +576,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
   // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
   { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
-  // The "Grade" label. Olive on the paper was never measured before this card
-  // set a label in it.
+  // The bill's level caption ("Grade" until #1702 renamed it). Olive on the
+  // paper was never measured before this card set a label in it.
   { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-olive" },
   {
     // The seal's points numeral. Red on the paper is 4.49:1 — a hair under the
@@ -1342,8 +1342,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // 12px, so 4.5:1 is what WCAG asks. They are here because they are the
   // TIGHTEST neutral stocks in the app — the selected row is two washes of
   // `--color-text-primary` deep — and both inks failed AA on it before the lift
-  // (light 4.05 / 3.90, dark 3.80 / 4.19). The lift is what fixes them; #1579
-  // owns the row's dark promotion separately.
+  // (light 4.05 / 3.90, dark 3.80 / 4.19). The lift is what fixes them: 5.63 /
+  // 5.66 light and 5.63 / 6.04 dark. On those numbers #1579 deleted the rule
+  // that promoted the selected row's count to secondary — tertiary is the
+  // louder ink on that stock in BOTH themes now, so the count keeps it. Both
+  // inks stay measured: secondary still crosses the thumb on the rail (the
+  // thumb animates over segments that carry it), and the promotion is one CSS
+  // line from returning.
   ...(
     [
       ["secondary", "--color-text-secondary"],

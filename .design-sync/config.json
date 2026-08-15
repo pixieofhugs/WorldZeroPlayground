@@ -145,7 +145,6 @@
     "LevelUpWatcher": "src/components/LevelUpWatcher.tsx",
     "Lotus": "src/components/factionMarks/Lotus.tsx",
     "MarkdownPreview": "src/pages/editPraxis/blocks/MarkdownPreview.tsx",
-    "Meadow": "src/pages/players/Meadow.tsx",
     "MediaArt": "src/pages/editPraxis/blocks/MediaArt.tsx",
     "MediaGallery": "src/components/MediaGallery.tsx",
     "MetataskPicker": "src/components/metataskSeal/MetataskPicker.tsx",
@@ -511,9 +510,6 @@
     "LevelUpPopup": {
       "cardMode": "single",
       "viewport": "460x600"
-    },
-    "Meadow": {
-      "cardMode": "column"
     },
     "MetataskPicker": {
       "cardMode": "single",

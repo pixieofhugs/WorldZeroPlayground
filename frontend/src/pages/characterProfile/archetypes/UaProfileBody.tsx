@@ -141,13 +141,13 @@ const kit: ProfileKit = {
   barFill:
     'linear-gradient(90deg, var(--faction-ua-glow), var(--faction-ua-vermil))',
   barTrack: HAIR,
-  levelUnitLabel: 'marks this anno',
+  levelUnitLabel: 'points this anno',
   nextLevelLabel: (next) => `next · anno ${next}`,
   sectionHeading: heading,
   praxisEyebrow: (name) => `Sealed by ${name}`,
   praxisEmpty: {
     title: 'Nothing sealed yet',
-    body: 'One true mark, then another. The first is always the boldest.',
+    body: 'One true piece, then another. The first is always the boldest.',
   },
   emptyStateStyle: {
     border: `1px dashed var(--faction-ua-border)`,
@@ -157,7 +157,7 @@ const kit: ProfileKit = {
     background: SURFACE,
   },
   laurel: <SpectrumLaurel centerBg={SURFACE} glyphColor={ACCENT} />,
-  badgeTitle: 'Marks of the practice',
+  badgeTitle: 'Seals of the practice',
   badgeBoardStyle: {
     border: `1px solid ${RULE}`,
     borderRadius: 'var(--radius-sm)',

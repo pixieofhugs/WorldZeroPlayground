@@ -432,7 +432,7 @@ describe.each(["desktop", "mobile"] as const)(
       expect(html, "the torn strip survived").not.toContain("polygon(0 0,4% 40%");
     });
 
-    it("reads the ephemerists grade label in brass", () => {
+    it("reads the ephemerists level label in brass", () => {
       onlyOn(
         "ephemerists",
         "color:var(--faction-ephemerists-plate-brass-light)",

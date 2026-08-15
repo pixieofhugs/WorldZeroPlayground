@@ -577,6 +577,40 @@ A co-owner. Solo/duel praxis have exactly one (the creator); a collab has all it
 collaborators (ADR-0013). Membership — not authorship — is the visibility and edit key for
 an `in_progress` praxis. _Avoid_: "owner"/"creator" when the rule is really "any member".
 
+## Co-writing a praxis
+
+> **Status (2026-08-14): DESIGNED, NOT BUILT (ADR-0073).** No room exists yet —
+> authoring is still single-writer with a debounced save. The vocabulary below is the
+> *design*; treat it as forward-looking until ADR-0073 lands.
+
+**Room**:
+The live editing space for one praxis — every **member** with the composer open is in it,
+writing the same text at the same time. A room is a **workspace, not a record**: it holds
+the text while it is being written and is discarded once the praxis is sealed. Every
+praxis has one, including solo (where the member is alone in it).
+_Avoid_: "session" (overloaded with auth), "document" (the praxis is the document), calling
+the room the praxis.
+
+**Working text**:
+The praxis text as it is being co-written — co-owned, live, belonging to the room. Distinct
+from the **body text**, which is the text of record: what the site reads, renders and
+publishes. Working text becomes body text; the two are never separately authored.
+_Avoid_: treating body text as somewhere a member writes.
+
+**Freeze**:
+What submitting does to a collab's working text: seals it read-only for every member while
+the praxis is pending publish. The reopening verb is **`pullBack`** (ADR-0059), which is
+also what resets consensus — so ADR-0012's "an edit means we're not done" needs no separate
+notion of what counts as an edit. Nothing can change, so nothing must be detected.
+_Avoid_: "lock" (suggests one member holds it against the others; a freeze binds everyone
+equally, including whoever submitted).
+
+**Presence**:
+Who is in a room right now, and where their cursor sits — drawn in each member's own
+faction colour. Presence is **decoration, never authorization**: it is self-reported by
+each client and says nothing about who may edit. Membership is the edit key.
+_Avoid_: reading presence as permission; "online" (it is per-room, not site-wide).
+
 ## Task promotion
 
 > **Status (2026-07-17): DESIGNED, NOT BUILT (ADR-0034).** No backend implementation exists

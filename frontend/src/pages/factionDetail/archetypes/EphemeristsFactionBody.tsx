@@ -117,8 +117,8 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-// "grade {roman}"; level 0 shows an em-dash, matching the ephemerists convention.
-const grade = (level: number) => (level > 0 ? toRoman(level) : "—");
+// "level {roman}"; level 0 shows an em-dash, matching the ephemerists convention.
+const romanLevel = (level: number) => (level > 0 ? toRoman(level) : "—");
 
 /**
  * A keeper's monogram. The codex struck these as circular vellum medallions;
@@ -438,7 +438,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   </div>
                   <div style={{ ...SMALL_CAPS, fontSize: "var(--text-sm)", letterSpacing: "0.14em", color: BAND_QUIET, marginTop: "var(--space-sm)" }}>
                     {t("ephemerists.spotlight.stat", {
-                      grade: grade(spot.level),
+                      level: romanLevel(spot.level),
                       score: spot.all_time_score.toLocaleString(),
                     })}
                   </div>
@@ -472,7 +472,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   </div>
                   <Tally level={m.level} />
                   <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: NILE }}>
-                    {t("ephemerists.roster.level", { grade: grade(m.level) })}
+                    {t("ephemerists.roster.level", { level: romanLevel(m.level) })}
                   </span>
                 </Link>
               ))
