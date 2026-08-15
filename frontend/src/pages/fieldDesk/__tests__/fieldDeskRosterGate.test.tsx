@@ -96,13 +96,22 @@ function currentUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
   }
 }
 
-function render(user: CurrentUser | null): string {
+function renderRaw(user: CurrentUser | null): string {
   mocks.user = user
   return renderToStaticMarkup(
     <MemoryRouter>
       <FieldDesk />
     </MemoryRouter>,
-  ).replace(/<[^>]*>/g, '')
+  )
+}
+
+function render(user: CurrentUser | null): string {
+  return renderRaw(user).replace(/<[^>]*>/g, '')
+}
+
+/** The text of every `<h1>` the page drew, in document order. */
+function h1s(html: string): string[] {
+  return [...html.matchAll(/<h1\b[^>]*>(.*?)<\/h1>/gs)].map((m) => m[1].replace(/<[^>]*>/g, '').trim())
 }
 
 describe('a life before the gate is told nothing about a second one (#1560)', () => {
@@ -138,6 +147,30 @@ describe('the roster is shown whenever it has a choice to offer (#1560)', () => 
     const body = render(currentUser({ character: null }))
     expect(body).toContain('Nothing in the drawer yet.')
     expect(body).not.toContain('Whose shoes today?')
+  })
+})
+
+describe('the page keeps its level-1 heading whatever the gate does (#1794)', () => {
+  // The <h1> used to live INSIDE the roster block, so the commonest state of
+  // all — one life, gate shut — served `/` with an outline starting at level 2.
+  it('names the carried life when the roster is gated away', () => {
+    const heads = h1s(renderRaw(currentUser()))
+    expect(heads).toEqual(['Mollusk'])
+  })
+
+  it('falls back to the handle rather than an empty heading', () => {
+    const heads = h1s(renderRaw(currentUser({ character: life({ display_name: '' }) })))
+    expect(heads).toEqual(['@molly'])
+  })
+
+  it('still asks whose shoes once the gate opens', () => {
+    const heads = h1s(renderRaw(currentUser({ can_create_additional_character: true })))
+    expect(heads).toEqual(['Whose shoes today?'])
+  })
+
+  it('still has exactly one for an account playing nobody', () => {
+    const heads = h1s(renderRaw(currentUser({ character: null })))
+    expect(heads).toEqual(['Nothing in the drawer yet.'])
   })
 })
 
