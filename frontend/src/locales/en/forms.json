@@ -296,7 +296,7 @@
       "bodyPlaceholder": "Say what you did and how it went.",
       "wordCount": "{{words}} words · markdown ok",
       "proofLabel": "Proof",
-      "proofButton": "Drop a photo of the work",
+      "proofButton": "Drop a photo of the work\nor browse files",
       "proofHelper": "Photos, clips or receipts — max 50 MB each.",
       "submit": "Submit",
       "submitBusy": "Submitting…"

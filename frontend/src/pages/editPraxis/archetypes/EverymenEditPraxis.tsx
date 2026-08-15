@@ -4,7 +4,7 @@
  *
  * The union's WORK ORDER: a red masthead plate flanked by two counter-rotating
  * cogs, poster rays fanning from behind it over a gold and an olive corner glow,
- * dashed red rules between every region, a rubber-stamp points seal, and a
+ * one dashed red rule above the footer, a rubber-stamp points seal, and a
  * full-width report bar for the cast. Bebas Neue carries every headline and
  * label; Courier Prime carries everything read.
  *
@@ -97,7 +97,6 @@ import {
   ErrorBanner,
   RingMark,
   TaskSlip,
-  TitleCounter,
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
@@ -123,6 +122,15 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
+
+/* The Write-up header's right end: the word count, then Write/Preview (#1706).
+   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
+   so the two need a row of their own or the tabs drop below the count. */
+const metaRowStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--space-md)",
+} as const;
 
 /* ── The sheet's palette. Named for the ROLE each plays in the design's skin row.
  *    See the header for which reds may be ink and on what. ── */
@@ -273,7 +281,11 @@ export default function EverymenEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  /** The broadsheet's divider — one element, drawn between every region. */
+  /**
+   * The broadsheet's rule — one element, drawn ONCE, above the footer (#1707).
+   * The design calls its rule once and separates the regions with the sheet's
+   * own gap; seven dashed reds read as a form to be filled in, not a work order.
+   */
   const dashRule = (
     <ComposerRule
       style={{ height: 0, background: "transparent", borderTop: `2px dashed ${RED}` }}
@@ -295,6 +307,9 @@ export default function EverymenEditPraxis({ state }: Props) {
     style: {
       background: PANEL,
       border: `2px solid ${FRAME}`,
+      /* The design left-rules the slip in the accent (#1706). It sits AFTER the
+         border shorthand on purpose: a shorthand spread last would erase it. */
+      borderLeft: `2px solid ${ACCENT}`,
       borderRadius: 0,
       padding: "var(--space-lg)",
     },
@@ -497,8 +512,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
-          rule={dashRule}
-          meta={<TitleCounter length={state.title.length} color={MUTED} />}
+          rule={false}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
         >
           <TitleField
@@ -520,7 +534,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            rule={dashRule}
+            rule={false}
             labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           >
             <ModePicker
@@ -571,7 +585,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 ? t("editPraxis.composer.opponentLabel")
                 : undefined
             }
-            rule={dashRule}
+            rule={false}
             labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           >
             <InviteSearch
@@ -596,7 +610,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            rule={dashRule}
+            rule={false}
             labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           >
             <MetataskSealStack state={state} />
@@ -608,64 +622,63 @@ export default function EverymenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          rule={dashRule}
+          rule={false}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           meta={
-            <WriteUpTabs
-              tab={tab}
-              setTab={setTab}
-              skin={{
-                containerStyle: { gap: "var(--space-xs)" },
-                buttonStyle: (active) =>
-                  stencil({
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 0,
-                    border: `2px solid ${active ? FRAME : "transparent"}`,
-                    background: active ? PANEL : "transparent",
-                    color: active ? INK : MUTED,
-                  }),
-              }}
-            />
+            <span style={metaRowStyle}>
+              <span
+                style={stencil({
+                  color: MUTED,
+                  fontFamily: COURIER,
+                  letterSpacing: "0.12em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </span>
+              <WriteUpTabs
+                tab={tab}
+                setTab={setTab}
+                skin={{
+                  containerStyle: { gap: "var(--space-xs)" },
+                  buttonStyle: (active) =>
+                    stencil({
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 0,
+                      border: `2px solid ${active ? FRAME : "transparent"}`,
+                      background: active ? PANEL : "transparent",
+                      color: active ? INK : MUTED,
+                    }),
+                }}
+              />
+            </span>
           }
         >
           {/* Mounted one at a time: a hidden textarea is still a tab stop and
               would put the body in the DOM twice. */}
           {tab === "write" ? (
-            <>
-              <BodyTextarea
-                state={state}
-                skin={{
-                  id: "composer-body",
-                  rows: 9,
-                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
-                  toolbarButtonStyle: {
-                    background: PANEL,
-                    color: INK,
-                    border: `2px solid ${FRAME}`,
-                    borderRadius: 0,
-                    fontFamily: BEBAS,
-                  },
-                  textareaStyle: {
-                    ...fieldBox,
-                    resize: "vertical",
-                    minHeight: 200,
-                    lineHeight: 1.6,
-                    fontFamily: COURIER,
-                    padding: "var(--space-md) var(--space-lg)",
-                  },
-                }}
-              />
-              <div
-                style={stencil({
-                  color: MUTED,
+            <BodyTextarea
+              state={state}
+              skin={{
+                id: "composer-body",
+                rows: 9,
+                placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                toolbarButtonStyle: {
+                  background: PANEL,
+                  color: INK,
+                  border: `2px solid ${FRAME}`,
+                  borderRadius: 0,
+                  fontFamily: BEBAS,
+                },
+                textareaStyle: {
+                  ...fieldBox,
+                  resize: "vertical",
+                  minHeight: 200,
+                  lineHeight: 1.6,
                   fontFamily: COURIER,
-                  letterSpacing: "0.12em",
-                  marginTop: "var(--space-sm)",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
-              </div>
-            </>
+                  padding: "var(--space-md) var(--space-lg)",
+                },
+              }}
+            />
           ) : (
             <BodyPreview
               state={state}
@@ -695,7 +708,7 @@ export default function EverymenEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          rule={dashRule}
+          rule={false}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
         >
           <div
@@ -748,7 +761,9 @@ export default function EverymenEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: `2px dashed ${RED}`,
                     borderRadius: 0,
-                    padding: "var(--space-lg) var(--space-xl)",
+                    padding: "var(--space-2xl) var(--space-lg)",
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
                     color: INK,
                   }),
                   buttonLabel: t("editPraxis.composer.proofButton"),
