@@ -210,12 +210,22 @@ describe("the last two archetype seams of #1706", () => {
     expect(markup.indexOf(words)).toBeLessThan(markup.indexOf("<textarea"));
   });
 
-  it.each(SLUGS)("%s offers the browse line inside the drop target", (slug) => {
+  it("the drop target's label carries the design's second line", () => {
+    // One catalog assertion for all eight: `or browse files` is the design's
+    // own second line, and the target renders the label verbatim.
+    expect(i18n.t("forms:editPraxis.composer.proofButton")).toContain("\n");
+  });
+
+  it.each(SLUGS)("%s centres the drop target at the design's padding", (slug) => {
     const markup = render(slug === "na" ? null : slug);
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofButton"));
-    // Centred at the design's padding, and the size hint stays OUTSIDE the
-    // target where #1706 wanted it — so it must survive, not move in.
-    expect(markup).toContain("padding:var(--space-2xl) var(--space-lg)");
+    // The three together are the target's geometry, and only the target's:
+    // `pre-line` is what makes the label's second line a second line.
+    expect(markup).toContain(
+      "padding:var(--space-2xl) var(--space-lg);text-align:center;white-space:pre-line",
+    );
+    // The size hint stays OUTSIDE the target, where #1706 wanted it — so it
+    // has to survive this, not move in.
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofHelper"));
   });
 

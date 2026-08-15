@@ -964,13 +964,13 @@ export default function CovenEditPraxis({ state }: Props) {
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
-        {/* The composer's ONE braid (#1707). The design calls its rule exactly
-            once, right above the footer; every other region is separated by the
-            sheet's own gap. Six braids read as a chain of dividers rather than
-            as the mark that closes the page. */}
-        {braidRule}
+        {/* The composer's ONE braid (#1707) is the one the footer already opens
+            with, just below — no second one is added here. The design calls its
+            rule exactly once, immediately above the footer; every other region
+            is separated by the sheet's own gap. Six braids read as a chain of
+            dividers rather than as the mark that closes the page.
 
-        {/* [Cancel] … [Submit] — the global order from #646, stacked here
+            [Cancel] … [Submit] — the global order from #646, stacked here
             because Coven's cast is a full-bleed band rather than an inline
             button: the exits read first, the band closes the sheet. */}
         <ComposerFooter
