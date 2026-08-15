@@ -588,8 +588,9 @@ export function DropButton({
 /* SaveDraftButton — the composer's third exit (#1081): keep the draft, leave.  */
 /*                                                                              */
 /* Publish files the praxis and Drop destroys it; until now there was no way to */
-/* simply stop for the night. The click flushes the queued autosave and lands   */
-/* on the player's own profile, where their in_progress praxes are listed.      */
+/* simply stop for the night. The click writes nothing — the text is already in */
+/* the room (#1743) — it just lands on the player's own profile, where their    */
+/* in_progress praxes are listed.                                               */
 /*                                                                              */
 /* Deliberately unskinned by default, like the collab Leave link above: this is */
 /* a mechanics affordance, not a faction gesture, and the shared neutral        */
@@ -614,8 +615,8 @@ export function SaveDraftButton({
   skin?: SaveDraftButtonSkin;
 }) {
   const { t } = useTranslation("forms");
-  // A cast or moderated praxis has no draft to save — the autosave effect sits
-  // the same states out, and the archetype is read-only in them. Hide rather
+  // A cast or moderated praxis has no draft to keep — the room refuses a change
+  // in the same states, and the archetype is read-only in them. Hide rather
   // than disable, as everywhere else.
   if (state.controlsLocked) return null;
   return (
