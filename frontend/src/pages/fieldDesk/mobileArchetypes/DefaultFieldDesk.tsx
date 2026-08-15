@@ -1,10 +1,11 @@
 import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionFill, factionName } from '../../../utils/factions'
+import { factionCssVar, factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
@@ -22,6 +23,10 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
  * Layout is flex/relative — no fixed-px grid drives the page structure
  * (SPEC-faction-ui-profile §1a).
  */
+
+/** The task-faction mark on an in-progress row (#1711), sized to the row's own
+ *  cap height — it stands where the lead dot stood, not where an emblem would. */
+const ROW_SIGIL = 14
 
 // Static style objects, hoisted to module scope (#586) — no closure deps.
 const pageTitleStyle: CSSProperties = {
@@ -314,10 +319,12 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   textDecoration: 'none',
                 }}
               >
-                <span
-                  className="shrink-0"
-                  style={{ width: 10, height: 10, borderRadius: 3, ...factionFill(praxis.task_faction_slug, 'dot') }}
-                />
+                {/* The task's faction, drawn as its own mark rather than as a
+                    colour swatch (#1711). Decorative: the meta line below names
+                    the faction in words. */}
+                <span className="shrink-0 flex" aria-hidden>
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="font-display truncate content-text" style={{ lineHeight: 1.2, color: 'var(--color-text-primary)' }}>
                     {praxis.task_title}
