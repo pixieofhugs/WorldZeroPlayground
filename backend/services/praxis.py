@@ -56,6 +56,7 @@ from services.era import (
     get_or_create_stats,
 )
 from services.level_jump import available_level_reach, consume_level_jump
+from services.praxis_room import close_member_sockets
 from models.duel import Duel, DuelStatus
 
 
@@ -1842,6 +1843,11 @@ async def kick_member(
     # identity-mapped praxis to build its response.
     praxis.members.remove(kickee_member)
 
+    # Membership is checked when a room socket opens, so a kicked member with a
+    # composer already open would keep co-writing until they closed the tab. A
+    # gate needs both doors (ADR-0073).
+    close_member_sockets(praxis_id, member_id)
+
     # A kick resets the changed group back to drafting (ADR-0013).
     await collab_consensus.on_member_kicked(praxis, session)
 
@@ -1865,6 +1871,8 @@ async def leave_praxis(
 
     leaver = next(m for m in praxis.members if m.character_id == character_id)
     praxis.members.remove(leaver)
+    # Same second door as a kick: leaving closes the room socket too (ADR-0073).
+    close_member_sockets(praxis_id, character_id)
     await session.flush()
 
     # A departure can complete the consensus among those who stayed.
