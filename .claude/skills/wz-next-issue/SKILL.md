@@ -150,21 +150,23 @@ Work the brief inside the worktree. Reuse the existing skills rather than reinve
 - Read what the `CLAUDE.md` routing table points you to for the touched area — don't
   reload docs you don't need.
 
-Run the gates and make them pass:
+Run the gates and make them pass. **Any written list of jobs and steps ROTS** — a hand-kept
+copy has cost a red merge twice. `.github/workflows/test.yml` is the only authoritative one:
 
-- Backend: `pytest --cov=. --cov-fail-under=80` (from `/backend`)
-- Frontend: **all six steps** (from `/frontend`). `npm test` alone is only `vitest run`
-  — one of six — and is NOT the frontend gate:
-  `npm run lint`, `npm run typecheck`, `npm run typecheck:design-sync`, `npm test`,
-  `npm run build`, `npm run budget`
-- API contract: if you touched a route signature, a `response_model` or any Pydantic
-  schema, run `python scripts/regen_api_client.py` from the repo root and commit BOTH
-  `backend/openapi.json` and `frontend/src/api/generated/schema.d.ts`. The `api-schema`
-  job regenerates and runs `git diff --exit-code`, so a stale artifact is a red PR.
+```
+grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml
+```
 
-All three jobs (`test`, `frontend`, `api-schema`) are required checks on `main`. If this
-list ever disagrees with `.github/workflows/test.yml`, **the workflow wins** — go read it:
-`grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml`
+Run every step it names, locally, before you call anything green. Backend coverage floor is
+`pytest --cov=. --cov-fail-under=80` from `/backend`. Two steps bite in ways the YAML does
+not say:
+
+- **`npm test` is NOT the frontend gate.** It is `vitest run` — one step of several. The
+  lint ratchet, both typechecks, the build and the byte budget fail CI as readily as `tsc`.
+- **`api-schema` regenerates, then diffs.** Touch a route signature, a `response_model` or
+  any Pydantic schema and you must run `python scripts/regen_api_client.py` from the repo
+  root and commit BOTH `backend/openapi.json` and `frontend/src/api/generated/schema.d.ts`.
+  The job runs `git diff --exit-code`, so a stale artifact is a red PR.
 
 Commit on the branch with a clear message. Stay in scope — if the work wants to grow
 beyond the brief, that's a Step 6 escalation, not a license to expand.
