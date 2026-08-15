@@ -5,11 +5,11 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -190,7 +190,7 @@ export default function SingularityTaskDetail({
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -511,41 +511,45 @@ export default function SingularityTaskDetail({
   // ── The readout: base, the (usually absent) ×mult badge, and the total ──
   const scoreBody = (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-        <span style={{ ...LABEL, fontSize: "var(--text-xs)" }}>
-          {t("detail.points.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: MONO,
-            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-            lineHeight: 0.85,
-            color: INK,
-          }}
-        >
-          {basePoints}
-        </span>
-        {/* Hidden at ×1.00, so invisible under era_1's neutralized modifiers and
-            automatic the day one moves (ADR-0055). The factor is read raw off
-            the state contract, never reconstructed from total / base. */}
-        {showMultiplier && (
-          <span
-            style={{
-              marginLeft: "auto",
-              fontFamily: MONO,
-              fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
-              color: CTA_INK,
-              background: BRIGHT,
-              borderRadius: 4,
-              padding: "var(--space-xs) var(--space-sm)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
-          </span>
-        )}
-      </div>
-      <Rule />
+      {/* The trace line and its rule (#1704). Hidden at ×1.00, so invisible
+          under era_1's neutralized modifiers and automatic the day one moves
+          (ADR-0055) — with no modifier the line only echoed the total below it.
+          The factor is read raw off the state contract, never reconstructed
+          from total / base. */}
+      {showBreakdown && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+            <span style={{ ...LABEL, fontSize: "var(--text-xs)" }}>
+              {t("detail.points.base")}
+            </span>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+                lineHeight: 0.85,
+                color: INK,
+              }}
+            >
+              {basePoints}
+            </span>
+            <span
+              style={{
+                marginLeft: "auto",
+                fontFamily: MONO,
+                fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+                color: CTA_INK,
+                background: BRIGHT,
+                borderRadius: 4,
+                padding: "var(--space-xs) var(--space-sm)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
+            </span>
+          </div>
+          <Rule />
+        </>
+      )}
       <div
         style={{
           display: "flex",
@@ -787,38 +791,42 @@ export default function SingularityTaskDetail({
           aria-hidden
           style={{ flex: "1 1 20%", minWidth: 20, borderTop: `1px dashed ${HAIR}` }}
         />
-        <span
-          style={{
-            display: "flex",
-            gap: "var(--space-xs)",
-            padding: "var(--space-xs)",
-            border: `1px solid ${BORDER}`,
-            borderRadius: 5,
-          }}
-        >
-          {(["score", "recent"] as const).map((sort) => {
-            const on = submissionSort === sort;
-            return (
-              <button
-                key={sort}
-                onClick={() => setSubmissionSort(sort)}
-                style={{
-                  ...LABEL,
-                  cursor: "pointer",
-                  border: "none",
-                  borderRadius: 4,
-                  padding: "var(--space-xs) var(--space-sm)",
-                  background: on ? BRIGHT : "transparent",
-                  color: on ? CTA_INK : DIM,
-                }}
-              >
-                {sort === "score"
-                  ? t("detail.gallery.sort.top")
-                  : t("detail.gallery.sort.recent")}
-              </button>
-            );
-          })}
-        </span>
+        {/* Nothing to sort until something is filed (#1704). The heading and the
+            empty line below stay; only the control goes. */}
+        {sortedSubmissions.length > 0 && (
+          <span
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
+              border: `1px solid ${BORDER}`,
+              borderRadius: 5,
+            }}
+          >
+            {(["score", "recent"] as const).map((sort) => {
+              const on = submissionSort === sort;
+              return (
+                <button
+                  key={sort}
+                  onClick={() => setSubmissionSort(sort)}
+                  style={{
+                    ...LABEL,
+                    cursor: "pointer",
+                    border: "none",
+                    borderRadius: 4,
+                    padding: "var(--space-xs) var(--space-sm)",
+                    background: on ? BRIGHT : "transparent",
+                    color: on ? CTA_INK : DIM,
+                  }}
+                >
+                  {sort === "score"
+                    ? t("detail.gallery.sort.top")
+                    : t("detail.gallery.sort.recent")}
+                </button>
+              );
+            })}
+          </span>
+        )}
       </div>
 
       {sortedSubmissions.length === 0 ? (

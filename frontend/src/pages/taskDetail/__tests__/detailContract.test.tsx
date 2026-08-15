@@ -187,6 +187,75 @@ describe("task-detail action column", () => {
   }
 });
 
+/**
+ * Two controls that only exist when they say something (#1704) — CLAUDE.md's
+ * "hide unusable controls" doctrine, checked across every skin because all nine
+ * copied the na reference.
+ *
+ *  1. **The gallery sort toggle needs something to sort.** Every skin drew
+ *     `Top rated | Recent` in the gallery head unconditionally and tested
+ *     `sortedSubmissions.length === 0` only for the body below it, so a task
+ *     with no praxis offered a sort over nothing.
+ *  2. **The `base` row must not restate the total.** ADR-0049 / ADR-0053's row
+ *     policy, already applied to the praxis stamp by `scoreBreakdown.ts`
+ *     (#1131): at the identity multiplier `base 18` and `18 POINTS` are the same
+ *     number twice. The row and its `×mult` chip drop as one unit.
+ */
+const SORT_LABELS = ["Top rated", "Recent"];
+
+/**
+ * The `base` eyebrow — the row's only text. Matched as a bare substring on
+ * purpose: the skins run it straight into its numeral (`base18`, `base 18`), so
+ * a `\b`-anchored regex matches neither, and no other copy on this page carries
+ * the word.
+ */
+const BASE_ROW = "base";
+
+describe("task-detail gallery sort toggle", () => {
+  const ONE_PRAXIS = [
+    { id: 3, task_id: 207, created_by_id: 42, score: 4, created_at: "2026-02-02T00:00:00Z" },
+  ] as unknown as TaskDetailState["sortedSubmissions"];
+
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} draws no sort toggle over an empty gallery`, () => {
+      const { text } = render(<Archetype state={baseState()} />);
+      for (const label of SORT_LABELS) expect(text).not.toContain(label);
+      // The heading and the empty line stay — only the control goes.
+      expect(text).toContain("No praxis filed yet");
+    });
+
+    it(`${slug} draws the sort toggle once there is praxis to sort`, () => {
+      const { text } = render(
+        <Archetype
+          state={baseState({ submissions: ONE_PRAXIS, sortedSubmissions: ONE_PRAXIS })}
+        />,
+      );
+      for (const label of SORT_LABELS) expect(text).toContain(label);
+    });
+  }
+});
+
+describe("task-detail worth readout", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} drops the base row when it would restate the total`, () => {
+      const { text } = render(<Archetype state={baseState()} />);
+      expect(text).not.toContain(BASE_ROW);
+      expect(text).toContain("18");
+      expect(text).toContain("POINTS");
+    });
+
+    it(`${slug} keeps base, chip and total once a factor is real`, () => {
+      const { text } = render(
+        <Archetype state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })} />,
+      );
+      expect(text).toContain(BASE_ROW);
+      expect(text).toContain("×1.25");
+      expect(text).toContain("18");
+      expect(text).toContain("23");
+    });
+  }
+});
+
 describe("na / Default task detail — the reference anatomy", () => {
   it("hides the multiplier badge at the identity factor", () => {
     const { text } = render(<DefaultTaskDetail state={baseState()} />);

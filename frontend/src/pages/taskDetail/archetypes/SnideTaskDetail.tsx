@@ -5,11 +5,11 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -200,7 +200,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -320,31 +320,31 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         gap: "var(--space-sm)",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
-        }}
-      >
-        <span
+      {showBreakdown && (
+        <div
           style={{
-            fontFamily: BLACK,
-            fontSize: "var(--text-xs)",
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "var(--faction-snide-acid)",
-            background: HARD,
-            padding: "var(--space-xs) var(--space-sm)",
-            transform: "rotate(-1.5deg)",
-            whiteSpace: "nowrap",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "var(--space-sm)",
+            flexWrap: "wrap",
           }}
         >
-          {t("detail.points.base")} {basePoints}
-        </span>
-        {showMultiplier && (
+          <span
+            style={{
+              fontFamily: BLACK,
+              fontSize: "var(--text-xs)",
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--faction-snide-acid)",
+              background: HARD,
+              padding: "var(--space-xs) var(--space-sm)",
+              transform: "rotate(-1.5deg)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t("detail.points.base")} {basePoints}
+          </span>
           <span
             style={{
               fontFamily: MARK,
@@ -359,8 +359,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               multiplier: factionMultiplier.toFixed(2),
             })}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* The total, circled in pink pen. */}
       <div
@@ -876,40 +876,44 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
         <CensorRule style={{ flex: "1 1 20%", minWidth: 24 }} />
-        <span
-          style={{
-            display: "flex",
-            gap: "var(--space-xs)",
-            padding: "var(--space-xs)",
-            border: `2px solid ${INK}`,
-            background: PAPER,
-          }}
-        >
-          {(["score", "recent"] as const).map((sort) => (
-            <button
-              key={sort}
-              onClick={() => setSubmissionSort(sort)}
-              style={{
-                cursor: "pointer",
-                border: "none",
-                fontFamily: TYPE,
-                fontSize: "var(--text-xs)",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-                padding: "var(--space-sm) var(--space-md)",
-                background:
-                  submissionSort === sort ? "var(--faction-snide-note-cta-bg)" : "transparent",
-                color:
-                  submissionSort === sort ? "var(--faction-snide-note-cta-ink)" : MUTED,
-              }}
-            >
-              {sort === "score"
-                ? t("detail.gallery.sort.top")
-                : t("detail.gallery.sort.recent")}
-            </button>
-          ))}
-        </span>
+        {/* Nothing to sort until something is filed (#1704). The heading and the
+            empty line below stay; only the control goes. */}
+        {sortedSubmissions.length > 0 && (
+          <span
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
+              border: `2px solid ${INK}`,
+              background: PAPER,
+            }}
+          >
+            {(["score", "recent"] as const).map((sort) => (
+              <button
+                key={sort}
+                onClick={() => setSubmissionSort(sort)}
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  fontFamily: TYPE,
+                  fontSize: "var(--text-xs)",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  padding: "var(--space-sm) var(--space-md)",
+                  background:
+                    submissionSort === sort ? "var(--faction-snide-note-cta-bg)" : "transparent",
+                  color:
+                    submissionSort === sort ? "var(--faction-snide-note-cta-ink)" : MUTED,
+                }}
+              >
+                {sort === "score"
+                  ? t("detail.gallery.sort.top")
+                  : t("detail.gallery.sort.recent")}
+              </button>
+            ))}
+          </span>
+        )}
       </div>
 
       {sortedSubmissions.length === 0 ? (

@@ -221,8 +221,11 @@ describe("Everymen task detail — the broadsheet", () => {
     const { text } = render(
       <EverymenTaskDetail state={baseState({ canSignUp: false })} />,
     );
-    // The wage box stays; an unusable control is worse than none.
-    expect(text).toContain("base");
+    // The wage box stays; an unusable control is worse than none. Anchored on
+    // the stamped total rather than the `base` eyebrow: #1704 drops that row at
+    // the identity multiplier, so the total is what "the box is still here"
+    // looks like today.
+    expect(text).toContain("POINTS");
     expect(text).not.toContain("Sign up");
   });
 });
