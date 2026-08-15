@@ -14,7 +14,7 @@ import { SkyCrown } from './Constellation'
  * so its labels use the page text tokens rather than the `--sky-*` ink.
  *
  * It also took a `variant` so it could key the Meadow in bloom words (#684).
- * There is one viz in both themes now (#1700, ADR-0073), so the axis is gone —
+ * There is one viz in both themes now (#1700, ADR-0074), so the axis is gone —
  * the legend keys the sky it is actually under, which is the property epic #654
  * was grilled for in the first place.
  */

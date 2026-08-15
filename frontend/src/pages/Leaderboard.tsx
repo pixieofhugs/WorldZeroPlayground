@@ -65,11 +65,10 @@ export function DesktopLeaderboard({
   const [scoreMode, setScoreMode] = useState<ScoreMode>('era')
   const myCharId = user?.character?.id ?? null
 
-  // One sky in both themes (#1700, ADR-0073). #684 §1 made the viz theme-bound
+  // One sky in both themes (#1700, ADR-0074). #684 §1 made the viz theme-bound
   // — the Meadow for light, the Constellation for dark — and that is withdrawn:
   // the Constellation paints its own `--sky-bg` stage, so it never inherits the
   // page ground and needs no light sibling.
-
   const pointsOf = (character: CharacterOut) =>
     scoreMode === 'era' ? character.score : character.all_time_score
 

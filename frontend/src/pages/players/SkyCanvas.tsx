@@ -41,7 +41,7 @@ export interface SkyCanvasProps {
  * equal distances regardless of the fluid column width (epic #654 §1).
  *
  * It also carried a `viz` prop so the light theme could swap in the Meadow
- * (#684 §2). One sky serves both themes now (#1700, ADR-0073), so the swap seam
+ * (#684 §2). One sky serves both themes now (#1700, ADR-0074), so the swap seam
  * and its `PlayersVizProps` contract are gone with their only other consumer.
  */
 export default function SkyCanvas({

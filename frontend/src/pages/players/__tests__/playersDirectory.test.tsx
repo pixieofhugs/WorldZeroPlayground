@@ -25,7 +25,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 }))
 // `useTheme` throws outside its provider by design (#701), so the players tree
 // needs it stubbed to render at all. It is a SPY because "one sky in both
-// themes" (#1700, ADR-0073) is the claim that nothing here calls it — see the
+// themes" (#1700, ADR-0074) is the claim that nothing here calls it — see the
 // dispatch describe below. There is no DOM in this harness for a real
 // `[data-theme]` attribute to cascade through either way.
 vi.mock('../../../hooks/useTheme', () => ({
@@ -162,7 +162,7 @@ describe('desktop constellation (#656)', () => {
   })
 })
 
-// #1700 (ADR-0073) reverses #684 §1, which made the visualisation THEME-BOUND —
+// #1700 (ADR-0074) reverses #684 §1, which made the visualisation THEME-BOUND —
 // a night sky for dark, the Meadow's sunlit field for light. The Meadow is
 // retired and the Constellation is the one sky. Asserting "same output in both
 // themes" would be vacuous now that nothing here reads the theme, so the claim
