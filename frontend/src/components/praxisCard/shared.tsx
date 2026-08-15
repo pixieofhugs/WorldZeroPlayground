@@ -651,9 +651,9 @@ export function PraxisModeChip({
   // (`submit_proposed_at` is the collab submit window).
   const { notice, credit } = sheetInk(praxis.task_faction_slug);
   const chip: CSSProperties = {
-    // A chip is a LABEL, not running text: it keeps the label tier (#888 leaves
-    // `.eyebrow`/`--text-sm` alone by design), but at the 9px step rather than
-    // the 8px floor the meta line just left.
+    // A chip is a LABEL, not running text: it keeps the label tier, at the
+    // heading step the tier settled on in #1307 rather than the 8px floor the
+    // meta line just left. (#888 left this at 9px; #1608 swept the step.)
     fontSize: "var(--text-md)",
     fontFamily: fonts?.display,
     letterSpacing: "0.14em",
@@ -745,7 +745,7 @@ export function PraxisMediaGallery({
           border: `1px dashed color-mix(in srgb, ${accent} 45%, transparent)`,
           background: `color-mix(in srgb, ${accent} 4%, transparent)`,
           color: accent,
-          // Label tier, at the eyebrow step rather than the 8px floor (#888).
+          // Label tier, at its heading step rather than the 8px floor (#1608).
           fontSize: "var(--text-md)",
           fontFamily: fonts?.body,
           letterSpacing: "0.14em",
@@ -794,7 +794,7 @@ export function PraxisMediaGallery({
                 </span>
                 <span
                   style={{
-                    // Label tier, eyebrow step rather than the 8px floor (#888).
+                    // Label tier, heading step rather than the 8px floor (#1608).
                     fontSize: "var(--text-md)",
                     fontFamily: fonts?.body,
                     letterSpacing: "0.1em",
