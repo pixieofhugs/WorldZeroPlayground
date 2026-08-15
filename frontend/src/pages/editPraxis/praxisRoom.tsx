@@ -97,6 +97,30 @@ function roomStoreName(praxisId: number): string {
   return `praxis-room-${praxisId}`;
 }
 
+/**
+ * Drop this browser's copy of a document the server has destroyed (#1745).
+ *
+ * Publishing flattens the room into `body_text` and deletes the stored
+ * document; `pullBack` then seeds a **new** one from that text. This store
+ * holds the old one, and the two were built independently — merged, the praxis
+ * would hold its body twice. That is the ADR-0073 duplication footgun arriving
+ * from the client side, and it is invisible when it happens, because both
+ * copies say the same thing.
+ *
+ * It is also the local half of the privacy rule: the tombstones the server just
+ * dropped — text a member typed and deleted — are in here too.
+ *
+ * Deleting the database rather than `clearData()`ing a handle: constructing an
+ * `IndexeddbPersistence` purely to empty it would re-create the store it is
+ * emptying. A delete blocked by an open handle completes once that handle
+ * closes, which is the provider teardown this fires alongside.
+ */
+export function discardRoomStore(praxisId: number): void {
+  // The static-render harness runs in `node`, where there is no IndexedDB.
+  if (typeof indexedDB === "undefined") return;
+  indexedDB.deleteDatabase(roomStoreName(praxisId));
+}
+
 export interface PraxisRoom {
   /** The co-edited markdown body. Bound to CodeMirror by `BodyTextarea`. */
   body: Y.Text;
@@ -188,10 +212,9 @@ export function PraxisRoomProvider({
     // rather than a nicety. The room is still the only thing that writes the
     // record; this only decides where the updates wait.
     //
-    // #1745 discards the server's document on publish and re-seeds a fresh one
-    // through `pullBack`. When it does, it has to `clearData()` this store in
-    // the same beat: a stale local copy merging back into a re-seeded document
-    // is the duplication footgun by another route.
+    // Publishing destroys the server's document and `pullBack` re-seeds a fresh
+    // one (#1745), so this store is dropped in the same beat — see
+    // `discardRoomStore` below.
     const offline = new IndexeddbPersistence(roomStoreName(praxisId), doc);
     const provider = new WebsocketProvider(
       roomServerUrl(),

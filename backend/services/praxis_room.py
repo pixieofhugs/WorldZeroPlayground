@@ -32,9 +32,24 @@ rule that runs on the client is not a rule:
 5. **Exactly one backend instance may run**, because rooms live in-process.
    Enforced by :func:`acquire_single_instance_lock`. ADR-0073 states the
    constraint once; ADR-0012's lazy-on-access timeout depends on the same fact.
-
-What is deliberately *not* here: nothing freezes a room on submit yet, and the
-document is not discarded on publish (#1745).
+6. **Drafting is the only status a document may change in** (#1745). Submitting
+   *freezes* the document for every member, the submitter included, so ADR-0012
+   survives verbatim: its hard reset keys on an edit being a discrete event, and
+   a CRDT has none — text simply moves. Nothing has to be reset while nothing
+   can change. ``pullBack`` is the one door back in, and it is that ADR's hard
+   reset. The freeze is enforced in :meth:`PraxisRoomServer._refuse_writes_when_frozen`
+   rather than by a read-only editor, because a rule that runs on the client is
+   not a rule — the composer must not be able to talk a frozen room into
+   accepting text.
+7. **Publishing destroys the document** (:meth:`PraxisRoomServer.discard_document`).
+   It is flattened into ``body_text`` first and ``pullBack`` re-seeds a fresh one
+   through rule 1, so nothing is lost that a reader could ever see. This is a
+   privacy decision and not a storage one: a CRDT retains **tombstones**, so text
+   a player typed and then deleted lives on in the document's history. Praxes are
+   permanent; their drafts are not. Squashing is not the answer to that — folding
+   the history re-encodes it and Yjs does garbage-collect deleted content on the
+   way out, but only above ``_SQUASH_UPDATES_ABOVE``, so the raw tail beneath
+   that threshold holds every recent retraction verbatim.
 """
 
 import logging
@@ -47,7 +62,7 @@ from typing import Any
 import anyio
 from anyio import Event, Lock
 from fastapi import HTTPException
-from pycrdt import Doc, Map, Text
+from pycrdt import Doc, Map, Text, YMessageType, YSyncMessageType
 from pycrdt.store import BaseYStore, YDocNotFound
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
 from pycrdt.websocket.asgi_server import ASGIWebsocket
@@ -58,7 +73,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 from config import settings
 from db import AsyncSessionLocal
 from models.account import Account, AccountStatus
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisStatus
 from models.praxis_room import PraxisRoomUpdate
 from services.auth import decode_jwt
 from services.character import resolve_active_character
@@ -120,6 +135,35 @@ def room_name_for(praxis_id: int) -> str:
 
 def _praxis_id_of(room_name: str) -> int:
     return int(room_name.split(":", 1)[1])
+
+
+def is_frozen_status(status: PraxisStatus) -> bool:
+    """Whether a praxis at this status has a sealed document (#1745).
+
+    Written as "not drafting" rather than "pending or submitted" on purpose: a
+    status added later arrives frozen, which is the safe direction. Drafting is
+    the one state the ADR-0012 machine calls open, and it is the one state in
+    which "everyone co-writes freely" is true.
+    """
+    return status != PraxisStatus.in_progress
+
+
+def _document_values(document: Doc) -> dict[str, str]:
+    """The praxis columns this document is the source of.
+
+    One implementation for the debounced flush and for the publish-time flatten:
+    they write the same two columns from the same two root types, and the title's
+    absent/empty distinction below is too easy to get wrong twice.
+    """
+    values: dict[str, str] = {"body_text": str(document.get(ROOM_BODY_KEY, type=Text))}
+    title = document.get(ROOM_META_KEY, type=Map).get(ROOM_TITLE_KEY)
+    # ABSENT is "the room has no title yet", never "the title was cleared" —
+    # nothing seeds this key, so it arrives with the first co-author to type in
+    # the title box and not before. Reading it the other way would blank the
+    # title of every praxis whose body someone edited.
+    if isinstance(title, str):
+        values["title"] = title
+    return values
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +333,19 @@ class _RoomFlusher:
         if self._pending:
             await self.write()
 
+    def abandon(self) -> None:
+        """Stop *without* the closing flush.
+
+        For the publish-time discard alone (#1745), which has just written the
+        document into the praxis itself, inside the publishing transaction. The
+        closing flush would repeat that write on its own session and after that
+        transaction — harmless in content, but it would be a room task writing
+        to a praxis whose room no longer exists.
+        """
+        self._pending = False
+        if self._cancel_scope is not None:
+            self._cancel_scope.cancel()
+
     async def write(self) -> None:
         """One UPDATE, from whatever the document says right now.
 
@@ -296,17 +353,7 @@ class _RoomFlusher:
         ``lazy='raise'``, and a room task has no business waking the identity map
         of a session that a request may also be holding.
         """
-        document = self._room.ydoc
-        values: dict[str, str] = {
-            "body_text": str(document.get(ROOM_BODY_KEY, type=Text))
-        }
-        title = document.get(ROOM_META_KEY, type=Map).get(ROOM_TITLE_KEY)
-        # ABSENT is "the room has no title yet", never "the title was cleared" —
-        # nothing seeds this key, so it arrives with the first co-author to type
-        # in the title box and not before. Reading it the other way would blank
-        # the title of every praxis whose body someone edited.
-        if isinstance(title, str):
-            values["title"] = title
+        values = _document_values(self._room.ydoc)
 
         async with self._session_factory() as session:
             await session.execute(
@@ -452,6 +499,10 @@ class PraxisRoomServer(WebsocketServer):
         self._flush_debounce_seconds = flush_debounce_seconds
         self._connections: set[_RoomConnection] = set()
         self._flushers: dict[str, _RoomFlusher] = {}
+        #: Praxes whose document is sealed (#1745). Only ever holds ids with a
+        #: room open — :meth:`release` and :meth:`discard_document` drop theirs —
+        #: because a room that is not open re-reads the status when it opens.
+        self._frozen: set[int] = set()
         self.__open_lock: Lock | None = None
 
     @property
@@ -492,9 +543,71 @@ class PraxisRoomServer(WebsocketServer):
             await self.start_room(room)
             await self._load_or_seed(room, name)
             self._start_flusher(room, name)
+            praxis_id = _praxis_id_of(name)
+            room.on_message = self._refuse_writes_when_frozen(praxis_id)
+            await self._read_freeze(praxis_id)
             # Only now may clients synchronize against it.
             room.ready = True
             return room
+
+    async def _read_freeze(self, praxis_id: int) -> None:
+        """Open the room in whatever state its praxis is already in (#1745).
+
+        The consensus transitions push the flag onto rooms that are *live* when
+        a praxis is submitted or reopened; this is what makes a praxis submitted
+        while nobody was connected still open frozen. It is also the self-heal:
+        the flag is derived from the status either way, so a push that never
+        happened costs one reconnect rather than a permanently wrong room.
+        """
+        async with self._session_factory() as session:
+            status = await session.scalar(
+                select(Praxis.status).where(Praxis.id == praxis_id)
+            )
+        self.set_frozen(praxis_id, status is not None and is_frozen_status(status))
+
+    def set_frozen(self, praxis_id: int, frozen: bool) -> None:
+        """Seal or reopen this praxis's document. Idempotent, and takes no lock.
+
+        Callable from a request task while the room's own tasks run: it only
+        moves an ``int`` in or out of a set, which the message hook reads.
+        """
+        if frozen:
+            self._frozen.add(praxis_id)
+        else:
+            self._frozen.discard(praxis_id)
+
+    def _refuse_writes_when_frozen(
+        self, praxis_id: int
+    ) -> Callable[[bytes], bool]:
+        """``YRoom.on_message``: drop what a frozen room must not accept.
+
+        Returning ``True`` skips the message before the room applies it, which
+        is what makes the freeze a rule instead of a client-side courtesy. It is
+        a *room*-level hook rather than a per-socket one because the freeze binds
+        every member equally — including whoever submitted. That is the word:
+        a lock is something one member holds against the others.
+
+        Two kinds of message still pass, and both have to:
+
+        - ``SYNC_STEP1`` is a client asking what the server holds. Reading a
+          sealed write-up is the whole point of showing it, and refusing this
+          would leave the composer staring at an empty document.
+        - Awareness carries no document state (presence is #1744), and
+          ``y-websocket`` rides it as its keepalive, so dropping it would take
+          the socket down rather than the edit.
+        """
+
+        def refuse(message: bytes) -> bool:
+            if praxis_id not in self._frozen or not message:
+                return False
+            if message[0] != YMessageType.SYNC:
+                return False
+            # SYNC_STEP2 carries the client's missing updates and SYNC_UPDATE
+            # its new ones; a truncated SYNC message is refused rather than
+            # indexed past its end.
+            return len(message) < 2 or message[1] != YSyncMessageType.SYNC_STEP1
+
+        return refuse
 
     def _start_flusher(self, room: YRoom, name: str) -> None:
         """Watch this room's document and copy it into the praxis (#1743).
@@ -553,6 +666,45 @@ class PraxisRoomServer(WebsocketServer):
                     if flusher is not None:
                         await flusher.close()
                     await self.delete_room(room=room)
+                    self._frozen.discard(connection.praxis_id)
+
+    async def discard_document(self, praxis: Praxis, session: AsyncSession) -> None:
+        """Publish: the document becomes the record, and is then destroyed (#1745).
+
+        Ordered so that nothing can put a byte back afterwards. The room is
+        stopped *before* its rows are deleted — stopping cancels the task that
+        writes them — and the whole sequence holds ``_open_lock``, so a connect
+        cannot re-seed a room into the gap.
+
+        The praxis is written through the entity rather than by a Core statement
+        (the shape :class:`_RoomFlusher` uses): the caller is holding this praxis
+        and is about to seal it, so a statement past the identity map would
+        publish a stale ``body_text`` in the very response that announces it.
+
+        Every socket on the praxis is revoked. Their documents are the one the
+        server just destroyed, so a client left holding one would merge it into
+        the next freshly seeded room — the ADR-0073 duplication footgun arriving
+        by its back door. Reconnecting is cheap and lands them on the real state.
+        """
+        name = room_name_for(praxis.id)
+        async with self._open_lock:
+            flusher = self._flushers.pop(name, None)
+            if flusher is not None:
+                flusher.abandon()
+            room = self.rooms.get(name)
+            if room is not None:
+                for column, value in _document_values(room.ydoc).items():
+                    setattr(praxis, column, value)
+                await self.delete_room(room=room)
+            for connection in list(self._connections):
+                if connection.praxis_id == praxis.id:
+                    connection.revoke()
+            await session.execute(
+                delete(PraxisRoomUpdate).where(
+                    PraxisRoomUpdate.praxis_id == praxis.id
+                )
+            )
+        self._frozen.discard(praxis.id)
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -686,6 +838,27 @@ class PraxisRoomASGIServer(ASGIServer):
 # app below; ``services.praxis`` reaches it through :func:`close_member_sockets`.
 PRAXIS_ROOM_SERVER = PraxisRoomServer()
 PRAXIS_ROOM_APP = PraxisRoomASGIServer(PRAXIS_ROOM_SERVER)
+
+
+def follow_praxis_status(praxis: Praxis) -> None:
+    """The room's freeze follows the praxis's status (#1745).
+
+    Called by every ADR-0012 transition that moves a praxis in or out of
+    drafting. Derived from the status rather than from the transition, so it is
+    idempotent and the call sites do not each have to know which way they moved
+    a praxis — and a room that is not open ignores it and reads the status when
+    it opens.
+    """
+    PRAXIS_ROOM_SERVER.set_frozen(praxis.id, is_frozen_status(praxis.status))
+
+
+async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
+    """Flatten this praxis's document into it and destroy the document (#1745).
+
+    The publish half of the freeze, called from ADR-0012's single seal. Runs in
+    the caller's transaction: a seal that rolls back keeps the draft.
+    """
+    await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
 
 
 def close_member_sockets(praxis_id: int, character_id: int) -> None:

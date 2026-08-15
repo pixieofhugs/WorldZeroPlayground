@@ -284,6 +284,8 @@ export function editPraxisState(slug: string): EditPraxisState {
     autosaveAt: null,
     setAutosaveAt: () => {},
     autoSubmitDays: null,
+    // Drafting, so the shared document is open (#1745).
+    documentFrozen: false,
     isPublished: false,
     controlsLocked: false,
     modeIsLocked: false,
