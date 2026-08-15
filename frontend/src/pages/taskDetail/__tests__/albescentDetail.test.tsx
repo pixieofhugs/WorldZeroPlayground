@@ -123,7 +123,7 @@ describe("Albescent task detail — Default plus the light", () => {
       "Discussion",
       "Sign up",
       "Level",
-      "In progress",
+      "people working on this",
       "base",
     ]) {
       expect(text, `inherited slot: ${shared}`).toContain(shared);
@@ -190,7 +190,7 @@ describe("Albescent task detail — Default plus the light", () => {
 
   it("renders the in-progress population as a header count", () => {
     const { text } = render(<AlbescentTaskDetail state={baseState()} />);
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
     expect(text).toContain("6");
   });
 });

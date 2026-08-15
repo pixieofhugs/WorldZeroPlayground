@@ -161,7 +161,7 @@ describe("wow task detail — the contract points it inherits", () => {
     // Owner ruling 2026-07-28, reversing epic #1028 decision 3. The design's own
     // header comment says the header count covers it.
     const { text } = render(<WowTaskDetail state={baseState()} />);
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
     expect(text).toContain("4");
   });
 

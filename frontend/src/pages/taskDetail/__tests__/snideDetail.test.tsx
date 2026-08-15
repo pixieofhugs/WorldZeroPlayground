@@ -160,7 +160,7 @@ describe("SNIDE task detail — the ransom dossier", () => {
 
   it("renders the in-progress population as a header count", () => {
     const { text } = render(<SnideTaskDetail state={baseState()} />);
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
     expect(text).toContain("9");
   });
 

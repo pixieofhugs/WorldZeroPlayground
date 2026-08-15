@@ -156,7 +156,7 @@ describe("Everymen task detail — the broadsheet", () => {
   it("renders the in-progress population as a header count", () => {
     const { text } = render(<EverymenTaskDetail state={baseState()} />);
     expect(text).not.toContain("on the job");
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
     expect(text).toContain("23");
   });
 
