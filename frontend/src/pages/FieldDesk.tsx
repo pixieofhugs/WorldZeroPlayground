@@ -168,7 +168,7 @@ export default function FieldDesk() {
                 ) : (
                   <span style={{ ...pillAvatar, display: 'inline-block' }} />
                 )}
-                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                <span style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)' }}>
                   @{active.username} ·{' '}
                   <b style={{ color: 'var(--color-text-primary)' }}>
                     {t('fieldDesk.livesInPlay', { count: lives.length })}
@@ -475,7 +475,7 @@ function ContinueRow({
         className="shrink-0"
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 'var(--text-sm)',
+          fontSize: 'var(--text-md)',
           letterSpacing: '0.16em',
           textTransform: 'uppercase',
           color: 'var(--faction-default-card-muted)',
@@ -739,7 +739,7 @@ const medallion: CSSProperties = {
   marginBottom: 'var(--space-lg)',
 }
 const slotOpen: CSSProperties = {
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   color: 'var(--color-success)',

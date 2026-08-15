@@ -343,7 +343,7 @@ function SkyNode({
             background: 'var(--sky-bg)',
             border: '1px solid var(--sky-ring)',
             color: 'var(--sky-name)',
-            fontSize: 'var(--text-sm)',
+            fontSize: 'var(--text-md)',
             lineHeight: 1,
           }}
         >

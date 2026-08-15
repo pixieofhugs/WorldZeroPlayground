@@ -185,7 +185,7 @@ export default function FeedBankFullModal({
           style={{
             marginTop: 'var(--space-lg)',
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 'var(--text-sm)',
+            fontSize: 'var(--text-md)',
             fontWeight: 700,
             textTransform: 'uppercase',
             background: 'transparent',

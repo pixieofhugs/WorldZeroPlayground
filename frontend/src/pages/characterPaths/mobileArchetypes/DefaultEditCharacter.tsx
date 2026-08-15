@@ -239,7 +239,7 @@ const ringInner: CSSProperties = {
   background: 'var(--faction-default-card-bg)',
 }
 const label: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.16em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)',
 }
 const field: CSSProperties = {
@@ -255,7 +255,7 @@ const factionRow: CSSProperties = {
   fontFamily: 'var(--font-body)', color: 'var(--color-text-secondary)',
 }
 const counterRow: CSSProperties = {
-  textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+  textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)',
   color: 'var(--color-text-tertiary)', marginTop: 'var(--space-sm)',
 }
 const help: CSSProperties = {

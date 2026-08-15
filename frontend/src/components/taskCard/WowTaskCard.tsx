@@ -199,7 +199,7 @@ export default function WowTaskCard({
                   >
                     {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
                   </span>
-                  <span style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-xs)", color: MUTED }}>
+                  <span style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-lg)", color: MUTED }}>
                     {i18n.t("feed:taskCard.modifierCaption")}
                   </span>
                 </div>

@@ -299,7 +299,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 >
                   {t("snide.dispatch.letterhead")}
                 </span>
-                <span style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
+                <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
                   {t("snide.dispatch.reLabel")}
                 </span>
               </div>
@@ -523,7 +523,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   >
                     {spot.display_name}
                   </div>
-                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: "var(--space-xs)" }}>
+                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: "var(--space-xs)" }}>
                     {t("snide.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),

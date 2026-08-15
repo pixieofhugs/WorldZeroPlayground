@@ -208,7 +208,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   /** Special Elite, uppercase, wide — every micro-label on the sheet. */
   const eyebrow: CSSProperties = {
     fontFamily: TYPE,
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     letterSpacing: "0.2em",
     textTransform: "uppercase",
     color: MUTED,
@@ -333,7 +333,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <span
             style={{
               fontFamily: BLACK,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
               color: "var(--faction-snide-acid)",
@@ -669,7 +669,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <span
             style={{
               fontFamily: BLACK,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -896,7 +896,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
                   cursor: "pointer",
                   border: "none",
                   fontFamily: TYPE,
-                  fontSize: "var(--text-xs)",
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   whiteSpace: "nowrap",

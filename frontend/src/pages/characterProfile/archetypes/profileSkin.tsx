@@ -605,7 +605,7 @@ export function ProfileSkin({
                       <span
                         style={{
                           fontFamily: kit.eyebrowFont,
-                          fontSize: 'var(--text-xs)',
+                          fontSize: 'var(--text-md)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
                           // `kit.muted`, not `headerMuted`: this label sits
@@ -655,7 +655,7 @@ export function ProfileSkin({
                       <span
                         style={{
                           fontFamily: kit.eyebrowFont,
-                          fontSize: 'var(--text-sm)',
+                          fontSize: 'var(--text-md)',
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
                           color: headerMuted,

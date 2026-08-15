@@ -41,7 +41,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 
 const kicker: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -284,7 +284,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', color: AMBER, flex: 'none' }}>
+      <span style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.04em', color: AMBER, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

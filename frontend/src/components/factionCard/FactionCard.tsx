@@ -413,7 +413,7 @@ export function EphemeristsCard({
           <div
             style={{
               ...eph.SMALL_CAPS,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.26em",
               color: eph.GOLD,
               marginBottom: "var(--space-xs)",
@@ -579,7 +579,7 @@ export function SingularityCard({
         )}
         <div
           style={{
-            fontSize: "var(--text-xs)",
+            fontSize: "var(--text-md)",
             color: "var(--faction-singularity-card-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.15em",

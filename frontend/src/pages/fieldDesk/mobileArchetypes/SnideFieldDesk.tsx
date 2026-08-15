@@ -45,7 +45,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -78,7 +78,7 @@ const actionPillStyle: CSSProperties = {
 /** The baseline row under the track — the file's typewriter voice. */
 const trackMetaStyle: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -168,7 +168,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
                   <div className="truncate" style={{ fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.02em', lineHeight: 1.15, color: TEXT }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -286,7 +286,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: TYPE, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
+                  style={{ fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>

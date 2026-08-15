@@ -306,7 +306,7 @@ export default function EphemeristsTaskDetail({
    */
   const eyebrow: CSSProperties = {
     ...SMALL_CAPS,
-    fontSize: "var(--text-sm)",
+    fontSize: "var(--text-md)",
     color: QUIET,
   };
   /** The same label voice on a panel cell, where the caption gold clears. */
@@ -461,7 +461,7 @@ export default function EphemeristsTaskDetail({
           <span
             style={{
               ...SMALL_CAPS,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               fontWeight: 600,
               letterSpacing: "0.16em",
               padding: "var(--space-xs) var(--space-sm)",
@@ -685,7 +685,7 @@ export default function EphemeristsTaskDetail({
           <span
             style={{
               ...SMALL_CAPS,
-              fontSize: "var(--text-xs)",
+              fontSize: "var(--text-md)",
               letterSpacing: "0.2em",
               marginTop: "var(--space-xs)",
               color: CAPTION,
@@ -862,7 +862,7 @@ export default function EphemeristsTaskDetail({
         cursor: "pointer",
         border: "none",
         padding: "var(--space-xs) var(--space-md)",
-        fontSize: "var(--text-sm)",
+        fontSize: "var(--text-md)",
         background: submissionSort === sort ? CTA_BG : "transparent",
         color: submissionSort === sort ? CTA_INK : QUIET,
       }}

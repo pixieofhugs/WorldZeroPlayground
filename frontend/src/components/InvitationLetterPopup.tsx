@@ -177,7 +177,7 @@ export default function InvitationLetterPopup({
           style={{
             marginLeft: 'auto',
             fontFamily: FONT_MONO,
-            fontSize: 'var(--text-xs)',
+            fontSize: 'var(--text-md)',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: FAINT,
@@ -191,7 +191,7 @@ export default function InvitationLetterPopup({
       <p
         style={{
           fontFamily: FONT_MONO,
-          fontSize: 'var(--text-sm)',
+          fontSize: 'var(--text-md)',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: accent,
@@ -243,7 +243,7 @@ export default function InvitationLetterPopup({
           <div
             style={{
               fontFamily: FONT_MONO,
-              fontSize: 'var(--text-xs)',
+              fontSize: 'var(--text-md)',
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: FAINT,
@@ -266,7 +266,7 @@ export default function InvitationLetterPopup({
               <span
                 style={{
                   fontFamily: FONT_MONO,
-                  fontSize: 'var(--text-sm)',
+                  fontSize: 'var(--text-md)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   color: FAINT,

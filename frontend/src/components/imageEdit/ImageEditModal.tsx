@@ -401,7 +401,7 @@ const controlRowStyle: CSSProperties = {
 }
 const controlLabelStyle: CSSProperties = {
   fontFamily: FONT_BODY,
-  fontSize: 'var(--text-sm)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
   color: FAINT,

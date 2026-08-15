@@ -286,7 +286,7 @@ function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ ...PANEL, flex: '1 1 0', textAlign: 'center', padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: READING, fontWeight: 600, display: 'block', lineHeight: 1, color: DEEP }}>{value}</b>
-      <span style={{ ...CAPTION, fontSize: 'var(--text-xs)', marginTop: 'var(--space-xs)', display: 'block' }}>
+      <span style={{ ...CAPTION, fontSize: 'var(--text-md)', marginTop: 'var(--space-xs)', display: 'block' }}>
         {label}
       </span>
     </div>

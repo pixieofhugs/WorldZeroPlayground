@@ -363,7 +363,7 @@ function ActiveTasksBody({
                 <span
                   style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: 'var(--text-sm)',
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.16em',
                     textTransform: 'uppercase',
                     color: 'var(--faction-default-card-muted)',
@@ -509,7 +509,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                     className="truncate"
                     style={{
                       fontFamily: 'var(--font-body)',
-                      fontSize: 'var(--text-sm)',
+                      fontSize: 'var(--text-md)',
                       letterSpacing: '0.18em',
                       textTransform: 'uppercase',
                       color: 'var(--color-text-secondary)',

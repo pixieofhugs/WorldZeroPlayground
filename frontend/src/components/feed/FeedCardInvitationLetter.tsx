@@ -64,7 +64,7 @@ export function acceptMode(
 
 const CONTROL: CSSProperties = {
   fontFamily: "'Courier Prime', monospace",
-  fontSize: "var(--text-sm)",
+  fontSize: "var(--text-md)",
   fontWeight: 700,
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -155,7 +155,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
       to="/factions"
       style={{
         fontFamily: "'Courier Prime', monospace",
-        fontSize: "var(--text-sm)",
+        fontSize: "var(--text-md)",
         fontWeight: 700,
         textTransform: "uppercase",
         letterSpacing: "0.1em",

@@ -57,7 +57,7 @@ export function LevelJumpBanner({ state }: { state: TaskDetailState }) {
       </span>
       <span
         style={{
-          fontSize: "var(--text-sm)",
+          fontSize: "var(--text-lg)",
           color: "var(--color-text-secondary)",
         }}
       >

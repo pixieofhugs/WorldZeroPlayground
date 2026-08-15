@@ -232,7 +232,7 @@ export default function EphemeristsFeedFrame({
             <span
               style={{
                 ...SMALL_CAPS,
-                fontSize: 'var(--text-sm)',
+                fontSize: 'var(--text-md)',
                 color: BAND_INK,
                 border: `1px solid ${BRASS}`,
                 padding: '0 var(--space-xs)',

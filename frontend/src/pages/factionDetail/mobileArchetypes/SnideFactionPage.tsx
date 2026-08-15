@@ -40,7 +40,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -279,7 +279,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: MUTED, flex: 'none' }}>
+      <span style={{ fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.06em', color: MUTED, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

@@ -138,7 +138,7 @@ export default function CovenFactionHero({
               <span style={{ fontFamily: READING, fontSize: 28, fontWeight: 600, lineHeight: 1, color: DEEP }}>
                 {stat.value}
               </span>
-              <span style={{ ...CAPTION, fontSize: "var(--text-xs)", width: 66 }}>{stat.label}</span>
+              <span style={{ ...CAPTION, fontSize: "var(--text-md)", width: 66 }}>{stat.label}</span>
             </div>
           ))}
         </div>

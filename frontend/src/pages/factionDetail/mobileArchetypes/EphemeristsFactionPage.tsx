@@ -47,7 +47,7 @@ const NA_SLUG = 'na'
 
 const kicker: CSSProperties = {
   ...SMALL_CAPS,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.2em',
   color: QUIET,
 }
@@ -265,7 +265,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         {member.display_name}
       </span>
       <Tally level={member.level} />
-      <span style={{ ...SMALL_CAPS, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', color: NILE, flex: 'none' }}>
+      <span style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.12em', color: NILE, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

@@ -46,7 +46,7 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 
 const kicker: CSSProperties = {
   ...SMALL_CAPS,
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.22em',
   color: QUIET,
 }
@@ -78,7 +78,7 @@ const actionPillStyle: CSSProperties = {
 /** The baseline row under the track — the leaf's marginalia voice. */
 const trackMetaStyle: CSSProperties = {
   ...SMALL_CAPS,
-  fontSize: 'var(--text-sm)',
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.12em',
   color: QUIET,
 }
@@ -300,7 +300,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
                   <div className="truncate" style={{ fontFamily: DECO, fontSize: 'var(--text-content)', lineHeight: 1.15, color: INK }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...SMALL_CAPS, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: QUIET }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: QUIET }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -309,7 +309,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: NILE, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
+                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: NILE, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>
