@@ -30,13 +30,14 @@ const PHOSPHOR = 'var(--faction-singularity-card-accent)'
 const SIGNAL = 'var(--faction-singularity-card-muted)'
 const BORDER_HARD = 'var(--faction-singularity-border-hard)'
 // The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
-// palette's first stop until #1220 (ADR-0066) pointed it at the token that
-// actually means "the spectrum's yellow as an ink". Consequence to know: the
-// brand palette was theme-invariant and this one is not, so the accent now
-// deepens in light (7.0:1 on the terminal black) and lifts in dark (10.0:1).
-// If Singularity's credits panel ever wants its own gold, that is a
-// --faction-singularity-* token, not a brand one.
-const AMBER = 'var(--faction-default-gold)'
+// palette's first stop until #1220 (ADR-0066) pointed it at na's
+// --faction-default-gold, and #1766 gave it the --faction-singularity-* token
+// this comment always said it would eventually want. Nothing renders
+// differently — the new token carries exactly what the alias resolved to in
+// each cascade (6.63:1 by day, 10.59:1 by night, on the terminal black). What
+// forced the split is that na's gold is a caption ink on a WHITE score plate
+// and this ground is near-black in BOTH themes, so no one value serves both.
+const AMBER = 'var(--faction-singularity-amber)'
 const FONT = 'var(--font-faction-terminal)'
 
 const phosphor = (pct: number): string => `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`
