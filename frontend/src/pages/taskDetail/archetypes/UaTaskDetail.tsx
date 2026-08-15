@@ -14,11 +14,11 @@ import {
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { isNeutralMultiplier } from "../../../utils/points";
 import {
   actionColumnSize,
   ErrorBanner,
   LevelJumpBanner,
+  showWorthBreakdown,
   TaskDetailComments,
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
@@ -173,7 +173,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
-  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
     canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
@@ -262,49 +262,53 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         width: "100%",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-sm)",
-        }}
-      >
-        <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
-          {t("detail.points.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: UA_DISPLAY,
-            fontWeight: 700,
-            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-            lineHeight: 0.9,
-            color: "var(--faction-ua-card-text)",
-          }}
-        >
-          {basePoints}
-        </span>
-        {showMultiplier && (
-          <span
+      {/* The itemised line and the rule under it (#1704): with no modifier to
+          carry, it said the ensō's own number back to the reader. */}
+      {showBreakdown && (
+        <>
+          <div
             style={{
-              marginLeft: "auto",
-              fontFamily: UA_DISPLAY,
-              fontWeight: 700,
-              fontSize: "var(--text-xl)",
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-              color: "var(--faction-ua-card-chip-ink)",
-              background: "var(--faction-ua-card-chip-bg)",
-              borderRadius: 4,
-              padding: "var(--space-xs) var(--space-sm)",
+              display: "flex",
+              alignItems: "baseline",
+              gap: "var(--space-sm)",
             }}
           >
-            {t("detail.points.multiplier", {
-              multiplier: factionMultiplier.toFixed(2),
-            })}
-          </span>
-        )}
-      </div>
-      <div style={{ display: "flex" }}>{rule(1)}</div>
+            <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
+              {t("detail.points.base")}
+            </span>
+            <span
+              style={{
+                fontFamily: UA_DISPLAY,
+                fontWeight: 700,
+                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+                lineHeight: 0.9,
+                color: "var(--faction-ua-card-text)",
+              }}
+            >
+              {basePoints}
+            </span>
+            <span
+              style={{
+                marginLeft: "auto",
+                fontFamily: UA_DISPLAY,
+                fontWeight: 700,
+                fontSize: "var(--text-xl)",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+                color: "var(--faction-ua-card-chip-ink)",
+                background: "var(--faction-ua-card-chip-bg)",
+                borderRadius: 4,
+                padding: "var(--space-xs) var(--space-sm)",
+              }}
+            >
+              {t("detail.points.multiplier", {
+                multiplier: factionMultiplier.toFixed(2),
+              })}
+            </span>
+          </div>
+          <div style={{ display: "flex" }}>{rule(1)}</div>
+        </>
+      )}
       <div style={{ display: "flex", justifyContent: "center" }}>
         {/* The mark's one sanctioned use besides the faction line. `vermil` is
             the documented ink for exactly this numeral at display size. */}
@@ -747,40 +751,44 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
         {rule(0.7)}
-        <span
-          style={{
-            display: "flex",
-            gap: "var(--space-xs)",
-            padding: "var(--space-xs)",
-            border: "1px solid var(--faction-ua-rule)",
-            borderRadius: 6,
-          }}
-        >
-          {(["score", "recent"] as const).map((sort) => {
-            const on = submissionSort === sort;
-            return (
-              <button
-                key={sort}
-                onClick={() => setSubmissionSort(sort)}
-                style={{
-                  ...UA_EYEBROW,
-                  cursor: "pointer",
-                  border: "none",
-                  borderRadius: 4,
-                  padding: "var(--space-xs) var(--space-sm)",
-                  background: on ? "var(--faction-ua)" : "transparent",
-                  color: on
-                    ? "var(--faction-ua-on-fill)"
-                    : "var(--faction-ua-card-muted)",
-                }}
-              >
-                {sort === "score"
-                  ? t("detail.gallery.sort.top")
-                  : t("detail.gallery.sort.recent")}
-              </button>
-            );
-          })}
-        </span>
+        {/* Nothing to sort until something is filed (#1704). The heading and the
+            empty line below stay; only the control goes. */}
+        {sortedSubmissions.length > 0 && (
+          <span
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
+              border: "1px solid var(--faction-ua-rule)",
+              borderRadius: 6,
+            }}
+          >
+            {(["score", "recent"] as const).map((sort) => {
+              const on = submissionSort === sort;
+              return (
+                <button
+                  key={sort}
+                  onClick={() => setSubmissionSort(sort)}
+                  style={{
+                    ...UA_EYEBROW,
+                    cursor: "pointer",
+                    border: "none",
+                    borderRadius: 4,
+                    padding: "var(--space-xs) var(--space-sm)",
+                    background: on ? "var(--faction-ua)" : "transparent",
+                    color: on
+                      ? "var(--faction-ua-on-fill)"
+                      : "var(--faction-ua-card-muted)",
+                  }}
+                >
+                  {sort === "score"
+                    ? t("detail.gallery.sort.top")
+                    : t("detail.gallery.sort.recent")}
+                </button>
+              );
+            })}
+          </span>
+        )}
       </div>
 
       {sortedSubmissions.length === 0 ? (
