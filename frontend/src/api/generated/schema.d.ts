@@ -479,6 +479,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/discord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Auth Discord
+         * @description Redirect the browser to Discord's OAuth consent screen.
+         */
+        get: operations["auth_discord_auth_discord_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/discord/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Auth Discord Callback
+         * @description Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
+         *
+         *     Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+         *
+         *     Deliberately a second handler rather than a shared ``/auth/{provider}``: the
+         *     two callbacks genuinely differ in how they obtain a profile, and an
+         *     abstraction drawn at N=2 gets rebuilt at N=4. Generalise when a third
+         *     provider shows what is actually shared.
+         */
+        get: operations["auth_discord_callback_auth_discord_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/google": {
         parameters: {
             query?: never;
@@ -5207,6 +5254,42 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    auth_discord_auth_discord_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    auth_discord_callback_auth_discord_callback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

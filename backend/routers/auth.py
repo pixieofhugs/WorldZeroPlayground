@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA
 from models.account import Account, AuthProvider
 from schemas.auth import CurrentUser, DevLoginOut, LogoutOut
@@ -45,8 +46,66 @@ _OAUTH.register(
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
+# Discord's endpoints are named explicitly rather than discovered. It does serve
+# `/.well-known/openid-configuration`, with a live RS256 JWKS — but `openid`,
+# `oidc` and `id_token` appear nowhere in its published OAuth2 or User docs and
+# `openid` is not in its scopes table. That is a surface it has made no
+# commitment to keep, and building the sign-in on it means the day it goes away
+# is the day nobody can log in.
+#
+# THE TRAILING SLASH ON `api_base_url` IS LOAD-BEARING. authlib resolves a
+# relative request path with `urljoin`, which discards the last segment of a
+# base that does not end in one: without it, `users/@me` resolves against
+# `https://discord.com/api/` — Discord's unversioned default, which is the
+# deprecated v6 — instead of v10. Nothing catches this. The stub in
+# `tests/integration/test_account_linking.py` sees the relative path and never
+# performs the join, and production would answer 200 from the wrong API version.
+#
+# `name` stays a bare string, as `"google"` above does (#1771): it is authlib's
+# registry key, read back as the attribute `_OAUTH.discord`, not a value written
+# to a column. `AuthProvider.DISCORD` would work here — `StrEnum` puts `str`
+# ahead of `Enum` in its MRO, so `str.__hash__` wins and the registry lookup
+# matches — but it would make two adjacent registrations of the same kind read
+# differently for no gain. The value that IS a column value is passed to
+# `create_or_get_account` below, from the enum.
+_OAUTH.register(
+    name="discord",
+    client_id=settings.DISCORD_CLIENT_ID,
+    client_secret=settings.DISCORD_CLIENT_SECRET,
+    authorize_url="https://discord.com/oauth2/authorize",
+    access_token_url="https://discord.com/api/oauth2/token",
+    api_base_url="https://discord.com/api/v10/",
+    client_kwargs={"scope": "identify email"},
+)
 
 _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
+
+
+def _signed_in_redirect(account_id: int) -> Response:
+    """Turn a resolved Account into a session: JWT cookie, then home.
+
+    Extracted when the second provider arrived (#1772) so the cookie flags are
+    stated once. Every kwarg below is a security decision with a reason recorded
+    against it, and a third provider handler that copies the block is a third
+    place for one of them to be quietly dropped — the failure mode being a
+    session cookie that ships without `Secure`, which nothing in the test suite
+    would notice. Not shared with `dev_login`: that seam deliberately sets
+    different flags and returns a body rather than a redirect.
+    """
+    response = Response(status_code=302, headers={"location": settings.FRONTEND_URL})
+    response.set_cookie(
+        key="access_token",
+        value=create_jwt(account_id),
+        httponly=True,
+        samesite="lax",
+        # Fail closed: Secure unless we KNOW this is local development.
+        secure=not _is_development(),
+        max_age=_COOKIE_MAX_AGE,
+        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
+        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+    return response
 
 
 # The two OAuth legs answer with a redirect, not JSON, so they carry
@@ -96,21 +155,83 @@ async def auth_google_callback(
         session=session,
     )
 
-    jwt_token = create_jwt(account.id)
-    response = Response(status_code=302, headers={"location": settings.FRONTEND_URL})
-    response.set_cookie(
-        key="access_token",
-        value=jwt_token,
-        httponly=True,
-        samesite="lax",
-        # Fail closed: Secure unless we KNOW this is local development.
-        secure=not _is_development(),
-        max_age=_COOKIE_MAX_AGE,
-        # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
-        # no value, and "" is not None — Starlette would emit a bare `Domain=`.
-        domain=settings.COOKIE_DOMAIN or None,
+    return _signed_in_redirect(account.id)
+
+
+@router.get("/discord", response_class=RedirectResponse, status_code=302)
+async def auth_discord(request: Request):
+    """Redirect the browser to Discord's OAuth consent screen."""
+    return await _OAUTH.discord.authorize_redirect(
+        request, settings.DISCORD_REDIRECT_URI
     )
-    return response
+
+
+@router.get("/discord/callback", response_class=RedirectResponse, status_code=302)
+async def auth_discord_callback(
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    """Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
+
+    Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+
+    Deliberately a second handler rather than a shared ``/auth/{provider}``: the
+    two callbacks genuinely differ in how they obtain a profile, and an
+    abstraction drawn at N=2 gets rebuilt at N=4. Generalise when a third
+    provider shows what is actually shared.
+    """
+    token = await _OAUTH.discord.authorize_access_token(request)
+
+    # Google's profile rides along on the token; Discord's cannot. Discord
+    # returns no `id_token` on its documented path, so authlib's
+    # `if "id_token" in token` gate never fires and `token["userinfo"]` stays
+    # None — the profile has to be fetched. The path is relative on purpose;
+    # see the trailing-slash argument at the registration above.
+    resp = await _OAUTH.discord.get("users/@me", token=token)
+    user_info = resp.json()
+
+    # The token is used here and discarded (#1374, same posture as Google).
+    # Discord also issues a refresh token and a multi-day access token, and
+    # nothing downstream wants either: World Zero authenticates every request
+    # with its own JWT and never calls Discord as the player. Storing a live
+    # third-party credential no code path reads is pure liability.
+    email = user_info.get("email")
+    if not email:
+        # `email` is BOTH optional and nullable on Discord's user object, and
+        # its `email` scope returns an address only "if the user has one" — so
+        # an absent key and an explicit null are both real answers, and `not`
+        # covers them together. This check is the callback's rather than the
+        # service's because `create_or_get_account` takes `email: str`, and
+        # widening that to Optional to move the check would weaken the contract
+        # for every caller. Unlike the verified flag it is also NOT placed
+        # behind the returning-identity early return: a `verified: false` window
+        # is a documented, transient Discord state (changing your email re-sends
+        # the mail), whereas an email vanishing from an account is not a
+        # transition Discord describes at all.
+        raise_coded(
+            403,
+            ErrorCode.oauth_email_unverified,
+            "Discord did not return an email address for that account.",
+        )
+
+    account = await create_or_get_account(
+        provider=AuthProvider.DISCORD,
+        # Discord's `id` — a snowflake, always serialised as a JSON string so
+        # clients cannot overflow it at 64 bits. `username` and `email` are both
+        # mutable and `id` is not in the `PATCH /users/@me` surface, so this is
+        # the only field worth keying on.
+        provider_user_id=user_info["id"],
+        email=email,
+        # Forwarded, not enforced here: `verified` is the provider's claim about
+        # the ADDRESS (account-trust lives in the separate `flags` bitfield), and
+        # it only decides anything on the branch that resolves an Account by
+        # email — which the service owns (#1771, ADR-0075). The field is
+        # optional, so normalise to a real bool at the edge.
+        email_verified=user_info.get("verified") is True,
+        session=session,
+    )
+
+    return _signed_in_redirect(account.id)
 
 
 @router.get("/me", response_model=CurrentUser)

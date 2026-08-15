@@ -7799,6 +7799,36 @@
         ]
       }
     },
+    "/auth/discord": {
+      "get": {
+        "description": "Redirect the browser to Discord's OAuth consent screen.",
+        "operationId": "auth_discord_auth_discord_get",
+        "responses": {
+          "302": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Auth Discord",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/discord/callback": {
+      "get": {
+        "description": "Exchange the OAuth code for a token, create/get the Account, set JWT cookie.\n\nRedirects to ``settings.FRONTEND_URL`` carrying the session cookie.\n\nDeliberately a second handler rather than a shared ``/auth/{provider}``: the\ntwo callbacks genuinely differ in how they obtain a profile, and an\nabstraction drawn at N=2 gets rebuilt at N=4. Generalise when a third\nprovider shows what is actually shared.",
+        "operationId": "auth_discord_callback_auth_discord_callback_get",
+        "responses": {
+          "302": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Auth Discord Callback",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/auth/google": {
       "get": {
         "description": "Redirect the browser to Google's OAuth consent screen.",
