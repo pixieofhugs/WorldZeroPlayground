@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
     GOOGLE_REDIRECT_URI: str
+    DISCORD_CLIENT_ID: str
+    DISCORD_CLIENT_SECRET: str
+    DISCORD_REDIRECT_URI: str
     MEDIA_BASE_URL: str
     ENVIRONMENT: str = "development"
     MEDIA_ROOT: str = "/media"
