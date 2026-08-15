@@ -82,12 +82,33 @@
      the tier's floor (both tiers are under WCAG's large-text threshold, so
      both owe 4.5:1) on every neutral stock in both cascades and on all eight
      card sheets in DARK — but it fails on three sheets in LIGHT, and the
-     reason is polarity rather than taste. S.N.I.D.E. 3.18:1 and Singularity
-     3.29:1 are near-black in BOTH themes (§6), so no light-cascade neutral can
-     clear them; Ephemerists' vellum is the darkest light sheet at 4.36:1 (its
-     praxis plate 4.35). That is #694's shape exactly: a colour that must
-     differ between two factions WITHIN one theme is a faction question, not a
-     global one.
+     reason is polarity rather than taste: S.N.I.D.E., Singularity and, since
+     #1627, the Ephemerists plate are near-black in BOTH themes (§6), so no
+     light-cascade neutral can clear them. That is #694's shape exactly: a
+     colour that must differ between two factions WITHIN one theme is a
+     faction question, not a global one.
+
+     #1715 WIDENED THAT GAP AND DID NOT CLOSE IT, which is the honest version
+     of the same finding. Lifting the neutral to AAA on the app's own stocks
+     darkens it in light, so the three always-dark sheets go the other way:
+     S.N.I.D.E. 3.18 -> 2.19, Singularity 3.29 -> 2.27, the Ephemerists plate
+     2.92 -> 2.01 (its page 3.12 -> 2.15). Every LIGHT PAPER sheet gains about
+     two ratio points at the same time — UA 4.89 -> 7.09, everymen 4.56 -> 6.61,
+     na 5.83 -> 8.46 — and dark gains everywhere (worst UA, 5.50 -> 7.93). The
+     three that lose are the three that were already unreachable, and the fix
+     for them is the per-faction ink this block describes rather than a softer
+     global: #1307 measured the mint and deferred it, #1715 is forbidden from
+     making it (a per-faction repoint is exactly what that issue rules out), so
+     it is still owed. Two of the three are covered in practice — the S.N.I.D.E.
+     comment voice moved its shared slots onto the flipping slip stock (7.61:1)
+     and both Singularity chassis repoint the global inks outright — which
+     leaves the Ephemerists plate as the one surface where a `.label-caption`
+     actually lands on this number in light.
+
+     (The figures this block used to carry — "vellum 4.36, praxis plate 4.35" —
+     were stale before #1715 touched them: #1627 took the plate to a night
+     ground in both cascades and nothing re-measured. A ratio in prose is a
+     claim about two tokens, and it expires when EITHER of them moves.)
 
      A faction frame therefore sets this ONCE on its own root and every label
      underneath follows — no per-label style, and no faction contradicting the
@@ -107,11 +128,15 @@
      Same measurement, one property over. `.markdown-preview` is the only rule
      in the app that colours a link, and the praxis body it renders is skinned
      by all eight factions — so ONE ink was answering for the app's near-white
-     page, S.N.I.D.E.'s photocopier black (3.06:1), Singularity's terminal
-     (3.17:1) and the Ephemerists' plate, which since #1627 is a night ground in
-     both cascades (2.82:1 on the plate, 3.01 on its page, 2.60 in a panel cell;
-     the hover ink, being the near-black primary, reads 1.07:1 there). A colour
+     page, S.N.I.D.E.'s photocopier black, Singularity's terminal and the
+     Ephemerists' plate, which since #1627 is a night ground in both cascades
+     (the hover ink, being the near-black primary, reads 1.07:1 there). A colour
      that must differ between two factions inside one theme is #694's shape.
+     #1636 measured 3.06 / 3.17 / 2.82; #1715's lift takes the light neutral
+     down to 2.20 / 2.28 / 2.03 on the same three, for the reason the
+     `--label-ink` block above works through in full — the sheets that lose are
+     the always-dark ones, which no light-cascade neutral could ever have
+     served, and this seam is precisely how they escape it.
 
      NOTHING IS MINTED for the Ephemerists half: `-plate-nile` is declared
      "links, affirmations" and is already measured on all three of the plate's
@@ -4845,7 +4870,13 @@
       LIGHT ships the kit's ground unchanged (it measures 5.75:1, against a
       5.99:1 baseline); only its glow comes down, .24 -> .13, the same order as
       UaBackdrop's stated 6-8% ceiling. A backdrop's job is to be felt, not
-      seen. */
+      seen.
+
+      Every figure above is a PRE-#1715 reading and every one of them moved up:
+      that issue lifted both quiet inks away from the AA floor, brightening them
+      on this night ground and darkening them on the cream one. The margins named
+      here are the floors the ground was chosen against, not ceilings — the
+      ground choice stands on its own (the kit's #241c0b failed at any glow). */
 :root {
   /* the ground — the cream sweep both the hero plate and the page sit on */
   --faction-wow-ground-from: #fbf4e0;
@@ -5464,7 +5495,8 @@
      over the page is a lift in light (#eae6e0) and in dark (#202025, within a
      shade of the design's #1b1a24), so one declaration covers both themes and
      nothing drifts when the page ground moves. --color-text-secondary reads
-     4.82:1 on the light well and 5.04:1 on the dark one. */
+     6.89:1 on the light well and 7.34:1 on the dark one (4.96 / 4.96 before
+     #1715 lifted the neutral tiers; both grounds are `Pair` rows now). */
   --filter-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
 
   /* The sliding thumb: a neutral highlight, never a hue. Same reasoning — one
@@ -5869,14 +5901,19 @@
 /* A selected row inverts to the thumb fill, and the count follows the label
    into the warm family there so the whole row reads as one selected object.
 
-   ponytail (#1549): the original reason given was "tertiary is too faint
-   against the thumb", and that was never worth much — measured, the thumb
-   (10% primary over `--filter-well`) reads secondary at 4.05:1 and tertiary at
-   3.90:1 in light, and secondary at 3.80:1 against tertiary's 4.19:1 in DARK,
-   where this rule therefore costs contrast rather than buying it. Both inks
-   are under AA on that stock at `--text-lg` in both themes, so the fix is the
-   GROUND (a selected row wants more than a 10% lift) and not the ink, which
-   puts it outside a token-tier change. Left as-is here, measured, and named. */
+   ponytail (#1549, closed out by #1715): the original reason given was
+   "tertiary is too faint against the thumb", and that was never worth much —
+   measured, the thumb (10% primary over `--filter-well`) read secondary at
+   4.05:1 and tertiary at 3.90:1 in light, and secondary at 3.80:1 against
+   tertiary's 4.19:1 in DARK, where this rule therefore cost contrast rather
+   than buying it. Both inks were under AA on that stock at `--text-lg` in both
+   themes. #1549 called the fix the GROUND rather than the ink and left it; the
+   ink turned out to be short on every neutral stock, and lifting it to AAA on
+   the two the app owns carries this one over AA as a side effect — 5.63 / 5.66
+   light, 5.63 / 6.04 dark. The rule stays because it is about reading the row
+   as one object, not about contrast, and it no longer costs any. #1579 owns
+   the dark half of it. Both stocks are `Pair` rows now, so the next repaint of
+   `--color-text-primary` (which IS this ground, twice) has to answer for them. */
 .filter-factions__row[data-on] .filter-factions__count {
   color: var(--color-text-secondary);
 }
