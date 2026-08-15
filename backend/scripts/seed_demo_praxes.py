@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from game_config import CURRENT_ERA, EraConfig
 from script_utils import get_settings
-from models.account import Account, OAuthProvider
+from models.account import Account, AuthProvider, OAuthProvider
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
@@ -190,7 +190,7 @@ async def get_or_create_metatask_owner(
         # `?key=meta` logs straight into this character.
         session.add(OAuthProvider(
             account_id=account.id,
-            provider="dev",
+            provider=AuthProvider.DEV,
             provider_user_id=f"dev-{METATASK_PLAYER_KEY}",
         ))
         existing = Character(
@@ -516,7 +516,7 @@ async def get_or_create_players(session) -> dict[str, Character]:
         await session.flush()
         session.add(OAuthProvider(
             account_id=account.id,
-            provider="demo",
+            provider=AuthProvider.DEMO,
             provider_user_id=username,
         ))
         character = Character(

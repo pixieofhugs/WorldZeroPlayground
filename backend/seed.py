@@ -29,7 +29,7 @@ from sqlalchemy import func, select
 from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA
 from script_utils import add_env_argument, get_settings
-from models.account import Account, OAuthProvider
+from models.account import Account, AuthProvider, OAuthProvider
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
@@ -97,7 +97,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
 
     session.add(OAuthProvider(
         account_id=pixie_acc.id,
-        provider="google",
+        provider=AuthProvider.GOOGLE,
         provider_user_id="google_pixie",
     ))
 
@@ -277,7 +277,7 @@ async def seed_dev_demo(session) -> None:
     """
     dev_oauth = (await session.execute(
         select(OAuthProvider).where(
-            OAuthProvider.provider == "dev",
+            OAuthProvider.provider == AuthProvider.DEV,
             OAuthProvider.provider_user_id == "dev-user-1",
         )
     )).scalar_one_or_none()
@@ -289,7 +289,7 @@ async def seed_dev_demo(session) -> None:
         await session.flush()
         session.add(OAuthProvider(
             account_id=dev_acc.id,
-            provider="dev",
+            provider=AuthProvider.DEV,
             provider_user_id="dev-user-1",
         ))
         molly = Character(
