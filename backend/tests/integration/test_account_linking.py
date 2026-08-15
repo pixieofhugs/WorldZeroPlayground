@@ -1,0 +1,249 @@
+"""Characterization tests for the OAuth account-linking seam (#1768).
+
+The seam under test is ``services.auth.create_or_get_account`` — where an OAuth
+identity becomes a World Zero Account. It is called by both OAuth legs
+(``routers/auth.py``: the Google callback and the dev-login bypass), and it owns
+three rules that nothing else enforces:
+
+1. a known ``(provider, provider_user_id)`` pair resolves to its Account
+   **without consulting email at all**;
+2. an unknown pair whose email matches an existing Account *links* to that
+   Account rather than minting a second one;
+3. an unknown pair with an unknown email mints both rows.
+
+Rule 1 is the load-bearing one: the email a provider asserts is only an
+authentication decision on the *linking* path, and any future gate on that claim
+(#1771) must not start rejecting returning players. These tests pin that down.
+
+Tested at the service, not through authlib: the rules live in the service, and
+mocked OAuth transport would only put ceremony between the test and the
+assertions. The single route-level test at the bottom covers the one rule that
+does live in the router today — the ``email_verified`` gate.
+
+No behaviour change accompanies this file; it describes what the code already
+does, so that two queued changes to it have a baseline.
+"""
+import pytest
+from httpx import AsyncClient
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from errors import ErrorCode, detail_code
+from models.account import Account, OAuthProvider
+from services.auth import create_or_get_account
+
+#: The two provider names in service today (``routers/auth.py``). Free-form
+#: strings on the model for now; #1771 replaces them with an enum.
+_GOOGLE = "google"
+_DEV = "dev"
+
+
+async def _account_count(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count()).select_from(Account))
+    return result.scalar_one()
+
+
+async def _provider_rows(
+    session: AsyncSession, provider: str, provider_user_id: str
+) -> list[OAuthProvider]:
+    result = await session.execute(
+        select(OAuthProvider).where(
+            OAuthProvider.provider == provider,
+            OAuthProvider.provider_user_id == provider_user_id,
+        )
+    )
+    return list(result.scalars())
+
+
+# ---------------------------------------------------------------------------
+# Case 1 — returning user: the provider pair wins, email is never consulted
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_returning_identity_ignores_the_email_claim(
+    db_session: AsyncSession, account: Account, account2: Account
+):
+    """A known provider pair resolves to its own Account, whatever email says.
+
+    The email passed here belongs to a *different* Account, so any lookup that
+    reached the email branch would return ``account2`` — or, with a stricter
+    email rule bolted on later, refuse the sign-in outright. Neither may happen:
+    the provider pair already identifies this player.
+    """
+    db_session.add(
+        OAuthProvider(
+            account_id=account.id, provider=_GOOGLE, provider_user_id="google-sub-1"
+        )
+    )
+    await db_session.commit()
+    accounts_before = await _account_count(db_session)
+
+    resolved = await create_or_get_account(
+        provider=_GOOGLE,
+        provider_user_id="google-sub-1",
+        email=account2.email,
+        session=db_session,
+    )
+
+    assert resolved.id == account.id
+    assert resolved.email == account.email
+    # No account minted, and no second link row for the same pair.
+    assert await _account_count(db_session) == accounts_before
+    assert len(await _provider_rows(db_session, _GOOGLE, "google-sub-1")) == 1
+
+
+# ---------------------------------------------------------------------------
+# Case 2 — new identity, known email: link, do not mint
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_new_identity_with_known_email_links_to_that_account(
+    db_session: AsyncSession, account: Account
+):
+    accounts_before = await _account_count(db_session)
+
+    resolved = await create_or_get_account(
+        provider=_GOOGLE,
+        provider_user_id="google-sub-new",
+        email=account.email,
+        session=db_session,
+    )
+
+    assert resolved.id == account.id
+    assert await _account_count(db_session) == accounts_before
+
+    linked = await _provider_rows(db_session, _GOOGLE, "google-sub-new")
+    assert len(linked) == 1
+    assert linked[0].account_id == account.id
+
+
+# ---------------------------------------------------------------------------
+# Case 3 — new identity, unknown email: mint both rows
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_unknown_identity_and_email_creates_account_and_link(
+    db_session: AsyncSession,
+):
+    accounts_before = await _account_count(db_session)
+
+    resolved = await create_or_get_account(
+        provider=_GOOGLE,
+        provider_user_id="google-sub-fresh",
+        email="newcomer@example.com",
+        session=db_session,
+    )
+
+    assert resolved.id is not None
+    assert resolved.email == "newcomer@example.com"
+    assert await _account_count(db_session) == accounts_before + 1
+
+    linked = await _provider_rows(db_session, _GOOGLE, "google-sub-fresh")
+    assert len(linked) == 1
+    assert linked[0].account_id == resolved.id
+
+
+# ---------------------------------------------------------------------------
+# Case 4 — two providers, one Account
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_two_providers_sharing_an_email_resolve_to_one_account(
+    db_session: AsyncSession, account: Account
+):
+    """Both links attach to the existing Account, and both keep resolving to it.
+
+    This is the property the second-provider work (#1772) inherits: linking by
+    email is how a player's second provider finds their existing account, and
+    re-presenting either identity afterwards takes the case-1 path.
+    """
+    accounts_before = await _account_count(db_session)
+
+    first = await create_or_get_account(
+        provider=_GOOGLE,
+        provider_user_id="google-sub-2",
+        email=account.email,
+        session=db_session,
+    )
+    second = await create_or_get_account(
+        provider=_DEV,
+        provider_user_id="dev-sub-2",
+        email=account.email,
+        session=db_session,
+    )
+
+    assert first.id == second.id == account.id
+    assert await _account_count(db_session) == accounts_before
+
+    result = await db_session.execute(
+        select(OAuthProvider).where(OAuthProvider.account_id == account.id)
+    )
+    linked = {(row.provider, row.provider_user_id) for row in result.scalars()}
+    assert linked == {(_GOOGLE, "google-sub-2"), (_DEV, "dev-sub-2")}
+
+    # Re-presenting either identity resolves to the same Account.
+    for provider, provider_user_id in linked:
+        again = await create_or_get_account(
+            provider=provider,
+            provider_user_id=provider_user_id,
+            email=account.email,
+            session=db_session,
+        )
+        assert again.id == account.id
+
+
+# ---------------------------------------------------------------------------
+# Case 5 — the router's email_verified gate
+# ---------------------------------------------------------------------------
+
+
+class _StubGoogleClient:
+    """Stands in for ``_OAUTH.google`` — the callback only calls these two.
+
+    Cheaper than mocking authlib's transport: the handler reads
+    ``token["userinfo"]`` when present and never reaches ``userinfo()``.
+    """
+
+    def __init__(self, userinfo: dict) -> None:
+        self._userinfo = userinfo
+
+    async def authorize_access_token(self, request) -> dict:
+        return {"userinfo": self._userinfo}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "email_verified",
+    [
+        pytest.param(False, id="explicitly-false"),
+        pytest.param(None, id="claim-absent"),
+        # Google has emitted the claim as a string; `is not True` must reject it.
+        pytest.param("true", id="stringy-true"),
+    ],
+)
+async def test_callback_rejects_an_unverified_email(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    email_verified,
+):
+    """An unverified email is refused *before* anything is linked or minted."""
+    from routers import auth as auth_router
+
+    user_info = {"sub": "google-sub-unverified", "email": "victim@example.com"}
+    if email_verified is not None:
+        user_info["email_verified"] = email_verified
+    monkeypatch.setattr(auth_router._OAUTH, "google", _StubGoogleClient(user_info))
+
+    accounts_before = await _account_count(db_session)
+
+    resp = await client.get("/auth/google/callback")
+
+    assert resp.status_code == 403
+    assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
+    assert await _account_count(db_session) == accounts_before
+    assert await _provider_rows(db_session, _GOOGLE, "google-sub-unverified") == []
