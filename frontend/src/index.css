@@ -97,18 +97,26 @@
      na 5.83 -> 8.46 — and dark gains everywhere (worst UA, 5.50 -> 7.93). The
      three that lose are the three that were already unreachable, and the fix
      for them is the per-faction ink this block describes rather than a softer
-     global: #1307 measured the mint and deferred it, #1715 is forbidden from
-     making it (a per-faction repoint is exactly what that issue rules out), so
-     it is still owed. Two of the three are covered in practice — the S.N.I.D.E.
-     comment voice moved its shared slots onto the flipping slip stock (7.61:1)
-     and both Singularity chassis repoint the global inks outright — which
-     leaves the Ephemerists plate as the one surface where a `.label-caption`
-     actually lands on this number in light.
+     global: #1307 measured the mint and deferred it, #1715 was forbidden from
+     making it (a per-faction repoint is exactly what that issue rules out), and
+     #1754 is that report accepted. Two of the three cover themselves already —
+     the S.N.I.D.E. comment voice moved its shared slots onto the flipping slip
+     stock (7.61:1) and both Singularity chassis repoint the global inks
+     outright — which left the Ephemerists plate as the one surface where a
+     `.label-caption` actually landed on this number in light. `.eph-plate-sheet`
+     now repoints the seam onto `-plate-quiet` (6.38 page / 5.98 plate / 5.52
+     panel cell, both cascades); see that rule for why it is not `-card-muted`.
+     THE SEAM IS SPENT ON ONE SHEET, NOT OPENED AS A HABIT: a faction repoints
+     this only where the global genuinely cannot reach its ground, and the
+     measurement is the argument.
 
      (The figures this block used to carry — "vellum 4.36, praxis plate 4.35" —
      were stale before #1715 touched them: #1627 took the plate to a night
      ground in both cascades and nothing re-measured. A ratio in prose is a
-     claim about two tokens, and it expires when EITHER of them moves.)
+     claim about two tokens, and it expires when EITHER of them moves. The
+     vellum half was re-measured for #1754 and genuinely clears — 6.33:1 light,
+     8.28:1 dark, the codex stock being one that FLIPS — and it has had no
+     reader in the app since #1627 either way.)
 
      A faction frame therefore sets this ONCE on its own root and every label
      underneath follows — no per-label style, and no faction contradicting the
