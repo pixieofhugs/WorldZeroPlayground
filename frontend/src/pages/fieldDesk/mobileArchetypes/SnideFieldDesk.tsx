@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -35,6 +36,10 @@ const IMPACT = 'var(--faction-snide-font-impact)'
 const BLACK = 'var(--faction-snide-font-black)'
 const TYPE = 'var(--faction-snide-font-type)'
 const MARKER = 'var(--faction-snide-font-marker)'
+
+/** The task-faction mark on a cut-out row (#1711) — a touch under the other
+ *  skins' 14, because this row's rule is tight and the type is condensed. */
+const ROW_SIGIL = 13
 
 const HALFTONE = 'radial-gradient(rgba(182,255,46,0.09) 32%, transparent 34%)'
 const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
@@ -268,7 +273,11 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${LINE}`, textDecoration: 'none' }}
               >
-                <span className="shrink-0" style={{ width: 9, height: 9, background: ACID }} />
+                {/* The TASK's faction, not the zine's own acid (#1711). The kicker
+                    under the title names it in words, so the mark is decorative. */}
+                <span className="shrink-0 flex" aria-hidden>
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.02em', lineHeight: 1.15, color: TEXT }}>
                     {praxis.task_title}

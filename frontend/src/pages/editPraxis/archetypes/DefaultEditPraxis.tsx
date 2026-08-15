@@ -230,7 +230,6 @@ export default function DefaultEditPraxis({ state }: Props) {
   const praxis = state.praxis!;
   const task = state.task;
 
-  const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
   const modeOptions: Array<{ key: PraxisType; label: string }> = [
     { key: "solo", label: t("editPraxis.composer.modeSolo") },
     { key: "collab", label: t("editPraxis.composer.modeCollab") },
@@ -350,7 +349,6 @@ export default function DefaultEditPraxis({ state }: Props) {
                   flexWrap: "wrap",
                 },
                 options: modeOptions,
-                allowedModes,
                 renderOption: (option, { active, disabled, onSelect }) => (
                   <button
                     key={option.key}

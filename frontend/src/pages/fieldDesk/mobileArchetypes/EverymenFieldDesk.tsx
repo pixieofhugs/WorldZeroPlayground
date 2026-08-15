@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -32,6 +33,10 @@ const PAPER = 'var(--everymen-paper)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
 const ACCENT_FONT = 'var(--font-accent)'
 const BODY_FONT = 'var(--font-body)'
+
+/** The task-faction mark on a dispatch row (#1711) — the square red slug it
+ *  replaces was 10px, and the mark carries more line, so it takes 14. */
+const ROW_SIGIL = 14
 
 const kicker: CSSProperties = {
   fontFamily: BODY_FONT,
@@ -324,7 +329,11 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid color-mix(in srgb, var(--everymen-ink) 20%, transparent)`, textDecoration: 'none' }}
               >
-                <span className="shrink-0" style={{ width: 10, height: 10, background: RED }} />
+                {/* The TASK's faction, not the shop's own red (#1711). The kicker
+                    line below says the faction in words, so the mark is decorative. */}
+                <span className="shrink-0 flex" aria-hidden>
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: INK }}>
                     {praxis.task_title}

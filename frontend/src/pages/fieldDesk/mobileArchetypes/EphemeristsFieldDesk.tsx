@@ -6,6 +6,7 @@ import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { praxisModeLabel } from '../../../utils/praxis'
 import { EphemeristsSigil } from '../../../components/sigil/EphemeristsSigil'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   BRASS,
   CAPTION,
@@ -84,6 +85,11 @@ const trackMetaStyle: CSSProperties = {
 
 /** The valley's own spectrum: ochre through brass into the Nile (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${OCHRE}, ${BRASS}, ${NILE})`
+
+/** The task-faction mark on a register row (#1711), at the row's cap height.
+ *  Below the kite's own 20px threshold, so an ephemerists task draws the mark's
+ *  reduced cut here — which is exactly what that cut is for. */
+const ROW_SIGIL = 14
 
 /** One leaf off the field journal — papyrus inside the plate's hairline. */
 function Leaf({ children }: { children: ReactNode }) {
@@ -284,9 +290,12 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
                 className="flex items-center gap-3"
                 style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${RULE}`, textDecoration: 'none' }}
               >
-                {/* ornament: the register's lead dot, drawn square to the row's
-                    cap height — illustration geometry, not layout spacing. */}
-                <span className="shrink-0" style={{ width: 9, height: 9, background: OCHRE }} />
+                {/* The register's lead mark is the TASK's faction now, not the
+                    valley's ochre (#1711). The small-caps line under the title
+                    names the faction, so the mark is decorative. */}
+                <span className="shrink-0 flex" aria-hidden>
+                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: DECO, fontSize: 'var(--text-content)', lineHeight: 1.15, color: INK }}>
                     {praxis.task_title}
