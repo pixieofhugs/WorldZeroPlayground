@@ -149,8 +149,30 @@ describe('collabCopy — the shared tier speaks the domain noun (#1154)', () => 
     expect(line).not.toMatch(FACTION_VERBS)
   })
 
-  it('says submitted / not submitted on the roster pills', () => {
-    expect(collabCopy(null, 'pillCast')).toBe('submitted')
-    expect(collabCopy(null, 'pillWeaving')).toBe('not submitted')
+  /**
+   * #1832 — the four roster pills, in one capitalisation.
+   *
+   * `pillWeaving` read "not submitted": a collaborator who had ACCEPTED the
+   * invitation and was mid-write, described by what they had not done and put
+   * in the same negative frame as somebody who had not answered at all. The
+   * count it was standing in for is already on the header tally (`castStatus`,
+   * "{{cast}} of {{total}} submitted"), so the roster loses nothing — it says
+   * it once, as a count, instead of as a negative on every row.
+   *
+   * Sentence case for all four, chosen once: they are standalone labels on a
+   * pill (`.label-caption` sets `text-transform: none`, so the literal is what
+   * ships), never fragments inside a sentence, and the design writes them
+   * capitalised. Capitalising only the one the ruling names would read as an
+   * accident next to three lower-case siblings.
+   *
+   * The duel pair (`duelPillSealed` / `duelPillWriting`) is deliberately left
+   * lower-case: a praxis is either a collab or a duel side, so those two never
+   * render beside these four, and #1832 scoped itself to the roster's set.
+   */
+  it('labels the four roster states in sentence case', () => {
+    expect(collabCopy(null, 'pillCast')).toBe('Submitted')
+    expect(collabCopy(null, 'pillWeaving')).toBe('Accepted')
+    expect(collabCopy(null, 'pillInvited')).toBe('Invited')
+    expect(collabCopy(null, 'pillDeclined')).toBe('Declined')
   })
 })

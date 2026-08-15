@@ -110,12 +110,12 @@ describe('CollabRoster render', () => {
   // A null slug takes the shared fallback tier, which speaks the domain noun
   // rather than any faction's verb (#1154) — the faction-voiced wording is
   // covered in collabCopy.test.ts (#591).
-  it('shows a submitted pill for cast members and a not-submitted pill otherwise', () => {
+  it('pills each member by submission state, and tallies the count once', () => {
     const html = renderToStaticMarkup(
       <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} />,
     )
-    expect(html).toContain('submitted')
-    expect(html).toContain('not submitted')
+    expect(html).toContain(collabCopy(null, 'pillCast'))
+    expect(html).toContain(collabCopy(null, 'pillWeaving'))
     expect(html).toContain('1 of 2 submitted')
   })
 
@@ -207,7 +207,11 @@ describe('CollabRoster — a one-member collab (#1274)', () => {
  * from "always renders one pill".
  */
 describe('CollabRoster — the four-state pill (#1416)', () => {
-  const PILLS = ['submitted', 'invited', 'declined'] as const
+  // In catalog order: filed, accepted, invited, declined. Read from the
+  // resolver so the words stay the catalog's — #1832 moved all four.
+  const PILLS = (['pillCast', 'pillWeaving', 'pillInvited', 'pillDeclined'] as const).map(
+    (key) => collabCopy(null, key),
+  )
   const render = (
     members: PraxisMemberOut[],
     invites: PraxisInviteOut[] = [],
@@ -222,33 +226,32 @@ describe('CollabRoster — the four-state pill (#1416)', () => {
       />,
     )
 
-  // "not submitted" contains "submitted", so the accepted case is read off the
-  // full pill string rather than by substring.
+  // Matched on the whole pill element, not by substring: `castStatus` puts the
+  // word "submitted" in the header tally too.
   const pillsIn = (html: string) =>
     PILLS.filter((word) => html.includes(`>${word}</span>`))
 
   it('filed — a member who has submitted', () => {
-    const html = render([member(1, true), member(2, true)])
-    expect(pillsIn(html)).toEqual(['submitted'])
-    expect(html).not.toContain('not submitted')
+    expect(pillsIn(render([member(1, true), member(2, true)]))).toEqual([PILLS[0]])
   })
 
+  // #1832 — accepted-and-writing is its own positive state. It used to read
+  // "not submitted", which described the member by what they had not done and
+  // repeated a count the header tally already carries.
   it('accepted — a member who has not', () => {
-    const html = render([member(1, false), member(2, false)])
-    expect(html).toContain('not submitted')
-    expect(pillsIn(html)).toEqual([])
+    expect(pillsIn(render([member(1, false), member(2, false)]))).toEqual([PILLS[1]])
   })
 
   it('invited — a pending invite, which used to live outside the roster', () => {
     const html = render([member(1, false)], [invite(2, 'Asked', 'pending')])
     expect(html).toContain('Asked')
-    expect(pillsIn(html)).toEqual(['invited'])
+    expect(pillsIn(html)).toEqual([PILLS[1], PILLS[2]])
   })
 
   it('declined — which used to be filtered away entirely', () => {
     const html = render([member(1, false)], [invite(2, 'Refused', 'declined')])
     expect(html).toContain('Refused')
-    expect(pillsIn(html)).toEqual(['declined'])
+    expect(pillsIn(html)).toEqual([PILLS[1], PILLS[3]])
   })
 
   it('draws all four at once, one pill each', () => {
@@ -256,8 +259,7 @@ describe('CollabRoster — the four-state pill (#1416)', () => {
       [member(1, true), member(2, false)],
       [invite(3, 'Asked', 'pending'), invite(4, 'Refused', 'declined')],
     )
-    expect(pillsIn(html)).toEqual(['submitted', 'invited', 'declined'])
-    expect(html).toContain('not submitted')
+    expect(pillsIn(html)).toEqual(PILLS)
   })
 
   // The pill must not carry its state in colour alone: the two unanswered

@@ -202,7 +202,13 @@ test.describe('collaboration lifecycle', () => {
 // Snide (the level-0 task's faction) control labels.
 const SNIDE_SIGNUP = /PULL THIS JOB/i //   task page: create the draft
 const SNIDE_COLLAB_MODE = /THE GANG/i //   ModePicker: the collab option
-const SNIDE_CAST = /count me in/i //       PublishButton: cast + cast-final
+// PublishButton: cast + cast-final. NOT in the faction's voice — #1812 deleted
+// the eight collab override blocks, so the submit control reads the shared
+// `editPraxis.collab.castAction` / `castFinalAction` on every faction. The
+// alternation covers both, since which one the crew's last member sees depends
+// on the consensus gate. Neither branch is the bare "Submit" of the solo
+// composer, so it stays specific without anchoring.
+const SNIDE_CAST = /Submit my part|this one publishes it/i
 
 /** First `count` distinct-titled tasks any high-level character may attempt. */
 async function pickTasks(
