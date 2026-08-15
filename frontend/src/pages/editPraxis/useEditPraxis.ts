@@ -16,9 +16,9 @@
  *   `useComposerConfirm` — the one in-page confirm slot
  *
  * What stays here is what nothing else can own: the initial load and the
- * viewer's seal catalogue, the lifecycle writes (publish, save draft, pull
- * back, leave, drop, mode switch), and the derived flags that read across two
- * or more of the concerns above.
+ * viewer's seal catalogue, the lifecycle transitions (publish, pull back,
+ * leave, drop, mode switch — plus `saveDraft`, which since #1743 only leaves),
+ * and the derived flags that read across two or more of the concerns above.
  *
  * The split is pure restructuring — the interface, the request count and the
  * mount-time request ORDER are all unchanged, and the existing suite that
