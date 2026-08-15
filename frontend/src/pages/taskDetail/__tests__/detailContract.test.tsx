@@ -207,7 +207,7 @@ describe("na / Default task detail — the reference anatomy", () => {
 
   it("renders the in-progress population as a header count", () => {
     const { text } = render(<DefaultTaskDetail state={baseState()} />);
-    expect(text).toContain("In progress");
+    expect(text).toContain("people working on this");
     expect(text).toContain("6");
   });
 
