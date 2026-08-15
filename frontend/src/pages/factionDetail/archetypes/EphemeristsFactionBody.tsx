@@ -53,12 +53,37 @@ import type { FactionDetailState } from "../useFactionDetail";
  * SWEPT OFF THE CODEX (#1208). Every mark is the plate kit's rather than a
  * private drawing: the roster's circular vellum medallions are `AuthorOctagon`,
  * the level beside a keeper's name gains the `Tally`, and every section rule is
- * `RuneRule`. Two grounds carry ink here — the plate (`ink` 11.3:1, `quiet`
- * 5.6, `caption` 4.8, `nile` 5.0) and the night band under the spotlight
- * (`band-ink` 12.4, `gold` 9.4, `band-quiet` 8.6). The page beneath both is
- * `.eph-backdrop`, repainted onto `-plate-page` in the same issue; only `ink`,
- * `quiet` and `nile` clear on it, which is why no caption sits directly on it.
+ * `RuneRule`. Two faction grounds carry ink here — the plate (`ink` 13.91:1,
+ * `quiet` 5.98, `caption` 7.22, `nile` 7.00) and the night band under the
+ * spotlight (`band-ink` 14.00, `gold` 14.00, `band-quiet` 8.97). Every one of
+ * those eight numbers was stale when #1793 re-derived them: they were measured
+ * on the PAPYRUS plate, and #1627 turned the whole register night without
+ * anything asking this comment to keep up.
+ *
+ * THE THIRD GROUND IS THE APP'S OWN PAGE, and no plate ink may be spent on it
+ * (#1675, #1793). This header used to say "the page beneath both is
+ * `.eph-backdrop`, repainted onto `-plate-page`; only `ink`, `quiet` and `nile`
+ * clear on it" — and every clause of that was false here. Nothing in this file
+ * applies `.eph-backdrop` or any other ground: the root is a bare
+ * `.wz-faction-grid`, so what is behind anything outside a `CARD` is
+ * `--color-bg-page`, which is near-WHITE in light. #1675 caught the section
+ * headings and kickers that way (cream on cream, 1.13:1); #1793 caught the two
+ * empty states, at 2.64:1. So everything on this page that is not inside a card
+ * takes the app's own tiers, and `PAGE_QUIET` below is the third of them.
  */
+
+/**
+ * The page's quiet ink — the app's second tier, NOT `-plate-quiet` (#1793).
+ *
+ * `QUIET` is #a2977a, minted for the Valley plate's three NIGHT grounds (page
+ * 6.38, plate 5.98, panel cell 5.52). On the app's light page it is 2.64:1, and
+ * no value of that token could be both: clearing the panel cell needs relative
+ * luminance >= 0.2453, clearing the light page needs <= 0.1626, and the
+ * intervals do not meet. So the ink changes rather than the token — 7.78:1 in
+ * light, 8.33:1 in dark, and the same tier `KICKER` beside it already reads.
+ * Both readings are gated in `factionContrast.test.ts`.
+ */
+const PAGE_QUIET = "var(--color-text-secondary)";
 
 /** One plate off the field journal, at the weight the design draws it. */
 const CARD: CSSProperties = {
@@ -183,7 +208,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           <SectionHeading>{t("ephemerists.tasks.heading")}</SectionHeading>
           <Kicker>{t("ephemerists.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: QUIET }}>
+            <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
               {t("ephemerists.tasks.empty")}
             </p>
           ) : (
@@ -209,7 +234,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           <SectionHeading>{t("ephemerists.praxis.heading")}</SectionHeading>
           <Kicker>{t("ephemerists.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: QUIET }}>
+            <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
               {t("ephemerists.praxis.empty")}
             </p>
           ) : (

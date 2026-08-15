@@ -150,10 +150,12 @@ export interface EditPraxisState {
   /**
    * The composer's third exit (#1081): keep the draft and leave.
    *
-   * Flushes the queued autosave — cancel, then write the text in hand, the same
-   * two steps publish runs — and navigates to the player's own profile, where
-   * their `in_progress` praxes are listed. Refuses to leave (and says so) if the
-   * flush can't be written, so no keystroke is lost on the way out.
+   * Navigation, and nothing else: it clears the error line and sends the player
+   * to their own profile, where their `in_progress` praxes are listed (`/tasks`
+   * if they somehow have no character). It carried a flush until #1743 — title
+   * and body now live in the room and reach the record on the room server's own
+   * debounce (ADR-0073), so there is no client-side write left to order, none
+   * that can fail, and nothing to refuse leaving over.
    */
   saveDraft: () => Promise<void>;
   /** Pull my own cast back on a pending collab (#591). */

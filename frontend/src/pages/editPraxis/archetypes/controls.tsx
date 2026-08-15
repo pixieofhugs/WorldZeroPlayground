@@ -18,6 +18,7 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import { usePraxisRoom, ROOM_TITLE_KEY } from "../praxisRoom";
+import { paintedAwareness } from "../roomPresence";
 import {
   BODY_EDITOR_BASE_THEME,
   BODY_EDITOR_HOST_STYLE,
@@ -260,6 +261,10 @@ export function InviteSearch({
 }) {
   const { t } = useTranslation("forms");
   const praxis = state.praxis!;
+  // The one roster mount that sits inside a room, and so the only one that can
+  // say who is here (#1744). Every other mount — the eight detail pages, the
+  // waiting surface — passes nothing and draws no dot at all.
+  const room = usePraxisRoom();
   // The invite search is behind the `+ invite` chip (#1417) rather than sitting
   // permanently open across a whole row of the composer. Local state, because it
   // is a disclosure and nothing outside this control has an opinion about it.
@@ -313,6 +318,7 @@ export function InviteSearch({
                   currentCharacterId={state.currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
+                  presentCharacterIds={room?.present}
                   onKick={state.kickMember}
                   onRescindInvite={state.cancelInvite}
                 />
@@ -588,8 +594,9 @@ export function DropButton({
 /* SaveDraftButton — the composer's third exit (#1081): keep the draft, leave.  */
 /*                                                                              */
 /* Publish files the praxis and Drop destroys it; until now there was no way to */
-/* simply stop for the night. The click flushes the queued autosave and lands   */
-/* on the player's own profile, where their in_progress praxes are listed.      */
+/* simply stop for the night. The click writes nothing — the text is already in */
+/* the room (#1743) — it just lands on the player's own profile, where their    */
+/* in_progress praxes are listed.                                               */
 /*                                                                              */
 /* Deliberately unskinned by default, like the collab Leave link above: this is */
 /* a mechanics affordance, not a faction gesture, and the shared neutral        */
@@ -614,8 +621,8 @@ export function SaveDraftButton({
   skin?: SaveDraftButtonSkin;
 }) {
   const { t } = useTranslation("forms");
-  // A cast or moderated praxis has no draft to save — the autosave effect sits
-  // the same states out, and the archetype is read-only in them. Hide rather
+  // A cast or moderated praxis has no draft to keep — the room refuses a change
+  // in the same states, and the archetype is read-only in them. Hide rather
   // than disable, as everywhere else.
   if (state.controlsLocked) return null;
   return (
@@ -836,6 +843,9 @@ export function BodyTextarea({
   const room = usePraxisRoom();
   const ytext = room?.body ?? null;
   const seeded = room?.seeded ?? false;
+  // Stable for the room's whole life (it lives beside `body` in one state
+  // object), so listing it as an editor dependency cannot cause a rebuild.
+  const awareness = room?.awareness ?? null;
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   // Stable across the editor's life; reconfigured rather than remounted.
@@ -877,9 +887,17 @@ export function BodyTextarea({
         BODY_EDITOR_BASE_THEME,
         editableSlot.of(EditorView.editable.of(writable)),
         EditorView.contentAttributes.of(contentAttributes),
-        // `null` awareness: carets and collaborator colours are #1744, and
-        // passing it here is what would draw them.
-        yCollab(ytext, null),
+        // Co-authors' carets and selections, each in their own faction's hue
+        // (#1744). PAINTED, never raw: `y-codemirror.next` interpolates the
+        // remote's `user.color` straight into a style attribute, so the wire
+        // carries a faction slug and `paintedAwareness` derives the colour —
+        // see `roomPresence.ts`.
+        //
+        // No `praxisType` gate. The plugin skips `clientid ===
+        // awareness.doc.clientID`, so a solo author alone in their own room
+        // draws nothing by construction — which is also the honest rule for a
+        // collab that happens to have one member online.
+        yCollab(ytext, awareness == null ? null : paintedAwareness(awareness)),
       ],
     });
     viewRef.current = view;
@@ -887,12 +905,14 @@ export function BodyTextarea({
       view.destroy();
       viewRef.current = null;
     };
-    // Only the bound text and the placeholder rebuild the editor. Everything
-    // else below reconfigures it in place — a rebuild would drop the caret and
-    // the undo history mid-sentence. The placeholder is a translated string, so
-    // it changes exactly once, on a language switch, where a rebuild costs
-    // nothing: the text itself lives in the room, not in the editor.
-  }, [ytext, skin.placeholder]);
+    // Only the bound text, its awareness channel and the placeholder rebuild
+    // the editor. Everything else below reconfigures it in place — a rebuild
+    // would drop the caret and the undo history mid-sentence. `awareness`
+    // arrives and departs with `ytext`, so it never rebuilds anything on its
+    // own. The placeholder is a translated string, so it changes exactly once,
+    // on a language switch, where a rebuild costs nothing: the text itself
+    // lives in the room, not in the editor.
+  }, [ytext, awareness, skin.placeholder]);
 
   useEffect(() => {
     viewRef.current?.dispatch({

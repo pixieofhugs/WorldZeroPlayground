@@ -357,6 +357,61 @@ describe('CollabRoster rescind × visibility (#1416)', () => {
   })
 })
 
+/**
+ * The live "here now" dot (#1744).
+ *
+ * Presence is a PROP, never derived here: only the composer mount sits inside
+ * `PraxisRoomProvider`, so the ten other mounts (praxis detail ×8, the waiting
+ * surface, and the composer's own waiting stage) get "nothing known" for free —
+ * and the dot becomes testable in a harness where no effect ever runs.
+ *
+ * The dot is ephemeral (a tab closing takes it away) while `StatusPill` is
+ * persistent workflow state, so they must not look alike: "he's not here" and
+ * "he hasn't approved" are different facts and only one blocks the publish.
+ * That is why the dot is a bare filled badge on the avatar's corner rather than
+ * a second bordered chip, and why it takes `card-credit` rather than the
+ * `card-accent` the row already spends on *done*.
+ */
+describe('CollabRoster — the live presence dot (#1744)', () => {
+  const rosterHtml = (present?: readonly number[]) =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={[member(1, false), member(2, false)]}
+        invites={[invite(7, 'Asked', 'pending')]}
+        currentCharacterId={1}
+        factionSlug="coven"
+        presentCharacterIds={present}
+      />,
+    )
+
+  it('lights the dot on the connected member only', () => {
+    const html = rosterHtml([1])
+    expect(html).toContain('M1 is here now')
+    expect(html).not.toContain('M2 is here now')
+  })
+
+  // A public praxis-detail page knows nobody's connection state. An empty dot
+  // column there would read as a crew that had left, which is a claim the page
+  // is in no position to make — so absent means NO MARKUP, not "everyone away".
+  it('draws no dot markup at all where the prop is absent', () => {
+    const html = rosterHtml()
+    expect(html).not.toContain('is here now')
+    expect(html).not.toContain('role="img"')
+  })
+
+  // `invite()` derives `invitee_id` as `id + 100`, so 107 is the invitee behind
+  // invite 7. Nobody who has not accepted can be in the room at all — the
+  // membership check at connect (#1740) is what makes that true — so a claimed
+  // id colliding with an invitee must never light their row.
+  it('never lights an invited row, even for its own invitee id', () => {
+    const html = rosterHtml([1, 2, 107])
+    expect(html).toContain('M1 is here now')
+    expect(html).toContain('M2 is here now')
+    expect(html).not.toContain('Asked is here now')
+  })
+})
+
 // Mirrors the backend `kick_member` guard — see the comment above `canKick`.
 describe('CollabRoster kick × visibility (#959, #1076)', () => {
   const kick = () => {}
