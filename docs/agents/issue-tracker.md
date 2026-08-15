@@ -44,8 +44,14 @@ already expresses both relationships natively — the same mechanism the `needs-
   not the `#number` or `node_id`, and **must** use `-F` — `-f` sends a string and 422s.
 - **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write. The assignee *is* the
   claim; an open unassigned child is unclaimed.
-- **Frontier query**: the map's open children, minus any with an open blocker
-  (`issue_dependencies_summary.blocked_by > 0`) or an assignee; first in map order wins.
+- **Frontier query**: the map's open children, minus any with an open blocker or an assignee; first
+  in map order wins. Read both relationships back with the **GET** side of the same two endpoints —
+  `gh api repos/pixieofhugs/WorldZeroPlayground/issues/<map>/sub_issues` returns the children as
+  full issue objects (`state`, `assignee`), and `.../issues/<n>/dependencies/blocked_by` returns the
+  blockers, so "open blocker" is a `state` check on that list. Do **not** reach for the
+  `issue_dependencies_summary` / `sub_issues_summary` fields some GitHub docs describe: this repo's
+  issue payload does not carry them, so `.issue_dependencies_summary.blocked_by > 0` reads as `null`
+  on every ticket and quietly reports a blocked frontier as takeable.
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append the
   gist + link to the map's Decisions-so-far.
 - **Read a ticket** with `python scripts/gh_issue_comments.py <n>` — the collaborator filter below
