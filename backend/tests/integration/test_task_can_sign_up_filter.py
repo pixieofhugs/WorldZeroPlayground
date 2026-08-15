@@ -32,6 +32,7 @@ from models.task import Task, TaskStatus, TaskType
 from services.era import get_or_create_stats
 from services.praxis import evaluate_signup
 from services.task import list_tasks
+from tests.integration.factories import make_task
 
 # The faction Era 1 grants Double Dipper to. The slug is needed as a real
 # Faction row (FK), but the *ability* is asserted off the config below, never
@@ -78,24 +79,17 @@ async def _make_task(
     status: TaskStatus = TaskStatus.active,
     task_type: TaskType = TaskType.standard,
 ) -> Task:
-    task = Task(
+    return await make_task(
+        db_session,
+        author,
         title=title,
         description="",
         point_value=5,
         level_required=level_required,
         status=status,
         task_type=task_type,
-        created_by=author.id,
-        # Every row is 'ua' so the faction axis never varies: the abilities under
-        # test key off the *character's* faction, not the task's.
-        primary_faction_slug="ua",
+        commit=True,
     )
-    db_session.add(task)
-    await db_session.commit()
-    await db_session.refresh(task)
-    return task
-
-
 async def _seed_in_progress_praxis(
     db_session: AsyncSession, character: Character, task: Task
 ) -> None:

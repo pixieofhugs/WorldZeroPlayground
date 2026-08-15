@@ -23,7 +23,6 @@ import { describe, it, expect } from 'vitest'
 import '../i18n'
 import type { CommentOut } from '../api/comments'
 import type { CharacterOut } from '../api/auth'
-import type { TaskOut } from '../api/tasks'
 import UaTaskCard from '../components/taskCard/UaTaskCard'
 import UaFactionHero from '../components/factionHero/UaFactionHero'
 import { UaSelectCard } from '../components/selectCard/FactionSelectCard'
@@ -31,6 +30,7 @@ import UaFeedFrame from '../components/feed/UaFeedFrame'
 import UaAvatar from '../components/avatar/UaAvatar'
 import UaBackdrop from '../components/backdrop/UaBackdrop'
 import UaComment from '../components/comments/voices/UaComment'
+import { aTask } from '../test/fixtures'
 
 const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 
@@ -44,15 +44,13 @@ const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..')
  */
 const ENSO_MARK = '/factionMarks/enso.webp'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 12,
   title: 'Render the old library façade in charcoal',
   description: 'Draw only what the light is doing.',
   point_value: 30,
-  level_required: 2,
-  status: 'active',
   primary_faction_slug: 'ua',
-} as unknown as TaskOut
+})
 
 const CHARACTER: CharacterOut = {
   id: 42,

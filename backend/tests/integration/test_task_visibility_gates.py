@@ -41,6 +41,7 @@ from models.era import Era
 from models.faction import Faction
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
+from tests.integration.factories import make_admin
 
 # Comfortably either side of the window, so a slow test run cannot flip a row
 # from one side of it to the other mid-assertion.
@@ -63,13 +64,6 @@ async def _set_level_and_faction(
     character.faction_slug = faction
     await session.commit()
 
-
-async def _make_admin(session: AsyncSession, account: Account) -> None:
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id))
-    await session.commit()
 
 
 async def _gated_task(
@@ -200,7 +194,7 @@ async def test_an_admin_gets_the_first_look(
     review queue that waits 48 hours to show a proposal defeats the feature it
     is the other half of.
     """
-    await _make_admin(db_session, account)
+    await make_admin(db_session, account)
     fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
     await _set_level_and_faction(db_session, character, era, 0, "ua")
 
@@ -231,7 +225,7 @@ async def test_an_admin_edit_does_not_move_the_go_live_time(
     the go-live time unpredictable. The proposal below is already ripe and is
     then edited; it stays visible to the level-3 player.
     """
-    await _make_admin(db_session, account)
+    await make_admin(db_session, account)
     ripe = await _gated_task(db_session, character, TaskStatus.pending, RIPE_AGE)
     await _set_level_and_faction(db_session, character2, era, CURRENT_ERA.level_to_see_pending_tasks, "ua")
 

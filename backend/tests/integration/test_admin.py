@@ -15,16 +15,8 @@ from models.faction import Faction
 from models.praxis import Praxis
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
+from tests.integration.factories import make_admin
 
-
-async def _make_admin(account: Account, session: AsyncSession) -> None:
-    """Grant the admin role to an account."""
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    ar = AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    session.add(ar)
-    await session.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +47,7 @@ async def test_admin_list_pending_tasks(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     task = Task(
         title="Pending Admin Test",
@@ -82,7 +74,7 @@ async def test_admin_update_task_status(
     db_session: AsyncSession,
 ):
     """Use the generic status endpoint to retire a task."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.put(
         f"/admin/tasks/{active_task.id}/status",
@@ -109,7 +101,7 @@ async def test_admin_can_move_task_freely_between_states(
     one takes as a parameter, so they were three routes spelling three of this
     route's arguments. Two of the hops below had no dedicated route at all.
     """
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     task = Task(
         title="Free-move",
@@ -174,7 +166,7 @@ async def test_admin_list_flagged_praxes(
     db_session: AsyncSession,
 ):
     """Flagged praxes appear in the admin moderation queue."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     # Create and flag a praxis
     sub_resp = await client.post(
@@ -242,7 +234,7 @@ async def test_admin_list_flagged_comments_includes_flags(
 ):
     """Flagged comments surface with normalized flag rows; an `other` note is
     preserved as reason_detail (#237, ADR-0037)."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     sub_resp = await client.post(
         "/praxes",
@@ -303,7 +295,7 @@ async def test_admin_patch_character_stats(
     db_session: AsyncSession,
 ):
     """Admin can set a character's score, level, and vote budget."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.patch(
         f"/admin/characters/{character.id}/stats",
@@ -331,7 +323,7 @@ async def test_admin_ban_character(
     db_session: AsyncSession,
 ):
     """Admin can ban and unban a character."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     # Ban
     resp = await client.post(
@@ -375,7 +367,7 @@ async def test_admin_ban_deletes_no_media(
     from config import settings as _settings
 
     monkeypatch.setattr(_settings, "MEDIA_ROOT", str(tmp_path))
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     relative_path = os.path.join(str(character2.id), "avatar", "abc", "avatar.jpg")
     absolute_path = os.path.join(str(tmp_path), relative_path)
@@ -409,7 +401,7 @@ async def test_admin_list_accounts(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.get("/admin/accounts", headers=auth_headers)
     assert resp.status_code == 200
@@ -424,7 +416,7 @@ async def test_admin_get_account(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.get(f"/admin/accounts/{account.id}", headers=auth_headers)
     assert resp.status_code == 200
@@ -439,7 +431,7 @@ async def test_admin_list_characters(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.get("/admin/characters", headers=auth_headers)
     assert resp.status_code == 200
@@ -455,7 +447,7 @@ async def test_admin_suspend_account(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         f"/admin/accounts/{account2.id}/suspend",
@@ -479,7 +471,7 @@ async def test_admin_overview(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.get("/admin/overview", headers=auth_headers)
     assert resp.status_code == 200
@@ -496,7 +488,7 @@ async def test_admin_messages(
     db_session: AsyncSession,
 ):
     """Admin can list and archive contact messages."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     msg = ContactMessage(name="Tester", email="t@t.com", message="Hello")
     db_session.add(msg)
@@ -530,7 +522,7 @@ async def test_admin_moderate_praxis_hide(
     praxis_solo: Praxis,
 ):
     """PATCH /admin/praxes/{id}/moderate with status=hidden hides a visible praxis."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.patch(
         f"/admin/praxes/{praxis_solo.id}/moderate",
@@ -551,7 +543,7 @@ async def test_admin_moderate_praxis_unhide(
     praxis_solo: Praxis,
 ):
     """PATCH /admin/praxes/{id}/moderate with status=visible restores a hidden praxis."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     # First hide it
     await client.patch(
@@ -580,7 +572,7 @@ async def test_admin_moderate_praxis_failed_direct(
     praxis_solo: Praxis,
 ):
     """PATCH /admin/praxes/{id}/moderate with status=failed stores the admin note."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.patch(
         f"/admin/praxes/{praxis_solo.id}/moderate",
@@ -601,7 +593,7 @@ async def test_admin_moderate_nonexistent_praxis_returns_404(
     db_session: AsyncSession,
 ):
     """Moderating a praxis that does not exist returns 404."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.patch(
         "/admin/praxes/999999/moderate",
@@ -690,7 +682,7 @@ async def test_admin_list_characters_filter_faction(
     db_session: AsyncSession,
 ):
     """Admin can filter character list by faction slug."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.get("/admin/characters?faction=ua", headers=auth_headers)
     assert resp.status_code == 200
@@ -711,7 +703,7 @@ async def test_admin_list_characters_no_results(
     era: Era,
 ):
     """Admin character list returns empty list for unknown faction."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.get("/admin/characters?faction=nonexistent", headers=auth_headers)
     assert resp.status_code == 200
@@ -737,7 +729,7 @@ async def test_admin_edit_pending_task(
     db_session: AsyncSession,
 ):
     """Admin can edit title and point_value of a pending task."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     task = Task(
         title="Original Title",
@@ -774,7 +766,7 @@ async def test_admin_edit_task_faction(
     the own-faction modifier, so a task filed against the wrong faction was
     unfixable short of SQL before this.
     """
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     task = Task(
         title="Filed Against The Wrong Faction",
@@ -817,7 +809,7 @@ async def test_admin_edit_task_unknown_faction_rejected(
     db_session: AsyncSession,
 ):
     """An unknown slug is a coded 422, not a 500 from the FK (#1714)."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     task = Task(
         title="Untouched",
@@ -850,7 +842,7 @@ async def test_admin_edit_active_task_rejected(
     db_session: AsyncSession,
 ):
     """Admin cannot edit an active task (must retire first)."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.patch(
         f"/admin/tasks/{active_task.id}",
@@ -881,7 +873,7 @@ async def test_admin_patch_stats_recomputes_votes_available(
 
     from game_config import CURRENT_ERA
 
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     # Set a known score so we can predict votes_available
     patch_resp = await client.patch(
@@ -931,7 +923,7 @@ async def test_admin_era_reset_zeros_votes_spent_this_era(
 
     from game_config import CURRENT_ERA
 
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     # Pre-reset: force character to have votes_spent_this_era > 0
     result = await db_session.execute(
@@ -1003,7 +995,7 @@ async def test_admin_era_reset_preserves_votes_spent_without_flag(
     from services.era import apply_era_reset
     from sqlalchemy import select
 
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     # Pre-reset spend
     result = await db_session.execute(

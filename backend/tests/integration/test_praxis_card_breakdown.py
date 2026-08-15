@@ -47,6 +47,7 @@ from services.praxis_out import (
     build_praxis_card_out,
     build_praxis_out,
 )
+from tests.integration.factories import make_task
 
 
 # ---------------------------------------------------------------------------
@@ -168,20 +169,13 @@ async def _ensure_faction(session: AsyncSession, slug: str) -> None:
 async def _make_task(
     session: AsyncSession, creator: Character, *, faction_slug: str, points: int
 ) -> Task:
-    task = Task(
+    return await make_task(
+        session,
+        creator,
         title=f"{faction_slug} task",
-        description="proof",
         point_value=points,
-        level_required=0,
-        status=TaskStatus.active,
-        created_by=creator.id,
-        primary_faction_slug=faction_slug,
+        faction_slug=faction_slug,
     )
-    session.add(task)
-    await session.flush()
-    return task
-
-
 async def _make_solo(
     session: AsyncSession, task: Task, author: Character
 ) -> Praxis:

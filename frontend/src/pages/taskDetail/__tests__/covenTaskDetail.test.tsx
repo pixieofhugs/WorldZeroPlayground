@@ -28,30 +28,21 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import CovenTaskDetail from "../archetypes/CovenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
+import { aTask } from '../../../test/fixtures'
 
-const TASK: TaskOut = {
+const TASK = aTask({
   id: 305,
   title: "Brew comfort for a weary friend",
   description: "Put the kettle on for someone tired.",
   point_value: 120,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 31,
   primary_faction_slug: "coven",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  created_by_avatar_url: "",
-  signup_reason: null,
   in_progress_count: 9,
   created_by_display_name: "Wren Abalone",
   created_by_faction_slug: "coven",
   created_by_level: 4,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
 function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
   return {

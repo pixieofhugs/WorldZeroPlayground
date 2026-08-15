@@ -21,8 +21,8 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import type { DuelDetailOut } from "../../../api/duel";
+import { aMember, aPraxis } from '../../../test/fixtures'
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -34,75 +34,28 @@ const { default: EphemeristsPraxisDetail } = await import(
   "../archetypes/EphemeristsPraxisDetail"
 );
 
-const MEMBER: PraxisMemberOut = {
-  id: 101,
-  praxis_id: 1,
+const MEMBER = aMember({
   character_id: 3,
   character_display_name: "Ada",
-  has_submitted: true,
-  joined_at: "2026-01-01T00:00:00Z",
-  nudged_at: null,
-  submitted_at: null,
-};
+});
 
-const CO_MEMBER: PraxisMemberOut = {
+const CO_MEMBER = aMember({
   id: 102,
-  praxis_id: 1,
   character_id: 4,
   character_display_name: "Beth",
-  has_submitted: true,
   joined_at: "2026-01-02T00:00:00Z",
-  nudged_at: null,
-  submitted_at: null,
-};
+});
 
-const PRAXIS: PraxisOut = {
-  id: 1,
-  task_id: 7,
+const PRAXIS = aPraxis({
   task_title: "The Sunk Causeway",
-  task_point_value: 12,
-  task_level_required: 2,
   task_faction_slug: "ephemerists",
-  type: "solo",
-  status: "submitted",
   title: "Low Water, Third Reading",
   body_text: "Walked the causeway at the ebb and marked the stones.",
-  moderation_status: "visible",
-  admin_note: null,
-  flagged_at: null,
-  submitted_at: "2026-01-03T00:00:00Z",
-  submit_proposed_at: null,
   created_by_id: 3,
   created_by_display_name: "Ada",
   created_by_faction_slug: "ephemerists",
-  created_at: "2026-01-01T00:00:00Z",
-  updated_at: "2026-01-03T00:00:00Z",
   members: [MEMBER],
-  invites: [],
-  media_items: [
-    {
-      id: 9,
-      praxis_id: 1,
-      type: "image",
-      file_path: "proof.png",
-      display_order: 0,
-      created_at: "2026-01-03T00:00:00Z",
-    },
-  ],
-  // (base 12 + meta 0) × 1.0 + 4 from votes.
-  score: 16,
-  metatask_points: 0,
-  display_multiplier: 1.0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
-  duel_id: null,
-  can_flag: true,
-  applied_metatasks: [],
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voter_count: 0,
-};
+});
 
 /** A settled duel this praxis is the challenger side of. */
 const DUEL: DuelDetailOut = {

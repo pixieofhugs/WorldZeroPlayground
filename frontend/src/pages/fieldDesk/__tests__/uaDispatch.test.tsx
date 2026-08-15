@@ -21,7 +21,7 @@ import UaFieldDesk from '../mobileArchetypes/UaFieldDesk'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import type { CharacterOut } from '../../../api/auth'
-import type { PraxisCardOut } from '../../../api/praxis'
+import { aPraxisCard } from '../../../test/fixtures'
 
 const CHARACTER: CharacterOut = {
   id: 42,
@@ -41,45 +41,19 @@ const CHARACTER: CharacterOut = {
   invitations: [],
 }
 
-const ACTIVE_TASK: PraxisCardOut = {
-  id: 55,
-  task_id: 7,
+const ACTIVE_TASK = aPraxisCard({
   task_title: 'Ten thumbnails before breakfast',
   task_point_value: 15,
   task_level_required: 1,
-  type: 'solo',
   status: 'in_progress',
   title: null,
-  moderation_status: 'visible',
   created_by_id: 42,
   created_by_display_name: 'Ada Reed',
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
   submitted_at: null,
-  member_count: 1,
   score: 0,
-  voter_count: 0,
-  metatask_points: 0,
-  display_multiplier: 1.0,
   points_from_votes: 0,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
   task_faction_slug: 'ua',
-  applied_metatasks: [],
-  body_text: null,
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  duel_id: null,
-  media_items: [],
-  members: [],
-  opponent_display_name: null,
-  opponent_faction_slug: null,
-  opponent_praxis_id: null,
-  submit_proposed_at: null,
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voted_by_name: null,
-}
+})
 
 function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeState {
   return {

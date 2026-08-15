@@ -24,10 +24,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import i18n from '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import type { PraxisOut, PraxisMemberOut } from '../../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
-import type { TaskOut } from '../../../api/tasks'
 import type { CurrentUser } from '../../../api/auth'
+import { aMember, aPraxis, aTask } from '../../../test/fixtures'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
 vi.mock('../../../hooks/useFormFactor', () => ({
@@ -37,75 +36,25 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 // Imported after the mock so the archetype picks it up.
 const { default: CovenPraxisDetail } = await import('../archetypes/CovenPraxisDetail')
 
-const MEMBER: PraxisMemberOut = {
-  id: 101,
-  praxis_id: 1,
+const MEMBER = aMember({
   character_id: 3,
   character_display_name: 'Ada',
-  has_submitted: true,
-  joined_at: '2026-01-01T00:00:00Z',
-  nudged_at: null,
-  submitted_at: null,
-}
+})
 
-const CO_MEMBER: PraxisMemberOut = {
+const CO_MEMBER = aMember({
   id: 102,
-  praxis_id: 1,
   character_id: 4,
   character_display_name: 'Beth',
-  has_submitted: true,
   joined_at: '2026-01-02T00:00:00Z',
-  nudged_at: null,
-  submitted_at: null,
-}
+})
 
-const PRAXIS: PraxisOut = {
-  id: 1,
-  task_id: 7,
-  task_title: 'Sweep The Stoop',
-  task_point_value: 12,
-  task_level_required: 2,
+const PRAXIS = aPraxis({
   task_faction_slug: 'coven',
-  type: 'solo',
-  status: 'submitted',
-  title: 'The Long Way Round',
-  body_text: 'Walked the whole ridge before dark.',
-  moderation_status: 'visible',
-  admin_note: null,
-  flagged_at: null,
-  submitted_at: '2026-01-03T00:00:00Z',
-  submit_proposed_at: null,
   created_by_id: 3,
   created_by_display_name: 'Ada',
   created_by_faction_slug: 'coven',
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-03T00:00:00Z',
   members: [MEMBER],
-  invites: [],
-  media_items: [
-    {
-      id: 9,
-      praxis_id: 1,
-      type: 'image',
-      file_path: 'proof.png',
-      display_order: 0,
-      created_at: '2026-01-03T00:00:00Z',
-    },
-  ],
-  // (base 12 + meta 0) × 1.0 + 4 from votes.
-  score: 16,
-  metatask_points: 0,
-  display_multiplier: 1.0,
-  points_from_votes: 4,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
-  duel_id: null,
-  can_flag: true,
-  applied_metatasks: [],
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voter_count: 0,
-}
+})
 
 const MINE: DuelSideOut = {
   praxis_id: 1,
@@ -144,28 +93,19 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
   }
 }
 
-const SEAL_METATASK: TaskOut = {
+const SEAL_METATASK = aTask({
   id: 501,
   title: 'Composting',
-  description: '',
   point_value: 60,
   level_required: 0,
-  status: 'active',
   task_type: 'metatask',
   created_by: 9,
-  primary_faction_slug: 'na',
   metatask_faction_slug: 'coven',
-  created_at: '2026-01-01T00:00:00Z',
-  in_progress_count: 0,
   created_by_display_name: '',
-  created_by_avatar_url: '',
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
   can_sign_up: false,
   allowed_modes: [],
   eligible_for_current_user: false,
-}
+})
 
 const VIEWER: CurrentUser = {
   id: 50,

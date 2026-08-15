@@ -37,49 +37,29 @@ import { surfaceMap } from "../../../factions";
 import { AuthContext } from "../../../auth/AuthContext";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { PraxisOut } from "../../../api/praxis";
 import type { CurrentUser } from "../../../api/auth";
+import { aPraxis } from '../../../test/fixtures'
 
 const HEADING = "Cast your vote";
 const PROMPT = "How much did this move you?";
 
-const PRAXIS: PraxisOut = {
-  id: 1,
-  task_id: 7,
+const PRAXIS = aPraxis({
   task_title: "Mangrove",
   task_point_value: 30,
   task_level_required: 3,
   task_faction_slug: "ua",
-  type: "solo",
-  status: "submitted",
   title: "Reforestation",
   body_text: "Seedlings planted along the estuary.",
-  moderation_status: "visible",
-  admin_note: null,
-  flagged_at: null,
   submitted_at: "2026-01-02T00:00:00Z",
-  submit_proposed_at: null,
   created_by_id: 3,
   created_by_display_name: "Ada",
   created_by_faction_slug: "ua",
-  created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-02T00:00:00Z",
   members: [],
-  invites: [],
   media_items: [],
   score: 46,
-  metatask_points: 0,
-  display_multiplier: 1.0,
   points_from_votes: 16,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
-  duel_id: null,
-  can_flag: true,
-  applied_metatasks: [],
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voter_count: 0,
-};
+});
 
 function viewer(): CurrentUser {
   return {

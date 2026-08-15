@@ -27,10 +27,11 @@ import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import type { PraxisOut, PraxisMemberOut } from '../../../api/praxis'
+import type { PraxisOut } from '../../../api/praxis'
 import type { CharacterOut, CurrentUser } from '../../../api/auth'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../../api/duel'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
+import { aMember } from '../../../test/fixtures'
 
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
@@ -56,16 +57,11 @@ function text(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>).replace(/<[^>]*>/g, '')
 }
 
-const MEMBER: PraxisMemberOut = {
+const MEMBER = aMember({
   id: 10,
-  praxis_id: 1,
   character_id: 1,
   character_display_name: 'Ada',
-  has_submitted: true,
-  joined_at: '2026-01-01T00:00:00Z',
-  nudged_at: null,
-  submitted_at: null,
-}
+})
 
 function praxis(): PraxisOut {
   return {

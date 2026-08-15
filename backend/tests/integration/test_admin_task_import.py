@@ -18,21 +18,12 @@ from models.character import Character
 from models.faction import Faction, FactionStatus
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
+from tests.integration.factories import make_admin
 
 IMPORT_URL = "/admin/tasks/import-csv"
 
 HEADER = "Name,Faction,Description,Level,Points"
 
-
-async def _make_admin(account: Account, session: AsyncSession) -> None:
-    """Grant the admin role to an account."""
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    )
-    await session.commit()
 
 
 def _upload(csv_text: str) -> dict:
@@ -97,7 +88,7 @@ async def test_well_formed_csv_creates_exactly_those_tasks(
     db_session: AsyncSession,
 ):
     """Every field lands with the value the CSV named."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     csv_text = (
         f"{HEADER}\n"
@@ -146,7 +137,7 @@ async def test_empty_description_is_stored_as_empty_string(
     db_session: AsyncSession,
 ):
     """`description` is NOT NULL — a blank column must become '', never NULL."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         IMPORT_URL,
@@ -170,7 +161,7 @@ async def test_legacy_faction_alias_is_corrected_and_reported(
     db_session: AsyncSession,
 ):
     """A known legacy slug is normalised, and the admin is told it happened."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         IMPORT_URL,
@@ -206,7 +197,7 @@ async def test_malformed_row_rejects_the_whole_file(
     db_session: AsyncSession,
 ):
     """One bad row rejects every row — the import is atomic."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
     csv_text = (
@@ -239,7 +230,7 @@ async def test_every_bad_row_is_reported_not_just_the_first(
     db_session: AsyncSession,
 ):
     """The admin fixes the whole file in one pass, not one row per upload."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     csv_text = (
         f"{HEADER}\n"
@@ -268,7 +259,7 @@ async def test_unknown_faction_slug_names_the_row(
     db_session: AsyncSession,
 ):
     """An unknown faction is a rejection, not a silent NULL or a FK explosion."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
     resp = await client.post(
@@ -292,7 +283,7 @@ async def test_duplicate_title_within_the_file_is_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
     csv_text = (
@@ -322,7 +313,7 @@ async def test_title_that_already_exists_is_skipped_not_rejected(
     Re-running a curated sheet after adding a few lines has to be safe, so a
     collision with the board is a warning rather than a rejection of the file.
     """
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         IMPORT_URL,
@@ -364,7 +355,7 @@ async def test_file_of_only_duplicates_creates_nothing_and_still_succeeds(
     db_session: AsyncSession,
 ):
     """Re-importing an unchanged file is a no-op, not an error."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
     before = await _task_titles(db_session)
 
     resp = await client.post(
@@ -387,7 +378,7 @@ async def test_missing_required_column_is_rejected(
     db_session: AsyncSession,
 ):
     """A CSV with the wrong header fails on the header, not row by row."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         IMPORT_URL,
@@ -407,7 +398,7 @@ async def test_empty_file_is_rejected(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(IMPORT_URL, headers=auth_headers, files=_upload(""))
 
@@ -423,7 +414,7 @@ async def test_no_data_rows_is_rejected(
     db_session: AsyncSession,
 ):
     """A header-only file is a mistake worth naming, not a silent no-op."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(IMPORT_URL, headers=auth_headers, files=_upload(HEADER))
 
@@ -439,7 +430,7 @@ async def test_utf8_bom_header_is_tolerated(
     db_session: AsyncSession,
 ):
     """Excel writes a BOM; without utf-8-sig the first column name is mangled."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         IMPORT_URL,
@@ -466,7 +457,7 @@ async def test_non_utf8_bytes_are_rejected(
     db_session: AsyncSession,
 ):
     """A binary file dropped into the picker fails on decode, not on insert."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     resp = await client.post(
         IMPORT_URL,
@@ -485,7 +476,7 @@ async def test_admin_without_an_active_character_is_rejected(
     db_session: AsyncSession,
 ):
     """`created_by` is NOT NULL — an admin with no character cannot import."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
     db_session.add(Faction(slug="ua", status=FactionStatus.visible))
     await db_session.commit()
 

@@ -34,17 +34,8 @@ from models.praxis import (
 from models.roles import AccountRole, Role
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
+from tests.integration.factories import make_admin
 
-
-async def _make_admin(account: Account, session: AsyncSession) -> None:
-    """Grant the admin role to an account."""
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    )
-    await session.commit()
 
 
 async def _score_of(character_id: int, session: AsyncSession) -> int:
@@ -115,7 +106,7 @@ async def test_admin_marking_failed_recomputes_the_score(
     praxis_solo: Praxis,
 ):
     """submit → vote → score > 0 → admin marks failed → score drops, no other action."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     vote_response = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
@@ -146,7 +137,7 @@ async def test_restoring_a_failed_praxis_restores_the_score(
     vote: Vote,
 ):
     """The mark is reversible: back to ``visible`` and the points return."""
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
     await recalculate_character_stats(character.id, db_session)
     before = await _score_of(character.id, db_session)
     assert before > 0
@@ -180,7 +171,7 @@ async def test_failing_a_duel_side_moves_the_opponents_recorded_score(
     work an admin ruled did not meet the task — until their own next unrelated
     edit. The ruling has to reach the opponent's row in the same transaction.
     """
-    await _make_admin(account, db_session)
+    await make_admin(db_session, account)
 
     opponent_praxis = Praxis(
         task_id=praxis_solo.task_id,

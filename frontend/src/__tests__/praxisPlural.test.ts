@@ -19,26 +19,16 @@
  * and is not a finding. Import specifiers are stripped too — `pages/praxes/` is
  * a real directory, and renaming directories is out of scope for #1136.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
+// `includeTests` is on: this sweep is about every `/praxes` in the tree, and it
+// excuses its own fixtures by name (FIXTURE_FILES) rather than by directory.
+import { SRC_DIR, sourceFiles, stripComments, toRelative } from '../test/sourceScan'
 
-const SRC_DIR = fileURLToPath(new URL('..', import.meta.url))
 const LOCALES_DIR = join(SRC_DIR, 'locales', 'en')
 
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry: string) => {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return sourceFiles(path)
-    return /\.tsx?$/.test(entry) ? [path] : []
-  })
-}
-
-const toRelative = (path: string) => relative(SRC_DIR, path).split('\\').join('/')
-
-const stripComments = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+const allSource = () => sourceFiles({ includeTests: true })
 
 /**
  * `pages/praxes/` is a real source directory — an import specifier, or a plain
@@ -75,7 +65,7 @@ describe('the API keeps saying /praxes (#1136)', () => {
    * there is correct, not a regression. Nothing under `__tests__` issues a
    * request, which is what this rule is about.
    */
-  const apiFiles = sourceFiles(join(SRC_DIR, 'api')).filter(
+  const apiFiles = sourceFiles({ dir: join(SRC_DIR, 'api'), includeTests: true }).filter(
     (path) => !toRelative(path).startsWith('api/__tests__/'),
   )
 
@@ -100,7 +90,7 @@ describe('the API keeps saying /praxes (#1136)', () => {
 
 describe('no router path says /praxes (#1136)', () => {
   it('has no /praxes left outside api/', () => {
-    const offenders = sourceFiles(SRC_DIR)
+    const offenders = allSource()
       .filter(
         (path) => !toRelative(path).startsWith('api/') && !FIXTURE_FILES.has(toRelative(path)),
       )
@@ -131,10 +121,9 @@ describe('no user-visible string says "praxes" (#1136)', () => {
 })
 
 describe('the scan sees the codebase', () => {
-  it('reads a non-empty file set', () => {
-    expect(sourceFiles(SRC_DIR).length).toBeGreaterThan(100)
-  })
-
+  // "reads a non-empty file set" is asserted once, with the shared walk, in
+  // `src/test/__tests__/sourceScan.test.ts`. The stripper below is this file's
+  // own — it strips MODULE PATHS as well as comments — so it is tested here.
   it('strips comments and source paths, but not real route literals', () => {
     expect(routePaths('// GET /praxes/{id}/voters')).not.toContain('/praxes')
     expect(routePaths("import x from './praxes/usePraxes'")).not.toContain('/praxes')

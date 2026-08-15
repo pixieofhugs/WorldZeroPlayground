@@ -30,8 +30,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import type { TaskOut } from "../../../api/tasks";
-import type { PraxisCardOut } from "../../../api/praxis";
+import { aPraxisCard, aTask } from '../../../test/fixtures'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -41,68 +40,26 @@ function render(element: ReactElement): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, "") };
 }
 
-const TASK: TaskOut = {
-  id: 7,
+const TASK = aTask({
   title: "Reforestation",
   description: "Mangrove",
   point_value: 30,
   level_required: 3,
-  status: "active",
-  task_type: "standard",
   created_by: 3,
   primary_faction_slug: "snide",
-  metatask_faction_slug: null,
-  created_at: "2026-01-01T00:00:00Z",
-  in_progress_count: 0,
   created_by_display_name: "",
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  created_by_level: 0,
-  signup_reason: null,
-  can_sign_up: true,
-  allowed_modes: ["solo"],
-  eligible_for_current_user: true,
-};
+});
 
-const MY_PRAXIS: PraxisCardOut = {
-  id: 55,
-  task_id: 7,
+const MY_PRAXIS = aPraxisCard({
   task_title: "Reforestation",
   task_point_value: 30,
   task_level_required: 3,
-  type: "solo",
-  status: "submitted",
-  title: "Seedlings",
-  moderation_status: "visible",
   created_by_id: 3,
   created_by_display_name: "Ada",
-  created_at: "2026-01-01T00:00:00Z",
-  updated_at: "2026-01-01T00:00:00Z",
-  submitted_at: "2026-01-02T00:00:00Z",
-  member_count: 1,
   score: 4.2,
-  voter_count: 0,
-  metatask_points: 0,
-  display_multiplier: 1.0,
   points_from_votes: 0,
-  habit_bonus_points: 0,
-  is_top_for_task: false,
   task_faction_slug: "snide",
-  applied_metatasks: [],
-  body_text: null,
-  created_by_avatar_url: "",
-  created_by_faction_slug: null,
-  duel_id: null,
-  media_items: [],
-  members: [],
-  opponent_display_name: null,
-  opponent_faction_slug: null,
-  opponent_praxis_id: null,
-  submit_proposed_at: null,
-  viewer_can_vote: true,
-  viewer_vote: null,
-  voted_by_name: null,
-};
+});
 
 /** Base state — every flag off; scenarios override what they exercise. */
 function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
