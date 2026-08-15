@@ -33,7 +33,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *   - the BASE row appears only when some other term has moved the figure. With
  *     no multiplier, no metatask and no votes the disc already states it, so the
  *     row would print the same number twice (#1131) — the working out drops to
- *     nothing and the tally keeps the sheet honest on its own.
+ *     nothing, and under ADR-0076 the tally and its rule go with it.
  *   - the MULT row appears only when the multiplier is not ×1.0. `era_1`
  *     neutralises it to 1.0 for every faction, so the row is dark today and
  *     lights up on its own if an era ever configures one.
@@ -41,8 +41,8 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *   - the HABIT row appears only when a habit bonus was banked (#1617), and sits
  *     under the tally's rule with the votes — both are flat terms added after
  *     the multiplier, never inside it.
- *   - the VOTES tally is drawn ALWAYS, including `+0` — an absent row cannot
- *     say "nobody has voted yet".
+ *   - the VOTES tally appears only when there are votes (ADR-0076), so a
+ *     base-only praxis is the disc and its caption alone.
  * Nothing is derived by subtraction; that was the bug ADR-0053 retired.
  *
  * ## Size
@@ -239,29 +239,31 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         </div>
       ))}
 
-      {/* The tally, under a rule of its own. Always drawn: `+ 0 from votes` is a
-          fact about this praxis, not a missing row. Its rule separates it from
-          the working above — with no working (the #1131 empty state) there is
-          nothing to separate, and the rule would hang under the disc alone.
+      {/* The flat terms, under a rule of their own — the rule is the multiplier's
+          edge: everything over it is inside `(base + meta) × mult` and everything
+          under it is flat (#1617). Both leave at 0: the habit bonus always did,
+          and the tally does since ADR-0076. With neither, the block goes rather
+          than hanging an empty rule under the disc.
 
-          The habit bonus joins it BELOW that rule rather than in the ruled rows
-          above, because the rule is the multiplier's edge: everything over it is
-          inside `(base + meta) × mult` and everything under it is flat (#1617).
-          Unlike the tally it goes when it is 0 — the vast majority of praxes. */}
-      <div
-        style={{
-          borderTop: rows.length > 0 ? "1px solid var(--faction-default-card-line)" : undefined,
-          marginTop: "var(--space-xs)",
-          paddingTop: rows.length > 0 ? "var(--space-sm)" : undefined,
-          fontFamily: "var(--font-body)",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.06em",
-          color: "var(--faction-default-card-muted)",
-        }}
-      >
-        <div>{t("card.stamp.fromVotes", { votes })}</div>
-        {habit !== null && <div>{t("card.stamp.habitBonus", { points: habit })}</div>}
-      </div>
+          `rows.length > 0` whenever this block is drawn — votes or habit both
+          un-suppress the base row — so the rule is only ever conditional in the
+          direction the compiler cannot see. */}
+      {(votes !== null || habit !== null) && (
+        <div
+          style={{
+            borderTop: rows.length > 0 ? "1px solid var(--faction-default-card-line)" : undefined,
+            marginTop: "var(--space-xs)",
+            paddingTop: rows.length > 0 ? "var(--space-sm)" : undefined,
+            fontFamily: "var(--font-body)",
+            fontSize: "var(--text-base)",
+            letterSpacing: "0.06em",
+            color: "var(--faction-default-card-muted)",
+          }}
+        >
+          {votes !== null && <div>{t("card.stamp.fromVotes", { votes })}</div>}
+          {habit !== null && <div>{t("card.stamp.habitBonus", { points: habit })}</div>}
+        </div>
+      )}
     </div>
   );
 }
