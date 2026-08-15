@@ -23,8 +23,9 @@
  *
  * - the desktop aside track is **330px** (the Unaffiliated design's 340 is the
  *   outlier);
- * - the **crown renders at both form factors**, always. It arrives inside the
- *   shared `PraxisStatusBanners`, keyed only on `is_top_for_task`. This faction's
+ * - the **crown renders at both form factors**, always. It arrives in the score
+ *   stamp's corner, keyed only on `is_top_for_task` (#1710 retired the hero
+ *   banner it used to arrive in). This faction's
  *   design draws `showCrownMobile: false` and that is the outlier too — it is a
  *   canonical mark reading `--fdl-*` (ADR-0054), so a skin may not reposition or
  *   suppress it (owner ruling, 2026-07-28);
@@ -53,7 +54,7 @@
  *
  * ## Reused, not rebuilt
  *
- * `TaskCrown` (via the shared banners) · `ScoreStamp`, which since #1091 owns the
+ * `TaskCrown` (mounted by `ScoreStamp`, #1710) · `ScoreStamp`, which since #1091 owns the
  * whole score rail — the Everymen rubber-stamp roundel, the ruled rows and the
  * votes tally — so this file only mounts it and builds NO arithmetic of its own
  * (`scoreBreakdown()` is the single authority, ADR-0053) · `VoteUI`, which
@@ -400,9 +401,10 @@ export default function EverymenPraxisDetail({
   );
 
   // ── Moderation banners — NEUTRAL, deliberately outside the costume ─────────
-  // ADR-0061: the crown hero, the failed note, the flagged notice and
-  // the steward bar read the shared neutral block in every faction's dress. The
-  // design voices all four ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that
+  // ADR-0061: the failed note, the flagged notice and the steward bar read the
+  // shared neutral block in every faction's dress (the crown hero went with
+  // #1710). The
+  // design voices all of them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that
   // vocabulary is recorded on the issue and not built.
   const banners = (
     <>
@@ -564,8 +566,11 @@ export default function EverymenPraxisDetail({
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        {/* The crown already has its own hero banner above; one mark per page. */}
-        <ScoreStamp praxis={praxis} showCrown={false} />
+        {/* THE PAGE'S ONE MARK, IN THE CORNER (#1710). The stamp's crown was off
+            here because a bordered hero panel above already drew one. The panel
+            is gone (owner ruling: "just a fleur in the corner"), so the mark
+            comes back to the stamp -- still one per page, still ADR-0054's. */}
+        <ScoreStamp praxis={praxis} />
       </div>
     </section>
   );
