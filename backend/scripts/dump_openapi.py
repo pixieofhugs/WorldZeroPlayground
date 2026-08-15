@@ -56,6 +56,9 @@ PLACEHOLDER_ENVIRONMENT = {
     "GOOGLE_CLIENT_ID": "openapi-dump-client-id",
     "GOOGLE_CLIENT_SECRET": "openapi-dump-client-secret",
     "GOOGLE_REDIRECT_URI": "http://localhost:8000/auth/google/callback",
+    "DISCORD_CLIENT_ID": "openapi-dump-client-id",
+    "DISCORD_CLIENT_SECRET": "openapi-dump-client-secret",
+    "DISCORD_REDIRECT_URI": "http://localhost:8000/auth/discord/callback",
     "MEDIA_BASE_URL": "http://localhost:8000/media",
     "MEDIA_ROOT": "/tmp/openapi-dump-media",
 }
