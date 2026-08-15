@@ -17,17 +17,19 @@ import { FACTION_RAINBOW_ORDER } from '../../../utils/factions'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',
-  theme: 'dark' as 'light' | 'dark',
+  useTheme: vi.fn(() => ({ theme: 'dark' as 'light' | 'dark', toggle: () => {} })),
 }))
 
 vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => mocks.formFactor,
 }))
-// The viz dispatch reads the shared reactive theme cell (#701). Driving the hook
-// directly is the dispatch decision itself — there is no DOM here for a real
-// `[data-theme]` attribute to cascade through.
+// `useTheme` throws outside its provider by design (#701), so the players tree
+// needs it stubbed to render at all. It is a SPY because "one sky in both
+// themes" (#1700, ADR-0074) is the claim that nothing here calls it — see the
+// dispatch describe below. There is no DOM in this harness for a real
+// `[data-theme]` attribute to cascade through either way.
 vi.mock('../../../hooks/useTheme', () => ({
-  useTheme: () => ({ theme: mocks.theme, toggle: () => {} }),
+  useTheme: mocks.useTheme,
 }))
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: null as CurrentUser | null }),
@@ -39,7 +41,6 @@ vi.mock('../../../api/leaderboard', () => ({
 import Leaderboard, { DesktopLeaderboard } from '../../Leaderboard'
 import DefaultPlayers from '../mobileArchetypes/DefaultPlayers'
 import Constellation, { skyRadius, type RankedPlayer } from '../Constellation'
-import Meadow, { placeBlooms } from '../Meadow'
 import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from '../SkyCanvas'
 import SkyLegend from '../SkyLegend'
 import RosterTable from '../RosterTable'
@@ -144,7 +145,7 @@ describe('desktop constellation (#656)', () => {
   })
 
   // #684 §§6-7: the pin/tether is GONE (it drew a sigil at a radius its rank had
-  // not earned); the sky gains the same in-viz "you" ring the meadow has.
+  // not earned); the sky carries an in-viz "you" ring instead.
   it('rings the viewer own orb when in the sky, and never pins them when not', () => {
     const inSky = render(
       <Constellation players={ranked(PLAYERS)} maxScore={2140} myCharId={22} {...STAGE} />,
@@ -161,171 +162,28 @@ describe('desktop constellation (#656)', () => {
   })
 })
 
-describe('light-theme meadow (#684)', () => {
-  it('links every bloom to its public profile, champion first', () => {
-    const { html } = render(
-      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
-    )
-    expect(html).toContain('href="/characters/11"')
-    expect(html).toContain('href="/characters/22"')
-    expect(html).toContain('href="/characters/33"')
-    // Champion first in document order — the field is painted front-to-back.
-    expect(html.indexOf('href="/characters/11"')).toBeLessThan(html.indexOf('href="/characters/22"'))
-  })
-
-  it('shows the meadow zero state and no golden champion when nothing has bloomed', () => {
-    const flat = PLAYERS.map((c) => ({ ...c, score: 0 }))
-    const { text, html } = render(
-      <Meadow players={ranked(flat)} maxScore={0} myCharId={null} {...STAGE} />,
-    )
-    expect(text, 'meadow copy, not the sky wording').toContain('The season is young')
-    expect(text).not.toContain('The era is young')
-    expect(html, 'no golden bloom in the zero state').not.toContain('--meadow-champion-petal')
-  })
-
-  it('rings the viewer own bloom only when they are in the field (§7)', () => {
-    const inField = render(
-      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={22} {...STAGE} />,
-    )
-    expect(inField.html).toContain('--meadow-you')
-    expect(inField.text).toContain('You')
-
-    const outsideField = render(
-      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={999} {...STAGE} />,
-    )
-    expect(outsideField.html, 'outside the top N the field says nothing').not.toContain(
-      '--meadow-you',
-    )
-  })
-
-  // The unaffiliated spectrum is never a single faction hue (ADR-0039): the
-  // `na` bloom wears one faction per petal.
-  it('paints an unaffiliated bloom with the whole spectrum, not one faction', () => {
-    const { html } = render(
-      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
-    )
-    // Every faction in the spectrum, each exactly once — asserted off the array
-    // so the bloom cannot silently drop or double a hue when the order changes.
-    for (const slug of FACTION_RAINBOW_ORDER) {
-      expect(html, `${slug} petal`).toContain(`--faction-${slug})`)
-    }
-    // Albescent hides in plain sight (#783): it is not in the spectrum, so it
-    // must never appear as a petal. This bloom is what an unrevealed player
-    // sees, and a near-black petal would announce the society exists.
-    expect(html).not.toContain('--faction-albescent')
-  })
-
-  // #805: the bloom is TWO petal layers — a large soft wash under a smaller
-  // solid petal. The wash used to be suppressed outright for an unaffiliated
-  // player (`fill="none"`), so their bloom lost its flower shape and read as a
-  // scatter of dots beside everyone else's. An SVG `fill` takes a gradient, so
-  // this was never one of ADR-0039's scalar contexts: it walks the spectrum.
-  it('gives the unaffiliated bloom its soft wash, in the spectrum light tints', () => {
-    const { html } = render(
-      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
-    )
-    for (const slug of FACTION_RAINBOW_ORDER) {
-      expect(html, `${slug} wash petal`).toContain(`--faction-${slug}-light)`)
-    }
-    // The wash layer is the rx 17 / ry 26 ellipse; none of them may be blank.
-    expect(html, 'no wash petal is suppressed').not.toContain('rx="17" ry="26" fill="none"')
-  })
-
-  it('still washes a themed bloom in its own single hue', () => {
-    // The other half: only the unaffiliated bloom is shape-dependent. Reza is
-    // Ephemerists and Wren is Everymen, so each wash is one tint, not seven.
-    // (Neither may be the champion — the champion's own gilt overrides both
-    // petal layers before the faction is consulted.)
-    const { html } = render(
-      <Meadow
-        players={ranked([PLAYERS[1], player({ id: 44, display_name: 'Wren', faction_slug: 'everymen', score: 100 })])}
-        maxScore={2140}
-        myCharId={null}
-        {...STAGE}
-      />,
-    )
-    expect(html).toContain('--faction-everymen-light)')
-    expect(html).not.toContain('--faction-coven-light)')
-  })
-})
-
-// §3's load-bearing invariant. Asserted on the placement function, not the DOM —
-// there is no layout engine in this harness to measure.
-describe('meadow depth placement (#684 §3)', () => {
-  const MANY = Array.from({ length: 12 }, (_, index) =>
-    player({ id: 100 + index, display_name: `P${index}`, score: 1200 - index * 90 }),
-  )
-
-  it('gives every bloom a unique, strictly increasing depth', () => {
-    const blooms = placeBlooms(ranked(MANY), 900, 765, 1200)
-    const depths = blooms.map((b) => b.depth)
-    expect(new Set(depths).size, 'no two blooms share a depth').toBe(blooms.length)
-    for (let index = 1; index < blooms.length; index += 1) {
-      expect(depths[index], `rank ${index + 1} stands behind rank ${index}`).toBeGreaterThan(
-        depths[index - 1],
-      )
-      // Farther back = higher on the stage. Strict, so "the frontmost flower is
-      // #1" holds for every PAIR, not just for the champion.
-      expect(blooms[index].y).toBeLessThan(blooms[index - 1].y)
-    }
-  })
-
-  it('sizes blooms by score alone — never by depth', () => {
-    const blooms = placeBlooms(ranked(MANY), 900, 765, 1200)
-    for (let index = 1; index < blooms.length; index += 1) {
-      expect(blooms[index].size).toBeLessThan(blooms[index - 1].size)
-    }
-    // Two equal scores at different depths must be the same size.
-    const tied = ranked([
-      player({ id: 1, score: 500 }),
-      player({ id: 2, score: 500 }),
-      player({ id: 3, score: 900 }),
-    ])
-    const placed = placeBlooms(tied, 900, 765, 900)
-    const equalScored = placed.filter((b) => b.entry.points === 500)
-    expect(equalScored[0].size).toBe(equalScored[1].size)
-    expect(equalScored[0].y).not.toBe(equalScored[1].y)
-  })
-
-  it('drops depth ranking entirely in the zero state — uniform, even scatter', () => {
-    const flat = MANY.map((c) => ({ ...c, score: 0 }))
-    const blooms = placeBlooms(ranked(flat), 900, 765, 0)
-    const sizes = new Set(blooms.map((b) => b.size))
-    expect(sizes.size, 'every bud is the same size').toBe(1)
-    expect(blooms.some((b) => b.champion), 'nobody leads a field nobody has bloomed in').toBe(false)
-  })
-
-  it('is deterministic — the same input places identically', () => {
-    const first = placeBlooms(ranked(MANY), 900, 765, 1200)
-    const second = placeBlooms(ranked(MANY), 900, 765, 1200)
-    expect(first.map((b) => [b.x, b.y])).toEqual(second.map((b) => [b.x, b.y]))
-  })
-})
-
-describe('theme-bound viz dispatch (#684 §1)', () => {
+// #1700 (ADR-0074) reverses #684 §1, which made the visualisation THEME-BOUND —
+// a night sky for dark, the Meadow's sunlit field for light. The Meadow is
+// retired and the Constellation is the one sky. Asserting "same output in both
+// themes" would be vacuous now that nothing here reads the theme, so the claim
+// is stated as what it actually is: the board never consults the theme, and the
+// sky is really on screen in the sky's own words.
+describe('one sky serves both themes (#1700)', () => {
   // Rendered through DesktopLeaderboard, NOT <Leaderboard/>: the page wrapper
-  // shows "Loading…" here (no effect resolves the fetch), so a dispatch
-  // assertion against it would pass with nothing on screen.
+  // shows "Loading…" here (no effect resolves the fetch), so an assertion
+  // against it would pass with nothing on screen.
   const board = () => (
     <DesktopLeaderboard characters={PLAYERS} loading={false} error={null} user={null} />
   )
 
-  it('draws the meadow, in meadow words, under the light theme', () => {
-    mocks.theme = 'light'
+  it('draws the constellation, in sky words, without reading the theme', () => {
+    mocks.useTheme.mockClear()
     const { html, text } = render(board())
-    expect(html, 'the meadow is really on screen').toContain('sunlit field of players')
-    expect(html).not.toContain('night sky of players')
-    expect(text, 'the tagline follows the encoding').toContain('nearer the front of the field')
-    expect(text).toContain('Bigger bloom')
-  })
-
-  it('draws the constellation, in sky words, under the dark theme', () => {
-    mocks.theme = 'dark'
-    const { html, text } = render(board())
-    expect(html).toContain('night sky of players')
-    expect(html).not.toContain('sunlit field of players')
-    expect(text).toContain('closer to the sun')
-    expect(text).toContain('Bigger sigil')
+    expect(html, 'the sky is really on screen').toContain('night sky of players')
+    expect(html, 'no light-theme sibling survives').not.toContain('sunlit field of players')
+    expect(text, 'the tagline names the sky encoding').toContain('closer to the sun')
+    expect(text, 'the legend keys the sky').toContain('Bigger sigil')
+    expect(mocks.useTheme, 'no theme branch on the players board').not.toHaveBeenCalled()
   })
 })
 
@@ -343,15 +201,6 @@ describe('sky legend (#730 §3)', () => {
     expect(text).toContain('Crown')
   })
 
-  // The legend is the KEY to the encoding, so it has to describe the viz that is
-  // actually on screen — the meadow has blooms and no crown (#684).
-  it('keys the meadow in meadow words, with no crown', () => {
-    const { text } = render(<SkyLegend scoreMode="era" variant="meadow" />)
-    expect(text).toContain('Bigger bloom = more era points')
-    expect(text).toContain('Golden bloom')
-    expect(text).not.toContain('Crown')
-    expect(text).not.toContain('sigil')
-  })
 })
 
 describe('SkyCanvas measuring wrapper (#730 §1)', () => {
