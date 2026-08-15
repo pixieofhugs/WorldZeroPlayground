@@ -86,6 +86,6 @@
     "MEDIA_TOO_LARGE": "File too large (max {{max_megabytes}} MB).",
     "AVATAR_MUST_BE_IMAGE": "Avatar must be an image file.",
     "AVATAR_TOO_LARGE": "Avatar too large (max {{max_megabytes}} MB).",
-    "OAUTH_EMAIL_UNVERIFIED": "Google hasn't verified that email address, so we can't sign you in with it. Verify it with Google and try again."
+    "OAUTH_EMAIL_UNVERIFIED": "We can't sign you in: that account has no verified email address. Verify your email where you signed in, then try again."
   }
 }
