@@ -10,3 +10,10 @@ itsdangerous
 python-multipart
 Pillow
 httpx
+# The praxis room (ADR-0073). Both MIT, as is the pycrdt-store dependency
+# pycrdt-websocket pulls in. Pinned rather than floating like the rest of this
+# file: these two agree on a CRDT wire format and on a document's stored shape,
+# and a silent minor bump on either side is a data-compatibility change, not a
+# library upgrade.
+pycrdt==0.14.2
+pycrdt-websocket==0.16.4

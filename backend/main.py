@@ -74,14 +74,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 # Session middleware is required by Authlib for OAuth state management
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
-# CORS — allow frontend origin; configured via env in production
-_cors_origins = os.environ.get(
-    "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
-).split(",")
-
+# CORS — allow frontend origin; configured via env in production.
+# The same list also guards the praxis room's WebSocket handshake, which this
+# middleware does not cover (see ``Settings.CORS_ORIGINS``).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _cors_origins],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],

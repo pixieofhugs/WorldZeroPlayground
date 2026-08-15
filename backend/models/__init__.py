@@ -17,6 +17,7 @@ from models.praxis import (
     MediaType,
     ModerationStatus,
 )
+from models.praxis_room import PraxisRoomUpdate
 from models.vote import Vote
 from models.duel import Duel, DuelStatus
 from models.flag import Flag
@@ -51,6 +52,7 @@ __all__ = [
     "PraxisInviteStatus",
     "MediaType",
     "ModerationStatus",
+    "PraxisRoomUpdate",
     "Vote",
     "Duel",
     "DuelStatus",
