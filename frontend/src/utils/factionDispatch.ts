@@ -10,6 +10,7 @@
  * means a new page dispatcher is one map + one call.
  */
 import type { ComponentType } from 'react'
+import { hasOwnKey } from './hasOwnKey'
 
 /**
  * Resolve a faction slug to its archetype component.
@@ -27,6 +28,12 @@ import type { ComponentType } from 'react'
  * `undefined` when nothing is registered (the "render a bespoke variant if it
  * exists, otherwise inline default chrome" case, e.g. faction-page heroes) —
  * and the alias rule still applies either way.
+ *
+ * The registration test is own-property-only (#1821). A bracket read reaches
+ * `Object.prototype`, and `??` only catches null/undefined, so
+ * `pickVariant(map, "constructor", Default)` handed the `Object` function back
+ * as the archetype for React to render. Every surface dispatches through here,
+ * which is what makes this the one place worth guarding rather than ~10.
  */
 export function pickVariant<P>(
   map: Record<string, ComponentType<P>>,
@@ -43,5 +50,5 @@ export function pickVariant<P>(
   fallback?: ComponentType<P>,
 ): ComponentType<P> | undefined {
   if (!slug) return fallback
-  return map[slug] ?? fallback
+  return hasOwnKey(map, slug) ? map[slug] : fallback
 }
