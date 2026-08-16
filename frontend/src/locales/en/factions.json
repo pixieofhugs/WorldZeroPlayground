@@ -135,7 +135,7 @@
       "gateBody": "File surveys worthy of {{faction}} and the keepers will send word. The road is long — keep triangulating, and the record will remember."
     },
     "spotlight": {
-      "label": "Keeper of the road",
+      "label": "Champion",
       "stat": "level {{level}} · {{score}} pvncta"
     },
     "roster": {
@@ -209,7 +209,7 @@
       "gateBody": "Complete tasks from {{faction}} and the ranks will send word. Keep going — the work speaks for itself."
     },
     "spotlight": {
-      "label": "Standard-bearer of the week",
+      "label": "Champion",
       "stat": "lvl {{level}} · {{score}} pts"
     },
     "roster": {
@@ -284,7 +284,7 @@
       "gateBody": "Keep running functions and the array will bring your node online."
     },
     "spotlight": {
-      "label": "> PRIMARY NODE",
+      "label": "Champion",
       "stat": "lvl {{level}} · {{score}} cr"
     },
     "roster": {
@@ -361,7 +361,7 @@
     },
     "spotlight": {
       "wanted": "★ WANTED ★",
-      "label": "menace of the week",
+      "label": "Champion",
       "stat": "lvl {{level}} · {{score}} pts"
     },
     "roster": {
@@ -437,7 +437,7 @@
       "gateBody": "Seal work worth holding up and {{faction}} will send an invitation. Keep at it — talent is optional, the daily practice isn't."
     },
     "spotlight": {
-      "label": "Held up",
+      "label": "Champion",
       "stat": "Anno {{anno}} · {{score}} pts"
     },
     "roster": {
@@ -509,7 +509,7 @@
       "gateBody": "Keep casting spells worthy of {{faction}} and the coven will leave a light on. The weird ones always find their way home."
     },
     "spotlight": {
-      "label": "Witch of the week",
+      "label": "Champion",
       "stat": "lvl {{level}} · {{score}} pts"
     },
     "roster": {
@@ -587,7 +587,7 @@
       "gateBody": "Complete quests from {{faction}} and the Court will send a herald. Keep at it — deeds carry further than petitions."
     },
     "spotlight": {
-      "label": "Champion of the Fortnight",
+      "label": "Champion",
       "stat": "lvl {{level}} · {{score}} pts"
     },
     "roster": {
