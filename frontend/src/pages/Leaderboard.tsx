@@ -58,11 +58,12 @@ export default function Leaderboard() {
 
   // The eyebrow names the live era, read from the era config — never a literal
   // (CLAUDE.md: never hardcode a value that lives in EraConfig). `/game-config`
-  // answers signed-out readers too, which `user.era_name` cannot.
-  const eyebrow =
-    scoreMode === 'era'
-      ? t('leaderboard.eyebrowEra', { era: config?.era_name ?? '' })
-      : t('leaderboard.eyebrowAllTime')
+  // answers signed-out readers too, which `user.era_name` cannot. Blank until
+  // it lands, rather than a dangling separator in front of a missing name.
+  let eyebrow = t('leaderboard.eyebrowAllTime')
+  if (scoreMode === 'era') {
+    eyebrow = config ? t('leaderboard.eyebrowEra', { era: config.era_name }) : ''
+  }
 
   if (loading) {
     return (
