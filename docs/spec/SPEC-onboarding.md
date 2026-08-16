@@ -109,9 +109,8 @@ its own place client-side: a session-scoped boolean written the moment before th
 hands the browser to a provider, acted on by the root landing route only once a session exists,
 and cleared by the flow on its next mount so it can fire at most once. No destination on the
 wire — no query parameter, no return-to path, no `state` payload, no backend change. The
-mechanism and its failure modes
-live in `frontend/src/utils/onboardingResume.ts`. This is the same visit interrupted, not a
-new scan — see *Coming back*.
+mechanism and its failure modes live in `frontend/src/utils/onboardingResume.ts`. This is the
+same visit interrupted, not a new scan — see *Coming back*.
 
 **The server is not asked to decide.**
 ([#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734) — superseded) The
