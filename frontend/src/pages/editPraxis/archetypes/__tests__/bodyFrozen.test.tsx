@@ -20,25 +20,33 @@ import i18n from "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { BodyTextarea } from "../controls";
 
-function state(documentFrozen: boolean): EditPraxisState {
+function state(
+  documentFrozen: boolean,
+  sealedMidEdit = false,
+): EditPraxisState {
   return {
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
     documentFrozen,
+    sealedMidEdit,
     submitting: false,
     reopenForEdit: async () => {},
   } as unknown as EditPraxisState;
 }
 
-function html(documentFrozen: boolean): string {
+function html(documentFrozen: boolean, sealedMidEdit = false): string {
   // The copy has an apostrophe, which the static renderer emits as `&#x27;` —
   // the same decode the confirm-copy and praxis-detail suites carry.
   return renderToStaticMarkup(
-    <BodyTextarea state={state(documentFrozen)} skin={{ textareaStyle: {} }} />,
+    <BodyTextarea
+      state={state(documentFrozen, sealedMidEdit)}
+      skin={{ textareaStyle: {} }}
+    />,
   ).replace(/&#x27;|&#39;/g, "'");
 }
 
 const frozenLine = i18n.t("forms:editPraxis.composer.bodyFrozen");
+const sealedLine = i18n.t("forms:editPraxis.composer.bodyFrozenMidEdit");
 const reopenLine = i18n.t("forms:editPraxis.composer.bodyFrozenAction");
 
 describe("a frozen write-up", () => {
@@ -59,6 +67,33 @@ describe("a frozen write-up", () => {
     // `reopenForEdit`, not a raw write: ADR-0059, and since #1745 the only way
     // a sealed document reopens at all.
     expect(markup).toMatch(/<button[^>]*>[^<]*Reopen/);
+  });
+
+  it("tells the member sealed mid-sentence that their text is gone (#1931)", () => {
+    // The whole reason the two cases are told apart. This member watched their
+    // own typing appear on screen after the room hung up, and none of it
+    // reached the server; the generic notice would leave them believing the
+    // text in front of them is saved.
+    const markup = html(true, true);
+    expect(sealedLine, "the copy exists in the catalog").not.toBe("");
+    expect(markup).toContain(sealedLine);
+    expect(markup).not.toContain(frozenLine);
+    // Honest, not euphemistic: no recovery exists, and this is the one place
+    // that can say so before they close the tab.
+    expect(sealedLine).toMatch(/cannot be recovered/i);
+  });
+
+  it("does not claim a loss to a member who loaded an already-frozen praxis", () => {
+    // They typed nothing and lost nothing — the pre-existing #1745 case.
+    const markup = html(true);
+    expect(markup).toContain(frozenLine);
+    expect(markup).not.toContain(sealedLine);
+  });
+
+  it("still offers the way back in after a mid-sentence seal", () => {
+    // Losing the paragraph is not losing the door — `pullBack` is what lets
+    // them write it again, and it is the only door.
+    expect(html(true, true)).toContain(reopenLine);
   });
 
   it("hides the markdown toolbar, which writes past the read-only flag", () => {
