@@ -236,6 +236,34 @@ export function MemberByline({
   )
 }
 
+// ── Compact `.btn-*` overrides (#1783) ───────────────────────────────────────
+/**
+ * What the moderation and flag controls are still allowed to say inline.
+ *
+ * These sat as sixteen near-identical `style` objects, and thirteen of them
+ * opened by restating the button's own `fontSize` — the number the class
+ * already declares, typed out again beside it. That restatement is what #1783
+ * removed: it looks redundant and is the opposite, because an inline style wins,
+ * so each of the thirteen would have pinned its button at 9px on the day the
+ * class moved to the label-tier floor. The class owns size, face, casing and
+ * tracking; nothing here may name any of the four again.
+ *
+ * The pad IS a real override — a denser row than `.btn-*`'s default 8px/16px —
+ * and the two ring/ink pairs are the danger and warning outline variants. Three
+ * objects, declared once, rather than twelve copies that can drift one at a time.
+ */
+const BTN_COMPACT: CSSProperties = { padding: 'var(--space-xs) var(--space-md)' }
+const BTN_COMPACT_DANGER: CSSProperties = {
+  ...BTN_COMPACT,
+  borderColor: 'var(--color-danger-ring)',
+  color: 'var(--color-danger)',
+}
+const BTN_COMPACT_WARNING: CSSProperties = {
+  ...BTN_COMPACT,
+  borderColor: 'var(--color-warning-ring)',
+  color: 'var(--color-warning)',
+}
+
 // ── Admin moderation bar ─────────────────────────────────────────────────────
 
 export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
@@ -265,21 +293,21 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
         <div className="flex items-center gap-2 ml-auto">
           {praxis.moderation_status === 'flagged' && (
             <>
-              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)' }}>{t('detail.admin.approve')}</button>
-              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary" style={BTN_COMPACT}>{t('detail.admin.approve')}</button>
+              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={BTN_COMPACT_DANGER}>{t('detail.admin.hide')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={BTN_COMPACT_WARNING}>{t('detail.admin.fail')}</button>
             </>
           )}
           {praxis.moderation_status === 'visible' && (
             <>
-              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline" style={BTN_COMPACT_DANGER}>{t('detail.admin.hide')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={BTN_COMPACT_WARNING}>{t('detail.admin.fail')}</button>
             </>
           )}
           {(praxis.moderation_status === 'hidden' || praxis.moderation_status === 'failed') && (
             <>
-              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)' }}>{t('detail.admin.restore')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)', fontSize: 'var(--text-sm)', borderColor: 'var(--color-warning-ring)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary" style={BTN_COMPACT}>{t('detail.admin.restore')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline" style={BTN_COMPACT_WARNING}>{t('detail.admin.fail')}</button>
             </>
           )}
         </div>
@@ -297,7 +325,7 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
             onClick={() => void handleModerate('failed', adminFailNote)}
             disabled={moderating}
             className="btn-primary"
-            style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)', fontSize: 'var(--text-sm)' }}
+            style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)' }}
           >
             {t('detail.admin.confirm')}
           </button>
@@ -635,11 +663,20 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
         // The LABEL takes the wall's alarm ink (#1451); the fill and the rule
         // stay the neutral rungs. `--color-danger` as a 1.5px rule owes 3:1
         // (WCAG 1.4.11) and clears it on all nine walls — 3.31:1 worst.
-        style={{ background: 'var(--color-danger-veil)', border: '1.5px solid var(--color-danger)', color: wallInk(praxis, 'alarm'), fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
+        //
+        // `.btn-outline` DRESSED BY HAND, not hand-rolled from nothing (#1783).
+        // This was a free-standing style object repeating the class's face —
+        // font, size, casing, cursor — beside a cancel that wears the class, and
+        // #1608 left it exactly because raising one of a visible pair is worse
+        // than raising neither. Wearing the class is what makes the pair move
+        // together and keep moving together; the fill, the rule, the ink, the
+        // denser pad and the square corner are the dress, and they stay here.
+        className="btn-outline"
+        style={{ background: 'var(--color-danger-veil)', border: '1.5px solid var(--color-danger)', color: wallInk(praxis, 'alarm'), ...BTN_COMPACT, borderRadius: 0 }}
       >
         {withdrawing ? t('detail.owner.submitting') : t(unsubmitCopy.confirm)}
       </button>
-      <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)' }}>{t('detail.owner.cancel')}</button>
+      <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={BTN_COMPACT}>{t('detail.owner.cancel')}</button>
     </div>
   )
 }
@@ -710,7 +747,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           <p className="font-body" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{t('detail.flag.body')}</p>
         </div>
         {!showFlagForm && (
-          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}>
+          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={BTN_COMPACT_DANGER}>
             {t('detail.flag.flag')}
           </button>
         )}
@@ -728,8 +765,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
                 disabled={flagging}
                 className="btn-outline"
                 style={{
-                  fontSize: 'var(--text-sm)',
-                  padding: 'var(--space-xs) var(--space-md)',
+                  ...BTN_COMPACT,
                   ...(flagReason === value
                     ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
                     : {}),
@@ -758,11 +794,11 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           )}
           <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
             {flagReason !== null && (
-              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)', background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
+              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ ...BTN_COMPACT, background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
                 {flagging ? t('detail.flag.submitting') : t('detail.flag.submit')}
               </button>
             )}
-            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)' }}>
+            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={BTN_COMPACT}>
               {t('detail.flag.cancel')}
             </button>
           </div>
