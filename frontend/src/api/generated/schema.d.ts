@@ -1671,6 +1671,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/terms/acceptance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Terms
+         * @description Record that the signed-in account agreed to the current terms.
+         *
+         *     Appends to a log. Accepting twice writes two rows and both are the truth —
+         *     agreement is shown again on a later visit, so a second acceptance is a
+         *     second event, not a duplicate to be collapsed.
+         *
+         *     Takes no request body on purpose: the accepted version is the server's
+         *     constant, so a caller cannot claim to have agreed to wording it was never
+         *     shown. The version it *was* shown comes back in the response.
+         *
+         *     Requires a session. Agreement is bound to an account, which is why it is
+         *     asked for after sign-in rather than before it.
+         */
+        post: operations["accept_terms_terms_acceptance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4205,6 +4236,24 @@ export interface components {
          * @enum {string}
          */
         TaskType: "standard" | "metatask";
+        /**
+         * TermsAcceptanceOut
+         * @description The receipt for one acceptance: what was agreed to, and when.
+         *
+         *     No ``id`` and no ``account_id`` — the caller already knows who they are, and
+         *     ``account_id`` never appears on the wire. Deliberately not a request model's
+         *     twin: this route takes **no** body at all, because the version is the
+         *     server's to state.
+         */
+        TermsAcceptanceOut: {
+            /**
+             * Accepted At
+             * Format: date-time
+             */
+            accepted_at: string;
+            /** Version */
+            version: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -7379,6 +7428,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskSignupOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_terms_terms_acceptance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TermsAcceptanceOut"];
                 };
             };
             /** @description Validation Error */
