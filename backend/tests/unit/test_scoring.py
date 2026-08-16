@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from decimal import Decimal
+
+import pytest
 
 from game_config import ERA_1, ERA_2
 from models.praxis import ModerationStatus
@@ -13,6 +16,8 @@ from services.scoring import (
     compute_praxis_score,
     compute_vote_budget,
     compute_votes_available,
+    exact,
+    round_half_up,
     snide_tie_winner_id,
     snide_tie_winner_slug,
 )
@@ -569,3 +574,90 @@ def test_everymen_no_other_faction_penalty():
     config = ERA_1.factions["everymen"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 1.0
+
+
+# ---------------------------------------------------------------------------
+# #1578 — halves round UP, and a contribution total carries no binary error
+# ---------------------------------------------------------------------------
+
+# Coven is the only Era 1 faction with a non-integer modifier, which is why it
+# is the one that exposes both defects. Read from the era — never restated here.
+_COVEN_COLLAB_MODIFIER = ERA_1.factions["coven"].collab_own_modifier
+
+# The table from #1578, extended with the whole-number neighbours that made the
+# old behaviour look arbitrary: under banker's rounding 35 lost a point and
+# 25/45/55 did not, purely because only 35 landed on a true binary half.
+#
+# (base points, exact product, banked score). These expectations are pinned to
+# Coven's *current* modifier on purpose: an era that changes it should fail
+# here loudly rather than quietly reintroduce a rounding surprise.
+_COVEN_COLLAB_TABLE = [
+    (20, "22.0", 22),
+    (25, "27.5", 28),
+    (30, "33.0", 33),
+    (35, "38.5", 39),
+    (40, "44.0", 44),
+    (45, "49.5", 50),
+    (50, "55.0", 55),
+    (55, "60.5", 61),
+]
+
+
+@pytest.mark.parametrize("base_points,exact_product,banked", _COVEN_COLLAB_TABLE)
+def test_coven_collab_total_is_exact_and_banks_half_up(
+    base_points, exact_product, banked
+):
+    """A Coven own-faction collab scores the exact decimal, and halves go up."""
+    total = compute_praxis_score(
+        task_point_value=base_points,
+        faction_multiplier=_COVEN_COLLAB_MODIFIER,
+        total_stars=0,
+    )
+    # Defect 2: the total must be the number it prints as, with no IEEE-754 tail.
+    assert Decimal(str(total)) == Decimal(exact_product)
+    # Defect 1: every half goes up, whatever the parity beneath it.
+    assert round_half_up(total) == banked
+
+
+def test_contribution_total_has_no_binary_error():
+    """#1578's headline: a 100-point Coven collab is 110.0, not 110.00000000000001."""
+    total = compute_praxis_score(
+        task_point_value=100,
+        faction_multiplier=_COVEN_COLLAB_MODIFIER,
+        total_stars=0,
+    )
+    assert total == 110.0
+    assert repr(total) == "110.0"
+
+
+def test_round_half_up_takes_a_true_tie_up():
+    """The one case banker's rounding gets wrong — and a float-only fix still would."""
+    assert round_half_up(38.5) == 39
+
+
+def test_round_half_up_is_parity_blind():
+    """round() gives 38 for both of these; half-up gives the neighbouring integers."""
+    assert round_half_up(37.5) == 38
+    assert round_half_up(38.5) == 39
+    assert round_half_up(0.5) == 1
+
+
+def test_round_half_up_still_rounds_down_below_a_half():
+    assert round_half_up(38.49) == 38
+    assert round_half_up(0.0) == 0
+
+
+def test_round_half_up_does_not_truncate():
+    """ADR-0053's original ruling: a true 49.9 must not bank as 49."""
+    assert round_half_up(49.9) == 50
+
+
+def test_round_half_up_accepts_a_decimal_sum():
+    """The stats path sums in Decimal; the helper must bank that without a float hop."""
+    assert round_half_up(Decimal("38.5")) == 39
+
+
+def test_exact_reads_the_printed_number_not_the_binary_one():
+    """Decimal(1.1) is 1.1000000000000000888…; exact(1.1) is 1.1."""
+    assert exact(_COVEN_COLLAB_MODIFIER) == Decimal(str(_COVEN_COLLAB_MODIFIER))
+    assert exact(35) * exact(_COVEN_COLLAB_MODIFIER) == Decimal("38.5")

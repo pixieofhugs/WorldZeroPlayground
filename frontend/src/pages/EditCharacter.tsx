@@ -262,7 +262,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
                 style={inputStyle}
               />
               <span
-                className={`font-body text-xs ${displayName.length >= 45 ? 'text-red-600' : 'text-muted'}`}
+                className={`font-body text-xs ${displayName.length >= 45 ? 'warning-text' : 'text-muted'}`}
                 style={{ display: 'block', textAlign: 'right', marginTop: 'var(--space-xs)' }}
               >
                 {t('editCharacter.displayNameCount', { count: displayName.length })}
@@ -297,7 +297,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
             <span className="label-heading">{t('editCharacter.storyLabel')}</span>
-            <span className={`font-body text-xs ${bio.length >= 450 ? 'text-red-600' : 'text-muted'}`}>
+            <span className={`font-body text-xs ${bio.length >= 450 ? 'warning-text' : 'text-muted'}`}>
               {t('editCharacter.storyCount', { count: bio.length })}
             </span>
           </div>
@@ -316,7 +316,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
           <div style={{ marginTop: 'var(--space-lg)' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <span style={fieldLabel}>{t('editCharacter.taglineLabel')}</span>
-              <span className={`font-body text-xs ${tagline.length >= TAGLINE_MAX ? 'text-red-600' : 'text-muted'}`}>
+              <span className={`font-body text-xs ${tagline.length >= TAGLINE_MAX ? 'warning-text' : 'text-muted'}`}>
                 {t('editCharacter.taglineCount', { count: tagline.length })}
               </span>
             </div>
@@ -343,7 +343,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
               style={{ ...inputStyle, maxWidth: 280 }}
             />
             <span
-              className={`font-body text-xs ${location.length >= 90 ? 'text-red-600' : 'text-muted'}`}
+              className={`font-body text-xs ${location.length >= 90 ? 'warning-text' : 'text-muted'}`}
               style={{ display: 'block', marginTop: 'var(--space-xs)' }}
             >
               {t('editCharacter.basedCount', { count: location.length })}
@@ -351,7 +351,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
           </div>
         </section>
 
-        {error && <p className="font-body content-text text-red-600">{error}</p>}
+        {error && <p className="font-body content-text danger-text">{error}</p>}
 
         {/* ── Actions ── */}
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>

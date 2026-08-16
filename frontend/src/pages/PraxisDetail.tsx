@@ -43,7 +43,7 @@ export default function PraxisDetail() {
   if (state.loading) return <div className="py-8 font-body text-muted">{t('detail.loading')}</div>
   if (state.fetchError) return (
     <div className="py-8">
-      <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+      <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
         {state.fetchError}{' '}
         <button onClick={() => window.location.reload()} className="underline">{t('detail.retry')}</button>
       </p>
