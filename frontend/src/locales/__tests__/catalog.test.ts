@@ -507,6 +507,101 @@ describe('the four functional controls say one thing across every faction (#1863
   })
 })
 
+/* ========================================================================== *
+ * #1948 — THE TERMINAL REGISTER BELONGS TO EXACTLY ONE FACTION.
+ *
+ * THE SEAM IS THE CATALOG LEAF VALUE, per faction block. Cozy Coven's join panel
+ * read `JOIN.EXE` over witch-house body copy. It was not a shared panel and not
+ * a wrong slug: `coven.join.windowTitle` was the title bar of the pushpinned
+ * `join.exe` window that #1209 deleted, and CovenFactionBody's replacement
+ * changed no copy, so the title outlived its window and got re-hung on the new
+ * bar. `coven.mobile.eyebrow` ("coven.exe") is the same residue of the retired
+ * lo-fi `coven.exe` / `whimsy.exe` desktop metaphor (#784 / #1023 / #1209).
+ *
+ * Every other faction names that same panel in its own voice — "The Road",
+ * "THE ROLL", "ACCESS", "Those practising", "THE MUSTER", the S.N.I.D.E.
+ * letterhead — so the fix is Coven's two strings, not seven factions'.
+ *
+ * A key-presence test cannot see this: the key existed, resolved, and rendered.
+ * The way it comes back is a voice pass writing `.exe` into a skin that is not
+ * Singularity's, so the guard reads VALUES and pins the whole offender set with
+ * an exact toEqual. Singularity's 13 strings are listed one by one: the register
+ * IS its voice, and enumerating them is what makes an eighth entry fail.
+ * ========================================================================== */
+describe('only Singularity speaks in the terminal register (#1948)', () => {
+  // `.exe`-style extensions, and a leading `> ` shell prompt.
+  const TERMINAL = /\.(exe|bat|cmd|sh|dll|proc)\b|^\s*>\s/i
+
+  /**
+   * Singularity's whole terminal voice, string by string. Nothing else in any en
+   * catalog may match — a `.exe` on a witch-house, cork-board or broadsheet skin
+   * is the bug #1948 reports.
+   *
+   * `manifest.txt` inside `singularity.manifest.empty` is Singularity's too; it
+   * is caught by the `> ` prompt rather than by the extension, which is why the
+   * pattern does not need a `.txt` arm.
+   */
+  const TERMINAL_VOICE = [
+    'common.json:profile.singularity.praxisEmptyTitle',
+    'factions.json:singularity.access.eligibleKicker',
+    'factions.json:singularity.access.gateKicker',
+    'factions.json:singularity.access.joinButton',
+    'factions.json:singularity.access.joining',
+    'factions.json:singularity.invitation.kicker',
+    'factions.json:singularity.manifest.empty',
+    'factions.json:singularity.mobile.eyebrow',
+    'factions.json:singularity.praxis.empty',
+    'factions.json:singularity.roster.empty',
+    'factions.json:singularity.roster.emptyWithSpotlight',
+    'factions.json:singularity.roster.heading',
+    'factions.json:singularity.tasks.empty',
+  ].sort()
+
+  it('finds catalog leaves to scan, so the sweep cannot pass by scanning nothing', () => {
+    expect(catalogLeaves().length).toBeGreaterThan(1000)
+  })
+
+  it('finds no executable flavour text outside Singularity', () => {
+    const offenders = catalogLeaves()
+      .filter(([, value]) => TERMINAL.test(value))
+      .map(([id]) => id)
+      .sort()
+    expect(offenders).toEqual(TERMINAL_VOICE)
+  })
+
+  it('renames the key the retired window titled, and keeps the panel labelled', () => {
+    // ponytail: "the circle" and "The Circle" are PROVISIONAL — assembled from
+    // the four strings already in this panel ("You're in the circle", "The
+    // circle is open", "Not in the circle — yet", "the circle is recruiting"),
+    // not written. The owner writes strings in this repo; pinning them here
+    // means a later voice pass reads as a deliberate edit, not a drift.
+    expect(factions.coven.join).not.toHaveProperty('windowTitle')
+    expect(factions.coven.join.heading).toBe('the circle')
+    expect(factions.coven.mobile.eyebrow).toBe('The Circle')
+  })
+
+  it('names the join panel in every faction voice, so none falls back to chrome', () => {
+    // The bar Coven's `.exe` sat on. Albescent has no join panel (ADR-0048: the
+    // letter IS its join surface), so it is absent by design, not by omission.
+    const labels: Record<string, string> = {
+      coven: factions.coven.join.heading,
+      wow: factions.wow.join.heading,
+      ephemerists: factions.ephemerists.road.heading,
+      everymen: factions.everymen.roll.heading,
+      singularity: factions.singularity.access.heading,
+      snide: factions.snide.dispatch.letterhead,
+      ua: factions.ua.registry.heading,
+    }
+    for (const [slug, label] of Object.entries(labels)) {
+      expect(label, slug).toBeTypeOf('string')
+      expect(label.length, slug).toBeGreaterThan(0)
+    }
+    // Seven distinct voices — a copy pass that settled them onto one shared
+    // string would be a different ruling, and should fail here first.
+    expect(new Set(Object.values(labels)).size).toBe(7)
+  })
+})
+
 describe('no duplicate keys in any locale catalog', () => {
   // JSON is last-wins: a key repeated inside the same object silently drops the
   // earlier block at parse time, so the copy vanishes with no error (this is
