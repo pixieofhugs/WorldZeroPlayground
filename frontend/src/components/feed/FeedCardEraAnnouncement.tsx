@@ -45,12 +45,12 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
         {archive}
       </div>
 
-      <h3
+      <h2
         className="font-display italic"
         style={{ fontSize: 'var(--text-content)', color: 'var(--badge-admin-text)', marginBottom: 'var(--space-sm)', lineHeight: 1.3 }}
       >
         {i18n.t('feed:eraAnnouncement.headline', { name: era_name })}
-      </h3>
+      </h2>
 
       {era_notes && (
         <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'rgba(247,244,238,0.75)', marginBottom: 'var(--space-lg)', lineHeight: 1.5 }}>

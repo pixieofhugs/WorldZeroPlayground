@@ -291,7 +291,7 @@ export default function EverymenTaskCard({
                 </div>
               </div>
 
-              <h3
+              <h2
                 style={{
                   fontFamily: POSTER,
                   fontSize: size.titleSize,
@@ -303,7 +303,7 @@ export default function EverymenTaskCard({
                 }}
               >
                 {task.title}
-              </h3>
+              </h2>
 
               {task.description && (
                 <p

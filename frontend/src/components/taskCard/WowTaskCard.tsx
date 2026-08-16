@@ -245,7 +245,7 @@ export default function WowTaskCard({
               </div>
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: MED,
                 fontWeight: 400,
@@ -256,7 +256,7 @@ export default function WowTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p

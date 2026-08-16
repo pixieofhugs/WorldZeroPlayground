@@ -14,6 +14,17 @@ import { surfaceMap } from '../../factions'
 /**
  * The contract every faction task-card skin is built against (ADR-0055).
  *
+ * THE TITLE IS AN `<h2>` (#1950). Every skin draws its own title element — the
+ * layouts are too different to share a slot — so the level is a convention this
+ * doc holds rather than a component that enforces it, and
+ * `components/__tests__/cardHeadingOutline.test.tsx` is what makes the
+ * convention bite. A card is a top-level item of whatever page mounts it, one
+ * level under that page's `<h1>`; it cannot see the page, so it may not assume
+ * a section heading sits in between. It was an `<h3>`, which skipped a level on
+ * every surface that lists cards straight under its title, and Lighthouse said
+ * so. Do not add a `headingLevel` prop: no consumer wants a different one
+ * (#1817 refused the same prop for the same reason).
+ *
  * Points arrive UNMULTIPLIED, with the viewer's faction modifier alongside,
  * rather than as the pre-multiplied product the pre-v2 `displayPoints` prop
  * carried. A card renders `basePoints`, and renders a `×multiplier` badge only

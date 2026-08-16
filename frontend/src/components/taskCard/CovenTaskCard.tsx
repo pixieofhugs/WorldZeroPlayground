@@ -331,7 +331,7 @@ export default function CovenTaskCard({
               <Sigil size={size.sigil} points={basePoints} />
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: DISPLAY,
                 fontWeight: 600,
@@ -343,7 +343,7 @@ export default function CovenTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
