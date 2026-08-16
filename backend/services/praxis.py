@@ -1113,7 +1113,15 @@ async def delete_praxis(
     character_id: int,
     session: AsyncSession,
 ) -> None:
-    """Delete a praxis. Creator only. Must be in_progress."""
+    """Delete a praxis. Creator only. Must be in_progress.
+
+    A duel side is deletable once its challenge has been dissolved (#1831): the
+    declined Duel row goes with the praxis, because the two duel FKs are the one
+    pair into ``praxis.id`` that does not cascade. A live or resolved duel still
+    refuses the delete — the reasoning is on
+    :func:`services.duel.discard_dissolved_duels_for_praxis`, which owns the
+    predicate.
+    """
     praxis = await get_praxis(praxis_id, session)
     if praxis.created_by_id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character's praxis.")
@@ -1122,6 +1130,10 @@ async def delete_praxis(
             status_code=400,
             detail="Cannot delete a submitted praxis. Move it to editing first.",
         )
+    # Local import: services.duel imports this module at module scope (#307).
+    from services.duel import discard_dissolved_duels_for_praxis
+
+    await discard_dissolved_duels_for_praxis(praxis_id, session)
     await session.delete(praxis)
     await session.flush()
 

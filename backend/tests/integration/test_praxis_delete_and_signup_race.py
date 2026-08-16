@@ -168,26 +168,19 @@ async def test_signing_up_holds_a_lock_keyed_on_the_character(
 # plain delete, which the database threw out as a generic 409 after a dialog
 # promising the draft was already gone.
 #
-# #1831 ruled the fix as "dissolve the challenge, then delete", frontend-only,
-# no new endpoint. THAT DOES NOT WORK, and the two xfails below are the proof.
+# #1831 first ruled the fix as "dissolve the challenge, then delete",
+# frontend-only. That alone does not work: ``cancel_duel_challenge`` only sets
+# ``status='declined'`` and never clears ``duel.challenger_praxis_id`` — nor can
+# it, the column is ``nullable=False``. The row still referenced the praxis after
+# the cancel and the DELETE was refused exactly as before, which made the bug
+# wider than the issue's title: ANY praxis that had ever carried a challenge
+# could never be dropped again, however the duel ended.
 #
-# ``cancel_duel_challenge`` only sets ``status='declined'``. It never clears
-# ``duel.challenger_praxis_id`` — and cannot: the column is ``nullable=False``
-# (``models/duel.py``) with ``ON DELETE NO ACTION``, and a declined duel row is
-# deliberately "kept for history". So the row still references the praxis after
-# the cancel, and the DELETE is refused exactly as before.
-#
-# The consequence is wider than the issue described. It is not "a duel side
-# cannot be dropped" — it is that ANY praxis that has ever carried a challenge
-# can never be dropped, for the rest of its life, however the duel ended. The
-# escape route #1831 assumed existed (leave via the mode picker, then drop) is
-# dead for the same reason: the mode picker's own ``cancelChallenge`` leaves the
-# very same declined row pointing at the praxis.
-#
-# Releasing it means either deleting the Duel row with the praxis or making the
-# column nullable — and both reverse a documented ruling ("it should refuse the
-# delete rather than vanish with it"; "Duel row is kept for history"). That is
-# an owner's call, not an implementation detail, so it is not made here.
+# Owner ruling (2026-08-15): the *declined* row goes with the praxis; a duel that
+# reached a result keeps refusing the delete. The reasoning and the exact
+# predicate live on ``services.duel.discard_dissolved_duels_for_praxis``. Both
+# halves are pinned below — the dissolve-then-drop sequence the composer's
+# ``cancel`` runs, and the settled duel that still refuses.
 
 
 async def _duel_side(client: AsyncClient, headers: dict, task_id: int, opponent_id: int):
@@ -208,15 +201,6 @@ async def _duel_side(client: AsyncClient, headers: dict, task_id: int, opponent_
     return praxis_id, challenge.json()["id"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "#1831 is NOT fixed. Cancelling leaves duel.challenger_praxis_id "
-        "pointing at the praxis (NOT NULL, NO ACTION), so the delete is still "
-        "refused. Needs an owner ruling on the declined duel row's fate; when "
-        "that lands, drop this marker rather than the test."
-    ),
-)
 @pytest.mark.asyncio
 async def test_dropping_a_pending_duel_side_dissolves_the_challenge_then_deletes(
     client: AsyncClient,
@@ -228,8 +212,10 @@ async def test_dropping_a_pending_duel_side_dissolves_the_challenge_then_deletes
 ):
     """Stage one: the challenge is out, nobody has answered it.
 
-    Also the narrowest proof that dissolving is not enough — the cancel below
-    returns 200 and ``declined``, and the delete still fails.
+    The whole sequence the composer's ``cancel`` runs, in order: dissolve, then
+    delete. Both halves must land — a 409 on the delete after a 200 on the cancel
+    would leave the challenge irreversibly dissolved *and* the draft still there,
+    which is strictly worse than the original refusal.
     """
     praxis_id, duel_id = await _duel_side(
         client, auth_headers2, active_task.id, character.id
@@ -243,22 +229,13 @@ async def test_dropping_a_pending_duel_side_dissolves_the_challenge_then_deletes
     assert delete.status_code == 204, delete.text
     assert await db_session.get(Praxis, praxis_id) is None
 
-    # The duel row outlives the praxis it pointed at — that is the whole reason
-    # its FKs are NO ACTION. It is a declined contract, not a forfeited one.
-    duel = await db_session.get(Duel, duel_id)
-    assert duel is not None
-    assert duel.status is DuelStatus.declined
-    assert duel.forfeited_by_character_id is None
+    # The dissolved challenge goes with the praxis (owner ruling, 2026-08-15):
+    # it never became votable and never froze an outcome, so there is no history
+    # in it to keep. Nothing else could read it either — the row would be
+    # unreachable from every surface the moment its challenger praxis vanished.
+    assert await db_session.get(Duel, duel_id) is None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "#1831 is NOT fixed — same NOT NULL / NO ACTION reference as the "
-        "pending case. This test also encodes what the opponent is owed once "
-        "it is: a surviving, unpenalised, plain solo praxis."
-    ),
-)
 @pytest.mark.asyncio
 async def test_dropping_an_active_duel_side_leaves_the_opponent_a_plain_solo(
     client: AsyncClient,
@@ -315,9 +292,69 @@ async def test_dropping_an_active_duel_side_leaves_the_opponent_a_plain_solo(
     assert opponent_view.json()["type"] == PraxisType.solo.value
     assert opponent_view.json()["duel_id"] is None
 
+    # …and the dissolved contract went with the dropped draft, exactly as in the
+    # pending case: an accepted-then-cancelled duel never became votable either.
+    assert await db_session.get(Duel, duel_id) is None
+
+
+@pytest.mark.asyncio
+async def test_a_settled_duel_still_refuses_the_delete_after_a_forfeit(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """The other side of the ruling: a duel that reached a result is not droppable.
+
+    Reachable, and the only way a *settled* duel's side is ever in_progress again:
+    unsubmitting a settled side forfeits the contest (ADR-0011 §Forfeit) and
+    reopens the praxis for editing. The duel stays ``settled`` with a winner by
+    default, so there is no route to ``declined`` — the cancel is refused — and
+    the draft stays undroppable. If this ever starts returning 204, a real
+    contest's record can be destroyed by the loser.
+    """
+    stats = await db_session.scalar(
+        select(CharacterStats).where(CharacterStats.character_id == character.id)
+    )
+    stats.level = 2
+    await db_session.commit()
+
+    praxis_id, duel_id = await _duel_side(
+        client, auth_headers2, active_task.id, character.id
+    )
+    accept = await client.post(
+        f"/duels/{duel_id}/respond", json={"accept": True}, headers=auth_headers
+    )
+    assert accept.status_code == 200, accept.text
+    opponent_praxis_id = accept.json()["opponent_praxis_id"]
+
+    for praxis, headers in ((praxis_id, auth_headers2), (opponent_praxis_id, auth_headers)):
+        submit = await client.post(f"/praxes/{praxis}/submit", headers=headers)
+        assert submit.status_code == 200, submit.text
+
+    duel = await db_session.get(Duel, duel_id)
     await db_session.refresh(duel)
-    assert duel.status is DuelStatus.declined
-    assert duel.forfeited_by_character_id is None
+    assert duel.status is DuelStatus.settled
+
+    # Forfeit: reopening a settled side is the one door back to in_progress.
+    unsubmit = await client.post(
+        f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2
+    )
+    assert unsubmit.status_code == 200, unsubmit.text
+
+    # A settled duel cannot be dissolved, so the declined escape hatch is shut.
+    cancel = await client.post(f"/duels/{duel_id}/cancel", headers=auth_headers2)
+    assert cancel.status_code == 400, cancel.text
+
+    # Last statement: the failed flush aborts the shared SAVEPOINT.
+    delete = await client.delete(f"/praxes/{praxis_id}", headers=auth_headers2)
+    assert delete.status_code == 409, (
+        "a duel that reached a result keeps its Duel row and keeps refusing the "
+        "delete — only a *declined* challenge goes with the praxis (#1831)"
+    )
 
 
 @pytest.mark.asyncio
@@ -330,11 +367,12 @@ async def test_deleting_a_duel_side_without_dissolving_the_duel_is_refused(
 ):
     """The FK refusal itself, pinned so the cancel step cannot be called redundant.
 
-    ``delete_praxis`` does no duel lookup of its own — the guard is the database
-    (``duel.challenger_praxis_id`` is NO ACTION), and it surfaces through
-    ``main.integrity_error_handler`` as a generic 409. If a future migration
-    ever let this cascade, a duel would silently vanish with one player's draft,
-    and this assertion is what would notice.
+    ``delete_praxis`` discards only *declined* duels; a live one it leaves alone,
+    and the guard is then the database (``duel.challenger_praxis_id`` is NO
+    ACTION), surfacing through ``main.integrity_error_handler`` as a generic 409.
+    So the composer must still dissolve the challenge before dropping the draft.
+    If a future migration ever let this cascade, a live duel would silently
+    vanish with one player's draft, and this assertion is what would notice.
 
     The failed flush aborts the SAVEPOINT this test shares with the client, so
     nothing may touch the session afterwards — the assertion is deliberately
