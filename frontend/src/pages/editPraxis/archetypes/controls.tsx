@@ -1062,7 +1062,12 @@ export function BodyTextarea({
               background: "none",
               border: "none",
               padding: 0,
-              color: "var(--color-text-secondary)",
+              // The link seam, not the neutral it is unset to (#1636/#1819).
+              // This sits one line under the frozen notice above, which reads
+              // `--label-ink` through its class — leaving the global secondary
+              // here would fix the sentence and leave its way out unreachable
+              // on exactly the three near-black sheets that needed both.
+              color: "var(--link-ink)",
               textDecoration: "underline",
               cursor: "pointer",
             }}
