@@ -37,10 +37,16 @@ const CARD_GRID: CSSProperties = {
  * the phone twin `mobileArchetypes/DefaultFactionPage` DID carry a join block,
  * so you could join from a phone and not from a laptop. Collapsing the pair
  * without acting would have taken the phone's away too. What follows is that
- * skin's block moved across unchanged — sticky Join with a confirm step,
- * confirm-switch copy, the soft gate and the burn, all ADR-0019-gated to a
- * viewer who can actually act. It keeps the `mobile.*` catalog keys it arrived
- * with; renaming them is a catalog change and this PR makes none.
+ * skin's block moved across — sticky Join with a confirm step, confirm-switch
+ * copy, the soft gate and the burn, all ADR-0019-gated to a viewer who can
+ * actually act. It keeps the `mobile.*` catalog keys it arrived with; renaming
+ * them is a catalog change and this PR makes none.
+ *
+ * ITS PAINT DID NOT MOVE ACROSS UNCHANGED, because #1819 landed between the cut
+ * and the merge and the block's four global-ink sites came with it. Migrating
+ * them rather than re-listing the debt under its new filename is the whole of
+ * that difference; the two button blocks below carry the measurements, and one
+ * of the four turned out to be a live dark-mode defect rather than debt.
  */
 export default function DefaultFactionBody({
   state,
@@ -78,12 +84,17 @@ export default function DefaultFactionBody({
         </p>
       )}
       {!confirming ? (
-        <button type="button" onClick={() => setConfirming(true)} style={JOIN_BUTTON_STYLE}>
+        <button type="button" onClick={() => setConfirming(true)} style={joinButtonStyle(faction.slug)}>
           {t("mobile.join", { faction: name })}
         </button>
       ) : (
         <>
-          <p className="font-body content-text" style={{ color: "var(--color-text-primary)" }}>
+          {/* No `color:` — `body` is `text-ink`, i.e. --color-text-primary, so
+              this prose INHERITS exactly what it used to restate. The inline
+              copy was the defect (#1819): a faction frame that repoints ink on
+              its own root cannot reach past it, and this archetype is the
+              fall-through every unbespoke faction lands on. */}
+          <p className="font-body content-text">
             {switching
               ? t("detail.join.confirmSwitch", { faction: name, current: factionName(currentSlug) })
               : t("detail.join.confirm", { faction: name })}
@@ -93,7 +104,7 @@ export default function DefaultFactionBody({
               type="button"
               onClick={() => void membership.join()}
               disabled={membership.joining}
-              style={{ ...JOIN_BUTTON_STYLE, flex: 1, opacity: membership.joining ? 0.6 : 1 }}
+              style={{ ...joinButtonStyle(faction.slug), flex: 1, opacity: membership.joining ? 0.6 : 1 }}
             >
               {membership.joining ? t("mobile.joining") : t("mobile.confirm")}
             </button>
@@ -237,26 +248,65 @@ export default function DefaultFactionBody({
   );
 }
 
-const JOIN_BUTTON_STYLE: CSSProperties = {
-  width: "100%",
-  fontFamily: "var(--font-body)",
-  fontSize: "var(--text-xl)",
-  fontWeight: 700,
-  letterSpacing: "0.04em",
-  color: "var(--color-text-on-accent)",
-  background: "var(--color-text-primary)",
-  border: "none",
-  borderRadius: 999,
-  padding: "var(--space-md) var(--space-lg)",
-  cursor: "pointer",
-};
+/**
+ * The primary verb's pill, in the mounted faction's own accent pair (#1819).
+ *
+ * IT ARRIVED WITH A REAL DARK-MODE DEFECT, and the tier was how it hid. The
+ * phone skin this moved from (#1314) filled with `--color-text-primary` and
+ * inked with `--color-text-on-accent`, which reads as "near-black pill, white
+ * label" — true in LIGHT and only there. `--color-text-primary` flips to a warm
+ * cream (`#f0e6d0`) in dark while `--color-text-on-accent` is declared in
+ * `:root` alone and stays `#ffffff`, so the dark pill was white-on-cream at
+ * **1.24:1** — the label all but gone. That is #1169's shape exactly: a
+ * *neutral* is a statement about the page ground, never about legibility on a
+ * fill, and the pairing it makes is unmeasured by construction.
+ *
+ * The faction accent pair is the same two values in light and a designed pair in
+ * dark: `-card-accent` is `#1a1209` / `#f0e6d0` — byte-identical to the primary
+ * neutral in BOTH cascades, so nothing moves — and `-on-accent` is `#ffffff` /
+ * `#14110b`, i.e. 18.51:1 light (unchanged) and 15.19:1 dark (the fix). Both are
+ * gated by ACCENT_PAIRS in `factionContrast.test.ts`, in both themes, which the
+ * neutral pairing never could be.
+ *
+ * A function rather than a const because it now reads the mounted slug, the same
+ * way `accent` above does. Seven of the eight keys declare `-on-accent`;
+ * `ephemerists` deleted its in #1232 and never lands here, because it has a
+ * bespoke body of its own (ADR-0077) — as do the other six. Only `albescent`
+ * falls through today, and it resolves to `default`.
+ */
+function joinButtonStyle(slug: string): CSSProperties {
+  return {
+    width: "100%",
+    fontFamily: "var(--font-body)",
+    fontSize: "var(--text-xl)",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    color: factionCssVar(slug, "on-accent"),
+    background: factionCssVar(slug, "card-accent"),
+    border: "none",
+    borderRadius: 999,
+    padding: "var(--space-md) var(--space-lg)",
+    cursor: "pointer",
+  };
+}
 
+/**
+ * The quiet half of the pair. Uppercase, letter-spaced, `--text-md` — this is
+ * label register, not prose, so it reads the label SEAM rather than restating a
+ * global neutral (#1819). The swap spends no contrast in either cascade: on the
+ * page (and on the sticky bar, whose `--color-nav-bg` is the page at 0.9/0.92
+ * alpha over itself) `--color-text-secondary` read 7.78 light / 8.33 dark and
+ * `--label-ink` reads 7.83 / 8.94. What changes is hue — warm grey to the
+ * lavender the third tier is (#1549) — which is the "this is chrome, not
+ * content" signal a cancel beside a primary verb is asking for, and it now
+ * follows any frame that repoints the seam on its own root.
+ */
 const CANCEL_BUTTON_STYLE: CSSProperties = {
   fontFamily: "var(--font-body)",
   fontSize: "var(--text-md)",
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "var(--color-text-secondary)",
+  color: "var(--label-ink)",
   background: "transparent",
   border: "1px solid var(--color-border-strong)",
   borderRadius: 999,
