@@ -273,6 +273,11 @@ export function takeJustCreatedPraxis(praxisId: number): PraxisOut | null {
 export async function createPraxis(data: PraxisCreate): Promise<PraxisOut> {
   const { data: created } = await apiPost('/praxes', { body: data })
   justCreatedPraxis = created
+  // A signup is a new in-progress praxis in the viewer's own bank — the rail's
+  // "In progress" panel and the `{n} of {max}` slot counter both read that list
+  // (#1867). All four signup entry points funnel through here, so this is the
+  // one place any of them needs it.
+  notifyRequestsChanged()
   return created
 }
 
@@ -468,6 +473,11 @@ export async function kickMember(
   const { data } = await apiPost('/praxes/{praxis_id}/kick/{member_id}', {
     params: { path: { praxis_id: praxisId, member_id: memberId } },
   })
+  // The reset lands on the KICKER too: a group that had been submitted is back
+  // to editing, so this praxis re-enters the viewer's own in-progress list and
+  // their "awaiting your submission" bucket — the same move `unsubmitPraxis`
+  // announces (#1867).
+  notifyRequestsChanged()
   return data
 }
 
