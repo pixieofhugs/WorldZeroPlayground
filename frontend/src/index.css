@@ -2532,6 +2532,17 @@
      ground, 7.66:1 on the darkened panel. Deliberately short of the "gold
      bright" below, which the stamp total reserves for its own line. */
   --faction-wow-accent-deep: #cfb268;
+  /* Restated, not because the alias is wrong — at the ROOT this resolves to the
+     darkened plate on its own, because `:root` and `[data-theme="dark"]` match
+     the same element and the panel's dark declaration wins there (§3, #1661).
+     It is restated because the stamp is the one WOW surface that also renders
+     inside a NESTED theme wrapper: the Singularity and S.N.I.D.E. profile
+     bodies scope `data-theme="dark"` to their own container, and an alias
+     declared only at `:root` inherits its already-resolved LIGHT value into
+     that subtree while `--faction-wow-chronicle-bg` beside it (restated above)
+     goes dark. That is the mismatch #1827 saw. Every sibling in the same shape
+     is inventoried by `frozenThemeAliases.test.ts`. */
+  --faction-wow-stamp-bg: var(--faction-wow-chronicle-panel);
   --faction-wow-stamp-total: #e3b84a; /* the design's dark "gold bright" */
   --faction-wow-stamp-shadow: rgba(0, 0, 0, 0.4);
   /* The plum chip lifts to the design's dark secondary plum, one step below the

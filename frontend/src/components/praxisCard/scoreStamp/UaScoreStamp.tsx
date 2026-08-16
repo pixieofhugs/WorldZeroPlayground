@@ -26,10 +26,11 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * ua-line …) that #853 deletes.
  *
  * ROW SELECTION IS NOT OURS. `scoreBreakdown` decides which rows exist
- * (ADR-0047); this file only decides what a row looks like. The votes row
- * survives at `+0` — a declared deviation from the design, which drops it. The
- * base row does NOT survive a total it merely repeats (#1131): with nothing to
- * multiply, add or vote, the plate keeps the tally and the ensō holds the figure.
+ * (ADR-0047, ADR-0076); this file only decides what a row looks like. The votes
+ * row goes at zero, which is what the design drew — the deviation this file used
+ * to declare against it is withdrawn. The base row does NOT survive a total it
+ * merely repeats (#1131): with nothing to multiply, add or vote there is no
+ * working at all, so the plate goes with it and the ensō holds the figure alone.
  *
  * Every raw number below is ornament: the plate's own insets and leads, and
  * display type sized to the drawing rather than to the text scale (§4a).
@@ -107,145 +108,152 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         />
       )}
 
-      {/* The score box — a ruled plate on the lifted sheet. */}
-      <div
-        style={{
-          boxSizing: "border-box",
-          width: BOX_WIDTH,
-          border: "1px solid var(--faction-ua-card-rule)",
-          borderRadius: 6,
-          background: "var(--faction-ua-card-box-bg)",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's inset within its own rule.
-          padding: "7px 11px",
-        }}
-      >
-        {/*
-         * The base row. It goes when `scoreBreakdown` nulls the figure (#1131) —
-         * the ensō below is already saying it — and the chip goes with it, which
-         * is safe because a live multiplier is one of the things that keeps the
-         * base row alive in the first place.
-         */}
-        {base !== null && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the cap label and its figure.
-              gap: 7,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={labelStyle}>{t("card.stamp.base")}</span>
-            <span
-              style={{
-                fontFamily: "var(--faction-ua-card-font)",
-                fontWeight: 600,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's engraved figure.
-                fontSize: 25,
-                lineHeight: 0.8,
-                color: "var(--faction-ua-card-text)",
-              }}
-            >
-              {base}
-            </span>
-            {/*
-             * The chip stays on the base row in EVERY state. The design's
-             * "full formula" column moves it onto a `× mult` row of its own; the
-             * other four keep it here, and a plate that rearranges itself stops
-             * reading as the same object when a row drops out (§6 — the archetype
-             * is the identity). Declared deviation.
-             */}
-            {mult !== null && <MultChip>{formatMult(mult)}</MultChip>}
-          </div>
-        )}
-
-        {meta !== null && (
-          <div
-            style={{
-              ...workingStyle,
-              color: "var(--faction-ua-card-accent)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
-              marginTop: 3,
-            }}
-          >
-            + {meta} {t("card.stamp.meta")}
-          </div>
-        )}
-
-        {/*
-         * The grouped subtotal, drawn under a hairline. It exists only when a
-         * metatask AND a multiplier are both live — the design's "full formula"
-         * column — because without a multiplier `(base + meta)` explains
-         * nothing and the plate reads as a form with a hole in it. Either of
-         * those keeps the base row alive too (#1131), so the `base !== null`
-         * clause is the compiler's proof, not a fourth state.
-         */}
-        {meta !== null && mult !== null && base !== null && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-              borderTop: "1px solid var(--faction-ua-card-rule)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the drawn rule's clearance.
-              marginTop: 5,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: matches the lead of the working lines.
-              paddingTop: 3,
-            }}
-          >
-            <span style={workingStyle}>{t("card.stamp.group")}</span>
-            <span
-              style={{
-                fontFamily: "var(--faction-ua-card-font)",
-                fontWeight: 600,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: the subtotal figure, a step under base.
-                fontSize: 20,
-                lineHeight: 0.9,
-                color: "var(--faction-ua-card-text)",
-              }}
-            >
-              {base + meta}
-            </span>
-          </div>
-        )}
-
-        {/*
-         * The votes row survives at `+0` — ADR-0047 beats the design here, which
-         * drops the line when votes are zero. Deliberate, and the same call
-         * every other #841 stamp makes.
-         */}
+      {/* The score box — a ruled plate on the lifted sheet. It is drawn only
+          when a working line survives to sit in it: with none, the plate would
+          be an empty ruled box over the ensō (ADR-0076). `base !== null` is the
+          resolver's own test for that — it nulls the base exactly when no other
+          term is in play. */}
+      {base !== null && (
         <div
           style={{
-            ...workingStyle,
-            // A lead between working LINES — so none when the tally is the only
-            // line left standing (#1131).
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
-            marginTop: base !== null ? 3 : undefined,
+            boxSizing: "border-box",
+            width: BOX_WIDTH,
+            border: "1px solid var(--faction-ua-card-rule)",
+            borderRadius: 6,
+            background: "var(--faction-ua-card-box-bg)",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's inset within its own rule.
+            padding: "7px 11px",
           }}
         >
-          {t("card.stamp.fromVotes", { votes })}
-        </div>
+          {/*
+           * The base row. It goes when `scoreBreakdown` nulls the figure (#1131) —
+           * the ensō below is already saying it — and the chip goes with it, which
+           * is safe because a live multiplier is one of the things that keeps the
+           * base row alive in the first place.
+           */}
+          {base !== null && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the cap label and its figure.
+                gap: 7,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span style={labelStyle}>{t("card.stamp.base")}</span>
+              <span
+                style={{
+                  fontFamily: "var(--faction-ua-card-font)",
+                  fontWeight: 600,
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's engraved figure.
+                  fontSize: 25,
+                  lineHeight: 0.8,
+                  color: "var(--faction-ua-card-text)",
+                }}
+              >
+                {base}
+              </span>
+              {/*
+               * The chip stays on the base row in EVERY state. The design's
+               * "full formula" column moves it onto a `× mult` row of its own; the
+               * other four keep it here, and a plate that rearranges itself stops
+               * reading as the same object when a row drops out (§6 — the archetype
+               * is the identity). Declared deviation.
+               */}
+              {mult !== null && <MultChip>{formatMult(mult)}</MultChip>}
+            </div>
+          )}
 
-        {/*
-         * The habit bonus (#1617) — UA's own ability, and the one plate on the
-         * site that routinely carries this line. It is written UNDER the tally
-         * and outside the grouped subtotal on purpose: the bonus is flat, and
-         * the plate's rule is where the multiplier stops applying. Vermilion
-         * like the metatask working, because both are points the sheet ADDS.
-         */}
-        {habit !== null && (
-          <div
-            style={{
-              ...workingStyle,
-              color: "var(--faction-ua-card-accent)",
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
-              marginTop: 3,
-            }}
-          >
-            + {habit} {t("card.stamp.habit")}
-          </div>
-        )}
-      </div>
+          {meta !== null && (
+            <div
+              style={{
+                ...workingStyle,
+                color: "var(--faction-ua-card-accent)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
+                marginTop: 3,
+              }}
+            >
+              + {meta} {t("card.stamp.meta")}
+            </div>
+          )}
+
+          {/*
+           * The grouped subtotal, drawn under a hairline. It exists only when a
+           * metatask AND a multiplier are both live — the design's "full formula"
+           * column — because without a multiplier `(base + meta)` explains
+           * nothing and the plate reads as a form with a hole in it. Either of
+           * those keeps the base row alive too (#1131), so the `base !== null`
+           * clause is the compiler's proof, not a fourth state.
+           */}
+          {meta !== null && mult !== null && base !== null && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                borderTop: "1px solid var(--faction-ua-card-rule)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the drawn rule's clearance.
+                marginTop: 5,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: matches the lead of the working lines.
+                paddingTop: 3,
+              }}
+            >
+              <span style={workingStyle}>{t("card.stamp.group")}</span>
+              <span
+                style={{
+                  fontFamily: "var(--faction-ua-card-font)",
+                  fontWeight: 600,
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the subtotal figure, a step under base.
+                  fontSize: 20,
+                  lineHeight: 0.9,
+                  color: "var(--faction-ua-card-text)",
+                }}
+              >
+                {base + meta}
+              </span>
+            </div>
+          )}
+
+          {/*
+           * The votes row, when there are votes (ADR-0076) — which is what the
+           * design drew all along, and the deviation UA declared against it is
+           * withdrawn. Inside the plate the base row is always above this one, so
+           * the lead between working LINES is unconditional here.
+           */}
+          {votes !== null && (
+            <div
+              style={{
+                ...workingStyle,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
+                marginTop: 3,
+              }}
+            >
+              {t("card.stamp.fromVotes", { votes })}
+            </div>
+          )}
+
+          {/*
+           * The habit bonus (#1617) — UA's own ability, and the one plate on the
+           * site that routinely carries this line. It is written UNDER the tally
+           * and outside the grouped subtotal on purpose: the bonus is flat, and
+           * the plate's rule is where the multiplier stops applying. Vermilion
+           * like the metatask working, because both are points the sheet ADDS.
+           */}
+          {habit !== null && (
+            <div
+              style={{
+                ...workingStyle,
+                color: "var(--faction-ua-card-accent)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
+                marginTop: 3,
+              }}
+            >
+              + {habit} {t("card.stamp.habit")}
+            </div>
+          )}
+        </div>
+      )}
 
       {/*
        * The total mark — the ensō, holding the figure in its ring.
@@ -259,8 +267,9 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
       <div
         style={{
           display: "flex",
+          // With no plate to overlap (ADR-0076), the ring hangs on its own.
           // eslint-disable-next-line local/no-raw-style-values -- ornament: the ring overlaps the plate's foot by 6px; that overlap IS the drawing, and the nearest rungs (4/8) either open a gap under the plate or swallow its last working line.
-          marginTop: -6,
+          marginTop: base !== null ? -6 : 0,
         }}
       >
         <UaEnsoScore

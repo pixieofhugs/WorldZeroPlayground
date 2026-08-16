@@ -181,10 +181,10 @@
     "leaveAction": "Leave collab",
     "collab": {
       "castStatus": "{{cast}} of {{total}} submitted",
-      "pillCast": "submitted",
-      "pillWeaving": "not submitted",
-      "pillInvited": "invited",
-      "pillDeclined": "declined",
+      "pillCast": "Submitted",
+      "pillWeaving": "Accepted",
+      "pillInvited": "Invited",
+      "pillDeclined": "Declined",
       "you": "you",
       "progressAria": "{{cast}} of {{total}} members have submitted their part",
       "bannerWaiting": "Submitted. Waiting on the others.",
@@ -304,150 +304,6 @@
       "proofHelper": "Photos, clips or receipts — max 50 MB each.",
       "submit": "Submit",
       "submitBusy": "Submitting…"
-    },
-    "na": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} in",
-        "pillCast": "in",
-        "pillWeaving": "still writing",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} people have put their part in",
-        "bannerWaiting": "your part's in. waiting on the others now.",
-        "bannerHoldout": "everyone's waiting on you — put your part in.",
-        "bannerPublished": "all in. it's up on the board. everyone gets credit.",
-        "castAction": "put my part in",
-        "castFinalAction": "put mine in — that's everyone",
-        "pullBackAction": "take my part back out",
-        "successHeading": "it's up",
-        "successBody": "everyone's part is in. small thing, done together.",
-        "successContinue": "go look at it"
-      }
-    },
-    "ephemerists": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} accounts entered",
-        "pillCast": "entered",
-        "pillWeaving": "still observing",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} observers have entered their account",
-        "bannerWaiting": "Your account is entered. The others have yet to set theirs down.",
-        "bannerHoldout": "The concord waits on you — enter your account.",
-        "bannerPublished": "The accounts agree. Every observer is credited.",
-        "castAction": "Enter my account",
-        "castFinalAction": "Enter mine — seal the concord",
-        "pullBackAction": "Withdraw my account",
-        "successHeading": "The accounts agree",
-        "successBody": "Every observer has set it down. The concord is sealed.",
-        "successContinue": "Read the entry"
-      }
-    },
-    "everymen": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} signed off",
-        "pillCast": "signed off",
-        "pillWeaving": "still on the clock",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} of the crew have signed off on the report",
-        "bannerWaiting": "You signed off. Waiting on the rest of the crew.",
-        "bannerHoldout": "The crew is waiting on you — sign off on your part.",
-        "bannerPublished": "Signed off all round. Every hand on the report is credited.",
-        "castAction": "Sign off on my part",
-        "castFinalAction": "Sign off — file the report",
-        "pullBackAction": "Pull my sign-off",
-        "successHeading": "REPORT FILED",
-        "successBody": "Every hand signed off. The job's on the board.",
-        "successContinue": "See the filed report"
-      }
-    },
-    "snide": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} in on it",
-        "pillCast": "in",
-        "pillWeaving": "still scheming",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} of the gang are in on it",
-        "bannerWaiting": "you're in. waiting on the rest of the gang.",
-        "bannerHoldout": "the gang's waiting on YOU · get in on it.",
-        "bannerPublished": "everyone's in. it's out there. no taking it back now.",
-        "castAction": "count me in",
-        "castFinalAction": "count me in · print it",
-        "pullBackAction": "back out",
-        "successHeading": "IT'S OUT THERE",
-        "successBody": "whole gang's in. it hit the street.",
-        "successContinue": "go see it"
-      }
-    },
-    "singularity": {
-      "collab": {
-        "castStatus": "{{cast}}/{{total}} committed",
-        "pillCast": "committed",
-        "pillWeaving": "pending",
-        "you": "self",
-        "progressAria": "{{cast}} of {{total}} nodes have committed their branch",
-        "bannerWaiting": "> branch committed. awaiting remaining nodes.",
-        "bannerHoldout": "> blocked: merge requires your commit.",
-        "bannerPublished": "> all branches merged. signal transmitted.",
-        "castAction": "$ commit --mine",
-        "castFinalAction": "$ commit --final && merge",
-        "pullBackAction": "$ revert --mine",
-        "successHeading": "> merge complete",
-        "successBody": "// all nodes committed · signal is live",
-        "successContinue": "$ open ./praxis"
-      }
-    },
-    "ua": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} hands have signed",
-        "pillCast": "signed",
-        "pillWeaving": "still at work",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} hands have signed the work",
-        "bannerWaiting": "You have signed. The other hands have yet to.",
-        "bannerHoldout": "The other hands are waiting on you — sign the work.",
-        "bannerPublished": "Signed by every hand. The work stands.",
-        "castAction": "Sign the work",
-        "castFinalAction": "Sign — seal the work",
-        "pullBackAction": "Withdraw my signature",
-        "successHeading": "Sealed",
-        "successBody": "Every hand has signed. The work stands.",
-        "successContinue": "View the work"
-      }
-    },
-    "coven": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} have cast",
-        "pillCast": "cast",
-        "pillWeaving": "still walking",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} walkers have cast their part",
-        "bannerWaiting": "Cast. Waiting on the others to finish their walk.",
-        "bannerHoldout": "The circle is waiting on you — cast your part in.",
-        "bannerPublished": "The circle is closed. Every walker is credited.",
-        "castAction": "Cast my part",
-        "castFinalAction": "Cast — close the circle",
-        "pullBackAction": "Pull my part back",
-        "successHeading": "The circle is closed",
-        "successBody": "Every part is cast. It's out in the world now.",
-        "successContinue": "See where it landed"
-      }
-    },
-    "albescent": {
-      "collab": {
-        "castStatus": "{{cast}} of {{total}} hands have entered",
-        "pillCast": "entered",
-        "pillWeaving": "not yet entered",
-        "you": "you",
-        "progressAria": "{{cast}} of {{total}} hands have entered their account",
-        "bannerWaiting": "Your account is entered. The other hands have not yet.",
-        "bannerHoldout": "The Register waits on you — enter your account.",
-        "bannerPublished": "Entered by every hand. The Register keeps it.",
-        "castAction": "Set down my account",
-        "castFinalAction": "Set mine down — close the Register",
-        "pullBackAction": "Strike my account",
-        "successHeading": "Kept in the Register",
-        "successBody": "Every hand has entered. No more than was done.",
-        "successContinue": "Read the account"
-      }
     }
   },
   "proposeTask": {

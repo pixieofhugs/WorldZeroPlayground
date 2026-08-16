@@ -30,6 +30,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut } from "../../../api/duel";
 import type { CurrentUser } from "../../../api/auth";
 import { aMember, aPraxis, aTask } from '../../../test/fixtures'
+import { collabCopy } from "../../../components/collab/collabCopy";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -323,11 +324,12 @@ describe("Everymen praxis detail — the state axes", () => {
         members: [MEMBER, { ...CO_MEMBER, has_submitted: false }],
       },
     });
-    // The words are `collabCopy`'s, which the Everymen already override for
-    // every roster on the site — not copy this page mints.
+    // The words are `collabCopy`'s — not copy this page mints. They used to be
+    // the Everymen's ("signed off" / "still on the clock"); #1812 deleted all
+    // eight faction voices, so the roster reads the shared tier here too.
     const { text } = render(collab);
-    expect(text, "filed").toContain("signed off");
-    expect(text, "not filed").toContain("still on the clock");
+    expect(text, "filed").toContain(collabCopy(null, "pillCast"));
+    expect(text, "not filed").toContain(collabCopy(null, "pillWeaving"));
     for (const invented of ["inventory", "shelving", "the hours"]) {
       expect(text, `invented column not built: ${invented}`).not.toContain(invented);
     }

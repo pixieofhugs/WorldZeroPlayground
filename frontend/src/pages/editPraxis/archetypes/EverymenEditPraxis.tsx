@@ -28,9 +28,10 @@
  * The union voice this composer used to speak — `WORK REPORT №0055`, `THE CREW`,
  * `THE JOB`, `PROOF OF WORK`, `★ STAMP & FILE ★`, `VOID THE REPORT` — is
  * deleted with this issue, and the archetype reads `editPraxis.composer.*` like
- * every other skin. `editPraxis.everymen.collab` SURVIVES: that block is
- * `collabCopy`'s override table, a different resolver that also feeds
- * `CollabRoster` on `/praxis/:id`, and it is pinned by `collabCopy.test.ts`.
+ * every other skin. `editPraxis.everymen.collab` survived this issue — it was
+ * `collabCopy`'s override table rather than composer copy — but #1812 then
+ * deleted all eight of those: collab submission status speaks one vocabulary on
+ * every faction. `collabCopy.test.ts` pins the absence.
  *
  * The masthead plate is the one place the design puts words on the dress, and
  * the design's own word there is faction voice (`FILE YOUR REPORT`), which

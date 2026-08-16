@@ -40,9 +40,10 @@
  *
  * The one neutral shared `editPraxis.composer.*` set (ADR-0065 §3). UA's page
  * vocabulary — `Seal a praxis`, `Mark · Anno III`, `The other hands`, `Seal it`
- * — is deleted with this issue. `editPraxis.ua.collab` SURVIVES: that block is
- * `collabCopy`'s override table, a different resolver that also dresses
- * `CollabRoster` on the read page, and it is not composer page copy.
+ * — is deleted with this issue. `editPraxis.ua.collab` survived it, being
+ * `collabCopy`'s override table rather than composer page copy; #1812 then
+ * deleted all eight of those, because collab submission status speaks one
+ * vocabulary on every faction.
  *
  * ## Dress, and where its tokens come from
  *

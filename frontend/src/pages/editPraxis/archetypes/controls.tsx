@@ -1337,8 +1337,8 @@ export function PublishButton({
     (state.duel?.status === "active" || state.duel?.status === "pending");
   if (state.isPublished && !duelPullBack) return null;
   // Multi-member collabs cast (and pull back) through this same footer button
-  // (#646). The consensus gate decides the action and the faction-voiced idle
-  // label; the busy label stays the archetype's mode-agnostic present participle.
+  // (#646). The consensus gate decides the action and the idle label; the busy
+  // label stays the archetype's mode-agnostic present participle.
   const collab =
     praxis?.type === "collab" && praxis.members.length > 1
       ? deriveCollabGate(praxis.members, state.currentCharacterId)
@@ -1346,8 +1346,7 @@ export function PublishButton({
   // Neutral wording, deliberately: no forfeit language and no consequence
   // dialog before the duel settles (#718 rejected that framing once already;
   // `praxisDetail/__tests__/duelForfeitWarning.test.tsx` is the standing guard).
-  // Shared voice for now, like the other mechanics lines in
-  // `SHARED_DEFAULT_COLLAB_KEYS`.
+  // Shared voice, like every line `collabCopy` resolves since #1812.
   const idleLabel = duelPullBack
     ? collabCopy(praxis?.task_faction_slug, "duelPullBackAction")
     : collab && praxis

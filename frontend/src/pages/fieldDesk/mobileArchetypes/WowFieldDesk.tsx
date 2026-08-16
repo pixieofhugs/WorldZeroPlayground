@@ -29,6 +29,14 @@
  *    that line collides, so points move to their own footer row beside the level
  *    — geometry yields to type (§4), and it is also what makes the whole row a
  *    46px-tall target rather than a 14px title.
+ *
+ * ONE FIGURE PER ROW, AND IT IS THE PRAXIS'S SCORE (#1834). The footer row used
+ * the shared `fieldDesk.home.taskMeta` line ("faction · +N pts") NEXT TO the
+ * kit's gilt ✦ figure, so the same number was printed twice — and both read the
+ * TASK's base worth rather than what the quest has actually earned. The gilt
+ * figure is the kit's, so it stays and carries the score; the muted line beside
+ * it keeps naming the task's faction, which is what makes the row's sigil
+ * decorative.
  */
 import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
@@ -56,6 +64,7 @@ import {
 import CharacterSwitcherSheet from "../../../components/CharacterSwitcherSheet";
 import FactionSigil from "../../../components/sigil/FactionSigil";
 import { factionName } from "../../../utils/factions";
+import { formatPoints } from "../../../utils/points";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
@@ -376,10 +385,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {t("fieldDesk.home.taskMeta", {
-                          faction: factionName(praxis.task_faction_slug),
-                          points: praxis.task_point_value,
-                        })}
+                        {factionName(praxis.task_faction_slug)}
                       </span>
                       <span
                         style={{
@@ -389,7 +395,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        ✦{praxis.task_point_value}
+                        ✦{formatPoints(praxis.score)}
                       </span>
                     </div>
                   </Link>

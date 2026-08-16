@@ -81,7 +81,10 @@ describe('CollabSuccess render', () => {
     expect(html).toContain('2 of 2 submitted')
   })
 
-  it('speaks the task faction voice', () => {
+  // #1812 — the success screen used to close in the task faction's voice ("Sealed"
+  // / "Every hand has signed." / "View the work" for UA). It is the last reading
+  // of the same submission state the roster shows, so it took the same ruling.
+  it('speaks the one shared voice on a faction task too', () => {
     const html = renderToStaticMarkup(
       <CollabSuccess
         members={MEMBERS}
@@ -91,10 +94,10 @@ describe('CollabSuccess render', () => {
         onContinue={() => {}}
       />,
     )
-    expect(html).toContain('Sealed')
-    expect(html).toContain('Every hand has signed.')
-    expect(html).toContain('View the work')
-    expect(html).not.toContain('The praxis is submitted')
+    expect(html).toContain('The praxis is submitted')
+    for (const voiced of ['Sealed', 'Every hand has signed.', 'View the work']) {
+      expect(html, voiced).not.toContain(voiced)
+    }
   })
 
   it('offers a manual continue action, not an auto-redirect', () => {

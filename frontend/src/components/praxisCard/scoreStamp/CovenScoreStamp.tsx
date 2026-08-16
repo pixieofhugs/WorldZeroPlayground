@@ -142,16 +142,19 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
-      {/* The tally, always. Its lead belongs to the line above it, so it goes
-          when the base line does (#1131) and the slip keeps its own padding. */}
-      <div
-        style={{
-          ...workingStyle,
-          marginTop: base !== null ? workingStyle.marginTop : undefined,
-        }}
-      >
-        {t("card.stamp.fromVotes", { votes })}
-      </div>
+      {/* The tally, when the coven has votes to count (ADR-0076). Its lead
+          belongs to the line above it, so it goes when the base line does
+          (#1131) and the slip keeps its own padding. */}
+      {votes !== null && (
+        <div
+          style={{
+            ...workingStyle,
+            marginTop: base !== null ? workingStyle.marginTop : undefined,
+          }}
+        >
+          {t("card.stamp.fromVotes", { votes })}
+        </div>
+      )}
 
       {/* The habit bonus, written after the tally: flat, outside the multiplier
           (#1617). It always has a line above it, so it always keeps its lead. */}
@@ -161,8 +164,11 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
-      {/* The braid — what rules a Coven surface. */}
-      <Braid style={{ margin: "var(--space-sm) 0 var(--space-xs)" }} />
+      {/* The braid — what rules a Coven surface, and only where there is working
+          to rule off. `base !== null` is that test: the resolver nulls it exactly
+          when no other term is in play (ADR-0076), so a base-only slip is the
+          bottom line alone rather than a braid drawn under nothing. */}
+      {base !== null && <Braid style={{ margin: "var(--space-sm) 0 var(--space-xs)" }} />}
 
       <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
         <span

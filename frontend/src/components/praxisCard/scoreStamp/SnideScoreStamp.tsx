@@ -114,16 +114,19 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
       {meta !== null && <div style={typedLine}>{t("card.stamp.meta")} +{meta}</div>}
 
-      <div
-        style={{
-          ...typedLine,
-          // The lead is between typed LINES: none when the tally is the first
-          // one on the tag (#1131).
-          marginTop: base !== null ? typedLine.marginTop : undefined,
-        }}
-      >
-        {t("card.stamp.fromVotes", { votes })}
-      </div>
+      {/* The tally, typed only when somebody voted (ADR-0076). */}
+      {votes !== null && (
+        <div
+          style={{
+            ...typedLine,
+            // The lead is between typed LINES: none when the tally is the first
+            // one on the tag (#1131).
+            marginTop: base !== null ? typedLine.marginTop : undefined,
+          }}
+        >
+          {t("card.stamp.fromVotes", { votes })}
+        </div>
+      )}
 
       {/* The habit bonus, typed after the tally: flat, outside the multiplier
           (#1617). It always has a line above it, so it always keeps its lead. */}
@@ -133,16 +136,21 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
-      {/* Torn-off perforation, then the total mark. */}
-      <div
-        aria-hidden
-        style={{
-          height: 0,
-          borderTop: "2px dashed var(--faction-snide-acid-deep)",
-          opacity: 0.75,
-          margin: "var(--space-sm) 0",
-        }}
-      />
+      {/* Torn-off perforation, then the total mark. The perforation tears the
+          typed working off the total, so a tag with no working has nothing to
+          tear (ADR-0076); `base !== null` is the resolver's own test for "some
+          working survived". */}
+      {base !== null && (
+        <div
+          aria-hidden
+          style={{
+            height: 0,
+            borderTop: "2px dashed var(--faction-snide-acid-deep)",
+            opacity: 0.75,
+            margin: "var(--space-sm) 0",
+          }}
+        />
+      )}
       <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
         <span
           style={{
