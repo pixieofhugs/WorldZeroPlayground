@@ -301,6 +301,7 @@
     "bodyConnecting": "Opening the shared write-up…",
     "bodyUnreachable": "The shared write-up would not open, so this editor cannot take text. Reload the page to try again.",
     "bodyFrozen": "Frozen while the crew's publish window is open. Submitting locks the write-up for everyone — including whoever submitted — so nothing changes under a submission already made.",
+    "bodyFrozenMidEdit": "Someone submitted while you were writing, so the write-up froze mid-sentence. Anything you typed after that never reached the crew and cannot be recovered — you will have to write it again.",
     "bodyFrozenAction": "Reopen the write-up for the crew",
       "wordCount": "{{words}} words · markdown ok",
       "proofLabel": "Proof",

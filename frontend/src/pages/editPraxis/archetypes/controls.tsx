@@ -18,6 +18,7 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import { usePraxisRoom, ROOM_TITLE_KEY } from "../praxisRoom";
+import { composerWritable } from "../roomSeal";
 import { paintedAwareness } from "../roomPresence";
 import {
   BODY_EDITOR_BASE_THEME,
@@ -861,8 +862,9 @@ export function BodyTextarea({
   // same thing. `seeded` is "not yet" — the document has not arrived. Frozen is
   // "not now" — it has arrived and is sealed for the whole group until somebody
   // reopens it (#1745). The server drops the update messages either way; this
-  // only stops the member typing into a void.
-  const writable = seeded && !state.documentFrozen;
+  // only stops the member typing into a void. The rule itself is one line in
+  // `roomSeal.ts`, where the harness can call it (#1931).
+  const writable = composerWritable(seeded, state.documentFrozen);
   const setBodyRef = useRef(state.setBody);
   setBodyRef.current = state.setBody;
 
@@ -1052,7 +1054,20 @@ export function BodyTextarea({
           className="flex flex-col items-start gap-1"
           style={{ marginTop: "var(--space-xs)" }}
         >
-          <p className="label-caption">{t("editPraxis.composer.bodyFrozen")}</p>
+          {/* Two sentences for two different members (#1931). Whoever loaded a
+              praxis that was already sealed has lost nothing and is told the
+              rule. Whoever was still typing when the room hung up under them
+              has lost whatever they typed after that — it never reached the
+              server and cannot be recovered — and being told the rule instead
+              of the loss would leave them believing text they can still see on
+              screen is safe. */}
+          <p className="label-caption">
+            {t(
+              state.sealedMidEdit
+                ? "editPraxis.composer.bodyFrozenMidEdit"
+                : "editPraxis.composer.bodyFrozen",
+            )}
+          </p>
           <button
             type="button"
             className="label-caption"
