@@ -30,7 +30,10 @@ from game_config import (
     EraConfig,
     FactionConfig,
 )
+from models.character import Character
+from models.task import Task, TaskType
 from services.meta_task import faction_bypasses_metatask_level
+from services.praxis_metatask import _check_metatask_eligibility
 
 ERAS = {"era_1": ERA_1, "era_2": ERA_2}
 
@@ -210,6 +213,22 @@ def _declared_factions() -> dict:
     return dict(ERA_1_FACTIONS)
 
 
+def test_the_exported_faction_dict_is_the_resolved_one() -> None:
+    """``game_config.ERA_N_FACTIONS`` must never be the pre-inheritance dict.
+
+    The era file keeps a module-level literal for authoring; the two now differ
+    by the perk union, and a consumer reading the literal would see an Albescent
+    that has not inherited yet.
+    """
+    import game_config
+
+    assert game_config.ERA_1_FACTIONS is ERA_1.factions
+    assert game_config.ERA_2_FACTIONS is ERA_2.factions
+    assert _declared_factions()["albescent"].duel_win_modifier != (
+        ERA_1.factions["albescent"].duel_win_modifier
+    )
+
+
 def test_a_faction_added_with_a_new_perk_is_mirrored_automatically() -> None:
     """The failure mode that produced #1871: a faction arrives, nobody mirrors it."""
     era = _era_with_extra_faction(habit_bonus_points=99, level_jump_reach=4)
@@ -286,3 +305,49 @@ def test_metatask_bypass_follows_the_config_not_the_slug() -> None:
 def test_metatask_bypass_is_safe_for_unknown_and_missing_slugs() -> None:
     assert faction_bypasses_metatask_level(None, ERA_1) is False
     assert faction_bypasses_metatask_level("ua_masters", ERA_1) is False
+
+
+# ---------------------------------------------------------------------------
+# The enforcement gate itself — the branch Ruling 3 deleted
+# ---------------------------------------------------------------------------
+
+
+def _metatask_gate(faction_slug: str, level: int, era: EraConfig = ERA_1):
+    return _check_metatask_eligibility(
+        Character(faction_slug=faction_slug),
+        Task(task_type=TaskType.metatask, metatask_faction_slug="wow"),
+        level,
+        era,
+    )
+
+
+def test_gate_lets_the_bypass_faction_in_below_the_level() -> None:
+    assert _metatask_gate("albescent", 0) is None
+
+
+def test_gate_holds_everyone_else_to_the_era_level() -> None:
+    """Read off ``era`` — no restated integer, so a re-tune moves the test."""
+    below = ERA_1.metatask_apply_level - 1
+    assert _metatask_gate("wow", below) is not None
+    assert _metatask_gate("wow", ERA_1.metatask_apply_level) is None
+
+
+def test_gate_carries_no_faction_slug_branch_of_its_own() -> None:
+    """Strip the perk from the config and the gate must stop granting it.
+
+    This is the assertion that would have failed against the old
+    ``if character.faction_slug == ALBESCENT_FACTION_SLUG`` — a slug branch
+    survives a config edit, a config read does not.
+    """
+    stripped = dataclasses.replace(
+        ERA_1,
+        factions={
+            slug: dataclasses.replace(
+                faction,
+                can_apply_metatask_at_any_level=False,
+                inherits_faction_perks=False,
+            )
+            for slug, faction in _declared_factions().items()
+        },
+    )
+    assert _metatask_gate("albescent", 0, stripped) is not None
