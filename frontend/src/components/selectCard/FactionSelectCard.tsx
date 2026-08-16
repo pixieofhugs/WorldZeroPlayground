@@ -12,7 +12,7 @@ import * as eph from "../factionMarks/ephemeristsPlate";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { WowSigil } from "../sigil/WowSigil";
-import AlbescentSigil from "../sigil/AlbescentSigil";
+import FactionSigil from "../sigil/FactionSigil";
 import DefaultSelectCard from "./DefaultSelectCard";
 
 /**
@@ -477,7 +477,10 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-2xl) 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.34em", color: "var(--albescent-reveal-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
-          <AlbescentSigil size={26} color="var(--albescent-reveal-ink)" />
+          {/* Was the surveyor's cross-hair on the reveal ink; the order has no
+              mark of its own any more (#1891 ruling 6). Same 26px, so the
+              header row's metrics are unchanged. */}
+          <FactionSigil slug="albescent" size={26} />
         </div>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: vellum-letter name — the archetype's calligraphic display type */}
         <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: "var(--space-lg)" }}>{i18n.t("feed:factionSelect.albescent.name")}</div>

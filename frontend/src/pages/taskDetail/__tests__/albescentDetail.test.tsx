@@ -28,6 +28,7 @@ import AlbescentTaskDetail from "../archetypes/AlbescentTaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aTask } from '../../../test/fixtures'
+import { factionName, setAlbescentRevealed } from "../../../utils/factions";
 
 const TITLE = "Sit with something until it turns pale";
 const BRIEF =
@@ -123,8 +124,25 @@ describe("Albescent task detail — Default plus the light", () => {
     }
     expect(text).toContain(TITLE);
     expect(text).toContain(BRIEF);
-    // The faction line resolves from factions.json by slug, like every skin.
-    expect(text).toContain("Albescent");
+    // The faction line resolves through `factionName()`, like every skin — and
+    // since #1891 that means it reads "Unaffiliated" to a viewer who was never
+    // invited. The skin itself is UNCHANGED: the look stays, only the word goes,
+    // which is why every other assertion above still holds. The revealed half
+    // of this is asserted below.
+    expect(text).toContain(factionName("na"));
+    expect(text).not.toContain("Albescent");
+  });
+
+  it("names the order once the viewer has been revealed to it (#1891)", () => {
+    // The mask is a module-level flag, so it outlives the case that sets it —
+    // reset unconditionally or a later test passes for the wrong reason.
+    setAlbescentRevealed(true);
+    try {
+      const { text } = render(<AlbescentTaskDetail state={baseState()} />);
+      expect(text).toContain("Albescent");
+    } finally {
+      setAlbescentRevealed(false);
+    }
   });
 
   it("inherits the base row once a factor makes it worth saying", () => {

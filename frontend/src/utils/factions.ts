@@ -317,13 +317,88 @@ export function isKnownFaction(slug: string | null | undefined): boolean {
   return hasOwnKey(CSS_KEY, slug) && CSS_KEY[slug] !== "default";
 }
 
+/** The secret society's slug (ADR-0027, #390). */
+export const ALBESCENT_FACTION_SLUG = "albescent";
+
+/**
+ * Whether the signed-in account has been revealed to Albescent.
+ *
+ * Module-level and mutable, which is the honest cost of the decision in #1891.
+ * See `factionName` for why it is paid here rather than threaded through props.
+ *
+ * Defaults to `false`, so every state this app can be in before `/auth/me`
+ * answers — first paint, logged out, a non-React caller, a page nobody has
+ * written yet — is the SECRET one. Failing closed is the whole point: a leak
+ * here is unrecoverable, and a name withheld for one extra frame is not.
+ */
+let albescentRevealed = false;
+
+/**
+ * Point the mask at the current viewer. Called by `AuthContext` on every change
+ * of viewer — sign-in, sign-out, and the `applyUser` hand-off that follows a
+ * join (the join IS the reveal, so this is how the word appears).
+ *
+ * Exported for tests too: the frontend harness is `renderToStaticMarkup` with
+ * no DOM, so effects never run and a test cannot reach the provider's closure.
+ * Tests MUST reset it — it outlives the case that set it, and a leaked `true`
+ * makes a later assertion pass for the wrong reason.
+ */
+export function setAlbescentRevealed(revealed: boolean): void {
+  albescentRevealed = revealed;
+}
+
+/**
+ * Whether this viewer must not be shown Albescent as a CHOICE.
+ *
+ * The counterpart to the mask, and deliberately not the same answer. Where a
+ * name LABELS a thing already on screen, masking it to "Unaffiliated" is right
+ * — a blank where every other card has a name advertises that something is
+ * being withheld. Where a name builds a CHOOSER, masking is wrong: it hands an
+ * unrevealed player two identical "Unaffiliated" rows, which is louder than the
+ * leak it replaces. Choosers must DROP the row; this is the predicate they
+ * filter on (#1891 ruling 3).
+ */
+export function isFactionHiddenFromChoosers(
+  slug: string | null | undefined,
+): boolean {
+  return slug === ALBESCENT_FACTION_SLUG && !albescentRevealed;
+}
+
 /**
  * Get a faction's display name by slug from the factions.json catalog
  * (`names.<slug>`). A null / unrecognized slug falls back to the "Unaffiliated"
  * copy under `names.na`. The backend emits only slugs now — never name prose.
+ *
+ * THIS FUNCTION IS NOT PURE, AND THAT IS THE DESIGN (#1891). It reads the
+ * module-level `albescentRevealed` flag, so the same slug answers differently
+ * for two viewers.
+ *
+ * Albescent is a secret society: a player who was never invited must not
+ * encounter the word, or learn the order exists. The name was leaking through
+ * every surface that labels a thing with its faction — praxis bylines, task
+ * cards, metatask seals, the character switcher, a sidebar `aria-label` — about
+ * thirty-five call sites, each of which would have needed its own gate, and
+ * each of which is a place a future page can forget.
+ *
+ * Putting the gate HERE is what makes a page written next month secret by
+ * construction rather than by review. It is also the only version that covers
+ * the callers which are not React at all and have no context to read.
+ *
+ * The look is untouched: Albescent's skins, frames and voices keep rendering
+ * (ruling 1). Only the word changes, and it changes to "Unaffiliated" rather
+ * than to a blank or a dash — `default` / `na` / Unaffiliated is already one
+ * identity here, and a blank advertises the omission.
+ *
+ * Not a security boundary. The wire still carries the slug, and the server is
+ * what withholds Albescent from `/factions` and from the level ladder. This
+ * stops the app from SAYING the name; it does not pretend to stop a reader of
+ * the network tab.
  */
 export function factionName(slug: string | null | undefined): string {
-  const key = slug ?? "";
+  const key =
+    slug === ALBESCENT_FACTION_SLUG && !albescentRevealed
+      ? UNAFFILIATED_FACTION_SLUG
+      : slug ?? "";
   if (i18n.exists(`factions:names.${key}`)) {
     return tString(`factions:names.${key}`);
   }

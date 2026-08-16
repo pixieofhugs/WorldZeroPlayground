@@ -9,7 +9,6 @@ export { default as AlbescentPraxisCard } from "../src/components/praxisCard/des
 export { default as AlbescentPraxisDetail } from "../src/pages/praxisDetail/archetypes/AlbescentPraxisDetail";
 export { default as AlbescentProfileBody } from "../src/pages/characterProfile/archetypes/AlbescentProfileBody";
 export { default as AlbescentSeal } from "../src/components/metataskSeal/skins/AlbescentSeal";
-export { default as AlbescentSigil } from "../src/components/sigil/AlbescentSigil";
 export { default as AlbescentTaskCard } from "../src/components/taskCard/AlbescentTaskCard";
 export { default as AlbescentTaskDetail } from "../src/pages/taskDetail/archetypes/AlbescentTaskDetail";
 export { default as AlbescentVote } from "../src/components/vote/AlbescentVote";
