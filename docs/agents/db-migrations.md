@@ -208,14 +208,19 @@ deliberate exception to rules 2 and 3: its primary key is the human-written `slu
 | `praxis.py` | `praxis_member` | `id` | `praxis_id`, `character_id` |
 | `praxis.py` | `media_item` | `id` | `praxis_id` |
 | `praxis.py` | `praxis_invite` | `id` | `praxis_id`, `inviter_id`, `invitee_id` |
+| `praxis_room.py` | `praxis_room_update` | `id` | `praxis_id` |
 | `relationship.py` | `relationship` | `id` | `from_character_id`, `to_character_id` |
 | `roles.py` | `role` | `id` | — |
 | `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by` |
 | `task.py` | `task` | `id` | `created_by` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
 | `taunt_message.py` | `taunt_message` | `id` | `from_character_id`, `to_character_id` |
+| `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
 
-26 tables, 51 integer foreign keys, 5 string ones.
+28 tables, 53 integer foreign keys, 5 string ones.
+
+`backend/tests/unit/test_model_conventions.py` parses this table and asserts both
+halves against `Base.metadata`, so a new model that skips this list fails there.
 
 ### The `create_type=False` convention (three-layer enum defense)
 
