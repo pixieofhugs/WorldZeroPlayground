@@ -62,12 +62,16 @@ export function acceptMode(
   return "confirm-first";
 }
 
+/**
+ * The BOX a feed control wears. Its FACE — font, size, weight, casing,
+ * tracking — is `.feed-action`, so every element styled from here also carries
+ * that class (#1783). Those five declarations used to sit at the top of this
+ * object and again on the "view factions" link below, and again twice over in
+ * FeedCardCollabInvite, three times in FeedCardDuelChallenge and once in
+ * FeedBankFullModal: eight copies of one label, which is how the feed's
+ * controls and `.btn-*` came to sit on two different rungs of the same ramp.
+ */
 const CONTROL: CSSProperties = {
-  fontFamily: "'Courier Prime', monospace",
-  fontSize: "var(--text-md)",
-  fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
   padding: "var(--space-xs) var(--space-lg)",
   border: "none",
   cursor: "pointer",
@@ -153,12 +157,8 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
   const viewFactions = (
     <Link
       to="/factions"
+      className="feed-action"
       style={{
-        fontFamily: "'Courier Prime', monospace",
-        fontSize: "var(--text-md)",
-        fontWeight: 700,
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
         color,
         textDecoration: "none",
       }}
@@ -245,11 +245,12 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
               flexWrap: "wrap",
             }}
           >
-            <button type="button" onClick={() => void join()} disabled={joining} style={acceptStyle}>
+            <button type="button" className="feed-action" onClick={() => void join()} disabled={joining} style={acceptStyle}>
               {i18n.t("feed:invitationLetter.confirm.confirm")}
             </button>
             <button
               type="button"
+              className="feed-action"
               onClick={() => setConfirming(false)}
               disabled={joining}
               style={QUIET}
@@ -280,6 +281,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
               {mode !== "suppressed" && (
                 <button
                   type="button"
+                  className="feed-action"
                   data-invitation-accept={mode}
                   onClick={() => {
                     if (mode === "confirm-first") setConfirming(true);
@@ -292,7 +294,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
                 </button>
               )}
               {onNotNow && (
-                <button type="button" data-invitation-not-now onClick={onNotNow} style={QUIET}>
+                <button type="button" className="feed-action" data-invitation-not-now onClick={onNotNow} style={QUIET}>
                   {i18n.t("feed:invitationLetter.notNow")}
                 </button>
               )}

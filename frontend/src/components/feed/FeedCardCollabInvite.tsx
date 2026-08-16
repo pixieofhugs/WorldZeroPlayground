@@ -225,15 +225,15 @@ export default function FeedCardCollabInvite({ item }: Props) {
               flexWrap: "wrap",
             }}
           >
+            {/* Face is `.feed-action` (#1783) — the same five declarations
+                stood here, in FeedCardDuelChallenge, in FeedBankFullModal and
+                in FeedCardInvitationLetter, eight copies of one label. Only the
+                fill, the rule and the cursor are this button's own. */}
             <button
               onClick={handleAccept}
               disabled={loading}
+              className="feed-action"
               style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
                 background: "var(--badge-collab)",
                 color: "var(--color-text-on-accent)",
                 border: "none",
@@ -246,12 +246,8 @@ export default function FeedCardCollabInvite({ item }: Props) {
             <button
               onClick={handleDecline}
               disabled={loading}
+              className="feed-action"
               style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
                 background: "transparent",
                 color: "var(--color-text-secondary)",
                 border: "1px solid var(--color-border)",
