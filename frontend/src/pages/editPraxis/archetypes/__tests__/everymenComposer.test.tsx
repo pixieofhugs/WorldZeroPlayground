@@ -153,6 +153,29 @@ describe("Everymen composer dress", () => {
     expect(markup).not.toContain("animation:");
   });
 
+  it("fills the chosen mode with the CTA, not a generic accent block (#1830)", () => {
+    // The design's shared control dress says so in as many words: a control's
+    // active state takes "its CTA fill … never a generic accent block". The red
+    // block with a 4px offset shadow was the union's ONE irreversible act —
+    // filing — restated on a control that only picks how you file.
+    const markup = render("desktop");
+    expect(markup).toContain("background:var(--faction-everymen-bill-cta-bg)");
+    expect(markup).not.toContain("4px 4px 0 var(--everymen-frame)");
+  });
+
+  it("stencils every label at the design's 0.2em (#1830)", () => {
+    // `stencil()` is the whole label tier, and its 0.16em reached the mode
+    // chips, the write-up tabs, the picker and the exits — the slots that did
+    // NOT pass their own tracking. The masthead wordmark keeps 0.16em, which is
+    // the design's own value there.
+    const markup = render("desktop");
+    const tight = markup.match(/letter-spacing:0\.16em;[^"]*/g) ?? [];
+    expect(tight).toHaveLength(1);
+    expect(tight[0]).toContain("--faction-everymen-bill-mast-ink");
+    const chip = markup.slice(markup.indexOf('aria-pressed="true"'));
+    expect(chip.slice(0, 400)).toContain("letter-spacing:0.2em");
+  });
+
   it.each(WIDTHS)("keeps its ground inside its own column on %s (#1028)", (width) => {
     const markup = render(width);
     expect(markup).not.toContain("100vh");
