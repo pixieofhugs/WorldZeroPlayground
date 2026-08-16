@@ -2027,6 +2027,52 @@
   --sky-name-muted: #8a8070; /* faded/zero names + zero-state — AA 4.94:1 */
   --sky-you: rgba(239, 230, 212, 0.7); /* "you" ring around the viewer's own orb (#684 §7) */
 
+  /* ── The on-night faction ink (#1792) ──
+     A faction hue that has to sit on the night canvas ABOVE. One tier, seven
+     entries, each holding that faction's dark-cascade hex as a literal.
+
+     DO NOT ADD A [data-theme="dark"] OVERRIDE FOR THESE. Not an oversight — the
+     whole tier exists because the sky does not flip and its ink must not
+     either. `--sky-bg` is night in both themes (see the note above it), but the
+     Constellation's score numeral was inked with `factionCssVar(slug)`, which
+     DOES flip, so in light theme a permanently-dark surface was painted with
+     hues tuned for a light page ground. Four of seven fell under AA there —
+     ephemerists 3.22, everymen 3.29, singularity 3.71, ua 3.92 — while every
+     dark value cleared comfortably. That is one bug, not four hues being too
+     dark, and restating these under [data-theme="dark"] would put it straight
+     back for whichever half of the split you got wrong.
+
+     Nor may they be `var(--faction-{key})`: a var() reference resolves where it
+     is READ, so it would flip too. A literal is the only thing that cannot.
+
+     All seven, not the four that failed, so the call site reads the token
+     unconditionally instead of branching on which faction it drew. The three
+     that already cleared get better ratios, never worse.
+
+     Measured against --sky-bg #0f0e15 — identical in both themes, by
+     construction:
+       ua           #e8703a →  6.23:1  (was 3.92 in light)
+       wow          #f5c542 → 11.84:1  (was 8.93)
+       everymen     #ef5350 →  5.51:1  (was 3.29)
+       coven        #f472b6 →  7.25:1  (was 6.09)
+       snide        #b6ff2e → 15.84:1  (was 7.07)
+       ephemerists  #3aa0a4 →  6.17:1  (was 3.22)
+       singularity  #60a5fa →  7.55:1  (was 3.71)
+
+     `default` (na / albescent) is absent on purpose: the sky hands unaffiliated
+     points no colour at all and lets `.rainbow-ink` clip them (ADR-0039), so
+     there is no ink here to guarantee. `factionCssVar` would resolve
+     `--faction-default-on-night` if anyone asked; nobody may, and adding it
+     would invite a caller to drop the isKnownFaction branch that keeps the
+     spectrum. */
+  --faction-ua-on-night: #e8703a;
+  --faction-wow-on-night: #f5c542;
+  --faction-everymen-on-night: #ef5350;
+  --faction-coven-on-night: #f472b6;
+  --faction-snide-on-night: #b6ff2e;
+  --faction-ephemerists-on-night: #3aa0a4;
+  --faction-singularity-on-night: #60a5fa;
+
   /* A `--meadow-*` family stood here: the Constellation's LIGHT-theme sibling,
      a daylit field with its own AA measurements (#684 §9). #1700 retires the
      Meadow (ADR-0074) and the sky above serves both themes, so the family had
