@@ -54,7 +54,10 @@ import type { FactionDetailState } from "../useFactionDetail";
  * — so the member list and the spotlight are built from the two list shapes the
  * design DOES draw: the submission card and the comment row.
  *
- * NO COPY CHANGED. Every string is the `factions` catalog key it was.
+ * NO COPY CHANGED when this file replaced the memo board — every string was the
+ * `factions` catalog key it was. That is exactly how `join.exe` survived the
+ * window it titled: #1948 is the one string since changed (`join.windowTitle` →
+ * `join.heading`, "the circle").
  */
 
 const CHROME = "var(--font-faction-rounded)"; // Quicksand
@@ -240,7 +243,14 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               }}
             >
               <SigilMark size={26} />
-              <span style={{ ...CAPTION, marginLeft: "auto" }}>{t("coven.join.windowTitle")}</span>
+              {/*
+                #1948: this bar used to read `join.exe` — the title of the
+                pushpinned window #1209 deleted, re-hung on the panel that
+                replaced it. Every sibling names its join panel in its own voice
+                (`road.heading` "The Road", `roll.heading` "THE ROLL",
+                `access.heading` "ACCESS"), so Coven's is `join.heading` too.
+              */}
+              <span style={{ ...CAPTION, marginLeft: "auto" }}>{t("coven.join.heading")}</span>
             </div>
 
             <div style={{ background: CARD, padding: "var(--space-lg)" }}>
