@@ -594,3 +594,176 @@ describe('i18next runtime', () => {
     expect(() => i18n.t('nonexistent:some.key')).toThrow('missing copy key')
   })
 })
+
+/* ========================================================================== *
+ * #1909 (child of #1864) — the 97 key slots the copy audit ruled CUT.
+ *
+ * THE SEAM IS THE CATALOG'S LEAF SET. Each of these was one faction writing a
+ * bespoke string on a surface the audit ruled generic while the other eight
+ * never had the slot at all, so the ruling is not "these words are wrong", it is
+ * "this slot should not exist". A key-presence test cannot see that: it asserts
+ * what IS in the catalog, and a later voice pass adding `wow.charter.title`
+ * back would pass every one of them. So this guard reads the same
+ * `catalogLeaves()` walk and asserts ABSENCE, which is the only shape that can
+ * fail on a re-addition.
+ *
+ * The list is the 133 strings, by KEY rather than by value — #1863 rewrote
+ * values across these same catalogs while this was being built, and matching on
+ * the string would have deleted whatever the rewrite left behind.
+ *
+ * Adding a slot back is not forbidden forever. The audit's own principle is
+ * "we can put it back in intentionally" — putting it back means deleting its
+ * line here, in a diff that says so.
+ * ========================================================================== */
+describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
+  const DELETED_SLOTS = [
+    'common.json:fieldDesk.home.coven.charWindow',
+    'common.json:fieldDesk.home.coven.questsWindow',
+    'common.json:profile.singularity.scoreFootnote',
+    'common.json:profile.wow.eyebrow',
+    'common.json:profile.wow.honours',
+    'common.json:profile.wow.praxisEmpty',
+    'common.json:profile.wow.stats.points',
+    'common.json:profile.wow.stats.praxis',
+    'common.json:profile.wow.stats.tasks',
+    'common.json:profile.wow.tabPraxis',
+    'common.json:profile.wow.tabTasks',
+    'common.json:profile.wow.tasksEmpty',
+    'factions.json:albescent.letter.terms.standingLabel',
+    'factions.json:albescent.letter.terms.standingValue',
+    'factions.json:coven.invitation.terms.3.label',
+    'factions.json:coven.invitation.terms.3.value',
+    'factions.json:coven.praxis.kicker',
+    'factions.json:coven.tasks.kicker',
+    'factions.json:ephemerists.invitation.terms.3.label',
+    'factions.json:ephemerists.invitation.terms.3.value',
+    'factions.json:ephemerists.masthead.almanac',
+    'factions.json:ephemerists.masthead.almanacMark',
+    'factions.json:ephemerists.masthead.observation',
+    'factions.json:ephemerists.masthead.observationMark',
+    'factions.json:ephemerists.masthead.record',
+    'factions.json:ephemerists.masthead.recordMark',
+    'factions.json:ephemerists.masthead.star',
+    'factions.json:ephemerists.masthead.starMark',
+    'factions.json:ephemerists.praxis.kicker',
+    'factions.json:ephemerists.tasks.kicker',
+    'factions.json:everymen.invitation.terms.3.label',
+    'factions.json:everymen.invitation.terms.3.value',
+    'factions.json:everymen.praxis.kicker',
+    'factions.json:everymen.tasks.kicker',
+    'factions.json:singularity.invitation.terms.3.label',
+    'factions.json:singularity.invitation.terms.3.value',
+    'factions.json:singularity.manifest.command',
+    'factions.json:singularity.praxis.kicker',
+    'factions.json:singularity.tasks.kicker',
+    'factions.json:snide.invitation.terms.3.label',
+    'factions.json:snide.invitation.terms.3.value',
+    'factions.json:snide.praxis.kicker',
+    'factions.json:snide.spotlight.wanted',
+    'factions.json:snide.tasks.kicker',
+    'factions.json:ua.invitation.terms.3.label',
+    'factions.json:ua.invitation.terms.3.value',
+    'factions.json:ua.praxis.kicker',
+    'factions.json:ua.tasks.kicker',
+    'factions.json:wow.charter.paragraphs.0',
+    'factions.json:wow.charter.paragraphs.1',
+    'factions.json:wow.charter.paragraphs.2',
+    'factions.json:wow.charter.title',
+    'factions.json:wow.invitation.terms.3.label',
+    'factions.json:wow.invitation.terms.3.value',
+    'factions.json:wow.mobile.subtitle',
+    'factions.json:wow.praxis.kicker',
+    'factions.json:wow.tasks.kicker',
+    'feed.json:factionCard.ephemerists.eyebrow',
+    'feed.json:factionCard.everymen.eyebrow',
+    'feed.json:factionCard.everymen.kicker',
+    'feed.json:factionCard.everymen.motto',
+    'feed.json:factionCard.everymen.perks.finishesWork',
+    'feed.json:factionCard.everymen.perks.honestPoints',
+    'feed.json:factionCard.everymen.perks.stampedWork',
+    'feed.json:factionCard.everymen.summons',
+    'feed.json:factionCard.snide.subtitle',
+    'feed.json:identity.coven.windowTitle',
+    'feed.json:identity.singularity.protocol',
+    'feed.json:identity.wow.dispatch',
+    'feed.json:row.wow.levelUp',
+    'feed.json:row.wow.praxisSealed',
+    'feed.json:row.wow.questTaken',
+    'feed.json:taskCard.albescent.eyebrow',
+    'feed.json:taskCard.ephemerists.coordPolar',
+    'feed.json:taskCard.ephemerists.coordXPrefix',
+    'feed.json:taskCard.ephemerists.footnote',
+    'feed.json:taskCard.ephemerists.marginalia',
+    'feed.json:taskCard.ephemerists.motto',
+    'feed.json:taskCard.ephemerists.vanishingLabel',
+    'feed.json:taskCard.everymen.billMasthead',
+    'feed.json:taskCard.everymen.sealUnit',
+    'feed.json:taskCard.singularity.levelLabel',
+    'feed.json:taskCard.singularity.levelPill',
+    'feed.json:taskCard.singularity.pointsLabel',
+    'feed.json:taskCard.singularity.windowTitle',
+    'feed.json:taskCard.snide.dispatchNumber',
+    'feed.json:taskCard.snide.scrawl',
+    'feed.json:taskCard.ua.estLine',
+    'feed.json:taskCard.ua.pointsLine',
+    'feed.json:taskCard.wow.byOrder',
+    'feed.json:taskCard.wow.decree',
+    'praxis.json:card.coven.mediaEmpty',
+    'praxis.json:card.ephemerists.for',
+    'praxis.json:card.ephemerists.mediaEmpty',
+    'praxis.json:card.masthead.albescent',
+    'praxis.json:card.masthead.coven',
+    'praxis.json:card.masthead.everymen',
+    'praxis.json:card.masthead.singularity',
+    'praxis.json:card.masthead.snide',
+    'praxis.json:card.masthead.ua',
+    'praxis.json:card.masthead.wow',
+    'praxis.json:card.stamp.ephemerists.base',
+    'praxis.json:card.stamp.ephemerists.fromVotes',
+    'praxis.json:card.stamp.ephemerists.fromVotesGloss',
+    'praxis.json:card.stamp.ephemerists.habit',
+    'praxis.json:card.stamp.ephemerists.points',
+    'praxis.json:card.wow.forQuest',
+    'praxis.json:card.wow.illumination',
+    'praxis.json:card.wow.sealed',
+    'praxis.json:comments.albescent.letterhead',
+    'praxis.json:comments.everymen.masthead',
+    'praxis.json:comments.singularity.protocol',
+    'praxis.json:comments.ua.house',
+    'praxis.json:comments.wow.post',
+    'praxis.json:comments.wow.react',
+    'praxis.json:duelSeal.wow.forfeit.cancel',
+    'praxis.json:duelSeal.wow.forfeit.confirm',
+    'praxis.json:duelSeal.wow.forfeit.sub',
+    'praxis.json:duelSeal.wow.ribbonLine',
+    'praxis.json:duelSeal.wow.rosterLabel',
+    'praxis.json:duelSeal.wow.stakesLabel',
+    'praxis.json:duelSeal.wow.submit.cancel',
+    'praxis.json:duelSeal.wow.submit.confirm',
+    'praxis.json:duelSeal.wow.submit.sub',
+    'votes.json:chrome.coven.prompt',
+    'votes.json:chrome.ephemerists.prompt',
+    'votes.json:chrome.singularity.prompt',
+    'votes.json:chrome.singularity.promptHint',
+    'votes.json:chrome.ua.plateNumber',
+    'votes.json:chrome.ua.plateTopMark',
+    'votes.json:chrome.ua.prompt',
+    'votes.json:chrome.wow.picked',
+    'votes.json:chrome.wow.prompt',
+  ] as const
+
+  it('has the whole ruling in the list', () => {
+    // 97 keys, 133 strings — #1864's count. A line lost to a bad merge would
+    // otherwise silently shrink the guard.
+    expect(new Set(DELETED_SLOTS).size).toBe(133)
+  })
+
+  it('finds catalog leaves to check against, so absence cannot be vacuous', () => {
+    expect(catalogLeaves().length).toBeGreaterThan(1000)
+  })
+
+  it('holds none of them', () => {
+    const present = new Set(catalogLeaves().map(([id]) => id))
+    expect(DELETED_SLOTS.filter((id) => present.has(id))).toEqual([])
+  })
+})
