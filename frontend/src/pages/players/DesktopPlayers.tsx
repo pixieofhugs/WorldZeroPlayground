@@ -14,6 +14,7 @@ import {
   PLAYERS_FILTERS_DEFAULT,
   PODIUM_SIZE,
   ROSTER_PAGE_STEP,
+  factionHref,
   factionStandings,
   rosterView,
   selectRoster,
@@ -50,8 +51,11 @@ const ELLIPSIS_GLYPH = '⋮'
  *   - **Seven lanes in the race, not eight.** The design's "Albescent" row is
  *     unaffiliated players, and `na` is a state rather than a faction — see
  *     `factionStandings`.
- *   - **Roster rows are `<Link>`s.** The design draws none; the roster has
- *     linked to the public profile since #517 and losing that is a regression.
+ *   - **The whole roster row navigates to the player.** The design draws no
+ *     link; the roster has linked to the public profile since #517 and losing
+ *     that is a regression. Since #1953 the row is a `<div>` with a stretched
+ *     overlay rather than one big `<Link>`, so the faction line inside it can
+ *     be its own link without nesting anchors — see `RosterRow`.
  *   - **The podium's latest-praxis title takes `--text-content`**, not the
  *     design's 14px: a task title is prose that can run to any length, and the
  *     content-text floor governs those (WORLD_ZERO_STYLE §4, #627).
@@ -364,9 +368,12 @@ function RaceRow({
     >
       <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>{rank}</span>
       <FactionSigil slug={lane.slug} size={22} />
-      <span className="font-display" style={{ fontSize: 'var(--text-content)' }}>
-        {factionName(lane.slug)}
-      </span>
+      {/* The lane's name opens its faction page (#1953). A race row is a plain
+          div — it links to nothing else — so this is one anchor, not the
+          nested-anchor case `RosterRow` below has to work around. `factionHref`
+          still gates it: see its docblock for why a lane can never be `na` or a
+          masked Albescent and why it is asked anyway. */}
+      <FactionLaneName slug={lane.slug} />
       <span
         aria-hidden
         style={{
@@ -407,14 +414,57 @@ function RaceRow({
   )
 }
 
-/** One roster row. A link, always — the design draws none and that is a bug. */
+/**
+ * A race lane's name, linked to its faction page (#1953).
+ *
+ * `<a>` is blockified as a grid item and Tailwind's preflight gives it `color:
+ * inherit; text-decoration: inherit`, so it renders identically to the `<span>`
+ * it replaces. Whether a linked faction name should grow a hover affordance of
+ * its own is a style question, deliberately not answered here.
+ */
+function FactionLaneName({ slug }: { slug: string }) {
+  const href = factionHref(slug)
+  const style = { fontSize: 'var(--text-content)' }
+  if (href === null) {
+    return (
+      <span className="font-display" style={style}>
+        {factionName(slug)}
+      </span>
+    )
+  }
+  return (
+    <Link to={href} className="font-display" style={style}>
+      {factionName(slug)}
+    </Link>
+  )
+}
+
+/**
+ * One roster row. The whole row still navigates to the player — the design
+ * draws no link at all and that is a bug — but the faction line under the name
+ * now opens that faction's page (#1953), and those two facts cannot both be
+ * anchors nested one inside the other.
+ *
+ * So the row takes the shape #1893 settled for feed cards: the row's ROOT is a
+ * plain positioned `<div>`, ONE anchor inside it (the player's name) carries a
+ * stretched overlay that covers the row, and every other link is lifted above
+ * that overlay with `position: relative; z-index: 1`. The overlay declares no
+ * z-index of its own, so any positioned sibling that declares one paints — and
+ * hit-tests — above it. The name anchor itself must NOT be positioned, or the
+ * overlay collapses to the name's own box.
+ *
+ * The faction name is the lifted link, and it is only a link at all when
+ * `factionHref` says so: unaffiliated has no page, and an unrevealed viewer must
+ * not be handed `/factions/albescent` behind a word `factionName` has already
+ * masked to "Unaffiliated" (#1926).
+ */
 function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
   const { t } = useTranslation('common')
   const { character, rank, points } = row
+  const href = factionHref(character.faction_slug)
 
   return (
-    <Link
-      to={`/characters/${character.id}`}
+    <div
       className={isMe ? 'grid items-center' : 'leaderboard-row grid items-center'}
       style={{
         position: 'relative',
@@ -425,7 +475,6 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         borderBottom: '1px solid var(--color-border)',
         background: isMe ? 'var(--color-bg-surface)' : undefined,
         color: 'var(--color-text-primary)',
-        textDecoration: 'none',
       }}
     >
       {/* Your row's edge is the spectrum, bled into the gutter — one mark for
@@ -453,7 +502,13 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
           <FactionAvatar character={character} size={34} />
         </span>
         <span className="flex flex-col min-w-0" style={{ gap: 'var(--space-xs)' }}>
-          <span className="font-display truncate" style={{ fontSize: 'var(--text-content)' }}>
+          {/* The row's one anchor. NOT positioned — the overlay it carries has
+              to cover the row's root, not this name. */}
+          <Link
+            to={`/characters/${character.id}`}
+            className="font-display truncate"
+            style={{ fontSize: 'var(--text-content)', color: 'inherit', textDecoration: 'none' }}
+          >
             {character.display_name}
             {isMe && (
               <>
@@ -461,15 +516,34 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
                 <span className="label-heading">{t('leaderboard.roster.you')}</span>
               </>
             )}
-          </span>
+            <span aria-hidden style={{ position: 'absolute', inset: 0 }} />
+          </Link>
           {/* The faction's NAME, in the label tier's own ink (#1932). It used
               to be printed in the faction hue, which is 2.09:1 for WOW on the
               frost this row wears when it is yours. Nothing is lost: the word
               is the identity, and the avatar's ring and the gem's outline
-              beside it are still hue-coded. */}
-          <span className="label-heading truncate">
-            {factionName(character.faction_slug)}
-          </span>
+              beside it are still hue-coded.
+
+              It links to that faction's page (#1953) — lifted above the row's
+              overlay so the click reaches it — unless `factionHref` withholds
+              one, in which case the word stays exactly what it was. */}
+          {href === null ? (
+            <span className="label-heading truncate">
+              {factionName(character.faction_slug)}
+            </span>
+          ) : (
+            <Link
+              to={href}
+              className="label-heading truncate"
+              // No inline `color`: `.label-heading` owns `--label-ink` and an
+              // inline declaration outranks the class, which is the #1932
+              // regression. Tailwind's preflight `a { color: inherit }` is an
+              // element selector and loses to the class, so the ink is right.
+              style={{ position: 'relative', zIndex: 1 }}
+            >
+              {factionName(character.faction_slug)}
+            </Link>
+          )}
         </span>
       </div>
 
@@ -483,6 +557,6 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
       >
         {points}
       </span>
-    </Link>
+    </div>
   )
 }
