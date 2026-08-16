@@ -132,7 +132,8 @@ async function send(praxisId: number): Promise<void> {
     const cast = await castVote(praxisId, value)
     // The score moves HERE and only here — the server's own post-write tally.
     recordCastTally(praxisId, cast.tally)
-    const live = casts.get(praxisId)!
+    const live = casts.get(praxisId)
+    if (!live) return
     put(praxisId, {
       ...live,
       saving: false,
@@ -145,7 +146,8 @@ async function send(praxisId: number): Promise<void> {
   } catch (failure) {
     // Rollback: back to the last star the server accepted, which is nothing at
     // all on a first cast. The control reads `failure` and says why.
-    const live = casts.get(praxisId)!
+    const live = casts.get(praxisId)
+    if (!live) return
     put(praxisId, {
       ...live,
       saving: false,
