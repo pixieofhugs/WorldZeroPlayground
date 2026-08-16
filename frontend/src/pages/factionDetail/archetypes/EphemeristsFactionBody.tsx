@@ -94,19 +94,10 @@ const CARD: CSSProperties = {
   boxShadow: SHADOW,
 };
 
-const KICKER: CSSProperties = {
-  fontFamily: MARGINALIA,
-  fontStyle: "italic",
-  // eslint-disable-next-line local/no-raw-style-values -- ornament: marginal gloss under the section title, not copy.
-  fontSize: 13,
-  // The PAGE's ink, not the plate's (#1675). See SECTION_HEADING below.
-  color: "var(--color-text-secondary)",
-  margin: "var(--space-xs) 0 var(--space-lg)",
-};
-
-function Kicker({ children }: { children: ReactNode }) {
-  return <div style={KICKER}>{children}</div>;
-}
+/* The marginalia `Kicker` under each section title lived here. #1909 cut its two
+   strings (`ephemerists.tasks.kicker` / `.praxis.kicker`): the audit ruled the
+   line restated its own heading, and no faction outside the seven bespoke bodies
+   ever had one. The style went with the only component that used it. */
 
 const SECTION_HEADING: CSSProperties = {
   fontFamily: DECO,
@@ -206,7 +197,6 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
         {/* ④ TASKS */}
         <div>
           <SectionHeading>{t("ephemerists.tasks.heading")}</SectionHeading>
-          <Kicker>{t("ephemerists.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
               {t("ephemerists.tasks.empty")}
@@ -232,7 +222,6 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
         {/* ⑤ PRAXIS */}
         <div>
           <SectionHeading>{t("ephemerists.praxis.heading")}</SectionHeading>
-          <Kicker>{t("ephemerists.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
               {t("ephemerists.praxis.empty")}

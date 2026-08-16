@@ -59,8 +59,14 @@ import type { FactionDetailState } from "../useFactionDetail";
 
 const CHROME = "var(--font-faction-rounded)"; // Quicksand
 
-/** Section heading — the display face, a braid, then the kicker. */
-function SectionHead({ children, kicker }: { children: ReactNode; kicker?: ReactNode }) {
+/**
+ * Section heading — the display face, then a braid.
+ *
+ * It used to close on a kicker (`coven.tasks.kicker` / `coven.praxis.kicker`).
+ * #1909 cut the slot: the audit found the kicker restated its own heading, and
+ * only the seven bespoke bodies had one at all.
+ */
+function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
@@ -84,7 +90,6 @@ function SectionHead({ children, kicker }: { children: ReactNode; kicker?: React
         {children}
       </span>
       <Braid style={{ flex: 1 }} />
-      {kicker !== undefined && <span style={{ ...CAPTION, flex: "0 0 auto" }}>{kicker}</span>}
     </div>
   );
 }
@@ -165,7 +170,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHead kicker={t("coven.tasks.kicker")}>{t("coven.tasks.heading")}</SectionHead>
+          <SectionHead>{t("coven.tasks.heading")}</SectionHead>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.tasks.empty")}</p>
           ) : (
@@ -188,7 +193,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHead kicker={t("coven.praxis.kicker")}>{t("coven.praxis.heading")}</SectionHead>
+          <SectionHead>{t("coven.praxis.heading")}</SectionHead>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.praxis.empty")}</p>
           ) : (

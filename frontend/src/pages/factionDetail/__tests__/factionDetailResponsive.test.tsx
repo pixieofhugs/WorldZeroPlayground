@@ -74,8 +74,11 @@ const OWN_VOICE: Record<string, readonly string[]> = {
     'ephemerists.tasks.heading',
   ],
   everymen: ['everymen.charter.heading', 'everymen.roster.heading', 'everymen.tasks.heading'],
+  // Singularity's long-form panel had no heading of its own — it opened on a
+  // shell prompt, `singularity.manifest.command`, which #1909 CUT. Its praxis
+  // heading stands in: still a string only this body draws, still unconditional.
   singularity: [
-    'singularity.manifest.command',
+    'singularity.praxis.heading',
     'singularity.roster.heading',
     'singularity.tasks.heading',
   ],
