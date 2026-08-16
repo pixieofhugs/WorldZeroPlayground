@@ -1,6 +1,7 @@
 """Service for recomputing and persisting CharacterStats from current vote data."""
 
 import dataclasses
+from decimal import Decimal
 from typing import Any
 
 from fastapi import HTTPException
@@ -32,7 +33,7 @@ from services.era import (
     get_or_create_stats,
 )
 from services.praxis_scoring import Contribution, compute_contributions
-from services.scoring import compute_level
+from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
 
 # Factions that never receive invitation letters (ADR-0022 / ADR-0019 sentinels).
@@ -152,7 +153,10 @@ async def _deliver_earned_invitations(
     faction_by_task: dict[int, str] = {tid: slug for tid, slug in task_rows.all()}
 
     task_ids_by_faction: dict[str, set[int]] = {}
-    points_by_faction: dict[str, float] = {}
+    # Decimal, not float (#1578): this sums many contribution totals and then
+    # compares the sum to a threshold, so a binary tail could decide an invite
+    # on a character sitting exactly on the line.
+    points_by_faction: dict[str, Decimal] = {}
     for praxis in praxes:
         slug = faction_by_task.get(praxis.task_id) or CROSS_FACTION_SLUG
         if slug in uninvitable:
@@ -160,13 +164,16 @@ async def _deliver_earned_invitations(
         task_ids_by_faction.setdefault(slug, set()).add(praxis.task_id)
         contribution = contributions.get(praxis.id)
         if contribution is not None:
-            points_by_faction[slug] = points_by_faction.get(slug, 0.0) + contribution.total
+            points_by_faction[slug] = points_by_faction.get(
+                slug, Decimal(0)
+            ) + exact(contribution.total)
 
     qualifying = {
         slug
         for slug, task_ids in task_ids_by_faction.items()
         if len(task_ids) >= era.invitation_task_threshold
-        and points_by_faction.get(slug, 0.0) >= era.invitation_point_threshold
+        and points_by_faction.get(slug, Decimal(0))
+        >= exact(era.invitation_point_threshold)
     }
     if not qualifying:
         return
@@ -277,9 +284,18 @@ async def recalculate_character_stats(
     contributions = await compute_contributions(
         all_praxes, author, era, session, character_level=author_level
     )
-    # round(), not int(): int() truncates toward zero, so a true total of 49.9
-    # banked as 49 (ADR-0053). compute_level is directly downstream.
-    total_score = round(sum(c.total for c in contributions.values()))
+    # The one rounding site in the scoring path, and it rounds the **sum of
+    # every contribution** — not each contribution. A character's total score is
+    # what levels, and compute_level is directly downstream; per-praxis totals
+    # are displayed to one decimal place instead. #1578 kept it that way.
+    #
+    # round_half_up(), not round() and not int() (ADR-0053, extended by #1578):
+    #   - int() truncates toward zero, so a true total of 49.9 banked as 49.
+    #   - round() is banker's rounding, so 38.5 banked as 38 while 37.5 banked
+    #     as 38 as well — a tie went up or down on the parity beneath it.
+    # The sum is taken in Decimal so "exactly a half" is a fact about the score
+    # and not about which side of the line IEEE-754 left it on.
+    total_score = round_half_up(sum(exact(c.total) for c in contributions.values()))
 
     # Vote budget is computed on read (services.scoring.compute_votes_available)
     # from stats.score and stats.votes_spent_this_era, so no bookkeeping needed here.
