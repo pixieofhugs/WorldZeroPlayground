@@ -40,7 +40,12 @@ rule that runs on the client is not a rule:
    reset. The freeze is enforced in :meth:`PraxisRoomServer._refuse_writes_when_frozen`
    rather than by a read-only editor, because a rule that runs on the client is
    not a rule — the composer must not be able to talk a frozen room into
-   accepting text.
+   accepting text. Like rule 4, it needs **two doors** (#1808): the freeze also
+   *closes* the room's sockets as it lands, with a close code that says "come
+   back, and re-read the praxis". Without that a co-author mid-sentence is never
+   told, and their browser goes on accepting and rendering keystrokes the server
+   is dropping — the worst shape a data-loss bug can take, because the text is on
+   screen and so the player believes it is saved.
 7. **Publishing destroys the document** (:meth:`PraxisRoomServer.discard_document`).
    It is flattened into ``body_text`` first and ``pullBack`` re-seeds a fresh one
    through rule 1, so nothing is lost that a reader could ever see. This is a
@@ -110,7 +115,28 @@ _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 
 # RFC 6455 "policy violation": the close code for a socket refused or revoked on
 # authorization grounds, as opposed to one that simply ended.
+#
+# It means **do not come back**: the member was kicked, left, or the document
+# they were holding no longer exists. `frontend/src/pages/editPraxis/
+# roomReconnect.ts` reads it as exactly that and stops redialling (#1804).
 _WS_POLICY_VIOLATION = 1008
+
+# The room sealed under the members who were in it (#1808).
+#
+# An application close code — RFC 6455 reserves 4000-4999 for exactly this — and
+# **not** 1008, because the two say opposite things to the client. 1008 is "stop
+# asking"; this one is "come back, and re-read the praxis before you type again".
+# Reading a sealed write-up still works: the reconnected socket's ``SYNC_STEP1``
+# passes :meth:`PraxisRoomServer._refuse_writes_when_frozen` on purpose.
+#
+# Why a close at all, rather than a message saying "frozen": the freeze is
+# enforced server-side, so a client that is not told keeps accepting keystrokes,
+# renders them, and watches every one of them be dropped — the text is on screen,
+# so the player believes it is saved. The socket closing is what makes the
+# composer re-read the status it derives ``documentFrozen`` from, through
+# machinery that already exists. It is #1740's "a gate needs two doors" applied
+# to the freeze: the server refusing writes was door one, and this is door two.
+_WS_ROOM_FROZEN = 4001
 
 _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 
@@ -439,18 +465,27 @@ class _RoomConnection:
         self.character_id = character_id
         self.room_name = room_name_for(praxis_id)
         self.revoked = False
+        #: The code this socket will close with, once revoked. Read by the ASGI
+        #: app on its way out, because the *reason* is what the client acts on:
+        #: 1008 stops it redialling, :data:`_WS_ROOM_FROZEN` does not (#1808).
+        self.close_code = _WS_POLICY_VIOLATION
         self._raw_receive = receive
         self._revoke_event = Event()
         self.channel = ASGIWebsocket(self._receive, send, self.room_name)
 
-    def revoke(self) -> None:
+    def revoke(self, code: int = _WS_POLICY_VIOLATION) -> None:
         """End this socket. Safe to call from any task: it only sets an event.
 
         The socket is not closed from the revoking task — a WebSocket has one
         writer, and that is the task serving it. Waking its ``receive`` with a
         disconnect unwinds the serve loop, which closes on its way out.
+
+        ``code`` defaults to the revocation this door was built for — a member
+        who may no longer be here at all. Pass :data:`_WS_ROOM_FROZEN` for the
+        one revocation that is not a removal.
         """
         self.revoked = True
+        self.close_code = code
         self._revoke_event.set()
 
     async def _receive(self) -> dict[str, Any]:
@@ -573,11 +608,50 @@ class PraxisRoomServer(WebsocketServer):
 
         Callable from a request task while the room's own tasks run: it only
         moves an ``int`` in or out of a set, which the message hook reads.
+
+        **State, not transition** — nothing is closed here. :meth:`_read_freeze`
+        calls this for a room that is *opening*, where "the flag went from unset
+        to set" is true of every frozen praxis anybody reads, and closing on it
+        would hang up on the socket that just asked to see the write-up and
+        then on its every retry. :meth:`follow_status` is the transition.
         """
         if frozen:
             self._frozen.add(praxis_id)
         else:
             self._frozen.discard(praxis_id)
+
+    def follow_status(self, praxis_id: int, frozen: bool) -> None:
+        """A praxis moved in or out of drafting; the live room follows (#1808).
+
+        The freeze's second door. :meth:`_refuse_writes_when_frozen` is the
+        first: it drops the inbound updates, which is correct and is *not* the
+        defect. The defect is that nobody told the client — ``documentFrozen``
+        is derived from the fetched praxis, so a co-author mid-sentence when
+        someone else submits keeps typing into a document their browser accepts,
+        renders, and cannot save. **The text is on screen, so they believe it is
+        saved**, and it exists nowhere but that tab.
+
+        Closing their sockets is what makes them re-read the praxis. It cannot
+        recover the keystrokes already dropped — a CRDT merges additively and
+        the server never took them — so this is only about how short the gap is.
+
+        **Only on the open-to-frozen transition.** Re-freezing an already frozen
+        room is a no-op here: this is called from every ADR-0012 transition and
+        the flag is derived from the status rather than from the move, so a
+        thaw-shaped call on a drafting praxis, or a second submit on a pending
+        one, must not hang up on everyone reading it.
+        """
+        sealing = frozen and praxis_id not in self._frozen
+        self.set_frozen(praxis_id, frozen)
+        if not sealing:
+            return
+        for connection in list(self._connections):
+            if connection.praxis_id == praxis_id:
+                # The submitter's own socket too. The freeze binds every member
+                # equally — that is the word: a lock is something one member
+                # holds against the others — and their client is refetching the
+                # praxis anyway, so the reconnect costs them nothing.
+                connection.revoke(_WS_ROOM_FROZEN)
 
     def _refuse_writes_when_frozen(
         self, praxis_id: int
@@ -834,12 +908,17 @@ class PraxisRoomASGIServer(ASGIServer):
         finally:
             await self.rooms.release(connection)
             if connection.revoked:
-                await self._refuse(send)
+                # The revoking task chose the code; this is only the writer.
+                await self._refuse(send, connection.close_code)
 
-    async def _refuse(self, send: Callable[[dict[str, Any]], Any]) -> None:
+    async def _refuse(
+        self,
+        send: Callable[[dict[str, Any]], Any],
+        code: int = _WS_POLICY_VIOLATION,
+    ) -> None:
         """Close the socket on policy grounds — before accept, or after revoke."""
         try:
-            await send({"type": "websocket.close", "code": _WS_POLICY_VIOLATION})
+            await send({"type": "websocket.close", "code": code})
         except Exception:  # pragma: no cover — the client may already be gone
             logger.debug("Praxis room socket already closed", exc_info=True)
 
@@ -858,8 +937,13 @@ def follow_praxis_status(praxis: Praxis) -> None:
     idempotent and the call sites do not each have to know which way they moved
     a praxis — and a room that is not open ignores it and reads the status when
     it opens.
+
+    Sealing a room that was open also **closes its sockets** (#1808), which is
+    why this goes through :meth:`PraxisRoomServer.follow_status` rather than
+    ``set_frozen``: the transition is the thing the members have to be told
+    about, and only this function's callers know one happened.
     """
-    PRAXIS_ROOM_SERVER.set_frozen(praxis.id, is_frozen_status(praxis.status))
+    PRAXIS_ROOM_SERVER.follow_status(praxis.id, is_frozen_status(praxis.status))
 
 
 async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
