@@ -17,6 +17,14 @@ function tKey(t: TFunction<'progression'>, key: string): string {
 /**
  * LevelUpPopup — World Zero "Field Stamp" level-up popup (design: docs/design/level-up/).
  * Self-contained inline-styled modal, matching EverymenVote / the feed modals.
+ *
+ * Both skins make their fixed scrim the scroller so the CTA stays reachable on
+ * a short viewport (#1947 — reported at 361x233, where the card is roughly
+ * twice the viewport's height). ponytail: the CTA keeps a plain `autoFocus`,
+ * so on a viewport too short for the card the popup opens scrolled to the
+ * button — the celebration is a scroll up, and the primary control is never
+ * off-screen. Suppressing that with `focus({ preventScroll: true })` would
+ * need a ref and buys a first paint nobody can act on.
  */
 
 /**
@@ -278,10 +286,21 @@ function MobileLevelUpCard({
         inset: 0,
         zIndex: 1000,
         display: 'flex',
-        alignItems: 'center',
+        // Short viewports (#1947): the scrim is the scroller. `flex-start` +
+        // `margin: auto` on the card, NOT `align-items: center` — a centred
+        // flex item that outgrows its scroll container overflows off BOTH
+        // ends and the top end is unreachable, because a scroll container
+        // cannot scroll to negative offsets. Auto margins centre while there
+        // is free space and collapse to 0 when there isn't, so the seal stays
+        // reachable above and the CTA below.
+        alignItems: 'flex-start',
         justifyContent: 'center',
         padding: 'var(--space-xl)',
-        overflow: 'hidden',
+        // Was `overflow: hidden` — that clipped the confetti AND pinned the
+        // card. The confetti layer clips itself, so only the y-axis changes.
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
         background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.44), rgba(26,18,9,0.74))',
       }}
     >
@@ -296,6 +315,9 @@ function MobileLevelUpCard({
           zIndex: 2,
           width: '100%',
           maxWidth: 340,
+          // Centres inside the scrolling scrim; collapses to 0 when the card
+          // is taller than the viewport (#1947). See the scrim's note.
+          margin: 'auto',
           boxSizing: 'border-box',
           background: PAPER,
           border: `1px solid ${BORDER}`,
@@ -467,14 +489,21 @@ export default function LevelUpPopup({
         position: 'fixed',
         inset: 0,
         display: 'flex',
-        alignItems: 'center',
+        // Same short-viewport contract as the mobile skin (#1947): the scrim
+        // scrolls, the card centres with auto margins rather than
+        // `align-items: center`, which would put the top of an over-tall card
+        // out of scroll range. A laptop window dragged short — or any zoomed
+        // desktop — hits this too.
+        alignItems: 'flex-start',
         justifyContent: 'center',
         padding: 'var(--space-xl)',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
         zIndex: 1000,
         background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
       }}
     >
-      <div onClick={(e) => e.stopPropagation()}>{card}</div>
+      <div style={{ margin: 'auto' }} onClick={(e) => e.stopPropagation()}>{card}</div>
     </div>
   )
 }
