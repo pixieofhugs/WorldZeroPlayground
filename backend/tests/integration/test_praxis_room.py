@@ -266,6 +266,7 @@ class _Rooms:
         #: it reads as a room bug rather than as the harness bug it is.
         self.sessions = sessions
         self._tasks: list[asyncio.Task] = []
+        self._sockets: list[_Socket] = []
 
     async def open(
         self,
@@ -303,6 +304,7 @@ class _Rooms:
             "headers": headers,
         }
 
+        self._sockets.append(socket)
         self._tasks.append(
             asyncio.create_task(
                 (through or self.app)(scope, socket.receive, socket.send)
@@ -338,30 +340,48 @@ class _Rooms:
         return None if room is None else room.ydoc
 
     async def aclose(self) -> None:
-        """Cancel every socket task, and refuse to wait forever for one (#1930).
+        """Hang every socket up, then cancel whatever is left (#1930).
 
-        ``asyncio.wait`` rather than ``await task``: :meth:`PraxisRoomServer.release`
-        runs its half of the teardown inside ``anyio.CancelScope(shield=True)``,
-        and that shield holds against a plain ``Task.cancel`` — so a ceiling that
-        works by cancelling *this* task would not reach a socket stuck in there.
-        Giving up on the wait does.
+        **The disconnect is what ends these tasks; the cancel is the backstop.**
+        This used to cancel outright. Roughly once in 400 cycles a raw
+        ``Task.cancel`` on a socket task suspended in the task group inside
+        :meth:`_RoomConnection._receive` left it wedged: the task counted the
+        cancellation (``cancelling() == 1``) and stayed asleep in anyio's
+        ``TaskGroup.__aexit__``, while that group's cancel scope still read
+        ``cancel_called is False`` — so neither half of the revoke race was ever
+        told to stop, and the loop went idle with the room still open. That is
+        #1930, whose CI signature is a 60s pytest-timeout ending in
+        ``EpollSelector.select``.
+
+        Hanging up avoids the question. It is also what a real client does:
+        ``websocket.disconnect`` unwinds the serve loop through the door the room
+        already has, with no cancellation involved on the happy path.
+
+        ``asyncio.wait`` rather than ``await task`` for the ceiling:
+        :meth:`PraxisRoomServer.release` runs its half of the teardown inside
+        ``anyio.CancelScope(shield=True)``, and that shield holds against a plain
+        ``Task.cancel`` — so a ceiling that works by cancelling *this* task would
+        not reach a socket stuck in there. Giving up on the wait does.
         """
-        for task in self._tasks:
-            task.cancel()
         if not self._tasks:
             return
-        done, pending = await asyncio.wait(
-            self._tasks, timeout=_CEILING_SECONDS
-        )
-        for task in done:
+        for socket in self._sockets:
+            await socket.disconnect()
+        _, pending = await asyncio.wait(self._tasks, timeout=_CEILING_SECONDS)
+        for task in pending:
+            task.cancel()
+        if pending:
+            _, pending = await asyncio.wait(pending, timeout=_CEILING_SECONDS)
+        for task in self._tasks:
             # Read the outcome so a cancelled or failed socket task is not
             # reported as an unretrieved exception on some later, unrelated test.
-            with suppress(asyncio.CancelledError, Exception):
-                task.result()
+            if task.done():
+                with suppress(asyncio.CancelledError, Exception):
+                    task.result()
         if pending:
             raise AssertionError(
                 f"{len(pending)} praxis-room socket task(s) were still running "
-                f"{_CEILING_SECONDS}s after cancel."
+                f"{_CEILING_SECONDS}s after being hung up on and cancelled."
                 f"{_pending_task_dump()}"
             )
 
