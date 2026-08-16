@@ -26,6 +26,11 @@ function render(element: ReactElement): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
+/** The text of every `<h1>` the skin drew, in document order. */
+function h1s(html: string): string[] {
+  return [...html.matchAll(/<h1\b[^>]*>(.*?)<\/h1>/gs)].map((m) => m[1].replace(/<[^>]*>/g, '').trim())
+}
+
 const MEMBER: CharacterOut = {
   id: 7,
   username: 'ada',
@@ -96,6 +101,22 @@ describe('mobile faction-page content-slot invariant', () => {
       expect(text.toLowerCase(), 'tasks stat').toContain('tasks')
       expect(text, 'top member').toContain('Ada')
       expect(text, 'recent praxis').toContain('Plant a tree')
+    })
+
+    /**
+     * #1817 — the hero name is the page's heading, not a styled `<div>`.
+     *
+     * WOW draws its hero through the shared `WowPavilionHeader`, which had no
+     * heading element at all, so the page's outline started at level 2. The fix
+     * lives in that one component and this page is its SECOND consumer: the home
+     * suite pins the first, and neither would notice a change that re-split the
+     * fix into two per-page headings.
+     */
+    it(`${slug} opens the outline with one h1, and it is the faction's name`, () => {
+      const { html } = render(<Archetype state={baseState()} />)
+      const heads = h1s(html)
+      expect(heads, 'exactly one page heading').toHaveLength(1)
+      expect(heads[0], 'and it names the faction').toContain('Everymen')
     })
 
     it(`${slug} offers Join only to an eligible viewer (invite-gated)`, () => {
