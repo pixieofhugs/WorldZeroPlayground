@@ -1,5 +1,5 @@
 /**
- * #894 — wiring the "Create as meta task" checkbox.
+ * #894 — wiring the "Create as Metatask" checkbox.
  *
  * Two guarantees:
  *  1. The checkbox is gated off the capability seam (`canProposeMetatask`,
@@ -64,16 +64,16 @@ function renderText(overrides: Partial<ProposeTaskState> = {}): string {
   ).replace(/<[^>]*>/g, '')
 }
 
-describe('meta task checkbox — capability gate', () => {
+describe('metatask checkbox — capability gate', () => {
   it('is hidden below the propose-metatask gate', () => {
     expect(renderText({ canProposeMetatask: false })).not.toContain(
-      'Create as meta task',
+      'Create as Metatask',
     )
   })
 
   it('appears once the proposer is eligible', () => {
     expect(renderText({ canProposeMetatask: true })).toContain(
-      'Create as meta task',
+      'Create as Metatask',
     )
   })
 })

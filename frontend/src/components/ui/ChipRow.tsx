@@ -40,6 +40,17 @@ export function ChipRow({ label, children }: { label: string; children: ReactNod
  * single-colour box-shadow cannot carry the spectrum, so the frame alone
  * carries selection. The caller passes `!isKnownFaction(slug)` (a VALUE test,
  * not key presence, #749) — so every non-na chip stays pixel-identical.
+ *
+ * `sigilText` (#1824) is the third variant: a sigil AND its faction's name, at
+ * the propose-task form's own geometry (40px tall, 2px border in EVERY state so
+ * selection cannot reflow the row, a 14% tint wash and a soft glow instead of a
+ * ring). It keeps `iconOnly`'s selection semantics — the dark-inverted fill
+ * would fight the sigil the same way — including the na frame, so it reads
+ * `unaffiliated` too. It suppresses the swatch (the sigil is the mark) and
+ * announces as `role="radio"`, because its chips are a radiogroup rather than
+ * eight independent toggles. Every value it introduces is gated on the flag:
+ * the mobile leaderboard and the praxis feed mount the other two variants and
+ * must stay pixel-identical (`__tests__/chipVariants.test.tsx` is that guard).
  */
 export function Chip({
   on,
@@ -48,6 +59,7 @@ export function Chip({
   ariaLabel,
   iconOnly,
   unaffiliated,
+  sigilText,
   children,
 }: {
   on: boolean
@@ -56,14 +68,16 @@ export function Chip({
   ariaLabel?: string
   iconOnly?: boolean
   unaffiliated?: boolean
+  sigilText?: boolean
   children: ReactNode
 }) {
   // ponytail: one style object with a handful of ternaries rather than two chip
   // components — the two variants share every box property but the fill.
   const ring = tint ?? 'var(--color-text-primary)'
-  // Selected na glyph chip: the spectrum arrives as a border ring, replacing
-  // the grey ring/glow. `frameStyle` overrides background/border/boxSizing.
-  const useFrame = Boolean(iconOnly && on && unaffiliated)
+  // Selected na chip (glyph or sigil+text): the spectrum arrives as a border
+  // ring, replacing the grey ring/glow. `frameStyle` overrides
+  // background/border/boxSizing.
+  const useFrame = Boolean((iconOnly || sigilText) && on && unaffiliated)
   const frameStyle = useFrame ? factionFill(null, 'frame') : undefined
 
   return (
@@ -71,6 +85,8 @@ export function Chip({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
+      role={sigilText ? 'radio' : undefined}
+      aria-checked={sigilText ? on : undefined}
       aria-pressed={iconOnly ? on : undefined}
       className="font-body uppercase"
       style={{
@@ -82,28 +98,60 @@ export function Chip({
         fontSize: 'var(--text-md)',
         fontWeight: on ? 700 : 400,
         letterSpacing: '0.05em',
-        color: on && !iconOnly ? 'var(--color-text-on-accent)' : 'var(--color-text-secondary)',
-        background: on && !iconOnly ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
-        border: `1px solid ${
-          iconOnly ? (on ? ring : 'var(--color-border-strong)') : on ? 'transparent' : 'var(--color-border-strong)'
-        }`,
+        lineHeight: sigilText ? 1 : undefined,
+        color: sigilText
+          ? on
+            ? 'var(--color-text-primary)'
+            : 'var(--color-text-secondary)'
+          : on && !iconOnly
+            ? 'var(--color-text-on-accent)'
+            : 'var(--color-text-secondary)',
+        background: sigilText
+          ? on && !useFrame
+            ? `color-mix(in srgb, ${ring} 14%, var(--color-bg-surface))`
+            : 'var(--color-bg-surface)'
+          : on && !iconOnly
+            ? 'var(--color-text-primary)'
+            : 'var(--color-bg-surface)',
+        // 2px in both states for the sigil+text variant: selection changes the
+        // border's COLOUR, never its width, so eight wrapped chips cannot
+        // reflow under the pointer.
+        border: sigilText
+          ? `2px solid ${on ? ring : 'var(--color-border-strong)'}`
+          : `1px solid ${
+              iconOnly ? (on ? ring : 'var(--color-border-strong)') : on ? 'transparent' : 'var(--color-border-strong)'
+            }`,
         // Ring is a box-shadow, not a thicker border, so selecting a chip does
         // not reflow the row by a pixel. na's frame carries its own selection,
         // so the coloured glow is dropped there (a solid glow can't be spectral).
-        boxShadow: iconOnly && on && !useFrame ? `0 0 0 2px ${ring}, 0 0 8px ${ring}` : undefined,
-        opacity: iconOnly && !on ? 0.85 : undefined,
+        boxShadow: sigilText
+          ? on && !useFrame
+            ? `0 0 8px color-mix(in srgb, ${ring} 45%, transparent)`
+            : undefined
+          : iconOnly && on && !useFrame
+            ? `0 0 0 2px ${ring}, 0 0 8px ${ring}`
+            : undefined,
+        opacity: sigilText ? (on ? undefined : 0.88) : iconOnly && !on ? 0.85 : undefined,
         borderRadius: 999,
-        padding: iconOnly ? 'var(--space-xs)' : 'var(--space-sm) var(--space-md)',
-        minHeight: 36,
+        padding: sigilText
+          ? '0 var(--space-md)'
+          : iconOnly
+            ? 'var(--space-xs)'
+            : 'var(--space-sm) var(--space-md)',
+        minHeight: sigilText ? 40 : 36,
         minWidth: iconOnly ? 36 : undefined,
+        boxSizing: sigilText ? 'border-box' : undefined,
         whiteSpace: 'nowrap',
         cursor: 'pointer',
+        transition: sigilText
+          ? 'box-shadow 120ms, color 120ms, border-color 120ms, background 120ms'
+          : undefined,
         // Spread last so the rainbow frame's background/border/boxSizing win
         // over the scalar ring above. Empty for every non-na chip.
         ...frameStyle,
       }}
     >
-      {tint && !iconOnly && (
+      {tint && !iconOnly && !sigilText && (
         <i style={{ width: 8, height: 8, borderRadius: 2, flex: 'none', background: tint }} />
       )}
       {children}
