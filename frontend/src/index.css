@@ -972,6 +972,27 @@
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
+  /* The punched sprocket hole — the row of five wells the faction card wears
+     above and below its body, tape running through a reader. It is ORNAMENT,
+     not a rung of the `--faction-singularity-card-*` contract: nothing else
+     paints it, and the drawing (a 6×4 well, blue-bordered) is the whole of its
+     meaning. Named here rather than beside `-card-bg` for exactly that reason —
+     `-card-*` is a two-theme contract whose halves are both near-black, and a
+     later editor re-cutting it must not have to wonder whether the hole is one
+     of its tiers.
+
+     A LIFT, not a shade of the ground: #050f08 is the chassis and this is two
+     stops above it, so the well reads as a recess catching phosphor rather than
+     as a hole cut clean through. §6: Singularity's older ornament families
+     (`-stamp-*`, `-vote-*`, `-phosphor-dim`) are theme-INVARIANT, and this joins
+     them — one value serves both cascades, and there is deliberately no
+     [data-theme="dark"] half to "complete".
+
+     Value carried across unchanged from the inline `rgba(10,26,14)` this
+     replaces (#1912). Nothing repaints; see that issue for why the literal was
+     painting all along. */
+  --faction-singularity-punch-hole: #0a1a0e;
+
   /* Dim sage phosphor (#723) — the SECOND green. `card-text` and `card-accent`
      are the same bright #4ade80, so a Singularity surface had one weight of
      green and reached for `color-mix(… accent N%, transparent)` whenever it
