@@ -37,7 +37,8 @@ def compute_display_status(
     """Derive the human-readable relationship label from both sides.
 
     A block on either edge takes absolute precedence over the type-derived label
-    (ADR-0009: a block is mutual and visible).
+    (ADR-0009, superseded by ADR-0077 — under which a block is its own
+    record, is silent, and produces no display label at all).
     """
     if outgoing_status == "blocked" or incoming_status == "blocked":
         return DISPLAY_STATUS_BLOCKED
@@ -71,8 +72,9 @@ def _to_list_item(
     The item describes THE EDGE, not the viewer: ``to_*`` always names
     ``relationship.to_character_id`` and ``display_status`` is computed with this
     edge as the outgoing side. Block and unblock may be performed by either party
-    (ADR-0009), so a viewer-relative shape would hand back the same row mirrored
-    depending on who acted.
+    (ADR-0009, superseded by ADR-0077, which gives a block its own record and
+    its authorship to the blocker alone), so a viewer-relative shape would
+    hand back the same row mirrored depending on who acted.
     """
     outgoing_type = relationship.type.value
     outgoing_status = relationship.status.value
@@ -180,8 +182,11 @@ async def unblock_relationship(
     character: Character,
     session: AsyncSession,
 ) -> Relationship:
-    """Reverse a block (ADR-0009). Either party can unblock; the edge returns to
-    active and its display status re-derives from the relationship types."""
+    """Reverse a block. Either party can unblock; the edge returns to active
+    and its display status re-derives from the relationship types.
+
+    ADR-0009, superseded by ADR-0077: a block becomes its own record, unblock
+    becomes that record's deletion, and only the blocker may perform it."""
     relationship = await session.get(Relationship, relationship_id)
     if relationship is None:
         raise HTTPException(status_code=404, detail="Relationship not found.")
