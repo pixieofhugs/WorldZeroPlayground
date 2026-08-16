@@ -73,5 +73,9 @@ export const BODY_EDITOR_BASE_THEME: Extension = EditorView.theme({
     caretColor: "currentColor",
   },
   ".cm-line": { padding: 0 },
-  ".cm-placeholder": { color: "var(--color-text-tertiary)" },
+  // The placeholder is the quiet label tier wearing CodeMirror's name for it, so
+  // it reads the same seam `.label-caption` does. NOT `--color-text-tertiary`:
+  // this theme is mounted inside all eight faction skins' body fields, and the
+  // global neutral is unreachable from the root a frame repoints (#1819).
+  ".cm-placeholder": { color: "var(--label-ink)" },
 });

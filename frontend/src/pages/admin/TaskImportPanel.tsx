@@ -88,17 +88,17 @@ export default function TaskImportPanel({ onImported }: Props) {
       </div>
 
       {error && (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {error}
         </p>
       )}
 
       {rowErrors.length > 0 && (
-        <div className="border-2 border-red-300 px-3 py-2">
-          <p className="font-body content-text text-red-600">
+        <div className="border-2 danger-edge px-3 py-2">
+          <p className="font-body content-text danger-text">
             {t("import.rejected", { total: rowErrors.length })}
           </p>
-          <ul className="font-body text-xs text-red-600 list-disc pl-5 mt-1">
+          <ul className="font-body text-xs danger-text list-disc pl-5 mt-1">
             {rowErrors.map((rowError, index) => (
               <li key={`${rowError.row}-${index}`}>{rowError.msg}</li>
             ))}

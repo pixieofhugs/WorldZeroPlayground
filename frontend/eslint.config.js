@@ -364,6 +364,100 @@ function propertyName(node) {
 //       ramps and that is where it stops.
 //     - A colour laundered through a data structure — a `SizeSet`-style table of
 //       hexes read by an Identifier — which is Gap D's shape wearing paint.
+//   #1819 closes Gap E for the TEXT family; see the tier arm below.
+
+// ---------------------------------------------------------------------------
+// The TIER arm (#1819). Gap E, closed for `--color-text-*`.
+//
+// `no-raw-colour-values` above judges whether a value is a token. This one
+// judges whether it is the RIGHT token for the surface it is written on, which
+// is a question no colour-literal rule can ask: `var(--color-text-tertiary)`
+// is declared in `index.css`, reads as correctly tokenized to every other check
+// we run, and is still wrong inside a faction archetype.
+//
+// Wrong because it is UNREACHABLE. The label tiers paint `var(--label-ink)`,
+// a seam a faction frame repoints once on its own root — and a component that
+// restates the global neutral inline paints over that seam for every faction at
+// once. The measurement is the point: the neutral is 2.19:1 on the S.N.I.D.E.
+// sheet, 2.27:1 on Singularity and 2.01:1 on the Ephemerists plate in light,
+// and those three sheets are near-black in BOTH themes, so no global light
+// value can serve them. The faction has an answer (`--faction-{key}-card-muted`,
+// 4.70:1 at worst) and the inline restatement is what stops it being applied.
+//
+// Its own rule id and its own list, for the reason the colour arm gives: the
+// ratchet turns a whole RULE off per file, so sharing an id would silently
+// un-ratchet an arm that had already reached zero.
+//
+// HOW THE PATH LIST WAS DERIVED, since a global ban would be wrong — the
+// neutral tokens are correct on neutral chrome, and most of this app is neutral
+// chrome. The repo already names its faction-dispatched surfaces in the
+// filesystem: `factions/manifest.ts` lazy-loads one module per faction out of a
+// directory called `archetypes/` (desktop) or `mobileArchetypes/` (the separate
+// mobile files #494 split out), and `components/factionMarks/` holds the
+// per-faction ornaments those archetypes mount. Every file under those three
+// names today is either a faction-named archetype (including `Default*`, which
+// is `na`/Unaffiliated's own identity per ADR-0030 — not an escape hatch) or a
+// helper shared BY archetypes and mounted on nothing else (`controls.tsx`,
+// `shared.tsx`, `profileSkin.tsx`, `bodyEditorTheme.ts`). So the directory NAME
+// is the dispatch signal, and a glob on it stays right for archetype dirs that
+// do not exist yet.
+//
+// Deliberately NOT scoped by "calls `factionCssVar`" — 60+ files do, including
+// neutral chrome like `Sidebar.tsx` and `ConfirmDialog.tsx` that reach for one
+// faction accent and are otherwise correctly neutral. That scope would ban the
+// right token on the surfaces it is right for.
+//
+// KNOWN GAP (this arm's own). A faction-dressed surface OUTSIDE those three
+// directory names is not covered — `editPraxis/waiting/PraxisWaitingSurface.tsx`
+// takes a `dress` and lives in `waiting/`, and the praxis card's desktop skins
+// live under `components/praxisCard/desktop/`. Widening by hand-listing those
+// would make the scope a maintained enumeration rather than a convention, which
+// is the thing that rots. Naming a directory `archetypes/` is the cheap fix
+// when one of them next moves.
+const FACTION_DISPATCHED_PATHS = [
+  'src/**/archetypes/**/*.{ts,tsx}',
+  'src/**/mobileArchetypes/**/*.{ts,tsx}',
+  'src/components/factionMarks/**/*.{ts,tsx}',
+]
+
+// Any reference to the global text family, in any string that reaches CSS —
+// a `color:` value, a `border: 1px solid var(...)` shorthand, or a module
+// constant read by one. Matching the STRING rather than a property name is what
+// catches the laundering shape the px arm learned about the hard way: a
+// `const FAINT = 'var(--color-text-tertiary)'` at the top of a skin is the same
+// decision as writing it at the call site, and a prop-name visitor never sees
+// it.
+const GLOBAL_TEXT_TOKEN = /var\(\s*--color-text-[\w-]*/
+
+/**
+ * Is this node the FALLBACK half of a `??` / `||`?
+ *
+ * `inkColor ?? 'var(--color-text-tertiary)'` is not the defect: it applies only
+ * when the skin supplied no ink of its own, which IS the legitimate neutral
+ * default, and it is the shape the #1819 ruling explicitly preserved. The
+ * defect is the unconditional restatement, which no frame can reach past.
+ *
+ * A deliberate exemption, not a legacy entry — nothing here is ever going to
+ * migrate, so a shrinking list would be lying about it.
+ */
+function isFallbackOperand(ancestors, node) {
+  let child = node
+  for (let i = ancestors.length - 1; i >= 0; i -= 1) {
+    const parent = ancestors[i]
+    if (parent.type === 'LogicalExpression') {
+      if ((parent.operator === '??' || parent.operator === '||') && parent.right === child) {
+        return true
+      }
+      return false
+    }
+    // Keep climbing through the wrappers a fallback is written inside —
+    // `dress.quietStyle ?? { color: '…' }` puts the literal two levels down.
+    if (parent.type !== 'ObjectExpression' && parent.type !== 'Property') return false
+    child = parent
+  }
+  return false
+}
+
 const noRawStyleValues = {
   rules: {
     'no-raw-style-values': {
@@ -437,6 +531,37 @@ const noRawStyleValues = {
         }
       },
     },
+    // The tier arm (#1819). See the header block above for the path derivation
+    // and for why this is a third id rather than a visitor on the colour arm.
+    'no-global-ink-on-faction-surface': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow the global --color-text-* family inside faction-dispatched surfaces — they read --label-ink or the matching factionCssVar (WORLD_ZERO_STYLE.md).',
+        },
+        schema: [],
+      },
+      create(context) {
+        const message =
+          'Global `--color-text-*` on a faction-dispatched surface — read `var(--label-ink)` (the label seam a frame repoints on its own root) or the matching `factionCssVar(slug, …)`. The neutral is a real token at the wrong TIER: it paints over the seam, and it measures 2.19:1 on S.N.I.D.E., 2.27:1 on Singularity and 2.01:1 on the Ephemerists plate in light.'
+        const report = (node) => {
+          if (isFallbackOperand(context.sourceCode.getAncestors(node), node)) return
+          context.report({ node, message })
+        }
+        return {
+          Literal(node) {
+            if (typeof node.value !== 'string') return
+            if (GLOBAL_TEXT_TOKEN.test(node.value)) report(node)
+          },
+          // `` `1px solid var(--color-text-tertiary)` `` — the quasis are where
+          // the value lives, and a Literal-only visitor is blind to all of them.
+          TemplateLiteral(node) {
+            if (node.quasis.some((quasi) => GLOBAL_TEXT_TOKEN.test(quasi.value.raw))) report(node)
+          },
+        }
+      },
+    },
   },
 }
 
@@ -454,6 +579,15 @@ const LEGACY_RAW_STYLE_FILES = fs
 // one. New files may never be added to it. #1609 burns it down.
 const LEGACY_RAW_COLOUR_FILES = fs
   .readFileSync(new URL('./.eslint-legacy-raw-colours.txt', import.meta.url), 'utf8')
+  .split('\n')
+  .map((line) => line.split('#')[0].trim())
+  .filter(Boolean)
+
+// Faction surfaces not yet migrated off the global ink family (issue #1819).
+// This list only ever shrinks — migrating a file means deleting its line here,
+// not adding one. New files may never be added to it.
+const LEGACY_FACTION_INK_FILES = fs
+  .readFileSync(new URL('./.eslint-legacy-faction-ink.txt', import.meta.url), 'utf8')
   .split('\n')
   .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
@@ -585,6 +719,43 @@ export default [
           files: LEGACY_RAW_COLOUR_FILES,
           rules: {
             'local/no-raw-colour-values': 'off',
+          },
+        },
+      ]
+    : []),
+  {
+    // The tier arm is the one rule in this file that is scoped by PATH rather
+    // than switched off by one, so it is registered here instead of in the
+    // `src/**` block above. Its plugin registration rides on that block, which
+    // is why this one carries only the rule line.
+    files: FACTION_DISPATCHED_PATHS,
+    rules: {
+      'local/no-global-ink-on-faction-surface': 'error',
+    },
+  },
+  {
+    /**
+     * Tests assert ON the token they are guarding — `factionContrast.test.ts`
+     * resolves `--color-text-tertiary` by name to prove `--label-ink` is unset
+     * to it, and a fixture for this very rule must contain what it forbids.
+     * A deliberate exemption, as the colour arm's twin above is.
+     *
+     * It must come AFTER the block above: later blocks win in flat config, and
+     * `src/**\/archetypes/__tests__/**` matches both.
+     */
+    files: ['src/**/*.test.{ts,tsx}', 'src/**/__tests__/**'],
+    rules: {
+      'local/no-global-ink-on-faction-surface': 'off',
+    },
+  },
+  // Same ratchet, same empty-list guard (#750). Seeded from what the rule
+  // actually reported on the day it landed; it only ever shrinks.
+  ...(LEGACY_FACTION_INK_FILES.length > 0
+    ? [
+        {
+          files: LEGACY_FACTION_INK_FILES,
+          rules: {
+            'local/no-global-ink-on-faction-surface': 'off',
           },
         },
       ]
