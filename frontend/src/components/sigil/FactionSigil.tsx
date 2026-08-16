@@ -2,7 +2,6 @@ import type { } from "react";
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
-import AlbescentSigil from "./AlbescentSigil";
 import { SingularitySigil } from "./SingularitySigil";
 import { UaSigil } from "./UaSigil";
 import DefaultSigil from "./DefaultSigil";
@@ -37,35 +36,17 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
   );
 }
 
-/**
- * Albescent's surveyor's cross-hair (#1626). It is the faction's only mark and
- * it is drawn everywhere else it appears — the invitation, the faction-select
- * tile — but `factions/albescent.ts` registers no `sigil` row, so asking this
- * dispatcher for `albescent` handed back the unaffiliated spectrum ring while a
- * finished `AlbescentSigil` sat one directory over. Every caller that hit it
- * (the faction filter facet, the mobile players chip row, the requests-queue
- * tray, and now the credential footer) had to either live with the wrong mark
- * or branch on the slug itself — four copies of one gap.
- *
- * WHY THE ADAPTER AND NOT THE MANIFEST. `albescent.ts`'s contract is explicit:
- * anything added there must be "a flourish LAYERED OVER Default's structure",
- * because a surface that repaints Albescent in its own colours un-hides the
- * society (#783). A bespoke emblem drawn on the always-light
- * `--albescent-reveal-*` register is not Default-plus-a-flourish, so it is not a
- * manifest row. It resolves here instead, where the mark→slug question already
- * lives — and it sits BEFORE the spread, so the day albescent does declare a
- * `sigil` the manifest wins and this line quietly stops mattering.
- */
-function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
-  /* #1658. A dispatched mount with no colour of its own gets the mark stroked
-     in the unaffiliated spectrum — the design's credential treatment, and the
-     same answer to #783 the adapter itself is: the spectrum is what na wears,
-     so a member's mark reads as camouflage rather than as a livery. A caller
-     that DID name an ink keeps it (the faction filter facet passes
-     `factionCssVar`), and a direct mount on the reveal register — the
-     invitation letter, the faction-select tile — never comes through here. */
-  return <AlbescentSigil size={size ?? 22} color={color} spectrum={!color} />;
-}
+/* Albescent has NO adapter row here any more, and no mark of its own anywhere
+   (#1891). The surveyor's cross-hair added by #1626 was a distinct emblem worn
+   by an otherwise-hidden faction: a mark nobody else wears is a tell, and it
+   appeared on surfaces an unrevealed player reads — the filter facet, the
+   players chip row, the requests tray, the credential footer. `albescent` now
+   falls through to `DefaultSigilAdapter` like any unthemed slug, which is what
+   `factions/albescent.ts` (registering no `sigil` row) always said it should.
+
+   The owner accepts the two consequences knowingly: for a REVEALED player the
+   Albescent and Unaffiliated filter rows now wear the same mark, and the
+   invitation letter presents the unaffiliated spectrum ring. */
 
 /**
  * The hoop a surface draws AROUND the mark, for the one slug whose mark has an
@@ -93,10 +74,6 @@ function DefaultSigilAdapter({ size }: SigilVariantProps) {
 }
 
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(
-    { albescent: AlbescentSigilAdapter, ...surfaceMap("sigil") },
-    slug,
-    DefaultSigilAdapter,
-  );
+  const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
   return <Variant size={size} color={color} />;
 }

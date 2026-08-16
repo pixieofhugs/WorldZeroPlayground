@@ -445,41 +445,57 @@ _Avoid_: skin, theme (the chrome), template.
 
 **Relationship edge**:
 A single **directed** declaration `from_character → to_character` carrying a `type`
-(friend | foe) and a `status` (active | blocked). Unique per ordered `(from, to)` pair, so a
+(friend | foe). Unique per ordered `(from, to)` pair, so a
 two-character dyad is at most **two independent edges**. Instant — there is no pending/accept
 handshake (unlike a praxis invite). The edge is the *stored* unit of the relationship system;
 the felt "are we friends / rivals" is the **display status**, computed from the pair and never
-stored. Canonical term for the row: **edge**.
-**Lifecycle:** only the **declarer** (`from`) may `delete` the edge. **Either** party may
-`block` it, and a block is **reversible** (`unblock` restores `active`) — so a mis-block can be
-undone without losing the edge. Changing your own edge's `type` (friend↔foe) has no endpoint:
-it is a deliberate `delete` + re-`create` (intended friction; you lose `created_at`).
+stored. Canonical term for the row: **edge**. A **Block** is *not* a state of an edge and does
+not live here (ADR-0077, superseding ADR-0009).
+**Lifecycle:** only the **declarer** (`from`) may `delete` the edge. Changing your own edge's
+`type` (friend↔foe) has no endpoint: it is a deliberate `delete` + re-`create` (intended
+friction; you lose `created_at`).
 _Avoid_: "relationship" for the pairwise feeling (that's the display status); "request" /
-"pending" (there is no acceptance step); treating one edge as covering both directions.
+"pending" (there is no acceptance step); treating one edge as covering both directions;
+calling a block a kind of relationship, or an edge state.
 
 **Display status**:
 The human-readable label for a pair of characters, computed **per-viewer** by
 `compute_display_status` from both edges — Mutual Friends, Rivals, Tsundere, One-sided Friend,
-One-sided Foe, Secret Admirer, Targeted, **Blocked**, Unknown. Not stored; derived at read time.
-- **Blocked wins.** If *either* edge has `status = blocked`, the status is **Blocked** for
-  **both** parties — a block is mutual and **visible**: the blocked person is meant to know
-  (the edge that got blocked is theirs, so it surfaces in their own list). See ADR-0009.
-- Otherwise computed from `(your edge type, their edge type)` over the friend/foe/none matrix.
+One-sided Foe, Secret Admirer, Targeted, Unknown. Not stored; derived at read time.
+- **Blocked is not one of them** (ADR-0077). It was under ADR-0009, when a block was an edge
+  `status` and won over the type-derived label for **both** parties. A block is now its own
+  record and is **silent** — it produces no label at either end, and the display status is
+  computed from edge *types* alone.
+- Computed from `(your edge type, their edge type)` over the friend/foe/none matrix.
   The same active pair yields different labels at each end (you: "One-sided Foe"; them:
   "Targeted") — the *same situation viewed from opposite ends*, **not** distinct states, and
   **not** redundant labels (they are the `(foe, none)` and `(none, foe)` cells of one symmetric
   function). **Tsundere** is the lone perspective-symmetric label — both mixed cases collapse to
   it — and is a *designed* state: one side feels friend, the other foe.
 _Avoid_: treating One-sided Foe / Targeted as duplicates to reconcile; storing the label;
-hiding a block from the blocked party; calling it "relationship".
+announcing a block to the blocked party; calling it "relationship".
+
+**Block** *(ADR-0077)*:
+One character's standing instruction that another goes quiet on them. Its **own record**, keyed
+blocker → blocked, independent of `friend` / `foe` — it needs no edge in either direction, so
+you can block a stranger. **Directed in authorship** (only the blocker creates or removes it)
+and **symmetric in effect** (it silences the pair both ways, outranking any active edge without
+consuming it). **Silent**: the blocked party is told nothing and keeps the ordinary friend/foe
+controls. Its reach is deliberately narrow — it stops **taunts** and the **friend/foe feed
+sources**, and nothing else; profiles, praxis, votes, comments, collab invites, duel challenges
+and nudges all still cross it. **Unblock** is deleting the record, and restores nothing else.
+*Model transition:* the code still carries the ADR-0009 shape (`status = blocked` on an edge)
+until #1681's build issues land.
+_Avoid_: "blocked" as an edge status or a display status (the superseded ADR-0009 model);
+"mutual block" (one record, one author); calling it a privacy control or a contact barrier.
 
 **Taunt** *(ADR-0031, ADR-0068)*:
 An automatic needle from one character's achievement into a rival's feed — never typed by a
 player. Three triggers: a **lead flip** (the sender is now ahead of the recipient on score,
 however that happened, including passively), a **level-up**, and a **praxis submission**.
 Delivery is subscription-shaped: **declaring a foe subscribes *you* to that rival's taunts** —
-a taunt reaches only recipients whose own active foe edge points at the sender, and a block on
-either edge silences the pair (Blocked wins, ADR-0009). The backend persists a structured
+a taunt reaches only recipients whose own active foe edge points at the sender, and a **Block**
+between the pair silences it in both directions (ADR-0077). The backend persists a structured
 reference (sender's send-time faction voice + trigger); the frontend catalog owns every word
 (ADR-0031). Era transitions are silent — taunts arise only from organic play.
 _Avoid_: message / DM (no player composes one); notification (it is feed content the recipient

@@ -481,7 +481,10 @@ export function InviteSearch({
             border: "none",
             padding: 0,
             cursor: "pointer",
-            color: "var(--color-text-tertiary)",
+            // No `color` here: `.label-caption` already paints `--label-ink`,
+            // and restating it inline is the fork #1783 ruled on — an inline
+            // value the class can no longer reach, so a frame that repoints the
+            // seam on its own root stops being able to move this link (#1819).
             ...skin.leaveStyle,
           }}
         >
@@ -638,7 +641,11 @@ export function SaveDraftButton({
         border: "none",
         padding: 0,
         cursor: "pointer",
-        color: "var(--color-text-tertiary)",
+        // `--label-ink`, not the neutral it defaults to: a skin may pass its own
+        // `className` here, so this cannot lean on `.label-caption` the way the
+        // leave link above does — but it must still read the seam a faction
+        // frame repoints on its own root (#1819).
+        color: "var(--label-ink)",
         ...skin?.style,
       }}
     >
@@ -1020,10 +1027,7 @@ export function BodyTextarea({
         style={{ ...BODY_EDITOR_HOST_STYLE, ...skin.textareaStyle }}
       />
       {awaitingRoom && (
-        <p
-          className="label-caption"
-          style={{ color: "var(--color-text-tertiary)" }}
-        >
+        <p className="label-caption">
           {/* Two states, one line. The room has either not arrived yet or has
               stopped trying (#1804), and the difference matters entirely to the
               person waiting: "…" is worth sitting through, and the other is
@@ -1048,12 +1052,7 @@ export function BodyTextarea({
           className="flex flex-col items-start gap-1"
           style={{ marginTop: "var(--space-xs)" }}
         >
-          <p
-            className="label-caption"
-            style={{ color: "var(--color-text-tertiary)" }}
-          >
-            {t("editPraxis.composer.bodyFrozen")}
-          </p>
+          <p className="label-caption">{t("editPraxis.composer.bodyFrozen")}</p>
           <button
             type="button"
             className="label-caption"
@@ -1063,7 +1062,12 @@ export function BodyTextarea({
               background: "none",
               border: "none",
               padding: 0,
-              color: "var(--color-text-secondary)",
+              // The link seam, not the neutral it is unset to (#1636/#1819).
+              // This sits one line under the frozen notice above, which reads
+              // `--label-ink` through its class — leaving the global secondary
+              // here would fix the sentence and leave its way out unreachable
+              // on exactly the three near-black sheets that needed both.
+              color: "var(--link-ink)",
               textDecoration: "underline",
               cursor: "pointer",
             }}

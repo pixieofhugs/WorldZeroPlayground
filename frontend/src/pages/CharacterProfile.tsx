@@ -143,7 +143,8 @@ export default function CharacterProfile() {
     }
   };
 
-  // ADR-0009 — a block is mutual, visible and reversible. The confirm that
+  // ADR-0009 (superseded by ADR-0077) — a block is mutual, visible and
+  // reversible. The confirm that
   // precedes this lives in RelationshipBlockControl; by the time it calls, the
   // player has read what blocking does.
   const handleBlockRelationship = async () => {
@@ -181,7 +182,7 @@ export default function CharacterProfile() {
   if (error)
     return (
       <div className="py-8">
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {extractError(error, "Couldn't load this character.")}{" "}
           <button
             onClick={() => window.location.reload()}
@@ -277,7 +278,8 @@ export default function CharacterProfile() {
                 {t("relationships.remove")}
               </button>
             ) : (
-              // ADR-0009 — a block is reversible; either party can unblock.
+              // ADR-0009 (superseded by ADR-0077) — a block is reversible;
+              // either party can unblock.
               <button
                 onClick={handleUnblockRelationship}
                 disabled={relationshipLoading}
@@ -292,7 +294,8 @@ export default function CharacterProfile() {
                 {t("relationships.unblock")}
               </button>
             )}
-            {/* ADR-0009 — either party may block, and the control hides
+            {/* ADR-0009 (superseded by ADR-0077) — either party may block,
+                and the control hides
                 itself on the cases where it would be wrong (own profile, an
                 edge already blocked). */}
             <RelationshipBlockControl

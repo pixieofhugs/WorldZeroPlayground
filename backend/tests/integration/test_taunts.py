@@ -234,7 +234,8 @@ async def test_a_block_on_either_edge_silences_the_pair(
     active_task: Task,
     blocker_is_the_subscriber: bool,
 ):
-    """Blocked wins (ADR-0009), whichever edge of the pair carries it."""
+    """Blocked wins (ADR-0009, superseded by ADR-0077), whichever edge of the
+    pair carries it."""
     if blocker_is_the_subscriber:
         # The subscription edge itself is blocked.
         await _declare_foe(

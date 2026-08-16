@@ -16,13 +16,17 @@
  * What still distinguishes Albescent is the invitation and reveal flow
  * (ADR-0027) and the flourishes — never a colour.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import "../../i18n";
 import {
   FACTION_RAINBOW_ORDER,
   factionCssVar,
   factionFill,
+  factionName,
   getAllFactions,
+  isFactionHiddenFromChoosers,
   isKnownFaction,
+  setAlbescentRevealed,
   sortFactionsByRainbowOrder,
   type FactionFillShape,
 } from "../factions";
@@ -138,5 +142,78 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
     expect(
       JSON.stringify(SHAPES.map((shape) => factionFill("albescent", shape))),
     ).not.toContain("albescent");
+  });
+});
+
+/**
+ * The name mask (#1891). The look was already indistinguishable — everything
+ * above proves it — but the WORD leaked through every surface that labels a
+ * thing with its faction.
+ *
+ * `factionName` is deliberately impure: it reads a module-level flag that
+ * `AuthContext` sets, which is what makes ~35 call sites and every page written
+ * later secret by construction. The cost of that decision is paid here — the
+ * flag is global mutable state, it outlives the case that set it, and a leaked
+ * `true` would make a later assertion pass for the wrong reason. Hence the
+ * unconditional reset.
+ */
+describe("Albescent's NAME is masked until the viewer is revealed (#1891)", () => {
+  // Not `beforeEach`: this must also undo a `true` left by the LAST case in the
+  // block, which no `beforeEach` here would reach.
+  afterEach(() => setAlbescentRevealed(false));
+
+  it("reads as Unaffiliated to a viewer who was never invited", () => {
+    setAlbescentRevealed(false);
+    // Equality against `na` rather than the literal, for the reason the whole
+    // file compares slugs: pinning the copy lets the two drift apart.
+    expect(factionName("albescent")).toBe(factionName("na"));
+  });
+
+  it("is a NAME, not a blank — a blank advertises the omission", () => {
+    setAlbescentRevealed(false);
+    // A dash or an empty string where every other card carries a name tells the
+    // viewer something is being withheld, which is the opposite of secret.
+    expect(factionName("albescent").trim().length).toBeGreaterThan(0);
+    expect(factionName("albescent")).not.toBe("-");
+  });
+
+  it("says its own name once the viewer is revealed", () => {
+    setAlbescentRevealed(true);
+    expect(factionName("albescent")).not.toBe(factionName("na"));
+    // Guards the mask from passing vacuously: if the catalog entry vanished,
+    // the unrevealed assertions would go green for the wrong reason.
+    expect(factionName("albescent")).toContain("Albescent");
+  });
+
+  it("defaults to hidden, so first paint and logged-out are the secret state", () => {
+    // No setter call at all — this is the module's own starting value. Every
+    // state before `/auth/me` answers must fail CLOSED: a name withheld for one
+    // extra frame costs nothing, a name leaked once cannot be taken back.
+    expect(factionName("albescent")).toBe(factionName("na"));
+  });
+
+  it("touches no other slug in either state", () => {
+    for (const revealed of [false, true]) {
+      setAlbescentRevealed(revealed);
+      expect(factionName("ua"), `ua @ ${revealed}`).not.toBe(factionName("na"));
+      expect(factionName(null), `null @ ${revealed}`).toBe(factionName("na"));
+      expect(factionName("not_a_faction"), `unknown @ ${revealed}`).toBe(
+        factionName("na"),
+      );
+    }
+  });
+
+  it("removes the row from a CHOOSER rather than masking it", () => {
+    // The two halves are deliberately different answers. Masking a chooser row
+    // would hand an unrevealed player two identical "Unaffiliated" checkboxes,
+    // which is louder than the leak it replaces.
+    setAlbescentRevealed(false);
+    expect(isFactionHiddenFromChoosers("albescent")).toBe(true);
+    expect(isFactionHiddenFromChoosers("na")).toBe(false);
+    expect(isFactionHiddenFromChoosers("ua")).toBe(false);
+    expect(isFactionHiddenFromChoosers(null)).toBe(false);
+
+    setAlbescentRevealed(true);
+    expect(isFactionHiddenFromChoosers("albescent")).toBe(false);
   });
 });

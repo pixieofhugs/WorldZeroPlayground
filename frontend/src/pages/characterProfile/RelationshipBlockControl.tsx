@@ -1,5 +1,6 @@
 /**
- * Block, from the character profile (#1668, ADR-0009).
+ * Block, from the character profile (#1668, ADR-0009 — superseded by
+ * ADR-0077, which moves the block onto its own record and makes it silent).
  *
  * The whole block path was already built — `PUT /relationships/{id}`, the
  * service, and `blockRelationship` in `api/relationships.ts` with the ADR cited
@@ -29,7 +30,9 @@
  * B is declared a foe by A, cannot delete A's edge, and blocks it — has no id
  * to act on from here and shows the friend/foe buttons instead. The upgrade
  * path is the incoming edge appearing in the list response; that is backend
- * work and its own issue, deliberately not this one.
+ * work and its own issue, deliberately not this one — and ADR-0077 takes the
+ * other route instead: the block leaves the edge entirely, so there is no id
+ * to hold and this ceiling disappears (#1681).
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -53,6 +56,10 @@ const tString = i18n.t as unknown as (
  * two things ADR-0009 decided that a player would otherwise assume the opposite
  * of: the block is VISIBLE to the person blocked (World Zero diverges from the
  * silent-block convention on purpose), and it is REVERSIBLE.
+ *
+ * ADR-0077 supersedes ADR-0009 and reverses the first of those: a block
+ * becomes SILENT. This copy is wrong the day that lands and must be rewritten
+ * with it (#1681) — it is the only place a player reads the decision.
  */
 export function blockConfirm(displayName: string): ConfirmRequest {
   return {
@@ -99,6 +106,7 @@ export default function RelationshipBlockControl({
     relationship !== null &&
     // ADR-0009: `Blocked` is dyad-level — either edge blocked shows it to both
     // parties. Whichever edge carries it, the slot belongs to `unblock`.
+    // ADR-0077 supersedes this: the label goes away, and this gate with it.
     relationship.display_status !== 'Blocked'
   if (!blockable) return null
 

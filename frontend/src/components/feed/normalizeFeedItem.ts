@@ -404,9 +404,16 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor,
         actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
+        // The slug WINS, and there is no `?? p.*_faction_name` fallback any
+        // more (#1891). A server-sent display name walks straight past
+        // `factionName()`, which is where the Albescent mask lives — and `p` is
+        // an untyped payload bag, so nothing would have flagged the day such a
+        // field appeared on the wire. `FriendDefectionPayload` emits slugs only
+        // (ADR-0038), so this preference was already dead code; deleting it is
+        // what stops it coming back to life silently.
         action: i18n.t('feed:row.action.defected', {
-          oldFaction: p.old_faction_name ?? factionName(p.old_faction_slug),
-          newFaction: p.new_faction_name ?? factionName(p.new_faction_slug),
+          oldFaction: factionName(p.old_faction_slug),
+          newFaction: factionName(p.new_faction_slug),
         }),
         badge: { type: 'friend', label: i18n.t('feed:badge.friend') },
         headline: null,

@@ -1,19 +1,32 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from dependencies import get_current_account_optional
 from game_config import CURRENT_ERA
+from models.account import Account
 from schemas.game_config import (
     FactionConfigOut,
     GameConfigOut,
     LevelProfileOut,
     LevelUnlockOut,
 )
+from services.progression import visible_level_profiles
 
 router = APIRouter()
 
 
 @router.get("", response_model=GameConfigOut)
-async def get_game_config() -> GameConfigOut:
-    """Return current era game configuration. No auth required."""
+async def get_game_config(
+    account: Account | None = Depends(get_current_account_optional),
+) -> GameConfigOut:
+    # NOTE — this docstring ships verbatim to the PUBLIC ``/openapi.json``, so
+    # it says what the route does without naming what it hides. The reason lives
+    # in ``services.progression``, which does not ship (#1891).
+    """Return current era game configuration.
+
+    Optional auth — anonymous callers stay anonymous and get the public answer.
+    The account is read only to decide which level-ladder rungs this caller may
+    be told about (``services.progression.visible_level_profiles``).
+    """
     factions = [
         FactionConfigOut(
             slug=faction.slug,
@@ -35,7 +48,7 @@ async def get_game_config() -> GameConfigOut:
                 for unlock in profile.unlocks
             ],
         )
-        for profile in CURRENT_ERA.level_profiles
+        for profile in visible_level_profiles(account)
     ]
 
     return GameConfigOut(

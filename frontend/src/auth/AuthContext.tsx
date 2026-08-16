@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { getMe, logout, type CurrentUser } from '../api/auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
+import { setAlbescentRevealed } from '../utils/factions'
 
 interface AuthState {
   user: CurrentUser | null
@@ -95,13 +96,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
 
+  /**
+   * The ONE place the viewer changes — so it is the one place the Albescent
+   * mask is re-pointed (#1891).
+   *
+   * `utils/factions` holds `albescentRevealed` at module level because
+   * `factionName()` has ~35 callers, some of them not React at all. That flag
+   * is only as correct as the number of transitions that remember to set it,
+   * so all three of them (sign-in, the `applyUser` hand-off, sign-out) route
+   * through here rather than each calling `setUser` and hoping.
+   *
+   * `null` means logged out, which means unrevealed — the same fail-closed
+   * default the module starts at.
+   */
+  const adoptViewer = (me: CurrentUser | null) => {
+    setAlbescentRevealed(me?.albescent_revealed ?? false)
+    setUser(me)
+  }
+
   const fetchUser = async () => {
     try {
       const me = await getMe()
-      setUser(me)
+      adoptViewer(me)
       rememberSession(true)
     } catch {
-      setUser(null)
+      adoptViewer(null)
       // Covers sign-out and expiry too: both land here via `refetch`.
       rememberSession(false)
     } finally {
@@ -112,8 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // See `AuthState.applyUser`. `rememberSession(true)` because being handed a
   // built `CurrentUser` is itself proof the session is live — the same fact
   // `fetchUser` records on a successful `/auth/me`.
+  //
+  // This is also how the secret society's name APPEARS: joining Albescent is
+  // what reveals it, and `POST /factions/choose` answers the refreshed
+  // `CurrentUser` carrying `albescent_revealed: true` (#1383).
   const applyUser = (me: CurrentUser) => {
-    setUser(me)
+    adoptViewer(me)
     rememberSession(true)
     setLoading(false)
   }
@@ -121,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // No `/auth/me` follow-up: ending the session IS the new state, and the
   // provider owns both halves of it — see `AuthState.signOut`.
   const signOut = runSignOut(logout, () => {
-    setUser(null)
+    adoptViewer(null)
     rememberSession(false)
     setLoading(false)
     // Deploy-scoped is not viewer-scoped: `/factions` hides Albescent from an

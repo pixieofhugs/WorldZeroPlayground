@@ -44,6 +44,7 @@ from services.comment import build_comment_out, list_flagged_comments, moderate_
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
     admin_edit_task,
+    apply_ban,
     archive_message,
     find_admin_accounts,
     flags_for_comments,
@@ -373,8 +374,7 @@ async def ban_character(
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
-    character.status = CharacterStatus.banned if data.banned else CharacterStatus.active
-    await session.flush()
+    await apply_ban(character, data.banned, session)
     return BanActionOut(character_id=character_id, banned=data.banned)
 
 
