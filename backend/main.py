@@ -88,8 +88,41 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
 
 
-# Session middleware is required by Authlib for OAuth state management
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+# Session middleware is required by Authlib for OAuth state management. This
+# cookie holds nothing but the OAuth `state` for one round trip — and that makes
+# it a live CSRF control, not a convenience (#1755). Every kwarg below is load-
+# bearing; `tests/integration/test_session_cookie.py` pins all three.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    # Fail closed, exactly as the JWT cookie does (`routers/auth.py`). Without
+    # `Secure` a network attacker can PLANT a session cookie over plain HTTP
+    # that the browser then sends to the HTTPS site (RFC 6265bis §5.7 step 16,
+    # §8.6) — the login-CSRF that binding `state` to the user agent exists to
+    # prevent, and there is no HSTS here to make it theoretical. Gated rather
+    # than unconditional because Safari refuses `Secure` on `http://localhost`
+    # (WebKit bug 232088, still open): it drops the `Set-Cookie` at storage
+    # time, so the callback carries no session and authlib raises "CSRF
+    # Warning! State not equal in request and response" — an error that reads
+    # as a bug in `state` handling rather than a cookie flag.
+    https_only=not settings.is_development,
+    # The only expiry OAuth state actually has. authlib stamps `exp = now +
+    # 3600` into the stored value and never reads it back, so its hour is
+    # decorative; the default this replaces is FOURTEEN DAYS of replayability
+    # for an abandoned sign-in. Starlette feeds this to `TimestampSigner.
+    # unsign()`, so it is server-enforced rather than a browser hint. Safe to
+    # cut this short because nothing in `backend/` reads `request.session`
+    # except authlib.
+    max_age=600,
+    # LOAD-BEARING — never "strict". The callback arrives via a cross-site 302
+    # from the provider, so `Lax`'s carve-out for top-level safe-method
+    # navigations is the only reason `state` comes back at all. OWASP's Session
+    # Management Cheat Sheet recommends `Strict` for session cookies; following
+    # it here breaks sign-in SILENTLY. Stated explicitly rather than left to
+    # Starlette's default so the next hardening pass has to read this comment
+    # before "correcting" it.
+    same_site="lax",
+)
 
 # CORS — allow frontend origin; configured via env in production.
 # The same list also guards the praxis room's WebSocket handshake, which this
