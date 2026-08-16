@@ -235,14 +235,39 @@ describe("WOW composer — the dress", () => {
     expect(markup).toContain("border-radius:6px");
   });
 
-  it.each(WIDTHS)("runs both corner ornaments on %s", (width) => {
+  it.each(WIDTHS)("floats the balloons alone over the ground on %s", (width) => {
     const markup = render(width);
-    // The turning dashed ring: a CLASS, so the reduced-motion guard in
-    // index.css still governs it. An inline `animation:` would bypass it.
-    expect(markup).toContain('class="ep-spin"');
-    expect(markup).not.toMatch(/animation:/);
-    // ...and the bunch, from the faction's one ornament module (§6/#849).
+    // The bunch, from the faction's one ornament module (§6/#849) — and it is
+    // now the WHOLE ground. The dashed gold ring went with #1830: the submit
+    // band owns the sheet's bottom edge, and the design's ground row reads
+    // "Balloons only, lifted clear of the submit band; the dashed ring is
+    // dropped."
     expect(markup).toContain("wow-balloon-bunch");
+    expect(markup).not.toContain('class="ep-spin"');
+    expect(markup).not.toContain("2px dashed var(--faction-wow-chronicle-gold)");
+    // Motion stays CLASS-gated either way: an inline `animation:` would bypass
+    // the reduced-motion guard in index.css (#1003).
+    expect(markup).not.toMatch(/animation:/);
+  });
+
+  it.each(WIDTHS)("lifts the bunch clear of the band on %s", (width) => {
+    // Design ground row: `right: 10, bottom: 76` desktop / 66 mobile. The old
+    // negative offsets tucked the bunch into the corner the full-bleed band
+    // now occupies, so it read as clipped rather than as an ornament (#1830).
+    const markup = render(width);
+    expect(markup).toContain("right:10px");
+    expect(markup).toContain(width === "mobile" ? "bottom:66px" : "bottom:76px");
+  });
+
+  it("spends the quiet gold on its quiet edges (#1830)", () => {
+    // Two golds, not one: the solid `--faction-wow-chronicle-gold` frames the
+    // sheet, the fields and the ACTIVE chip; `--faction-wow-rule` (the same
+    // gold at 40%) draws the edges that are only suggesting a boundary — the
+    // inactive mode chip and the proof drop zone.
+    const markup = render();
+    expect(markup).toContain("1.5px solid var(--faction-wow-rule)");
+    expect(markup).toContain("1.5px dashed var(--faction-wow-rule)");
+    expect(markup).not.toContain("1.5px dashed var(--faction-wow-chronicle-gold)");
   });
 
   it("closes the sheet with the zigzag, not a hairline", () => {

@@ -38,10 +38,19 @@ import type { CSSProperties, ReactNode } from "react";
 
 /** Frame + rule gold. Theme-invariant, and never an ink: 2.24:1 on the cream. */
 const GOLD = "var(--faction-wow-chronicle-gold)";
-/** Plum as INK/ornament — this one DOES flip with the theme. */
+/** Plum as INK — this one DOES flip with the theme. */
 const PLUM = "var(--faction-wow-card-accent)";
-/** The burnt gold that finishes the balloon strings. */
-const GILT = "var(--faction-wow-stamp-total)";
+/**
+ * Plum as ORNAMENT (#1830).
+ *
+ * The design's skin row splits the two in dark and only in dark: the ink lifts
+ * to `#C79BE0` so it can be read, while the plum that is only ever a *shape* —
+ * the zigzag's far stop, the odd balloon — stays at `#8A5AAE`, one step off the
+ * light value it is theme-invariantly meant to look like. `-stamp-chip-bg`
+ * dereferences `-card-accent` in light, so the two are the same swatch by day
+ * and it is the night that tells them apart.
+ */
+const PLUM_ORNAMENT = "var(--faction-wow-stamp-chip-bg)";
 
 /**
  * The wavy rule's path, stretched to whatever its container gives it.
@@ -78,7 +87,7 @@ export function Zig({ id, style }: { id: string; style?: CSSProperties }) {
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor={GOLD} />
-            <stop offset="1" stopColor={PLUM} />
+            <stop offset="1" stopColor={PLUM_ORNAMENT} />
           </linearGradient>
         </defs>
         <path
@@ -188,8 +197,16 @@ export function BalloonBunch({
         </g>
         <Balloon cx={12} cy={15} fill="var(--faction-wow-balloon-5)" delay={0} />
         <Balloon cx={31} cy={12} fill="var(--faction-wow-balloon-5)" delay={0.2} />
-        <Balloon cx={22} cy={27} fill="var(--faction-wow-balloon-1)" delay={0.4} />
-        <circle cx={22} cy={51} r={1.6} fill={GILT} />
+        {/* The odd balloon takes the ORNAMENT plum, not the vote plate's first
+            ramp rung (`--faction-wow-balloon-1`), which is frozen at the LIGHT
+            plum in both themes because the ramp it belongs to is theme-
+            invariant. Same swatch by day, the design's lifted `#8A5AAE` by
+            night (#1830). */}
+        <Balloon cx={22} cy={27} fill={PLUM_ORNAMENT} delay={0.4} />
+        {/* The tie-off knot is struck metal, so it takes the theme-invariant
+            frame gold rather than the burnt `-stamp-total`, which is an INK
+            and moves with the theme (#1830). */}
+        <circle cx={22} cy={51} r={1.6} fill={GOLD} />
       </svg>
     </span>
   );

@@ -64,10 +64,12 @@
  * ## Motion
  *
  * Two cogs on the masthead, `ep-spin` against `ep-spin-rev` — the counter-turn
- * is the whole gag, and it is the only motion here. Both are CLASSES: the
- * keyframes live in `index.css` behind the shared `prefers-reduced-motion`
- * guard, and an inline `animation:` would bypass it (#1003). `index.css` needed
- * no motion edit for this skin.
+ * is the whole gag — and a third on the waiting surface's hero mark, forward,
+ * which the design turns too (#1830). All three are CLASSES: the keyframes live
+ * in `index.css` behind the shared `prefers-reduced-motion` guard, and an
+ * inline `animation:` would bypass it (#1003). `index.css` needed no motion
+ * edit for this skin; the period comes through `--ep-spin-dur` ({@link
+ * COG_PERIOD}).
  *
  * ## Not drawn as designed
  *
@@ -200,6 +202,9 @@ function buildGearPath(): string {
 
 const GEAR_PATH = buildGearPath();
 
+/** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). */
+const COG_PERIOD = "22s";
+
 /**
  * The union cog. Ornament only — aria-hidden at every call site.
  *
@@ -264,12 +269,19 @@ export default function EverymenEditPraxis({ state }: Props) {
    * takes the louder rung, because being a size larger than the rest of the site
    * IS the distinction here (§4a — a token names a tier, so the number lands
    * where it lands).
+   *
+   * The tracking is the design's `label.spacing` of 0.2em (#1830). It used to
+   * default to 0.16em with the loud slots — the labels, the status word, the
+   * slip — overriding back up, which left the quiet ones (mode chips, write-up
+   * tabs, picker, exits, slip pill) stencilled a step tighter than the row they
+   * sat in. The masthead wordmark still says 0.16em, out of its own line in the
+   * design; it is chrome on the plate, not a label on the paper.
    */
   const stencil = (overrides: CSSProperties = {}): CSSProperties =>
     composerLabelStyle({
       fontFamily: BEBAS,
       fontSize: "var(--text-xl)",
-      letterSpacing: "0.16em",
+      letterSpacing: "0.2em",
       ...overrides,
     });
 
@@ -306,7 +318,22 @@ export default function EverymenEditPraxis({ state }: Props) {
     borderRadius: 0,
     boxShadow: SHADOW,
   };
-  const statusMark = <Gear size={40} fill={RED} hole={PANEL} />;
+  /* The waiting surface's hero mark: `gear(40, accent, field, 1)` in the design
+     row — the SHEET accent rather than the rule red, on the panel stock, and
+     turning forward like the pair on the nameplate. It was drawn in `--everymen-
+     red` and stilled; a cog that has stopped is the one thing this metaphor
+     cannot say on a page whose whole message is that the work is in hand
+     (#1830). It is a mark on a plate, not type, so the accent's 4.49:1 on the
+     paper is not the measurement that governs it. */
+  const statusMark = (
+    <Gear
+      size={40}
+      fill={ACCENT}
+      hole={PANEL}
+      spin="forward"
+      duration={COG_PERIOD}
+    />
+  );
   const slip = {
     style: {
       background: PANEL,
@@ -317,7 +344,7 @@ export default function EverymenEditPraxis({ state }: Props) {
       borderRadius: 0,
       padding: "var(--space-lg)",
     },
-    labelStyle: stencil({ color: ACCENT, letterSpacing: "0.2em" }),
+    labelStyle: stencil({ color: ACCENT }),
     titleStyle: {
       fontFamily: BEBAS,
       textTransform: "uppercase" as const,
@@ -358,7 +385,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               boxShadow: `inset 0 -6px 0 -4px ${PAPER_DEEP}`,
             }}
           >
-            <Gear size={16} fill={MAST_INK} hole={MAST} spin="forward" duration="26s" />
+            <Gear size={16} fill={MAST_INK} hole={MAST} spin="forward" duration={COG_PERIOD} />
             <span
               style={{
                 fontFamily: BEBAS,
@@ -371,7 +398,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             >
               {factionName(slug)}
             </span>
-            <Gear size={16} fill={MAST_INK} hole={MAST} spin="reverse" duration="26s" />
+            <Gear size={16} fill={MAST_INK} hole={MAST} spin="reverse" duration={COG_PERIOD} />
           </ComposerMasthead>
   );
   const ground = (
@@ -408,9 +435,9 @@ export default function EverymenEditPraxis({ state }: Props) {
     ground,
     rule: () => dashRule,
     mark: statusMark,
-    statusStyle: stencil({ color: INK, letterSpacing: "0.2em" }),
+    statusStyle: stencil({ color: INK }),
     metaStyle: { color: MUTED },
-    labelStyle: stencil({ color: INK, letterSpacing: "0.2em" }),
+    labelStyle: stencil({ color: INK }),
     slip,
     panelStyle: {
       background: PANEL,
@@ -470,7 +497,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           rule={false}
-          labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          labelStyle={stencil({ color: INK })}
         >
           <TitleField
             state={state}
@@ -492,7 +519,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
             rule={false}
-            labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+            labelStyle={stencil({ color: INK })}
           >
             <ModePicker
               state={state}
@@ -510,14 +537,20 @@ export default function EverymenEditPraxis({ state }: Props) {
                     aria-pressed={active}
                     onClick={onSelect}
                     disabled={disabled && !active}
+                    /* The chosen mode takes the kit's CTA fill, which for the
+                       Everymen is the report bar's near-black — the design's
+                       control dress says a faction's active state is "its CTA
+                       fill … never a generic accent block", and a red block
+                       under an offset shadow was the union's one irreversible
+                       act restated on a control that only chooses how you file
+                       (#1830). */
                     style={stencil({
                       cursor: disabled ? "not-allowed" : "pointer",
                       padding: "var(--space-sm) var(--space-lg)",
                       borderRadius: 0,
-                      background: active ? RED : PANEL,
-                      color: active ? ON_ACCENT : INK,
-                      border: `2px solid ${FRAME}`,
-                      boxShadow: active ? `4px 4px 0 ${FRAME}` : "none",
+                      background: active ? BAR : PANEL,
+                      color: active ? BAR_INK : INK,
+                      border: `2px solid ${active ? BAR : FRAME}`,
                     })}
                   >
                     {option.label}
@@ -543,7 +576,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 : undefined
             }
             rule={false}
-            labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+            labelStyle={stencil({ color: INK })}
           >
             <InviteSearch
               state={state}
@@ -568,7 +601,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
             rule={false}
-            labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+            labelStyle={stencil({ color: INK })}
           >
             <MetataskSealStack state={state} />
           </ComposerSection>
@@ -580,7 +613,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
           rule={false}
-          labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          labelStyle={stencil({ color: INK })}
           meta={
             <span style={composerMetaCluster}>
               <span
@@ -678,7 +711,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
           rule={false}
-          labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          labelStyle={stencil({ color: INK })}
         >
           <div
             style={{
