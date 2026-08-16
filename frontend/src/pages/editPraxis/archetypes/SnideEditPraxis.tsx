@@ -143,7 +143,6 @@ const ALARM = "var(--faction-snide-composer-alarm)";
 const ACID = "var(--faction-snide-acid)";
 const PRESS_INK = "var(--faction-snide-ink)";
 const PRESS_PAPER = "var(--faction-snide-paper)";
-const HOT_PINK = "var(--faction-snide-pink)";
 
 const TITLE_FACE = "var(--faction-snide-font-impact)"; /* Anton */
 const BODY_FACE = "var(--faction-snide-font-type)"; /* Special Elite */
@@ -190,26 +189,19 @@ function SnideBlob({ width, height, struck = false, children }: BlobProps) {
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       >
         <path d={BLOB_PATH} fill={ACID} />
+        {/* Acid fill, press-ink tick, and nothing else. The hot-pink bar that
+            used to cross the blob is not in the design's mark — a strike-through
+            reads as "cancelled" on the one mark that says your part is IN
+            (#1830). */}
         {struck && (
-          <>
-            <polyline
-              points="28,36 41,50 66,22"
-              fill="none"
-              stroke={PRESS_INK}
-              strokeWidth={8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <line
-              x1="10"
-              y1="58"
-              x2="84"
-              y2="15"
-              stroke={HOT_PINK}
-              strokeWidth={6}
-              strokeLinecap="round"
-            />
-          </>
+          <polyline
+            points="28,36 41,50 66,22"
+            fill="none"
+            stroke={PRESS_INK}
+            strokeWidth={8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         )}
       </svg>
       {children}
