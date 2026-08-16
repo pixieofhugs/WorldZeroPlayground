@@ -19,7 +19,6 @@ src/pages/CharacterProfile.tsx
 src/pages/Contact.tsx
 src/pages/EditCharacter.tsx
 src/pages/FactionDetail.tsx
-src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx
 src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx
 src/pages/Factions.tsx
 src/pages/FieldDesk.tsx
@@ -86,5 +85,4 @@ src/pages/characterProfile/archetypes/SingularityProfileBody.tsx
 src/pages/characterProfile/archetypes/SnideProfileBody.tsx
 src/pages/factionDetail/archetypes/EverymenFactionBody.tsx
 src/pages/factionDetail/archetypes/SnideFactionBody.tsx
-src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx
 src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx

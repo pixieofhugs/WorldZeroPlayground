@@ -70,7 +70,12 @@ export default function DefaultFactionBody({
   const joinAction = membership.state === "eligible" && (
     <>
       {membership.joinError && (
-        <p className="font-body content-text text-red-600">{membership.joinError}</p>
+        // The phone skin this came from wrote `text-red-600`, and its legacy
+        // exemption died with the file. The token says the same thing and is
+        // what every other body's join error already uses (#1853).
+        <p className="font-body content-text" style={{ color: "var(--color-danger)" }}>
+          {membership.joinError}
+        </p>
       )}
       {!confirming ? (
         <button type="button" onClick={() => setConfirming(true)} style={JOIN_BUTTON_STYLE}>

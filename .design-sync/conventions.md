@@ -75,8 +75,9 @@ internally and stacks single-column on a phone):
 - `editpraxis` — the composer: `DefaultEditPraxis`, `UaEditPraxis`, `WowEditPraxis`, …
 - `characterprofile` `*ProfileBody` and `factiondetail` `*FactionBody` — the page bodies.
 
-**Still split by form factor** — faction detail only: `*FactionBody` (responsive body) vs
-`*FactionPage` (mobile screen). Character profile is responsive-only (`*ProfileBody`).
+**Nothing is split by form factor any more.** Faction detail was the last pair —
+`*FactionBody` beside a `*FactionPage` mobile screen — and ADR-0077 (#1314) retired
+the phone skins. Character profile went the same way in #1319 (`*ProfileBody`).
 
 **Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaFieldDesk` / `SnideFieldDesk` …
 (`fielddesk`), plus the singletons `DefaultTasks`, `DefaultPlayers`, `DefaultSettings`,

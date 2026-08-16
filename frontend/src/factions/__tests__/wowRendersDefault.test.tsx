@@ -63,17 +63,17 @@ function Sentinel() {
  * full-bleed branch, not a deletion). Its two rail skins went with the
  * `duelRail` / `mobileDuelRail` SURFACES themselves in #1090, which folded
  * the duel into a card inside praxis detail; that is a surface retirement, not
- * a WOW gap, so none of those three names appears above or below. And #901's two
- * surviving FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone
- * screen the kit drew, plus `mobileFactionPage` derived from that screen's
- * chrome and the matching desktop archetype — #901 skinned four
- * further surfaces off that screen which no longer exist, its task card, its
- * task detail, its praxis detail and its PROFILE, because ADR-0056 (#1044),
- * ADR-0058 (#1068), ADR-0061 (#1089) and #1319 retired all four surfaces
- * outright, so the decree `taskCard`, the parchment `taskDetail` and the crested
- * `profileBody` now serve WOW on both form factors and praxis detail is ONE
- * shared page every faction dresses; the pavilion profile is the phone branch
- * inside `WowProfileBody`, not a deletion), and #931's
+ * a WOW gap, so none of those three names appears above or below. And #901's ONE
+ * surviving FIELD PAVILION mobile surface (`mobileFieldDesk`, from the one phone
+ * screen the kit drew — #901 skinned five further surfaces off that screen which
+ * no longer exist, its task card, its task detail, its praxis detail, its
+ * PROFILE and its FACTION PAGE, because ADR-0056 (#1044), ADR-0058 (#1068),
+ * ADR-0061 (#1089), #1319 and ADR-0077 (#1314) retired all five surfaces
+ * outright, so the decree `taskCard`, the parchment `taskDetail`, the crested
+ * `profileBody` and the muster `factionBody` now serve WOW on both form factors
+ * and praxis detail is ONE shared page every faction dresses; the pavilion
+ * profile is the phone branch inside `WowProfileBody`, not a deletion), and
+ * #931's
  * `metataskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
@@ -86,8 +86,9 @@ function Sentinel() {
  * and the `factionBody` beneath that hero — THE MUSTER PAGE: the charter, the
  * muster roll, the two galleries and the enlist rail. Third of #951's four to
  * ship. Derived rather than drawn, like the two above it: the ornaments come
- * from `wowOrnament`, the section order from `mobileFactionPage`, and the copy
- * was already sitting unread in `factions.json` from #900.
+ * from `wowOrnament`, the section order from the `mobileFactionPage` twin
+ * ADR-0077 has since retired, and the copy was already sitting unread in
+ * `factions.json` from #900. It serves both form factors now.
  *
  * `factionCard` is the LAST unclaimed desktop surface.
  *
@@ -130,11 +131,10 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'factionSelectCard',
   'duelSeal',
   'mobileFieldDesk',
-  'mobileFactionPage',
   'metataskSeal',
 ])
 
-describe('wow is partly skinned: twenty surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: nineteen surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
