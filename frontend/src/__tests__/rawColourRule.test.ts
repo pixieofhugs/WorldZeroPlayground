@@ -1,0 +1,123 @@
+/**
+ * Fixtures for the colour arm of the style ratchet (#1853).
+ *
+ * The seam is the RULE AS WIRED, not the regex: every one of the six laundering
+ * patterns the px arm has been hardened against (#750, #763, #770, #789, #1233)
+ * was a hole between "the pattern matches" and "the visitor ever sees the node".
+ * So these lint real source text through the real `eslint.config.js` — same
+ * plugin registration, same legacy list, same exemptions CI runs — and assert on
+ * what comes back.
+ *
+ * A rule with no fixtures is a rule that can be quietly weakened: delete the
+ * `[\d.]` lookahead and nothing else in the repo goes red.
+ */
+import { existsSync, readFileSync } from 'node:fs'
+
+import { ESLint } from 'eslint'
+import { beforeAll, describe, expect, it } from 'vitest'
+
+const RULE = 'local/no-raw-colour-values'
+
+let eslint: ESLint
+
+beforeAll(() => {
+  eslint = new ESLint()
+})
+
+/** Rule ids reported for `code`, judged as if it lived at `filePath`. */
+const lint = async (code: string, filePath = 'src/rawColourFixture.tsx'): Promise<string[]> => {
+  const [result] = await eslint.lintText(code, { filePath, warnIgnored: false })
+  return result.messages.filter((m) => m.ruleId === RULE).map((m) => m.message)
+}
+
+const reports = async (code: string, filePath?: string): Promise<boolean> =>
+  (await lint(code, filePath)).length > 0
+
+describe('local/no-raw-colour-values reports raw colour', () => {
+  it('flags a colour function inside a shadow string — the #1851 shape', async () => {
+    expect(await reports("export const s = { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }")).toBe(
+      true,
+    )
+  })
+
+  it('flags a raw hex in an inline style', async () => {
+    expect(await reports("export const A = () => <p style={{ color: '#dc2626' }} />")).toBe(true)
+  })
+
+  it('flags a stock Tailwind colour utility in a className', async () => {
+    expect(await reports('export const A = () => <p className="font-body text-red-600" />')).toBe(
+      true,
+    )
+  })
+
+  it('flags hsl() and a directional border shorthand, not just rgba/boxShadow', async () => {
+    expect(await reports("export const s = { borderBottom: '1px solid hsl(210 40% 96%)' }")).toBe(
+      true,
+    )
+  })
+
+  it('flags a colour laundered through a ternary, as the px arm does', async () => {
+    expect(
+      await reports("export const s = (w: boolean) => ({ background: w ? 'rgba(234,179,8,0.08)' : 'transparent' })"),
+    ).toBe(true)
+  })
+})
+
+describe('local/no-raw-colour-values stays silent where colour is tokenized', () => {
+  it('says nothing about a var(--color-*) reference', async () => {
+    expect(
+      await lint(
+        "export const s = { color: 'var(--color-danger)', boxShadow: '0 4px 12px var(--color-shadow-soft)' }",
+      ),
+    ).toEqual([])
+  })
+
+  it('says nothing about a colour function that composes a token', async () => {
+    // The `[\d.]` lookahead is what separates these two: `rgb(var(--x) / .4)` is
+    // a token doing alpha, `rgba(0,0,0,.4)` is a hardcoded colour.
+    expect(await lint("export const s = { background: 'rgb(var(--rgb-accent) / 0.4)' }")).toEqual([])
+  })
+
+  it("says nothing about the repo's own var()-backed Tailwind utilities", async () => {
+    expect(await lint('export const A = () => <p className="text-ink bg-surface border-border" />')).toEqual(
+      [],
+    )
+  })
+
+  it('says nothing about a raw length — that is the OTHER arm, on its own list', async () => {
+    expect(await lint("export const s = { padding: 'var(--space-md)', opacity: 0.4 }")).toEqual([])
+  })
+
+  it('says nothing in a file on the legacy list', async () => {
+    expect(
+      await lint(
+        "export const s = { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }",
+        'src/components/AlbescentInvitation.tsx',
+      ),
+    ).toEqual([])
+  })
+
+  it('says nothing in the colour-math helper, which parses colour by definition', async () => {
+    expect(await lint("export const s = { color: '#1c1c1a' }", 'src/utils/contrast.ts')).toEqual([])
+  })
+})
+
+describe('the legacy list stays honest', () => {
+  it('is not empty, and every entry is a real path the rule can be turned off for', async () => {
+    const entries = readFileSync(
+      new URL('../../.eslint-legacy-raw-colours.txt', import.meta.url),
+      'utf8',
+    )
+      .split('\n')
+      .map((line) => line.split('#')[0].trim())
+      .filter(Boolean)
+
+    expect(entries.length).toBeGreaterThan(0)
+    // A path that no longer exists is a line nobody can delete by migrating it,
+    // so the list would stop shrinking without anyone noticing (#750's lesson,
+    // wearing a filename).
+    expect(
+      entries.filter((entry) => !existsSync(new URL(`../../${entry}`, import.meta.url))),
+    ).toEqual([])
+  })
+})

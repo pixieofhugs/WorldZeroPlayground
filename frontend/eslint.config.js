@@ -194,6 +194,119 @@ function isRawPxValue(node) {
   return false
 }
 
+// ---------------------------------------------------------------------------
+// The COLOUR arm (#1853). Everything above judges raw *numbers*; a colour is
+// neither a bare number nor a spacing prop, so every colour literal reported
+// clean — which is how #1851's pair of hand-rolled `rgba(0,0,0,0.15)` dropdown
+// shadows survived a green lint run over both.
+//
+// This is a different failure from a raw `14` for font-size. The number is
+// merely off-scale; the colour is off-THEME. A raw colour in a component has no
+// `[data-theme="dark"]` counterpart and cannot get one without a `dark ? a : b`
+// ternary, which the style system forbids outright — so every one of these is a
+// surface that is either already wrong in dark mode or about to be.
+//
+// It ships as its OWN rule id rather than a third visitor on
+// `no-raw-style-values`, for one mechanical reason: the ratchet below turns a
+// whole RULE off per file. Sharing an id would mean every file on the colour
+// legacy list silently lost its px enforcement too — un-ratcheting the arm that
+// already reached zero. Two arms, two ids, two lists that shrink independently.
+//
+// Note there is no `.css` scoping to do: the rule is registered only on the
+// `src/**/*.{ts,tsx}` block, and `index.css` is where colour VALUES belong.
+
+// A raw colour literal in any notation: 3/4/6/8-digit hex, or a colour function
+// whose first argument is a number. The `[\d.]` lookahead is load-bearing —
+// `rgb(var(--rgb-accent) / 0.4)` composes a TOKEN and must stay silent, while
+// `rgba(0,0,0,0.15)` and `hsl(210 40% 96%)` are the literals this rule exists
+// for. Hex is bounded on the right by `\b` so `#a1b2c3d4e5` (an id, not a
+// colour) does not match a prefix of itself.
+const RAW_COLOUR_LITERAL =
+  /#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b|\b(?:rgba?|hsla?)\(\s*[\d.]/
+
+// Props that carry paint. The explicit set is the list the #1853 ruling names,
+// widened by the shorthands that are the same decision wearing a different key
+// (`borderBottom: '1px solid rgba(...)'` is the commonest shape in this tree,
+// and leaving it out would make renaming the prop a laundering route). The
+// `/Color$/` test then covers the long tail for free — `borderTopColor`,
+// `textDecorationColor`, `accentColor` — without an enumeration to maintain.
+//
+// Custom properties are included on purpose: an inline `'--x': 'rgba(...)'` is
+// the same off-theme value with a token-shaped name. It costs nothing, because
+// the report only fires when the VALUE holds a raw colour — `'--space-x': '4px'`
+// never trips it.
+const COLOUR_PROPS = new Set([
+  'color',
+  'background',
+  'backgroundColor',
+  'backgroundImage',
+  'borderColor',
+  'border',
+  'borderTop',
+  'borderRight',
+  'borderBottom',
+  'borderLeft',
+  'boxShadow',
+  'textShadow',
+  'outline',
+  'outlineColor',
+  'fill',
+  'stroke',
+  'caretColor',
+])
+const isColourProp = (name) =>
+  COLOUR_PROPS.has(name) || /Color$/.test(name) || name.startsWith('--')
+
+// Tailwind's stock palette in a class name — `text-red-600`, `border-red-300`.
+// Same blind spot as `text-sm`: a value wearing a class name, and the Property
+// visitor never sees it because it never enters a style object.
+//
+// The repo's OWN colour utilities are var()-backed by `tailwind.config.ts`
+// (`text-ink`, `bg-surface`, `border-border`), so they are absent from the
+// palette list below by construction and stay silent. Only the stock ramps —
+// which read straight from Tailwind's own hexes, outside `index.css` and
+// outside the dark cascade — are shades this rule reports.
+const TAILWIND_COLOUR_PREFIX =
+  '(?:bg|text|border|border-[trblxyse]|ring|ring-offset|outline|divide|divide-[xy]|from|via|to|fill|stroke|caret|accent|decoration|placeholder|shadow)'
+const TAILWIND_PALETTE =
+  '(?:slate|gray|grey|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)'
+const TAILWIND_COLOUR_CLASS = new RegExp(
+  `(?:^|\\s)(?:[a-z-]+:)*${TAILWIND_COLOUR_PREFIX}-${TAILWIND_PALETTE}-\\d{2,3}\\b`,
+)
+
+// The same shapes `findRawSpacingClass` walks, generalised over a predicate:
+// a plain string, a template literal, and the ternaries / `??` / `||` chains
+// that wrap conditional values. Skipping these would reproduce the exact
+// Literal-only blind spot that let patterns 1-3 past the px arm (#770, #789) —
+// `background: warn ? 'rgba(234,179,8,0.08)' : 'transparent'` is a live shape in
+// this tree, not a hypothetical.
+function someStringIn(node, test) {
+  if (!node) return false
+  switch (node.type) {
+    case 'Literal':
+      return typeof node.value === 'string' && test(node.value)
+    case 'TemplateLiteral':
+      return node.quasis.some((quasi) => test(quasi.value.raw))
+        || node.expressions.some((expression) => someStringIn(expression, test))
+    case 'ConditionalExpression':
+      return someStringIn(node.consequent, test) || someStringIn(node.alternate, test)
+    case 'LogicalExpression':
+    case 'BinaryExpression':
+      return someStringIn(node.left, test) || someStringIn(node.right, test)
+    case 'JSXExpressionContainer':
+      return someStringIn(node.expression, test)
+    default:
+      return false
+  }
+}
+
+/** The property name as written, for `color:` and for `'--fc-bg':` alike. */
+function propertyName(node) {
+  if (node.key.type === 'Identifier') return node.computed ? null : node.key.name
+  if (node.key.type === 'Literal' && typeof node.key.value === 'string') return node.key.value
+  return null
+}
+
 // KNOWN GAPS — documented on purpose (#763 ask 4). A documented gap beats a
 // silent one: the #750 audit's real finding was not that values escaped, but
 // that they escaped while the ratchet reported CLEAN.
@@ -232,6 +345,25 @@ function isRawPxValue(node) {
 //   Every current use is legitimate (declared ornament geometry; a negated
 //   `--space-*` token) — but that is a fact about today's tree, not a guarantee
 //   the rule enforces, and only review holds it.
+//
+// Gap E — a real token used at the WRONG TIER. This is the gap the colour arm
+//   (#1853) does NOT close, and it is worth stating plainly because the arm
+//   landing makes it easy to assume otherwise.
+//   `no-raw-colour-values` catches raw colour LITERALS. It does not catch
+//   `var(--color-text-tertiary)` on a faction-dispatched surface: that name is
+//   declared in `index.css`, reads as correctly tokenized to every check we run,
+//   and is still wrong, because a faction surface must read its own
+//   `--faction-*` family and not the global one (#1819). Nothing in an AST
+//   distinguishes "token" from "token that belongs to a different surface" —
+//   that needs a rule that knows which files are faction-dispatched, with its
+//   own list. It is a separate rule and a separate PR.
+//   Two smaller things the colour arm also leaves alone, on purpose:
+//     - CSS colour KEYWORDS (`white`, `black`, `red`) and the unshaded Tailwind
+//       utilities that spell them (`bg-white`, `text-black`). Same disease, much
+//       larger and more arguable set; #1853 scoped the arm to literals + shaded
+//       ramps and that is where it stops.
+//     - A colour laundered through a data structure — a `SizeSet`-style table of
+//       hexes read by an Identifier — which is Gap D's shape wearing paint.
 const noRawStyleValues = {
   rules: {
     'no-raw-style-values': {
@@ -267,6 +399,44 @@ const noRawStyleValues = {
         }
       },
     },
+    // The colour arm (#1853). See the constants and Gap E above for why it is a
+    // separate id rather than a third visitor on the rule above.
+    'no-raw-colour-values': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow raw colour literals (hex, rgb/rgba/hsl/hsla) and stock Tailwind colour utilities — use a --color-*/--faction-* token from index.css (WORLD_ZERO_STYLE.md).',
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Property(node) {
+            const name = propertyName(node)
+            if (!name || !isColourProp(name)) return
+            if (someStringIn(node.value, (value) => RAW_COLOUR_LITERAL.test(value))) {
+              context.report({
+                node,
+                message: `Raw colour literal for "${name}" — use a --color-*/--faction-* token from index.css. A hardcoded colour has no [data-theme="dark"] counterpart.`,
+              })
+            }
+          },
+          JSXAttribute(node) {
+            if (node.name.type !== 'JSXIdentifier' || node.name.name !== 'className') return
+            const test = (value) =>
+              TAILWIND_COLOUR_CLASS.test(value) || RAW_COLOUR_LITERAL.test(value)
+            if (someStringIn(node.value, test)) {
+              context.report({
+                node,
+                message:
+                  'Stock Tailwind colour utility or arbitrary colour in className (e.g. `text-red-600`, `bg-[#fff]`) — use a token-backed utility (`text-ink`, `bg-surface`) or a --color-* var. The value is a raw colour wearing a class name.',
+              })
+            }
+          },
+        }
+      },
+    },
   },
 }
 
@@ -277,6 +447,15 @@ const LEGACY_RAW_STYLE_FILES = fs
   .readFileSync(new URL('./.eslint-legacy-raw-styles.txt', import.meta.url), 'utf8')
   .split('\n')
   .map((line) => line.trim())
+  .filter(Boolean)
+
+// Files not yet migrated off raw colour (issue #1853). This list only
+// ever shrinks — migrating a file means deleting its line here, not adding
+// one. New files may never be added to it. #1609 burns it down.
+const LEGACY_RAW_COLOUR_FILES = fs
+  .readFileSync(new URL('./.eslint-legacy-raw-colours.txt', import.meta.url), 'utf8')
+  .split('\n')
+  .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
 
 /**
@@ -346,6 +525,7 @@ export default [
         },
       ],
       'local/no-raw-style-values': 'error',
+      'local/no-raw-colour-values': 'error',
       'sonarjs/no-identical-functions': 'error',
       'no-restricted-imports': NO_AXIOS_IMPORT,
     },
@@ -361,6 +541,50 @@ export default [
           files: LEGACY_RAW_STYLE_FILES,
           rules: {
             'local/no-raw-style-values': 'off',
+          },
+        },
+      ]
+    : []),
+  {
+    /**
+     * Colour-MATH helpers parse and compose colour by definition (#1853). A
+     * contrast ratio cannot be computed from `var(--color-text-primary)`; these
+     * modules exist precisely to turn a literal into a number, so a rule that
+     * bans literals has nothing true to say about them. This is a deliberate
+     * exemption, NOT a legacy entry: nothing here is ever going to migrate, so
+     * putting it on the shrinking list would make the list dishonest.
+     *
+     * It reports zero today — `contrast.ts` names its hexes in prose and its
+     * notations in regexes, and the rule reads neither. So this block is
+     * prospective: it protects the module's PURPOSE, so that the first hand-fed
+     * `parse('#1c1c1a')` in a test-bed or a triage helper is not a build break.
+     */
+    files: ['src/utils/contrast.ts'],
+    rules: {
+      'local/no-raw-colour-values': 'off',
+    },
+  },
+  {
+    /**
+     * Tests assert ON colour: a contrast guard names the hex it measured, and a
+     * fixture for this very rule must contain the literals it forbids. Same
+     * reasoning as the `i18next/no-literal-string` exemption below.
+     */
+    files: ['src/**/*.test.{ts,tsx}', 'src/**/__tests__/**'],
+    rules: {
+      'local/no-raw-colour-values': 'off',
+    },
+  },
+  // Same ratchet, same empty-list guard (#750): ESLint rejects `files: []`
+  // outright, so finishing the migration must not be the thing that breaks the
+  // build. #1609 burns this list down; when it empties, this spread vanishes
+  // and the rule keeps standing.
+  ...(LEGACY_RAW_COLOUR_FILES.length > 0
+    ? [
+        {
+          files: LEGACY_RAW_COLOUR_FILES,
+          rules: {
+            'local/no-raw-colour-values': 'off',
           },
         },
       ]

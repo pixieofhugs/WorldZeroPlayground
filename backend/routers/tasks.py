@@ -12,7 +12,6 @@ from dependencies import (
 )
 from models.account import Account
 from models.character import Character
-from models.task import Task
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
 from services.praxis import gather_signup_facts
@@ -22,6 +21,7 @@ from services.task import (
     build_task_out,
     build_task_out_for_viewer,
     build_task_signup_out,
+    get_task_for_viewer,
     in_progress_counts_for_tasks,
     list_signups_for_task,
     list_tasks as service_list_tasks,
@@ -141,8 +141,20 @@ async def get_task(
     task_id: int,
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
+    account: Optional[Account] = Depends(get_current_account_optional),
 ):
-    task = await session.get(Task, task_id)
+    # Deliberately no docstring: a route's docstring is published in the public
+    # `openapi.json`, and the reasoning below is not something to hand out.
+    #
+    # #1725 — the same pending gate the browse applies, at the door it was never
+    # applied to. A withheld proposal 404s rather than 403s, with the same detail
+    # an absent id gets: task ids are sequential, so a 403 would confirm the row
+    # exists and make the review window enumerable. `retired` and `active` are
+    # unaffected — praxis link back to retired tasks.
+    is_admin = account is not None and await account_has_admin_role(
+        account.id, session
+    )
+    task = await get_task_for_viewer(session, task_id, viewer, is_admin=is_admin)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
     return await build_task_out_for_viewer(task, viewer, session)
