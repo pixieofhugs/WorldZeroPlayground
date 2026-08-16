@@ -3553,6 +3553,51 @@
     font-size: var(--text-title);
   }
 
+  /* ── Functional ink role classes (issue #1609) ──
+     The className half of the `--color-danger` / `--color-warning` families.
+     Forty-one sites across twenty-three pages painted their error chrome with
+     Tailwind's STOCK ramp — `text-red-600`, `border-red-300` — which reads
+     Tailwind's own hexes rather than index.css, so it sits outside the
+     `[data-theme="dark"]` cascade entirely and paints the light-theme red on a
+     dark page. (`text-red-600` IS #dc2626, i.e. `--color-danger`'s light value:
+     the light render is byte-identical and only dark was ever wrong.)
+
+     One class per TOKEN, not one class per banner. Deliberate: the eighteen
+     bordered banners repeat `font-body content-text … border-2 px-3 py-2`
+     near-verbatim and want a single shared <ErrorBanner>, but that is a
+     component decision about type and spacing, and folding those into a class
+     here would freeze one archetype's metrics in the stylesheet just before the
+     component that owns them arrives. These three carry paint and nothing else,
+     which is what the drift actually was, and they are the seam that component
+     would read.
+
+     Note the tier split. A counter that turns colour as it APPROACHES a limit
+     is a warning, not an error — nothing has gone wrong yet and the character
+     is still accepted — so the eight length counters take `.warning-text` and
+     only the over-limit message under the propose-task fields takes danger.
+     Every one of them was red before. `--color-warning` also measures better on
+     the page than the red it replaces — 4.57:1 light / 11.14:1 dark, and
+     4.89 / 10.18 on `--color-bg-surface` composited over it (utils/contrast.ts)
+     — against `--color-danger`'s 4.40:1 light, the global-ink debt recorded at
+     --color-danger-veil above, which the counters now step off rather than onto.
+
+     `.danger-edge` is a border-COLOUR only: the sites keep their `border-2`,
+     which lives in Tailwind's utilities layer and would win over a shorthand
+     declared here in @layer components. No `-veil` fill is minted — none of
+     these banners had a background and inventing one is a redesign. */
+
+  .danger-text {
+    color: var(--color-danger);
+  }
+
+  .danger-edge {
+    border-color: var(--color-danger-edge);
+  }
+
+  .warning-text {
+    color: var(--color-warning);
+  }
+
   /* ── Task-detail praxis gallery (issue #1137) ──
      The completed-praxis grid on a task detail mounts the SAME <PraxisCard> the
      /praxes feed does — one responsive component per faction since ADR-0067 —
@@ -3577,6 +3622,22 @@
     --praxis-card-basis: 320px;
   }
 
+  /* The basis only says where the row WRAPS, and `frameBase` carries
+     `flex: 1 1 <basis>` — that leading `1` is flex-grow, so a task with exactly
+     ONE filed praxis had that card stretch across the whole gallery row and
+     dominate the page (#1897). One card should read like one of three.
+
+     `max-width` and not `width`: it clamps a flex item regardless of flex-grow,
+     and it constrains a different property than the card's inline `width: 100%`,
+     so the cap lands without a specificity fight and without touching any of the
+     nine bespoke frames. Empty space to the right of a lone card is the point —
+     a gallery with one item in it, which is the truth.
+
+     No `min-width` here on purpose: `frameBase`'s 280px floor must keep winning
+     under a 320px viewport, one card per row on a phone. */
+  .praxis-gallery > * {
+    max-width: var(--praxis-card-basis);
+  }
   /* ── Pennant shape (faction filter tabs) ── */
 
   .pennant-shape {

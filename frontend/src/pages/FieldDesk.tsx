@@ -268,7 +268,7 @@ export default function FieldDesk() {
           signable tasks mean anything. See the header comment. */}
       <div className="flex flex-col" style={{ gap: 'var(--space-2xl)', marginTop: 'var(--space-4xl)' }}>
         {signupMsg && (
-          <p className="font-body content-text border-2 border-red-300 text-red-600 px-3 py-2">
+          <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
             {signupMsg}
           </p>
         )}
