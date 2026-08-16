@@ -401,6 +401,59 @@ async def respond_to_duel_challenge(
     return loaded_praxis, duel
 
 
+async def discard_dissolved_duels_for_praxis(
+    praxis_id: int, session: AsyncSession
+) -> None:
+    """Drop the ``declined`` Duel rows a praxis is about to be deleted with (#1831).
+
+    Called from :func:`services.praxis.delete_praxis`. Every FK into ``praxis.id``
+    cascades except the two duel columns, which are deliberately NO ACTION — so
+    without this, a praxis that has ever carried a challenge could never be
+    dropped again, however the duel ended. Dissolving the challenge first does not
+    help: ``cancel_duel_challenge`` only sets ``status``, and
+    ``challenger_praxis_id`` is NOT NULL.
+
+    Owner ruling (2026-08-15). The two documented rulings this looks like it
+    reverses are each about a *different* duel than this one:
+
+    - "a duel is a contract between two players … it should refuse the delete
+      rather than vanish with it" (``models/praxis.py``, migration 0006) was
+      written about a **live contract**. Still true, and still enforced: a
+      ``pending``/``active`` duel is not touched here and the FK refuses.
+    - "Duel row is kept for history" (``models/duel.py``) is about a duel that
+      **happened**. Still true: ``settled`` and ``resolved`` are not touched here,
+      so a forfeited side that unsubmits back to editing still cannot be dropped.
+
+    A challenge dissolved before the contest ever happened is neither. It is an
+    abandoned draft, and there is no history in it worth keeping, so it goes with
+    the praxis.
+
+    **Why the status is the whole predicate.** ``declined`` is only ever written
+    on the decline path (from ``pending``) and by ``cancel_duel_challenge`` (from
+    ``pending``/``active``), and nothing transitions out of it. A duel produces a
+    result only by becoming votable (``settled``) or by having its outcome frozen
+    at era close (``resolved``), and a declined duel has been neither. Once its
+    praxis is gone the row is unreachable from every read besides: this module and
+    ``services.vote`` exclude ``declined``, ``services.badge`` counts only
+    active/settled/resolved, the era sweep in ``services.era`` takes only
+    active/settled, and the feed's challenge query inner-joins the challenger praxis.
+
+    Plural on purpose: ``issue_duel_challenge``'s already-in-a-duel guard is
+    :func:`get_duel_for_praxis`, which excludes ``declined``, so challenge →
+    cancel → challenge again leaves a praxis carrying several declined rows.
+    """
+    result = await session.execute(
+        select(Duel).where(
+            (Duel.challenger_praxis_id == praxis_id)
+            | (Duel.opponent_praxis_id == praxis_id),
+            Duel.status == DuelStatus.declined,
+        )
+    )
+    for duel in result.scalars().all():
+        await session.delete(duel)
+    await session.flush()
+
+
 async def cancel_duel_challenge(
     duel_id: int,
     character_id: int,
