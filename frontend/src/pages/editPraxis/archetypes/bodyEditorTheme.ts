@@ -55,6 +55,11 @@ export const BODY_EDITOR_HOST_STYLE: CSSProperties = {
  * - the placeholder colour
  * - **the caret's height** — see `BODY_EDITOR_SELECTION` below
  * - **the caret's colour and the selection's** — same
+ *
+ * Plus one rule that is not a CodeMirror default at all: where a co-author's
+ * name label sits on the first line (`.cm-ySelectionInfo`, #1951). It lives
+ * here because it is `y-codemirror.next` colliding with the box THIS file
+ * builds, and because one rule beats eight per-skin copies of it.
  */
 const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   "&": {
@@ -121,6 +126,48 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   // that this rule reads and a skin may repoint — not eight literals here.
   "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionLayer .cm-selectionBackground":
     { background: "color-mix(in srgb, currentColor 22%, transparent)" },
+
+  // ---- A co-author's name label, flipped under the caret on line 1 (#1951) ----
+  //
+  // `y-codemirror.next` hangs the label off the caret widget as
+  // `.cm-ySelectionInfo { position: absolute; top: -1.05em }` — an ABOVE
+  // placement, in the label's own `em` (its `font-size` is `.75em`, so the rise
+  // is ~0.79 of the body's em) on a box ~0.9 body-em tall. Every line but the
+  // first has a whole line box overhead to rise into. The first has the
+  // scroller's edge: `.cm-scroller` is `overflow: auto` here, `.cm-content` has
+  // the base theme's `4px 0` padding stripped above, and overflow past a scroll
+  // container's START edge is not merely hidden but unreachable — no scroll
+  // position brings it back. So roughly half the label is cut off, which is the
+  // screenshot on #1951.
+  //
+  // Nothing else in the chain can give way. The scroller's `overflow` is what
+  // makes the field scroll; the host's `overflow: hidden` above it is what makes
+  // `resize: vertical` work at all (see BODY_EDITOR_HOST_STYLE); a `padding-top`
+  // on `.cm-content` would buy the room by pushing the body text down inside
+  // every one of the eight skins' boxes, away from the inset the skin chose. The
+  // one thing that can move is the label, and only where it has to.
+  //
+  // `top: 100%` is the caret box's own bottom edge — the mirror of the library's
+  // rise, in the units the containing block already has, so it needs no font
+  // metric and no line-height (which is the reading measure and stays untouched,
+  // #1852). The label lands over the top of line 2 exactly as it used to land
+  // over line 0.
+  //
+  // Specificity: the library's rule is a `baseTheme` at (0,2,0). Written as a
+  // descendant of `.cm-content` this is (0,5,0), so it wins on weight and does
+  // not depend on which theme mounts last — unlike `.cm-cursor` above, where
+  // matched weight made mount order load-bearing.
+  //
+  // ponytail: `:first-child` is "the first line CodeMirror rendered", not "the
+  // first line on screen". Scrolled down, an out-of-viewport prefix becomes a
+  // `.cm-gap` block widget and this stops matching — correct for the flipped
+  // line, but it means a caret parked on whichever line sits at the scrolled top
+  // edge is still clipped there. That case needs geometry, which CSS does not
+  // have; the fix would be a ViewPlugin measuring `coordsAtPos` against the
+  // scroller rect. Not worth it for the reported bug, which is a short composer
+  // at scroll top. The 0.4em `.cm-ySelectionCaretDot` overhangs by 0.2em and is
+  // left alone: it fits inside the half-leading of a 1.6+ line-height.
+  ".cm-content > .cm-line:first-child .cm-ySelectionInfo": { top: "100%" },
 });
 
 /**
