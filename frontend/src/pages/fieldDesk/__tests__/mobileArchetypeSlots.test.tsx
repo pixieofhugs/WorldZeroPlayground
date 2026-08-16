@@ -289,6 +289,10 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
 describe("the WOW crest carries the mobile home's heading (#1817)", () => {
   it('names the carried life, once', () => {
     const { html } = render(<WowFieldDesk state={baseState()} />)
-    expect(h1s(html)).toEqual(['Mollusk'])
+    const heads = h1s(html)
+    expect(heads, 'exactly one page heading').toHaveLength(1)
+    // The skin greets rather than labels ("Good morrow, Sir Mollusk."), so the
+    // assertion is on the name inside the salutation, not the whole string.
+    expect(heads[0], 'and it names the carried life').toContain('Mollusk')
   })
 })
