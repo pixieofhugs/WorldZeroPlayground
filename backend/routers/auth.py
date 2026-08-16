@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
-from errors import ErrorCode, detail_code, raise_coded
+from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
 from models.account import Account, AuthProvider
 from schemas.auth import CurrentUser, DevLoginOut, LogoutOut
@@ -116,6 +116,18 @@ def _signed_in_redirect(account_id: int) -> Response:
 #: SCREAMING_SNAKE.
 _LOGIN_PARAM = "login"
 
+#: What a callback carries home when the PROVIDER ended the sign-in rather than
+#: one of our own gates — a declined consent screen, or a ``state`` authlib no
+#: longer recognises. Built with the blessed constructor rather than reached for
+#: as a bare ``ErrorCode`` value so this code has a construction site like every
+#: other member, which is what ``tests/unit/test_errors.py`` checks: a code
+#: nothing builds is a name a client waits forever for. Never raised — a
+#: callback cannot answer with a body at all (see below) — so it is built once,
+#: here, and only ever read for its code.
+_PROVIDER_ENDED_IT = coded_error(
+    403, ErrorCode.oauth_failed, "That sign-in did not complete."
+)
+
 
 def _sign_in_failed_redirect(exc: Exception) -> Response:
     """The failure counterpart to :func:`_signed_in_redirect` (#1773).
@@ -134,13 +146,17 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
       unverified-email gate (ADR-0075, #1771). Its code rides along in the
       coded detail, so the catalog can say something specific.
     * :class:`OAuthError` — the provider ended it. A declined consent screen or
-      a stale ``state`` both land here with no detail of ours, hence the
-      generic :attr:`ErrorCode.oauth_failed` fallback.
+      a stale ``state`` both land here carrying no detail of ours, so they
+      borrow :data:`_PROVIDER_ENDED_IT`'s.
 
     Anything else still 500s, which is right: an unhandled error is a defect,
     not a rejection, and dressing it as "try another provider" would hide it.
     """
-    code = detail_code(getattr(exc, "detail", None)) or ErrorCode.oauth_failed.value
+    detail = exc.detail if isinstance(exc, HTTPException) else _PROVIDER_ENDED_IT.detail
+    # The `or` is belt-and-braces: every HTTPException that reaches here today
+    # went through `raise_coded`, but an uncoded one must not redirect to
+    # `?login=None`.
+    code = detail_code(detail) or ErrorCode.oauth_failed.value
     return Response(
         status_code=302,
         headers={"location": f"{settings.FRONTEND_URL}?{_LOGIN_PARAM}={code}"},
