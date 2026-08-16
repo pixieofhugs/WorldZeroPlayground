@@ -62,6 +62,7 @@ import {
   publishPresence,
   samePresence,
 } from "./roomPresence";
+import { shouldReconnectRoom } from "./roomReconnect";
 
 /**
  * The body's root key — `ROOM_BODY_KEY` in `praxis_room.py`. The server seeds a
@@ -79,14 +80,6 @@ const ROOM_BODY_KEY = "body";
  */
 const ROOM_META_KEY = "meta";
 export const ROOM_TITLE_KEY = "title";
-
-/**
- * RFC 6455 "policy violation" — what the room sends when door one refuses a
- * handshake or door two revokes a kicked member (`_WS_POLICY_VIOLATION`).
- * y-websocket reconnects with backoff for every code outside 4400-4499, which
- * for a refusal is an infinite retry of a request that will never be granted.
- */
-const WS_POLICY_VIOLATION = 1008;
 
 /** The room mount in `main.py`: `app.mount("/rooms", PRAXIS_ROOM_APP)`. */
 const ROOM_PATH = "/rooms/praxis";
@@ -171,6 +164,19 @@ export interface PraxisRoom {
    * authoring, the whole point of the local store, could never happen.
    */
   seeded: boolean;
+  /**
+   * The room has stopped trying to connect (#1804).
+   *
+   * True when the socket was refused, or failed enough times before ever
+   * opening that retrying became a storm rather than a recovery — see
+   * `roomReconnect.ts`. Once opened, retries are unbounded and this stays
+   * false however long the network is away.
+   *
+   * A room that never opened never seeds, so the composer stays read-only
+   * either way; this is what lets it say *why* instead of sitting silently in
+   * a state it will never leave.
+   */
+  unreachable: boolean;
 }
 
 const PraxisRoomContext = createContext<PraxisRoom | null>(null);
@@ -219,6 +225,7 @@ export function PraxisRoomProvider({
     awareness: Awareness;
   } | null>(null);
   const [seeded, setSeeded] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
   const [present, setPresent] = useState<readonly number[]>([]);
   // The viewer, for the identity this client publishes. Narrowed to the three
   // fields rather than held as `user`, because `/auth/me` mints a fresh object
@@ -237,6 +244,7 @@ export function PraxisRoomProvider({
     if (praxisId == null) {
       setTypes(null);
       setSeeded(false);
+      setUnreachable(false);
       setPresent([]);
       return;
     }
@@ -256,17 +264,37 @@ export function PraxisRoomProvider({
     // one (#1745), so this store is dropped in the same beat — see
     // `discardRoomStore` below.
     const offline = new IndexeddbPersistence(roomStoreName(praxisId), doc);
+    // Did this room's socket ever open? A local `let` rather than a ref because
+    // the latch belongs to THIS provider: a new `praxisId` builds a new socket,
+    // which has opened nothing, and a ref shared across effect runs would tell
+    // it otherwise. Latches, never unlatches — the closure below reads it at
+    // call time.
+    let hasOpened = false;
     const provider = new WebsocketProvider(
       roomServerUrl(),
       String(praxisId),
       doc,
       {
-        // A refusal is not a hiccup. Door one turns away a non-member and door
-        // two closes on a kicked one; both are permanent for this praxis, and
-        // retrying either forever is a socket storm that changes no answer.
-        shouldReconnect: (event) => event.code !== WS_POLICY_VIOLATION,
+        // A refusal is not a hiccup, and the browser cannot tell us it was one:
+        // door one closes before the upgrade, so JS sees 1006 and no server can
+        // say otherwise (#1804). The question that does separate them is
+        // whether we were ever admitted — see `roomReconnect.ts`.
+        shouldReconnect: (event, self) =>
+          shouldReconnectRoom(
+            event.code,
+            self.wsUnsuccessfulReconnects,
+            hasOpened,
+          ),
       },
     );
+    const onStatus = ({ status }: { status: string }) => {
+      if (status === "connected") hasOpened = true;
+    };
+    provider.on("status", onStatus);
+    // y-websocket emits this exactly when `shouldReconnect` says no, having
+    // already stopped. Nothing else will happen in this room now, so say so.
+    const onClosed = () => setUnreachable(true);
+    provider.on("closed", onClosed);
     const awareness = provider.awareness;
     setTypes({ body, meta, awareness });
 
@@ -307,6 +335,8 @@ export function PraxisRoomProvider({
     return () => {
       doc.off("update", onDocUpdate);
       provider.off("sync", onSync);
+      provider.off("status", onStatus);
+      provider.off("closed", onClosed);
       awareness.off("change", syncPresence);
       offline.off("synced", onOfflineLoaded);
       // Also drops this client's awareness state — the socket closing is what
@@ -319,6 +349,7 @@ export function PraxisRoomProvider({
       doc.destroy();
       setTypes(null);
       setSeeded(false);
+      setUnreachable(false);
       setPresent([]);
     };
   }, [praxisId]);
@@ -341,8 +372,8 @@ export function PraxisRoomProvider({
   }, [types, characterId, characterName, characterFaction]);
 
   const room = useMemo<PraxisRoom | null>(
-    () => (types === null ? null : { ...types, seeded, present }),
-    [types, seeded, present],
+    () => (types === null ? null : { ...types, seeded, unreachable, present }),
+    [types, seeded, unreachable, present],
   );
 
   return (

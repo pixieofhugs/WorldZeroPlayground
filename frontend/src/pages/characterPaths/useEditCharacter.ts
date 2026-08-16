@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../../auth/AuthContext'
 import { extractError } from '../../utils/errors'
 import { useAvatarPicker } from './useAvatarPicker'
+import { canSubmitName } from './useCreateCharacter'
 
 /**
  * Shared read/write model for Edit Character, lifted out of EditCharacter so the
@@ -45,6 +46,8 @@ export interface EditCharacterState {
   handleAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleAvatarConfirm: (blob: Blob) => void
   saving: boolean
+  /** False while the name is blank or a save is in flight — see {@link canSubmitName}. */
+  canSubmit: boolean
   error: string
   handleSubmit: (event: React.FormEvent) => void | Promise<void>
   deleting: boolean
@@ -94,9 +97,15 @@ export function useEditCharacter(): EditCharacterState {
   // Only allow editing your own character
   const isOwner = user?.character?.id === character?.id
 
+  // The same gate create has carried all along (#1697) — a blank name is a 422
+  // whose Pydantic prose has never seen the i18n catalogue, so the control that
+  // would spend the request is closed instead.
+  const trimmedName = displayName.trim()
+  const canSubmit = canSubmitName(displayName, saving)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!id || !character) return
+    if (!id || !character || !canSubmit) return
     setSaving(true)
     setError('')
     const characterId = parseInt(id, 10)
@@ -120,7 +129,7 @@ export function useEditCharacter(): EditCharacterState {
       // so "" has to reach the server as "". `exclude_unset` stays: it is what
       // makes a partial update partial for callers that genuinely send a subset.
       const updated = await updateCharacter(characterId, {
-        display_name: displayName,
+        display_name: trimmedName,
         bio: bio.trim(),
         tagline: tagline.trim(),
         location: location.trim(),
@@ -174,6 +183,7 @@ export function useEditCharacter(): EditCharacterState {
     handleAvatarChange,
     handleAvatarConfirm,
     saving,
+    canSubmit,
     error,
     handleSubmit,
     deleting,
