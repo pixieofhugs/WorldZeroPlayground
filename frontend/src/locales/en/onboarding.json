@@ -27,5 +27,8 @@
     "note": "PLACEHOLDER — one line, set beside the tick",
     "accept": "PLACEHOLDER — I agree",
     "error": "PLACEHOLDER — that did not save; try again"
+  },
+  "mark": {
+    "label": "PLACEHOLDER — START HERE"
   }
 }

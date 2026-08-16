@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { createCharacter, uploadCharacterAvatar, type CharacterCreate } from '../../api/characters'
 import { getInvitedFactions } from '../../api/me'
 import { extractError } from '../../utils/errors'
+import { resolveHandoffDestination } from '../../utils/onboardingHandoff'
 import { useAvatarPicker } from './useAvatarPicker'
 
 /**
@@ -164,7 +165,18 @@ export function useCreateCharacter(): CreateCharacterState {
         await uploadCharacterAvatar(character.id, avatarFile)
       }
       await refetch() // server already set the new life active
-      navigate(`/characters/${character.id}`)
+      // THE HAND-OFF (#1861, SPEC-onboarding § The hand-off). A brand-new
+      // character lands on their one takeable task, framed — not on their own
+      // empty profile, which is where the arc used to stop with nothing to do.
+      // It never CLAIMS: a claim enters the task bank and unwinding it means
+      // finding the withdraw path on day one.
+      //
+      // DERIVED from the character's own state via `task.start_here`, never
+      // from a flag onboarding passes in, so it holds however they arrived —
+      // sticker, search engine, or a second character years from now. The
+      // profile stays the destination for anyone with no marked task, which is
+      // anyone who has already completed the onboarding one.
+      navigate(await resolveHandoffDestination(`/characters/${character.id}`))
     } catch (err) {
       setError(extractError(err))
     } finally {

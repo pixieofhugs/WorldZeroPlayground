@@ -22,6 +22,7 @@
 import { useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
+import StartHereMark from "../components/StartHereMark";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useTaskDetail } from "./taskDetail/useTaskDetail";
@@ -67,6 +68,17 @@ export default function TaskDetail() {
   return (
     <>
       <PageTitle title={t("detail.pageTitle")} eyebrow={t("detail.pageEyebrow")} />
+      {/* THE TASK MARKS ITSELF (#1861, SPEC-onboarding § The hand-off) — the
+          signal appears WHEREVER the task appears, and this is its second
+          surface after the card. On the dispatcher for the same reason it is on
+          `TaskCard`'s: one place, every archetype, none of which learns
+          anything about new players. `start_here` is derived server-side from
+          the viewing character's own praxis history. */}
+      {state.task.start_here && (
+        <div style={{ marginBottom: "var(--space-lg)" }}>
+          <StartHereMark />
+        </div>
+      )}
       <Archetype state={state} />
     </>
   );
