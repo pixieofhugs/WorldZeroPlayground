@@ -67,8 +67,15 @@ const PROSE: CSSProperties = {
   color: SOFT,
 }
 
-/** A slip band over a candle-lit panel. */
-function Plate({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * A slip band over a candle-lit panel.
+ *
+ * The band used to close on a window title (`fieldDesk.home.coven.charWindow`
+ * / `.questsWindow` — "you" and "quests"). #1909 CUT both: Coven was the only
+ * faction with the slot, and the audit ruled the field desk generic. The sigil
+ * and the slip stay — they are the band.
+ */
+function Plate({ children }: { children: ReactNode }) {
   return (
     <section
       style={{
@@ -89,7 +96,6 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
         }}
       >
         <SigilMark size={22} />
-        <span style={{ ...CAPTION, marginLeft: 'auto' }}>{title}</span>
       </div>
       <div style={{ background: CARD, padding: 'var(--space-lg)' }}>{children}</div>
     </section>
@@ -202,7 +208,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         </header>
 
         {/* ── Character plate ── */}
-        <Plate title={t('fieldDesk.home.coven.charWindow')}>
+        <Plate>
           <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-md)' }}>
             <button
               type="button"
@@ -350,7 +356,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         )}
 
         {/* ── Quests plate ── */}
-        <Plate title={t('fieldDesk.home.coven.questsWindow')}>
+        <Plate>
           <div className="flex items-center" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
             <span
               style={{

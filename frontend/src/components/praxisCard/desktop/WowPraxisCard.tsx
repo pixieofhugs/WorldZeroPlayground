@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { useTranslation } from "react-i18next";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -24,13 +23,16 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *    wearing WOW's frame; with Coven on its own sticker, one indirection for one
  *    caller was just a place for the two palettes to meet again.
  *
- * The archaic register is not decoration either — "for the quest —", "Sealed by
- * the Court", "❦ here, an illumination ❦" are the card's voice, and they are fed
- * to the shared slots rather than replacing them.
+ * THE ARCHAIC REGISTER IS GONE (#1909). Four strings fed the shared slots —
+ * `card.masthead.wow` ("Chronicle of proof · № {{id}}"), `card.wow.forQuest`
+ * ("for the quest —"), `card.wow.illumination` ("❦ here, an illumination ❦") and
+ * `card.wow.sealed` ("Sealed by the Court") — and the copy audit CUT all four:
+ * every one was a single-faction flourish on a surface it ruled generic. The
+ * SLOTS survive; they are simply not filled here any more, and the shared card
+ * draws its own. The footnote keeps the submission date, which is data.
  */
 export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
-  const sealed = praxis.submitted_at
+  const submitted = praxis.submitted_at
     ? new Date(praxis.submitted_at).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -79,21 +81,6 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             display: "var(--faction-wow-card-font)",
             body: "var(--faction-wow-body-font)",
           }}
-          eyebrow={
-            <div
-              className="label-heading"
-              style={{
-                fontFamily: "var(--faction-wow-card-font)",
-                letterSpacing: "0.14em",
-                color: "var(--faction-wow-card-accent)",
-                marginBottom: "var(--space-xs)",
-              }}
-            >
-              {t("card.masthead.wow", { id: praxis.id })}
-            </div>
-          }
-          taskLead={t("card.wow.forQuest")}
-          mediaEmptyLabel={t("card.wow.illumination")}
           mediaEmptyStyle={{
             height: 150,
             borderRadius: 6,
@@ -106,17 +93,19 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             opacity: 1,
           }}
           footnote={
-            <div
-              style={{
-                fontFamily: "var(--faction-wow-body-font)",
-                fontStyle: "italic",
-                fontSize: "var(--text-content)",
-                color: "var(--faction-wow-card-muted)",
-                marginTop: "var(--space-sm)",
-              }}
-            >
-              {sealed ? `${t("card.wow.sealed")} · ${sealed}` : t("card.wow.sealed")}
-            </div>
+            submitted && (
+              <div
+                style={{
+                  fontFamily: "var(--faction-wow-body-font)",
+                  fontStyle: "italic",
+                  fontSize: "var(--text-content)",
+                  color: "var(--faction-wow-card-muted)",
+                  marginTop: "var(--space-sm)",
+                }}
+              >
+                {submitted}
+              </div>
+            )
           }
         />
       </div>

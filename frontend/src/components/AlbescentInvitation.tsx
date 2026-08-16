@@ -47,11 +47,16 @@ const HAIRLINE_FAINT = 'rgba(0,0,0,0.055)'
 const RULE = 'rgba(0,0,0,0.07)'
 
 // i18n key stems under factions:albescent.letter — resolved at render.
+//
+// The fourth row was "standing / unranked, by design"
+// (`terms.standingLabel` + `terms.standingValue`). #1909 CUT both: they are the
+// Albescent twin of the `{F}.invitation.terms[3]` standing row the audit cut
+// across all seven other letters, which meant three different things by faction
+// and was static flavour presented as live standing.
 const TERM_KEYS: ReadonlyArray<{ label: string; value: string }> = [
   { label: 'terms.tollLabel', value: 'terms.tollValue' },
   { label: 'terms.skillsLabel', value: 'terms.skillsValue' },
   { label: 'terms.outputLabel', value: 'terms.outputValue' },
-  { label: 'terms.standingLabel', value: 'terms.standingValue' },
 ]
 
 const PERK_KEYS: ReadonlyArray<string> = [
