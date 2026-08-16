@@ -241,9 +241,14 @@ export function rosterView(
   const mine = roster.findIndex((row) => row.character.id === myCharId)
   if (mine < 0 || mine < rows.length) return base
 
+  // The viewer can sit exactly one row past the loaded page, in which case
+  // there is nothing between the page and them and the gap row would read
+  // backwards ("Ranks 6-5"). Pin without a gap: `hasMore` still says the list
+  // continues, and one more "load more" merges them into the flat list.
+  const skipped = mine - rows.length
   return {
     ...base,
-    gap: { from: roster[rows.length].rank, to: roster[mine - 1].rank },
+    gap: skipped > 0 ? { from: roster[rows.length].rank, to: roster[mine - 1].rank } : null,
     pinned: roster[mine],
   }
 }

@@ -213,6 +213,17 @@ describe('rosterView — "show me my row"', () => {
     expect(view.hasMore).toBe(false)
   })
 
+  it('pins without a gap when the player is the very next row past the page', () => {
+    // The boundary between "on the page" and "below a gap": rank 6 sits one
+    // row past ranks 4-5, so there is nothing for a gap row to name. Naming it
+    // anyway printed the range backwards, "Ranks 6-5".
+    const view = rosterView(roster, 2, 6)
+    expect(view.rows.map((row) => row.rank)).toEqual([4, 5])
+    expect(view.gap).toBeNull()
+    expect(view.pinned?.rank).toBe(6)
+    expect(view.hasMore).toBe(true)
+  })
+
   it('shows nothing extra when a filter has excluded the player', () => {
     const filtered = selectRoster(ranked, filters({ factions: ['ua'] }), NOBODY)
     const view = rosterView(filtered, 1, 9)
