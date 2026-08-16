@@ -237,6 +237,26 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(text).toContain('Change photo')
   })
 
+  /**
+   * #1697: the create form gates submit on a non-blank trimmed name, the edit
+   * form gated on nothing at all — so clearing the field and saving reached the
+   * server, and the 422 `CharacterUpdate.display_name` has raised since #1686
+   * rendered as raw Pydantic prose ("String should have at least 1 character"),
+   * copy that never went through the i18n catalogue (ADR-0032).
+   *
+   * `editState` derives `canSubmit` through the same {@link canSubmitName} the
+   * hooks call, so this asserts the rule and its wiring, not the fixture.
+   */
+  it('disables Save when the name is blank, so the 422 is unreachable (#1697)', () => {
+    const { html } = render(<DefaultEditCharacter state={editState({ displayName: '   ' })} />)
+    expect(html, 'the sticky Save bar is closed').toContain('type="submit" disabled=""')
+  })
+
+  it('leaves Save open for a real name', () => {
+    const { html } = render(<DefaultEditCharacter state={editState({ displayName: 'Molly' })} />)
+    expect(html).not.toContain('type="submit" disabled=""')
+  })
+
   it('shows a freshly cropped portrait (preview) over the persisted avatar (#985)', () => {
     const state = editState({
       avatarPreview: 'blob:preview-123',
