@@ -69,6 +69,29 @@ class TaskOut(WireModel):
     # call to action ("begin again" vs "you are already on this") without
     # re-deriving a server rule from its own state (#1497).
     signup_reason: Optional[str] = None
+    # The *start here* mark (#1861, SPEC-onboarding § The hand-off). True iff
+    # this is the one game-wide onboarding task AND the viewing character has
+    # never completed it — ever, not "not this era".
+    #
+    # ONE RULE, THREE CONSUMERS, and they agree by construction because they
+    # read this one field: the mark drawn wherever the task appears,
+    # `CreateCharacter`'s hand-off destination for a brand-new character, and
+    # the `/start` flow's stop condition. A second signal is the drift the
+    # spec's "one rule" sentence exists to prevent — the flow could then refuse
+    # to start someone whose task is simultaneously marked *start here*.
+    #
+    # NOT era-scoped, deliberately. An era reset drops every character to level
+    # 0 and retires the board except this task, so an era-scoped completion
+    # would relight the mark for the whole playerbase at every rollover. Being
+    # honest about it costs no storage: `Praxis` carries no `era_id` filter on
+    # this read (era membership is a seal-time fact,
+    # `services.era.get_era_row_for_praxis`), so praxis history already
+    # outlives resets.
+    #
+    # Viewer-relative, so it defaults False for anonymous callers exactly as the
+    # flags above do, and on the metatask rows the praxis seal stack builds with
+    # `TaskOut.model_validate()`.
+    start_here: bool = False
 
 
 #: Trust-boundary caps on the three free-text fields a player writes, matching
