@@ -242,9 +242,10 @@ export default function DefaultProposeTask({
       <PageTitle title={t("proposeTask.pageTitle")} />
       <div aria-hidden="true" style={titleRuleStyle} />
 
-      {/* One column (§20.1). The tips rail is gone; the form is the page. */}
+      {/* One column (§20.1). The tips rail is gone; the form is the page — and
+          a single column is also what the mobile path needs, which the old
+          `1fr 280px` inline grid was a standing violation of. */}
       <div style={{ maxWidth: 760 }}>
-        <div>
           {/* Faction chips (§20.2) — the site's chip idiom, one wrapping
               radiogroup. Not `ChipRow`: its shell scrolls horizontally with a
               hidden scrollbar and prints a visible inline label, which would
@@ -619,7 +620,6 @@ export default function DefaultProposeTask({
               )}
             </div>
           </form>
-        </div>
       </div>
     </div>
   );
