@@ -233,6 +233,14 @@
   --color-overlay-strong: rgba(0, 0, 0, 0.25);
   --color-surface-scrim: rgba(255, 255, 255, 0.9);
 
+  /* The lift under an attached listbox — the @-mention popover and the invite
+     picker's results, both absolutely positioned under their input. They had
+     written the same alpha by hand at two different geometries (`0 4px 12px`
+     and `0 6px 20px`); this is the softer of the two, which is the one a
+     floating list wants. Not --filter-popover-shadow: that is a whole popover
+     panel's cast and three times as deep. */
+  --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+
   /* ── Faction primary colors (rainbow palette) ── */
   --faction-ua: #c24a18; /* burnt sienna — the practice's one hue (#848) */
   --faction-wow: #e0a800; /* yellow (deep — see the WOW note below) */
@@ -2122,6 +2130,9 @@
 
   /* ── Shared neutrals (dark) ── */
   --color-surface-scrim: rgba(19, 18, 26, 0.85);
+  /* A cast shadow on a near-black page needs far more of it to read at all —
+     the same move --filter-popover-shadow makes below. */
+  --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
   --faction-ua: #e8703a; /* sienna lifted for dark — UA */

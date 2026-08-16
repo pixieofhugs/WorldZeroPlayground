@@ -412,7 +412,7 @@ export function InviteSearch({
               zIndex: 10,
               background: skin.dropdownBg ?? "var(--color-bg-surface)",
               border: skin.dropdownBorder ?? "1px solid var(--color-border)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              boxShadow: "var(--dropdown-shadow)",
               maxHeight: 220,
               overflowY: "auto",
             }}

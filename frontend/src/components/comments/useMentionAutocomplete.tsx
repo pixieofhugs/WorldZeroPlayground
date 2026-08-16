@@ -201,7 +201,7 @@ export function MentionDropdown({
         background: 'var(--color-surface-scrim)',
         border: '1px solid var(--color-border-strong)',
         borderRadius: 6,
-        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+        boxShadow: 'var(--dropdown-shadow)',
         maxHeight: 240,
         overflowY: 'auto',
         zIndex: 30,
