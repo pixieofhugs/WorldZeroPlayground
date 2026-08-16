@@ -223,13 +223,19 @@ describe('the fluted rule is retired kit-wide (#1638)', () => {
     expect(sources().filter(({ source }) => source.includes('FlutedRule'))).toEqual([])
   })
 
-  it('mounts the rune band on all seven surfaces the flute had', () => {
+  it('mounts the rune band on every surface the flute had', () => {
     // Six imports plus the task page, whose local copy #1638 collapsed into the
     // shared one. Counted as FILES rather than mounts because the task page
     // draws it twice, and the number that can silently drift is how many
     // surfaces reach the kit at all.
+    //
+    // Seven until #1314. `EphemeristsFactionPage` was one of them and is gone
+    // with the whole `mobileFactionPage` surface (ADR-0077) — the band it drew
+    // is still on the phone, because `EphemeristsFactionBody` (already counted)
+    // now serves both widths. A DELETED surface is the one way this number may
+    // fall; it must never fall because a mount was dropped.
     const mounts = sources().filter(({ source }) => source.includes('<RuneRule'))
-    expect(mounts.length).toBe(7)
+    expect(mounts.length).toBe(6)
   })
 
   it('draws the band out of the kit register, in brass rather than gold', () => {

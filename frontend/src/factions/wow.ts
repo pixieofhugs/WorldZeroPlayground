@@ -71,15 +71,17 @@
  * beneath it, so those keep defaulting until they are designed.
  *
  * #901 adds THE FIELD PAVILION — the general MOBILE surfaces. The kit drew
- * exactly one phone screen, which maps to `mobileFieldDesk`; `mobileFactionPage`
- * is DERIVED from that screen's chrome plus the matching desktop archetype, and
- * names its source in its own docstring. (#901 drew four more surfaces off that
- * screen which no longer exist: its task card, its task detail, its praxis
- * detail and its PROFILE. ADR-0056, ADR-0058, ADR-0061 and #1319 retired all
- * four surfaces outright, so `taskCard`, `taskDetail`, `praxisDetail` — since
- * #1121 — and `profileBody` each serve WOW on both form factors. The pavilion
- * profile was not deleted with its surface: it is the phone branch inside
- * `WowProfileBody`, which is what "one responsive component" means here.)
+ * exactly one phone screen, and what survives of it is `mobileFieldDesk`.
+ * (#901 derived five more surfaces off that screen which no longer exist: its
+ * task card, its task detail, its praxis detail, its PROFILE and its FACTION
+ * PAGE. ADR-0056, ADR-0058, ADR-0061, #1319 and ADR-0077 retired all five
+ * surfaces outright, so `taskCard`, `taskDetail`, `praxisDetail` — since
+ * #1121 — `profileBody` and `factionBody` each serve WOW on both form factors.
+ * The pavilion profile was not deleted with its surface: it is the phone branch
+ * inside `WowProfileBody`, which is what "one responsive component" means here.
+ * The pavilion faction page was: `WowFactionBody` had already taken its section
+ * order and its join flow when #1611 derived that body, so nothing was left in
+ * the phone skin that the body did not say better.)
  * The shared vocabulary lives in `components/factionMarks/wowMobile.tsx`.
  * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
  * `mobilePlayersDirectory` were unclaimed here on purpose — nothing in the kit
@@ -115,7 +117,6 @@ const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDue
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
-const WowMobileFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/WowFactionPage'))
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
 
 export const WOW_MANIFEST: FactionManifest = {
@@ -146,12 +147,12 @@ export const WOW_MANIFEST: FactionManifest = {
   factionHero: () => WowFactionHero,
   // The PAGE beneath that hero. #900 drew the recruiting banner and left the
   // body defaulting, so a WOW faction page was a gilt banner over the na
-  // placeholder — and, because `DefaultFactionBody` carries no join block, with
-  // no way to enlist. Derived rather than drawn (no sheet exists): the ornaments
-  // come from `wowOrnament`, the section order from the phone twin below, and
-  // the main + rail shape from the other six bodies. The copy was already in
-  // `factions.json` from #900, unread until now. Third of #951's four bullets;
-  // `factionCard` is the last one open.
+  // placeholder — and, at the time, with no way to enlist. Derived rather than
+  // drawn (no sheet exists): the ornaments come from `wowOrnament`, the section
+  // order from the phone twin that ADR-0077 has since retired, and the main +
+  // rail shape from the other six bodies. The copy was already in
+  // `factions.json` from #900, unread until now. This now serves BOTH widths.
+  // Third of #951's four bullets; `factionCard` is the last one open.
   factionBody: () => WowFactionBody,
   backdrop: () => WowBackdrop,
   profileBody: () => WowProfileBody,
@@ -164,13 +165,11 @@ export const WOW_MANIFEST: FactionManifest = {
   duelSeal: () => WowDuelSealConfirm,
 
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
-  // phone screen, which is the `mobileFieldDesk`; `mobileFactionPage` is derived
-  // from that screen's chrome plus the matching desktop archetype and says which
-  // in its own docstring. (Four more were derived from it and are gone: ADR-0056
-  // retired the task-card twin, ADR-0058 the task-detail one, ADR-0061 the
-  // praxis-detail one and #1319 the PROFILE one, so `taskCard`, `taskDetail` and
-  // `profileBody` now serve both form factors and praxis detail is one shared
-  // page. The pavilion profile itself survives inside `WowProfileBody`.)
+  // phone screen, and this is it. (Five more were derived from it and are gone:
+  // ADR-0056 retired the task-card twin, ADR-0058 the task-detail one, ADR-0061
+  // the praxis-detail one, #1319 the PROFILE one and ADR-0077 the FACTION PAGE
+  // one, so `taskCard`, `taskDetail`, `profileBody` and `factionBody` now serve
+  // both form factors and praxis detail is one shared page. The pavilion
+  // profile itself survives inside `WowProfileBody`.)
   mobileFieldDesk: () => WowFieldDesk,
-  mobileFactionPage: () => WowMobileFactionPage,
 }

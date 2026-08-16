@@ -6,7 +6,7 @@ cannot say out loud. Everything the code *can* say lives in
 
 ## The shape
 
-**21 dispatched surfaces × 9 faction identities.**
+**20 dispatched surfaces × 9 faction identities.**
 
 A **surface** is a place where a faction may look like itself: a task card, a
 vote widget, a comment voice, a whole page. The list is
@@ -24,7 +24,9 @@ Do not maintain those two numbers here. Count them with
 `SURFACE_KEYS.length` and `FACTION_MANIFESTS.length + 1`; this section exists to
 say what the numbers *mean*, not to cache them. (They were 21 and 9 when this
 file was written, which is worth stating only because the epic that commissioned
-it went in believing the second number was 10.)
+it went in believing the second number was 10. The first is 20 since ADR-0077
+retired `mobileFactionPage` — a surface count falls when a collapse lands, and
+that is the only reason it may fall.)
 
 ## Why a bespoke component per faction, and not a props-driven skin
 
@@ -102,32 +104,38 @@ which is the only place that stays current.
 
 ## Responsive or split by form factor
 
-**The rule, and it covers all 21 surfaces: a surface is one responsive component
+**The rule, and it covers all 20 surfaces: a surface is one responsive component
 per faction unless its `SURFACE_KEYS` entry is prefixed `mobile`.** The key name
-*is* the status, so this document does not keep a 21-row table that would be
+*is* the status, so this document does not keep a 20-row table that would be
 wrong the day a surface lands. Grep the prefix.
 
 A skin that needs to know the viewport reads `useFormFactor()` internally, or
 composes a chassis that does — `DuelSealSheet` is the pattern: the skin declares
 its ground and its card, the chassis picks modal-over-scrim or full-bleed sheet.
 
-Two keys carry the prefix today, and they are not the same kind of thing:
+**One key carries the prefix today**, and it is not a twin:
 
-- **`mobileFactionPage` — a genuine twin, and genuine debt.** The faction detail
-  page is still two components per faction. #1314 collapses it and is blocked on
-  a design (#951). This is the last surface in the epic's collapse programme.
 - **`mobileFieldDesk` — not a twin, and not debt.** The phone home is a
   *different screen*, not a narrow rendering of the roster: `pages/FieldDesk.tsx`
   shows the account's roster of lives on a laptop and the carried life's home on
   a phone. Different content, different job. Do not write it up as a split to be
   collapsed, and do not "finish" it by building a desktop counterpart.
 
-Every collapse so far was licensed by its own record, one surface at a time —
+`mobileFactionPage` was the other one until ADR-0077 (#1314) — the last twin, and
+the one that closed the epic's collapse programme. It is worth knowing *why* it
+was the last, because the reason was not size: the two registries held two
+different CONTENT SETS rather than two renderings of one. On a phone every
+faction showed generic chrome in a faction dress — no manifesto, no spotlight, no
+bespoke join flow — so that collapse could not be output-neutral, and it needed
+an owner ruling rather than an engineering judgement.
+
+Every collapse was licensed by its own record, one surface at a time —
 ADR-0056 (task cards), ADR-0058 (task detail), ADR-0061/0063 (praxis detail),
 ADR-0065 (the composer), ADR-0067 (praxis cards), #1319 (character profile),
-#1313 (the duel seal). ADR-0035 still governs what remains. **A licence to
-collapse one surface is not a licence to collapse the next**; each record says so
-in terms, and the next surface needs its own.
+#1313 (the duel seal), ADR-0077 (faction detail). ADR-0035 still governs what
+remains. **A licence to collapse one surface is not a licence to collapse the
+next**; each record says so in terms, and ADR-0077 says in terms that it does not
+reach `mobileFieldDesk`.
 
 ## The two ways a faction silently loses a surface
 

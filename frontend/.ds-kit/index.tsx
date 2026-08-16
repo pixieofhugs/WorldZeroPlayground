@@ -29,7 +29,6 @@ export { default as CovenDuelSealConfirm } from "../src/components/duel/CovenDue
 export { default as CovenEditPraxis } from "../src/pages/editPraxis/archetypes/CovenEditPraxis";
 export { default as CovenFactionBody } from "../src/pages/factionDetail/archetypes/CovenFactionBody";
 export { default as CovenFactionHero } from "../src/components/factionHero/CovenFactionHero";
-export { default as CovenFactionPage } from "../src/pages/factionDetail/mobileArchetypes/CovenFactionPage";
 export { default as CovenFeedFrame } from "../src/components/feed/CovenFeedFrame";
 export { default as CovenFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/CovenFieldDesk";
 export { default as CovenPraxisCard } from "../src/components/praxisCard/desktop/CovenPraxisCard";
@@ -46,7 +45,6 @@ export { default as DefaultCreateCharacter } from "../src/pages/characterPaths/m
 export { default as DefaultEditCharacter } from "../src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter";
 export { default as DefaultEditPraxis } from "../src/pages/editPraxis/archetypes/DefaultEditPraxis";
 export { default as DefaultFactionBody } from "../src/pages/factionDetail/archetypes/DefaultFactionBody";
-export { default as DefaultFactionPage } from "../src/pages/factionDetail/mobileArchetypes/DefaultFactionPage";
 export { default as DefaultFactionsDirectory } from "../src/pages/factions/mobileArchetypes/DefaultFactionsDirectory";
 export { default as DefaultFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk";
 export { default as DefaultPraxisCard } from "../src/components/praxisCard/desktop/DefaultPraxisCard";
@@ -74,7 +72,6 @@ export { default as EphemeristsDuelSealConfirm } from "../src/components/duel/Ep
 export { default as EphemeristsEditPraxis } from "../src/pages/editPraxis/archetypes/EphemeristsEditPraxis";
 export { default as EphemeristsFactionBody } from "../src/pages/factionDetail/archetypes/EphemeristsFactionBody";
 export { default as EphemeristsFactionHero } from "../src/components/factionHero/EphemeristsFactionHero";
-export { default as EphemeristsFactionPage } from "../src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage";
 export { default as EphemeristsFeedFrame } from "../src/components/feed/EphemeristsFeedFrame";
 export { default as EphemeristsFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk";
 export { default as EphemeristsMasthead } from "../src/components/factionMarks/EphemeristsMasthead";
@@ -95,7 +92,6 @@ export { default as EverymenDuelSealConfirm } from "../src/components/duel/Every
 export { default as EverymenEditPraxis } from "../src/pages/editPraxis/archetypes/EverymenEditPraxis";
 export { default as EverymenFactionBody } from "../src/pages/factionDetail/archetypes/EverymenFactionBody";
 export { default as EverymenFactionHero } from "../src/components/factionHero/EverymenFactionHero";
-export { default as EverymenFactionPage } from "../src/pages/factionDetail/mobileArchetypes/EverymenFactionPage";
 export { default as EverymenFeedFrame } from "../src/components/feed/EverymenFeedFrame";
 export { default as EverymenFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/EverymenFieldDesk";
 export { default as EverymenPraxisCard } from "../src/components/praxisCard/desktop/EverymenPraxisCard";
@@ -171,7 +167,6 @@ export { default as SingularityDuelSealConfirm } from "../src/components/duel/Si
 export { default as SingularityEditPraxis } from "../src/pages/editPraxis/archetypes/SingularityEditPraxis";
 export { default as SingularityFactionBody } from "../src/pages/factionDetail/archetypes/SingularityFactionBody";
 export { default as SingularityFactionHero } from "../src/components/factionHero/SingularityFactionHero";
-export { default as SingularityFactionPage } from "../src/pages/factionDetail/mobileArchetypes/SingularityFactionPage";
 export { default as SingularityFeedFrame } from "../src/components/feed/SingularityFeedFrame";
 export { default as SingularityFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/SingularityFieldDesk";
 export { default as SingularityPraxisCard } from "../src/components/praxisCard/desktop/SingularityPraxisCard";
@@ -191,7 +186,6 @@ export { default as SnideDuelSealConfirm } from "../src/components/duel/SnideDue
 export { default as SnideEditPraxis } from "../src/pages/editPraxis/archetypes/SnideEditPraxis";
 export { default as SnideFactionBody } from "../src/pages/factionDetail/archetypes/SnideFactionBody";
 export { default as SnideFactionHero } from "../src/components/factionHero/SnideFactionHero";
-export { default as SnideFactionPage } from "../src/pages/factionDetail/mobileArchetypes/SnideFactionPage";
 export { default as SnideFeedFrame } from "../src/components/feed/SnideFeedFrame";
 export { default as SnideFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk";
 export { default as SnideMasthead } from "../src/components/factionCard/SnideMasthead";
@@ -213,7 +207,6 @@ export { default as UaDuelSealConfirm } from "../src/components/duel/UaDuelSealC
 export { default as UaEditPraxis } from "../src/pages/editPraxis/archetypes/UaEditPraxis";
 export { default as UaFactionBody } from "../src/pages/factionDetail/archetypes/UaFactionBody";
 export { default as UaFactionHero } from "../src/components/factionHero/UaFactionHero";
-export { default as UaFactionPage } from "../src/pages/factionDetail/mobileArchetypes/UaFactionPage";
 export { default as UaFeedFrame } from "../src/components/feed/UaFeedFrame";
 export { default as UaFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/UaFieldDesk";
 export { default as UaMandala } from "../src/components/factionMarks/UaMandala";
@@ -237,7 +230,6 @@ export { default as WowDuelSealConfirm } from "../src/components/duel/WowDuelSea
 export { default as WowEditPraxis } from "../src/pages/editPraxis/archetypes/WowEditPraxis";
 export { default as WowFactionBody } from "../src/pages/factionDetail/archetypes/WowFactionBody";
 export { default as WowFactionHero } from "../src/components/factionHero/WowFactionHero";
-export { default as WowFactionPage } from "../src/pages/factionDetail/mobileArchetypes/WowFactionPage";
 export { default as WowFeedFrame } from "../src/components/feed/WowFeedFrame";
 export { default as WowFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/WowFieldDesk";
 export { default as WowPraxisCard } from "../src/components/praxisCard/desktop/WowPraxisCard";

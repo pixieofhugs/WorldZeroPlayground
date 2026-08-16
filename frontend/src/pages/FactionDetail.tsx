@@ -4,24 +4,31 @@ import PageTitle from "../components/ui/PageTitle";
 import { factionCssVar, factionName, factionDescription } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
-import { useFormFactor } from "../hooks/useFormFactor";
 import { useFactionDetail } from "./factionDetail/useFactionDetail";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
-import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionPage";
 
 /**
  * Faction detail page (`/factions/:slug`). Per-faction surface #13 in
  * SPEC-faction-ui-profile.md: shows the faction's description, its members, its
  * tasks, and recently completed praxis.
  *
- * The frontispiece is dispatched per-faction via the `factionHero` surface: a faction opts
- * into a bespoke hero by registering here; otherwise the shared title +
- * description chrome is used. The body (members / tasks / recent-praxis) is
- * always DefaultFactionBody for now — add a pickVariant dispatch here when a
- * faction wants a bespoke body.
+ * The frontispiece is dispatched per-faction via the `factionHero` surface: a
+ * faction opts into a bespoke hero by registering here; otherwise the shared
+ * title + description chrome is used. The body (members / tasks / recent-praxis)
+ * dispatches the same way, through `factionBody`, falling through to
+ * DefaultFactionBody.
+ *
+ * ONE COMPONENT PER FACTION, AT BOTH WIDTHS (#1314 / ADR-0077). There used to be
+ * a `formFactor === "mobile"` early return here that dispatched a whole second
+ * registry, `mobileFactionPage`. Those eight skins did not hold a narrow
+ * rendering of the body below — they held DIFFERENT COPY, generic chrome in a
+ * faction dress, so every faction's manifesto, spotlight and bespoke join flow
+ * simply did not exist on a phone. The surface is retired and cannot be
+ * re-registered; a skin that needs the viewport reads `useFormFactor()` itself,
+ * the way `DefaultFactionBody` does for its pinned action band.
  *
  * Data + the page backdrop come from useFactionDetail; this component only
- * routes the loading / error / not-found guards and the hero dispatch.
+ * routes the loading / error / not-found guards and the two dispatches.
  */
 export interface FactionHeroProps {
   name: string;
@@ -37,7 +44,6 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   const { slug: slugParam } = useParams<{ slug: string }>();
   const slug = slugProp ?? slugParam;
   const state = useFactionDetail(slug);
-  const formFactor = useFormFactor();
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
 
   if (loading)
@@ -62,13 +68,6 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
         </Link>
       </div>
     );
-
-  // Phone: dispatch to a single-column mobile skin (Default fallback), keyed by
-  // faction slug so a per-faction mobile treatment can register in the registry.
-  if (formFactor === "mobile") {
-    const Mobile = pickVariant(surfaceMap('mobileFactionPage'), faction.slug, DefaultFactionPage);
-    return <Mobile state={state} />;
-  }
 
   const accent = factionCssVar(faction.slug, "border");
   const name = factionName(faction.slug);
