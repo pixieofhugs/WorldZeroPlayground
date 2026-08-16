@@ -742,6 +742,70 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
 })
 
 /**
+ * #1894 — the unaffiliated disc's trailing margin is conditional on there being
+ * something below it to be separated FROM.
+ *
+ * The seam is the rendered markup of `DefaultScoreStamp`: whether the disc's
+ * wrapper emits `margin-bottom`. ADR-0076 and #1131 between them can empty the
+ * whole lower half of this sheet — no rows, no tally — and the margin then had
+ * nothing to separate, so it sat as dead space inside a symmetrically padded box
+ * and pushed the disc off centre. The owner ruled the BOX shrinks: no
+ * `min-height` pinned to whatever a one-row stamp happens to measure today.
+ *
+ * The metatask case below is the one that decides how the condition may be
+ * spelled. `hasWorking` (rows OR flat terms) and the flat-terms block's own
+ * guard (flat terms only) are NOT the same predicate: a sealed metatask praxis
+ * nobody has voted on has rows and no flat terms, so gating the flat-terms block
+ * on `hasWorking` would hang its rule under the working with nothing beneath it —
+ * exactly the orphaned rule ADR-0076 exists to prevent.
+ */
+describe('the unaffiliated disc shrink-wraps when nothing follows it (#1894)', () => {
+  const bareFields = {
+    task_point_value: 10,
+    display_multiplier: 1,
+    metatask_points: 0,
+    points_from_votes: 0,
+    habit_bonus_points: 0,
+  }
+
+  it('drops the disc margin when the sheet is the disc alone', () => {
+    const markup = renderToStaticMarkup(
+      <DefaultScoreStamp praxis={praxis({ ...bareFields, score: 10 })} />,
+    )
+    // Nothing renders below the disc, so the box wraps to padding + disc +
+    // padding and the disc is dead-centre.
+    expect(markup).not.toContain('margin-bottom')
+  })
+
+  it('keeps it whenever any working follows — rows, votes or a habit bonus', () => {
+    const working = {
+      votes: praxis({ ...bareFields, points_from_votes: 4, score: 14 }),
+      // Rows but no flat terms: the case that separates `hasWorking` from the
+      // flat-terms guard.
+      metatask: praxis({ ...bareFields, metatask_points: 3, score: 13 }),
+      // Flat terms but drawn under a rule, since the base row comes back too.
+      habit: praxis({ ...bareFields, habit_bonus_points: 5, score: 15 }),
+      multiplier: praxis({ ...bareFields, display_multiplier: 1.1, score: 11 }),
+    }
+    for (const [name, p] of Object.entries(working)) {
+      expect(renderToStaticMarkup(<DefaultScoreStamp praxis={p} />), name).toContain(
+        'margin-bottom:var(--space-md)',
+      )
+    }
+  })
+
+  it('still hangs no flat-terms rule on a metatask praxis nobody has voted on', () => {
+    // `padding-top` is the flat-terms block's alone on this sheet — the rows
+    // carry `padding:var(--space-xs) 0` and nothing else pads one edge.
+    const markup = renderToStaticMarkup(
+      <DefaultScoreStamp praxis={praxis({ ...bareFields, metatask_points: 3, score: 13 })} />,
+    )
+    expect(markup).toContain('meta')
+    expect(markup).not.toContain('padding-top')
+  })
+})
+
+/**
  * The stamp's prop type is structural (#1079). `ScoredPraxis` always claimed to
  * be satisfied by BOTH payload shapes (ADR-0053), but the component prop was
  * pinned to `PraxisCardOut`, so the detail/composer payload could only reach a

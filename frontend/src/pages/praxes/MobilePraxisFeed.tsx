@@ -80,7 +80,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
       {loading && items.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {t('detail.errors.load')}{' '}
           <button onClick={() => window.location.reload()} className="underline">
             {tc('states.tryRefreshing')}

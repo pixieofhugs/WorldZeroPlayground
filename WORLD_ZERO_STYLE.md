@@ -74,6 +74,20 @@ All color values are CSS custom properties defined in `index.css`. See that file
 
 **Rule:** If you're about to hardcode a hex value in a component, stop. Add it as a CSS variable first.
 
+### The functional families have a className half, and the tier split is the point (#1609)
+
+`.danger-text`, `.danger-edge` and `.warning-text` (`@layer components`) are how a `className` reaches `--color-danger` / `--color-danger-edge` / `--color-warning`. They exist because a **stock Tailwind ramp is outside the cascade**: forty-one sites across twenty-three pages painted their error chrome `text-red-600 border-red-300`, which reads Tailwind's own hexes and cannot flip, so every error banner in the app rendered its light-theme red on the dark page. That class is now zero, and `local/no-raw-colour-values` (#1853) is what keeps it there.
+
+Four things worth carrying.
+
+**A repaint that only breaks in one theme leaves no diff in the other, which is exactly why it survived.** `text-red-600` **is** `#dc2626` — `--color-danger`'s light value to the byte. Light was pixel-correct the whole time and every screenshot, every review and every axe run agreed; only dark was ever wrong, and dark rendered *a* red, just not this theme's. When a token and a stock utility share a hex, the utility is not a shortcut to the token, it is a copy of one of its two values. (The one place the light render *does* move is the rule: `border-red-300` is `#fca5a5`, and `--color-danger-edge` at 30 % over the page composites nearer `#efb6b2`. It is a drawn mark carrying no words, so it is a taste call, not a contrast one.)
+
+**One class per TOKEN, not one class per banner.** Eighteen of the twenty-three sites repeat `font-body content-text … border-2 px-3 py-2` near-verbatim and genuinely want a shared `<ErrorBanner>`. Folding the type and the padding into a stylesheet class would have looked like the same cleanup and would have frozen one archetype's metrics one tier below where they belong — §1.2's rule reversed. These three carry paint and nothing else, which is what the drift actually was; the component, when it comes, reads them. `.danger-edge` sets a border-*colour* only, for the mechanical half of the same reason: `border-2` lives in Tailwind's utilities layer and beats any shorthand declared in `@layer components`.
+
+**Approaching a limit is not an error.** The eight length counters (Contact, Edit Character, Propose Task) all turned red at 90 %, and the propose-task fields then showed a *second*, genuinely-at-the-limit message in the same red — two states, one colour, and the louder one first. The approach state is `--color-warning` and only the over-limit copy stays danger. That also buys contrast rather than spending it: measured with `utils/contrast.ts`, `--color-warning` reads **4.57:1** light / **11.14:1** dark on the page and 4.89 / 10.18 on `--color-bg-surface` composited over it, against `--color-danger`'s 4.40:1 light — the global-ink debt recorded at `--color-danger-veil`, which the counters now step off rather than onto.
+
+**`text-muted` was suspected of being a bypass and is not.** The counters' quiet arm resolves through `tailwind.config.ts`, where `muted: "var(--color-text-secondary)"` — a var()-backed row, not a stock ramp. Grepping `index.css` for the class name finds nothing and reads as a bypass; the repo's own colour utilities are declared in the Tailwind config by design, precisely so `index.css` stays the only home for a colour *value*. **Check both files before calling a utility untokenised.**
+
 ### The third text tier is a TEMPERATURE, not a weight (#1549)
 
 The neutral vocabulary is three tiers, and only the first step is a step in contrast. `--color-text-primary` → `--color-text-secondary` is a 3.0× drop in ratio; `--color-text-secondary` → `--color-text-tertiary` is a **hue swing at held weight** — a lavender against warm greys, in both cascades, at essentially the same luminance.

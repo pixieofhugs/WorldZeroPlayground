@@ -38,6 +38,14 @@ import { scanPageForContrast, type Finding } from './contrastScan'
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 const BASELINE_OUT = process.env.CONTRAST_BASELINE_OUT
 
+/**
+ * WHO IS SWEPT, and who is not (#1903). Seven slugs — `coven` is a registered
+ * faction with its own CSS key and its own archetypes (CovenPraxisCard,
+ * CovenAvatar, CovenBackdrop) and is NOT one of them, and neither is `na`, the
+ * unaffiliated identity every player starts in (ADR-0030). Their skins have
+ * never been walked here. Read a green run as "these seven cleared AA", not as
+ * "the app cleared AA"; the roster gap is a known one and belongs with #1727.
+ */
 const FACTIONS = ['ua', 'everymen', 'wow', 'snide', 'ephemerists', 'singularity', 'albescent'] as const
 const THEMES = ['light', 'dark'] as const
 const VIEWPORTS = {
@@ -110,29 +118,41 @@ const SHARED_ROUTES = ['/', '/tasks', '/praxis', '/leaderboard', '/factions']
  * app going unchecked, is exactly one new surface. The report prints both, so
  * the node count is still visible; only the assertion is coarser.
  *
- * ponytail: these are the per-test surface counts read off nightly run
- * 31779247838, which is the last run before #1749 landed. They are the best
- * numbers available in a subagent worktree — no Playwright browsers, no seeded
- * Postgres, so they were NOT regenerated here. That run measured with the 56
- * `ratio: null` allowlist entries still in force, and #1762 deletes those, so
- * any of the 22 distinct surfaces they named that both still renders AND was
- * genuinely being filtered will now reach the report and push a count up. The
- * breadcrumbs on those 56 entries put the exposure at up to +4 on wow
- * desktop/mobile and up to +2 on ua and ephemerists desktop; the other four
- * factions had no such entries at all, so their numbers cannot move for this
- * reason. They are deliberately NOT pre-raised by that allowance — a ceiling
- * set too high is silent, which is the disease #1762 is treating, and a ceiling
- * set too low fails the nightly with the exact number to paste. Correct these
- * from the first real run's output, not from arithmetic.
+ * PROVENANCE (#1903). These are measured numbers, read off nightly run
+ * 31931556465 (2026-08-16, `8153e246`), which prints the whole population per
+ * test. That discharges the ponytail #1762 left here — it carried counts
+ * guessed in a browserless worktree and said to correct them from the first
+ * real run. Two real runs have now happened, and the guesses held exactly on
+ * run 31869484266 (08-15): none of the 56 deleted `ratio: null` allowlist
+ * entries moved a count, so the +4/+2 exposure it warned about never landed.
+ *
+ * WHY EVERY ROW WENT UP BY ONE on 08-16. The new surface is UA's three-stop
+ * parchment ramp — `--faction-ua-card-parchment` on `UaTaskCard`'s article.
+ * Neither that token nor the card changed; #1676 seeded a UA-faction task
+ * (`ensure_duel_fixture_task`, dev-only, for the duel fixture) onto the board
+ * the sweep walks, and a task card is skinned by the TASK's faction, not the
+ * viewer's. So one seeded row put UA's paper stock on all seven runs at once:
+ * 22 text nodes for the six non-UA viewers on both viewports, 44 desktop /
+ * 37 mobile for a UA viewer, whose own feed and praxis chrome share the ramp
+ * (`--faction-ua-parchment` computes byte-identical, so the report cannot tell
+ * the two tokens apart — see #857's exception block).
+ *
+ * RAISED, NOT FLATTENED. The test's own message prefers a solid backdrop, and
+ * that is the wrong trade here: the ramp is UA's paper stock, the archetype
+ * itself, and "give every gradient a solid backdrop" is precisely the fight
+ * the #1675 ruling declined to have. The cost is recorded rather than hidden —
+ * 22 more text nodes per run now go unchecked, and `UaTaskCard`'s own header
+ * already reasons about its darkest stop (2.93:1), so the token test carries
+ * that pairing.
  *
  * Lower one whenever a fix retires a surface. Raising one is a decision, not a
  * chore: it means a new fill is now hiding text from the sweep.
  */
 const UNMEASURABLE_CEILING: Record<string, Record<ViewportName, number>> = {
   // WOW's title bars and UA's gilt wordmark are the two kits with extra fills.
-  wow: { desktop: 8, mobile: 7 },
-  ua: { desktop: 8, mobile: 5 },
-  default: { desktop: 7, mobile: 5 },
+  wow: { desktop: 9, mobile: 8 },
+  ua: { desktop: 9, mobile: 6 },
+  default: { desktop: 8, mobile: 6 },
 }
 
 /** Which row of the table governs this faction — named, so the failure message can quote it. */

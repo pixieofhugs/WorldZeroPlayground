@@ -28,6 +28,10 @@ import { useAdminMode } from "../../auth/AdminModeContext";
 import { extractError } from "../../utils/errors";
 import { useCastTally } from "../../components/vote/castTallies";
 import {
+  applyPendingCast,
+  usePendingCast,
+} from "../../components/vote/pendingCasts";
+import {
   applyCastTally,
   applyDuelCastTally,
 } from "../../components/vote/useVotedPraxis";
@@ -310,6 +314,16 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       })
     : duel;
 
+  // The voters list is fetched exactly once, in the mount batch above, so
+  // before #1895 your own name did not appear until you reloaded. It is merged
+  // rather than refetched: the row is your name and your star, both facts this
+  // client already holds, and `applyPendingCast` upserts it where the server's
+  // ordering would put it. The row updates in place on a re-vote and rolls back
+  // if the cast is refused. The SCORE beside it still moves only on the
+  // server's own tally, above — see `pendingCasts` for why that line is drawn.
+  const viewerCast = usePendingCast(praxis?.id ?? -1);
+  const displayVoters = applyPendingCast(voters, viewerCast);
+
   const isOwner = isViewerMember(praxis, user?.character?.id);
 
   return {
@@ -317,7 +331,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     praxis: displayPraxis,
     fetchError,
 
-    voters,
+    voters: displayVoters,
     duel: displayDuel,
     comments,
 

@@ -8,7 +8,6 @@ import { useGameConfig } from '../hooks/useGameConfig'
 import { devLogin } from '../api/auth'
 import { computeFactionMultiplier } from '../utils/points'
 import { extractError, messageForCode } from '../utils/errors'
-import SignInOptions from '../components/SignInOptions'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import ActivityTicker from '../components/ActivityTicker'
@@ -162,22 +161,23 @@ export default function Home() {
         >
           {t('hero.tagline')}
         </div>
-        {/* The CTA slot. Signed in it is one button; signed out it is both ways
-            in, side by side (#1773) — wrapping rather than shrinking, because
-            the phone reaches this hero with no other logged-out control on the
-            page (`MobileHeader` has none). */}
+        {/* The CTA slot — one button either way.
+            Signed out it leads INTO the onboarding arc rather than straight to
+            a provider (#1861): a stranger is owed the explanation before the
+            ask, and the two entrances — this and the QR sticker — share one
+            flow rather than explaining the game twice. The providers
+            themselves have not gone anywhere; `/start`'s second card offers
+            both, which is also the only logged-out control the phone can reach
+            (`MobileHeader` has none, and the NavBar sheet is desktop-only). */}
         <div className="relative flex flex-wrap justify-center items-center" style={{ gap: 'var(--space-lg)' }}>
-          {user ? (
-            <button
-              onClick={() => navigate('/tasks')}
-              className="btn-primary"
-              style={{ ...markerButton, padding: 'var(--space-lg) var(--space-4xl)' }}
-            >
-              {t('hero.cta.loggedIn')}
-            </button>
-          ) : (
-            <SignInOptions style={{ ...markerButton, padding: 'var(--space-lg) var(--space-2xl)' }} />
-          )}
+          <button
+            onClick={() => navigate(user ? '/tasks' : '/start')}
+            className="btn-primary"
+            style={{ ...markerButton, padding: 'var(--space-lg) var(--space-4xl)' }}
+            data-testid="home-hero-cta"
+          >
+            {user ? t('hero.cta.loggedIn') : t('hero.cta.loggedOut')}
+          </button>
         </div>
         {!user && import.meta.env.DEV && (
           <div className="relative" style={{ marginTop: 'var(--space-lg)' }}>
@@ -203,7 +203,7 @@ export default function Home() {
       )}
 
       {signupMsg && (
-        <p className="font-body content-text mt-6 border-2 border-red-300 text-red-600 px-3 py-2">
+        <p className="font-body content-text mt-6 border-2 danger-edge danger-text px-3 py-2">
           {signupMsg}
         </p>
       )}
