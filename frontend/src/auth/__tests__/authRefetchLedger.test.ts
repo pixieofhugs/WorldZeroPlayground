@@ -182,8 +182,24 @@ describe('signing out never re-asks who the viewer is', () => {
     // failed `/auth/me` would have set.
     const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
     expect(source).toMatch(/runSignOut\(logout,/)
-    expect(source).toMatch(/setUser\(null\)/)
+    // `adoptViewer(null)` rather than a bare `setUser(null)` since #1891: the
+    // viewer changing is also when the Albescent name mask is re-pointed, and
+    // routing all three transitions through one function is what stops a fourth
+    // one being added that sets the user and forgets the flag.
+    expect(source).toMatch(/adoptViewer\(null\)/)
     expect(source).toMatch(/rememberSession\(false\)/)
+  })
+
+  it('re-points the name mask on every change of viewer (#1891)', () => {
+    // `utils/factions` holds `albescentRevealed` at module level, so it is only
+    // as correct as the number of transitions that remember to set it. This
+    // pins that the provider owns that job and does it in exactly one place.
+    const source = readStripped(join(SRC_DIR, 'auth', 'AuthContext.tsx'))
+    expect(source).toMatch(/setAlbescentRevealed\(me\?\.albescent_revealed \?\? false\)/)
+    // Once, inside `adoptViewer` — not once per caller. All three transitions
+    // (sign-in, the applyUser hand-off, sign-out) route through it.
+    expect(source.match(/setAlbescentRevealed\(/g)).toHaveLength(1)
+    expect(source.match(/adoptViewer\(/g)?.length).toBeGreaterThanOrEqual(4)
   })
 })
 

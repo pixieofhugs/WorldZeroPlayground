@@ -1,5 +1,6 @@
 import dataclasses
 import re
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -498,8 +499,16 @@ async def soft_delete_character(
     * **Moderator ban** (``POST /admin/characters/{id}/ban``) deletes nothing.
       Moderation must not shred the evidence it is acting on, and a ban is a
       reversible toggle — destroying files on it would restore a character
-      with holes in it. That route sets ``status`` directly and deliberately
-      does not call this function; keep it that way.
+      with holes in it. That route sets ``status`` via
+      ``services.admin_service.apply_ban`` and deliberately does not call this
+      function; keep it that way.
+
+    **What the two paths now share** (#1577): the ADR-0011 forfeit, through
+    ``services.duel.forfeit_settled_duels_for_character``. The ADR's trigger list
+    is "the ban / soft-delete of a side's character" and only this half of it was
+    ever implemented. **What they do not share**: the avatar erasure above, and
+    ``departed_at``, which is set here and nowhere else so that a life the player
+    ended is never mistaken for one a moderator took.
 
     **Praxis media survives both.** It is the public artefact of work other
     players have voted on and built feeds around; removing it retroactively
@@ -517,51 +526,19 @@ async def soft_delete_character(
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
     character.status = CharacterStatus.banned
+    # The one thing that distinguishes this path from a moderator ban afterwards
+    # (#1577). Never set by ``services.admin_service.apply_ban``, and never cleared.
+    character.departed_at = datetime.now(timezone.utc)
     erased_avatar_url = character.avatar_url
     character.avatar_url = ""
 
-    # ADR-0011 §Forfeit (#307): a ban forfeits every *settled* duel the banned
-    # character is a side of — the opponent wins by default. Sticky: leave duels
-    # already forfeited untouched. Recalc the winners so their win modifier lands
-    # (the banned side's own score is never read, so we don't recalc it).
-    from models.duel import Duel, DuelStatus
-    from services.character_stats import recalculate_character_stats
+    # ADR-0011 §Forfeit (#307). Shared with the moderator-ban route, which reaches
+    # the same state and owes the same forfeit (#1577) — imported here rather than
+    # at module scope because ``services.duel`` pulls in ``character_stats``, which
+    # imports this module.
+    from services.duel import forfeit_settled_duels_for_character
 
-    own_praxis_ids = select(Praxis.id).where(Praxis.created_by_id == character_id)
-    duels = (await session.execute(
-        select(Duel).where(
-            Duel.status == DuelStatus.settled,
-            Duel.forfeited_by_character_id.is_(None),
-            or_(
-                Duel.opponent_character_id == character_id,
-                Duel.challenger_praxis_id.in_(own_praxis_ids),
-            ),
-        )
-    )).scalars().all()
-
-    winner_ids: set[int] = set()
-    for duel in duels:
-        duel.forfeited_by_character_id = character_id
-        challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
-        challenger_character_id = (
-            challenger_praxis.created_by_id if challenger_praxis else None
-        )
-        winner_id = (
-            duel.opponent_character_id
-            if challenger_character_id == character_id
-            else challenger_character_id
-        )
-        if winner_id is not None:
-            winner_ids.add(winner_id)
-    await session.flush()
-
-    if winner_ids:
-        era_row = await get_current_era_row(session)
-        for winner_id in winner_ids:
-            await recalculate_character_stats(
-                winner_id, session, era, era_row=era_row
-            )
-        await session.flush()
+    await forfeit_settled_duels_for_character(character_id, session, era)
 
     # Last, and only after the cleared column has been flushed: see the docstring.
     # A no-op when the column held a pasted remote URL rather than a path we wrote,

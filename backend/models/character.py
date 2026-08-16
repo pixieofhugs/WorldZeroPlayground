@@ -1,7 +1,17 @@
 import enum
-from typing import TYPE_CHECKING, List
+from datetime import datetime
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Index, String, Text
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Identity,
+    Index,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -61,6 +71,22 @@ class Character(TimestampMixin, Base):
     )
     status: Mapped[CharacterStatus] = mapped_column(
         Enum(CharacterStatus, create_type=False), nullable=False, default=CharacterStatus.active
+    )
+    # When the *player* ended this life (#1577). Self-deletion and a moderator ban
+    # both land in ``status = banned``; this column is the only thing that says
+    # which happened, and it is written by ``services.character.soft_delete_character``
+    # alone — the admin ban toggle never sets or clears it.
+    #
+    # Deliberately NOT a third ``CharacterStatus`` value: every read that means
+    # "not playable" (``_ROSTER_STATUSES``, ``admin_service.list_active_characters``,
+    # the roster selects in ``services/character.py``) would have to learn the new
+    # value, and one missed site silently readmits a departed life. A departed
+    # character is banned to every existing read, and additionally departed here.
+    #
+    # Its consumer is ``services.admin_service.apply_ban``, which refuses to un-ban
+    # a life the player themselves ended.
+    departed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     # score, level, votes_spent_this_era, all_time_score live in CharacterStats (star schema split)
     # votes_available is computed on read: services.scoring.compute_votes_available

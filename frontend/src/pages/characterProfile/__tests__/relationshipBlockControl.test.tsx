@@ -1,5 +1,6 @@
 /**
- * The seam: the block control × the edge it is offered on (#1668, ADR-0009).
+ * The seam: the block control × the edge it is offered on (#1668, ADR-0009 —
+ * superseded by ADR-0077, which moves the block off the edge entirely).
  *
  * THE DEFECT. `blockRelationship` (`api/relationships.ts`) had no caller. The
  * route, the service, the wrapper and the ADR all shipped; the button did not,
@@ -114,10 +115,12 @@ describe('the confirm names the consequence, not "are you sure"', () => {
     expect(request.confirmLabel).not.toMatch(/^(OK|Yes)$/)
   })
 
-  it('states what blocking does — visible to both, and reversible (ADR-0009)', () => {
+  it('states what blocking does — visible to both, and reversible (ADR-0009, superseded by ADR-0077)', () => {
     expect(request.body).toBe(common.relationships.blockConfirm.body)
     // ADR-0009 diverges from the silent-block convention on purpose, and the
-    // player is entitled to know that before they act.
+    // player is entitled to know that before they act. ADR-0077 supersedes
+    // that choice — a block becomes silent — so this assertion changes with
+    // the build (#1681).
     expect(request.body.toLowerCase()).toContain('unblock')
     expect(request.body).toContain(common.relationships.blocked)
   })

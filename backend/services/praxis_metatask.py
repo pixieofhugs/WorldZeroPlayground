@@ -26,8 +26,8 @@ from models.praxis import Praxis, PraxisStatus
 from models.task import Task, TaskType
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
-from services.faction_service import ALBESCENT_FACTION_SLUG, faction_permits
-from services.meta_task import metatask_cap_for_level
+from services.faction_service import faction_permits
+from services.meta_task import faction_bypasses_metatask_level, metatask_cap_for_level
 from services.praxis import get_praxis
 
 
@@ -38,11 +38,13 @@ def _check_metatask_eligibility(
     era: EraConfig,
 ) -> Optional[str]:
     """Return a 403 reason string if this character can't apply ``task``, else None."""
-    # Albescent bypasses the level gate (its charter); everyone else must meet
-    # metatask_apply_level. Metatasks are faction-open, so the seam
-    # `faction_permits` (ADR-0029, #171) currently permits every faction — the
-    # call is retained so a future faction rule is inherited here automatically.
-    if character.faction_slug == ALBESCENT_FACTION_SLUG:
+    # A faction may grant the level bypass (Albescent's charter in both eras);
+    # everyone else must meet metatask_apply_level. Read off `era` via a
+    # purpose-named seam, never branched on a slug (#1871). Metatasks are
+    # faction-open, so the seam `faction_permits` (ADR-0029, #171) currently
+    # permits every faction — the call is retained so a future faction rule is
+    # inherited here automatically.
+    if faction_bypasses_metatask_level(character.faction_slug, era):
         return None
     if character_level < era.metatask_apply_level:
         return (
@@ -67,9 +69,9 @@ async def apply_metatask(
     - The task must be ``TaskType.metatask`` (else 400).
     - The applying character must be a member of the praxis (else 403).
     - The praxis must be ``in_progress`` (else 422).
-    - Level gate: at least ``era.metatask_apply_level`` (Albescent bypasses).
-      Metatasks are faction-open — any faction may apply any
-      faction's metatask.
+    - Level gate: at least ``era.metatask_apply_level``, unless the character's
+      faction carries ``can_apply_metatask_at_any_level``. Metatasks are
+      faction-open — any faction may apply any faction's metatask.
     - Quantity cap: at most ``metatask_cap_for_level(level, era)`` metatasks on
       one praxis (else 422).
     """

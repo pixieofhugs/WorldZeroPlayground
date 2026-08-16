@@ -7,12 +7,40 @@ A metatask is a Task row with ``task_type == TaskType.metatask``. Its
 ``services.praxis`` and ``services.character_stats`` stays in sync.
 """
 
+from typing import Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from game_config import EraConfig
+from game_config import CURRENT_ERA, EraConfig
 from models.meta_task import PraxisMetaTask
 from models.task import Task, TaskType
+
+
+def faction_bypasses_metatask_level(
+    faction_slug: Optional[str],
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """May this faction apply a metatask below ``era.metatask_apply_level``?
+
+    The one statement of the rule, and the only thing
+    ``services.praxis_metatask`` asks. Until #1871 this was a literal
+    ``if character.faction_slug == ALBESCENT_FACTION_SLUG`` inside that module —
+    a faction ability no era could re-tune and no era file mentioned, which meant
+    Era 2 inherited it without saying so. It is a ``FactionConfig`` field now,
+    read the way ``level_jump_reach`` and ``habit_bonus_points`` are read.
+
+    False for anonymous/unaffiliated characters and for any slug the era does not
+    define, matching :func:`services.level_jump.faction_level_jump_reach`: a
+    character carrying a slug from a previous era gets no ability rather than an
+    error.
+    """
+    if faction_slug is None:
+        return False
+    faction_config = era.factions.get(faction_slug)
+    if faction_config is None:
+        return False
+    return faction_config.can_apply_metatask_at_any_level
 
 
 def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
@@ -20,8 +48,8 @@ def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
 
     Below ``era.metatasks_per_praxis_max_level`` the cap is
     ``metatasks_per_praxis_base``; at or above it, ``metatasks_per_praxis_max``.
-    Level-based only — no faction bypass (Albescent's apply-gate bypass does not
-    lift the quantity cap).
+    Level-based only — no faction bypass: ``can_apply_metatask_at_any_level``
+    lifts the *apply* gate, never the quantity cap.
     """
     if character_level >= era.metatasks_per_praxis_max_level:
         return era.metatasks_per_praxis_max

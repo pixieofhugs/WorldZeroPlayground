@@ -222,18 +222,18 @@
     },
     "everymen": {
       "masthead": "EVERYMEN · DISPATCH FROM THE FLOOR",
-      "edited": "revised"
+      "edited": "edited"
     },
     "coven": {
       "edited": "edited"
     },
     "snide": {
       "prompt": "say your piece —",
-      "edited": "EDITED"
+      "edited": "edited"
     },
     "ephemerists": {
       "prompt": "inscribe a note in the margin",
-      "edited": "emended"
+      "edited": "edited"
     },
     "singularity": {
       "protocol": "singularity function",
@@ -241,14 +241,14 @@
     },
     "albescent": {
       "letterhead": "Albescent — correspondence",
-      "edited": "amended"
+      "edited": "edited"
     },
     "wow": {
       "prompt": "Add thy counsel to the chronicle…",
       "post": "Proclaim",
       "react": "Huzzah",
       "empty": "No counsel yet. Be the first to cry Huzzah.",
-      "edited": "amended"
+      "edited": "edited"
     }
   },
   "duelBanner": {
@@ -281,14 +281,14 @@
   },
   "duelRoster": {
     "you": "You",
-    "sealed": "sealed ✓",
+    "sealed": "submitted ✓",
     "walking": "still walking…"
   },
   "duelSeal": {
-    "heading": "Seal the duel?",
-    "confirm": "Seal it",
+    "heading": "Lock the duel?",
+    "confirm": "Lock it",
     "cancel": "Not yet",
-    "bodyActive": "{{name}} has accepted. Casting now seals the duel — once you have both cast, pulling back is a permanent forfeit.",
+    "bodyActive": "{{name}} has accepted. Casting now locks the duel — once you have both cast, pulling back is a permanent forfeit.",
     "bodyPending": "{{name}} hasn't accepted yet. You can cast now; if they decline, this scores as an ordinary praxis.",
     "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit.",
     "wow": {

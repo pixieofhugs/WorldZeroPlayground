@@ -441,6 +441,54 @@ async def test_albescent_join_reveals_and_lists(
 
 
 @pytest.mark.asyncio
+async def test_hidden_ladder_rung_still_fires_the_ability(
+    client: AsyncClient,
+    character: Character,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    db_session: AsyncSession,
+):
+    """Hiding the ``join_albescent`` rung must not withhold the ability (#1891).
+
+    The ladder filter is announcement copy only. Eligibility is decided by
+    ``era.albescent_level_required`` in ``services.character``, which never
+    consults ``level_profiles`` — this is the tripwire for anyone who later
+    routes the gate through the ladder and turns a display filter into an
+    enforcement gate.
+
+    An unrevealed account that reaches the level is therefore never told the
+    order's name, and can still walk through the door the moment something
+    tells it the door is there.
+    """
+    await _seed_faction(db_session, "albescent")
+    await _make_account_albescent_eligible(db_session, character, era)
+    assert account.albescent_revealed is False
+
+    # The rung is not on this account's ladder...
+    config = (await client.get("/game-config", headers=auth_headers)).json()
+    keys = {
+        unlock["key"]
+        for profile in config["level_profiles"]
+        for unlock in profile["unlocks"]
+    }
+    assert "join_albescent" not in keys
+
+    # ...but the ability it describes has fired.
+    me = (await client.get("/auth/me", headers=auth_headers)).json()
+    assert me["can_start_as_albescent"] is True
+    assert me["albescent_revealed"] is False
+
+    # And the join it gates still succeeds.
+    resp = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "albescent"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     client: AsyncClient,
     character: Character,

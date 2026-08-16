@@ -162,8 +162,8 @@ async def test_unblock_relationship_restores_active(
     character2: Character,
     auth_headers: dict,
 ):
-    """Unblock reverses a block (ADR-0009): the edge returns to active and its
-    display status re-derives from the type."""
+    """Unblock reverses a block (ADR-0009, superseded by ADR-0077): the edge
+    returns to active and its display status re-derives from the type."""
     create_resp = await client.post(
         "/relationships",
         json={"to_character_id": character2.id, "type": "friend"},
@@ -277,7 +277,8 @@ async def test_delete_relationship_wrong_owner(
 
 
 # ---------------------------------------------------------------------------
-# Blocked display status (ADR-0009)
+# Blocked display status (ADR-0009, superseded by ADR-0077 — which retires
+# the label entirely)
 # ---------------------------------------------------------------------------
 
 

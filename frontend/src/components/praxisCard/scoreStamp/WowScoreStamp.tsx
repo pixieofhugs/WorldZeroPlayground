@@ -161,21 +161,6 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         />
       )}
       <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
-        {/* WOW hangs its points upside down (#1716) — an owner ruling, and only
-            where a player is BROWSING. This stamp is ADR-0049's single mount for
-            every surface that shows a total (the card, the praxis-detail rail,
-            the composer's waiting slip), so the angle is not the stamp's to
-            decide: `--wow-points-flip` is a knob the MOUNT sets, the
-            `--praxis-card-basis` shape (#1137, §1.2) — the same knob the task
-            card's plaque reads, because it is one ruling. Unset resolves to
-            `0deg`, which is byte-identical to what this rendered before — so
-            the two checking surfaces stay upright by construction, and only
-            `WowPraxisCard` turns it.
-
-            A TRANSFORM on the presentation, never reversed or substituted
-            characters: the digits keep their reading order in the DOM, so the
-            total is still announced and still selectable. It composes with the
-            leaf's own two-degree strike, which lives on the root above. */}
         <span
           style={{
             fontFamily: "var(--faction-wow-card-font)",
@@ -184,7 +169,6 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             lineHeight: 0.8,
             color: "var(--faction-wow-stamp-total)",
             display: "inline-block",
-            transform: "rotate(var(--wow-points-flip, 0deg))",
           }}
         >
           {formatPoints(total)}

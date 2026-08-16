@@ -1,6 +1,21 @@
 # ADR-0009: Blocks are mutual and visible
 
-Status: Accepted (2026-06-24)
+> **Superseded in full by [ADR-0077](0077-a-block-is-its-own-record-not-a-status-on-a-friend-foe-edge.md)**
+> — a block is its own record, not a status on a friend/foe edge.
+>
+> This ADR asked whether a block is visible and whether it is permanent, and took
+> the *carrier* as given. That carrier is what broke: because `blocked` is a
+> status on a declared edge, a block cannot exist without one — so B, in the
+> motivating case below, holds no edge to A and has nothing to block. ADR-0077
+> moves the block onto its own record and reverses both answers reached here. A
+> block is now **silent to the blocked party**, and unblock deletes that record
+> rather than restoring an edge.
+>
+> The argument below is preserved as written. It is the record of what was
+> decided in June 2026 and of what ADR-0077 had to answer; it is not the live
+> decision.
+
+Status: Superseded by ADR-0077 (2026-08-16). Accepted 2026-06-24.
 
 ## Context
 

@@ -227,10 +227,10 @@ describe('duel seal skins render every slot', () => {
     // duelForfeit.cost, interpolated with the SNIDE-aware lose figure.
     expect(forfeit).toContain('Rax wins by default')
     // The submit-mode heading must NOT leak into the forfeit dialog.
-    expect(forfeit).not.toContain('Seal the duel?')
+    expect(forfeit).not.toContain('Lock the duel?')
 
     const submit = render('submit', DUEL)
-    expect(submit).toContain('Seal the duel?')
+    expect(submit).toContain('Lock the duel?')
     expect(submit).not.toContain('FORFEITS the duel')
   })
 
@@ -245,6 +245,6 @@ describe('duel seal skins render every slot', () => {
         onCancel={() => {}}
       />,
     )
-    expect(html.replace(/<[^>]*>/g, ' ')).toContain('Seal the duel?')
+    expect(html.replace(/<[^>]*>/g, ' ')).toContain('Lock the duel?')
   })
 })

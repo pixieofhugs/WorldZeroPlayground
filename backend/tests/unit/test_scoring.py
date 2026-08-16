@@ -552,11 +552,16 @@ def test_ua_full_points():
 
 
 def test_albescent_no_penalties():
-    """Albescent gets 1.0 on everything — no penalties."""
+    """Albescent is never penalised, and takes the best collab deal going.
+
+    #1871 gave it every other faction's perk, so ``collab_own_modifier`` is now
+    Coven's rather than the 1.0 baseline. Compared against Coven, not restated:
+    a re-tune there must move this.
+    """
     config = ERA_1.factions["albescent"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 1.0
-    assert config.collab_own_modifier == 1.0
+    assert config.collab_own_modifier == ERA_1.factions["coven"].collab_own_modifier
     assert config.collab_other_modifier == 1.0
 
 

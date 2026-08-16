@@ -1,8 +1,11 @@
 """Tests for the public /game-config endpoint."""
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
+from models.account import Account
+from services.progression import HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
 
 
 @pytest.mark.asyncio
@@ -62,3 +65,74 @@ async def test_game_config_omits_rules_no_client_reads(client: AsyncClient):
     assert CURRENT_ERA.factions["albescent"].can_always_rejoin is True
     for faction in data["factions"]:
         assert "can_always_rejoin" not in faction
+
+
+# ---------------------------------------------------------------------------
+# The secret-society rung over the wire (#1891)
+# ---------------------------------------------------------------------------
+
+
+def _ladder_unlock_keys(data: dict) -> set[str]:
+    return {
+        unlock["key"]
+        for profile in data["level_profiles"]
+        for unlock in profile["unlocks"]
+    }
+
+
+@pytest.mark.asyncio
+async def test_join_albescent_rung_hidden_from_anonymous(client: AsyncClient):
+    """This endpoint needs no auth, so the rung named Albescent to every visitor.
+
+    The optional-auth dependency is the whole point of the route change: an
+    anonymous caller resolves to ``None`` and gets the filtered ladder.
+    """
+    data = (await client.get("/game-config")).json()
+    assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY not in _ladder_unlock_keys(data)
+
+
+@pytest.mark.asyncio
+async def test_join_albescent_rung_hidden_from_unrevealed_account(
+    client: AsyncClient,
+    account: Account,
+    auth_headers: dict,
+):
+    """A signed-in account without the sticky reveal is told the same story."""
+    assert account.albescent_revealed is False
+    data = (await client.get("/game-config", headers=auth_headers)).json()
+    assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY not in _ladder_unlock_keys(data)
+
+
+@pytest.mark.asyncio
+async def test_join_albescent_rung_shown_to_revealed_account(
+    client: AsyncClient,
+    account: Account,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """A revealed account's ladder is unchanged — the rung is back."""
+    account.albescent_revealed = True
+    await db_session.flush()
+
+    data = (await client.get("/game-config", headers=auth_headers)).json()
+    assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY in _ladder_unlock_keys(data)
+
+
+@pytest.mark.asyncio
+async def test_hiding_the_rung_keeps_every_level_in_place(client: AsyncClient):
+    """``LevelUpWatcher`` indexes ``level_profiles`` BY LEVEL.
+
+    Dropping a profile rather than a rung would silently re-point every rank
+    above it, so the served ladder must stay index-aligned with
+    ``level_thresholds`` and keep every ``rank_key``.
+    """
+    data = (await client.get("/game-config")).json()
+
+    assert len(data["level_profiles"]) == len(CURRENT_ERA.level_profiles)
+    for served, configured in zip(data["level_profiles"], CURRENT_ERA.level_profiles):
+        assert served["rank_key"] == configured.rank_key
+        assert [unlock["key"] for unlock in served["unlocks"]] == [
+            unlock.key
+            for unlock in configured.unlocks
+            if unlock.key != HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
+        ]
