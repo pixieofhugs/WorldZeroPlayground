@@ -14,9 +14,11 @@
  *    render, because a deleted key that some other archetype still reads is a
  *    compile error, while a key left behind that nobody reads is silent.
  *
- * `editPraxis.coven.collab` is deliberately exempt: that block is `collabCopy`'s
- * override table, a different resolver, and it also feeds `CollabRoster` on the
- * read page `/praxis/:id`. `collabCopy.test.ts` pins it from the other side.
+ * `editPraxis.coven.collab` used to be exempt — it was `collabCopy`'s override
+ * table rather than page copy, so #1188 kept it. #1812 then deleted it too, for
+ * a different reason: collab submission status is a mechanical fact and speaks
+ * one vocabulary on every faction. So `editPraxis.coven` is now gone entirely,
+ * and `collabCopy.test.ts` pins that from the other side.
  *
  * renderToStaticMarkup needs no DOM, matching the rest of this suite. Effects
  * never run, so nothing here can assert on state that arrives after mount.
@@ -129,8 +131,8 @@ describe("Coven composer — the window is gone (ADR-0050, #1188)", () => {
     expect(render(width)).not.toContain("wow.exe");
   });
 
-  it("keeps no page copy of its own, only the collab override table", () => {
-    expect(Object.keys(forms.editPraxis.coven)).toEqual(["collab"]);
+  it("keeps no editPraxis copy of its own at all (#1188, then #1812)", () => {
+    expect(forms.editPraxis).not.toHaveProperty("coven");
   });
 
   it.each(WIDTHS)("letters the coven's own wordmark on %s", (width) => {

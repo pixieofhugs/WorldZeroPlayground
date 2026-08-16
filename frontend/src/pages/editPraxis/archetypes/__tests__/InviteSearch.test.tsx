@@ -20,6 +20,7 @@ import type { PraxisInviteOut, PraxisMemberOut, PraxisOut } from "../../../../ap
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../../api/duel";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { InviteSearch, type InviteSearchSkin } from "../controls";
+import { collabCopy } from "../../../../components/collab/collabCopy";
 
 const SKIN: InviteSearchSkin = {};
 
@@ -233,7 +234,7 @@ describe("InviteSearch — a collab whose crew is still one (#1274)", () => {
   it("draws the invitee as a roster row, with the rescind control on it", () => {
     const html = chipHtml(collabState([pendingInvite("Asked Player")]));
     expect(html).toContain("Asked Player");
-    expect(html).toContain("invited");
+    expect(html).toContain(collabCopy(null, "pillInvited"));
     expect(html).toContain("rescind invite to Asked Player");
   });
 

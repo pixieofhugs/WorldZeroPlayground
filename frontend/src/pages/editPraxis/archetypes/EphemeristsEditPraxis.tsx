@@ -31,9 +31,12 @@
  * Every string comes from the shared neutral `editPraxis.composer.*` block. The
  * faction's whole composer vocabulary — `AN ENTRY IN THE EPHEMERIS`, `THE
  * FINDING`, `THE ACCOUNT`, `THE EVIDENCE`, `alone / in concord / in dispute` —
- * was **deleted** with this issue; `editPraxis.ephemerists.collab` survives
- * because it is not composer page copy but `collabCopy`'s override table, read
- * by `CollabRoster` on `/praxis/:id` too. The masthead's one word is the
+ * was **deleted** with this issue. `editPraxis.ephemerists.collab` outlived it
+ * for a while — it was `collabCopy`'s override table rather than composer page
+ * copy, read by `CollabRoster` on `/praxis/:id` too — and #1812 has now deleted
+ * that as well: collab submission status is a mechanical fact a player acts on,
+ * so it speaks one vocabulary on every faction. This file has NO faction copy of
+ * any kind left. The masthead's one word is the
  * faction's NAME out of `factions.json` (`factionName`), the same string the
  * praxis-detail masthead sets — a name, not a voice. Since #1634 that name is
  * set by `EphemeristsMasthead` rather than here, which is the same string

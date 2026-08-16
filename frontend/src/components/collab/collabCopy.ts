@@ -1,29 +1,37 @@
 import i18n from '../../i18n'
 
 /**
- * Per-faction voice for the collab roster copy (#591).
+ * Copy for the collab roster and the multi-party composer footer (#591, #1812).
  *
- * The roster's key names are verb-neutral (`castAction`, `pillWeaving`, …);
- * the *words* are the faction's. Each faction may override any key under
- * `forms:editPraxis.<slug>.collab.<key>`; anything it doesn't override falls
- * back to the shared `forms:editPraxis.collab.<key>` block. This mirrors the
- * resolver shape already used for faction names/descriptions
+ * **Every faction reads the same words.** Owner ruling on #1812: collab
+ * submission status is a mechanical fact a player must read correctly *in order
+ * to act* — misread it and you lose work or publish early — so it is a
+ * deliberate exception to ADR-0065's per-faction dressing. Faction identity is
+ * carried by the caret colour, the card archetype and the chrome, not by the
+ * name of a state you have to act on. The eight `editPraxis.<slug>.collab`
+ * blocks (14 keys each, 112 strings) were deleted; `collabCopy.test.ts` guards
+ * the shape of the catalog so a tenth faction cannot quietly re-open it.
+ *
+ * That ruling finished what #1154 started: the shared block had been written in
+ * a witchy register — cast, weaving, woven — which read as a voice nobody owned,
+ * and it now speaks the domain's own words per CONTEXT.md ("Submitted",
+ * `status = submitted`, with `submitted_at` as the seal date).
+ *
+ * **The resolver stays.** A faction may still override any key under
+ * `forms:editPraxis.<slug>.collab.<key>`; nothing does today, and the collab
+ * keys specifically must not (see the guard). It is kept because it is the
+ * mechanism a *different* kind of copy would use if one is ever voiced again,
+ * and because it mirrors the shape already used for faction names/descriptions
  * (`utils/factions.ts`) and taunts (`utils/taunts.ts`): probe with
  * `i18n.exists()` first, because a bare `t()` on a missing key trips the
  * dev/test missing-key throw before the result could be inspected. A faction
  * with no entry for a key is a normal miss, not a defect.
  *
- * The shared block is the tier with **no voice**, so it speaks the domain's own
- * words (#1154): *submitted* / *not submitted*, per CONTEXT.md ("Submitted",
- * `status = submitted`, with `submitted_at` as the seal date). It used to be
- * written in a witchy register — cast, weaving, woven — which read as a voice
- * nobody owned: eight factions override the voiced keys, so the only faction
- * actually reading it is Warriors of Whimsy, and it is also what a *new* faction
- * inherits and what any un-overridden key falls back to. A faction that wants to
- * cast, sign off or file still does, in its own block; the fallback does not.
- * The key names are the one exception and stay as they are — they are named for
- * the mechanic, not the wording (see the verb-neutrality note above), and eight
- * of the nine blocks they front genuinely do still mean "cast".
+ * The key NAMES are deliberately untouched — `castAction`, `pillWeaving` and
+ * friends are named for the mechanic, not the wording. Renaming them would
+ * touch every call site for nothing a player sees, and #1811 is already going
+ * to re-cut this vocabulary when Cast/PullBack become Done/Propose/Approve/
+ * Withdraw.
  *
  * Despite the name, this is the resolver for the whole *multi-party composer
  * footer*, not just the roster: the one footer button casts and pulls back for
@@ -151,144 +159,6 @@ export type CollabCopyKey =
   | 'nudgeCrewDescription'
   | 'nudgeCrewResult'
   | 'nudgeCrewResultPartial'
-
-/**
- * Keys that are content to speak in the shared voice (#1074).
- *
- * Most collab keys are voiced by every faction — the roster's diction is part of
- * the faction's identity, and `collabCopy.test.ts` holds each faction to the full
- * set. These ones ship with a shared default only: they describe the *mechanics*
- * of leaving versus deleting a co-owned praxis (ADR-0013), which every faction
- * agrees on, and a warning about destroying other people's work is a poor place
- * to be clever. A faction may still override any of them; nothing here stops it,
- * and the resolver is unchanged. The list exists so the completeness test knows
- * which keys a silent faction is allowed to leave alone.
- *
- * `duelPullBackAction` (#1077) joins them: it is the same composer footer button
- * in its duel guise, so it resolves through the same hookless resolver, but the
- * line is a plain statement of a mechanic (at `active` your cast reopens for
- * free — forfeit begins only at `settled`, ADR-0011 §Forfeit) and a faction
- * flourish here risks reading as a consequence. Shared voice until a faction
- * asks for its own.
- *
- * The confirm-dialog wording for leave and kick (#1082) joins them on the same
- * grounds as `deleteConfirm` did: the three exits are one mechanic each — who
- * loses what when you go, and whose cast a kick clears (ADR-0013, ADR-0060) —
- * and a dialog whose whole job is to state a consequence plainly is the worst
- * place in the composer to be in character. Adding them here is also what keeps
- * a new shared key from silently owing eight faction translations.
- *
- * The `nudge*` block (#1083) joins them too, and the issue asks for it by name:
- * a voiced block historically drags all eight factions with it, and this one is
- * four words on a button plus one feed line. What it says is a mechanic and a
- * limit — one reminder, once a day, signed with your name — and the feed line in
- * particular is read by the RECIPIENT, whose faction is not the sender's, so a
- * sender-voiced quip there would land in someone else's room. Overrides stay
- * available for whichever faction earns one first.
- *
- * The `nudgeCrew*` block (#1418) joins them on the strongest version of that
- * argument: two of its four keys are a REPORT — how many of the crew the press
- * actually reached, and how many were inside their 24h window — and a faction
- * voice over a count is where an honest number goes to become a vibe.
- *
- * The whole `awaiting*` / `duelAwaiting*` block (#1080) joins them for the same
- * reason, plus one of its own: the waiting surface is **one shared, token-themed
- * screen** for every faction and both form factors (epic #1071, decision 7), the
- * way `CollabSuccess` already is. Its lines are mechanics — what a countdown
- * does, why a rival's entry is not readable, what re-opening your part costs
- * everyone else — and a per-faction voice over a warning about destroying other
- * people's cast is the same poor idea it was for `deleteConfirm`. A faction may
- * still override any of them; per-faction frames for this surface are a
- * follow-up wave, not a debt this one incurs.
- *
- * `rosterAwaitingAlone` (#1274) joins them as well. It states a fact about the
- * praxis rather than addressing the player — nobody else is on this collab yet —
- * which is the same tier as the other mechanics lines here. It is also read on
- * the PUBLIC detail page by non-members, so it has to work as a neutral
- * statement to a stranger. Its sibling `rosterAwaitingInvited`, which named the
- * outstanding invitees, went with the invite chips in #1416: those people are
- * roster rows now, so the line repeated a name three lines above itself.
- *
- * `pillInvited` / `pillDeclined` (#1416) join them, and the issue asks for it by
- * name so that absorbing invites into the roster costs no faction a translation.
- * They also earn it: an invite's status is a fact about the INVITEE — they have
- * not answered, or they said no — and the roster speaks in the voice of the
- * TASK's faction, which is frequently not theirs. A voiced refusal would put
- * words in the mouth of someone who is not on this praxis at all. The two
- * membership states stay voiced, because those people did join.
- *
- * The `holdout*` and `completed*` blocks (#1164) are the same block finished.
- * The first says what the ADR-0012 window does to the member who has not
- * submitted — a deadline and its escape, stated once; the second is the reading
- * that replaced the locked composer, and it is read by whoever opens `/edit`
- * after the fact, holdout included. Both are mechanics in the domain's own noun
- * (CONTEXT.md: *submitted*), which is exactly the tier this list is for.
- */
-export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
-  'leaveDescription',
-  'deleteAction',
-  'deleteDescription',
-  'deleteConfirm',
-  'leaveTitle',
-  'leaveConfirm',
-  'leaveConfirmSolo',
-  'leaveConfirmLast',
-  'leaveConfirmAction',
-  'kickTitle',
-  'kickConfirm',
-  'kickAction',
-  'duelPullBackAction',
-  'rosterAwaitingAlone',
-  'pillInvited',
-  'pillDeclined',
-  'awaitingStatusMeta',
-  'awaitingHeading',
-  'awaitingBody',
-  'awaitingTaskLabel',
-  'awaitingWriteUpLabel',
-  'awaitingWriteUpEmpty',
-  'awaitingEditAction',
-  'awaitingEditTitle',
-  'awaitingEditDescription',
-  'awaitingEditConfirm',
-  'awaitingClockLabel',
-  'awaitingClockDays',
-  'awaitingClockHours',
-  'awaitingClockCaption',
-  'awaitingClockAria',
-  'awaitingClockLapsed',
-  'holdoutClockLine',
-  'holdoutClockLineHours',
-  'holdoutClockLineLapsed',
-  'holdoutClockCaption',
-  'completedStatusMeta',
-  'completedHeading',
-  'completedBody',
-  'completedReadAction',
-  'duelCompletedHeading',
-  'duelCompletedBody',
-  'duelCompletedPlaceholder',
-  'duelAwaitingHeading',
-  'duelAwaitingTaskLabel',
-  'duelAwaitingWriteUpLabel',
-  'duelSealedPlaceholder',
-  'duelElapsedLine',
-  'duelPendingLine',
-  'duelPillSealed',
-  'duelPillWriting',
-  'duelPullBackDescription',
-  'nudgeAction',
-  'nudgeSentAction',
-  'nudgeAria',
-  'nudgeSentAria',
-  'nudgeDescription',
-  'duelNudgeAria',
-  'nudgeFeedAction',
-  'nudgeCrewAction',
-  'nudgeCrewDescription',
-  'nudgeCrewResult',
-  'nudgeCrewResultPartial',
-]
 
 /**
  * Resolve one collab copy key in the given faction's voice, falling back to the
