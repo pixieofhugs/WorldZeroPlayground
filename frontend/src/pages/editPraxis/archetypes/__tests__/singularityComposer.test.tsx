@@ -49,9 +49,19 @@ const praxis = {
   task_faction_slug: "singularity",
   type: "solo",
   status: "in_progress",
+  moderation_status: "visible",
   members: [],
   invites: [],
   media_items: [],
+  // The slip's mark is the shared ScoreStamp since #1828, and every stamp reads
+  // the score terms off the praxis (`score` is non-optional on the wire).
+  is_top_for_task: false,
+  task_point_value: 20,
+  metatask_points: 0,
+  display_multiplier: 1,
+  points_from_votes: 0,
+  habit_bonus_points: 0,
+  score: 20,
 } as unknown as PraxisOut;
 
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
@@ -106,12 +116,15 @@ describe("Singularity composer — structure", () => {
       "--faction-singularity-term-bg",
       "--faction-singularity-term-chrome",
       "--faction-singularity-term-panel",
-      "--faction-singularity-term-readout",
       "--faction-singularity-term-scan",
       "--faction-singularity-term-sweep",
-      "--faction-singularity-term-blue-bright",
-      "--faction-singularity-term-halo-blue",
       "--faction-singularity-term-halo-green",
+      // The slip's mark is the terminal's own SCORE STAMP since #1828. The
+      // readout well and the blue numeral it replaces (`term-readout`,
+      // `term-blue-bright`, `term-halo-blue`) were this composer's alone — the
+      // page swapped to this stamp the moment you filed, and now draws it in
+      // both stages.
+      "--faction-singularity-stamp-bg",
       "--faction-singularity-term-cta-bg",
       "--faction-singularity-card-font",
     ]) {
@@ -122,7 +135,9 @@ describe("Singularity composer — structure", () => {
     expect(html).toContain("ep-blink");
     expect(html, "no injected keyframes").not.toContain("@keyframes");
     expect(html, "the process name").toContain("praxis.proc");
-    expect(html, "the status mark").toContain("[ok]");
+    // The `[ok]` status mark is NOT on the compose row since #1828: the row
+    // reads `Draft` alone, and the mark is the waiting surface's hero beat.
+    expect(html, "the deferred status mark").not.toContain("[ok]");
     expect(html, "dashed hairs").toContain("dashed");
   });
 
