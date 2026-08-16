@@ -500,9 +500,15 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     // path cannot work. `duel.challenger_praxis_id`/`opponent_praxis_id` are
     // deliberately NO ACTION while all eight sibling praxis-child FKs cascade
     // (`models/praxis.py`, migration 0006) — a duel is a contract between two
-    // players, not a part of either side, so the database refuses the delete
-    // rather than letting the duel vanish with it. The player got a generic
-    // 409 after a dialog promising the opposite (#1831).
+    // players, not a part of either side. The player got a generic 409 after a
+    // dialog promising the opposite (#1831).
+    //
+    // What that NO ACTION guards is narrower than it looks, so do not read it
+    // as "a duel row never goes": `delete_praxis` now discards the DECLINED
+    // rows first, which is why the dissolve below is what unblocks the delete.
+    // A live (`pending`/`active`) or finished (`settled`/`resolved`) duel is
+    // still refused outright — see `services.duel.discard_dissolved_duels_for_praxis`,
+    // which owns that predicate and the owner ruling behind it.
     const inDuel = praxis.duel_id != null;
     const crewAtStake = praxis.type === "collab" && praxis.members.length > 1;
     const confirmed = await askConfirm(
