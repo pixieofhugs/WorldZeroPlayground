@@ -9,6 +9,7 @@ import praxis from '../en/praxis.json'
 import taunts from '../en/taunts.json'
 import votes from '../en/votes.json'
 import { findDuplicateJsonKeys } from './findDuplicateJsonKeys'
+import { factionName } from '../../utils/factions'
 
 // Factions with a vote voice (per-faction tier labels). Kept as an explicit
 // list, mirroring the seed catalog this test was ported from. Albescent is not
@@ -765,5 +766,125 @@ describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
   it('holds none of them', () => {
     const present = new Set(catalogLeaves().map(([id]) => id))
     expect(DELETED_SLOTS.filter((id) => present.has(id))).toEqual([])
+  })
+})
+
+/* ========================================================================== *
+ * #1910 — A KEY MAY NOT BE NAMED FOR SOMETHING IT NO LONGER HOLDS
+ *
+ * THE SEAM IS THE CATALOG'S KEY SET, not its values. Two different rulings land
+ * on the same shape:
+ *
+ *   1. #1864's "USE names.{F}" — seven slots held a copy of the faction's own
+ *      name, which stays per-faction in `factions:names.<slug>`. The call sites
+ *      read `factionName(slug)` now, so the slot is a second place the name
+ *      could drift from.
+ *   2. #1863 retired "seal" as a *word*. It changed values only and handed key
+ *      structure here, so `editPraxis.seal.pickerTitle` was left holding
+ *      "Attach a metatask to this praxis".
+ *
+ * Both failures are invisible to a value test — a re-added `taskCard.coven.
+ * masthead: "Cozy Coven"` reads correctly on screen and is still a duplicate,
+ * and a key called `seal` still renders its (correct) attach wording. So the
+ * guard asserts ABSENCE of the old names and PRESENCE of the new ones, which is
+ * the only shape a later pass cannot quietly undo.
+ * ========================================================================== */
+describe('no key is named for a word or a name it no longer holds (#1910)', () => {
+  /**
+   * #1864 §3. Two of these seven had no reader at all on `origin/main`
+   * (`frame.albescent.masthead`, `taskCard.everymen.masthead`); the other five
+   * now resolve through `factionName(slug)`.
+   */
+  const NAME_DUPLICATES = [
+    'feed.json:frame.albescent.masthead',
+    'feed.json:frame.singularity.masthead',
+    'feed.json:identity.ephemerists.wordmark',
+    'feed.json:identity.snide.wordmark',
+    'feed.json:taskCard.coven.masthead',
+    'feed.json:taskCard.ephemerists.masthead',
+    'feed.json:taskCard.everymen.masthead',
+  ] as const
+
+  /**
+   * The names #1863's rewrite falsified, and what each is called now. The two
+   * `duel*` rows sit under `editPraxis.collab`, not `editPraxis.composer` as
+   * #1910's table records — the audit's `composer.` prefix is an alias, the
+   * same class of mismatch #1909 hit seven times. They are renamed in place
+   * rather than moved: `collabCopy()` is where their readers live.
+   *
+   * `composer.statusSealed` has no successor. #1863 collapsed the `isDuel`
+   * ternary that was its only reader once both branches held "Submitted", so
+   * the key is deleted rather than renamed.
+   */
+  const RENAMED: ReadonlyArray<readonly [string, string | null]> = [
+    ['forms.json:editPraxis.seal.pickerTitle', 'forms.json:editPraxis.attach.pickerTitle'],
+    ['forms.json:editPraxis.seal.pickerSubtitle', 'forms.json:editPraxis.attach.pickerSubtitle'],
+    ['forms.json:editPraxis.seal.filterAll', 'forms.json:editPraxis.attach.filterAll'],
+    ['forms.json:editPraxis.seal.filterAria', 'forms.json:editPraxis.attach.filterAria'],
+    ['forms.json:editPraxis.seal.searchPlaceholder', 'forms.json:editPraxis.attach.searchPlaceholder'],
+    ['forms.json:editPraxis.seal.searchAria', 'forms.json:editPraxis.attach.searchAria'],
+    ['forms.json:editPraxis.seal.empty', 'forms.json:editPraxis.attach.empty'],
+    ['forms.json:editPraxis.seal.alreadySealed', 'forms.json:editPraxis.attach.alreadyAttached'],
+    ['forms.json:editPraxis.seal.addAria', 'forms.json:editPraxis.attach.addAria'],
+    ['forms.json:editPraxis.seal.pending', 'forms.json:editPraxis.attach.pending'],
+    ['forms.json:editPraxis.seal.cancel', 'forms.json:editPraxis.attach.cancel'],
+    ['forms.json:editPraxis.seal.confirm', 'forms.json:editPraxis.attach.confirm'],
+    ['forms.json:editPraxis.seal.removeTitle', 'forms.json:editPraxis.attach.removeTitle'],
+    ['forms.json:editPraxis.seal.removeBody', 'forms.json:editPraxis.attach.removeBody'],
+    ['forms.json:editPraxis.seal.removeCancel', 'forms.json:editPraxis.attach.removeCancel'],
+    ['forms.json:editPraxis.seal.removeConfirm', 'forms.json:editPraxis.attach.removeConfirm'],
+    ['forms.json:editPraxis.composer.sealsLabel', 'forms.json:editPraxis.composer.metatasksLabel'],
+    ['forms.json:editPraxis.collab.duelPillSealed', 'forms.json:editPraxis.collab.duelPillSubmitted'],
+    [
+      'forms.json:editPraxis.collab.duelSealedPlaceholder',
+      'forms.json:editPraxis.collab.duelHiddenPlaceholder',
+    ],
+    ['forms.json:editPraxis.composer.statusSealed', null],
+  ]
+
+  it('has the whole ruling in the list', () => {
+    // 3 keys / 7 strings from #1864 §3, plus the 20 `seal`-named leaves #1863
+    // falsified. A line lost to a bad merge would silently shrink the guard.
+    expect(new Set(NAME_DUPLICATES).size).toBe(7)
+    expect(new Set(RENAMED.map(([from]) => from)).size).toBe(20)
+  })
+
+  it('finds catalog leaves to check against, so absence cannot be vacuous', () => {
+    expect(catalogLeaves().length).toBeGreaterThan(1000)
+  })
+
+  it('holds no slot that duplicates a faction name', () => {
+    const present = new Set(catalogLeaves().map(([id]) => id))
+    expect(NAME_DUPLICATES.filter((id) => present.has(id))).toEqual([])
+  })
+
+  it('holds no key still named for the retired word', () => {
+    const present = new Set(catalogLeaves().map(([id]) => id))
+    expect(RENAMED.map(([from]) => from).filter((id) => present.has(id))).toEqual([])
+  })
+
+  it('holds every renamed key under its new name, with the same wording', () => {
+    const leaves = new Map(catalogLeaves())
+    const missing = RENAMED.filter(([, to]) => to !== null).filter(([, to]) => !leaves.has(to!))
+    expect(missing.map(([, to]) => to)).toEqual([])
+  })
+
+  it('the picker, the composer and the duel pill still say the settled words', () => {
+    // #1863's own value assertions, repointed. A rename that dropped a string
+    // on the way would pass every absence check above.
+    expect(i18n.t('forms:editPraxis.attach.pickerTitle')).toBe('Attach a metatask to this praxis')
+    expect(i18n.t('forms:editPraxis.attach.alreadyAttached')).toBe('Attached')
+    expect(i18n.t('forms:editPraxis.composer.metatasksLabel')).toBe('Metatasks')
+    expect(i18n.t('forms:editPraxis.collab.duelPillSubmitted')).toBe('submitted')
+    expect(i18n.t('forms:editPraxis.collab.duelHiddenPlaceholder')).toBe('Hidden until they submit')
+  })
+
+  it('resolves each repointed masthead to the faction name it used to spell', () => {
+    // The five slots that had a reader. `factionName()` is the single source
+    // (ADR-0038), so this is the assertion that the repoint kept the word.
+    expect(factionName('snide')).toBe('S.N.I.D.E.')
+    expect(factionName('ephemerists')).toBe('The Ephemerists')
+    expect(factionName('coven')).toBe('Cozy Coven')
+    expect(factionName('singularity')).toBe('Singularity')
   })
 })
