@@ -2,10 +2,16 @@ import type { TaskOut } from "../../api/tasks";
 import type { PendingTaskOut } from "../../api/admin";
 
 /**
- * One row in the admin Tasks tab. A plain task, optionally carrying the
- * proposer's display name — only `/admin/tasks/pending` supplies that.
+ * One row in the admin Tasks tab. A plain task, optionally carrying the two
+ * review-only fields — the proposer's display name and their note to the admin.
+ * Only `/admin/tasks/pending` supplies either; neither is on the public
+ * `TaskOut`, so both are optional here and absent on rows that came from
+ * `/tasks`.
  */
-export type AdminTaskRow = TaskOut & { created_by_name?: string };
+export type AdminTaskRow = TaskOut & {
+  created_by_name?: string;
+  notes?: string;
+};
 
 /**
  * Merge the two sources the admin Tasks tab reads (#909).

@@ -4275,6 +4275,11 @@
             ],
             "title": "Metatask Faction Slug"
           },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          },
           "point_value": {
             "title": "Point Value",
             "type": "integer"
@@ -4326,7 +4331,8 @@
           "allowed_modes",
           "eligible_for_current_user",
           "signup_reason",
-          "created_by_name"
+          "created_by_name",
+          "notes"
         ],
         "title": "PendingTaskOut",
         "type": "object"
@@ -5377,6 +5383,18 @@
               }
             ],
             "title": "Metatask Faction Slug"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
           },
           "point_value": {
             "exclusiveMinimum": 0.0,

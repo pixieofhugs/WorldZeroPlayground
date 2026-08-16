@@ -46,6 +46,17 @@ class Task(TimestampMixin, Base):
         default=TaskType.standard,
         server_default="standard",
     )
+    # Free text the proposer writes for the reviewing admin ("Why do you want
+    # this task to exist? What inspired it?") — context for a judgement call,
+    # not part of the task itself. Deliberately NOT on the public ``TaskOut``
+    # (#1823): it is addressed to an admin, and only the admin review queue
+    # (``PendingTaskOut``) serialises it. Empty string, never NULL, so readers
+    # need no None branch — the same shape ``description`` uses. The length cap
+    # lives on the wire in ``schemas.task``; the column is plain TEXT so the cap
+    # can move without a migration.
+    notes: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
     created_by: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )

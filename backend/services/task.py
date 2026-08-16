@@ -89,6 +89,7 @@ async def propose_task(
     task = Task(
         title=data.title,
         description=data.description or "",
+        notes=data.notes or "",
         point_value=data.point_value,
         level_required=data.level_required,
         primary_faction_slug=data.primary_faction_slug or CROSS_FACTION_SLUG,

@@ -319,6 +319,12 @@ async def admin_update_task_status(
 
 class PendingTaskOut(TaskOut):
     created_by_name: str = ""
+    # The proposer's note to the reviewing admin (#1823). It lives here and not
+    # on ``TaskOut`` on purpose: the field is labelled "Notes to admin" and is
+    # written in the expectation that a reviewer reads it, not the whole player
+    # base. ``TaskOut`` is the public browse/detail payload, so putting it there
+    # would publish it. This route is the one behind ``require_admin``.
+    notes: str = ""
 
 
 @router.get("/tasks/pending", response_model=list[PendingTaskOut])
@@ -349,6 +355,7 @@ async def list_pending_tasks(
             created_at=task.created_at,
             in_progress_count=in_progress_counts.get(task.id, 0),
             created_by_name=display_name or "",
+            notes=task.notes,
         )
         for task, display_name in rows
     ]

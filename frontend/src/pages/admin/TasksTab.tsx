@@ -317,6 +317,36 @@ export default function TasksTab() {
                         })}
                       </p>
                     )}
+                    {/* The proposer's answer to "why should this task exist?" —
+                        the context this review is meant to weigh (#1823).
+                        Pending-only for the same reason as the byline above:
+                        /tasks does not carry it. Rendered as text and never
+                        through dangerouslySetInnerHTML — this is unfiltered
+                        free text from any signed-in player. `pre-wrap` keeps
+                        the paragraph breaks they typed without letting
+                        anything else through. */}
+                    {task.status === "pending" && task.notes && (
+                      <div
+                        style={{
+                          marginTop: "var(--space-sm)",
+                          paddingLeft: "var(--space-sm)",
+                          borderLeft: "2px solid var(--color-border)",
+                        }}
+                      >
+                        <span
+                          className="label-caption"
+                          style={{ display: "block" }}
+                        >
+                          {t("tasks.notesLabel")}
+                        </span>
+                        <p
+                          className="font-body text-xs"
+                          style={{ whiteSpace: "pre-wrap" }}
+                        >
+                          {task.notes}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {(task.status === "pending" ||

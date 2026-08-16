@@ -64,6 +64,7 @@
     "meta": "{{points}} pts · lvl {{level}} · {{faction}}",
     "crossFaction": "cross-faction",
     "proposedBy": "Proposed by {{name}}",
+    "notesLabel": "Notes to admin",
     "status": {
       "active": "active",
       "pending": "pending",

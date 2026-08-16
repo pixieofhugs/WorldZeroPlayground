@@ -15,6 +15,7 @@ from models.faction import Faction
 from models.praxis import Praxis
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
+from schemas.task import MAX_TASK_NOTES
 from tests.integration.factories import make_admin
 
 
@@ -1034,3 +1035,97 @@ async def test_admin_era_reset_preserves_votes_spent_without_flag(
     new_stats = new_result.scalar_one()
     await db_session.refresh(new_stats)
     assert new_stats.votes_spent_this_era == 9
+
+
+# ---------------------------------------------------------------------------
+# Notes to admin (#1823)
+# ---------------------------------------------------------------------------
+#
+# The seam these cover is the whole point of the field: a player writes a note
+# on the propose form and an admin reads it in the review queue. Before #1823
+# the value was dropped client-side, so a test that only asserted the schema
+# accepted `notes` would have passed against the broken build. These assert the
+# round trip, and that the note does *not* travel any further than the queue.
+
+
+@pytest.mark.asyncio
+async def test_proposal_notes_reach_the_admin_review_queue(
+    client: AsyncClient,
+    account: Account,
+    character2: Character,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """A player's note to the admin survives POST /tasks and is readable in the queue."""
+    note = "My run group already does this every Sunday.\n\nSeemed worth sharing."
+
+    resp = await client.post(
+        "/tasks",
+        json={
+            "title": "Sunday long run",
+            "description": "Run for an hour",
+            "point_value": 15,
+            "notes": note,
+        },
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 201
+    task_id = resp.json()["id"]
+
+    await make_admin(db_session, account)
+    queue = await client.get("/admin/tasks/pending", headers=auth_headers)
+    assert queue.status_code == 200
+
+    row = next(t for t in queue.json() if t["id"] == task_id)
+    assert row["notes"] == note
+
+
+@pytest.mark.asyncio
+async def test_proposal_notes_are_absent_from_the_public_task_payload(
+    client: AsyncClient,
+    character2: Character,
+    auth_headers2: dict,
+):
+    """`notes` is addressed to an admin, so TaskOut must not carry it anywhere.
+
+    Guards the placement decision in #1823: the field lives on the admin-only
+    ``PendingTaskOut``. If someone later moves it up onto ``TaskOut`` for
+    convenience, every player would be able to read every proposer's note off
+    the browse list and the task detail page.
+    """
+    resp = await client.post(
+        "/tasks",
+        json={
+            "title": "Sunday long run",
+            "point_value": 15,
+            "notes": "private context for the reviewer",
+        },
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 201
+    assert "notes" not in resp.json()
+
+    task_id = resp.json()["id"]
+    detail = await client.get(f"/tasks/{task_id}", headers=auth_headers2)
+    assert detail.status_code == 200
+    assert "notes" not in detail.json()
+
+
+@pytest.mark.asyncio
+async def test_proposal_notes_over_the_cap_are_rejected(
+    client: AsyncClient,
+    character2: Character,
+    auth_headers2: dict,
+):
+    """The trust-boundary cap is enforced by the schema, not just the textarea."""
+    resp = await client.post(
+        "/tasks",
+        json={
+            "title": "Sunday long run",
+            "point_value": 15,
+            "notes": "x" * (MAX_TASK_NOTES + 1),
+        },
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 422
