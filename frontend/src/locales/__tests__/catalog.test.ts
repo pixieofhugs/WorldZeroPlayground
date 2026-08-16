@@ -216,6 +216,294 @@ describe('faction profile kits keep their copy in the catalog', () => {
   })
 })
 
+/* ========================================================================== *
+ * #1863 — the five drifted domain words, settled.
+ *
+ * THE SEAM IS THE CATALOG VALUE, NOT THE KEY. An audit of all 800 faction
+ * strings found five domain nouns/verbs that had each grown per-faction
+ * synonyms — a character's *level* was an `anno`, a `rank`, a roman numeral; a
+ * *task* was a `heist`, a `quest`, a `survey`; *submitting* was `sealing` or
+ * `filing`. They are one word each now. The way that ruling comes undone is a
+ * later voice pass rewriting a faction's copy back into its own dialect, which
+ * no key-presence check can see, so the guard reads VALUES.
+ *
+ * The rule the audit applied, and the rule these lists encode:
+ *
+ *     REPLACE WHERE THE WORD NAMES THE ENTITY. KEEP IT WHERE IT IS IMAGERY.
+ *
+ * "Spells cast" as a heading over a praxis list names the entity and is gone;
+ * "cast a small spell, let the circle cheer" is a picture and survives. Every
+ * survivor below is named with the reason it survived — that list IS the
+ * documentation of where the line fell, and an exact `toEqual` rather than a
+ * subset check so that a survivor which later disappears (because #1864's
+ * children delete or collapse its key) fails here and forces the list to be
+ * re-read rather than quietly rotting.
+ * ========================================================================== */
+
+/** Every leaf string in every en catalog, as `file.json:dotted.key`. */
+function catalogLeaves(): Array<[string, string]> {
+  const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'en')
+  const walk = (node: unknown, path: string[]): Array<[string, string]> => {
+    if (typeof node === 'string') return [[path.join('.'), node]]
+    if (Array.isArray(node)) return node.flatMap((item, i) => walk(item, [...path, String(i)]))
+    if (node && typeof node === 'object') {
+      return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
+        walk(value, [...path, key]),
+      )
+    }
+    return []
+  }
+  return readdirSync(dir)
+    .filter((entry) => entry.endsWith('.json'))
+    .flatMap((entry) =>
+      walk(JSON.parse(readFileSync(join(dir, entry), 'utf8')), []).map(
+        ([key, value]) => [`${entry}:${key}`, value] as [string, string],
+      ),
+    )
+}
+
+/**
+ * The surfaces the audit ruled KEEP their faction voice and which #1863
+ * rewrote in place: the invitation letter, the faction-select picker, the
+ * faction descriptions, and the taunts. Every other surface settles to one
+ * shared string under #1864's children, so its retired words leave with the key
+ * rather than with a rewrite — guarding them here would only pin copy that is
+ * scheduled for deletion.
+ */
+function isVoicedSurface(id: string): boolean {
+  const [file, key] = id.split(':')
+  if (file === 'taunts.json') return true
+  if (file === 'factions.json') return key.startsWith('descriptions.') || key.includes('.invitation.')
+  if (file === 'feed.json') return key.startsWith('factionSelect.')
+  return false
+}
+
+// Whole words only, or `cr` matches "crusade" and `pts` never matches at all.
+const RETIRED = new RegExp(
+  '\\b(' +
+    [
+      // character level → level
+      'annos?|ranks?|ranked|lvl',
+      // score unit → points
+      'pvncta|huzzahs?|cr|pts',
+      // a task → task
+      'heists?|quests?|surveys?|jobs?|functions?|protocols?|sheets?',
+      // a praxis → praxis
+      'spells?|chronicles?|transcriptions?|signals?|reports?|praxes',
+      // submitting a praxis → submit / submitted
+      'seals?|sealed|sealing|filed|filing',
+    ].join('|') +
+    ')\\b',
+  'i',
+)
+
+describe('the five domain words are one word each on the voiced surfaces (#1863)', () => {
+  /**
+   * Read as: every one of these still holds a retired word, on purpose, for the
+   * reason given. Nothing else may.
+   */
+  const SURVIVORS = [
+    // ---- the five the ruling names as look-alikes, and is not about ----
+    // The oath idiom. A knight is sworn and sealed; no praxis is being submitted.
+    'factions.json:wow.invitation.cta.joined',
+    'feed.json:factionSelect.wow.status.member',
+    // An interjection. The ruling retired *huzzahs* as a name for POINTS, not
+    // the cry — WOW may still shout it.
+    'taunts.json:wow.level_up.2',
+    // Metaphor. The praxis noun is `praxis`; a spell quietly cast is a picture.
+    'taunts.json:coven.score_overtake.1',
+
+    // ---- imagery the audit kept, string by string ----
+    // The wax seal on the summons — an object, not the act of submitting.
+    'factions.json:wow.invitation.pitch',
+    // "a sheet to work on" is the paper, not the task; the sentence beside it
+    // already says *task*, which is what makes the picture legible.
+    'factions.json:ua.invitation.pitch',
+    // "witches mid-spell" / "cast a small spell" — the doing, not the artefact.
+    'factions.json:coven.invitation.pitch',
+    'feed.json:factionSelect.coven.blurb',
+    // Singularity generates *signals* into a consensus. The praxis it submits is
+    // a praxis; what it broadcasts is a signal, and that survives.
+    'factions.json:singularity.invitation.pitch',
+    'factions.json:singularity.invitation.terms.2.value',
+    'feed.json:factionSelect.singularity.blurb',
+    'feed.json:factionSelect.singularity.status.locked',
+    // "filed under 'us'" is a filing cabinet, not the submit verb — the audit
+    // left this row's wording untouched where it rewrote its three siblings.
+    'factions.json:snide.invitation.perks.2',
+    // "Join the ranks" / "one rank brighter" is the membership, not the level.
+    'factions.json:everymen.invitation.headline',
+    'taunts.json:coven.level_up.0',
+    'taunts.json:wow.level_up.0',
+    // "Tomorrow is another sheet" — a fresh page, not a task.
+    'taunts.json:ua.score_overtake.1',
+
+    // ---- not #1863's to rewrite; the issue that owns each is named ----
+    // #1874 replaces every perks[1] with the faction's real backend mechanic.
+    'factions.json:coven.invitation.perks.1',
+    'factions.json:ephemerists.invitation.perks.1',
+    'factions.json:singularity.invitation.perks.1',
+    'factions.json:snide.invitation.perks.1',
+    // #1864 CUT: the whole terms[3] "standing" row goes, all seven factions.
+    'factions.json:coven.invitation.terms.3.label',
+  ].sort()
+
+  it('finds enough voiced strings that the sweep cannot pass by scanning nothing', () => {
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(200)
+  })
+
+  it('no voiced string says a retired word, beyond the named survivors', () => {
+    const offenders = catalogLeaves()
+      .filter(([id]) => isVoicedSurface(id))
+      .filter(([, value]) => RETIRED.test(value))
+      .map(([id]) => id)
+      .sort()
+    expect(offenders).toEqual(SURVIVORS)
+  })
+})
+
+describe('"seal" survives nowhere it means submitted (#1863)', () => {
+  // Any form of the word, so `sealing`/`unseals` cannot slip back in under a
+  // different ending. `file`/`files` are deliberately NOT here: a 50 MB upload
+  // limit is about computer files and always was.
+  const SEAL = /\bseal\w*\b/i
+  const FILED = /\b(filed|filing)\b/i
+
+  /**
+   * Metatasks now **attach**, praxes and duel entries are **submitted**, and the
+   * collab freeze **locks**. What is left is either imagery (above) or copy on a
+   * key that #1864's children delete or collapse — those are listed with the
+   * child that removes them, so this guard tightens as they land instead of
+   * being loosened by hand.
+   */
+  const SEAL_SURVIVORS = [
+    // Imagery / non-violations, same rulings as the block above.
+    'factions.json:wow.invitation.pitch',
+    'factions.json:wow.invitation.cta.joined',
+    'feed.json:factionSelect.wow.status.member',
+    // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
+    'factions.json:ephemerists.road.joining',
+    // #1864 GENERIC — the per-faction task/praxis list headings, empties and
+    // kickers all collapse to one shared string ("Recent praxis", "No praxis
+    // submitted yet."), so the retired word leaves with the key.
+    'factions.json:ephemerists.praxis.empty',
+    'factions.json:ua.praxis.heading',
+    'factions.json:ua.praxis.kicker',
+    'factions.json:ua.praxis.empty',
+    'factions.json:ua.registry.gateBody',
+    'feed.json:factionHero.ephemerists.stats.praxes',
+    'feed.json:factionHero.singularity.stats.praxes',
+    'feed.json:factionHero.ua.stats.praxes',
+    'feed.json:factionHero.wow.stats.praxes',
+    // #1864 CUT — single-faction flourishes on surfaces ruled generic.
+    'feed.json:row.wow.praxisSealed',
+    'praxis.json:card.wow.sealed',
+    // #1864 GENERIC, blocked on the profile-kit collapse. The decision record's
+    // own agreed wording for these rows still reads "No praxis sealed yet",
+    // which contradicts this ruling — flagged on #1863 rather than picked here.
+    'common.json:profile.praxisEyebrow',
+    'common.json:profile.praxisEmptyTitle',
+    'common.json:profile.coven.praxisEyebrow',
+    'common.json:profile.coven.praxisEmptyTitle',
+    'common.json:profile.singularity.praxisEyebrow',
+    'common.json:profile.singularity.praxisEmptyTitle',
+    'common.json:profile.ua.praxisEyebrow',
+    'common.json:profile.ua.praxisEmptyTitle',
+    'common.json:profile.ua.badgeTitle',
+    'common.json:profile.wow.praxisEyebrow',
+  ].sort()
+
+  const FILED_SURVIVORS = [
+    // A filing cabinet, not the submit verb.
+    'factions.json:snide.invitation.perks.2',
+    'praxis.json:listPage.emptyFiltered',
+    // Pure metaphor — a mind filing contingencies submits no praxis.
+    'progression.json:unlocks.three_plans.desc',
+    // #1864 GENERIC / CUT, as above.
+    'factions.json:ephemerists.praxis.kicker',
+    'factions.json:everymen.praxis.empty',
+    'feed.json:factionHero.coven.stats.praxes',
+    'feed.json:factionHero.everymen.stats.praxes',
+    'feed.json:factionHero.snide.stats.praxes',
+    'praxis.json:card.masthead.ua',
+    'praxis.json:card.masthead.albescent',
+    'common.json:profile.ephemerists.praxisEyebrow',
+  ].sort()
+
+  it('says seal only where the word is an oath, an object, or a doomed key', () => {
+    const offenders = catalogLeaves()
+      .filter(([, value]) => SEAL.test(value))
+      .map(([id]) => id)
+      .sort()
+    expect(offenders).toEqual(SEAL_SURVIVORS)
+  })
+
+  it('says filed only where the word is a filing cabinet, or a doomed key', () => {
+    const offenders = catalogLeaves()
+      .filter(([, value]) => FILED.test(value))
+      .map(([id]) => id)
+      .sort()
+    expect(offenders).toEqual(FILED_SURVIVORS)
+  })
+
+  it('the composer, the duel dialog and the metatask picker say the settled words', () => {
+    // The four rulings that carried the sweep off the faction surfaces, pinned
+    // by value so a revert reads as a failure rather than as a copy edit.
+    expect(i18n.t('forms:editPraxis.seal.pickerTitle')).toBe('Attach a metatask to this praxis')
+    expect(i18n.t('forms:editPraxis.seal.alreadySealed')).toBe('Attached')
+    expect(i18n.t('forms:editPraxis.composer.sealsLabel')).toBe('Metatasks')
+    expect(i18n.t('forms:editPraxis.collab.duelAwaitingHeading')).toBe('Your entry is submitted')
+    expect(i18n.t('praxis:duelSeal.heading')).toBe('Lock the duel?')
+  })
+})
+
+describe('the four functional controls say one thing across every faction (#1863)', () => {
+  // Each already had 3+ factions saying the same words; the audit settled the
+  // rest onto them. The keys stay per-faction until #1864 collapses them, so
+  // the guard is that every branch resolves to the SAME string.
+  const SLUGS = ['ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity'] as const
+
+  it('the join-panel confirm button reads Confirm, in one casing', () => {
+    // The join panel's key sits under a per-faction section name (`road`,
+    // `access`, `dispatch`…), so this walks the faction block rather than
+    // guessing the path.
+    const buttons = catalogLeaves()
+      .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
+      .map(([, value]) => value)
+    expect(buttons.length).toBe(SLUGS.length)
+    expect([...new Set(buttons)]).toEqual(['Confirm'])
+  })
+
+  it('the task-card signup reads Sign up', () => {
+    for (const slug of SLUGS) {
+      expect(i18n.t(`feed:taskCard.${slug}.signup` as 'feed:taskCard.na.signup')).toBe('Sign up')
+    }
+    // `taskCard.albescent.signup` is deliberately NOT settled: ADR-0048 makes
+    // the Albescent card the na sheet plus drift, so it renders na's verb and
+    // its own is orphaned copy. `factionTaskCardsV2.test.tsx` asserts the
+    // orphan never reaches a screen, which only holds while it differs.
+    expect(i18n.t('feed:taskCard.albescent.signup')).not.toBe(i18n.t('feed:taskCard.na.signup'))
+  })
+
+  it('the comment edited marker reads edited', () => {
+    for (const slug of [...SLUGS, 'albescent']) {
+      expect(i18n.t(`praxis:comments.${slug}.edited` as 'praxis:comments.ua.edited')).toBe('edited')
+    }
+  })
+
+  it('the vote star reads Rate {{value}} — {{label}}', () => {
+    for (const slug of [...SLUGS, 'unaffiliated']) {
+      expect(i18n.t(`votes:chrome.${slug}.rateAria` as 'votes:chrome.ua.rateAria', { value: 3, label: 'solid' })).toBe(
+        'Rate 3 — solid',
+      )
+    }
+    // Albescent and the mobile widget keep `Rate {{value}} of 5`: neither ships
+    // per-faction tier labels (#783 took Albescent's away, because a vote word
+    // is a tell), so their call sites have no `label` to interpolate.
+    expect(i18n.t('votes:chrome.albescent.rateAria', { value: 3 })).toBe('Rate 3 of 5')
+  })
+})
+
 describe('no duplicate keys in any locale catalog', () => {
   // JSON is last-wins: a key repeated inside the same object silently drops the
   // earlier block at parse time, so the copy vanishes with no error (this is

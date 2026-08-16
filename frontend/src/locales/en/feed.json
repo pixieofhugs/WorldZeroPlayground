@@ -54,7 +54,7 @@
     "friend_signup": "Signup",
     "friend_defection": "Defection",
     "global_task": "New task",
-    "collaborator_submitted": "Collaborator filed",
+    "collaborator_submitted": "Collaborator submitted",
     "awaiting_submission": "Your turn",
     "nudge": "Nudge",
     "era_announcement": "Era",
@@ -83,10 +83,10 @@
     "feedEmptyBody": "The city is quiet. Go do something."
   },
   "rowAction": {
-    "fileIt": "File it",
+    "fileIt": "Submit it",
     "dropOut": "Drop out",
     "answer": "Answer",
-    "fileYours": "File yours",
+    "fileYours": "Submit yours",
     "reply": "Reply",
     "failed": "That didn't go through."
   },
@@ -239,7 +239,7 @@
       "level": "level {{level}}",
       "points": "{{points}} pvncta",
       "footnote": "† the road does not return you to where you began — <1>see †</1>",
-      "signup": "Triangulate the truth ▸",
+      "signup": "Sign up",
       "masthead": "Ephemerists",
       "levelCaption": "Level",
       "pointsUnit": "pvncta"
@@ -248,21 +248,21 @@
       "masthead": "THE EVERYMEN",
       "sealUnit": "POINTS",
       "points": "{{points}} PTS",
-      "signup": "Report for duty",
+      "signup": "Sign up",
       "billMasthead": "Help Wanted!",
       "levelCaption": "Level"
     },
     "snide": {
       "dispatchNumber": "dispatch №{{number}}",
       "scrawl": "your assignment, should you ignore it —",
-      "signup": "I'M IN",
+      "signup": "Sign up",
       "pointsUnit": "PTS",
       "levelCaption": "level"
     },
     "singularity": {
       "pointsLabel": "PTS:",
       "levelLabel": "LVL: {{level}}",
-      "signup": "sign up",
+      "signup": "Sign up",
       "levelPill": "lvl {{level}}",
       "windowTitle": "task.proc — singularity",
       "levelCaption": "lvl",
@@ -276,13 +276,13 @@
       "pointsUnit": "points"
     },
     "coven": {
-      "signup": "sign up",
+      "signup": "Sign up",
       "masthead": "the cozy coven",
       "levelCaption": "level",
       "pointsUnit": "points"
     },
     "wow": {
-      "signup": "Take Up the Quest",
+      "signup": "Sign up",
       "decree": "By Royal Decree",
       "byOrder": "by order of the Whimsy Court",
       "pointsUnit": "points",
@@ -410,7 +410,7 @@
       "subtitle": "A daily practice of making things.",
       "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the making itself. Come sit with the work.",
       "status": {
-        "locked": "Seal work worth holding up to earn your place.",
+        "locked": "Submit work worth holding up to earn your place.",
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
@@ -420,7 +420,7 @@
     },
     "coven": {
       "name": "Cozy Coven",
-      "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a quest, cast a small spell, let the circle cheer.",
+      "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
       "status": {
         "locked": "Do the tiny brave thing to be invited ✦",
         "eligible": "The circle has opened for you ✦",

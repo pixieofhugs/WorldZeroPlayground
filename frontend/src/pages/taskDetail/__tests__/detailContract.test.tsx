@@ -208,7 +208,7 @@ describe("task-detail gallery sort toggle", () => {
       const { text } = render(<Archetype state={baseState()} />);
       for (const label of SORT_LABELS) expect(text).not.toContain(label);
       // The heading and the empty line stay — only the control goes.
-      expect(text).toContain("No praxis filed yet");
+      expect(text).toContain("No praxis submitted yet");
     });
 
     it(`${slug} draws the sort toggle once there is praxis to sort`, () => {

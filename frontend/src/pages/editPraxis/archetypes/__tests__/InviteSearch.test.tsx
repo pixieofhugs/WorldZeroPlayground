@@ -119,7 +119,8 @@ describe("InviteSearch — the compose-stage duel pair (#1417)", () => {
       duelState(1, { challengerSubmitted: false, opponentSubmitted: true }),
     );
     expect(html).toContain("still writing");
-    expect(html).toContain("sealed");
+    // #1863: a duel side that is in reads `submitted`, not `sealed`.
+    expect(html).toContain("submitted");
   });
 
   // The design's static mock simply had nowhere to put these; that is not a

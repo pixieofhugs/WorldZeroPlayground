@@ -70,7 +70,7 @@
       "drop": "drop"
     },
     "submitted": {
-      "text": "You've filed praxis for this task",
+      "text": "You've submitted praxis for this task",
       "view": "Read your praxis"
     },
     "brief": {
@@ -84,7 +84,7 @@
       },
       "viewAll": "View all {{count}} praxis →",
       "showFewer": "Show fewer ↑",
-      "empty": "No praxis filed yet. Be the first."
+      "empty": "No praxis submitted yet. Be the first."
     },
     "comments": {
       "heading": "Discussion"
