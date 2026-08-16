@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { collabCopy } from "../../../components/collab/collabCopy";
+import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
@@ -213,6 +214,18 @@ export interface ComposerSizes {
   maxWidth: number | string;
   /** Sheet padding, from the --space-* scale. */
   padding: string;
+  /**
+   * The sheet's side inset, as its own token (#1828).
+   *
+   * Split out of `padding` because the full-bleed submit band has to NEGATE it:
+   * a child of a padded column reaches its parent's edge only by running the
+   * same token the other way. Three skins had each re-derived this pair from the
+   * form factor by hand, which is three chances to disagree with the column they
+   * are bleeding out of.
+   */
+  padX: string;
+  /** The sheet's bottom inset — the other half the band negates. */
+  padBottom: string;
   /** Vertical rhythm between the layout's regions. */
   gap: string;
   /** The composer's own heading tier. */
@@ -236,6 +249,8 @@ export function useComposerSizes(): ComposerSizes {
     ? {
         maxWidth: "100%",
         padding: "var(--space-lg) var(--space-lg) var(--space-xl)",
+        padX: "var(--space-lg)",
+        padBottom: "var(--space-xl)",
         gap: "var(--space-lg)",
         // design 23px → the 24px rung.
         titleSize: "var(--text-title)",
@@ -244,6 +259,8 @@ export function useComposerSizes(): ComposerSizes {
     : {
         maxWidth: 720,
         padding: "var(--space-xl) var(--space-2xl) var(--space-2xl)",
+        padX: "var(--space-2xl)",
+        padBottom: "var(--space-2xl)",
         gap: "var(--space-xl)",
         // design 29px → the 32px rung. A --text-* token names a TIER, and the
         // composer's heading is the same tier as every other page heading.
@@ -259,6 +276,13 @@ export function useComposerSizes(): ComposerSizes {
  * colour to the skin, which is exactly the split this helper makes — pass your
  * own font and ink, inherit the tracking. 12px is the --text-lg rung; a label is
  * chrome, so the content floor does not apply to it (§4a).
+ *
+ * Every value here is a DEFAULT and not a pin: `overrides` is spread last, so a
+ * skin whose design asks for its own size, tracking or weight says so at the
+ * call site and wins. #1828 was filed reading this as a ceiling — eight skins
+ * landing on 12px is what the CALLERS pass, not what this helper allows — so the
+ * line is written down rather than left to be re-derived by the next reader.
+ * {@link composerBandStyle} is the same shape one tier up.
  */
 export function composerLabelStyle(
   overrides: CSSProperties = {},
@@ -271,6 +295,119 @@ export function composerLabelStyle(
     lineHeight: 1.2,
     ...overrides,
   };
+}
+
+/**
+ * The right-hand cluster of a section's label row — the write-up header's
+ * `saved a moment ago · N words · [Write|Preview]` (#1828).
+ *
+ * It WRAPS, and that is the whole reason it is a shared style rather than three
+ * spans: the design's note says so in as many words — *"at the faction's real
+ * label metrics (Cinzel 0.24em, Bebas 13px) three nowrap children don't fit a
+ * phone's header row."* Moving the autosave line up here out of the status row
+ * without this lands a third nowrap child on that row on every phone.
+ *
+ * `flex: 1 1 auto` + `minWidth: 0` so the cluster gives the label its intrinsic
+ * width first and then takes what is left; `justifyContent: flex-end` keeps it
+ * ranged right as it wraps. Design gaps 10/6 → the --space-md / --space-sm
+ * rungs.
+ */
+export const composerMetaCluster: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "var(--space-md)",
+  rowGap: "var(--space-sm)",
+  flexWrap: "wrap",
+  flex: "1 1 auto",
+  minWidth: 0,
+};
+
+/**
+ * The proof drop zone's ground: the skin's field, at 42% (#1828).
+ *
+ * Translucent on purpose — the design's note is *"so the sheet's own ornament
+ * reads through the drop zone"* — and every faction takes it, which is why the
+ * 42% is stated once here instead of eight times.
+ */
+export function composerDropGround(field: string): string {
+  return `color-mix(in srgb, ${field} 42%, transparent)`;
+}
+
+export interface ComposerBand {
+  /**
+   * The band's fill. The skin's CTA while there is something to file, and its
+   * CAST paint once the viewer has — the confirmation signal the design says the
+   * bleed exists for. The archetype decides which, because only it knows what
+   * "filed" means for its own gate (Coven's `hasCast`).
+   */
+  background: string;
+  /** The ink on that fill. */
+  color: string;
+  /**
+   * The sheet's own frame, for the band's 1.5px top rule.
+   *
+   * The SHEET's frame, not the fields' — for Everymen that is
+   * `--faction-everymen-composer-frame` (gold in light, red-deep in dark) and
+   * not `--everymen-frame`, which is the ink the panels are ruled in.
+   */
+  frame: string;
+  /** The band's face. Several skins speak their TITLE face here, not the label one. */
+  fontFamily?: string;
+  /** The band's tier on the --text-* ramp. Defaults to the label rung. */
+  fontSize?: string;
+  fontWeight?: number;
+  letterSpacing?: string;
+  /** A skin whose CTA carries a glow (the Singularity's, in dark). */
+  boxShadow?: string;
+}
+
+/**
+ * The FULL-BLEED SUBMIT BAND (#1828): the composer's one irreversible act,
+ * drawn flush to the sheet's bottom edge.
+ *
+ * Seven skins draw it and three had hand-rolled it, in three different shapes —
+ * S.N.I.D.E. with negative side margins plus a `paddingBottom: 0` on the content
+ * column, Coven with a negative margin on three sides, and the Everymen with a
+ * plain `width: 100%` that stopped at the sheet's inset on all three. So the
+ * bleed is one affordance now: it negates {@link ComposerSizes}'s own insets, so
+ * a band cannot disagree with the column it is bleeding out of, and the sheet's
+ * `overflow: hidden` rounds the corners for it.
+ *
+ * Pass the result as the `PublishButton`'s `style` and mount it through
+ * `<ComposerFooter band>`, which is what stretches it across the column.
+ *
+ * na and Albescent do NOT take it — the unaffiliated kit keeps the inline
+ * button, which is the owner ruling on #1828 and the reason this is a per-skin
+ * style rather than something the footer does on its own.
+ */
+export function composerBandStyle(
+  sizes: ComposerSizes,
+  band: ComposerBand,
+): CSSProperties {
+  return composerLabelStyle({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "var(--space-sm)",
+    // No top margin: the footer's own column gap already stands the band off
+    // the exits row (design 18px → the --space-lg rung the footer spends).
+    margin: `0 calc(-1 * ${sizes.padX}) calc(-1 * ${sizes.padBottom})`,
+    padding: "var(--space-lg) var(--space-xl)",
+    border: "none",
+    borderRadius: 0,
+    borderTop: `1.5px solid ${band.frame}`,
+    background: band.background,
+    color: band.color,
+    boxShadow: band.boxShadow,
+    // Spelled with `??` rather than left undefined: `overrides` is spread LAST,
+    // so an absent key here would erase the label tier's own default instead of
+    // inheriting it.
+    fontFamily: band.fontFamily ?? "var(--font-body)",
+    fontSize: band.fontSize ?? "var(--text-lg)",
+    fontWeight: band.fontWeight,
+    letterSpacing: band.letterSpacing ?? "0.14em",
+  });
 }
 
 interface ComposerSheetProps {
@@ -489,16 +626,33 @@ export function ComposerRule({ style, children }: ComposerRuleProps) {
 interface ComposerStatusRowProps {
   /** The stage word — Draft, and later Submitted. */
   status: ReactNode;
-  /** The autosave line beside it. */
+  /**
+   * The second line beside the stage word.
+   *
+   * The COMPOSER passes nothing since #1828: its row reads `Draft` alone, and
+   * the autosave string it used to carry sits in the write-up header beside the
+   * word count (see {@link composerMetaCluster}). What still passes one is the
+   * waiting surface, whose second line is a fact about the wait — when you
+   * filed, what the crew is still waiting on — and not a save state.
+   */
   meta?: ReactNode;
-  /** The faction's status mark, drawn at the end of the row. */
+  /**
+   * The faction's status mark, drawn at the end of the row.
+   *
+   * Also the waiting surface's alone since #1828. On a row that says `Draft` the
+   * mark is decoration, and for Coven it was a second pentacle competing with
+   * the sigil in the masthead directly above it; it is not discarded but
+   * DEFERRED — the same element reappears as the awaiting surface's `heroMark`
+   * beside "Your part is submitted", which #1189 called the strongest
+   * per-faction beat on the page.
+   */
   mark?: ReactNode;
   style?: CSSProperties;
   statusStyle?: CSSProperties;
   metaStyle?: CSSProperties;
 }
 
-/** Draft · Saved just now, with the skin's status mark at the end. */
+/** The stage word, with the waiting surface's second line and mark beside it. */
 export function ComposerStatusRow({
   status,
   meta,
@@ -711,7 +865,22 @@ export function RingMark({
 export interface TaskSlipProps {
   praxis: PraxisOut;
   task: TaskOut | null;
-  /** The faction's points mark, drawn at the slip's end. */
+  /**
+   * The mark at the slip's end. Defaults to the shared {@link ScoreStamp}
+   * (#1828) — pass one only to say something OTHER than the praxis's total.
+   *
+   * It used to be required in practice: every archetype passed a composer-only
+   * points mark of its own while the waiting surface mounted the stamp, so the
+   * mark changed shape the instant you pressed Submit, on the same page. The
+   * ornament seam survives the swap — `ScoreStamp` dispatches per faction
+   * through `surfaceMap("scoreStamp")` (ADR-0049), so each faction still brings
+   * its own device — and the site stops maintaining two parallel per-faction
+   * points marks.
+   *
+   * A draft renders it: the gate is `moderation_status` (`hidden`/`failed`) and
+   * never `status`, and the backend scores every praxis unconditionally, so a
+   * draft's total is its base points.
+   */
   mark?: ReactNode;
   /**
    * The slip's eyebrow. Defaults to the composer's neutral `The task`; the
@@ -837,7 +1006,7 @@ export function TaskSlip({
           </div>
         )}
       </div>
-      {mark}
+      {mark ?? <ScoreStamp praxis={praxis} />}
     </div>
   );
 }
@@ -850,11 +1019,53 @@ interface ComposerFooterProps {
    */
   start?: ReactNode;
   end: ReactNode;
+  /**
+   * The cast is a full-bleed BAND rather than an inline button (#1828).
+   *
+   * The exits keep a text row of their own and the band closes the sheet under
+   * it, stretched across the column so {@link composerBandStyle}'s negative side
+   * margins reach both edges. Seven skins pass this; na and Albescent do not,
+   * and the unaffiliated kit keeping the inline button is the point of the
+   * distinction rather than an omission.
+   */
+  band?: boolean;
   style?: CSSProperties;
 }
 
 /** The footer bar: exits at the start, the cast at the end (#646). */
-export function ComposerFooter({ start, end, style }: ComposerFooterProps) {
+export function ComposerFooter({
+  start,
+  end,
+  band = false,
+  style,
+}: ComposerFooterProps) {
+  if (band) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          // Stretch, so the band's `calc(100% + 2 × padX)` is arrived at by the
+          // column rather than written down as a width.
+          alignItems: "stretch",
+          gap: "var(--space-lg)",
+          ...style,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-lg)",
+            flexWrap: "wrap",
+          }}
+        >
+          {start}
+        </div>
+        {end}
+      </div>
+    );
+  }
   return (
     <div
       style={{
