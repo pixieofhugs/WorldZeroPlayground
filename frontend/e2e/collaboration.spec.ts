@@ -136,9 +136,18 @@ test.describe('collaboration lifecycle', () => {
     try {
       const page = await seed.alice.ctx.newPage()
       await page.goto('/')
-      const sidebar = page.locator('aside')
-      await expect(sidebar.locator(`a[href="/praxis/${seed.praxisId}/edit"]`)).toBeVisible()
-      await expect(sidebar.getByText(seed.task.title)).toBeVisible()
+      // Scoped to the panel, not the whole <aside> (#1676). The sidebar names
+      // one task in two places — the draft under "In progress tasks"
+      // (→ /praxis/{id}/edit) and the task under "Recent activity"
+      // (→ /tasks/{id}) — so an aside-wide getByText is a strict-mode
+      // violation. That is not the duplication bug it looks like: different
+      // sections, different destinations, both correct. `.first()` would pass
+      // by accident and stop asserting WHICH section the draft appears in,
+      // which is the whole claim of this test. `exact` keeps the panel's own
+      // collapse control ("Collapse In progress tasks") out of the match.
+      const inProgress = page.getByLabel('In progress tasks', { exact: true })
+      await expect(inProgress.locator(`a[href="/praxis/${seed.praxisId}/edit"]`)).toBeVisible()
+      await expect(inProgress.getByText(seed.task.title)).toBeVisible()
     } finally {
       await seed.alice.ctx.close()
       await seed.bob.ctx.close()
