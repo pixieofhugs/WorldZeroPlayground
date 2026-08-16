@@ -1,6 +1,6 @@
 import { useEffect, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { loginWith } from '../api/auth'
+import { loginWith, type AuthProvider } from '../api/auth'
 import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
@@ -22,18 +22,34 @@ import { drawAtRoot } from './ui/drawAtRoot'
 export default function SignInOptions({
   className = 'btn-primary',
   style,
+  onChoose,
 }: {
   className?: string
   style?: CSSProperties
+  /**
+   * Run just before the browser leaves for the provider.
+   *
+   * `loginWith` is a full document navigation, so this is the last moment any
+   * of this tab's code runs. The onboarding flow uses it to record that it was
+   * mid-flow, because the backend callback redirects to a constant
+   * (`FRONTEND_URL`) and nothing else survives the round trip. Absent
+   * everywhere else — the NavBar sheet and the Home hero have no place to
+   * return to.
+   */
+  onChoose?: () => void
 }) {
   const { t } = useTranslation('common')
+  const go = (provider: AuthProvider) => () => {
+    onChoose?.()
+    loginWith(provider)
+  }
   // Written out rather than mapped over a provider list: two of them, and a
   // literal key is what keeps the catalog greppable from the call site.
   return (
     <>
       <button
         type="button"
-        onClick={() => loginWith('google')}
+        onClick={go('google')}
         className={className}
         style={style}
         data-testid="sign-in-google"
@@ -42,7 +58,7 @@ export default function SignInOptions({
       </button>
       <button
         type="button"
-        onClick={() => loginWith('discord')}
+        onClick={go('discord')}
         className={className}
         style={style}
         data-testid="sign-in-discord"
