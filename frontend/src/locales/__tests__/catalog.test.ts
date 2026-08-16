@@ -78,6 +78,43 @@ describe('en copy catalog shape', () => {
   })
 })
 
+// #1865: every faction body computes the spotlight as the highest ALL-TIME
+// score — there is no time window in the frontend or the backend. Four labels
+// used to name one anyway ("of the week", "of the Fortnight"), so a player who
+// topped their faction expected to lose the slot in seven days and never would.
+// Guard the VALUE, not the key: the way this lie comes back is a voice pass
+// rewriting copy, which no key-presence check would catch.
+describe('faction spotlight labels name no time window', () => {
+  const TIME_WORDS = /\b(weekly|week|fortnightly|fortnight|daily|monthly)\b/i
+
+  // factions.json's inferred type is a union of differently-shaped per-slug
+  // objects; this narrows it to the one field the guard reads.
+  const entries = Object.entries(factions) as [
+    string,
+    { spotlight?: { label?: string } },
+  ][]
+  const spotlights = entries.filter(([, value]) => value?.spotlight?.label !== undefined)
+
+  it('finds a spotlight label on every faction that has one', () => {
+    // Fails loudly if a restructure makes the loop below vacuous.
+    expect(spotlights.map(([slug]) => slug)).toEqual([
+      'ephemerists',
+      'everymen',
+      'singularity',
+      'snide',
+      'ua',
+      'coven',
+      'wow',
+    ])
+  })
+
+  for (const [slug, value] of spotlights) {
+    it(`${slug} promises no rotation`, () => {
+      expect(value.spotlight!.label).not.toMatch(TIME_WORDS)
+    })
+  }
+})
+
 // #850: UA used to have no taunt branch at all and fell through to `default`,
 // which is a gloat. A contemplative faction gloating is off-voice, so UA
 // overrides with its own quiet acknowledgements — real entries, not a fallback.
