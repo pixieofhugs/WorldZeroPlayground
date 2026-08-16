@@ -9,7 +9,8 @@
     "wordmark": "World Zero",
     "tagline": "a collaborative production game played in the real world",
     "cta": {
-      "loggedIn": "Find a Task"
+      "loggedIn": "Find a Task",
+      "loggedOut": "PLACEHOLDER — the way in, for a stranger"
     },
     "devLogin": "dev login (no OAuth)"
   },

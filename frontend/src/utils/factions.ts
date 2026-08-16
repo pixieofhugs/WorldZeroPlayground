@@ -22,6 +22,7 @@
  */
 import type { CSSProperties } from "react";
 import i18n from "../i18n";
+import { hasOwnKey } from "./hasOwnKey";
 
 // Faction slugs are runtime-dynamic, so the catalog keys (`factions:names.<slug>`
 // / `factions:descriptions.<slug>`) can't be the typed literals t() expects.
@@ -85,9 +86,17 @@ const CSS_KEY: Record<string, string> = {
 /**
  * Resolve a slug to its CSS-variable key. Unknown/unregistered slugs degrade to
  * `default` (neutral grey / rainbow), never impersonate `ua`.
+ *
+ * The lookup is own-property-only because a plain bracket read broke that
+ * contract for the whole of `Object.prototype`: `CSS_KEY["constructor"]` is the
+ * `Object` function, which `??` cannot catch, so `factionCssVar` built
+ * `var(--faction-function Object() { [native code] })` and the element lost its
+ * colour (#1821). Every slug reaching here came from the server until #1744
+ * made presence awareness — self-reported by each client and relayed, ADR-0073
+ * — a path for a co-member's arbitrary string.
  */
 function resolveCssKey(slug: string | null | undefined): string {
-  return CSS_KEY[slug ?? ""] ?? "default";
+  return hasOwnKey(CSS_KEY, slug) ? CSS_KEY[slug] : "default";
 }
 
 /**
@@ -297,10 +306,15 @@ export function factionFill(
  * with a manifest and a membership roster, and only the mapped `default` keeps
  * it out of the spectrum. Anything that starts testing key presence again will
  * both grey out unaffiliated players AND expose a secret society.
+ *
+ * The presence half is own-property-only for the same reason resolveCssKey's
+ * lookup is (#1821): `in` walks the prototype chain, so `"constructor" in
+ * CSS_KEY` was true and its mapped value — the `Object` function — is not
+ * `"default"`, which reported every `Object.prototype` member as a real,
+ * themed faction.
  */
 export function isKnownFaction(slug: string | null | undefined): boolean {
-  const key = slug ?? "";
-  return key in CSS_KEY && CSS_KEY[key] !== "default";
+  return hasOwnKey(CSS_KEY, slug) && CSS_KEY[slug] !== "default";
 }
 
 /**

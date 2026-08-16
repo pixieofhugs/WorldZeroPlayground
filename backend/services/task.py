@@ -419,6 +419,106 @@ class TaskSort(str, Enum):
     level = "level"
 
 
+def viewer_sees_pending_tasks(
+    viewer_level: int, is_admin: bool, era: EraConfig = CURRENT_ERA
+) -> bool:
+    """WHO may watch the review queue — the level-3 unlock, admins exempt.
+
+    ``viewer_level`` is ``-1`` for an anonymous caller, who sits below every
+    gate by construction: this is an ability a *character* earns, so there is no
+    level to read. ``is_admin`` bypasses it because the pending queue is the
+    moderation queue (`is_admin` and `skip_level_check` answer different
+    questions — see :func:`list_tasks`).
+    """
+    return is_admin or viewer_level >= era.level_to_see_pending_tasks
+
+
+def pending_visibility_clause(
+    viewer_level: int, is_admin: bool, era: EraConfig = CURRENT_ERA
+):
+    """The whole pending rule as one WHERE clause: the level AND the window.
+
+    Stated once and applied at every door that can return a task — the browse
+    (:func:`list_tasks`) and the detail read (:func:`get_task_for_viewer`).
+    Before #1725 the browse was the only door that asked, and task ids are
+    sequential, so guessing the next id read a proposal nobody was cleared for.
+    A second copy of a rule with an era-configured level *and* an age window is
+    how the two drift; hence a clause both callers pass to their query rather
+    than a predicate each restates.
+
+    ``era.pending_task_admin_review_hours`` (#1695) is the second half: the
+    level unlock only reaches a proposal once it is that old, so an admin gets
+    the first look and can edit or reject it before other players read it. It is
+    a per-ROW fact — the same level-3 player sees the ripe rows and not the
+    fresh ones — so it is a clause, not a third boolean.
+
+    The clock is ``created_at``, never ``updated_at`` (owner ruling on #1695):
+    the window is "time for an admin to look", not "time since last touched", so
+    an edit at hour 47 must not restart it and make the go-live time
+    unpredictable. ``Task`` has no other timestamp and does not need one — a task
+    can re-enter ``pending`` from ``active``, but only an admin can move it
+    (:func:`services.admin_service.update_task_status`), so on that path the "no
+    admin has looked yet" premise this window protects is already false.
+
+    ponytail: if a NON-admin path ever sends a task back to ``pending``,
+    ``created_at`` stops being the proposal clock and this wants a dedicated
+    ``pending_since`` column stamped on every transition into the status.
+    """
+    if is_admin:
+        # Exempt, not merely early: the window exists to give admins the first
+        # look, so holding it against them defeats the feature.
+        return true()
+    if viewer_sees_pending_tasks(viewer_level, is_admin, era):
+        return or_(
+            Task.status != TaskStatus.pending,
+            Task.created_at
+            <= datetime.now(timezone.utc)
+            - timedelta(hours=era.pending_task_admin_review_hours),
+        )
+    return Task.status != TaskStatus.pending
+
+
+async def get_task_for_viewer(
+    session: AsyncSession,
+    task_id: int,
+    viewer: Optional[Character],
+    *,
+    is_admin: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> Optional[Task]:
+    """One task by id, or ``None`` when the pending gate withholds it (#1725).
+
+    The route turns ``None`` into 404 — never 403, which would confirm the id
+    exists and hand an enumerating caller the existence oracle the review window
+    is there to close.
+
+    Only ``pending`` is ever withheld here. ``active`` and ``retired`` are
+    returned to anyone: praxis link back to retired tasks, and
+    ``era.level_to_see_retired_tasks`` gates *the archive* — the browse — not
+    every mention of a retired task, the same distinction
+    :func:`list_tasks` already draws for a proposer's profile.
+
+    That is also why the status is read before the viewer's level: a detail read
+    of an approved task must not start costing two extra queries to enforce a
+    gate that cannot apply to it.
+    """
+    task = await session.get(Task, task_id)
+    if task is None or task.status is not TaskStatus.pending:
+        return task
+    viewer_level = -1
+    if viewer is not None:
+        era_row = await get_current_era_row(session)
+        stats = await get_or_create_stats(session, viewer.id, era_row.id)
+        viewer_level = stats.level
+    visible = await session.scalar(
+        select(Task.id).where(
+            Task.id == task_id,
+            pending_visibility_clause(viewer_level, is_admin, era),
+        )
+    )
+    return task if visible is not None else None
+
+
 async def list_tasks(
     session: AsyncSession,
     *,
@@ -553,48 +653,16 @@ async def list_tasks(
         or (viewer is not None
             and viewer.faction_slug in era.allow_praxis_on_retired_task_factions)
     )
-    viewer_sees_pending = is_admin or viewer_level >= era.level_to_see_pending_tasks
+    viewer_sees_pending = viewer_sees_pending_tasks(viewer_level, is_admin, era)
 
-    # #1695 — the second half of the pending rule, and the one that made a
-    # per-viewer boolean insufficient. The level unlock above says WHO may watch
-    # the review queue; `era.pending_task_admin_review_hours` says WHEN, so an
-    # admin gets the first look at a proposal and can edit or reject it before
-    # other players read it. It is a per-ROW fact — the same level-3 player sees
-    # the ripe rows and not the fresh ones — so it is a WHERE clause, not a third
-    # boolean.
-    #
-    # Written ONCE and applied unconditionally below, which is the whole reason
-    # it is a clause: every branch of the status logic is downstream of this
+    # Applied unconditionally here, which is the whole reason the pending rule is
+    # a clause: every branch of the status logic below is downstream of this
     # `where`, so there is no door it can be forgotten at. That is the failure
     # this file already carries a comment about — a gate written at only one door
     # is not a gate — and the redundant `status == "all"` restatement of the
-    # level rule is gone because this clause subsumes it.
-    #
-    # The clock is `created_at`, never `updated_at` (owner ruling on #1695): the
-    # window is "time for an admin to look", not "time since last touched", so an
-    # edit at hour 47 must not restart it and make the go-live time
-    # unpredictable. `Task` has no other timestamp, and it does not need one — a
-    # task can re-enter `pending` from `active`, but only an admin can move it
-    # (`services.admin_service.update_task_status`), so on that path the "no
-    # admin has looked yet" premise this window protects is already false.
-    #
-    # ponytail: if a NON-admin path ever sends a task back to `pending`,
-    # `created_at` stops being the proposal clock and this wants a dedicated
-    # `pending_since` column stamped on every transition into the status.
-    if is_admin:
-        # Exempt, not merely early: the window exists to give admins the first
-        # look, so holding it against them defeats the feature.
-        pending_visibility = true()
-    elif viewer_sees_pending:
-        pending_visibility = or_(
-            Task.status != TaskStatus.pending,
-            Task.created_at
-            <= datetime.now(timezone.utc)
-            - timedelta(hours=era.pending_task_admin_review_hours),
-        )
-    else:
-        pending_visibility = Task.status != TaskStatus.pending
-    query = query.where(pending_visibility)
+    # level rule is gone because this clause subsumes it. `get_task_for_viewer`
+    # passes the same clause for the same reason (#1725).
+    query = query.where(pending_visibility_clause(viewer_level, is_admin, era))
 
     if status and status != "all":
         try:
