@@ -178,12 +178,28 @@ class EraConfig:
     # a real faction. That is ADR-0042's shape: the era doc wins where it
     # speaks, and stays silent about the obvious.
     #
-    # Deliberately NOT the era-*reset* faction
-    # (services.era.ERA_RESET_DEFAULT_FACTION). They hold the same value today
-    # and are arguably one knob, but an era may reasonably want players born
-    # unaffiliated and *reset* into something else, so #1559 left them apart
-    # rather than silently unify them.
+    # Deliberately NOT the era-*reset* faction (reset_faction_slug, below). They
+    # hold the same value today and are arguably one knob, but an era may
+    # reasonably want players born unaffiliated and *reset* into something else,
+    # so #1559 left them apart rather than silently unify them — a ruling #1580
+    # upheld.
     starting_faction_slug: str = UNAFFILIATED_FACTION_SLUG
+
+    # The faction a character is dropped into when `reset_faction` fires (#1580).
+    # Being *born* into a faction and being *returned* to one at era close are
+    # different questions an era may want to answer differently — players born
+    # unaffiliated but reset into a starter faction, say. Today both answer
+    # UNAFFILIATED_FACTION_SLUG, which is why the two are easy to mistake for one
+    # knob; they are kept apart on purpose. Same constraint as above: whatever an
+    # era names must be a slug that era actually configures, since it is an FK
+    # onto a Faction row.
+    #
+    # Read from the era being *opened*: apply_era_reset takes `era: EraConfig =
+    # CURRENT_ERA` and scripts/era_reset.py leaves that default in place, the
+    # rollover procedure being "point CURRENT_ERA at the next era, then run the
+    # script". So this is the incoming era's answer to where the outgoing era's
+    # players land — consistent with reset_score/reset_level/reset_faction.
+    reset_faction_slug: str = UNAFFILIATED_FACTION_SLUG
 
     # Metatask-per-praxis cap (defaulted so bare EraConfig constructions stay valid).
     # A praxis holds metatasks_per_praxis_base metatasks until the applying character

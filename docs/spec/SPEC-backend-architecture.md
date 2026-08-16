@@ -57,6 +57,14 @@ Canonical examples:
 - `services/era.py::apply_era_reset` — takes `era: EraConfig = CURRENT_ERA`.
 - `services/character_stats.py::recalculate_character_stats` — uses
   `era.factions` to look up faction modifiers.
+- `services/character.py::create_character` — reads `era.starting_faction_slug`
+  for the faction a character is *born* into, never the `"na"` literal.
+- `services/era.py::apply_era_reset` — reads `era.reset_faction_slug` for the
+  faction a rollover *returns* a character to. Deliberately a second field, not
+  the one above (#1580): where you start and where a rollover puts you are two
+  moments an era may answer differently. It was a module constant until #1580,
+  which is exactly the rule-3 shape to watch for — a reset block reading
+  `era.reset_level` and `era.reset_vote_budget` and then a hardcoded slug.
 
 ---
 
