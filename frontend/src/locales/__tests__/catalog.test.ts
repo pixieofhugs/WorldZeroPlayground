@@ -146,6 +146,76 @@ describe('UA taunts', () => {
   })
 })
 
+// #1858: the seven faction character-profile kits held their copy as raw
+// literals in `.tsx` — invisible to any `locales/` sweep, never reviewed,
+// untranslatable — while the na kit next to them was properly i18n'd. This
+// guards the SHAPE: every slug that ships a profile kit must resolve the full
+// set of copy keys its kit reads. A missing one throws at t() (the catalog's
+// missingKeyHandler), so a kit that quietly grows a raw literal back fails here
+// as soon as its key is listed, and a kit that drops one fails immediately.
+describe('faction profile kits keep their copy in the catalog', () => {
+  // Per slug, the `profile.<slug>.*` keys ProfileSkin reads. Not a uniform
+  // shape on purpose: `levelUnit` and `scoreFootnote` are optional knobs only
+  // some kits set (the rest take ProfileSkin's shared `profile.levelUnit` and
+  // draw no footnote), and WOW's badge heading is `profile.wow.honours` —
+  // already in the catalog for its phone stack, the same words for the same
+  // section, so the desktop kit reads that key rather than a second copy of it.
+  const PROFILE_KIT_KEYS: Record<string, readonly string[]> = {
+    ua: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+    snide: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+    wow: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'honours'],
+    coven: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+    ephemerists: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+    everymen: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+    singularity: ['ringLabel', 'nextLevel', 'scoreFootnote', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+  }
+
+  for (const [slug, keys] of Object.entries(PROFILE_KIT_KEYS)) {
+    it(`${slug} resolves every profile copy key its kit reads`, () => {
+      for (const key of keys) {
+        const value = i18n.t(`common:profile.${slug}.${key}` as 'common:profile.lvl')
+        expect(value, `${slug}.${key}`).toBeTypeOf('string')
+        expect(value.length, `${slug}.${key}`).toBeGreaterThan(0)
+      }
+    })
+  }
+
+  it('has the two shared profile keys the skins fell back on', () => {
+    // `profile.levelUnit` was ProfileSkin's hardcoded `?? 'pts this level'`
+    // default and `profile.topPraxis` the laurel's `title=` — both live copy on
+    // eight surfaces, both outside the catalog until #1858.
+    expect(i18n.t('common:profile.levelUnit')).toBe('pts this level')
+    expect(i18n.t('common:profile.topPraxis')).toBe('Top praxis')
+    expect(i18n.t('common:profile.praxisHeading')).toBe('Praxis')
+    expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('sealed by Reza')
+  })
+
+  it('interpolates the two copy fields that take a named variable', () => {
+    // `nextLevelLabel(next)` and `praxisEyebrow(name)` were template literals.
+    // A template literal cannot be translated; a named {{var}} can be moved
+    // anywhere in the sentence, which is the whole point of the extraction.
+    expect(i18n.t('common:profile.coven.nextLevel', { level: 8 })).toBe('next · lvl 8')
+    // Ephemerists interpolates the ROMAN numeral its kit formats, not the int.
+    expect(i18n.t('common:profile.ephemerists.nextLevel', { level: 'VIII' })).toBe('next · level VIII')
+    expect(i18n.t('common:profile.everymen.praxisEyebrow', { name: 'Reza' })).toBe('Work Reza finished')
+  })
+
+  it('carries the odd characters over verbatim', () => {
+    // The copy review that follows #1858 rewords these; the MOVE may not. A
+    // stray ornament or a lost `> ` prefix would be a silent copy edit.
+    expect(i18n.t('common:profile.coven.praxisEmptyBody')).toBe(
+      'The first bit of mischief is always the hardest ✦',
+    )
+    expect(i18n.t('common:profile.singularity.praxisEmptyTitle')).toBe('> NO OUTPUT SEALED')
+    expect(i18n.t('common:profile.singularity.scoreFootnote', { score: 1880 })).toBe(
+      '> 1880 PTS LOGGED',
+    )
+    expect(i18n.t('common:profile.snide.praxisEmptyBody')).toBe(
+      "Clean record's a bad look around here. Go pull a job.",
+    )
+  })
+})
+
 describe('no duplicate keys in any locale catalog', () => {
   // JSON is last-wins: a key repeated inside the same object silently drops the
   // earlier block at parse time, so the copy vanishes with no error (this is
