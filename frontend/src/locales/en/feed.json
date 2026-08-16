@@ -54,7 +54,7 @@
     "friend_signup": "Signup",
     "friend_defection": "Defection",
     "global_task": "New task",
-    "collaborator_submitted": "Collaborator filed",
+    "collaborator_submitted": "Collaborator submitted",
     "awaiting_submission": "Your turn",
     "nudge": "Nudge",
     "era_announcement": "Era",
@@ -83,10 +83,10 @@
     "feedEmptyBody": "The city is quiet. Go do something."
   },
   "rowAction": {
-    "fileIt": "File it",
+    "fileIt": "Submit it",
     "dropOut": "Drop out",
     "answer": "Answer",
-    "fileYours": "File yours",
+    "fileYours": "Submit yours",
     "reply": "Reply",
     "failed": "That didn't go through."
   },

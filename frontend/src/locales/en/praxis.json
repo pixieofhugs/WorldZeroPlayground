@@ -281,14 +281,14 @@
   },
   "duelRoster": {
     "you": "You",
-    "sealed": "sealed ✓",
+    "sealed": "submitted ✓",
     "walking": "still walking…"
   },
   "duelSeal": {
-    "heading": "Seal the duel?",
-    "confirm": "Seal it",
+    "heading": "Lock the duel?",
+    "confirm": "Lock it",
     "cancel": "Not yet",
-    "bodyActive": "{{name}} has accepted. Casting now seals the duel — once you have both cast, pulling back is a permanent forfeit.",
+    "bodyActive": "{{name}} has accepted. Casting now locks the duel — once you have both cast, pulling back is a permanent forfeit.",
     "bodyPending": "{{name}} hasn't accepted yet. You can cast now; if they decline, this scores as an ordinary praxis.",
     "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit.",
     "wow": {
