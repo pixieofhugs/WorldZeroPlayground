@@ -11,9 +11,10 @@
  * hex — colours via --faction-snide-* vars.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 const INK = 'var(--faction-snide-ink)' // near-black
 const PAPER = 'var(--faction-snide-paper)' // warm xerox
@@ -57,7 +58,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'snide',
   dataTheme: 'dark',
   pageBackground: INK,
@@ -127,17 +128,10 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'lvl',
   barFill:
     'repeating-linear-gradient(45deg, var(--faction-snide-acid) 0 6px, var(--faction-snide-acid-deep) 6px 12px)',
   barTrack: 'rgba(255,255,255,0.12)',
-  nextLevelLabel: (next) => `next · lvl ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `cases closed by ${name}`,
-  praxisEmpty: {
-    title: 'No priors. Yet.',
-    body: "Clean record's a bad look around here. Go pull a job.",
-  },
   emptyStateStyle: {
     border: `2px dashed ${ACID}`,
     padding: 'var(--space-2xl)',
@@ -145,7 +139,6 @@ const kit: ProfileKit = {
     background: INK,
   },
   laurel: <SpectrumLaurel centerBg={PAPER} glyphColor={INK} rotate={-8} />,
-  badgeTitle: 'The record',
   badgeBoardStyle: {
     border: `2px solid ${ACID}`,
     background: PAPER,
@@ -189,5 +182,21 @@ const kit: ProfileKit = {
 }
 
 export default function SnideProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.snide.ringLabel'),
+        nextLevelLabel: (next) => t('profile.snide.nextLevel', { level: next }),
+        praxisEyebrow: (name) => t('profile.snide.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.snide.praxisEmptyTitle'),
+          body: t('profile.snide.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.snide.badgeTitle'),
+      }}
+    />
+  )
 }

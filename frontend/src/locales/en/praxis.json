@@ -26,6 +26,9 @@
       "voted": "Voted"
     }
   },
+  "gallery": {
+    "openImage": "View full-size image"
+  },
   "mobileCard": {
     "rosterMore": "+{{count}} more",
     "mediaMore": "+{{count}}",

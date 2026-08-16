@@ -30,6 +30,7 @@
  * relationship every Coven detail page has with the site ground.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import {
@@ -47,7 +48,7 @@ import {
   SOFT,
 } from '../../../components/factionMarks/covenSlip'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 const CHROME = 'var(--font-faction-rounded)' // Quicksand
 const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
@@ -141,7 +142,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'coven',
   pageBackground: PAGE,
   ink: INK,
@@ -180,16 +181,9 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'lvl',
   barFill: BAR,
   barTrack: BORDER,
-  nextLevelLabel: (next) => `next · lvl ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `sealed by ${name}`,
-  praxisEmpty: {
-    title: 'No spells sealed yet',
-    body: 'The first bit of mischief is always the hardest ✦',
-  },
   emptyStateStyle: {
     border: `1.5px dashed ${BORDER}`,
     borderRadius: 14,
@@ -198,7 +192,6 @@ const kit: ProfileKit = {
     background: CARD,
   },
   laurel: <SpectrumLaurel centerBg={CARD} glyphColor={DEEP} rotate={-8} />,
-  badgeTitle: 'Charms earned',
   badgeBoardStyle: {
     border: `2px solid ${BORDER}`,
     borderRadius: 14,
@@ -242,5 +235,21 @@ const kit: ProfileKit = {
 }
 
 export default function CovenProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.coven.ringLabel'),
+        nextLevelLabel: (next) => t('profile.coven.nextLevel', { level: next }),
+        praxisEyebrow: (name) => t('profile.coven.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.coven.praxisEmptyTitle'),
+          body: t('profile.coven.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.coven.badgeTitle'),
+      }}
+    />
+  )
 }

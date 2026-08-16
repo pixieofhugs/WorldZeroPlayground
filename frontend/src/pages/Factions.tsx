@@ -103,7 +103,7 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
       <PageTitle title="Factions" />
 
       {error && (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2 mb-4">{error}</p>
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">{error}</p>
       )}
 
       {/* Invitation letters — collapsible; each card also surfaces its own status below */}

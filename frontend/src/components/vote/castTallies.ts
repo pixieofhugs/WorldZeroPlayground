@@ -30,6 +30,12 @@ import type { VoteTallyOut } from '../../api/votes'
  * ponytail: deliberately not a general query cache. It holds one number pair
  * per write, cleared by the next read of the same id. If a second write ever
  * needs the same treatment, reach for a real cache then — not now.
+ *
+ * THAT SECOND WRITE ARRIVED, and the answer was still no (#1895). The deferred
+ * cast lives BESIDE this store, in `pendingCasts.ts`, because it needs the
+ * opposite lifecycle: a tally must be dropped by the next fetch, client intent
+ * must survive it. Reasoning in full at the top of that file. Two small stores,
+ * no query library — revisit at a third.
  */
 
 const tallies = new Map<number, VoteTallyOut>()

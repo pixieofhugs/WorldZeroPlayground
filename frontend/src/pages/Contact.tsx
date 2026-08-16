@@ -65,7 +65,7 @@ export default function Contact() {
             disabled={submitting}
             className="w-full border-2 border-border bg-card font-body content-text px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50"
           />
-          <span className={`font-body text-xs self-end ${form.name.length >= 90 ? 'text-red-600' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.name.length}/100</span>
+          <span className={`font-body text-xs self-end ${form.name.length >= 90 ? 'warning-text' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.name.length}/100</span>
         </div>
 
         <div>
@@ -100,7 +100,7 @@ export default function Contact() {
             disabled={submitting}
             className="w-full border-2 border-border bg-card font-body content-text px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50 resize-y"
           />
-          <span className={`font-body text-xs ${form.message.length >= 4500 ? 'text-red-600' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.message.length}/5000</span>
+          <span className={`font-body text-xs ${form.message.length >= 4500 ? 'warning-text' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.message.length}/5000</span>
         </div>
 
         {error && (
