@@ -1583,9 +1583,12 @@ export interface paths {
         put?: never;
         /**
          * Unblock Relationship Route
-         * @description Reverse a block (ADR-0009). Either party can unblock; the edge returns to
-         *     active. Separate route from PUT /{id} (block) so the two actions don't
-         *     collide.
+         * @description Reverse a block. Either party can unblock; the edge returns to active.
+         *     Separate route from PUT /{id} (block) so the two actions don't collide.
+         *
+         *     ADR-0009, superseded by ADR-0077 — under which a block is its own record
+         *     and unblock is that record's deletion, authored by the blocker alone. This
+         *     route still implements ADR-0009.
          */
         post: operations["unblock_relationship_route_relationships__relationship_id__unblock_post"];
         delete?: never;

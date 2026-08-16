@@ -7,7 +7,9 @@ reference — the sender's send-time faction voice (``faction_slug``) plus the
 
 ADR-0068 owns *delivery*: **declaring a foe subscribes you to that rival's
 taunts**. A taunt from sender S reaches recipient R only when R holds an active
-foe edge → S, and a block on either edge of the pair silences it (ADR-0009).
+foe edge → S, and a block between the pair silences it in both directions
+(ADR-0077, superseding ADR-0009 — under which the block rides on an edge, so
+either blocked edge of the pair is what silences it).
 The activity feed is the only delivery surface — there is no standalone read
 route, and ``services.activity_feed`` reads the rows this module writes.
 
@@ -47,7 +49,9 @@ async def load_foe_edges(character_id: int, session: AsyncSession) -> FoeEdges:
 
     One query over every edge touching the character, partitioned in Python:
     the pair rule needs *both* directions (an edge is silenced if either side of
-    the pair is blocked, ADR-0009), and a character holds few edges.
+    the pair is blocked, ADR-0009 — superseded by ADR-0077, under which the
+    block record is read directly and outranks the edge), and a character
+    holds few edges.
     """
     edges = (
         await session.execute(
