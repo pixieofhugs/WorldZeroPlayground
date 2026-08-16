@@ -70,13 +70,18 @@
  *
  * `useEditPraxis` and its whole state surface · every control in `controls.tsx`
  * · every block in `shared.tsx` · `MetataskSealStack` · `CollabRoster` (inside
- * `InviteSearch`) · `MarkdownPreview` · UA's own `UaSigil` / `UaEnsoScore` /
- * `Lotus`. No control is forked and no shared block was changed by this issue.
+ * `InviteSearch`) · `MarkdownPreview` · UA's own `UaSigil` / `Lotus`. No control
+ * is forked.
  *
- * `RingMark` is the shared geometry for the two marks and is deliberately NOT
- * used here: its ring is a `background` paint, and UA's ring is a drawn brush
- * delivered as a mask. `UaEnsoScore` is the same geometry with the mark in it
- * and is already UA's, on every other surface that centres a number in the ensō.
+ * The slip's points mark is no longer drawn here at all (#1828): it is
+ * `TaskSlip`'s default, the shared `ScoreStamp`, which dispatches to
+ * `UaScoreStamp` — the ensō, with the total in it. The composer used to draw
+ * `UaEnsoScore` itself over the task's bare `point_value`, so the mark changed
+ * shape the moment you pressed Submit.
+ *
+ * `RingMark` is the shared geometry for a mark of this kind and is deliberately
+ * NOT used here: its ring is a `background` paint, and UA's ring is a drawn
+ * brush delivered as a mask.
  *
  * ## Not drawn as designed
  *
@@ -105,7 +110,10 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -126,22 +134,13 @@ import {
 } from "./controls";
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/sigil/UaSigil";
-import { UA_DISPLAY, UA_TEXT, UaEnsoScore } from "../../../components/factionMarks/uaAtoms";
+import { UA_DISPLAY, UA_TEXT } from "../../../components/factionMarks/uaAtoms";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
 }
-
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 
 /* The practice's inks, named for the ROLE each plays in the design's skin row.
  * Every one carries both themes in `index.css`. */
@@ -321,36 +320,17 @@ export default function UaEditPraxis({ state }: Props) {
       }
     >
       <ComposerSheet sizes={sizes} style={sheetStyle} ground={groundLayer}>
-        {/* Draft · Saved just now, with the ensō as the status mark. */}
+        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
+            header; the sigil is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
-        {/* The task reference slip, on the inset panel with the points mark. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={
-            <UaEnsoScore
-              size={88}
-              value={task?.point_value ?? 0}
-              valueColor={ACCENT}
-              valueSize="var(--text-title)"
-              valueWeight={700}
-            />
-          }
-        />
+        {/* The task reference slip, on the inset panel. Its mark is the shared
+            ScoreStamp (#1828), which is UA's own ensō score by dispatch — the
+            same mark this slip drew, now drawn once for both stages. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -467,7 +447,20 @@ export default function UaEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={labelStyle}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span
+                style={composerLabelStyle({
+                  fontFamily: UA_TEXT,
+                  color: MUTED,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span
                 style={composerLabelStyle({
                   fontFamily: UA_TEXT,
@@ -598,7 +591,9 @@ export default function UaEditPraxis({ state }: Props) {
                   buttonStyle: composerLabelStyle({
                     fontFamily: UA_TEXT,
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the lotus and the ensō read through the
+                       drop zone (#1828). */
+                    background: composerDropGround(FIELD),
                     border: `1px dashed ${FILL}`,
                     borderRadius: RADIUS,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -627,9 +622,11 @@ export default function UaEditPraxis({ state }: Props) {
 
         <ComposerRule style={{ background: HAIR }} />
 
-        {/* [Cancel] … [Submit] — the global order from #646. An inline button
-            with no ornament, which is the design's submit treatment for UA. */}
+        {/* [Cancel] … [Submit] — the global order from #646, with the cast as a
+            full-bleed band (#1828): UA's skin row declares a CTA, so it takes
+            the committed bottom edge like every other non-na kit. */}
         <ComposerFooter
+          band
           start={
             <>
               <SaveDraftButton
@@ -659,7 +656,17 @@ export default function UaEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 style: {
-                  ...primaryStyle,
+                  ...composerBandStyle(sizes, {
+                    fontFamily: UA_TEXT,
+                    /* Design band: 13 / 500 / 0.14em. 13 sits between the label
+                       rung (12) and --text-xl (14); the band takes the rung
+                       ABOVE the label it has to outrank (§4a). */
+                    fontSize: "var(--text-xl)",
+                    fontWeight: 500,
+                    frame: ACCENT,
+                    color: ON_FILL,
+                    background: FILL,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
                 },
               }}
