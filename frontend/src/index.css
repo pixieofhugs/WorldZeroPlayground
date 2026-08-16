@@ -6451,8 +6451,15 @@
 /* Phone: the rails stack full-width. The bar is one component in both form
    factors — this is a media query, not a mobile twin. */
 @media (max-width: 767px) {
+  /* The phone tightens BOTH axes of the column, not just the padding (#1854):
+     the design's mobile filter block runs a 12px gap against the desktop's 16.
+     Inheriting the desktop gap left a bar padded for a phone and spaced for a
+     desktop. (Its padding is the design's 14px read in tokens — `--space-*`
+     has 12 and 16 and no 14, and a bespoke rung for one rule is not worth the
+     `no-raw-style-values` grandfathering.) */
   .filter-bar__body {
     padding: var(--space-md) var(--space-lg);
+    gap: var(--space-md);
   }
 
   .filter-bar__controls {
