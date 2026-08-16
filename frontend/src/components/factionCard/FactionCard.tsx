@@ -483,7 +483,7 @@ function SingularityHoles() {
           style={{
             width: 6,
             height: 4,
-            background: "rgba(10,26,14)",
+            background: "var(--faction-singularity-punch-hole)",
             border:
               "1px solid var(--faction-singularity-card-accent, var(--faction-singularity-border-hard))",
             borderRadius: 1,
