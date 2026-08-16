@@ -82,9 +82,11 @@ import {
   ComposerSheet,
   ComposerStatusRow,
   ErrorBanner,
-  RingMark,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -109,15 +111,6 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
-
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 
 /* The two faces the design names. Both are SURFACE faces on shared
  * `--font-faction-*` tokens rather than Coven's `card-font` (still Caveat), for
@@ -325,123 +318,6 @@ function GlyphScatter() {
   );
 }
 
-/**
- * The points, held in a glowing ward: a halo in accent, an accent ring, four
- * gold spokes turning once every 30 seconds, and five gold stars twinkling out
- * of step with each other.
- *
- * Built on `RingMark` — the shared geometry the layout contract offers for both
- * marks — with the punch-out collapsed (`inset={0}`, transparent centre) because
- * Coven's ward is a drawn sigil rather than a ring with a hole in it. The size,
- * the centring and the content slot are still the shared ones.
- *
- * The stars are HTML spans rather than SVG nodes on purpose: `epTwinkle`
- * animates `transform: scale()`, and on an SVG child that scales about the
- * viewBox origin instead of the star, which throws them across the disc.
- */
-const WARD_STARS: [number, number, string][] = [
-  [50, 4, "0s"],
-  [88, 26, "0.3s"],
-  [14, 74, "0.6s"],
-  [84, 78, "0.9s"],
-  [16, 24, "1.2s"],
-];
-
-function PointsWard({ size, points }: { size: number; points: number }) {
-  return (
-    <RingMark
-      size={size}
-      inset={0}
-      ring="var(--faction-coven-slip-sigil-halo)"
-      inner="transparent"
-    >
-      {/* The still layer: the accent ring the numeral sits inside. */}
-      <svg
-        viewBox="0 0 100 100"
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-      >
-        <circle
-          cx="50"
-          cy="50"
-          r="32"
-          fill="none"
-          stroke={PINK}
-          strokeWidth="1.8"
-          opacity="0.9"
-        />
-      </svg>
-      {/* The turning layer: four gold spokes outside the ring. */}
-      <svg
-        className="ep-spin"
-        viewBox="0 0 100 100"
-        aria-hidden="true"
-        style={
-          {
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            transformOrigin: "50% 50%",
-            "--ep-spin-dur": "30s",
-          } as CSSProperties
-        }
-      >
-        <g stroke={GOLD} strokeWidth="1.4" strokeLinecap="round" opacity="0.85">
-          <path d="M50 50 L74.7 25.3" />
-          <path d="M50 50 L74.7 74.7" />
-          <path d="M50 50 L25.3 74.7" />
-          <path d="M50 50 L25.3 25.3" />
-        </g>
-      </svg>
-      {WARD_STARS.map(([x, y, delay]) => (
-        // Two nodes, not one: the outer span is CENTRED on the point by
-        // transform (a negative half-pixel margin would be spacing wearing
-        // ornament's clothes), and `epTwinkle` animates `transform` — so the
-        // keyframe would overwrite that centring if they shared an element.
-        // This is where the ratchet's blind spot to a unary minus was found;
-        // that hole is closed now (#1233), and the two nodes still stand on
-        // the animation argument alone.
-        <span
-          key={`${x}-${y}`}
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: `${x}%`,
-            top: `${y}%`,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <span
-            className="ep-twinkle"
-            style={
-              {
-                display: "block",
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: GOLD,
-                "--ep-delay": delay,
-              } as CSSProperties
-            }
-          />
-        </span>
-      ))}
-      <span
-        style={{
-          position: "relative",
-          fontFamily: DISPLAY,
-          fontSize: "var(--text-title)",
-          lineHeight: 1,
-          color: DEEP,
-        }}
-      >
-        {points}
-      </span>
-    </RingMark>
-  );
-}
-
 export default function CovenEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
   /* The wordmark is Coven's own, already lettered for the v2 task card. Read
@@ -462,9 +338,6 @@ export default function CovenEditPraxis({ state }: Props) {
   /* The sheet's own inset, declared here rather than inherited, so the submit
      band's full bleed is arithmetic the reader can check against one place.
      Same values `useComposerSizes` would have given. */
-  const padX = sizes.isMobile ? "var(--space-lg)" : "var(--space-2xl)";
-  const padTop = sizes.isMobile ? "var(--space-lg)" : "var(--space-xl)";
-  const padBottom = sizes.isMobile ? "var(--space-xl)" : "var(--space-2xl)";
 
   /* Cast, not merely composing: a duel side that has sealed, or a collab member
      whose part is in. The band goes green for both — the only two states where
@@ -505,7 +378,6 @@ export default function CovenEditPraxis({ state }: Props) {
     borderRadius: RADIUS,
     boxShadow: "var(--faction-coven-slip-shadow)",
   };
-  const contentStyle = { padding: `${padTop} ${padX} ${padBottom}` };
   const statusMark = <Pentacle size={40} color={DEEP} />;
   const slip = {
     style: {
@@ -621,7 +493,6 @@ export default function CovenEditPraxis({ state }: Props) {
     pageStyle: { fontFamily: CHROME, color: INK },
     breadcrumbInk: LABEL,
     sheetStyle,
-    contentStyle,
     masthead,
     ground,
     rule: () => braidRule,
@@ -664,32 +535,22 @@ export default function CovenEditPraxis({ state }: Props) {
       <ComposerSheet
         sizes={sizes}
         style={sheetStyle}
-        contentStyle={contentStyle}
         masthead={masthead}
         ground={ground}
       >
-        {/* Draft · Saved just now, closed by the pentacle. */}
+        {/* `Draft`, alone (#1828). The pentacle here was a second one under the
+            sigil in the masthead directly above; it keeps its place as the
+            waiting surface's hero mark. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
-        {/* The task reference slip, with the ward. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={<PointsWard size={88} points={task?.point_value ?? 0} />}
-        />
+        {/* The task reference slip. Its mark is the shared ScoreStamp (#1828) —
+            the coven brings its own through `surfaceMap("scoreStamp")`, so the
+            ward is not replaced by a neutral one, it is replaced by the ward the
+            page draws AFTER you file. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -806,7 +667,20 @@ export default function CovenEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={labelStyle}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span
+                style={composerLabelStyle({
+                  fontFamily: CHROME,
+                  color: LABEL,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span
                 style={composerLabelStyle({
                   fontFamily: CHROME,
@@ -940,7 +814,9 @@ export default function CovenEditPraxis({ state }: Props) {
                     fontFamily: CHROME,
                     fontWeight: 700,
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the wheel and the glyph scatter read
+                       through the drop zone (#1828). */
+                    background: composerDropGround(FIELD),
                     border: `1.5px dashed ${BORDER}`,
                     borderRadius: FIELD_RADIUS,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -975,42 +851,29 @@ export default function CovenEditPraxis({ state }: Props) {
             [Cancel] … [Submit] — the global order from #646, stacked here
             because Coven's cast is a full-bleed band rather than an inline
             button: the exits read first, the band closes the sheet. */}
+        <Braid />
         <ComposerFooter
-          style={{
-            flexDirection: "column",
-            alignItems: "stretch",
-            gap: "var(--space-lg)",
-          }}
+          band
           start={
             <>
-              <Braid />
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-lg)",
-                  flexWrap: "wrap",
+              <SaveDraftButton
+                state={state}
+                skin={{ style: { color: LABEL, fontFamily: CHROME } }}
+              />
+              <DropButton
+                state={state}
+                skin={{
+                  style: composerLabelStyle({
+                    fontFamily: CHROME,
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    color: LABEL,
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }),
                 }}
-              >
-                <SaveDraftButton
-                  state={state}
-                  skin={{ style: { color: LABEL, fontFamily: CHROME } }}
-                />
-                <DropButton
-                  state={state}
-                  skin={{
-                    style: composerLabelStyle({
-                      fontFamily: CHROME,
-                      background: "transparent",
-                      border: "none",
-                      padding: 0,
-                      color: LABEL,
-                      textDecoration: "underline",
-                      cursor: "pointer",
-                    }),
-                  }}
-                />
-              </div>
+              />
             </>
           }
           end={
@@ -1020,30 +883,24 @@ export default function CovenEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 ornament: <Sparkle size={12} />,
-                style: composerLabelStyle({
-                  // The one place Coven speaks in the LABEL face rather than
-                  // the title one. 13px in the design; the label ramp's top
-                  // rung is 14, and button chrome is label tier (§4a — a token
-                  // names a tier, so the number lands where it lands).
-                  fontFamily: CHROME,
-                  fontSize: "var(--text-xl)",
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "var(--space-sm)",
+                style: {
+                  ...composerBandStyle(sizes, {
+                    // The one place Coven speaks in the LABEL face rather than
+                    // the title one. Design band: 14 / 700 / 0.12em — 14 is the
+                    // --text-xl rung exactly.
+                    fontFamily: CHROME,
+                    fontSize: "var(--text-xl)",
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                    // The SHEET's frame, which for Coven is the gilt edge —
+                    // `composerBandStyle` draws its own 1.5px rule, so this is
+                    // the colour rather than the `EDGE` shorthand.
+                    frame: GOLD,
+                    color: hasCast ? CAST_INK : CTA_INK,
+                    background: hasCast ? CAST_BAND : CTA_BAND,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
-                  border: "none",
-                  borderTop: EDGE,
-                  borderRadius: 0,
-                  padding: "var(--space-lg) var(--space-xl)",
-                  color: hasCast ? CAST_INK : CTA_INK,
-                  background: hasCast ? CAST_BAND : CTA_BAND,
-                  // Full bleed: back out the sheet's own inset so the band runs
-                  // edge to edge and sits flush on the bottom. The sheet's
-                  // `overflow: hidden` rounds its corners for us.
-                  margin: `0 calc(-1 * ${padX}) calc(-1 * ${padBottom})`,
-                }),
+                },
               }}
             />
           }
