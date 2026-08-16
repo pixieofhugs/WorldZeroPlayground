@@ -77,6 +77,18 @@ const slipPraxis = {
   id: 55,
   task_id: 7,
   task_title: "A Very Human Thing",
+  // The slip's default mark is the shared ScoreStamp (#1828), which reads the
+  // score terms and dispatches on the task's faction — so the fixture carries a
+  // real payload rather than leaving the stamp to the `?? 0` defensive path.
+  task_faction_slug: "wow",
+  moderation_status: "visible",
+  is_top_for_task: false,
+  task_point_value: 20,
+  metatask_points: 0,
+  display_multiplier: 1,
+  points_from_votes: 0,
+  habit_bonus_points: 0,
+  score: 20,
 } as unknown as PraxisOut;
 
 describe("task slip", () => {
@@ -109,5 +121,28 @@ describe("task slip", () => {
     );
     // An empty description must not spend a paragraph's worth of the row.
     expect(markup).not.toContain("<p");
+  });
+
+  /* ── the slip's mark (#1828) ─────────────────────────────────────────────
+   * The mark defaults to the shared `ScoreStamp` rather than to a composer-only
+   * points device per faction. That is one claim with two halves, and both are
+   * asserted: the stamp arrives unasked, and it is the FACTION's stamp — the
+   * ornament seam is what survives here, so a default that flattened every skin
+   * onto the na stamp would pass the first half alone. */
+  it("marks the slip with the faction's own score stamp when none is passed", () => {
+    const markup = renderSlip(slipTask);
+    // WowScoreStamp's own plaque token — the na fall-through paints
+    // `--faction-default-stamp-bg` instead, so this reads the dispatch too.
+    expect(markup).toContain("--faction-wow-stamp-bg");
+  });
+
+  it("lets a caller pass a mark of its own instead", () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <TaskSlip praxis={slipPraxis} task={slipTask} mark={<i>ornament</i>} />
+      </MemoryRouter>,
+    );
+    expect(markup).toContain("<i>ornament</i>");
+    expect(markup).not.toContain("--faction-wow-stamp-bg");
   });
 });
