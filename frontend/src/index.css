@@ -3779,12 +3779,6 @@
   .praxis-gallery > * {
     max-width: var(--praxis-card-basis);
   }
-  /* ── Pennant shape (faction filter tabs) ── */
-
-  .pennant-shape {
-    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
-  }
-
   /* ── Leaderboard row hover ── */
 
   .leaderboard-row:hover {
