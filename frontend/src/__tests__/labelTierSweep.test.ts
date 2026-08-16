@@ -119,6 +119,49 @@ describe('the label tier is two classes, and `.eyebrow` is not one of them (#130
 })
 
 /**
+ * #1783 — button and card-meta chrome joins the label-tier floor.
+ *
+ * THE SEAM IS `index.css`, because that is where the size actually lives. Every
+ * `.btn-primary` / `.btn-outline` / `.card-meta` on the site takes its size from
+ * one of three declarations, so a per-site test would assert 22 files' worth of
+ * the same fact and still not catch the one edit that matters. This reads the
+ * declaration.
+ *
+ * The three sat at the tier's two SMALLEST steps — buttons at `--text-sm` (9px),
+ * card meta at `--text-xs` (8px) — while #1307 had already moved the tier's two
+ * role classes up: `.label-heading` to `--text-md` (11px), `.label-caption` to
+ * `--text-lg` (12px). All three of these rules are uppercase and letter-spaced,
+ * which is the HEADING register, so `--text-md` is the step they join. Not
+ * `--text-lg`: the caption is nominally larger only because it drops the casing,
+ * and the reasoning is written out at `.label-caption`'s declaration.
+ *
+ * The guard below (#1608) is the other half and it is what makes this stick. It
+ * counts the two smallest steps in the SOURCE TREE, and 19 of the sites it was
+ * allow-listing were components restating one of these three class values
+ * inline. Moving the class without deleting those restatements would have moved
+ * nothing on screen — an inline style wins — so the two assertions are one
+ * change: the declaration goes up here, the restatements come out of the
+ * allow-list there.
+ */
+const LABEL_TIER_FLOOR = 'var(--text-md)'
+const CHROME_RULES = ['.btn-primary', '.btn-outline', '.card-meta'] as const
+
+/** The `font-size` a single-level rule declares, or undefined if it declares none. */
+function declaredFontSize(css: string, selector: string): string | undefined {
+  const rule = new RegExp(`^\\s*${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`, 'm').exec(css)
+  return /font-size:\s*([^;]+);/.exec(rule?.[1] ?? '')?.[1]
+}
+
+describe('button and card-meta chrome sits on the label-tier floor (#1783)', () => {
+  it('declares all three at the floor, in one place, so none of them can fork', () => {
+    const css = readFileSync(CSS, 'utf8')
+    expect(CHROME_RULES.map((selector) => [selector, declaredFontSize(css, selector)])).toEqual(
+      CHROME_RULES.map((selector) => [selector, LABEL_TIER_FLOOR]),
+    )
+  })
+})
+
+/**
  * #1608 — the half of the tier the census above CANNOT see.
  *
  * The guard at the top counts `className` values, and that is the right
@@ -145,28 +188,24 @@ const SMALLEST_STEPS = /var\(--text-(?:sm|xs)\)/g
 /** file → how many hits are there on purpose, and why. */
 const ALLOWED: Record<string, { readonly hits: number; readonly why: string }> = {
   'pages/praxisDetail/shared.tsx': {
-    hits: 16,
+    hits: 2,
     why:
-      'Moderation and flag controls carrying `.btn-primary`/`.btn-outline`, whose ' +
-      'own size IS this token — the inline value restates the class rather than ' +
-      'laundering one. Two more are the notice body under a --text-base title, ' +
-      'which raising alone would invert. Both belong to a button/content pass.',
+      'The report card\'s notice body, twice, under a --text-base title — raising ' +
+      'it alone would invert the pair. Content tier, not the label tier, so it is ' +
+      'not what #1783 moved. The fourteen button restatements above it are gone.',
   },
   'components/duel/shared.tsx': {
-    hits: 3,
+    hits: 1,
     why:
-      'Two `.btn-*` restatements on the seal actions, which #769 settled as ' +
-      'button chrome, plus one mention in the prose that records that decision.',
+      'Prose only. It records what #769 FIXED — rail wrappers that used to force ' +
+      'this size onto the slots inheriting from them. The two seal-button ' +
+      'restatements it also used to describe went with #1783.',
   },
   'components/collab/CollabSuccess.tsx': {
-    hits: 2,
+    hits: 1,
     why:
-      'One `.btn-primary` restatement, and one paragraph of body copy — content, ' +
-      'not a label, so the label tier is not where its size comes from.',
-  },
-  'pages/admin/AccountsTab.tsx': {
-    hits: 2,
-    why: 'Both `.btn-outline` restatements on the ban/unban control.',
+      'One paragraph of body copy — content, not a label, so the label tier is ' +
+      'not where its size comes from. Its `.btn-primary` restatement is gone.',
   },
   'components/praxisCard/desktop/EphemeristsPraxisCard.tsx': {
     hits: 1,
