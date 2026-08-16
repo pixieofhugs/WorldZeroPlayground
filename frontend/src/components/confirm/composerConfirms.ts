@@ -35,16 +35,46 @@ const tString = i18n.t as unknown as (
 type Slug = string | null | undefined
 
 /**
- * Drop a praxis that only you are in — solo, or your side of a duel (#1082).
+ * Drop a plain solo praxis — nobody else is in it (#1082).
  *
- * The collab case is `deleteCollabConfirm` and says something quite different;
- * `cancel` picks between them on whether a crew is actually at stake.
+ * This used to claim it covered "your side of a duel" too, and `cancel` did
+ * hand it every duellist. It never described that act: a duel is a contract
+ * between two players, so dropping one side also ends the challenge and hands
+ * the opponent their praxis back — see `dropDuelSideConfirm` (#1831). The
+ * collab case is `deleteCollabConfirm`; `cancel` picks between the three.
  */
 export function dropTaskConfirm(): ConfirmRequest {
   return {
     kind: 'dropTask',
     title: tString('forms:editPraxis.confirm.dropTaskTitle'),
     body: tString('forms:editPraxis.confirm.dropTask'),
+    confirmLabel: tString('forms:editPraxis.confirm.dropTaskAction'),
+    danger: true,
+  }
+}
+
+/**
+ * Drop your side of a duel (#1831) — the draft goes AND the challenge ends.
+ *
+ * Two consequences, so two sentences: the body is what happens to you, the
+ * note is what happens to the other player. `dropTaskConfirm` stated only the
+ * first, and the drop it promised was then refused outright by the database —
+ * both duel FKs are deliberately `NO ACTION` (`models/praxis.py`), so the
+ * praxis cannot be deleted while a duel row still points at it.
+ *
+ * NOT A FORFEIT. Forfeiting exists only at `settled` (ADR-0011 §Forfeit) and
+ * costs the forfeiter the contest; this fires at compose stage, where nothing
+ * has been submitted and `cancel_duel_challenge` reverts both sides to plain
+ * solo scoring with no penalty either way. The word was rejected in #718 and
+ * again in #1071 decision 3 — the note denies it in the same terms
+ * `dissolveDuelConfirm` already uses.
+ */
+export function dropDuelSideConfirm(): ConfirmRequest {
+  return {
+    kind: 'dropDuelSide',
+    title: tString('forms:editPraxis.confirm.dropDuelSideTitle'),
+    body: tString('forms:editPraxis.confirm.dropDuelSide'),
+    note: tString('forms:editPraxis.confirm.dropDuelSideNote'),
     confirmLabel: tString('forms:editPraxis.confirm.dropTaskAction'),
     danger: true,
   }
