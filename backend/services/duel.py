@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
@@ -69,6 +69,68 @@ async def _characters_share_account(
     if first is None or second is None:
         return False
     return first.account_id == second.account_id
+
+
+async def forfeit_settled_duels_for_character(
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
+    """Forfeit every *settled* duel this character is a side of (ADR-0011 §Forfeit).
+
+    The opponent wins by default. **Sticky**: a duel that already carries a
+    ``forfeited_by_character_id`` is left exactly as it is — the first forfeit is
+    the record, and the duel stays ``settled``.
+
+    The winners are re-scored so their duel *win* modifier lands. The forfeiting
+    character is deliberately **not** re-scored: their own score is never read on
+    the losing side of a forfeit, and the two callers below are both ending or
+    suspending that character's participation anyway.
+
+    Called by both paths that reach ``status = banned``, which is the whole point
+    of it living here rather than inside either one:
+
+    * ``services.character.soft_delete_character`` — the player ends their own life.
+    * ``services.admin_service.apply_ban`` — a moderator bans someone.
+
+    ADR-0011 names only ``soft_delete_character`` in its trigger list, but the rule
+    it states is "the ban / soft-delete of a side's character", and for a year the
+    ban route implemented neither (#1577). The recalculation below is subtle enough
+    that a second copy of it would drift, so there is one.
+    """
+    own_praxis_ids = select(Praxis.id).where(Praxis.created_by_id == character_id)
+    duels = (await session.execute(
+        select(Duel).where(
+            Duel.status == DuelStatus.settled,
+            Duel.forfeited_by_character_id.is_(None),
+            or_(
+                Duel.opponent_character_id == character_id,
+                Duel.challenger_praxis_id.in_(own_praxis_ids),
+            ),
+        )
+    )).scalars().all()
+
+    winner_ids: set[int] = set()
+    for duel in duels:
+        duel.forfeited_by_character_id = character_id
+        challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+        challenger_character_id = (
+            challenger_praxis.created_by_id if challenger_praxis else None
+        )
+        winner_id = (
+            duel.opponent_character_id
+            if challenger_character_id == character_id
+            else challenger_character_id
+        )
+        if winner_id is not None:
+            winner_ids.add(winner_id)
+    await session.flush()
+
+    if winner_ids:
+        era_row = await get_current_era_row(session)
+        for winner_id in winner_ids:
+            await recalculate_character_stats(winner_id, session, era, era_row=era_row)
+        await session.flush()
 
 
 async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
