@@ -45,13 +45,16 @@
  *   passes `fontFamily`: `composerLabelStyle` defaults to Courier Prime.
  * - **Geometry.** radius 6, borders 1.5px, and the border takes gold — the
  *   sheet, the fields, the slip and the plaque are all framed in the same gilt.
+ *   TWO gilts, strictly: see {@link RULE} for the quiet half and where it goes.
  * - **Masthead.** The 7px gold/plum barber ribbon, straight off
  *   `--faction-wow-quest-ribbon` (the composed token the quest decree already
  *   ships: `0 11px` gold, `11px 22px` plum, which is the design's band exactly).
  *   Decorative, so `aria-hidden` — the shared masthead's default.
- * - **Ground.** A dashed gold ring turning at the top-right on `.ep-spin`
- *   (90s, the keyframe's own default duration), and a bunch of googly balloons
- *   tucked into the bottom-right corner. Both live on `ComposerGround`, which
+ * - **Ground.** A bunch of googly balloons floating at the bottom-right, and
+ *   nothing else: the dashed gold ring that used to turn at the top-right is
+ *   dropped with #1830, because #1828 gave the bottom edge to the full-bleed
+ *   cast band and the design answers it by lifting the balloons clear and
+ *   leaving them alone on the layer. The bunch lives on `ComposerGround`, which
  *   the sheet CLIPS — the site background still shows around the column and no
  *   ornament here can reach the viewport (#1028).
  * - **Rule.** The zigzag: `Zig`, from the faction's one ornament module. Drawn
@@ -88,10 +91,11 @@
  *
  * ## Motion
  *
- * `.ep-spin` on the ring, `.wow-balloon-bunch` / `.wow-balloon-eye` inside the
- * bunch. All three are CLASSES whose keyframes live in `index.css` behind the
- * shared `prefers-reduced-motion` guard; an inline `animation:` would bypass it
- * (#1003). Nothing here carries state, so the page reads correctly stilled.
+ * `.wow-balloon-bunch` and `.wow-balloon-eye`, both inside the bunch — the
+ * page's only two since the turning ring went (#1830). Both are CLASSES whose
+ * keyframes live in `index.css` behind the shared `prefers-reduced-motion`
+ * guard; an inline `animation:` would bypass it (#1003). Nothing here carries
+ * state, so the page reads correctly stilled.
  *
  * ## Not drawn as designed
  *
@@ -192,6 +196,16 @@ const PLUM_FILL = "var(--faction-wow-plum-surface)";
 const ON_PLUM = "var(--faction-wow-on-plum)";
 /** Frame + rule gold. Theme-invariant, and never an ink. */
 const GOLD = "var(--faction-wow-chronicle-gold)";
+/**
+ * The QUIET gold — the same gilt at 40% (#1830).
+ *
+ * The design's skin row carries two: `frame` (solid {@link GOLD}) for the edges
+ * that make a plate — the sheet, the fields, the slip, the active chip — and
+ * `border` for the edges that only suggest one, the inactive mode chip and the
+ * proof drop zone. Drawing both at full gilt gave a chip you had not chosen and
+ * a zone you had not filled the same weight of frame as the writ itself.
+ */
+const RULE = "var(--faction-wow-rule)";
 /** Burnt gold that is legible AS TEXT — the plaque's figure. */
 const GOLD_INK = "var(--faction-wow-stamp-total)";
 /** The AA ink for anything printed ON the gold. */
@@ -203,13 +217,20 @@ const RIBBON = "var(--faction-wow-quest-ribbon)";
 const SHEET_SHADOW = "var(--faction-wow-detail-shadow)";
 
 /**
- * The two corner ornaments' geometry. Illustration, not layout, so raw pixels
+ * The corner ornament's geometry. Illustration, not layout, so raw pixels
  * (§4a) — and the only thing `sizes.isMobile` decides on this page, because the
  * layout itself stacks with flow at every width.
+ *
+ * The bunch sits INSIDE the sheet now, not tucked under its corner: #1828 gave
+ * the cast a full-bleed band along the bottom edge, and the design's ground row
+ * lifts the balloons clear of it (`bottom: 76` desktop / `66` mobile, `right:
+ * 10`) rather than letting the band crop them. The dashed gold ring that used
+ * to turn in the opposite corner went at the same time — *"Balloons only,
+ * lifted clear of the submit band; the dashed ring is dropped"* (#1830).
  */
 const ORNAMENT = {
-  desktop: { ring: 190, ringRight: -40, ringTop: -30, bunch: 96 },
-  mobile: { ring: 132, ringRight: -34, ringTop: -22, bunch: 66 },
+  desktop: { bunch: 96, bottom: 76 },
+  mobile: { bunch: 66, bottom: 66 },
 } as const;
 
 /** Lora label ink on the cream. Every label row on the sheet takes this. */
@@ -314,29 +335,14 @@ export default function WowEditPraxis({ state }: Props) {
   });
   const ground = (
           <ComposerGround inset={0}>
-            {/* The turning ring. `.ep-spin` reads --ep-spin-dur, whose default
-                is the design's own 90s, so no re-time is needed. */}
-            <span
-              style={{
-                position: "absolute",
-                top: ornament.ringTop,
-                right: ornament.ringRight,
-                width: ornament.ring,
-                height: ornament.ring,
-                borderRadius: "50%",
-                border: `2px dashed ${GOLD}`,
-                opacity: 0.25,
-              }}
-              className="ep-spin"
-            />
-            {/* The crowd, tucked into the corner and clipped by the sheet. Held
-                below full strength so the footer's words stay first. */}
+            {/* The crowd, standing clear of the cast's band. Held below full
+                strength so the footer's words stay first. */}
             <BalloonBunch
               size={ornament.bunch}
               style={{
                 position: "absolute",
-                right: -10,
-                bottom: -14,
+                right: 10,
+                bottom: ornament.bottom,
                 opacity: 0.55,
               }}
             />
@@ -455,7 +461,9 @@ export default function WowEditPraxis({ state }: Props) {
                       borderRadius: 6,
                       background: active ? PLUM_FILL : FIELD,
                       color: active ? ON_PLUM : LABEL,
-                      border: `1.5px solid ${GOLD}`,
+                      /* Solid gilt only on the mode you are IN; the rest take
+                         the quiet gold (#1830). */
+                      border: `1.5px solid ${active ? GOLD : RULE}`,
                     })}
                   >
                     {option.label}
@@ -662,10 +670,11 @@ export default function WowEditPraxis({ state }: Props) {
                   buttonStyle: composerLabelStyle({
                     fontFamily: MED,
                     cursor: "pointer",
-                    /* Translucent, so the turning ring and the balloons read
-                       through the drop zone (#1828). */
+                    /* Translucent, so the balloons read through the drop zone
+                       (#1828), and dashed in the QUIET gold: an empty zone is
+                       an invitation, not a plate (#1830). */
                     background: composerDropGround(FIELD),
-                    border: `1.5px dashed ${GOLD}`,
+                    border: `1.5px dashed ${RULE}`,
                     borderRadius: 6,
                     padding: "var(--space-2xl) var(--space-lg)",
                     textAlign: "center",
