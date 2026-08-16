@@ -37,7 +37,7 @@ vi.mock('../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => pendingMock(),
 }))
 
-vi.mock('../../api/auth', () => ({ loginWithGoogle: () => {} }))
+vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
 
 import NavBar from '../NavBar'
 

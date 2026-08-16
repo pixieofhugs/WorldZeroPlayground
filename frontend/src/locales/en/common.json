@@ -220,6 +220,12 @@
     "title": "Attributions",
     "intro": "World Zero is built on the shoulders of great open source projects and creative predecessors. Thank you to all of the following."
   },
+  "signIn": {
+    "title": "Somewhere to keep your score",
+    "google": "Continue with Google",
+    "discord": "Continue with Discord",
+    "close": "Close"
+  },
   "nav": {
     "home": "Home",
     "tasks": "Tasks",

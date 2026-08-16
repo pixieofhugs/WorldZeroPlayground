@@ -1,5 +1,6 @@
 {
   "loginRequired": "You need to log in to access that page.",
+  "loginFailed": "That sign-in didn't go through. Pick a way in and try again.",
   "signup": {
     "error": "Could not sign up — make sure you are logged in."
   },
@@ -8,8 +9,7 @@
     "wordmark": "World Zero",
     "tagline": "a collaborative production game played in the real world",
     "cta": {
-      "loggedIn": "Find a Task",
-      "loggedOut": "Sign Up Here"
+      "loggedIn": "Find a Task"
     },
     "devLogin": "dev login (no OAuth)"
   },

@@ -190,6 +190,14 @@ class ErrorCode(str, enum.Enum):
     #: an unseen OAuth identity is linked to an existing account BY EMAIL, which
     #: makes the claim an authentication decision rather than a profile detail.
     oauth_email_unverified = "OAUTH_EMAIL_UNVERIFIED"
+    #: #1773. Every other way a callback ends without a session: the player
+    #: declined the consent screen, or came back with a state authlib no longer
+    #: recognises. One code rather than a taxonomy, because the player's next
+    #: move is the same for all of them and the provider's own error strings are
+    #: not copy we would show. Unlike every other member this one is never
+    #: raised — it is the fallback ``routers.auth._sign_in_failed_redirect``
+    #: carries when the exception it caught has no coded detail of its own.
+    oauth_failed = "OAUTH_FAILED"
 
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
