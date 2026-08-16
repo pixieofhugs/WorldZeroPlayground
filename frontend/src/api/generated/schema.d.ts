@@ -3679,6 +3679,11 @@ export interface components {
             primary_faction_slug: string;
             /** Signup Reason */
             signup_reason: string | null;
+            /**
+             * Start Here
+             * @default false
+             */
+            start_here: boolean;
             status: components["schemas"]["TaskStatus"];
             task_type: components["schemas"]["TaskType"];
             /** Title */
@@ -4175,6 +4180,11 @@ export interface components {
             primary_faction_slug: string;
             /** Signup Reason */
             signup_reason: string | null;
+            /**
+             * Start Here
+             * @default false
+             */
+            start_here: boolean;
             status: components["schemas"]["TaskStatus"];
             task_type: components["schemas"]["TaskType"];
             /** Title */

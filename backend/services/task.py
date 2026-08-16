@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, false, func, or_, select, true
+from sqlalchemy import and_, exists, false, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -15,6 +15,7 @@ from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
+from seed import ONBOARDING_TASK_TITLE
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -237,6 +238,59 @@ async def build_task_out(
     )
 
 
+async def start_here_for_viewer(
+    task: Task,
+    viewer: Character,
+    session: AsyncSession,
+) -> bool:
+    """The *start here* mark, derived (#1861, SPEC-onboarding § The hand-off).
+
+    True iff ``task`` is the one game-wide onboarding task and ``viewer`` has
+    **never completed it, ever**. Never hand-set: there is no column, no flag
+    and no era filter behind this, only the character's own praxis history.
+
+    THE SAME RULE THAT STOPS THE FLOW. It has three consumers — the mark drawn
+    wherever the task appears, ``CreateCharacter``'s hand-off destination, and
+    the ``/start`` flow's stop condition — and they stay consistent by all
+    reading the one field this fills (``TaskOut.start_here``). A second signal
+    would let the flow refuse to start someone whose task is simultaneously
+    marked *start here*.
+
+    NOT ERA-SCOPED. An era reset drops every character to level 0, so "has not
+    completed it *this era*" would relight the mark for the whole playerbase at
+    every rollover. This read carries no era filter — notably not
+    ``Praxis.era_id``, which every praxis sealed since #1398 does carry and
+    which is exactly the wrong thing to join on here. Praxis history outlives
+    resets already, so the honest rule costs no new storage.
+
+    COMPLETED means published — ``status == submitted``, the seal that awards
+    the points. A claim is not a completion, or the flow would stop applying to
+    someone who has done nothing yet.
+
+    Keyed on the title, because that is already the onboarding task's identity
+    everywhere else: :func:`seed.ensure_onboarding_task` upserts on it, the
+    ``0004`` data migration matched on it, and
+    :func:`services.era.apply_era_reset` spares the task by it. A second key
+    would be a second thing to keep true.
+
+    ONE EXTRA QUERY PER PAGE AT MOST, not per row (#1377): the title test
+    short-circuits, and at most one row on any page is the onboarding task.
+    """
+    if task.title != ONBOARDING_TASK_TITLE:
+        return False
+
+    completed = await session.scalar(
+        select(
+            exists()
+            .where(Praxis.task_id == task.id)
+            .where(Praxis.status == PraxisStatus.submitted)
+            .where(PraxisMember.praxis_id == Praxis.id)
+            .where(PraxisMember.character_id == viewer.id)
+        )
+    )
+    return not completed
+
+
 async def build_task_out_for_viewer(
     task: Task,
     viewer: Optional[Character],
@@ -297,6 +351,7 @@ async def build_task_out_for_viewer(
             viewer.faction_slug, stats.level, stats.level_jump_used_at_level, era
         ),
     )
+    base.start_here = await start_here_for_viewer(task, viewer, session)
     return base
 
 

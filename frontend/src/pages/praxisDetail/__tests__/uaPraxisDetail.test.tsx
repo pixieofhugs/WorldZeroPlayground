@@ -232,6 +232,7 @@ describe("UA praxis detail — copy is neutral (ADR-0061)", () => {
               can_sign_up: false,
               allowed_modes: [],
               eligible_for_current_user: false,
+              start_here: false,
             },
           ],
         },

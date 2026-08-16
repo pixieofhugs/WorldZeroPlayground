@@ -66,6 +66,11 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     can_sign_up: true,
     allowed_modes: ['solo', 'collab'],
     eligible_for_current_user: true,
+    // The *start here* mark (#1861), derived server-side. False on the ordinary
+    // fixture task: only the one game-wide onboarding task ever carries it, and
+    // only for a character who has never completed it. A preview that wants to
+    // draw the mark passes `start_here: true` as an override.
+    start_here: false,
     ...overrides,
   }
 }
