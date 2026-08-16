@@ -23,7 +23,10 @@ prove the callback forwards the claim rather than deciding on it — one that th
 gate still rejects an unverified newcomer end to end, one that it admits a
 returning identity the provider currently calls unverified.
 """
+from urllib.parse import parse_qs, urlparse
+
 import pytest
+from authlib.integrations.starlette_client import OAuthError
 from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy import func, select
@@ -44,6 +47,18 @@ _DISCORD = AuthProvider.DISCORD
 async def _account_count(session: AsyncSession) -> int:
     result = await session.execute(select(func.count()).select_from(Account))
     return result.scalar_one()
+
+
+def _login_error_code(resp) -> str | None:
+    """The ``?login=`` code a refused callback sent the browser home with.
+
+    An OAuth callback is a top-level navigation, so a refusal cannot answer
+    with a JSON body anybody reads — it redirects and carries the
+    :class:`ErrorCode` in the one query param ``pages/Home.tsx`` already
+    inspects (#1773). This is the whole wire contract, read back.
+    """
+    location = resp.headers.get("location", "")
+    return parse_qs(urlparse(location).query).get("login", [None])[0]
 
 
 async def _provider_rows(
@@ -312,8 +327,10 @@ async def test_callback_rejects_an_unverified_email(
 
     resp = await client.get("/auth/google/callback")
 
-    assert resp.status_code == 403
-    assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
+    # A refusal here is a redirect, not a 403 body: see `_login_error_code`.
+    assert resp.status_code == 302
+    assert _login_error_code(resp) == ErrorCode.oauth_email_unverified.value
+    assert resp.cookies.get("access_token") is None
     assert await _account_count(db_session) == accounts_before
     assert await _provider_rows(db_session, _GOOGLE, "google-sub-unverified") == []
 
@@ -572,8 +589,9 @@ async def test_discord_callback_rejects_a_profile_with_no_email(
 
     resp = await client.get("/auth/discord/callback")
 
-    assert resp.status_code == 403
-    assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
+    assert resp.status_code == 302
+    assert _login_error_code(resp) == ErrorCode.oauth_email_unverified.value
+    assert resp.cookies.get("access_token") is None
     assert await _account_count(db_session) == accounts_before
     assert await _provider_rows(db_session, _DISCORD, "1070000000000000002") == []
 
@@ -620,7 +638,49 @@ async def test_discord_callback_rejects_an_unverified_email(
 
     resp = await client.get("/auth/discord/callback")
 
-    assert resp.status_code == 403
-    assert detail_code(resp.json()["detail"]) == ErrorCode.oauth_email_unverified.value
+    assert resp.status_code == 302
+    assert _login_error_code(resp) == ErrorCode.oauth_email_unverified.value
+    assert resp.cookies.get("access_token") is None
     assert await _account_count(db_session) == accounts_before
     assert await _provider_rows(db_session, _DISCORD, "1070000000000000003") == []
+
+
+# ---------------------------------------------------------------------------
+# Case 12 — the provider itself ends the sign-in (#1773)
+# ---------------------------------------------------------------------------
+
+
+class _DecliningClient:
+    """A provider that answers the code exchange with an OAuth error.
+
+    The shape of every failure that never reaches our own gates: the player
+    pressed Cancel on the consent screen, or came back with a state authlib no
+    longer recognises. Both surface as ``OAuthError`` out of
+    ``authorize_access_token``, and an uncaught one is a 500 whose body the
+    player reads — because a callback is a navigation, not an XHR.
+    """
+
+    async def authorize_access_token(self, request):
+        raise OAuthError(error="access_denied")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["google", "discord"])
+async def test_a_declined_consent_screen_lands_the_player_back_home(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    provider: str,
+):
+    """No code of its own, so it carries the generic one — and nothing is minted."""
+    from routers import auth as auth_router
+
+    monkeypatch.setattr(auth_router._OAUTH, provider, _DecliningClient())
+    accounts_before = await _account_count(db_session)
+
+    resp = await client.get(f"/auth/{provider}/callback")
+
+    assert resp.status_code == 302
+    assert _login_error_code(resp) == ErrorCode.oauth_failed.value
+    assert resp.cookies.get("access_token") is None
+    assert await _account_count(db_session) == accounts_before

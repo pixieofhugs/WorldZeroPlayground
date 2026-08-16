@@ -510,7 +510,9 @@ export interface paths {
          * Auth Discord Callback
          * @description Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
          *
-         *     Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+         *     Redirects to ``settings.FRONTEND_URL`` carrying the session cookie — or,
+         *     for any terminal failure, to the same place carrying an error code instead
+         *     of a session. See :func:`_sign_in_failed_redirect`.
          *
          *     Deliberately a second handler rather than a shared ``/auth/{provider}``: the
          *     two callbacks genuinely differ in how they obtain a profile, and an
@@ -557,7 +559,10 @@ export interface paths {
          * Auth Google Callback
          * @description Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
          *
-         *     Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+         *     Redirects to ``settings.FRONTEND_URL`` carrying the session cookie — or,
+         *     for any terminal failure, to the same place carrying an error code instead
+         *     of a session. See :func:`_sign_in_failed_redirect` for why a raise here
+         *     cannot be left to FastAPI.
          */
         get: operations["auth_google_callback_auth_google_callback_get"];
         put?: never;

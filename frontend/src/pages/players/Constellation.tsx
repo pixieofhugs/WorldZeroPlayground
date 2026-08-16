@@ -281,7 +281,16 @@ function SkyNode({
   // gradient clip to paint them (ADR-0039). See the isKnownFaction docblock in
   // utils/factions for what `known` means and why `na` is outside it (#749).
   const known = isKnownFaction(character.faction_slug)
-  const pointsColor = known ? factionCssVar(character.faction_slug) : undefined
+  // `on-night`, not the bare hue (#1792). The sky is night in BOTH themes, so a
+  // token that flips with the theme paints a light-tuned hue on a dark canvas
+  // for every light-theme reader — which put ephemerists (3.22), everymen
+  // (3.29), singularity (3.71) and ua (3.92) under AA here. The `-on-night` tier
+  // is `:root`-only and holds each faction's dark hue, so all seven clear
+  // 5.51:1 or better in either theme. All seven have one, so there is nothing to
+  // branch on.
+  const pointsColor = known
+    ? factionCssVar(character.faction_slug, 'on-night')
+    : undefined
   const badgeDim = Math.max(18, Math.round(size * 0.3))
 
   return (
