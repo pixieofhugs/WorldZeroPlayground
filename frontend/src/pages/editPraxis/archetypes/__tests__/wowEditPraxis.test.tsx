@@ -69,6 +69,17 @@ const PRAXIS = {
   members: [],
   invites: [],
   media_items: [],
+  // The slip's mark is the shared ScoreStamp since #1828, and every stamp reads
+  // the score terms — `score` is non-optional on the wire (`PraxisOut.score:
+  // float`, set unconditionally by `build_praxis_out`), so a fixture without it
+  // renders a mark this page always has.
+  is_top_for_task: false,
+  task_point_value: 20,
+  metatask_points: 0,
+  display_multiplier: 1,
+  points_from_votes: 0,
+  habit_bonus_points: 0,
+  score: 20,
 } as unknown as PraxisOut;
 
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
@@ -244,12 +255,20 @@ describe("WOW composer — the dress", () => {
     expect(markup).not.toContain("wow-zig-writeup");
   });
 
-  it("strikes the points plaque off-square with the figure in gold ink", () => {
+  /**
+   * #1828 superseded the composer's own plaque. It struck a SECOND off-square
+   * plate at `rotate(-2.5deg)` in `--faction-wow-quest-shadow`, carrying the
+   * task's bare `point_value`, while `WowScoreStamp` — the chronicle's real
+   * mark, at `rotate(-2deg)` on `--faction-wow-stamp-bg` — was what the same
+   * page drew the instant you pressed Submit. What is asserted now is that the
+   * slip wears the SHIPPED stamp and that the twin is gone.
+   */
+  it("marks the slip with the chronicle's own score stamp, not a second plaque", () => {
     const markup = render();
-    expect(markup).toContain("rotate(-2.5deg)");
-    expect(markup).toContain("--faction-wow-quest-shadow");
+    expect(markup).toContain("--faction-wow-stamp-bg");
     expect(markup).toContain("--faction-wow-stamp-total");
-    expect(markup).toContain(String(TASK.point_value));
+    expect(markup).not.toContain("rotate(-2.5deg)");
+    expect(markup).not.toContain("--faction-wow-quest-shadow");
   });
 
   it("trails the submit button with the writ's mark", () => {
