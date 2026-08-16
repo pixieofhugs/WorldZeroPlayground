@@ -1,5 +1,8 @@
 from typing import Optional
 
+# `MismatchingStateError` is not re-exported by `starlette_client`, which
+# publishes only `OAuthError` — hence the one level down for it.
+from authlib.integrations.base_client import MismatchingStateError
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi import Request
@@ -19,24 +22,6 @@ from services.current_user import build_current_user
 from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
-
-#: The ONE value that unlocks the dev seams below. `ENVIRONMENT` is a free-form
-#: `str` defaulting to "development" (`config.py`), and the guards here used to
-#: be deny-lists against the literal "production" — so every value that was not
-#: exactly that ("prod", "Production", a trailing space, an env var dropped when
-#: a Render service is re-created, unset) simultaneously enabled an
-#: unauthenticated JWT mint AND stripped `Secure` from the session cookie. Both
-#: now fail closed: anything unrecognised is treated as production.
-#:
-#: Safe to invert — `.github/workflows/e2e.yml:42` sets `ENVIRONMENT: development`
-#: explicitly ("dev-login must be enabled"), the config default is "development",
-#: and `render.yaml:34` is "production".
-_ENV_DEVELOPMENT = "development"
-
-
-def _is_development() -> bool:
-    return settings.ENVIRONMENT == _ENV_DEVELOPMENT
-
 
 _OAUTH = OAuth()
 _OAUTH.register(
@@ -99,7 +84,7 @@ def _signed_in_redirect(account_id: int) -> Response:
         httponly=True,
         samesite="lax",
         # Fail closed: Secure unless we KNOW this is local development.
-        secure=not _is_development(),
+        secure=not settings.is_development,
         max_age=_COOKIE_MAX_AGE,
         # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
@@ -128,6 +113,16 @@ _PROVIDER_ENDED_IT = coded_error(
     403, ErrorCode.oauth_failed, "That sign-in did not complete."
 )
 
+#: What a callback carries home when the sign-in went STALE rather than being
+#: refused (#1756) — the player started it, wandered off, and came back after
+#: the session cookie holding the OAuth `state` had expired. Ten minutes since
+#: #1755, which is what turns this from a fourteen-day theoretical into the
+#: ordinary outcome of getting distracted. Built, never raised, exactly as
+#: `_PROVIDER_ENDED_IT` above is.
+_STATE_WENT_STALE = coded_error(
+    403, ErrorCode.oauth_state_expired, "That sign-in expired before it finished."
+)
+
 
 def _sign_in_failed_redirect(exc: Exception) -> Response:
     """The failure counterpart to :func:`_signed_in_redirect` (#1773).
@@ -139,20 +134,38 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
     back. So both legs answer a terminal failure the way they answer success:
     a 302 to the frontend. No cookie — the sign-in did not happen.
 
-    Two exception families reach here, and neither is a bug:
+    Three cases reach here, and none is a bug:
 
     * :class:`HTTPException` — our own gates. The Discord leg's missing-email
       refusal below, and, on **both** legs, ``create_or_get_account``'s
       unverified-email gate (ADR-0075, #1771). Its code rides along in the
       coded detail, so the catalog can say something specific.
-    * :class:`OAuthError` — the provider ended it. A declined consent screen or
-      a stale ``state`` both land here carrying no detail of ours, so they
-      borrow :data:`_PROVIDER_ENDED_IT`'s.
+    * :class:`MismatchingStateError` — the sign-in went stale: the ``state``
+      came back after the session cookie carrying it had expired. Split from
+      the case below in #1756 because it is the only one the player did not
+      CHOOSE, and the only one where "try again" is real advice.
+    * :class:`OAuthError` — the provider ended it, in practice a declined
+      consent screen. Carries no detail of ours, so it borrows
+      :data:`_PROVIDER_ENDED_IT`'s.
 
     Anything else still 500s, which is right: an unhandled error is a defect,
     not a rejection, and dressing it as "try another provider" would hide it.
+
+    The dispatch below is ORDERED, and the order is the whole point:
+    ``MismatchingStateError`` SUBCLASSES ``OAuthError`` (its MRO is
+    ``MismatchingStateError -> OAuthError -> AuthlibBaseError``), so testing the
+    general case first would swallow the specific one and every expired sign-in
+    would read "something went wrong". Stated once here rather than as a pair of
+    ``except`` arms in each callback, so there is one place to get it right
+    instead of one per provider — the same argument :func:`_signed_in_redirect`
+    makes about its cookie flags.
     """
-    detail = exc.detail if isinstance(exc, HTTPException) else _PROVIDER_ENDED_IT.detail
+    if isinstance(exc, HTTPException):
+        detail = exc.detail
+    elif isinstance(exc, MismatchingStateError):
+        detail = _STATE_WENT_STALE.detail
+    else:
+        detail = _PROVIDER_ENDED_IT.detail
     # The `or` is belt-and-braces: every HTTPException that reaches here today
     # went through `raise_coded`, but an uncoded one must not redirect to
     # `?login=None`.
@@ -330,7 +343,7 @@ async def auth_logout(response: Response) -> LogoutOut:
         httponly=True,
         samesite="lax",
         # Fail closed, and must match the flags the cookie was set with.
-        secure=not _is_development(),
+        secure=not settings.is_development,
         # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
@@ -364,7 +377,7 @@ async def dev_login(
 
     Returns account_id + character_id so tests can invite/credit by id.
     """
-    if not _is_development():
+    if not settings.is_development:
         raise HTTPException(status_code=404, detail="Not found.")
 
     provider_user_id = "dev-user-1" if key == "1" else f"dev-{key}"
