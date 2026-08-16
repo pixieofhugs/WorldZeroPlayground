@@ -1,5 +1,6 @@
 import { createContext, useContext, type CSSProperties } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
+import { hasOwnKey } from '../../utils/hasOwnKey'
 
 /**
  * Shared chrome for per-faction vote UIs. The 1-5 control itself is faction-
@@ -120,9 +121,15 @@ const GATE_TREATMENTS: Record<string, GateTreatment> = {
   },
 }
 
-/** Resolve a slug to its gate voice; unknown/absent slugs get the spectrum. */
+/**
+ * Resolve a slug to its gate voice; unknown/absent slugs get the spectrum.
+ *
+ * Own-property-only (#1821): `||` only catches falsy, and `Object.prototype`
+ * members are functions, so a slug named `constructor` was spread onto the gate
+ * as if it were a treatment.
+ */
 export function gateTreatment(slug: string | null | undefined): GateTreatment {
-  return (slug && GATE_TREATMENTS[slug]) || DEFAULT_GATE
+  return hasOwnKey(GATE_TREATMENTS, slug) ? GATE_TREATMENTS[slug] : DEFAULT_GATE
 }
 
 /**

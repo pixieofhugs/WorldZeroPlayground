@@ -78,8 +78,15 @@ faction, same key shape in each branch:
 }
 ```
 
-Slugs: `ephemerists`, `everymen`, `wow`, `snide`, `singularity`, `ua`
+Slugs: `ephemerists`, `everymen`, `coven`, `wow`, `snide`, `singularity`, `ua`
 (plus `na` for unaffiliated and `albescent` where those surfaces have copy).
+
+The nesting can sit under a feature as well as at the top of a file. The
+character profile is the example: `common.json` `profile.*` holds the words the
+unaffiliated profile uses, and `profile.<slug>.*` holds each faction kit's own
+voice for the same seven or eight slots — ring label, level unit, next-level
+line, praxis eyebrow and empty state, badge heading (#1858). A slot a faction
+does not override simply has no key, and the shared `profile.*` one is used.
 
 ## Plurals
 

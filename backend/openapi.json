@@ -5686,6 +5686,26 @@
         "title": "TaskType",
         "type": "string"
       },
+      "TermsAcceptanceOut": {
+        "description": "The receipt for one acceptance: what was agreed to, and when.\n\nNo ``id`` and no ``account_id`` — the caller already knows who they are, and\n``account_id`` never appears on the wire. Deliberately not a request model's\ntwin: this route takes **no** body at all, because the version is the\nserver's to state.",
+        "properties": {
+          "accepted_at": {
+            "format": "date-time",
+            "title": "Accepted At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "accepted_at"
+        ],
+        "title": "TermsAcceptanceOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -12128,6 +12148,61 @@
         "summary": "List Task Signups",
         "tags": [
           "tasks"
+        ]
+      }
+    },
+    "/terms/acceptance": {
+      "post": {
+        "description": "Record that the signed-in account agreed to the current terms.\n\nAppends to a log. Accepting twice writes two rows and both are the truth —\nagreement is shown again on a later visit, so a second acceptance is a\nsecond event, not a duplicate to be collapsed.\n\nTakes no request body on purpose: the accepted version is the server's\nconstant, so a caller cannot claim to have agreed to wording it was never\nshown. The version it *was* shown comes back in the response.\n\nRequires a session. Agreement is bound to an account, which is why it is\nasked for after sign-in rather than before it.",
+        "operationId": "accept_terms_terms_acceptance_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TermsAcceptanceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Accept Terms",
+        "tags": [
+          "terms"
         ]
       }
     }

@@ -74,7 +74,7 @@ import {
   ProfileSkin,
   SpectrumLaurel,
   TaglineSlot,
-  type ProfileKit,
+  type ProfileDress,
 } from './profileSkin'
 
 type Segment = 'praxis' | 'tasks'
@@ -119,7 +119,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'wow',
   pageBackground:
     'linear-gradient(165deg, var(--faction-wow-ground-from), var(--faction-wow-ground-to))',
@@ -192,17 +192,9 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'rank',
   barFill: `linear-gradient(90deg, var(--faction-wow-plum-surface), ${GOLD})`,
   barTrack: PLATE_BORDER,
-  levelUnitLabel: 'huzzahs toward the next rank',
-  nextLevelLabel: (next) => `next · rank ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `Chronicles sealed by ${name}`,
-  praxisEmpty: {
-    title: 'No chronicle yet',
-    body: 'The Court waits. Go and do something gloriously daft, then write it down.',
-  },
   emptyStateStyle: {
     border: `1px dashed ${GOLD}`,
     borderRadius: 'var(--radius-lg)',
@@ -211,7 +203,6 @@ const kit: ProfileKit = {
     background: PLATE,
   },
   laurel: <SpectrumLaurel centerBg={SURFACE} glyphColor={FIGURE} />,
-  badgeTitle: 'Honours & Credentials',
   badgeBoardStyle: {
     border: `1px solid ${PLATE_BORDER}`,
     borderLeft: `4px solid var(--faction-wow-plum-surface)`,
@@ -261,10 +252,29 @@ const kit: ProfileKit = {
 }
 
 export default function WowProfileBody(props: ProfileBodyProps) {
+  const { t } = useTranslation('common')
   return useFormFactor() === 'mobile' ? (
     <MobileProfile {...props} />
   ) : (
-    <ProfileSkin props={props} kit={kit} />
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.wow.ringLabel'),
+        levelUnitLabel: t('profile.wow.levelUnit'),
+        nextLevelLabel: (next) => t('profile.wow.nextLevel', { level: next }),
+        praxisEyebrow: (name) => t('profile.wow.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.wow.praxisEmptyTitle'),
+          body: t('profile.wow.praxisEmptyBody'),
+        },
+        // `honours`, not a `badgeTitle` of its own: the phone stack's badge
+        // heading below already reads this key and says the same words about
+        // the same section. Two keys holding one string is how a copy pass
+        // reworders half a page.
+        badgeTitle: t('profile.wow.honours'),
+      }}
+    />
   )
 }
 

@@ -1,0 +1,194 @@
+/**
+ * The three onboarding cards (#1861, `docs/spec/SPEC-onboarding.md`).
+ *
+ * WHAT THIS CAN TEST. The harness is `renderToStaticMarkup` — no DOM, no
+ * events, effects never run — so the cards are exercised as the pure render
+ * units they were written to be, one at a time, rather than by walking the
+ * flow. `Onboarding.tsx`'s step machine is two lines of derivation over
+ * `useAuth()`; what it derives *from* is pinned in `AuthContext` and what it
+ * derives *to* is these three.
+ *
+ * The four things that would each be a silent regression:
+ *
+ *   1. **The escape.** "A door, not a wall": every stop keeps "let me just look
+ *      around" available. It is rendered by the shell, so this asserts it on
+ *      every card — losing it on one is the failure mode.
+ *   2. **Neither provider privileged.** Two buttons that drift apart in size,
+ *      class or ink is how one quietly becomes the recommended way in. The
+ *      assertion compares the rendered tags rather than eyeballing the source.
+ *   3. **The real Disclaimer.** `main` auto-deploys. Every other string on this
+ *      route is a placeholder and must be; the document is not, and the check
+ *      reads `common.json` so a swap to placeholder legal text fails here.
+ *   4. **Rainbow in exactly three places.** The restraint IS the design, which
+ *      makes it the one visual rule a test can hold: three references per card,
+ *      counted in the markup.
+ */
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect, vi } from 'vitest'
+
+import '../../i18n'
+import common from '../../locales/en/common.json'
+import onboarding from '../../locales/en/onboarding.json'
+
+vi.mock('../../api/terms', () => ({ acceptTerms: () => Promise.resolve({}) }))
+vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
+
+import IntroCard from '../onboarding/IntroCard'
+import AuthCard from '../onboarding/AuthCard'
+import TermsCard from '../onboarding/TermsCard'
+
+const render = (node: React.ReactNode): string =>
+  renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>)
+
+/** Copy as it reaches the markup: react-dom/server escapes these five. */
+const asRendered = (text: string): string =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+
+const CARDS: Array<[string, React.ReactNode]> = [
+  ['intro', <IntroCard onContinue={() => {}} />],
+  ['auth', <AuthCard />],
+  ['terms', <TermsCard onAccepted={() => {}} />],
+]
+
+describe('every onboarding card', () => {
+  for (const [name, card] of CARDS) {
+    it(`${name} keeps a way out of the flow`, () => {
+      const markup = render(card)
+
+      expect(markup).toContain('data-testid="onboarding-look-around"')
+      // `/tasks` and not `/`: `/` logged out is Home, which explains the game a
+      // second time. Public surfaces need no session, so this is a link out and
+      // not a dismissal.
+      expect(markup).toContain('href="/tasks"')
+    })
+
+    it(`${name} spends the rainbow exactly three times`, () => {
+      const markup = render(card)
+
+      // The border band, the conic step ring, one tick. A fourth is a design
+      // change, not a tweak.
+      expect(markup.match(/--faction-default-rainbow/g)).toHaveLength(3)
+    })
+
+    it(`${name} states no colour of its own`, () => {
+      const markup = render(card)
+
+      // Every colour through a `--faction-default-*` token so both themes come
+      // from the `[data-theme="dark"]` cascade. A hex in a style attribute is
+      // a light-only card.
+      expect(markup).not.toMatch(/style="[^"]*#[0-9a-fA-F]{3}/)
+    })
+  }
+})
+
+describe('the intro card', () => {
+  it('carries all six things the pitch must land', () => {
+    const markup = render(<IntroCard onContinue={() => {}} />)
+
+    for (const slot of Object.values(onboarding.intro.paragraph)) {
+      expect(markup).toContain(asRendered(slot))
+    }
+  })
+
+  it('lands them in ONE paragraph, not three beats', () => {
+    const markup = render(<IntroCard onContinue={() => {}} />)
+
+    const pitch = /<p[^>]*data-testid="onboarding-pitch"[^>]*>([\s\S]*?)<\/p>/.exec(markup)?.[1]
+    for (const slot of Object.values(onboarding.intro.paragraph)) {
+      expect(pitch).toContain(asRendered(slot))
+    }
+    // The whole card holds one <p>. Six slots joined into it is a paragraph;
+    // six <p>s would be the three-beat shape the spec rules out.
+    expect(markup.match(/<p[ >]/g)).toHaveLength(1)
+  })
+
+  it('says nothing about praxis, factions or signing up before auth', () => {
+    // The WORDS, not the markup: `--faction-default-*` tokens are all over the
+    // style attributes and are not copy. Strip every attribute and judge what
+    // is left, which is what a player reads.
+    const words = render(<IntroCard onContinue={() => {}} />)
+      .replace(/<[^>]*>/g, ' ')
+      .toLowerCase()
+
+    // The player meets "praxis" once they have one — nothing formally teaches
+    // the word. Factions are invitation-gated (ADR-0022) and unreachable at
+    // level 0, so naming them pre-signup sells what the game cannot deliver.
+    expect(words).not.toContain('praxis')
+    expect(words).not.toContain('faction')
+    // "Sign up" belongs to the task claim: a Character signs up FOR A TASK.
+    // Account creation uses other words.
+    expect(words).not.toContain('sign up')
+  })
+})
+
+describe('the auth card', () => {
+  it('offers both providers', () => {
+    const markup = render(<AuthCard />)
+
+    expect(markup).toContain(common.signIn.google)
+    expect(markup).toContain(common.signIn.discord)
+  })
+
+  it('privileges neither', () => {
+    const markup = render(<AuthCard />)
+
+    const control = (provider: string): string => {
+      const tag = new RegExp(`<button[^>]*data-testid="sign-in-${provider}"[^>]*>`).exec(markup)?.[0]
+      return (tag ?? '').replace(`data-testid="sign-in-${provider}"`, '')
+    }
+
+    expect(control('google')).not.toBe('')
+    expect(control('google')).toBe(control('discord'))
+  })
+
+  it('names no provider in the framing copy', () => {
+    const markup = render(<AuthCard />)
+
+    // A provider is named on the button that goes to it and nowhere else
+    // (#1738). Strip the two buttons and neither word may survive.
+    const framing = markup.replace(/<button[\s\S]*?<\/button>/g, '').toLowerCase()
+
+    expect(framing).not.toContain('google')
+    expect(framing).not.toContain('discord')
+  })
+})
+
+describe('the terms card', () => {
+  it('shows the real Disclaimer, not a placeholder', () => {
+    const markup = render(<TermsCard onAccepted={() => {}} />)
+
+    for (const paragraph of [
+      common.disclaimer.p1,
+      common.disclaimer.p2,
+      common.disclaimer.p3,
+      common.disclaimer.p4,
+      common.disclaimer.lastUpdated,
+    ]) {
+      expect(markup).toContain(asRendered(paragraph))
+    }
+  })
+
+  it('reads the document from the same keys the Disclaimer page does', () => {
+    const markup = render(<TermsCard onAccepted={() => {}} />)
+
+    // The document block holds no PLACEHOLDER — the framing line above it does,
+    // and that is the boundary: `main` auto-deploys, so provisional legal text
+    // would ship to production.
+    const document = /data-testid="onboarding-terms-document"[^>]*>([\s\S]*?)<\/div>/.exec(markup)?.[1]
+
+    expect(document).toBeTruthy()
+    expect(document).not.toContain('PLACEHOLDER')
+  })
+
+  it('offers an accept control', () => {
+    const markup = render(<TermsCard onAccepted={() => {}} />)
+
+    expect(markup).toContain('data-testid="onboarding-accept-terms"')
+  })
+})

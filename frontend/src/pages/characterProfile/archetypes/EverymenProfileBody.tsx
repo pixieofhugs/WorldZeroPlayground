@@ -10,9 +10,10 @@
  * hex — colours via --everymen-* / --faction-everymen-* vars.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 const INK = 'var(--everymen-ink)' // structure + text on the stable cream board (near-black both themes)
 const PAPER_TEXT = 'var(--everymen-paper-text)' // text on the paper page (flips in dark)
@@ -65,7 +66,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'everymen',
   pageBackground: PAPER,
   pageOverlay: 'radial-gradient(rgba(34,26,18,0.05) 1px, transparent 1px)',
@@ -109,16 +110,9 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'lvl',
   barFill: `linear-gradient(90deg, ${GOLD}, ${RED})`,
   barTrack: 'rgba(255,255,255,0.16)',
-  nextLevelLabel: (next) => `NEXT · LVL ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `Work ${name} finished`,
-  praxisEmpty: {
-    title: 'No work on the board yet',
-    body: 'Answer a call. Put in the first shift.',
-  },
   emptyStateStyle: {
     border: `2px dashed ${INK}`,
     padding: 'var(--space-2xl)',
@@ -126,7 +120,6 @@ const kit: ProfileKit = {
     background: CREAM,
   },
   laurel: <SpectrumLaurel centerBg={CREAM} glyphColor={RED} rotate={-8} />,
-  badgeTitle: 'Citations',
   badgeBoardStyle: {
     border: `3px solid ${INK}`,
     background: CREAM,
@@ -171,5 +164,21 @@ const kit: ProfileKit = {
 }
 
 export default function EverymenProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.everymen.ringLabel'),
+        nextLevelLabel: (next) => t('profile.everymen.nextLevel', { level: next }),
+        praxisEyebrow: (name) => t('profile.everymen.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.everymen.praxisEmptyTitle'),
+          body: t('profile.everymen.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.everymen.badgeTitle'),
+      }}
+    />
+  )
 }

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
 import { relativeTime } from '../../utils/dates'
+import { hasOwnKey } from '../../utils/hasOwnKey'
 import FactionFeedFrame from './FactionFeedFrame'
 import FeedItemSlot from './FeedItemSlot'
 import FeedRowContent from './FeedRowContent'
@@ -73,7 +74,14 @@ interface Props {
 
 export default function FeedCardRouter({ item, archivedView = false, onArchiveChange }: Props) {
   const row = normalizeFeedItem(item)
-  const Companion = COMPANION_BODIES[item.type]
+  // Own-property-only (#1821): a bracket read reaches `Object.prototype`, so a
+  // type of `constructor` resolved to the `Object` function and this rendered it
+  // as the companion body — past the `!Companion` guard below, which is exactly
+  // the "type the backend emits ahead of a frontend case" path that guard exists
+  // for.
+  const Companion = hasOwnKey(COMPANION_BODIES, item.type)
+    ? COMPANION_BODIES[item.type]
+    : undefined
   const isEraAnnouncement = item.type === 'era_announcement'
 
   // A type with no body renders nothing rather than an empty chassis. Every one
@@ -95,6 +103,12 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
   // "Not now" that un-archived the card would mean the opposite of its label.
   const renderBody = (act: (() => void) | null): ReactNode => {
     if (row) return <FeedRowContent row={row} avatarUrl={item.actor_avatar_url} />
+    // Unreachable while `isEraAnnouncement` is the only way past the early
+    // return above with neither a row nor a companion — but the lookup's type is
+    // honest about the miss now (#1821), and a body-less card renders nothing
+    // rather than throwing inside React's render, which is what the old
+    // `ComponentType`-that-was-really-undefined did.
+    if (!Companion) return null
     return <Companion item={item} onNotNow={archivedView ? undefined : (act ?? undefined)} />
   }
 
