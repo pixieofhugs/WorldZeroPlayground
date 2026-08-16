@@ -1,4 +1,5 @@
 import i18n from '../../i18n'
+import { hasOwnKey } from '../../utils/hasOwnKey'
 
 export interface ReframeTier {
   value: number
@@ -105,8 +106,14 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
 /**
  * Label a vote value in a task faction's vocabulary. Falls back to the arabic
  * number when no reframe exists (factionless / unknown slug).
+ *
+ * Own-property-only, like every other faction lookup (#1821): a bracket read
+ * reaches `Object.prototype`, and the `Object` function is truthy, so `?.` let
+ * it through and `reframe.tiers.find` threw a TypeError on any vote rendered
+ * for a slug named after a prototype member.
  */
 export function reframeLabel(factionSlug: string | null | undefined, value: number): string {
-  const reframe = VOTE_REFRAMES[factionSlug ?? '']
-  return reframe?.tiers.find((tier) => tier.value === value)?.label ?? String(value)
+  if (!hasOwnKey(VOTE_REFRAMES, factionSlug)) return String(value)
+  const reframe = VOTE_REFRAMES[factionSlug]
+  return reframe.tiers.find((tier) => tier.value === value)?.label ?? String(value)
 }
