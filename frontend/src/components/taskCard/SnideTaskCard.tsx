@@ -317,7 +317,7 @@ export default function SnideTaskCard({
                 inline flow instead — the cuts are `inline-block`, separated by
                 REAL space characters, and they still wrap, still sit on a shared
                 baseline and still carry their own grounds. */}
-            <h3
+            <h2
               style={{
                 fontSize: size.titleSize,
                 fontWeight: 400,
@@ -340,7 +340,7 @@ export default function SnideTaskCard({
                   </span>
                 </span>
               ))}
-            </h3>
+            </h2>
 
             {task.description && (
               <p

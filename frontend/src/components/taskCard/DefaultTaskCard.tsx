@@ -222,7 +222,7 @@ export default function DefaultTaskCard({
             )}
           </div>
 
-          <h3
+          <h2
             style={{
               fontFamily: LORA,
               fontWeight: 600,
@@ -234,7 +234,7 @@ export default function DefaultTaskCard({
             }}
           >
             {task.title}
-          </h3>
+          </h2>
 
           {task.description && (
             <p

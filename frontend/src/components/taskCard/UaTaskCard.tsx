@@ -183,7 +183,7 @@ export default function UaTaskCard({
               />
             </div>
 
-            <h3
+            <h2
               className="content-title"
               style={{
                 fontFamily: UA_DISPLAY,
@@ -195,7 +195,7 @@ export default function UaTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p

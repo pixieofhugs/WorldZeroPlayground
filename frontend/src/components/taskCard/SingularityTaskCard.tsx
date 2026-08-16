@@ -253,7 +253,7 @@ export default function SingularityTaskCard({
               </div>
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: MONO,
                 fontWeight: 400,
@@ -265,7 +265,7 @@ export default function SingularityTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p

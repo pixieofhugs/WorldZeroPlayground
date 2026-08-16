@@ -373,7 +373,7 @@ export default function EphemeristsTaskCard({
               </div>
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: DECO,
                 fontWeight: 400,
@@ -385,7 +385,7 @@ export default function EphemeristsTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
