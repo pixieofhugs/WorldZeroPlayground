@@ -8,16 +8,20 @@ import { drawAtRoot } from './ui/drawAtRoot'
  *
  * Both logged-out entry points used to call `loginWithGoogle()` directly, so
  * Discord shipped server-side (#1772) and stayed unreachable. This is the one
- * component that knows which providers exist and what they are called; the
- * onboarding auth card (#1732) mounts it too when that flow is built.
+ * component that knows which providers exist and what they are called.
+ *
+ * Two callers now: the NavBar's sign-in sheet below, and the onboarding arc's
+ * auth card (#1861), which is where the Home hero's pair went — a stranger is
+ * owed the explanation before the ask, so the hero leads into `/start` and
+ * `/start` offers the providers.
  *
  * NO PROVIDER NAME IN FRAMING COPY (#1738): a provider is named on the button
  * that goes to it and nowhere else. `signIn.title` frames the stop as somewhere
  * to keep a score, not as a gate.
  *
- * The caller owns the container — a wrapping flex row in the Home hero, a
- * column in the sheet below — so the buttons need no layout variant of their
- * own, and neither provider is styled as the recommended one.
+ * The caller owns the container — a column in the sheet below, a wrapping row
+ * on the onboarding sheet — so the buttons need no layout variant of their own,
+ * and neither provider is styled as the recommended one.
  */
 export default function SignInOptions({
   className = 'btn-primary',
