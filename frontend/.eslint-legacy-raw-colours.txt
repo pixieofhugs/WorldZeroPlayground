@@ -1,0 +1,90 @@
+# Files not yet migrated off raw colour (issue #1853). This list only ever
+# shrinks — migrating a file means deleting its line here, not adding one. New
+# files may never be added to it.
+#
+# Seeded from what `local/no-raw-colour-values` actually reported on the day it
+# landed: 61 files, 140 violations. #1609 burns it down. The three groups below
+# are how the 140 read, not three different rules — every line is one file.
+#
+# GROUP 1 — the danger banner. `text-red-600` / `border-red-300` / `#dc2626`,
+# which is `--color-danger`'s LIGHT value hardcoded, so the error text paints
+# light red on a dark ground. Repeated near-verbatim across ~20 surfaces; this
+# is one shared component away from zero, not twenty edits.
+src/pages/admin/AccountsTab.tsx
+src/pages/admin/ModerationTab.tsx
+src/pages/admin/OverviewTab.tsx
+src/pages/admin/TaskImportPanel.tsx
+src/pages/admin/TasksTab.tsx
+src/pages/CharacterProfile.tsx
+src/pages/Contact.tsx
+src/pages/EditCharacter.tsx
+src/pages/FactionDetail.tsx
+src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx
+src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx
+src/pages/Factions.tsx
+src/pages/FieldDesk.tsx
+src/pages/Home.tsx
+src/pages/Leaderboard.tsx
+src/pages/praxes/MobilePraxisFeed.tsx
+src/pages/Praxes.tsx
+src/pages/PraxisDetail.tsx
+src/pages/proposeTask/archetypes/DefaultProposeTask.tsx
+src/pages/TaskDetail.tsx
+src/pages/Tasks.tsx
+src/pages/tasks/mobileArchetypes/DefaultTasks.tsx
+src/pages/Updates.tsx
+#
+# GROUP 2 — hand-rolled lift. Neutral chrome carrying its own
+# `rgba(0,0,0,α)` shadow or modal scrim at a geometry nobody else uses. This is
+# the class #1851 fixed twice already, at two different geometries; a third
+# (`AlbescentInvitation`) is here. Wants a shared elevation token, not 19 edits.
+# `FieldDesk.tsx` sits in group 1 and carries one of these too.
+src/components/AlbescentInvitation.tsx
+src/components/collab/CollabRoster.tsx
+src/components/collab/CollabSuccess.tsx
+src/components/comments/CommentThread.tsx
+src/components/CredentialCard.tsx
+src/components/feed/FeedCardEraAnnouncement.tsx
+src/components/imageEdit/ImageEditModal.tsx
+src/components/InvitationLetterPopup.tsx
+src/components/LevelUpPopup.tsx
+src/components/metataskSeal/MetataskPicker.tsx
+src/components/metataskSeal/MetataskRemoveConfirm.tsx
+src/components/praxisCard/desktop/DefaultPraxisCard.tsx
+src/components/praxisCard/scoreStamp/DefaultScoreStamp.tsx
+src/components/praxisCard/shared.tsx
+src/components/selectCard/DefaultSelectCard.tsx
+src/components/taskCard/DefaultTaskCard.tsx
+src/components/taskCard/TaskCard.tsx
+src/pages/characterProfile/archetypes/DefaultProfileBody.tsx
+src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx
+#
+# GROUP 3 — faction skins and ornament marks. READ THESE BEFORE REPOINTING.
+# Gap B's judgement applies to colour exactly as it does to `text-[13px]`: a
+# `--faction-*` token names a TIER, and some of these literals name a ONE-OFF
+# ORNAMENT instead — Snide's `rgba(182,255,46,0.055)` ghost lettering, the
+# halftone dot fields, the offset flat drop shadows that are the print
+# metaphor rather than elevation. Migrating those mechanically would push
+# ornament colour onto a tier it was never part of, which is the coupling
+# WORLD_ZERO_STYLE.md §4a forbids. #1609 must decide per site, and a site that
+# stays raw stays on THIS list with the reason written down — never behind an
+# inline eslint-disable, which hides the decision from the next reader.
+src/components/factionCard/FactionCard.tsx
+src/components/factionHero/SingularityFactionHero.tsx
+src/components/factionHero/SnideFactionHero.tsx
+src/components/factionMarks/TaskCrown.tsx
+src/components/metataskSeal/skins/EphemeristsSeal.tsx
+src/components/metataskSeal/skins/SnideSeal.tsx
+src/components/praxisCard/desktop/EverymenPraxisCard.tsx
+src/components/praxisCard/desktop/SingularityPraxisCard.tsx
+src/components/selectCard/FactionSelectCard.tsx
+src/components/vote/CovenVote.tsx
+src/components/vote/EphemeristsVote.tsx
+src/components/vote/SnideVote.tsx
+src/pages/characterProfile/archetypes/EverymenProfileBody.tsx
+src/pages/characterProfile/archetypes/SingularityProfileBody.tsx
+src/pages/characterProfile/archetypes/SnideProfileBody.tsx
+src/pages/factionDetail/archetypes/EverymenFactionBody.tsx
+src/pages/factionDetail/archetypes/SnideFactionBody.tsx
+src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx
+src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx
