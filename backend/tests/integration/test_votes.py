@@ -1069,7 +1069,7 @@ async def test_forfeit_by_unsubmit_gives_opponent_win_regardless_of_votes(
 
 
 @pytest.mark.asyncio
-async def test_ban_forfeits_settled_duels(
+async def test_self_deletion_forfeits_settled_duels(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
@@ -1079,7 +1079,14 @@ async def test_ban_forfeits_settled_duels(
     auth_headers2: dict,
     era: Era,
 ):
-    """Banning a character forfeits their settled duels; the opponent wins by default."""
+    """Self-deletion forfeits the departing character's settled duels.
+
+    Named for the path it actually drives: it calls ``soft_delete_character``, i.e.
+    ``DELETE /characters/{id}``. It used to be called ``test_ban_forfeits_settled_-
+    duels``, which was the exact confusion #1577 was filed about — the *moderator*
+    ban route did no such thing until #1577, and this test never touched it. The
+    ban leg lives in ``test_ban_and_departure.py``.
+    """
     from game_config import CURRENT_ERA
     from models.duel import Duel, DuelStatus
     from services.character import soft_delete_character

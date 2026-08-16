@@ -41,7 +41,9 @@ export async function listRelationships(filters?: RelationshipFilters): Promise<
 // `listRelationships()` and searched it for the edge it had just written.
 //
 // The item describes THE EDGE, not the viewer: `to_*` always names
-// `to_character_id`, and either party may block or unblock (ADR-0009).
+// `to_character_id`, and either party may block or unblock (ADR-0009,
+// superseded by ADR-0077 — under which a block is its own record and only
+// the blocker may lift it).
 
 export async function createRelationship(to_character_id: number, type: 'friend' | 'foe'): Promise<RelationshipListItem> {
   const { data } = await apiPost('/relationships', { body: { to_character_id, type } })
@@ -56,7 +58,11 @@ export async function blockRelationship(id: number): Promise<RelationshipListIte
   return data as RelationshipListItem
 }
 
-/** Reverse a block (ADR-0009) — restores the edge to active. Either party can unblock. */
+/**
+ * Reverse a block — restores the edge to active. Either party can unblock.
+ * ADR-0009, superseded by ADR-0077: unblock becomes the deletion of a block
+ * record, authored by the blocker alone.
+ */
 export async function unblockRelationship(id: number): Promise<RelationshipListItem> {
   const { data } = await apiPost('/relationships/{relationship_id}/unblock', {
     params: { path: { relationship_id: id } },

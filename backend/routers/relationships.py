@@ -78,9 +78,12 @@ async def unblock_relationship_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ) -> RelationshipListItem:
-    """Reverse a block (ADR-0009). Either party can unblock; the edge returns to
-    active. Separate route from PUT /{id} (block) so the two actions don't
-    collide."""
+    """Reverse a block. Either party can unblock; the edge returns to active.
+    Separate route from PUT /{id} (block) so the two actions don't collide.
+
+    ADR-0009, superseded by ADR-0077 — under which a block is its own record
+    and unblock is that record's deletion, authored by the blocker alone. This
+    route still implements ADR-0009."""
     relationship = await unblock_relationship(
         relationship_id=relationship_id,
         character=character,
