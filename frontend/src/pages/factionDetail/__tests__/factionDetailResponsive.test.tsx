@@ -270,6 +270,41 @@ describe('faction detail serves one responsive body at both widths', () => {
 })
 
 /**
+ * The two things ADR-0069's rule calls STRUCTURAL rather than cosmetic, so they
+ * had to survive the collapse rather than resolve to a desktop value.
+ */
+describe('the structural survivors', () => {
+  it("keeps WOW's 46px touch targets on the muster roll (#895)", () => {
+    // A floor, so it is applied at both widths — the laptop row already clears
+    // it. Asserted at both so a later "tidy-up" cannot drop it from the phone.
+    for (const formFactor of FORM_FACTORS) {
+      expect(page('wow', formFactor).html, `${formFactor} roll row`).toContain(
+        'min-height:46px',
+      )
+    }
+  })
+
+  it("stacks Singularity's terminal masthead on a phone", () => {
+    // The one faction hero laid out as a hard `1fr 240px` grid; every other one
+    // wraps. It had never rendered under 768px before this collapse.
+    expect(page('singularity', 'desktop').html).toContain('grid-template-columns:1fr 240px')
+    expect(page('singularity', 'mobile').html).not.toContain('grid-template-columns:1fr 240px')
+  })
+
+  it('pins the fall-through join action above the tab bar on a phone', () => {
+    // `MobileStickyBar`'s new home. `albescent` is the one faction reaching
+    // `DefaultFactionBody`, which is the bar's only consumer.
+    const eligible = { membership: membership({ state: 'eligible' }) }
+    expect(page('albescent', 'mobile', eligible).html, 'pinned on a phone').toContain(
+      'bottom:var(--tab-bar-clearance)',
+    )
+    expect(page('albescent', 'desktop', eligible).html, 'inline on a laptop').not.toContain(
+      'bottom:var(--tab-bar-clearance)',
+    )
+  })
+})
+
+/**
  * Carried over from the retired `uaMobileDispatch` test, which pinned this on
  * the phone skin only. #788 killed the salon; the guard has to follow UA's
  * surviving body to the width the skin used to own.

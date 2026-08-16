@@ -106,8 +106,13 @@ export default function SnideFactionHero({
           padding: "var(--space-xl) var(--space-3xl) var(--space-2xl)",
         }}
       >
-        {/* identity — eyebrow + wordmark + motto + blurb */}
-        <div style={{ flex: 1, minWidth: 300 }}>
+        {/* identity — eyebrow + wordmark + motto + blurb.
+            `min(300px, 100%)` rather than a bare 300: #1314 sent this hero to a
+            phone for the first time, and at 375px the band's own
+            `--space-3xl` gutters leave 263px of inner width, so a hard floor of
+            300 pushed the column past the (clipped) edge. The `min()` is inert
+            wherever there is room, so no desktop rendering moves. */}
+        <div style={{ flex: 1, minWidth: "min(300px, 100%)" }}>
           {/* eyebrow, typed straight onto the wall (#1708 took the tape) */}
           <div
             style={{

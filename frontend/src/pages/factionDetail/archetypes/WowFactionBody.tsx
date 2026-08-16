@@ -312,6 +312,14 @@ function Quiet({ children }: { children: ReactNode }) {
 /**
  * A roll entry: rank numeral, name, tally — the phone twin's row widened, with
  * the top of the roll taking the Champion ribbon the copy catalog already names.
+ *
+ * `minHeight` is #895's 46px touch target, carried over from the twin when
+ * ADR-0077 retired it. It is applied at BOTH widths rather than behind a
+ * `useFormFactor()` read, because it is a FLOOR and the laptop row already
+ * clears it — the rank numeral alone is `--text-title` — so the branch would
+ * cost a hook to change nothing. ADR-0069 preserved the same number through the
+ * duel-seal collapse for the same reason: a touch target is a requirement, not
+ * a cosmetic delta, so it survives.
  */
 function MemberRow({
   rank,
@@ -327,6 +335,7 @@ function MemberRow({
     <Link
       to={`/characters/${member.id}`}
       style={{
+        minHeight: 46,
         display: "flex",
         alignItems: "center",
         gap: "var(--space-lg)",
