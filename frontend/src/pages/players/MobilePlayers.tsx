@@ -277,6 +277,10 @@ function PodiumRow({
         textDecoration: 'none',
       }}
     >
+      {/* Ring, bloom and wash carry the faction; the numeral inherits
+          `--color-text-primary` from the row (#1932). This is the 18px/400
+          "1" the nightly measured at 4.46:1 in UA's sienna — 18px regular is
+          NOT WCAG large text, so 4.5:1 is the floor it owes. */}
       <span
         className="font-display flex items-center justify-center"
         style={{
@@ -286,7 +290,6 @@ function PodiumRow({
           border: `1px solid ${color}`,
           boxShadow: `0 0 0 4px color-mix(in oklab, ${color} 14%, transparent)`,
           fontSize: 'var(--text-content)',
-          color,
           flex: 'none',
         }}
       >
@@ -301,7 +304,9 @@ function PodiumRow({
           <span className="font-display truncate" style={{ fontSize: 'var(--text-content)', lineHeight: 1.05 }}>
             {character.display_name}
           </span>
-          <span className="label-heading" style={{ color }}>
+          {/* Label tier, so the ink is the `--label-ink` seam and not the
+              faction hue (#1932) — see DesktopPlayers' twin. */}
+          <span className="label-heading">
             {t('leaderboard.level', { level: character.level })}
           </span>
           {/* Content floor, not the design's 10px — a task title is prose that
