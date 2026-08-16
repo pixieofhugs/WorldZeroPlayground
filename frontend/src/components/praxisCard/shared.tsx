@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
 import type { PraxisCardOut } from "../../api/praxis";
 import { factionCssVar, factionName } from "../../utils/factions";
-import { isDuelPraxis } from "../../utils/praxis";
+import { isDuelPraxis, stampRestatesTaskPoints } from "../../utils/praxis";
 import { mediaUrl } from "../../utils/media";
 import FactionAvatar from "../avatar/FactionAvatar";
 import VoteUI from "../vote/VoteUI";
@@ -376,10 +376,18 @@ export function PraxisVotedByMarker({
 /**
  * Slot: level + base points + collaboration mode + date — the meta line.
  *
- * FOUR segments, always, in that order (#888). The level used to be conditional
- * on `task_level_required > 0`, so a level-0 task dropped it and the separator
+ * The level is never conditional (#888). It used to be gated on
+ * `task_level_required > 0`, so a level-0 task dropped it and the separator
  * count changed card to card — a ragged line across a wall of cards. `L0` is a
  * real answer to "what does this need?", so it renders.
+ *
+ * The POINTS segment is the one exception, for the opposite reason (#1833): it
+ * drops when the stamp beside it already prints that same figure as its total,
+ * which under Era 1's neutral multiplier is most unvoted cards on the site.
+ * #888 was about a segment that always says something being hidden anyway; this
+ * is a segment that, in that one state, says nothing. `stampRestatesTaskPoints`
+ * owns the test, and it is #1131's rule — see it for why the figure comes back
+ * on its own the moment the two numbers diverge.
  */
 export function PraxisStats({
   praxis,
@@ -409,8 +417,14 @@ export function PraxisStats({
       <span style={{ fontWeight: 600 }}>
         {t("card.level", { level: praxis.task_level_required })}
       </span>
-      <span aria-hidden>·</span>
-      <span style={{ fontWeight: 700 }}>{t("card.points", { points: praxis.task_point_value })}</span>
+      {!stampRestatesTaskPoints(praxis) && (
+        <>
+          <span aria-hidden>·</span>
+          <span style={{ fontWeight: 700 }}>
+            {t("card.points", { points: praxis.task_point_value })}
+          </span>
+        </>
+      )}
       <span aria-hidden>·</span>
       <span>{collaborators > 0 ? t("card.crew", { count: collaborators }) : t("card.solo")}</span>
       {submittedDate && (

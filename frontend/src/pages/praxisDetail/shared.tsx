@@ -43,6 +43,8 @@ import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'
 import { factionCssVar } from '../../utils/factions'
+import { stampRestatesTaskPoints } from '../../utils/praxis'
+import type { TFunction } from 'i18next'
 
 /**
  * Whether this praxis's score was actually banked (#1444).
@@ -61,6 +63,31 @@ import { factionCssVar } from '../../utils/factions'
  */
 export function scoreWasBanked(praxis: PraxisOut): boolean {
   return !UNSCORED_MODERATION_STATUSES.has(praxis.moderation_status)
+}
+
+/**
+ * The trailing half of the task-reference band — "Level 3 · 30 pts" (#1833).
+ *
+ * All eight dressed pages copy this band rather than compose it from a slot,
+ * each in its own faction ink, and all eight were printing the task's points
+ * beside a score rail printing the same figure as its total. The band's ink and
+ * placement stay the archetype's; only its TEXT is shared, which is the smallest
+ * thing that stops the rule drifting apart eight ways.
+ *
+ * The points half drops when {@link stampRestatesTaskPoints} says the rail
+ * already prints that figure — #1131's rule, reached through the value
+ * `scoreBreakdown` publishes. It returns on its own the moment votes land or a
+ * multiplier is non-neutral, because then the two figures answer different
+ * questions, and it never leaves on a praxis whose rail is gone (`failed` /
+ * `hidden`, #1444) — there the band is the only points readout the page has.
+ *
+ * Returns a plain string: the separator is the band's own punctuation, not a
+ * slot, and every archetype already wrapped both halves in one styled `<span>`.
+ */
+export function taskRefMeta(praxis: PraxisOut, t: TFunction<'praxis'>): string {
+  const level = t('detail.taskRef.level', { level: praxis.task_level_required })
+  if (stampRestatesTaskPoints(praxis)) return level
+  return `${level} · ${t('detail.taskRef.points', { points: praxis.task_point_value })}`
 }
 
 // ── The detail WALL's alarm inks (#1451) ─────────────────────────────────────

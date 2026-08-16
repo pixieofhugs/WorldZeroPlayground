@@ -171,6 +171,25 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       ).toBe(occurrences(coven, SNIDE_MARK) + 1)
     })
 
+    /**
+     * #1834. The row is a PRAXIS, so its figure is the praxis's `score` — what
+     * the player has actually earned — not `task_point_value`, the task's base
+     * worth. The two agree until the first vote lands, which is why eight skins
+     * read the wrong field for so long: equal fixtures hide it.
+     *
+     * A score is a weighted sum and carries float noise, so the assertion is on
+     * the FORMATTED figure, and on its COUNT: WOW printed the same number twice
+     * in one row (once in the meta line, once as the gilt ✦ figure), and
+     * "the row contains the score" passes for that too.
+     */
+    it(`${slug} meters the in-progress row by the praxis's score, not the task's worth`, () => {
+      const voted = { ...ACTIVE_TASK, task_point_value: 88, score: 47.300000000000004 }
+      const { text } = render(<Skin state={baseState({ activeTasks: [voted] })} />)
+      expect(occurrences(text, '47.3'), 'the earned score, printed once').toBe(1)
+      expect(text, 'no raw float arithmetic noise').not.toContain('0000')
+      expect(text, "the task's base worth is not this row's figure").not.toContain('88')
+    })
+
     it(`${slug} renders the empty state when no active tasks`, () => {
       const { text } = render(<Skin state={baseState({ activeTasks: [] })} />)
       expect(text.toLowerCase(), 'empty-tasks slot').toContain('nothing in progress')

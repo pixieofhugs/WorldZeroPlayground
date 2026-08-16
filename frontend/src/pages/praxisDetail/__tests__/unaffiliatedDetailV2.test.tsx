@@ -283,13 +283,17 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(render(sealed).text).toContain("meta");
   });
 
-  // Re-affirmed 2026-07-20 against a design that hid it: an absent row cannot
-  // say "nobody has voted yet", so the tally is drawn at zero too.
-  it("always draws the votes tally, including +0", () => {
+  // ADR-0076 reversed the 2026-07-20 call that kept `+ 0 from votes` here. On
+  // this page the rail is the mounted `ScoreStamp`, so the ruling arrives
+  // through the same resolver as everywhere else: no votes, no votes row, and a
+  // base-only praxis reads as its total.
+  it("draws the votes tally only when there are votes (ADR-0076)", () => {
     const unvoted = state({
       praxis: { ...PRAXIS, points_from_votes: 0, score: 12 },
     });
-    expect(render(unvoted).text).toContain("from votes");
+    const { text } = render(unvoted);
+    expect(text).not.toContain("from votes");
+    expect(text, "the total still stands alone").toContain("12.0");
   });
 
   /**

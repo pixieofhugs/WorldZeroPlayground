@@ -5,6 +5,7 @@ import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
@@ -31,6 +32,14 @@ const GOLD = 'var(--everymen-gold)'
 const MUTED = 'var(--everymen-muted)'
 const PAPER = 'var(--everymen-paper)'
 const PAPER_DEEP = 'var(--everymen-paper-deep)'
+/* Red as TEXT is a different job from red as a fill or a rule, and this page
+   prints it on both of the family's tans (#1766). `RED` is 4.49:1 on the paper
+   and 3.75:1 on the deep stock — under AA on each — so small type takes the
+   sibling minted for the stock it actually lands on, and RED keeps every band,
+   frame, rule and dingbat it has. Display-sized figures stay on RED too: at
+   26px and 32px they owe the large-text 3:1 and clear it. */
+const PAPER_ACCENT = 'var(--everymen-paper-accent)'
+const DEEP_ACCENT = 'var(--everymen-deep-accent)'
 const ACCENT_FONT = 'var(--font-accent)'
 const BODY_FONT = 'var(--font-body)'
 
@@ -50,6 +59,13 @@ const kicker: CSSProperties = {
  * Characters / Edit as real controls (#1553) — a stamped union chit. They were
  * bare caps with no box: a sub-20px hit target on a phone. 44 is the WCAG 2.5.5
  * target floor and is GEOMETRY, not spacing.
+ *
+ * The chit fills with the DEEP stock, which is what made its label the tightest
+ * red-on-tan pairing in the file — 3.75:1 (#1766), so it takes
+ * `--everymen-deep-accent`. The size is NOT touched: `--text-lg` is the label
+ * ramp's own 12px step, not a raw literal under the content floor, and whether
+ * button chrome moves up a step is the ruling #1783 is asking for. Deciding it
+ * here would fork that.
  */
 const actionPillStyle: CSSProperties = {
   display: 'inline-flex',
@@ -64,7 +80,7 @@ const actionPillStyle: CSSProperties = {
   fontSize: 'var(--text-lg)',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: RED,
+  color: DEEP_ACCENT,
   textDecoration: 'none',
   cursor: 'pointer',
   transition: 'opacity 120ms ease',
@@ -310,7 +326,9 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         <SectionHead
           title={t('fieldDesk.home.everymen.questsHeading')}
           trailing={
-            <Link to="/tasks" style={{ ...kicker, color: RED, textDecoration: 'none' }}>
+            // 11px on the Plate's PAPER, so #1341's paper-stock sibling and not
+            // the bare red, which is 4.49 / 4.16 there.
+            <Link to="/tasks" style={{ ...kicker, color: PAPER_ACCENT, textDecoration: 'none' }}>
               {t('fieldDesk.home.viewAll')}
             </Link>
           }
@@ -341,7 +359,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
                   <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
-                      points: praxis.task_point_value,
+                      points: formatPoints(praxis.score),
                     })}
                   </div>
                 </div>

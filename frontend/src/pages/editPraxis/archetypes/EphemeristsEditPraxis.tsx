@@ -66,13 +66,22 @@
  *
  * ## Colour
  *
- * Every value is a `--faction-ephemerists-plate-*` token and light/dark flips
- * through the `[data-theme="dark"]` cascade — there is no `dark ?` branch in the
- * file. `-brass` is a rule colour and never an ink; quiet type takes `-quiet`,
- * which clears AA on the page, the plate AND the inner cells (#1028). The
- * design's two theme-tuned opacities for the ruling (.3 light / .22 dark) are
- * one literal wearing two values: `-rule` already carries that tuning in the
- * colour itself, so the ground layer needs no opacity ternary. This is the
+ * Every value is a `--faction-ephemerists-plate-*` token, and this register is
+ * THEME-INVARIANT BY DESIGN (#1627 + #1636) — do not read the cascade for it.
+ * Every plate var is declared once at `:root`; `[data-theme="dark"]` declares no
+ * plate token at all, and the dark block in `index.css` records that on purpose,
+ * saying the night half was removed because "the register is theme-invariant and
+ * lives entirely in `:root`". The register took the design's NIGHT half in both
+ * cascades, so nothing on this page moves when the theme flips — and there is no
+ * `dark ?` branch either. The one non-plate colour the file names,
+ * `--faction-ephemerists-card-alarm`, does have a dark half, but both halves
+ * carry the same value, so it does not move either.
+ *
+ * `-brass` is a rule colour and never an ink; quiet type takes `-quiet`, which
+ * clears AA on the page, the plate AND the inner cells (#1028). The design's two
+ * theme-tuned opacities for the ruling (.3 light / .22 dark) collapse to one
+ * here for the same reason: `-rule` carries the tuning in the colour, and there
+ * is only one `-rule`, so the ground layer needs no opacity ternary. This is the
  * plate (`--faction-ephemerists-plate-*`), never the illuminated codex
  * (`--eph-*`); the two grounds must not be mixed on one surface (ADR-0055).
  *

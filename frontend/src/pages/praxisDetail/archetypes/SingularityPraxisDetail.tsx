@@ -19,6 +19,7 @@ import {
   MemberByline,
   orderedMembers,
   scoreWasBanked,
+  taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -518,9 +519,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           {praxis.task_title}
         </Link>
         <span style={{ ...LABEL, marginLeft: "auto", color: BLUE }}>
-          {t("detail.taskRef.level", { level: praxis.task_level_required })}
-          {" · "}
-          {t("detail.taskRef.points", { points: praxis.task_point_value })}
+          {taskRefMeta(praxis, t)}
         </span>
       </div>
     </>
