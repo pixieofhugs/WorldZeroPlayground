@@ -117,6 +117,7 @@ function makeTask(): TaskOut {
     can_sign_up: true,
     allowed_modes: ['solo'],
     eligible_for_current_user: true,
+    start_here: false,
   }
 }
 

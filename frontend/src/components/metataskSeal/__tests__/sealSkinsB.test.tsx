@@ -39,6 +39,7 @@ function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
     can_sign_up: false,
     allowed_modes: [],
     eligible_for_current_user: false,
+    start_here: false,
     ...overrides,
   };
 }
