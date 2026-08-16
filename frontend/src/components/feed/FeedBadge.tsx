@@ -1,4 +1,5 @@
 /** Reusable badge chip for feed items (FRIEND, YOUR STUFF, GLOBAL, DUEL, etc.) */
+import { hasOwnKey } from '../../utils/hasOwnKey'
 
 const BADGE_STYLES: Record<string, { bg: string; color: string }> = {
   friend:    { bg: 'var(--badge-friend)',     color: 'var(--color-text-on-accent)' },
@@ -15,7 +16,10 @@ interface FeedBadgeProps {
 }
 
 export default function FeedBadge({ type, label }: FeedBadgeProps) {
-  const style = BADGE_STYLES[type] ?? BADGE_STYLES.global
+  // Own-property-only (#1821): a bracket read reaches `Object.prototype`, and
+  // `??` cannot catch the function it finds, so a `constructor` type painted the
+  // chip with `background: undefined` instead of falling through to `global`.
+  const style = hasOwnKey(BADGE_STYLES, type) ? BADGE_STYLES[type] : BADGE_STYLES.global
   const text = label ?? type.replace(/_/g, ' ')
 
   return (
