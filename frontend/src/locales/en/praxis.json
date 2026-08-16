@@ -222,18 +222,18 @@
     },
     "everymen": {
       "masthead": "EVERYMEN · DISPATCH FROM THE FLOOR",
-      "edited": "revised"
+      "edited": "edited"
     },
     "coven": {
       "edited": "edited"
     },
     "snide": {
       "prompt": "say your piece —",
-      "edited": "EDITED"
+      "edited": "edited"
     },
     "ephemerists": {
       "prompt": "inscribe a note in the margin",
-      "edited": "emended"
+      "edited": "edited"
     },
     "singularity": {
       "protocol": "singularity function",
@@ -241,14 +241,14 @@
     },
     "albescent": {
       "letterhead": "Albescent — correspondence",
-      "edited": "amended"
+      "edited": "edited"
     },
     "wow": {
       "prompt": "Add thy counsel to the chronicle…",
       "post": "Proclaim",
       "react": "Huzzah",
       "empty": "No counsel yet. Be the first to cry Huzzah.",
-      "edited": "amended"
+      "edited": "edited"
     }
   },
   "duelBanner": {

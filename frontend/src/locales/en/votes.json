@@ -67,7 +67,7 @@
       "rateAria": "Rate {{value}} of 5"
     },
     "ephemerists": {
-      "rateAria": "Cast {{label}}",
+      "rateAria": "Rate {{value}} — {{label}}",
       "prompt": "Cast your metal"
     },
     "everymen": {
@@ -76,13 +76,13 @@
       "tag": "earned"
     },
     "coven": {
-      "rateAria": "Cheer {{value}} — {{label}}",
+      "rateAria": "Rate {{value}} — {{label}}",
       "prompt": "how'd this land?",
       "idle": "tap to cheer",
       "tag": "yay!"
     },
     "wow": {
-      "rateAria": "Judge {{value}} — {{label}}",
+      "rateAria": "Rate {{value}} — {{label}}",
       "prompt": "Cast thy Verdict",
       "idle": "— awaiting thy judgment —",
       "picked": "thou dubbed it {{label}}"
@@ -93,14 +93,14 @@
       "tag": "locked in"
     },
     "singularity": {
-      "rateAria": "Cast {{value}} — {{label}}",
+      "rateAria": "Rate {{value}} — {{label}}",
       "prompt": "Cast Signal",
       "promptHint": "how confidently does this output hold?",
       "idle": "no signal",
       "tag": "locked"
     },
     "ua": {
-      "rateAria": "Mark {{value}} — {{label}}",
+      "rateAria": "Rate {{value}} — {{label}}",
       "prompt": "How true did it land",
       "plateNumber": "№{{value}}",
       "plateTopMark": "✦"

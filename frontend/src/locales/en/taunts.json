@@ -24,7 +24,7 @@
       "A quieter hand, {{from_name}}. Well drawn."
     ],
     "praxis_complete": [
-      "{{from_name}} sealed a piece. It stands.",
+      "{{from_name}} submitted a piece. It stands.",
       "One more true thing from {{from_name}}."
     ]
   },
@@ -50,7 +50,7 @@
       "{{from_name}} glows one rank brighter tonight. Mind the sparks, {{to_name}}."
     ],
     "praxis_complete": [
-      "{{from_name}} laid fresh proof on the hearth, sealed and hearted by the circle — while {{to_name}} lingers at the door."
+      "{{from_name}} laid fresh proof on the hearth, submitted and hearted by the circle — while {{to_name}} lingers at the door."
     ]
   },
   "ephemerists": {
@@ -59,10 +59,10 @@
       "{{from_name}} triangulated a way past {{to_name}}. The map and the road disagree — {{from_name}} sided with the road."
     ],
     "level_up": [
-      "{{from_name}} sealed another entry in the ephemeris. {{to_name}}'s page stays blank."
+      "{{from_name}} submitted another entry in the ephemeris. {{to_name}}'s page stays blank."
     ],
     "praxis_complete": [
-      "{{from_name}} filed the finding before it could pass. {{to_name}} let it slip."
+      "{{from_name}} submitted the finding before it could pass. {{to_name}} let it slip."
     ]
   },
   "everymen": {
@@ -102,8 +102,8 @@
     ],
     "praxis_complete": [
       "{{from_name}} hath furnished proof. The fern has been formally notified.",
-      "Deed sealed. {{from_name}} adds one more glorious absurdity to the eternal ledger of whimsy.",
-      "The Court reviewed {{from_name}}'s chronicle, wept a single joyful tear, and stamped it GLORIOUS."
+      "Deed submitted. {{from_name}} adds one more glorious absurdity to the eternal ledger of whimsy.",
+      "The Court reviewed {{from_name}}'s praxis, wept a single joyful tear, and stamped it GLORIOUS."
     ]
   }
 }
