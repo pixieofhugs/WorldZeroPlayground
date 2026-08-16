@@ -1,5 +1,4 @@
-import i18n from "../../i18n";
-import { factionCssVar } from "../../utils/factions";
+import { factionCssVar, factionName } from "../../utils/factions";
 
 /**
  * Shared S.N.I.D.E. masthead — the acid "S.N.I.D.E." wordmark with a right-aligned
@@ -39,7 +38,9 @@ export default function SnideMasthead({
           color: factionCssVar("snide", "card-accent"),
         }}
       >
-        {i18n.t("feed:identity.snide.wordmark")}
+        {/* The wordmark IS the faction name (#1910): `feed:identity.snide.
+            wordmark` held a second copy of "S.N.I.D.E." and is gone. */}
+        {factionName("snide")}
       </span>
       {subtitle !== undefined && (
         <span

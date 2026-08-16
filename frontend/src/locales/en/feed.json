@@ -178,21 +178,9 @@
       "cancel": "Cancel"
     }
   },
-  "frame": {
-    "albescent": {
-      "masthead": "Albescent · the standing record"
-    },
-    "singularity": {
-      "masthead": "DISPATCH · SIGNAL ONLINE"
-    }
-  },
   "identity": {
     "snide": {
-      "wordmark": "S.N.I.D.E.",
       "fullName": "Society for Nihilistic Intent & Disruptive Efforts"
-    },
-    "ephemerists": {
-      "wordmark": "THE EPHEMERISTS"
     },
     "na": {
       "sigilLabel": "Unaffiliated — all paths open"
@@ -219,12 +207,10 @@
       "level": "level {{level}}",
       "points": "{{points}} pvncta",
       "signup": "Sign up",
-      "masthead": "Ephemerists",
       "levelCaption": "Level",
       "pointsUnit": "pvncta"
     },
     "everymen": {
-      "masthead": "THE EVERYMEN",
       "points": "{{points}} PTS",
       "signup": "Sign up",
       "levelCaption": "Level"
@@ -246,7 +232,6 @@
     },
     "coven": {
       "signup": "Sign up",
-      "masthead": "the cozy coven",
       "levelCaption": "level",
       "pointsUnit": "points"
     },

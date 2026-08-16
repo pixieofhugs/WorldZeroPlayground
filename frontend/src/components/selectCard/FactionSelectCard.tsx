@@ -1,5 +1,6 @@
 import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
+import { factionName } from "../../utils/factions";
 import { hasOwnKey } from "../../utils/hasOwnKey";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "../sigil/UaSigil";
@@ -186,7 +187,7 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
           <SnideSigil size={40} color="var(--snide-acid)" />
           <div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
-            <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.snide.wordmark")}</div>
+            <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{factionName("snide")}</div>
             <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: "var(--space-xs)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
           </div>
         </div>
@@ -239,7 +240,7 @@ export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Om
           <div>
             <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.24em", color: eph.GOLD }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
-            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.BAND_INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
+            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.BAND_INK, marginTop: "var(--space-xs)" }}>{factionName("ephemerists")}</div>
           </div>
         </div>
         <div style={{ height: 1.5, background: `linear-gradient(90deg, ${eph.BRASS_LIGHT} 0%, transparent 100%)`, margin: "var(--space-lg) 0 var(--space-md)" }} />

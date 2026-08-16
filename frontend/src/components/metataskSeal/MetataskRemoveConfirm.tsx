@@ -33,7 +33,7 @@ export default function MetataskRemoveConfirm({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t("editPraxis.seal.removeTitle")}
+      aria-label={t("editPraxis.attach.removeTitle")}
       className={`fixed inset-0 z-50 flex justify-center ${
         isMobile ? "items-end" : "items-center"
       }`}
@@ -61,7 +61,7 @@ export default function MetataskRemoveConfirm({
             color: "var(--color-text-primary)",
           }}
         >
-          {t("editPraxis.seal.removeTitle")}
+          {t("editPraxis.attach.removeTitle")}
         </h2>
         <p
           className="font-body"
@@ -70,7 +70,7 @@ export default function MetataskRemoveConfirm({
             color: "var(--color-text-secondary)",
           }}
         >
-          {t("editPraxis.seal.removeBody", {
+          {t("editPraxis.attach.removeBody", {
             faction,
             points: target.point_value,
           })}
@@ -93,7 +93,7 @@ export default function MetataskRemoveConfirm({
               cursor: "pointer",
             }}
           >
-            {t("editPraxis.seal.removeCancel")}
+            {t("editPraxis.attach.removeCancel")}
           </button>
           <button
             type="button"
@@ -110,7 +110,7 @@ export default function MetataskRemoveConfirm({
               cursor: busy ? "wait" : "pointer",
             }}
           >
-            {t("editPraxis.seal.removeConfirm")}
+            {t("editPraxis.attach.removeConfirm")}
           </button>
         </div>
       </div>

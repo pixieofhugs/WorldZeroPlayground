@@ -362,7 +362,7 @@ function DuelSidePanel({
           })}
         >
           {side.is_submitted
-            ? collabCopy(factionSlug, "duelPillSealed")
+            ? collabCopy(factionSlug, "duelPillSubmitted")
             : collabCopy(factionSlug, "duelPillWriting")}
         </span>
       </div>
@@ -418,7 +418,7 @@ function DuelSidePanel({
         >
           {collabCopy(
             factionSlug,
-            completed ? "duelCompletedPlaceholder" : "duelSealedPlaceholder",
+            completed ? "duelCompletedPlaceholder" : "duelHiddenPlaceholder",
           )}
         </p>
       )}
