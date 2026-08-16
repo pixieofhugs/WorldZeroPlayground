@@ -10,14 +10,30 @@ The BIGINT rule in particular needs a machine: Postgres will happily accept an
 produces no error anywhere — it just quietly caps that relationship at 2^31 and
 costs a table rewrite to fix later.
 
-The human-readable inventory lives in ``docs/agents/db-migrations.md``; keep the
-two in step.
+The human-readable inventory lives in ``docs/agents/db-migrations.md``; the last
+two tests here hold it to ``Base.metadata`` so it cannot go stale silently, which
+it did the first time it had the chance (#1740 landed a table, #1790 noticed).
 """
+
+import re
+from pathlib import Path
 
 import sqlalchemy as sa
 
 from models.base import NAMING_CONVENTION, Base
 import models  # noqa: F401 — registers every mapped class on Base.metadata
+
+DB_MIGRATIONS_DOC = Path(__file__).resolve().parents[3] / "docs/agents/db-migrations.md"
+INVENTORY_HEADING = "### Model inventory"
+TOTALS = re.compile(
+    r"(?P<tables>\d+) tables, (?P<integer>\d+) integer foreign keys, "
+    r"(?P<string>\d+) string ones\."
+)
+FIX = (
+    f"Edit docs/agents/db-migrations.md, section '{INVENTORY_HEADING}': every table "
+    "on Base.metadata needs a row in that table (alphabetical by model file), and "
+    "the totals sentence under it must match."
+)
 
 # ``faction``'s primary key is the human-written slug (ADR-0038), so it is
 # exempt from the integer-identity rules and its FKs are strings.
@@ -26,6 +42,43 @@ STRING_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"faction"})
 # The one composite primary key in the schema: both halves are foreign keys and
 # the pair itself is the fact, so there is no surrogate key to generate.
 COMPOSITE_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"praxis_meta_task"})
+
+
+def _parse_inventory() -> tuple[set[str], str]:
+    """The doc's table names, and the sentence that closes the table.
+
+    Deliberately dumb: find the heading, read the pipe-delimited rows beneath it,
+    stop at the first line that is not one. A markdown parser is not warranted for
+    one table.
+    """
+    lines = DB_MIGRATIONS_DOC.read_text(encoding="utf-8").splitlines()
+    heading = next(
+        (i for i, line in enumerate(lines) if line.strip() == INVENTORY_HEADING), None
+    )
+    assert heading is not None, f"no '{INVENTORY_HEADING}' heading. {FIX}"
+
+    header = next(i for i in range(heading, len(lines)) if lines[i].startswith("|"))
+    end = header
+    while end < len(lines) and lines[end].startswith("|"):
+        end += 1
+
+    def cells(row: str) -> list[str]:
+        return [cell.strip().strip("`") for cell in row.strip().strip("|").split("|")]
+
+    column = cells(lines[header]).index("Table")  # not a magic index if the doc moves it
+    # header row, then the |---|---| separator, then the rows themselves.
+    documented = {cells(row)[column] for row in lines[header + 2 : end]}
+    totals = next(line for line in lines[end:] if line.strip())
+    return documented, totals
+
+
+def _foreign_key_columns() -> list[sa.Column]:
+    return [
+        column
+        for table in Base.metadata.tables.values()
+        for column in table.columns
+        if column.foreign_keys
+    ]
 
 
 def _integer_columns() -> list[sa.Column]:
@@ -115,3 +168,44 @@ def test_no_plain_integer_primary_or_foreign_key_survives() -> None:
         and (column.primary_key or column.foreign_keys)
     ]
     assert offenders == [], f"32-bit INTEGER used as an identifier: {offenders}"
+
+
+def test_the_doc_inventory_lists_every_table() -> None:
+    """The inventory is a mirror of the schema, so give it a mechanism (#1790).
+
+    Reported as two symmetric diffs rather than two lists, so a failure names the
+    table that drifted and which side it drifted on.
+    """
+    documented, _ = _parse_inventory()
+    assert documented, f"parsed no rows out of the inventory table. {FIX}"
+
+    schema = set(Base.metadata.tables)
+    assert not sorted(schema - documented), (
+        f"tables on Base.metadata with no row in the doc: "
+        f"{sorted(schema - documented)}. {FIX}"
+    )
+    assert not sorted(documented - schema), (
+        f"rows in the doc for tables that no longer exist: "
+        f"{sorted(documented - schema)}. {FIX}"
+    )
+
+
+def test_the_doc_inventory_totals_match_the_schema() -> None:
+    """Otherwise the totals are a second unguarded mirror inside the first's fix."""
+    _, totals = _parse_inventory()
+    match = TOTALS.search(totals)
+    assert match is not None, (
+        f"no 'N tables, N integer foreign keys, N string ones.' sentence under the "
+        f"inventory table; found {totals!r}. {FIX}"
+    )
+
+    foreign_keys = _foreign_key_columns()
+    counted = {
+        "tables": len(Base.metadata.tables),
+        "integer": sum(1 for c in foreign_keys if isinstance(c.type, sa.Integer)),
+        "string": sum(1 for c in foreign_keys if isinstance(c.type, sa.String)),
+    }
+    documented = {key: int(value) for key, value in match.groupdict().items()}
+    assert documented == counted, (
+        f"the doc's totals say {documented} but Base.metadata says {counted}. {FIX}"
+    )
