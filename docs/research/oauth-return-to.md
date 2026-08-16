@@ -3,6 +3,11 @@
 Research for [#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734), part of the
 onboarding map [#1732](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1732).
 
+> **Status: none of this was built.** #1734 was superseded — the onboarding arc carries nothing
+> through the round trip and remembers its place client-side instead. §7's recommendation is
+> live only as an answer to a *future* destination that must survive OAuth. Why the arc went the
+> other way: `docs/spec/SPEC-onboarding.md` § Authentication.
+
 **The question.** The intended arc is *scan → read what this is → accept terms → auth → create a
 character → do the one task → level 1*. It breaks at the arrow after auth, because the OAuth
 callback redirects to one fixed place. How should a destination survive the round trip to Google

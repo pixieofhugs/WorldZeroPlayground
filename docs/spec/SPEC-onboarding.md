@@ -102,15 +102,30 @@ here. The rules that matter:
 (`/auth/google`, `/auth/discord`). The frontend has no Discord control anywhere yet, so the
 auth card is the first surface in the app to offer one.
 
-**Carrying a destination through the round trip.**
-([#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734)) If a destination
-must survive OAuth, it rides as an **opaque key from a closed server-side set** inside
-authlib's `state`, mapped to a constant path in the callback — never a path or URL on the
-wire. `Admin.tsx` already implements that validate-against-a-closed-set pattern.
+**Nothing rides on the wire.**
+([#1899](https://github.com/pixieofhugs/WorldZeroPlayground/pull/1899)) The OAuth callback
+redirects to a constant, and that is deliberate rather than a gap. The flow remembers its own
+place client-side: a session-scoped boolean written the moment before the auth card hands the
+browser to a provider, acted on by the root landing route only once a session exists, and
+cleared by the flow on its next mount so it can fire at most once. No query parameter, no
+return-to path, no `state` payload, no backend change. The mechanism and its failure modes
+live in `frontend/src/utils/onboardingResume.ts`. This is the same visit interrupted, not a
+new scan — see *Coming back*.
 
-But prefer to **carry nothing**: `create_or_get_account` runs before the callback builds its
-redirect, so the server can distinguish a new account from a returning one without being
-told. Findings and sources: `research/oauth-return-to`.
+**The server is not asked to decide.**
+([#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734) — superseded) The
+rejected design would have had the server derive the destination: `create_or_get_account` runs
+before the callback builds its redirect, so it can distinguish a new account from a returning
+one without being told. **That is the wrong predicate.** The rule this flow runs on is
+character-level — *has this character completed the onboarding task* — and a player who signed
+up, never made a character, and re-scans the sticker months later reads as **returning**. A
+server-side new-vs-returning branch drops exactly that player at `/`, and they never reach the
+terms card. Answer that before proposing a return-to again.
+
+Carrying a destination instead — an opaque key from a closed server-side set inside authlib's
+`state`, mapped to a constant path in the callback, never a path or URL on the wire — is
+worked out in full in `docs/research/oauth-return-to.md`. **Not built, and not needed by this
+arc**, which has exactly one destination.
 
 ## Terms
 
@@ -162,7 +177,9 @@ needed; and admin is an account-level role while the mark is a character-level d
 ([#1856](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1856))
 
 **A scan always re-runs the cards from the top.** No resume, no bookmark. Terms simply shows
-again and writes another row; the append-only log absorbs the duplicate.
+again and writes another row; the append-only log absorbs the duplicate. The one exception is
+the OAuth round trip, which is the same visit interrupted rather than a new scan
+(*Authentication*, above).
 
 Consequently **`CurrentUser` gains nothing** — no terms flag, no new field, and no way for
 the flow and the server to disagree about where someone stands. The intro is not waste on a
