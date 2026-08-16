@@ -15,6 +15,7 @@
  */
 import { useId } from 'react'
 import type { ComponentType } from 'react'
+import { hasOwnKey } from '../../utils/hasOwnKey'
 
 export interface BadgeArtProps {
   /** px box (square). */
@@ -288,8 +289,11 @@ const BADGE_ART: Record<string, ComponentType<BadgeArtProps>> = {
   duel_victor: DuelVictorArt,
 }
 
+// Own-property-only (#1821): a bracket read reaches `Object.prototype`, so an
+// unregistered key of `constructor` handed the `Object` function back for React
+// to render rather than falling through to the unknown-badge glyph.
 export function badgeArtFor(key: string): ComponentType<BadgeArtProps> {
-  return BADGE_ART[key] ?? UnknownBadgeArt
+  return hasOwnKey(BADGE_ART, key) ? BADGE_ART[key] : UnknownBadgeArt
 }
 
 export { BADGE_ART, UnknownBadgeArt }

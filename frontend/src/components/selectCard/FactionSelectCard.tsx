@@ -1,5 +1,6 @@
 import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
+import { hasOwnKey } from "../../utils/hasOwnKey";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
@@ -515,7 +516,14 @@ const LEGACY_SLUG: Record<string, string> = {
 
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
   const cards = surfaceMap("factionSelectCard");
-  const key = cards[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
+  // Own-property-only on both tables (#1821). `pickVariant` already refuses a
+  // prototype key, so the rendered card was right either way — but the plain
+  // bracket reads let `key` hold `Object.prototype.toString` under a `string`
+  // annotation on the way there.
+  const key =
+    !hasOwnKey(cards, faction) && hasOwnKey(LEGACY_SLUG, faction)
+      ? LEGACY_SLUG[faction]
+      : faction;
   // The fallback IS the `na` registration. A manifest is override-only and
   // `na` deliberately has none (`factions/index.ts`: unaffiliated is a state,
   // not a faction, and falls through to the `Default*` skins everywhere), so

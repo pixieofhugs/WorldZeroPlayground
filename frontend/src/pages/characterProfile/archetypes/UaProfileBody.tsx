@@ -15,9 +15,10 @@
  * costume differs (ADR-0016). No hardcoded hex — every colour is a token.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 import Lotus from '../../../components/factionMarks/Lotus'
 import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/factionMarks/uaAtoms'
 
@@ -60,7 +61,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'ua',
   pageBackground: 'var(--faction-ua-page)',
   // One faint warm wash off the top-left. Mixed from the ornament token so it
@@ -137,18 +138,10 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'anno',
   barFill:
     'linear-gradient(90deg, var(--faction-ua-glow), var(--faction-ua-vermil))',
   barTrack: HAIR,
-  levelUnitLabel: 'points this anno',
-  nextLevelLabel: (next) => `next · anno ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `Sealed by ${name}`,
-  praxisEmpty: {
-    title: 'Nothing sealed yet',
-    body: 'One true piece, then another. The first is always the boldest.',
-  },
   emptyStateStyle: {
     border: `1px dashed var(--faction-ua-border)`,
     borderRadius: 'var(--radius-sm)',
@@ -157,7 +150,6 @@ const kit: ProfileKit = {
     background: SURFACE,
   },
   laurel: <SpectrumLaurel centerBg={SURFACE} glyphColor={ACCENT} />,
-  badgeTitle: 'Seals of the practice',
   badgeBoardStyle: {
     border: `1px solid ${RULE}`,
     borderRadius: 'var(--radius-sm)',
@@ -205,5 +197,22 @@ const kit: ProfileKit = {
 }
 
 export default function UaProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.ua.ringLabel'),
+        levelUnitLabel: t('profile.ua.levelUnit'),
+        nextLevelLabel: (next) => t('profile.ua.nextLevel', { level: next }),
+        praxisEyebrow: (name) => t('profile.ua.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.ua.praxisEmptyTitle'),
+          body: t('profile.ua.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.ua.badgeTitle'),
+      }}
+    />
+  )
 }

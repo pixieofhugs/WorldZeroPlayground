@@ -20,14 +20,21 @@
  * Drop either and the other is decorative: a class nobody reads, or a variable
  * nobody sets.
  *
+ * #1897 added a third fact: the gallery also CAPS its children at that basis.
+ * `frameBase` carries `flex-grow: 1`, so a task with exactly one praxis had that
+ * card stretch across the whole row — one card should look like one of three.
+ *
  * CEILING (`renderToStaticMarkup`, no jsdom, no layout, no computed styles):
  * this cannot prove a card got smaller, that three land in a row, or that a skin
  * is not cramped. Those are visual QA. It proves the wiring is connected.
  */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
+import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import { frameBase } from "../../../components/praxisCard/desktop/shared";
@@ -125,6 +132,10 @@ function render(element: ReactElement): string {
 // The Default fallback is a renderable surface too — guard it with the registry.
 const archetypes = { ...surfaceMap("taskDetail"), __default__: DefaultTaskDetail };
 
+const css = stripComments(
+  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+);
+
 describe("task-detail praxis gallery basis (#1137)", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug} wraps its praxis gallery in .praxis-gallery`, () => {
@@ -141,5 +152,37 @@ describe("task-detail praxis gallery basis (#1137)", () => {
     // Nothing outside `.praxis-gallery` sets the variable, so `/praxes`, the
     // character profile and the faction pages render exactly as before.
     expect(frameBase.flex).toContain("394px");
+  });
+});
+
+describe("a lone praxis card is capped at the gallery basis (#1897)", () => {
+  const capped = ruleBodies(css, ".praxis-gallery > *");
+
+  it("the gallery caps its children at the basis it sets", () => {
+    // `frameBase` is `flex: 1 1 var(--praxis-card-basis)` — the leading grow is
+    // why a single card ate the whole row. The cap is the same variable, so the
+    // basis stays the one knob and one card matches one of three.
+    expect(capped.length, ".praxis-gallery > * rule must exist").toBeGreaterThan(0);
+    for (const body of capped) {
+      expect(body).toMatch(/max-width\s*:\s*var\(\s*--praxis-card-basis\s*\)/);
+    }
+  });
+
+  it("leaves the card's 280px phone floor alone", () => {
+    // ACCEPTANCE, not an oversight: `min-width` beats `max-width`, so under a
+    // 320px viewport the card still renders at 280, one per row. The cap must
+    // not restate or lower that floor.
+    expect(frameBase.minWidth).toBe(280);
+    for (const body of capped) {
+      expect(body).not.toMatch(/min-width/);
+    }
+  });
+
+  it("does not set width, which would fight the card's inline style", () => {
+    // `max-width` was chosen precisely because it clamps a flex item without a
+    // specificity fight against `frameBase`'s inline `width: 100%`.
+    for (const body of capped) {
+      expect(body).not.toMatch(/(^|[\s;])width\s*:/);
+    }
   });
 });
