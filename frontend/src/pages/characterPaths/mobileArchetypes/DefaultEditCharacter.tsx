@@ -42,6 +42,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
     handleAvatarChange,
     handleAvatarConfirm,
     saving,
+    canSubmit,
     error,
     handleSubmit,
     deleting,
@@ -196,7 +197,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
 
       {/* Sticky Save bar */}
       <div style={stickyBar}>
-        <button type="submit" disabled={saving} style={{ ...primaryBtn, opacity: saving ? 0.5 : 1 }}>
+        <button type="submit" disabled={!canSubmit} style={{ ...primaryBtn, opacity: canSubmit ? 1 : 0.5 }}>
           {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
         </button>
       </div>

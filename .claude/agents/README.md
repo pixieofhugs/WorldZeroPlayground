@@ -33,6 +33,12 @@ Molly → main session → { backend, frontend-feature, frontend-style }
 No cycles. Specialists don't call each other; if `frontend-feature` hits a design decision it
 hands back to the main session, which dispatches `frontend-style`.
 
+Each specialist gets its own git worktree; the **session scratchpad is the one directory they
+share**, so brief it every time: *a helper script belongs in the agent's own worktree, never in
+the session scratchpad.* A generic name like `run_tests.py` gets clobbered by a parallel agent
+and the run goes green against the wrong worktree. Second-best, if a file genuinely must live in
+the scratchpad: prefix it with the issue number.
+
 ## History
 
 This replaced `docs/AGENTS_SETUP.md` (deleted) — a five-agent brief that was never built and
