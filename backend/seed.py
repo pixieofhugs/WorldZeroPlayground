@@ -255,6 +255,74 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
     return True
 
 
+# ---------------------------------------------------------------------------
+# Dev-only e2e fixture task
+# ---------------------------------------------------------------------------
+# The duel e2e suite (frontend/e2e/duel.helpers.ts) needs a task that is BOTH
+# faction-skinned and reachable at `era.duel_level_required`, so the duel flow
+# drives a real archetype (UaEditPraxis / UaDuelSealConfirm / UaPraxisDetail)
+# instead of only the Default skins. Era 1 seeds no such task — ERA_1_TASKS is
+# empty by design and the onboarding task above is cross-faction — so the duel
+# specs have failed on every nightly they ever ran (#1676).
+#
+# Dev-only, and deliberately NOT in the era config: #1398's ruling is that the
+# board is admin-authored, and anything named in the era config comes back the
+# deploy after an admin deletes it. This is created from `seed_dev_demo`, which
+# never runs against production, so that ruling is untouched.
+DUEL_FIXTURE_TASK_TITLE = "Hold Your Breath and Count"
+DUEL_FIXTURE_TASK_DESCRIPTION = (
+    "Take one slow breath in, hold it, and count until you have to let go. "
+    "Tell us the number — and what you were thinking about while you waited."
+)
+DUEL_FIXTURE_TASK_FACTION_SLUG = "ua"
+DUEL_FIXTURE_TASK_POINT_VALUE = 10
+
+
+async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
+    """Dev-only: upsert the faction-skinned task the duel e2e fixture picks.
+
+    Title-guarded like ``ensure_onboarding_task``, so it is safe to re-run.
+    Returns True if the task was created this run.
+
+    `level_required` reads ``era.duel_level_required`` rather than repeating the
+    number: the fixture's whole point is a task a duelling character can sign up
+    for, so the two must move together.
+
+    The faction slug is a literal because it names a *fixture*, not a rule — the
+    e2e suite asks for UA's archetype by name. A future era need not carry that
+    faction, so this no-ops when the row is absent rather than writing a Task
+    whose ``primary_faction_slug`` points at nothing.
+    """
+    existing = (
+        await session.execute(
+            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return False
+
+    faction = (
+        await session.execute(
+            select(Faction).where(Faction.slug == DUEL_FIXTURE_TASK_FACTION_SLUG)
+        )
+    ).scalar_one_or_none()
+    if faction is None:
+        return False
+
+    session.add(Task(
+        title=DUEL_FIXTURE_TASK_TITLE,
+        description=DUEL_FIXTURE_TASK_DESCRIPTION,
+        point_value=DUEL_FIXTURE_TASK_POINT_VALUE,
+        level_required=CURRENT_ERA.duel_level_required,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=created_by_id,
+        primary_faction_slug=DUEL_FIXTURE_TASK_FACTION_SLUG,
+    ))
+    await session.flush()
+    return True
+
+
 # There is deliberately no metatask phase (#1398). A "placeholder" metatask
 # ("Upside Down") used to be seeded here so the metatask surface had something
 # to render; it was invented content that appeared on production every deploy
@@ -267,7 +335,7 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
 # Dev-only demo content
 # ---------------------------------------------------------------------------
 
-async def seed_dev_demo(session) -> None:
+async def seed_dev_demo(session, created_by_id: int) -> None:
     """Dev-only: guarantee the app is never empty on a fresh DB.
 
     Creates the `dev login (no OAuth)` character ("Molly", unaffiliated) with a
@@ -338,6 +406,16 @@ async def seed_dev_demo(session) -> None:
         print("  >Dev-login character (@dev 'Molly', unaffiliated) + 1 in-progress task")
     else:
         print("  >Dev-login character already exists — skipping")
+
+    # The duel e2e fixture's task. Outside the branch above so it is topped up on
+    # an already-seeded dev database, not only on a fresh one.
+    #
+    # Committed here rather than left to `seed_demo_praxes` below: that function
+    # has several early returns that skip its own commit on an already-seeded
+    # database, which is exactly the case where this top-up matters.
+    if await ensure_duel_fixture_task(session, created_by_id):
+        print("  >Duel e2e fixture task (1 UA task at the duel level)")
+    await session.commit()
 
     # Cross-faction demo players + community-voted praxes (reused, idempotent).
     from scripts.seed_demo_praxes import seed as seed_demo_praxes
@@ -433,7 +511,7 @@ async def seed(env: str, yes: bool) -> None:
 
         # Phase 5: Dev-only demo content (characters + praxes). Never in prod.
         if env == "dev":
-            await seed_dev_demo(session)
+            await seed_dev_demo(session, pixie_char.id)
 
         print("\nSeed complete!\n")
         print(f"  era            : {era.name} ({era.config_key})")

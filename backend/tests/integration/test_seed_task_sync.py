@@ -23,13 +23,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import CROSS_FACTION_SLUG
-from game_config import TaskDef
+from game_config import CURRENT_ERA, TaskDef
 from models.character import Character
 from models.era import Era
 from models.faction import Faction
-from models.task import Task, TaskType
+from models.task import Task, TaskStatus, TaskType
 from seed import (
+    DUEL_FIXTURE_TASK_FACTION_SLUG,
+    DUEL_FIXTURE_TASK_TITLE,
     ONBOARDING_TASK_TITLE,
+    ensure_duel_fixture_task,
     ensure_onboarding_task,
     sync_era_tasks,
 )
@@ -173,3 +176,76 @@ async def test_seed_creates_no_metatask(
         )
     ).scalars().all()
     assert metatasks == []
+
+
+# ---------------------------------------------------------------------------
+# The duel e2e fixture task (#1676)
+# ---------------------------------------------------------------------------
+# `frontend/e2e/duel.helpers.ts::pickUaDuelTask` asks the API for a UA task at
+# level <= era.duel_level_required and fails the whole duel suite when there is
+# none — which was the case on every nightly, because Era 1 declares no tasks
+# (#1398) and the onboarding task above is cross-faction. These pin the two
+# properties that helper selects on, so the fixture and the duel gate cannot
+# drift apart silently.
+
+
+@pytest.mark.asyncio
+async def test_duel_fixture_task_is_reachable_at_the_duel_level(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    faction_ua: Faction,
+):
+    """It lands as a UA task the duel gate's level can sign up for, and repeats safely."""
+    created = await ensure_duel_fixture_task(db_session, character.id)
+    assert created is True
+
+    rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert len(rows) == 1
+    task = rows[0]
+    # The two properties pickUaDuelTask filters on.
+    assert task.primary_faction_slug == DUEL_FIXTURE_TASK_FACTION_SLUG
+    assert task.level_required <= CURRENT_ERA.duel_level_required
+    # ...and the two that make it pickable at all.
+    assert task.status == TaskStatus.active
+    assert task.task_type == TaskType.standard
+
+    # Idempotent: seed.py runs this on every dev seed.
+    assert await ensure_duel_fixture_task(db_session, character.id) is False
+    rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert len(rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_duel_fixture_task_skipped_when_the_era_lacks_the_faction(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """No matching faction row → no task, rather than a Task with a dangling FK.
+
+    A future era need not carry UA, and the seeder must degrade to a no-op. The
+    slug is repointed rather than the `ua` row deleted, because `character`
+    itself holds an FK to that row — so "the faction is absent" is only
+    expressible from the seeder's side.
+    """
+    monkeypatch.setattr("seed.DUEL_FIXTURE_TASK_FACTION_SLUG", "no_such_faction")
+
+    created = await ensure_duel_fixture_task(db_session, character.id)
+    assert created is False
+
+    rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == DUEL_FIXTURE_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert rows == []
