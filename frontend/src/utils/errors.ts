@@ -130,6 +130,20 @@ function catalogMessage(detail: CodedDetail): string | null {
 }
 
 /**
+ * The catalog's words for a bare `ErrorCode` value, or null if it has none.
+ *
+ * For the one failure that arrives with no response body to read: an OAuth
+ * callback is a top-level navigation, so `backend/routers/auth.py` hands its
+ * code back in the `?login=` query param instead of a `detail` (#1773). Same
+ * catalog and the same unknown-code safety as {@link extractError} — a code
+ * this client has never heard of returns null rather than tripping the
+ * throwing `missingKeyHandler`, so the caller can fall back to generic copy.
+ */
+export function messageForCode(code: string): string | null {
+  return catalogMessage({ code })
+}
+
+/**
  * Pulls the displayable prose out of a `detail` body, whatever shape it takes.
  * Returns null when there is nothing worth showing, so the caller falls through
  * to its status-based messages.

@@ -65,9 +65,25 @@ export async function logout(): Promise<void> {
   await apiPost('/auth/logout')
 }
 
-/** Redirect the browser to start the Google OAuth flow */
-export function loginWithGoogle(): void {
-  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/auth/google`
+/**
+ * The OAuth legs `backend/routers/auth.py` registers, in the order they are
+ * offered.
+ *
+ * Hardcoded rather than server-driven (#1773): both providers' credentials are
+ * mandatory `Settings` fields with no defaults, so a backend that booted has
+ * both — a capability endpoint could only ever answer "yes, both".
+ */
+export type AuthProvider = 'google' | 'discord'
+
+/**
+ * Redirect the browser to start `provider`'s OAuth flow.
+ *
+ * A full navigation, not a request — which is also why the failing half of
+ * that flow cannot answer with JSON. The callback redirects back to `/` with
+ * `?login=<ErrorCode>`; `pages/Home.tsx` renders it.
+ */
+export function loginWith(provider: AuthProvider): void {
+  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/auth/${provider}`
 }
 
 /** Dev-only: log in as a test account without Google OAuth */
