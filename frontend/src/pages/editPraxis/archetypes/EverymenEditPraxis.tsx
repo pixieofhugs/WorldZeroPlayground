@@ -96,9 +96,11 @@ import {
   ComposerSheet,
   ComposerStatusRow,
   ErrorBanner,
-  RingMark,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -123,15 +125,6 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
-
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 
 /* ── The sheet's palette. Named for the ROLE each plays in the design's skin row.
  *    See the header for which reds may be ink and on what. ── */
@@ -262,10 +255,20 @@ export default function EverymenEditPraxis({ state }: Props) {
     { key: "duel", label: t("editPraxis.composer.modeDuel") },
   ];
 
-  /** Bebas, struck in tracked caps — every label and headline on the order. */
+  /**
+   * Bebas, struck in tracked caps — every label and headline on the order.
+   *
+   * The size is the Everymen's own (#1828): the design draws this kit's label at
+   * 13 where the other seven sit at 12, and `composerLabelStyle`'s 12 is a
+   * default rather than a ceiling. 13 falls between --text-lg and --text-xl and
+   * takes the louder rung, because being a size larger than the rest of the site
+   * IS the distinction here (§4a — a token names a tier, so the number lands
+   * where it lands).
+   */
   const stencil = (overrides: CSSProperties = {}): CSSProperties =>
     composerLabelStyle({
       fontFamily: BEBAS,
+      fontSize: "var(--text-xl)",
       letterSpacing: "0.16em",
       ...overrides,
     });
@@ -451,64 +454,17 @@ export default function EverymenEditPraxis({ state }: Props) {
         masthead={masthead}
         ground={ground}
       >
-        {/* Draft · saved just now, with a cog turning at the end of the row. */}
+        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
+            header; the cog is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
-        {/* The job reference slip, on plate stock with the stamped points seal. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={
-            <RingMark
-              size={76}
-              inset={4}
-              ring="transparent"
-              inner="transparent"
-              style={{
-                boxSizing: "border-box",
-                borderRadius: "50%",
-                border: `2px solid ${RED}`,
-                boxShadow: `inset 0 0 0 3px ${PANEL}, inset 0 0 0 4px ${RED}`,
-              }}
-            >
-              <span
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "var(--space-xs)",
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: BEBAS,
-                    fontSize: "var(--text-title)",
-                    lineHeight: 0.8,
-                    color: ACCENT,
-                  }}
-                >
-                  {task?.point_value ?? 0}
-                </span>
-                <span style={stencil({ color: ACCENT, letterSpacing: "0.22em" })}>
-                  {t("editPraxis.composer.pointsUnit")}
-                </span>
-              </span>
-            </RingMark>
-          }
-        />
+        {/* The job reference slip, on plate stock. Its mark is the shared
+            ScoreStamp (#1828) — the Everymen's own rubber-stamp roundel by
+            dispatch, so the seal no longer changes shape when you file. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -626,7 +582,20 @@ export default function EverymenEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span
+                style={stencil({
+                  color: MUTED,
+                  fontFamily: COURIER,
+                  letterSpacing: "0.12em",
+                })}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span
                 style={stencil({
                   color: MUTED,
@@ -758,7 +727,9 @@ export default function EverymenEditPraxis({ state }: Props) {
                     alignItems: "center",
                     gap: "var(--space-sm)",
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the ray burst reads through the drop zone
+                       (#1828). */
+                    background: composerDropGround(PANEL),
                     border: `2px dashed ${RED}`,
                     borderRadius: 0,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -790,20 +761,9 @@ export default function EverymenEditPraxis({ state }: Props) {
             reads as a BAR rather than an inline button (the design's
             `barSubmit`). The exits keep their own row above it. */}
         <ComposerFooter
-          style={{
-            flexDirection: "column",
-            alignItems: "stretch",
-            gap: "var(--space-lg)",
-          }}
+          band
           start={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-              }}
-            >
+            <>
               <SaveDraftButton state={state} skin={{ style: { color: MUTED } }} />
               <DropButton
                 state={state}
@@ -818,7 +778,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                   }),
                 }}
               />
-            </div>
+            </>
           }
           end={
             <PublishButton
@@ -827,11 +787,21 @@ export default function EverymenEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 style: {
-                  ...primaryStyle,
-                  width: "100%",
+                  ...composerBandStyle(sizes, {
+                    /* Design band: 15 / 400 / 0.22em in the label face, which
+                       for the Everymen IS Bebas. 15 takes --text-content so the
+                       band still outranks this kit's own labels. */
+                    fontFamily: BEBAS,
+                    fontSize: "var(--text-content)",
+                    letterSpacing: "0.22em",
+                    /* The SHEET's frame — gold in light, red-deep in dark — and
+                       NOT `--everymen-frame`, which is the ink the panels are
+                       ruled in. */
+                    frame: SHEET_FRAME,
+                    color: BAR_INK,
+                    background: BAR,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
-                  borderTop: `2px solid ${FRAME}`,
-                  padding: "var(--space-md) var(--space-lg)",
                 },
               }}
             />
