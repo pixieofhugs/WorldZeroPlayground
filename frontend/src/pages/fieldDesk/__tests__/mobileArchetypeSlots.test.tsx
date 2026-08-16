@@ -28,6 +28,7 @@ import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
+import WowFieldDesk from '../mobileArchetypes/WowFieldDesk'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import { CAST_VOTES_LINK, FIND_TASK_LINK, UPDATES_LINK } from '../homeDestinations'
@@ -111,6 +112,11 @@ function occurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1
 }
 
+/** The text of every `<h1>` the skin drew, in document order. */
+function h1s(html: string): string[] {
+  return [...html.matchAll(/<h1\b[^>]*>(.*?)<\/h1>/gs)].map((m) => m[1].replace(/<[^>]*>/g, '').trim())
+}
+
 function withTaskFaction(slug: string): FieldDeskHomeState {
   return baseState({ activeTasks: [{ ...ACTIVE_TASK, task_faction_slug: slug }] })
 }
@@ -126,6 +132,20 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       expect(text, 'all-time slot').toContain('900')
       expect(html, 'profile link slot').toContain('href="/characters/42"')
       expect(html, 'edit link slot').toContain('href="/characters/42/edit"')
+    })
+
+    /**
+     * #1817 — every home opens its outline at level 1, one heading only.
+     *
+     * WOW had no `<h1>` at all: its name sits in the shared `WowPavilionHeader`,
+     * which drew it in a plain `<div>`. Same defect #1794 fixed on desktop, from
+     * a different cause, so it survived that fix. Asserted as a COUNT because
+     * the seven other skins head the page with a masthead and WOW with the
+     * carried life's name — the text is the skin's, the level is not.
+     */
+    it(`${slug} opens the outline with exactly one h1`, () => {
+      const { html } = render(<Skin state={baseState()} />)
+      expect(h1s(html)).toHaveLength(1)
     })
 
     it(`${slug} renders the level track`, () => {
@@ -257,4 +277,22 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       expect(text, 'nothing claimed while loading').not.toContain('All caught up')
     })
   }
+})
+
+/**
+ * #1817 — the crest's heading is fixed ONCE, in `WowPavilionHeader`, and two
+ * pages depend on that one change. The count invariant above catches the home;
+ * this pins WHAT the home's heading says, and its twin in the faction-page
+ * suite pins the other consumer, so a later change that re-splits the fix into
+ * two per-page headings cannot pass both.
+ */
+describe("the WOW crest carries the mobile home's heading (#1817)", () => {
+  it('names the carried life, once', () => {
+    const { html } = render(<WowFieldDesk state={baseState()} />)
+    const heads = h1s(html)
+    expect(heads, 'exactly one page heading').toHaveLength(1)
+    // The skin greets rather than labels ("Good morrow, Sir Mollusk."), so the
+    // assertion is on the name inside the salutation, not the whole string.
+    expect(heads[0], 'and it names the carried life').toContain('Mollusk')
+  })
 })

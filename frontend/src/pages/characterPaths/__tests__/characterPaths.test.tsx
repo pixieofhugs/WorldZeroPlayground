@@ -12,7 +12,7 @@ import type { ReactElement } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
-import { buildCreatePayload, type CreateCharacterState } from '../useCreateCharacter'
+import { buildCreatePayload, canSubmitName, type CreateCharacterState } from '../useCreateCharacter'
 import { createObjectUrlSlot } from '../useAvatarPicker'
 import type { EditCharacterState } from '../useEditCharacter'
 import DefaultCreateCharacter from '../mobileArchetypes/DefaultCreateCharacter'
@@ -75,13 +75,20 @@ function createState(overrides: Partial<CreateCharacterState>): CreateCharacterS
   }
 }
 
+/**
+ * `canSubmit` is DERIVED here, through the same rule the hook calls, so a test
+ * that sets `displayName` gets the gate the player would get — a hand-set
+ * `canSubmit` would only ever assert the fixture back at itself.
+ */
 function editState(overrides: Partial<EditCharacterState>): EditCharacterState {
+  const displayName = overrides.displayName ?? 'Molly'
+  const saving = overrides.saving ?? false
   return {
     id: '1',
     character: character({}),
     loading: false,
     isOwner: true,
-    displayName: 'Molly',
+    displayName,
     setDisplayName: () => {},
     bio: 'Doing very human things.',
     setBio: () => {},
@@ -97,7 +104,8 @@ function editState(overrides: Partial<EditCharacterState>): EditCharacterState {
     setAvatarError: () => {},
     handleAvatarChange: () => {},
     handleAvatarConfirm: () => {},
-    saving: false,
+    saving,
+    canSubmit: canSubmitName(displayName, saving),
     error: '',
     handleSubmit: () => {},
     deleting: false,
@@ -157,6 +165,29 @@ describe('buildCreatePayload — tagline is its own field (#1628)', () => {
     // exists to end.
     const payload = buildCreatePayload('Wren', 'Cartographer of small kindnesses.', '', '', [])
     expect(payload.tagline).toBeUndefined()
+  })
+})
+
+/**
+ * One rule, two forms (#1697). Create has gated on this since it shipped; edit
+ * gated on nothing, so a rename to whitespace reached the server and came back
+ * as Pydantic's own prose. Both hooks now call this, and both surfaces of each
+ * form hang their submit control off the result.
+ */
+describe('canSubmitName — the shared submit gate', () => {
+  it('refuses a name that is only whitespace', () => {
+    expect(canSubmitName('', false)).toBe(false)
+    expect(canSubmitName('   ', false)).toBe(false)
+    expect(canSubmitName('\t\n ', false)).toBe(false)
+  })
+
+  it('accepts a real name, padded or not', () => {
+    expect(canSubmitName('Wren', false)).toBe(true)
+    expect(canSubmitName('  Wren  ', false)).toBe(true)
+  })
+
+  it('stays closed while a request is in flight', () => {
+    expect(canSubmitName('Wren', true)).toBe(false)
   })
 })
 
@@ -235,6 +266,26 @@ describe('DefaultEditCharacter mobile skin', () => {
     const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
     expect(html).toContain('aria-label="Change photo"')
     expect(text).toContain('Change photo')
+  })
+
+  /**
+   * #1697: the create form gates submit on a non-blank trimmed name, the edit
+   * form gated on nothing at all — so clearing the field and saving reached the
+   * server, and the 422 `CharacterUpdate.display_name` has raised since #1686
+   * rendered as raw Pydantic prose ("String should have at least 1 character"),
+   * copy that never went through the i18n catalogue (ADR-0032).
+   *
+   * `editState` derives `canSubmit` through the same {@link canSubmitName} the
+   * hooks call, so this asserts the rule and its wiring, not the fixture.
+   */
+  it('disables Save when the name is blank, so the 422 is unreachable (#1697)', () => {
+    const { html } = render(<DefaultEditCharacter state={editState({ displayName: '   ' })} />)
+    expect(html, 'the sticky Save bar is closed').toContain('type="submit" disabled=""')
+  })
+
+  it('leaves Save open for a real name', () => {
+    const { html } = render(<DefaultEditCharacter state={editState({ displayName: 'Molly' })} />)
+    expect(html).not.toContain('type="submit" disabled=""')
   })
 
   it('shows a freshly cropped portrait (preview) over the persisted avatar (#985)', () => {
