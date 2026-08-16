@@ -5,6 +5,14 @@ from dataclasses import replace
 from game_config import ERA_1
 from services.praxis import multi_membership_faction_slugs
 
+# Albescent holds every other faction's perk (#1871), so "only faction X has
+# perk P" is now a claim about the factions that DECLARE P. Read the inheritors
+# off the config rather than naming a slug, so moving the charter moves these
+# tests with it.
+INHERITORS = {
+    slug for slug, config in ERA_1.factions.items() if config.inherits_faction_perks
+}
+
 
 def test_wow_modifiers_are_flat():
     # #811: WOW's perk is the level jump, not a multiplier. Its former +10%
@@ -39,7 +47,7 @@ def test_coven_is_the_only_faction_with_a_modifier():
         or 1.0 != config.collab_own_modifier
         or 1.0 != config.collab_other_modifier
     }
-    assert with_modifiers == {"coven"}
+    assert with_modifiers - INHERITORS == {"coven"}
 
 
 def test_level_jump_is_wow_only():
@@ -47,7 +55,7 @@ def test_level_jump_is_wow_only():
         slug for slug, config in ERA_1.factions.items()
         if config.level_jump_reach > 0
     }
-    assert granted == {"wow"}
+    assert granted - INHERITORS == {"wow"}
 
 
 def test_double_dipper_is_everymen_only():
@@ -57,12 +65,12 @@ def test_double_dipper_is_everymen_only():
         slug for slug, config in ERA_1.factions.items()
         if config.can_hold_multiple_memberships
     }
-    assert granted == {"everymen"}
+    assert granted - INHERITORS == {"everymen"}
 
 
 def test_multi_membership_slugs_follows_the_config_not_the_slug():
     """The rule's one statement reads ``era``, so moving the ability moves it."""
-    assert multi_membership_faction_slugs(ERA_1) == ("everymen",)
+    assert set(multi_membership_faction_slugs(ERA_1)) - INHERITORS == {"everymen"}
 
     moved = replace(
         ERA_1,
@@ -76,7 +84,10 @@ def test_multi_membership_slugs_follows_the_config_not_the_slug():
             ),
         },
     )
-    assert multi_membership_faction_slugs(moved) == ("snide",)
+    assert set(multi_membership_faction_slugs(moved)) - INHERITORS == {"snide"}
+    # And the inheritor followed it across rather than keeping a stale copy
+    # (#1871): the ability was re-derived, not pasted onto Albescent.
+    assert set(multi_membership_faction_slugs(moved)) >= INHERITORS
 
 
 def test_snide_duel_modifiers():
@@ -97,10 +108,16 @@ def test_ua_masters_cut_from_era_1():
 
 
 def test_albescent_full_access():
+    """No penalty anywhere, and the best collab deal any faction has (#1871).
+
+    ``collab_own_modifier`` is Coven's, inherited — asserted against Coven so it
+    tracks a re-tune. The perk union itself lives in
+    ``test_faction_perk_inheritance.py``.
+    """
     config = ERA_1.factions["albescent"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 1.0
-    assert config.collab_own_modifier == 1.0
+    assert config.collab_own_modifier == ERA_1.factions["coven"].collab_own_modifier
     assert config.collab_other_modifier == 1.0
     assert config.can_always_rejoin is True
 
