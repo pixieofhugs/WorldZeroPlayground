@@ -31,6 +31,7 @@ function task(overrides: Partial<TaskOut> & { id: number }): TaskOut {
     can_sign_up: true,
     allowed_modes: [],
     eligible_for_current_user: true,
+    start_here: false,
     ...overrides,
   };
 }
