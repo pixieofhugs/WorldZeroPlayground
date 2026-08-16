@@ -157,8 +157,17 @@ describe("SNIDE's dress", () => {
   });
 
   it("bleeds the submit bar to the sheet's edge at each width", () => {
-    expect(render("desktop")).toContain("margin-left:calc(-1 * var(--space-2xl))");
-    expect(render("mobile")).toContain("margin-left:calc(-1 * var(--space-lg))");
+    // Off the SHARED affordance since #1828 — three sides, not two: the bar had
+    // been reaching the sides by hand while the bottom was faked by dropping the
+    // content column's padding. `composerDispatch.test.tsx` makes the same claim
+    // for all seven band skins at once; what is asserted here is that SNIDE's is
+    // one of them rather than its own geometry.
+    expect(render("desktop")).toContain(
+      "margin:0 calc(-1 * var(--space-2xl)) calc(-1 * var(--space-2xl))",
+    );
+    expect(render("mobile")).toContain(
+      "margin:0 calc(-1 * var(--space-lg)) calc(-1 * var(--space-xl))",
+    );
   });
 
   it.each(WIDTHS)("keeps its ground on the column, not the viewport on %s", (width) => {

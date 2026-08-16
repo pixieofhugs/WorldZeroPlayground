@@ -31,17 +31,19 @@
  * **Rule** — the censor stripe, a solid redaction bar rather than a hairline,
  * struck ONCE above the footer (#1707) rather than between the sections.
  *
- * **The two marks** are one hand-drawn blob at two sizes: the points blob with
- * its numeral and `PTS` caption, and the status blob with a check struck through
- * in pen. They are NOT `RingMark` — that block is a ring with its middle punched
- * out, and this design's mark is a splat. They are passed through the same two
- * mark SLOTS (`TaskSlip.mark`, `ComposerStatusRow.mark`), which is the seam that
- * matters.
+ * **The mark** is the hand-drawn blob, struck through with a check in pen. It is
+ * NOT `RingMark` — that block is a ring with its middle punched out, and this
+ * design's mark is a splat. Since #1828 it is the WAITING surface's alone: the
+ * compose row reads `Draft` by itself, and the slip's points blob is gone in
+ * favour of the shared `ScoreStamp`, which dispatches to `SnideScoreStamp` —
+ * the same acid numeral, carrying the praxis's real total.
  *
- * **Submit** — a full-bleed acid bar, not an inline button. The shared
- * `ComposerFooter` already expressed it: its `style` prop turns the row into a
- * stretched column, and the sheet's bottom padding is dropped so the bar can
- * land flush on the sheet's edge. No footer was forked and no bar helper added.
+ * **Submit** — a full-bleed acid bar, not an inline button, and since #1828 it
+ * comes off the shared affordance rather than out of this file: `<ComposerFooter
+ * band>` plus `composerBandStyle`, which negates the sheet's own insets. The
+ * hand-rolled version here missed two things the design draws — the 1.5px top
+ * rule in the sheet's frame, and a bottom bleed (it dropped the content
+ * column's bottom padding instead, which is a different geometry).
  *
  * ## Colour
  *
@@ -85,7 +87,10 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   composerStageWord,
@@ -111,15 +116,6 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
-
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 
 /* THE SHEET — flips with the theme (xerox stock by day, photocopier black by
  * night), so nothing below branches on it. */
@@ -251,11 +247,6 @@ export default function SnideEditPraxis({ state }: Props) {
    * the design calls its rule there and lets whitespace part the regions, and
    * five redaction bars redacted the page's rhythm along with its sections. */
   const censorStripe = <ComposerRule style={{ height: 10, background: BAR }} />;
-
-  /* The submit bar's bleed: the sheet's own side padding, negated. Not a value
-   * off the scale — the same token, running the other way, which is the only
-   * way a child of a padded column reaches its parent's edge. */
-  const sidePad = sizes.isMobile ? "var(--space-lg)" : "var(--space-2xl)";
 
   /* The chrome, named once and mounted twice: the composer below, and the
      waiting surface once your part is in (#1189). The same ELEMENTS both
@@ -403,58 +394,21 @@ export default function SnideEditPraxis({ state }: Props) {
       <ComposerSheet
         sizes={sizes}
         style={sheetStyle}
-        /* Bottom padding goes to the full-bleed submit bar below. */
-        contentStyle={{ paddingBottom: 0 }}
         masthead={masthead}
         ground={ground}
       >
+        {/* The stage word, alone (#1828). It is `composerStageWord` rather than
+            the bare `Draft` key because SNIDE also prints it in the masthead,
+            and the two must not contradict each other. */}
         <ComposerStatusRow
           status={composerStageWord(state)}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={
-            <span
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "var(--space-xs)",
-                flexShrink: 0,
-              }}
-            >
-              <SnideBlob width={94} height={72}>
-                <span
-                  style={{
-                    position: "relative",
-                    fontFamily: TITLE_FACE,
-                    fontSize: "var(--text-title)",
-                    lineHeight: 1,
-                    color: PRESS_INK,
-                  }}
-                >
-                  {task?.point_value ?? 0}
-                </span>
-              </SnideBlob>
-              <span style={punkLabel({ color: ACID_INK, letterSpacing: "0.2em" })}>
-                {t("editPraxis.composer.pointsUnit")}
-              </span>
-            </span>
-          }
-        />
+        {/* The task slip. Its mark is the shared ScoreStamp (#1828) — the
+            press's own acid numeral by dispatch, over the praxis's real total
+            rather than the task's bare figure. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -564,7 +518,19 @@ export default function SnideEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={{ color: MUTED }}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span
+                style={punkLabel({
+                  color: FAINT,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span
                 style={punkLabel({
                   color: FAINT,
@@ -690,7 +656,9 @@ export default function SnideEditPraxis({ state }: Props) {
                 skin={{
                   buttonStyle: punkLabel({
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the raster reads through the drop zone
+                       (#1828). */
+                    background: composerDropGround(FIELD),
                     border: `1px dashed ${RULE}`,
                     borderRadius: 0,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -726,20 +694,9 @@ export default function SnideEditPraxis({ state }: Props) {
             ranged because SNIDE's cast is a bar and not a button. The exits keep
             the start, the cast keeps the end. */}
         <ComposerFooter
-          style={{
-            flexDirection: "column",
-            alignItems: "stretch",
-            gap: "var(--space-lg)",
-          }}
+          band
           start={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-              }}
-            >
+            <>
               <SaveDraftButton
                 state={state}
                 skin={{ style: { color: FAINT, fontFamily: BODY_FACE } }}
@@ -757,7 +714,7 @@ export default function SnideEditPraxis({ state }: Props) {
                   }),
                 }}
               />
-            </div>
+            </>
           }
           end={
             <PublishButton
@@ -765,25 +722,26 @@ export default function SnideEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
-                style: punkLabel({
-                  display: "block",
-                  width: "auto",
-                  /* The bleed: the sheet's own side padding, negated, so the bar
-                     reaches both edges of a padded column. */
-                  marginLeft: `calc(-1 * ${sidePad})`,
-                  marginRight: `calc(-1 * ${sidePad})`,
-                  padding: "var(--space-lg) var(--space-xl)",
-                  border: "none",
-                  borderRadius: 0,
-                  background: ACID,
-                  color: PRESS_INK,
-                  fontFamily: TITLE_FACE,
-                  /* A bar the width of the sheet set at the label tier reads as
-                     a rule rather than as the page's one irreversible action. */
-                  fontSize: "var(--text-content)",
-                  letterSpacing: "0.24em",
+                style: {
+                  ...composerBandStyle(sizes, {
+                    /* Design band: 15 / 400 / 0.2em in the TITLE face (Anton) —
+                       a bar the width of the sheet set at the label tier reads
+                       as a rule rather than as the page's one irreversible
+                       action, so 15 takes --text-content. The tracking is the
+                       design's 0.2em; this file had drifted to 0.24em. */
+                    fontFamily: TITLE_FACE,
+                    fontSize: "var(--text-content)",
+                    letterSpacing: "0.2em",
+                    /* The sheet's frame. SNIDE's stock has no border of its own
+                       — radius 0, borderW 0 — so the band's rule takes the
+                       composer's own rule ink, which is what the design's
+                       `frame` resolves to for this skin. */
+                    frame: RULE,
+                    background: ACID,
+                    color: PRESS_INK,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
-                }),
+                },
               }}
             />
           }
