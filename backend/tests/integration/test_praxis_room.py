@@ -14,7 +14,8 @@ each seeding a document from the same text and merging into two copies of it.
 """
 
 import asyncio
-from contextlib import asynccontextmanager
+import io
+from contextlib import asynccontextmanager, suppress
 from typing import Any, AsyncIterator, Callable
 
 import pytest
@@ -50,6 +51,55 @@ from services.praxis_room import (
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
 _TIMEOUT_SECONDS = 5.0
+
+#: The ceiling on the two waits in this file that are not a poll: a client
+#: disconnecting, and the room server stopping (#1930).
+#:
+#: Both used to be unbounded, and a hang in either surfaced as ``pytest-timeout``
+#: firing at 60s with a stack ending in ``EpollSelector.select`` — the event loop
+#: asleep, which names neither side of the socket. It has to stay well under that
+#: 60s so the seam is named before the backstop fires: the busiest test here holds
+#: two clients plus the server, and 3 x 10s still leaves headroom.
+_TEARDOWN_TIMEOUT_SECONDS = 10.0
+
+
+def _pending_task_dump() -> str:
+    """Every unfinished task on this loop, and where it is waiting.
+
+    A socket has two ends, and a hang needs both of them to diagnose.
+    ``pytest-timeout`` dumps *threads*, and every task in this suite shares one
+    thread, so its report shows the loop asleep and nothing else — which is
+    exactly what #1930 arrived as. This is the other half.
+    """
+    buffer = io.StringIO()
+    # Everything except the caller: this task's own stack is the one the failure
+    # is already raised from, and under pytest it is mostly plugin frames.
+    running = asyncio.current_task()
+    tasks = sorted(
+        (task for task in asyncio.all_tasks() if task is not running),
+        key=lambda task: task.get_name(),
+    )
+    buffer.write(f"\n\n--- {len(tasks)} other pending task(s) on this event loop ---")
+    for task in tasks:
+        buffer.write(f"\n\n== {task.get_name()}: {task.get_coro()!r}\n")
+        try:
+            task.print_stack(limit=12, file=buffer)
+        except Exception as exc:  # pragma: no cover — diagnostics must not raise
+            buffer.write(f"  <could not read stack: {exc!r}>\n")
+    return buffer.getvalue()
+
+
+@asynccontextmanager
+async def _bounded(description: str) -> AsyncIterator[None]:
+    """Give an otherwise unbounded wait a ceiling and a name (#1930)."""
+    try:
+        async with asyncio.timeout(_TEARDOWN_TIMEOUT_SECONDS):
+            yield
+    except TimeoutError:
+        raise AssertionError(
+            f"timed out after {_TEARDOWN_TIMEOUT_SECONDS}s waiting for "
+            f"{description}{_pending_task_dump()}"
+        ) from None
 
 #: The mount ``main.py`` puts the room app behind, read off the live app rather
 #: than restated here — the prefix is the mount's to own, and a test holding its
@@ -253,13 +303,32 @@ class _Rooms:
         return None if room is None else room.ydoc
 
     async def aclose(self) -> None:
+        """Cancel every socket task, and refuse to wait forever for one (#1930).
+
+        ``asyncio.wait`` rather than ``await task``: :meth:`PraxisRoomServer.release`
+        runs its half of the teardown inside ``anyio.CancelScope(shield=True)``,
+        and that shield holds against a plain ``Task.cancel`` — so a ceiling that
+        works by cancelling *this* task would not reach a socket stuck in there.
+        Giving up on the wait does.
+        """
         for task in self._tasks:
             task.cancel()
-        for task in self._tasks:
-            try:
-                await task
-            except (asyncio.CancelledError, Exception):
-                pass
+        if not self._tasks:
+            return
+        done, pending = await asyncio.wait(
+            self._tasks, timeout=_TEARDOWN_TIMEOUT_SECONDS
+        )
+        for task in done:
+            # Read the outcome so a cancelled or failed socket task is not
+            # reported as an unretrieved exception on some later, unrelated test.
+            with suppress(asyncio.CancelledError, Exception):
+                task.result()
+        if pending:
+            raise AssertionError(
+                f"{len(pending)} praxis-room socket task(s) were still running "
+                f"{_TEARDOWN_TIMEOUT_SECONDS}s after cancel."
+                f"{_pending_task_dump()}"
+            )
 
 
 @asynccontextmanager
@@ -288,11 +357,17 @@ async def running_rooms(
     # process-wide database session.
     monkeypatch.setattr(praxis_room.PRAXIS_ROOM_APP, "rooms", server)
     rooms = _Rooms(server, sessions)
-    async with server:
-        try:
-            yield rooms
-        finally:
-            await rooms.aclose()
+    # ``__aenter__``/``__aexit__`` by hand rather than ``async with server``:
+    # the ceiling belongs on the *exit* alone. Wrapping the whole block would
+    # put a clock on the test body too, and the body's waits are already bounded
+    # by :func:`_wait_for`.
+    await server.__aenter__()
+    try:
+        yield rooms
+    finally:
+        await rooms.aclose()
+        async with _bounded("the room server to stop"):
+            await server.__aexit__(None, None, None)
 
 
 @asynccontextmanager
@@ -303,8 +378,13 @@ async def client_doc(socket: _Socket) -> AsyncIterator[Doc]:
     everything in it arrives from the server.
     """
     doc = Doc()
-    async with Provider(doc, _ChannelAdapter(socket)):
+    provider = Provider(doc, _ChannelAdapter(socket))
+    await provider.__aenter__()
+    try:
         yield doc
+    finally:
+        async with _bounded(f"the client on {socket.path} to disconnect"):
+            await provider.__aexit__(None, None, None)
 
 
 async def _wait_for(predicate: Callable[[], bool], description: str) -> None:
@@ -314,7 +394,9 @@ async def _wait_for(predicate: Callable[[], bool], description: str) -> None:
         if predicate():
             return
         await asyncio.sleep(0.01)
-    raise AssertionError(f"timed out waiting for {description}")
+    raise AssertionError(
+        f"timed out waiting for {description}{_pending_task_dump()}"
+    )
 
 
 def _body(doc: Doc) -> str:
