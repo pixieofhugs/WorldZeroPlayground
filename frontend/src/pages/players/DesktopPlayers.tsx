@@ -264,6 +264,11 @@ function PodiumCard({
       }}
     >
       <div className="flex items-center justify-between" style={{ gap: 'var(--space-md)' }}>
+        {/* The ring, its bloom and the wash carry the faction; the NUMERAL does
+            not (#1932). A spine hue is a fill colour — `--faction-wow` is 1.96:1
+            on this page and 2.09:1 on the frost, and the lead's 24px does not
+            rescue it at the 3:1 large-text floor either. The numeral inherits
+            `--color-text-primary` from the card. */}
         <span
           className="font-display flex items-center justify-center"
           style={{
@@ -273,7 +278,6 @@ function PodiumCard({
             border: `1px solid ${color}`,
             boxShadow: `0 0 0 ${lead ? 5 : 4}px color-mix(in oklab, ${color} 14%, transparent)`,
             fontSize: lead ? 'var(--text-title)' : 'var(--text-content)',
-            color,
             flex: 'none',
           }}
         >
@@ -290,8 +294,10 @@ function PodiumCard({
           {character.display_name}
         </span>
         {/* The faction NAME is not drawn on the podium — the tint, the avatar
-            ring and the sigil on it already say which one. */}
-        <span className="label-heading" style={{ color }}>
+            ring and the sigil on it already say which one. Nor is the faction
+            HUE (#1932): this is the label tier, whose ink is the `--label-ink`
+            seam, and an inline colour paints over that seam. */}
+        <span className="label-heading">
           {t('leaderboard.level', { level: character.level })}
         </span>
       </div>
@@ -456,10 +462,12 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
               </>
             )}
           </span>
-          <span
-            className="label-heading truncate"
-            style={{ color: factionCssVar(character.faction_slug) }}
-          >
+          {/* The faction's NAME, in the label tier's own ink (#1932). It used
+              to be printed in the faction hue, which is 2.09:1 for WOW on the
+              frost this row wears when it is yours. Nothing is lost: the word
+              is the identity, and the avatar's ring and the gem's outline
+              beside it are still hue-coded. */}
+          <span className="label-heading truncate">
             {factionName(character.faction_slug)}
           </span>
         </span>
