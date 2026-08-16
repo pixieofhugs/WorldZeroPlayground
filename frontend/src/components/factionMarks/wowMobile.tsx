@@ -182,17 +182,24 @@ export function WowPavilionHeader({
           </div>
         </div>
 
-        <div
+        {/* The crest's name IS the page heading on both consumers — the carried
+            life on the mobile home, the faction on the faction page — and
+            neither draws another one, so it is an unconditional <h1> and needs
+            no level prop (#1817). Preflight already strips the element's own
+            margin and weight; `margin: 0` is stated anyway so the crest cannot
+            drift on it. */}
+        <h1
           style={{
             fontFamily: WOW_DISPLAY,
             fontSize: "var(--text-title)",
             lineHeight: 1.1,
             color: WOW_INK,
             overflowWrap: "anywhere",
+            margin: 0,
           }}
         >
           {name}
-        </div>
+        </h1>
         <div
           style={{
             fontFamily: WOW_BODY,
