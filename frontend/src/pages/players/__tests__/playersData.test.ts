@@ -19,7 +19,6 @@ import {
   rosterView,
   selectRoster,
   type PlayersFilters,
-  type RankedPlayer,
 } from '../playersData'
 
 function player(overrides: Partial<CharacterOut>): CharacterOut {

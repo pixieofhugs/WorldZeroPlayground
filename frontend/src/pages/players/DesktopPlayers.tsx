@@ -1,0 +1,481 @@
+import { useMemo, useState, type CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import PageTitle from '../../components/ui/PageTitle'
+import FactionAvatar from '../../components/avatar/FactionAvatar'
+import FactionSigil from '../../components/sigil/FactionSigil'
+import LevelGem from '../../components/ui/LevelGem'
+import { factionCssVar, factionName, isKnownFaction } from '../../utils/factions'
+import { relativeTime } from '../../utils/dates'
+import PlayersFilterBar from './PlayersFilterBar'
+import ScoreToggle from './ScoreToggle'
+import SectionHeading from './SectionHeading'
+import {
+  PLAYERS_FILTERS_DEFAULT,
+  PODIUM_SIZE,
+  ROSTER_PAGE_STEP,
+  factionStandings,
+  rosterView,
+  selectRoster,
+  type FactionStanding,
+  type LatestPraxisMap,
+  type PlayersFilters,
+  type PlayersViewProps,
+  type RankedPlayer,
+} from './playersData'
+
+/** Row geometry, straight from the design. Ornament dimensions, not spacing. */
+const PODIUM_COLUMNS = '1.12fr 1fr 1fr'
+const RACE_COLUMNS = '26px 26px 1fr 1fr 108px'
+const ROSTER_COLUMNS = '56px 1fr 84px 90px'
+const RACE_STAGGER_MS = 90
+/** Decorative marks. Expressions, so they are not user-facing copy. */
+const ELLIPSIS_GLYPH = '⋮'
+
+/**
+ * The Players page on desktop (#1855) — podium, faction race, roster.
+ *
+ * This replaced the Constellation (#656/#684), a night-sky scatter plot that
+ * encoded rank as orbital radius and score as orb size. It is deleted, not
+ * hidden: nothing else in the app reads `--sky-*` now.
+ *
+ * Deviations from the design, so the next editor does not "restore" them:
+ *
+ *   - **The eyebrow reads the era config**, never the design's literal "Era
+ *     Three" (CLAUDE.md: never hardcode a value that lives in `EraConfig`).
+ *   - **`PageTitle` draws the header**, so the title carries the per-letter
+ *     spectrum underline every other page has and the design's separate 140px
+ *     rainbow rule is NOT drawn. #1699 removed exactly that second rule from
+ *     this page; drawing it again is the regression, not the fidelity.
+ *   - **Seven lanes in the race, not eight.** The design's "Albescent" row is
+ *     unaffiliated players, and `na` is a state rather than a faction — see
+ *     `factionStandings`.
+ *   - **Roster rows are `<Link>`s.** The design draws none; the roster has
+ *     linked to the public profile since #517 and losing that is a regression.
+ *   - **The podium's latest-praxis title takes `--text-content`**, not the
+ *     design's 14px: a task title is prose that can run to any length, and the
+ *     content-text floor governs those (WORLD_ZERO_STYLE §4, #627).
+ */
+export default function DesktopPlayers({
+  ranked,
+  scoreMode,
+  onScoreMode,
+  eyebrow,
+  myCharId,
+  related,
+  latest,
+}: PlayersViewProps) {
+  const { t } = useTranslation('common')
+  const [filters, setFilters] = useState<PlayersFilters>(PLAYERS_FILTERS_DEFAULT)
+  const [visible, setVisible] = useState(ROSTER_PAGE_STEP)
+  const [raceOpen, setRaceOpen] = useState(true)
+  const [rosterOpen, setRosterOpen] = useState(true)
+
+  const podium = ranked.slice(0, PODIUM_SIZE)
+  const standings = useMemo(() => factionStandings(ranked), [ranked])
+  const roster = useMemo(
+    () => selectRoster(ranked, filters, related),
+    [ranked, filters, related],
+  )
+  const view = rosterView(roster, visible, myCharId)
+
+  return (
+    <div className="py-8">
+      <div className="flex items-end justify-between" style={{ gap: 'var(--space-lg)' }}>
+        <PageTitle title={t('leaderboard.title')} eyebrow={eyebrow} />
+        <ScoreToggle mode={scoreMode} onChange={onScoreMode} fontSize="var(--text-base)" />
+      </div>
+
+      {/* ── Out in front ── */}
+      <div
+        className="grid items-stretch"
+        style={{
+          gridTemplateColumns: PODIUM_COLUMNS,
+          borderTop: '1px solid var(--color-border-strong)',
+          borderBottom: '1px solid var(--color-border-strong)',
+        }}
+      >
+        {podium.map((row, index) => (
+          <PodiumCard key={row.character.id} row={row} lead={index === 0} latest={latest} />
+        ))}
+      </div>
+
+      {/* ── Faction points ── */}
+      <section style={{ marginTop: 'var(--space-3xl)' }}>
+        <SectionHeading
+          title={t('leaderboard.race.heading')}
+          open={raceOpen}
+          onToggle={() => setRaceOpen(!raceOpen)}
+          fontSize="var(--text-title)"
+          toggleLabel={t('leaderboard.race.heading')}
+        />
+        {raceOpen && (
+          <div className="flex flex-col" style={{ marginTop: 'var(--space-lg)' }}>
+            {standings.map((lane, index) => (
+              <RaceRow key={lane.slug} lane={lane} rank={index + 1} delayMs={index * RACE_STAGGER_MS} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Players ── */}
+      <section style={{ marginTop: 'var(--space-3xl)' }}>
+        <SectionHeading
+          title={t('leaderboard.roster.heading')}
+          meta={<span className="label-heading">{t('leaderboard.playersCount', { count: view.total })}</span>}
+          open={rosterOpen}
+          onToggle={() => setRosterOpen(!rosterOpen)}
+          fontSize="var(--text-title)"
+          toggleLabel={t('leaderboard.roster.heading')}
+        />
+
+        {rosterOpen && (
+          <>
+            <div style={{ marginTop: 'var(--space-lg)' }}>
+              <PlayersFilterBar
+                filters={filters}
+                onChange={(next) => {
+                  setFilters(next)
+                  setVisible(ROSTER_PAGE_STEP)
+                }}
+                showRelationshipRail={myCharId != null}
+              />
+            </div>
+
+            {view.total === 0 ? (
+              <p className="font-body content-text text-muted" style={{ marginTop: 'var(--space-xl)' }}>
+                {t('leaderboard.roster.empty')}
+              </p>
+            ) : (
+              <>
+                <div
+                  className="grid items-center"
+                  style={{
+                    marginTop: 'var(--space-xl)',
+                    gridTemplateColumns: ROSTER_COLUMNS,
+                    gap: 'var(--space-lg)',
+                    paddingBottom: 'var(--space-sm)',
+                    borderBottom: '1px solid var(--color-border-strong)',
+                  }}
+                >
+                  <span className="label-heading">{t('leaderboard.roster.colRank')}</span>
+                  <span className="label-heading">{t('leaderboard.roster.colPlayer')}</span>
+                  <span className="label-heading" style={{ textAlign: 'center' }}>
+                    {t('leaderboard.roster.colLevel')}
+                  </span>
+                  <span className="label-heading" style={{ textAlign: 'right' }}>
+                    {t('leaderboard.roster.colPoints')}
+                  </span>
+                </div>
+
+                {view.rows.map((row) => (
+                  <RosterRow key={row.character.id} row={row} isMe={row.character.id === myCharId} />
+                ))}
+
+                {view.gap && (
+                  <div
+                    className="grid items-center"
+                    style={{
+                      gridTemplateColumns: ROSTER_COLUMNS,
+                      gap: 'var(--space-lg)',
+                      padding: 'var(--space-sm) 0',
+                      color: 'var(--color-text-tertiary)',
+                    }}
+                  >
+                    <span aria-hidden style={{ fontSize: 'var(--text-md)', letterSpacing: '0.2em' }}>
+                      {ELLIPSIS_GLYPH}
+                    </span>
+                    <span className="label-heading">
+                      {t('leaderboard.roster.gap', { from: view.gap.from, to: view.gap.to })}
+                    </span>
+                  </div>
+                )}
+
+                {view.pinned && <RosterRow row={view.pinned} isMe />}
+
+                {view.hasMore && (
+                  <div className="flex items-center justify-end" style={{ paddingTop: 'var(--space-xl)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setVisible(visible + ROSTER_PAGE_STEP)}
+                      className="font-body uppercase"
+                      style={{
+                        fontSize: 'var(--text-sm)',
+                        letterSpacing: '0.18em',
+                        padding: 'var(--space-sm) var(--space-lg)',
+                        borderRadius: 999,
+                        border: '1px solid var(--color-border-strong)',
+                        background: 'transparent',
+                        color: 'var(--color-text-secondary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {t('leaderboard.roster.loadMore')}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </section>
+    </div>
+  )
+}
+
+/**
+ * One podium card. The leader's is larger throughout and carries a diagonal
+ * faction-tinted wash; the other two step down and have none.
+ *
+ * The wash is skipped for an unaffiliated leader rather than faked: `na` has no
+ * scalar hue to mix (ADR-0039), and `color-mix()` cannot take the spectrum
+ * gradient. The rank ring, the avatar and the points numeral already carry the
+ * spectrum for that card.
+ */
+function PodiumCard({
+  row,
+  lead,
+  latest,
+}: {
+  row: RankedPlayer
+  lead: boolean
+  latest: LatestPraxisMap
+}) {
+  const { t } = useTranslation('common')
+  const { character, rank, points } = row
+  const known = isKnownFaction(character.faction_slug)
+  const color = factionCssVar(character.faction_slug)
+  const recent = latest[character.id]
+
+  return (
+    <Link
+      to={`/characters/${character.id}`}
+      className="flex flex-col"
+      style={{
+        gap: lead ? 'var(--space-lg)' : 'var(--space-md)',
+        padding: 'var(--space-xl)',
+        borderLeft: lead ? undefined : '1px solid var(--color-border)',
+        background:
+          lead && known
+            ? `linear-gradient(170deg, color-mix(in oklab, ${color} 10%, transparent), transparent 68%)`
+            : undefined,
+        color: 'var(--color-text-primary)',
+        textDecoration: 'none',
+      }}
+    >
+      <div className="flex items-center justify-between" style={{ gap: 'var(--space-md)' }}>
+        <span
+          className="font-display flex items-center justify-center"
+          style={{
+            width: lead ? 44 : 38,
+            height: lead ? 44 : 38,
+            borderRadius: '50%',
+            border: `1px solid ${color}`,
+            boxShadow: `0 0 0 ${lead ? 5 : 4}px color-mix(in oklab, ${color} 14%, transparent)`,
+            fontSize: lead ? 'var(--text-title)' : 'var(--text-content)',
+            color,
+            flex: 'none',
+          }}
+        >
+          {rank}
+        </span>
+        <FactionAvatar character={character} size={lead ? 54 : 42} />
+      </div>
+
+      <div className="flex flex-col" style={{ gap: 'var(--space-xs)' }}>
+        <span
+          className="font-display"
+          style={{ fontSize: lead ? 'var(--text-title)' : 'var(--text-content)', lineHeight: 1.05 }}
+        >
+          {character.display_name}
+        </span>
+        {/* The faction NAME is not drawn on the podium — the tint, the avatar
+            ring and the sigil on it already say which one. */}
+        <span className="label-heading" style={{ color }}>
+          {t('leaderboard.level', { level: character.level })}
+        </span>
+      </div>
+
+      <div className="flex items-baseline" style={{ gap: 'var(--space-xs)' }}>
+        <span
+          className="font-display rainbow-ink"
+          style={{ fontSize: lead ? 'var(--text-display)' : 'var(--text-heading)', lineHeight: 1 }}
+        >
+          {points}
+        </span>
+        <span
+          className="font-body uppercase"
+          style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.2em', color: 'var(--color-text-tertiary)' }}
+        >
+          {t('leaderboard.points')}
+        </span>
+      </div>
+
+      {recent && (
+        <div
+          className="flex flex-col"
+          style={{
+            marginTop: 'auto',
+            gap: 'var(--space-xs)',
+            paddingTop: 'var(--space-md)',
+            borderTop: '1px solid var(--color-border)',
+          }}
+        >
+          <span className="label-heading">
+            {t('leaderboard.podium.latest', {
+              ago: recent.submittedAt ? relativeTime(recent.submittedAt) : '',
+            })}
+          </span>
+          {/* Content floor, not the design's 14px: a task title is prose that
+              can run to any length (WORLD_ZERO_STYLE §4). */}
+          <span className="font-display content-text" style={{ lineHeight: 1.35 }}>
+            {recent.taskTitle}
+          </span>
+        </div>
+      )}
+    </Link>
+  )
+}
+
+/** One lane of the faction race: rank, sigil, name, bar, points + share. */
+function RaceRow({
+  lane,
+  rank,
+  delayMs,
+}: {
+  lane: FactionStanding
+  rank: number
+  delayMs: number
+}) {
+  const { t } = useTranslation('common')
+  return (
+    <div
+      className="leaderboard-row grid items-center"
+      style={{
+        gridTemplateColumns: RACE_COLUMNS,
+        gap: 'var(--space-lg)',
+        padding: 'var(--space-md) 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
+      <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>{rank}</span>
+      <FactionSigil slug={lane.slug} size={22} />
+      <span className="font-display" style={{ fontSize: 'var(--text-content)' }}>
+        {factionName(lane.slug)}
+      </span>
+      <span
+        aria-hidden
+        style={{
+          height: 7,
+          borderRadius: 999,
+          background: 'var(--color-border-strong)',
+          overflow: 'hidden',
+          display: 'block',
+        }}
+      >
+        <span
+          className="wz-race-fill"
+          style={
+            {
+              display: 'block',
+              width: `${lane.barPercent}%`,
+              height: '100%',
+              background: factionCssVar(lane.slug),
+              transformOrigin: 'left',
+              // The stagger is per-row data, so it rides in as a custom
+              // property — the animation itself is a class, gated on
+              // reduced-motion in index.css, never an inline `animation:`.
+              '--wz-fill-delay': `${delayMs}ms`,
+            } as CSSProperties
+          }
+        />
+      </span>
+      <span className="flex items-baseline justify-end" style={{ gap: 'var(--space-xs)' }}>
+        <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-title)', lineHeight: 1 }}>
+          {Math.round(lane.points)}
+        </span>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)' }}>
+          {t('leaderboard.race.share', { share: Math.round(lane.sharePercent) })}
+        </span>
+      </span>
+    </div>
+  )
+}
+
+/** One roster row. A link, always — the design draws none and that is a bug. */
+function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
+  const { t } = useTranslation('common')
+  const { character, rank, points } = row
+
+  return (
+    <Link
+      to={`/characters/${character.id}`}
+      className={isMe ? 'grid items-center' : 'leaderboard-row grid items-center'}
+      style={{
+        position: 'relative',
+        gridTemplateColumns: ROSTER_COLUMNS,
+        gap: 'var(--space-lg)',
+        padding: isMe ? 'var(--space-md) 0 var(--space-md) var(--space-md)' : 'var(--space-md) 0',
+        marginLeft: isMe ? 'calc(-1 * var(--space-md))' : undefined,
+        borderBottom: '1px solid var(--color-border)',
+        background: isMe ? 'var(--color-bg-surface)' : undefined,
+        color: 'var(--color-text-primary)',
+        textDecoration: 'none',
+      }}
+    >
+      {/* Your row's edge is the spectrum, bled into the gutter — one mark for
+          "this is you" that no faction hue has to be borrowed for. */}
+      {isMe && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 3,
+            background: 'var(--faction-default-rainbow)',
+          }}
+        />
+      )}
+
+      <span style={{ fontSize: 'var(--text-lg)', color: isMe ? undefined : 'var(--color-text-secondary)' }}>
+        {rank}
+      </span>
+
+      <div className="flex items-center min-w-0" style={{ gap: 'var(--space-md)' }}>
+        <span style={{ flex: 'none', lineHeight: 0 }}>
+          <FactionAvatar character={character} size={34} />
+        </span>
+        <span className="flex flex-col min-w-0" style={{ gap: 'var(--space-xs)' }}>
+          <span className="font-display truncate" style={{ fontSize: 'var(--text-content)' }}>
+            {character.display_name}
+            {isMe && (
+              <>
+                {' '}
+                <span className="label-heading">{t('leaderboard.roster.you')}</span>
+              </>
+            )}
+          </span>
+          <span
+            className="label-heading truncate"
+            style={{ color: factionCssVar(character.faction_slug) }}
+          >
+            {factionName(character.faction_slug)}
+          </span>
+        </span>
+      </div>
+
+      <span className="flex justify-center">
+        <LevelGem level={character.level} factionSlug={character.faction_slug} size={34} />
+      </span>
+
+      <span
+        className="font-display rainbow-ink"
+        style={{ fontSize: 'var(--text-content)', textAlign: 'right' }}
+      >
+        {points}
+      </span>
+    </Link>
+  )
+}

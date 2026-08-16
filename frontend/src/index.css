@@ -2007,79 +2007,19 @@
   /* ── Leaderboard table row hover ── */
   --leaderboard-row-hover: rgba(255, 255, 255, 0.55);
 
-  /* ── Constellation sky (Players redesign, #656) ──
-     A self-contained night sky: night in BOTH themes, so these live in :root
-     only and are deliberately NOT repeated under [data-theme="dark"] — the
-     canvas never flips (epic #654 decision #8; same pattern as the rank colors
-     above and the "Constants keep their role in both themes" faction tokens).
-     Decorative tokens (glow/ring/sparkle/you-ring) carry no AA duty. The three
-     text-bearing tokens are measured against --sky-bg and clear AA:
-       --sky-name        #efe6d4 → 15.48:1
-       --sky-crown       #f0c85a → 11.99:1 (gilt icon)
-       --sky-name-muted  #8a8070 →  4.94:1  (zero-score names + zero-state copy;
-                          the #9b9080@.5 the mock used measures 2.38:1 and fails). */
-  --sky-bg: #0f0e15; /* night canvas */
-  --sky-glow: rgba(240, 202, 94, 0.16); /* warm gilt "sun" glow — central + orb boxShadow */
-  --sky-ring: rgba(239, 230, 212, 0.12); /* faint orbit-ring stroke */
-  --sky-sparkle: rgba(239, 230, 212, 0.55); /* starfield dots */
-  --sky-crown: #f0c85a; /* gilt rank-1 crown */
-  --sky-name: #efe6d4; /* node name/score — AA 15.48:1 */
-  --sky-name-muted: #8a8070; /* faded/zero names + zero-state — AA 4.94:1 */
-  --sky-you: rgba(239, 230, 212, 0.7); /* "you" ring around the viewer's own orb (#684 §7) */
+  /* A `--sky-*` family stood here (#656): the Constellation's self-contained
+     night stage — canvas, gilt crown, orbit rings, starfield, the "you" ring —
+     night in BOTH themes, plus a `--meadow-*` light-theme sibling that #1700
+     had already retired (ADR-0074). Beside it stood the seven
+     `--faction-*-on-night` inks (#1792), minted so a faction hue drawn on that
+     never-flipping canvas could not flip with the theme.
 
-  /* ── The on-night faction ink (#1792) ──
-     A faction hue that has to sit on the night canvas ABOVE. One tier, seven
-     entries, each holding that faction's dark-cascade hex as a literal.
-
-     DO NOT ADD A [data-theme="dark"] OVERRIDE FOR THESE. Not an oversight — the
-     whole tier exists because the sky does not flip and its ink must not
-     either. `--sky-bg` is night in both themes (see the note above it), but the
-     Constellation's score numeral was inked with `factionCssVar(slug)`, which
-     DOES flip, so in light theme a permanently-dark surface was painted with
-     hues tuned for a light page ground. Four of seven fell under AA there —
-     ephemerists 3.22, everymen 3.29, singularity 3.71, ua 3.92 — while every
-     dark value cleared comfortably. That is one bug, not four hues being too
-     dark, and restating these under [data-theme="dark"] would put it straight
-     back for whichever half of the split you got wrong.
-
-     Nor may they be `var(--faction-{key})`: a var() reference resolves where it
-     is READ, so it would flip too. A literal is the only thing that cannot.
-
-     All seven, not the four that failed, so the call site reads the token
-     unconditionally instead of branching on which faction it drew. The three
-     that already cleared get better ratios, never worse.
-
-     Measured against --sky-bg #0f0e15 — identical in both themes, by
-     construction:
-       ua           #e8703a →  6.23:1  (was 3.92 in light)
-       wow          #f5c542 → 11.84:1  (was 8.93)
-       everymen     #ef5350 →  5.51:1  (was 3.29)
-       coven        #f472b6 →  7.25:1  (was 6.09)
-       snide        #b6ff2e → 15.84:1  (was 7.07)
-       ephemerists  #3aa0a4 →  6.17:1  (was 3.22)
-       singularity  #60a5fa →  7.55:1  (was 3.71)
-
-     `default` (na / albescent) is absent on purpose: the sky hands unaffiliated
-     points no colour at all and lets `.rainbow-ink` clip them (ADR-0039), so
-     there is no ink here to guarantee. `factionCssVar` would resolve
-     `--faction-default-on-night` if anyone asked; nobody may, and adding it
-     would invite a caller to drop the isKnownFaction branch that keeps the
-     spectrum. */
-  --faction-ua-on-night: #e8703a;
-  --faction-wow-on-night: #f5c542;
-  --faction-everymen-on-night: #ef5350;
-  --faction-coven-on-night: #f472b6;
-  --faction-snide-on-night: #b6ff2e;
-  --faction-ephemerists-on-night: #3aa0a4;
-  --faction-singularity-on-night: #60a5fa;
-
-  /* A `--meadow-*` family stood here: the Constellation's LIGHT-theme sibling,
-     a daylit field with its own AA measurements (#684 §9). #1700 retires the
-     Meadow (ADR-0074) and the sky above serves both themes, so the family had
-     no readers left. The night-in-both-themes note on --sky-bg is the whole
-     rule now — a light-theme reader gets a dark stage on a light page, which is
-     deliberate and, because the stage is painted rather than inherited, costs
-     no contrast. */
+     #1855 retires the Constellation itself: the Players page is a podium, a
+     faction race and a roster now, all of them drawn on the ordinary page
+     ground, where the ordinary faction hue is the correct — and theme-correct —
+     ink. Sixteen tokens, no readers left. Anything that paints a permanently
+     dark surface again needs its own measured ink, not these back: the reason
+     they existed was the ground, and the ground is gone. */
 
   /* The level track's `--color-level-inactive` / `--level-node-incomplete` pair
      stood here. The track draws its unreached nodes from the global border and
@@ -3901,6 +3841,19 @@
    no longer an Ephemerists keyframe at all: `.coven-moon-dust` is its only
    consumer, and it carries the name it was written under. */
 @keyframes eph-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+/* Players page faction race (#1855) — each lane's bar grows from the left, one
+   after another. Class-gated on reduced-motion like every other motion here, so
+   a stilled page still shows the full-width bar: the WIDTH carries the number,
+   the animation only reveals it. The per-lane stagger arrives as an inline
+   custom property. */
+@keyframes wz-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: no-preference) {
+  .wz-race-fill {
+    animation: wz-fill 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--wz-fill-delay, 0s);
+  }
+}
 
 /* Unaffiliated spectrum-sweep vote widget (#820) — reached dots bob in a rising
    wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion

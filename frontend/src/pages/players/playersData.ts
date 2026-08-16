@@ -29,6 +29,9 @@ import { FACTION_RAINBOW_ORDER, UNAFFILIATED_FACTION_SLUG } from '../../utils/fa
 /** How many players stand on the podium. The roster starts below them. */
 export const PODIUM_SIZE = 3
 
+/** Rows one "Load more" reveals. Both form factors accumulate by this step. */
+export const ROSTER_PAGE_STEP = 8
+
 export type ScoreMode = 'era' | 'alltime'
 
 /** A character with its computed standing, shared by every section. */
@@ -159,6 +162,37 @@ export function selectRoster(
     if (needle && !character.display_name.toLowerCase().includes(needle)) return false
     return true
   })
+}
+
+/**
+ * The two strings a podium card's footer draws, from the player's most recent
+ * SUBMITTED praxis. Fetched for the top three only, after the roster resolves —
+ * the page renders fully without them and the footer simply does not draw when
+ * one is missing or its request failed.
+ */
+export interface LatestPraxis {
+  taskTitle: string
+  submittedAt: string | null
+}
+
+/** Character id → their latest praxis. Only ever holds the podium three. */
+export type LatestPraxisMap = Record<number, LatestPraxis>
+
+/**
+ * What a form factor needs to draw the page. Desktop and mobile take the same
+ * props and differ only in what they do with them — the split is structural
+ * (mobile's race has no bars and no rank column, its roster no faction line),
+ * not a difference in data.
+ */
+export interface PlayersViewProps {
+  ranked: RankedPlayer[]
+  scoreMode: ScoreMode
+  onScoreMode: (mode: ScoreMode) => void
+  /** Already resolved against the era config — never a literal (CLAUDE.md). */
+  eyebrow: string
+  myCharId: number | null
+  related: ViewerRelationships
+  latest: LatestPraxisMap
 }
 
 /** The gap the pin jumps: the global ranks that are loaded past but not drawn. */
