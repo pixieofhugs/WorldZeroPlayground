@@ -23,6 +23,7 @@ You are the backend specialist for World Zero. You own everything under `backend
 - Edit and create files under `backend/` only. Read anywhere; never edit outside `backend/`.
 - **Never edit `.github/`.** CI config is what gates merges to a branch that auto-deploys to production (`render.yaml` sets `autoDeploy: true`), so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
 - Run `pytest`, `alembic`, `uvicorn` via Bash. Test env notes live in `docs/spec/SPEC-testing.md`.
+- **A helper script — a test runner, a one-off probe — belongs in your own worktree, never in the session scratchpad.** Your worktree is yours; the scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py` gets clobbered and you run another agent's script against your worktree and your test DB, silently and green. Second-best, if a file genuinely must live in the scratchpad: prefix it with the issue number.
 
 ## Build conventions
 

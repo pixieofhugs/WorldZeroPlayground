@@ -15,7 +15,7 @@ time a slug's identity was untangled from UA's)
 
 `na` ("unaffiliated") is not a faction. It is the blank-slate state: every
 character starts there (`character.py` → `starting_faction_slug = "na"`), every
-era reset returns everyone to it (`era.py` → `ERA_RESET_DEFAULT_FACTION`), and
+era reset returns everyone to it (`era.reset_faction_slug`), and
 it doubles as the sentinel for generic cross-faction tasks
 (`task.primary_faction_slug`, `server_default="na"`). It is on screen constantly.
 

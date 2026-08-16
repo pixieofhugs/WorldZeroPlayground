@@ -1,35 +1,53 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   getAccounts,
   getAccountDetail,
   suspendAccount,
   banCharacter,
 } from "../../api/admin";
-import type { AccountSummary, AccountDetail } from "../../api/admin";
+import type {
+  AccountSummary,
+  AccountDetail,
+  CharacterStatus,
+} from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
 
-/** Every status this tab renders a label for — the UNION of two backend enums,
- *  not one of them. `statusLabel` below is called on `account.status`
- *  (`AccountStatus`: active | suspended) and on `character.status`
- *  (`CharacterStatus`: active | banned) alike, so the name understates it: no
- *  account is ever `banned` and no life is ever `suspended`. Left as one list
- *  because it is a label lookup rather than a set of offerable values, and the
- *  fallback renders anything unmapped verbatim. Splitting it in two is a
- *  separate decision, tracked in #1610 — #1551 is the `paused` removal that
- *  surfaced it, not the split. `paused` is gone from both enums (#1550). */
-type LabelledStatus = "active" | "suspended" | "banned";
-const ACCOUNT_STATUSES: LabelledStatus[] = ["active", "suspended", "banned"];
+/** Two lists because these are two backend enums, not one (#1610): an account
+ *  is `active | suspended`, a life is `active | banned`. Both label through the
+ *  single `accounts.status.*` namespace — the words are the same words — and
+ *  `statusLabel` renders anything unmapped verbatim. `CHARACTER_STATUSES` is
+ *  checked against the generated `CharacterStatus`; the account enum is not on
+ *  the wire schema (no field is typed by it), so it is stated here. */
+export const ACCOUNT_STATUSES = ["active", "suspended"] as const;
+export const CHARACTER_STATUSES = [
+  "active",
+  "banned",
+] as const satisfies readonly CharacterStatus[];
+
+/** Everything the `accounts.status.*` namespace needs a word for, DERIVED from
+ *  the two lists rather than restated — it exists only to prove the key is a
+ *  real catalog key, and no value has this type at a call site. */
+type LabelledStatus =
+  | (typeof ACCOUNT_STATUSES)[number]
+  | (typeof CHARACTER_STATUSES)[number];
+
+/** Label one status against the enum its row belongs to. Backend statuses reach
+ *  the wire as open strings, so an unmapped one — including the other enum's
+ *  values — renders raw rather than borrowing a label it has no right to. */
+export function statusLabel(
+  status: string,
+  allowed: readonly LabelledStatus[],
+  t: TFunction<"admin">,
+): string {
+  const known = allowed.find((s) => s === status);
+  return known ? t(`accounts.status.${known}`) : status;
+}
 
 export default function AccountsTab() {
   const { t } = useTranslation(["admin", "common"]);
-  // Backend statuses are open strings; render the known ones through the
-  // catalog and fall back to the raw value for anything unmapped.
-  const statusLabel = (status: string): string => {
-    const known = ACCOUNT_STATUSES.find((s) => s === status);
-    return known ? t(`accounts.status.${known}`) : status;
-  };
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -153,7 +171,7 @@ export default function AccountsTab() {
                         fontWeight: 700,
                       }}
                     >
-                      {statusLabel(account.status)}
+                      {statusLabel(account.status, ACCOUNT_STATUSES, t)}
                     </span>{" "}
                     &middot; {t("accounts.idLabel", { id: account.id })} &middot;{" "}
                     {formatTimestamp(account.created_at)}
@@ -222,7 +240,11 @@ export default function AccountsTab() {
                                 fontWeight: 700,
                               }}
                             >
-                              {statusLabel(character.status)}
+                              {statusLabel(
+                                character.status,
+                                CHARACTER_STATUSES,
+                                t,
+                              )}
                             </span>
                           </div>
                           <button

@@ -377,6 +377,8 @@ export function editCharacterState(slug: string): EditCharacterState {
     handleAvatarChange: noop,
     handleAvatarConfirm: noop,
     saving: false,
+    // The name is filled in, so the Save control is open (#1697).
+    canSubmit: true,
     error: '',
     handleSubmit: noop,
     deleting: false,

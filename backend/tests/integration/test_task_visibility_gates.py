@@ -24,6 +24,13 @@ read it. That one is per-ROW, not per-viewer — the same level-3 player sees th
 ripe pending rows and not the fresh ones — so every case below carries two
 pending rows of different ages, and the flag is deliberately asserted against the
 RIPE one: the capability is unchanged, only its reach in time.
+
+There is a THIRD door (#1725): `GET /tasks/{id}`. Task ids are sequential, so a
+gate the browse keeps and the detail route does not is not a gate — a caller who
+guesses the next id read the proposal immediately, logged out included. The last
+tests here drive the same five cases through that door, and it answers **404**
+rather than 403: a 403 confirms the id exists, which is the existence oracle the
+window is meant to close.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -238,3 +245,94 @@ async def test_an_admin_edit_does_not_move_the_go_live_time(
 
     assert ripe.id in await _ids(client, "/tasks?status=pending", auth_headers2)
     assert ripe.id in await _ids(client, "/tasks?status=all&limit=200", auth_headers2)
+
+
+@pytest.mark.parametrize(
+    "level, age, expected",
+    [
+        # Below the unlock, at either age: the level is what is missing.
+        (0, FRESH_AGE, 404),
+        (0, RIPE_AGE, 404),
+        # At the unlock, inside the window: #1695's half of the rule, and the
+        # case the id-guessing route used to hand over on demand.
+        (CURRENT_ERA.level_to_see_pending_tasks, FRESH_AGE, 404),
+        # At the unlock, past the window: the browse shows this row, so the
+        # detail must too — the gate is a copy of one rule, not a stricter one.
+        (CURRENT_ERA.level_to_see_pending_tasks, RIPE_AGE, 200),
+    ],
+)
+@pytest.mark.asyncio
+async def test_the_detail_door_answers_what_the_browse_answers(
+    level: int,
+    age: timedelta,
+    expected: int,
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """`GET /tasks/{id}` withholds exactly the pending rows the browse withholds."""
+    task = await _gated_task(db_session, character2, TaskStatus.pending, age)
+    await _set_level_and_faction(db_session, character, era, level, "ua")
+
+    response = await client.get(f"/tasks/{task.id}", headers=auth_headers)
+    assert response.status_code == expected, response.text
+
+    browse = await _ids(client, "/tasks?status=all&limit=200", auth_headers)
+    assert (task.id in browse) is (expected == 200)
+
+
+@pytest.mark.asyncio
+async def test_the_detail_door_is_shut_to_the_anonymous_web(
+    client: AsyncClient,
+    character2: Character,
+    db_session: AsyncSession,
+):
+    """No account, no level — and 404, so the id itself stays unconfirmed.
+
+    The two approved statuses are asserted alongside as the guard against
+    over-gating: retired rows must stay readable by id at any level, because
+    praxis link back to them. `era.level_to_see_retired_tasks` is the browse's
+    concern, not this door's.
+    """
+    ripe = await _gated_task(db_session, character2, TaskStatus.pending, RIPE_AGE)
+    fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
+    active = await _gated_task(db_session, character2, TaskStatus.active)
+    retired = await _gated_task(db_session, character2, TaskStatus.retired)
+
+    for task in (ripe, fresh):
+        response = await client.get(f"/tasks/{task.id}")
+        assert response.status_code == 404, response.text
+        # The same body a genuinely absent id gets: no shape to tell them apart.
+        assert response.json()["detail"] == "Task not found."
+
+    for task in (active, retired):
+        assert (await client.get(f"/tasks/{task.id}")).status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_the_detail_door_opens_for_an_admin_immediately(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """The window exists to give admins the first look, so it never holds them.
+
+    At level 0, because the bypass is `is_admin` and not a level — the same
+    exemption the browse takes.
+    """
+    await make_admin(db_session, account)
+    fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
+    await _set_level_and_faction(db_session, character, era, 0, "ua")
+
+    response = await client.get(f"/tasks/{fresh.id}", headers=auth_headers)
+    assert response.status_code == 200, response.text
+    assert response.json()["id"] == fresh.id

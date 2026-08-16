@@ -1084,8 +1084,12 @@ async def test_proposal_notes_reach_the_admin_review_queue(
 @pytest.mark.asyncio
 async def test_proposal_notes_are_absent_from_the_public_task_payload(
     client: AsyncClient,
+    account: Account,
+    character: Character,
     character2: Character,
+    auth_headers: dict,
     auth_headers2: dict,
+    db_session: AsyncSession,
 ):
     """`notes` is addressed to an admin, so TaskOut must not carry it anywhere.
 
@@ -1093,7 +1097,15 @@ async def test_proposal_notes_are_absent_from_the_public_task_payload(
     ``PendingTaskOut``. If someone later moves it up onto ``TaskOut`` for
     convenience, every player would be able to read every proposer's note off
     the browse list and the task detail page.
+
+    The detail read is made by an ADMIN, not by the proposer: since #1725 a fresh
+    proposal 404s at `GET /tasks/{id}` for everyone inside the review window, its
+    own author included (there is deliberately no proposer exemption — the detail
+    door answers exactly what the browse answers). Reading it as the one viewer
+    the gate lets through is the stronger assertion anyway: not even an admin
+    gets `notes` off the public payload, only off `/admin/tasks/pending`.
     """
+    await make_admin(db_session, account)
     resp = await client.post(
         "/tasks",
         json={
@@ -1107,8 +1119,8 @@ async def test_proposal_notes_are_absent_from_the_public_task_payload(
     assert "notes" not in resp.json()
 
     task_id = resp.json()["id"]
-    detail = await client.get(f"/tasks/{task_id}", headers=auth_headers2)
-    assert detail.status_code == 200
+    detail = await client.get(f"/tasks/{task_id}", headers=auth_headers)
+    assert detail.status_code == 200, detail.text
     assert "notes" not in detail.json()
 
 

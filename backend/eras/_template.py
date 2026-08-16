@@ -239,6 +239,11 @@ ERA_N = EraConfig(
     reset_faction=True,
     reset_vote_budget=True,
     reset_all_time_score=False,          # Almost always False
+    # reset_faction_slug — deliberately OMITTED (#1580), same shape as
+    # starting_faction_slug above and same FK constraint: name it only if a
+    # rollover into YOUR era should land the previous era's players somewhere
+    # other than `na`. Note it is read from the era being *opened*, so this is
+    # your era's say over the outgoing one's players.
 
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
