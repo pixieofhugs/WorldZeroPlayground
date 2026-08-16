@@ -99,6 +99,19 @@ function overlayCount(html: string): number {
   return html.split(OVERLAY).length - 1
 }
 
+/**
+ * The opening tags of every anchor pointing at `href`.
+ *
+ * Read as whole tags rather than with one regex over the markup, because React
+ * serializes `style` BEFORE `href` on a react-router `Link` — an assertion that
+ * assumed either order would pass or fail on the wrong thing.
+ */
+function anchorsTo(html: string, href: string): string[] {
+  return [...html.matchAll(/<a\b[^>]*>/g)]
+    .map((match) => match[0])
+    .filter((tag) => tag.includes(`href="${href}"`))
+}
+
 describe('FeedRowContent — the body-wide target', () => {
   it('stretches the HEADLINE anchor when the headline has an href', () => {
     const html = renderRow('friend_completion', {
@@ -117,9 +130,14 @@ describe('FeedRowContent — the body-wide target', () => {
       praxis_id: 9,
       task_title: 'Plant a tree',
     })
-    // The actor's own anchor — a different destination from the stretched one,
-    // so it has to win the hit test over the box it shares.
-    expect(html).toMatch(new RegExp(`<a\\b[^>]*href="/characters/4"[^>]*${LIFT}`))
+    // The actor's own anchor and the avatar disc's — both a different
+    // destination from the stretched one, so both have to win the hit test over
+    // the box they share with it.
+    const actorAnchors = anchorsTo(html, '/characters/4')
+    expect(actorAnchors).toHaveLength(2)
+    for (const tag of actorAnchors) expect(tag).toContain(LIFT)
+    // …and neither of them grew an overlay of its own.
+    expect(overlayCount(html)).toBe(1)
   })
 
   it('falls back to the ACTOR anchor where the headline has no href', () => {
