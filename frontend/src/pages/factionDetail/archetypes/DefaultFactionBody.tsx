@@ -1,11 +1,15 @@
-import { type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { MobileStickyBar } from "../MobileStickyBar";
 import type { FactionDetailState } from "../useFactionDetail";
+
+const NA_SLUG = "na";
 
 /** Shared flex-wrap card grid — varied card sizes are intentional, not a CSS grid. */
 const CARD_GRID: CSSProperties = {
@@ -25,6 +29,18 @@ const CARD_GRID: CSSProperties = {
  * design is deferred to Claude design. Data wiring + structure are final; the
  * section chrome (member tiles, layout) is meant to be restyled by a faction's
  * own body archetype.
+ *
+ * THE JOIN BLOCK (#1314). This archetype used to carry only the burn notice,
+ * because the factions falling through to it were waiting on #951's join/gate
+ * design. WOW got a body of its own in #1611 and Albescent is the only faction
+ * left here, so that note was stale — and worse, it described a real asymmetry:
+ * the phone twin `mobileArchetypes/DefaultFactionPage` DID carry a join block,
+ * so you could join from a phone and not from a laptop. Collapsing the pair
+ * without acting would have taken the phone's away too. What follows is that
+ * skin's block moved across unchanged — sticky Join with a confirm step,
+ * confirm-switch copy, the soft gate and the burn, all ADR-0019-gated to a
+ * viewer who can actually act. It keeps the `mobile.*` catalog keys it arrived
+ * with; renaming them is a catalog change and this PR makes none.
  */
 export default function DefaultFactionBody({
   state,
@@ -34,21 +50,69 @@ export default function DefaultFactionBody({
   const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } =
     state;
+  const [confirming, setConfirming] = useState(false);
+  const phone = useFormFactor() === "mobile";
 
   // Guarded non-null by the dispatcher.
   if (!faction) return null;
 
   const accent = factionCssVar(faction.slug, "border");
+  const name = factionName(faction.slug);
+  const currentSlug = membership.currentFactionSlug;
+  const switching = currentSlug && currentSlug !== NA_SLUG;
+
+  /**
+   * The primary verb. Rendered ONCE — inline under the standing line on a
+   * laptop, pinned above the tab bar on a phone (#495 / #1566). Only an
+   * "eligible" viewer can act (ADR-0019), and a control nobody can use is
+   * hidden rather than disabled.
+   */
+  const joinAction = membership.state === "eligible" && (
+    <>
+      {membership.joinError && (
+        <p className="font-body content-text text-red-600">{membership.joinError}</p>
+      )}
+      {!confirming ? (
+        <button type="button" onClick={() => setConfirming(true)} style={JOIN_BUTTON_STYLE}>
+          {t("mobile.join", { faction: name })}
+        </button>
+      ) : (
+        <>
+          <p className="font-body content-text" style={{ color: "var(--color-text-primary)" }}>
+            {switching
+              ? t("detail.join.confirmSwitch", { faction: name, current: factionName(currentSlug) })
+              : t("detail.join.confirm", { faction: name })}
+          </p>
+          <div style={{ display: "flex", gap: "var(--space-sm)" }}>
+            <button
+              type="button"
+              onClick={() => void membership.join()}
+              disabled={membership.joining}
+              style={{ ...JOIN_BUTTON_STYLE, flex: 1, opacity: membership.joining ? 0.6 : 1 }}
+            >
+              {membership.joining ? t("mobile.joining") : t("mobile.confirm")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={membership.joining}
+              style={CANCEL_BUTTON_STYLE}
+            >
+              {t("detail.join.cancel")}
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  );
 
   return (
     <>
       {/* ── The burn (#1305) ── this viewer left this faction this era, so
-          joining is refused for the rest of it. ponytail: this archetype has
-          no join block at all — the factions that fall through to it (WOW,
-          Albescent) are waiting on the join/gate design in #951 — so only the
-          state a viewer can be MISLED about is surfaced here. When #951 lands
-          the full standing / join / gate panel, fold this notice into it
-          rather than leaving two. ── */}
+          joining is refused for the rest of it. The phone twin said this in its
+          own words (`mobile.burnedHint`); that delta was cosmetic, so it
+          collapses to the neutral platform wording every other body uses
+          (ADR-0057: the dress is ours, the words are not). ── */}
       {membership.state === "burned" && (
         <div
           className="sidebar-card mb-6"
@@ -58,6 +122,39 @@ export default function DefaultFactionBody({
           <p className="font-body content-text text-ink">
             {t("detail.burned.body", { faction: factionName(faction.slug) })}
           </p>
+        </div>
+      )}
+
+      {/* ── Standing / the soft gate ── the two states a viewer cannot act on.
+          "gate" is "not invited YET" (#454), which is why its copy tells you to
+          keep going; the burn above is a closed door and must stay a different
+          sentence. ── */}
+      {membership.state === "member" && (
+        <p className="label-caption mb-6" style={{ color: accent }}>
+          {t("mobile.memberBadge")}
+        </p>
+      )}
+      {membership.state === "gate" && (
+        <p className="font-body text-muted content-text mb-6">
+          {t("mobile.gateHint", { faction: name })}
+        </p>
+      )}
+
+      {/* ponytail: on a laptop the verb sits here, in a plain 420px column,
+          because this archetype has no rail to put it in — the whole file is
+          placeholder chrome and #951's join/gate design is what will place it
+          properly. On a phone it pins instead, at the bottom of the page. ── */}
+      {!phone && joinAction && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-sm)",
+            maxWidth: 420,
+            marginBottom: "var(--space-xl)",
+          }}
+        >
+          {joinAction}
         </div>
       )}
 
@@ -126,6 +223,38 @@ export default function DefaultFactionBody({
           </div>
         )}
       </section>
+
+      {/* ── The pinned action band ── phone only, and the LAST child of the
+          page's tall box so `position: sticky` has something to pin against
+          (#495, #1566). ── */}
+      {phone && joinAction && <MobileStickyBar>{joinAction}</MobileStickyBar>}
     </>
   );
 }
+
+const JOIN_BUTTON_STYLE: CSSProperties = {
+  width: "100%",
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--text-xl)",
+  fontWeight: 700,
+  letterSpacing: "0.04em",
+  color: "var(--color-text-on-accent)",
+  background: "var(--color-text-primary)",
+  border: "none",
+  borderRadius: 999,
+  padding: "var(--space-md) var(--space-lg)",
+  cursor: "pointer",
+};
+
+const CANCEL_BUTTON_STYLE: CSSProperties = {
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--text-md)",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "var(--color-text-secondary)",
+  background: "transparent",
+  border: "1px solid var(--color-border-strong)",
+  borderRadius: 999,
+  padding: "var(--space-md) var(--space-lg)",
+  cursor: "pointer",
+};

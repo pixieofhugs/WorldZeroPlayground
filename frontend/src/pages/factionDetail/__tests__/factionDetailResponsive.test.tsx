@@ -186,9 +186,19 @@ function page(
   return { html, text: decode(html.replace(/<[^>]*>/g, '')) }
 }
 
-/** The catalog's English for a key, decoded the same way the markup is. */
+/**
+ * The catalog's English for a key, decoded the same way the markup is.
+ *
+ * `t` is typed to the literal key union, and these keys are looked up from a
+ * table — the same widening cast `WowFactionBody`'s charter reader uses.
+ */
+const translate = i18next.t as unknown as (
+  key: string,
+  options: Record<string, unknown>,
+) => string
+
 function copy(key: string, vars: Record<string, string> = {}): string {
-  return decode(i18next.t(key, { ns: 'factions', ...vars }) as string)
+  return decode(translate(key, { ns: 'factions', ...vars }))
 }
 
 describe('faction detail serves one responsive body at both widths', () => {
