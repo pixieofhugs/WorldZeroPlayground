@@ -287,3 +287,48 @@ describe("praxis-read earned-points breakdown", () => {
     });
   }
 });
+
+// ─── The task-reference line does not restate the stamp (#1833) ──────────────
+//
+// Each archetype's task-reference band closes with "Level 3 · 30 pts", and the
+// score rail beside it prints 30.0 as the total whenever nothing has moved the
+// score off the base — which, under Era 1's neutral multiplier, is every
+// unvoted praxis. #1131 made the stamp suppress its own base row in exactly
+// that state; the band reintroduced the double-print one component boundary
+// away, so both ends now share `stampRestatesTaskPoints`.
+//
+// Walked across the registry because the band is copied into all eight dressed
+// pages rather than composed from a slot — the copy is what let it drift.
+
+describe("task-reference points (#1833)", () => {
+  /** Nothing in play but the base: the stamp's total IS the task's points. */
+  const baseOnly = (over: Partial<typeof PRAXIS> = {}) => {
+    const s = state();
+    s.praxis = { ...PRAXIS, points_from_votes: 0, score: 30, ...over };
+    return s;
+  };
+
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} drops the figure the stamp already prints`, () => {
+      const { text } = render(<Archetype state={baseOnly()} />);
+      expect(text, "the level still reads").toContain("Level 3");
+      expect(text, "the stamp still carries the total").toContain("30.0");
+      expect(text, "and the band does not repeat it").not.toContain("30 pts");
+    });
+
+    it(`${slug} keeps both figures once votes move the total`, () => {
+      // base 30 + 16 from votes = 46: two figures, two questions.
+      const { text } = render(<Archetype state={state()} />);
+      expect(text, "what the task is worth").toContain("30 pts");
+      expect(text, "what this praxis scored").toContain("46.0");
+    });
+
+    it(`${slug} keeps the figure on a praxis with no stamp at all`, () => {
+      // #1444 gates the stamp off a failed praxis and `scoreWasBanked` takes the
+      // whole panel with it, so the band is the only points readout left.
+      const { text } = render(<Archetype state={baseOnly({ moderation_status: "failed" })} />);
+      expect(text, "no total was banked").not.toContain("30.0");
+      expect(text, "so what the task is worth stays").toContain("30 pts");
+    });
+  }
+});

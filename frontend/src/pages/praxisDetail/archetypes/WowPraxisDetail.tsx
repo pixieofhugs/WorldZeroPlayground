@@ -20,6 +20,7 @@ import {
   MemberByline,
   orderedMembers,
   scoreWasBanked,
+  taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
@@ -510,9 +511,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           {praxis.task_title}
         </Link>
         <span style={{ ...EYEBROW, color: LABEL, marginLeft: 'auto' }}>
-          {t('detail.taskRef.level', { level: praxis.task_level_required })}
-          {' · '}
-          {t('detail.taskRef.points', { points: praxis.task_point_value })}
+          {taskRefMeta(praxis, t)}
         </span>
       </div>
     </>
