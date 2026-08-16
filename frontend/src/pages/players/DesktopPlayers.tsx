@@ -200,7 +200,7 @@ export default function DesktopPlayers({
                       onClick={() => setVisible(visible + ROSTER_PAGE_STEP)}
                       className="font-body uppercase"
                       style={{
-                        fontSize: 'var(--text-sm)',
+                        fontSize: 'var(--text-md)',
                         letterSpacing: '0.18em',
                         padding: 'var(--space-sm) var(--space-lg)',
                         borderRadius: 999,
@@ -303,12 +303,10 @@ function PodiumCard({
         >
           {points}
         </span>
-        <span
-          className="font-body uppercase"
-          style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.2em', color: 'var(--color-text-tertiary)' }}
-        >
-          {t('leaderboard.points')}
-        </span>
+        {/* The design sets this 8px; the label tier's floor is --text-md
+            (#1608/#1783), and .label-heading is exactly this mark: a tracked
+            uppercase unit beside a number. */}
+        <span className="label-heading">{t('leaderboard.points')}</span>
       </div>
 
       {recent && (
@@ -394,7 +392,8 @@ function RaceRow({
         <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-title)', lineHeight: 1 }}>
           {Math.round(lane.points)}
         </span>
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)' }}>
+        {/* A small FACT about the number beside it — caption tier (#1307). */}
+        <span className="label-caption">
           {t('leaderboard.race.share', { share: Math.round(lane.sharePercent) })}
         </span>
       </span>

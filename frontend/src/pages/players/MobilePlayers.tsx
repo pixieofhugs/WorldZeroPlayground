@@ -82,7 +82,7 @@ export default function MobilePlayers({
         >
           {t('leaderboard.title')}
         </h1>
-        <ScoreToggle mode={scoreMode} onChange={onScoreMode} fontSize="var(--text-sm)" />
+        <ScoreToggle mode={scoreMode} onChange={onScoreMode} fontSize="var(--text-md)" />
       </div>
       {/* The phone has no per-letter PageTitle underline, so this rule is the
           page's only spectrum — not the second copy #1699 removed on desktop. */}
