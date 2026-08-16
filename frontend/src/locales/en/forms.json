@@ -313,35 +313,24 @@
       "body": "An admin will review it soon. Only admins can see it for its first {{hours}} hours; other players see it after that."
     },
     "successMeta": {
-      "heading": "Meta task proposed!",
+      "heading": "Metatask proposed!",
       "body": "An admin will review it, and only admins can see it for its first {{hours}} hours; other players see it after that. Once activated, {{faction}} players can apply it to their praxis for a points bonus."
     },
-    "factionSelectorLabel": "Choose a faction for this task, or leave it open to everyone",
-    "factionDescriptor": {
-      "na": "Anyone",
-      "ua": "Practise with us — one true piece a day.",
-      "coven": "Circle",
-      "wow": "Knights who take the ridiculous with total seriousness.",
-      "everymen": "Mobilize",
-      "snide": "Mischief",
-      "ephemerists": "Record",
-      "singularity": "Discover"
-    },
+    "factionLabel": "Faction",
     "fields": {
       "name": {
         "label": "Task name",
-        "placeholder": "What do you want people to do?",
+        "placeholder": "Task Name",
         "tooLong": "Task name must be 200 characters or fewer."
       },
       "description": {
         "label": "Description",
-        "placeholder": "Write the task description here. What exactly should the player do? What counts as completing it?",
+        "placeholder": "Task Description",
         "tooLong": "Description must be 5000 characters or fewer."
       },
       "basePoints": {
         "label": "Base points",
-        "placeholder": "pts",
-        "hint": "Admin may adjust"
+        "placeholder": "pts"
       },
       "bonusPoints": {
         "label": "Bonus points",
@@ -349,21 +338,18 @@
         "hint": "Flat bonus added to score"
       },
       "minimumLevel": {
-        "label": "Minimum level",
-        "hint": "Level 0 = anyone can attempt"
+        "label": "Minimum level"
       },
       "notes": {
         "label": "Notes to admin (optional)",
-        "placeholder": "Why do you want this task to exist? What inspired it?"
+        "placeholder": "Notes to Admin (optional)"
       }
     },
     "metaToggle": {
-      "label": "Create as meta task",
-      "hint": "applies as a bonus to all {{faction}} submissions",
-      "hintNoFaction": "pick a faction above (Unaffiliated = anyone)"
+      "label": "Create as Metatask"
     },
     "preview": {
-      "metaHeading": "Meta task preview — {{faction}}",
+      "metaHeading": "Metatask preview — {{faction}}",
       "taskHeading": "Task preview — {{faction}} · Pending",
       "bonusPoints": "+{{points}} bonus pts",
       "points": "{{points}} pts",
@@ -371,27 +357,15 @@
       "pending": "Pending review"
     },
     "errors": {
-      "createMeta": "Could not create meta task.",
+      "createMeta": "Could not create metatask.",
       "propose": "Could not propose task."
     },
     "submit": {
       "busy": "Submitting...",
-      "meta": "Propose meta task",
+      "meta": "Propose Metatask",
       "task": "Submit proposal",
       "cancel": "Cancel",
       "note": "Your proposal goes to admin for review. Only admins can see it for its first {{hours}} hours; other players see it after that."
-    },
-    "tips": {
-      "goodTaskHeading": "What makes a good task",
-      "goodTaskItems": [
-        "It should be doable by someone with no money and no special skills.",
-        "The proof post should be interesting to read even if you didn't do the task.",
-        "It should have a clear pass/fail.",
-        "It should feel like it belongs to its faction.",
-        "If anyone could do it anywhere, it's probably right."
-      ],
-      "nextHeading": "What happens next",
-      "nextBody": "Your proposal goes to admin review. If approved, it enters the pending task list. Admins typically review proposals within 1-2 weeks."
     }
   }
 }

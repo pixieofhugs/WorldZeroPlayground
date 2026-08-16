@@ -57,16 +57,24 @@ function render(overrides: Partial<ProposeTaskState> = {}): string {
   )
 }
 
-describe('propose task — unaffiliated option', () => {
+describe('propose task — the faction chips', () => {
   it('offers an unaffiliated choice alongside the real factions', () => {
     const text = render().replace(/<[^>]*>/g, '')
     expect(text).toContain('Unaffiliated')
-    expect(text).toContain('Anyone')
     // The registry factions are still listed.
     expect(text).toContain('Everymen')
   })
 
-  it('gives the unaffiliated pennant the rainbow, never a borrowed faction hue', () => {
+  it('is one radiogroup of eight radios — na plus the seven factions (#1824)', () => {
+    const markup = render()
+    expect(markup).toContain('role="radiogroup"')
+    expect(markup.match(/role="radio"/g)).toHaveLength(8)
+    // Unaffiliated leads, then the rainbow: everymen is the first faction.
+    expect(markup.indexOf('Unaffiliated')).toBeLessThan(markup.indexOf('Everymen'))
+    expect(markup.indexOf('Everymen')).toBeLessThan(markup.indexOf('Cozy Coven'))
+  })
+
+  it('gives the unaffiliated chip the rainbow, never a borrowed faction hue', () => {
     // ADR-0039: `na` has no hue, so it takes the spectrum as a frame rather
     // than resolving to `default` grey or impersonating UA orange (#749).
     expect(render()).toContain('--faction-default-rainbow')
@@ -76,19 +84,32 @@ describe('propose task — unaffiliated option', () => {
     expect(render({ factionSlug: 'ua' })).toContain('var(--faction-ua)')
   })
 
-  it('reads Unaffiliated as a legitimate metatask issuer, not an error', () => {
-    // #894: `na` metatasks are allowed ("anyone"), so the helper next to the
-    // checkbox invites the choice rather than rejecting it.
-    const unaffiliated = render({ canProposeMetatask: true }).replace(
-      /<[^>]*>/g,
-      '',
+  it('runs the selected faction through the whole form, not just the chip', () => {
+    // The card frame, the task-name face, the level nodes and the submit pill
+    // all read the same slug (factionSurfaces.ts) — that is the point of the
+    // change, and a per-surface accent is exactly what silently drops out.
+    const markup = render({ factionSlug: 'coven', title: 'Bake something' })
+    expect(markup).toContain('var(--faction-coven-card-font)')
+    expect(markup).toContain('border:2px solid var(--faction-coven)')
+    expect(markup).toContain(
+      'color-mix(in srgb, var(--faction-coven) 18%, var(--color-bg-surface))',
     )
-    expect(unaffiliated).toContain('Unaffiliated = anyone')
+    // The card's own frame is the bevelled ramp, over an OPAQUE paper layer.
+    expect(markup).toContain('var(--faction-default-card-bg)')
+    expect(markup).toContain('background-clip:padding-box, border-box')
+  })
 
-    const affiliated = render({
-      canProposeMetatask: true,
-      factionSlug: 'coven',
-    }).replace(/<[^>]*>/g, '')
-    expect(affiliated).toContain('applies as a bonus to all')
+  it('leaves the metatask control announceable without a native checkbox', () => {
+    // `accent-color` takes one colour and na's identity is seven (#1824).
+    const markup = render({ canProposeMetatask: true })
+    expect(markup).toContain('role="checkbox"')
+    expect(markup).not.toContain('type="checkbox"')
+  })
+
+  it('names the three placeholder-only fields for a screen reader', () => {
+    const markup = render()
+    expect(markup).toContain('aria-label="Task name"')
+    expect(markup).toContain('aria-label="Description"')
+    expect(markup).toContain('aria-label="Notes to admin (optional)"')
   })
 })

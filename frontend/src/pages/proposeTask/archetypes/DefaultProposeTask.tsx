@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../../../components/ui/PageTitle";
 import FilterLevelNodes from "../../../components/ui/FilterLevelNodes";
+import { Chip } from "../../../components/ui/ChipRow";
+import FactionSigil from "../../../components/sigil/FactionSigil";
 import { useGameConfig } from "../../../hooks/useGameConfig";
 import {
   factionCssVar,
@@ -10,7 +12,14 @@ import {
   factionName,
   getAllFactions,
   isKnownFaction,
+  sortFactionsByRainbowOrder,
 } from "../../../utils/factions";
+import {
+  metaBoxStyle,
+  proposeCardStyle,
+  submitButtonStyle,
+  taskNameInputStyle,
+} from "../factionSurfaces";
 import {
   UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
@@ -66,59 +75,31 @@ const basePointsInputStyle: CSSProperties = {
   textAlign: "center",
 };
 
-const tipsListStyle: CSSProperties = {
-  color: "var(--color-text-primary)",
-  lineHeight: 1.6,
-  paddingLeft: "var(--space-lg)",
-  listStyleType: "disc",
-};
-
-const tipsBodyStyle: CSSProperties = {
-  color: "var(--color-text-secondary)",
-  lineHeight: 1.6,
-};
-
 const submitNoteStyle: CSSProperties = {
   color: "var(--color-text-tertiary)",
   marginLeft: "auto",
 };
 
-const submitDashStyle: CSSProperties = {
-  position: "absolute",
-  inset: 3,
-  border: "1px dashed rgba(255,255,255,0.25)",
-  pointerEvents: "none",
+/** The one page rule under the title — the site's spectrum, not a faction's. */
+const titleRuleStyle: CSSProperties = {
+  height: 3,
+  width: 240,
+  background: "var(--faction-default-rainbow)",
+  marginBottom: "var(--space-xl)",
 };
 
-/** Shape/type of the selector pennant; the FILL is picked per-slug below. */
-const basePennantStyle: CSSProperties = {
-  display: "block",
-  fontFamily: "'Courier Prime', monospace",
-  fontSize: "var(--text-md)",
-  fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
-  padding: "var(--space-xs) var(--space-md)",
-  marginBottom: "var(--space-xs)",
+/** The metatask control: a real checkbox can't carry seven colours (#1824). */
+const metaToggleStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-sm)",
+  background: "transparent",
+  border: "none",
+  padding: 0,
+  margin: 0,
+  cursor: "pointer",
+  textAlign: "left",
 };
-
-/** Solid-hue pennant fill — only for slugs that pass isKnownFaction. */
-const knownPennantFillStyle = (slug: string): CSSProperties => ({
-  background: factionCssVar(slug),
-  color: "var(--color-text-on-accent)",
-  textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-});
-
-const FACTION_DESCRIPTOR_KEY = {
-  na: "proposeTask.factionDescriptor.na",
-  ua: "proposeTask.factionDescriptor.ua",
-  coven: "proposeTask.factionDescriptor.coven",
-  wow: "proposeTask.factionDescriptor.wow",
-  everymen: "proposeTask.factionDescriptor.everymen",
-  snide: "proposeTask.factionDescriptor.snide",
-  ephemerists: "proposeTask.factionDescriptor.ephemerists",
-  singularity: "proposeTask.factionDescriptor.singularity",
-} as const;
 
 /**
  * Default propose-task archetype — the original universal form, now consuming
@@ -133,10 +114,6 @@ export default function DefaultProposeTask({
   state: ProposeTaskState;
 }) {
   const { t } = useTranslation("forms");
-  const factionDescriptor = (slug: string): string => {
-    const key = FACTION_DESCRIPTOR_KEY[slug as keyof typeof FACTION_DESCRIPTOR_KEY];
-    return key ? t(key) : "";
-  };
   const {
     canProposeMetatask,
     success,
@@ -184,10 +161,15 @@ export default function DefaultProposeTask({
   // Unaffiliated leads the picker: it is the default, and it is a state rather
   // than a faction, so it is an extra option here rather than a registry entry
   // (ADR-0039). Everything after it comes from the API, falling back to the
-  // static registry before the fetch lands.
+  // static registry before the fetch lands, in the site's one rainbow order
+  // (#352) — the chips are a spectrum now, so their sequence is the spectrum's.
   const factionOptions: string[] = [
     UNAFFILIATED_FACTION_SLUG,
-    ...(factions.length > 0 ? factions : getAllFactions()).map((f) => f.slug),
+    ...sortFactionsByRainbowOrder(
+      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({
+        slug: f.slug,
+      })),
+    ).map((f) => f.slug),
   ];
 
   if (success) {
@@ -258,73 +240,39 @@ export default function DefaultProposeTask({
       </nav>
 
       <PageTitle title={t("proposeTask.pageTitle")} />
+      <div aria-hidden="true" style={titleRuleStyle} />
 
-      {/* Two-column: form left, tips right (§20.1) */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 280px",
-          gap: "var(--space-xl)",
-          alignItems: "start",
-        }}
-      >
-        {/* ── Left: Form ── */}
+      {/* One column (§20.1). The tips rail is gone; the form is the page. */}
+      <div style={{ maxWidth: 760 }}>
         <div>
-          {/* Faction Selector (§20.2) */}
+          {/* Faction chips (§20.2) — the site's chip idiom, one wrapping
+              radiogroup. Not `ChipRow`: its shell scrolls horizontally with a
+              hidden scrollbar and prints a visible inline label, which would
+              bury three of the eight options. */}
           <div style={{ marginBottom: "var(--space-lg)" }}>
-            {/* A full sentence, not a region name — caption tier (#1307). */}
-            <span
-              className="label-caption"
-              style={{ display: "block", marginBottom: "var(--space-sm)" }}
+            <div
+              role="radiogroup"
+              aria-label={t("proposeTask.factionLabel")}
+              style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}
             >
-              {t("proposeTask.factionSelectorLabel")}
-            </span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}>
-              {factionOptions.map((slug) => {
-                const active = factionSlug === slug;
-                const known = isKnownFaction(slug);
-                return (
-                  <button
-                    key={slug}
-                    type="button"
-                    onClick={() => setFactionSlug(slug)}
-                    style={{
-                      border: `2px solid ${active ? factionCssVar(slug, "border") : "var(--color-border)"}`,
-                      background: active
-                        ? factionCssVar(slug, "light")
-                        : "var(--color-bg-surface)",
-                      borderRadius: 6,
-                      padding: "var(--space-sm) var(--space-lg)",
-                      cursor: "pointer",
-                      textAlign: "center",
-                      transition: "all 120ms",
-                      transform: active ? "translateY(-2px)" : "none",
-                    }}
-                  >
-                    <span
-                      className="pennant-shape"
-                      style={{
-                        ...basePennantStyle,
-                        // A real faction flies its solid hue with on-accent ink.
-                        // `na` has no hue — it gets the spectrum as a FRAME
-                        // around paper with ink text, because no single ink is
-                        // legible across the rainbow (ADR-0039, factionFill).
-                        ...(known
-                          ? knownPennantFillStyle(slug)
-                          : factionFill(slug, "pill")),
-                      }}
-                    >
-                      {factionName(slug)}
-                    </span>
-                    {/* Sentence-case: the descriptors are no longer uniformly
-                        one word (#850 gave UA a full sentence), and 0.15em
-                        all-caps is a wall at that length. */}
-                    <span className="label-caption">
-                      {factionDescriptor(slug)}
-                    </span>
-                  </button>
-                );
-              })}
+              {factionOptions.map((slug) => (
+                <Chip
+                  key={slug}
+                  on={factionSlug === slug}
+                  onClick={() => setFactionSlug(slug)}
+                  tint={factionCssVar(slug)}
+                  // `na` (and Albescent) have no single hue for the selected
+                  // ring, so they take the spectrum frame instead (#749).
+                  unaffiliated={!isKnownFaction(slug)}
+                  sigilText
+                >
+                  {/* The slug, not a null for `na`: FactionSigil already falls
+                      through to the spectrum ring for it, and passing the slug
+                      is what keeps Albescent's own mark on Albescent's chip. */}
+                  <FactionSigil slug={slug} size={18} />
+                  <span>{factionName(slug)}</span>
+                </Chip>
+              ))}
             </div>
           </div>
 
@@ -333,23 +281,19 @@ export default function DefaultProposeTask({
             <div
               className="sidebar-card"
               style={{
-                // A real faction accents its left edge; `na` is framed in the
-                // spectrum (a gradient can't be a scalar border-colour).
-                ...(selectedKnown
-                  ? { borderLeft: `4px solid ${color}` }
-                  : factionFill(factionSlug, "frame")),
-                padding: "var(--space-lg) var(--space-xl)",
+                // One frame for every selection — an even 2px gradient edge,
+                // the spectrum for `na` and a bevelled ramp of its own hue for
+                // a real faction (factionSurfaces.ts).
+                ...proposeCardStyle(factionSlug),
                 marginBottom: "var(--space-lg)",
               }}
             >
-              {/* Task Name (§20.4) */}
+              {/* Task Name (§20.4). The visible label is gone — the field is
+                  set in the faction's own display face and identified by its
+                  placeholder — so the label key it used to render is now what
+                  it ANNOUNCES: a placeholder disappears on the first keystroke
+                  (§7). Same for the description and notes below. */}
               <div style={{ marginBottom: "var(--space-lg)" }}>
-                <span
-                  className="label-heading"
-                  style={{ display: "block", marginBottom: "var(--space-sm)" }}
-                >
-                  {t("proposeTask.fields.name.label")}
-                </span>
                 <input
                   type="text"
                   required
@@ -357,28 +301,9 @@ export default function DefaultProposeTask({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={submitting}
+                  aria-label={t("proposeTask.fields.name.label")}
                   placeholder={t("proposeTask.fields.name.placeholder")}
-                  style={{
-                    width: "100%",
-                    fontFamily: "'Courier Prime', monospace",
-                    fontSize: "var(--text-title)",
-                    fontWeight: 700,
-                    color: "var(--color-text-primary)",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: `2px solid ${title ? color : "var(--color-border-strong)"}`,
-                    outline: "none",
-                    paddingBottom: "var(--space-sm)",
-                    transition: "border-color 150ms",
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderBottomColor = color;
-                  }}
-                  onBlur={(e) => {
-                    if (!title)
-                      e.currentTarget.style.borderBottomColor =
-                        "var(--color-border-strong)";
-                  }}
+                  style={taskNameInputStyle(factionSlug, Boolean(title))}
                 />
                 <span
                   className={`label-caption self-end ${title.length >= 180 ? "text-red-600" : ""}`}
@@ -398,18 +323,13 @@ export default function DefaultProposeTask({
 
               {/* Description (§20.4) */}
               <div style={{ marginBottom: "var(--space-lg)" }}>
-                <span
-                  className="label-heading"
-                  style={{ display: "block", marginBottom: "var(--space-sm)" }}
-                >
-                  {t("proposeTask.fields.description.label")}
-                </span>
                 <textarea
                   rows={6}
                   maxLength={5000}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={submitting}
+                  aria-label={t("proposeTask.fields.description.label")}
                   placeholder={t("proposeTask.fields.description.placeholder")}
                   className="content-text"
                   style={descriptionTextareaStyle}
@@ -459,12 +379,6 @@ export default function DefaultProposeTask({
                       className="content-title"
                       style={basePointsInputStyle}
                     />
-                    <span
-                      className="label-caption"
-                      style={{ display: "block", marginTop: "var(--space-xs)" }}
-                    >
-                      {t("proposeTask.fields.basePoints.hint")}
-                    </span>
                   </div>
                 )}
                 {isMetatask && (
@@ -509,73 +423,44 @@ export default function DefaultProposeTask({
                     levels={LEVEL_OPTIONS}
                     value={levelRequired}
                     onChange={setLevelRequired}
+                    factionSlug={factionSlug}
                   />
-                  <span
-                    className="label-caption"
-                    style={{ display: "block", marginTop: "var(--space-xs)" }}
-                  >
-                    {t("proposeTask.fields.minimumLevel.hint")}
-                  </span>
                 </div>
               </div>
 
               {canProposeMetatask && (
                 <div
                   style={{
-                    borderTop: "1px dashed var(--color-border)",
-                    paddingTop: "var(--space-md)",
-                    marginTop: "var(--space-xs)",
+                    borderTop: "1px solid var(--color-border)",
+                    paddingTop: "var(--space-lg)",
                   }}
                 >
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--space-sm)",
-                      cursor: "pointer",
-                    }}
+                  {/* A `role="checkbox"` button, not an `<input>`: a native box
+                      is tinted with `accent-color`, which takes ONE colour, and
+                      unaffiliated's identity is seven of them (ADR-0039). */}
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={isMetatask}
+                    onClick={() => setIsMetatask(!isMetatask)}
+                    disabled={submitting}
+                    style={metaToggleStyle}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isMetatask}
-                      onChange={(e) => setIsMetatask(e.target.checked)}
-                      style={{
-                        accentColor: color,
-                        width: 14,
-                        height: 14,
-                        cursor: "pointer",
-                      }}
-                    />
                     <span
-                      className="content-text font-body"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        fontWeight: isMetatask ? 700 : 400,
-                      }}
-                    >
+                      aria-hidden="true"
+                      style={metaBoxStyle(factionSlug, isMetatask)}
+                    />
+                    <span className="label-heading">
                       {t("proposeTask.metaToggle.label")}
                     </span>
-                    <span className="label-caption">
-                      {isKnownFaction(factionSlug)
-                        ? t("proposeTask.metaToggle.hint", {
-                            faction: factionName(factionSlug),
-                          })
-                        : t("proposeTask.metaToggle.hintNoFaction")}
-                    </span>
-                  </label>
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Notes to Admin (§20.5) — hidden for meta tasks */}
+            {/* Notes to Admin (§20.5) — hidden for metatasks */}
             {!isMetatask && (
               <div style={{ marginBottom: "var(--space-lg)" }}>
-                <span
-                  className="label-heading"
-                  style={{ display: "block", marginBottom: "var(--space-sm)" }}
-                >
-                  {t("proposeTask.fields.notes.label")}
-                </span>
                 {/* maxLength mirrors schemas.task.MAX_TASK_NOTES, which stays
                     the authority and still rejects an over-long body. Stated
                     as a literal for the same reason the title and description
@@ -586,6 +471,7 @@ export default function DefaultProposeTask({
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={submitting}
                   maxLength={2000}
+                  aria-label={t("proposeTask.fields.notes.label")}
                   placeholder={t("proposeTask.fields.notes.placeholder")}
                   className="content-text"
                   style={notesTextareaStyle}
@@ -697,32 +583,18 @@ export default function DefaultProposeTask({
             )}
 
             {/* Submit Row (§20.7) */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
               <button
                 type="submit"
                 disabled={submitting}
                 style={{
-                  // A real faction fills the CTA with its solid hue + on-accent
-                  // ink. `na` has no legible single ink across the spectrum, so
-                  // it takes the `pill` — rainbow frame, neutral paper, dark ink
-                  // — instead of a grey block (ADR-0039, #649).
-                  ...(selectedKnown
-                    ? { background: color, color: "var(--color-text-on-accent)", border: "none" }
-                    : factionFill(factionSlug, "pill")),
-                  fontFamily: "'Courier Prime', monospace",
-                  fontSize: "var(--text-lg)",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  padding: "var(--space-md) var(--space-xl)",
+                  // The selected chip's treatment at CTA size: the faction's
+                  // tint, or the spectrum frame for `na` (factionSurfaces.ts).
+                  ...submitButtonStyle(factionSlug),
                   cursor: submitting ? "wait" : "pointer",
-                  position: "relative",
                   opacity: submitting ? 0.6 : 1,
                 }}
               >
-                <span
-                  style={submitDashStyle}
-                />
                 {submitting
                   ? t("proposeTask.submit.busy")
                   : isMetatask
@@ -747,41 +619,6 @@ export default function DefaultProposeTask({
               )}
             </div>
           </form>
-        </div>
-
-        {/* ── Right: Tips Column (§20.8) ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-          <div className="sidebar-card" style={{ padding: "var(--space-md) var(--space-lg)" }}>
-            {/* Both tips-card titles are prose phrases rather than region
-                names ("What makes a good task"), so they take the caption tier
-                — and they take the SAME one, or two sibling cards disagree
-                about what a card title is. */}
-            <p className="label-caption mb-2">
-              {t("proposeTask.tips.goodTaskHeading")}
-            </p>
-            <ul
-              className="content-text font-body"
-              style={tipsListStyle}
-            >
-              {(
-                t("proposeTask.tips.goodTaskItems", {
-                  returnObjects: true,
-                }) as string[]
-              ).map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="sidebar-card" style={{ padding: "var(--space-md) var(--space-lg)" }}>
-            <p className="label-caption mb-2">{t("proposeTask.tips.nextHeading")}</p>
-            <p
-              className="content-text font-body"
-              style={tipsBodyStyle}
-            >
-              {t("proposeTask.tips.nextBody")}
-            </p>
-          </div>
         </div>
       </div>
     </div>
