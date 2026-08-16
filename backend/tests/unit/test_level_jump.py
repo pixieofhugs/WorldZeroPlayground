@@ -21,9 +21,19 @@ def test_wow_grants_reach_of_one() -> None:
     assert faction_level_jump_reach("wow", ERA_1) == 1
 
 
+def test_albescent_grants_the_same_reach_it_inherited_from_wow() -> None:
+    """#1871: Albescent holds every other faction's perk, this one included.
+
+    Asserted against WOW rather than against ``1`` — the reach is inherited, so
+    a re-tune of WOW's must move Albescent's with it.
+    """
+    assert faction_level_jump_reach("albescent", ERA_1) == faction_level_jump_reach(
+        "wow", ERA_1
+    )
+
+
 @pytest.mark.parametrize(
-    "slug", ["ua", "snide", "coven", "ephemerists", "everymen", "singularity",
-             "albescent", "na"],
+    "slug", ["ua", "snide", "coven", "ephemerists", "everymen", "singularity", "na"],
 )
 def test_every_other_faction_grants_nothing(slug: str) -> None:
     assert faction_level_jump_reach(slug, ERA_1) == 0

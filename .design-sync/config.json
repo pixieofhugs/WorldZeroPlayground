@@ -17,7 +17,6 @@
     "AlbescentPraxisDetail": "src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx",
     "AlbescentProfileBody": "src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx",
     "AlbescentSeal": "src/components/metataskSeal/skins/AlbescentSeal.tsx",
-    "AlbescentSigil": "src/components/sigil/AlbescentSigil.tsx",
     "AlbescentTaskCard": "src/components/taskCard/AlbescentTaskCard.tsx",
     "AlbescentTaskDetail": "src/pages/taskDetail/archetypes/AlbescentTaskDetail.tsx",
     "AlbescentVote": "src/components/vote/AlbescentVote.tsx",

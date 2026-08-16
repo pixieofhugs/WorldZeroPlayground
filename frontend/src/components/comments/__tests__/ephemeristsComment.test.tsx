@@ -95,9 +95,10 @@ describe('EphemeristsComment — row states', () => {
   })
 
   it('row · edited: the faction mark joins the byline', () => {
-    // `comments.ephemerists.edited` — a pre-existing flavour key, not new copy.
-    expect(row({ ...COMMENT, is_edited: true })).toContain('emended')
-    expect(row()).not.toContain('emended')
+    // `comments.ephemerists.edited` held the flavour word `emended` until
+    // #1863 settled the edited marker on one word for every faction.
+    expect(row({ ...COMMENT, is_edited: true })).toContain('edited')
+    expect(row()).not.toContain('edited')
   })
 
   it('row · mention: a resolved handle links in the plate Nile ink', () => {
