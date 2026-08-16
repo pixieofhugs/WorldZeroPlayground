@@ -51,17 +51,14 @@ describe("FactionSigil dispatcher (#659)", () => {
     expect(html).toContain("var(--everymen-cream)");
   });
 
-  // #1626. `factions/albescent.ts` registers no `sigil` row — and must not,
-  // since its manifest takes only Default-plus-a-flourish surfaces (#783) — so
-  // the dispatcher used to hand albescent the unaffiliated ring while its own
-  // cross-hair sat one directory over. Resolved HERE, once, rather than by a
-  // slug branch in each of the four callers.
-  it("renders the surveyor's cross-hair for the albescent slug", () => {
+  // #1626 gave albescent its own adapter row here, holding the surveyor's
+  // cross-hair; #1891 deleted it. `factions/albescent.ts` registers no `sigil`
+  // row and never did, so with the adapter gone the slug simply falls through —
+  // no branch, no row, no mark. Asserted in full further down.
+  it("has no bespoke row for the albescent slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
-    // The four cardinal ticks — the cross-hair's own geometry, and what tells
-    // it apart from any ring. Its INK is #1658's business, asserted below.
-    expect(html.match(/<line /g), "four cardinal ticks").toHaveLength(4);
-    expect(html, "not the unaffiliated ring").not.toContain("var(--faction-default-rainbow-conic)");
+    expect(html.match(/<line /g), "no cross-hair ticks").toBeNull();
+    expect(html, "the unaffiliated ring").toContain("var(--faction-default-rainbow-conic)");
   });
 
   it("falls back to the unaffiliated ring for an unknown slug", () => {
