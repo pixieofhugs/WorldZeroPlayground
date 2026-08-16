@@ -450,9 +450,11 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
   it('the composer, the duel dialog and the metatask picker say the settled words', () => {
     // The four rulings that carried the sweep off the faction surfaces, pinned
     // by value so a revert reads as a failure rather than as a copy edit.
-    expect(i18n.t('forms:editPraxis.seal.pickerTitle')).toBe('Attach a metatask to this praxis')
-    expect(i18n.t('forms:editPraxis.seal.alreadySealed')).toBe('Attached')
-    expect(i18n.t('forms:editPraxis.composer.sealsLabel')).toBe('Metatasks')
+    // #1910 renamed the three `seal`-named keys to match the words they hold;
+    // the assertions are the same wording under the honest path.
+    expect(i18n.t('forms:editPraxis.attach.pickerTitle')).toBe('Attach a metatask to this praxis')
+    expect(i18n.t('forms:editPraxis.attach.alreadyAttached')).toBe('Attached')
+    expect(i18n.t('forms:editPraxis.composer.metatasksLabel')).toBe('Metatasks')
     expect(i18n.t('forms:editPraxis.collab.duelAwaitingHeading')).toBe('Your entry is submitted')
     expect(i18n.t('praxis:duelSeal.heading')).toBe('Lock the duel?')
   })

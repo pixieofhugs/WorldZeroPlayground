@@ -77,7 +77,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t("editPraxis.seal.pickerTitle")}
+      aria-label={t("editPraxis.attach.pickerTitle")}
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
         padding: isMobile ? 0 : "var(--space-lg)",
@@ -123,7 +123,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
               color: "var(--color-text-primary)",
             }}
           >
-            {t("editPraxis.seal.pickerTitle")}
+            {t("editPraxis.attach.pickerTitle")}
           </h2>
           <p
             className="font-body"
@@ -133,7 +133,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
               marginTop: "var(--space-xs)",
             }}
           >
-            {t("editPraxis.seal.pickerSubtitle")}
+            {t("editPraxis.attach.pickerSubtitle")}
           </p>
         </div>
 
@@ -142,7 +142,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
           className="flex flex-wrap"
           style={{ gap: "var(--space-xs)" }}
           role="group"
-          aria-label={t("editPraxis.seal.filterAria")}
+          aria-label={t("editPraxis.attach.filterAria")}
         >
           <button
             type="button"
@@ -150,7 +150,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
             aria-pressed={factionFilter === ALL_FILTER}
             style={chipStyle(factionFilter === ALL_FILTER, null)}
           >
-            {t("editPraxis.seal.filterAll")}
+            {t("editPraxis.attach.filterAll")}
           </button>
           {factionSlugs.map((slug) => (
             <button
@@ -169,8 +169,8 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("editPraxis.seal.searchPlaceholder")}
-          aria-label={t("editPraxis.seal.searchAria")}
+          placeholder={t("editPraxis.attach.searchPlaceholder")}
+          aria-label={t("editPraxis.attach.searchAria")}
           className="font-body"
           style={{
             width: "100%",
@@ -199,7 +199,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 textAlign: "center",
               }}
             >
-              {t("editPraxis.seal.empty")}
+              {t("editPraxis.attach.empty")}
             </p>
           )}
           {rows.map((mt) => {
@@ -212,7 +212,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 disabled={sealed}
                 onClick={() => setPending(mt)}
                 aria-pressed={selected}
-                aria-label={t("editPraxis.seal.addAria", { title: mt.title })}
+                aria-label={t("editPraxis.attach.addAria", { title: mt.title })}
                 className="text-left"
                 style={{
                   display: "block",
@@ -238,7 +238,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                       marginTop: "var(--space-xs)",
                     }}
                   >
-                    {t("editPraxis.seal.alreadySealed")}
+                    {t("editPraxis.attach.alreadyAttached")}
                   </span>
                 )}
               </button>
@@ -265,7 +265,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 flex: "1 1 auto",
               }}
             >
-              {t("editPraxis.seal.pending", {
+              {t("editPraxis.attach.pending", {
                 faction: factionName(pending.metatask_faction_slug),
                 points: pending.point_value,
               })}
@@ -289,7 +289,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 cursor: "pointer",
               }}
             >
-              {t("editPraxis.seal.cancel")}
+              {t("editPraxis.attach.cancel")}
             </button>
             <button
               type="button"
@@ -312,7 +312,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 cursor: pending ? "pointer" : "default",
               }}
             >
-              {t("editPraxis.seal.confirm")}
+              {t("editPraxis.attach.confirm")}
             </button>
           </div>
         </div>

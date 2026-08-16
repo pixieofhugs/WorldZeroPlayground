@@ -163,10 +163,10 @@ export function formatAutosave(date: Date | null): string {
  * prevent.
  *
  * #1863 retired "sealed": a duel side used to read `statusSealed` and everything
- * else `statusSubmitted`, chosen on `isDuel`. Both now hold the same word, so the
- * branch chose between two identical strings and is gone. `statusSealed` is left
- * in the catalog, orphaned — deleting the key is #1864's child, which owns key
- * structure.
+ * else `statusSubmitted`, chosen on `isDuel`. Both held the same word, so the
+ * branch chose between two identical strings and went with the sweep. #1910
+ * deleted the orphaned key behind it — one stage word, one key, no ternary that
+ * reads like a distinction the app does not make.
  *
  * The completed reading takes the collab block's own word, which says
  * `Submitted` rather than `Submitted by you`: a lapsed window publishes over a

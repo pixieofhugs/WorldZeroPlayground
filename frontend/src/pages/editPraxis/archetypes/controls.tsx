@@ -120,7 +120,7 @@ function DuelPairSide({
         )}
         {collabCopy(
           factionSlug,
-          side.is_submitted ? "duelPillSealed" : "duelPillWriting",
+          side.is_submitted ? "duelPillSubmitted" : "duelPillWriting",
         )}
       </span>
     </div>
