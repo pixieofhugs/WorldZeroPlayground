@@ -203,7 +203,7 @@ export default function Home() {
       )}
 
       {signupMsg && (
-        <p className="font-body content-text mt-6 border-2 border-red-300 text-red-600 px-3 py-2">
+        <p className="font-body content-text mt-6 border-2 danger-edge danger-text px-3 py-2">
           {signupMsg}
         </p>
       )}
