@@ -56,6 +56,28 @@ describe('local/no-raw-colour-values reports raw colour', () => {
     )
   })
 
+  /**
+   * #1912. `background: 'rgba(10,26,14)'` sat in `FactionCard.tsx` and was read
+   * as a no-op — "rgba() takes four arguments, so the browser drops the
+   * declaration". It does not. The legacy COMMA grammar makes the alpha
+   * optional in both spellings:
+   *
+   *   rgba() = rgba( <number>#{3} , <alpha-value>? ) | …
+   *
+   * (mdn-data `css/syntaxes.json`, mirroring CSS Color 4, where `rgba()` is a
+   * full alias of `rgb()`.) So the declaration was PAINTING all along, and
+   * tokenizing it repainted nothing.
+   *
+   * What the episode is really about is ARITY: the `[\d.]` lookahead matches on
+   * the first argument and never counts them, which is the only reason this arm
+   * caught the line at all. Pinned here so that "hardening" the regex into a
+   * four-argument shape cannot silently un-ratchet the three-argument one.
+   */
+  it('flags a comma-form rgba() whether or not it carries the optional alpha', async () => {
+    expect(await reports("export const s = { background: 'rgba(10,26,14)' }")).toBe(true)
+    expect(await reports("export const s = { background: 'rgba(10,26,14,1)' }")).toBe(true)
+  })
+
   it('flags a colour laundered through a ternary, as the px arm does', async () => {
     expect(
       await reports("export const s = (w: boolean) => ({ background: w ? 'rgba(234,179,8,0.08)' : 'transparent' })"),

@@ -3,10 +3,19 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { readThemes, resolveVar, type VarMap } from "./cssVars";
+import {
+  declarationsIn,
+  readThemes,
+  resolveVar,
+  ruleBodies,
+  stripComments,
+  THEME_SCOPED,
+  type VarMap,
+} from "./cssVars";
 
 /**
- * Inventory of the "frozen theme alias" shape (#1827).
+ * Inventory of the "frozen theme alias" shape (#1827), and the guard on the
+ * scope that unfreezes it (#1839).
  *
  * A token declared **only** at `:root` as `var(--other)`, where `--other` has a
  * `[data-theme="dark"]` override, is not the bug it looks like. `data-theme` is
@@ -18,21 +27,28 @@ import { readThemes, resolveVar, type VarMap } from "./cssVars";
  * cuts on exactly that reasoning (#1661). **Restating all of these is a
  * regression, not a fix.**
  *
- * It is only a defect inside a **nested** theme wrapper. The app has one:
+ * It was a defect inside a **nested** theme wrapper. The app has one:
  * `pages/characterProfile/archetypes/profileSkin.tsx` scopes `data-theme` to
  * the skin container, and the Singularity and S.N.I.D.E. profile bodies set it
- * to `'dark'`. Under the global *light* theme, every alias below inherits its
- * already-resolved light value into that subtree while its non-aliased
- * neighbours go dark — a half-flipped surface. Signup carries no faction gate,
- * so any faction's praxis card can render there.
+ * to `'dark'`. Under the global *light* theme, every alias below used to
+ * inherit its already-resolved light value into that subtree while its
+ * non-aliased neighbours went dark — a half-flipped surface. Signup carries no
+ * faction gate, so any faction's praxis card can render there.
  *
- * So this file is an inventory rather than a prohibition. It fails when a
- * **new** alias of this shape appears, which forces one of two decisions in
- * review: it is fine at the root and never renders in a nested wrapper (add it
- * here), or it does and needs a `[data-theme="dark"]` restatement (the #1827
- * fix for `--faction-wow-stamp-bg`). What it must never be is unnoticed —
- * `factionTokensDeclared.test.ts` polices every `var()` against a declaration
- * and is blind to this, because every token here is perfectly well declared.
+ * **#1839 fixed that with scope rather than restatement.** `[data-theme="dark"]`
+ * is a bare attribute selector, so it already matches the nested wrapper; what
+ * did not was `:root`, which matches `documentElement` alone. So every alias
+ * below is declared on `:root, [data-theme]` — one value, one place, and any
+ * element carrying a theme re-declares it and re-substitutes against its own
+ * referents. That fixes every wrapper anyone nests later, not just the two that
+ * exist today.
+ *
+ * So this file is an inventory plus a scope guard. The inventory fails when a
+ * **new** alias of this shape appears, which forces a decision in review rather
+ * than leaving it unnoticed — `factionTokensDeclared.test.ts` polices every
+ * `var()` against a declaration and is blind to this, because every token here
+ * is perfectly well declared. The scope guard then fails unless that alias is
+ * declared where a nested theme can reach it.
  */
 
 const CSS = readFileSync(
@@ -56,8 +72,14 @@ const CSS = readFileSync(
  *
  * `--faction-default-gold` was a fourth spectrum-cut entry until #1766 (#1822)
  * took it off `--faction-default-stop-3` and gave it a literal in each cascade.
- * It leaves this list by ceasing to be an alias at all — the opposite direction
- * from the WOW fix, and a reminder that the sweep tracks a SHAPE, not a set.
+ * It leaves this list by ceasing to be an alias at all — a reminder that the
+ * sweep tracks a SHAPE, not a set.
+ *
+ * `--faction-wow-stamp-bg` arrived from the other direction. #1827 (PR #1838)
+ * restated it under `[data-theme="dark"]` as the one instance that demonstrably
+ * rendered in a nested wrapper, which took it out of the sweep by making it not
+ * root-only. #1839 fixes the mechanism instead, so the restatement is deleted
+ * and the plaque rejoins the list it was always a member of.
  */
 const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-default-aurora",
@@ -81,6 +103,7 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-ua-vote-halo",
   "--faction-ua-vote-reading",
   "--faction-wow-figure",
+  "--faction-wow-stamp-bg",
   "--faction-wow-vote-off",
   "--faction-wow-vote-on",
   "--filter-thumb",
@@ -128,12 +151,51 @@ describe("root-only aliases over a flipping referent are inventoried (#1827)", (
     expect(frozenAliases(themes)).toEqual([...KNOWN_ROOT_ONLY_ALIASES].sort());
   });
 
-  it("restates the WOW stamp plaque in dark, because it renders in a nested wrapper", () => {
-    expect(themes.dark.get("--faction-wow-stamp-bg")).toBe(
-      "var(--faction-wow-chronicle-panel)",
-    );
+  /**
+   * THE SEAM THIS ISSUE IS ABOUT (#1839) — a scope, not a value.
+   *
+   * `[data-theme="dark"]` is a bare attribute selector, so it matches the skin
+   * container `profileSkin.tsx` renders as readily as it matches `<html>`. The
+   * light half did not: `:root` matches `documentElement` and nothing else, so
+   * an alias declared there is never RE-DECLARED inside a nested wrapper and
+   * therefore never re-substitutes — it inherits the value it already resolved
+   * to on the root. Declaring it on `:root, [data-theme]` is the whole fix, and
+   * it is a fix no ratio and no value assertion can see. Hence: the sweep's own
+   * inventory, checked against the selector that declares it.
+   */
+  it("declares every inventoried alias where a nested [data-theme] reaches it (#1839)", () => {
+    const clean = stripComments(CSS);
+    const scoped = declarationsIn(ruleBodies(clean, THEME_SCOPED));
+    const bare = declarationsIn(ruleBodies(clean, ":root"));
+
+    const aliases = frozenAliases(themes);
+    expect(aliases.length).toBeGreaterThan(0);
+    for (const name of aliases) {
+      expect(
+        scoped.has(name),
+        `${name} resolves through var() and must be declared on \`${THEME_SCOPED}\`, ` +
+          `or it freezes at its light value inside a nested theme wrapper`,
+      ).toBe(true);
+      expect(
+        bare.has(name),
+        `${name} is still declared in a bare \`:root\` block — that declaration ` +
+          `wins on <html> by source order and re-freezes the alias`,
+      ).toBe(false);
+    }
+  });
+
+  /**
+   * #1838's restatement is now redundant, and #1661's ruling is why it goes.
+   * The scope fix reaches this plaque like every other alias, so restating the
+   * value under `[data-theme="dark"]` would be a second copy of it on disk.
+   */
+  it("no longer restates the WOW stamp plaque in dark (#1838 superseded)", () => {
+    expect(themes.dark.has("--faction-wow-stamp-bg")).toBe(false);
     expect(resolveVar("--faction-wow-stamp-bg", "dark", themes)).toBe(
       resolveVar("--faction-wow-chronicle-panel", "dark", themes),
+    );
+    expect(resolveVar("--faction-wow-stamp-bg", "light", themes)).toBe(
+      resolveVar("--faction-wow-chronicle-panel", "light", themes),
     );
   });
 });

@@ -115,6 +115,7 @@ export default function EditPraxis() {
       <PraxisRoomProvider
         praxisId={isWaitingStage(state.phase) ? null : state.praxis.id}
         onUpdate={state.setAutosaveAt}
+        onSealed={state.noteRoomSealed}
       >
         <Archetype state={state} />
       </PraxisRoomProvider>
