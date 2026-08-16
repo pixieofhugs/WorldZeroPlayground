@@ -248,8 +248,11 @@ describe('applyDuelCastTally (#1239)', () => {
     const duelMoved =
       applyDuelCastTally(DUEL, { challenger: tally, opponent: null }).challenger
         .points_from_votes - DUEL.challenger.points_from_votes
+    // `votes` is null below 1 since ADR-0076 — both sides of this subtraction
+    // are live casts, so the fallbacks are the compiler's, not the case's.
     const praxisMoved =
-      scoreBreakdown(applyCastTally(DETAIL, tally)).votes - scoreBreakdown(DETAIL).votes
+      (scoreBreakdown(applyCastTally(DETAIL, tally)).votes ?? 0) -
+      (scoreBreakdown(DETAIL).votes ?? 0)
     expect(duelMoved).toBe(praxisMoved)
   })
 

@@ -39,7 +39,13 @@ const ACCENT = 'var(--faction-ua-card-accent)'
 const RULE = 'var(--faction-ua-rule)'
 const FILL = 'var(--faction-ua)'
 const ON_FILL = 'var(--faction-ua-on-fill)'
-const VERMIL = 'var(--faction-ua-vermil)'
+// There is no VERMIL here. --faction-ua-vermil is declared "the ensō score
+// numeral — large display type only" and the member row was setting it at
+// 14px/600, which owes the full 4.5:1 rather than the large-text 3:1 and paid
+// 4.12:1 on the dark sheet (#1766). The rank numeral takes the card's own
+// accent ink instead — 5.18:1 light, 6.58:1 dark, and already gated by
+// factionContrast's `ua card accent` row. A correctly scoped token used out of
+// its scope is not a missing tier.
 const DISPLAY = 'var(--faction-ua-card-font)'
 const SERIF = 'var(--faction-ua-body-font)'
 
@@ -300,7 +306,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'var(--text-xl)', color: VERMIL, width: 16, flex: 'none' }}>
+      <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'var(--text-xl)', color: ACCENT, width: 16, flex: 'none' }}>
         {rank}
       </span>
       <Medallion name={member.display_name} size={28} />

@@ -36,10 +36,11 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * follow the Unaffiliated mechanism exactly"), so the ROWS are
  * {@link DefaultScoreStamp}'s: base with the multiplier beside it, the metatask
  * line, the votes tally, the total. Row selection stays in `scoreBreakdown`
- * (ADR-0047/0053) — this file is presentation only, and each row is its own
+ * (ADR-0047/0053/0076) — this file is presentation only, and each row is its own
  * line so the cell reads as a shorter or longer entry in all five conditional
- * states rather than as a form with gaps. The BASE line is optional too since
- * #1131: with nothing moving the figure, the octagon already carries it.
+ * states rather than as a form with gaps. The BASE line is optional since #1131
+ * and the TALLY since ADR-0076: with nothing moving the figure, the cell is the
+ * octagon alone, and it needs no rule above it to say so.
  *
  * DEVIATIONS from the vendored frame, both named in the PR:
  *  • the multiplier chip is labelled from the SHARED `card.stamp.mult` key
@@ -161,26 +162,28 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         </div>
       )}
 
-      {/* The tally, always drawn — `+ 0 票` is a fact, not a gap. The `+` and
-          the figure are arithmetic, not copy, so they are set here rather than
-          interpolated into a sentence: this is the one line where a label and a
-          numeral sit together, and #1637's whole bound is that only the label
-          is encoded. */}
-      <div
-        style={{
-          fontFamily: READING,
-          fontStyle: "italic",
-          fontSize: "var(--text-md)",
-          color: QUIET,
-          marginTop: "var(--space-sm)",
-        }}
-      >
-        + {votes}{" "}
-        <GlossedGlyph
-          glyph={t("card.stamp.ephemerists.fromVotes")}
-          gloss={t("card.stamp.ephemerists.fromVotesGloss")}
-        />
-      </div>
+      {/* The tally, cut only when there are votes to record (ADR-0076). The `+`
+          and the figure are arithmetic, not copy, so they are set here rather
+          than interpolated into a sentence: this is the one line where a label
+          and a numeral sit together, and #1637's whole bound is that only the
+          label is encoded. */}
+      {votes !== null && (
+        <div
+          style={{
+            fontFamily: READING,
+            fontStyle: "italic",
+            fontSize: "var(--text-md)",
+            color: QUIET,
+            marginTop: "var(--space-sm)",
+          }}
+        >
+          + {votes}{" "}
+          <GlossedGlyph
+            glyph={t("card.stamp.ephemerists.fromVotes")}
+            gloss={t("card.stamp.ephemerists.fromVotesGloss")}
+          />
+        </div>
+      )}
 
       {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
           Labelled 習 like every other row of this cell — the #1637 bound holds,

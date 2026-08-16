@@ -122,16 +122,19 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
-      {/* The tally, always. Its lead belongs to the line above, so it goes when
-          the base entry does (#1131) and the leaf keeps its own inset. */}
-      <div
-        style={{
-          ...workingStyle,
-          marginTop: base !== null ? workingStyle.marginTop : undefined,
-        }}
-      >
-        {t("card.stamp.fromVotes", { votes })}
-      </div>
+      {/* The tally, when there are votes to enter (ADR-0076). Its lead belongs to
+          the line above, so it goes when the base entry does (#1131) and the leaf
+          keeps its own inset. */}
+      {votes !== null && (
+        <div
+          style={{
+            ...workingStyle,
+            marginTop: base !== null ? workingStyle.marginTop : undefined,
+          }}
+        >
+          {t("card.stamp.fromVotes", { votes })}
+        </div>
+      )}
 
       {/* The habit bonus, entered after the tally: flat, outside the multiplier
           (#1617). It always has a line above it, so it always keeps its lead. */}
@@ -141,17 +144,21 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
-      {/* The gold→plum hairline, then the total and its star. */}
-      <div
-        aria-hidden
-        style={{
-          height: 2,
-          background:
-            "linear-gradient(90deg, var(--faction-wow-chronicle-gold), var(--faction-wow-card-accent))",
-          opacity: 0.8,
-          margin: "var(--space-sm) 0 var(--space-xs)",
-        }}
-      />
+      {/* The gold→plum hairline, then the total and its star. The hairline rules
+          the working off from the total, so it goes when the working does
+          (ADR-0076) — `base !== null` is the resolver's own test for that. */}
+      {base !== null && (
+        <div
+          aria-hidden
+          style={{
+            height: 2,
+            background:
+              "linear-gradient(90deg, var(--faction-wow-chronicle-gold), var(--faction-wow-card-accent))",
+            opacity: 0.8,
+            margin: "var(--space-sm) 0 var(--space-xs)",
+          }}
+        />
+      )}
       <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
         {/* WOW hangs its points upside down (#1716) — an owner ruling, and only
             where a player is BROWSING. This stamp is ADR-0049's single mount for

@@ -13,14 +13,15 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * TWO DELIBERATE FORMATTING CHOICES, both the design's and both faction voice
  * rather than data:
- *  - the total prints to TWO decimals (`13.60`). ADR-0047 fixes the row
+ *  - the total prints to TWO decimals (`13.60`). A row rule fixes the row
  *    selection, not the notation, and a terminal pads its output;
  *  - the votes row zero-pads to two digits (`+04`), for the same reason.
  * Row SELECTION stays in `scoreBreakdown` — a hidden row leaves the register
  * shorter, never gappy, so all five conditional states read as one read-out.
- * That now includes `BASE`, which the resolver drops when the figure would only
- * restate `TOT` (#1131): the read-out prints `VOTES +00` and the total, and the
- * machine is not made to echo itself.
+ * That includes `BASE`, which the resolver drops when the figure would only
+ * restate `TOT` (#1131), and `VOTES`, which it drops at zero (ADR-0076). With
+ * both gone the register is empty, so its rule goes too and the read-out is
+ * `TOT` alone — the machine is not made to echo itself, nor to print `+00`.
  */
 export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -69,18 +70,20 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
       valueColor: "var(--faction-singularity-terminal-ink)",
     });
   }
-  lines.push({
-    key: "votes",
-    label: t("card.stamp.votes"),
-    // The terminal pads its output — `+04`. Notation is this file's, not the
-    // resolver's (ADR-0047 fixes which rows exist, not how they read).
-    value: `+${String(votes).padStart(2, "0")}`,
-    valueColor: "var(--faction-singularity-terminal-ink)",
-  });
+  if (votes !== null) {
+    lines.push({
+      key: "votes",
+      label: t("card.stamp.votes"),
+      // The terminal pads its output — `+04`. Notation is this file's, not the
+      // resolver's (a row rule fixes which rows exist, not how they read).
+      value: `+${String(votes).padStart(2, "0")}`,
+      valueColor: "var(--faction-singularity-terminal-ink)",
+    });
+  }
   // The habit bonus prints after the multiplier and beside votes — it is flat,
   // outside the parentheses (#1617) — and pads like every other line the machine
-  // writes. It is the one line below `BASE` that is also optional: the read-out
-  // omits a register the era never wrote to rather than printing `+00`.
+  // writes. Like votes since ADR-0076, the read-out omits a register the era
+  // never wrote to rather than printing `+00`.
   if (habit !== null) {
     lines.push({
       key: "habit",
@@ -122,14 +125,18 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         </div>
       ))}
 
-      <div
-        aria-hidden
-        style={{
-          height: 1,
-          background: "var(--faction-singularity-stamp-rule)",
-          margin: "var(--space-sm) 0",
-        }}
-      />
+      {/* The rule between the register and `TOT`. An empty register has nothing
+          to rule off, so the read-out prints the total alone (ADR-0076). */}
+      {lines.length > 0 && (
+        <div
+          aria-hidden
+          style={{
+            height: 1,
+            background: "var(--faction-singularity-stamp-rule)",
+            margin: "var(--space-sm) 0",
+          }}
+        />
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "var(--space-sm)" }}>
         <span
