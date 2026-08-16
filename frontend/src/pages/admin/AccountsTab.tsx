@@ -232,22 +232,28 @@ export default function AccountsTab() {
                                 character.status !== "banned",
                               )
                             }
+                            // The inline `--text-sm` is gone (#1783): it
+                            // restated `.btn-outline`'s own value, and this
+                            // control was the ONE admin button carrying it, so
+                            // it rendered 3px under the seventeen `text-xs`
+                            // siblings around it — including its own account-
+                            // level twin, the suspend button above. `text-xs`
+                            // stays: that is admin's live density decision and
+                            // it beats the component layer, which is why this
+                            // one had to be deleted rather than edited.
                             className="btn-outline text-xs"
-                            style={
-                              character.status === "banned"
+                            style={{
+                              padding: "var(--space-xs) var(--space-sm)",
+                              ...(character.status === "banned"
                                 ? {
                                     borderColor: "var(--color-success)",
                                     color: "var(--color-success)",
-                                    fontSize: "var(--text-sm)",
-                                    padding: "var(--space-xs) var(--space-sm)",
                                   }
                                 : {
                                     borderColor: "var(--color-danger-ring)",
                                     color: "var(--color-danger)",
-                                    fontSize: "var(--text-sm)",
-                                    padding: "var(--space-xs) var(--space-sm)",
-                                  }
-                            }
+                                  }),
+                            }}
                           >
                             {character.status === "banned"
                               ? t("accounts.unban")

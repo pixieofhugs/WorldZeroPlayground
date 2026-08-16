@@ -255,15 +255,12 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               flexWrap: "wrap",
             }}
           >
+            {/* Face is `.feed-action` (#1783); see FeedCardCollabInvite. */}
             <button
               onClick={handleAccept}
               disabled={loading || busy || withdrawing}
+              className="feed-action"
               style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
                 background: "var(--badge-duel)",
                 color: "var(--color-text-on-accent)",
                 border: "none",
@@ -276,12 +273,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             <button
               onClick={handleDecline}
               disabled={loading || busy || withdrawing}
+              className="feed-action"
               style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
                 background: "transparent",
                 color: "var(--color-text-secondary)",
                 border: "1px solid var(--color-border)",
@@ -296,12 +289,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             <button
               onClick={handleWithdraw}
               disabled={loading || busy || withdrawing}
+              className="feed-action"
               style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
                 background: "transparent",
                 color: "var(--color-text-tertiary)",
                 border: "1px solid var(--color-border)",
