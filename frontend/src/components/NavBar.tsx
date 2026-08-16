@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
-import { loginWithGoogle } from '../api/auth'
+import { SignInSheet } from './SignInOptions'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { useTheme } from '../hooks/useTheme'
 import PendingBadge from './layout/PendingBadge'
@@ -54,6 +55,7 @@ export default function NavBar() {
    * pointers at one number from one subscription, which cannot.
    */
   const { pending_requests_count: pendingCount } = useSidebarPanels()
+  const [signInOpen, setSignInOpen] = useState(false)
 
   const links: readonly NavLinkSpec[] = [
     { to: '/', label: t('nav.home'), end: true },
@@ -211,9 +213,20 @@ export default function NavBar() {
               </button>
             </>
           ) : (
-            <button onClick={loginWithGoogle} className="btn-primary">
-              {t('nav.login')}
-            </button>
+            /* One button, two ways in (#1773) — so it opens the choice rather
+               than picking a provider on the player's behalf. */
+            <>
+              <button
+                type="button"
+                onClick={() => setSignInOpen(true)}
+                className="btn-primary"
+                aria-haspopup="dialog"
+                aria-expanded={signInOpen}
+              >
+                {t('nav.login')}
+              </button>
+              <SignInSheet open={signInOpen} onClose={() => setSignInOpen(false)} />
+            </>
           )}
         </div>
       </div>

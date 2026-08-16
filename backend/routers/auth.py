@@ -1,6 +1,6 @@
 from typing import Optional
 
-from authlib.integrations.starlette_client import OAuth
+from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi import Request
 from fastapi.responses import RedirectResponse
@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
-from errors import ErrorCode, raise_coded
+from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
 from models.account import Account, AuthProvider
 from schemas.auth import CurrentUser, DevLoginOut, LogoutOut
@@ -108,6 +108,61 @@ def _signed_in_redirect(account_id: int) -> Response:
     return response
 
 
+#: Where a refused sign-in puts its :class:`ErrorCode` — the query param
+#: ``frontend/src/pages/Home.tsx`` already inspects for ``?login=required``
+#: (``auth/ProtectedRoute.tsx`` is what sends that one). One param, both
+#: meanings: ``required`` is prose the page owns, anything else is a code the
+#: ``errors.json`` catalog owns. They cannot collide — code values are
+#: SCREAMING_SNAKE.
+_LOGIN_PARAM = "login"
+
+#: What a callback carries home when the PROVIDER ended the sign-in rather than
+#: one of our own gates — a declined consent screen, or a ``state`` authlib no
+#: longer recognises. Built with the blessed constructor rather than reached for
+#: as a bare ``ErrorCode`` value so this code has a construction site like every
+#: other member, which is what ``tests/unit/test_errors.py`` checks: a code
+#: nothing builds is a name a client waits forever for. Never raised — a
+#: callback cannot answer with a body at all (see below) — so it is built once,
+#: here, and only ever read for its code.
+_PROVIDER_ENDED_IT = coded_error(
+    403, ErrorCode.oauth_failed, "That sign-in did not complete."
+)
+
+
+def _sign_in_failed_redirect(exc: Exception) -> Response:
+    """The failure counterpart to :func:`_signed_in_redirect` (#1773).
+
+    An OAuth callback is a top-level browser NAVIGATION, not an XHR. Raising
+    from one therefore never reaches `frontend/src/api/client.ts` — FastAPI
+    renders the coded detail as JSON and the player is left staring at
+    ``{"detail":{"code":"OAUTH_EMAIL_UNVERIFIED",…}}`` at a URL with no way
+    back. So both legs answer a terminal failure the way they answer success:
+    a 302 to the frontend. No cookie — the sign-in did not happen.
+
+    Two exception families reach here, and neither is a bug:
+
+    * :class:`HTTPException` — our own gates. The Discord leg's missing-email
+      refusal below, and, on **both** legs, ``create_or_get_account``'s
+      unverified-email gate (ADR-0075, #1771). Its code rides along in the
+      coded detail, so the catalog can say something specific.
+    * :class:`OAuthError` — the provider ended it. A declined consent screen or
+      a stale ``state`` both land here carrying no detail of ours, so they
+      borrow :data:`_PROVIDER_ENDED_IT`'s.
+
+    Anything else still 500s, which is right: an unhandled error is a defect,
+    not a rejection, and dressing it as "try another provider" would hide it.
+    """
+    detail = exc.detail if isinstance(exc, HTTPException) else _PROVIDER_ENDED_IT.detail
+    # The `or` is belt-and-braces: every HTTPException that reaches here today
+    # went through `raise_coded`, but an uncoded one must not redirect to
+    # `?login=None`.
+    code = detail_code(detail) or ErrorCode.oauth_failed.value
+    return Response(
+        status_code=302,
+        headers={"location": f"{settings.FRONTEND_URL}?{_LOGIN_PARAM}={code}"},
+    )
+
+
 # The two OAuth legs answer with a redirect, not JSON, so they carry
 # `response_class=RedirectResponse` and a 302 instead of a `response_model`
 # (#1400). A model here would be a lie the generated client believes: without
@@ -132,28 +187,35 @@ async def auth_google_callback(
 ):
     """Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
 
-    Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+    Redirects to ``settings.FRONTEND_URL`` carrying the session cookie — or,
+    for any terminal failure, to the same place carrying an error code instead
+    of a session. See :func:`_sign_in_failed_redirect` for why a raise here
+    cannot be left to FastAPI.
     """
-    token = await _OAUTH.google.authorize_access_token(request)
-    user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
+    try:
+        token = await _OAUTH.google.authorize_access_token(request)
+        user_info = token.get("userinfo") or await _OAUTH.google.userinfo(token=token)
 
-    # Google's access token is used here and then discarded (#1374): it proves
-    # this sign-in, and nothing afterwards calls a Google API as the player. The
-    # session that follows is World Zero's own JWT.
-    #
-    # `email_verified` is forwarded, not enforced here (#1771): it only matters
-    # on the branch that resolves an account *by email*, and the service owns
-    # that branch. Gating here would also have rejected a returning player whose
-    # provider says "unverified" while an address change is in flight — someone
-    # their `sub` already identifies. The claim is normalised to a real bool at
-    # the edge because a provider may answer with anything at all.
-    account = await create_or_get_account(
-        provider=AuthProvider.GOOGLE,
-        provider_user_id=user_info["sub"],
-        email=user_info["email"],
-        email_verified=user_info.get("email_verified") is True,
-        session=session,
-    )
+        # Google's access token is used here and then discarded (#1374): it
+        # proves this sign-in, and nothing afterwards calls a Google API as the
+        # player. The session that follows is World Zero's own JWT.
+        #
+        # `email_verified` is forwarded, not enforced here (#1771): it only
+        # matters on the branch that resolves an account *by email*, and the
+        # service owns that branch. Gating here would also have rejected a
+        # returning player whose provider says "unverified" while an address
+        # change is in flight — someone their `sub` already identifies. The
+        # claim is normalised to a real bool at the edge because a provider may
+        # answer with anything at all.
+        account = await create_or_get_account(
+            provider=AuthProvider.GOOGLE,
+            provider_user_id=user_info["sub"],
+            email=user_info["email"],
+            email_verified=user_info.get("email_verified") is True,
+            session=session,
+        )
+    except (HTTPException, OAuthError) as exc:
+        return _sign_in_failed_redirect(exc)
 
     return _signed_in_redirect(account.id)
 
@@ -173,63 +235,75 @@ async def auth_discord_callback(
 ):
     """Exchange the OAuth code for a token, create/get the Account, set JWT cookie.
 
-    Redirects to ``settings.FRONTEND_URL`` carrying the session cookie.
+    Redirects to ``settings.FRONTEND_URL`` carrying the session cookie — or,
+    for any terminal failure, to the same place carrying an error code instead
+    of a session. See :func:`_sign_in_failed_redirect`.
 
     Deliberately a second handler rather than a shared ``/auth/{provider}``: the
     two callbacks genuinely differ in how they obtain a profile, and an
     abstraction drawn at N=2 gets rebuilt at N=4. Generalise when a third
     provider shows what is actually shared.
     """
-    token = await _OAUTH.discord.authorize_access_token(request)
+    try:
+        token = await _OAUTH.discord.authorize_access_token(request)
 
-    # Google's profile rides along on the token; Discord's cannot. Discord
-    # returns no `id_token` on its documented path, so authlib's
-    # `if "id_token" in token` gate never fires and `token["userinfo"]` stays
-    # None — the profile has to be fetched. The path is relative on purpose;
-    # see the trailing-slash argument at the registration above.
-    resp = await _OAUTH.discord.get("users/@me", token=token)
-    user_info = resp.json()
+        # Google's profile rides along on the token; Discord's cannot. Discord
+        # returns no `id_token` on its documented path, so authlib's
+        # `if "id_token" in token` gate never fires and `token["userinfo"]`
+        # stays None — the profile has to be fetched. The path is relative on
+        # purpose; see the trailing-slash argument at the registration above.
+        resp = await _OAUTH.discord.get("users/@me", token=token)
+        user_info = resp.json()
 
-    # The token is used here and discarded (#1374, same posture as Google).
-    # Discord also issues a refresh token and a multi-day access token, and
-    # nothing downstream wants either: World Zero authenticates every request
-    # with its own JWT and never calls Discord as the player. Storing a live
-    # third-party credential no code path reads is pure liability.
-    email = user_info.get("email")
-    if not email:
-        # `email` is BOTH optional and nullable on Discord's user object, and
-        # its `email` scope returns an address only "if the user has one" — so
-        # an absent key and an explicit null are both real answers, and `not`
-        # covers them together. This check is the callback's rather than the
-        # service's because `create_or_get_account` takes `email: str`, and
-        # widening that to Optional to move the check would weaken the contract
-        # for every caller. Unlike the verified flag it is also NOT placed
-        # behind the returning-identity early return: a `verified: false` window
-        # is a documented, transient Discord state (changing your email re-sends
-        # the mail), whereas an email vanishing from an account is not a
-        # transition Discord describes at all.
-        raise_coded(
-            403,
-            ErrorCode.oauth_email_unverified,
-            "Discord did not return an email address for that account.",
+        # The token is used here and discarded (#1374, same posture as Google).
+        # Discord also issues a refresh token and a multi-day access token, and
+        # nothing downstream wants either: World Zero authenticates every
+        # request with its own JWT and never calls Discord as the player.
+        # Storing a live third-party credential no code path reads is pure
+        # liability.
+        email = user_info.get("email")
+        if not email:
+            # `email` is BOTH optional and nullable on Discord's user object,
+            # and its `email` scope returns an address only "if the user has
+            # one" — so an absent key and an explicit null are both real
+            # answers, and `not` covers them together. This check is the
+            # callback's rather than the service's because
+            # `create_or_get_account` takes `email: str`, and widening that to
+            # Optional to move the check would weaken the contract for every
+            # caller. Unlike the verified flag it is also NOT placed behind the
+            # returning-identity early return: a `verified: false` window is a
+            # documented, transient Discord state (changing your email re-sends
+            # the mail), whereas an email vanishing from an account is not a
+            # transition Discord describes at all.
+            #
+            # Still a `raise` rather than a direct redirect: the code and its
+            # prose belong at the refusal, and the `except` below is the single
+            # place that knows a callback cannot answer with a body.
+            raise_coded(
+                403,
+                ErrorCode.oauth_email_unverified,
+                "Discord did not return an email address for that account.",
+            )
+
+        account = await create_or_get_account(
+            provider=AuthProvider.DISCORD,
+            # Discord's `id` — a snowflake, always serialised as a JSON string
+            # so clients cannot overflow it at 64 bits. `username` and `email`
+            # are both mutable and `id` is not in the `PATCH /users/@me`
+            # surface, so this is the only field worth keying on.
+            provider_user_id=user_info["id"],
+            email=email,
+            # Forwarded, not enforced here: `verified` is the provider's claim
+            # about the ADDRESS (account-trust lives in the separate `flags`
+            # bitfield), and it only decides anything on the branch that
+            # resolves an Account by email — which the service owns (#1771,
+            # ADR-0075). The field is optional, so normalise to a real bool at
+            # the edge.
+            email_verified=user_info.get("verified") is True,
+            session=session,
         )
-
-    account = await create_or_get_account(
-        provider=AuthProvider.DISCORD,
-        # Discord's `id` — a snowflake, always serialised as a JSON string so
-        # clients cannot overflow it at 64 bits. `username` and `email` are both
-        # mutable and `id` is not in the `PATCH /users/@me` surface, so this is
-        # the only field worth keying on.
-        provider_user_id=user_info["id"],
-        email=email,
-        # Forwarded, not enforced here: `verified` is the provider's claim about
-        # the ADDRESS (account-trust lives in the separate `flags` bitfield), and
-        # it only decides anything on the branch that resolves an Account by
-        # email — which the service owns (#1771, ADR-0075). The field is
-        # optional, so normalise to a real bool at the edge.
-        email_verified=user_info.get("verified") is True,
-        session=session,
-    )
+    except (HTTPException, OAuthError) as exc:
+        return _sign_in_failed_redirect(exc)
 
     return _signed_in_redirect(account.id)
 
