@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -11,11 +12,15 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * Its TOTAL MARK is typographic: `TOT` against the figure in cyan with a soft
  * halo and a blinking block cursor, the machine still holding the line open.
  *
- * TWO DELIBERATE FORMATTING CHOICES, both the design's and both faction voice
- * rather than data:
- *  - the total prints to TWO decimals (`13.60`). A row rule fixes the row
- *    selection, not the notation, and a terminal pads its output;
- *  - the votes row zero-pads to two digits (`+04`), for the same reason.
+ * ONE DELIBERATE FORMATTING CHOICE, the design's and faction voice rather than
+ * data: the votes row zero-pads to two digits (`+04`), because a terminal pads
+ * its output.
+ *
+ * The TOTAL used to be the second such choice — two decimals, `13.60` — and the
+ * owner ruled it drift, not voice (#1866): it made a whole 10 read `10.00` here
+ * and `10.0` on the other seven, which is one figure printed three ways. It goes
+ * through the shared `formatPoints` with every other stamp now.
+ *
  * Row SELECTION stays in `scoreBreakdown` — a hidden row leaves the register
  * shorter, never gappy, so all five conditional states read as one read-out.
  * That includes `BASE`, which the resolver drops when the figure would only
@@ -159,7 +164,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
             textShadow: "0 0 8px var(--faction-singularity-total-glow)",
           }}
         >
-          {total.toFixed(2)}
+          {formatPoints(total)}
           <span aria-hidden className="sg-cursor">
             _
           </span>

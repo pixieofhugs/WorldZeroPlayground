@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -186,7 +187,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             transform: "rotate(var(--wow-points-flip, 0deg))",
           }}
         >
-          {total.toFixed(1)}
+          {formatPoints(total)}
         </span>
         {/* The total MARK. Decorative to a screen reader — the figure beside it
             is the value; the star is the faction's device on it. */}

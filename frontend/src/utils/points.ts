@@ -63,12 +63,18 @@ export function isNeutralMultiplier(multiplier: number): boolean {
  * on it. A praxis score is a weighted sum, so that noise is the normal case.
  *
  * Lives here rather than beside any one surface because the duel stakes tiles,
- * the desktop FieldDesk's "continue" rows and all eight mobile field desks print
- * the same kind of figure, and three private copies of one `toFixed` is how the
- * rounding rule drifts (#1834).
+ * the desktop FieldDesk's "continue" rows, all eight mobile field desks, the
+ * duel card on praxis detail and all eight praxis-card score stamps print the
+ * same kind of figure, and private copies of one `toFixed` are how the rounding
+ * rule drifts (#1834, #1866 — one stamp had already drifted to two decimals).
+ *
+ * Round FIRST, then strip: `Number.isInteger` is not the test, because
+ * `compute_praxis_score` does no rounding and puts the raw product on the wire.
+ * Coven's `collab_own_modifier=1.1` on 50 points is `55.00000000000001`, which
+ * is not an integer and would print as `55.0` on a score that is whole (#1866).
  */
 export function formatPoints(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+  return Number(value.toFixed(1)).toString()
 }
 
 /**

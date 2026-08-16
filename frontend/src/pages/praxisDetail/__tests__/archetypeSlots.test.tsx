@@ -312,7 +312,10 @@ describe("task-reference points (#1833)", () => {
     it(`${slug} drops the figure the stamp already prints`, () => {
       const { text } = render(<Archetype state={baseOnly()} />);
       expect(text, "the level still reads").toContain("Level 3");
-      expect(text, "the stamp still carries the total").toContain("30.0");
+      // Stated ONCE. A whole score prints without a decimal now (#1866), so the
+      // stamp's total and the band's figure are the same string and only the
+      // count tells them apart — which is the rule this case is about.
+      expect(text.split("30"), "the stamp still carries the total").toHaveLength(2);
       expect(text, "and the band does not repeat it").not.toContain("30 pts");
     });
 
@@ -320,14 +323,15 @@ describe("task-reference points (#1833)", () => {
       // base 30 + 16 from votes = 46: two figures, two questions.
       const { text } = render(<Archetype state={state()} />);
       expect(text, "what the task is worth").toContain("30 pts");
-      expect(text, "what this praxis scored").toContain("46.0");
+      expect(text, "what this praxis scored").toContain("46");
     });
 
     it(`${slug} keeps the figure on a praxis with no stamp at all`, () => {
       // #1444 gates the stamp off a failed praxis and `scoreWasBanked` takes the
       // whole panel with it, so the band is the only points readout left.
       const { text } = render(<Archetype state={baseOnly({ moderation_status: "failed" })} />);
-      expect(text, "no total was banked").not.toContain("30.0");
+      // Stated once again, and this time the one statement is the band's.
+      expect(text.split("30"), "no total was banked").toHaveLength(2);
       expect(text, "so what the task is worth stays").toContain("30 pts");
     });
   }

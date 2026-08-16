@@ -190,7 +190,7 @@ describe('praxis detail: the opponent colour is never an ink and never a ground'
     // that passes on an empty string: the card is genuinely on the page, with
     // the rival named and both totals printed.
     expect(text, `the ${_slug} page drew no duel card at all`).toContain('Rax')
-    expect(text, "this side's total").toContain('18.0')
+    expect(text, "this side's total").toContain('Ada18')
     expect(text, "the rival's total").toContain('15.4')
 
     // `color:` may never name the opponent's hue — not on a name, not on a

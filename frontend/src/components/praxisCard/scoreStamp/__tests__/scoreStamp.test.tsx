@@ -19,6 +19,7 @@ import { pickVariant } from '../../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
+import { formatPoints } from '../../../../utils/points'
 import { applyCastTally } from '../../../vote/useVotedPraxis'
 import { recordCastTally, castTally, __resetCastTallies } from '../../../vote/castTallies'
 import ScoreStamp from '../ScoreStamp'
@@ -397,7 +398,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       else expect(html).not.toContain('TALLY')
       expect(html).toContain('ON THE RECORD')
       // The roundel carries the total whichever rows are present.
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       expectVotesRow(html, showsVotes, 'votes')
       expectBaseRow(html, showsBase)
       expect(html).not.toMatch(HEX)
@@ -409,7 +410,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       )
       expectBaseRow(html, showsBase, EPHEMERISTS_LABEL.base)
       expectVotesRow(html, showsVotes, EPHEMERISTS_LABEL.fromVotes)
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       expect(html).not.toMatch(HEX)
     })
 
@@ -422,7 +423,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       // bordered box under the ensō (ADR-0076).
       if (showsBase) expect(markup).toContain('--faction-ua-card-box-bg')
       else expect(markup).not.toContain('--faction-ua-card-box-bg')
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       expect(html).toContain('points')
       // The total mark is the ensō, masked from the asset and tinted by a token.
       expect(markup).toContain('/factionMarks/enso.webp')
@@ -442,7 +443,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       // gold token — the ✦ below wears that too.
       if (showsBase) expect(markup).toContain('linear-gradient(90deg')
       else expect(markup).not.toContain('linear-gradient(90deg')
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       // The retired ✦ survives here and only here — see ADR-0050 / the design
       // README's carve-out. Losing it is half of what #840 exists to fix.
       expect(html).toContain('✦')
@@ -458,7 +459,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       // is nothing to rule (ADR-0076).
       if (showsBase) expect(markup).toContain('cvn-braid')
       else expect(markup).not.toContain('cvn-braid')
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       expect(html).toContain('✨')
       expect(html).not.toMatch(HEX)
     })
@@ -560,7 +561,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       // the total, so it tears nothing off an empty tag (ADR-0076).
       if (showsBase) expect(markup).toContain('2px dashed')
       else expect(markup).not.toContain('2px dashed')
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       expect(html).toContain('pts')
       expect(html).not.toMatch(HEX)
     })
@@ -574,7 +575,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain('tot')
       // The terminal pads its output: two decimals, and a zero-padded votes row —
       // which is exactly the `+00` ADR-0076 stops it printing.
-      expect(html).toContain(fields.score.toFixed(2))
+      expect(html).toContain(formatPoints(fields.score))
       expectVotesRow(html, showsVotes, `+${String(fields.points_from_votes).padStart(2, '0')}`)
       // The read-out's rule sits between the register and `TOT`; an empty
       // register has no register to rule off.
@@ -593,7 +594,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       // the disc is alone and neither survives (ADR-0076).
       if (showsBase) expect(markup).toContain('--faction-default-card-muted')
       else expect(markup).not.toContain('--faction-default-card-muted')
-      expect(html).toContain(fields.score.toFixed(1))
+      expect(html).toContain(formatPoints(fields.score))
       expect(html).toContain('points')
       expect(html).not.toMatch(HEX)
     })
@@ -652,14 +653,18 @@ describe('a base-only score reads as a bare total on every stamp (ADR-0076)', ()
       const html = text(markup)
       expect(html).not.toContain(baseLabel)
       // The total mark stays — under ADR-0049 it is the faction's signature
-      // device, so it is the one number that never drops out. Singularity's
-      // two-decimal `10.00` contains this too.
-      expect(html).toContain('10.0')
+      // device, so it is the one number that never drops out. #1866: a whole
+      // score prints WHOLE, so the figure that survives is `10`, not `10.0`
+      // (nor Singularity's old `10.00`).
+      expect(html).not.toContain('10.0')
       // The tally goes with it: no votes, no votes row (ADR-0076).
       expect(html).not.toMatch(votesLabel)
       if (rule) expect(markup).not.toContain(rule)
-      // The label is gone, not blanked: no orphaned figure left behind.
-      expect(html).not.toMatch(/\b10\b(?!\.)/)
+      // The label is gone, not blanked, and the total mark is the one survivor:
+      // the figure is stated exactly once (#1131). Counted as a substring rather
+      // than with `\b`, because several stamps butt the unit straight onto the
+      // numeral ('10points', '10pts') and there is no word boundary there.
+      expect(html.split('10')).toHaveLength(2)
     })
   }
 })
@@ -870,7 +875,9 @@ describe('the Ephemerists label their score in kanji (#1637)', () => {
     expect(html).toContain('40')
     expect(html).toContain('×1.20')
     expect(html).toContain('+ 4 ')
-    expect(html).toContain('52.0')
+    // Whole, so no decimal — the kanji labels do not change the notation (#1866).
+    expect(html).toContain('52')
+    expect(html).not.toContain('52.0')
     // The one thing that would break the bound: a number written as a glyph.
     expect(html).not.toMatch(/[〇一二三四五六七八九十百千万]/)
   })

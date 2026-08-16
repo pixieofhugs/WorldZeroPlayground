@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { UaEnsoScore } from "../../factionMarks/uaAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -274,7 +275,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
       >
         <UaEnsoScore
           size={ENSO_SIZE}
-          value={total.toFixed(1)}
+          value={formatPoints(total)}
           unit={t("card.stamp.points")}
           ringColor="var(--faction-ua-card-enso)"
           valueColor="var(--faction-ua-card-total)"

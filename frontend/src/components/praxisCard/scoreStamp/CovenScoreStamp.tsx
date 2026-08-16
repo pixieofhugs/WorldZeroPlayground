@@ -14,6 +14,7 @@ import {
   SHADOW,
 } from "../../factionMarks/covenSlip";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -181,7 +182,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
             color: DEEP,
           }}
         >
-          {total.toFixed(1)}
+          {formatPoints(total)}
         </span>
         {/* Coven's total mark. Decorative — the figure beside it is the value. */}
         <span
