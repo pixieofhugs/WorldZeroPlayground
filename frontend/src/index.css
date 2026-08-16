@@ -5949,7 +5949,9 @@
 }
 
 :root {
-  /* The rail's inner padding, and the height of the bar's spectrum strip.
+  /* The rail's inner padding, and the THICKNESS of the bar's spectrum edge —
+     which since #1944 is the strip's `padding-top` rather than its `height`,
+     because a 3px box cannot hold the bar's corner. Same number, same job.
      SegmentedRail used to read this too, to write the design's
      `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the
      active segment instead, so the number is back to living in one file. */
@@ -5975,11 +5977,47 @@
 
 /* The spectrum edge along the top of the bar — ruling 1's ring, laid flat.
    Rounded on its own top corners so it still follows the bar's radius now
-   that the bar no longer clips its children with overflow: hidden. */
+   that the bar no longer clips its children with overflow: hidden.
+
+   A BOX CANNOT HOLD A CORNER LARGER THAN ITSELF, AND THE CLAMP IS SILENT
+   (#1944). When the radii along one edge sum to more than that edge, CSS
+   scales EVERY radius on the box down by the same factor until they fit (CSS
+   Backgrounds §5.3.1). At `height: 3px` against a 12px top-left that factor is
+   0.25, so the strip drew a 3px corner where the bar's padding box turns at
+   11px — its nearly-square left end overhung the bar's rounded corner and
+   floated out over the border. Nothing about the declaration looks wrong; the
+   number that renders is not the number that is written, and only the zoomed
+   screenshot on the report says so. **A radius asserted in a test is not a
+   radius the box can hold — assert the box too**, which is what the sibling
+   `describe` in `filterBarOverflow.test.ts` now does.
+
+   So the box is as tall as its own corner and the 3px band is carved out of
+   it: `padding-top` marks the band, the two-layer `content-box` mask drops
+   everything below it (the exclude idiom `.alb-profile-edge` and
+   `.level-gem-shape` already use), and the negative bottom margin hands back
+   the 9px of flow the taller box would otherwise add above
+   `.filter-bar__body`. The rainbow tapers into each top corner now, because
+   the curve doing the tapering is the bar's own.
+
+   `calc(var(--space-md) - 1px)` is the bar's PADDING-box radius rather than
+   its border-box one: the strip is the first child inside a 1px border, and a
+   border shrinks the curve it wraps by its own width. */
 .filter-bar__spectrum {
-  height: var(--filter-rail-pad);
+  box-sizing: border-box;
+  height: var(--space-md);
+  margin-bottom: calc(var(--filter-rail-pad) - var(--space-md));
+  padding-top: var(--filter-rail-pad);
+  border-radius: calc(var(--space-md) - 1px) calc(var(--space-md) - 1px) 0 0;
   background: var(--faction-default-rainbow);
-  border-radius: var(--space-md) var(--space-md) 0 0;
+  /* Decoration, and now nine pixels taller than it paints. */
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
 }
 
 .filter-bar__body {
