@@ -3577,35 +3577,6 @@
     --praxis-card-basis: 320px;
   }
 
-  /* ── Scanning surfaces (issue #1716) ──
-     A surface where a player is BROWSING a list of things, as opposed to one
-     where they are CHECKING what they earned. Warriors of Whimsy hang their
-     points upside down, and that is the line the owner drew: the tasks list,
-     the field desk and home turn the figure; the character profile, the faction
-     page, the task detail and the praxis detail do not — even though the first
-     three of those mount the very same <TaskCard>.
-
-     Which is why the answer lives on the CONTAINER, the `--praxis-card-basis`
-     shape above. A mark cannot know what page it is on, and a `browsing` prop
-     would have to thread through the dispatcher to every skin to say something
-     about the surface. A custom property inherits, so the page states it once
-     and the mark reads `rotate(var(--wow-points-flip, 0deg))`.
-
-     The direction is the durable half: UNSET IS UPRIGHT. An exempt page is
-     right way up because it says nothing, and a page built tomorrow is upright
-     until it opts in. The inverse — turn by default, list the exceptions — is a
-     list that rots the first time someone adds a surface. Adding a browsing
-     page? Put this class on the list container. `wowPointsUpsideDown.test.tsx`
-     pins the set of files that wear it, in both directions.
-
-     Faction-agnostic on purpose despite having exactly one tenant: the class
-     names the AXIS, and any later mark that may only misbehave while a player
-     is scanning declares itself here rather than inventing a second knob. */
-
-  .scanning-surface {
-    --wow-points-flip: 180deg;
-  }
-
   /* ── Pennant shape (faction filter tabs) ── */
 
   .pennant-shape {

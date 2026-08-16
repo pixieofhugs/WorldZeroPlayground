@@ -82,9 +82,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         ) : tasks.length === 0 ? (
           <TaskListEmpty state={state} />
         ) : (
-          /* `scanning-surface`: the mobile half of the same browsing list, so
-             the WOW flip (#1716) reaches both form factors. */
-          <div className="scanning-surface flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
             {isMetatask ? (
               <MetataskSeal metatasks={tasks} />
             ) : (

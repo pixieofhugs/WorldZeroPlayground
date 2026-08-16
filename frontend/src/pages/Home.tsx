@@ -221,9 +221,7 @@ export default function Home() {
       </section>
 
       {/* ── NEWEST TASK ── */}
-      {/* `scanning-surface`: home is a browsing surface (#1716), so a WOW card
-          hangs its points upside down here. See index.css. */}
-      <section className="scanning-surface" style={{ paddingTop: 'var(--space-4xl)' }}>
+      <section style={{ paddingTop: 'var(--space-4xl)' }}>
         <SectionHeader title={t('sections.newestTask.title')} href="/tasks" linkLabel={t('sections.newestTask.link')} />
         {newestTask ? (
           <TaskCard
