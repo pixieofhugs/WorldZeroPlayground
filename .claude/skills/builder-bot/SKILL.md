@@ -364,8 +364,13 @@ auto-starting another batch.
    cascade, never a `dark ? a : b` ternary. Read `WORLD_ZERO_STYLE.md` before UI work.
 5. Backend work uses a DEDICATED test DB `wz<issue>_test` — parallel agents share
    `worldzero_test` and drop each other's tables mid-run.
-6. You have NO browser tools and no dev stack — verify via tests/tsc/eslint and state plainly
+6. **A helper script belongs in YOUR OWN worktree, never in the session scratchpad.** The
+   scratchpad is the one directory parallel agents share, so a generic name like `run_tests.py`
+   gets clobbered and you run another agent's script against the wrong worktree and the wrong
+   test DB — silently, and green. Second-best, if a file genuinely must live there: prefix it
+   with the issue number.
+7. You have NO browser tools and no dev stack — verify via tests/tsc/eslint and state plainly
    in the PR that visual QA is outstanding.
-7. Base off the latest `origin/main` (fetch/rebase if stale).
-8. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
+8. Base off the latest `origin/main` (fetch/rebase if stale).
+9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
 ```
