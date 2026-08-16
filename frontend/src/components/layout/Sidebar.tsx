@@ -532,17 +532,24 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                     No `marginTop`: at 18px the mark aligns optically to the
                     kicker line on its own, and the old nudge — sized for a 6px
                     dot — now floats it above the row. */}
-                <span
-                  className="shrink-0 flex"
-                  role="img"
-                  aria-label={factionName(item.context_faction_slug)}
-                >
-                  {isNeutral ? (
+                {isNeutral ? (
+                  // `DefaultSigil` names itself; a wrapper label here would
+                  // only overwrite that copy with something shorter.
+                  <span className="shrink-0 flex">
                     <DefaultSigil size={ACTIVITY_SIGIL} color={sampledSpectrum(index)} />
-                  ) : (
+                  </span>
+                ) : (
+                  // The seven faction marks are aria-hidden SVGs, so the row
+                  // names them — as the in-progress row above does, and for the
+                  // same reason: nothing else in the row spells the faction out.
+                  <span
+                    className="shrink-0 flex"
+                    role="img"
+                    aria-label={factionName(item.context_faction_slug)}
+                  >
                     <FactionSigil slug={item.context_faction_slug} size={ACTIVITY_SIGIL} />
-                  )}
-                </span>
+                  </span>
+                )}
                 <div className="min-w-0">
                   <div
                     className="truncate"
