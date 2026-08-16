@@ -9,9 +9,9 @@
  * which. A test that exercised the matcher alone would pass with the globs
  * deleted.
  *
- * This is also the runnable half of #1819's check. The rendered half lives in
- * `e2e/contrast.spec.ts`, which is nightly-only and needs a browser and a seeded
- * Postgres; these run in the PR.
+ * This guards the RULE. The two notices #1819 was filed about are guarded at
+ * their mount, in
+ * `src/pages/editPraxis/archetypes/__tests__/composerQuietInk.test.tsx`.
  */
 import { existsSync, readFileSync } from 'node:fs'
 
@@ -195,34 +195,5 @@ describe('the legacy list stays honest', () => {
       entries.filter((entry) => !/\/(archetypes|mobileArchetypes)\/|^src\/components\/factionMarks\//.test(entry)),
       'an entry outside the three dispatched directory names is a file the rule never judged — turning it "off" there is noise that makes the list look larger than the debt.',
     ).toEqual([])
-  })
-})
-
-describe('the two composer notices #1819 was filed about', () => {
-  /**
-   * The bug was invisible to every ratio in `factionContrast.test.ts`: that
-   * file measures `--label-ink` against each sheet and stays green through a
-   * caption that never reads it. So this asserts on the SOURCE — the thing the
-   * measurement cannot see.
-   */
-  const controls = readFileSync(
-    new URL('../pages/editPraxis/archetypes/controls.tsx', import.meta.url),
-    'utf8',
-  )
-
-  it('the connecting/unreachable notice carries no inline ink', async () => {
-    expect(controls).toContain('<p className="label-caption">\n          {/* Two states, one line.')
-  })
-
-  it('the frozen notice carries no inline ink', async () => {
-    expect(controls).toContain(
-      '<p className="label-caption">{t("editPraxis.composer.bodyFrozen")}</p>',
-    )
-  })
-
-  it('the frozen notice\'s way out reads the link seam', async () => {
-    // Fixing the sentence and leaving its only action on the global secondary
-    // would be half a fix on exactly the sheets that needed both.
-    expect(controls).toContain('color: "var(--link-ink)"')
   })
 })
