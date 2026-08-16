@@ -17,12 +17,20 @@ import { factionFill } from "../../utils/factions";
 import { isTaskBankFull } from "./bankFull";
 import FeedBadge from "./FeedBadge";
 import FeedBankFullModal from "./FeedBankFullModal";
+import { FEED_BODY_LIFTED, FeedBodyOverlay } from "./feedBodyTarget";
 
 interface Props {
   item: ActivityFeedItem;
 }
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
+
+/** The task title's face — identical whether or not it is the body's anchor. */
+const TITLE_STYLE = {
+  fontSize: "var(--text-content)",
+  fontWeight: 700,
+  color: "var(--color-text-primary)",
+} as const;
 
 /**
  * The collaboration invite — a PAYLOAD BODY inside the faction chassis as of
@@ -120,9 +128,12 @@ export default function FeedCardCollabInvite({ item }: Props) {
 
   return (
     <>
-      <div style={{ padding: "var(--space-md) var(--space-lg)" }}>
+      {/* `position: relative` is the overlay's containing block (#1893). It is
+          set on the BODY, never on the chassis: the band above (kicker · tag ·
+          time · archive ×) is a sibling of this div and must never navigate. */}
+      <div style={{ padding: "var(--space-md) var(--space-lg)", position: "relative" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-md)" }}>
-          <Link to={`/characters/${inviter_character_id}`}>
+          <Link to={`/characters/${inviter_character_id}`} style={FEED_BODY_LIFTED}>
             <div
               style={{
                 width: 28,
@@ -164,6 +175,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                           fontWeight: 700,
                           color: "var(--color-text-primary)",
                           textDecoration: "none",
+                          ...FEED_BODY_LIFTED,
                         }}
                       />
                     ),
@@ -194,16 +206,26 @@ export default function FeedCardCollabInvite({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          <span
-            className="font-body"
-            style={{
-              fontSize: "var(--text-content)",
-              fontWeight: 700,
-              color: "var(--color-text-primary)",
-            }}
-          >
-            {task_title}
-          </span>
+          {/* THE BODY'S ANCHOR (#1893). The card's referent is the praxis you
+              are being invited into — the same place the accepted state below
+              already links — so the title carries it, and the overlay stretched
+              from it makes the whole body one target. A NAMED anchor rather
+              than an empty stretched one: the tab stop this adds is a link a
+              screen reader can read out, and the face is unchanged. */}
+          {praxis_id != null ? (
+            <Link
+              to={`/praxis/${praxis_id}`}
+              className="font-body"
+              style={{ ...TITLE_STYLE, textDecoration: "none" }}
+            >
+              {task_title}
+              <FeedBodyOverlay />
+            </Link>
+          ) : (
+            <span className="font-body" style={TITLE_STYLE}>
+              {task_title}
+            </span>
+          )}
           <span className="label-caption">
             {i18n.t("feed:collabInvite.taskMeta", {
               points: task_point_value,
@@ -223,6 +245,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
               alignItems: "center",
               gap: "var(--space-sm)",
               flexWrap: "wrap",
+              // Discrete on top of the overlay (#1893): these answer the invite,
+              // they never navigate.
+              ...FEED_BODY_LIFTED,
             }}
           >
             {/* Face is `.feed-action` (#1783) — the same five declarations
@@ -270,7 +295,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
             <Link
               to={`/praxis/${praxis_id}`}
               className="label-caption"
-              style={{ color: "var(--badge-collab)", textDecoration: "none" }}
+              style={{ color: "var(--badge-collab)", textDecoration: "none", ...FEED_BODY_LIFTED }}
             >
               {i18n.t("feed:collabInvite.accepted")}
             </Link>

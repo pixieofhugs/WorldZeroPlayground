@@ -17,6 +17,7 @@
  * inherited the body's ink onto the band, where it read 2.07:1 in light.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import {
@@ -41,7 +42,7 @@ import {
   SMALL_CAPS,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { toRoman } from '../../../utils/roman'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 /** Level 0 shows a mid-dot rather than a numeral — the codex's own convention. */
 const romanLevel = (value: number): string => (value > 0 ? toRoman(value) : '\u00b7')
@@ -67,7 +68,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'ephemerists',
   pageBackground: PAGE,
   pageOverlay: `radial-gradient(color-mix(in srgb, ${INK} 6%, transparent) 1px, transparent 1px)`,
@@ -119,7 +120,6 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'level',
   // The level ring is a brass instrument, so its label is engraved rather than
   // whispered (#1630). Not free from #1645's card-* repoint, which is where this
   // was expected to fall out: that landed `--faction-ephemerists-card-accent` on
@@ -129,14 +129,7 @@ const kit: ProfileKit = {
   barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
   barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
   formatLevel: romanLevel,
-  levelUnitLabel: 'pvncta this level',
-  nextLevelLabel: (next) => `next · level ${romanLevel(next)}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `Filed to the codex by ${name}`,
-  praxisEmpty: {
-    title: 'The codex holds no entry yet',
-    body: 'Walk a road, and set the first record down.',
-  },
   emptyStateStyle: {
     border: `1.5px dashed ${BRASS}`,
     padding: 'var(--space-2xl)',
@@ -144,7 +137,6 @@ const kit: ProfileKit = {
     background: PLATE,
   },
   laurel: <SpectrumLaurel centerBg={DISC} glyphColor={BRASS} />,
-  badgeTitle: 'Concordances',
   badgeBoardStyle: {
     border: `1px solid ${LINE}`,
     background: PLATE,
@@ -188,5 +180,24 @@ const kit: ProfileKit = {
 }
 
 export default function EphemeristsProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.ephemerists.ringLabel'),
+        levelUnitLabel: t('profile.ephemerists.levelUnit'),
+        // {{level}} takes the ROMAN numeral, not the integer — the catalog
+        // holds the sentence, the kit still owns how the valley counts.
+        nextLevelLabel: (next) => t('profile.ephemerists.nextLevel', { level: romanLevel(next) }),
+        praxisEyebrow: (name) => t('profile.ephemerists.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.ephemerists.praxisEmptyTitle'),
+          body: t('profile.ephemerists.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.ephemerists.badgeTitle'),
+      }}
+    />
+  )
 }

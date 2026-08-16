@@ -13,6 +13,7 @@ import { factionFill } from "../../utils/factions";
 import { extractError } from "../../utils/errors";
 import FeedBadge from "./FeedBadge";
 import FeedBankFullModal from "./FeedBankFullModal";
+import { FEED_BODY_LIFTED, FeedBodyOverlay } from "./feedBodyTarget";
 
 interface Props {
   item: ActivityFeedItem;
@@ -24,6 +25,13 @@ interface Props {
 const BANK_FULL_MARKER = "Task bank is full";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
+
+/** The task title's face — identical whether or not it is the body's anchor. */
+const TITLE_STYLE = {
+  fontSize: "var(--text-content)",
+  fontWeight: 700,
+  color: "var(--color-text-primary)",
+} as const;
 
 /**
  * The duel challenge — a PAYLOAD BODY inside the faction chassis as of #1194
@@ -152,9 +160,12 @@ export default function FeedCardDuelChallenge({ item }: Props) {
 
   return (
     <>
-      <div style={{ padding: "var(--space-md) var(--space-lg)" }}>
+      {/* `position: relative` is the overlay's containing block (#1893). It is
+          set on the BODY, never on the chassis: the band above (kicker · tag ·
+          time · archive ×) is a sibling of this div and must never navigate. */}
+      <div style={{ padding: "var(--space-md) var(--space-lg)", position: "relative" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-md)" }}>
-          <Link to={`/characters/${challenger_character_id}`}>
+          <Link to={`/characters/${challenger_character_id}`} style={FEED_BODY_LIFTED}>
             <div
               style={{
                 width: 28,
@@ -196,6 +207,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                           fontWeight: 700,
                           color: "var(--color-text-primary)",
                           textDecoration: "none",
+                          ...FEED_BODY_LIFTED,
                         }}
                       />
                     ),
@@ -226,16 +238,25 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          <span
-            className="font-body"
-            style={{
-              fontSize: "var(--text-content)",
-              fontWeight: 700,
-              color: "var(--color-text-primary)",
-            }}
-          >
-            {task_title}
-          </span>
+          {/* THE BODY'S ANCHOR (#1893). The card's referent is the challenger's
+              praxis — the same place the accepted state below already links.
+              `challenger_praxis_id` is NULL in the run-up, before the challenger
+              has a praxis to point at, and then the body is PLAIN: no overlay,
+              no cursor change, and nothing pointing at `/praxis/null`. */}
+          {challenger_praxis_id != null ? (
+            <Link
+              to={`/praxis/${challenger_praxis_id}`}
+              className="font-body"
+              style={{ ...TITLE_STYLE, textDecoration: "none" }}
+            >
+              {task_title}
+              <FeedBodyOverlay />
+            </Link>
+          ) : (
+            <span className="font-body" style={TITLE_STYLE}>
+              {task_title}
+            </span>
+          )}
           <span className="label-caption">
             {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value })}
           </span>
@@ -253,6 +274,9 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               alignItems: "center",
               gap: "var(--space-sm)",
               flexWrap: "wrap",
+              // Discrete on top of the overlay (#1893): Accept / Decline /
+              // Withdraw answer the challenge, they never navigate.
+              ...FEED_BODY_LIFTED,
             }}
           >
             {/* Face is `.feed-action` (#1783); see FeedCardCollabInvite. */}
@@ -332,7 +356,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             <Link
               to={`/praxis/${challenger_praxis_id}`}
               className="label-caption"
-              style={{ color: "var(--badge-duel)", textDecoration: "none" }}
+              style={{ color: "var(--badge-duel)", textDecoration: "none", ...FEED_BODY_LIFTED }}
             >
               {i18n.t("feed:duelChallenge.accepted")}
             </Link>
