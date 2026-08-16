@@ -77,9 +77,7 @@
         "skillsLabel": "required skills",
         "skillsValue": "none — only care",
         "outputLabel": "expected output",
-        "outputValue": "accounts, entered plainly",
-        "standingLabel": "standing",
-        "standingValue": "unranked, by design"
+        "outputValue": "accounts, entered plainly"
       },
       "perks": {
         "record": "A record that survives the keeper",
@@ -96,28 +94,16 @@
     }
   },
   "ephemerists": {
-    "masthead": {
-      "starMark": "星",
-      "star": "Star",
-      "almanacMark": "暦",
-      "almanac": "Almanac",
-      "observationMark": "観",
-      "observation": "Observation",
-      "recordMark": "録",
-      "record": "Record"
-    },
     "apparatus": {
       "heading": "The Apparatus",
       "empty": "No apparatus recorded yet."
     },
     "tasks": {
       "heading": "Surveys",
-      "kicker": "Surveys awaiting a hand to triangulate them",
       "empty": "No surveys open."
     },
     "praxis": {
       "heading": "Transcriptions",
-      "kicker": "Truths filed to the codex & weighed for concordance",
       "empty": "Nothing sealed to the codex yet."
     },
     "road": {
@@ -163,10 +149,7 @@
           "label": "expected output",
           "value": "truths, submitted to the codex"
         },
-        {
-          "label": "your standing",
-          "value": "keeper of the road"
-        }
+        {}
       ],
       "perks": [
         "A codex that weighs your findings for concordance",
@@ -186,12 +169,10 @@
     },
     "tasks": {
       "heading": "Jobs",
-      "kicker": "Now mobilizing",
       "empty": "No work orders posted."
     },
     "praxis": {
       "heading": "Accomplishments",
-      "kicker": "Work that held up",
       "empty": "No reports filed yet."
     },
     "roll": {
@@ -237,10 +218,7 @@
           "label": "expected output",
           "value": "honest work, finished"
         },
-        {
-          "label": "your standing",
-          "value": "card-carrying"
-        }
+        {}
       ],
       "perks": [
         "A roll that has your back on every shift",
@@ -255,17 +233,14 @@
   },
   "singularity": {
     "manifest": {
-      "command": "> cat /faction/manifest.txt",
       "empty": "> manifest.txt: empty"
     },
     "tasks": {
       "heading": "Functions",
-      "kicker": "Open functions needing cycles // awaiting nodes",
       "empty": "> no open functions"
     },
     "praxis": {
       "heading": "Signals Generated",
-      "kicker": "function outputs // verified by the array",
       "empty": "> no answers yet"
     },
     "access": {
@@ -313,10 +288,7 @@
           "label": "expected output",
           "value": "signal, into consensus"
         },
-        {
-          "label": "node status",
-          "value": "awaiting connect"
-        }
+        {}
       ],
       "perks": [
         "A consensus that verifies, coalesces, amplifies",
@@ -336,12 +308,10 @@
     },
     "tasks": {
       "heading": "Heists",
-      "kicker": "We've come up with a new caper to pull off",
       "empty": "No mischief here"
     },
     "praxis": {
       "heading": "Good Stories",
-      "kicker": "Successful heists",
       "empty": "No heists pulled off yet."
     },
     "dispatch": {
@@ -360,7 +330,6 @@
       "gateBody": "Keep pulling off jobs and {{faction}} will come looking for you. Cause enough trouble and the invitation writes itself."
     },
     "spotlight": {
-      "wanted": "★ WANTED ★",
       "label": "Champion",
       "stat": "lvl {{level}} · {{score}} pts"
     },
@@ -386,10 +355,7 @@
           "label": "expected output",
           "value": "trouble, well-made"
         },
-        {
-          "label": "your standing",
-          "value": "accomplice, pending"
-        }
+        {}
       ],
       "perks": [
         "A crew that covers for you, not on you",
@@ -412,12 +378,10 @@
     },
     "tasks": {
       "heading": "Today's points",
-      "kicker": "Open to any hand",
       "empty": "Nothing set down today."
     },
     "praxis": {
       "heading": "Sealed work",
-      "kicker": "Recently sealed",
       "empty": "Nothing sealed yet."
     },
     "registry": {
@@ -465,10 +429,7 @@
           "label": "expected output",
           "value": "work, submitted & signed"
         },
-        {
-          "label": "season seat",
-          "value": "#2 in the roster"
-        }
+        {}
       ],
       "perks": [
         "A circle that reads your work closely, and kindly",
@@ -488,12 +449,10 @@
     },
     "tasks": {
       "heading": "Open Quests",
-      "kicker": "Fresh quests on the board",
       "empty": "No quests pinned up."
     },
     "praxis": {
       "heading": "Spells cast",
-      "kicker": "Spells that stuck the landing",
       "empty": "Nothing cast yet."
     },
     "join": {
@@ -537,10 +496,7 @@
           "label": "expected output",
           "value": "small, brave, strange things"
         },
-        {
-          "label": "season rank",
-          "value": "#3 and rising"
-        }
+        {}
       ],
       "perks": [
         "A coven that cheers every tiny victory",
@@ -555,22 +511,14 @@
   },
   "wow": {
     "charter": {
-      "heading": "The Charter",
-      "title": "The Charter of Whimsy",
-      "paragraphs": [
-        "Hear ye. We are the Warriors of Whimsy, and we have taken a vow so grave it loops entirely back around to silly: to bring whimsy into a world that keeps insisting on being sensible.",
-        "We march in real armour after imaginary dragons. We hold ceremonies for the frankly ceremonious. We knight houseplants. Our motto, borne on the crest in the honest tongue of Pig Latin, is Imsy-whay or-fay every-oneway — whimsy, for everyone — and we mean it with our whole gleaming breastplates.",
-        "The noodle sword is not a joke to us. It is THE joke, and we carry it with both hands and a straight face. That is the crusade. Enlist, and take the ridiculous seriously alongside us."
-      ]
+      "heading": "The Charter"
     },
     "tasks": {
       "heading": "Quests Awaiting a Champion",
-      "kicker": "The herald's call",
       "empty": "No quests afoot. The realm is, briefly and tragically, sensible."
     },
     "praxis": {
       "heading": "Chronicles of Proof",
-      "kicker": "Deeds set down",
       "empty": "The chronicle stands open, its pages still blank."
     },
     "join": {
@@ -596,8 +544,7 @@
       "level": "lvl {{level}}"
     },
     "mobile": {
-      "eyebrow": "The Field Pavilion",
-      "subtitle": "thy crusade, in the palm of thy gauntlet"
+      "eyebrow": "The Field Pavilion"
     },
     "invitation": {
       "kicker": "the Court is mustering —",
@@ -616,10 +563,7 @@
           "label": "expected output",
           "value": "the ridiculous, taken gravely seriously"
         },
-        {
-          "label": "thy standing",
-          "value": "knight, freshly sworn"
-        }
+        {}
       ],
       "perks": [
         "The Leap of Whimsy — once each level, a knight may storm a single task one rung above their station and take it anyway"

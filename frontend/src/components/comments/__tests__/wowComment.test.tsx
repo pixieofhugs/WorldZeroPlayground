@@ -157,7 +157,13 @@ describe('row states', () => {
   it('draws no reaction pill — nothing in the product can answer one', () => {
     // The kit draws "✦ Huzzah · 12" and #898 shipped the word, but there is no
     // reaction endpoint, column or count. A control that no-ops is forbidden.
-    expect(row()).not.toContain(i18n.t('praxis:comments.wow.react'))
+    //
+    // The word is spelled out because #1909 DELETED `praxis:comments.wow.react`
+    // as dead copy: a key kept alive only by a negative assertion is one the
+    // next dead-key sweep cannot tell from a live one. The ✦ is carried too, so
+    // this cannot pass or fail on `comments.wow.empty`, which says "Huzzah" in
+    // a sentence about having no counsel yet.
+    expect(row()).not.toContain('✦ Huzzah')
   })
 })
 

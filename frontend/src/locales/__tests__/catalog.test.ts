@@ -155,19 +155,22 @@ describe('UA taunts', () => {
 // as soon as its key is listed, and a kit that drops one fails immediately.
 describe('faction profile kits keep their copy in the catalog', () => {
   // Per slug, the `profile.<slug>.*` keys ProfileSkin reads. Not a uniform
-  // shape on purpose: `levelUnit` and `scoreFootnote` are optional knobs only
-  // some kits set (the rest take ProfileSkin's shared `profile.levelUnit` and
-  // draw no footnote), and WOW's badge heading is `profile.wow.honours` —
-  // already in the catalog for its phone stack, the same words for the same
-  // section, so the desktop kit reads that key rather than a second copy of it.
+  // shape on purpose: `levelUnit` is an optional knob only some kits set (the
+  // rest take ProfileSkin's shared `profile.levelUnit`).
+  //
+  // Two rows lost an entry to #1909's CUT list rather than to a code change:
+  // WOW's badge heading was `profile.wow.honours` and Singularity was the one
+  // kit setting `scoreFootnote`. WOW's kit now reads the SHARED
+  // `profile.badgesHeading` and Singularity draws no footnote, which is what
+  // the other six already did — so neither key belongs in a per-slug list.
   const PROFILE_KIT_KEYS: Record<string, readonly string[]> = {
     ua: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
     snide: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    wow: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'honours'],
+    wow: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody'],
     coven: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
     ephemerists: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
     everymen: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    singularity: ['ringLabel', 'nextLevel', 'scoreFootnote', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
+    singularity: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
   }
 
   for (const [slug, keys] of Object.entries(PROFILE_KIT_KEYS)) {
@@ -207,9 +210,9 @@ describe('faction profile kits keep their copy in the catalog', () => {
       'The first bit of mischief is always the hardest ✦',
     )
     expect(i18n.t('common:profile.singularity.praxisEmptyTitle')).toBe('> NO OUTPUT SEALED')
-    expect(i18n.t('common:profile.singularity.scoreFootnote', { score: 1880 })).toBe(
-      '> 1880 PTS LOGGED',
-    )
+    // `profile.singularity.scoreFootnote` ("> 1880 PTS LOGGED") was pinned here
+    // for its `> ` prefix. #1909 CUT the key; `praxisEmptyTitle` above still
+    // carries the prefix, so the character check is not lost with it.
     expect(i18n.t('common:profile.snide.praxisEmptyBody')).toBe(
       "Clean record's a bad look around here. Go pull a job.",
     )
@@ -344,8 +347,9 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     'factions.json:ephemerists.invitation.perks.1',
     'factions.json:singularity.invitation.perks.1',
     'factions.json:snide.invitation.perks.1',
-    // #1864 CUT: the whole terms[3] "standing" row goes, all seven factions.
-    'factions.json:coven.invitation.terms.3.label',
+    // The whole terms[3] "standing" row was listed here, waiting for #1864's
+    // deletion child. #1909 took it — all seven factions — so it is a survivor
+    // no longer, and the guard is that much tighter.
   ].sort()
 
   it('finds enough voiced strings that the sweep cannot pass by scanning nothing', () => {
@@ -388,16 +392,14 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     // submitted yet."), so the retired word leaves with the key.
     'factions.json:ephemerists.praxis.empty',
     'factions.json:ua.praxis.heading',
-    'factions.json:ua.praxis.kicker',
     'factions.json:ua.praxis.empty',
     'factions.json:ua.registry.gateBody',
     'feed.json:factionHero.ephemerists.stats.praxes',
     'feed.json:factionHero.singularity.stats.praxes',
     'feed.json:factionHero.ua.stats.praxes',
     'feed.json:factionHero.wow.stats.praxes',
-    // #1864 CUT — single-faction flourishes on surfaces ruled generic.
-    'feed.json:row.wow.praxisSealed',
-    'praxis.json:card.wow.sealed',
+    // `feed.json:row.wow.praxisSealed` and `praxis.json:card.wow.sealed` were
+    // listed here as #1864 CUTs waiting on their child. #1909 deleted both.
     // #1864 GENERIC, blocked on the profile-kit collapse. The decision record's
     // own agreed wording for these rows still reads "No praxis sealed yet",
     // which contradicts this ruling — flagged on #1863 rather than picked here.
@@ -419,14 +421,12 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'praxis.json:listPage.emptyFiltered',
     // Pure metaphor — a mind filing contingencies submits no praxis.
     'progression.json:unlocks.three_plans.desc',
-    // #1864 GENERIC / CUT, as above.
-    'factions.json:ephemerists.praxis.kicker',
+    // #1864 GENERIC, as above. The three CUTs that sat here —
+    // `ephemerists.praxis.kicker` and both `card.masthead.*` — left with #1909.
     'factions.json:everymen.praxis.empty',
     'feed.json:factionHero.coven.stats.praxes',
     'feed.json:factionHero.everymen.stats.praxes',
     'feed.json:factionHero.snide.stats.praxes',
-    'praxis.json:card.masthead.ua',
-    'praxis.json:card.masthead.albescent',
     'common.json:profile.ephemerists.praxisEyebrow',
   ].sort()
 

@@ -73,7 +73,6 @@
     "singularity": {
       "ringLabel": "lvl",
       "nextLevel": "next // lvl {{level}}",
-      "scoreFootnote": "> {{score}} PTS LOGGED",
       "praxisEyebrow": "Sealed outputs // by {{name}}",
       "praxisEmptyTitle": "> NO OUTPUT SEALED",
       "praxisEmptyBody": "Run a protocol. Cast the first signal.",
@@ -97,23 +96,12 @@
       "badgeTitle": "Seals of the practice"
     },
     "wow": {
-      "eyebrow": "Of the Court of Whimsy",
       "ringLabel": "rank",
       "levelUnit": "huzzahs toward the next rank",
       "nextLevel": "next · rank {{level}}",
       "praxisEyebrow": "Chronicles sealed by {{name}}",
       "praxisEmptyTitle": "No chronicle yet",
-      "praxisEmptyBody": "The Court waits. Go and do something gloriously daft, then write it down.",
-      "honours": "Honours & Credentials",
-      "tabPraxis": "Chronicles",
-      "tabTasks": "Quests Decreed",
-      "stats": {
-        "points": "Huzzahs",
-        "praxis": "Chronicles",
-        "tasks": "Quests"
-      },
-      "praxisEmpty": "No chronicle yet. The Court waits.",
-      "tasksEmpty": "No quest decreed by this knight, as yet."
+      "praxisEmptyBody": "The Court waits. Go and do something gloriously daft, then write it down."
     }
   },
   "leaderboard": {
@@ -207,8 +195,6 @@
       "findTask": "Find a Task",
       "castVotes": "Cast Your Votes",
       "coven": {
-        "charWindow": "you",
-        "questsWindow": "quests",
         "questsHeading": "quests"
       },
       "ua": {

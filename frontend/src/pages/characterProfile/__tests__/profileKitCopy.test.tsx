@@ -98,7 +98,11 @@ const KIT_COPY: Record<string, readonly string[]> = {
     'Chronicles sealed by Reza',
     'No chronicle yet',
     'The Court waits. Go and do something gloriously daft, then write it down.',
-    'Honours & Credentials',
+    // WOW's badge heading was 'Honours & Credentials' (`profile.wow.honours`),
+    // shared with its phone stack. #1909 CUT the key with the rest of the
+    // `profile.wow.*` block, so the kit reads the SHARED 'Badges' — which is
+    // where #1910's `profileKit.{F}.badgeTitle` collapse settles every kit.
+    'Badges',
   ],
   coven: [
     'lvl',
@@ -133,9 +137,9 @@ const KIT_COPY: Record<string, readonly string[]> = {
     'lvl',
     '380 / 500 pts this level',
     'next // lvl 8',
-    // The only kit with a score footnote — it names the absolute score, not the
-    // threshold, which is why it could not share na's `ptsToNext`.
-    '> 1880 PTS LOGGED',
+    // It was the only kit with a score footnote — it named the absolute score,
+    // not the threshold, which is why it could not share na's `ptsToNext`.
+    // #1909 CUT `profile.singularity.scoreFootnote`, so no footnote is drawn.
     'Sealed outputs // by Reza',
     '> NO OUTPUT SEALED',
     'Run a protocol. Cast the first signal.',

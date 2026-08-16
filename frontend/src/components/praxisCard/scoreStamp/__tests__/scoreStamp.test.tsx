@@ -372,13 +372,16 @@ function expectVotesRow(html: string, showsVotes: boolean, votesLabel = 'from vo
 }
 
 /**
- * The Ephemerists' rows are the same rows under different NAMES (#1637): the
- * labels are kanji and the English rides on `title`, which `text()` strips with
- * the tag it lives on. So every shared row assertion below hands in the glyph
- * the reader actually sees — passing the English would go quietly green on the
- * NEGATIVE half ("no base row") while proving nothing about the positive one.
+ * The Ephemerists' rows used to be the same rows under different NAMES (#1637):
+ * the labels were kanji and the English rode on `title`. #1909 CUT all five of
+ * those strings — they were the only faction-specific score-stamp labels in the
+ * app, on a surface the audit ruled generic — so each row now prints the SHARED
+ * label it was glossed with. The one that is not simply the shared default is
+ * the tally: the gloss said "from votes", the shared sentence key
+ * `card.stamp.fromVotes` interpolates a figure, and the row sets its own `+ N`
+ * outside the label (#1637's bound), so it takes `card.stamp.votes`.
  */
-const EPHEMERISTS_LABEL = { base: '基', points: '点', fromVotes: '票' } as const
+const EPHEMERISTS_LABEL = { base: 'base', points: 'points', fromVotes: 'votes' } as const
 
 /**
  * The five conditional states of design v2, on both #841 stamps. The failure
@@ -895,20 +898,21 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
 })
 
 /**
- * #1637 — the Ephemerists label their score in kanji, and ONLY the labels.
+ * #1637 IS RETIRED, and #1909 is what retired it.
  *
- * The seam under test is the rendered label markup of the Ephemerists stamp:
- * which string reaches the glyph slot, and what the reader can get back out of
- * it. It is an i18n change, not a DOM one — the design walks every text node
- * with a `TreeWalker` because a canvas cannot reach the components, and a sweep
- * built from that would rewrite the word "base" anywhere on the page.
+ * The Ephemerists used to label their score in kanji — 基 / 点 / 票 / 習 — with
+ * the English on `title`. The copy audit CUT all five strings: they were the
+ * only faction-specific score-stamp labels in the app, on a surface it ruled
+ * generic, and the shared gloss each glyph carried is now the visible label.
  *
- * The bound that makes the puzzle acceptable is asserted here as its own case:
- * the cost of not decoding is losing a LABEL, never a number. So the numerals
- * assertion is not a nicety — it is the rule. A future skin that renders 四 for
- * a vote count would render fine, read beautifully, and be the defect.
+ * #1637's own BOUND survives the change and is still the thing worth guarding:
+ * the cost of not decoding a label may never be a NUMBER. A skin that renders
+ * 四 for a vote count would render fine, read beautifully, and be the defect.
+ * So the numerals case stays exactly as written, and the label cases invert to
+ * absences — because the way a faction-only label comes back onto a settled
+ * surface is a voice pass, which only a negative assertion can catch.
  */
-describe('the Ephemerists label their score in kanji (#1637)', () => {
+describe('the Ephemerists score stamp reads in the shared words (#1909)', () => {
   /** A praxis with every row live, so all three substituted labels are drawn. */
   const full = () =>
     renderToStaticMarkup(
@@ -924,14 +928,14 @@ describe('the Ephemerists label their score in kanji (#1637)', () => {
       />,
     )
 
-  it('prints the glyphs, and none of the English, in the visible text', () => {
+  it('prints the shared English, and none of the glyphs, in the visible text', () => {
     const html = text(full())
-    expect(html).toContain('基')
-    expect(html).toContain('点')
-    expect(html).toContain('票')
-    expect(html).not.toContain('base')
-    expect(html).not.toContain('points')
-    expect(html).not.toContain('from votes')
+    expect(html).toContain('base')
+    expect(html).toContain('points')
+    expect(html).toContain('votes')
+    for (const glyph of ['基', '点', '票', '習']) {
+      expect(html).not.toContain(glyph)
+    }
   })
 
   it('leaves every numeral Western — undecoded, the arithmetic still checks out', () => {
@@ -946,25 +950,16 @@ describe('the Ephemerists label their score in kanji (#1637)', () => {
     expect(html).not.toMatch(/[〇一二三四五六七八九十百千万]/)
   })
 
-  it('carries the English on one attribute, for hover, focus and assistive tech', () => {
+  it('needs no glossed abbreviation, because nothing is abbreviated', () => {
     const markup = full()
-    // `title` is the whole reveal: a pointer opens it as a tooltip and AT reads
-    // it out, so there is no second accessibility path that could drift.
-    for (const gloss of ['base', 'points', 'from votes']) {
-      expect(markup).toContain(`title="${gloss}"`)
-    }
-    // …and every substituted label is reachable, so FOCUS is a real gesture and
-    // not just a word in the ruling.
-    expect(markup.match(/tabindex="0"/g)).toHaveLength(3)
-    // `<abbr>` is the element that says "short form, expansion available" — it
-    // is what draws the native dotted underline hinting there is a lookup here.
-    expect(markup.match(/<abbr /g)).toHaveLength(3)
-  })
-
-  it('never uppercases a kanji, whatever voice the surrounding label wears', () => {
-    // SMALL_CAPS sets `text-transform: uppercase` for the plate's whole label
-    // voice; uppercasing does nothing to a kanji but cost it the override.
-    expect(full().match(/text-transform:none/g)).toHaveLength(3)
+    // The whole `<abbr title=…>` reveal existed to expand a glyph. With the
+    // label itself in English there is nothing to expand — and an `<abbr>` with
+    // no expansion is a dotted underline promising a lookup that is not there.
+    expect(markup).not.toContain('<abbr ')
+    expect(markup).not.toContain('tabindex="0"')
+    // The plate's `text-transform: none` overrides existed for the same reason:
+    // uppercasing does nothing to a kanji but cost it the override.
+    expect(markup).not.toContain('text-transform:none')
   })
 
   it('leaves every other faction reading in English', () => {
@@ -993,15 +988,14 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
    * The line is spelled out per faction rather than pattern-matched, because
    * `5 × 0.80 = 4` is the bug this guards and 4 is already on every one of these
    * sheets as the votes figure — a bare numeral assertion would go green on it.
-   * Seven label the row in English; the Ephemerists label it in kanji like every
-   * other row of theirs (#1637), and handing in 'habit' there would assert
-   * nothing. Singularity zero-pads (`+05`) — its declared terminal notation,
-   * the same one its votes row already uses.
+   * All eight label the row in English since #1909 cut the Ephemerists' four
+   * kanji; only the surrounding notation differs. Singularity zero-pads (`+05`)
+   * — its declared terminal notation, the same one its votes row already uses.
    */
   const STAMPS = [
     ['the unaffiliated sheet', DefaultScoreStamp, 'habit', '+ 5 habit bonus'],
     ['Everymen', EverymenScoreStamp, 'habit', 'habit+5'],
-    ['the Ephemerists', EphemeristsScoreStamp, '習', '+ 5 習'],
+    ['the Ephemerists', EphemeristsScoreStamp, 'habit', '+ 5 habit'],
     ['S.N.I.D.E.', SnideScoreStamp, 'habit', 'habit +5'],
     ['Singularity', SingularityScoreStamp, 'habit', 'habit+05'],
     ['WOW', WowScoreStamp, 'habit', 'habit +5'],
@@ -1034,8 +1028,10 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
     expect(html).not.toMatch(/[〇一二三四五六七八九十百千万]/)
   })
 
-  it('carries the English gloss on the kanji, for hover, focus and assistive tech', () => {
+  it('labels the habit row in the shared word, not a kanji (#1909)', () => {
     const markup = renderToStaticMarkup(<EphemeristsScoreStamp praxis={banked} />)
-    expect(markup).toContain('title="habit"')
+    expect(text(markup)).toContain('habit')
+    expect(markup).not.toContain('習')
+    expect(markup).not.toContain('title="habit"')
   })
 })
