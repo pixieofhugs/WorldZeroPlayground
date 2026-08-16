@@ -32,10 +32,11 @@
  * `editPraxis.coven` block at all now.
  *
  * The one word this page draws that is not from the neutral set is the
- * MASTHEAD WORDMARK, and it is not composer copy: it is Coven's own wordmark,
- * already owned by `feed:taskCard.coven.masthead` for the v2 task card. Read
- * from there rather than re-keyed here, so the coven is lettered identically on
- * both surfaces and this page introduces no faction copy of its own.
+ * MASTHEAD WORDMARK, and it is not composer copy: it is the faction's NAME.
+ * It used to be read from `feed:taskCard.coven.masthead`, the v2 task card's
+ * copy of it; #1910 deleted that slot and both surfaces read `factionName()`,
+ * the one key a faction name lives under (ADR-0038). The lower case is the
+ * lettering, so it is a `textTransform` here rather than a second spelling.
  *
  * ## One responsive component, no mobile twin (ADR-0065 §2)
  *
@@ -106,6 +107,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
+import { factionName } from "../../../utils/factions";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -320,10 +322,6 @@ function GlyphScatter() {
 
 export default function CovenEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
-  /* The wordmark is Coven's own, already lettered for the v2 task card. Read
-     from `feed` rather than re-keyed under `editPraxis.coven`, which this issue
-     deletes — the composer introduces no faction copy of its own. */
-  const { t: tFeed } = useTranslation("feed");
   const sizes = useComposerSizes();
   const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
@@ -436,9 +434,11 @@ export default function CovenEditPraxis({ state }: Props) {
                     lineHeight: 1,
                     letterSpacing: "0.02em",
                     color: INK,
+                    // The lower case is the lettering, not the word (#1910).
+                    textTransform: "lowercase",
                   }}
                 >
-                  {tFeed("taskCard.coven.masthead")}
+                  {factionName("coven")}
                 </span>
               </div>
               <Braid style={{ marginTop: "var(--space-sm)" }} />

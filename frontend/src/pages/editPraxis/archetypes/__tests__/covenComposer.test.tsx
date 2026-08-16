@@ -29,6 +29,7 @@ import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
 import forms from "../../../../locales/en/forms.json";
+import { factionName } from "../../../../utils/factions";
 import type { EditPraxisState } from "../../useEditPraxis";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
@@ -136,9 +137,10 @@ describe("Coven composer — the window is gone (ADR-0050, #1188)", () => {
   });
 
   it.each(WIDTHS)("letters the coven's own wordmark on %s", (width) => {
-    // Read from `feed`, where the v2 task card already owns it — the composer
-    // introduces no faction copy key of its own.
-    expect(render(width)).toContain(i18n.t("feed:taskCard.coven.masthead"));
+    // The wordmark is the faction NAME, read from the one key that owns it
+    // (ADR-0038) since #1910 deleted `feed:taskCard.coven.masthead`. The
+    // composer introduces no faction copy key of its own.
+    expect(render(width)).toContain(factionName("coven"));
   });
 });
 

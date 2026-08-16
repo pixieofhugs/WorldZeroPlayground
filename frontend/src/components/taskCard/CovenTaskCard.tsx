@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 
@@ -266,9 +267,14 @@ export default function CovenTaskCard({
             />
             <circle cx="22" cy="22" r="3" fill="var(--faction-coven-slip-gold)" />
           </svg>
+          {/* The slip's own `feed:taskCard.coven.masthead` held a second copy of
+              the faction's name ("the cozy coven") and is gone with #1910. The
+              lower case belonged to the hand-lettering rather than to the word,
+              so it moves to `textTransform`, where casing belongs — the name
+              itself now comes from the one place that owns it (ADR-0038). */}
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat masthead, not typeset copy. */}
-          <div style={{ fontFamily: HAND, fontSize: 26, lineHeight: 0.9, marginTop: "var(--space-xs)" }}>
-            {i18n.t("feed:taskCard.coven.masthead")}
+          <div style={{ fontFamily: HAND, fontSize: 26, lineHeight: 0.9, marginTop: "var(--space-xs)", textTransform: "lowercase" }}>
+            {factionName("coven")}
           </div>
           <Thread style={{ marginTop: "var(--space-sm)" }} />
         </div>

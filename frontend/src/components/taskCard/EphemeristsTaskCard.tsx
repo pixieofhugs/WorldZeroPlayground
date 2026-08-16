@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import {
@@ -266,7 +267,11 @@ export default function EphemeristsTaskCard({
                 whiteSpace: "nowrap",
               }}
             >
-              {i18n.t("feed:taskCard.ephemerists.masthead")}
+              {/* #1910: the band spells the faction's name, so it reads the one
+                  key that stays per-faction rather than a second copy. The
+                  `textTransform` above already carried the plate's upper case,
+                  so the band reads THE EPHEMERISTS either way. */}
+              {factionName("ephemerists")}
             </span>
           </div>
         </div>

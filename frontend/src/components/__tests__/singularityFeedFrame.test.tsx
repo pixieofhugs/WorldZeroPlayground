@@ -11,8 +11,9 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
-// Initialize the i18n catalog so the masthead key resolves to English text.
+// Initialize the i18n catalog so the faction name resolves to English text.
 import '../../i18n'
+import { factionName } from '../../utils/factions'
 import SingularityFeedFrame from '../feed/SingularityFeedFrame'
 
 function frame({
@@ -33,7 +34,13 @@ describe('SingularityFeedFrame — the window bar is ornament, the prompt line i
     // #1243 §10: the boot strip used to be `aria-hidden` in ONE piece, which
     // cannot hold the dismiss control. Each ornament carries the attribute now.
     const html = frame()
-    expect(html).toMatch(/<span aria-hidden="true"[^>]*>DISPATCH/)
+    // The window title is the faction's own name since #1910 deleted
+    // `feed:frame.singularity.masthead` ("DISPATCH · SIGNAL ONLINE"); the bar's
+    // `text-transform: uppercase` is what makes it read SINGULARITY on screen,
+    // so the markup holds the name as `factionName()` spells it.
+    expect(html).toMatch(
+      new RegExp(`<span aria-hidden="true"[^>]*>${factionName('singularity')}<`),
+    )
     expect(html).toMatch(/<span aria-hidden="true"[^>]*>0x[0-9A-F]{4}</)
   })
 

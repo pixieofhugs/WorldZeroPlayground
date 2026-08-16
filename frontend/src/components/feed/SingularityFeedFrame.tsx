@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import i18n from '../../i18n'
+import { factionName } from '../../utils/factions'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
 
@@ -55,11 +55,16 @@ import type { FeedFrameProps } from './feedFrameProps'
  *
  * Epic #1192 — the Unaffiliated sheet is the copy spec and the other eight are
  * visual chassis only. `kicker`, `tag` and `time` arrive already resolved from
- * the neutral `feed` catalog and are printed verbatim. The one string this file
- * names is `feed:frame.singularity.masthead`, which F2 authored for exactly this
- * slot. The costume lowercases the tag and letter-spaces the kicker; it
- * mutilates no word, the same call `SingularityPraxisDetail`'s `LABEL` makes in
- * the other direction.
+ * the neutral `feed` catalog and are printed verbatim. The costume lowercases
+ * the tag and letter-spaces the kicker; it mutilates no word, the same call
+ * `SingularityPraxisDetail`'s `LABEL` makes in the other direction.
+ *
+ * The window bar's title used to be `feed:frame.singularity.masthead`
+ * ("DISPATCH · SIGNAL ONLINE"), which F2 authored for this slot. #1864 ruled
+ * the whole `frame.{F}.masthead` family down to `names.{F}` and #1910 deleted
+ * it, so the bar names the faction whose window it is — the one string a
+ * terminal chrome bar can carry without becoming copy. This file now names NO
+ * copy key at all.
  *
  * ## Always dark, in both themes
  *
@@ -233,7 +238,7 @@ export default function SingularityFeedFrame({
             textOverflow: 'ellipsis',
           }}
         >
-          {i18n.t('feed:frame.singularity.masthead')}
+          {factionName('singularity')}
         </span>
         <span
           aria-hidden="true"
