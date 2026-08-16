@@ -44,6 +44,55 @@ describe('.filter-bar does not clip its overflow (#1506)', () => {
 })
 
 /**
+ * #1854 — the bar is a surface card wearing a rainbow top edge, and every
+ * mounting surface inherits it from this one rule.
+ *
+ * The chrome itself shipped with the bar (#1365) and is unchanged here; what
+ * was missing is a guard. Four surfaces plus the Players rebuild (#1855) get
+ * the card by mounting `FilterBar` and nothing else, so a dropped declaration
+ * is five regressions with no local diff to notice them in — and the sibling
+ * `describe` above exists because a rule in this exact block was edited once
+ * already. Pinning the tokens (not px) also keeps the ratchet honest against
+ * `local/no-raw-style-values`.
+ *
+ * `overflow: hidden` is NOT part of the card and must not be re-added; the
+ * spectrum's own top radius does that clipping. See #1506 above.
+ */
+describe('.filter-bar is a surface card with a rainbow top edge (#1854)', () => {
+  it('paints the card in tokens', () => {
+    const bodies = ruleBodies(css, '.filter-bar')
+    expect(bodies.length).toBeGreaterThan(0)
+    const card = bodies.join('\n')
+    expect(card).toMatch(/border\s*:\s*1px\s+solid\s+var\(--color-border\)/)
+    expect(card).toMatch(/border-radius\s*:\s*var\(--space-md\)/)
+    expect(card).toMatch(/background\s*:\s*var\(--color-bg-surface\)/)
+  })
+
+  it('draws the top edge in the na/default spectrum', () => {
+    // ADR-0039: this is the unaffiliated/everyone identity, which is what
+    // makes it legitimate as global chrome. A faction hue here would be the
+    // Snide-lime accent #1361 ruling 1 rejected.
+    const bodies = ruleBodies(css, '.filter-bar__spectrum')
+    const strip = bodies.join('\n')
+    expect(strip).toMatch(/background\s*:\s*var\(--faction-default-rainbow\)/)
+    expect(strip).toMatch(/height\s*:\s*var\(--[\w-]+\)/)
+  })
+
+  it('runs the controls as a padded column that tightens on the phone', () => {
+    // Two bodies in document order: the desktop rule, then the max-width:767px
+    // override. The phone must restate BOTH axes — inheriting the desktop gap
+    // is what this test caught.
+    const bodies = ruleBodies(css, '.filter-bar__body')
+    expect(bodies.length, 'a desktop body and a phone override').toBe(2)
+    const [desktop, phone] = bodies
+    expect(desktop).toMatch(/padding\s*:\s*var\(--space-lg\)\s+var\(--space-xl\)/)
+    expect(desktop).toMatch(/gap\s*:\s*var\(--space-lg\)/)
+    expect(phone).toMatch(/padding\s*:\s*var\(--space-md\)\s+var\(--space-lg\)/)
+    expect(phone).toMatch(/gap\s*:\s*var\(--space-md\)/)
+  })
+})
+
+/**
  * #1726 — a segment must never be narrower than its own label.
  *
  * `.filter-rail__segment` used to be `flex: 1` with zero horizontal padding, so

@@ -50,6 +50,19 @@ export interface FilterBarProps {
  *     is authored in tokens and neutral; the one spectrum it keeps is the rail
  *     ring, which is `na`'s and the site default's shared identity (ruling 1).
  *
+ * And one thing the design draws that is deliberately PRESENT, recorded beside
+ * those three so it is not read as the rejected pattern (#1854): the bar is a
+ * **surface card with a 3px rainbow top edge**. Both live on `.filter-bar`
+ * itself, so every mounting surface inherits them — Tasks, Praxes, Updates and
+ * Players — instead of four page-local wrappers. The strip is
+ * `--faction-default-rainbow`, the unaffiliated/everyone identity (ADR-0039),
+ * not a faction hue promoted to global chrome. The Snide-lime rejection stands.
+ *
+ * The card must NOT take `overflow: hidden` to clip that strip, however much
+ * the shape asks for it: it traps `OptionPicker`'s absolutely-positioned
+ * popover (#1506). The strip rounds its own top corners instead, and
+ * `filterBarOverflow.test.ts` holds both halves.
+ *
  * The page TITLE is not drawn here either, though the design puts it in the
  * bar: every mounting page already renders `PageTitle`, and two headings is a
  * regression, not fidelity.
