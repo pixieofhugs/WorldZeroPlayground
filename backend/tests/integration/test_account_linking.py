@@ -26,6 +26,10 @@ returning identity the provider currently calls unverified.
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+# `MismatchingStateError` is NOT re-exported from `starlette_client`, which only
+# publishes `OAuthError` — the same reason `routers/auth.py` reaches one level
+# down for it.
+from authlib.integrations.base_client import MismatchingStateError
 from authlib.integrations.starlette_client import OAuthError
 from fastapi import HTTPException
 from httpx import AsyncClient
@@ -653,11 +657,12 @@ async def test_discord_callback_rejects_an_unverified_email(
 class _DecliningClient:
     """A provider that answers the code exchange with an OAuth error.
 
-    The shape of every failure that never reaches our own gates: the player
-    pressed Cancel on the consent screen, or came back with a state authlib no
-    longer recognises. Both surface as ``OAuthError`` out of
-    ``authorize_access_token``, and an uncaught one is a 500 whose body the
-    player reads — because a callback is a navigation, not an XHR.
+    The player pressed Cancel on the consent screen. It surfaces as a bare
+    ``OAuthError`` out of ``authorize_access_token``, and an uncaught one is a
+    500 whose body the player reads — because a callback is a navigation, not
+    an XHR.
+
+    An expired ``state`` is deliberately NOT this case; see case 13.
     """
 
     async def authorize_access_token(self, request):
@@ -682,5 +687,62 @@ async def test_a_declined_consent_screen_lands_the_player_back_home(
 
     assert resp.status_code == 302
     assert _login_error_code(resp) == ErrorCode.oauth_failed.value
+    assert resp.cookies.get("access_token") is None
+    assert await _account_count(db_session) == accounts_before
+
+
+# ---------------------------------------------------------------------------
+# Case 13 — the sign-in went stale rather than being refused (#1756)
+# ---------------------------------------------------------------------------
+
+
+class _StaleStateClient:
+    """A provider callback arriving with a ``state`` authlib no longer holds.
+
+    Exactly what authlib does when the session cookie carrying the state is
+    gone: ``StarletteOAuth2App.authorize_access_token`` looks the state up,
+    gets ``None`` back, and ``_format_state_params`` raises. Reproduced by
+    raising the real exception rather than by expiring a cookie, because the
+    cookie's ten-minute lifetime (#1755) is enforced by
+    ``TimestampSigner.unsign()`` against the wall clock — a test that waited it
+    out would take ten minutes.
+    """
+
+    async def authorize_access_token(self, request):
+        raise MismatchingStateError()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["google", "discord"])
+async def test_an_expired_state_says_so_rather_than_something_went_wrong(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    provider: str,
+):
+    """A stale sign-in is retryable, and the copy has to be able to say that.
+
+    This is the one requirement of #1756 that #1862 did not deliver: it caught
+    the whole ``OAuthError`` family under one generic code, on the reasoning
+    that the player's next move is the same for all of them. That holds for a
+    declined consent screen — declining is a choice — but not for a state that
+    went stale while the player was distracted, which is not a choice they made
+    and which succeeds on a second attempt.
+
+    The assertion that matters is the INEQUALITY as much as the equality:
+    ``MismatchingStateError`` subclasses ``OAuthError``, so a dispatch that
+    tested the general case first would swallow this one and every stale
+    sign-in would read "something went wrong".
+    """
+    from routers import auth as auth_router
+
+    monkeypatch.setattr(auth_router._OAUTH, provider, _StaleStateClient())
+    accounts_before = await _account_count(db_session)
+
+    resp = await client.get(f"/auth/{provider}/callback")
+
+    assert resp.status_code == 302
+    assert _login_error_code(resp) == ErrorCode.oauth_state_expired.value
+    assert _login_error_code(resp) != ErrorCode.oauth_failed.value
     assert resp.cookies.get("access_token") is None
     assert await _account_count(db_session) == accounts_before

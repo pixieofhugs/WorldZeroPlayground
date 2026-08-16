@@ -190,14 +190,21 @@ class ErrorCode(str, enum.Enum):
     #: an unseen OAuth identity is linked to an existing account BY EMAIL, which
     #: makes the claim an authentication decision rather than a profile detail.
     oauth_email_unverified = "OAUTH_EMAIL_UNVERIFIED"
-    #: #1773. Every other way a callback ends without a session: the player
-    #: declined the consent screen, or came back with a state authlib no longer
-    #: recognises. One code rather than a taxonomy, because the player's next
-    #: move is the same for all of them and the provider's own error strings are
-    #: not copy we would show. Unlike every other member this one is never
-    #: raised — it is the fallback ``routers.auth._sign_in_failed_redirect``
-    #: carries when the exception it caught has no coded detail of its own.
+    #: #1773. Every other way a callback ends without a session — in practice,
+    #: the player declined the consent screen. One code rather than a taxonomy,
+    #: because the player's next move is the same for all of them and the
+    #: provider's own error strings are not copy we would show. Unlike every
+    #: other member this one is never raised — it is the fallback
+    #: ``routers.auth._sign_in_failed_redirect`` carries when the exception it
+    #: caught has no coded detail of its own.
     oauth_failed = "OAUTH_FAILED"
+    #: #1756. The sign-in went stale rather than being refused: the player
+    #: started it, got distracted, and came back after the session cookie
+    #: carrying the OAuth ``state`` had expired (ten minutes, #1755). Split out
+    #: of :attr:`oauth_failed` because it is the one member of that family the
+    #: player did not choose, and the only one where "try again" is genuine
+    #: advice rather than a shrug. Never raised, for the same reason.
+    oauth_state_expired = "OAUTH_STATE_EXPIRED"
 
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
