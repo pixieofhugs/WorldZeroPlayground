@@ -95,7 +95,9 @@ import {
   ErrorBanner,
   RingMark,
   TaskSlip,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -154,14 +156,6 @@ const BAND = "var(--faction-default-rainbow-loop)";
 const TITLE_FACE = "var(--font-display)";
 
 const labelStyle = { color: MUTED };
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 const panelStyle = {
   background: FIELD,
   border: `1px solid ${BORDER}`,
@@ -289,48 +283,17 @@ export default function DefaultEditPraxis({ state }: Props) {
         masthead={masthead}
         ground={ground}
       >
-        {/* Draft · Saved just now, with the spectrum status mark. */}
+        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
+            header and the spectrum mark is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={DEFAULT_COMPOSER_DRESS.statusStyle}
-          metaStyle={DEFAULT_COMPOSER_DRESS.metaStyle}
-          mark={statusMark}
         />
 
-        {/* The task reference slip, on the field ground with the points mark. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={
-            <RingMark
-              size={84}
-              inset={4}
-              ring={RING}
-              inner={SHEET}
-              ringOpacity={0.9}
-              spin
-            >
-              <span
-                style={{
-                  fontFamily: TITLE_FACE,
-                  fontSize: "var(--text-title)",
-                  lineHeight: 1,
-                  color: INK,
-                }}
-              >
-                {task?.point_value ?? 0}
-              </span>
-            </RingMark>
-          }
-        />
+        {/* The task reference slip, on the field ground. Its mark is the shared
+            ScoreStamp (#1828) — the spectrum ring the composer used to draw here
+            changed shape the instant you pressed Submit. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -439,16 +402,24 @@ export default function DefaultEditPraxis({ state }: Props) {
         )}
 
         {/* Write-up — the tabs sit in the section's meta slot, so the label row
-            reads `Write-up … N words [Write|Preview]` exactly as the design
-            draws it. The word count rides the same row (#1706); it used to hang
-            under the textarea, where the design has nothing at all. */}
+            reads `Write-up … saved a moment ago … N words [Write|Preview]`
+            exactly as the design draws it. The word count rides the same row
+            (#1706) and the autosave line joined it (#1828); the cluster WRAPS,
+            which is what keeps three nowrap children on a phone's header row. */}
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
           rule={false}
           labelStyle={labelStyle}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span style={{ color: FAINT }}>
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span style={{ color: FAINT }}>
                 {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
@@ -564,7 +535,8 @@ export default function DefaultEditPraxis({ state }: Props) {
                 skin={{
                   buttonStyle: composerLabelStyle({
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the aurora reads through it (#1828). */
+                    background: composerDropGround(FIELD),
                     border: `1px dashed ${BORDER}`,
                     borderRadius: 10,
                     padding: "var(--space-2xl) var(--space-lg)",

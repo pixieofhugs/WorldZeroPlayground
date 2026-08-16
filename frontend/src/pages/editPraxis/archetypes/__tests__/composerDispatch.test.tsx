@@ -352,6 +352,112 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
   );
 });
 
+/**
+ * The composer's SHARED seams (#1828), asserted across every skin at once.
+ *
+ * Each of these is a claim about the layout rather than about a faction, and
+ * each was previously made eight times — or, in the band's case, three times in
+ * three different shapes and five times not at all. They are asserted here, on
+ * the composing stage of every registered archetype, because the failure this
+ * guards is one skin drifting off the shared affordance and nothing noticing.
+ */
+describe("the composer's shared seams (#1828)", () => {
+  /** Every slug that registers `editPraxis`, plus the two that fall through. */
+  const BAND_SLUGS = ["coven", "ephemerists", "everymen", "singularity", "snide", "ua", "wow"];
+  const INLINE_SLUGS = [null, "albescent"];
+
+  const composingState = (slug: string | null) =>
+    baseState({
+      task: task(["solo", "collab", "duel"], slug),
+      praxis: {
+        ...praxis,
+        task_faction_slug: slug,
+        task_point_value: 20,
+        score: 20,
+        metatask_points: 0,
+        display_multiplier: 1,
+        points_from_votes: 0,
+        habit_bonus_points: 0,
+        is_top_for_task: false,
+      } as unknown as PraxisOut,
+      // `formatAutosave` is relative to now, so the fixture has to be too —
+      // a fixed instant renders "42 minutes ago" and grows every day.
+      autosaveAt: new Date(),
+    });
+
+  const composer = (slug: string | null, width: "mobile" | "desktop" = "desktop") => {
+    mocks.formFactor = width;
+    const Archetype = resolvedArchetype(
+      pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+    )!;
+    return renderToStaticMarkup(
+      <MemoryRouter>
+        <Archetype state={composingState(slug)} />
+      </MemoryRouter>,
+    );
+  };
+
+  /**
+   * The bleed, as the geometry rather than as a colour: the band negates the
+   * sheet's own side and bottom insets, which is the only way a child of a
+   * padded column reaches its parent's edge. Desktop and mobile spend different
+   * rungs, so both are named.
+   */
+  const BLEED = {
+    desktop: "margin:0 calc(-1 * var(--space-2xl)) calc(-1 * var(--space-2xl))",
+    mobile: "margin:0 calc(-1 * var(--space-lg)) calc(-1 * var(--space-xl))",
+  } as const;
+
+  it.each(WIDTHS.flatMap((w) => BAND_SLUGS.map((s) => [w, s] as const)))(
+    "bleeds %s's submit band to the sheet's edges for %s",
+    (width, slug) => {
+      const markup = composer(slug, width);
+      expect(markup).toContain(BLEED[width]);
+      // …edged in the SHEET's frame, which is the half both hand-rolled bleeds
+      // missed: S.N.I.D.E. drew `border: none` and the Everymen drew the rule in
+      // the panels' ink.
+      expect(markup).toMatch(/border-top:1\.5px solid var\(--[a-z-]+\)/);
+    },
+  );
+
+  it.each(WIDTHS.flatMap((w) => INLINE_SLUGS.map((s) => [w, s] as const)))(
+    "keeps the inline button on %s for %s — the unaffiliated kit takes no band",
+    (width, slug) => {
+      expect(composer(slug, width)).not.toContain(BLEED[width]);
+    },
+  );
+
+  const SAVED = i18n.t("forms:editPraxis.composer.statusSaved", {
+    ago: i18n.t("forms:autosaveAgo.justNow"),
+  });
+
+  it.each([...INLINE_SLUGS, ...BAND_SLUGS])(
+    "%s reads Draft alone, with the autosave line moved into the write-up header",
+    (slug) => {
+      const markup = composer(slug);
+      const text = markup.replace(/<[^>]*>/g, "");
+      expect(text).toContain(i18n.t("forms:editPraxis.composer.statusDraft"));
+      // The autosave string is still on the page — and now AFTER the write-up
+      // label, which is the whole move. Before #1828 it sat in the status row,
+      // i.e. above the task slip and every section.
+      expect(text.indexOf(SAVED)).toBeGreaterThan(
+        text.indexOf(i18n.t("forms:editPraxis.composer.writeUpLabel")),
+      );
+    },
+  );
+
+  it.each([...INLINE_SLUGS, ...BAND_SLUGS])(
+    "%s marks the task slip with the shared score stamp",
+    (slug) => {
+      // The stamp prints the praxis's TOTAL to a decimal; every composer-only
+      // mark printed the task's bare `point_value`. So the decimal is the claim
+      // — it cannot be satisfied by the device this replaces, and it holds for
+      // all eight skins without naming eight ornaments.
+      expect(composer(slug).replace(/<[^>]*>/g, "")).toContain("20.0");
+    },
+  );
+});
+
 describe("mode picker gates, unchanged by the collapse (#311, #877)", () => {
   it.each(WIDTHS)("shows all three segments on %s when the duel chip is visible", (width) => {
     const markup = render(width, baseState({ duelChipVisible: true }));

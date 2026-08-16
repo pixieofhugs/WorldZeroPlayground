@@ -121,7 +121,10 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -147,15 +150,6 @@ interface Props {
   state: EditPraxisState;
 }
 
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
-
 /* The terminal's two-theme contract (#1023/#1034), named for the ROLE each
  * plays in this design's skin row rather than for its colour. Both halves are
  * near-black and the cascade flips the phosphor — see the header. */
@@ -168,16 +162,12 @@ const ALARM = "var(--faction-singularity-card-alarm)";
 const CHROME = "var(--faction-singularity-term-chrome)";
 /** The raised box: fields, the task slip, proof tiles. */
 const PANEL = "var(--faction-singularity-term-panel)";
-/** The points readout's well — the token was minted for this exact mark. */
-const READOUT = "var(--faction-singularity-term-readout)";
 const INK = "var(--faction-singularity-term-ink)";
 /** The design's `accent`: titles, the status mark, the lit lamp. */
 const ACCENT = "var(--faction-singularity-term-bright)";
 /** The design's `muted`: labels, captions, the leaving end of the footer. */
 const MUTED = "var(--faction-singularity-term-dim)";
 const BLUE = "var(--faction-singularity-term-blue)";
-/** The design's `accentDeep`: the points numeral, and nothing else. */
-const ACCENT_DEEP = "var(--faction-singularity-term-blue-bright)";
 const BORDER = "var(--faction-singularity-term-border)";
 const HAIR = "var(--faction-singularity-term-hair)";
 const SCAN = "var(--faction-singularity-term-scan)";
@@ -186,7 +176,6 @@ const CTA_BG = "var(--faction-singularity-term-cta-bg)";
 const CTA_INK = "var(--faction-singularity-term-cta-ink)";
 const CTA_GLOW = "var(--faction-singularity-term-cta-glow)";
 const HALO_GREEN = "var(--faction-singularity-term-halo-green)";
-const HALO_BLUE = "var(--faction-singularity-term-halo-blue)";
 const SHADOW = "var(--faction-singularity-term-shadow)";
 
 /* Share Tech Mono, for the title, the body AND the label — the whole surface is
@@ -436,62 +425,18 @@ export default function SingularityEditPraxis({ state }: Props) {
         masthead={masthead}
         ground={ground}
       >
+        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
+            header; `[ok]` is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
-        {/* The task reference slip, on a raised panel, with the points readout
-            at its end. It turns its column on a phone so the readout never
-            squeezes the borrowed title. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={
-            <div
-              style={{
-                background: READOUT,
-                border: `1px solid ${BORDER}`,
-                borderRadius: RADIUS,
-                padding: "var(--space-md) var(--space-lg)",
-                textAlign: "center",
-                alignSelf: sizes.isMobile ? "flex-start" : "auto",
-                flexShrink: 0,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: FACE,
-                  fontSize: "var(--text-title)",
-                  lineHeight: 1,
-                  color: ACCENT_DEEP,
-                  textShadow: HALO_BLUE,
-                }}
-              >
-                {task?.point_value ?? 0}
-              </div>
-              <div
-                style={termLabel({
-                  color: MUTED,
-                  letterSpacing: "0.1em",
-                  marginTop: "var(--space-xs)",
-                })}
-              >
-                {t("editPraxis.composer.pointsUnit")}
-              </div>
-            </div>
-          }
-        />
+        {/* The task reference slip, on a raised panel. Its mark is the shared
+            ScoreStamp (#1828) — the terminal's own readout by dispatch, which is
+            what this page swapped to the moment you filed. It turns its column
+            on a phone so the mark never squeezes the borrowed title. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -605,7 +550,19 @@ export default function SingularityEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span
+                style={termLabel({
+                  color: MUTED,
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span
                 style={termLabel({
                   color: MUTED,
@@ -732,7 +689,9 @@ export default function SingularityEditPraxis({ state }: Props) {
                 skin={{
                   buttonStyle: termLabel({
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the scanline and the sweep read through
+                       the drop zone (#1828). */
+                    background: composerDropGround(PANEL),
                     border: `1px dashed ${BORDER}`,
                     borderRadius: RADIUS,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -766,8 +725,10 @@ export default function SingularityEditPraxis({ state }: Props) {
           }}
         />
 
-        {/* [Cancel] … [Submit] — the global order from #646. */}
+        {/* [Cancel] … [Submit] — the global order from #646, with the cast as a
+            full-bleed band flush to the chassis's bottom edge (#1828). */}
         <ComposerFooter
+          band
           start={
             <>
               <SaveDraftButton
@@ -813,7 +774,20 @@ export default function SingularityEditPraxis({ state }: Props) {
                   />
                 ),
                 style: {
-                  ...primaryStyle,
+                  ...composerBandStyle(sizes, {
+                    /* Design band: 13 / 400 / 0.1em. 13 sits between the label
+                       rung (12) and --text-xl (14); the band takes the rung
+                       above the label it has to outrank (§4a). */
+                    fontFamily: FACE,
+                    fontSize: "var(--text-xl)",
+                    letterSpacing: "0.1em",
+                    frame: BORDER,
+                    color: CTA_INK,
+                    background: CTA_BG,
+                    /* The terminal's own CTA halo — `none` in light, real in
+                       dark, straight off the token. */
+                    boxShadow: CTA_GLOW,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
                 },
               }}

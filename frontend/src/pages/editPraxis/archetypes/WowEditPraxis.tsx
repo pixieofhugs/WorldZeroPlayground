@@ -125,7 +125,10 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -150,15 +153,6 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
-
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 
 /* ── WOW's two faces (§3) ── */
 /** MedievalSharp — the chronicle's display hand. */
@@ -205,8 +199,6 @@ const ON_GOLD = "var(--faction-wow-on-fill)";
 
 /** The band along the head of the writ: gold 0-11px, plum 11-22px. */
 const RIBBON = "var(--faction-wow-quest-ribbon)";
-/** The struck-plaque lift, shared with the quest decree's points plaque. */
-const PLAQUE_SHADOW = "var(--faction-wow-quest-shadow)";
 /** A whole page's lift rather than a card's — the sheet is the page here. */
 const SHEET_SHADOW = "var(--faction-wow-detail-shadow)";
 
@@ -403,28 +395,18 @@ export default function WowEditPraxis({ state }: Props) {
         masthead={masthead}
         ground={ground}
       >
+        {/* `Draft`, alone (#1828) — the autosave line moved to the write-up
+            header and the ✦ is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
         {/* The task slip, on the sheet's cream inside a gold frame — the ground
-            the muted ink and the task's own description were measured on. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={<PointsPlaque points={task?.point_value ?? 0} />}
-        />
+            the muted ink and the task's own description were measured on. Its
+            mark is the shared ScoreStamp (#1828), which for WOW is the struck
+            plaque this file used to draw a second, unscored copy of. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           label={t("editPraxis.composer.titleLabel")}
@@ -542,7 +524,14 @@ export default function WowEditPraxis({ state }: Props) {
           rule={false}
           labelStyle={LABEL_STYLE}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span style={composerLabelStyle(QUIET_STYLE)}>
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span style={composerLabelStyle(QUIET_STYLE)}>
                 {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
@@ -673,7 +662,9 @@ export default function WowEditPraxis({ state }: Props) {
                   buttonStyle: composerLabelStyle({
                     fontFamily: MED,
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the turning ring and the balloons read
+                       through the drop zone (#1828). */
+                    background: composerDropGround(FIELD),
                     border: `1.5px dashed ${GOLD}`,
                     borderRadius: 6,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -702,8 +693,10 @@ export default function WowEditPraxis({ state }: Props) {
 
         <Zig id="footer" />
 
-        {/* [Cancel] … [Submit] — the global order from #646. */}
+        {/* [Cancel] … [Submit] — the global order from #646, with the cast as a
+            full-bleed band flush to the sheet's bottom edge (#1828). */}
         <ComposerFooter
+          band
           start={
             <>
               <SaveDraftButton
@@ -734,7 +727,20 @@ export default function WowEditPraxis({ state }: Props) {
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 trailingOrnament: <span aria-hidden>✦</span>,
                 style: {
-                  ...primaryStyle,
+                  ...composerBandStyle(sizes, {
+                    /* The band is the one control WOW letters in its DISPLAY
+                       face — the design's `band.font: 'title'`. Design band: 16
+                       / 400 / 0.14em; 16 falls between --text-xl (14) and
+                       --text-content (18) and takes the louder rung, which is
+                       also what keeps the writ's cast bigger than every other
+                       skin's (§4a). */
+                    fontFamily: MED,
+                    fontSize: "var(--text-content)",
+                    letterSpacing: "0.14em",
+                    frame: GOLD,
+                    color: ON_GOLD,
+                    background: GOLD,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
                 },
               }}
@@ -743,59 +749,6 @@ export default function WowEditPraxis({ state }: Props) {
         />
       </ComposerSheet>
     </ComposerPage>
-  );
-}
-
-/**
- * The points mark: a struck plaque in a gold frame.
- *
- * The figure is a number a player cares about, so it sits in the content tier
- * (§4) and takes the burnt-gold INK rather than the frame's gilt, which is
- * 2.24:1 on this cream. The unit beneath is label-tier and takes the plum.
- */
-function PointsPlaque({ points }: { points: number }) {
-  const { t } = useTranslation("forms");
-  return (
-    <div
-      style={{
-        flexShrink: 0,
-        textAlign: "center",
-        transform: "rotate(-2.5deg)",
-        background: SHEET,
-        border: `2px solid ${GOLD}`,
-        borderRadius: 6,
-        boxShadow: PLAQUE_SHADOW,
-        padding: "var(--space-sm) var(--space-md)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "var(--space-xs)",
-          fontFamily: MED,
-          fontSize: "var(--text-title)",
-          lineHeight: 1,
-        }}
-      >
-        <span style={{ color: GOLD_INK }}>{points}</span>
-        <span aria-hidden style={{ color: GOLD }}>
-          ✦
-        </span>
-      </div>
-      <div
-        style={{
-          fontFamily: LORA,
-          fontStyle: "italic",
-          fontSize: "var(--text-lg)",
-          color: PLUM,
-          marginTop: "var(--space-xs)",
-        }}
-      >
-        {t("editPraxis.composer.pointsUnit")}
-      </div>
-    </div>
   );
 }
 

@@ -110,7 +110,10 @@ import {
   ComposerStatusRow,
   ErrorBanner,
   TaskSlip,
+  composerBandStyle,
+  composerDropGround,
   composerLabelStyle,
+  composerMetaCluster,
   formatAutosave,
   useComposerSizes,
   type ComposerDress,
@@ -138,7 +141,6 @@ import {
   CAPTION,
   Cornice,
   DECO,
-  DISC,
   RuneRule,
   INK,
   INNER,
@@ -151,7 +153,6 @@ import {
   READING,
   RULE,
   SHADOW,
-  SMALL_CAPS,
   Sign,
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
@@ -160,15 +161,6 @@ import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
-
-/* The Write-up header's right end: the word count, then Write/Preview (#1706).
-   `ComposerSection` hands `meta` a plain span, and `WriteUpTabs` is a flex DIV,
-   so the two need a row of their own or the tabs drop below the count. */
-const metaRowStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "var(--space-md)",
-} as const;
 
 /* The cast's own pair. Not exported by the plate module because no other
  * surface has a primary button; declared in `index.css` in both themes. */
@@ -191,89 +183,12 @@ const EPH_BAND = { desktop: 84, mobile: 68 };
 /** The journal ruling's leading, and where the ochre margin rule is struck. */
 const RULING = 25;
 const MARGIN_RULE = { desktop: 22, mobile: 13 };
-/** The two marks. Both stepped octagons, both drawn on a 100-unit viewBox. */
-const POINTS_MARK = 92;
+/** The stage mark: a stepped octagon, drawn on a 100-unit viewBox. */
 const STATUS_MARK = 44;
 /** The sign following the cast. */
 const SUBMIT_SIGN = 17;
 /** The ankh inside the status octagon. */
 const STATUS_SIGN = 24;
-
-/**
- * The points mark: a brass octagon with a second inset hairline, an incised
- * circle and a baseline struck under the figure.
- *
- * The stroke widths are in viewBox units, so a 1.5 unit stroke on the 100-unit
- * square lands at the skin's `borderW: 1.5` once scaled to 92.
- */
-function PointsMark({ points, unit }: { points: number; unit: string }) {
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: POINTS_MARK,
-        height: POINTS_MARK,
-        flexShrink: 0,
-      }}
-    >
-      <svg
-        width={POINTS_MARK}
-        height={POINTS_MARK}
-        viewBox="0 0 100 100"
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0 }}
-      >
-        <Octagon inset={0} stroke={BRASS} width={1.6} fill={DISC} />
-        <Octagon inset={9} stroke={BRASS_LIGHT} width={0.8} />
-        <circle
-          cx={50}
-          cy={50}
-          r={34}
-          fill="none"
-          stroke={BRASS_LIGHT}
-          strokeWidth={0.7}
-          opacity={0.7}
-        />
-        <path d="M18 74 H82" stroke={BRASS} strokeWidth={1} opacity={0.85} />
-      </svg>
-      {/* The figure sits in the field ABOVE the struck baseline; the unit reads
-          beneath it. Percentages, so the split follows the mark at any size. */}
-      <span
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: "26%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: DECO,
-          fontSize: "var(--text-title)",
-          lineHeight: 1,
-          color: INK,
-        }}
-      >
-        {points}
-      </span>
-      <span
-        style={{
-          ...SMALL_CAPS,
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: "7%",
-          textAlign: "center",
-          fontSize: "var(--text-md)",
-          letterSpacing: "0.2em",
-          color: CAPTION,
-        }}
-      >
-        {unit}
-      </span>
-    </div>
-  );
-}
 
 /**
  * The stage mark: the ankh, cut into a stepped octagon with a brass border.
@@ -534,33 +449,17 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         masthead={masthead}
         ground={ground}
       >
-        {/* Draft · Saved just now, with the ankh cartouche at the row's end. */}
+        {/* `Draft`, alone (#1828). The autosave line moved to the write-up
+            header; the ankh cartouche is the waiting surface's beat. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
-          meta={
-            state.autosaveAt
-              ? t("editPraxis.composer.statusSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.composer.statusUnsaved")
-          }
           statusStyle={dress.statusStyle}
-          metaStyle={dress.metaStyle}
-          mark={statusMark}
         />
 
-        {/* The task reference slip, on an inner cell with the points mark. */}
-        <TaskSlip
-          praxis={praxis}
-          task={task}
-          {...slip}
-          mark={
-            <PointsMark
-              points={task?.point_value ?? praxis.task_point_value ?? 0}
-              unit={t("editPraxis.composer.pointsUnit")}
-            />
-          }
-        />
+        {/* The task reference slip, on an inner cell. Its mark is the shared
+            ScoreStamp (#1828) — the plate's own medallion by dispatch, carrying
+            the praxis's total instead of the task's bare figure. */}
+        <TaskSlip praxis={praxis} task={task} {...slip} />
 
         <ComposerSection
           rule={false}
@@ -673,7 +572,20 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           htmlFor="composer-body"
           labelStyle={sectionLabel}
           meta={
-            <span style={metaRowStyle}>
+            <span style={composerMetaCluster}>
+              <span
+                style={composerLabelStyle({
+                  ...label,
+                  color: QUIET,
+                  letterSpacing: "0.14em",
+                })}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.composer.statusSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.composer.statusUnsaved")}
+              </span>
               <span
                 style={composerLabelStyle({
                   ...label,
@@ -798,7 +710,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   buttonStyle: composerLabelStyle({
                     ...label,
                     cursor: "pointer",
-                    background: "transparent",
+                    /* Translucent, so the journal ruling reads through the drop
+                       zone (#1828). */
+                    background: composerDropGround(INNER),
                     border: `1.5px dashed ${BRASS}`,
                     borderRadius: 0,
                     padding: "var(--space-2xl) var(--space-lg)",
@@ -829,9 +743,10 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             when it is given children, so the rune band replaces the hairline. */}
         <ComposerRule>{runes}</ComposerRule>
 
-        {/* [Cancel] … [Submit] — the global order from #646. The cast is an
-            inline button with the open eye following the word. */}
+        {/* [Cancel] … [Submit] — the global order from #646. The cast is a
+            full-bleed band (#1828) with the open eye following the word. */}
         <ComposerFooter
+          band
           start={
             <>
               <SaveDraftButton
@@ -879,7 +794,17 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   />
                 ),
                 style: {
-                  ...primaryStyle,
+                  ...composerBandStyle(sizes, {
+                    /* Design band: 12 / 500 / 0.24em — the engraved label
+                       metrics exactly, which is the one skin whose band and
+                       label agree, and 12 is the --text-lg rung. */
+                    fontFamily: CAPS,
+                    fontWeight: 500,
+                    letterSpacing: "0.24em",
+                    frame: LINE,
+                    color: CTA_INK,
+                    background: CTA,
+                  }),
                   cursor: state.submitting ? "wait" : "pointer",
                 },
               }}
