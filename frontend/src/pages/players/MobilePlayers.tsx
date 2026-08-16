@@ -12,6 +12,7 @@ import {
   PLAYERS_FILTERS_DEFAULT,
   PODIUM_SIZE,
   ROSTER_PAGE_STEP,
+  factionHref,
   factionStandings,
   rosterView,
   selectRoster,
@@ -128,9 +129,13 @@ export default function MobilePlayers({
                 }}
               >
                 <FactionSigil slug={lane.slug} size={18} />
-                <span className="font-display truncate" style={{ fontSize: 'var(--text-content)' }}>
-                  {factionName(lane.slug)}
-                </span>
+                {/* The lane's name opens its faction page (#1953). A race row is
+                    a plain div — it links to nothing else — so this is one
+                    anchor, not the nested-anchor case the roster has on
+                    desktop. `factionHref` still gates it: see its docblock for
+                    why a lane can never be `na` or a masked Albescent and why
+                    it is asked anyway. */}
+                <FactionLaneName slug={lane.slug} />
                 <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-content)' }}>
                   {Math.round(lane.points)}
                 </span>
@@ -239,6 +244,32 @@ export default function MobilePlayers({
         )}
       </section>
     </div>
+  )
+}
+
+/**
+ * A race lane's name, linked to its faction page (#1953).
+ *
+ * `<a>` is blockified as a grid item, so `truncate` still clips exactly as the
+ * `<span>` it replaces did, and Tailwind's preflight (`color: inherit;
+ * text-decoration: inherit`) leaves it looking identical. Whether a linked
+ * faction name should grow a hover affordance of its own is a style question,
+ * deliberately not answered here.
+ */
+function FactionLaneName({ slug }: { slug: string }) {
+  const href = factionHref(slug)
+  const style = { fontSize: 'var(--text-content)' }
+  if (href === null) {
+    return (
+      <span className="font-display truncate" style={style}>
+        {factionName(slug)}
+      </span>
+    )
+  }
+  return (
+    <Link to={href} className="font-display truncate" style={style}>
+      {factionName(slug)}
+    </Link>
   )
 }
 
