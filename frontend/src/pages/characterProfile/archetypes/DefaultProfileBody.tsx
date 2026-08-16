@@ -88,9 +88,10 @@ function SectionHeading({ title, eyebrow }: { title: string; eyebrow?: string })
 /** The FDL laurel stamped on the character's top praxis (highest base+vote
  *  points — `praxis.score` is exactly that sum). Spectrum ring, ink glyph. */
 function FdlLaurel() {
+  const { t } = useTranslation('common')
   return (
     <span
-      title="Top praxis"
+      title={t('profile.topPraxis')}
       style={{
         position: 'absolute',
         top: -11,
@@ -301,8 +302,8 @@ function DesktopProfile({
       {/* ── ⑤ Praxis ── */}
       <section>
         <SectionHeading
-          title="Praxis"
-          eyebrow={`sealed by ${character.display_name}`}
+          title={t('profile.praxisHeading')}
+          eyebrow={t('profile.praxisEyebrow', { name: character.display_name })}
         />
         {submissions.length === 0 ? (
           <div

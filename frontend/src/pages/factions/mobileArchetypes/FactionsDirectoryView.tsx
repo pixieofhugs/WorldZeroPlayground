@@ -202,7 +202,7 @@ export default function FactionsDirectoryView({
       {loading ? (
         <p className="font-body text-muted">{t('index.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">{error}</p>
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">{error}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)' }}>
           {visible.map((f) => (

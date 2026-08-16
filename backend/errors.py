@@ -162,6 +162,12 @@ class ErrorCode(str, enum.Enum):
 
     # -- Character creation --------------------------------------------------
     character_name_required = "CHARACTER_NAME_REQUIRED"
+    #: #1577. The admin ban toggle asked to un-ban a life the *player* ended
+    #: (``Character.departed_at`` is set). Coded rather than left as prose even
+    #: though ``routers/admin.py`` is otherwise an uncoded, admin-only surface:
+    #: it is the one refusal on that route a caller must tell apart from the 404
+    #: beside it, and the uncoded-raise allowlist only shrinks.
+    character_departed_not_restorable = "CHARACTER_DEPARTED_NOT_RESTORABLE"
 
     # -- Praxis ownership and comment threads --------------------------------
     praxis_not_owner = "PRAXIS_NOT_OWNER"

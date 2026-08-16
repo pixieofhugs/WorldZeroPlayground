@@ -160,6 +160,28 @@ export interface ProfileKit {
   badgeChipStyle: CSSProperties
 }
 
+/**
+ * The `ProfileKit` fields that are user-facing COPY rather than dress (#1858).
+ *
+ * They used to be raw English literals inside each kit — invisible to a
+ * `locales/` sweep, so never reviewed and impossible to translate, while the na
+ * kit beside them read `common.json` `profile.*` properly. The words now live in
+ * `common.json` under `profile.<slug>.*` and a `<Faction>ProfileBody` resolves
+ * them with `useTranslation`, because `t()` is only reachable inside a
+ * component and a kit is a module-scope const.
+ */
+export type ProfileCopyField =
+  | 'ringLabel'
+  | 'levelUnitLabel'
+  | 'nextLevelLabel'
+  | 'scoreFootnote'
+  | 'praxisEyebrow'
+  | 'praxisEmpty'
+  | 'badgeTitle'
+
+/** A kit minus its copy: everything a faction can declare at module scope. */
+export type ProfileDress = Omit<ProfileKit, ProfileCopyField>
+
 /** A reusable spectrum-ring FDL laurel (used by all colored factions; the
  *  colorless ones supply their own ink-outline variant). `ringBg` defaults to
  *  the spectrum default ring; `centerBg`/`glyphColor` skin the medallion. */
@@ -174,9 +196,10 @@ export function SpectrumLaurel({
   glyphColor?: string
   rotate?: number
 }) {
+  const { t } = useTranslation('common')
   return (
     <span
-      title="Top praxis"
+      title={t('profile.topPraxis')}
       style={{
         position: 'absolute',
         top: -11,
@@ -435,7 +458,8 @@ export function ProfileSkin({
   const levelText = kit.formatLevel
     ? kit.formatLevel(character.level)
     : String(character.level)
-  const levelUnit = kit.levelUnitLabel ?? 'pts this level'
+  // The shared unit, for the four kits that name no unit of their own.
+  const levelUnit = kit.levelUnitLabel ?? t('profile.levelUnit')
 
   const credential = (
     <CredentialCard
@@ -452,7 +476,7 @@ export function ProfileSkin({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
       {/* ── ⑤ Praxis ── */}
       <section>
-        {kit.sectionHeading('Praxis', kit.praxisEyebrow(character.display_name))}
+        {kit.sectionHeading(t('profile.praxisHeading'), kit.praxisEyebrow(character.display_name))}
         {submissions.length === 0 ? (
           <div style={kit.emptyStateStyle}>
             <div

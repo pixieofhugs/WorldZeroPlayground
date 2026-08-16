@@ -115,7 +115,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p className="font-body content-text text-red-600">{membership.joinError}</p>
+            <p className="font-body content-text danger-text">{membership.joinError}</p>
           )}
           {!confirming ? (
             <button
