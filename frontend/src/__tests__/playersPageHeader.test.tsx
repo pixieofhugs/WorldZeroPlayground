@@ -1,23 +1,28 @@
 /**
- * #1699 — the Players page wears the SHARED page header.
+ * #1699 — the Players page wears the SHARED page header. Re-pinned against the
+ * rebuilt page (#1855), because the design it was rebuilt from draws a 140px
+ * rainbow rule under the title, which is precisely the second spectrum bar
+ * #1699 deleted. `PageTitle` brings the rainbow, per letter; the page draws it
+ * once and no rule of its own.
  *
- * Seam: the markup `DesktopLeaderboard` emits above the sky. It used to
- * hand-roll an `<h1>` that copied `PageTitle`'s classes but dropped the
- * per-letter rainbow underline (Style Guide §7, ADR-0066), then drew a second
- * full-width rainbow rule of its own. Asserted here as what a reader sees:
- * every letter of the title carries its own spectrum bar, the page draws that
- * rainbow ONCE, and the controls that shared the old header row survive.
- *
- * Rendered through `DesktopLeaderboard`, not `<Leaderboard/>`: the page wrapper
- * shows its Loading branch under `renderToStaticMarkup` (no effect resolves the
- * fetch), so an assertion against it would pass with nothing on screen.
+ * Seam: the markup `DesktopPlayers` emits above the podium. Rendered directly,
+ * not through `<Leaderboard/>`: the page shows its Loading branch under
+ * `renderToStaticMarkup` (no effect resolves the fetch), so an assertion
+ * against it would pass with nothing on screen.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import '../i18n'
 import type { CharacterOut } from '../api/auth'
-import { DesktopLeaderboard } from '../pages/Leaderboard'
+
+vi.mock('../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+vi.mock('../hooks/useTheme', () => ({
+  useTheme: () => ({ theme: 'dark', toggle: () => {} }),
+}))
+
+import DesktopPlayers from '../pages/players/DesktopPlayers'
+import { NO_RELATIONSHIPS, rankPlayers } from '../pages/players/playersData'
 
 function player(overrides: Partial<CharacterOut>): CharacterOut {
   return {
@@ -46,23 +51,33 @@ const PLAYERS: CharacterOut[] = [
   player({ id: 33, display_name: 'Molly', faction_slug: 'na', score: 340 }),
 ]
 
+const ERA_EYEBROW = 'Renaissance · The Standings'
+
 function board() {
   const html = renderToStaticMarkup(
     <MemoryRouter>
-      <DesktopLeaderboard characters={PLAYERS} loading={false} error={null} user={null} />
+      <DesktopPlayers
+        ranked={rankPlayers(PLAYERS, 'era')}
+        scoreMode="era"
+        onScoreMode={() => {}}
+        eyebrow={ERA_EYEBROW}
+        myCharId={null}
+        related={NO_RELATIONSHIPS}
+        latest={{}}
+      />
     </MemoryRouter>,
   )
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
-/** The heading only — the sky below paints faction hues of its own. */
+/** The heading only — the sections below paint faction hues of their own. */
 function headingHtml(html: string): string {
   const open = html.indexOf('<h1')
   expect(open, 'the page has a heading').toBeGreaterThan(-1)
   return html.slice(open, html.indexOf('</h1>', open))
 }
 
-describe('players page header (#1699)', () => {
+describe('players page header (#1699, rebuilt in #1855)', () => {
   it('underlines the title letter by letter, like every other page', () => {
     const heading = headingHtml(board().html)
     for (let stop = 1; stop <= 7; stop++) {
@@ -72,19 +87,23 @@ describe('players page header (#1699)', () => {
     }
   })
 
-  it('draws that rainbow once — no separate full-width rule', () => {
+  it('draws that rainbow once — no separate rule under the title', () => {
     const { html, text } = board()
     expect(text, 'the title still reads as a word').toContain('Players')
-    expect(html, 'no second spectrum bar under the title').not.toContain(
-      'linear-gradient(90deg, var(--faction-everymen)',
-    )
+    // The spectrum appears on the letters and on the ONE ornament that is not
+    // a rule: your own roster row's left edge. A 140px bar under the title —
+    // the design's, and this page's before #1699 — is not drawn.
+    expect(html, 'no second spectrum bar under the title').not.toContain('width:140px')
   })
 
-  it('keeps the score toggle and the counts line', () => {
+  it('names the live era in the eyebrow, never a literal', () => {
+    // The page reads `era_name` off the game config; the header only states it.
+    expect(board().text).toContain(ERA_EYEBROW)
+  })
+
+  it('keeps the score toggle beside the title', () => {
     const { text } = board()
     expect(text, 'era toggle').toContain('Era')
     expect(text, 'all-time toggle').toContain('All-Time')
-    expect(text, 'players count').toContain('3 adventurers')
-    expect(text, 'factions count').toContain('3 factions')
   })
 })

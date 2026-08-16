@@ -1484,39 +1484,22 @@ const ARCHETYPE_PAIRS: Pair[] = [
 ];
 
 /**
- * #1792 — THE SKY IS A PERMANENTLY-DARK GROUND, SO ITS INK CANNOT FLIP.
+ * A `SKY_PAIRS` block stood here (#1792): seven rows measuring each faction's
+ * `-on-night` ink against `--sky-bg`, the Constellation's own night canvas.
  *
- * `--sky-bg` is declared in `:root` with no `[data-theme="dark"]` override: the
- * Constellation paints its own night canvas, in both themes, on purpose. The
- * score numeral under each orb is inked per faction, and it used to read
- * `factionCssVar(slug)` — a token that DOES flip. So a surface that never
- * changes was painted, in light theme, with hues tuned for a light page ground,
- * and four of the seven fell under AA there (ephemerists 3.22, everymen 3.29,
- * singularity 3.71, ua 3.92) while every dark value cleared comfortably.
- *
- * That is one bug, not four hues being too dark, which is why the fix is a
- * `:root`-only `-on-night` alias per faction holding the value the dark cascade
- * already shipped — the ink that clears this exact ground was designed, reviewed
- * and measured long ago; it was merely locked inside `[data-theme="dark"]`.
- *
- * All seven, not the four that failed: a four-entry tier forces a conditional at
- * the call site, and the three that already cleared only get better.
- *
- * The theme-invariance itself is asserted below ("the sky's ink cannot flip"),
- * because these two rows per faction are green either way the moment the values
- * agree — a ratio cannot see a `[data-theme="dark"]` block that restates them.
+ * #1855 retires the Constellation, and with it both the canvas and the tier —
+ * the Players page draws on the ordinary page ground, where the ordinary
+ * faction hue is the theme-correct ink and `FILL_PAIRS` / `ACCENT_PAIRS`
+ * already gate it. The rows are not relaxed; they have no surface left to
+ * measure on. Anything that paints a permanently dark ground again needs its
+ * own measured ink and its own rows here — #1792's reasoning is why, and it is
+ * kept in git rather than as a comment about a token nobody declares.
  */
-const SKY_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
-  what: `${key} sky score numeral`,
-  surface: "--sky-bg",
-  text: `--faction-${key}-on-night`,
-}));
 
 const PAIRS: Pair[] = [
   ...CARD_PAIRS,
   ...FILL_PAIRS,
   ...ACCENT_PAIRS,
-  ...SKY_PAIRS,
   ...ROSTER_PAIRS,
   ...PRAXIS_CARD_PAIRS,
   ...ARCHETYPE_PAIRS,
@@ -2343,63 +2326,5 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
       Object.keys(READERS).filter((path) => !found.has(path)),
       "an allowlist entry with no reader is a scope nobody is spending — delete the line with the last draw call, the way #1293 deletes an unread font token.",
     ).toEqual([]);
-  });
-});
-
-/**
- * The sky's ink cannot flip, and the sky has to be the thing reading it (#1792).
- *
- * The seven `SKY_PAIRS` rows above stay green whatever `[data-theme="dark"]`
- * says, because a ratio is measured per theme and both halves of a split would
- * be measured separately. So the two things that actually make this fix a fix
- * are structural, in the shape #1413 and #1307 already set here:
- *
- *   1. `-on-night` is declared ONCE. Restating it under `[data-theme="dark"]` is
- *      the next editor's instinct — the family looks like every other faction
- *      token, all of which flip — and it re-opens the bug on whichever half of
- *      the split got the light hue. index.css says so in the declaration's
- *      comment; a comment is a rule you have to remember, and this is one the
- *      suite cannot forget.
- *   2. The Constellation READS it. #1792 is one line at one call site, and a
- *      seven-entry tier nobody paints from is a palette, not a fix.
- *
- * The values are literal duplicates of the dark cascade's hues, which they have
- * to be — `var(--faction-ua)` resolves where it is read, so an alias would flip
- * exactly like the hue it aliases. A forced second copy is the one case this
- * repo's "no mirror table" rule (#1269) cannot delete its way out of, so it gets
- * the other mitigation: the sync is asserted rather than asked for.
- */
-describe("the sky's ink cannot flip (#1792)", () => {
-  for (const key of FILL_KEYS) {
-    const token = `--faction-${key}-on-night`;
-
-    it(`${key}: ${token} is theme-invariant`, () => {
-      expect(
-        resolveVar(token, "light", THEMES),
-        `${token} must resolve identically in both themes — the sky is night in both.`,
-      ).toBe(resolveVar(token, "dark", THEMES));
-      // THEMES.dark is every `[data-theme="dark"]` body merged, so presence here
-      // IS the override — no source slicing, and it survives index.css declaring
-      // the two selectors in interleaved passes.
-      expect(
-        THEMES.dark.has(token),
-        `${token} is restated under [data-theme="dark"]. Delete it: --sky-bg has no dark override either, and a per-theme on-night ink is the bug #1792 fixed.`,
-      ).toBe(false);
-    });
-
-    it(`${key}: ${token} still holds the dark cascade's hue`, () => {
-      expect(
-        resolveVar(token, "light", THEMES),
-        `${token} has drifted from --faction-${key} under [data-theme="dark"]. It was minted AS that hue, because the ink that clears a night ground is the one designed for one. If the dark hue was repainted, re-measure it on --sky-bg and move both; if the new hue does not clear, --sky-bg is what this ink answers to and this assertion is what you relax, deliberately.`,
-      ).toBe(resolveVar(`--faction-${key}`, "dark", THEMES));
-    });
-  }
-
-  it("is what the Constellation's score numeral paints with", () => {
-    const source = sourceOf("pages/players/Constellation.tsx");
-    expect(
-      /factionCssVar\(\s*character\.faction_slug\s*,\s*["']on-night["']\s*\)/.test(source),
-      "the sky's score numeral must ask for the 'on-night' suffix. Bare factionCssVar(slug) is the faction's PAGE hue, which flips with the theme and put four factions under AA on a canvas that never flips (#1792).",
-    ).toBe(true);
   });
 });

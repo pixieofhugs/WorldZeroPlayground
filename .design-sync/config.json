@@ -30,7 +30,6 @@
     "CommentFlagControl": "src/components/comments/FlagControl.tsx",
     "CommentThread": "src/components/comments/CommentThread.tsx",
     "ConfirmDialog": "src/components/confirm/ConfirmDialog.tsx",
-    "Constellation": "src/pages/players/Constellation.tsx",
     "CovenAvatar": "src/components/avatar/CovenAvatar.tsx",
     "CovenBackdrop": "src/components/backdrop/CovenBackdrop.tsx",
     "CovenComment": "src/components/comments/voices/CovenComment.tsx",
@@ -58,7 +57,6 @@
     "DefaultFactionPage": "src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx",
     "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
-    "DefaultPlayers": "src/pages/players/mobileArchetypes/DefaultPlayers.tsx",
     "DefaultPraxisCard": "src/components/praxisCard/desktop/DefaultPraxisCard.tsx",
     "DefaultPraxisDetail": "src/pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx",
     "DefaultProfileBody": "src/pages/characterProfile/archetypes/DefaultProfileBody.tsx",
@@ -71,6 +69,7 @@
     "DefaultTaskCard": "src/components/taskCard/DefaultTaskCard.tsx",
     "DefaultTaskDetail": "src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
     "DefaultTasks": "src/pages/tasks/mobileArchetypes/DefaultTasks.tsx",
+    "DesktopPlayers": "src/pages/players/DesktopPlayers.tsx",
     "DuelCard": "src/pages/praxisDetail/DuelCard.tsx",
     "DuelSealConfirm": "src/components/duel/DuelSealConfirm.tsx",
     "Enso": "src/components/factionMarks/Enso.tsx",
@@ -151,6 +150,7 @@
     "MetataskRemoveConfirm": "src/components/metataskSeal/MetataskRemoveConfirm.tsx",
     "MetataskSealStack": "src/components/metataskSeal/MetataskSealStack.tsx",
     "MobileHeader": "src/components/layout/MobileHeader.tsx",
+    "MobilePlayers": "src/pages/players/MobilePlayers.tsx",
     "MobilePraxisFeed": "src/pages/praxes/MobilePraxisFeed.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
     "NavBar": "src/components/NavBar.tsx",
@@ -160,7 +160,6 @@
     "PortraitPicker": "src/pages/characterPaths/PortraitPicker.tsx",
     "PraxisCard": "src/components/praxisCard/PraxisCard.tsx",
     "PraxisWaitingSurface": "src/pages/editPraxis/waiting/PraxisWaitingSurface.tsx",
-    "RosterTable": "src/pages/players/RosterTable.tsx",
     "ScoreStamp": "src/components/praxisCard/scoreStamp/ScoreStamp.tsx",
     "ShellContent": "src/components/layout/ShellContent.tsx",
     "Sidebar": "src/components/layout/Sidebar.tsx",
@@ -184,8 +183,6 @@
     "SingularityTaskDetail": "src/pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
     "SingularityVote": "src/components/vote/SingularityVote.tsx",
     "SiteFooter": "src/components/layout/SiteFooter.tsx",
-    "SkyCanvas": "src/pages/players/SkyCanvas.tsx",
-    "SkyLegend": "src/pages/players/SkyLegend.tsx",
     "SnideAvatar": "src/components/avatar/SnideAvatar.tsx",
     "SnideBackdrop": "src/components/backdrop/SnideBackdrop.tsx",
     "SnideComment": "src/components/comments/voices/SnideComment.tsx",
@@ -300,9 +297,6 @@
       "cardMode": "single",
       "viewport": "560x520"
     },
-    "Constellation": {
-      "cardMode": "column"
-    },
     "CovenBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
@@ -370,10 +364,6 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "DefaultPlayers": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DefaultPraxisCard": {
       "cardMode": "column"
     },
@@ -400,6 +390,10 @@
     "DefaultTasks": {
       "cardMode": "single",
       "viewport": "390x760"
+    },
+    "DesktopPlayers": {
+      "cardMode": "single",
+      "viewport": "1200x900"
     },
     "DuelSealConfirm": {
       "cardMode": "single",
@@ -522,6 +516,10 @@
     "MobileHeader": {
       "cardMode": "column"
     },
+    "MobilePlayers": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
     "MobilePraxisFeed": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -535,9 +533,6 @@
     "PraxisWaitingSurface": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "RosterTable": {
-      "cardMode": "column"
     },
     "ShellContent": {
       "cardMode": "column"
@@ -581,9 +576,6 @@
       "viewport": "1200x900"
     },
     "SiteFooter": {
-      "cardMode": "column"
-    },
-    "SkyCanvas": {
       "cardMode": "column"
     },
     "SnideBackdrop": {

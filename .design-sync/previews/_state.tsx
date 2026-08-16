@@ -17,7 +17,8 @@ import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/u
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
 import type { ProfileBodyProps } from '../../frontend/src/pages/characterProfile/FactionProfileBody'
-import type { PlayersDirectoryProps } from '../../frontend/src/pages/players/mobileArchetypes/DefaultPlayers'
+import type { PlayersViewProps } from '../../frontend/src/pages/players/playersData'
+import { NO_RELATIONSHIPS, rankPlayers } from '../../frontend/src/pages/players/playersData'
 import type { VoterDetail } from '../../frontend/src/api/votes'
 import {
   characterFor,
@@ -395,19 +396,27 @@ export function profileProps(slug: string): ProfileBodyProps {
   }
 }
 
-// ── players (directory) ───────────────────────────────────────────────────────
-/** A directory of players across factions. */
-export const playersProps: PlayersDirectoryProps = {
-  characters: [
-    characterFor('ua', { id: 7 }),
-    characterFor('wow', { id: 19 }),
-    characterFor('snide', { id: 31 }),
-    characterFor('ephemerists', { id: 22 }),
-    characterFor('everymen', { id: 12 }),
-    characterFor('singularity', { id: 44 }),
-    makeCharacter({ id: 2, display_name: 'Unaffiliated Wanderer', faction_slug: 'na', level: 1, score: 12 }),
-  ],
-  loading: false,
-  error: null,
+// ── players ───────────────────────────────────────────────────────────────────
+/** A field of players across factions: podium, faction race and roster (#1855). */
+export const playersProps: PlayersViewProps = {
+  ranked: rankPlayers(
+    [
+      characterFor('ua', { id: 7 }),
+      characterFor('wow', { id: 19 }),
+      characterFor('snide', { id: 31 }),
+      characterFor('ephemerists', { id: 22 }),
+      characterFor('everymen', { id: 12 }),
+      characterFor('singularity', { id: 44 }),
+      makeCharacter({ id: 2, display_name: 'Unaffiliated Wanderer', faction_slug: 'na', level: 1, score: 12 }),
+    ],
+    'era',
+  ),
+  scoreMode: 'era',
+  onScoreMode: noop,
+  eyebrow: 'Renaissance · The Standings',
   myCharId: 7,
+  related: NO_RELATIONSHIPS,
+  latest: {
+    7: { taskTitle: 'Left a jar of soup on a stranger’s step', submittedAt: '2026-08-10T09:00:00Z' },
+  },
 }

@@ -58,52 +58,47 @@
   "leaderboard": {
     "loading": "Loading...",
     "empty": "No players yet.",
-    "desktop": {
-      "title": "Players",
-      "eyebrowEra": "{{era}} · The Standings",
-      "eyebrowAllTime": "All-Time · The Standings",
-      "toggleEra": "Era",
-      "toggleAllTime": "All-Time",
-      "playersCount_one": "{{count}} adventurer",
-      "playersCount_other": "{{count}} adventurers",
-      "factionsCount_one": "{{count}} faction",
-      "factionsCount_other": "{{count}} factions",
-      "taglineEra": "The closer to the sun, the higher you've climbed this era.",
-      "taglineAllTime": "The closer to the sun, the higher you've climbed of all time.",
-      "legend": {
-        "sizeEra": "Bigger sigil = more era points",
-        "sizeAllTime": "Bigger sigil = more all-time points",
-        "crown": "Crown = the lead",
-        "faint": "Faint = still at zero"
-      },
-      "zeroState": "The era is young — no one has climbed yet.",
-      "skyLabel": "The standings, drawn as a night sky of players.",
-      "you": "You",
-      "roster": {
-        "heading": "Full Roster",
-        "searchPlaceholder": "Search adventurers…",
-        "allFactions": "All",
-        "colRank": "Rank",
-        "colPlayer": "Player",
-        "colBadges": "Badges",
-        "colLevel": "Lvl",
-        "colPoints": "Pts",
-        "empty": "No adventurers match your search.",
-        "showing": "Showing {{from}}–{{to}} of {{total}}",
-        "prev": "‹ Prev",
-        "next": "Next ›"
-      }
+    "loadError": "Couldn't load the leaderboard.",
+    "title": "Players",
+    "eyebrowEra": "{{era}} · The Standings",
+    "eyebrowAllTime": "All-Time · The Standings",
+    "toggleEra": "Era",
+    "toggleAllTime": "All-Time",
+    "playersCount_one": "{{count}} player",
+    "playersCount_other": "{{count}} players",
+    "level": "Level {{level}}",
+    "points": "pts",
+    "podium": {
+      "latest": "Latest · {{ago}}"
+    },
+    "race": {
+      "heading": "Faction Points",
+      "share": "{{share}}%",
+      "more_one": "{{count}} more faction",
+      "more_other": "{{count}} more factions",
+      "fewer": "Show fewer"
+    },
+    "roster": {
+      "heading": "Players",
+      "searchPlaceholder": "Search players…",
+      "searchLabel": "Search players",
+      "railLabel": "Show",
+      "railEveryone": "Everyone",
+      "railFriends": "Friends",
+      "railFoes": "Foes",
+      "colRank": "Rank",
+      "colPlayer": "Player",
+      "colLevel": "Lvl",
+      "colPoints": "Pts",
+      "you": "you",
+      "gap": "Ranks {{from}}–{{to}}",
+      "loadMore": "Load more",
+      "loadMoreCount_one": "{{count}} more player",
+      "loadMoreCount_other": "{{count}} more players",
+      "empty": "No players match your filters."
     },
     "mobile": {
-      "sortEra": "Era",
-      "sortAllTime": "All-time",
-      "allFactions": "All",
-      "factionLevel": "{{faction}} · Lv {{level}}",
-      "points": "pts",
-      "empty": "No players match this filter.",
-      "loadError": "Couldn't load the leaderboard.",
-      "loadMore": "Load more players",
-      "showing": "Showing {{shown}} of {{total}}"
+      "factionLevel": "{{faction}} · Lv {{level}}"
     }
   },
   "collaborationCard": {

@@ -23,7 +23,6 @@ export { CollabSuccess } from "../src/components/collab/CollabSuccess";
 export { CommentFlagControl } from "../src/components/comments/FlagControl";
 export { default as CommentThread } from "../src/components/comments/CommentThread";
 export { default as ConfirmDialog } from "../src/components/confirm/ConfirmDialog";
-export { default as Constellation } from "../src/pages/players/Constellation";
 export { default as CovenAvatar } from "../src/components/avatar/CovenAvatar";
 export { default as CovenBackdrop } from "../src/components/backdrop/CovenBackdrop";
 export { default as CovenComment } from "../src/components/comments/voices/CovenComment";
@@ -51,7 +50,6 @@ export { default as DefaultFactionBody } from "../src/pages/factionDetail/archet
 export { default as DefaultFactionPage } from "../src/pages/factionDetail/mobileArchetypes/DefaultFactionPage";
 export { default as DefaultFactionsDirectory } from "../src/pages/factions/mobileArchetypes/DefaultFactionsDirectory";
 export { default as DefaultFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk";
-export { default as DefaultPlayers } from "../src/pages/players/mobileArchetypes/DefaultPlayers";
 export { default as DefaultPraxisCard } from "../src/components/praxisCard/desktop/DefaultPraxisCard";
 export { default as DefaultPraxisDetail } from "../src/pages/praxisDetail/archetypes/DefaultPraxisDetail";
 export { default as DefaultProfileBody } from "../src/pages/characterProfile/archetypes/DefaultProfileBody";
@@ -65,6 +63,7 @@ export { default as DefaultTaskCard } from "../src/components/taskCard/DefaultTa
 export { default as DefaultTaskDetail } from "../src/pages/taskDetail/archetypes/DefaultTaskDetail";
 export { default as DefaultTasks } from "../src/pages/tasks/mobileArchetypes/DefaultTasks";
 export { default as DefaultVote } from "../src/components/vote/DefaultVote";
+export { default as DesktopPlayers } from "../src/pages/players/DesktopPlayers";
 export { default as DuelCard } from "../src/pages/praxisDetail/DuelCard";
 export { default as DuelSealConfirm } from "../src/components/duel/DuelSealConfirm";
 export { default as DuelSealSheet } from "../src/components/duel/DuelSealSheet";
@@ -151,6 +150,7 @@ export { default as MetataskRemoveConfirm } from "../src/components/metataskSeal
 export { default as MetataskSeal } from "../src/components/metataskSeal/MetataskSeal";
 export { default as MetataskSealStack } from "../src/components/metataskSeal/MetataskSealStack";
 export { default as MobileHeader } from "../src/components/layout/MobileHeader";
+export { default as MobilePlayers } from "../src/pages/players/MobilePlayers";
 export { default as MobilePraxisFeed } from "../src/pages/praxes/MobilePraxisFeed";
 export { default as MobileTabBar } from "../src/components/layout/MobileTabBar";
 export { default as NavBar } from "../src/components/NavBar";
@@ -160,7 +160,6 @@ export { default as PointsRoundel } from "../src/components/factionMarks/PointsR
 export { default as PortraitPicker } from "../src/pages/characterPaths/PortraitPicker";
 export { default as PraxisCard } from "../src/components/praxisCard/PraxisCard";
 export { default as PraxisWaitingSurface } from "../src/pages/editPraxis/waiting/PraxisWaitingSurface";
-export { default as RosterTable } from "../src/pages/players/RosterTable";
 export { default as ScoreStamp } from "../src/components/praxisCard/scoreStamp/ScoreStamp";
 export { default as ShellContent } from "../src/components/layout/ShellContent";
 export { default as Sidebar } from "../src/components/layout/Sidebar";
@@ -186,8 +185,6 @@ export { default as SingularityTaskCard } from "../src/components/taskCard/Singu
 export { default as SingularityTaskDetail } from "../src/pages/taskDetail/archetypes/SingularityTaskDetail";
 export { default as SingularityVote } from "../src/components/vote/SingularityVote";
 export { default as SiteFooter } from "../src/components/layout/SiteFooter";
-export { default as SkyCanvas } from "../src/pages/players/SkyCanvas";
-export { default as SkyLegend } from "../src/pages/players/SkyLegend";
 export { default as SnideAvatar } from "../src/components/avatar/SnideAvatar";
 export { default as SnideBackdrop } from "../src/components/backdrop/SnideBackdrop";
 export { default as SnideComment } from "../src/components/comments/voices/SnideComment";
