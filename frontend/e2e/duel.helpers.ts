@@ -12,11 +12,24 @@ import { expect, type Browser, type BrowserContext, type Page } from '@playwrigh
  * unreachable control fails the test instead of passing silently.
  *
  * Why a UA task specifically (pickUaDuelTask): the composer archetype, the seal
- * dialog, and the read-page rail are each dispatched by the TASK's faction, not
- * the player's. A UA task yields the Ua *composer* but the *Default* seal dialog
- * ("Seal the duel?" / "Seal it") and the *Default* rail ("⚔ Duel" / live tally) —
- * the stable base English strings this suite asserts against. A level-2 player
- * (duels need era.duel_level_required = 2) can sign up for UA tasks at level ≤ 2.
+ * dialog and the praxis-detail page (which mounts the duel rail) are each
+ * dispatched by the TASK's faction, not the player's — so a UA task drives three
+ * real archetypes (UaEditPraxis / UaDuelSealConfirm / UaPraxisDetail) instead of
+ * the Default fall-through an `na` task would give. A level-2 player (duels need
+ * era.duel_level_required = 2) can sign up for UA tasks at level ≤ 2.
+ *
+ * CORRECTED (#1676) — the old note here claimed a UA task yields the *Default*
+ * seal dialog and rail. It does not: `factions/ua.ts` registers both `duelSeal`
+ * and `praxisDetail`. What is actually true, and what makes UA safe to assert
+ * against, is that the COPY is faction-invariant — every skin takes the heading
+ * and confirm label from the shared `useDuelSealCopy`, and all eight
+ * praxis-detail archetypes render the same `duelCrossLink` strings. The one
+ * faction that does override them is `wow` ("Take the Field", praxis.json
+ * `duelSeal.wow`), so this helper must not drift onto a wow task.
+ *
+ * The task itself is dev-seeded — `seed.py::ensure_duel_fixture_task`. Era 1
+ * declares no tasks (#1398), so before that this filter matched nothing and the
+ * whole duel suite failed here on every nightly it ever ran.
  */
 
 export const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
@@ -87,10 +100,13 @@ export async function createSoloDraft(
  * opponent chip so the challenge is confirmed before returning.
  */
 export async function challengeViaUi(page: Page, opponentName: string): Promise<void> {
-  // The UA duel mode chip: the visible label+desc differ per archetype, but UA's
-  // "a mark made against another" (forms.json editPraxis.ua.mode.duel.desc) is a
-  // stable, unique accessible-name fragment. The chip only renders at level ≥ 2.
-  const duelChip = page.getByRole('button', { name: /a mark made against another/i })
+  // The duel mode chip. It is NOT per-archetype copy (#1676): every composer
+  // builds its mode options from the shared `editPraxis.composer.modeDuel`
+  // ("Duel", forms.json), and the `editPraxis.ua.*` block the old locator quoted
+  // does not exist anywhere in the catalog — so that name matched nothing and
+  // this helper could never get past here. `exact` keeps it off the longer
+  // duel-related labels elsewhere on the page. The chip only renders at level ≥ 2.
+  const duelChip = page.getByRole('button', { name: 'Duel', exact: true })
   await expect(duelChip).toBeVisible()
   await duelChip.click()
   await expect(duelChip).toHaveAttribute('aria-pressed', 'true')
@@ -136,13 +152,19 @@ export async function waitForDuelAttached(page: Page, opponentName: string): Pro
 /**
  * Seal a duel side through the composer UI: the primary submit opens the seal
  * confirm when a duel is attached (controls.tsx sealsADuel → requestDuelSeal),
- * then confirm inside the dialog. UA's composer submit label is "Seal it"
- * (publishIdle) and the Default confirm button is ALSO "Seal it" — the dialog is
- * scoped so the confirm is unambiguous.
+ * then confirm inside the dialog.
+ *
+ * CORRECTED (#1676): the composer submit is NOT "Seal it". `PublishButton` only
+ * replaces its idle label for the collab consensus gate and the duel PULL-BACK;
+ * an unsealed duel side falls through to the archetype's own `idleLabel`, which
+ * is the shared `editPraxis.composer.submit` ("Submit") in all eight composers.
+ * "Seal it" exists only as the DIALOG's confirm (praxis.json duelSeal.confirm),
+ * so the old pre-dialog locator matched nothing.
  */
 export async function sealViaUi(page: Page): Promise<void> {
-  // Pre-dialog there is exactly one "Seal it" — the composer submit.
-  await page.getByRole('button', { name: /seal it/i }).click()
+  // The composer submit — it opens the seal dialog rather than publishing,
+  // because a duel is attached (controls.tsx sealsADuel).
+  await page.getByRole('button', { name: 'Submit', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Seal the duel?' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: /seal it/i }).click()
