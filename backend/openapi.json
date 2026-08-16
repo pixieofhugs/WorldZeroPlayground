@@ -9102,8 +9102,26 @@
     },
     "/game-config": {
       "get": {
-        "description": "Return current era game configuration. No auth required.",
+        "description": "Return current era game configuration.\n\nOptional auth — anonymous callers stay anonymous and get the public answer.\nThe account is read only to decide which level-ladder rungs this caller may\nbe told about (``services.progression.visible_level_profiles``).",
         "operationId": "get_game_config_game_config_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9114,8 +9132,23 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Game Config",
         "tags": [
           "game-config"

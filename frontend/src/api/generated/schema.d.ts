@@ -916,7 +916,11 @@ export interface paths {
         };
         /**
          * Get Game Config
-         * @description Return current era game configuration. No auth required.
+         * @description Return current era game configuration.
+         *
+         *     Optional auth — anonymous callers stay anonymous and get the public answer.
+         *     The account is read only to decide which level-ladder rungs this caller may
+         *     be told about (``services.progression.visible_level_profiles``).
          */
         get: operations["get_game_config_game_config_get"];
         put?: never;
@@ -6028,7 +6032,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -6039,6 +6045,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GameConfigOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
