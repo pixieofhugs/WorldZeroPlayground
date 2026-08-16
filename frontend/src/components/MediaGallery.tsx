@@ -18,7 +18,12 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
   const sorted = [...media].sort((a, b) => a.display_order - b.display_order)
 
   return (
+    // `.user-media` marks the region that is the PLAYER's, not the site's, so a
+    // faction flourish can be told to stop at it (#1646). Inert everywhere but
+    // Albescent, which is the only skin that washes a blended layer over the
+    // praxis-detail sheet.
     <div
+      className="user-media"
       style={
         layout === 'grid'
           ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-md)' }

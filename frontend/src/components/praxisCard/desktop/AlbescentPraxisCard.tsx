@@ -13,10 +13,16 @@ import { frameBase, type ArchetypeProps } from "./shared";
  *
  * #842 added the other half of the tell: the design pairs the drift with three
  * faint gold sparks ({@link AlbescentSparks}), and only the drift had shipped.
+ *
+ * #1646 narrows "the whole sheet" by one element: the drift stops at the proof
+ * photo, which is the one thing here that is not the site's to tint. The class
+ * on this wrapper is the scope index.css needs to raise `.user-media` above
+ * `.alb-rainbow` for THIS skin only — the media gallery is shared by all nine
+ * archetypes. No layer moves; the photo simply paints last.
  */
 export function AlbescentPraxisCard(props: ArchetypeProps) {
   return (
-    <div style={{ ...frameBase, borderRadius: 10, /* inherits the Default sheet */ position: "relative", overflow: "hidden" }}>
+    <div className="alb-praxis-card" style={{ ...frameBase, borderRadius: 10, /* inherits the Default sheet */ position: "relative", overflow: "hidden" }}>
       <DefaultPraxisCard {...props} />
       <span aria-hidden className="alb-rainbow" />
       <AlbescentSparks />

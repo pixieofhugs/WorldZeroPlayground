@@ -4554,6 +4554,41 @@
   .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
 }
 
+/* THE DRIFT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the light over the
+   whole sheet, and every layer above is built that way. This narrows it by one
+   element: the proof photo is the one thing on the sheet that is not the site's
+   to tint. Everything else — copy, score box, seals, footer, the empty media
+   slot's dashed drop-target — is chrome the drift is supposed to colour, and
+   still is.
+
+   THE LIFT, NOT A HOLE. There is no way to punch a blended overlay out around a
+   rectangle, so the media is raised ABOVE it instead: a blend composites against
+   what is already painted beneath it, so anything painted after is untouched.
+   `z-index: 3` clears both surfaces' overlays in one number — `.alb-rainbow`
+   sits at 0 and the three `.alb-praxis-*` layers at 2. `position` is required
+   for `z-index` to apply at all; `relative` keeps the box exactly where flow put
+   it.
+
+   Two rejected shapes, for the next reader. Moving the wash BEHIND the card
+   content erases the tell outright, because Default's sheet is opaque — and
+   making it translucent is the repaint ADR-0048 forbids, since Albescent in its
+   own colours is back in the spectrum and un-hidden. Confining the wash TO the
+   photo is the complaint inverted.
+
+   SCOPED TO THE TWO ALBESCENT WRAPPERS ON PURPOSE. `.user-media` is a shared
+   hook — `PraxisMediaGallery` is one component for all nine praxis archetypes
+   and `MediaGallery` serves the detail page — so an unscoped lift would reorder
+   skins that stack their own layers (Ephemerists' plate at 1, Singularity's
+   content at 2). The other eight sheets must render byte-identical.
+
+   Nothing here is inside a motion query: reduced motion still stills the drift,
+   and it stills it over exactly the same layers. */
+.alb-praxis-card .user-media,
+.alb-praxis .user-media {
+  position: relative;
+  z-index: 3;
+}
+
 /* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
    unfreeze, and built to the same rule as the first: the exact spectrum sheet an
    unaffiliated player sees, plus a flourish that reveals the society to someone
