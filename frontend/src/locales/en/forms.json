@@ -299,6 +299,7 @@
       "tabsAria": "Switch between write and preview",
       "bodyPlaceholder": "Say what you did and how it went.",
     "bodyConnecting": "Opening the shared write-up…",
+    "bodyUnreachable": "The shared write-up would not open, so this editor cannot take text. Reload the page to try again.",
     "bodyFrozen": "Frozen while the crew's publish window is open. Submitting seals the write-up for everyone — including whoever submitted — so nothing changes under a submission already made.",
     "bodyFrozenAction": "Reopen the write-up for the crew",
       "wordCount": "{{words}} words · markdown ok",

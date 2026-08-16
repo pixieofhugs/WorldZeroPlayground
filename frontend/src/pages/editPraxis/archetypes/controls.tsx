@@ -1024,7 +1024,16 @@ export function BodyTextarea({
           className="label-caption"
           style={{ color: "var(--color-text-tertiary)" }}
         >
-          {t("editPraxis.composer.bodyConnecting")}
+          {/* Two states, one line. The room has either not arrived yet or has
+              stopped trying (#1804), and the difference matters entirely to the
+              person waiting: "…" is worth sitting through, and the other is
+              not. Left silent, a refused room is an editor that will never
+              accept a keystroke and never says why. */}
+          {t(
+            room?.unreachable
+              ? "editPraxis.composer.bodyUnreachable"
+              : "editPraxis.composer.bodyConnecting",
+          )}
         </p>
       )}
       {/* Said where it is felt (#1745). This is the member who has just tried to

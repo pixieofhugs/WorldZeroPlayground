@@ -45,6 +45,25 @@ export function oneLine(value: string): string {
   return value.replace(/\s+/g, ' ').trim()
 }
 
+/**
+ * The submit gate both character forms share: a name that is more than
+ * whitespace, and no request already in flight.
+ *
+ * `display_name` is `StringConstraints(strip_whitespace=True, min_length=1)` on
+ * the wire (`backend/schemas/character.py`, #1686), so a blank name is a 422 —
+ * and a 422 renders Pydantic's own English ("String should have at least 1
+ * character"), copy that never passed through the i18n catalogue (ADR-0032).
+ * Closing the control is the whole answer (#1697): it makes that response
+ * unreachable from the UI rather than translating it.
+ *
+ * Lives here, exported, because the edit hook is the second caller and one rule
+ * stated twice drifts — and because the frontend harness has no DOM, so a rule
+ * inlined in a hook body cannot be driven by a test.
+ */
+export function canSubmitName(displayName: string, busy: boolean): boolean {
+  return displayName.trim().length > 0 && !busy
+}
+
 /** Mirror of the server @handle derivation (services/character._derive_unique_username). */
 export function previewHandle(displayName: string): string {
   return displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'wanderer'
@@ -130,8 +149,7 @@ export function useCreateCharacter(): CreateCharacterState {
     void getInvitedFactions().then(setInvited).catch(() => setInvited([]))
   }, [])
 
-  const trimmedName = displayName.trim()
-  const canSubmit = trimmedName.length > 0 && !submitting
+  const canSubmit = canSubmitName(displayName, submitting)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
