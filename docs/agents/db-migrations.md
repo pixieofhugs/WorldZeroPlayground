@@ -214,9 +214,10 @@ deliberate exception to rules 2 and 3: its primary key is the human-written `slu
 | `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by` |
 | `task.py` | `task` | `id` | `created_by` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
 | `taunt_message.py` | `taunt_message` | `id` | `from_character_id`, `to_character_id` |
+| `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
 
-27 tables, 52 integer foreign keys, 5 string ones.
+28 tables, 53 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

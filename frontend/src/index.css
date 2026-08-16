@@ -3577,6 +3577,23 @@
     --praxis-card-basis: 320px;
   }
 
+  /* The basis only says where the row WRAPS, and `frameBase` carries
+     `flex: 1 1 <basis>` — that leading `1` is flex-grow, so a task with exactly
+     ONE filed praxis had that card stretch across the whole gallery row and
+     dominate the page (#1897). One card should read like one of three.
+
+     `max-width` and not `width`: it clamps a flex item regardless of flex-grow,
+     and it constrains a different property than the card's inline `width: 100%`,
+     so the cap lands without a specificity fight and without touching any of the
+     nine bespoke frames. Empty space to the right of a lone card is the point —
+     a gallery with one item in it, which is the truth.
+
+     No `min-width` here on purpose: `frameBase`'s 280px floor must keep winning
+     under a 320px viewport, one card per row on a phone. */
+  .praxis-gallery > * {
+    max-width: var(--praxis-card-basis);
+  }
+
   /* ── Scanning surfaces (issue #1716) ──
      A surface where a player is BROWSING a list of things, as opposed to one
      where they are CHECKING what they earned. Warriors of Whimsy hang their

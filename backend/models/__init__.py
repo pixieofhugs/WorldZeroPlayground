@@ -30,6 +30,7 @@ from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.nudge import Nudge
 from models.feed_dismissal import FeedDismissal
+from models.terms_acceptance import TermsAcceptance
 
 __all__ = [
     "Faction",
@@ -67,4 +68,5 @@ __all__ = [
     "InvitationLetter",
     "Nudge",
     "FeedDismissal",
+    "TermsAcceptance",
 ]
