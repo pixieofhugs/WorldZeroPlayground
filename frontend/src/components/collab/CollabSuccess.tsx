@@ -137,7 +137,6 @@ export function CollabSuccess({
           autoFocus
           onClick={onContinue}
           className="btn-primary px-4 py-2"
-          style={{ fontSize: 'var(--text-sm)' }}
         >
           {collabCopy(factionSlug, 'successContinue')}
         </button>

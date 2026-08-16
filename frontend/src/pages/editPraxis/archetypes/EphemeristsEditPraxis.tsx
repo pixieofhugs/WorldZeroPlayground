@@ -6,10 +6,10 @@
  * Dress over the shared layout, not a layout of its own. `DefaultEditPraxis` is
  * the reference implementation and the contract (ADR-0065 §1); read it there
  * rather than re-deriving it here. What this file adds is the Deco × Egypt plate
- * at composer size: a night-sky masthead under a cavetto cornice, a papyrus
- * ground ruled like a field journal with an ochre margin rule struck down its
- * gutter, a brass octagon for the points, an ankh in an octagon for the stage,
- * and an open eye following the cast.
+ * at composer size: a night-sky masthead under a cavetto cornice, a ground bowed
+ * toward a gravity well off the sheet's right edge with an ochre margin rule
+ * struck down its gutter, a brass octagon for the points, an ankh in an octagon
+ * for the stage, and an open eye following the cast.
  *
  * ## The layout, in order — unchanged from Default
  *
@@ -44,10 +44,12 @@
  *
  * ## Marks: reused, not redrawn (WORLD_ZERO_STYLE §6, "one primitive")
  *
- * The engraved masthead, the cornice, the rune band, the incised signs and the
- * stepped octagon are all `components/factionMarks` — the module #1120 extracted
- * so the plate's ornament is shared rather than copied. This file draws no new
- * SVG apart from the two marks' arrangement. The winged sun disc that headed the
+ * The engraved masthead, the cornice, the rune band, the incised signs, the
+ * stepped octagon and the gravity field are all `components/factionMarks` — the
+ * module #1120 extracted so the plate's ornament is shared rather than copied.
+ * This file draws no new SVG apart from the two marks' arrangement; the field
+ * went into the module for the same reason (#1830), and the waiting surface
+ * mounts it through this file's `dress.ground`. The winged sun disc that headed the
  * sky band was retired kit-wide by #1634: the sigil is the only mark, and it
  * arrives inside the masthead.
  *
@@ -78,12 +80,14 @@
  * carry the same value, so it does not move either.
  *
  * `-brass` is a rule colour and never an ink; quiet type takes `-quiet`, which
- * clears AA on the page, the plate AND the inner cells (#1028). The design's two
- * theme-tuned opacities for the ruling (.3 light / .22 dark) collapse to one
- * here for the same reason: `-rule` carries the tuning in the colour, and there
- * is only one `-rule`, so the ground layer needs no opacity ternary. This is the
+ * clears AA on the page, the plate AND the inner cells (#1028). This is the
  * plate (`--faction-ephemerists-plate-*`), never the illuminated codex
  * (`--eph-*`); the two grounds must not be mixed on one surface (ADR-0055).
+ *
+ * ONE DEVIATION IS KEPT AND IS NOT A DRIFT (re-affirmed by #1830). The design's
+ * `danger` is the plate ochre `#D9744C`; this file ships
+ * `--faction-ephemerists-card-alarm`, which is #1449's alarm rung, because the
+ * ochre misses AA for the error banner's ink on this ground. See {@link ALARM}.
  *
  * ## Not drawn as designed
  *
@@ -141,7 +145,8 @@ import {
   CAPTION,
   Cornice,
   DECO,
-  RuneRule,
+  DISC,
+  GravityField,
   INK,
   INNER,
   LINE,
@@ -151,7 +156,7 @@ import {
   PLATE,
   QUIET,
   READING,
-  RULE,
+  RuneRule,
   SHADOW,
   Sign,
 } from "../../../components/factionMarks/ephemeristsPlate";
@@ -180,8 +185,21 @@ const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
  * praxis-detail masthead's: one plate, one masthead, at the same two sizes on
  * both surfaces. `WORDMARK_DISC` went with the winged disc it measured. */
 const EPH_BAND = { desktop: 84, mobile: 68 };
-/** The journal ruling's leading, and where the ochre margin rule is struck. */
-const RULING = 25;
+/**
+ * The gravity field's nominal sheet width — the design's own `s.w`, and the
+ * same pair `useComposerSizes` sets the column to. The well is measured from
+ * the sheet's RIGHT edge, so this is what the field's canvas is drawn against;
+ * a viewport wider than the nominal scales the rows rather than moving the well
+ * (see `GravityField`).
+ */
+const GRAVITY_WIDTH = { desktop: 720, mobile: 360 };
+/**
+ * How far down the field is drawn. The design's canvas is 1500; a composer's
+ * sheet is taller than that as soon as you write anything, and the ground is
+ * clipped to the sheet, so the canvas overruns and the clip decides.
+ */
+const GRAVITY_HEIGHT = 2400;
+/** Where the ochre margin rule is struck. */
 const MARGIN_RULE = { desktop: 22, mobile: 13 };
 /** The stage mark: a stepped octagon, drawn on a 100-unit viewBox. */
 const STATUS_MARK = 44;
@@ -217,7 +235,7 @@ function StatusMark() {
         aria-hidden="true"
         style={{ position: "absolute", inset: 0 }}
       >
-        <Octagon inset={0} stroke={BRASS} width={3.4} fill={INNER} />
+        <Octagon inset={0} stroke={BRASS} width={3.4} fill={DISC} />
       </svg>
       <span
         style={{
@@ -228,7 +246,7 @@ function StatusMark() {
           justifyContent: "center",
         }}
       >
-        <Sign name="ankh" size={STATUS_SIGN} color={NILE} weight={1.6} />
+        <Sign name="ankh" size={STATUS_SIGN} color={BRASS} weight={1.6} />
       </span>
     </span>
   );
@@ -317,8 +335,10 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           <>
             {/* The sky band. A wash rather than a flat fill: the night blue
                 lifts toward the nile at the horizon and settles back into the
-                band at its foot. Both stops are tokens, so the sky flips with
-                the theme. */}
+                band at its foot. Both stops are plate tokens, so — like the
+                rest of this register — the sky is the SAME in both themes and
+                does not flip; the design's byte-identical light/dark objects
+                say so too (#1830 corrected this note). */}
             <ComposerMasthead
               height={EPH_BAND[factor]}
               background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${NILE}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
@@ -344,10 +364,13 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           </>
   );
   const ground = (
-          <ComposerGround
-            inset={0}
-            background={`repeating-linear-gradient(0deg, transparent 0 ${RULING}px, ${RULE} ${RULING}px ${RULING + 1}px)`}
-          >
+          <ComposerGround inset={0} style={{ overflow: "hidden" }}>
+            {/* The plate's own field, bowed toward the well off the sheet's
+                right edge (#1830). NOT lined paper — see `GravityField`. */}
+            <GravityField
+              width={GRAVITY_WIDTH[factor]}
+              height={GRAVITY_HEIGHT}
+            />
             {/* The margin rule, struck in ochre down the gutter — outside the
                 content column's inset, so no line of type ever runs into it. */}
             <span

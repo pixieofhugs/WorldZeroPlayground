@@ -324,6 +324,24 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     },
   );
 
+  it("the Ephemerists ground is the gravity field, not lined paper (#1830)", () => {
+    // The ground is `dress.ground`, so the composer and the waiting surface
+    // mount the SAME element and this harness reaches both. The design replaced
+    // the 25px journal ruling with a field bowed toward a well off the sheet's
+    // right edge; `ephemeristsGravity.test.tsx` owns the field's geometry, and
+    // what is pinned here is that the ruling did not survive beside it.
+    const Archetype = resolvedArchetype(
+      pickVariant(surfaceMap("editPraxis"), "ephemerists", DefaultEditPraxis),
+    )!;
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <Archetype state={waitingState("ephemerists")} />
+      </MemoryRouter>,
+    );
+    expect(markup).toContain('preserveAspectRatio="xMaxYMin slice"');
+    expect(markup).not.toContain("repeating-linear-gradient");
+  });
+
   it("na falls through to the spectrum kit's own band (ADR-0065 §4)", () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>

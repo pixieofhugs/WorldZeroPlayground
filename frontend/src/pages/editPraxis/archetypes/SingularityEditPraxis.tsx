@@ -253,6 +253,10 @@ export default function SingularityEditPraxis({ state }: Props) {
         fontFamily: FACE,
         // 19 in the design → the 18px content rung (§4a).
         fontSize: "var(--text-content)",
+        // The design's own 0.04em. A monospace readout is set loose, and this
+        // is the one slot on the page that had been left at the face's natural
+        // fit (#1830).
+        letterSpacing: "0.04em",
         lineHeight: 1,
         color: ACCENT,
       }}

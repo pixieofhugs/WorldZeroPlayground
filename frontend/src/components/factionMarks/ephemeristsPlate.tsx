@@ -340,6 +340,100 @@ export function GlyphRegister({ width, y, strength, keyPrefix, color }: {
   );
 }
 
+/* ── The gravity field (#1830) ──
+ *
+ * Every number below is the design's own `ephGravity()`. They are ornament
+ * geometry on an SVG canvas, not layout spacing (§4a).
+ */
+/** The leading of the unbent rows, at the top and bottom of the sheet. */
+const GRAVITY_PITCH = 52;
+/** Where the mass sits: `WELL_X` past the sheet's right edge, `WELL_Y` down. */
+const WELL_X = 12;
+const WELL_Y = 520;
+/** How far the canvas overruns the sheet, so the well itself is drawn. */
+const WELL_MARGIN = 40;
+/** Strongest sag, at the well's own latitude, and the falloff either side. */
+const PULL_MAX = 0.42;
+const PULL_FALLOFF = 620;
+
+/**
+ * THE GRAVITY FIELD — the plate's ground, and NOT lined paper (#1830).
+ *
+ * The composer used to rule this sheet with a `repeating-linear-gradient` at
+ * 25px, which is a notebook. The design replaced it with a field: fixed-pitch
+ * brass rows bowed toward a well sitting just off the sheet's right edge, each
+ * row sagging by its distance from the mass, plus three ochre rings marking
+ * where the mass is. Its own comment is *"the plate's field, not lined paper"* —
+ * the Ephemerists read the world, they do not take minutes on it. The curvature
+ * is also doing a job: it is strongest in the open right-hand margin and
+ * flattest where a field or a panel covers the ground, so what you see of the
+ * field is exactly what the layout does not use.
+ *
+ * `width` is the sheet's nominal width — the well's position is measured from
+ * its right edge. The canvas is anchored to that edge (`xMaxYMin slice`), so a
+ * viewport wider than the nominal keeps the well where it belongs and scales
+ * the rows up rather than stranding them mid-sheet.
+ *
+ * DEVIATION, named: the design's canvas stops at 1500px because its own preview
+ * sheet does. A composer's sheet grows with what you write, and a field that
+ * stops two thirds of the way down is worse than no field, so `height` runs to
+ * the caller's number with the same formula on every row. Nothing else moves.
+ */
+export function GravityField({ width, height }: { width: number; height: number }) {
+  const span = width + WELL_MARGIN;
+  const rows = [];
+  for (let y = -GRAVITY_PITCH; y < height; y += GRAVITY_PITCH) {
+    const pull = PULL_MAX / (1 + Math.pow((y - WELL_Y) / PULL_FALLOFF, 2));
+    const end = y + (WELL_Y - y) * pull;
+    rows.push(
+      <path
+        key={y}
+        d={`M-6 ${y} C ${width * 0.42} ${y} ${width * 0.66} ${end} ${span + 6} ${end}`}
+        fill="none"
+        stroke={BRASS}
+        strokeWidth={0.8}
+        opacity={0.1 + pull * 0.34}
+      />,
+    );
+  }
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox={`0 0 ${span} ${height}`}
+      preserveAspectRatio="xMaxYMin slice"
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: -WELL_MARGIN,
+        height,
+        pointerEvents: "none",
+      }}
+    >
+      {rows}
+      <circle cx={width + WELL_X} cy={WELL_Y} r={4} fill={OCHRE} opacity={0.55} />
+      <circle
+        cx={width + WELL_X}
+        cy={WELL_Y}
+        r={26}
+        fill="none"
+        stroke={OCHRE}
+        strokeWidth={0.7}
+        opacity={0.28}
+      />
+      <circle
+        cx={width + WELL_X}
+        cy={WELL_Y}
+        r={52}
+        fill="none"
+        stroke={OCHRE}
+        strokeWidth={0.6}
+        opacity={0.16}
+      />
+    </svg>
+  );
+}
+
 /* `Wing` and `WingedDisc` stood here — the winged sun disc, the mark that headed
    every Ephemerists band and crowned the task detail's action panel.
 

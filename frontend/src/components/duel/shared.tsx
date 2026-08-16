@@ -47,7 +47,17 @@
  * the 18px content floor. `DuelSlotTheme` deliberately carries no size field: a
  * skin owns font, colour and ornament, never type size (WORLD_ZERO_STYLE §4a).
  * Genuine Label-tier bits keep their own token explicitly — the tile captions
- * stay on the caption tier, the seal buttons on `--text-sm` as button chrome.
+ * stay on the caption tier.
+ *
+ * THE SEAL BUTTONS NO LONGER NAME A SIZE AT ALL (#1783). #769 ruled they stay
+ * at the tier's second-smallest step "as button chrome", and they carried that
+ * as an inline value beside `.btn-primary` / `.btn-outline` — the same number
+ * the class already declared. #1783 moved button chrome site-wide onto the
+ * label-tier floor and weighed that precedent: it settled a decorative seal, not
+ * the primary action chrome of the whole site, so it did not carry. Both buttons
+ * take the class's size now, which is the only way they stay level with every
+ * other confirm on the site. Do not reintroduce the inline value; an inline
+ * style wins, so it would pin these two and nothing would warn you.
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -500,7 +510,7 @@ export function SealActions({
         type="button"
         onClick={onCancel}
         className="btn-outline px-4 py-2"
-        style={{ fontSize: 'var(--text-sm)', fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont }}
+        style={{ fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont }}
       >
         {cancelLabel ?? t('duelSeal.cancel')}
       </button>
@@ -511,7 +521,6 @@ export function SealActions({
         onClick={onConfirm}
         className="btn-primary px-4 py-2"
         style={{
-          fontSize: 'var(--text-sm)',
           fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
           opacity: busy ? 0.5 : 1,
           ...(danger

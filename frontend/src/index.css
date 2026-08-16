@@ -3247,8 +3247,11 @@
 
   /* ── Task card shared patterns ── */
 
+  /* --text-md, not --text-xs (#1783). See the note above .btn-primary: this is
+     the same uppercase, letter-spaced heading register at the same step, and it
+     was the one rule still sitting on the ramp's very bottom rung. */
   .card-meta {
-    font-size: var(--text-xs);
+    font-size: var(--text-md);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 6px;
@@ -3265,13 +3268,41 @@
     -webkit-box-orient: vertical;
   }
 
-  /* ── Buttons ── */
+  /* ── Buttons ──
+     BUTTON CHROME IS ON THE LABEL-TIER FLOOR, --text-md (#1783). It used to be
+     --text-sm (9px), with .card-meta a rung below it at --text-xs (8px), while
+     #1307 had already walked the tier's two role classes up — .label-heading to
+     --text-md, .label-caption to --text-lg. All three of these rules are
+     uppercase and letter-spaced, i.e. the HEADING register, so --text-md is the
+     step they join. NOT --text-lg: the caption is nominally the larger of the
+     two only because it drops the casing, and pulling caps up to 12px to match
+     the number un-matches the voices (the argument is written out in full at
+     .label-caption).
+
+     WHY THE WHOLE SITE'S BUTTONS MOVED AT ONCE, AND WHY THEY HAD TO. A button
+     label carries the four stacked legibility costs the tier split exists to
+     remove, and unlike a caption it is text a player must read TO ACT. #769
+     ruled the duel seal's buttons stay --text-sm "as button chrome"; that was a
+     decorative seal rather than the primary action chrome of the site, and
+     #1783 weighed it and did not carry it. The seal buttons ride this rule now
+     like everything else.
+
+     THE HAZARD THIS RULE HAS ALREADY SURVIVED ONCE, so do not re-open it: 19
+     components had this number typed into an inline `style` beside the class —
+     a RESTATEMENT, not an override, identical by intent and load-bearing by
+     accident. An inline style wins, so every one of them would have pinned its
+     button at 9px while the rest of the site moved, and nothing would have
+     warned you. They were deleted, not edited. `__tests__/labelTierSweep.test.ts`
+     reads this declaration and counts the two smallest steps in the source tree
+     so the pair can never drift apart again. If you are about to write
+     `fontSize: 'var(--text-*)'` next to `className="btn-…"`, the answer is that
+     the class already says it. */
 
   .btn-primary {
     @apply font-body;
     background: var(--color-text-primary);
     color: var(--color-bg-page);
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     padding: 0.5rem 1rem;
@@ -3287,7 +3318,7 @@
     background: var(--color-bg-surface);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-strong);
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     padding: 0.5rem 1rem;
@@ -3296,6 +3327,28 @@
   }
   .btn-outline:hover {
     opacity: 0.85;
+  }
+
+  /* ── Feed action controls ──
+     The feed's accept / decline / withdraw / dismiss controls, and the one
+     plain link that sits among them. NOT .btn-* on purpose: they carry
+     font-weight 700, 0.1em tracking and a denser pad, and they take their fill
+     from a --badge-* rather than the neutral. That is dress a design owns, so
+     #1783 did not flatten them into the button classes — it deleted the eight
+     hand-rolled copies of this face across FeedCardCollabInvite,
+     FeedCardDuelChallenge, FeedBankFullModal and FeedCardInvitationLetter and
+     left the copies' per-instance colour, padding and cursor inline, where they
+     belong. Reading --text-md here is the point: the two families now step
+     together off one token instead of two ramps drifting apart.
+
+     Size, face and casing only. It sets no colour and no box, so a caller keeps
+     dressing itself and an inline style still wins for everything it does set. */
+  .feed-action {
+    @apply font-body;
+    font-size: var(--text-md);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
 
   /* ── Filter chips ── */

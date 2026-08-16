@@ -47,6 +47,7 @@ import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore } from "./praxisRoom";
 import {
   deleteCollabConfirm,
+  dropDuelSideConfirm,
   dropTaskConfirm,
   duelDropsCoauthorsConfirm,
   leaveCollabConfirm,
@@ -492,14 +493,45 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     // (enforced by the backend's `delete_praxis`). A member who only wants out
     // has `leaveCollab` — the creator included (ADR-0013). Say which of the two
     // this is before it happens, in the faction's voice where it has one (#1074).
+    //
+    // A duel side is the third case, and it used to be silently folded into
+    // the second: it is stored type='solo' with a `duel_id` (ADR-0011), so
+    // `crewAtStake` is false and every duellist got the plain drop path. That
+    // path cannot work. `duel.challenger_praxis_id`/`opponent_praxis_id` are
+    // deliberately NO ACTION while all eight sibling praxis-child FKs cascade
+    // (`models/praxis.py`, migration 0006) — a duel is a contract between two
+    // players, not a part of either side. The player got a generic 409 after a
+    // dialog promising the opposite (#1831).
+    //
+    // What that NO ACTION guards is narrower than it looks, so do not read it
+    // as "a duel row never goes": `delete_praxis` now discards the DECLINED
+    // rows first, which is why the dissolve below is what unblocks the delete.
+    // A live (`pending`/`active`) or finished (`settled`/`resolved`) duel is
+    // still refused outright — see `services.duel.discard_dissolved_duels_for_praxis`,
+    // which owns that predicate and the owner ruling behind it.
+    const inDuel = praxis.duel_id != null;
     const crewAtStake = praxis.type === "collab" && praxis.members.length > 1;
     const confirmed = await askConfirm(
       crewAtStake
         ? deleteCollabConfirm(praxis.task_faction_slug)
-        : dropTaskConfirm(),
+        : inDuel
+          ? dropDuelSideConfirm()
+          : dropTaskConfirm(),
     );
     if (!confirmed) return;
     try {
+      // Dissolve the contract, then delete the side. Same call the mode picker
+      // makes when switching away from a duel, and legal at both pre-submit
+      // stages — `cancel_duel_challenge` takes pending *or* active, from either
+      // participant, and reverts both sides to plain solo with no penalty. So
+      // this needs no new endpoint and costs the opponent nothing.
+      //
+      // Deliberately not routed through the mode picker instead: `changeMode`
+      // refuses to leave an accepted duel (`errors.duelUnderway`), so at the
+      // active stage there is no other way out of a task you asked to drop.
+      if (praxis.duel_id != null) {
+        await cancelChallenge(praxis.duel_id);
+      }
       await deletePraxis(praxis.id);
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.drop")));

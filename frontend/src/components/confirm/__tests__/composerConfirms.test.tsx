@@ -39,6 +39,7 @@ import ConfirmDialog from '../ConfirmDialog'
 import {
   deleteCollabConfirm,
   dissolveDuelConfirm,
+  dropDuelSideConfirm,
   dropTaskConfirm,
   duelDropsCoauthorsConfirm,
   kickMemberConfirm,
@@ -128,9 +129,32 @@ describe('composer confirms — each names its own consequence', () => {
     expect(request.body).toMatch(/no forfeit/i)
   })
 
+  it('dropping a duel side names the duel and the opponent, not a forfeit (#1831)', () => {
+    const request = dropDuelSideConfirm()
+    // The act has two consequences and the dialog must state both: the draft
+    // goes (as the plain drop always said) AND the challenge ends. The plain
+    // `dropTaskConfirm` stated only the first, and the delete it promised was
+    // then refused by the duel FKs.
+    expect(request.title).toMatch(/duel/i)
+    expect(request.body).toMatch(/duel/i)
+    expect(request.body).toMatch(/draft/i)
+    // What happens to the other player is a consequence of some drops only,
+    // so it rides in the note — the same slot `leaveCollabConfirm` uses.
+    expect(request.note).toMatch(/opponent/i)
+    expect(request.note).toMatch(/solo/i)
+    // NOT a forfeit: that exists only at `settled` (ADR-0011 §Forfeit), and
+    // the word was rejected in #718 and #1071 decision 3. Cancelling at
+    // compose stage costs neither side anything, so the copy may only ever use
+    // the word to deny it — exactly as `dissolveDuelConfirm` does.
+    expect(`${request.title} ${request.body} ${request.note}`).not.toMatch(
+      /(?<!no )forfeit/i,
+    )
+  })
+
   it('gives every case its own words', () => {
     const requests = [
       dropTaskConfirm(),
+      dropDuelSideConfirm(),
       deleteCollabConfirm(null),
       leaveCollabConfirm(null, 3),
       kickMemberConfirm(null, 'Bramblewick'),

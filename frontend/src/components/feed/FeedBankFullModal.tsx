@@ -180,14 +180,15 @@ export default function FeedBankFullModal({
             {error}
           </p>
         )}
+        {/* Face is `.feed-action` (#1783). This copy was the odd one of the
+            eight — it had dropped the 0.1em tracking the other seven carry —
+            so it picks that up here, which is the drift a de-duplication is
+            for. */}
         <button
           onClick={onDismiss}
+          className="feed-action"
           style={{
             marginTop: 'var(--space-lg)',
-            fontFamily: "'Courier Prime', monospace",
-            fontSize: 'var(--text-md)',
-            fontWeight: 700,
-            textTransform: 'uppercase',
             background: 'transparent',
             border: '1px solid var(--color-border)',
             padding: 'var(--space-xs) var(--space-lg)',
