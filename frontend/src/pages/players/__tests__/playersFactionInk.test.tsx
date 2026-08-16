@@ -1,0 +1,274 @@
+/**
+ * The Players page paints no faction spine hue as TEXT (#1932).
+ *
+ * SEAM: the `color`-role declarations the two surfaces emit, plus the two
+ * neutral grounds this page actually draws on. Not a route, not a ratio on a
+ * token's documentation — the pairing a component *rendered*.
+ *
+ * WHY IT NEEDS ITS OWN FILE, next to `playersDirectory.test.tsx` which already
+ * renders both surfaces. That file asserts what the page SAYS; this one asserts
+ * what it paints, and the two answers are governed by different documents. The
+ * nightly found it (14 measured failures, every one in LIGHT), and the nightly
+ * needs Playwright, a backend and a seeded Postgres. The decision underneath it
+ * — "is this ink legible on that ground" — needs none of that, which is the
+ * same argument `contrastTriage.test.ts` makes for the triage half of #1762.
+ *
+ * WHY NEITHER STANDING GUARD SAW IT.
+ *
+ *   - `factionContrast.test.ts` measures a token against the surface its
+ *     DECLARATION names. `--faction-wow` declares a fill, and its own comment at
+ *     `--faction-wow-on-fill` records the measurement from the other side
+ *     ("white only 2.15:1"). Nothing there is wrong; the pairing this page drew
+ *     was simply not one the manifest could name.
+ *   - `local/no-global-ink-on-faction-surface` (#1819) is scoped to
+ *     `archetypes/`, `mobileArchetypes/` and `components/factionMarks/`, and
+ *     `pages/players/` is in none of them — correctly, because this page is
+ *     NEUTRAL chrome that happens to dispatch on a slug. And the rule's polarity
+ *     is the other one anyway: it bans a global ink on a faction sheet. This was
+ *     a faction ink on a global sheet, which no rule bans. See the PR body.
+ */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import type { ReactElement } from 'react'
+import { describe, it, expect, vi } from 'vitest'
+import '../../../i18n'
+import type { CharacterOut } from '../../../api/auth'
+import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import {
+  AA_NORMAL,
+  compositeOver,
+  contrastRatio,
+  parseColor,
+  type Rgba,
+} from '../../../utils/contrast'
+
+vi.mock('../../../hooks/useTheme', () => ({
+  useTheme: () => ({ theme: 'light' as const, toggle: () => {} }),
+}))
+
+import DesktopPlayers from '../DesktopPlayers'
+import MobilePlayers from '../MobilePlayers'
+import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
+
+// ── The two grounds ────────────────────────────────────────────────────────
+//
+// Both are what the browser reported in run 31964402024, and both fall out of
+// index.css rather than being typed in here:
+//
+//   rgb(247, 244, 238) = `--color-bg-page`, the bare page.
+//   rgb(253, 252, 250) = `--color-bg-surface` composited over it — the frost the
+//                        signed-in player's own roster row wears. It is ALPHA
+//                        (rgba(255,255,255,0.72) light), so it has no value of
+//                        its own and `contrastRatio` throws if you hand it one
+//                        un-composited (#1413). That extra layer is the whole
+//                        0.13 between UA's 4.59:1 as declared and its 4.46:1 as
+//                        rendered, and it is the layer this repo has now missed
+//                        three times (#1715, #1579, and the declaration comment
+//                        at `--faction-ua-on-fill`).
+const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
+const THEMES = readThemes(readFileSync(CSS_PATH, 'utf8'))
+
+function token(name: string, theme: Theme): Rgba {
+  const raw = resolveVar(name, theme, THEMES)
+  if (raw === null) throw new Error(`${name} does not resolve under ${theme}`)
+  const colour = parseColor(raw)
+  if (colour === null) throw new Error(`${name} resolves to an unparseable ${raw}`)
+  return colour
+}
+
+function grounds(theme: Theme): { page: Rgba; frost: Rgba } {
+  const page = token('--color-bg-page', theme)
+  return { page, frost: compositeOver(token('--color-bg-surface', theme), page) }
+}
+
+/** The seven spine hues, in the order `factionCssVar` can hand them out. */
+const SPINE_KEYS = ['ua', 'everymen', 'wow', 'snide', 'ephemerists', 'singularity', 'coven'] as const
+
+// ── The render seam ────────────────────────────────────────────────────────
+
+/**
+ * Every declaration in every inline `style` attribute of the rendered markup,
+ * as `[property, value]`.
+ *
+ * Split on `;` then on the FIRST `:`, which is what keeps `color-mix(` and
+ * `linear-gradient(` out of the answer: they carry the substring `color` and no
+ * colon after it, so a naive `/color:/` scan reads the leader's faction wash as
+ * an ink. The wash is a fill and is meant to stay.
+ */
+function declarations(html: string): Array<[string, string]> {
+  const out: Array<[string, string]> = []
+  for (const match of html.matchAll(/style="([^"]*)"/g)) {
+    for (const decl of match[1].split(';')) {
+      const colon = decl.indexOf(':')
+      if (colon === -1) continue
+      out.push([decl.slice(0, colon).trim(), decl.slice(colon + 1).trim()])
+    }
+  }
+  return out
+}
+
+/**
+ * Properties that end up as an ink.
+ *
+ * `--gem-ink` is here because it IS `.level-gem-number`'s `color`, one
+ * indirection away in index.css — and the indirection is exactly what hid it.
+ * `LevelGem`'s own docstring says the gem is "outlined rather than filled … so
+ * the numeral sits on the surface the gem lands on … without per-faction
+ * contrast tuning", and then handed the numeral the faction hue, which is the
+ * per-faction tuning the outline was supposed to make unnecessary. A visitor
+ * that only knows the CSS property name `color` never reaches it.
+ */
+const INK_PROPS = new Set(['color', '--gem-ink'])
+
+/**
+ * The BARE spine hue — `var(--faction-wow)`, never `var(--faction-wow-card-text)`.
+ *
+ * The suffixed members of the family are a different claim entirely: they are
+ * inks measured against a named ground, and `FactionAvatar` correctly paints its
+ * monogram in `--faction-{key}-card-text` on the faction's own circle, a pairing
+ * `CARD_PAIRS` has gated since #651. A regex that swept the whole prefix would
+ * report that as a defect and teach the next editor to strip a measured pairing.
+ * `[a-z]+` stops at the first hyphen, which is exactly the line between "this
+ * hue" and "this hue's ink for a ground".
+ */
+const FACTION_TOKEN = /var\(\s*--faction-[a-z]+\s*\)/
+
+function render(element: ReactElement): string {
+  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
+}
+
+function player(overrides: Partial<CharacterOut>): CharacterOut {
+  return {
+    id: 1,
+    username: 'wren',
+    display_name: 'Wren',
+    bio: '',
+    tagline: '',
+    avatar_url: '',
+    location: '',
+    level: 5,
+    score: 100,
+    all_time_score: 100,
+    faction_slug: 'wow',
+    status: 'active',
+    created_at: '2026-01-01T00:00:00Z',
+    badges: [],
+    invitations: [],
+    ...overrides,
+  }
+}
+
+/**
+ * A field that puts the two REPORTED hues on the podium and in the roster, and
+ * an unaffiliated player besides — `na` must keep the spectrum (ADR-0039), so a
+ * fix that reached for a flat neutral everywhere would show up here.
+ */
+const FIELD: CharacterOut[] = [
+  player({ id: 11, display_name: 'Pip', faction_slug: 'wow', score: 412 }),
+  player({ id: 22, display_name: 'Ada', faction_slug: 'ua', score: 388 }),
+  player({ id: 33, display_name: 'Nodefour', faction_slug: 'singularity', score: 341 }),
+  player({ id: 44, display_name: 'Wren', faction_slug: 'na', score: 296 }),
+  ...SPINE_KEYS.map((slug, index) =>
+    player({ id: 100 + index, display_name: `Filler ${index}`, faction_slug: slug, score: 200 - index }),
+  ),
+]
+
+function props(overrides: Partial<PlayersViewProps> = {}): PlayersViewProps {
+  return {
+    ranked: rankPlayers(FIELD, 'era'),
+    scoreMode: 'era',
+    onScoreMode: () => {},
+    eyebrow: 'Renaissance · The Standings',
+    // The WOW player, so their own row wears the frost — the tighter of the
+    // two grounds and the one the nightly reported both label failures on.
+    myCharId: 11,
+    related: NO_RELATIONSHIPS,
+    latest: { 11: { taskTitle: 'Left a poem in a library book', submittedAt: '2026-01-01T00:00:00Z' } },
+    ...overrides,
+  }
+}
+
+describe('the Players surfaces paint no faction hue as text', () => {
+  for (const [surface, element] of [
+    ['desktop', <DesktopPlayers {...props()} />],
+    ['mobile', <MobilePlayers {...props()} />],
+  ] as const) {
+    it(`${surface}: no inline ink resolves to a faction spine hue`, () => {
+      const offenders = declarations(render(element))
+        .filter(([property, value]) => INK_PROPS.has(property) && FACTION_TOKEN.test(value))
+        .map(([property, value]) => `${property}: ${value}`)
+      expect(offenders).toEqual([])
+    })
+
+    it(`${surface}: the hue still dresses the fills, rules and marks`, () => {
+      // The other half of the fix, and the one a careless sweep would break:
+      // this page is meant to be loudly faction-coded. Borders, washes, race
+      // bars, gem strokes and glows all keep the spine hue.
+      const kept = declarations(render(element)).filter(
+        ([property, value]) => !INK_PROPS.has(property) && FACTION_TOKEN.test(value),
+      )
+      expect(kept.length).toBeGreaterThan(0)
+    })
+  }
+})
+
+describe('why the hue cannot be the ink here, measured', () => {
+  it('two of the seven spine hues are illegible as text on this page in light', () => {
+    const { page, frost } = grounds('light')
+    const measured = Object.fromEntries(
+      SPINE_KEYS.map((key) => {
+        const hue = token(`--faction-${key}`, 'light')
+        return [key, { page: contrastRatio(hue, page), frost: contrastRatio(hue, frost) }]
+      }),
+    )
+
+    // WOW's gold is the large miss and the one its own declaration already
+    // records from the other side (`--faction-wow-on-fill`: "white only
+    // 2.15:1"). Clearing 4.5:1 on the frost needs an ink of relative luminance
+    // <= 0.1774; the hue sits at 0.4385, so it would have to shed 60 % of its
+    // luminance and land near rgb(148, 111, 0) — a bronze, not this kit's gold —
+    // and `--faction-wow-on-fill` (#14110b, 8.76:1 on the hue) would stop
+    // clearing on the fill it was measured for. That is the ceiling: it is not
+    // that nobody found the right yellow, it is that there is no yellow.
+    expect(measured.wow.page).toBeLessThan(AA_NORMAL)
+    expect(measured.wow.frost).toBeLessThan(AA_NORMAL)
+
+    // UA is the near miss, and it is instructive: 4.46:1 on the bare page while
+    // clearing on the frost. `--faction-ua-on-fill`'s comment measured the hue
+    // at 4.59:1 against #fcf7ef, a slightly LIGHTER warm white than the page,
+    // and the whole 0.13 is the ground. Site-by-site is the fix here per the
+    // 2026-08-14 owner ruling recorded in factionContrast.test.ts: no
+    // per-faction on-page ink tier is minted to rescue a 0.04 shortfall.
+    expect(measured.ua.page).toBeLessThan(AA_NORMAL)
+
+    // The other five clear, and they are asserted so that a repaint of any one
+    // of them cannot quietly join the two above while this file still reads as
+    // if it were about WOW and UA only.
+    for (const key of ['everymen', 'ephemerists', 'singularity'] as const) {
+      expect(measured[key].page).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+    // snide's acid and coven's pink are under AA on this ground too. They are
+    // not in the nightly's 14 because no `snide` or `coven` row reached a
+    // faction-inked slot in that run — a coverage fact, not a pass. Recording
+    // them here is what stops "put the hue back for the factions it works for"
+    // from ever looking like a two-faction exemption.
+    expect(measured.snide.page).toBeLessThan(AA_NORMAL)
+    expect(measured.coven.page).toBeLessThan(AA_NORMAL)
+  })
+
+  it('the inks it paints instead clear AA on both grounds, in both themes', () => {
+    for (const theme of ['light', 'dark'] as Theme[]) {
+      const { page, frost } = grounds(theme)
+      // `.label-heading` reads `--label-ink`, which this page never repoints, so
+      // it is `--color-text-tertiary`. The podium rank numeral inherits
+      // `--color-text-primary` from the row it sits in.
+      for (const ink of ['--color-text-tertiary', '--color-text-primary']) {
+        const colour = token(ink, theme)
+        expect(contrastRatio(colour, page)).toBeGreaterThanOrEqual(AA_NORMAL)
+        expect(contrastRatio(colour, frost)).toBeGreaterThanOrEqual(AA_NORMAL)
+      }
+    }
+  })
+})
