@@ -61,7 +61,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       </div>
 
       {signupMsg && (
-        <p className={`font-body content-text mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'border-red-300 text-red-600'}`}>
+        <p className={`font-body content-text mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'danger-edge danger-text'}`}>
           {signupMsg.msg}
         </p>
       )}
@@ -69,7 +69,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       {loading && tasks.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {extractError(error, "Couldn't load tasks.")}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
@@ -85,15 +85,8 @@ function DesktopTasks({ state }: { state: TasksState }) {
               <MetataskSeal metatasks={tasks} />
             </div>
           ) : (
-            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6).
-               `scanning-surface` declares this a browsing list (#1716): a WOW
-               card hangs its points upside down here, and upright on the
-               profile / faction / detail pages that mount the same card and
-               declare nothing. See the class in index.css. */
-            <div
-              className="scanning-surface"
-              style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}
-            >
+            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}

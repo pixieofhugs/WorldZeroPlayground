@@ -15,7 +15,7 @@ export default function OverviewTab() {
       .catch((err) => setError(extractError(err, t('overview.loadError'))))
   }, [t])
 
-  if (error) return <p className="font-body content-text text-red-600">{error}</p>
+  if (error) return <p className="font-body content-text danger-text">{error}</p>
   if (!stats) return <div className="font-body text-muted content-text">{t('common:loading')}</div>
 
   const items = [
@@ -38,7 +38,7 @@ export default function OverviewTab() {
         >
           <p
             className="font-display text-3xl font-bold"
-            style={highlight ? { color: '#dc2626' } : {}}
+            style={highlight ? { color: 'var(--color-danger)' } : {}}
           >
             {value}
           </p>

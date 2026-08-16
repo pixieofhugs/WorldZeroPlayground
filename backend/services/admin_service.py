@@ -25,6 +25,7 @@ from schemas.admin import (
     FlagOut,
     OverviewStats,
 )
+from services.duel import forfeit_settled_duels_for_character
 from services.era import get_current_era_row, get_or_create_stats
 from services.scoring import compute_vote_budget, compute_votes_available
 
@@ -251,6 +252,49 @@ async def flags_for_comments(
 # ---------------------------------------------------------------------------
 # Seed / Insert
 # ---------------------------------------------------------------------------
+
+
+async def apply_ban(
+    character: Character,
+    banned: bool,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
+    """Ban or un-ban a character on behalf of a moderator (#1577).
+
+    Takes the row rather than an id because the route already resolved it and
+    owns the 404 for a missing one.
+
+    **Banning forfeits.** ADR-0011 §Forfeit's trigger is "the ban / soft-delete of
+    a side's character"; for a year only the soft-delete half did it, so a banned
+    duellist's opponent kept waiting on a tally that would never be decided. Same
+    function the self-delete path calls, so the two cannot drift.
+
+    **Un-banning does not un-forfeit.** ADR-0011 makes the forfeit sticky —
+    recorded on the first forfeit and never overwritten — so a ban is destructive
+    on first use even though the toggle reads as reversible. That is the ADR's
+    ruling, not this function's; #1577 explicitly left it standing.
+
+    **Un-banning refuses a departed life.** ``departed_at`` is written only by
+    ``services.character.soft_delete_character``, i.e. by the player themselves.
+    An admin reversing a *moderation* action must not resurrect someone who left:
+    the two are indistinguishable by ``status`` alone, which is exactly why the
+    column exists.
+    """
+    if not banned and character.departed_at is not None:
+        raise_coded(
+            409,
+            ErrorCode.character_departed_not_restorable,
+            "This character was deleted by its player and cannot be restored.",
+        )
+
+    if banned:
+        character.status = CharacterStatus.banned
+        await forfeit_settled_duels_for_character(character.id, session, era)
+    else:
+        character.status = CharacterStatus.active
+
+    await session.flush()
 
 
 async def set_character_stats(

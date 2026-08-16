@@ -60,10 +60,17 @@ describe('Home, ?login=', () => {
     expect(markup).not.toContain('SOME_FUTURE_CODE')
   })
 
-  it('offers both ways in from the hero while logged out', () => {
+  // #1861 — the hero's two provider buttons moved to `/start`'s auth card. A
+  // stranger is owed the explanation before the ask, so the logged-out CTA
+  // leads INTO the onboarding arc rather than straight to a provider, and the
+  // arc's second card is where Google and Discord now live. The destination
+  // itself is an `onClick`, so nothing static can read it; what this pins is
+  // that the hero no longer *is* the sign-in.
+  it('leads a logged-out visitor into the onboarding arc, not to a provider', () => {
     const markup = render('')
 
-    expect(markup).toContain('data-testid="sign-in-google"')
-    expect(markup).toContain('data-testid="sign-in-discord"')
+    expect(markup).toContain('data-testid="home-hero-cta"')
+    expect(markup).not.toContain('data-testid="sign-in-google"')
+    expect(markup).not.toContain('data-testid="sign-in-discord"')
   })
 })

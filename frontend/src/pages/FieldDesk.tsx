@@ -268,7 +268,7 @@ export default function FieldDesk() {
           signable tasks mean anything. See the header comment. */}
       <div className="flex flex-col" style={{ gap: 'var(--space-2xl)', marginTop: 'var(--space-4xl)' }}>
         {signupMsg && (
-          <p className="font-body content-text border-2 border-red-300 text-red-600 px-3 py-2">
+          <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
             {signupMsg}
           </p>
         )}
@@ -605,11 +605,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
       ) : items.length === 0 ? (
         <p className="font-body text-muted">{t(`signedIn.browse.empty.${tab}`)}</p>
       ) : (
-        /* `scanning-surface`: the desk's browse grid (#1716) — a WOW card hangs
-           its points upside down here, and upright wherever no mount says
-           otherwise. See index.css. */
         <div
-          className="scanning-surface"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',

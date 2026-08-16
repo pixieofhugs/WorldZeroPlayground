@@ -1,0 +1,31 @@
+{
+  "card": {
+    "stepCaption": "PLACEHOLDER — STEP",
+    "lookAround": "PLACEHOLDER — let me just look around first"
+  },
+  "intro": {
+    "title": "PLACEHOLDER — the title of the pitch",
+    "paragraph": {
+      "game": "PLACEHOLDER (slot 1 of 6 — say that this is a game).",
+      "realWorld": "PLACEHOLDER (slot 2 of 6 — say that the things you do happen in the real world, away from the screen).",
+      "proof": "PLACEHOLDER (slot 3 of 6 — say that you photograph what you did, as proof).",
+      "rated": "PLACEHOLDER (slot 4 of 6 — say that other players rate that photo, and that is how you score).",
+      "free": "PLACEHOLDER (slot 5 of 6 — say that it is free).",
+      "maker": "PLACEHOLDER (slot 6 of 6 — say that a person made this, and that it is small and a bit silly)."
+    },
+    "note": "PLACEHOLDER — one line, set beside the tick",
+    "continue": "PLACEHOLDER — go on then"
+  },
+  "auth": {
+    "title": "PLACEHOLDER — the title of the sign-in stop",
+    "body": "PLACEHOLDER — one or two lines saying why a score needs somewhere to live. No provider is named here; the buttons name themselves.",
+    "note": "PLACEHOLDER — one line, set beside the tick"
+  },
+  "terms": {
+    "title": "PLACEHOLDER — the title of the agreement stop",
+    "body": "PLACEHOLDER — one or two lines framing the document below and saying what agreeing binds you to. The document itself is the real Disclaimer and is not a placeholder.",
+    "note": "PLACEHOLDER — one line, set beside the tick",
+    "accept": "PLACEHOLDER — I agree",
+    "error": "PLACEHOLDER — that did not save; try again"
+  }
+}
