@@ -76,6 +76,24 @@ type ViewportName = keyof typeof VIEWPORTS
  * (`src/utils/__tests__/factionContrast.test.ts`) carries these surfaces, which
  * is why its ROSTER_PAIRS block measures a pairing rather than a documented
  * role — read that block's header before assuming a token is covered here.
+ *
+ * #1819 IS THE SECOND ONE OF THESE, and it is worth recording what the missing
+ * fixture would have to do, because "add the composer" understates it by a lot.
+ * The two composer notices — the room CONNECTING and the document FROZEN — sat
+ * at 2.01:1 on the Ephemerists plate, and neither is route-reachable:
+ *   - FROZEN needs a praxis whose `status !== 'in_progress'`, so the fixture
+ *     must create AND submit one, per faction, and the composer must still be
+ *     reachable afterwards.
+ *   - CONNECTING is `room.body !== null && !room.seeded` — a socket that has
+ *     OPENED and not yet been seeded. Blocking the WebSocket does not produce
+ *     it (that leaves `body` null and no notice at all); it needs
+ *     `page.routeWebSocket` proxying the real server and swallowing the seed
+ *     frame. That is a fixture with its own failure modes, and a flaky nightly
+ *     is worse than a documented gap.
+ * Both are guarded meanwhile at their MOUNT, DOM-lessly and in the PR, by
+ * `src/pages/editPraxis/archetypes/__tests__/composerQuietInk.test.tsx` — which
+ * asserts the notices carry no inline ink, so the seam the ratio would measure
+ * is at least reachable. A ratio still needs this file.
  */
 const SHARED_ROUTES = ['/', '/tasks', '/praxis', '/leaderboard', '/factions']
 

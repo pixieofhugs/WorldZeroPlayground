@@ -276,7 +276,7 @@ export default function ModerationTab() {
   }
 
   if (loading) return <div className="font-body text-muted content-text">{t('common:loading')}</div>
-  if (error) return <p className="font-body content-text text-red-600">{error}</p>
+  if (error) return <p className="font-body content-text danger-text">{error}</p>
 
   const queue: QueueItem[] = [
     ...flaggedPraxes.map((praxis): QueueItem => ({ kind: 'praxis', praxis })),
@@ -295,7 +295,7 @@ export default function ModerationTab() {
   return (
     <div className="flex flex-col gap-8">
       {actionError && (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {actionError}
         </p>
       )}

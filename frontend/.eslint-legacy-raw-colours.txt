@@ -6,38 +6,24 @@
 # landed: 61 files, 140 violations. #1609 burns it down. The three groups below
 # are how the 140 read, not three different rules — every line is one file.
 #
-# GROUP 1 — the danger banner. `text-red-600` / `border-red-300` / `#dc2626`,
-# which is `--color-danger`'s LIGHT value hardcoded, so the error text paints
-# light red on a dark ground. Repeated near-verbatim across ~20 surfaces; this
-# is one shared component away from zero, not twenty edits.
-src/pages/admin/AccountsTab.tsx
-src/pages/admin/ModerationTab.tsx
-src/pages/admin/OverviewTab.tsx
-src/pages/admin/TaskImportPanel.tsx
-src/pages/admin/TasksTab.tsx
-src/pages/CharacterProfile.tsx
-src/pages/Contact.tsx
-src/pages/EditCharacter.tsx
-src/pages/FactionDetail.tsx
-src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx
-src/pages/Factions.tsx
-src/pages/FieldDesk.tsx
-src/pages/Home.tsx
-src/pages/Leaderboard.tsx
-src/pages/praxes/MobilePraxisFeed.tsx
-src/pages/Praxes.tsx
-src/pages/PraxisDetail.tsx
-src/pages/proposeTask/archetypes/DefaultProposeTask.tsx
-src/pages/TaskDetail.tsx
-src/pages/Tasks.tsx
-src/pages/tasks/mobileArchetypes/DefaultTasks.tsx
-src/pages/Updates.tsx
+# GROUP 1 — the danger banner. CLEARED by #1609: 41 violations across 23 files,
+# all `text-red-600` / `border-red-300` / a hardcoded `#dc2626`. They now read
+# `.danger-text` / `.danger-edge` / `.warning-text` — three role classes in
+# index.css @layer components, one per token, NOT one banner component (that is
+# a .tsx decision about type and spacing, and freezing an archetype's metrics in
+# the stylesheet the week before the component arrives is the wrong tier).
+# `text-red-600` is #dc2626 exactly, so the light render did not move; only dark
+# was ever wrong. The eight length counters went to `--color-warning` rather
+# than danger — approaching a limit is not an error — which also lifts them off
+# the 4.40:1 the red measured on the page.
+# `FieldDesk.tsx` was in this group and stays on the list for a GROUP 2
+# violation: its page dot-field writes its own `rgba(0,0,0,0.035)`.
 #
 # GROUP 2 — hand-rolled lift. Neutral chrome carrying its own
 # `rgba(0,0,0,α)` shadow or modal scrim at a geometry nobody else uses. This is
 # the class #1851 fixed twice already, at two different geometries; a third
 # (`AlbescentInvitation`) is here. Wants a shared elevation token, not 19 edits.
-# `FieldDesk.tsx` sits in group 1 and carries one of these too.
+src/pages/FieldDesk.tsx
 src/components/AlbescentInvitation.tsx
 src/components/collab/CollabRoster.tsx
 src/components/collab/CollabSuccess.tsx

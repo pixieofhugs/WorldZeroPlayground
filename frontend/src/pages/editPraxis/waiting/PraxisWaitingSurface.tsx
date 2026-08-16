@@ -531,7 +531,11 @@ export default function PraxisWaitingSurface({
     border: "none",
     padding: 0,
     cursor: "pointer",
-    color: "var(--color-text-tertiary)",
+    // The seam, not the neutral it defaults to (#1819). This surface is
+    // faction-dressed, so the global tertiary is an ink the frame above it
+    // cannot move; `--label-ink` is unset to exactly this grey everywhere no
+    // frame has repointed it, which makes the swap a no-op on those.
+    color: "var(--label-ink)",
     ...dress.quietButtonStyle,
   });
 
