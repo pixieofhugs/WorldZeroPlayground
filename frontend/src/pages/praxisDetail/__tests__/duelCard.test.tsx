@@ -152,7 +152,10 @@ describe('duel card — the three readings', () => {
   it('settled: both totals, the margin, and never a decided verdict', () => {
     const { text, html } = render(state())
     expect(text, 'the card label').toContain('The duel')
-    expect(text, "this side's total").toContain('18.0')
+    // `Ada18`, not `18`: a whole total prints without a decimal now (#1866), so
+    // a bare `18` is also satisfied by the score stamp's `+ 18 from votes`
+    // higher up the same page. The figure is anchored to the row it belongs to.
+    expect(text, "this side's total").toContain('Ada18')
     expect(text, "the rival's total").toContain('15.4')
     expect(text, 'the leader and the margin').toContain('Ada leads by 2.6')
     expect(text, 'live, not decided').toContain('live')
@@ -179,7 +182,7 @@ describe('duel card — the three readings', () => {
       state({ duel: duel({ forfeited_by_character_id: RIVAL.character_id }) }),
     )
     expect(text, 'the verdict').toContain('Won by default')
-    expect(text, 'this side still stands').toContain('18.0')
+    expect(text, 'this side still stands').toContain('Ada18')
     // Absent, not losing: the tally stopped deciding this duel the moment they
     // threw it, so their real figure is gone rather than shown as a loss.
     expect(text, "the forfeiter's total is gone").not.toContain('15.4')
@@ -194,7 +197,7 @@ describe('duel card — the three readings', () => {
     )
     expect(text).toContain('Won by default')
     expect(text, 'the rival keeps their total').toContain('15.4')
-    expect(text, 'this side has none').not.toContain('18.0')
+    expect(text, 'this side has none').not.toContain('Ada18')
   })
 
   it('resolved: the frozen pair and the named winner', () => {
@@ -208,7 +211,7 @@ describe('duel card — the three readings', () => {
         }),
       }),
     )
-    expect(text, 'the frozen figures, not the live ones').toContain('21.0')
+    expect(text, 'the frozen figures, not the live ones').toContain('Ada21')
     expect(text).toContain('24.5')
     expect(text).toContain('Rax won')
     expect(text).toContain('frozen at era close')
@@ -228,7 +231,7 @@ describe('duel card — the three readings', () => {
     )
     expect(text).toContain('No contest')
     expect(text).toContain('never became votable')
-    expect(text, 'no frozen figures exist to print').not.toContain('18.0')
+    expect(text, 'no frozen figures exist to print').not.toContain('Ada18')
   })
 })
 
@@ -341,7 +344,7 @@ describe('duel card — the ink seam', () => {
     const html = dressed()
     const text = html.replace(/<[^>]*>/g, '')
     expect(text, 'the live reading, whole').toContain('Ada leads by 2.6')
-    expect(text).toContain('18.0')
+    expect(text).toContain('Ada18')
     expect(text).toContain('15.4')
     const declined = renderToStaticMarkup(
       <MemoryRouter>

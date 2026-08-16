@@ -379,7 +379,7 @@ describe("Singularity praxis detail — the state axes", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
     expect(text, "points from votes").toContain("4");
-    expect(text, "total, in this faction's own two-decimal register").toContain("16.00");
+    expect(text, "total — through the shared formatter now, not a private two-decimal register (#1866)").toContain("16");
   });
 
   it("shows the multiplier row only when the factor is not 1.0", () => {

@@ -286,7 +286,7 @@ describe("Ephemerists praxis detail — the state axes", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
     expect(text, "points from votes").toContain("4");
-    expect(text, "total").toContain("16.0");
+    expect(text, "total").toContain("16");
   });
 
   /**
