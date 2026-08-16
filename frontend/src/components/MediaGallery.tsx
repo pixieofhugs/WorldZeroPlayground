@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import type { MediaItemOut } from '../api/praxis'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -10,6 +12,7 @@ interface Props {
 
 /** Media gallery with rounded images and clean borders (Style Guide §12.5). */
 export default function MediaGallery({ media, layout = 'column' }: Props) {
+  const { t } = useTranslation('praxis')
   if (media.length === 0) return null
 
   const sorted = [...media].sort((a, b) => a.display_order - b.display_order)
@@ -25,19 +28,34 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
       {sorted.map((item) => {
         const src = `${BASE_URL}/media/${item.file_path}`
         if (item.type === 'image') {
+          // #1896. Both layouts crop the thumbnail, so the full file is only
+          // reachable through the browser's own image viewer — which is also
+          // the pinch-zoom, save-as and rotate a lightbox would have to build.
+          // The anchor is the whole feature; the crop below is untouched.
+          // `alt` stays empty (nobody has described these photos), so the link
+          // takes its accessible name from the catalog rather than the URL.
           return (
-            <img
+            <a
               key={item.id}
-              src={src}
-              alt=""
-              style={{
-                width: '100%',
-                borderRadius: 8,
-                objectFit: 'cover',
-                maxHeight: layout === 'grid' ? 140 : 384,
-                border: '1px solid var(--color-border)',
-              }}
-            />
+              href={src}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={t('gallery.openImage')}
+              style={{ display: 'block' }}
+            >
+              <img
+                src={src}
+                alt=""
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  borderRadius: 8,
+                  objectFit: 'cover',
+                  maxHeight: layout === 'grid' ? 140 : 384,
+                  border: '1px solid var(--color-border)',
+                }}
+              />
+            </a>
           )
         }
         if (item.type === 'video') {

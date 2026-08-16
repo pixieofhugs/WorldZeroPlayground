@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
+import { onboardingHandoffPending } from './utils/onboardingResume'
 
 /**
  * Every page is code-split (#1045). The chrome above stays eager — Layout and
@@ -55,6 +56,7 @@ const ProposeTask = lazy(importProposeTask)
 const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
 
 /** The one loading surface: route chunk in flight, or the session still resolving. */
 function PageLoading() {
@@ -87,6 +89,14 @@ export function RootLanding() {
     void (hadSessionLastVisit() ? importFieldDesk() : importHome())
     return <PageLoading />
   }
+  // The OAuth round trip lands here and nowhere else: the backend callback
+  // redirects to a constant (`settings.FRONTEND_URL`), so a player who left the
+  // onboarding flow for a provider comes back to `/` rather than to the card
+  // they were on. This is the whole of putting them back — a boolean in
+  // `sessionStorage`, read only once a session actually exists, and cleared by
+  // the flow on mount so it can fire at most once. Nothing rides on the wire
+  // and `routers/auth.py` is untouched. See `utils/onboardingResume`.
+  if (user && onboardingHandoffPending()) return <Navigate to="/start" replace />
   return user ? <FieldDesk /> : <Home />
 }
 
@@ -109,6 +119,10 @@ export default function App() {
       <Suspense fallback={<PageLoading />}>
         <Routes>
           <Route path="/" element={<RootLanding />} />
+          {/* The QR code's one destination, and Home's logged-out CTA's. No
+              `ProtectedRoute`: the arc explains the game BEFORE it asks for an
+              account, which is the whole point of it (#1861). */}
+          <Route path="/start" element={<Onboarding />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<TaskDetail />} />
           <Route path="/praxis" element={<Praxes />} />

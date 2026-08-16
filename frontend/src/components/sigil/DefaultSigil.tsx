@@ -19,9 +19,21 @@ interface DefaultSigilProps {
   size?: number;
   /** inner cut-out as a fraction of the radius (0–1) */
   hole?: number;
+  /**
+   * What to paint the ring with instead of the whole conic sweep (#1892). Any
+   * CSS `background` value, not just a colour: the ring is PAINTED rather than
+   * stroked, and the one caller that needs this — the sidebar's activity rail —
+   * samples a window of `--faction-default-rainbow` by row position, which is a
+   * background shorthand and not a stop that can be named. Its rows would
+   * otherwise repeat one identical spectrum ring down the column.
+   *
+   * Named `color` to line up with `FactionSigilProps`, so a caller that reaches
+   * this through the dispatcher spells it the same way the other seven marks do.
+   */
+  color?: string;
 }
 
-export default function DefaultSigil({ size = 48, hole = 0.4 }: DefaultSigilProps) {
+export default function DefaultSigil({ size = 48, hole = 0.4, color }: DefaultSigilProps) {
   const inner = Math.round(hole * 100);
   // The mask color is an alpha stencil (not a themed value): opaque keeps the
   // ring, transparent punches the centre hole.
@@ -35,7 +47,7 @@ export default function DefaultSigil({ size = 48, hole = 0.4 }: DefaultSigilProp
         height: size,
         borderRadius: "50%",
         flex: "none",
-        background: "var(--faction-default-rainbow-conic)",
+        background: color ?? "var(--faction-default-rainbow-conic)",
         WebkitMask: mask,
         mask,
       }}

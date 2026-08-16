@@ -1,6 +1,6 @@
 import { useEffect, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { loginWith } from '../api/auth'
+import { loginWith, type AuthProvider } from '../api/auth'
 import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
@@ -8,32 +8,52 @@ import { drawAtRoot } from './ui/drawAtRoot'
  *
  * Both logged-out entry points used to call `loginWithGoogle()` directly, so
  * Discord shipped server-side (#1772) and stayed unreachable. This is the one
- * component that knows which providers exist and what they are called; the
- * onboarding auth card (#1732) mounts it too when that flow is built.
+ * component that knows which providers exist and what they are called.
+ *
+ * Two callers now: the NavBar's sign-in sheet below, and the onboarding arc's
+ * auth card (#1861), which is where the Home hero's pair went — a stranger is
+ * owed the explanation before the ask, so the hero leads into `/start` and
+ * `/start` offers the providers.
  *
  * NO PROVIDER NAME IN FRAMING COPY (#1738): a provider is named on the button
  * that goes to it and nowhere else. `signIn.title` frames the stop as somewhere
  * to keep a score, not as a gate.
  *
- * The caller owns the container — a wrapping flex row in the Home hero, a
- * column in the sheet below — so the buttons need no layout variant of their
- * own, and neither provider is styled as the recommended one.
+ * The caller owns the container — a column in the sheet below, a wrapping row
+ * on the onboarding sheet — so the buttons need no layout variant of their own,
+ * and neither provider is styled as the recommended one.
  */
 export default function SignInOptions({
   className = 'btn-primary',
   style,
+  onChoose,
 }: {
   className?: string
   style?: CSSProperties
+  /**
+   * Run just before the browser leaves for the provider.
+   *
+   * `loginWith` is a full document navigation, so this is the last moment any
+   * of this tab's code runs. The onboarding flow uses it to record that it was
+   * mid-flow, because the backend callback redirects to a constant
+   * (`FRONTEND_URL`) and nothing else survives the round trip. Absent
+   * everywhere else — the NavBar sheet and the Home hero have no place to
+   * return to.
+   */
+  onChoose?: () => void
 }) {
   const { t } = useTranslation('common')
+  const go = (provider: AuthProvider) => () => {
+    onChoose?.()
+    loginWith(provider)
+  }
   // Written out rather than mapped over a provider list: two of them, and a
   // literal key is what keeps the catalog greppable from the call site.
   return (
     <>
       <button
         type="button"
-        onClick={() => loginWith('google')}
+        onClick={go('google')}
         className={className}
         style={style}
         data-testid="sign-in-google"
@@ -42,7 +62,7 @@ export default function SignInOptions({
       </button>
       <button
         type="button"
-        onClick={() => loginWith('discord')}
+        onClick={go('discord')}
         className={className}
         style={style}
         data-testid="sign-in-discord"
