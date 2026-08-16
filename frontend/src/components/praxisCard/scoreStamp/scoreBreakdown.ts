@@ -1,5 +1,6 @@
 /**
- * The shared, faction-INDEPENDENT half of the score stamp (ADR-0049, ADR-0053).
+ * The shared, faction-INDEPENDENT half of the score stamp (ADR-0049, ADR-0053,
+ * ADR-0076).
  *
  * ADR-0049 splits the stamp on the logic/presentation seam: this module owns the
  * row SELECTION — which of base / mult / meta / votes / total a card may show —
@@ -31,10 +32,13 @@ export interface ScoreBreakdown {
    * The task's base points, or null when the base row is hidden because it
    * would only restate the total (#1131).
    *
-   * A null `base` always coincides with `mult === null`, `meta === null` and
-   * `votes === 0` — it is hidden precisely when no other term is in play — so a
+   * A null `base` always coincides with `mult`, `meta`, `habit` and `votes` all
+   * being null — it is hidden precisely when no other term is in play — so a
    * skin that hangs its multiplier chip off the base row may drop the whole row
-   * as one unit without orphaning the chip.
+   * as one unit without orphaning the chip. It is therefore also the predicate
+   * for "this stamp has any working at all", which is what each skin gates its
+   * separating rule on: with no working, a braid, hairline, perforation or
+   * ruled plate would rule off an empty block (ADR-0076).
    */
   base: number | null;
   /** The display multiplier, or null when the mult row is hidden (×1.0). */
@@ -50,16 +54,20 @@ export interface ScoreBreakdown {
    * than under Era 1's 1.0, which is the owner ruling this null carries.
    */
   habit: number | null;
-  votes: number;
+  /**
+   * Points from votes, or null when the votes row is hidden (`≤ 0`) —
+   * ADR-0076. It used to be the one term that printed at its neutral value; the
+   * owner ruled that a score with no votes reads as the total alone.
+   */
+  votes: number | null;
   total: number;
 }
 
 /**
  * Resolve the rows a stamp should show (ADR-0053).
  *
- * One policy, four clauses: a row exists when it tells the viewer something the
- * total mark does not already say, with the votes row as the single declared
- * exception.
+ * One policy, no exceptions: a row exists when it tells the viewer something the
+ * total mark does not already say. ADR-0076 folded the last exception in.
  *  - base row only when some other term has moved it — hidden when it would
  *    print the total a second time (#1131)
  *  - mult row only when `display_multiplier !== 1` (×1.0 moves nothing)
@@ -68,8 +76,10 @@ export interface ScoreBreakdown {
  *    is 0 for every faction but UA and for every character's FIRST praxis, so a
  *    row drawn at 0 would print "+0 habit" on nearly every card on the site and
  *    tell the viewer nothing the total does not already say.
- *  - votes row ALWAYS, `+0` included — the exception, re-affirmed in ADR-0047:
- *    an absent row cannot say "nobody has voted yet"
+ *  - votes row only when `points_from_votes > 0` (ADR-0076). This row was the
+ *    declared exception until 2026-08-15 — ADR-0047 kept `+0` on the grounds
+ *    that an absent row cannot say "nobody has voted yet" — and the owner ruled
+ *    the other way: a score with no votes reads as the total alone.
  *  - total to 1 decimal at the render sites
  *
  * A duel side's multiplier is live and provisional (ADR-0052) — a side that is
@@ -83,7 +93,8 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
   const mult = rawMult !== 1 ? rawMult : null;
   const meta = rawMeta > 0 ? rawMeta : null;
   const habit = rawHabit > 0 ? rawHabit : null;
-  const votes = praxis.points_from_votes ?? 0;
+  const rawVotes = praxis.points_from_votes ?? 0;
+  const votes = rawVotes > 0 ? rawVotes : null;
   const total = praxis.score ?? 0;
 
   /**
@@ -95,7 +106,7 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
    * faction's total mark.
    */
   const baseRestatesTotal =
-    mult === null && meta === null && habit === null && votes === 0 && total === rawBase;
+    mult === null && meta === null && habit === null && votes === null && total === rawBase;
 
   return {
     base: baseRestatesTotal ? null : rawBase,

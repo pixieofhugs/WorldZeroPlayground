@@ -1,5 +1,5 @@
 /**
- * The score stamp's two halves (ADR-0047, ADR-0049).
+ * The score stamp's two halves (ADR-0047, ADR-0049, ADR-0076).
  *
  * `scoreBreakdown` is the SHARED half: one selector deciding which rows any
  * faction's stamp may show. It had no test before #839 — the row rules lived
@@ -81,16 +81,22 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
     expect(scoreBreakdown(praxis({ metatask_points: 3 })).meta).toBe(3)
   })
 
-  it('always keeps the votes row — +0 is a real value, not an absent one', () => {
-    expect(scoreBreakdown(praxis({ points_from_votes: 0 })).votes).toBe(0)
+  /**
+   * ADR-0076 reverses ADR-0047 here, and only here. The votes row used to be the
+   * one declared exception to the suppression policy — "an absent row cannot say
+   * 'nobody has voted yet'" — and is now the fifth null beside `mult`, `meta` and
+   * `habit`, so every skin gates it the way it already gates those.
+   */
+  it('drops the votes row at zero and keeps it above (ADR-0076)', () => {
+    expect(scoreBreakdown(praxis({ points_from_votes: 0 })).votes).toBeNull()
+    expect(scoreBreakdown(praxis({ points_from_votes: 4 })).votes).toBe(4)
   })
 
   /**
    * #1131. The base row is the one row whose content can be entirely implied by
    * the total mark: with no multiplier, no metatask and no votes the stamp said
-   * `10.0 POINTS` and then `BASE 10`. The votes row is NOT part of this — the
-   * owner was offered "hide base and `+0 from votes`" and declined it, so the
-   * empty state is the mark plus the tally.
+   * `10.0 POINTS` and then `BASE 10`. Under ADR-0076 the tally leaves with it, so
+   * this is the state that reads as a bare total.
    */
   it('hides the base row when it would only restate the total', () => {
     const bare = praxis({
@@ -106,7 +112,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       mult: null,
       meta: null,
       habit: null,
-      votes: 0,
+      votes: null,
       total: 10,
     })
   })
@@ -146,7 +152,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       scoreBreakdown(
         praxis({ task_point_value: null, points_from_votes: null, score: null }),
       ),
-    ).toEqual({ base: 0, mult: 0.8, meta: null, habit: null, votes: 0, total: 0 })
+    ).toEqual({ base: 0, mult: 0.8, meta: null, habit: null, votes: null, total: 0 })
   })
 
   it('formats the multiplier to two decimals', () => {
@@ -174,11 +180,10 @@ describe('the habit bonus is a term of the breakdown (#1617)', () => {
   })
 
   /**
-   * The meta rule, not the votes one. `+0 from votes` is ADR-0047's single
-   * declared exception because an absent row cannot say "nobody has voted yet";
-   * the habit bonus has no such statement to make. It is 0 for every faction
-   * but UA and for every character's FIRST praxis, so a permanent `+0 habit`
-   * would print on all but a handful of cards on the site and mean nothing.
+   * The same rule every other term now follows — ADR-0076 folded the votes row
+   * into it too. The bonus is 0 for every faction but UA and for every
+   * character's FIRST praxis, so a permanent `+0 habit` would print on all but a
+   * handful of cards on the site and mean nothing.
    */
   it('hides the row at 0 or below — the default on every faction but UA', () => {
     expect(scoreBreakdown(praxis({ habit_bonus_points: 0 })).habit).toBeNull()
@@ -310,32 +315,43 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
  * `showsBase` is part of the state, not a detail of one skin: 'base only' is the
  * #1131 empty state, where the figure equals the total and the row would print it
  * twice, so every stamp must OMIT it there and print it in the other four.
+ *
+ * `showsVotes` is ADR-0076's half of the same idea, and the two are NOT the same
+ * flag: '× mult' and '+ metatask' keep the base row while the tally stays away.
+ * `showsBase` doubles as "this stamp has some working at all", because a null
+ * base coincides with every other term being absent — which is what the
+ * separating rule between the working and the total mark is gated on.
  */
 const STATES = [
   {
     name: 'base only',
     fields: { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, score: 12 },
     showsBase: false,
+    showsVotes: false,
   },
   {
     name: '+ votes',
     fields: { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, score: 16 },
     showsBase: true,
+    showsVotes: true,
   },
   {
     name: '× mult',
     fields: { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, score: 9.6 },
     showsBase: true,
+    showsVotes: false,
   },
   {
     name: '+ metatask',
     fields: { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, score: 32 },
     showsBase: true,
+    showsVotes: false,
   },
   {
     name: 'full formula',
     fields: { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, score: 29.6 },
     showsBase: true,
+    showsVotes: true,
   },
 ] as const
 
@@ -346,6 +362,12 @@ const STATES = [
 function expectBaseRow(html: string, showsBase: boolean, baseLabel = 'base') {
   if (showsBase) expect(html).toContain(baseLabel)
   else expect(html).not.toContain(baseLabel)
+}
+
+/** The same, for the tally — ADR-0076: no votes, no votes row. */
+function expectVotesRow(html: string, showsVotes: boolean, votesLabel = 'from votes') {
+  if (showsVotes) expect(html).toContain(votesLabel)
+  else expect(html).not.toContain(votesLabel)
 }
 
 /**
@@ -365,15 +387,18 @@ const EPHEMERISTS_LABEL = { base: '基', points: '点', fromVotes: '票' } as co
  * it. Each state must still print the total and its own device.
  */
 describe('#841 stamps across the conditional states (ADR-0047)', () => {
-  for (const { name, fields, showsBase } of STATES) {
+  for (const { name, fields, showsBase, showsVotes } of STATES) {
     it(`Everymen prints the tally and the roundel — ${name}`, () => {
       const html = text(renderToStaticMarkup(<EverymenScoreStamp praxis={praxis({ ...fields })} />))
-      expect(html).toContain('TALLY')
+      // The tally stamp is the working's frame, so it is struck only when there
+      // is working to fill it: a `TALLY` header over an empty form is the
+      // orphaned rule ADR-0076 warns about.
+      if (showsBase) expect(html).toContain('TALLY')
+      else expect(html).not.toContain('TALLY')
       expect(html).toContain('ON THE RECORD')
       // The roundel carries the total whichever rows are present.
       expect(html).toContain(fields.score.toFixed(1))
-      // The votes row survives at 0 — the deliberate ADR-0047 deviation.
-      expect(html).toContain('votes')
+      expectVotesRow(html, showsVotes, 'votes')
       expectBaseRow(html, showsBase)
       expect(html).not.toMatch(HEX)
     })
@@ -383,7 +408,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
         renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({ ...fields })} />),
       )
       expectBaseRow(html, showsBase, EPHEMERISTS_LABEL.base)
-      expect(html).toContain(EPHEMERISTS_LABEL.fromVotes)
+      expectVotesRow(html, showsVotes, EPHEMERISTS_LABEL.fromVotes)
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).not.toMatch(HEX)
     })
@@ -392,8 +417,11 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       const markup = renderToStaticMarkup(<UaScoreStamp praxis={praxis({ ...fields })} />)
       const html = text(markup)
       expectBaseRow(html, showsBase)
-      // The votes row survives at 0 — the deliberate ADR-0047 deviation.
-      expect(html).toContain('from votes')
+      expectVotesRow(html, showsVotes)
+      // The ruled plate holds the working; with no working it would be an empty
+      // bordered box under the ensō (ADR-0076).
+      if (showsBase) expect(markup).toContain('--faction-ua-card-box-bg')
+      else expect(markup).not.toContain('--faction-ua-card-box-bg')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('points')
       // The total mark is the ensō, masked from the asset and tinted by a token.
@@ -403,11 +431,17 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     })
   }
 
-  for (const { name, fields, showsBase } of STATES) {
+  for (const { name, fields, showsBase, showsVotes } of STATES) {
     it(`WOW prints the working and keeps the star — ${name}`, () => {
-      const html = text(renderToStaticMarkup(<WowScoreStamp praxis={praxis({ ...fields })} />))
+      const markup = renderToStaticMarkup(<WowScoreStamp praxis={praxis({ ...fields })} />)
+      const html = text(markup)
       expectBaseRow(html, showsBase)
-      expect(html).toContain('from votes')
+      expectVotesRow(html, showsVotes)
+      // The gold→plum hairline separates the working from the total, so it goes
+      // when the working does (ADR-0076). Matched on the gradient, not on the
+      // gold token — the ✦ below wears that too.
+      if (showsBase) expect(markup).toContain('linear-gradient(90deg')
+      else expect(markup).not.toContain('linear-gradient(90deg')
       expect(html).toContain(fields.score.toFixed(1))
       // The retired ✦ survives here and only here — see ADR-0050 / the design
       // README's carve-out. Losing it is half of what #840 exists to fix.
@@ -416,9 +450,14 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     })
 
     it(`Coven prints the working and keeps the sparkle — ${name}`, () => {
-      const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />))
+      const markup = renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />)
+      const html = text(markup)
       expectBaseRow(html, showsBase)
-      expect(html).toContain('from votes')
+      expectVotesRow(html, showsVotes)
+      // The braid rules the working off from the total, so with no working there
+      // is nothing to rule (ADR-0076).
+      if (showsBase) expect(markup).toContain('cvn-braid')
+      else expect(markup).not.toContain('cvn-braid')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('✨')
       expect(html).not.toMatch(HEX)
@@ -511,32 +550,49 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
  * assertions below are deliberately notation-aware.
  */
 describe('#842 stamps across the conditional states (ADR-0047)', () => {
-  for (const { name, fields, showsBase } of STATES) {
+  for (const { name, fields, showsBase, showsVotes } of STATES) {
     it(`S.N.I.D.E. prints the working and the total in pts — ${name}`, () => {
-      const html = text(renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />))
+      const markup = renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />)
+      const html = text(markup)
       expectBaseRow(html, showsBase)
-      expect(html).toContain('from votes')
+      expectVotesRow(html, showsVotes)
+      // The torn-off perforation is the tag's rule between the typed working and
+      // the total, so it tears nothing off an empty tag (ADR-0076).
+      if (showsBase) expect(markup).toContain('2px dashed')
+      else expect(markup).not.toContain('2px dashed')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('pts')
       expect(html).not.toMatch(HEX)
     })
 
     it(`Singularity prints the register and the two-decimal total — ${name}`, () => {
-      const html = text(
-        renderToStaticMarkup(<SingularityScoreStamp praxis={praxis({ ...fields })} />),
+      const markup = renderToStaticMarkup(
+        <SingularityScoreStamp praxis={praxis({ ...fields })} />,
       )
+      const html = text(markup)
       expectBaseRow(html, showsBase)
       expect(html).toContain('tot')
-      // The terminal pads its output: two decimals, and a zero-padded votes row.
+      // The terminal pads its output: two decimals, and a zero-padded votes row —
+      // which is exactly the `+00` ADR-0076 stops it printing.
       expect(html).toContain(fields.score.toFixed(2))
-      expect(html).toContain(`+${String(fields.points_from_votes).padStart(2, '0')}`)
+      expectVotesRow(html, showsVotes, `+${String(fields.points_from_votes).padStart(2, '0')}`)
+      // The read-out's rule sits between the register and `TOT`; an empty
+      // register has no register to rule off.
+      if (showsBase) expect(markup).toContain('--faction-singularity-stamp-rule')
+      else expect(markup).not.toContain('--faction-singularity-stamp-rule')
       expect(html).not.toMatch(HEX)
     })
 
     it(`the unaffiliated sheet prints the working and the total — ${name}`, () => {
-      const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ ...fields })} />))
+      const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ ...fields })} />)
+      const html = text(markup)
       expectBaseRow(html, showsBase)
-      expect(html).toContain('from votes')
+      expectVotesRow(html, showsVotes)
+      // `--faction-default-card-muted` dresses the leader-line row labels and
+      // the tally block, and nothing else on the sheet: in the base-only state
+      // the disc is alone and neither survives (ADR-0076).
+      if (showsBase) expect(markup).toContain('--faction-default-card-muted')
+      else expect(markup).not.toContain('--faction-default-card-muted')
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('points')
       expect(html).not.toMatch(HEX)
@@ -545,32 +601,39 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
 })
 
 /**
- * #1131 on every registered stamp at once. The rule lives in `scoreBreakdown`,
- * but each skin still has to ACT on the null — nine files built their own row
- * arrays from the resolver's nulls, and a skin that interpolates `base` straight
- * into JSX would render an empty label instead of dropping the row. So this
- * asserts the state on all eight rather than trusting the resolver test.
+ * #1131 and ADR-0076 on every registered stamp at once. Both rules live in
+ * `scoreBreakdown`, but each skin still has to ACT on the null — nine files build
+ * their own row arrays from the resolver's nulls, and a skin that interpolates a
+ * term straight into JSX would render an empty label instead of dropping the row.
+ * So this asserts the state on all eight rather than trusting the resolver test.
  *
  * The state is the commonest one on the site: a freshly submitted praxis, before
  * anyone votes, under `era_1`'s neutral ×1.0 — which is also what the composer's
- * waiting surface shows the moment you submit.
+ * waiting surface shows the moment you submit, where a praxis is base-only by
+ * definition. Under ADR-0076 it reads as the total alone.
  */
-describe('the base row leaves every stamp when it restates the total (#1131)', () => {
+describe('a base-only score reads as a bare total on every stamp (ADR-0076)', () => {
   /**
-   * Each stamp with the two words this case reads off it — the base label it
-   * would print, and the votes label it must still print. Seven say them in
-   * English; the Ephemerists say them in kanji (#1637), and handing in 'base'
+   * Each stamp with the three things this case reads off it — the base label and
+   * the votes label it must NOT print, and the markup fragment that draws its
+   * separating rule between the working and the total mark. Seven say the labels
+   * in English; the Ephemerists say them in kanji (#1637), and handing in 'base'
    * there would assert nothing at all.
+   *
+   * The rule fragment is the second half of the ruling: with zero rows left, a
+   * braid / hairline / perforation / bordered plate would rule off an empty
+   * block. The Ephemerists draw no such rule — their cell is the frame — so they
+   * have nothing to check here.
    */
   const STAMPS = [
-    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/],
-    ['Everymen', EverymenScoreStamp, 'base', /votes/],
-    ['the Ephemerists', EphemeristsScoreStamp, EPHEMERISTS_LABEL.base, /票/],
-    ['S.N.I.D.E.', SnideScoreStamp, 'base', /votes/],
-    ['Singularity', SingularityScoreStamp, 'base', /votes/],
-    ['WOW', WowScoreStamp, 'base', /votes/],
-    ['Coven', CovenScoreStamp, 'base', /votes/],
-    ['UA', UaScoreStamp, 'base', /votes/],
+    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/, '--faction-default-card-muted'],
+    ['Everymen', EverymenScoreStamp, 'base', /votes/, 'TALLY'],
+    ['the Ephemerists', EphemeristsScoreStamp, EPHEMERISTS_LABEL.base, /票/, null],
+    ['S.N.I.D.E.', SnideScoreStamp, 'base', /votes/, '2px dashed'],
+    ['Singularity', SingularityScoreStamp, 'base', /votes/, '--faction-singularity-stamp-rule'],
+    ['WOW', WowScoreStamp, 'base', /votes/, 'linear-gradient(90deg'],
+    ['Coven', CovenScoreStamp, 'base', /votes/, 'cvn-braid'],
+    ['UA', UaScoreStamp, 'base', /votes/, '--faction-ua-card-box-bg'],
   ] as const
 
   /** No multiplier, no metatask, no votes: base IS the total. */
@@ -583,17 +646,18 @@ describe('the base row leaves every stamp when it restates the total (#1131)', (
     score: 10,
   })
 
-  for (const [name, Stamp, baseLabel, votesLabel] of STAMPS) {
-    it(`${name} states the figure once, and still says nobody has voted`, () => {
-      const html = text(renderToStaticMarkup(<Stamp praxis={bare} />))
+  for (const [name, Stamp, baseLabel, votesLabel, rule] of STAMPS) {
+    it(`${name} states the figure once, with no tally and no orphaned rule`, () => {
+      const markup = renderToStaticMarkup(<Stamp praxis={bare} />)
+      const html = text(markup)
       expect(html).not.toContain(baseLabel)
       // The total mark stays — under ADR-0049 it is the faction's signature
       // device, so it is the one number that never drops out. Singularity's
       // two-decimal `10.00` contains this too.
       expect(html).toContain('10.0')
-      // And the votes row stays at +0: ADR-0047's declared exception, which the
-      // owner re-affirmed against hiding it alongside base.
-      expect(html).toMatch(votesLabel)
+      // The tally goes with it: no votes, no votes row (ADR-0076).
+      expect(html).not.toMatch(votesLabel)
+      if (rule) expect(markup).not.toContain(rule)
       // The label is gone, not blanked: no orphaned figure left behind.
       expect(html).not.toMatch(/\b10\b(?!\.)/)
     })
@@ -638,13 +702,17 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
     ).not.toContain('meta')
   })
 
-  it('draws the votes tally even at zero — an absent row cannot say "nobody voted"', () => {
+  it('drops the votes tally at zero — the total says it (ADR-0076)', () => {
+    // ADR-0047 kept `+ 0 from votes` here on the grounds that an absent row
+    // cannot say "nobody has voted yet". ADR-0076 overturns that for this row
+    // and this row only; the mult row above is still hidden at ×1.0 for the
+    // reason it always was.
     const unvoted = text(
       renderToStaticMarkup(
         <DefaultScoreStamp praxis={praxis({ points_from_votes: 0, score: 12 })} />,
       ),
     )
-    expect(unvoted).toContain('0 from votes')
+    expect(unvoted).not.toContain('from votes')
   })
 
   it('states votes as POINTS, never as a count of voters', () => {
