@@ -456,7 +456,7 @@
       "empty": "Nothing cast yet."
     },
     "join": {
-      "windowTitle": "join.exe",
+      "heading": "the circle",
       "memberTitle": "You're in the circle",
       "memberStanding": "Standing · <1>coven witch</1>",
       "eligibleTitle": "The circle is open",
@@ -477,7 +477,7 @@
       "level": "lvl {{level}}"
     },
     "mobile": {
-      "eyebrow": "coven.exe"
+      "eyebrow": "The Circle"
     },
     "invitation": {
       "kicker": "the circle is recruiting",
