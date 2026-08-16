@@ -1550,9 +1550,13 @@
   );
   --faction-wow-quest-shadow: 0 8px 24px -12px rgba(74, 56, 10, 0.5), inset 0 0 0 1px rgba(138, 109, 31, 0.28);
 
-  /* WOW — googly-balloon vote plate. The balloon ramp climbs plum → gold and is
-     THEME-INVARIANT (the prototype ships one ramp for both themes); only the
-     plate and the caption inks flip. */
+  /* WOW — googly-balloon vote plate. The RAMP climbs plum → gold and is
+     THEME-INVARIANT (the prototype ships one ramp for both themes). What flips
+     is the plate, the caption inks, and — since #1946 — the two things drawn
+     directly ON the plate rather than on a balloon: the idle fill and the
+     outline, which join the string in the dark cascade. The rule the family
+     now follows is that a mark measured against the plate flips when the plate
+     does, and only a mark measured against a ramp colour may stay put. */
   --faction-wow-balloon-plate-from: var(--faction-wow-card-bg);
   --faction-wow-balloon-plate-to: var(--faction-wow-chronicle-panel);
   --faction-wow-balloon-plate-border: var(--faction-wow-chronicle-gold);
@@ -1564,10 +1568,12 @@
   /* An UNREACHED balloon is drawn, not outlined-and-hollow: the design fills it
      with a dead parchment #EDE4C8 so the whole bunch is present and only the
      colour climbs (#860 ask 3). #821 made it transparent, which read as four
-     missing balloons. */
+     missing balloons. It is the PLATE's own parchment a shade down — see the
+     dark half, where that is the whole argument. */
   --faction-wow-balloon-idle: #ede4c8;
-  /* Every balloon carries the same dark ink outline — the googly-cartoon line,
-     not a state signal (#860 ask 3). */
+  /* Every balloon carries the same outline — the googly-cartoon line, not a
+     state signal (#860 ask 3). Dark ink here, parchment in the dark cascade,
+     for the same reason the string flips: it is drawn against the plate. */
   --faction-wow-balloon-outline: rgba(60, 44, 6, 0.42);
   --faction-wow-balloon-string: rgba(60, 44, 6, 0.42);
   --faction-wow-balloon-eye: #241c0b;
@@ -2692,11 +2698,39 @@
   --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
   --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
   /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
-  /* The prototype's dark card reuses the light balloon SVG verbatim, ink outline
-     and all. That works for the OUTLINE — every balloon is filled now, so the
-     dark line lands on parchment or on a ramp colour either way, and it stays
-     put. It does not work for the STRING, whose tail hangs off the balloon onto
-     the dark plate; that one hairline inverts to parchment. */
+
+  /* THE IDLE BALLOON IS THE PLATE, AND ONLY ONE OF THE TWO FLIPPED (#1946).
+     The block in `:root` calls #EDE4C8 a "dead parchment", and the arithmetic
+     says it is the plate itself: the light plate runs #FBF4E0 → #F3E7C4 and
+     the idle fill is #EDE4C8, a hair under its darker stop. So an untouched
+     bunch reads as five OUTLINE drawings on parchment, and the ramp is the
+     only thing that carries rank. That is the design, and it is right.
+
+     It could not survive the plate going dark. `-plate-from` / `-plate-to`
+     flip to #2A2210 → #1B1508 and the fill stayed a literal cream, which
+     inverts the whole widget: at rest, the UNREACHED state is now the loudest
+     thing on the plate — five near-white blobs at ~15:1, louder than any
+     colour the ramp climbs to. "They look like sperms" is that inversion
+     reported from the far side. The defect sorts perfectly by cascade
+     (WORLD_ZERO_STYLE §3, #1792 / #1932), so it is one bug about a flip and
+     not a quarrel with the drawing.
+
+     Dark therefore restates what light already does — a fill a shade off its
+     own plate, lifting rather than sinking because a dark sheet lifts. The
+     ramp stays theme-invariant and untouched; nothing about the light render
+     moves by a byte.
+
+     WHICH FORCES THE OUTLINE, and the note this replaces says so in its own
+     words: the dark ink line was kept "because every balloon is filled now, so
+     the dark line lands on parchment or on a ramp colour either way". With the
+     idle fill no longer parchment, an ink outline on a #3A2F16 body is an
+     invisible line around an invisible balloon — #821's four missing balloons
+     by another route (#860 ask 3). It inverts to parchment, at the same alpha
+     it carried in light, which is the treatment the STRING beside it already
+     shipped. The two hairlines are the same drawing; only one of them had been
+     asked the question. */
+  --faction-wow-balloon-idle: #3a2f16;
+  --faction-wow-balloon-outline: rgba(243, 231, 196, 0.42);
   --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
   /* The crest family is theme-invariant (struck metal — see :root). Only the
      disc the coin is MOUNTED on flips, to the kit's dark avatar field. */
@@ -3779,12 +3813,6 @@
   .praxis-gallery > * {
     max-width: var(--praxis-card-basis);
   }
-  /* ── Pennant shape (faction filter tabs) ── */
-
-  .pennant-shape {
-    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
-  }
-
   /* ── Leaderboard row hover ── */
 
   .leaderboard-row:hover {
@@ -5955,7 +5983,9 @@
 }
 
 :root {
-  /* The rail's inner padding, and the height of the bar's spectrum strip.
+  /* The rail's inner padding, and the THICKNESS of the bar's spectrum edge —
+     which since #1944 is the strip's `padding-top` rather than its `height`,
+     because a 3px box cannot hold the bar's corner. Same number, same job.
      SegmentedRail used to read this too, to write the design's
      `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the
      active segment instead, so the number is back to living in one file. */
@@ -5981,11 +6011,47 @@
 
 /* The spectrum edge along the top of the bar — ruling 1's ring, laid flat.
    Rounded on its own top corners so it still follows the bar's radius now
-   that the bar no longer clips its children with overflow: hidden. */
+   that the bar no longer clips its children with overflow: hidden.
+
+   A BOX CANNOT HOLD A CORNER LARGER THAN ITSELF, AND THE CLAMP IS SILENT
+   (#1944). When the radii along one edge sum to more than that edge, CSS
+   scales EVERY radius on the box down by the same factor until they fit (CSS
+   Backgrounds §5.3.1). At `height: 3px` against a 12px top-left that factor is
+   0.25, so the strip drew a 3px corner where the bar's padding box turns at
+   11px — its nearly-square left end overhung the bar's rounded corner and
+   floated out over the border. Nothing about the declaration looks wrong; the
+   number that renders is not the number that is written, and only the zoomed
+   screenshot on the report says so. **A radius asserted in a test is not a
+   radius the box can hold — assert the box too**, which is what the sibling
+   `describe` in `filterBarOverflow.test.ts` now does.
+
+   So the box is as tall as its own corner and the 3px band is carved out of
+   it: `padding-top` marks the band, the two-layer `content-box` mask drops
+   everything below it (the exclude idiom `.alb-profile-edge` and
+   `.level-gem-shape` already use), and the negative bottom margin hands back
+   the 9px of flow the taller box would otherwise add above
+   `.filter-bar__body`. The rainbow tapers into each top corner now, because
+   the curve doing the tapering is the bar's own.
+
+   `calc(var(--space-md) - 1px)` is the bar's PADDING-box radius rather than
+   its border-box one: the strip is the first child inside a 1px border, and a
+   border shrinks the curve it wraps by its own width. */
 .filter-bar__spectrum {
-  height: var(--filter-rail-pad);
+  box-sizing: border-box;
+  height: var(--space-md);
+  margin-bottom: calc(var(--filter-rail-pad) - var(--space-md));
+  padding-top: var(--filter-rail-pad);
+  border-radius: calc(var(--space-md) - 1px) calc(var(--space-md) - 1px) 0 0;
   background: var(--faction-default-rainbow);
-  border-radius: var(--space-md) var(--space-md) 0 0;
+  /* Decoration, and now nine pixels taller than it paints. */
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
 }
 
 .filter-bar__body {
