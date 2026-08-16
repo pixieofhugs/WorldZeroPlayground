@@ -662,7 +662,12 @@ export default function UaEditPraxis({ state }: Props) {
                        rung (12) and --text-xl (14); the band takes the rung
                        ABOVE the label it has to outrank (§4a). */
                     fontSize: "var(--text-xl)",
-                    fontWeight: 500,
+                    /* The design asks 500; `index.html` loads EB Garamond at 400
+                       and 600 only, and CSS font matching resolves a requested
+                       500 DOWN to 400 — i.e. the design's emphasis would
+                       silently not happen (`fontsLoaded.test.ts`, #1294). 600 is
+                       the real face on the emphatic side of it. */
+                    fontWeight: 600,
                     frame: ACCENT,
                     color: ON_FILL,
                     background: FILL,

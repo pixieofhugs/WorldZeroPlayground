@@ -104,7 +104,6 @@ import { collabCopy } from "../../../components/collab/collabCopy";
 import { deriveCollabGate } from "../../../components/collab/collabGate";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
 import { duelSides } from "../../../components/duel/shared";
-import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import { useGameConfig } from "../../../hooks/useGameConfig";
 import { factionCssVar } from "../../../utils/factions";
 import { relativeTime } from "../../../utils/dates";
@@ -571,20 +570,20 @@ export default function PraxisWaitingSurface({
         {/* The task this is all for, on the composer's own reference slip.
             Without it the surface never says what was proven.
 
-            The mark is `ScoreStamp` rather than the composer's points ring:
-            `scoreBreakdown()` is the single row-selection authority (ADR-0053),
-            it is already dressed per faction, and it applies the conditional
-            rules the design's inline strip spelled out by hand — a multiplier
-            row only when it is not ×1.0, a votes row always. Both are genuinely
-            reachable here: unsubmitting preserves votes, and a duel side carries
-            a live, provisional modifier (ADR-0052). A static task point value
+            The mark is `ScoreStamp`, and since #1828 it is the SLIP's default
+            rather than this mount's argument — the composer draws the same one,
+            so the mark no longer changes shape the instant you press Submit.
+            The reasoning stands where it was written: `scoreBreakdown()` is the
+            single row-selection authority (ADR-0053), it is already dressed per
+            faction, and it applies the conditional rules the design's inline
+            strip spelled out by hand. Both a live multiplier and preserved votes
+            are genuinely reachable here (ADR-0052), so a static task point value
             would be the less true number in the same place. */}
         <TaskSlip
           praxis={praxis}
           task={state.task}
           label={collabCopy(slug, isDuel ? "duelAwaitingTaskLabel" : "awaitingTaskLabel")}
           {...dress.slip}
-          mark={<ScoreStamp praxis={praxis} />}
         />
 
         {/* The confirmation beat. */}
