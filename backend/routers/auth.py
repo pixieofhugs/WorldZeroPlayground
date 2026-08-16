@@ -20,24 +20,6 @@ from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
 
-#: The ONE value that unlocks the dev seams below. `ENVIRONMENT` is a free-form
-#: `str` defaulting to "development" (`config.py`), and the guards here used to
-#: be deny-lists against the literal "production" — so every value that was not
-#: exactly that ("prod", "Production", a trailing space, an env var dropped when
-#: a Render service is re-created, unset) simultaneously enabled an
-#: unauthenticated JWT mint AND stripped `Secure` from the session cookie. Both
-#: now fail closed: anything unrecognised is treated as production.
-#:
-#: Safe to invert — `.github/workflows/e2e.yml:42` sets `ENVIRONMENT: development`
-#: explicitly ("dev-login must be enabled"), the config default is "development",
-#: and `render.yaml:34` is "production".
-_ENV_DEVELOPMENT = "development"
-
-
-def _is_development() -> bool:
-    return settings.ENVIRONMENT == _ENV_DEVELOPMENT
-
-
 _OAUTH = OAuth()
 _OAUTH.register(
     name="google",
@@ -99,7 +81,7 @@ def _signed_in_redirect(account_id: int) -> Response:
         httponly=True,
         samesite="lax",
         # Fail closed: Secure unless we KNOW this is local development.
-        secure=not _is_development(),
+        secure=not settings.is_development,
         max_age=_COOKIE_MAX_AGE,
         # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
@@ -330,7 +312,7 @@ async def auth_logout(response: Response) -> LogoutOut:
         httponly=True,
         samesite="lax",
         # Fail closed, and must match the flags the cookie was set with.
-        secure=not _is_development(),
+        secure=not settings.is_development,
         # `or None`: an unset COOKIE_DOMAIN arrives as "" from a .env line with
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
@@ -364,7 +346,7 @@ async def dev_login(
 
     Returns account_id + character_id so tests can invite/credit by id.
     """
-    if not _is_development():
+    if not settings.is_development:
         raise HTTPException(status_code=404, detail="Not found.")
 
     provider_user_id = "dev-user-1" if key == "1" else f"dev-{key}"

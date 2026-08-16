@@ -5,7 +5,7 @@ from config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.ENVIRONMENT == "development",
+    echo=settings.is_development,
 )
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
