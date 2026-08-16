@@ -14,7 +14,12 @@ const listeners = new Set<Listener>()
 /**
  * Fire after any action that changes the current character's pending requests
  * (accept/decline an invite or challenge, submit/unsubmit, leave/delete a
- * collab or duel praxis). Every subscribed feed surface refetches.
+ * collab or duel praxis) or their bank of in-progress work (sign up for a task,
+ * kick a member and reopen the group). Every subscribed feed surface refetches.
+ *
+ * NOT for a write whose effect lands on someone ELSE — sending or rescinding an
+ * invite, for one. The bus is a module-local Set, so it can only ever reach the
+ * tab that made the call, and the inviter's own panels do not move.
  */
 export function notifyRequestsChanged(): void {
   for (const fn of listeners) fn()
