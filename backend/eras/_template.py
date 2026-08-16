@@ -57,6 +57,25 @@ from game_config import (
 #   level_jump_reach        -- levels above own level this faction may reach when
 #                              signing up, once per level. Optional, defaults to 0
 #                              (no ability). Era 1 gives wow 1; everyone else 0.
+#
+# Non-modifier abilities (all optional, all default to "no ability"):
+#   habit_bonus_points            -- flat bonus on a praxis sealed within
+#                                    habit_window_days of another of your own
+#   can_hold_multiple_memberships -- may re-claim a task you already hold
+#   can_always_rejoin             -- rejoinable after leaving, where leaving is
+#                                    otherwise era-final
+#   can_apply_metatask_at_any_level -- exempt from metatask_apply_level
+#   inherits_faction_perks        -- holds every OTHER faction's perk in this era
+#                                    (#1871). Declare the faction's own floor and
+#                                    EraConfig resolves the union; the duel pair
+#                                    is inherited WHOLE from the highest
+#                                    duel_win_modifier, downside included.
+#
+# ** Perks live in TWO places. ** The fields above are one; the other is the
+# pair of EraConfig frozensets in the ERA_N block below,
+# `allow_praxis_on_retired_task_factions` / `..._pending_task_factions`. Any
+# audit of "what can faction X do" must read both — #1871 exists because one
+# read only the first.
 
 ERA_N_FACTIONS = {
     # --- Required system faction (copy and customize) ---
@@ -248,4 +267,13 @@ ERA_N = EraConfig(
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
     level_profiles=ERA_N_LEVEL_PROFILES,
+
+    # The SECOND home a faction perk can have (#1871) — a frozenset of slugs
+    # rather than a FactionConfig field. Both default to empty; name a faction
+    # here only if your era grants it. A faction carrying
+    # `inherits_faction_perks` is added automatically whenever anyone else is
+    # listed, so do not list it by hand.
+    #
+    # allow_praxis_on_retired_task_factions=frozenset({"your_faction"}),
+    # allow_praxis_on_pending_task_factions=frozenset(),
 )
