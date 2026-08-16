@@ -226,7 +226,7 @@
     },
     "albescent": {
       "eyebrow": "Albescent",
-      "signup": "Sign up",
+      "signup": "acknowledge",
       "level": "Lvl {{level}}",
       "pointsUnit": "pts"
     },

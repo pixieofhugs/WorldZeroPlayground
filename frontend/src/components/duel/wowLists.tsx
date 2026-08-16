@@ -208,7 +208,7 @@ export interface WowSealVoice {
  *     branch. Re-authoring them here would be a skin re-implementing a slot,
  *     which `duel/shared.tsx` forbids outright.
  *  2. `heading` is a CONTRACT, not a flourish. `duelSkinSlots.test.tsx` asserts
- *     that every registered seal skin renders "Seal the duel?" in submit mode
+ *     that every registered seal skin renders "Lock the duel?" in submit mode
  *     and "Forfeit" in forfeit mode — that is #718's faction-neutral-copy
  *     decision with a guard behind it. A WOW-voiced title was drafted here and
  *     removed when the guard (correctly) caught it.

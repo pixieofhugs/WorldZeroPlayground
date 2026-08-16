@@ -200,7 +200,7 @@ describe("collab — my part is in, the crew is not", () => {
     // one thing this rule is not. Apostrophes are HTML-escaped in the emitted
     // markup, so these are punctuation-free fragments.
     expect(html).toContain("frozen");
-    expect(html).toContain("seals it for everyone");
+    expect(html).toContain("locks it for everyone");
   });
 
   it("offers the authoring re-entry, and says what it costs the crew first", () => {

@@ -111,15 +111,17 @@ describe('EphemeristsVote markup', () => {
     mocks.user = null
     const html = render()
     expect(text(html)).toContain('Log in to vote')
-    expect(html).not.toContain('aria-label="Cast')
+    expect(html).not.toContain('aria-label="Rate')
   })
 
   it('renders five discs, each labelled with its metal', () => {
     mocks.user = currentUser()
     const html = render()
-    for (const metal of METALS) {
-      expect(html).toContain(`Cast ${metal}`)
-    }
+    // #1863 settled the star's screen-reader label on one shape for every
+    // faction: `Rate {{value}} — {{label}}`. The metal is still the label.
+    METALS.forEach((metal, index) => {
+      expect(html).toContain(`Rate ${index + 1} — ${metal}`)
+    })
     expect((html.match(/<button/g) ?? []).length).toBe(5)
   })
 
