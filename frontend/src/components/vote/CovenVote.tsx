@@ -68,18 +68,10 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
 
   return (
     <div>
-      <div
-        style={{
-          fontFamily: 'var(--faction-coven-card-font)',
-          fontWeight: 700,
-          fontSize: 'var(--text-content)',
-          color: 'var(--faction-coven-vote-off)',
-          marginBottom: 'var(--space-xs)',
-        }}
-      >
-        {t('chrome.coven.prompt')}
-      </div>
-
+      {/* "how'd this land?" (`chrome.coven.prompt`) headed the row. #1909 cut
+          the whole `chrome.{F}.prompt` slot: three of nine factions rendered
+          one, two more held dead strings, and six ship none at all — so the
+          prompt was never a widget feature, it was three exceptions. */}
       <div
         onMouseLeave={() => setHovered(0)}
         style={{

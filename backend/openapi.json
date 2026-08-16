@@ -4299,6 +4299,11 @@
             ],
             "title": "Signup Reason"
           },
+          "start_here": {
+            "default": false,
+            "title": "Start Here",
+            "type": "boolean"
+          },
           "status": {
             "$ref": "#/components/schemas/TaskStatus"
           },
@@ -4331,6 +4336,7 @@
           "allowed_modes",
           "eligible_for_current_user",
           "signup_reason",
+          "start_here",
           "created_by_name",
           "notes"
         ],
@@ -5569,6 +5575,11 @@
             ],
             "title": "Signup Reason"
           },
+          "start_here": {
+            "default": false,
+            "title": "Start Here",
+            "type": "boolean"
+          },
           "status": {
             "$ref": "#/components/schemas/TaskStatus"
           },
@@ -5600,7 +5611,8 @@
           "can_sign_up",
           "allowed_modes",
           "eligible_for_current_user",
-          "signup_reason"
+          "signup_reason",
+          "start_here"
         ],
         "title": "TaskOut",
         "type": "object"

@@ -120,8 +120,12 @@ describe('the skin is the identification (epic decision 5)', () => {
     // v1 headed every card "HERALD'S DISPATCH" as well as its kicker. #1194 made
     // `kicker` a card's ONLY kind label; two labels naming one kind is exactly
     // what that rule exists to stop.
+    //
+    // Spelled out because #1909 DELETED `feed:identity.wow.dispatch`: a key
+    // kept alive only by a negative assertion is one the next dead-key sweep
+    // cannot tell from a live one.
     const html = frame()
-    expect(html).not.toContain(i18n.t('feed:identity.wow.dispatch'))
+    expect(html).not.toContain("Herald's Dispatch")
     expect(html.split('Task completed').length - 1, 'the kind is named once').toBe(1)
   })
 })

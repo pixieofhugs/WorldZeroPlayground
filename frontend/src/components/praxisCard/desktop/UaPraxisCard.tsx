@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { Lotus } from "../../factionMarks";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -28,7 +27,6 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * tooth. Do not reintroduce either.
  */
 export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -84,25 +82,14 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
             display: "var(--faction-ua-card-font)",
             body: "var(--faction-ua-body-font)",
           }}
-          eyebrow={
-            /*
-             * The running head sits INSIDE the text column, above the title, so
-             * it stops at the score box rather than running under the ensō —
-             * the `eyebrow` slot #841 added for exactly this shape.
-             */
-            <div
-              style={{
-                fontFamily: "var(--faction-ua-body-font)",
-                fontSize: "var(--text-base)",
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                color: "var(--faction-ua-card-muted)",
-                marginBottom: "var(--space-sm)",
-              }}
-            >
-              {t("card.masthead.ua")}
-            </div>
-          }
+          /*
+           * The running head ("Acquisition · filed", `card.masthead.ua`) sat
+           * INSIDE the text column, above the title, so it stopped at the score
+           * box rather than running under the ensō — the `eyebrow` slot #841
+           * added for exactly that shape. #1909 CUT the string: once the praxis
+           * masthead is generic it reads "Praxis" on a praxis card. The slot
+           * stays for whatever fills it next.
+           */
         />
       </div>
     </div>

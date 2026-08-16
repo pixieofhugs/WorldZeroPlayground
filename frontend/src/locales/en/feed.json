@@ -115,12 +115,7 @@
     "points": "{{points}} pts",
     "pointsEarned": "+{{points}} pts",
     "level": "lvl {{level}}",
-    "quotedHeadline": "“{{headline}}”",
-    "wow": {
-      "questTaken": "{{name}} took up a quest, breastplate agleam.",
-      "praxisSealed": "{{name}} sealed a chronicle of proof.",
-      "levelUp": "{{name}} was elevated a rank by the Court."
-    }
+    "quotedHeadline": "“{{headline}}”"
   },
   "dateDivider": {
     "today": "Today",
@@ -199,17 +194,8 @@
     "ephemerists": {
       "wordmark": "THE EPHEMERISTS"
     },
-    "coven": {
-      "windowTitle": "coven.exe"
-    },
-    "singularity": {
-      "protocol": "singularity protocol"
-    },
     "na": {
       "sigilLabel": "Unaffiliated — all paths open"
-    },
-    "wow": {
-      "dispatch": "Herald's Dispatch"
     }
   },
   "taskCrown": {
@@ -225,20 +211,13 @@
       "signup": "Sign up"
     },
     "albescent": {
-      "eyebrow": "Albescent",
       "signup": "acknowledge",
       "level": "Lvl {{level}}",
       "pointsUnit": "pts"
     },
     "ephemerists": {
-      "motto": "exhibit C · no single here",
-      "coordXPrefix": "x 14 · y ",
-      "coordPolar": "r 47 · θ 31°",
-      "vanishingLabel": "∞ · vanishing",
-      "marginalia": "¼″ wider within than without †",
       "level": "level {{level}}",
       "points": "{{points}} pvncta",
-      "footnote": "† the road does not return you to where you began — <1>see †</1>",
       "signup": "Sign up",
       "masthead": "Ephemerists",
       "levelCaption": "Level",
@@ -246,31 +225,21 @@
     },
     "everymen": {
       "masthead": "THE EVERYMEN",
-      "sealUnit": "POINTS",
       "points": "{{points}} PTS",
       "signup": "Sign up",
-      "billMasthead": "Help Wanted!",
       "levelCaption": "Level"
     },
     "snide": {
-      "dispatchNumber": "dispatch №{{number}}",
-      "scrawl": "your assignment, should you ignore it —",
       "signup": "Sign up",
       "pointsUnit": "PTS",
       "levelCaption": "level"
     },
     "singularity": {
-      "pointsLabel": "PTS:",
-      "levelLabel": "LVL: {{level}}",
       "signup": "Sign up",
-      "levelPill": "lvl {{level}}",
-      "windowTitle": "task.proc — singularity",
       "levelCaption": "lvl",
       "pointsUnit": "pts"
     },
     "ua": {
-      "estLine": "A daily practice",
-      "pointsLine": "{{points}} points",
       "signup": "Sign up",
       "levelCaption": "Level",
       "pointsUnit": "points"
@@ -283,8 +252,6 @@
     },
     "wow": {
       "signup": "Sign up",
-      "decree": "By Royal Decree",
-      "byOrder": "by order of the Whimsy Court",
       "pointsUnit": "points",
       "levelCaption": "level"
     }
@@ -297,23 +264,8 @@
       "welcomeBack": "WELCOME BACK"
     },
     "newInvitation": "NEW INVITATION",
-    "ephemerists": {
-      "eyebrow": "World Zero · Faction №5"
-    },
-    "snide": {
-      "subtitle": "field dispatch"
-    },
     "everymen": {
-      "kicker": "THE EVERYMEN WANT YOU",
-      "summons": "NEW SUMMONS · {{note}}",
-      "eyebrow": "World Zero · Faction",
-      "motto": "UNITED · WE · STAND",
-      "blurbFallback": "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start.",
-      "perks": {
-        "honestPoints": "Honest tasks with honest points",
-        "finishesWork": "A faction that finishes what it starts",
-        "stampedWork": "Your work stamped by the people beside you"
-      }
+      "blurbFallback": "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start."
     }
   },
   "factionHero": {

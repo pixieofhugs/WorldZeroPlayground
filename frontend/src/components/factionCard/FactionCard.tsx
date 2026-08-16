@@ -315,7 +315,9 @@ export function SnideCard({
           clipPath: SNIDE_TORN_CLIP,
         }}
       />
-      <SnideMasthead subtitle={i18n.t("feed:factionCard.snide.subtitle")} />
+      {/* The masthead used to close on "field dispatch"
+          (`feed:factionCard.snide.subtitle`); #1909 cut the slot. */}
+      <SnideMasthead />
       {invitationNote && (
         <InvitationNote slug={faction.slug} note={invitationNote} />
       )}
@@ -410,17 +412,10 @@ export function EphemeristsCard({
       >
         <eph.EmblemOctagon size={64} />
         <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              ...eph.SMALL_CAPS,
-              fontSize: "var(--text-md)",
-              letterSpacing: "0.26em",
-              color: eph.GOLD,
-              marginBottom: "var(--space-xs)",
-            }}
-          >
-            {i18n.t("feed:factionCard.ephemerists.eyebrow")}
-          </div>
+          {/* "World Zero · Faction №5" sat here
+              (`feed:factionCard.ephemerists.eyebrow`). #1909 cut it: two
+              factions wrote an eyebrow, seven never had the slot, and the audit
+              ruled the card generic. */}
           <div
             style={{
               fontFamily: eph.DECO,
@@ -483,7 +478,7 @@ function SingularityHoles() {
           style={{
             width: 6,
             height: 4,
-            background: "rgba(10,26,14)",
+            background: "var(--faction-singularity-punch-hole)",
             border:
               "1px solid var(--faction-singularity-card-accent, var(--faction-singularity-border-hard))",
             borderRadius: 1,
@@ -577,29 +572,11 @@ export function SingularityCard({
         {invitationNote && (
           <InvitationNote slug={faction.slug} note={invitationNote} />
         )}
-        <div
-          style={{
-            fontSize: "var(--text-md)",
-            color: "var(--faction-singularity-card-muted)",
-            textTransform: "uppercase",
-            letterSpacing: "0.15em",
-            marginBottom: "var(--space-sm)",
-          }}
-        >
-          {i18n.t("feed:identity.singularity.protocol")}
-          <span
-            aria-hidden
-            className="sg-cursor"
-            style={{
-              display: "inline-block",
-              width: 5,
-              height: 9,
-              background: "var(--faction-singularity-card-text)",
-              marginLeft: "var(--space-xs)",
-              verticalAlign: "middle",
-            }}
-          />
-        </div>
+        {/* The card opened on "singularity protocol" with the blinking cursor
+            after it (`feed:identity.singularity.protocol`). #1909 cut the
+            string: Singularity was the only faction with the slot, on a surface
+            the audit ruled generic. The cursor was that line's punctuation and
+            goes with it — the terminal chrome below still carries the `> `. */}
         <div
           style={{
             display: "flex",

@@ -111,25 +111,20 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
   const cheering = active >= 5
   // The design's own caption logic: hovering previews the bare word, a cast vote
   // is spoken as a sentence, and an untouched row waits.
+  // A cast vote used to be spoken in WOW's own voice — `chrome.wow.picked`,
+  // "thou dubbed it {{label}}". #1909 cut it: the audit found the generic
+  // `chrome.voted` already covers the slot. It takes `stars`, not `label`, so
+  // the call site moves with the key.
   const caption = hovered
     ? TIERS[hovered - 1].label
     : selected
-      ? t('chrome.wow.picked', { label: TIERS[selected - 1].label })
+      ? t('chrome.voted', { stars: selected })
       : t('chrome.wow.idle')
 
   return (
     <div>
-      <div
-        style={{
-          fontFamily: 'var(--faction-wow-card-font)',
-          fontSize: 'var(--text-content)',
-          color: 'var(--faction-wow-vote-on)',
-          marginBottom: 'var(--space-xs)',
-        }}
-      >
-        {t('chrome.wow.prompt')}
-      </div>
-
+      {/* "Cast thy Verdict" (`chrome.wow.prompt`) headed the row. #1909 cut the
+          whole `chrome.{F}.prompt` slot — see the note in `CovenVote`. */}
       <div
         onMouseLeave={() => setHovered(0)}
         className={cheering ? 'wow-balloon-cheer' : undefined}

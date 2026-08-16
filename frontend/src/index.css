@@ -68,7 +68,55 @@
   --color-text-primary: #1a1209;
   --color-text-secondary: #554b3c;
   --color-text-tertiary: #4d4868;
+}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   `:root, [data-theme]` — THE SCOPE AN ALIAS NEEDS (#1839)
+
+   READ THIS ONCE; every block below with this selector is the same decision.
+
+   A token whose value is `var(--other)` substitutes at COMPUTED-VALUE TIME,
+   against the element it is declared on. `data-theme` is set on
+   `document.documentElement`, so `:root` and `[data-theme="dark"]` match the
+   SAME element — which is why an alias declared once at `:root` picks up the
+   dark referent and flips correctly, and why #1661 was right to delete ~1 KB of
+   restated spectrum cuts. Nothing here restates a value; that ruling stands.
+
+   IT STOPS BEING TRUE INSIDE A NESTED THEME WRAPPER.
+   `pages/characterProfile/archetypes/profileSkin.tsx` renders `data-theme` on
+   the skin container, and the Singularity and S.N.I.D.E. profile bodies set it
+   to `dark` — deliberately, so a faction pinned to one theme never mutates the
+   global one. Under the GLOBAL LIGHT theme that container used to render half
+   flipped: `[data-theme="dark"]` is a bare attribute selector, so it matches
+   the container and every DIRECTLY DECLARED token went dark, while `:root`
+   matches `documentElement` alone, so every ALIAS was never re-declared inside
+   the subtree and inherited the light value it had already resolved to. Signup
+   carries no faction gate, so any faction's praxis card renders in there.
+
+   THE FIX IS SCOPE, NOT RESTATEMENT. An alias is declared on
+   `:root, [data-theme]`: one value, one place, and any element carrying a theme
+   re-declares it and re-substitutes against its own referents. Specificity is
+   unchanged — `[data-theme]` and `[data-theme="dark"]` are both (0,1,0), and the
+   dark block sits later in the file, so it still wins wherever it applies. This
+   covers every wrapper anyone nests later, not just today's two.
+
+   WHAT BELONGS HERE. Aliases, and only aliases. A LITERAL needs nothing: the
+   dark block already re-declares the ones that flip, and the rest are inherited
+   unchanged. Putting a literal here would be noise pretending to be a rule.
+
+   WHY THE BLOCKS ARE IN PLACE RATHER THAN GATHERED INTO ONE. The aliases sit in
+   eleven documented neighbourhoods spread over ~5,700 lines, and several of
+   those notes are load-bearing about their NEIGHBOURS — the UA praxis-card
+   exception says in writing that "everything the card needs is named here, in
+   its own `--faction-ua-card-*` namespace", which lifting four of its ten
+   declarations out would falsify. Splitting a block in place moves no line and
+   changes no cascade position; gathering them would have relocated ~300 lines
+   of prose and broken a dozen "above"/"below" references to buy nothing.
+
+   The inventory and this scope are both asserted by
+   `utils/__tests__/frozenThemeAliases.test.ts`.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root, [data-theme] {
   /* ── The label tier's ink is a SEAM, not a constant (#1307) ───────────────
      Read by .label-heading and .label-caption and by nothing else. Declared
      here rather than left to a `var(--label-ink, …)` fallback for the reason
@@ -152,7 +200,9 @@
      is the same relation the two neutrals below have to each other. */
   --link-ink: var(--color-text-secondary);
   --link-ink-hover: var(--color-text-primary);
+}
 
+:root {
   /* ── Borders ── */
   --color-border: rgba(0, 0, 0, 0.07);
   --color-border-strong: rgba(0, 0, 0, 0.15);
@@ -466,6 +516,11 @@
   --faction-default-stop-5: #1d6e72; /* teal */
   --faction-default-stop-6: #2563eb; /* blue */
   --faction-default-stop-7: #be185d; /* magenta */
+}
+
+/* Every cut below reads the seven stops, and the stops flip — so the cuts are
+   theme-scoped (see the `:root, [data-theme]` note near the top). */
+:root, [data-theme] {
   --faction-default-rainbow: linear-gradient(90deg, var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 17%, var(--faction-default-stop-3) 33%, var(--faction-default-stop-4) 50%, var(--faction-default-stop-5) 67%, var(--faction-default-stop-6) 83%, var(--faction-default-stop-7) 100%);
   /* The bar ramp stood on end (#983), for a vertical RULE — the left-edge
      accent a feed row, a quoted block or a callout draws. Same seven stops,
@@ -516,6 +571,9 @@
      composes them, rather than the file carrying a second gradient token for
      one caller. */
   --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
+}
+
+:root {
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
@@ -597,8 +655,15 @@
   /* White in BOTH themes: the chip is a saturated green→blue pill in either,
      and the ink has to answer to the pill, not to the page. */
   --faction-default-chip-text: #ffffff;
+}
+
+/* Two more cuts of the same seven stops — theme-scoped for the same reason. */
+:root, [data-theme] {
   --faction-default-total-rainbow: linear-gradient(90deg, var(--faction-default-stop-1), var(--faction-default-stop-3) 40%, var(--faction-default-stop-4) 60%, var(--faction-default-stop-6));
   --faction-default-eyebrow-rainbow: linear-gradient(90deg, var(--faction-default-stop-4), var(--faction-default-stop-6), var(--faction-default-stop-7));
+}
+
+:root {
   /* ── The edit-praxis COMPOSER's own tiers (#1181, epic #1179, ADR-0065) ──
      The card set above gives the composer its SHEET (--faction-default-card-bg),
      its ink and its muted ink. Three tiers it does not give, all of which the v2
@@ -633,6 +698,9 @@
   --faction-default-composer-field: #fffdf9;
   --faction-default-composer-faint: #747067;
   --faction-default-composer-hair: rgba(0, 0, 0, 0.06);
+}
+
+:root, [data-theme] {
   /* The AURORA — the na composer's ground: the seven-stop spectrum as soft
      radial washes rather than a ramp. Deliberately not any of the four rainbow
      tokens above; every one of those is cut for an EDGE (a bar, a rule, a seam-
@@ -640,11 +708,8 @@
      into a stripe. Same argument the existing ramps already make among
      themselves — the spectrum comes cut for its geometry.
 
-     The three properties beneath it are the wash's COMPOSITING, and they flip
-     with the theme: over a light sheet it sits `normal` and is desaturated hard,
-     over a dark one it `screen`s so the colour lifts instead of muddying. They
-     are tokens for the same reason the hues are — so the component reads a
-     var() and never branches on a `dark` boolean (WORLD_ZERO_STYLE §2). */
+     Composed from the stops, which flip, so it is theme-scoped like the four
+     ramps above (see the `:root, [data-theme]` note near the top). */
   --faction-default-aurora:
     radial-gradient(62% 78% at 8% 16%, var(--faction-default-stop-1), transparent 70%),
     radial-gradient(58% 72% at 34% 4%, var(--faction-default-stop-2), transparent 70%),
@@ -653,6 +718,14 @@
     radial-gradient(66% 80% at 98% 62%, var(--faction-default-stop-6), transparent 70%),
     radial-gradient(64% 78% at 62% 96%, var(--faction-default-stop-7), transparent 70%),
     radial-gradient(60% 74% at 22% 92%, var(--faction-default-stop-5), transparent 70%);
+}
+
+:root {
+  /* The three properties beneath are the AURORA wash's COMPOSITING, and they
+     flip with the theme: over a light sheet it sits `normal` and is desaturated
+     hard, over a dark one it `screen`s so the colour lifts instead of muddying.
+     They are tokens for the same reason the hues are — so the component reads a
+     var() and never branches on a `dark` boolean (WORLD_ZERO_STYLE §2). */
   --faction-default-aurora-opacity: 0.2;
   --faction-default-aurora-filter: blur(56px) saturate(0.5);
   --faction-default-aurora-blend: normal;
@@ -972,6 +1045,27 @@
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
+  /* The punched sprocket hole — the row of five wells the faction card wears
+     above and below its body, tape running through a reader. It is ORNAMENT,
+     not a rung of the `--faction-singularity-card-*` contract: nothing else
+     paints it, and the drawing (a 6×4 well, blue-bordered) is the whole of its
+     meaning. Named here rather than beside `-card-bg` for exactly that reason —
+     `-card-*` is a two-theme contract whose halves are both near-black, and a
+     later editor re-cutting it must not have to wonder whether the hole is one
+     of its tiers.
+
+     A LIFT, not a shade of the ground: #050f08 is the chassis and this is two
+     stops above it, so the well reads as a recess catching phosphor rather than
+     as a hole cut clean through. §6: Singularity's older ornament families
+     (`-stamp-*`, `-vote-*`, `-phosphor-dim`) are theme-INVARIANT, and this joins
+     them — one value serves both cascades, and there is deliberately no
+     [data-theme="dark"] half to "complete".
+
+     Value carried across unchanged from the inline `rgba(10,26,14)` this
+     replaces (#1912). Nothing repaints; see that issue for why the literal was
+     painting all along. */
+  --faction-singularity-punch-hole: #0a1a0e;
+
   /* Dim sage phosphor (#723) — the SECOND green. `card-text` and `card-accent`
      are the same bright #4ade80, so a Singularity surface had one weight of
      green and reached for `color-mix(… accent N%, transparent)` whenever it
@@ -1157,11 +1251,15 @@
   --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
   --faction-ua-rule: #dbcbb3; /* neutral hairline / divider (cf. -border, orange) */
   --faction-ua-hair: #e4d8c3; /* faintest divider, below -rule */
+}
+
+:root, [data-theme] {
   /* THE PAPER STOCK — the three-stop sheet UA's design sheets draw as
      `--cardGrad`, never a flat fill: lift at the top edge, the sheet through the
      middle, panel at the foot. Composed from the three surface primitives above
      instead of repeating their hex, so it needs NO dark half — the var()s
      re-resolve under [data-theme="dark"] and the stock dims with the faction.
+     Theme-scoped so that stays true inside a nested wrapper too (#1839).
 
      WHY NOT `--faction-ua-card-parchment`, which is the same gradient. That name
      lives inside the PRAXIS-CARD-ONLY exception block below (#857), which asks
@@ -1179,6 +1277,9 @@
     var(--faction-ua-card-bg) 46%,
     var(--faction-ua-panel)
   );
+}
+
+:root {
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
@@ -1203,6 +1304,14 @@
      definition on disk. There is no gilt double-frame: #839 removed the
      invented one and the handoff never had it. */
   --faction-ua-card-frame: #b8471a; /* the card's 2px border — design's own */
+}
+
+/* Still the one `--faction-ua-card-*` namespace the block above describes — the
+   five members grouped here are the ones that POINT at a primitive with no dark
+   twin of their own, so they need the theme scope to re-substitute inside a
+   nested wrapper (#1839; see the note near the top). The rest are either
+   literals or aliases the dark cascade already restates, and neither needs it. */
+:root, [data-theme] {
   --faction-ua-card-parchment: linear-gradient(
     158deg,
     var(--faction-ua-lift),
@@ -1210,14 +1319,17 @@
     var(--faction-ua-panel)
   );
   --faction-ua-card-rule: var(--faction-ua-rule); /* score box + media hairline */
-  --faction-ua-card-box-bg: var(--faction-ua-lift); /* the score box's lifted sheet */
-  --faction-ua-card-chip-bg: #b8471a; /* the ×0.80 multiplier chip */
   --faction-ua-card-chip-ink: var(--faction-ua-on-fill);
   --faction-ua-card-enso: var(--faction-ua-glow); /* the ensō brush ink */
+  --faction-ua-card-lotus: var(--faction-ua-glow); /* the ground watermark */
+}
+
+:root {
+  --faction-ua-card-box-bg: var(--faction-ua-lift); /* the score box's lifted sheet */
+  --faction-ua-card-chip-bg: #b8471a; /* the ×0.80 multiplier chip */
   --faction-ua-card-total: var(--faction-ua-vermil); /* the total, display size */
   --faction-ua-card-points: var(--faction-ua-glow); /* the "points" caption */
-  --faction-ua-card-lotus: var(--faction-ua-glow); /* the ground watermark */
-  --faction-ua-card-lotus-opacity: 0.2;
+  --faction-ua-card-lotus-opacity: 0.2; /* the watermark above, at 20% */
 
   /* ── UA growing-mandala reading ramp (#821, re-read for dark by #849) ──
      The five rungs of the vote widget's reading — faint · forming · true ·
@@ -1238,6 +1350,9 @@
   --faction-ua-rank-3: #d2762f; /* true */
   --faction-ua-rank-4: #dd5a1e; /* alive */
   --faction-ua-rank-5: #b5361a; /* radiant */
+}
+
+:root, [data-theme] {
   /* Cores are punched to the sheet colour so the mandala reads as an APERTURE
      rather than a disc — it must be whatever the card is, never a fixed
      parchment. Tracking --faction-ua-card-bg is what makes that true, full
@@ -1248,7 +1363,9 @@
      card's accent ink — which has both themes already — rather than an ornament
      hue of its own. */
   --faction-ua-vote-reading: var(--faction-ua-card-accent);
+}
 
+:root {
   /* The retired `coven.exe` window chrome and its collage scraps lived here —
      `-scrap-*`, `-tape`, `-win-border`, `-title-*`, `-body-bg`, `-notepad-*`,
      `-dot`, `-ivy*`. #1209 swept every surface onto the candlelit spell slip and
@@ -1374,9 +1491,20 @@
      ("for the quest —", "Sealed by the Court"). #860 ask 1 — it had no token,
      so the cards were passing a raw font stack around. */
   --faction-wow-body-font: var(--font-display); /* Lora */
-  /* The score stamp: the inset parchment plate struck at -2deg, with the
-     "gold bright" total the design reserves for the bottom line. */
+}
+
+/* The score stamp's PLATE. The stamp is the one WOW surface that also renders
+   inside a nested theme wrapper — a foreign-faction praxis card on a Singularity
+   or S.N.I.D.E. profile — which is where #1827 first saw this whole class of
+   bug. It is theme-scoped rather than restated in dark (#1839): #1661's ruling
+   that the value lives in one place survives intact. */
+:root, [data-theme] {
   --faction-wow-stamp-bg: var(--faction-wow-chronicle-panel);
+}
+
+:root {
+  /* The score stamp struck at -2deg, with the "gold bright" total the design
+     reserves for the bottom line. */
   --faction-wow-stamp-total: #8a5a16;
   --faction-wow-stamp-shadow: rgba(74, 56, 10, 0.22);
   --faction-wow-stamp-chip-bg: var(--faction-wow-card-accent); /* plum */
@@ -1485,9 +1613,14 @@
   --faction-wow-confetti-4: #5fb0c9;
   --faction-wow-confetti-5: #7a4a9e;
   --faction-wow-confetti-6: #e86fa6;
+}
+
+:root, [data-theme] {
   --faction-wow-vote-on: var(--faction-wow-card-accent); /* plum — 5.79:1 */
   --faction-wow-vote-off: var(--faction-wow-card-muted); /* olive — 4.76:1 */
+}
 
+:root {
   /* WOW — THE CREST (#897). The seal is STRUCK METAL, so this whole family is
      THEME-INVARIANT and declared once: the kit draws the identical coin on its
      light decree card and on its dark one, and a gold-and-cream medal reads on
@@ -1777,10 +1910,19 @@
   --everymen-deep-accent: #a01c21;
   --everymen-field: #c1272d;
   --everymen-field-deep: #8d1c20;
+}
+
+/* The card CONTRACT — four names the shared archetype reads, each pointing at
+   the legacy `--everymen-*` family rather than repeating its hex. The alias IS
+   the contract, which is exactly why it needs the theme scope (#1839). */
+:root, [data-theme] {
   --faction-everymen-card-bg: var(--everymen-paper);
   --faction-everymen-card-text: var(--everymen-paper-text);
   --faction-everymen-card-accent: var(--everymen-red);
   --faction-everymen-card-muted: var(--everymen-muted);
+}
+
+:root {
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
 
   /* ── Broadsheet chrome (#841) — the masthead bar, the frame ink and the
@@ -2529,17 +2671,12 @@
      ground, 7.66:1 on the darkened panel. Deliberately short of the "gold
      bright" below, which the stamp total reserves for its own line. */
   --faction-wow-accent-deep: #cfb268;
-  /* Restated, not because the alias is wrong — at the ROOT this resolves to the
-     darkened plate on its own, because `:root` and `[data-theme="dark"]` match
-     the same element and the panel's dark declaration wins there (§3, #1661).
-     It is restated because the stamp is the one WOW surface that also renders
-     inside a NESTED theme wrapper: the Singularity and S.N.I.D.E. profile
-     bodies scope `data-theme="dark"` to their own container, and an alias
-     declared only at `:root` inherits its already-resolved LIGHT value into
-     that subtree while `--faction-wow-chronicle-bg` beside it (restated above)
-     goes dark. That is the mismatch #1827 saw. Every sibling in the same shape
-     is inventoried by `frozenThemeAliases.test.ts`. */
-  --faction-wow-stamp-bg: var(--faction-wow-chronicle-panel);
+  /* `--faction-wow-stamp-bg` was restated here by #1827, because the stamp
+     renders inside a NESTED theme wrapper and an alias declared only at `:root`
+     froze at its light value in there. #1839 fixed the scope instead — the
+     light declaration is on `:root, [data-theme]` now, so it re-substitutes in
+     the wrapper on its own and this copy is redundant. Deleted (#1661: a value
+     lives in one place). */
   --faction-wow-stamp-total: #e3b84a; /* the design's dark "gold bright" */
   --faction-wow-stamp-shadow: rgba(0, 0, 0, 0.4);
   /* The plum chip lifts to the design's dark secondary plum, one step below the
@@ -3456,7 +3593,11 @@
        --gem-size   overall box in px (task-card ~24 → roster ~34)
        --gem-stroke paint for the outline: a faction colour, or the
                     --faction-default-rainbow gradient for unaffiliated
-       --gem-ink    numeral colour (unaffiliated uses the rainbow class below)
+       --gem-ink    numeral colour. `currentColor` for a known faction, so the
+                    numeral takes the ink of the surface the gem landed on and
+                    the sentence above stays true — it was the faction hue until
+                    #1932, which is 1.96:1 on the app page. Unaffiliated passes
+                    `transparent` and takes the rainbow class below.
        --gem-glow   colour cast around the shape
      The outline is a gradient-capable "border": a filled lozenge whose middle
      is masked out. That is what lets the rainbow stroke and the solid faction
@@ -4413,6 +4554,41 @@
   .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
 }
 
+/* THE DRIFT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the light over the
+   whole sheet, and every layer above is built that way. This narrows it by one
+   element: the proof photo is the one thing on the sheet that is not the site's
+   to tint. Everything else — copy, score box, seals, footer, the empty media
+   slot's dashed drop-target — is chrome the drift is supposed to colour, and
+   still is.
+
+   THE LIFT, NOT A HOLE. There is no way to punch a blended overlay out around a
+   rectangle, so the media is raised ABOVE it instead: a blend composites against
+   what is already painted beneath it, so anything painted after is untouched.
+   `z-index: 3` clears both surfaces' overlays in one number — `.alb-rainbow`
+   sits at 0 and the three `.alb-praxis-*` layers at 2. `position` is required
+   for `z-index` to apply at all; `relative` keeps the box exactly where flow put
+   it.
+
+   Two rejected shapes, for the next reader. Moving the wash BEHIND the card
+   content erases the tell outright, because Default's sheet is opaque — and
+   making it translucent is the repaint ADR-0048 forbids, since Albescent in its
+   own colours is back in the spectrum and un-hidden. Confining the wash TO the
+   photo is the complaint inverted.
+
+   SCOPED TO THE TWO ALBESCENT WRAPPERS ON PURPOSE. `.user-media` is a shared
+   hook — `PraxisMediaGallery` is one component for all nine praxis archetypes
+   and `MediaGallery` serves the detail page — so an unscoped lift would reorder
+   skins that stack their own layers (Ephemerists' plate at 1, Singularity's
+   content at 2). The other eight sheets must render byte-identical.
+
+   Nothing here is inside a motion query: reduced motion still stills the drift,
+   and it stills it over exactly the same layers. */
+.alb-praxis-card .user-media,
+.alb-praxis .user-media {
+  position: relative;
+  z-index: 3;
+}
+
 /* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
    unfreeze, and built to the same rule as the first: the exact spectrum sheet an
    unaffiliated player sees, plus a flourish that reveals the society to someone
@@ -5152,8 +5328,14 @@
   /* plum AS A SURFACE — theme-invariant (note 1 above) */
   --faction-wow-plum-surface: #7a4a9e;
   --faction-wow-on-plum: #f3e7c4; /* 5.16:1 on the plum above */
-  /* the tallies (note 2 above) */
+}
+
+:root, [data-theme] {
+  /* the tallies (note 2 above) — theme-scoped, being an alias (#1839) */
   --faction-wow-figure: var(--faction-wow-stamp-total);
+}
+
+:root {
   /* the near-white plate a stat / honour / chronicle row is struck on */
   --faction-wow-plate: #fffcf2;
   --faction-wow-plate-border: rgba(200, 160, 42, 0.34);
@@ -5743,7 +5925,7 @@
    because na is the site default — one identity (ADR-0066). The collision is
    deliberate; do not "fix" it to a neutral border.
    ══════════════════════════════════════════ */
-:root {
+:root, [data-theme] {
   /* An opaque, slightly-lifted well for filter chrome: rail tracks, chips, the
      popover, the sheet, the search field.
 
@@ -5758,7 +5940,9 @@
      Composed from the page ground rather than declared twice: 6% of the ink
      over the page is a lift in light (#eae6e0) and in dark (#202025, within a
      shade of the design's #1b1a24), so one declaration covers both themes and
-     nothing drifts when the page ground moves. --color-text-secondary reads
+     nothing drifts when the page ground moves. Being composed is why this block
+     carries the theme scope (#1839; see the note near the top) — a color-mix()
+     of a flipping ink has to re-substitute wherever a theme is set. --color-text-secondary reads
      6.89:1 on the light well and 7.34:1 on the dark one (4.96 / 4.96 before
      #1715 lifted the neutral tiers; both grounds are `Pair` rows now). */
   --filter-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
@@ -5768,7 +5952,9 @@
      The design's rgba(240,230,208,.12) / .18 IS this pair, said in dark only. */
   --filter-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --filter-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+}
 
+:root {
   /* The rail's inner padding, and the height of the bar's spectrum strip.
      SegmentedRail used to read this too, to write the design's
      `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the

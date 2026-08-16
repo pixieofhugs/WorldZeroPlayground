@@ -194,11 +194,12 @@ export default function EverymenTaskCard({
               boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
             }}
           >
+            {/* The masthead read "Help Wanted!" between the two gears
+                (`feed:taskCard.everymen.billMasthead`). #1909 cut it: Everymen
+                was the only faction with a masthead on a task card, and the
+                audit ruled the surface generic. The gears and the double rule
+                are the band, and they stay. */}
             <Gear size={15} fill="currentColor" hub="var(--faction-everymen-bill-mast)" opacity={0.95} />
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: poster lettering; Bebas at label-ramp sizes stops reading as a masthead. */}
-            <span style={{ ...LABEL, fontSize: 17, letterSpacing: "0.18em" }}>
-              {i18n.t("feed:taskCard.everymen.billMasthead")}
-            </span>
             <Gear size={15} fill="currentColor" hub="var(--faction-everymen-bill-mast)" opacity={0.95} />
           </div>
 
@@ -276,10 +277,17 @@ export default function EverymenTaskCard({
                   <span style={{ fontFamily: POSTER, fontSize: size.pointsSize, lineHeight: 0.8 }}>
                     {basePoints}
                   </span>
-                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: stamp text, sized to the struck seal rather than the label ramp (§4a). */}
-                  <span style={{ ...LABEL, fontSize: 8, letterSpacing: "0.22em", marginTop: "var(--space-xs)" }}>
-                    {i18n.t("feed:taskCard.everymen.sealUnit")}
-                  </span>
+                  {/* The seal's unit word ("POINTS",
+                      `feed:taskCard.everymen.sealUnit`) stood here. #1909 cut
+                      it: Everymen was the only faction with the slot.
+
+                      ponytail: this leaves the struck seal a bare figure, and
+                      `taskCard.everymen` has no `pointsUnit` to fall back on —
+                      it is the one faction card that never had one. Ceiling: no
+                      unit word on this card until the shared key exists.
+                      Upgrade path: #1910 collapses `taskCard.{F}.pointsUnit` to
+                      ONE shared key; read it here when it lands. Inventing a
+                      cross-faction read now would collide with that PR. */}
                 </div>
               </div>
 

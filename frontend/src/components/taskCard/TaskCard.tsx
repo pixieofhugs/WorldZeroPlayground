@@ -6,6 +6,7 @@ import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
 import DefaultTaskCard from './DefaultTaskCard'
+import StartHereMark from '../StartHereMark'
 import { factionCssVar, factionFill, factionName } from '../../utils/factions'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
@@ -111,6 +112,25 @@ export default function TaskCard({
         inProgressCount={shownInProgressCount}
         onSignup={onSignup}
       />
+      {/* THE TASK MARKS ITSELF (#1861, SPEC-onboarding § The hand-off). Mounted
+          on the dispatcher rather than in the nine skins, exactly as the META
+          pill is: one place, every faction, and no skin can forget it.
+          `start_here` is derived server-side from the viewing character's own
+          praxis history, so this surface stays new-player-unaware. Top RIGHT,
+          so it never collides with the META stack on the left. */}
+      {shown.start_here && (
+        <div
+          style={{
+            position: 'absolute',
+            top: -6,
+            right: -6,
+            zIndex: 5,
+            pointerEvents: 'none',
+          }}
+        >
+          <StartHereMark />
+        </div>
+      )}
       {isMetatask && (
         <div
           style={{

@@ -6,7 +6,6 @@ import {
   CAPTION,
   DECO,
   DISC,
-  GlossedGlyph,
   INK,
   INNER,
   LotusSign,
@@ -53,6 +52,13 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *    in the box pattern's own place, because the stamp must stay legible in all
  *    five states — its chip is ochre, the plate's one accent, since brass is
  *    never an ink and a gold chip would pay under 3:1 behind a label.
+ *
+ * THE FIVE KANJI ARE GONE (#1909). Four rows were labelled 基 / 票 / 習 / 点 as
+ * {@link GlossedGlyph}s with the shared English on `title`. The copy audit ruled
+ * all five strings CUT — they were the only faction-specific score-stamp labels
+ * in the app, on a surface it ruled generic — so every row now prints the SHARED
+ * label it was already glossed with, in the same incised small caps. The tally's
+ * `+ N` still sets its figure outside the label, so #1637's bound holds.
  */
 
 /** The octagon medallion, and its inner rule. Ornament geometry (§4a). */
@@ -102,11 +108,11 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             gap: "var(--space-sm)",
           }}
         >
-          <GlossedGlyph
-            glyph={t("card.stamp.ephemerists.base")}
-            gloss={t("card.stamp.base")}
-            style={label}
-          />
+          {/* 基 stood here, glossed "base". #1909 cut all five of this cell's
+              kanji: they were the only faction-specific score-stamp labels in
+              the app, on a surface the audit ruled generic. The shared gloss
+              each one carried is now the visible label. */}
+          <span style={label}>{t("card.stamp.base")}</span>
           <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", lineHeight: 0.8, color: INK }}>
             {base}
           </span>
@@ -178,17 +184,14 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             marginTop: "var(--space-sm)",
           }}
         >
-          + {votes}{" "}
-          <GlossedGlyph
-            glyph={t("card.stamp.ephemerists.fromVotes")}
-            gloss={t("card.stamp.ephemerists.fromVotesGloss")}
-          />
+          + {votes} <span style={label}>{t("card.stamp.votes")}</span>
         </div>
       )}
 
       {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
-          Labelled 習 like every other row of this cell — the #1637 bound holds,
-          so the LABEL is encoded and the figure stays a Western numeral. */}
+          Labelled from the shared key like every other row of this cell — the
+          #1637 bound holds, so the LABEL is encoded and the figure stays a
+          Western numeral. */}
       {habit !== null && (
         <div
           style={{
@@ -199,7 +202,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             marginTop: "var(--space-xs)",
           }}
         >
-          + {habit} <GlossedGlyph glyph={t("card.stamp.ephemerists.habit")} gloss={t("card.stamp.habit")} />
+          + {habit} <span style={label}>{t("card.stamp.habit")}</span>
         </div>
       )}
 
@@ -248,11 +251,16 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", color: OCHRE }}>
               {formatPoints(total)}
             </span>
-            <GlossedGlyph
-              glyph={t("card.stamp.ephemerists.points")}
-              gloss={t("card.stamp.points")}
-              style={{ ...SMALL_CAPS, color: CAPTION, marginTop: "var(--space-xs)" }}
-            />
+            <span
+              style={{
+                ...SMALL_CAPS,
+                fontSize: "var(--text-md)",
+                color: CAPTION,
+                marginTop: "var(--space-xs)",
+              }}
+            >
+              {t("card.stamp.points")}
+            </span>
           </div>
         </div>
         {/* The lotus itself, closing the cell. */}

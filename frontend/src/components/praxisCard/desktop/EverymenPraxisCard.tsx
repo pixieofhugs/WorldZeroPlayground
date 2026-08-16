@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { useTranslation } from "react-i18next";
 import { factionCssVar } from "../../../utils/factions";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -37,7 +36,6 @@ const everymenMarginRule: CSSProperties = {
 };
 
 export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -73,12 +71,14 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
           boxShadow: "0 2px 0 rgba(34, 26, 18, 0.22)",
         }}
       >
-        {/* Cogs flank the name — a drawn glyph, not an icon (§7). */}
+        {/* Cogs flank the name — a drawn glyph, not an icon (§7). The name
+            itself ("The Everymen", `card.masthead.everymen`) was CUT by #1909:
+            once the masthead is generic it reads "Praxis" on a praxis card, and
+            Everymen's was only ever the faction's own name. The cogs stay. */}
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: flanking cog glyph, sized under the lettering (§4a) */}
         <span aria-hidden style={{ fontSize: 12, opacity: 0.85 }}>
           ⚙
         </span>
-        <span>{t("card.masthead.everymen")}</span>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: flanking cog glyph, sized under the lettering (§4a) */}
         <span aria-hidden style={{ fontSize: 12, opacity: 0.85 }}>
           ⚙

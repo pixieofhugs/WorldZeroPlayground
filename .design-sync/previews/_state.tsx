@@ -287,6 +287,9 @@ export function editPraxisState(slug: string): EditPraxisState {
     autoSubmitDays: null,
     // Drafting, so the shared document is open (#1745).
     documentFrozen: false,
+    // Nothing has sealed under this preview: no room, so no 4001 (#1931).
+    sealedMidEdit: false,
+    noteRoomSealed: noop,
     isPublished: false,
     controlsLocked: false,
     modeIsLocked: false,

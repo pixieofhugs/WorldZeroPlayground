@@ -775,7 +775,11 @@ export function PraxisMediaGallery({
   const tiles = items.slice(0, 3);
   const overflow = items.length - tiles.length;
   return (
-    <div className="flex" style={{ gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
+    // `.user-media` marks the region that is the PLAYER's, not the site's, so a
+    // faction flourish can be told to stop at it (#1646). Inert everywhere but
+    // Albescent, and deliberately absent from the empty slot above — a dashed
+    // drop-target is chrome, and the drift keeps washing it.
+    <div className="flex user-media" style={{ gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
       {tiles.map((item, index) => {
         const showOverflow = index === tiles.length - 1 && overflow > 0;
         return (

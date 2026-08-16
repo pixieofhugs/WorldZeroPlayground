@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { clearOnboardingHandoff, onboardingHandoffPending } from '../utils/onboardingResume'
+import { resolveHandoffDestination } from '../utils/onboardingHandoff'
 import IntroCard from './onboarding/IntroCard'
 import AuthCard from './onboarding/AuthCard'
 import TermsCard from './onboarding/TermsCard'
@@ -71,17 +72,19 @@ export default function Onboarding() {
   return (
     <TermsCard
       onAccepted={() => {
-        // THE HAND-OFF: the flow ends here and does not resume. Where a
-        // brand-new character then lands is `CreateCharacter`'s own decision,
-        // derived from that character's state (spec § The hand-off) — not
-        // something this flow passes in.
+        // THE HAND-OFF: the flow ends here and does not resume.
         //
-        // ponytail: `user.character` is "has a life", which is the part of the
-        // spec's predicate that exists today. The full rule is "has this
-        // character ever completed the onboarding task", which is the same
-        // derivation the *start here* mark needs and is being built alongside
-        // it; when it lands, this ternary reads it instead.
-        navigate(user.character ? '/' : '/characters/create')
+        // No character yet — the flow's next stop is making one, and where THAT
+        // lands is `CreateCharacter`'s own decision, derived from the character
+        // it just created rather than passed in from here.
+        if (!user.character) return navigate('/characters/create')
+        // A character already, so the remaining stop is the task itself.
+        // `resolveHandoffDestination` reads `task.start_here` — the SAME
+        // predicate as the mark, which is what makes the flow's stop condition
+        // and the mark consistent by construction: past the line where the
+        // character has completed the onboarding task nothing is marked, so
+        // this falls through to `/` exactly as the spec says a scan should.
+        void resolveHandoffDestination('/').then(navigate)
       }}
     />
   )
