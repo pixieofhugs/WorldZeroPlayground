@@ -384,7 +384,7 @@ describe("the composer's shared seams (#1828)", () => {
   const BAND_SLUGS = ["coven", "ephemerists", "everymen", "singularity", "snide", "ua", "wow"];
   const INLINE_SLUGS = [null, "albescent"];
 
-  const composingState = (slug: string | null) =>
+  const composingState = (slug: string | null, over: Record<string, unknown> = {}) =>
     baseState({
       task: task(["solo", "collab", "duel"], slug),
       praxis: {
@@ -397,20 +397,25 @@ describe("the composer's shared seams (#1828)", () => {
         points_from_votes: 0,
         habit_bonus_points: 0,
         is_top_for_task: false,
+        ...over,
       } as unknown as PraxisOut,
       // `formatAutosave` is relative to now, so the fixture has to be too —
       // a fixed instant renders "42 minutes ago" and grows every day.
       autosaveAt: new Date(),
     });
 
-  const composer = (slug: string | null, width: "mobile" | "desktop" = "desktop") => {
+  const composer = (
+    slug: string | null,
+    width: "mobile" | "desktop" = "desktop",
+    over: Record<string, unknown> = {},
+  ) => {
     mocks.formFactor = width;
     const Archetype = resolvedArchetype(
       pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
     )!;
     return renderToStaticMarkup(
       <MemoryRouter>
-        <Archetype state={composingState(slug)} />
+        <Archetype state={composingState(slug, over)} />
       </MemoryRouter>,
     );
   };
@@ -467,11 +472,16 @@ describe("the composer's shared seams (#1828)", () => {
   it.each([...INLINE_SLUGS, ...BAND_SLUGS])(
     "%s marks the task slip with the shared score stamp",
     (slug) => {
-      // The stamp prints the praxis's TOTAL to a decimal; every composer-only
-      // mark printed the task's bare `point_value`. So the decimal is the claim
-      // — it cannot be satisfied by the device this replaces, and it holds for
-      // all eight skins without naming eight ornaments.
-      expect(composer(slug).replace(/<[^>]*>/g, "")).toContain("20.0");
+      // The stamp prints the praxis's TOTAL; every composer-only mark printed
+      // the task's bare `point_value`. The claim used to ride on the stamp's
+      // trailing decimal, which #1866 removed, so it rides on the FIGURE now:
+      // votes move the total off the base, and only the stamp can say 24. That
+      // holds for all eight skins without naming eight ornaments.
+      const text = composer(slug, "desktop", { points_from_votes: 4, score: 24 }).replace(
+        /<[^>]*>/g,
+        "",
+      );
+      expect(text).toContain("24");
     },
   );
 });

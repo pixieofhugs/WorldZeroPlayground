@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { PointsRoundel } from "../../factionMarks";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -173,7 +174,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
       {/* The total mark — a second, separate strike. */}
       <PointsRoundel
         className="everymen-stamp-print"
-        total={total.toFixed(1)}
+        total={formatPoints(total)}
         unitLabel={t("card.stamp.points")}
         arcLabel={t("card.stamp.onTheRecord")}
         color="var(--everymen-red)"

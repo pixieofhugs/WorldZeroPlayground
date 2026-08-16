@@ -86,7 +86,8 @@ describe('the praxis stamp draws the same ring as every other UA surface', () =>
     const atom = renderToStaticMarkup(
       <UaEnsoScore
         size={STAMP_RING}
-        value="15.0"
+        // A whole score prints whole (#1866); the stamp hands the atom `15`.
+        value="15"
         unit="points"
         ringColor="var(--faction-ua-card-enso)"
         valueColor="var(--faction-ua-card-total)"
@@ -98,8 +99,14 @@ describe('the praxis stamp draws the same ring as every other UA surface', () =>
   })
 
   it('fits a four-digit total inside the ring it is struck in', () => {
-    const stamp = renderToStaticMarkup(<UaScoreStamp praxis={praxis(1500)} />)
-    expect(fittedPx(stamp)).toBeLessThan(30)
-    expect(stamp.replace(/<[^>]*>/g, '')).toContain('points')
+    const wide = renderToStaticMarkup(<UaScoreStamp praxis={praxis(1500)} />)
+    const narrow = renderToStaticMarkup(<UaScoreStamp praxis={praxis(15)} />)
+    // The ring takes over: four glyphs are pulled below the 38px the design
+    // struck for a two-glyph total. The threshold is stated as a comparison
+    // rather than a px so it survives the notation — a whole score dropped its
+    // trailing `.0` in #1866, which is one glyph fewer to fit.
+    expect(fittedPx(wide)).toBeLessThan(36)
+    expect(fittedPx(wide)).toBeLessThan(fittedPx(narrow))
+    expect(wide.replace(/<[^>]*>/g, '')).toContain('points')
   })
 })

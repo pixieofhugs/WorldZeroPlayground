@@ -19,6 +19,7 @@ import {
   stepClip,
 } from "../../factionMarks/ephemeristsPlate";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -245,7 +246,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             }}
           >
             <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", color: OCHRE }}>
-              {total.toFixed(1)}
+              {formatPoints(total)}
             </span>
             <GlossedGlyph
               glyph={t("card.stamp.ephemerists.points")}

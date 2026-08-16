@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -177,7 +178,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
               color: "transparent",
             }}
           >
-            {total.toFixed(1)}
+            {formatPoints(total)}
           </span>
           <span
             style={{

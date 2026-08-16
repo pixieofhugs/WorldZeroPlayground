@@ -376,7 +376,7 @@ describe("S.N.I.D.E. praxis detail — the dress traps", () => {
   it("mounts ONE score readout and invents no arithmetic", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
-    expect(text, "total from the shared resolver").toContain("16.0");
+    expect(text, "total from the shared resolver").toContain("16");
     expect(
       text.match(/from votes/g)?.length,
       "the stamp carries the tally; the page does not restate it",

@@ -196,7 +196,10 @@ describe('the meta line does not restate the stamp (#1833)', () => {
   it('drops the base figure when the stamp already prints it as the total', () => {
     // base 12, nothing else in play → the stamp's total IS 12.
     const html = body({ score: 12, points_from_votes: 0 })
-    expect(html, 'the stamp still carries the figure').toContain('12.0')
+    // `12points` — the stamp's figure with its own unit welded on once the tags
+    // are stripped, which is what tells it apart from the band's `12 pts` now
+    // that a whole score prints without a decimal (#1866).
+    expect(html, 'the stamp still carries the figure').toContain('12points')
     expect(html, 'and the meta line does not repeat it').not.toContain('12 pts')
     // The line keeps its other three segments and their separators.
     expect(html).toContain('L2')
@@ -207,14 +210,14 @@ describe('the meta line does not restate the stamp (#1833)', () => {
     // base 12 + 4 from votes = 16: two figures answering two questions.
     const html = body({ score: 16, points_from_votes: 4 })
     expect(html, 'what the task is worth').toContain('12 pts')
-    expect(html, 'what this praxis scored').toContain('16.0')
+    expect(html, 'what this praxis scored').toContain('16points')
   })
 
   it('keeps the base figure on a praxis with no stamp at all', () => {
     // #1444 gates the stamp off a `failed` praxis, so the meta line is the only
     // points readout left and suppressing it would leave the card silent.
     const html = body({ score: 12, points_from_votes: 0, moderation_status: 'failed' })
-    expect(html, 'no total was banked').not.toContain('12.0')
+    expect(html, 'no total was banked').not.toContain('12points')
     expect(html, 'so what the task is worth stays').toContain('12 pts')
   })
 })

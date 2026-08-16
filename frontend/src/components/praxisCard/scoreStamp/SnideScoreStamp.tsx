@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -162,7 +163,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
             textShadow: "2px 2px 0 var(--faction-snide-pink)",
           }}
         >
-          {total.toFixed(1)}
+          {formatPoints(total)}
         </span>
         <span
           style={{

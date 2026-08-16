@@ -24,6 +24,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Era config *shape* (dataclass fields) | `backend/game_config.py` |
 | Backend layering, DDD posture, what goes in services vs. routes | `docs/spec/SPEC-backend-architecture.md` (how); ADR-0045 (why-not-full-DDD) |
 | Building a new era | `backend/eras/_template.py` |
+| The onboarding arc — QR scan to level 1, what a stranger is told, terms, the hand-off | `docs/spec/SPEC-onboarding.md` (decisions charted on #1732) |
 | Account vs. Character, anti-self-voting | ADR-0041 + CONTEXT.md ("Account", "Character") |
 | DB schema | `backend/models/*.py` (source of truth) |
 | Scoring formulas / era-reset semantics | `backend/services/scoring.py` + `praxis_scoring.py` + `services/era.py`; **values** in `backend/eras/era_1.py`; rationale in ADR-0014/0042/0043/0044 |

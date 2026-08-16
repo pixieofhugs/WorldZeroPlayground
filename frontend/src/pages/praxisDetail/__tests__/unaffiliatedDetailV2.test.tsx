@@ -259,7 +259,7 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
     expect(text, "points from votes").toContain("4");
-    expect(text, "total").toContain("16.0");
+    expect(text, "total").toContain("16");
   });
 
   // #1091: the rows come from the mounted `ScoreStamp` now, so they speak the
@@ -293,7 +293,7 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     });
     const { text } = render(unvoted);
     expect(text).not.toContain("from votes");
-    expect(text, "the total still stands alone").toContain("12.0");
+    expect(text, "the total still stands alone").toContain("12");
   });
 
   /**
@@ -311,11 +311,11 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     });
     const { text } = render(failed);
     expect(text, "no headed empty panel").not.toContain("Score");
-    expect(text, "no total nobody banked").not.toContain("16.0");
+    expect(text, "no total nobody banked").not.toContain("16");
     // The banner is the honest signal and it stays (the #1373 ruling).
     expect(text).toContain("Not the task.");
 
-    expect(render(state()).text, "a visible praxis still stamps").toContain("16.0");
+    expect(render(state()).text, "a visible praxis still stamps").toContain("16");
   });
 
   it("banners flagged, failed-with-note, and the crown", () => {

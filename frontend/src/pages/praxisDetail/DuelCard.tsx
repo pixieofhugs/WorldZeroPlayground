@@ -75,6 +75,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../../utils/media'
+import { formatPoints } from '../../utils/points'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
 import type { PraxisDetailState } from './usePraxisDetail'
 
@@ -144,15 +145,6 @@ function resolveInk(ink?: DuelCardInk): Required<DuelCardInk> {
     line: ink?.line ?? DEFAULT_INK.line,
     plate: ink?.plate ?? DEFAULT_INK.plate,
   }
-}
-
-/**
- * Scores render to one decimal, matching `ScoreStamp`'s total on the same page
- * ("16.0") and the design's "18.0". A duel margin is the difference of two such
- * figures, so it takes the same shape.
- */
-function formatScore(value: number): string {
-  return value.toFixed(1)
 }
 
 /** The dash a side with no total wears. Ornament, not copy. */
@@ -313,11 +305,15 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
    * A side's total, or the em-dash where it has none. A forfeiter's total is
    * absent by rule (see the header), which is checked before the frozen pair
    * because a forfeit survives era close.
+   *
+   * `formatPoints` rather than a local `toFixed`: this figure sits on the same
+   * page as `ScoreStamp`'s total and has to read the same way (#1866). A duel
+   * margin is the difference of two such figures, so it takes the same shape.
    */
   const scoreFor = (side: DuelSideOut, frozen: number | null): string => {
     if (forfeitedBy != null && side.character_id === forfeitedBy) return NO_SCORE
-    if (resolved) return frozen != null ? formatScore(frozen) : NO_SCORE
-    return formatScore(side.points_from_votes)
+    if (resolved) return frozen != null ? formatPoints(frozen) : NO_SCORE
+    return formatPoints(side.points_from_votes)
   }
 
   // ── The one footer verdict line ───────────────────────────────────────────
@@ -350,7 +346,7 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
           ? t('duelCrossLink.standing.tied')
           : t('duelCrossLink.standing.leads', {
               name: margin > 0 ? mine.display_name : rival.display_name,
-              margin: formatScore(Math.abs(margin)),
+              margin: formatPoints(Math.abs(margin)),
             }),
     })
   }

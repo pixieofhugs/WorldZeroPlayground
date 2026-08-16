@@ -80,7 +80,8 @@ export interface ScoreBreakdown {
  *    declared exception until 2026-08-15 — ADR-0047 kept `+0` on the grounds
  *    that an absent row cannot say "nobody has voted yet" — and the owner ruled
  *    the other way: a score with no votes reads as the total alone.
- *  - total to 1 decimal at the render sites
+ *  - total through `formatPoints` at the render sites — one decimal only when
+ *    the score has one (#1866)
  *
  * A duel side's multiplier is live and provisional (ADR-0052) — a side that is
  * currently behind legitimately shows a loss modifier, ×0.0 for Snide.
@@ -118,7 +119,14 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
   };
 }
 
-/** `×0.80` — two decimals, matching the ADR-0047 sample. */
+/**
+ * `×0.80` — two decimals, matching the ADR-0047 sample. A multiplier is the one
+ * figure that keeps its trailing zeros: `×0.8` reads as a typo, `×0.80` as a
+ * rate. The TOTAL is the opposite and does NOT belong here — it goes through
+ * `formatPoints` in `utils/points`, shared with the duel tiles and field desks,
+ * because eight private `toFixed` calls are how Singularity drifted to two
+ * decimals on a figure that should have had none (#1866).
+ */
 export function formatMult(mult: number): string {
   return `×${mult.toFixed(2)}`;
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { useAuth } from '../auth/AuthContext'
+import { onRequestsChanged } from '../utils/requestsBus'
 
 /**
  * Hook to fetch the current character's in-progress praxes.
@@ -13,6 +14,12 @@ import { useAuth } from '../auth/AuthContext'
  * a character switch, a sign-out, a praxis submit — so no memo upstream can make
  * that object stable. The character id is the only thing this request is
  * actually keyed on, and it survives all of them.
+ *
+ * ...and again on `requestsBus`, a SECOND trigger rather than a replacement
+ * (#1867). Signing up for a task, dropping one, or accepting a collab invite
+ * all change this list without moving the character id, so the keying above
+ * could never see them. Same subscription shape as `useSidebarPanels`, which
+ * reads the same list off `/me/sidebar`.
  */
 export function useMyActiveTasks() {
   const { user } = useAuth()
@@ -35,6 +42,7 @@ export function useMyActiveTasks() {
 
   useEffect(() => {
     refetch()
+    return onRequestsChanged(refetch)
   }, [refetch])
 
   return { activeTasks, loading, refetch } as const
