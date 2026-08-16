@@ -15,6 +15,7 @@ each seeding a document from the same text and merging into two copies of it.
 
 import asyncio
 import io
+import linecache
 from contextlib import asynccontextmanager, suppress
 from typing import Any, AsyncIterator, Callable
 
@@ -52,15 +53,47 @@ SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
 _TIMEOUT_SECONDS = 5.0
 
-#: The ceiling on the two waits in this file that are not a poll: a client
-#: disconnecting, and the room server stopping (#1930).
+#: The ceiling on the waits here that are not a poll — a client connecting or
+#: disconnecting, the room server starting or stopping, a cancelled socket task
+#: unwinding (#1930).
 #:
-#: Both used to be unbounded, and a hang in either surfaced as ``pytest-timeout``
-#: firing at 60s with a stack ending in ``EpollSelector.select`` — the event loop
-#: asleep, which names neither side of the socket. It has to stay well under that
-#: 60s so the seam is named before the backstop fires: the busiest test here holds
-#: two clients plus the server, and 3 x 10s still leaves headroom.
-_TEARDOWN_TIMEOUT_SECONDS = 10.0
+#: Every one of them was unbounded, and a hang in any of them surfaced as
+#: ``pytest-timeout`` firing at 60s with a stack ending in
+#: ``EpollSelector.select`` — the event loop asleep, which names neither end of
+#: the socket. Both observed hangs left every polled wait uncovered, so they were
+#: in one of these.
+#:
+#: It has to stay well under pytest-timeout's 60s so the seam is named before the
+#: backstop fires. Worst case is one trip plus the ceilings the unwinding then
+#: passes through: two nested clients, ``aclose`` and the server stopping — 4 x
+#: 10s, which still leaves headroom.
+_CEILING_SECONDS = 10.0
+
+
+def _await_chain(task: asyncio.Task) -> str:
+    """Where ``task`` is suspended, outermost coroutine first.
+
+    ``Task.get_stack`` is not enough: a suspended coroutine's frame has no
+    ``f_back``, so it prints the *one* outermost line and stops — which for a
+    socket task is ``await self.rooms.serve(...)`` and nothing about why. Walking
+    ``cr_await`` instead gives the whole chain down to the await that is stuck.
+    """
+    lines: list[str] = []
+    awaited: Any = task.get_coro()
+    seen: set[int] = set()
+    while awaited is not None and id(awaited) not in seen:
+        seen.add(id(awaited))
+        frame = getattr(awaited, "cr_frame", None) or getattr(awaited, "gi_frame", None)
+        if frame is not None:
+            source = linecache.getline(frame.f_code.co_filename, frame.f_lineno).strip()
+            lines.append(
+                f'  File "{frame.f_code.co_filename}", line {frame.f_lineno},'
+                f" in {frame.f_code.co_name}\n    {source}"
+            )
+        awaited = getattr(awaited, "cr_await", None) or getattr(
+            awaited, "gi_yieldfrom", None
+        )
+    return "\n".join(lines) or "  <no frames>"
 
 
 def _pending_task_dump() -> str:
@@ -81,11 +114,12 @@ def _pending_task_dump() -> str:
     )
     buffer.write(f"\n\n--- {len(tasks)} other pending task(s) on this event loop ---")
     for task in tasks:
-        buffer.write(f"\n\n== {task.get_name()}: {task.get_coro()!r}\n")
+        state = "cancelling" if task.cancelling() else "pending"
+        buffer.write(f"\n\n== {task.get_name()} [{state}]\n")
         try:
-            task.print_stack(limit=12, file=buffer)
+            buffer.write(_await_chain(task))
         except Exception as exc:  # pragma: no cover — diagnostics must not raise
-            buffer.write(f"  <could not read stack: {exc!r}>\n")
+            buffer.write(f"  <could not read stack: {exc!r}>")
     return buffer.getvalue()
 
 
@@ -93,13 +127,14 @@ def _pending_task_dump() -> str:
 async def _bounded(description: str) -> AsyncIterator[None]:
     """Give an otherwise unbounded wait a ceiling and a name (#1930)."""
     try:
-        async with asyncio.timeout(_TEARDOWN_TIMEOUT_SECONDS):
+        async with asyncio.timeout(_CEILING_SECONDS):
             yield
     except TimeoutError:
         raise AssertionError(
-            f"timed out after {_TEARDOWN_TIMEOUT_SECONDS}s waiting for "
+            f"timed out after {_CEILING_SECONDS}s waiting for "
             f"{description}{_pending_task_dump()}"
         ) from None
+
 
 #: The mount ``main.py`` puts the room app behind, read off the live app rather
 #: than restated here — the prefix is the mount's to own, and a test holding its
@@ -316,7 +351,7 @@ class _Rooms:
         if not self._tasks:
             return
         done, pending = await asyncio.wait(
-            self._tasks, timeout=_TEARDOWN_TIMEOUT_SECONDS
+            self._tasks, timeout=_CEILING_SECONDS
         )
         for task in done:
             # Read the outcome so a cancelled or failed socket task is not
@@ -326,7 +361,7 @@ class _Rooms:
         if pending:
             raise AssertionError(
                 f"{len(pending)} praxis-room socket task(s) were still running "
-                f"{_TEARDOWN_TIMEOUT_SECONDS}s after cancel."
+                f"{_CEILING_SECONDS}s after cancel."
                 f"{_pending_task_dump()}"
             )
 
@@ -358,10 +393,11 @@ async def running_rooms(
     monkeypatch.setattr(praxis_room.PRAXIS_ROOM_APP, "rooms", server)
     rooms = _Rooms(server, sessions)
     # ``__aenter__``/``__aexit__`` by hand rather than ``async with server``:
-    # the ceiling belongs on the *exit* alone. Wrapping the whole block would
-    # put a clock on the test body too, and the body's waits are already bounded
-    # by :func:`_wait_for`.
-    await server.__aenter__()
+    # the ceilings belong on the two ends, not around the test body. The body's
+    # own waits are already bounded by :func:`_wait_for`, and a clock around it
+    # would be a second timeout competing with pytest-timeout's.
+    async with _bounded("the room server to start"):
+        await server.__aenter__()
     try:
         yield rooms
     finally:
@@ -379,7 +415,8 @@ async def client_doc(socket: _Socket) -> AsyncIterator[Doc]:
     """
     doc = Doc()
     provider = Provider(doc, _ChannelAdapter(socket))
-    await provider.__aenter__()
+    async with _bounded(f"the client on {socket.path} to connect"):
+        await provider.__aenter__()
     try:
         yield doc
     finally:
