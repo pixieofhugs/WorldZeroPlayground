@@ -115,6 +115,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     handleAvatarChange,
     handleAvatarConfirm,
     saving,
+    canSubmit,
     error,
     handleSubmit,
   } = state
@@ -354,7 +355,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
 
         {/* ── Actions ── */}
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
-          <button type="submit" disabled={saving} className="btn-primary">
+          <button type="submit" disabled={!canSubmit} className="btn-primary">
             {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
           </button>
           <button type="button" onClick={() => navigate(`/characters/${id}`)} className="btn-outline">

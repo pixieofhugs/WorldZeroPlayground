@@ -1,3 +1,4 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 #: The ONE value that unlocks a development seam. ``ENVIRONMENT`` is a free-form
@@ -13,16 +14,38 @@ from pydantic_settings import BaseSettings
 #: "development", and ``render.yaml:34`` is "production".
 _ENV_DEVELOPMENT = "development"
 
+#: Every OAuth credential, in one list, because the list *is* the mechanism
+#: (#1814). These are blank-by-default so a checkout whose ``.env`` predates a
+#: provider still boots — and required in production, enforced below by walking
+#: this tuple. Adding provider #3 means adding its three names here and nothing
+#: else: it inherits the guard, and no stale ``.env`` anywhere takes a whole test
+#: suite down at collection the way #1789's Discord fields did.
+_OAUTH_CREDENTIAL_FIELDS = (
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URI",
+    "DISCORD_CLIENT_ID",
+    "DISCORD_CLIENT_SECRET",
+    "DISCORD_REDIRECT_URI",
+)
+
+#: Deliberately the literal, and deliberately *not* ``not is_development``: this
+#: guard is about a deployment that means to serve OAuth, and the fail-closed
+#: reading would make every other environment name ("staging", "test", a local
+#: ``ENVIRONMENT=local``) demand credentials nothing there calls — which is the
+#: stale-checkout breakage this exists to end.
+_ENV_PRODUCTION = "production"
+
 
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
-    GOOGLE_CLIENT_ID: str
-    GOOGLE_CLIENT_SECRET: str
-    GOOGLE_REDIRECT_URI: str
-    DISCORD_CLIENT_ID: str
-    DISCORD_CLIENT_SECRET: str
-    DISCORD_REDIRECT_URI: str
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = ""
+    DISCORD_CLIENT_ID: str = ""
+    DISCORD_CLIENT_SECRET: str = ""
+    DISCORD_REDIRECT_URI: str = ""
     MEDIA_BASE_URL: str
     ENVIRONMENT: str = "development"
     MEDIA_ROOT: str = "/media"
@@ -47,6 +70,24 @@ class Settings(BaseSettings):
     ROOM_ALLOW_MISSING_ORIGIN: bool = False
 
     model_config = {"env_file": ".env", "extra": "ignore"}
+
+    @model_validator(mode="after")
+    def _require_oauth_credentials_in_production(self) -> "Settings":
+        """Production refuses to boot half-configured, naming every blank at once.
+
+        The mandatory declarations these defaults replaced only ever bought
+        anything here: nothing local or in CI talks to a provider. What they
+        cost was every stale checkout (#1814).
+        """
+        if self.ENVIRONMENT != _ENV_PRODUCTION:
+            return self
+        blank = [name for name in _OAUTH_CREDENTIAL_FIELDS if not getattr(self, name).strip()]
+        if blank:
+            raise ValueError(
+                f"{_ENV_PRODUCTION} requires every OAuth credential; these are "
+                f"missing or blank: {', '.join(blank)}"
+            )
+        return self
 
     @property
     def cors_origins(self) -> list[str]:

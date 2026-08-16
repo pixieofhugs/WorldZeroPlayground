@@ -17,8 +17,9 @@ from game_config import EraConfig, FactionConfig, TaskDef
 # =============================================================================
 
 # Five factions, and **no UA** — deliberate, not an oversight. Existing UA
-# characters are not stranded: reset_faction=True below sweeps everyone to `na`
-# at rollover. (`ua` is not a structurally required slug — only `na` is, as the
+# characters are not stranded: reset_faction=True below sweeps everyone to
+# reset_faction_slug at rollover, which this era leaves at its `na` default.
+# (`ua` is not a structurally required slug — only `na` is, as the
 # FK target for the born-unaffiliated state and for cross-faction tasks. See
 # faction_slugs.py; _template.py claimed otherwise until #1618 and is corrected.)
 #
