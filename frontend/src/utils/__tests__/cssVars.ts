@@ -14,6 +14,11 @@
  * (This example used to be `--faction-ephemerists-card-bg: var(--eph-vellum)`.
  * It stopped demonstrating the point in #1627: that contract now aliases the
  * Valley plate, which is theme-invariant, so the name no longer flips at all.)
+ *
+ * That reasoning holds only where `:root` and `[data-theme]` are the same
+ * element. Inside a NESTED theme wrapper they are not, so every alias in the
+ * file is declared on `:root, [data-theme]` instead (#1839) — which is a second
+ * light-cascade selector this parser has to read, or the light map loses them.
  */
 
 /** A resolved theme: custom-property name (with `--`) → raw declared value. */
@@ -37,15 +42,25 @@ export function stripComments(css: string): string {
  * declarations win, as the cascade does.
  */
 export function ruleBodies(css: string, selector: string): string[] {
-  const bodies: string[] = [];
+  return matchRules(css, selector).map((rule) => rule.body);
+}
+
+/** A matched rule and where in the source it started — the cascade's tiebreak. */
+interface Rule {
+  at: number;
+  body: string;
+}
+
+function matchRules(css: string, selector: string): Rule[] {
+  const rules: Rule[] = [];
   let cursor = 0;
   while (cursor < css.length) {
     const start = css.indexOf(selector, cursor);
     if (start === -1) break;
     const open = css.indexOf("{", start);
     if (open === -1) break;
-    // Reject `[data-theme="dark"] input` / `:root .foo` — selector must be
-    // the whole thing, not a prefix of a descendant selector.
+    // Reject `[data-theme="dark"] input` / `:root .foo` / `:root, [data-theme]`
+    // — selector must be the whole thing, not a prefix of a longer one.
     const between = css.slice(start + selector.length, open).trim();
     const before = start === 0 ? "\n" : css[start - 1];
     if (between !== "" || !/[\s;{}]/.test(before)) {
@@ -59,13 +74,28 @@ export function ruleBodies(css: string, selector: string): string[] {
       else if (css[index] === "}") depth -= 1;
       index += 1;
     }
-    bodies.push(css.slice(open + 1, index - 1));
+    rules.push({ at: start, body: css.slice(open + 1, index - 1) });
     cursor = index;
   }
-  return bodies;
+  return rules;
 }
 
-function declarationsIn(bodies: string[]): VarMap {
+/**
+ * The selector every alias block carries (#1839): a value that resolves through
+ * `var()` has to be re-declared on any element that carries a theme, or a
+ * nested `[data-theme]` wrapper inherits its already-substituted value.
+ */
+export const THEME_SCOPED = ":root, [data-theme]";
+
+/** Bodies of every rule matching one of `selectors`, in source order. */
+function bodiesInSourceOrder(css: string, selectors: string[]): string[] {
+  return selectors
+    .flatMap((selector) => matchRules(css, selector))
+    .sort((a, b) => a.at - b.at)
+    .map((rule) => rule.body);
+}
+
+export function declarationsIn(bodies: string[]): VarMap {
   const map: VarMap = new Map();
   for (const body of bodies) {
     for (const match of body.matchAll(CUSTOM_PROP)) {
@@ -75,11 +105,18 @@ function declarationsIn(bodies: string[]): VarMap {
   return map;
 }
 
-/** Parse index.css into the light (`:root`) and dark (`[data-theme="dark"]`) var maps. */
+/**
+ * Parse index.css into the light and dark var maps.
+ *
+ * The light cascade has two selectors, not one: `:root` for a value that stands
+ * on its own, and `:root, [data-theme]` for an alias, which must also be
+ * declared on a nested theme wrapper so it re-substitutes there (#1839). Both
+ * match `documentElement`, so the light map is their merge in source order.
+ */
 export function readThemes(css: string): Record<Theme, VarMap> {
   const clean = stripComments(css);
   return {
-    light: declarationsIn(ruleBodies(clean, ":root")),
+    light: declarationsIn(bodiesInSourceOrder(clean, [":root", THEME_SCOPED])),
     dark: declarationsIn(ruleBodies(clean, '[data-theme="dark"]')),
   };
 }
