@@ -188,28 +188,24 @@ const SMALLEST_STEPS = /var\(--text-(?:sm|xs)\)/g
 /** file → how many hits are there on purpose, and why. */
 const ALLOWED: Record<string, { readonly hits: number; readonly why: string }> = {
   'pages/praxisDetail/shared.tsx': {
-    hits: 16,
+    hits: 2,
     why:
-      'Moderation and flag controls carrying `.btn-primary`/`.btn-outline`, whose ' +
-      'own size IS this token — the inline value restates the class rather than ' +
-      'laundering one. Two more are the notice body under a --text-base title, ' +
-      'which raising alone would invert. Both belong to a button/content pass.',
+      'The report card\'s notice body, twice, under a --text-base title — raising ' +
+      'it alone would invert the pair. Content tier, not the label tier, so it is ' +
+      'not what #1783 moved. The fourteen button restatements above it are gone.',
   },
   'components/duel/shared.tsx': {
-    hits: 3,
+    hits: 1,
     why:
-      'Two `.btn-*` restatements on the seal actions, which #769 settled as ' +
-      'button chrome, plus one mention in the prose that records that decision.',
+      'Prose only. It records what #769 FIXED — rail wrappers that used to force ' +
+      'this size onto the slots inheriting from them. The two seal-button ' +
+      'restatements it also used to describe went with #1783.',
   },
   'components/collab/CollabSuccess.tsx': {
-    hits: 2,
+    hits: 1,
     why:
-      'One `.btn-primary` restatement, and one paragraph of body copy — content, ' +
-      'not a label, so the label tier is not where its size comes from.',
-  },
-  'pages/admin/AccountsTab.tsx': {
-    hits: 2,
-    why: 'Both `.btn-outline` restatements on the ban/unban control.',
+      'One paragraph of body copy — content, not a label, so the label tier is ' +
+      'not where its size comes from. Its `.btn-primary` restatement is gone.',
   },
   'components/praxisCard/desktop/EphemeristsPraxisCard.tsx': {
     hits: 1,
