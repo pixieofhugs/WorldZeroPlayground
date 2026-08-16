@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -16,16 +15,16 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *    the Updates feed's aged-paper foe note;
  *  • the TAPE strip (and there is no strip to reconsider: #1708 retired tape
  *    from every SNIDE surface);
- *  • the `Special Elite` MASTHEAD block. The design's running head is a single
- *    Courier eyebrow line in acid, inside the text column, where it stops at
- *    the score tag instead of running under it — so it is passed to
- *    {@link PraxisBody} as `eyebrow`, the seam #841 opened for the codex.
+ *  • the `Special Elite` MASTHEAD block. The design's running head was a single
+ *    Courier eyebrow line in acid, inside the text column, where it stopped at
+ *    the score tag instead of running under it — passed to {@link PraxisBody} as
+ *    `eyebrow`, the seam #841 opened for the codex. #1909 CUT its string
+ *    (`card.masthead.snide`, "evidence locker"), so the slot ships empty.
  *
  * The dashed acid rule above the vote widget is the design's, and is the one
  * divider the slab carries.
  */
 export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -67,18 +66,9 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           transform: "skewX(-3deg)",
           color: "var(--faction-snide-card-text)",
         }}
-        eyebrow={
-          <div
-            className="label-heading"
-            style={{
-              letterSpacing: "0.16em",
-              color: "var(--faction-snide-acid)",
-              marginBottom: "var(--space-xs)",
-            }}
-          >
-            {t("card.masthead.snide")}
-          </div>
-        }
+        /* The eyebrow read "evidence locker" (`card.masthead.snide`). #1909 cut
+           the slot — once generic it says "Praxis" on a praxis card — so the
+           shared eyebrow is left unfilled here. */
         voteRule={
           <div
             aria-hidden

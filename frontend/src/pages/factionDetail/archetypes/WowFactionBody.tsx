@@ -6,7 +6,7 @@ import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
 import { WowSigil } from "../../../components/sigil/WowSigil";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
@@ -133,7 +133,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
     >
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        <Charter />
+        <Charter slug={faction.slug} />
 
         {/* ── the muster roll ── */}
         <section>
@@ -159,7 +159,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
         {/* ── quests awaiting a champion ── */}
         <section>
-          <SectionHead kicker={t("wow.tasks.kicker")}>{t("wow.tasks.heading")}</SectionHead>
+          <SectionHead>{t("wow.tasks.heading")}</SectionHead>
           {tasks.length === 0 ? (
             <Quiet>{t("wow.tasks.empty")}</Quiet>
           ) : (
@@ -182,7 +182,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
         {/* ── chronicles of proof ── the one bunch of balloons on the page ── */}
         <section>
-          <SectionHead kicker={t("wow.praxis.kicker")} balloons>
+          <SectionHead balloons>
             {t("wow.praxis.heading")}
           </SectionHead>
           {recentPraxis.length === 0 ? (
@@ -214,14 +214,21 @@ const CARD_GRID: CSSProperties = {
 /**
  * The charter — the faction's own voice at length, bunting strung across it.
  * The only section the hero above cannot show.
+ *
+ * #1909 CUT the four strings that used to fill it: `wow.charter.title` ("The
+ * Charter of Whimsy") and the three `wow.charter.paragraphs`. No other faction
+ * had body copy on this panel — the other seven bodies all print the faction
+ * DESCRIPTION here, split on blank lines — so once the audit ruled the surface
+ * generic, WOW prints the description too. This is the one deletion in #1909
+ * that removes several hundred words of real writing; the ruling's own terms
+ * are "we can put it back in intentionally".
  */
-function Charter() {
+function Charter({ slug }: { slug: string }) {
   const { t } = useTranslation("factions");
-  // The catalog holds the charter as an array of paragraphs; `t` is typed to a
-  // string, so the array form needs the same cast every other reader uses.
-  const resolve = t as unknown as (k: string, o: { returnObjects: true }) => unknown;
-  const raw = resolve("wow.charter.paragraphs", { returnObjects: true });
-  const paragraphs = Array.isArray(raw) ? (raw as string[]) : [];
+  const paragraphs = factionDescription(slug)
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   return (
     <section style={{ ...PLATE_FRAME, padding: 0, overflow: "hidden" }}>
@@ -230,18 +237,7 @@ function Charter() {
         <div className="label-heading" style={{ fontFamily: MED }}>
           {t("wow.charter.heading")}
         </div>
-        <h2
-          style={{
-            fontFamily: MED,
-            fontSize: "var(--text-title)",
-            lineHeight: 1.15,
-            color: INK,
-            margin: "var(--space-xs) 0 var(--space-md)",
-          }}
-        >
-          {t("wow.charter.title")}
-        </h2>
-        <Zig id="charter" style={{ marginBottom: "var(--space-md)" }} />
+        <Zig id="charter" style={{ margin: "var(--space-md) 0" }} />
         {paragraphs.map((paragraph) => (
           <p
             key={paragraph}
@@ -261,23 +257,22 @@ function Charter() {
   );
 }
 
-/** A section head in the display face, over the wavy gold→plum rule. */
+/**
+ * A section head in the display face, over the wavy gold→plum rule.
+ *
+ * It used to open on a herald's kicker (`wow.tasks.kicker` /
+ * `wow.praxis.kicker`); #1909 cut the slot, because the audit ruled the line
+ * restated its own heading and only the seven bespoke bodies ever had one.
+ */
 function SectionHead({
   children,
-  kicker,
   balloons,
 }: {
   children: ReactNode;
-  kicker?: string;
   balloons?: boolean;
 }) {
   return (
     <div style={{ marginBottom: "var(--space-lg)" }}>
-      {kicker && (
-        <div className="label-heading" style={{ fontFamily: MED }}>
-          {kicker}
-        </div>
-      )}
       <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
         <h2
           style={{

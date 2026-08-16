@@ -208,7 +208,12 @@ describe('wow profile serves both form factors from WowProfileBody', () => {
   it('still renders the crested desktop page on a wide viewport', () => {
     const html = renderBody({ faction_slug: 'wow' })
     expect(html).not.toContain('data-testid="mobile-profile"')
-    expect(html, 'the desktop kit heading').toContain('Honours &amp; Credentials')
+    // The kit heading was 'Honours &amp; Credentials' until #1909 CUT
+    // `profile.wow.honours`; both form factors now read the shared 'Badges',
+    // which every kit says. So WOW is identified by a mark instead: the gilt
+    // rope ring the desktop kit mounts its credential in.
+    expect(html, 'the crested desktop page').toContain('--faction-wow-avatar-ring')
+    expect(html, 'the desktop kit heading').toContain('Badges')
   })
 })
 

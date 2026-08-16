@@ -188,9 +188,13 @@ export default function SingularityProfileBody(props: ProfileBodyProps) {
         ...dress,
         ringLabel: t('profile.singularity.ringLabel'),
         nextLevelLabel: (next) => t('profile.singularity.nextLevel', { level: next }),
-        // The one kit with a footnote: it logs the absolute score and ignores
-        // the threshold, which is why it takes a key of its own.
-        scoreFootnote: (score) => t('profile.singularity.scoreFootnote', { score }),
+        /* It was the one kit with a footnote — it logged the absolute score and
+           ignored the threshold, which is why it took a key of its own.
+           `scoreFootnote` read `profile.singularity.scoreFootnote`
+           ("> {{score}} PTS LOGGED"). #1909 CUT it: Singularity was the only
+           kit that set the optional footnote, on a surface the audit ruled
+           generic. `ProfileSkin` draws no footnote when the knob is unset,
+           which is what the other six kits already do. */
         praxisEyebrow: (name) => t('profile.singularity.praxisEyebrow', { name }),
         praxisEmpty: {
           title: t('profile.singularity.praxisEmptyTitle'),

@@ -81,20 +81,15 @@ import {
   INK,
   LISTS_BG,
   ListsBand,
-  ListsRibbonMark,
   ListsSpark,
   listsEyebrow,
-  MUTED,
   NOTICE,
-  ON_RIBBON,
   PANEL,
   PANEL_BORDER,
   PANEL_QUIET,
-  RIBBON,
   Rosette,
   SCRIM,
   SHADOW,
-  useWowSealVoice,
 } from './wowLists'
 
 export default function WowDuelSealConfirm({
@@ -108,7 +103,10 @@ export default function WowDuelSealConfirm({
 }: DuelSealConfirmProps) {
   const { me, foe } = duelSides(duel, viewerCharacterId)
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
-  const voice = useWowSealVoice(mode)
+  // `useWowSealVoice` supplied nine strings on top of `copy` — the kicker, the
+  // two section headings, the ribbon line and the two button labels per mode.
+  // #1909 CUT all nine; see the note where the hook used to live in
+  // `wowLists.tsx`. This skin now renders `copy` alone, like the other eight.
 
   // The opponent's tokens (#310) — spent on the rosette ring only. See the note
   // in `wowLists.tsx`: a foreign hue is never a ground and never an ink here.
@@ -152,21 +150,10 @@ export default function WowDuelSealConfirm({
         >
           <WowSigil size={46} />
           <div style={{ minWidth: 0 }}>
-            {/* The kicker is WOW's; the HEADING below is the shared, neutral
-                one (#718 — and `duelSkinSlots.test.tsx` enforces it). A span,
-                not a <p>: this line is a byline, Label tier by role, and the
-                seal guard rightly treats a Label-sized <p> as sunk body copy. */}
-            <span
-              style={{
-                display: 'block',
-                fontFamily: BODY_FONT,
-                fontStyle: 'italic',
-                fontSize: 'var(--text-lg)',
-                color: MUTED,
-              }}
-            >
-              {voice.sub}
-            </span>
+            {/* The kicker above the heading was WOW's ("Enter the lists ·
+                submitting proof" / "Leave the lists · yielding the joust");
+                #1909 cut both. The HEADING below is the shared, neutral one
+                (#718 — and `duelSkinSlots.test.tsx` enforces it), unchanged. */}
             <h2
               className="content-title"
               style={{ fontFamily: DISPLAY_FONT, color: INK, lineHeight: 1.15 }}
@@ -221,7 +208,8 @@ export default function WowDuelSealConfirm({
               marginBottom: 'var(--space-sm)',
             }}
           >
-            {voice.rosterLabel}
+            {/* "The Roster" (`duelSeal.wow.rosterLabel`) stood here; #1909 cut
+                it. The rosette stays — it is drawn, not written. */}
             <Rosette accent={accent} soft={soft} size={18} />
           </span>
           <div
@@ -236,11 +224,9 @@ export default function WowDuelSealConfirm({
           </div>
         </div>
 
-        {/* ── the stakes, struck in gold ── */}
+        {/* ── the stakes, struck in gold. Its "The Stakes" eyebrow
+            (`duelSeal.wow.stakesLabel`) was cut by #1909. ── */}
         <div style={{ marginTop: 'var(--space-lg)' }}>
-          <span style={{ ...listsEyebrow, marginBottom: 'var(--space-sm)' }}>
-            {voice.stakesLabel}
-          </span>
           <div
             style={{
               background: PANEL,
@@ -259,30 +245,11 @@ export default function WowDuelSealConfirm({
             />
           </div>
 
-          {/* The ribbon promise — suppressed on the forfeit face, where it
-              would be a lie: a rider who quits has not entered the lists to
-              the end. */}
-          {!copy.danger && (
-            <p
-              className="content-text"
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: 'var(--space-sm)',
-                marginTop: 'var(--space-sm)',
-                padding: 'var(--space-sm) var(--space-md)',
-                borderRadius: 11,
-                background: RIBBON,
-                color: ON_RIBBON,
-                fontFamily: BODY_FONT,
-                fontStyle: 'italic',
-              }}
-            >
-              <ListsRibbonMark color={ON_RIBBON} />
-              <span>{voice.ribbonLine}</span>
-            </p>
-
-          )}
+          {/* The ribbon promise ("A ribbon for the courage to enter — in our
+              lists both riders are honoured.", `duelSeal.wow.ribbonLine`) sat
+              here, suppressed on the forfeit face where it would be a lie.
+              #1909 cut the string, and the plum band existed only to carry it —
+              a coloured plate holding nothing is not a survivor. */}
         </div>
 
         <div style={{ marginTop: 'var(--space-lg)' }}>
@@ -290,8 +257,11 @@ export default function WowDuelSealConfirm({
             onConfirm={onConfirm}
             onCancel={onCancel}
             busy={busy}
-            confirmLabel={voice.confirm}
-            cancelLabel={voice.cancel}
+            /* WOW's own verbs ("Take the Field" / "Yield the Field",
+               "Withdraw" / "Hold thy Ground") were cut by #1909. `copy` already
+               carries the right confirm label in both modes, and `SealActions`
+               falls back to `duelSeal.cancel` for the other. */
+            confirmLabel={copy.confirmLabel}
             danger={copy.danger}
             theme={theme}
           />

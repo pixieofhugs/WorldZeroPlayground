@@ -52,12 +52,13 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * comment voices should also be neutralised is a call for the owner, not for a
  * dress issue holding a shared locale file eight agents are queued on.
  *
- * THE HUZZAH IS STILL NOT BUILT. The kit draws a "✦ Huzzah · 12" reaction pill
- * and #898 shipped the word (`comments.wow.react`), but there is no reaction
- * anywhere in the product — no endpoint, no column, no count on `CommentOut` —
- * so the pill would be a control that no-ops, which UX principle 5 forbids. The
- * key waits for the feature. "Reply" is absent for the same reason: comments are
- * flat (ADR-0006).
+ * THE HUZZAH IS STILL NOT BUILT, AND ITS WORD IS GONE. The kit draws a "✦ Huzzah
+ * · 12" reaction pill and #898 shipped the word (`comments.wow.react`), but
+ * there is no reaction anywhere in the product — no endpoint, no column, no
+ * count on `CommentOut` — so the pill would be a control that no-ops, which UX
+ * principle 5 forbids. The key waited for a feature that never came, so #1909
+ * deleted it as dead copy: no button is removed here, because none was ever
+ * built. "Reply" is absent for the same reason: comments are flat (ADR-0006).
  *
  * Every colour is a shipped `--faction-wow-*` token and both themes come from
  * the `[data-theme="dark"]` cascade. The one AA trap on this palette is avoided
@@ -195,7 +196,10 @@ export default function WowComment(props: CommentProps) {
             // one WOW ink measured against the parchment plate.
             bg="var(--faction-wow-chronicle-panel)"
             text={INK}
-            submitLabel={t('comments.wow.post')}
+            // The submit label was `comments.wow.post` ("Proclaim"). #1909
+            // deleted it: the generic `praxis:comments.post` ("Post comment")
+            // already covers the slot, and `ComposerControls` reads it as its
+            // own default — so dropping the override IS the repoint.
             // The shared string in the decree's own quiet register — an OVERRIDE
             // of ComposerControls' neutral default, not a new hint.
             hint={<span style={QUIET}>{t('comments.mentionHint')}</span>}

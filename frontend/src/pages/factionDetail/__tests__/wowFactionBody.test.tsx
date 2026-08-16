@@ -82,16 +82,31 @@ describe('the enlist rail answers every membership state', () => {
 describe('the page speaks in WOW voice, not the phone catalog', () => {
   it('wires the charter, the roll and both galleries', () => {
     const markup = render('none')
-    expect(markup).toContain('The Charter of Whimsy')
+    expect(markup).toContain('The Charter')
     expect(markup).toContain('The Muster Roll')
     expect(markup).toContain('Quests Awaiting a Champion')
     expect(markup).toContain('Chronicles of Proof')
   })
 
-  it('renders the charter body, which is the one thing the hero cannot show', () => {
-    // The array-valued key needs `returnObjects`; a plain `t()` yields the key
-    // back and the section renders its frame with nothing in it.
-    expect(render('none')).toContain('We knight houseplants')
+  /**
+   * THE CHARTER OF WHIMSY IS GONE (#1909), and the panel prints the DESCRIPTION.
+   *
+   * `wow.charter.title` and the three `wow.charter.paragraphs` were all on the
+   * copy audit's CUT list: no other faction had body copy on its about panel —
+   * the other seven print `factionDescription(slug)` — so once the audit ruled
+   * the surface generic, WOW prints it too. That is several hundred words of
+   * real writing, deleted deliberately, under the audit's own terms ("we can
+   * put it back in intentionally").
+   *
+   * Guarded as an absence AND a presence: the panel must not be empty (the bug
+   * the old `returnObjects` test caught), and the bespoke charter must not creep
+   * back onto a settled surface under a new key.
+   */
+  it('fills the charter panel with the faction description, not a bespoke charter', () => {
+    const markup = render('none')
+    expect(markup).toContain('We wield the noodle sword')
+    expect(markup).not.toContain('The Charter of Whimsy')
+    expect(markup).not.toContain('We knight houseplants')
   })
 
   it('does not fall back to the phone page copy', () => {

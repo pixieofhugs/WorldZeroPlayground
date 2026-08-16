@@ -268,11 +268,13 @@ export default function WowProfileBody(props: ProfileBodyProps) {
           title: t('profile.wow.praxisEmptyTitle'),
           body: t('profile.wow.praxisEmptyBody'),
         },
-        // `honours`, not a `badgeTitle` of its own: the phone stack's badge
-        // heading below already reads this key and says the same words about
-        // the same section. Two keys holding one string is how a copy pass
-        // reworders half a page.
-        badgeTitle: t('profile.wow.honours'),
+        // This read `profile.wow.honours` ("Honours & Credentials"), shared
+        // with the phone stack's badge heading below so one string covered one
+        // section. #1909 CUT that key with the rest of WOW's profile block, and
+        // `badgeTitle` is required, so both now read the SHARED
+        // `profile.badgesHeading` ("Badges") — which is the wording #1910's
+        // `profileKit.{F}.badgeTitle` collapse settles every kit onto anyway.
+        badgeTitle: t('profile.badgesHeading'),
       }}
     />
   )
@@ -295,10 +297,21 @@ function MobileProfile({
   const [segment, setSegment] = useState<Segment>('praxis')
   const badges = character.badges ?? []
 
+  // The tally's three labels were WOW's own — "Huzzahs", "Chronicles",
+  // "Quests" — and #1909 CUT all three with the rest of `profile.wow.*`. No
+  // other profile body draws a stat row, so there is no per-faction twin to
+  // settle onto; these are the SHARED words for the same three entities.
+  //
+  // ponytail: `sidebar.characterCard.points` is a sidebar key doing duty on a
+  // profile. Ceiling: it is the only shared string in this namespace that says
+  // "points", and a deletion PR may not mint a new one. Upgrade path: #1910
+  // owns the profile-kit collapse and can give the row a proper
+  // `profile.stats.*` block. The row itself is kept because its figures are
+  // real data — deleting it would take the score and both counts off the page.
   const stats = [
-    { label: t('profile.wow.stats.points'), value: character.score },
-    { label: t('profile.wow.stats.praxis'), value: submissions.length },
-    { label: t('profile.wow.stats.tasks'), value: proposedTasks.length },
+    { label: t('sidebar.characterCard.points'), value: character.score },
+    { label: t('profile.mobile.tabPraxis'), value: submissions.length },
+    { label: t('profile.mobile.tabTasks'), value: proposedTasks.length },
   ]
 
   return (
@@ -430,9 +443,10 @@ function MobileProfile({
               level: character.level,
             })}
           </div>
-          <div className="label-heading" style={{ fontFamily: WOW_DISPLAY, color: WOW_DEEP }}>
-            {t('profile.wow.eyebrow')}
-          </div>
+          {/* "Of the Court of Whimsy" (`profile.wow.eyebrow`) sat under the
+              faction/level line. #1909 cut it: WOW was the only faction with a
+              profile eyebrow, on a surface the audit ruled generic, and there
+              is no shared twin to fall back to. */}
 
           {identityActions && (
             <div style={{ marginTop: 'var(--space-lg)', width: '100%', maxWidth: 220 }}>
@@ -495,7 +509,7 @@ function MobileProfile({
         {/* ── honours & credentials — hidden entirely when empty ── */}
         {badges.length > 0 && (
           <section>
-            <WowSectionHead>{t('profile.wow.honours')}</WowSectionHead>
+            <WowSectionHead>{t('profile.badgesHeading')}</WowSectionHead>
             <div
               style={{
                 background: WOW_PLATE,
@@ -516,10 +530,10 @@ function MobileProfile({
         <div>
           <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
             <SegTab on={segment === 'praxis'} onClick={() => setSegment('praxis')}>
-              {t('profile.wow.tabPraxis')}
+              {t('profile.mobile.tabPraxis')}
             </SegTab>
             <SegTab on={segment === 'tasks'} onClick={() => setSegment('tasks')}>
-              {t('profile.wow.tabTasks')}
+              {t('profile.mobile.tabTasks')}
             </SegTab>
           </div>
           <WowCheckerBand height={3} />
@@ -527,7 +541,7 @@ function MobileProfile({
 
         {segment === 'praxis' ? (
           submissions.length === 0 ? (
-            <Empty>{t('profile.wow.praxisEmpty')}</Empty>
+            <Empty>{t('profile.praxisEmptyTitle')}</Empty>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
               {submissions.map((praxis) => (
@@ -536,7 +550,7 @@ function MobileProfile({
             </div>
           )
         ) : proposedTasks.length === 0 ? (
-          <Empty>{t('profile.wow.tasksEmpty')}</Empty>
+          <Empty>{t('profile.proposedTasksEmpty')}</Empty>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
             {proposedTasks.map((task) => (

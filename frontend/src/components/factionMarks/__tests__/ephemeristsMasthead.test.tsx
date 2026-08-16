@@ -78,24 +78,35 @@ describe("EphemeristsMasthead — the datum row", () => {
   });
 });
 
-describe("EphemeristsMasthead — the register", () => {
+/**
+ * THE REGISTER IS GONE (#1909), and this block is what says so.
+ *
+ * It used to assert the four kanji and their glossed `title=`. All EIGHT of its
+ * strings are on the copy audit's CUT list — the marks AND the English — because
+ * no other faction had a register row and the audit ruled the masthead a shared
+ * surface. Kept as an ABSENCE rather than deleted: the way a faction-only band
+ * comes back onto a settled surface is a later voice pass, and only a negative
+ * assertion can fail on that.
+ */
+describe("EphemeristsMasthead — the register, deleted", () => {
   const html = render("page");
 
-  it("sets four kanji, each with its English one gesture away", () => {
-    for (const [mark, gloss] of [
-      ["星", "Star"],
-      ["暦", "Almanac"],
-      ["観", "Observation"],
-      ["録", "Record"],
-    ]) {
-      expect(html).toContain(`title="${gloss}"`);
-      expect(html).toContain(`>${mark}</abbr>`);
+  it("sets no kanji, at either scale", () => {
+    for (const mark of ["星", "暦", "観", "録"]) {
+      expect(html).not.toContain(mark);
+      expect(render("card")).not.toContain(mark);
     }
   });
 
-  it("reaches the focus gloss the tooltip cannot give a keyboard user", () => {
-    expect((html.match(/class="eph-gloss"/g) ?? []).length).toBe(4);
-    expect((html.match(/tabindex="0"/g) ?? []).length).toBe(4);
+  it("carries no glossed abbreviation at all", () => {
+    expect(html).not.toContain('class="eph-gloss"');
+    expect(html).not.toContain("</abbr>");
+  });
+
+  it("still rules the datum row off, top and bottom", () => {
+    // The register carried the design's 1px + 3px-double band; those rules moved
+    // to the datum row rather than leaving with the copy.
+    expect(html).toContain("3px double");
   });
 });
 

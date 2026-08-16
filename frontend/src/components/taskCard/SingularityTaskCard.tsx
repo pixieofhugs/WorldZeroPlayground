@@ -176,10 +176,11 @@ export default function SingularityTaskCard({
             <Lamp fill="var(--faction-singularity-led-amber)" />
             <Lamp fill="var(--faction-singularity-led-green)" />
           </span>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: window-bar lettering, sized to the 8px lamps beside it rather than the label ramp (§4a). */}
-          <span style={{ ...LABEL, fontSize: 10.5 }}>
-            {i18n.t("feed:taskCard.singularity.windowTitle")}
-          </span>
+          {/* The window bar read "task.proc — singularity"
+              (`feed:taskCard.singularity.windowTitle`). #1909 cut it:
+              Singularity was the only faction with a window title on a task
+              card, on a surface the audit ruled generic. The lamps and the
+              chrome band stay — they are the window, not its caption. */}
         </div>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
