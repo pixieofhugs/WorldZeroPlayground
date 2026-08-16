@@ -5,6 +5,7 @@ import { factionFill, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
 import FeedRowActions from './FeedRowActions'
+import { FEED_BODY_LIFTED, FeedBodyOverlay } from './feedBodyTarget'
 import { FeedRowSkinContext, resolveFeedRowInk } from './feedRowSkin'
 import type { FeedRow } from './normalizeFeedItem'
 
@@ -50,14 +51,34 @@ export default function FeedRowContent({
   const known = isKnownFaction(row.slug)
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
 
+  // WHICH ANCHOR OWNS THE BODY (#1893). `headlineHref`, falling back to
+  // `actorHref` — the two quoted rows that carry no headline target
+  // (`foe_taunt`, `friend_defection`) both name an actor, so neither ends up
+  // dead. Where neither exists this stays null and the body is PLAIN: no
+  // overlay, no cursor change, no dead click zone.
+  //
+  // Gated on `row.headline` too, not just its href: an href with nothing to
+  // hang it on draws no anchor, and stretching a nonexistent one would silently
+  // lose the row's target rather than fall back to the actor.
+  const stretch: 'headline' | 'actor' | null = row.headline && row.headlineHref
+    ? 'headline'
+    : row.actorHref
+      ? 'actor'
+      : null
+  // The anchor that carries the overlay must NOT be positioned itself, or the
+  // overlay collapses to that anchor's own box. Everything else lifts.
+  const liftUnless = (which: 'headline' | 'actor') =>
+    stretch === which ? null : FEED_BODY_LIFTED
+
   const actorNode = row.actor ? (
     row.actorHref ? (
       <Link
         to={row.actorHref}
         className="font-body"
-        style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: ink.actor, textDecoration: 'none' }}
+        style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: ink.actor, textDecoration: 'none', ...liftUnless('actor') }}
       >
         {row.actor}
+        {stretch === 'actor' && <FeedBodyOverlay />}
       </Link>
     ) : (
       <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: ink.actor }}>
@@ -183,14 +204,19 @@ export default function FeedRowContent({
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             {row.headlineQuoted ? (
-              <QuotedHeadline headline={row.headline} href={row.headlineHref} />
+              <QuotedHeadline
+                headline={row.headline}
+                href={row.headlineHref}
+                stretched={stretch === 'headline'}
+              />
             ) : row.headlineHref ? (
               <Link
                 to={row.headlineHref}
                 className="font-body"
-                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3 }}
+                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3, ...liftUnless('headline') }}
               >
                 {row.headline}
+                {stretch === 'headline' && <FeedBodyOverlay />}
               </Link>
             ) : (
               <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
@@ -228,7 +254,10 @@ export default function FeedRowContent({
       {/* The action slot. Indented to the text column exactly as the headline
           is, so a row with an avatar reads as one block rather than two. */}
       {row.actions.length > 0 && (
-        <div style={{ marginLeft: row.actor ? 'var(--space-3xl)' : 0 }}>
+        // Lifted as a block (#1893): every control inside is either a link to
+        // somewhere else or a one-shot call, and both must beat the body
+        // overlay rather than navigate through it.
+        <div style={{ marginLeft: row.actor ? 'var(--space-3xl)' : 0, ...FEED_BODY_LIFTED }}>
           <FeedRowActions actions={row.actions} />
         </div>
       )}
@@ -250,7 +279,16 @@ export default function FeedRowContent({
  * identical either way: the quote is speech, and dressing it as a bold title link
  * would undo the distinction the quoting exists to draw.
  */
-function QuotedHeadline({ headline, href }: { headline: string; href: string | null }) {
+function QuotedHeadline({
+  headline,
+  href,
+  stretched,
+}: {
+  headline: string
+  href: string | null
+  /** True when this quote is the anchor that owns the whole body (#1893). */
+  stretched: boolean
+}) {
   const quoted = i18n.t('feed:row.quotedHeadline', { headline })
   const style: React.CSSProperties = {
     margin: 0,
@@ -267,13 +305,24 @@ function QuotedHeadline({ headline, href }: { headline: string; href: string | n
     )
   }
   return (
-    <Link to={href} className="font-body" style={{ ...style, display: 'block', textDecoration: 'none' }}>
+    <Link
+      to={href}
+      className="font-body"
+      style={{ ...style, display: 'block', textDecoration: 'none', ...(stretched ? null : FEED_BODY_LIFTED) }}
+    >
       {quoted}
+      {stretched && <FeedBodyOverlay />}
     </Link>
   )
 }
 
+/**
+ * The avatar's link. Always LIFTED, never the stretched one (#1893): where the
+ * actor is the body's target, the actor's NAME carries the overlay and this
+ * points at the same place, so lifting it costs nothing and keeps the disc
+ * individually clickable either way.
+ */
 function MaybeLink({ href, children }: { href: string | null; children: React.ReactNode }) {
   if (!href) return <>{children}</>
-  return <Link to={href} style={{ flexShrink: 0 }}>{children}</Link>
+  return <Link to={href} style={{ flexShrink: 0, ...FEED_BODY_LIFTED }}>{children}</Link>
 }
