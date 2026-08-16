@@ -18,7 +18,7 @@
  * the `[data-theme="dark"]` cascade on those variables, with nothing in this
  * file to know about it.
  */
-import { EditorView } from "@codemirror/view";
+import { EditorView, drawSelection } from "@codemirror/view";
 import type { Extension } from "@codemirror/state";
 import type { CSSProperties } from "react";
 
@@ -44,10 +44,19 @@ export const BODY_EDITOR_HOST_STYLE: CSSProperties = {
 /**
  * CodeMirror's code-editor defaults, undone.
  *
- * Every value here is structural or `inherit`; the one colour is
- * `currentColor`, which resolves to the skin's own ink.
+ * Every value here is structural or `inherit`; the only colours are
+ * `currentColor` and a mix of it, which resolve to the skin's own ink.
+ *
+ * The list, so the next person does not re-derive it:
+ *
+ * - the editor's own ground and focus outline (`&`, `&.cm-focused`)
+ * - monospace and a code editor's 1.4 line-height (`.cm-scroller`)
+ * - the gutter padding on content and lines
+ * - the placeholder colour
+ * - **the caret's height** — see `BODY_EDITOR_SELECTION` below
+ * - **the caret's colour and the selection's** — same
  */
-export const BODY_EDITOR_BASE_THEME: Extension = EditorView.theme({
+const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   "&": {
     // Fill the host, including the part of it the skin's min-height created.
     flex: "1 1 auto",
@@ -68,9 +77,6 @@ export const BODY_EDITOR_BASE_THEME: Extension = EditorView.theme({
     // The base theme pads the content and every line to clear a code editor's
     // gutter. There is no gutter here, and the skin owns the padding.
     padding: 0,
-    // `&light .cm-content` hardcodes a black caret, which is invisible on the
-    // dark fields half these skins draw. `currentColor` is the skin's ink.
-    caretColor: "currentColor",
   },
   ".cm-line": { padding: 0 },
   // The placeholder is the quiet label tier wearing CodeMirror's name for it, so
@@ -78,4 +84,85 @@ export const BODY_EDITOR_BASE_THEME: Extension = EditorView.theme({
   // this theme is mounted inside all eight faction skins' body fields, and the
   // global neutral is unreachable from the root a frame repoints (#1819).
   ".cm-placeholder": { color: "var(--label-ink)" },
+
+  // ---- The caret and the selection CodeMirror now draws (#1852) ----
+  //
+  // `.cm-cursor` inherits `borderLeft: 1.2px solid black` from the base theme,
+  // and the `&dark` override that would lighten it never applies: this editor
+  // is never marked a dark CodeMirror theme, so the base theme's `&light` class
+  // is on the wrapper in both site themes. Black is invisible on the dark
+  // fields half these skins draw — the same hazard the old `caretColor` line
+  // named, moved to the element that draws the caret now.
+  //
+  // Specificity note, because it is load-bearing rather than decorative: an
+  // `EditorView.theme` rule and a base-theme rule of equal specificity are
+  // separated only by mount order, and this module mounts after the base theme.
+  // (0,2,0) here therefore beats the base theme's (0,2,0).
+  ".cm-cursor": { borderLeftColor: "currentColor" },
+
+  // The selection background base-themes to `#d9d9d9`/`#222` unfocused and
+  // `#d7d4f0`/`#233` focused — code-editor greys and an indigo, on eight
+  // faction grounds. One `currentColor` mix instead: the skin's own ink,
+  // thinned, so it lands on whatever ground that skin drew and follows the
+  // `[data-theme="dark"]` cascade for free through the ink it derives from.
+  //
+  // BOTH selectors are needed and neither is redundant. The focused base rule
+  // is (0,5,0) — `&light.cm-focused > .cm-scroller > .cm-selectionLayer
+  // .cm-selectionBackground` — so a bare `.cm-selectionBackground` at (0,2,0)
+  // would lose to it and the composer would show CodeMirror's indigo exactly
+  // when someone is using it. The first selector matches that shape; the second
+  // covers the blurred selection at (0,3,0), over the base theme's (0,2,0).
+  //
+  // ponytail: one ratio for all eight skins in both themes, unmeasured against
+  // any of their grounds — 22% keeps a mid-ink wash near 5:1 for the text that
+  // draws on top of it, which is the number that matters, but "visible enough
+  // to read as a selection" is an eyeball question. If one ground turns out too
+  // close, the upgrade is a `--composer-selection-tint` variable in index.css
+  // that this rule reads and a skin may repoint — not eight literals here.
+  "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionLayer .cm-selectionBackground":
+    { background: "color-mix(in srgb, currentColor 22%, transparent)" },
 });
+
+/**
+ * The caret, drawn by CodeMirror instead of by the browser (#1852).
+ *
+ * Without this, the caret in the composer body is the NATIVE one. A native
+ * caret in a contenteditable is sized to the line box, and every skin sets a
+ * reading line-height of 1.6–1.85 on its body field — so the caret stood a
+ * third taller than the text beside it, and CSS exposes no height control for
+ * it (`caret-color` is the whole surface area).
+ *
+ * `drawSelection()` hides the native caret and selection and paints its own.
+ * `RectangleMarker.forRange` sizes the drawn cursor from `coordsAtPos` —
+ * `pos.bottom - pos.top`, the text node's box, explicitly not `.cm-line`'s — so
+ * it is text-height by construction. No magic number, and nothing to re-tune
+ * when a skin's line-height moves. The skins' line-heights are the body copy's
+ * reading measure and were not the bug.
+ *
+ * Shipped WITH the theme rather than beside it in the extension list, because
+ * the two halves are inert apart: `drawSelection()` alone drops CodeMirror's
+ * code-editor greys onto eight faction grounds, and the rules above style
+ * elements that only exist once it mounts them.
+ *
+ * What it costs, none of it verified in a browser (#1852 asks for exactly this
+ * and an agent worktree has none):
+ *
+ * - **Screen-reader selection.** `drawSelection()` hides the native selection
+ *   in CSS only — the `hideNativeSelection` theme paints `::selection`
+ *   transparent — and the DOM Selection an AT reads is still written. The
+ *   `nativeSelectionHidden` facet it also sets is read in exactly one place in
+ *   `@codemirror/view`, and only to skip cursor-assoc enforcement. So there is
+ *   a source-level reason to expect no regression; there is not a measurement.
+ * - **Cursor assoc under line wrapping.** That skipped enforcement is real and
+ *   this editor has `lineWrapping` on: at a soft wrap the caret may sit at the
+ *   end of one visual line where it used to move to the start of the next.
+ * - **IME composition.** Composition still runs in the contenteditable, but
+ *   the caret inside a preedit is now a drawn element updated on selection
+ *   change, and CodeMirror defers updates while a composition is pending.
+ */
+const BODY_EDITOR_SELECTION: Extension = drawSelection();
+
+export const BODY_EDITOR_BASE_THEME: Extension = [
+  BODY_EDITOR_SELECTION,
+  BODY_EDITOR_SKIN_THEME,
+];

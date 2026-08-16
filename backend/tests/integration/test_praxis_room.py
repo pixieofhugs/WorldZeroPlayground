@@ -14,7 +14,9 @@ each seeding a document from the same text and merging into two copies of it.
 """
 
 import asyncio
-from contextlib import asynccontextmanager
+import io
+import linecache
+from contextlib import asynccontextmanager, suppress
 from typing import Any, AsyncIterator, Callable
 
 import pytest
@@ -50,6 +52,89 @@ from services.praxis_room import (
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
 _TIMEOUT_SECONDS = 5.0
+
+#: The ceiling on the waits here that are not a poll — a client connecting or
+#: disconnecting, the room server starting or stopping, a cancelled socket task
+#: unwinding (#1930).
+#:
+#: Every one of them was unbounded, and a hang in any of them surfaced as
+#: ``pytest-timeout`` firing at 60s with a stack ending in
+#: ``EpollSelector.select`` — the event loop asleep, which names neither end of
+#: the socket. Both observed hangs left every polled wait uncovered, so they were
+#: in one of these.
+#:
+#: It has to stay well under pytest-timeout's 60s so the seam is named before the
+#: backstop fires. Worst case is one trip plus the ceilings the unwinding then
+#: passes through: two nested clients, ``aclose`` and the server stopping — 4 x
+#: 10s, which still leaves headroom.
+_CEILING_SECONDS = 10.0
+
+
+def _await_chain(task: asyncio.Task) -> str:
+    """Where ``task`` is suspended, outermost coroutine first.
+
+    ``Task.get_stack`` is not enough: a suspended coroutine's frame has no
+    ``f_back``, so it prints the *one* outermost line and stops — which for a
+    socket task is ``await self.rooms.serve(...)`` and nothing about why. Walking
+    ``cr_await`` instead gives the whole chain down to the await that is stuck.
+    """
+    lines: list[str] = []
+    awaited: Any = task.get_coro()
+    seen: set[int] = set()
+    while awaited is not None and id(awaited) not in seen:
+        seen.add(id(awaited))
+        frame = getattr(awaited, "cr_frame", None) or getattr(awaited, "gi_frame", None)
+        if frame is not None:
+            source = linecache.getline(frame.f_code.co_filename, frame.f_lineno).strip()
+            lines.append(
+                f'  File "{frame.f_code.co_filename}", line {frame.f_lineno},'
+                f" in {frame.f_code.co_name}\n    {source}"
+            )
+        awaited = getattr(awaited, "cr_await", None) or getattr(
+            awaited, "gi_yieldfrom", None
+        )
+    return "\n".join(lines) or "  <no frames>"
+
+
+def _pending_task_dump() -> str:
+    """Every unfinished task on this loop, and where it is waiting.
+
+    A socket has two ends, and a hang needs both of them to diagnose.
+    ``pytest-timeout`` dumps *threads*, and every task in this suite shares one
+    thread, so its report shows the loop asleep and nothing else — which is
+    exactly what #1930 arrived as. This is the other half.
+    """
+    buffer = io.StringIO()
+    # Everything except the caller: this task's own stack is the one the failure
+    # is already raised from, and under pytest it is mostly plugin frames.
+    running = asyncio.current_task()
+    tasks = sorted(
+        (task for task in asyncio.all_tasks() if task is not running),
+        key=lambda task: task.get_name(),
+    )
+    buffer.write(f"\n\n--- {len(tasks)} other pending task(s) on this event loop ---")
+    for task in tasks:
+        state = "cancelling" if task.cancelling() else "pending"
+        buffer.write(f"\n\n== {task.get_name()} [{state}]\n")
+        try:
+            buffer.write(_await_chain(task))
+        except Exception as exc:  # pragma: no cover — diagnostics must not raise
+            buffer.write(f"  <could not read stack: {exc!r}>")
+    return buffer.getvalue()
+
+
+@asynccontextmanager
+async def _bounded(description: str) -> AsyncIterator[None]:
+    """Give an otherwise unbounded wait a ceiling and a name (#1930)."""
+    try:
+        async with asyncio.timeout(_CEILING_SECONDS):
+            yield
+    except TimeoutError:
+        raise AssertionError(
+            f"timed out after {_CEILING_SECONDS}s waiting for "
+            f"{description}{_pending_task_dump()}"
+        ) from None
+
 
 #: The mount ``main.py`` puts the room app behind, read off the live app rather
 #: than restated here — the prefix is the mount's to own, and a test holding its
@@ -181,6 +266,7 @@ class _Rooms:
         #: it reads as a room bug rather than as the harness bug it is.
         self.sessions = sessions
         self._tasks: list[asyncio.Task] = []
+        self._sockets: list[_Socket] = []
 
     async def open(
         self,
@@ -218,6 +304,7 @@ class _Rooms:
             "headers": headers,
         }
 
+        self._sockets.append(socket)
         self._tasks.append(
             asyncio.create_task(
                 (through or self.app)(scope, socket.receive, socket.send)
@@ -253,13 +340,50 @@ class _Rooms:
         return None if room is None else room.ydoc
 
     async def aclose(self) -> None:
-        for task in self._tasks:
+        """Hang every socket up, then cancel whatever is left (#1930).
+
+        **The disconnect is what ends these tasks; the cancel is the backstop.**
+        This used to cancel outright. Roughly once in 400 cycles a raw
+        ``Task.cancel`` on a socket task suspended in the task group inside
+        :meth:`_RoomConnection._receive` left it wedged: the task counted the
+        cancellation (``cancelling() == 1``) and stayed asleep in anyio's
+        ``TaskGroup.__aexit__``, while that group's cancel scope still read
+        ``cancel_called is False`` — so neither half of the revoke race was ever
+        told to stop, and the loop went idle with the room still open. That is
+        #1930, whose CI signature is a 60s pytest-timeout ending in
+        ``EpollSelector.select``.
+
+        Hanging up avoids the question. It is also what a real client does:
+        ``websocket.disconnect`` unwinds the serve loop through the door the room
+        already has, with no cancellation involved on the happy path.
+
+        ``asyncio.wait`` rather than ``await task`` for the ceiling:
+        :meth:`PraxisRoomServer.release` runs its half of the teardown inside
+        ``anyio.CancelScope(shield=True)``, and that shield holds against a plain
+        ``Task.cancel`` — so a ceiling that works by cancelling *this* task would
+        not reach a socket stuck in there. Giving up on the wait does.
+        """
+        if not self._tasks:
+            return
+        for socket in self._sockets:
+            await socket.disconnect()
+        _, pending = await asyncio.wait(self._tasks, timeout=_CEILING_SECONDS)
+        for task in pending:
             task.cancel()
+        if pending:
+            _, pending = await asyncio.wait(pending, timeout=_CEILING_SECONDS)
         for task in self._tasks:
-            try:
-                await task
-            except (asyncio.CancelledError, Exception):
-                pass
+            # Read the outcome so a cancelled or failed socket task is not
+            # reported as an unretrieved exception on some later, unrelated test.
+            if task.done():
+                with suppress(asyncio.CancelledError, Exception):
+                    task.result()
+        if pending:
+            raise AssertionError(
+                f"{len(pending)} praxis-room socket task(s) were still running "
+                f"{_CEILING_SECONDS}s after being hung up on and cancelled."
+                f"{_pending_task_dump()}"
+            )
 
 
 @asynccontextmanager
@@ -288,11 +412,18 @@ async def running_rooms(
     # process-wide database session.
     monkeypatch.setattr(praxis_room.PRAXIS_ROOM_APP, "rooms", server)
     rooms = _Rooms(server, sessions)
-    async with server:
-        try:
-            yield rooms
-        finally:
-            await rooms.aclose()
+    # ``__aenter__``/``__aexit__`` by hand rather than ``async with server``:
+    # the ceilings belong on the two ends, not around the test body. The body's
+    # own waits are already bounded by :func:`_wait_for`, and a clock around it
+    # would be a second timeout competing with pytest-timeout's.
+    async with _bounded("the room server to start"):
+        await server.__aenter__()
+    try:
+        yield rooms
+    finally:
+        await rooms.aclose()
+        async with _bounded("the room server to stop"):
+            await server.__aexit__(None, None, None)
 
 
 @asynccontextmanager
@@ -303,8 +434,14 @@ async def client_doc(socket: _Socket) -> AsyncIterator[Doc]:
     everything in it arrives from the server.
     """
     doc = Doc()
-    async with Provider(doc, _ChannelAdapter(socket)):
+    provider = Provider(doc, _ChannelAdapter(socket))
+    async with _bounded(f"the client on {socket.path} to connect"):
+        await provider.__aenter__()
+    try:
         yield doc
+    finally:
+        async with _bounded(f"the client on {socket.path} to disconnect"):
+            await provider.__aexit__(None, None, None)
 
 
 async def _wait_for(predicate: Callable[[], bool], description: str) -> None:
@@ -314,7 +451,9 @@ async def _wait_for(predicate: Callable[[], bool], description: str) -> None:
         if predicate():
             return
         await asyncio.sleep(0.01)
-    raise AssertionError(f"timed out waiting for {description}")
+    raise AssertionError(
+        f"timed out waiting for {description}{_pending_task_dump()}"
+    )
 
 
 def _body(doc: Doc) -> str:
