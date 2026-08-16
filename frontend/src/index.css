@@ -3456,7 +3456,11 @@
        --gem-size   overall box in px (task-card ~24 → roster ~34)
        --gem-stroke paint for the outline: a faction colour, or the
                     --faction-default-rainbow gradient for unaffiliated
-       --gem-ink    numeral colour (unaffiliated uses the rainbow class below)
+       --gem-ink    numeral colour. `currentColor` for a known faction, so the
+                    numeral takes the ink of the surface the gem landed on and
+                    the sentence above stays true — it was the faction hue until
+                    #1932, which is 1.96:1 on the app page. Unaffiliated passes
+                    `transparent` and takes the rainbow class below.
        --gem-glow   colour cast around the shape
      The outline is a gradient-capable "border": a filled lozenge whose middle
      is masked out. That is what lets the rainbow stroke and the solid faction
