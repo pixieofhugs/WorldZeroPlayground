@@ -66,7 +66,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
       {/* Signup outcome — the CTA arrived with the shared card (ADR-0056), so
           the message that answers it has to arrive too. */}
       {signupMsg && (
-        <p className={`font-body content-text mt-3 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'border-red-300 text-red-600'}`}>
+        <p className={`font-body content-text mt-3 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'danger-edge danger-text'}`}>
           {signupMsg.msg}
         </p>
       )}
@@ -76,15 +76,13 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         {loading && tasks.length === 0 ? (
           <p className="font-body text-muted">{t('listPage.loading')}</p>
         ) : error ? (
-          <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+          <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
             {t('mobile.loadError')}
           </p>
         ) : tasks.length === 0 ? (
           <TaskListEmpty state={state} />
         ) : (
-          /* `scanning-surface`: the mobile half of the same browsing list, so
-             the WOW flip (#1716) reaches both form factors. */
-          <div className="scanning-surface flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
             {isMetatask ? (
               <MetataskSeal metatasks={tasks} />
             ) : (

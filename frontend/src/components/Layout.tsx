@@ -8,6 +8,7 @@ import FactionBackdrop from './backdrop/FactionBackdrop'
 import LevelUpWatcher from './LevelUpWatcher'
 import InvitationWatcher from './InvitationWatcher'
 import NavBar from './NavBar'
+import { flushPendingCasts } from './vote/pendingCasts'
 import MobileHeader from './layout/MobileHeader'
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
@@ -38,6 +39,14 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+
+  // A vote queued but not yet sent must not sit out its debounce across a
+  // navigation (#1895). A vote control usually unmounts with its page and
+  // flushes itself; this catches one that survives the route change — the
+  // reconciled-in-place arrangement above is exactly what lets a subtree do so.
+  useEffect(() => {
+    flushPendingCasts()
   }, [pathname])
 
   useEffect(() => {

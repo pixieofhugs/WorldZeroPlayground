@@ -111,11 +111,11 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     expect(html, 'the unaffiliated spectrum ring').toContain('--faction-default-rainbow-conic')
   })
 
-  // The one named hazard (#783): albescent registers no `sigil` row, so the
-  // dispatcher used to hand it the unaffiliated ring while its own cross-hair
-  // sat in components/sigil/. Resolved inside FactionSigil, not here — this
-  // asserts the card GETS the right mark, which is all the card may know.
-  it('gets albescent its own cross-hair, without a branch in the card', () => {
+  // #783's named hazard, inverted by #1891. Albescent's cross-hair is DELETED:
+  // a mark nobody else wears is a tell, and this card is read by strangers. The
+  // card is still slug-blind — it asks `FactionSigil` and takes what it is
+  // given — so what is asserted is that the answer is now the ordinary one.
+  it('gets albescent the same mark as everyone unthemed, not one of its own', () => {
     const rings = (html: string) => html.split('--faction-default-rainbow-conic').length - 1
     const albescent = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="albescent" level={1} score={0} />,
@@ -123,16 +123,14 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     const unaffiliated = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="na" level={1} score={0} />,
     )
-    // Its own mark, and since #1658 its own ink: the cross-hair is stroked from
-    // the spectrum's stops rather than the flat reveal ink. Asserted at the
-    // dispatcher in factionSigil.test.tsx; this only pins that the card is
-    // still handed it.
-    expect(albescent, "albescent's spectrum-stroked mark").toContain('--faction-default-stop-1')
-    // na wears the spectrum TWICE — portrait hoop and sigil. Albescent keeps the
-    // hoop (it is unthemed on purpose, #783) and the sigil is the one thing that
-    // differs, so counting the ring is what tells the two apart.
+    // No cross-hair: the mark was seven parts stroked from a <linearGradient>
+    // built out of the --faction-default-stop-* tokens.
+    expect(albescent, 'the deleted cross-hair').not.toContain('<linearGradient')
+    // Both now wear the spectrum TWICE — portrait hoop and sigil. Counting the
+    // ring used to be what told the two apart; that it no longer does is the
+    // point of the change.
     expect(rings(unaffiliated), 'na: hoop + sigil').toBe(2)
-    expect(rings(albescent), 'albescent: hoop only, the sigil is its own').toBe(1)
+    expect(rings(albescent), 'albescent: hoop + sigil, same as na').toBe(2)
   })
 })
 

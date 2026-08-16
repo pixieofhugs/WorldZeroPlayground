@@ -114,6 +114,20 @@ ERA_1_FACTIONS = {
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
+    # Albescent holds every OTHER faction's perk (#1871). The values below are
+    # its FLOOR, not its final deal: `inherits_faction_perks` makes
+    # `EraConfig.__post_init__` widen each axis to the best any faction in this
+    # era holds, so UA's habit bonus, WOW's level jump, Coven's collab bonus,
+    # Everymen's Double Dipper, Snide's duel gamble and Ephemerists' Task Vision
+    # all arrive here without being pasted — and so does the perk of a faction
+    # added to this dict tomorrow. Read `ERA_1.factions["albescent"]`, never
+    # this literal.
+    #
+    # Two perks are Albescent's OWN and so are declared, not inherited: the
+    # rejoin, and the metatask level bypass. Snide's duel deal comes across
+    # WHOLE — 2.0 win AND 0.0 loss, not the softer 0.5 a per-axis maximum would
+    # keep. Owner ruling: "they have so many other advantages, they can deal
+    # with the full snide deal."
     "albescent": FactionConfig(
         slug="albescent",
         can_always_rejoin=True,       # can always be rejoined after defecting
@@ -123,6 +137,8 @@ ERA_1_FACTIONS = {
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
+        can_apply_metatask_at_any_level=True,   # may apply metatasks at any level
+        inherits_faction_perks=True,            # every other faction's perk, too
     ),
     "na": FactionConfig(
         slug="na",
@@ -297,6 +313,13 @@ ERA_1 = EraConfig(
     tasks=ERA_1_TASKS,
     level_profiles=ERA_1_LEVEL_PROFILES,
     # Ephemerists' Task Vision perk: they may create praxes on retired tasks.
+    #
+    # THIS IS A PERK, AND IT DOES NOT LIVE ON FactionConfig (#1871). Perks have
+    # two homes — the dataclass fields above and this frozenset — and an audit
+    # that reads only the first half misses it, which is exactly how Albescent
+    # came to be missing Task Vision. Albescent is NOT listed here by hand: it
+    # carries `inherits_faction_perks`, so `EraConfig.__post_init__` adds it
+    # whenever anyone else is in this set.
     allow_praxis_on_retired_task_factions=frozenset({"ephemerists"}),
     # Collab invites reach across levels and factions on purpose (#1511) — a
     # level-1 character of any faction may be invited onto a level-6 task and

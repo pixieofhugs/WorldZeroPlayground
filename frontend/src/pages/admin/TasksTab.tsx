@@ -13,7 +13,11 @@ import type { AdminTaskRow } from "./adminTaskRows";
 import TaskImportPanel from "./TaskImportPanel";
 import { extractError } from "../../utils/errors";
 import { useGameConfig } from "../../hooks/useGameConfig";
-import { factionName, UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
+import {
+  factionName,
+  isFactionHiddenFromChoosers,
+  UNAFFILIATED_FACTION_SLUG,
+} from "../../utils/factions";
 
 type StatusFilter = "all" | "pending" | "active" | "retired";
 
@@ -48,9 +52,16 @@ export default function TasksTab() {
   // choice for a task: for a TASK the slug means cross-faction (open to all),
   // not "unaffiliated player", so it gets the tab's existing cross-faction
   // wording rather than the faction catalog's player-facing name.
-  const factionOptions = (gameConfig?.factions ?? []).map(
-    (faction) => faction.slug,
-  );
+  //
+  // NOT reveal-gated by its source, unlike every other faction chooser: this
+  // reads `/game-config`, which serves the whole era roster to anyone, where
+  // `useFactions()` reads the viewer-scoped `/factions`. So `albescent` was in
+  // this <select> for every admin, revealed or not (#1891). It is a chooser, so
+  // the row is REMOVED rather than masked — `na` is already in this list under
+  // its own cross-faction wording, and a masked row would sit beside it.
+  const factionOptions = (gameConfig?.factions ?? [])
+    .map((faction) => faction.slug)
+    .filter((slug) => !isFactionHiddenFromChoosers(slug));
   const factionOptionLabel = (slug: string): string =>
     slug === UNAFFILIATED_FACTION_SLUG
       ? t("tasks.crossFaction")
@@ -141,12 +152,12 @@ export default function TasksTab() {
 
   if (loading)
     return <div className="font-body text-muted content-text">{t("common:loading")}</div>;
-  if (error) return <p className="font-body content-text text-red-600">{error}</p>;
+  if (error) return <p className="font-body content-text danger-text">{error}</p>;
 
   return (
     <div>
       {actionError && (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2 mb-4">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">
           {actionError}
         </p>
       )}

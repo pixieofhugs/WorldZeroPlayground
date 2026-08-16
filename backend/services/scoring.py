@@ -1,5 +1,6 @@
+from decimal import ROUND_HALF_UP, Decimal
 from math import floor
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from faction_slugs import CROSS_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
@@ -11,6 +12,45 @@ COLLABORATION_MODE_SOLO = "solo"
 COLLABORATION_MODE_COLLAB = "collab"
 COLLABORATION_MODE_DUEL = "duel"
 SNIDE_FACTION_SLUG = "snide"
+
+_WHOLE = Decimal(1)
+
+
+def exact(value: Union[int, float, Decimal]) -> Decimal:
+    """The ``Decimal`` for the number ``value`` *prints* as, not its binary value.
+
+    ``Decimal(1.1)`` is 1.1000000000000000888178…; ``Decimal(str(1.1))`` is
+    exactly ``1.1``. Every era modifier is authored as a short decimal literal
+    (`collab_own_modifier=1.1`), and ``repr`` of a float is the shortest string
+    that round-trips, so the printed form is always the intended one.
+
+    This is the seam that keeps #1578 fixed: score arithmetic done through
+    ``exact`` cannot produce ``110.00000000000001`` for 100 × 1.1, so "exactly
+    a half" stays a fact about the score rather than about IEEE-754.
+    """
+    return value if isinstance(value, Decimal) else Decimal(str(value))
+
+
+def round_half_up(value: Union[int, float, Decimal]) -> int:
+    """Bank a score to a whole number, rounding an exact half **up** (#1578).
+
+    Neither builtin does this:
+
+    - ``int()`` truncates toward zero, so a true 49.9 banks as 49 (ADR-0053).
+    - ``round()`` is banker's rounding — half-to-*even* — so ``round(38.5)``
+      is 38 while ``round(37.5)`` is 38 too. A half went up or down on the
+      parity of the integer beneath it, which no player could discover.
+
+    Half up is the only rule a player would guess, and a game about doing real
+    things should not keep a house edge on ties. Deliberately **not**
+    ``int(x + 0.5)``: that reintroduces float error at exactly the boundary it
+    is meant to settle.
+
+    Negative inputs round away from zero (-0.5 → -1). The scoring path never
+    produces one — every term in ``compute_praxis_score`` is non-negative — so
+    that case is unreachable rather than chosen.
+    """
+    return int(exact(value).quantize(_WHOLE, rounding=ROUND_HALF_UP))
 
 
 def compute_vote_budget(score: int, era: EraConfig = CURRENT_ERA) -> int:
@@ -176,9 +216,21 @@ def compute_praxis_score(
       (owner ruling): habit and faction alignment are different incentives, and
       folding it inside would make the same ability worth 50% more under an era
       with a 1.2 own-faction modifier than under Era 1's 1.0.
+
+    Evaluated in ``Decimal`` and returned as ``float`` (#1578). The multipliers
+    are decimal literals in the era config, so binary multiplication grew a tail
+    — 100 × 1.1 came back as ``110.00000000000001``, and Coven's ×1.1 pushed
+    three of four halves just over the line while leaving the fourth on it. The
+    returned float is the nearest double to the exact decimal, which round-trips
+    through ``str``; every caller that sums or banks these goes back through
+    ``exact`` first. The return type stays ``float`` on purpose: ``Decimal``
+    here would reach ``Contribution.total``, the praxis wire schema and every
+    reader, to fix a defect that only bites at the banking step.
     """
-    return (
-        (task_point_value + meta_task_points) * faction_multiplier * duel_multiplier
-        + total_stars
-        + habit_bonus
+    return float(
+        exact(task_point_value + meta_task_points)
+        * exact(faction_multiplier)
+        * exact(duel_multiplier)
+        + exact(total_stars)
+        + exact(habit_bonus)
     )

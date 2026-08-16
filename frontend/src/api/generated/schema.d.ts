@@ -916,7 +916,11 @@ export interface paths {
         };
         /**
          * Get Game Config
-         * @description Return current era game configuration. No auth required.
+         * @description Return current era game configuration.
+         *
+         *     Optional auth — anonymous callers stay anonymous and get the public answer.
+         *     The account is read only to decide which level-ladder rungs this caller may
+         *     be told about (``services.progression.visible_level_profiles``).
          */
         get: operations["get_game_config_game_config_get"];
         put?: never;
@@ -1583,9 +1587,12 @@ export interface paths {
         put?: never;
         /**
          * Unblock Relationship Route
-         * @description Reverse a block (ADR-0009). Either party can unblock; the edge returns to
-         *     active. Separate route from PUT /{id} (block) so the two actions don't
-         *     collide.
+         * @description Reverse a block. Either party can unblock; the edge returns to active.
+         *     Separate route from PUT /{id} (block) so the two actions don't collide.
+         *
+         *     ADR-0009, superseded by ADR-0077 — under which a block is its own record
+         *     and unblock is that record's deletion, authored by the blocker alone. This
+         *     route still implements ADR-0009.
          */
         post: operations["unblock_relationship_route_relationships__relationship_id__unblock_post"];
         delete?: never;
@@ -6028,7 +6035,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -6039,6 +6048,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GameConfigOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

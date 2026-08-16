@@ -3,7 +3,8 @@
 **Status:** Accepted
 **Date:** 2026-07-30
 **Relates to:** ADR-0031 (backend emits keys; the catalog owns taunt wording),
-ADR-0009 (a block is mutual and visible), the 2026-07-30 architecture audit
+ADR-0077 (a block is its own record — superseding ADR-0009, which this ADR was
+written against), the 2026-07-30 architecture audit
 (which found the taunt write path had never been wired)
 **Builds on:** the one-way **relationship edge** model (CONTEXT.md) — a foe
 declaration is directional and instant, with no acceptance handshake
@@ -25,8 +26,9 @@ some mutual/either-direction blend.
 ## Decision
 
 **Declaring a foe subscribes you to that rival's taunts.** A taunt from sender
-S reaches recipient R only when R holds an **active foe edge → S**. A block on
-either edge in the pair silences it (Blocked wins, ADR-0009). Era transitions
+S reaches recipient R only when R holds an **active foe edge → S**. A block
+between the pair silences it in both directions (ADR-0077; ADR-0009 while the
+block still rides on the edge, where either blocked edge is what wins). Era transitions
 and admin recalculations are silent: taunts arise only from organic play.
 
 Three triggers, each hooked where the fact it reports is produced:

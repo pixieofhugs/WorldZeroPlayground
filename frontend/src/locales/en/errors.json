@@ -66,6 +66,7 @@
     "FACTION_ALBESCENT_NOT_AT_CREATION": "Albescent is joined in the field, not chosen at creation.",
 
     "CHARACTER_NAME_REQUIRED": "A chosen name is required.",
+    "CHARACTER_DEPARTED_NOT_RESTORABLE": "This life was ended by its player and cannot be restored.",
 
     "PRAXIS_NOT_OWNER": "You do not own this praxis.",
     "PRAXIS_NOT_OPEN_FOR_COMMENTS": "This praxis is not open for comments.",
