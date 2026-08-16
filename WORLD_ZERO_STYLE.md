@@ -468,6 +468,22 @@ Size and tracking overrides are the same tell. **11 size pins** (`text-[9px]`, `
 
 One site refused the rule and is worth knowing about: the **logged-out vote gate** takes `.label-heading`, not the caption. Its nine faction treatments override size, face, ink and — for two of them — casing, so the only thing the class still contributes is the uppercase the other seven rely on, and `.label-caption` sets `text-transform: none`. **When a class is doing nothing but supply a default its callers depend on, the tier question is which default, not which intent.**
 
+### Button and card-meta chrome is on the same floor, and a RESTATEMENT is why it could not move one site at a time (#1783)
+
+`.btn-primary`, `.btn-outline` and `.card-meta` sat below the tier the two role classes had already been walked up to — buttons at `--text-sm` (9px), card meta at `--text-xs` (8px), the ramp's bottom two rungs. All three are uppercase and letter-spaced, which is the **heading** register, so `--text-md` is the step they join. Not `--text-lg`: the caption is nominally the larger of the two only because it drops the casing, and pulling caps up to match the number un-matches the voices.
+
+**Owner ruling: a button label is text a player must read TO ACT, which is a stronger case than a caption's, not a weaker one.** #769 had ruled the duel seal's buttons stay at 9px "as button chrome"; that settled a decorative seal, not the primary action chrome of the whole site, and it did not carry.
+
+**The reason this had to move at the class and could not be swept is a shape worth recognising anywhere.** Twenty-five sites named the two smallest steps in an inline `style`, and **19 of them were RESTATEMENTS rather than overrides** — a component typing the button's own font size next to `className="btn-primary"`, the same number by intent. A restatement reads as redundant and is the opposite of redundant: an inline style wins, so every one of the 19 would have pinned its own button at 9px on the day the class moved, and *nothing warns you* — no test fails, no lint fires, the class is correct and the page is wrong. Raising one of them individually is the mirror failure: it desynchronises that button from every other button on the site. **So the only two coherent moves are "move the class and delete every restatement" and "do nothing", and raising the inline sites while leaving the class is worse than either.** They are deleted, not edited; a swap leaves the fork in place for the next move to find.
+
+Three things the census turned up that a `className` grep would not have.
+
+**Count with a tool, and count the twins.** The issue said 20 and the tool said 19; #1608's own headline of "461 sites" was really 241 classes plus ~121 inline twins. The instrument is `__tests__/labelTierSweep.test.ts`, which greps the **size token** rather than a class name, because the population that hides is a `CSSProperties` object laundered through a data structure. Its allow-list is the point of the file rather than an exemption from it: each surviving hit carries a written reason, and it went from 25 to 6.
+
+**A Tailwind utility is a third twin, and it beats the class.** Eighteen `.btn-*` sites across admin carry `text-xs` (12px), which wins over the component layer — those are *overrides*, an admin density decision, and they stay. But one of them **also** carried the inline 9px, so a dormant 12px override sat under a live 9px one and the button rendered 3px below its own siblings. Deleting the inline value there activates the utility rather than landing on the class, which is the opposite of a no-op. **Before deleting a restatement, read every layer under it.**
+
+**A hand-rolled twin resolves itself once the pair moves together.** The praxis detail's withdraw-confirm was left behind by the earlier sweep for a sharper reason than the rest: it stands *beside* a `.btn-outline` cancel, and raising one of a visible pair is worse than raising neither. The fix is not to give it a number — it is to make it wear the class it was imitating, keeping only its fill, rule, ink, pad and square corner inline. The same reasoning retired eight hand-rolled copies of the feed's action label into `.feed-action`, which is deliberately **not** `.btn-*` (weight 700, 0.1em tracking, a denser pad and a `--badge-*` fill are dress a design owns) but now reads the same `--text-md`. **Two families stepping off one token is the goal; flattening them into one class would have been a restyle nobody asked for.**
+
 ---
 
 ## 4a. Spacing
