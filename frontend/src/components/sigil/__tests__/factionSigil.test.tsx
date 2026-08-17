@@ -39,10 +39,17 @@ describe("FactionSigil dispatcher (#659)", () => {
     expect(html).not.toContain("#");
   });
 
-  it("renders the S.N.I.D.E. circled-A for the snide slug", () => {
+  it("renders the S.N.I.D.E. brushed A for the snide slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="snide" />);
-    expect(html).toContain('viewBox="0 0 48 48"');
     expect(html).toContain("var(--faction-snide-acid)");
+    // Sigil Studies v2: four FILLED shapes cantered at -22deg, on a viewBox
+    // that bleeds 8 units past the drawing so the legs break out of the ring.
+    // The old mark was stroked on a 48-unit square; both facts are the reason
+    // it held at 84px and smudged at 15.
+    expect(html).toContain('viewBox="-8 -8 116 116"');
+    expect(html).toContain("rotate(-22 50 50)");
+    expect(html.match(/<path /g), "ring, two legs, crossbar").toHaveLength(4);
+    expect(html).not.toContain('viewBox="0 0 48 48"');
   });
 
   it("renders the Everymen meshed cogs for the everymen slug", () => {
