@@ -110,19 +110,39 @@
 #     the inner rim was black on near-black. They take `--fdl-glyph`, the twin
 #     that flips the other way.
 #
-# THE 27 THAT STAY are six ornament classes, and the reason is per class rather
-# than per line — this is one metaphor at a time, not a residue of stragglers:
+# THE 27 THAT STAY were six ornament classes, and the reason is per class rather
+# than per line — this is one metaphor at a time, not a residue of stragglers.
+# Class 1 is now cleared, so the standing figure is 8 FILES / 13 VIOLATIONS.
+# Classes 2-6 keep their numbers: the site comments and two PR bodies cite them,
+# and renumbering a decision record to close a gap loses the trail.
 #
-#   1. THE FLAT OFFSET PRINT SHADOW (16 of the 27, and the whole reason
-#      S.N.I.D.E. and the Everymen banner dominate what is left).
-#      `8px 10px 0`, `6px 8px 0`, `4px 5px 0`, `2px 3px 0` — zero blur, hard
-#      edge, at eight alphas from 0.2 to 0.55. It is a flyposter's register
-#      offset, not elevation: nothing is lifted, so `--color-cast-shadow` would
-#      be a category error, and its 0.25 -> 0.7 dark lift would swell a printed
-#      mark. Collapsing the eight alphas onto ONE print token is the honest next
-#      move and it is a NEW rung — deferred only because the blocking sheet is
-#      ~1.0 KB from its FAIL line. That is the upgrade path; take it when the
-#      sheet has room.
+#   1. THE FLAT OFFSET PRINT SHADOW — CLEARED. `8px 10px 0` down to `1px 2px 0`,
+#      zero blur, hard edge. A flyposter's register offset, not elevation:
+#      nothing is lifted, so `--color-cast-shadow` was a category error and its
+#      0.25 -> 0.7 dark lift would have swelled a printed mark.
+#      The room the entry above was waiting for arrived — #2073 moved ornament
+#      motion into a deferred sheet, leaving 2,571 bytes to the CSS FAIL line —
+#      and the rung is `--color-print-offset`, one theme-invariant black declared
+#      beside the cast tokens with the reasoning at the declaration.
+#      NOT the "collapse the eight alphas onto one" the entry above proposed.
+#      Taken literally that is a look change at up to sixteen of seventeen sites,
+#      and nobody in this batch has a browser. So: ONE name, and STRENGTH STAYS AT
+#      THE CALL SITE as `color-mix(in srgb, var(--color-print-offset) 32%,
+#      transparent)` — the split group 2 already made for blur and offset ("a
+#      component's business"), and the one `shared.tsx`'s byline rule makes as a
+#      percentage of `currentColor`. All nine strengths (0.2 / 0.22 / 0.3 / 0.32 /
+#      0.35 / 0.4 / 0.45 / 0.5 / 0.55) are preserved exactly, so the change
+#      repaints no pixel; `printOffsetToken.test.ts` pins them. Collapsing them
+#      is still the honest next move and is now a one-line change — it is a DESIGN
+#      call for someone with eyes on seventeen surfaces, not a sweep.
+#      Seventeen sites, not sixteen: FOURTEEN were on the rule's report and THREE
+#      were laundered past it (`SnideProfileBody`'s `filter: drop-shadow(...)`,
+#      `SnideFactionBody`'s `shadow=` prop that `TaskCrown` applies as a filter,
+#      and `SnideFieldDesk`'s `const CARD_SHADOW`). The class was already the
+#      house pattern on ~20 OTHER surfaces that draw this mark as
+#      `color-mix(in srgb, <token> N%, transparent)`; these were the holdouts.
+#      Four files came off the list. Byte cost: one declaration, comments
+#      stripped by the minifier.
 #   2. HALFTONE DOT FIELDS — `rgba(182,255,46,0.055)` / `0.08` acid on ink,
 #      `rgba(20,17,11,0.06)` ink on the medallion. The list's own example. The
 #      density IS the drawing; `--faction-snide-acid` names the tier the strip
@@ -148,12 +168,33 @@
 #      `-weak`/`-medium` mistake index.css already records. `EphemeristsSeal`'s
 #      disc casts onto `--faction-ephemerists-plate-bg`, declared once with no
 #      dark override — nothing behind it flips, so neither cast rung applies.
+#   7. ONE SURVIVOR THE SIX CLASSES NEVER COVERED, found while clearing class 1
+#      and RECORDED HERE RATHER THAN DECIDED — deciding it was not that pass's
+#      job, and an undecided line with no reason on it is how a list stops being
+#      a decision record. `SnideFactionHero`'s staggered stat chits fill with a
+#      bare `rgba(0,0,0,0.34)`: a translucent WASH on the flyposted wall, not the
+#      offset register on the same element and not classes 2-6. It is the 13th of
+#      the 13. What a decider has to weigh: the wall it darkens is
+#      `--faction-snide-ink`, theme-invariant, so this is a hue question — does
+#      the chit want a named wash rung, the way `-note-wash-acid`/`-pink` have
+#      one? — and not a dark-mode one.
 #
-# TWO BLIND SPOTS confirmed still open, neither a hole in the regex (§4a):
-# `filter:` is not a COLOUR_PROP, so `SnideFactionBody`'s
-# `shadow="drop-shadow(2px 2px 0 rgba(0,0,0,.35))"` prop — which `TaskCrown`
-# applies as `filter` — is unreported; it is class 1 above. And a module
-# constant is Gap D wearing paint, which is how `const green` survived.
+# THE BLIND SPOTS, restated after class 1 (none is a hole in the regex, §4a).
+# Both shapes are still open in the RULE; the class-1 instances of them are gone.
+#   - `filter:` is not a COLOUR_PROP. It hid two class-1 sites outright — the
+#     `SnideProfileBody` credential frame and the `shadow=` prop `TaskCrown`
+#     applies as a filter — and neither was ever on this list, so the list is a
+#     FLOOR on this class and not its extent. Both now read the print token.
+#   - A module constant is Gap D wearing paint (how `const green` survived, and
+#     how `SnideFieldDesk`'s `const CARD_SHADOW` did).
+#   - A property name the rule does not judge, which is the same shape one step
+#     further out and was not previously written down. `EverymenProfileBody`
+#     paints raw `rgba()` through `pageOverlay`, `barTrack` and a
+#     `dividerColor=` JSX attribute; `SnideFieldDesk` through
+#     `const HALFTONE`. None is class 1 — they are grain, a track and a rule —
+#     and none is reportable, so none can go on this list. They are named here so
+#     the next reader knows the list undercounts, and they belong to whoever
+#     takes classes 2-7.
 src/components/factionHero/SnideFactionHero.tsx
 src/components/metataskSeal/skins/EphemeristsSeal.tsx
 src/components/metataskSeal/skins/SnideSeal.tsx
@@ -162,7 +203,3 @@ src/components/selectCard/FactionSelectCard.tsx
 src/components/vote/CovenVote.tsx
 src/components/vote/EphemeristsVote.tsx
 src/components/vote/SnideVote.tsx
-src/pages/characterProfile/archetypes/EverymenProfileBody.tsx
-src/pages/characterProfile/archetypes/SnideProfileBody.tsx
-src/pages/factionDetail/archetypes/SnideFactionBody.tsx
-src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx
