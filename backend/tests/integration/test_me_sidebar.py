@@ -113,6 +113,12 @@ async def test_sidebar_runs_the_feed_fan_out_once(
     ``_compute_counts`` is 15 COUNT queries the rail has no use for: it draws no
     badges. The old ``requests``/``global`` fetches paid for 30 of them between
     them, every signed-in page load.
+
+    ``_fetch_sources`` is counted for #1587: the activity COUNT is
+    ``len()`` of the fan-out this already runs, taken before the five-item
+    slice. A second fan-out — or a ``_count_sources`` pass over the twelve
+    ``all`` sources — would be the cost this whole path exists to avoid, and
+    #1532/#1539 cut it from 31 connections to 2.
     """
     archive_view_calls = 0
     real_get_archive_view = activity_feed_service.get_archive_view
@@ -130,11 +136,33 @@ async def test_sidebar_runs_the_feed_fan_out_once(
         count_calls += 1
         return await real_compute_counts(*args, **kwargs)
 
+    fetch_calls = 0
+    real_fetch_sources = activity_feed_service._fetch_sources
+
+    async def counting_fetch_sources(*args, **kwargs):
+        nonlocal fetch_calls
+        fetch_calls += 1
+        return await real_fetch_sources(*args, **kwargs)
+
+    count_source_calls = 0
+    real_count_sources = activity_feed_service._count_sources
+
+    async def counting_count_sources(*args, **kwargs):
+        nonlocal count_source_calls
+        count_source_calls += 1
+        return await real_count_sources(*args, **kwargs)
+
     monkeypatch.setattr(
         activity_feed_service, "get_archive_view", counting_get_archive_view
     )
     monkeypatch.setattr(
         activity_feed_service, "_compute_counts", counting_compute_counts
+    )
+    monkeypatch.setattr(
+        activity_feed_service, "_fetch_sources", counting_fetch_sources
+    )
+    monkeypatch.setattr(
+        activity_feed_service, "_count_sources", counting_count_sources
     )
 
     response = await client.get("/me/sidebar", headers=auth_headers)
@@ -145,6 +173,14 @@ async def test_sidebar_runs_the_feed_fan_out_once(
         f"the service ran {archive_view_calls} times"
     )
     assert count_calls == 0, "the rail draws no badges and must not pay for counts"
+    assert fetch_calls == 1, (
+        f"the activity count is len() of the fan-out already run, not a second "
+        f"one; _fetch_sources ran {fetch_calls} times (#1587)"
+    )
+    assert count_source_calls == 1, (
+        f"only the four request sources are COUNTed; _count_sources ran "
+        f"{count_source_calls} times (#1587)"
+    )
 
 
 @pytest.mark.asyncio
@@ -178,8 +214,100 @@ async def test_sidebar_without_a_character_is_empty(
     assert response.json() == {
         "pending_requests_count": 0,
         "global_activity": [],
+        "global_activity_count": 0,
         "active_praxes": [],
     }
+
+
+@pytest.mark.asyncio
+async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    era: Era,
+    auth_headers: dict,
+):
+    """#1587: the count is the fan-out's length, taken BEFORE the glance slice.
+
+    Twelve active tasks are twelve ``global_task`` items. The panel still ships
+    five — it is a glance, and #1456 is not being undone — but the number beside
+    it must be twelve-and-then-some, not five. Reading ``len(global_activity)``
+    on the client is exactly the display cap this issue exists to replace.
+
+    The equality against the ``all`` view is the ADR-0036 half: the number and
+    the list a player reaches by tapping it are the same fetch, so the badge
+    cannot disagree with what it leads to.
+    """
+    from models.task import TaskStatus
+
+    db_session.add_all([
+        Task(
+            title=f"Task {n}",
+            description="news",
+            point_value=10,
+            level_required=0,
+            status=TaskStatus.active,
+            created_by=character.id,
+            primary_faction_slug="ua",
+        )
+        for n in range(12)
+    ])
+    await db_session.commit()
+
+    response = await client.get("/me/sidebar", headers=auth_headers)
+    assert response.status_code == 200
+    body = response.json()
+
+    assert len(body["global_activity"]) == activity_feed_service.SIDEBAR_ACTIVITY_LIMIT
+    assert body["global_activity_count"] >= 12, (
+        "twelve pieces of news must count as twelve; the panel said "
+        f"{body['global_activity_count']}"
+    )
+
+    feed = await client.get(
+        "/activity-feed",
+        params={"filter": "all", "limit": 100},
+        headers=auth_headers,
+    )
+    assert feed.status_code == 200
+    assert body["global_activity_count"] == len(feed.json()["items"]), (
+        "the number and the list it leads to are one fetch (ADR-0036)"
+    )
+
+
+@pytest.mark.asyncio
+async def test_activity_count_excludes_the_requests_it_is_shown_beside(
+    client: AsyncClient,
+    four_request_types: int,
+    auth_headers: dict,
+):
+    """#1587: an outstanding obligation is counted ONCE, on the requests side.
+
+    The mobile home draws one row from these two numbers — requests first, news
+    second. Both come out of ``_visible_types`` on the same response, so ADR-0070's
+    partition is what stops a collab invite being counted in both. A count taken
+    over ``FILTER_ALL``'s *sources* rather than its *visible types* would pass a
+    typecheck and silently double-count all four.
+    """
+    response = await client.get("/me/sidebar", headers=auth_headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["pending_requests_count"] == four_request_types
+
+    feed = await client.get(
+        "/activity-feed",
+        params={"filter": "all", "limit": 100},
+        headers=auth_headers,
+    )
+    assert feed.status_code == 200
+    items = feed.json()["items"]
+    assert {item["type"] for item in items}.isdisjoint(REQUEST_ITEM_TYPES), (
+        "guard: the live `all` view already excludes the obligations"
+    )
+    assert body["global_activity_count"] == len(items), (
+        f"the news count {body['global_activity_count']} must be the "
+        f"obligation-free view's {len(items)} — no item on both rows"
+    )
 
 
 @pytest_asyncio.fixture
@@ -220,6 +348,9 @@ async def four_request_types(
     open_duel_praxis = praxis(character2.id, PraxisType.duel, "Open duel")
     answered_duel_praxis = praxis(character2.id, PraxisType.duel, "Answered duel")
     # --- awaiting_submission: viewer un-submitted (counts) / submitted (not) -
+    # Both carry their creator's member row as well as the viewer's: an
+    # obligation needs somebody else to be party to it (#1980), and a collab the
+    # creator never appeared in is a shape no route can produce.
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
     db_session.add_all([
@@ -257,7 +388,15 @@ async def four_request_types(
             praxis_id=my_turn.id, character_id=character.id, has_submitted=False
         ),
         PraxisMember(
+            praxis_id=my_turn.id, character_id=character2.id, has_submitted=False
+        ),
+        PraxisMember(
             praxis_id=already_filed.id, character_id=character.id, has_submitted=True
+        ),
+        # The twin differs from ``my_turn`` in ``has_submitted`` and nothing
+        # else, or it stops being a twin.
+        PraxisMember(
+            praxis_id=already_filed.id, character_id=character2.id, has_submitted=False
         ),
         # A letter for a faction the viewer does NOT stand in is an open ask...
         InvitationLetter(

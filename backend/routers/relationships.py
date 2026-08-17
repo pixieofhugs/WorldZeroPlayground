@@ -8,7 +8,9 @@ from errors import ErrorCode, raise_coded
 from dependencies import get_current_character
 from models.character import Character
 from models.relationship import RelationshipType
+from schemas.block import BlockCreate, BlockListItem
 from schemas.relationship import RelationshipCreate, RelationshipListItem
+from services.block_service import block_character, list_blocks, unblock_character
 from services.relationship_service import (
     block_relationship,
     build_relationship_item,
@@ -20,6 +22,56 @@ from services.relationship_service import (
 router = APIRouter()
 
 
+# ---------------------------------------------------------------------------
+# Blocks (ADR-0077) — their own record, addressed by character, never by edge.
+# ---------------------------------------------------------------------------
+
+
+@router.get("/blocks", response_model=list[BlockListItem])
+async def list_my_blocks(
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+) -> list[BlockListItem]:
+    """List the characters the authenticated character has blocked.
+
+    Outgoing only. A block is silent to the party it names (ADR-0077), so there
+    is no route, field or error anywhere that reports an *incoming* one.
+    """
+    return await list_blocks(character_id=character.id, session=session)
+
+
+@router.post("/blocks", response_model=BlockListItem, status_code=201)
+async def block_character_route(
+    data: BlockCreate,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+) -> BlockListItem:
+    """Block a character. No friend or foe declaration is needed or created.
+
+    Idempotent — blocking someone already blocked answers the existing record.
+    """
+    return await block_character(
+        blocker=character,
+        character_id=data.character_id,
+        session=session,
+    )
+
+
+@router.delete("/blocks/{character_id}", status_code=204)
+async def unblock_character_route(
+    character_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    """Lift a block. Only the character who created it can, and it restores
+    nothing else — no friend or foe edge comes back with it (ADR-0077)."""
+    await unblock_character(
+        blocker=character,
+        character_id=character_id,
+        session=session,
+    )
+
+
 @router.get("", response_model=list[RelationshipListItem])
 async def list_my_relationships(
     type: Optional[str] = None,
@@ -27,7 +79,12 @@ async def list_my_relationships(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ) -> list[RelationshipListItem]:
-    """List the authenticated character's outgoing relationships with display status."""
+    """List the authenticated character's outgoing friend and foe declarations,
+    with the display status their pairing produces.
+
+    Outgoing only, and blocks do not appear here at all — a block is its own
+    record with its own route (ADR-0077).
+    """
     return await list_relationships(
         character_id=character.id,
         session=session,
@@ -63,7 +120,12 @@ async def block_relationship_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ) -> RelationshipListItem:
-    """Block a relationship. Either party can block."""
+    """Block the other party to this relationship, addressed by the edge's id.
+
+    Superseded by `POST /relationships/blocks`, which takes a character id and
+    needs no edge (ADR-0077). Kept for one release while the client moves;
+    retires with #1907.
+    """
     relationship = await block_relationship(
         relationship_id=relationship_id,
         character=character,
@@ -78,12 +140,13 @@ async def unblock_relationship_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ) -> RelationshipListItem:
-    """Reverse a block. Either party can unblock; the edge returns to active.
-    Separate route from PUT /{id} (block) so the two actions don't collide.
+    """Lift this caller's block on the other party to this relationship,
+    addressed by the edge's id.
 
-    ADR-0009, superseded by ADR-0077 — under which a block is its own record
-    and unblock is that record's deletion, authored by the blocker alone. This
-    route still implements ADR-0009."""
+    Superseded by `DELETE /relationships/blocks/{character_id}` (ADR-0077).
+    Kept for one release while the client moves; retires with #1907. Only the
+    blocker's own record is deleted, and no edge changes.
+    """
     relationship = await unblock_relationship(
         relationship_id=relationship_id,
         character=character,

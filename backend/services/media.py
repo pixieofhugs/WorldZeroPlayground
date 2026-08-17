@@ -10,7 +10,9 @@ import io
 import logging
 import os
 import re
+import shutil
 import uuid
+from typing import Iterable
 
 from fastapi import HTTPException, UploadFile
 from PIL import Image
@@ -139,6 +141,123 @@ def resolve_stored_media_path(
     if not resolved.startswith(resolved_root + os.sep):
         return None
     return resolved
+
+
+#: Appended to ``MEDIA_ROOT`` to name the quarantine directory (#1593).
+#:
+#: A **sibling** of ``MEDIA_ROOT``, and that is the load-bearing part. Two
+#: separate things scan the mounted tree and would each undo the withdrawal if
+#: quarantine lived inside it:
+#:
+#: * ``StaticFiles`` serves everything under ``MEDIA_ROOT`` unauthenticated, so
+#:   a subdirectory is still a URL — the file would move and stay fetchable.
+#: * ``services.media_sweep`` walks ``MEDIA_ROOT`` and calls anything no row
+#:   claims *by its stored path* an orphan. A quarantined file is claimed by a
+#:   row whose ``file_path`` resolves to the mounted location, so the sweeper
+#:   would classify it as unclaimed and offer to delete exactly the evidence a
+#:   hide is meant to preserve.
+#:
+#: Suffixing the realpath rather than joining a name guarantees the sibling
+#: relationship structurally: ``<root>-quarantine`` can never satisfy the
+#: ``startswith(root + os.sep)`` containment test that both scanners use.
+#:
+#: DEPLOYMENT NOTE: on Render ``MEDIA_ROOT`` is itself the persistent disk's
+#: mount point (``/app/media``), so its sibling ``/app/media-quarantine`` sits
+#: on the container filesystem and would not survive a deploy. Pointing
+#: ``MEDIA_ROOT`` one level *inside* the disk (``/app/media/uploads``) puts the
+#: quarantine sibling (``/app/media/uploads-quarantine``) on the disk too. That
+#: is a one-line env change plus a one-time move of the existing tree, and it
+#: lives in ``render.yaml``, outside this package.
+QUARANTINE_SUFFIX = "-quarantine"
+
+
+def quarantine_root() -> str:
+    """Absolute path of the unmounted directory a hidden praxis's media moves to.
+
+    Resolved per call rather than at import: ``settings.MEDIA_ROOT`` is
+    monkeypatched per test, and the value has to follow it.
+    """
+    return os.path.realpath(settings.MEDIA_ROOT) + QUARANTINE_SUFFIX
+
+
+def _move_stored_media(stored_path: str, source_root: str, target_root: str) -> bool:
+    """Move one stored relative path between two roots. Best-effort, idempotent.
+
+    Both ends go through ``resolve_stored_media_path``, so the same "is this a
+    file we own?" predicate that guards every other filesystem operation guards
+    this one at *both* roots — a ``..`` or absolute value cannot be moved out of
+    the mount or written outside quarantine.
+
+    The relative path is the whole mapping: it is ``MediaItem.file_path``
+    verbatim, mirrored under the other root, so nothing absolute is stored and
+    the reverse move cannot land somewhere else. ``file_path`` is written once
+    by ``process_and_save_media`` and never rewritten, so a praxis or character
+    that changed hands still restores to the path its own row names.
+
+    Repeat-safe on both legs. A missing source means the file is already at the
+    other end (or was never written) and is not an error — that is what makes
+    hiding twice, or hiding a praxis whose file is already gone, a no-op. An
+    existing target is removed first: it is a stale copy of the same upload, and
+    Windows ``rename`` refuses an existing destination.
+
+    Returns whether a file actually moved. Failures are logged and swallowed,
+    like ``delete_stored_avatar``: a filesystem problem must not block the
+    moderation decision the caller is really making.
+    """
+    source = resolve_stored_media_path(stored_path, source_root)
+    target = resolve_stored_media_path(stored_path, target_root)
+    if source is None or target is None or not os.path.isfile(source):
+        return False
+    try:
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        if os.path.exists(target):
+            os.remove(target)
+        # shutil, not os.replace: the two roots can be different filesystems
+        # (a mounted disk and the image beneath it), where rename raises EXDEV.
+        shutil.move(source, target)
+    except OSError:
+        logger.warning("Could not move media %s out of %s", stored_path, source_root)
+        return False
+    # Every upload owns its directory (#1336), so the move empties the one it
+    # left. rmdir refuses a non-empty directory, which is the guard we want for
+    # pre-#1336 rows that still share a per-praxis directory.
+    try:
+        os.rmdir(os.path.dirname(source))
+    except OSError:
+        pass
+    return True
+
+
+def withdraw_media_from_mount(stored_paths: Iterable[str]) -> int:
+    """Move these files out of ``MEDIA_ROOT`` into quarantine. Returns the count moved.
+
+    Publication withdrawn, evidence kept: the bytes survive at a path no route
+    serves, so a moderator can still open them and un-hiding is reversible.
+
+    ponytail: quarantine is deliberately outside the orphan sweep's reach, so a
+    praxis deleted while hidden leaves its files there with no row pointing at
+    them and nothing to collect them. Upgrade path when that matters: a
+    ``--include-quarantine`` mode on ``scripts/sweep_orphan_media.py`` that
+    reconciles the quarantine tree against ``MediaItem`` rows the same way.
+    """
+    return sum(
+        _move_stored_media(path, settings.MEDIA_ROOT, quarantine_root())
+        for path in stored_paths
+    )
+
+
+def restore_media_to_mount(stored_paths: Iterable[str]) -> int:
+    """Move these files back under ``MEDIA_ROOT``. Returns the count moved.
+
+    The reverse leg, and a no-op for anything not in quarantine — so it is safe
+    to call on every non-hidden moderation rather than only on the transition
+    out of ``hidden``, which is what makes the disk self-heal if a withdrawal
+    half-completed.
+    """
+    return sum(
+        _move_stored_media(path, quarantine_root(), settings.MEDIA_ROOT)
+        for path in stored_paths
+    )
 
 
 def delete_stored_avatar(stored_avatar_url: str | None, character_id: int) -> None:
@@ -360,8 +479,12 @@ __all__ = [
     "MEDIA_FILENAME_MAX_LEN",
     "MEDIA_MAX_BYTES",
     "MEDIA_MAX_MEGABYTES",
+    "QUARANTINE_SUFFIX",
     "delete_stored_avatar",
     "process_and_save_avatar",
     "process_and_save_media",
+    "quarantine_root",
     "resolve_stored_media_path",
+    "restore_media_to_mount",
+    "withdraw_media_from_mount",
 ]

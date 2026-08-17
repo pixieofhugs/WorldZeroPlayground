@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 from game_config import CURRENT_ERA, EraConfig
 from services.level_jump import available_level_reach, faction_level_jump_reach
+from services.meta_task import faction_bypasses_metatask_level
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,14 @@ class CharacterCapabilities:
     can_see_retired_tasks: bool
     can_see_pending_tasks: bool
     can_comment: bool
+    # The metatask APPLY gate (#1973) — pinning an existing metatask to a
+    # praxis, which is NOT ``can_propose_metatask`` (authoring a new one).
+    # Mirrors ``services.praxis_metatask._check_metatask_eligibility``: the
+    # level gate, OR a faction that carries the bypass. Like the level-jump
+    # fields below and unlike the propose/see flags, is_admin does NOT
+    # short-circuit it — ``apply_metatask`` has no admin escape hatch, so True
+    # here would offer an admin a control the API answers 403 to.
+    can_apply_metatask: bool
     # Faction level-jump allowance (#811). ``level_jump_reach`` is what the
     # faction grants at all (0 for everyone without the ability), so the frontend
     # can hide the affordance entirely rather than showing it spent forever;
@@ -51,6 +60,13 @@ def compute_capabilities(
     level_jump_used_at_level: int | None = None,
 ) -> CharacterCapabilities:
     granted_reach = faction_level_jump_reach(faction_slug, era)
+    # Stated once, before the three returns, because it is the same answer in
+    # all of them: the faction bypass alone is enough, so an Albescent member
+    # below the level still gets True (#1973).
+    can_apply_metatask = character_level is not None and (
+        faction_bypasses_metatask_level(faction_slug, era)
+        or character_level >= era.metatask_apply_level
+    )
     if character_level is None:
         jump_available = False
     else:
@@ -68,6 +84,7 @@ def compute_capabilities(
             can_see_retired_tasks=True,
             can_see_pending_tasks=True,
             can_comment=True,
+            can_apply_metatask=can_apply_metatask,
             level_jump_reach=granted_reach,
             level_jump_available=jump_available,
         )
@@ -79,6 +96,7 @@ def compute_capabilities(
             can_see_retired_tasks=False,
             can_see_pending_tasks=False,
             can_comment=False,
+            can_apply_metatask=False,
             level_jump_reach=granted_reach,
             level_jump_available=False,
         )
@@ -103,6 +121,7 @@ def compute_capabilities(
         ),
         can_see_pending_tasks=character_level >= era.level_to_see_pending_tasks,
         can_comment=character_level >= era.comment_level_required,
+        can_apply_metatask=can_apply_metatask,
         level_jump_reach=granted_reach,
         level_jump_available=jump_available,
     )

@@ -15,7 +15,7 @@ import { scanPageForContrast, type Finding } from './contrastScan'
  * rendered. #595 fixed one instance of it by hand; siblings survived. This
  * walks all of them.
  *
- * Coverage: 7 factions x 2 themes x 2 viewports. Both viewports because the
+ * Coverage: 9 factions x 2 themes x 2 viewports. Both viewports because the
  * mobile archetypes are separate files and diverge (#565) — a desktop-only
  * sweep would report green over half the app.
  *
@@ -39,14 +39,39 @@ const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 const BASELINE_OUT = process.env.CONTRAST_BASELINE_OUT
 
 /**
- * WHO IS SWEPT, and who is not (#1903). Seven slugs — `coven` is a registered
- * faction with its own CSS key and its own archetypes (CovenPraxisCard,
- * CovenAvatar, CovenBackdrop) and is NOT one of them, and neither is `na`, the
- * unaffiliated identity every player starts in (ADR-0030). Their skins have
- * never been walked here. Read a green run as "these seven cleared AA", not as
- * "the app cleared AA"; the roster gap is a known one and belongs with #1727.
+ * WHO IS SWEPT (#1903, closed by #1727). Nine slugs — every identity a
+ * character can actually carry.
+ *
+ * `coven` and `na` were the gap. Coven is a registered faction with its own
+ * CSS key and its own archetypes (CovenPraxisCard, CovenAvatar,
+ * CovenBackdrop); `na` is the unaffiliated identity EVERY player starts in
+ * (ADR-0030), reading the `--faction-default-*` set and the rainbow through
+ * factionFill. Neither had ever been walked, so the most-worn skin in the app
+ * was the one nothing measured. Narrowing what the sweep looks at while two
+ * whole identities went unlooked-at would have been optimising the wrong axis.
+ *
+ * Both are in `CURRENT_ERA.factions`, so `/auth/dev-login?faction=` places a
+ * character in either without a new seam. `na` has no faction page of its own
+ * — `/factions/na` renders FactionDetail's not-found guard, which is a real
+ * chrome surface and worth a look, just not the bespoke one the other eight
+ * get.
+ *
+ * NEITHER HAS AN OBSERVED CEILING. They fall to the `default` row of
+ * UNMEASURABLE_CEILING, which is a starting guess, not a measurement — the
+ * first run that includes them is the measurement. If they blow it, the
+ * failure message prints the whole population and says what to set.
  */
-const FACTIONS = ['ua', 'everymen', 'wow', 'snide', 'ephemerists', 'singularity', 'albescent'] as const
+const FACTIONS = [
+  'ua',
+  'everymen',
+  'wow',
+  'snide',
+  'ephemerists',
+  'singularity',
+  'albescent',
+  'coven',
+  'na',
+] as const
 const THEMES = ['light', 'dark'] as const
 const VIEWPORTS = {
   // Matches useFormFactor's single 767px breakpoint (#494) — no tablet tier.
@@ -145,6 +170,20 @@ const SHARED_ROUTES = ['/', '/tasks', '/praxis', '/leaderboard', '/factions']
  * already reasons about its darkest stop (2.93:1), so the token test carries
  * that pairing.
  *
+ * THESE NUMBERS ARE NOW SLACK, DELIBERATELY (#1727). Every row above was
+ * measured against a scanner that wrote off any fill with an opaque stop.
+ * Banding resolves most of them, so the real counts are lower — probably much
+ * lower — and the assertion is `<=`, so slack passes. It is not lowered here
+ * because a ceiling set from arithmetic in a browserless worktree is the guess
+ * #1762 already had to correct once. The next run prints the whole population
+ * per test; lower each row to what it prints, then, and not before. Leaving it
+ * slack for one night costs a night of ratchet; guessing it low costs a red
+ * suite that says nothing about contrast.
+ *
+ * `coven` and `na` joined the roster in the same change and have no row of
+ * their own, so they read `default` — the same guess, with the same
+ * instruction.
+ *
  * Lower one whenever a fix retires a surface. Raising one is a decision, not a
  * chore: it means a new fill is now hiding text from the sweep.
  */
@@ -242,7 +281,7 @@ for (const faction of FACTIONS) {
           findings.push(...((await page.evaluate(scanPageForContrast)) as Finding[]))
         }
 
-        const { failures, stale, unmeasurable } = triageFindings(theme, findings)
+        const { failures, stale, unmeasurable, resolvedFills } = triageFindings(theme, findings)
         for (const finding of failures) emitBaseline(finding, faction, theme, viewport)
 
         // LOUD, always — including on a green run. The whole risk of the #1675
@@ -255,6 +294,19 @@ for (const faction of FACTIONS) {
             `(ceiling ${ceiling}), ${uncheckedNodes} text node(s) unchecked.\n` +
             (unmeasurable.size
               ? `${[...unmeasurable].map(([css, over]) => describeSurface(css, over)).join('\n')}\n`
+              : '  (none)\n'),
+        )
+
+        // The other half of the same honesty (#1727). These fills used to be
+        // in the block above; they are now measured against their worst stop,
+        // so any pairing appearing here for the first time has its provenance
+        // printed next to it rather than arriving as a mystery failure.
+        console.log(
+          `[contrast] ${combination}: ${resolvedFills.size} fill(s) resolved by banding, ` +
+            `${[...resolvedFills.values()].reduce((total, over) => total + over.length, 0)} text node(s) ` +
+            `newly measured.\n` +
+            (resolvedFills.size
+              ? `${[...resolvedFills].map(([css, over]) => describeSurface(css, over)).join('\n')}\n`
               : '  (none)\n'),
         )
 
