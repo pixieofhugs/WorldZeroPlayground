@@ -5,15 +5,73 @@ import i18n from '../../i18n'
  * The chassis's dismiss / restore control (Unaffiliated sheet §2a).
  *
  * "Dismissing is a one-tap, no-confirm action" — so this is a plain button with
- * no dialog behind it. It sits DORMANT at 40% opacity and comes up to full on
- * hover **or focus**: the focus half is not decoration, it is the keyboard and
- * screen-reader route to the archive, which swipe alone would not provide.
+ * no dialog behind it.
  *
  * Built once, centrally, and handed to every faction frame as a ready node
  * (`FeedFrameProps.archive`) so eight skins share one accessible control instead
  * of writing eight. It paints in `currentColor`; a frame tints it by setting
- * `color` on whatever it places the node inside.
+ * `color` on whatever it places the node inside. That indirection is what makes
+ * this ONE file the fix for #2091 rather than eight — every frame publishes its
+ * band ink here and none of them overrides the control's own colour.
+ *
+ * ── THE DORMANCY WAS THE DEFECT (#2091) ──────────────────────────────────────
+ *
+ * It used to sit at `opacity: 0.4` and come up to full on hover or focus. An
+ * alpha on the ink is a contrast cut, and this is a non-text UI control, so
+ * WCAG 1.4.11 gives it a 3:1 floor against its band. Measured on the ink every
+ * frame publishes here, over that frame's own band ground, in both themes
+ * (`__tests__/feedArchiveControl.test.tsx` re-measures all fourteen pairings —
+ * the numbers below are its output, not a hand tally):
+ *
+ *   at 40%   nine of fourteen pairings FAIL, and the two the bug was reported
+ *            on are the worst of them — the default/Albescent chassis at
+ *            **2.33:1** in dark (the screenshot on #2091) and 1.99:1 in light,
+ *            UA at 1.74–2.01:1, WOW 1.83 / 2.29, Coven 1.86–2.99, Everymen
+ *            1.92 / 1.95. Only S.N.I.D.E., Singularity, Ephemerists and the era
+ *            announcement scraped over, at 3.03–3.59:1.
+ *   at 100%  every pairing clears, and clears the 4.5:1 TEXT floor as well:
+ *            worst is UA's darkest parchment stop at 4.55:1 and Everymen's night
+ *            red at 4.59:1, best is S.N.I.D.E. at 17.82:1.
+ *
+ * So the fix is not a colour. Each frame's band ink was already measured for
+ * type on that band; spending it at full strength is what the ✕ needed, and it
+ * mints no token — #1609's rule is "does index.css already own this colour", and
+ * every one of these already did. It also brings the control in line with the
+ * Ephemerists band's own principle (see that frame's docblock): a quiet tier is
+ * a MEASURED ink, never one ink at two opacities.
+ *
+ * HOVER / FOCUS STILL ANSWERS, and the focus half is not decoration — it is the
+ * keyboard and screen-reader route to the archive, which swipe alone would not
+ * provide. It now lifts a 12% wash of the control's own ink instead of
+ * un-dimming the glyph, which leaves the glyph itself at full strength: the
+ * tightest pairing on that wash is 3.78:1 (UA, dark), so the lit state clears
+ * 1.4.11 too.
+ *
+ * THE BOX is the reporter's own suggestion and it is free — a `currentColor`
+ * hairline, the same figure `FeedChassisBand` already strikes around the status
+ * tag. It is what makes the ✕ read as a control rather than as punctuation after
+ * the timestamp, and it needs no colour of its own.
+ *
+ * ponytail: the hit target is 24px, not the 44px this repo applies everywhere
+ * else (`identityActionStyle`, every vote key). 44 is unreachable from here and
+ * not by a near miss: `EphemeristsFeedFrame` gives its masthead a FIXED
+ * `height` (30px desktop, 26px mobile) with `overflow: hidden`, so anything
+ * taller than the band is clipped — visually and for hit-testing, by any
+ * mechanism, including a padded box or an absolutely-positioned extender. 24px
+ * is the largest square that fits that band's border box on a phone and is
+ * WCAG 2.5.8's (AA) target minimum; 2.5.5's 44 is AAA. The upgrade path is to
+ * grow that band in an Ephemerists dress issue and then raise the two numbers
+ * below — this control does not need a second code path to get there.
  */
+/**
+ * The hover / focus wash, as a percentage of the control's own ink.
+ *
+ * Exported for one reason: `__tests__/feedArchiveControl.test.tsx` measures the
+ * LIT state, which no render can reach (the harness fires no events), and a
+ * percentage restated in the test would be a second place for it to drift.
+ */
+export const LIT_WASH_PCT = 12
+
 export default function FeedArchiveButton({
   onAct,
   variant = 'archive',
@@ -43,16 +101,27 @@ export default function FeedArchiveButton({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'transparent',
-        border: 'none',
+        // Ornament geometry — the drawn square's own box, not layout spacing, so
+        // it is a raw number and deliberately off the --space-* ramp (§4a), the
+        // same call `identityActionStyle` makes for its 44.
+        boxSizing: 'border-box',
+        minWidth: 24,
+        minHeight: 24,
+        background: lit
+          ? `color-mix(in srgb, currentColor ${LIT_WASH_PCT}%, transparent)`
+          : 'transparent',
+        border: '1px solid currentColor',
+        borderRadius: 'var(--radius-sm)',
         padding: 'var(--space-xs)',
         cursor: 'pointer',
         color: 'currentColor',
         fontFamily: "'Courier Prime', monospace",
-        fontSize: 'var(--text-base)',
+        // The tier the timestamp beside it already reads at (.label-caption,
+        // --text-lg): the ✕ was a rung under the fact it sits next to, which is
+        // the "small font" half of #2091.
+        fontSize: 'var(--text-lg)',
         lineHeight: 1,
-        opacity: lit ? 1 : 0.4,
-        transition: 'opacity 120ms',
+        transition: 'background-color 120ms',
       }}
     >
       <span aria-hidden>{variant === 'restore' ? '↺' : '✕'}</span>
