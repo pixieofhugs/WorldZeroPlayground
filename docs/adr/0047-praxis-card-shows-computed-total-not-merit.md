@@ -1,6 +1,31 @@
 # ADR-0047 — The praxis card shows the computed total, not Merit
 
-**Status:** Accepted
+> **Superseded by [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md)**
+> — a praxis has exactly one number, `score`, the computed total resolved for its
+> author, for every praxis type with no carve-out.
+>
+> This ADR moved the *card* to the computed total while leaving
+> `PraxisCardOut.score` as Merit, shipping the same number twice under two names.
+> ADR-0053 collapsed the two: Merit is retired as a live concept, the collab
+> carve-out below is gone (`display_multiplier` is a plain float, never `None`),
+> and the detail page's `(score − votePoints) / base` derivation — which that
+> interim state silently pinned at ×1.0 — is deleted.
+>
+> **The row policy below outlived the number it was written for.** ADR-0053 kept
+> the conditional stamp and made `scoreBreakdown()` its only resolver, so the
+> rules in *Decision* still describe live behaviour — read them through ADR-0049
+> and ADR-0053 for where they now live. One clause has since gone:
+> [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md) overturned the
+> **votes row always shows** exception (re-affirmed below on 2026-07-20), so a
+> base-only praxis now reads as a bare total instead of a total plus `+0 from
+> votes`.
+>
+> The argument below is preserved as written. It is the record of what was
+> decided in July 2026 and of what ADR-0053 and ADR-0076 had to answer; it is not
+> the live decision.
+
+**Status:** Superseded by ADR-0053 (2026-07-21); the votes-row clause separately
+superseded by ADR-0076 (2026-08-15). Accepted 2026-07-19.
 **Date:** 2026-07-19
 **Supersedes:** the "Merit (the card number)" decision in **ADR-0014**
 **Relates to:** ADR-0014 (Contribution vs Merit), ADR-0011 (duel = two solo sides),
