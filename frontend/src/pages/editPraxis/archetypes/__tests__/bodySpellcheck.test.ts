@@ -17,10 +17,15 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { bodyContentAttributes } from "../controls";
 
+// The facet accepts an attribute object OR a `(view) => Attrs` function. The
+// composer registers the plain object, which is the branch a DOM-less test can
+// read; anything else would need a view to resolve.
 function facetValue(skin: { id?: string; ariaLabel?: string }) {
   return EditorState.create({
     extensions: [EditorView.contentAttributes.of(bodyContentAttributes(skin))],
-  }).facet(EditorView.contentAttributes);
+  })
+    .facet(EditorView.contentAttributes)
+    .filter((source) => typeof source !== "function");
 }
 
 describe("the composer body editor's spell check (#1978)", () => {
