@@ -6,15 +6,21 @@
  *
  * WORLD_ZERO_STYLE §6 draws a device ONCE, and `EphemeristsMasthead` is the
  * same rule one level up: what repeats here is not a mark but an ARRANGEMENT of
- * marks. Five surfaces drew this arrangement in five places — the praxis card,
- * the task card, the praxis detail, the task detail and the feed frame — and
- * four of them declared a private `Lamp` to do it. Five copies is how the
- * palettes drifted apart: the feed frame's cluster was
- * `-term-dim` / `-term-blue` / `-term-bright` (green, blue, green) while the
- * other four were `-led-red` / `-led-amber` / `-led-green`, and nothing linked
- * them. A second declaration is invisible to the import graph and invisible to
- * rendered markup, which comes out perfectly either way — the exact failure
- * #1638/#1654 pinned for the Ephemerists plate.
+ * marks. SIX surfaces drew this arrangement in six places — the praxis card,
+ * the task card, the praxis detail, the task detail, the feed frame and the
+ * edit-praxis composer — and four of them declared a private `Lamp` to do it.
+ * Six copies is how the palettes drifted apart: the feed frame's cluster and
+ * the composer's were `-term-dim` / `-term-blue` / `-term-bright` (green, blue,
+ * green) while the other four were `-led-red` / `-led-amber` / `-led-green`,
+ * and nothing linked them. A second declaration is invisible to the import
+ * graph and invisible to rendered markup, which comes out perfectly either way
+ * — the exact failure #1638/#1654 pinned for the Ephemerists plate.
+ *
+ * The composer was the one the first pass missed, and it is worth saying how:
+ * it had no `Lamp` identifier and no LED token, so it read as clean to both
+ * source scans at once. What found it was a reporter looking at the screen.
+ * `singularityLamps.test.tsx` now names all six surfaces rather than counting
+ * them.
  *
  * ## The cluster takes no props, deliberately
  *
@@ -23,7 +29,8 @@
  * the palette would still live at the call sites, and a sixth surface could
  * still invent a trio. So the KIT owns the whole cluster — the three hues, the
  * wrapper, the pitch — and a caller mounts it. There is nothing to pass and so
- * nothing to disagree about.
+ * nothing to disagree about. That "sixth surface" was not hypothetical: the
+ * composer already existed, and it had invented exactly that trio.
  *
  * ## Colour
  *

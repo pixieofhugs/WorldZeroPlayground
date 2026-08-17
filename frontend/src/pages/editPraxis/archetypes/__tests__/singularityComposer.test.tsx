@@ -169,6 +169,35 @@ describe("Singularity composer — structure", () => {
     expect(html).not.toMatch(/#[0-9a-fA-F]{6}\b/);
   });
 
+  // #1979, second pass. #1998 made the three window lamps one kit drawing and
+  // repainted five bars with it; this bar was the sixth and nobody had counted
+  // it, so the composer went on mapping its own `[MUTED, BLUE, ACCENT]` onto
+  // three dots — green, blue, green, the exact trio the feed frame had just
+  // given up. Invisible to BOTH source scans in `singularityLamps.test.tsx`:
+  // there was no `Lamp` identifier to find and no LED token to find. The
+  // rendered bar is the only place the two palettes can be compared, so the
+  // assertion lives here, in the shape the feed frame's uses.
+  it("wears the kit's LED lamps on the window bar, not the chassis' phosphor", () => {
+    const html = render("desktop", state());
+    const TRIO = [
+      "--faction-singularity-led-red",
+      "--faction-singularity-led-amber",
+      "--faction-singularity-led-green",
+    ];
+    for (const token of TRIO) expect(html, `${token} is unpainted`).toContain(token);
+    // Scoped to the CLUSTER, not the frame: `term-dim` / `term-blue` /
+    // `term-bright` are the chassis' inks and stay everywhere else in this file
+    // (the process name, the titles, the breathing session lamp). What must not
+    // come back is a LAMP drawn in them.
+    const open = html.indexOf(TRIO[0]);
+    const close = html.indexOf(TRIO[2]);
+    // Both ends located, or the slice below is the empty string and this test
+    // asserts nothing — the shape that passes loudest while the bug ships.
+    expect(open, "the cluster is on the bar at all").toBeGreaterThan(-1);
+    expect(close).toBeGreaterThan(open);
+    expect(html.slice(open, close)).not.toContain("--faction-singularity-term-");
+  });
+
   it("renders at both widths with one breadcrumb", () => {
     for (const width of ["desktop", "mobile"] as const) {
       const html = render(width, state());
