@@ -87,13 +87,20 @@ function DesktopTasks({ state }: { state: TasksState }) {
           ) : (
             /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
+              {/* `onSignup` is offered to any signed-in viewer. Whether the slot
+                  it produces is a claim or a statement of why not is the CARD's
+                  call, off `task.signup_reason` (#1976) — gating it on
+                  `can_sign_up` here is what made this list go silent about a
+                  task it was still showing, and with the eligibility filter
+                  switched off, silent about most of them. An anonymous viewer
+                  still gets nothing: the server sends no reason to explain. */}
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
                   basePoints={task.point_value}
                   multiplier={displayMultiplierFor(task)}
-                  onSignup={user && task.can_sign_up ? handleSignup : undefined}
+                  onSignup={user ? handleSignup : undefined}
                 />
               ))}
             </div>

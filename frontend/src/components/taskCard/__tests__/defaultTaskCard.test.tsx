@@ -45,14 +45,16 @@ function markup(element: ReactElement): { html: string; text: string } {
 }
 
 function card(props: Partial<{
+  task: TaskOut
   multiplier: number
   inProgressCount: number
   onSignup: (id: number) => void
 }> = {}) {
+  const task = props.task ?? TASK
   return markup(
     <DefaultTaskCard
-      task={TASK}
-      basePoints={TASK.point_value}
+      task={task}
+      basePoints={task.point_value}
       multiplier={props.multiplier ?? 1}
       inProgressCount={props.inProgressCount ?? 0}
       onSignup={props.onSignup}
@@ -91,9 +93,24 @@ describe('na task card — content slots', () => {
     )
   })
 
-  it('hides the sign-up CTA rather than disabling it when the viewer cannot sign up', () => {
+  it('draws no action slot at all on a surface that did not ask for one', () => {
     expect(card({ onSignup: () => {} }).text).toContain(SIGNUP)
     expect(card().text, 'no onSignup → no control').not.toContain(SIGNUP)
+    expect(card().html, 'and nothing to refuse either').not.toContain('aria-disabled')
+  })
+
+  // #1976 — the ninth skin. The other eight ride the manifest loop in
+  // `factionTaskCardsV2.test.tsx`; na is the fallback skin and is only reached
+  // there through Albescent, which is na + drift (ADR-0048). It gets its own
+  // row here so the fallback is pinned in its own right.
+  it('states why sign-up is shut instead of offering a claim the server refuses', () => {
+    const { html, text } = card({
+      task: aTask({ ...TASK, level_required: 4, can_sign_up: false, signup_reason: 'below_level' }),
+      onSignup: () => {},
+    })
+    expect(text).toContain(i18n.t('tasks:detail.signup.denied.belowLevel', { level: 4 }))
+    expect(text, 'and stops calling it a sign-up').not.toContain(SIGNUP)
+    expect(html, 'not actionable, and it says so').toContain('aria-disabled="true"')
   })
 })
 
