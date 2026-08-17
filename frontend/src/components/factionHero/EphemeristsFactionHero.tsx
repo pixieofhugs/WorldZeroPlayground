@@ -80,8 +80,8 @@ export default function EphemeristsFactionHero({
   // The faction labels its own counts — page passes raw numbers only.
   const stats = [
     { value: members, label: i18n.t("feed:factionHero.ephemerists.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.ephemerists.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.ephemerists.stats.praxes") },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
   return (
     <header

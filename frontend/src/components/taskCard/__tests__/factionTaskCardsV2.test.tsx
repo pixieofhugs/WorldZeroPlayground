@@ -2,9 +2,10 @@
  * The bespoke faction task cards, v2 (#1023 wave A — ADR-0055 + ADR-0056).
  *
  * One table rather than a file per skin: every card answers the SAME contract
- * ({@link CardProps}), so the interesting assertions are identical and only the
- * per-faction signup key differs. A card that stops honouring the contract flips
- * one row red and names itself.
+ * ({@link CardProps}), so the interesting assertions are identical. A card that
+ * stops honouring the contract flips one row red and names itself. The table
+ * used to carry a per-faction signup key too; #1911 collapsed the nine into one
+ * `feed:taskCard.signup`, so the verb is a module constant now.
  *
  * Two things are pinned. First, each card is ONE responsive component: the same
  * element tree renders on both form factors and only the size set moves, so the
@@ -53,37 +54,24 @@ const TASK = aTask({
 interface Skin {
   slug: string
   Card: ComponentType<CardProps>
-  /**
-   * The faction's own signup copy — reused, never reinvented (#1020). Resolved
-   * here rather than held as a key string: `t()` takes a typed literal, and a
-   * `string` field would need a cast that defeats the catalog's key checking.
-   */
-  signup: string
 }
 
+/**
+ * The one sign-up verb all nine cards read (#1911). Resolved rather than held as
+ * a key string: `t()` takes a typed literal, and a `string` field would need a
+ * cast that defeats the catalog's key checking.
+ */
+const SIGNUP = i18n.t('feed:taskCard.signup')
+
 const SKINS: Skin[] = [
-  { slug: 'coven', Card: CovenTaskCard, signup: i18n.t('feed:taskCard.coven.signup') },
-  {
-    slug: 'ephemerists',
-    Card: EphemeristsTaskCard,
-    signup: i18n.t('feed:taskCard.ephemerists.signup'),
-  },
-  { slug: 'everymen', Card: EverymenTaskCard, signup: i18n.t('feed:taskCard.everymen.signup') },
-  {
-    // Albescent's row reads na's key ON PURPOSE, and it is the one row where
-    // that is not an oversight: the card IS the na card plus a drift
-    // (ADR-0048), and a per-faction WORD is as identifying as a per-faction
-    // hue (WORLD_ZERO_STYLE §3). `feed:taskCard.albescent.signup` still exists
-    // in the catalog, orphaned since #783 deleted the bespoke card it belonged
-    // to; wiring it back would un-hide the society on an ordinary surface.
-    slug: 'albescent',
-    Card: AlbescentTaskCard,
-    signup: i18n.t('feed:taskCard.na.signup'),
-  },
-  { slug: 'singularity', Card: SingularityTaskCard, signup: i18n.t('feed:taskCard.singularity.signup') },
-  { slug: 'snide', Card: SnideTaskCard, signup: i18n.t('feed:taskCard.snide.signup') },
-  { slug: 'ua', Card: UaTaskCard, signup: i18n.t('feed:taskCard.ua.signup') },
-  { slug: 'wow', Card: WowTaskCard, signup: i18n.t('feed:taskCard.wow.signup') },
+  { slug: 'coven', Card: CovenTaskCard },
+  { slug: 'ephemerists', Card: EphemeristsTaskCard },
+  { slug: 'everymen', Card: EverymenTaskCard },
+  { slug: 'albescent', Card: AlbescentTaskCard },
+  { slug: 'singularity', Card: SingularityTaskCard },
+  { slug: 'snide', Card: SnideTaskCard },
+  { slug: 'ua', Card: UaTaskCard },
+  { slug: 'wow', Card: WowTaskCard },
 ]
 
 /**
@@ -176,8 +164,8 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
   it('draws no action slot at all on a surface that did not ask for one', () => {
     // A character profile's task list and a faction page's roster are readouts.
     // They withhold `onSignup`, and they get neither a claim nor a refusal.
-    expect(render(skin, { onSignup: () => {} }).text).toContain(skin.signup)
-    expect(render(skin).text, 'no onSignup → no control').not.toContain(skin.signup)
+    expect(render(skin, { onSignup: () => {} }).text).toContain(SIGNUP)
+    expect(render(skin).text, 'no onSignup → no control').not.toContain(SIGNUP)
     expect(render(skin).html, 'and nothing to refuse either').not.toContain('aria-disabled')
   })
 
@@ -192,7 +180,7 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
         onSignup: () => {},
       })
       expect(text, `${reason} states why`).toContain(expected)
-      expect(text, `${reason} does not still say ${skin.signup}`).not.toContain(skin.signup)
+      expect(text, `${reason} does not still say ${SIGNUP}`).not.toContain(SIGNUP)
       // The control communicates its state rather than merely not working:
       // `aria-disabled` keeps it in the tab order and announces it, where the
       // `disabled` attribute would take it out of the tree unheard.
@@ -221,7 +209,7 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
     expect(again.html, 'still a live control').not.toContain('aria-disabled')
 
     const open = render(skin, { onSignup: () => {} })
-    expect(open.text, "the faction's own verb, unchanged").toContain(skin.signup)
+    expect(open.text, "the faction's own verb, unchanged").toContain(SIGNUP)
     expect(open.html, 'still a live control').not.toContain('aria-disabled')
   })
 })
@@ -260,7 +248,7 @@ describe.each(SKINS)('$slug task card v2 — one component, two form factors (AD
       expect(text, `${formFactor} in progress`).toContain(
         i18n.t('feed:taskCard.inProgress', { count: 6 }),
       )
-      expect(text, `${formFactor} signup`).toContain(skin.signup)
+      expect(text, `${formFactor} signup`).toContain(SIGNUP)
     }
     mocks.formFactor = 'desktop'
   })
@@ -325,12 +313,19 @@ describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => 
   })
 
   it('speaks na words — a per-faction verb is as identifying as a per-faction hue', () => {
+    // Albescent kept an orphaned verb of its own ("acknowledge") from the
+    // bespoke card #783 deleted, and this pinned that it never reached a
+    // screen: wiring it back would un-hide the society on an ordinary surface
+    // (ADR-0048 — the card IS the na card plus a drift, and a per-faction WORD
+    // is as identifying as a per-faction hue, WORLD_ZERO_STYLE §3). #1911
+    // collapsed the nine signup keys to one, which DELETED the orphan, so there
+    // is no second verb left to catch the card saying. What survives, and is
+    // what the ruling was actually about, is that the card says the shared word
+    // and paints in none of Albescent's own tokens.
     const { text, html } = markup(
       <AlbescentTaskCard task={TASK} {...props} onSignup={() => {}} />,
     )
-    expect(text).toContain(i18n.t('feed:taskCard.na.signup'))
-    expect(text, 'the orphaned pre-#783 Albescent verb must stay orphaned')
-      .not.toContain(i18n.t('feed:taskCard.albescent.signup'))
+    expect(text).toContain(SIGNUP)
     expect(html, 'no --faction-albescent-* token may reach a rendered surface')
       .not.toContain('--faction-albescent')
   })

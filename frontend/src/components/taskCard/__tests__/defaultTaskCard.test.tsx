@@ -62,7 +62,7 @@ function card(props: Partial<{
   )
 }
 
-const SIGNUP = i18n.t('feed:taskCard.na.signup')
+const SIGNUP = i18n.t('feed:taskCard.signup')
 
 describe('na task card — content slots', () => {
   // #1020 gave every card a uniform "Task {id}" eyebrow; #1124 retired the id

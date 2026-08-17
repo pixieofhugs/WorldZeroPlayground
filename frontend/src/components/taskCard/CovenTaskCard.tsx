@@ -195,7 +195,7 @@ function Sigil({ size, points }: { size: number; points: number }) {
             rather than to the label ramp (WORLD_ZERO_STYLE §4a). */}
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the sigil. */}
         <span style={{ ...CAPTION, fontSize: 8, marginTop: "var(--space-xs)" }}>
-          {i18n.t("feed:taskCard.coven.pointsUnit")}
+          {i18n.t("feed:taskCard.pointsUnit")}
         </span>
       </div>
     </div>
@@ -211,7 +211,7 @@ export default function CovenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.coven.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -295,7 +295,7 @@ export default function CovenTaskCard({
                 </span>
                 {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption set to the numeral beside it, not the label ramp. */}
                 <span style={{ ...CAPTION, fontSize: 8.5 }}>
-                  {i18n.t("feed:taskCard.coven.levelCaption")}
+                  {i18n.t("feed:taskCard.levelCaption")}
                 </span>
               </div>
 

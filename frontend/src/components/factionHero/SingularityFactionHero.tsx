@@ -57,8 +57,8 @@ export default function SingularityFactionHero({
   // sigil, never a full-width band under the blurb.
   const stats = [
     { value: members, label: i18n.t("feed:factionHero.singularity.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.singularity.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.singularity.stats.praxes") },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
 
   return (

@@ -111,7 +111,11 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `feed:factionHero\\.{F}\\.stats\\.praxes`, shared: 'feed:factionHero.stats.praxes', wording: 'Praxis submitted' },
   { banned: `feed:factionHero\\.{F}\\.stats\\.tasks`, shared: 'feed:factionHero.stats.tasks', wording: 'Tasks open' },
   { banned: `feed:taskCard\\.{F}\\.levelCaption`, shared: 'feed:taskCard.levelCaption', wording: 'Level' },
-  { banned: `feed:taskCard\\.{F}\\.pointsUnit`, shared: 'feed:taskCard.pointsUnit', wording: 'points' },
+  // "Points", not #1864's "points": the owner split the row by ROLE for #2028 —
+  // a standalone label or caption is Title Case, an inline interpolated value
+  // (`taskCard.points`, `detail.spotlightStat`) stays lowercase because it reads
+  // as a sentence. This unit word stands alone beside a figure.
+  { banned: `feed:taskCard\\.{F}\\.pointsUnit`, shared: 'feed:taskCard.pointsUnit', wording: 'Points' },
   { banned: `feed:taskCard\\.{F}\\.signup`, shared: 'feed:taskCard.signup', wording: 'Sign up' },
 
   // --- praxis.json: the comment thread ----------------------------------

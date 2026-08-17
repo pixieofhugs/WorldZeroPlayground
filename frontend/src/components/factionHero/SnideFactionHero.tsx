@@ -39,8 +39,8 @@ export default function SnideFactionHero({
 }) {
   const stats = [
     { value: members, label: i18n.t("feed:factionHero.snide.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.snide.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.snide.stats.praxes") },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
 
   return (

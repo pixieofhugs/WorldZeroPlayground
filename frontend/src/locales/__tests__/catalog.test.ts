@@ -477,13 +477,13 @@ describe('the four functional controls say one thing across every faction (#1863
 
   it('the task-card signup reads Sign up', () => {
     for (const slug of SLUGS) {
-      expect(i18n.t(`feed:taskCard.${slug}.signup` as 'feed:taskCard.na.signup')).toBe('Sign up')
+      expect(i18n.t(`feed:taskCard.${slug}.signup` as 'feed:taskCard.signup')).toBe('Sign up')
     }
     // `taskCard.albescent.signup` is deliberately NOT settled: ADR-0048 makes
     // the Albescent card the na sheet plus drift, so it renders na's verb and
     // its own is orphaned copy. `factionTaskCardsV2.test.tsx` asserts the
     // orphan never reaches a screen, which only holds while it differs.
-    expect(i18n.t('feed:taskCard.albescent.signup')).not.toBe(i18n.t('feed:taskCard.na.signup'))
+    expect(i18n.t('feed:taskCard.signup')).not.toBe(i18n.t('feed:taskCard.signup'))
   })
 
   it('the comment edited marker reads edited', () => {

@@ -111,7 +111,7 @@ function text(): string {
   return html().replace(/<[^>]*>/g, '')
 }
 
-const SIGNUP = i18n.t('feed:taskCard.na.signup')
+const SIGNUP = i18n.t('feed:taskCard.signup')
 
 describe('Tasks form-factor dispatch', () => {
   it('renders the Default mobile browse skin on mobile', () => {

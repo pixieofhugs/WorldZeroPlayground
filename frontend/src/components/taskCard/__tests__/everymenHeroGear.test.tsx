@@ -49,7 +49,7 @@ describe('Everymen task card — the hero cog', () => {
     const halves = [...markup.matchAll(/flex:1 1 0/g)].map((m) => m.index)
     expect(halves).toHaveLength(2)
 
-    const level = markup.indexOf(i18n.t('feed:taskCard.everymen.levelCaption'))
+    const level = markup.indexOf(i18n.t('feed:taskCard.levelCaption'))
     const cog = markup.indexOf(COG)
     const points = markup.indexOf(`>${POINTS}<`)
 

@@ -35,8 +35,8 @@ export default function EverymenFactionHero({
   // sourced yet (no leaderboard/aggregate endpoint) — add rows when they are.
   const stats = [
     { value: members, label: i18n.t("feed:factionHero.everymen.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.everymen.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.everymen.stats.praxes") },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
 
   return (

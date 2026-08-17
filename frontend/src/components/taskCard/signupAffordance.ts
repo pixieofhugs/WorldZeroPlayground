@@ -52,23 +52,16 @@ export interface TaskCardSignupCta {
  * there is no viewer to explain anything to) and so would only ever be offered
  * a button, which is why those surfaces still gate on the user.
  *
- * `signupLabel` is the faction's own verb, resolved by the skin because `t()`
- * takes a typed literal and a `string` parameter here would need a cast that
- * defeats the catalog's key checking.
- *
- * ponytail: `signupLabel` is a parameter only because the nine
- * `feed:taskCard.{F}.signup` keys are still nine — eight of them literally
- * "Sign up", and `locales/__tests__/catalog.test.ts` pins that. #1864 owns
- * collapsing them; when it lands this parameter loses its reason to exist and
- * the plain branch below becomes `i18n.t("tasks:" + SIGNUP_CTA_KEY)` like the
- * other three. Deliberately NOT collapsed here: ADR-0048 keeps
- * `taskCard.albescent.signup` deliberately unsettled, and that is a copy ruling,
- * not a refactor this issue gets to make in passing.
+ * The label used to arrive as a `signupLabel` parameter, because the nine
+ * `feed:taskCard.{F}.signup` keys were nine — eight of them literally "Sign up"
+ * and Albescent's `acknowledge` orphaned by ADR-0048, which makes its card the
+ * na sheet plus drift. #1911 collapsed the family to one `feed:taskCard.signup`,
+ * so there is no faction verb left for a skin to resolve and the parameter is
+ * gone with it: the label is read here, once, for all nine cards.
  */
 export function taskCardSignupCta(
   task: TaskOut,
   onSignup: ((id: number) => void) | undefined,
-  signupLabel: string,
 ): TaskCardSignupCta | null {
   if (!onSignup) return null;
 
@@ -89,6 +82,8 @@ export function taskCardSignupCta(
 
   const key = signupCtaKey(task.signup_reason);
   const label =
-    key === SIGNUP_CTA_KEY ? signupLabel : i18n.t(`tasks:${key}`, { level: task.level_required });
+    key === SIGNUP_CTA_KEY
+      ? i18n.t("feed:taskCard.signup")
+      : i18n.t(`tasks:${key}`, { level: task.level_required });
   return { label, denied: false, onPress: () => onSignup(task.id) };
 }
