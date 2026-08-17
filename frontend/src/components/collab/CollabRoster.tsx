@@ -440,6 +440,29 @@ export function CollabRoster({
                 />
               )}
 
+              {/* Done (ADR-0079) — "my part is finished", beside the approval
+                  pill rather than inside it, because the two are orthogonal: a
+                  member may be done and not have approved, or have approved
+                  without ever ticking it. Folding Done into the pill's four
+                  states would re-merge two of the three signals ADR-0079 split.
+                  Quiet, because it gates nothing and starts nothing. */}
+              {row.member?.is_done && (
+                <span
+                  className="label-caption"
+                  style={{
+                    padding: 'var(--space-xs) var(--space-sm)',
+                    borderRadius: 4,
+                    border: `1px solid ${quiet}`,
+                    background: 'transparent',
+                    color: quiet,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {collabCopy(factionSlug, 'pillDone')}
+                </span>
+              )}
+
               <StatusPill
                 row={row}
                 label={collabCopy(factionSlug, PILL_KEY_BY_STATE[row.state])}

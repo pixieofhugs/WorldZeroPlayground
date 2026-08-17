@@ -40,6 +40,7 @@ function member(
     character_id: id,
     character_display_name: name,
     has_submitted: hasSubmitted,
+    is_done: false,
     joined_at: OPENED,
     nudged_at: nudgedAt,
     submitted_at: hasSubmitted ? OPENED : null,
