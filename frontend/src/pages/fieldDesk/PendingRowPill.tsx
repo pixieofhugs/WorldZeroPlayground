@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
+import { ACTIVITY_COUNT_CAP } from '../../api/sidebar'
 import type { PendingRowState } from './useFieldDeskHome'
 
 /**
@@ -45,7 +47,7 @@ export default function PendingRowPill({
     row.kind === 'requests'
       ? t('fieldDesk.home.pending', { count: row.count })
       : row.kind === 'notifications'
-        ? t('fieldDesk.home.notifications')
+        ? newsLabel(row.count, t)
         : t('fieldDesk.home.caughtUp')
 
   const body = (
@@ -70,6 +72,30 @@ export default function PendingRowPill({
       {body}
     </Link>
   )
+}
+
+/**
+ * The middle state's words, in the only three shapes its number can take (#1587).
+ *
+ * EXACT below the cap, "50+" at or above it. `global_activity_count` is the
+ * length of a fetch whose every source stops at `SUB_QUERY_LIMIT` rows, so a
+ * total under that cap cannot have come from a truncated source and is provably
+ * the whole of it; a total at or above it is a floor. One comparison, and the
+ * figure on screen is never a lie.
+ *
+ * ZERO IS "NO NUMBER". `selectPendingRow` only reaches this state with news
+ * waiting, so a zero here means the response carried no count — a client
+ * deployed ahead of its API. It reads as the wording this row shipped with,
+ * which is true at any volume, rather than "undefined notifications".
+ */
+function newsLabel(count: number, t: TFunction<'common'>): string {
+  if (count === 0) return t('fieldDesk.home.notifications')
+  if (count >= ACTIVITY_COUNT_CAP) {
+    // `cap`, not `count`: a bare `count` would send i18next hunting for plural
+    // suffixes this one-form key does not have.
+    return t('fieldDesk.home.notificationsCapped', { cap: ACTIVITY_COUNT_CAP })
+  }
+  return t('fieldDesk.home.notificationsCount', { count })
 }
 
 /** Inline-flex so a skin that passes a `glyph` gets it set beside the words;

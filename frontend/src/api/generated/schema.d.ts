@@ -4144,6 +4144,8 @@ export interface components {
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
             global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            /** Global Activity Count */
+            global_activity_count: number;
             /** Pending Requests Count */
             pending_requests_count: number;
         };

@@ -38,4 +38,21 @@ class SidebarOut(WireModel):
     #: it deliberately, with a client-side normalizer landed first, or not at
     #: all. What the field CONTAINS is this comment, not its name.
     global_activity: list[ActivityFeedItem]
+    #: How many items that panel is a five-item GLANCE of (#1587).
+    #:
+    #: Free: ``get_sidebar_feed`` already fetches every row and slices; this is
+    #: the length before the slice, so the number and the list are one fetch
+    #: and cannot disagree (ADR-0036). No extra query, no extra fan-out.
+    #:
+    #: A FLOOR, not always an exact total — each source stops at
+    #: ``SUB_QUERY_LIMIT``. A total below that is provably exact (no source can
+    #: have hit its cap while the sum is under it), which is the whole of the
+    #: client's "12 notifications" vs "50+ notifications" rule.
+    #:
+    #: New here, so it is the deploy-skew case the ``global_activity`` note
+    #: describes from the other side: adding a field is safe backwards (an old
+    #: client ignores it), but a frontend AHEAD of its API reads ``undefined``.
+    #: The client degrades that to its previous wording ("New updates") rather
+    #: than rendering a number it was not sent.
+    global_activity_count: int
     active_praxes: list[PraxisCardOut]
