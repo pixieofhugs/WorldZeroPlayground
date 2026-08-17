@@ -242,6 +242,12 @@ export default function SnideTaskCard({
             the CTA, the knockout cuts, the pen circle. */}
         <CardMasthead
           slug="snide"
+          /* The brushed A is drawn 24 where the kit draws 20 (#2035), and it
+             bleeds 2px into the band's inset on each side — which is the mark
+             doing what it was drawn to do: `SnideSigil`'s four shapes break out
+             of their own circle at four points. This used to be a stylesheet
+             hook reaching into the sigil's markup; #2056 made it the prop. */
+          markSize={24}
           style={{
             background: "var(--faction-snide-note-bar)",
             color: "var(--faction-snide-note-bar-ink)",
