@@ -124,7 +124,13 @@ describe('Tasks form-factor dispatch', () => {
     expect(out, 'no mobile skin').not.toContain('mobile-tasks-browse')
     // The desktop page title; the filter bar itself is now shared chrome and so
     // is no longer a form-factor discriminator (#1367).
-    expect(out, 'desktop page title').toContain('Tasks')
+    //
+    // Asserted on the eyebrow, not the word "Tasks": `PageTitle` draws the title
+    // as per-letter spans (Style Guide §7), so the title never appears
+    // contiguously in the markup. This line used to read `toContain('Tasks')`
+    // and was in fact matching the type rail's "Tasks" SEGMENT — which #1973
+    // then hid from this logged-out viewer, exposing the false positive.
+    expect(out, 'desktop page title eyebrow').toContain('0 shown')
   })
 
   it('mounts the shared filter bar on BOTH form factors (#1367)', () => {
@@ -287,8 +293,10 @@ describe('the task rails', () => {
     expect(out, 'no pending segment').not.toContain(
       `>${i18n.t('tasks:browse.status.pending')}<`,
     )
-    // type (2) + sort (3) + status (2). No eligibility rail logged out.
-    expect(segmentCount(out), 'seven segments across three rails').toBe(7)
+    // sort (3) + status (2). No eligibility rail logged out, and no TYPE rail
+    // either since #1973 — a logged-out viewer cannot apply a metatask, so the
+    // rail that offers them is hidden rather than shown dead.
+    expect(segmentCount(out), 'five segments across two rails').toBe(5)
   })
 
   it('widens the status rail to four for a viewer allowed the extra states', () => {
@@ -303,8 +311,11 @@ describe('the task rails', () => {
     // the API expects, which is what `statusFilters` above carries.
     expect(out).toContain(`>${i18n.t('tasks:browse.status.retired')}<`)
     expect(out).toContain(`>${i18n.t('tasks:browse.status.pending')}<`)
-    // type (2) + sort (3) + status (4) + eligibility (2).
-    expect(segmentCount(out), 'the status rail grew by two').toBe(11)
+    // sort (3) + status (4) + eligibility (2). Still no type rail: seeing
+    // retired/pending and applying a metatask are different gates, and this
+    // viewer holds only the first (#1973). `metataskFilterGate.test.tsx` covers
+    // the viewer who holds the second.
+    expect(segmentCount(out), 'the status rail grew by two').toBe(9)
     // The thumb is a measured rect since #1726 and this harness runs no
     // effects, so its placement is not observable here — see
     // components/ui/FilterBar/__tests__ for the half that is.
