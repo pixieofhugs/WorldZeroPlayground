@@ -51,9 +51,10 @@ function ClippedCondition({ text }: { text: string }) {
                 lineHeight: 1,
                 padding: 'var(--space-xs) var(--space-xs)',
                 transform: `rotate(${clip.rotate}deg)`,
-                // ornament (#1609): the cut-out chip's flat offset shadow —
-                // print metaphor, not elevation. Stays raw; see the list.
-                boxShadow: '1px 2px 0 rgba(0,0,0,0.4)',
+                // ornament (#1609): the cut-out chip's flat offset register —
+                // print metaphor, not elevation, so not `--color-cast-shadow`.
+                // The 1/2px offset and the 40% are the drawing and stay here.
+                boxShadow: '1px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
                 textTransform: 'uppercase',
               }}
             >
@@ -80,9 +81,10 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
         borderRadius: 2,
         padding: 'var(--space-md) var(--space-lg)',
         transform: 'rotate(-1deg)',
-        // ornament (#1609): flat offset print shadow, and the halftone dot
-        // field below is a one-off density rather than the acid tier.
-        boxShadow: '4px 5px 0 rgba(0,0,0,0.35)',
+        // ornament (#1609): flat offset print register — ink tokenized, strength
+        // kept. The halftone dot field below stays raw for its own reason: the
+        // density IS the drawing, not the acid tier. See the legacy list.
+        boxShadow: '4px 5px 0 color-mix(in srgb, var(--color-print-offset) 35%, transparent)',
         overflow: 'hidden',
       }}
     >
