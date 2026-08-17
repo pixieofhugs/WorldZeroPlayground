@@ -71,7 +71,10 @@ export default function SingularityFactionHero({
         background: VOID,
         color: PHOSPHOR_TEXT,
         fontFamily: FONT,
-        boxShadow: "0 24px 60px -28px rgba(0,0,0,0.8)",
+        // The hero casts onto the FACTION PAGE, not onto itself — that ground
+        // is `--color-bg-page` and it flips, so this is the ordinary lift
+        // (#1609). The tile being always-dark says nothing about its shadow.
+        boxShadow: "0 24px 60px -28px var(--color-cast-shadow)",
       }}
     >
       {/* inset signal border */}
@@ -92,8 +95,12 @@ export default function SingularityFactionHero({
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          background:
-            "repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(255,255,255,0.018) 2px,rgba(255,255,255,0.018) 4px)",
+          // The one raw colour left in a file whose docblock says "every color
+          // resolves to a --faction-singularity-* var" (#1609). It was WHITE at
+          // 1.8% on a green-phosphor terminal; `phosphor()` is this file's own
+          // helper and keeps the density exactly, so only the hue moves — onto
+          // the faction's, which is what the other eight rasters draw.
+          background: `repeating-linear-gradient(to bottom,transparent,transparent 2px,${phosphor(1.8)} 2px,${phosphor(1.8)} 4px)`,
         }}
       />
       {/* corner phosphor glow */}

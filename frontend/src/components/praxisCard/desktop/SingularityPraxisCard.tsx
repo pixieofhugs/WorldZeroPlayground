@@ -90,7 +90,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
         overflow: "hidden",
         background: "var(--faction-singularity-card-bg)",
         border: "1px solid var(--faction-singularity-frame)",
-        boxShadow: "0 4px 18px rgba(0, 0, 0, 0.4)",
+        boxShadow: "0 4px 18px var(--color-cast-shadow)",
         // The standing raster — ornament geometry, raw by §4a.
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent 0 2px, var(--faction-singularity-scanline) 2px 3px)",

@@ -144,7 +144,11 @@ export function UaCard({
           height: 10,
           borderRadius: "50%",
           background: factionCssVar("ua", "card-accent"),
-          border: "2px solid rgba(0,0,0,0.25)",
+          // The pin's rim is a percentage of the ink already on the card
+          // (#1609). It was a fixed 25% black, which is the one value that
+          // could not follow the card into dark mode; `currentColor` here is
+          // the `--faction-ua-card-text` the frame sets above.
+          border: "2px solid color-mix(in srgb, currentColor 25%, transparent)",
         }}
       />
       {invitationNote && (
@@ -522,8 +526,11 @@ export function SingularityCard({
         style={{
           position: "absolute",
           inset: 0,
+          // #1609: the standing raster has had a name in index.css since #723
+          // and eight surfaces read it. This was a NINTH density of the same
+          // ornament, hand-rolled at 0.015 — the drift a token exists to stop.
           backgroundImage:
-            "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.015) 2px, rgba(74,222,128,0.015) 4px)",
+            "repeating-linear-gradient(to bottom, transparent, transparent 2px, var(--faction-singularity-scanline) 2px, var(--faction-singularity-scanline) 4px)",
           pointerEvents: "none",
           zIndex: 1,
         }}
