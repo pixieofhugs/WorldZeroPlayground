@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
+import PointsRoundel from "../factionMarks/PointsRoundel";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -25,6 +26,14 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
  * different card. There is no mobile twin: ADR-0056 was accepted and the
  * `mobileTaskCard` surface retired, so this file serves both form factors.
+ *
+ * v3 ornament (#2034): the seal is now the SHARED {@link PointsRoundel} rather
+ * than a second circle drawn here, the poster rays converge on the sheet's
+ * centre instead of its upper third, and a fist gripping a bolt flanks the
+ * sign-up on both sides. All of it is inline SVG and `color-mix` on existing
+ * tokens — no new CSS, which is deliberate: the task card is a lazy archetype
+ * (`factions/everymen.ts`), so bytes drawn here never touch the critical path,
+ * while a rule in `index.css` would land in the one blocking stylesheet.
  *
  * Colour comes almost entirely from the existing `--everymen-*` family, which
  * the design's own palette turned out to match value-for-value; only the
@@ -50,9 +59,15 @@ interface SizeSet {
   bodyPad: string;
   titleSize: string;
   levelSize: string;
-  pointsSize: string;
-  /** Diameter of the rubber-stamp seal. Geometry. */
+  /** Diameter of the rubber-stamp seal — the roundel typesets itself from it. */
   seal: number;
+  /**
+   * The fist-and-bolt's width beside the CTA — a flex BASIS, not a fixed size.
+   * The design draws it at 104 on a card wide enough to hold two of them plus
+   * the button; ours is 384 at most and `maxWidth:100%` under that, so the pair
+   * shrinks with the row rather than pushing the button out of it. Geometry.
+   */
+  mark: number;
 }
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
@@ -62,8 +77,8 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     bodyPad: "var(--space-lg) var(--space-xl) var(--space-xl)",
     titleSize: "var(--text-heading)",
     levelSize: "var(--text-display)",
-    pointsSize: "var(--text-heading)",
     seal: 70,
+    mark: 96,
   },
   mobile: {
     cardWidth: 340,
@@ -71,8 +86,8 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     bodyPad: "var(--space-lg) var(--space-lg) var(--space-lg)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-heading)",
-    pointsSize: "var(--text-title)",
     seal: 62,
+    mark: 84,
   },
 };
 
@@ -134,6 +149,132 @@ function Gear({ size, fill, hub, opacity }: {
   );
 }
 
+/**
+ * The union's fist gripping a bolt, traced from the design's supplied vector:
+ * the hand and, as its own subpath, the lightning. Both are drawn in the
+ * source's Y-up space, which is why the group flips and scales them.
+ */
+const FIST = "M3705 3400 c-93 -46 -97 -111 -17 -291 31 -71 60 -129 65 -129 11 0 231 100 241 110 8 8 -83 223 -116 271 -17 26 -82 59 -116 59 -9 0 -35 -9 -57 -20z M3309 3357 c-45 -30 -71 -82 -66 -128 3 -20 58 -153 122 -295 65 -143 124 -272 131 -289 29 -69 85 -115 142 -115 29 0 92 18 92 27 0 2 -12 15 -28 28 -79 67 -103 216 -49 308 l28 47 -82 181 c-46 99 -91 192 -102 205 -44 57 -129 71 -188 31z M3032 3093 c-54 -26 -77 -68 -77 -138 1 -55 10 -81 110 -299 120 -262 137 -284 218 -293 56 -7 107 16 143 62 51 67 43 104 -76 365 -56 124 -113 240 -127 258 -46 61 -122 79 -191 45z M4000 2992 c-253 -115 -257 -117 -276 -154 -21 -40 -14 -120 13 -156 64 -86 118 -88 297 -8 70 31 136 56 145 54 10 -2 16 -13 16 -33 0 -28 -6 -32 -150 -97 -82 -37 -162 -68 -176 -68 -14 0 -43 -13 -63 -29 -60 -48 -116 -64 -194 -59 l-68 5 -32 -49 c-37 -55 -73 -81 -149 -105 -51 -16 -96 -13 -178 11 -15 5 -26 -3 -47 -33 -33 -49 -105 -92 -164 -99 -40 -4 -44 -7 -38 -26 20 -63 160 -336 207 -404 95 -134 244 -265 389 -342 31 -16 52 -36 63 -60 21 -43 181 -391 362 -790 73 -162 137 -298 141 -302 5 -5 270 -7 589 -6 l582 3 -272 475 c-150 261 -341 595 -425 741 -97 170 -152 275 -152 294 0 15 38 130 84 254 145 390 143 459 -28 830 -42 91 -84 174 -94 184 -26 31 -92 57 -142 57 -35 0 -87 -19 -240 -88z M2750 2823 c-47 -24 -80 -76 -80 -126 0 -49 139 -363 177 -402 82 -82 225 -32 240 85 5 32 -6 64 -67 202 -73 164 -105 219 -139 238 -38 20 -95 21 -131 3z";
+
+const BOLT = "M4390 4284 c-420 -315 -766 -577 -768 -583 -2 -6 125 -75 282 -153 157 -79 286 -145 286 -148 0 -3 -45 -29 -99 -58 l-99 -54 40 -86 c22 -48 42 -89 44 -91 2 -2 29 6 60 18 67 25 124 27 192 5 68 -22 121 -76 162 -163 19 -39 35 -71 36 -71 1 0 65 22 141 49 362 129 883 314 1020 362 118 42 150 57 140 66 -11 10 -418 259 -684 417 -56 34 -103 63 -103 66 0 3 187 91 415 196 l415 191 -337 289 c-185 159 -346 296 -357 305 -20 16 -49 -4 -786 -557z M2515 2471 c-66 -37 -302 -168 -525 -291 -672 -372 -886 -492 -865 -487 17 4 342 119 1365 482 135 48 253 90 262 94 16 6 10 22 -44 139 -33 72 -63 132 -67 131 -3 0 -60 -31 -126 -68z";
+
+/**
+ * The discharge: jagged arcs thrown off a point. The design generates these
+ * rather than drawing them, which is also the cheap way to carry them — a dozen
+ * lines of arithmetic instead of two dozen literal paths.
+ */
+function crackle(ox: number, oy: number, count: number, seed: number) {
+  const arcs: { d: string; hot: boolean }[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const angle = ((i * (360 / count)) + (i % 3) * 11 + seed) * Math.PI / 180;
+    const reach = 34 + (i % 3) * 8;
+    const length = 30 + (i % 4) * 16;
+    let x = ox + Math.cos(angle) * reach;
+    let y = oy + Math.sin(angle) * reach;
+    let d = `M${x.toFixed(1)} ${y.toFixed(1)}`;
+    for (let step = 1; step <= 4; step += 1) {
+      const zag = (step % 2 ? 1 : -1) * (7 + (i % 3) * 3);
+      x += Math.cos(angle) * (length / 4) - Math.sin(angle) * zag;
+      y += Math.sin(angle) * (length / 4) + Math.cos(angle) * zag;
+      d += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+    arcs.push({ d, hot: i % 2 === 1 });
+  }
+  return arcs;
+}
+
+/** Off the bolt's head, then off each flank of the fist — the design's three. */
+const SPARKS = [
+  ...crackle(400, 230, 10, 0),
+  ...crackle(430, 360, 7, 47),
+  ...crackle(250, 400, 7, 113),
+];
+
+/**
+ * Fists-and-lightning, the mark that flanks the bill's sign-up (#2034).
+ *
+ * ORNAMENT ONLY, AND THAT IS LOAD-BEARING: it is `aria-hidden`, it takes no
+ * pointer events and it is not focusable, so the CTA row's only hit box stays
+ * the button's. `docs/agents/design-fidelity.md` names the failure this avoids —
+ * 44px boxes drawn for smaller marks overlapping each other — and the answer
+ * here is that there is only ever one box in the row.
+ *
+ * It is STATIC. The design crackles the arcs, jitters the fist and flickers the
+ * bolt on three keyframes; the same pass disables the seal's stamp animation
+ * outright, and the arcs read as a discharge standing still.
+ *
+ * ponytail: the ceiling is the motion, dropped for the CSS budget — three
+ * keyframes plus their reduced-motion gate is ~0.5 KB in `index.css`, which is
+ * ~1 KB from its FAIL line with seven ornament passes landing at once, and
+ * inline `animation:` is not an option because it bypasses the gate. Upgrade
+ * path: mint `.evm-crackle` / `.evm-shake` / `.evm-bolt` behind the house
+ * `prefers-reduced-motion` block once the sheet has room, and hang them on the
+ * `<g>`s already grouped for exactly that.
+ */
+function FistAndBolt({ width, mirrored }: { width: number; mirrored?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-evm-bolt=""
+      style={{
+        // Shrinkable, so the pair yields to the button rather than the reverse:
+        // grow 0 caps it at the design's width, shrink 1 + minWidth 0 lets a
+        // narrow card squeeze it, and the svg scales inside because it has a
+        // viewBox and no fixed height.
+        flex: `0 1 ${width}px`,
+        minWidth: 0,
+        lineHeight: 0,
+        pointerEvents: "none",
+      }}
+    >
+      <svg
+        viewBox="96 74 505 491"
+        style={{
+          display: "block",
+          width: "100%",
+          height: "auto",
+          // The sparks are thrown clear of the box on purpose; the card's own
+          // `overflow:hidden` is what stops them leaving the sheet.
+          overflow: "visible",
+          transform: mirrored ? "scaleX(-1)" : undefined,
+        }}
+      >
+        <g>
+          {SPARKS.map((arc) => (
+            <path
+              key={arc.d}
+              d={arc.d}
+              fill="none"
+              /* The hot core is a cream that must NOT flip with the paper — a
+                 spark stays bright on a dark bill — so it mixes toward the
+                 masthead's ink, which is the one warm near-white this faction
+                 holds steady across both themes. */
+              stroke={arc.hot
+                ? "var(--everymen-gold)"
+                : "color-mix(in srgb, var(--everymen-gold) 25%, var(--faction-everymen-bill-mast-ink))"}
+              strokeWidth={arc.hot ? 5 : 3.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </g>
+        <g
+          transform="translate(0,575) scale(0.1,-0.1)"
+          stroke="var(--everymen-red)"
+          strokeWidth={70}
+          strokeLinejoin="round"
+        >
+          {/* The hand is the red knocked back toward the sheet, so it reads as
+              printed ink rather than a second solid — and it follows the paper
+              into dark, where the mix darkens instead of lightening. */}
+          <path d={FIST} fill="color-mix(in srgb, var(--everymen-red) 68%, var(--everymen-paper))" />
+          <path d={BOLT} fill="var(--everymen-gold)" />
+        </g>
+      </svg>
+    </span>
+  );
+}
+
 export default function EverymenTaskCard({
   task,
   basePoints,
@@ -166,7 +307,12 @@ export default function EverymenTaskCard({
         }}
       >
         <div style={{ position: "relative", overflow: "hidden", border: `1px solid ${INK}`, borderRadius: 1 }}>
-          {/* Poster rays and two corner glows, masked away from the copy. */}
+          {/* Poster rays and two corner glows, masked away from the copy.
+              The burst converges on the sheet's CENTRE (#2034) — it fanned from
+              the upper third, which put its vanishing point inside the masthead
+              band that hides it. Only the conic moves: the two corner glows are
+              anchored to their own corners, and the mask still opens from 16%,
+              so the rays still fade before they reach the brief. */}
           <div
             aria-hidden="true"
             style={{
@@ -177,7 +323,7 @@ export default function EverymenTaskCard({
               backgroundImage:
                 "radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),"
                 + " radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),"
-                + " repeating-conic-gradient(from 0deg at 50% 16%, var(--faction-everymen-bill-ray) 0 5.2deg, transparent 5.2deg 10.4deg)",
+                + " repeating-conic-gradient(from 0deg at 50% 50%, var(--faction-everymen-bill-ray) 0 5.2deg, transparent 5.2deg 10.4deg)",
               WebkitMaskImage: "radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)",
               maskImage: "radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)",
             }}
@@ -274,48 +420,29 @@ export default function EverymenTaskCard({
                     </div>
                   )}
 
-                  {/* The rubber-stamp points seal, struck a few degrees off true. */}
-                  <div
-                    style={{
-                      position: "relative",
-                      flex: "0 0 auto",
-                      width: size.seal,
-                      height: size.seal,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transform: "rotate(-4deg)",
-                      color: "var(--everymen-red)",
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        borderRadius: "50%",
-                        border: "2px solid var(--everymen-red)",
-                        boxShadow: "inset 0 0 0 3px var(--everymen-paper), inset 0 0 0 4px var(--everymen-red)",
-                      }}
-                    />
-                    <span style={{ fontFamily: POSTER, fontSize: size.pointsSize, lineHeight: 0.8 }}>
-                      {basePoints}
-                    </span>
-                    {/* The seal's unit word. It was `feed:taskCard.everymen.
-                        sealUnit` ("POINTS") until #1909 cut the slot — Everymen
-                        was the only faction that had one — which left the struck
-                        seal a bare figure, because this was also the one faction
-                        card with no `pointsUnit` of its own to fall back on. The
-                        ponytail note parked here named the upgrade path: read
-                        the shared key once it exists. #1911 made it exist. The
-                        stamp still uppercases, so the catalog's "Points" strikes
-                        as POINTS exactly as before. */}
-                    {/* eslint-disable-next-line local/no-raw-style-values -- ornament: stamp text, sized to the struck seal rather than the label ramp (§4a). */}
-                    <span style={{ ...LABEL, fontSize: 8, letterSpacing: "0.22em", marginTop: "var(--space-xs)" }}>
-                      {i18n.t("feed:taskCard.pointsUnit")}
-                    </span>
-                  </div>
+                  {/* The rubber-stamp points seal, struck a few degrees off
+                      true — and since #2034 it is the SHARED roundel, not a
+                      second circle drawn here. The mark already existed
+                      (`factionMarks/PointsRoundel`, #841/ADR-0049) and the
+                      praxis card's score stamp already struck it; this card was
+                      the one surface of the two still drawing its own, which
+                      #2042's survey named. Everything it holds is typeset in
+                      the roundel's own 0..100 user space, so one `size` moves
+                      the ring, the figure and the caption together.
+
+                      It carries no `arcLabel`: the legend reads "★ VERIFIED ★
+                      ON THE RECORD", which a task nobody has attempted cannot
+                      claim. New copy is #2028's, and it is closed.
+
+                      The unit word is #1911's shared `pointsUnit` — the roundel
+                      uppercases it, so the catalog's "Points" still strikes as
+                      POINTS. Do not undo that. */}
+                  <PointsRoundel
+                    total={String(basePoints)}
+                    unitLabel={i18n.t("feed:taskCard.pointsUnit")}
+                    size={size.seal}
+                    color="var(--everymen-red)"
+                  />
                 </div>
               </div>
 
@@ -364,14 +491,21 @@ export default function EverymenTaskCard({
               a struck block with air under it; the dashed red rule above the
               in-progress line is the bill's own bottom treatment, so no rule is
               added here. */}
+          {/* The pair flanks the button INSIDE the shared row rather than
+              beside it, so #2030's centring and its clearance still hold: three
+              flex items, none positioned, the button `0 0 auto` and the two
+              marks `0 1` — the button never yields a pixel and the marks give
+              way first at any card width. */}
           {cta && (
-            <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
+            <div style={{ ...CARD_CTA_ROW, alignItems: "center", gap: "var(--space-sm)", position: "relative", zIndex: 2 }}>
+              <FistAndBolt width={size.mark} mirrored />
               <button
                 type="button"
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
                   ...CARD_CTA,
+                  flex: "0 0 auto",
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   background: "var(--faction-everymen-bill-cta-bg)",
                   color: "var(--faction-everymen-bill-cta-ink)",
@@ -386,6 +520,7 @@ export default function EverymenTaskCard({
               >
                 {cta.label}
               </button>
+              <FistAndBolt width={size.mark} />
             </div>
           )}
         </div>

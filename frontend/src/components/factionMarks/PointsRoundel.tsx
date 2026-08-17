@@ -18,6 +18,14 @@ import type { CSSProperties } from "react";
  * The multiply blend belongs to the CONSUMER, via `.everymen-stamp-print` — the
  * blend has to invert in dark and that is a cascade decision, not a prop.
  *
+ * IT IS A SHARED MARK, and since #2034 it is struck on TWO surfaces: the praxis
+ * card's score stamp and the Everymen task card's points seal. That is what
+ * makes `arcLabel` optional. The legend reads "★ VERIFIED ★ ON THE RECORD" — a
+ * claim only a scored praxis can make, so a task card omits it, and with two
+ * texts in the ring instead of three the unit caption takes the room the legend
+ * was holding. Both mounts therefore keep their own proportions from one
+ * drawing; the praxis stamp passes a legend and is unchanged by this.
+ *
  * Type sizes here are the design's, in the SVG's own user-space units on a
  * 0..100 viewBox — they are neither `px` nor text-scale steps, and the scale
  * factor is `size / 100`. Stamp lettering is ornament (`WORLD_ZERO_STYLE` §4a),
@@ -29,8 +37,8 @@ export interface PointsRoundelProps {
   total: string;
   /** The `POINTS` caption under the numeral. */
   unitLabel: string;
-  /** The legend arced around the inner ring. */
-  arcLabel: string;
+  /** The legend arced around the inner ring. Omitted where none is earned. */
+  arcLabel?: string;
   /** Rendered size in px, both axes. Design draws it at 102. */
   size?: number;
   /** The stamp ink. Pass a faction token; defaults to the surrounding ink. */
@@ -58,6 +66,10 @@ export default function PointsRoundel({
   // The design shrinks the numeral for a four-glyph total (`29.6`) so it stays
   // inside the inner ring; anything shorter is struck at full size.
   const totalSize = total.length > 3 ? 31 : 33;
+  // Without the legend the ring holds two texts, not three, so the caption
+  // takes the room the arc was holding rather than staying tuned for it — the
+  // task card strikes this at 70px, where the stamp's 7.5 would be sub-6px mush.
+  const unitSize = arcLabel ? 7.5 : 10.5;
   return (
     <svg
       viewBox="0 0 100 100"
@@ -68,16 +80,20 @@ export default function PointsRoundel({
       className={className}
       style={{ overflow: "visible", transform: "rotate(-6deg)", flexShrink: 0, ...style }}
     >
-      <defs>
-        <path id={arcId} d={ARC_PATH} />
-      </defs>
       <circle cx={50} cy={50} r={46} fill="none" stroke={color} strokeWidth={2.5} />
       <circle cx={50} cy={50} r={40} fill="none" stroke={color} strokeWidth={1} />
-      <text fill={color} fontFamily="var(--font-faction-typewriter)" fontSize={8} letterSpacing={1.6}>
-        <textPath href={`#${arcId}`} startOffset="2%">
-          {arcLabel}
-        </textPath>
-      </text>
+      {arcLabel && (
+        <>
+          <defs>
+            <path id={arcId} d={ARC_PATH} />
+          </defs>
+          <text fill={color} fontFamily="var(--font-faction-typewriter)" fontSize={8} letterSpacing={1.6}>
+            <textPath href={`#${arcId}`} startOffset="2%">
+              {arcLabel}
+            </textPath>
+          </text>
+        </>
+      )}
       <text
         x={50}
         y={54}
@@ -94,7 +110,7 @@ export default function PointsRoundel({
         textAnchor="middle"
         fill={color}
         fontFamily="var(--font-faction-typewriter)"
-        fontSize={7.5}
+        fontSize={unitSize}
         letterSpacing={2}
         style={{ textTransform: "uppercase" }}
       >
