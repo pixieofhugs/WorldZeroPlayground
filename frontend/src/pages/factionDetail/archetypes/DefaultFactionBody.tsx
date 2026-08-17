@@ -271,7 +271,7 @@ export default function DefaultFactionBody({
  * A function rather than a const because it now reads the mounted slug, the same
  * way `accent` above does. Seven of the eight keys declare `-on-accent`;
  * `ephemerists` deleted its in #1232 and never lands here, because it has a
- * bespoke body of its own (ADR-0077) — as do the other six. Only `albescent`
+ * bespoke body of its own (ADR-0078) — as do the other six. Only `albescent`
  * falls through today, and it resolves to `default`.
  */
 function joinButtonStyle(slug: string): CSSProperties {

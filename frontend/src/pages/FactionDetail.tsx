@@ -18,7 +18,7 @@ import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
  * dispatches the same way, through `factionBody`, falling through to
  * DefaultFactionBody.
  *
- * ONE COMPONENT PER FACTION, AT BOTH WIDTHS (#1314 / ADR-0077). There used to be
+ * ONE COMPONENT PER FACTION, AT BOTH WIDTHS (#1314 / ADR-0078). There used to be
  * a `formFactor === "mobile"` early return here that dispatched a whole second
  * registry, `mobileFactionPage`. Those eight skins did not hold a narrow
  * rendering of the body below — they held DIFFERENT COPY, generic chrome in a
