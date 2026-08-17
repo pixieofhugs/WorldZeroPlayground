@@ -147,20 +147,20 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
   REFERENCE_FACTIONS.every((faction) => surfaceMap(surface)[faction] !== undefined),
 )
 
-// WOW desktop pages the design kit never drew — tracked by #951. Each must ship
-// a bespoke skin; until then WOW renders the generic Default (N/A), not Coven.
-// When a skin ships, drop the surface here and the "still pending" guard below
-// fails, forcing this allowlist to shrink in lockstep with the fix.
-// `taskDetail` left this set in #1037 — the parchment field, WOW's first
-// desktop task-detail page — `praxisDetail` left it in #1121, the chronicle
-// entry (WOW's dress over the one shared praxis-detail page, ADR-0061), and
-// `factionBody` left it with the muster page: the charter, the muster roll, the
-// two galleries and the enlist rail, derived from the phone twin and the shared
-// ornament module because the kit never drew this one either. `factionCard` is
-// the last bullet of #951.
-const WOW_PENDING: ReadonlySet<string> = new Set([
-  'factionCard',
-])
+// THE #951 ALLOWLIST IS GONE, and its absence is the record that the issue
+// closed. It held the WOW desktop pages the design kit never drew: each had to
+// ship a bespoke skin, and until it did WOW rendered the generic Default (N/A),
+// never Coven. It shrank four times, each time in the same commit as the skin —
+// `taskDetail` in #1037 (the parchment field), `praxisDetail` in #1121 (the
+// chronicle entry, WOW's dress over the one shared page, ADR-0061),
+// `factionBody` with the muster page, and `factionCard` with the muster bill:
+// bunting, the googly crown on a cream plate, a wavy gold→plum rule and a still
+// balloon bunch in the corner, derived from the shared ornament module because
+// the kit never drew this one either.
+//
+// So WOW is now asserted exactly the way Coven is, with no exemption to keep in
+// step — which is the whole point of an allowlist that was always meant to
+// empty. A NEW WOW gap is a red row below, not a line to add back here.
 
 describe('Coven is bespoke on every core surface, never the Default', () => {
   it.each(REQUIRED)('coven skins %s', (surface) => {
@@ -168,12 +168,8 @@ describe('Coven is bespoke on every core surface, never the Default', () => {
   })
 })
 
-describe('WOW is bespoke on every core surface except the #951 pending set', () => {
-  it.each(REQUIRED.filter((surface) => !WOW_PENDING.has(surface)))('wow skins %s', (surface) => {
+describe('WOW is bespoke on every core surface, never the Default', () => {
+  it.each(REQUIRED)('wow skins %s', (surface) => {
     expect(surfaceMap(surface)['wow']).toBeDefined()
-  })
-
-  it.each([...WOW_PENDING])('%s is still pending a WOW skin (#951) — falls to Default', (surface) => {
-    expect(surfaceMap(surface as FactionSurface)['wow']).toBeUndefined()
   })
 })
