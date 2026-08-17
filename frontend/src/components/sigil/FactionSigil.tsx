@@ -2,6 +2,7 @@ import type { } from "react";
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
+import AlbescentSigil from "./AlbescentSigil";
 import { SingularitySigil } from "./SingularitySigil";
 import { UaSigil } from "./UaSigil";
 import DefaultSigil from "./DefaultSigil";
@@ -36,17 +37,32 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
   );
 }
 
-/* Albescent has NO adapter row here any more, and no mark of its own anywhere
-   (#1891). The surveyor's cross-hair added by #1626 was a distinct emblem worn
-   by an otherwise-hidden faction: a mark nobody else wears is a tell, and it
-   appeared on surfaces an unrevealed player reads — the filter facet, the
-   players chip row, the requests tray, the credential footer. `albescent` now
-   falls through to `DefaultSigilAdapter` like any unthemed slug, which is what
-   `factions/albescent.ts` (registering no `sigil` row) always said it should.
-
-   The owner accepts the two consequences knowingly: for a REVEALED player the
-   Albescent and Unaffiliated filter rows now wear the same mark, and the
-   invitation letter presents the unaffiliated spectrum ring. */
+/**
+ * Albescent's labyrinth (#1626's row, deleted by #1891 and REINSTATED by owner
+ * ruling on Sigil Studies v2).
+ *
+ * #1891's objection was to the mark it deleted, not to the existence of one: a
+ * surveyor's cross-hair, inked on the always-light `--albescent-reveal-*`
+ * register, was a distinct emblem in a distinct PALETTE worn by an otherwise-
+ * hidden faction. The labyrinth answers that half — it carries no hue of its
+ * own, it is filled with the unaffiliated conic, so what a stranger meets is a
+ * shape and never a livery. The owner has accepted the remaining consequence
+ * knowingly: an unrevealed viewer sees a mark they do not recognise on the
+ * filter facet, the players roster, the requests tray, the credential footer
+ * and the sidebar's activity rail. Everything about the NAME stays masked —
+ * that is #1891/#1926's other half and it is untouched.
+ *
+ * WHY THE ADAPTER AND NOT THE MANIFEST. `albescent.ts`'s contract is explicit:
+ * anything added there must be "a flourish LAYERED OVER Default's structure",
+ * because a surface that repaints Albescent in its own colours un-hides the
+ * society (#783). A bespoke emblem is not Default-plus-a-flourish, so it is not
+ * a manifest row. It resolves here, where the mark→slug question already lives —
+ * and it sits BEFORE the spread, so the day albescent does declare a `sigil` the
+ * manifest wins and this line quietly stops mattering.
+ */
+function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
+  return <AlbescentSigil size={size ?? 22} color={color} />;
+}
 
 /**
  * The hoop a surface draws AROUND the mark, for the one slug whose mark has an
@@ -74,6 +90,10 @@ function DefaultSigilAdapter({ size }: SigilVariantProps) {
 }
 
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+  const Variant = pickVariant(
+    { albescent: AlbescentSigilAdapter, ...surfaceMap("sigil") },
+    slug,
+    DefaultSigilAdapter,
+  );
   return <Variant size={size} color={color} />;
 }

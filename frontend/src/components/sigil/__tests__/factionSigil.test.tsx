@@ -74,13 +74,15 @@ describe("FactionSigil dispatcher (#659)", () => {
   });
 
   // #1626 gave albescent its own adapter row here, holding the surveyor's
-  // cross-hair; #1891 deleted it. `factions/albescent.ts` registers no `sigil`
-  // row and never did, so with the adapter gone the slug simply falls through —
-  // no branch, no row, no mark. Asserted in full further down.
-  it("has no bespoke row for the albescent slug", () => {
+  // cross-hair; #1891 deleted it; Sigil Studies v2 reinstates it holding the
+  // labyrinth, by owner ruling. `factions/albescent.ts` still registers no
+  // `sigil` row and still must not (its manifest takes only
+  // Default-plus-a-flourish surfaces, #783), so the row lives in the dispatcher.
+  // Asserted in full further down.
+  it("renders the labyrinth for the albescent slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
+    expect(html).toContain("/factionMarks/labyrinth.svg");
     expect(html.match(/<line /g), "no cross-hair ticks").toBeNull();
-    expect(html, "the unaffiliated ring").toContain("var(--faction-default-rainbow-conic)");
   });
 
   it("falls back to the unaffiliated ring for an unknown slug", () => {
@@ -98,48 +100,86 @@ describe("FactionSigil dispatcher (#659)", () => {
 });
 
 /**
- * Albescent has no mark of its own (#1891 ruling 6).
+ * Albescent's labyrinth — the mark reinstated (Sigil Studies v2, superseding
+ * #1891 ruling 6).
  *
- * This block used to assert the spectrum-stroked cross-hair (#1658, #1630). The
- * mark is deleted, not restyled: an emblem nobody else wears is a tell, and it
- * rendered on surfaces an unrevealed player reads — the filter facet, the
- * players chip row, the requests tray, the credential footer.
+ * This block has asserted three different things in three issues, and the
+ * reason it keeps moving is worth stating once. #1658 asserted a cross-hair
+ * stroked in the spectrum; #1891 asserted no mark at all, because a distinct
+ * emblem in a distinct PALETTE, worn by an otherwise-hidden faction on surfaces
+ * an unrevealed player reads, is a tell. The design answers the palette half —
+ * the labyrinth carries no hue of its own — and the owner has accepted the
+ * remaining shape half. So what is asserted here is not just "a mark exists"
+ * but the property that makes the mark safe: it introduces **no colour**.
  *
- * The seam is still the DISPATCHER's markup, because that is where the decision
- * lives. What it must now produce for `albescent` is exactly what it produces
- * for a slug it has never heard of.
+ * The seam is the DISPATCHER's markup, because that is where the decision
+ * lives: the primitive draws whatever it is handed, and `CredentialCard` and
+ * the filter facet stay slug-blind.
+ *
+ * NOT ASSERTED, and no test here can: whether the mark READS at 15px. The
+ * harness is `renderToStaticMarkup` — no DOM, no layout, no rasterisation.
  */
-describe("Albescent resolves to the unaffiliated ring (#1891)", () => {
-  it("draws the same mark as an unknown slug", () => {
+describe("Albescent's labyrinth (Sigil Studies v2)", () => {
+  it("no longer draws what an unknown slug draws", () => {
+    // The exact inverse of #1891's assertion, and the one line that says the
+    // ruling was reversed rather than the mark quietly re-added somewhere else.
     const albescent = renderToStaticMarkup(<FactionSigil slug="albescent" size={40} />);
     const unknown = renderToStaticMarkup(<FactionSigil slug="not_a_faction" size={40} />);
-    expect(albescent).toBe(unknown);
+    expect(albescent).not.toBe(unknown);
+    expect(albescent).toContain("/factionMarks/labyrinth.svg");
+    expect(unknown).not.toContain("/factionMarks/labyrinth.svg");
   });
 
-  it("draws the DefaultSigil ring, conic and all", () => {
+  it("carries no palette of its own — the unaffiliated conic and nothing else", () => {
+    // This is the property that makes reinstating the mark safe. The drawing
+    // is an alpha stencil under `public/`; the PAINT is the same spectrum na
+    // wears — so a
+    // stranger meets a shape and never a livery.
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
-    expect(html).toContain("var(--faction-default-rainbow-conic)");
+    expect(html).not.toContain("var(--albescent-reveal-text)");
+    expect(html).not.toContain("var(--albescent-reveal-ink)");
+    expect(html).not.toMatch(/var\(--faction-albescent/);
+    expect(html).not.toContain("#");
   });
 
-  it("keeps no trace of the cross-hair or the reveal register", () => {
-    // The old mark was seven parts stroked from a `<linearGradient>` built out
-    // of the `--faction-default-stop-*` tokens, on `--albescent-reveal-text`.
-    // None of that may survive at any mount, coloured or not.
+  it("takes a caller's paint, so the rail can sample the ramp per row", () => {
+    // The mark is painted through a mask rather than stroked — the same
+    // mechanism as `DefaultSigil` — so `color` is any `background`, not just a
+    // colour. The sidebar's neutral rows rely on that shape.
+    const sampled = "var(--faction-default-rainbow) 40% 0 / 600% 100%";
+    const html = renderToStaticMarkup(<FactionSigil slug="albescent" color={sampled} />);
+    expect(html).toContain(sampled);
+  });
+
+  it("keeps no trace of the cross-hair", () => {
+    // The old mark was seven parts stroked from an in-document
+    // `<linearGradient>`. None of it survives, coloured or not.
     for (const html of [
       renderToStaticMarkup(<FactionSigil slug="albescent" />),
-      renderToStaticMarkup(<FactionSigil slug="albescent" color="var(--albescent-reveal-ink)" />),
+      renderToStaticMarkup(<FactionSigil slug="albescent" color="var(--color-text-tertiary)" />),
     ]) {
       expect(html).not.toContain("<linearGradient");
-      expect(html).not.toContain("var(--albescent-reveal-text)");
+      expect(html).not.toContain("<line ");
     }
   });
 
   it("never puts the word in the markup", () => {
-    // A slug-derived id or class would print the society's name into the DOM of
-    // every page the mark appears on — the leak #783 closed, restated for the
-    // fallback (#1891).
-    const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
-    expect(html.toLowerCase()).not.toContain("albescent");
+    // UNCHANGED BY THE REINSTATEMENT, and deliberately: #1891/#1926's mask on
+    // the NAME is untouched and still correct. A slug-derived id, class or
+    // label would print the society's name into the DOM of every page the mark
+    // appears on — the leak #783 closed. Only the mark came back.
+    for (const size of [15, 22, 84]) {
+      const html = renderToStaticMarkup(<FactionSigil slug="albescent" size={size} />);
+      expect(html.toLowerCase(), `${size}px`).not.toContain("albescent");
+    }
+  });
+
+  it("renders at every size the study shows, and at the app's own mounts", () => {
+    for (const size of [84, 34, 15, 44, 26, 18]) {
+      const html = renderToStaticMarkup(<FactionSigil slug="albescent" size={size} />);
+      expect(html, `${size}px`).toContain(`width:${size}px`);
+      expect(html, `${size}px`).toContain(`height:${size}px`);
+    }
   });
 });
 
