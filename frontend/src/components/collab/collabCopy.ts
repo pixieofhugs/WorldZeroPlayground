@@ -27,11 +27,13 @@ import i18n from '../../i18n'
  * dev/test missing-key throw before the result could be inspected. A faction
  * with no entry for a key is a normal miss, not a defect.
  *
- * Most key NAMES are deliberately untouched — `castAction`, `pillWeaving` and
- * friends are named for the mechanic, not the wording. Renaming them would
- * touch every call site for nothing a player sees, and #1811 is already going
- * to re-cut this vocabulary when Cast/PullBack become Done/Propose/Approve/
- * Withdraw.
+ * #1811 re-cut the action vocabulary, which #1812 had deliberately left alone:
+ * `castAction` / `castFinalAction` / `pullBackAction` were one button meaning
+ * three things, and ADR-0079 split them into `doneAction`, `proposeAction`,
+ * `approveAction` and `withdrawAction`. Those names DID have to move, because
+ * the mechanic moved under them — which is the test the surviving names pass:
+ * `pillWeaving` and friends are named for a mechanic that is still there, so
+ * renaming them would touch every call site for nothing a player sees.
  *
  * The two exceptions are #1910's: `duelPillSealed` and `duelSealedPlaceholder`
  * were named for a state — *sealed* — that #1863 abolished. They are not the
@@ -64,6 +66,10 @@ export type CollabCopyKey =
   | 'castStatus'
   | 'pillCast'
   | 'pillWeaving'
+  // The Done badge (ADR-0079, #1811). A fifth reading rather than a sixth
+  // state: Done is orthogonal to approval, so it rides ALONGSIDE whichever of
+  // the four a row is already in instead of replacing it.
+  | 'pillDone'
   // The roster's other two states (#1416). `pillCast`/`pillWeaving` already name
   // the two a MEMBER can be in — submitted, and on the crew but not submitted —
   // so absorbing the invites needed only the two states that are not membership
@@ -79,9 +85,27 @@ export type CollabCopyKey =
   // It replaces the banner AND the consensus readings, which are degenerate at
   // one member, so it is not a `banner*` key.
   | 'rosterAwaitingAlone'
-  | 'castAction'
-  | 'castFinalAction'
-  | 'pullBackAction'
+  // The three signals and the group's way out of a proposal (ADR-0079, #1811).
+  // `castAction` / `castFinalAction` / `pullBackAction` are gone with the one
+  // button that meant three things: what a player says is now *which* of these
+  // they press, and each key names exactly one act.
+  | 'doneAction'
+  | 'doneUndoAction'
+  | 'doneDescription'
+  | 'proposeAction'
+  | 'proposeDescription'
+  | 'proposeTitle'
+  | 'proposeConfirm'
+  | 'approveAction'
+  | 'approveFinalAction'
+  | 'approveDescription'
+  | 'withdrawAction'
+  | 'withdrawDescription'
+  // The first keystroke after a proposal goes live asks once, because the
+  // keystroke is what cancels it (ADR-0079).
+  | 'editCancelsTitle'
+  | 'editCancelsConfirm'
+  | 'editCancelsAction'
   | 'duelPullBackAction'
   | 'successHeading'
   | 'successBody'
