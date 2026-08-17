@@ -4,6 +4,7 @@ import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
+import CovenCauldron from "../factionMarks/CovenCauldron";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -14,10 +15,10 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  *
  * A slip of paper that fades pink → lavender under a gold twinkle field, headed
  * by a pentagram badge and the coven's name hand-lettered in Caveat. A celtic
- * braid, hearts tied off at both ends, rules off each section; the points sit in
- * a glowing arcane sigil; a slow pentagram watermark turns behind the copy; and
- * the call to action is a full-bleed pink band. Grenze Gotisch carries the
- * title, Cormorant Garamond the reading copy, Quicksand the chrome.
+ * braid, hearts tied off at both ends, rules off each section; the points bubble
+ * in a cauldron; a slow pentagram watermark turns behind the copy; and the call
+ * to action is a rounded pink box. Grenze Gotisch carries the title, Cormorant
+ * Garamond the reading copy, Quicksand the chrome.
  *
  * This REPLACES the lo-fi `coven.exe` window archetype wholesale (ADR-0055 /
  * ADR-0056 — a full metaphor swap, not a tweak). The `--faction-coven-win-*`
@@ -52,8 +53,17 @@ interface SizeSet {
   bodyPad: string;
   titleSize: string;
   levelSize: string;
-  /** Outer box of the arcane sigil. Geometry. */
-  sigil: number;
+  /**
+   * Rendered side of {@link CovenCauldron}. Geometry, and the ONLY dial the
+   * mark takes — everything in it, text included, is inside the viewBox.
+   *
+   * Bigger than the arcane sigil's 100/88 box it replaces, because the design
+   * scales its own cauldron to 1.16× the badge and the shared mark draws a
+   * little tighter inside its 132-unit square. At 116 the caption sets at
+   * ~8.8px, in line with the slip's other captions; below about 100 it drops
+   * under 8px and the vessel stops reading as one.
+   */
+  cauldron: number;
 }
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
@@ -62,15 +72,17 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     /* Top pad is the band's now: the floating wordmark used to carry the gap. */
     bodyPad: "var(--space-md) var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-heading)",
-    levelSize: "var(--text-heading)",
-    sigil: 100,
+    /* One rung up (#2033): the numeral was set small for Cormorant's eye and
+       read two steps behind Everymen's and Snide's. */
+    levelSize: "var(--text-display)",
+    cauldron: 116,
   },
   mobile: {
     cardWidth: 340,
     bodyPad: "var(--space-md) var(--space-lg) var(--space-lg)",
     titleSize: "var(--text-title)",
-    levelSize: "var(--text-title)",
-    sigil: 88,
+    levelSize: "var(--text-heading)",
+    cauldron: 100,
   },
 };
 
@@ -135,79 +147,6 @@ function TwinkleField() {
         <path key={`${x}-${y}`} d={starPath(x, y, r)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
       ))}
     </svg>
-  );
-}
-
-/** The points, held in a glowing arcane sigil. */
-function Sigil({ size, points }: { size: number; points: number }) {
-  const sparkles: [number, number, number][] = [
-    [50, 4, 3.4],
-    [88, 26, 2.4],
-    [14, 74, 2.8],
-    [84, 78, 1.9],
-    [16, 24, 1.7],
-  ];
-  return (
-    <div
-      style={{
-        position: "relative",
-        flex: "0 0 auto",
-        width: size,
-        height: size,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "var(--faction-coven-slip-sigil-halo)" }}
-      />
-      <span
-        aria-hidden="true"
-        style={{ position: "absolute", inset: "18%", borderRadius: "50%", background: "var(--faction-coven-slip-sigil-core)" }}
-      />
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 100 100"
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-      >
-        <circle cx="50" cy="50" r="32" fill="none" stroke="var(--faction-coven-slip-pk)" strokeWidth="1.6" opacity="0.9" />
-        <g stroke="var(--faction-coven-slip-gold)" strokeWidth="1.1" strokeLinecap="round" opacity="0.8">
-          <path d="M50 8 v6" />
-          <path d="M50 86 v6" />
-          <path d="M8 50 h6" />
-          <path d="M86 50 h6" />
-        </g>
-        {sparkles.map(([x, y, r]) => (
-          <path key={`${x}-${y}`} d={starPath(x, y, r)} fill="var(--faction-coven-slip-gold)" opacity={0.9} />
-        ))}
-      </svg>
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          lineHeight: 0.85,
-        }}
-      >
-        <span
-          className="content-title"
-          style={{ fontFamily: READING, fontWeight: 600, color: "var(--faction-coven-slip-deep)" }}
-        >
-          {points}
-        </span>
-        {/* Ornament: the unit caption inside the drawn sigil, sized to the disc
-            rather than to the label ramp (WORLD_ZERO_STYLE §4a). */}
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the sigil. */}
-        <span style={{ ...CAPTION, fontSize: 8, marginTop: "var(--space-xs)" }}>
-          {i18n.t("feed:taskCard.pointsUnit")}
-        </span>
-      </div>
-    </div>
   );
 }
 
@@ -348,7 +287,20 @@ export default function CovenTaskCard({
                 </div>
               )}
 
-              <Sigil size={size.sigil} points={basePoints} />
+              {/* THE SCORE MOVES INTO THE CAULDRON (#2033). It sat in a drawn
+                  arcane sigil — a halo disc, a pale core, a ringed circle of
+                  gold ticks and sparkles, with the numeral floated over the
+                  middle. All of it goes: the vessel is #2019's, by owner
+                  ruling, because Coven draws the same pot on the praxis card's
+                  score stamp and two cauldrons is the outcome that ruling
+                  exists to prevent. Everything the sigil painted, the mark
+                  paints — including the numeral and its caption, which are
+                  typeset INSIDE the viewBox so one `size` scales the lot. */}
+              <CovenCauldron
+                total={String(basePoints)}
+                caption={i18n.t("feed:taskCard.pointsUnit")}
+                size={size.cauldron}
+              />
             </div>
 
             <h2
@@ -405,12 +357,17 @@ export default function CovenTaskCard({
           </Link>
         </div>
 
-        {/* The pink band ran the slip's full width. #2030 tucks it in with
-            clearance under it, rounded to the same 20 the modifier chip takes —
-            the slip has no square corner on it anywhere. No rule above: the
-            braid under the description is the section's own tie-off, and the
-            dotted-with-a-gem rule the design defines for Coven is dead code it
-            skips in the same pass. */}
+        {/* The pink band ran the slip's full width. #2030 tucked it in with
+            clearance under it; #2033 gives it its final shape — A ROUNDED BOX,
+            not a pill. At the 20 it inherited from the modifier chip a 44px-tall
+            button is within 2px of fully round, so the two controls read as the
+            same object at different lengths; 12 keeps a corner soft enough for a
+            slip that has no square one on it while letting the CTA be the one
+            BOX on the card. The chip keeps its 20 and stays a chip.
+
+            No rule above: the braid under the description is the section's own
+            tie-off, and the dotted-with-a-gem rule the design defines for Coven
+            is dead code it skips in the same pass. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
             <button
@@ -432,7 +389,7 @@ export default function CovenTaskCard({
                 textTransform: "uppercase",
                 padding: "var(--space-sm) var(--space-xl)",
                 border: "1.5px solid var(--faction-coven-slip-cta-to)",
-                borderRadius: 20,
+                borderRadius: 12,
                 boxShadow: "0 3px 8px var(--faction-coven-slip-glow)",
               }}
             >
