@@ -806,6 +806,36 @@ export interface BodyTextareaSkin {
   hideToolbar?: boolean;
 }
 
+/**
+ * The attributes the body editor puts on its own content element (#1978).
+ *
+ * Exported, and pure, because it is the seam a DOM-less harness can reach: the
+ * editor is built inside an effect that never runs here, but this value can be
+ * handed to `EditorView.contentAttributes` and read back off an
+ * `EditorState`. Same move `bodyEditorTheme.ts` makes for the theme.
+ *
+ * `spellcheck` is the reason this is a function at all. `@codemirror/view`
+ * hard-codes `spellcheck: "false"` on `.cm-content` (it is a code editor by
+ * birth), and `contentAttributes` is merged over those defaults, so this facet
+ * is the only place that decision can be reversed. A `<textarea>` had it for
+ * free; when #1742 moved the write-up into the room it silently lost it. This
+ * is the long-form prose a player is judged on — it gets the browser's
+ * dictionary back. Note that is an authoring aid, not an accessibility
+ * affordance; the `aria-*` entries below are the accessibility half and are
+ * unrelated.
+ */
+export function bodyContentAttributes(
+  skin: Pick<BodyTextareaSkin, "id" | "ariaLabel">,
+): Record<string, string> {
+  const attributes: Record<string, string> = { spellcheck: "true" };
+  // `<label for>` does nothing for a contenteditable div, so the section's
+  // label reaches the editor as `aria-labelledby` instead (ComposerSection
+  // gives that label its id).
+  if (skin.id) attributes["aria-labelledby"] = `${skin.id}-label`;
+  if (skin.ariaLabel) attributes["aria-label"] = skin.ariaLabel;
+  return attributes;
+}
+
 // Toolbar buttons in render order. Each glyph is referenced through
 // `button.glyph` (an identifier expression, not JSX text) so it never trips
 // i18next/no-literal-string; the accessible name comes from the t() labelKey.
@@ -868,15 +898,10 @@ export function BodyTextarea({
   const setBodyRef = useRef(state.setBody);
   setBodyRef.current = state.setBody;
 
-  const contentAttributes = useMemo(() => {
-    const attributes: Record<string, string> = {};
-    // `<label for>` does nothing for a contenteditable div, so the section's
-    // label reaches the editor as `aria-labelledby` instead (ComposerSection
-    // gives that label its id).
-    if (skin.id) attributes["aria-labelledby"] = `${skin.id}-label`;
-    if (skin.ariaLabel) attributes["aria-label"] = skin.ariaLabel;
-    return attributes;
-  }, [skin.id, skin.ariaLabel]);
+  const contentAttributes = useMemo(
+    () => bodyContentAttributes(skin),
+    [skin.id, skin.ariaLabel],
+  );
 
   // ---- The editor, bound to the ROOM's text (never seeded from here) ----
   useEffect(() => {
