@@ -57,9 +57,12 @@ describe("the Coven watermark", () => {
   });
 
   it("is mounted only through CovenCat", () => {
-    // `covenSlip.tsx` is where the class legitimately appears as a literal.
+    // The class as a `className`, not the string — every one of these files
+    // discusses `.cvn-wheel` in a comment and should go on doing so.
+    // `covenSlip.tsx` is where it legitimately appears as a literal.
+    const worn = /className\s*[=:]\s*["'`{ ]*["'`]?cvn-wheel/;
     const offenders = FILES.filter(
-      ([path, source]) => source.includes("cvn-wheel") && !path.endsWith("covenSlip.tsx"),
+      ([path, source]) => worn.test(source) && !path.endsWith("covenSlip.tsx"),
     ).map(([path]) => path);
     expect(offenders, "these mount `.cvn-wheel` without going through CovenCat").toEqual([]);
   });
