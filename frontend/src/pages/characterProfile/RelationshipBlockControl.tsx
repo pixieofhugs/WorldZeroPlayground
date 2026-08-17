@@ -1,11 +1,14 @@
 /**
- * Block, from the character profile (#1668, ADR-0009 — superseded by
- * ADR-0077, which moves the block onto its own record and makes it silent).
+ * Block, from the character profile (#1668, ADR-0077).
  *
- * The whole block path was already built — `PUT /relationships/{id}`, the
- * service, and `blockRelationship` in `api/relationships.ts` with the ADR cited
- * directly above it — except for the control. So the profile could UNblock an
- * edge it had never been able to block. This is the missing half.
+ * IT TAKES NO EDGE (#1907). The control used to be offered only on the viewer's
+ * own outgoing friend/foe edge, because a block was a `status` on one and the
+ * client had to name a row id — and `GET /relationships` is outgoing-only. That
+ * ceiling excluded exactly the player the feature exists for: declared a foe by
+ * someone, holding no declaration of their own, and so shown the friend/foe
+ * buttons and no way to block. ADR-0077 moves the block onto its own record
+ * keyed by character, and a character id is something the profile always has,
+ * so the gate below no longer mentions an edge at all.
  *
  * VISIBILITY IS THE CONTRACT. Blocking is a safety affordance, and the rule
  * "hide unusable controls, don't show them disabled" is not cosmetic here: a
@@ -21,18 +24,6 @@
  * the faction of the surface it interrupts, traps focus, and is visible to the
  * test harness. The wording is a pure builder for the same reason the
  * composer's are: the dialog needs a DOM, a request does not.
- *
- * ponytail (#1668): block is offered only on the viewer's OWN outgoing edge,
- * because that is the only edge whose id the client ever holds —
- * `GET /relationships` is outgoing-only (`list_relationships` filters
- * `from_character_id == me`). The backend is symmetric (either party may block,
- * `relationship_service.block_relationship`), so ADR-0009's motivating case —
- * B is declared a foe by A, cannot delete A's edge, and blocks it — has no id
- * to act on from here and shows the friend/foe buttons instead. The upgrade
- * path is the incoming edge appearing in the list response; that is backend
- * work and its own issue, deliberately not this one — and ADR-0077 takes the
- * other route instead: the block leaves the edge entirely, so there is no id
- * to hold and this ceiling disappears (#1681).
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -40,7 +31,6 @@ import i18n from '../../i18n'
 import ConfirmDialog, {
   type ConfirmRequest,
 } from '../../components/confirm/ConfirmDialog'
-import type { RelationshipListItem } from '../../api/relationships'
 
 /** Interpolated keys can't be the typed literals `t()` wants (composerConfirms). */
 const tString = i18n.t as unknown as (
@@ -52,14 +42,15 @@ const tString = i18n.t as unknown as (
  * The confirm, fully worded — a pure builder so its copy is testable without a
  * browser.
  *
- * It names the consequence rather than asking "are you sure", and it says the
- * two things ADR-0009 decided that a player would otherwise assume the opposite
- * of: the block is VISIBLE to the person blocked (World Zero diverges from the
- * silent-block convention on purpose), and it is REVERSIBLE.
+ * It names the consequence rather than asking "are you sure", and it carries
+ * the three things ADR-0077 decided that a player would otherwise have to guess
+ * at: what a block actually reaches (taunts and the friends-and-foes feed
+ * sources — it is a feed-scope instrument, not a contact barrier), that it is
+ * SILENT to the person blocked, and that it is REVERSIBLE.
  *
- * ADR-0077 supersedes ADR-0009 and reverses the first of those: a block
- * becomes SILENT. This copy is wrong the day that lands and must be rewritten
- * with it (#1681) — it is the only place a player reads the decision.
+ * This is the only place a player reads any of that, so the reach clause stays
+ * as narrow as the ADR's own list. Widening what a block prevents is a separate
+ * decision with its own record; this copy must not promise it early.
  */
 export function blockConfirm(displayName: string): ConfirmRequest {
   return {
@@ -74,16 +65,14 @@ export function blockConfirm(displayName: string): ConfirmRequest {
 }
 
 export default function RelationshipBlockControl({
-  relationship,
   viewerCharacterId,
   targetCharacterId,
   targetDisplayName,
   factionSlug,
+  alreadyBlocked,
   busy,
   onBlock,
 }: {
-  /** The viewer's edge to this character, or null if they hold none. */
-  relationship: RelationshipListItem | null
   /** The viewer's active character; undefined when logged out / character-less. */
   viewerCharacterId: number | undefined
   /** Whose profile this is. */
@@ -92,6 +81,12 @@ export default function RelationshipBlockControl({
   targetDisplayName: string
   /** Their faction: the dialog wears the surface it interrupts. */
   factionSlug: string | null | undefined
+  /**
+   * This viewer already holds a block record against them. Read from the
+   * viewer's OWN block list, never from anything the target could see — so this
+   * is false for the blocked party by construction, not by a branch.
+   */
+  alreadyBlocked: boolean
   /** A relationship mutation is in flight. */
   busy: boolean
   /** Write the block. The page owns the API call and the error. */
@@ -103,11 +98,9 @@ export default function RelationshipBlockControl({
   const blockable =
     viewerCharacterId !== undefined &&
     viewerCharacterId !== targetCharacterId &&
-    relationship !== null &&
-    // ADR-0009: `Blocked` is dyad-level — either edge blocked shows it to both
-    // parties. Whichever edge carries it, the slot belongs to `unblock`.
-    // ADR-0077 supersedes this: the label goes away, and this gate with it.
-    relationship.display_status !== 'Blocked'
+    // Already blocked: the slot belongs to `unblock`. No edge is consulted —
+    // blocking someone you have friended is legal and leaves the edge alive.
+    !alreadyBlocked
   if (!blockable) return null
 
   return (

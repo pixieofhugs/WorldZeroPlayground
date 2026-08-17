@@ -17,7 +17,7 @@
     "blockError": "Could not block.",
     "blockConfirm": {
       "title": "Block {{name}}?",
-      "body": "This tie stops driving your activity and taunts, and it reads as Blocked to both of you — World Zero does not hide a block. You can unblock at any time.",
+      "body": "Taunts stop crossing between you, and they leave your activity feed. Nothing else changes, and they are not told — a block is silent. You can unblock at any time.",
       "action": "Block"
     },
     "addFriend": "Friend",
