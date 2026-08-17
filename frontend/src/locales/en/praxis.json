@@ -49,7 +49,6 @@
       "habitBonus": "+ {{points}} habit bonus",
       "votes": "votes",
       "total": "total",
-      "totalShort": "tot",
       "fromVotes": "+ {{votes}} from votes",
       "points": "points",
       "pointsShort": "pts",
