@@ -235,6 +235,49 @@
   .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
 }
 
+/* ── Everymen — the HELP WANTED bill's fists-and-lightning, at the sign-up
+   (#2034/#2071). Two motions: each generated arc strikes on its own beat, and
+   the bolt in the fist flickers as it discharges. The per-arc delay is an inline
+   `animation-delay` computed from the arc's index and its group's seed
+   (`crackle()` in `EverymenTaskCard.tsx`) — a per-instance number, while the
+   animation itself stays in the class so the gate can reach it.
+
+   `steps(1, end)` IS THE EFFECT. Eased, `evm-crackle` reads as a fade in and
+   out; stepped, it snaps between levels and reads as electrical. Do not smooth
+   it, and do not give the arcs a shorter cycle.
+
+   THE DESIGN'S TWO SHAKE KEYFRAMES ARE NOT HERE, by owner ruling (#2071): a
+   0.32s stepped jitter on a mark that appears twice per card, in a flex-wrap
+   grid of up to forty cards, is the arithmetic that stood WOW's balloon bobbing
+   down. The newer hammer-strike set in the same design (evmHammer / evmQuake /
+   evmCrack / evmFlash / evmSpark / evmStreak) is not being built either.
+
+   `.evm-arc`'s resting `opacity: 0.9` is in index.css, and it matters more here
+   than anywhere else in this file: `evm-crackle` opens at 0, so without it a
+   stilled mark is a fist and a bolt with no lightning at all. 0.9 is the
+   crackle's own peak, so the rest is a frame somebody drew. ── */
+@keyframes evm-crackle {
+  0%, 100% { opacity: 0; }
+  4% { opacity: 1; }
+  9% { opacity: 0.15; }
+  13% { opacity: 0.9; }
+  18% { opacity: 0; }
+  52% { opacity: 0; }
+  56% { opacity: 0.8; }
+  60% { opacity: 0; }
+}
+@keyframes evm-flicker {
+  0%, 100% { opacity: 1; }
+  38% { opacity: 0.72; }
+  44% { opacity: 1; }
+  61% { opacity: 0.85; }
+  67% { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .evm-arc { animation: evm-crackle 1.15s steps(1, end) infinite; }
+  .evm-bolt { animation: evm-flicker 2.4s ease-in-out infinite; }
+}
+
 /* ── Coven — the spell slip's pentagram watermark turns, once every two minutes
    (#1023). Stilled, the watermark is simply a static pentagram, which is what it
    is at any single frame anyway. `.cvn-wheel { transform-origin: 50% 50% }` is

@@ -4624,6 +4624,20 @@
    Stilled, the gears keep their heat/glow (that carries the rank) and the sparks
    stay hidden (opacity:0 inline), so nothing here has a resting form to hold. */
 
+/* Everymen — the HELP WANTED bill's fists-and-lightning at the sign-up (#2034).
+   The discharge MOVES since #2071: `evm-crackle` on the arcs and `evm-flicker`
+   on the bolt, both in `src/motion.ornament.css` off the critical path, with the
+   per-arc stagger arriving as an inline `animation-delay`.
+
+   THIS LINE IS THE WHOLE REASON THE STILLED MARK IS STILL A DISCHARGE.
+   `evm-crackle` opens at `opacity: 0`, so a reduced-motion reader — or anyone
+   who never receives the deferred sheet — would otherwise get a fist and a bolt
+   with no lightning, and the mark would lose the thing it is a picture of. 0.9
+   is the crackle's own 13% peak, so the rest state is a frame somebody drew,
+   the same reading as `.epg-glyph` above and Coven's static pentagram. The bolt
+   needs no counterpart: `evm-flicker` never leaves full strength. */
+.evm-arc { opacity: 0.9; }
+
 /* Ephemerists — the Valley plate's incised glyph registers (#1023). Two rows of
    signs (Egypt, Greece, the middle ages, 1925) surface and recede on a long,
    staggered cycle behind the masthead. Per-glyph strength and phase arrive as

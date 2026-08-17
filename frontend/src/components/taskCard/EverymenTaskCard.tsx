@@ -30,10 +30,15 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * v3 ornament (#2034): the seal is now the SHARED {@link PointsRoundel} rather
  * than a second circle drawn here, the poster rays converge on the sheet's
  * centre instead of its upper third, and a fist gripping a bolt flanks the
- * sign-up on both sides. All of it is inline SVG and `color-mix` on existing
- * tokens — no new CSS, which is deliberate: the task card is a lazy archetype
- * (`factions/everymen.ts`), so bytes drawn here never touch the critical path,
- * while a rule in `index.css` would land in the one blocking stylesheet.
+ * sign-up on both sides. All the GEOMETRY is inline SVG and `color-mix` on
+ * existing tokens, because the task card is a lazy archetype
+ * (`factions/everymen.ts`) and bytes drawn here never touch the critical path.
+ *
+ * The MOTION cannot be drawn here — a reduced-motion gate has no inline form —
+ * and #2034 dropped it rather than spend the blocking stylesheet. #2071 rules
+ * the discharge back in, and #2073's deferred `src/motion.ornament.css` is where
+ * it goes: off the critical path, so the old objection no longer applies. The
+ * classes are `.evm-arc` and `.evm-bolt`; see {@link FistAndBolt}.
  *
  * Colour comes almost entirely from the existing `--everymen-*` family, which
  * the design's own palette turned out to match value-for-value; only the
@@ -164,7 +169,7 @@ const BOLT = "M4390 4284 c-420 -315 -766 -577 -768 -583 -2 -6 125 -75 282 -153 1
  * lines of arithmetic instead of two dozen literal paths.
  */
 function crackle(ox: number, oy: number, count: number, seed: number) {
-  const arcs: { d: string; hot: boolean }[] = [];
+  const arcs: { d: string; hot: boolean; delay: number }[] = [];
   for (let i = 0; i < count; i += 1) {
     const angle = ((i * (360 / count)) + (i % 3) * 11 + seed) * Math.PI / 180;
     const reach = 34 + (i % 3) * 8;
@@ -178,7 +183,12 @@ function crackle(ox: number, oy: number, count: number, seed: number) {
       y += Math.sin(angle) * (length / 4) + Math.cos(angle) * zag;
       d += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
     }
-    arcs.push({ d, hot: i % 2 === 1 });
+    // The beat this arc strikes on (#2071). The delay is the one per-instance
+    // number in the discharge, so it rides inline while `evm-crackle` itself
+    // stays in `.evm-arc` where the reduced-motion gate can reach it. Both the
+    // index and the group's seed are only in scope here, which is why it is
+    // computed with the geometry rather than at the point of render.
+    arcs.push({ d, hot: i % 2 === 1, delay: i * 137 + seed * 3 });
   }
   return arcs;
 }
@@ -199,18 +209,24 @@ const SPARKS = [
  * 44px boxes drawn for smaller marks overlapping each other — and the answer
  * here is that there is only ever one box in the row.
  *
- * It is STATIC. The design crackles the arcs, jitters the fist and flickers the
- * bolt on three keyframes, and the same design stands its own stamp animation
- * down in the pass after — this card's ornament is drawn, not played. Jagged
- * arcs thrown off a bolt read as a discharge standing perfectly still.
+ * IT DISCHARGES SINCE #2071 — and only that. `evm-crackle` strikes each arc on
+ * its own beat and `evm-flicker` runs down the bolt; both are classes in
+ * `src/motion.ornament.css`, which is delivered past first paint, so the motion
+ * costs the blocking stylesheet nothing. That deferred sheet is what retired the
+ * budget ceiling this ornament was drawn-not-played for.
  *
- * ponytail: the ceiling is the motion, dropped for the CSS budget — three
- * keyframes plus their reduced-motion gate is ~0.5 KB in `index.css`, which is
- * ~1 KB from its FAIL line with seven ornament passes landing at once, and
- * inline `animation:` is not an option because it bypasses the gate. Upgrade
- * path: mint `.evm-crackle` / `.evm-shake` / `.evm-bolt` behind the house
- * `prefers-reduced-motion` block once the sheet has room, and hang them on the
- * `<g>`s already grouped for exactly that.
+ * The design's two SHAKE keyframes are dropped by owner ruling: a 0.32s stepped
+ * jitter on a mark that appears twice per card, in a flex-wrap grid of up to
+ * forty cards, is the arithmetic that stood WOW's balloon bobbing down. The
+ * newer hammer-strike set in the same design is not being built either.
+ *
+ * Two things the CSS holds that this file must not take back. The animation
+ * belongs to the CLASS — an inline `animation:` bypasses the reduced-motion
+ * gate, and only the per-arc `animation-delay` is inline, because a beat is a
+ * per-instance number. And `.evm-arc` carries a resting opacity in `index.css`,
+ * because `evm-crackle` opens at 0: stilled, or with the deferred sheet never
+ * received, the arcs are still drawn, and the mark keeps the thing it is a
+ * picture of.
  */
 function FistAndBolt({ width, mirrored }: { width: number; mirrored?: boolean }) {
   return (
@@ -244,6 +260,8 @@ function FistAndBolt({ width, mirrored }: { width: number; mirrored?: boolean })
           {SPARKS.map((arc) => (
             <path
               key={arc.d}
+              className="evm-arc"
+              style={{ animationDelay: `${arc.delay}ms` }}
               d={arc.d}
               fill="none"
               /* The hot core is a cream that must NOT flip with the paper — a
@@ -269,7 +287,9 @@ function FistAndBolt({ width, mirrored }: { width: number; mirrored?: boolean })
               printed ink rather than a second solid — and it follows the paper
               into dark, where the mix darkens instead of lightening. */}
           <path d={FIST} fill="color-mix(in srgb, var(--everymen-red) 68%, var(--everymen-paper))" />
-          <path d={BOLT} fill="var(--everymen-gold)" />
+          {/* The flicker is on the BOLT only, never the fist: the hand is the
+              mark's anchor, and the design's own jitter on it is dropped. */}
+          <path className="evm-bolt" d={BOLT} fill="var(--everymen-gold)" />
         </g>
       </svg>
     </span>
