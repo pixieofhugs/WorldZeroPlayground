@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
+import { PenCircle } from "../../factionMarks/snideAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
@@ -9,11 +10,13 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * slab: a black well punched into the plate, tilted -3deg, ruled in acid and
  * printed with a hard (unblurred) drop shadow.
  *
- * The faction's TOTAL MARK is typographic, not graphic — Anton at the design's
- * 30 with a 2px hot-pink offset shadow, the misregistered second pass of a
- * two-colour photocopy. That mark is S.N.I.D.E.'s signature and it was absent
- * entirely until this issue: #821's one generic tilted plate rendered the same
- * numeral every faction got.
+ * The faction's TOTAL MARK is the PINK PEN LOOP, and since #2042 it is the
+ * faction's one drawing rather than this file's: {@link PenCircle}, the same
+ * device the S.N.I.D.E. task card circles a task's worth in. It used to be
+ * typographic here — Anton at the design's 30 with a 2px hot-pink offset shadow,
+ * the misregistered second pass of a two-colour photocopy. Either way the mark is
+ * S.N.I.D.E.'s signature and it was absent entirely until #842: #821's one generic
+ * tilted plate rendered the same numeral every faction got.
  *
  * Row SELECTION stays in `scoreBreakdown` (ADR-0047) — this file is presentation
  * only. Each optional row is its own line so the tag stays legible across all
@@ -152,30 +155,29 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           }}
         />
       )}
-      <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
-        <span
-          style={{
-            fontFamily: "var(--faction-snide-font-impact)",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the signature total, Anton at the design's 30 over a misregistered pink pass (§4a)
-            fontSize: 30,
-            lineHeight: 0.78,
-            color: "var(--faction-snide-acid)",
-            textShadow: "2px 2px 0 var(--faction-snide-pink)",
-          }}
-        >
-          {formatPoints(total)}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--text-md)",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "var(--faction-snide-card-muted)",
-          }}
-        >
-          {t("card.stamp.pointsShort")}
-        </span>
+      {/* THE TOTAL IS CIRCLED IN PINK PEN (#2042). It was a bare Anton numeral
+          over a misregistered pink offset here and a drawn pen loop on the task
+          card — one faction, two devices — and the owner's ruling is that the
+          point card reflects the card's total look. {@link PenCircle} is the
+          drawing now; the pink shadow goes, because the pink IS the loop.
+
+          THE INKS ARE THIS SURFACE'S, NOT THE ATOM'S DEFAULTS, and the difference
+          is not cosmetic: the card's `-note-ink` figure measures 1.05:1 on this
+          plate in LIGHT and its `-note-pink-ink` caption 3.27:1. The tag keeps the
+          two inks it already printed — acid at 16.31:1 light / 16.81:1 dark, the
+          faded newsprint caption at 13.52:1 / 12.74:1, both composited over the
+          translucent plate on the S.N.I.D.E. praxis card's own `-card-bg`.
+
+          The loop is drawn at 96, which is the desktop task card's own width, so
+          the tag's `minWidth: 116` grows to fit it rather than clipping it. */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <PenCircle
+          size={96}
+          value={formatPoints(total)}
+          unit={t("card.stamp.pointsShort")}
+          valueColor="var(--faction-snide-acid)"
+          unitColor="var(--faction-snide-card-muted)"
+        />
       </div>
     </div>
   );
