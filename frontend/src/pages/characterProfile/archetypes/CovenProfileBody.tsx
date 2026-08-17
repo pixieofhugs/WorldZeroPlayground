@@ -46,8 +46,8 @@ import {
   READING,
   SHADOW,
   SOFT,
+  Spark,
 } from '../../../components/factionMarks/covenSlip'
-import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 const CHROME = 'var(--font-faction-rounded)' // Quicksand
@@ -64,7 +64,7 @@ const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
  * the field re-flows with the band at both widths — nothing here is a fixed-px
  * layout dimension.
  *
- * The mark is `CovenSigil` at --faction-coven-slip-gold, the token whose own
+ * The mark is `covenSlip`'s `Spark` at --faction-coven-slip-gold, the token whose own
  * declaration names "twinkles" as its job (§6: a faction's ornament is ONE
  * primitive at named strengths — this is that primitive, not a second drawing of
  * it). The design's #f6d76b is that token's dark value; light gets the warmer
@@ -90,7 +90,7 @@ function Sparkfield() {
           className="cvn-profile-spark"
           style={{ left: `${left}%`, top: `${top}%`, ['--cvn-spark-delay' as string]: `${delay}s` }}
         >
-          <CovenSigil size={size} color="var(--faction-coven-slip-gold)" />
+          <Spark size={size} color="var(--faction-coven-slip-gold)" />
         </span>
       ))}
     </div>

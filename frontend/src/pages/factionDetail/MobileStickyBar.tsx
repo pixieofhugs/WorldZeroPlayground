@@ -27,7 +27,7 @@ import type { CSSProperties, ReactNode } from "react";
  * ---------------
  * One caller: `archetypes/DefaultFactionBody`, at phone widths only. The seven
  * bespoke bodies do not, and that is a decision rather than an oversight — see
- * the `ponytail:` on `DefaultFactionBody`'s join block and ADR-0077.
+ * the `ponytail:` on `DefaultFactionBody`'s join block and ADR-0078.
  *
  * Note there is a second, DIFFERENT `MobileStickyBar` in
  * `pages/editPraxis/mobileArchetypes/shared.tsx`. Same name, same pinning idea,
