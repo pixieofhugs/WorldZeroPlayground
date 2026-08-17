@@ -1691,10 +1691,11 @@ async def get_sidebar_feed(
     character_id: int,
     session: AsyncSession,
     session_factory: Callable,
-) -> tuple[int, list[ActivityFeedItemDC]]:
+) -> tuple[int, list[ActivityFeedItemDC], int]:
     """The rail's pending-request COUNT and its activity panel, in one pass.
 
-    Returns ``(pending_requests_count, recent_activity)``, the list newest-first.
+    Returns ``(pending_requests_count, recent_activity, activity_count)``, the
+    list newest-first and sliced to :data:`SIDEBAR_ACTIVITY_LIMIT`.
 
     WHAT THE PANEL CARRIES (#1556)
     ------------------------------
@@ -1738,6 +1739,28 @@ async def get_sidebar_feed(
     disagreed with the list under it is precisely what that ADR exists to
     prevent, and the equality is pinned by
     ``test_sidebar_badge_equals_the_requests_queue_card_count``.
+
+    WHY THE ACTIVITY SIDE GETS A COUNT FOR FREE (#1587)
+    ---------------------------------------------------
+    The parallel note for the other side. The activity panel needed a number
+    too — the mobile home's pending row says "12 notifications" — and the
+    obvious way to get one is what this function does NOT do: a second pass,
+    ``_count_sources`` over the *twelve* live ``all`` sources, on a first-wave
+    request. It is not needed. :func:`_fetch_sources` takes no limit; it
+    already returns every row from every source, and ``SIDEBAR_ACTIVITY_LIMIT``
+    is a Python slice applied afterwards. **The length before that slice is the
+    number**, from the same fetch, so ADR-0036 holds by construction rather
+    than by assertion: the badge cannot disagree with the list because it IS
+    the list.
+
+    It is a floor, not always an exact total. Each source query stops at
+    ``SUB_QUERY_LIMIT`` rows, so a player with more than that in one source is
+    undercounted. The honest threshold falls out of the same arithmetic: a
+    total **below** ``SUB_QUERY_LIMIT`` is provably exact, because no single
+    source can have hit its cap while the sum is under it. The client shows the
+    real number below the cap and a "50+" form at or above it — see
+    ``ACTIVITY_COUNT_CAP`` in ``frontend/src/api/sidebar.ts``, which is pinned
+    to this constant by a test rather than copied from it.
     """
     fetch_ctx, archive_view = await _build_fetch_context(
         character_id, session, before_cursor=None, archived=False
@@ -1755,7 +1778,11 @@ async def get_sidebar_feed(
     )
 
     recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
-    return sum(request_counts.values()), recent_activity[:SIDEBAR_ACTIVITY_LIMIT]
+    return (
+        sum(request_counts.values()),
+        recent_activity[:SIDEBAR_ACTIVITY_LIMIT],
+        len(recent_activity),
+    )
 
 
 async def get_activity_feed(
