@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -82,6 +83,7 @@ export default function UaTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.ua.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -231,12 +233,14 @@ export default function UaTaskCard({
             )}
           </Link>
 
-          {onSignup && (
+          {cta && (
             <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
               <button
-                onClick={() => onSignup(task.id)}
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
                 style={{
-                  cursor: "pointer",
+                  cursor: cta.denied ? "not-allowed" : "pointer",
                   fontFamily: UA_DISPLAY,
                   fontWeight: 600,
                   fontSize: "var(--text-content)",
@@ -249,7 +253,7 @@ export default function UaTaskCard({
                   border: "1.5px solid var(--faction-ua-card-frame)",
                 }}
               >
-                {i18n.t("feed:taskCard.ua.signup")}
+                {cta.label}
               </button>
             </div>
           )}

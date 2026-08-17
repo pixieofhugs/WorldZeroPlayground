@@ -87,6 +87,23 @@ const SKINS: Skin[] = [
 ]
 
 /**
+ * Every value of `services/praxis.py`'s `SignupDenialReason`, with the copy the
+ * card must show for it (#1976).
+ *
+ * Written out rather than derived from the mapper: a table that reads the thing
+ * it is testing would pass just as happily if the mapper started returning one
+ * generic key for all five. The `below_level` row leaves `{{level}}` uninterpolated
+ * on purpose — `TASK.level_required` is 2 and its own test pins the number.
+ */
+const DENIALS: [reason: string, copy: string][] = [
+  ['below_level', i18n.t('tasks:detail.signup.denied.belowLevel', { level: 2 })],
+  ['task_status_closed', i18n.t('tasks:detail.signup.denied.taskStatusClosed')],
+  ['already_active_member', i18n.t('tasks:detail.signup.denied.alreadyActiveMember')],
+  ['bank_full', i18n.t('tasks:detail.signup.denied.bankFull')],
+  ['is_metatask', i18n.t('tasks:detail.signup.denied.isMetatask')],
+]
+
+/**
  * The five entities React escapes on the way out. They have to come back before
  * the text is compared to a catalog string, or a perfectly correct card fails
  * for having an apostrophe in its CTA — which is exactly what S.N.I.D.E.'s
@@ -112,12 +129,13 @@ function markup(element: ReactElement): { html: string; text: string } {
 
 function render(
   { Card }: Skin,
-  props: Partial<Pick<CardProps, 'multiplier' | 'inProgressCount' | 'onSignup'>> = {},
+  props: Partial<Pick<CardProps, 'task' | 'multiplier' | 'inProgressCount' | 'onSignup'>> = {},
 ) {
+  const task = props.task ?? TASK
   return markup(
     <Card
-      task={TASK}
-      basePoints={TASK.point_value}
+      task={task}
+      basePoints={task.point_value}
       multiplier={props.multiplier ?? 1}
       inProgressCount={props.inProgressCount ?? 0}
       onSignup={props.onSignup}
@@ -155,9 +173,56 @@ describe.each(SKINS)('$slug task card v2 — content slots', (skin) => {
     )
   })
 
-  it('hides the sign-up CTA rather than disabling it when the viewer cannot sign up', () => {
+  it('draws no action slot at all on a surface that did not ask for one', () => {
+    // A character profile's task list and a faction page's roster are readouts.
+    // They withhold `onSignup`, and they get neither a claim nor a refusal.
     expect(render(skin, { onSignup: () => {} }).text).toContain(skin.signup)
     expect(render(skin).text, 'no onSignup → no control').not.toContain(skin.signup)
+    expect(render(skin).html, 'and nothing to refuse either').not.toContain('aria-disabled')
+  })
+
+  // #1976. The card used to say "Sign up" on a task the server would refuse, or
+  // (where the list gated on `can_sign_up`) say nothing at all — either way it
+  // disagreed with the detail page for the same task, which has read
+  // `signup_reason` since #1497.
+  it('states the reason instead of offering a claim the server will refuse', () => {
+    for (const [reason, expected] of DENIALS) {
+      const { html, text } = render(skin, {
+        task: aTask({ ...TASK, can_sign_up: false, signup_reason: reason }),
+        onSignup: () => {},
+      })
+      expect(text, `${reason} states why`).toContain(expected)
+      expect(text, `${reason} does not still say ${skin.signup}`).not.toContain(skin.signup)
+      // The control communicates its state rather than merely not working:
+      // `aria-disabled` keeps it in the tab order and announces it, where the
+      // `disabled` attribute would take it out of the tree unheard.
+      expect(html, `${reason} is not actionable`).toContain('aria-disabled="true"')
+    }
+  })
+
+  it('interpolates the level the viewer is short of, rather than a generic no', () => {
+    const { text } = render(skin, {
+      task: aTask({ ...TASK, level_required: 4, can_sign_up: false, signup_reason: 'below_level' }),
+      onSignup: () => {},
+    })
+    expect(text).toContain(i18n.t('tasks:detail.signup.denied.belowLevel', { level: 4 }))
+    expect(text, 'the placeholder must not survive to the screen').not.toContain('{{level}}')
+  })
+
+  it('keeps the claim pressable, and says the detail page words, when sign-up is open', () => {
+    // `multi_membership` is a PERMIT: Double Dipper lets its members go again,
+    // and the detail page has said "Begin again" for it since #1497 while the
+    // card said "Sign up". One mapper, one answer.
+    const again = render(skin, {
+      task: aTask({ ...TASK, signup_reason: 'multi_membership' }),
+      onSignup: () => {},
+    })
+    expect(again.text).toContain(i18n.t('tasks:detail.signup.ctaAgain'))
+    expect(again.html, 'still a live control').not.toContain('aria-disabled')
+
+    const open = render(skin, { onSignup: () => {} })
+    expect(open.text, "the faction's own verb, unchanged").toContain(skin.signup)
+    expect(open.html, 'still a live control').not.toContain('aria-disabled')
   })
 })
 
