@@ -645,7 +645,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // that was measured on #0a0c15 is now also asked to clear #12151f. It does,
   // by a wide margin either way; the row exists so that the NEXT move of this
   // band cannot repeat #1627's failure, where an ink stayed put while the ground
-  // under it changed and every row in this file went on passing.
+  // under it changed and every row in this file went on passing. 14.00:1 on the
+  // band, 13.07:1 on the disc — 0.93 of a very large margin.
   { what: "ephemerists card masthead band, wordmark", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
   { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },

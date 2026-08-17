@@ -308,10 +308,11 @@ export default function EphemeristsTaskCard({
             is two values lighter than `-plate-band`, so the header reads as a
             brass-edged plate rather than as a night strip, and the compass rose
             below it is struck on the same field. THE INK IS UNCHANGED:
-            `-plate-band-ink` is the gold measured on the band and it clears the
-            disc by more than it clears the plate (14.2:1 — the pairing is
-            recorded in `factionContrast.test.ts`). The sigil takes
-            `currentColor`, so it is that same gold.
+            `-plate-band-ink` is the gold measured on the band, and moving the
+            ground under it spends 0.93 of a very large margin — 14.00:1 on the
+            band, 13.07:1 on the disc. That is a NEW pairing rather than the old
+            row wearing a new ground, so `factionContrast.test.ts` records it.
+            The sigil takes `currentColor`, so it is that same gold.
 
             `boxSizing` is load-bearing next to the border: the band is a block
             child of a card with `overflow: hidden`, so a content-box border
