@@ -1,4 +1,4 @@
-# ADR-0077 — Faction detail collapses to one responsive component per faction
+# ADR-0078 — Faction detail collapses to one responsive component per faction
 
 **Status:** Accepted
 **Date:** 2026-08-16

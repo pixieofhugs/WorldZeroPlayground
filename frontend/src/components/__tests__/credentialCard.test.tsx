@@ -111,26 +111,35 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     expect(html, 'the unaffiliated spectrum ring').toContain('--faction-default-rainbow-conic')
   })
 
-  // #783's named hazard, inverted by #1891. Albescent's cross-hair is DELETED:
-  // a mark nobody else wears is a tell, and this card is read by strangers. The
-  // card is still slug-blind — it asks `FactionSigil` and takes what it is
-  // given — so what is asserted is that the answer is now the ordinary one.
-  it('gets albescent the same mark as everyone unthemed, not one of its own', () => {
-    const rings = (html: string) => html.split('--faction-default-rainbow-conic').length - 1
+  // #783's named hazard, ruled on three times. #1626 gave albescent a
+  // cross-hair; #1891 deleted it, because a mark nobody else wears is a tell
+  // and this card is read by strangers; Sigil Studies v2 reinstates a mark by
+  // owner ruling, and what makes THAT safe is that the labyrinth carries no
+  // palette — it is cut out of the same spectrum na wears. The card stays
+  // slug-blind either way: it asks `FactionSigil` and takes what it is given,
+  // so what is asserted is the ANSWER and the property that makes it safe.
+  it('gets albescent a shape of its own but never a colour of its own', () => {
     const albescent = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="albescent" level={1} score={0} />,
     )
     const unaffiliated = renderToStaticMarkup(
       <CredentialCard displayName="Wren" handle="wren" factionSlug="na" level={1} score={0} />,
     )
-    // No cross-hair: the mark was seven parts stroked from a <linearGradient>
-    // built out of the --faction-default-stop-* tokens.
+    // The shape: the labyrinth here, the ring there.
+    expect(albescent, 'the labyrinth').toContain('/factionMarks/labyrinth.svg')
+    expect(unaffiliated, 'the na ring, unchanged').not.toContain('/factionMarks/labyrinth.svg')
+    // The paint: BOTH are the unaffiliated conic, and neither reaches for a
+    // reveal register or a faction hue. This is the line #1891's objection
+    // was really about.
     expect(albescent, 'the deleted cross-hair').not.toContain('<linearGradient')
-    // Both now wear the spectrum TWICE — portrait hoop and sigil. Counting the
-    // ring used to be what told the two apart; that it no longer does is the
-    // point of the change.
-    expect(rings(unaffiliated), 'na: hoop + sigil').toBe(2)
-    expect(rings(albescent), 'albescent: hoop + sigil, same as na').toBe(2)
+    expect(albescent, 'the reveal register').not.toContain('--albescent-reveal')
+    expect(albescent, 'no name in the markup').not.toContain('albescent"')
+    // Both draw the conic TWICE — the portrait hoop and the mark itself. That
+    // the count no longer tells the two apart is the whole point: what differs
+    // is the stencil the ramp is poured through, never the ramp.
+    for (const html of [albescent, unaffiliated]) {
+      expect(html.split('--faction-default-rainbow-conic').length - 1, 'hoop + mark').toBe(2)
+    }
   })
 })
 

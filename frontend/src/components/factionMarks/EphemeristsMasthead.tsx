@@ -91,7 +91,9 @@ const DECLINATION = "+44° 03′";
 export type MastheadScale = "page" | "card";
 
 interface MastheadSize {
-  /** The sigil's HEIGHT; the mark owns its 486:560 ratio (#1635). Ornament. */
+  /** The sigil's box. It was a HEIGHT while the mark owned a 486:560 ratio
+   *  (#1635); Sigil Studies v2 draws the kite square, so this is both
+   *  dimensions and the mark is ~15% wider here than it was. Ornament. */
   sigil: number;
   wordmark: string;
   datum: string;
@@ -99,7 +101,9 @@ interface MastheadSize {
   gap: string;
   /** The grid's own column gap. Ornament geometry rounded to the scale. */
   columnGap: string;
-  /** The datum row's closing sigil, below the reduced cut's 20px (#1635). */
+  /** The datum row's closing sigil. It used to sit below #1635's 20px reduced
+   *  cut on purpose; v2 is filled rather than stroked and has no cut, so this
+   *  is now simply the size the datum row was drawn at. */
   inlineSigil: number;
 }
 
