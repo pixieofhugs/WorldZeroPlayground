@@ -343,11 +343,9 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     'taunts.json:ua.score_overtake.1',
 
     // ---- not #1863's to rewrite; the issue that owns each is named ----
-    // #1874 replaces every perks[1] with the faction's real backend mechanic.
-    'factions.json:coven.invitation.perks.1',
-    'factions.json:ephemerists.invitation.perks.1',
-    'factions.json:singularity.invitation.perks.1',
-    'factions.json:snide.invitation.perks.1',
+    // The four perks[1] rows parked here for #1874 are gone: that issue landed
+    // and every mechanic slot now states its faction's real backend perk in the
+    // ruled vocabulary, so none of them says a retired word any more.
     // The whole terms[3] "standing" row was listed here, waiting for #1864's
     // deletion child. #1909 took it — all seven factions — so it is a survivor
     // no longer, and the guard is that much tighter.
@@ -525,7 +523,7 @@ describe('the four functional controls say one thing across every faction (#1863
  * A key-presence test cannot see this: the key existed, resolved, and rendered.
  * The way it comes back is a voice pass writing `.exe` into a skin that is not
  * Singularity's, so the guard reads VALUES and pins the whole offender set with
- * an exact toEqual. Singularity's 13 strings are listed one by one: the register
+ * an exact toEqual. Singularity's 14 strings are listed one by one: the register
  * IS its voice, and enumerating them is what makes an eighth entry fail.
  * ========================================================================== */
 describe('only Singularity speaks in the terminal register (#1948)', () => {
@@ -548,6 +546,10 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     'factions.json:singularity.access.joinButton',
     'factions.json:singularity.access.joining',
     'factions.json:singularity.invitation.kicker',
+    // #1874's mechanic slot. Singularity has no perk, so rather than invent one
+    // the line refuses in the array's own register — caught by the `> ` prompt.
+    // It goes when #1869 gives Singularity something to advertise.
+    'factions.json:singularity.invitation.perks.1',
     'factions.json:singularity.manifest.empty',
     'factions.json:singularity.mobile.eyebrow',
     'factions.json:singularity.praxis.empty',
