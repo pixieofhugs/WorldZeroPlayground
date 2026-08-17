@@ -1150,8 +1150,12 @@ export function BodyTextarea({
           countdown runs (#1164). Nothing here is a refusal — the room takes the
           keystroke and the confirm is what makes cancelling the window
           deliberate (ADR-0079) — so it names the consequence and offers no exit,
-          because typing IS the exit. */}
-      {state.proposalConfirmArmed && (
+          because typing IS the exit.
+
+          Gated on the PRAXIS, not on `proposalConfirmArmed`. The latch is about
+          the dialog, which fires once; this line is about the state, which is
+          still true afterwards and is what the member is deciding against. */}
+      {proposalIsLive(state.praxis) && (
         <div style={{ marginTop: "var(--space-xs)" }}>
           {/* The ink is the class's and only the class's (#1819): an inline
               `color` here beats `--label-ink`, and the three near-black sheets

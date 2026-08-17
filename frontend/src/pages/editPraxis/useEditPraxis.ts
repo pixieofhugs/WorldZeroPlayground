@@ -488,6 +488,16 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // second ask is the latch below rather than a busy flag: agreeing pins THIS
   // proposal's `submit_proposed_at`, which disarms the filter for as long as
   // that proposal lives and re-arms for the next one.
+  //
+  // ponytail: the client learns the edit actually cancelled the proposal only
+  // on its next praxis read. The cancellation is the ROOM's — it fires on the
+  // server's own debounced flush — so nothing here can know the moment it
+  // lands, and nothing is optimistically cleared, because a member who agrees
+  // and then types nothing has cancelled nothing. The ceiling is a footer that
+  // goes on offering Approve/Withdraw against a window the server has already
+  // closed; both are recoverable (Approve re-proposes, Withdraw 422s onto the
+  // error line). The upgrade is to refetch the praxis off the room's update
+  // signal, which `onUpdate` already delivers to `setAutosaveAt`.
   const proposalConfirmArmed = editNeedsProposalConfirm(praxis, agreedProposalAt);
   const confirmProposalEdit = useCallback(() => {
     if (!praxis) return;

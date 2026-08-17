@@ -38,11 +38,29 @@ vi.mock("../../praxisRoom", async (importOriginal) => ({
 
 const { BodyTextarea } = await import("../controls");
 
-function state(proposalConfirmArmed: boolean): EditPraxisState {
+function state(proposalLive: boolean): EditPraxisState {
+  const member = (id: number) => ({
+    id,
+    praxis_id: 1,
+    character_id: id,
+    character_display_name: `M${id}`,
+    has_submitted: false,
+    is_done: false,
+    joined_at: "2026-01-01T00:00:00Z",
+    nudged_at: null,
+    submitted_at: null,
+  });
   return {
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
-    proposalConfirmArmed,
+    praxis: {
+      id: 1,
+      type: "collab",
+      status: proposalLive ? "pending" : "in_progress",
+      submit_proposed_at: proposalLive ? "2026-08-17T10:00:00Z" : null,
+      members: [member(1), member(2)],
+    },
+    proposalConfirmArmed: proposalLive,
     confirmProposalEdit: () => {},
     controlsLocked: false,
     submitting: false,

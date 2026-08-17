@@ -21,14 +21,37 @@ import i18n from "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { BodyTextarea } from "../controls";
 
+/** A crew of two — the smallest praxis a proposal can exist on. */
+function praxis(proposalLive: boolean) {
+  const member = (id: number) => ({
+    id,
+    praxis_id: 1,
+    character_id: id,
+    character_display_name: `M${id}`,
+    has_submitted: false,
+    is_done: false,
+    joined_at: "2026-01-01T00:00:00Z",
+    nudged_at: null,
+    submitted_at: null,
+  });
+  return {
+    id: 1,
+    type: "collab",
+    status: proposalLive ? "pending" : "in_progress",
+    submit_proposed_at: proposalLive ? "2026-08-17T10:00:00Z" : null,
+    members: [member(1), member(2)],
+  };
+}
+
 function state(
-  proposalConfirmArmed: boolean,
+  proposalLive: boolean,
   controlsLocked = false,
 ): EditPraxisState {
   return {
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
-    proposalConfirmArmed,
+    praxis: praxis(proposalLive),
+    proposalConfirmArmed: proposalLive,
     confirmProposalEdit: () => {},
     controlsLocked,
     submitting: false,
@@ -56,6 +79,21 @@ describe("a live proposal, at the write-up", () => {
 
   it("says nothing of the sort while the crew is only drafting", () => {
     expect(html(false)).not.toContain(liveLine);
+  });
+
+  it("outlives the dialog, because the state it names does", () => {
+    // Gated on the praxis rather than on `proposalConfirmArmed`: the confirm
+    // fires once and gets out of the way, but the window is still open and is
+    // still what the member is deciding against on their next keystroke.
+    const agreedAlready = {
+      ...(state(true) as unknown as Record<string, unknown>),
+      proposalConfirmArmed: false,
+    } as unknown as EditPraxisState;
+    expect(
+      renderToStaticMarkup(
+        <BodyTextarea state={agreedAlready} skin={{ textareaStyle: {} }} />,
+      ).replace(/&#x27;|&#39;/g, "'"),
+    ).toContain(liveLine);
   });
 
   it("names the consequence rather than merely flagging a state", () => {
