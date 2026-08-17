@@ -231,7 +231,8 @@ describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () =>
     //
     // Albescent is the only permitted absence, and only because it is hidden.
     // `wow` was absent for one release (#784) after Cozy Coven took its pink
-    // block; it rejoined at index 2 in #812 once it had a yellow one.
+    // block; it rejoined at index 2 in #812 once it had a yellow one, and moved
+    // to index 5 in #2078 when that yellow became a plum.
     expect([...FACTION_RAINBOW_ORDER].sort()).toEqual([
       "coven",
       "ephemerists",
@@ -271,16 +272,36 @@ describe("FACTION_RAINBOW_ORDER is a spectrum, not a roster", () => {
     }
   });
 
-  it("runs red → orange → yellow → green → teal → blue → pink", () => {
+  it("runs red → orange → gold → green → blue → plum → pink", () => {
     // The order is the spectrum. A slug's index is decided by its hue and
     // nothing else — not join date, not prominence, not alphabetically.
+    //
+    // RE-POINTED, NOT RENUMBERED (#2078). This used to read red → orange →
+    // YELLOW → green → TEAL → blue → pink, which was the same claim about the
+    // hues #2068 replaced: WOW held the yellow at h45 and the Ephemerists the
+    // teal at h183. WOW is a plum (h274 light / h276 dark) and the Ephemerists
+    // a plate brass (h41 / h44), so two slugs moved — `ephemerists` up to
+    // index 2 and `wow` down to index 5 — and the spectrum's shape changed
+    // with them: there is no teal in it at all now, and the run from green to
+    // blue is one long jump rather than two short ones.
+    //
+    // The cut in the wheel is still red, and that is why `everymen` leads
+    // rather than `ua`: #c1272d sits at h357.7, i.e. −2.3°, straddling the
+    // origin (its dark twin #ef5350 is h1.1). Sorting the light values by raw
+    // angle would wrap it to the tail; the array has always cut at red.
+    //
+    // The hue is not assertable here by construction — this module holds no
+    // colour (#1269), index.css does — so this list is the record of a
+    // measurement made against index.css, not a derivation. Angles as of
+    // 2026-08-17: everymen 358, ua 18, ephemerists 41, snide 82,
+    // singularity 221, wow 274, coven 335.
     expect([...FACTION_RAINBOW_ORDER]).toEqual([
       "everymen",
       "ua",
-      "wow",
-      "snide",
       "ephemerists",
+      "snide",
       "singularity",
+      "wow",
       "coven",
     ]);
   });

@@ -436,19 +436,30 @@ export function getAllFactions(): FactionConfig[] {
 
 /**
  * Canonical rainbow display order for faction strips/pennants (issue #352):
- * Everymen → UA → Warriors of Whimsy → S.N.I.D.E. → Ephemerists → Singularity
- * → Cozy Coven. Red, orange, yellow, green, teal, blue, pink — the order is the
+ * Everymen → UA → Ephemerists → S.N.I.D.E. → Singularity → Warriors of Whimsy
+ * → Cozy Coven. Red, orange, gold, green, blue, plum, pink — the order is the
  * spectrum, so a slug's position is decided by its hue and nothing else.
  *
- * TWO SLOTS ARE OUT OF SPECTRAL ORDER SINCE #2068, DELIBERATELY LEFT THAT WAY.
- * That issue swapped two hues without touching this array: WOW went from the
- * yellow to a plum (h314) and Ephemerists from the teal to a brass (h85), so the
- * strip now runs red, orange, PLUM, green, GOLD, blue, pink. Sorting by hue again
- * means moving `wow` between `singularity` and `coven` and `ephemerists` up to
- * index 2, which repaints every stripe bar, pennant, legend and Meadow bloom in
- * the app — a visual call the owner reserved along with whether the na spectrum
- * keeps a teal stop. Do not "fix" the sort as tidy-up; it is an open decision,
- * and this comment is the record that the drift is known rather than missed.
+ * SORTED BY: each `--faction-{slug}` light value's HSL hue angle, read off
+ * index.css. LAST RE-SORTED: 2026-08-17 (#2078), following #2068's hue swap.
+ * Angles then — everymen 358, ua 18, ephemerists 41, snide 82, singularity 221,
+ * wow 274, coven 335. The wheel is cut at RED, which is why `everymen` leads
+ * rather than `ua`: #c1272d is h357.7, i.e. −2.3°, straddling the origin (its
+ * dark twin #ef5350 is h1.1), so a raw ascending sort of the light values would
+ * wrap it to the tail. Move a slug here only after re-reading the hue.
+ *
+ * #2068 moved two hues and #2075 left this array alone, so it spent one release
+ * claiming a spectrum it no longer had: WOW's yellow became a plum and the
+ * Ephemerists' teal a plate brass. #2078 is the owner's ruling to follow the
+ * hues — `ephemerists` up to index 2, `wow` down to index 5 — accepting the
+ * repaint of every surface that reads this order. There is no teal in the
+ * spectrum at all now, and green→blue is one long jump rather than two short
+ * ones. The adjacency that ruling had to clear is UA's sienna beside the brass,
+ * the exact "second brown" pairing the old yellow was tuned deep to avoid:
+ * ΔE2000 31.1 light / 30.3 dark, against 34.2 / 31.0 for the yellow it replaces
+ * and 12.4 / 13.5 for everymen|ua, which already ships as the tightest pair.
+ * Measured, not assumed — and not assertable here, because this module holds no
+ * colour (#1269).
  *
  * Albescent is deliberately absent (#783). It is a secret society hiding in
  * plain sight: /factions omits it server-side until an account is revealed to it
@@ -458,19 +469,25 @@ export function getAllFactions(): FactionConfig[] {
  * visible rows; `Leaderboard` and `DefaultPlayers` did not, and shipped the
  * leak. Removing the slug closes all three at the source.
  *
- * Consumers must not assume a length. `Meadow`'s bloom paints one petal per
- * entry, and the stripe bars distribute stops evenly across whatever is here.
+ * Consumers must not assume a length, and only one of them paints these fills
+ * with a hard edge between them: the mobile factions directory's stripe bar,
+ * which distributes stops evenly across whatever is here. `factionStandings`
+ * takes this array as the ROSTER of race lanes and then re-sorts by points, and
+ * the filter facet lists gapped rows — neither shows an adjacency. (The
+ * Leaderboard's own bar and `Meadow`'s bloom were the other two touching
+ * surfaces until #1868 and #1763 retired them.)
  */
 export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "everymen",
   "ua",
-  // Was the yellow, between UA's orange and S.N.I.D.E.'s green (#812), which was
-  // the only index a yellow could hold. WOW is a plum since #2068 and this index
-  // is now the array's one lie — see the note above before moving it.
-  "wow",
-  "snide",
+  // Took the gold slot when #2068 emptied the teal one, so it moved up from
+  // index 4 to sit between UA's sienna and S.N.I.D.E.'s acid green (#2078).
   "ephemerists",
+  "snide",
   "singularity",
+  // Held index 2 as the yellow from #812; a plum belongs between the blue and
+  // the pink, which is the only index a plum can hold (#2068, #2078).
+  "wow",
   // Cozy Coven takes the pink slot, because it took the pink (#784).
   "coven",
 ];

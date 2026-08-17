@@ -56,14 +56,19 @@ import { WowSigil } from "../sigil/WowSigil";
  * Snide, UA, Ephemerists or Singularity card. `EverymenFactionCard.tsx` is the
  * precedent and the same argument.
  *
- * THE TWO SHARED HELPERS ARE NOT REUSED, AND THE REASON IS ARITHMETIC, not
- * taste. `StatusBadge` and `InvitationNote` both paint text in
- * `factionCssVar(slug)` — the faction's SPINE hue, which is a fill and not an
- * ink. WOW's is `#e0a800`, and on this cream card ground that measures
- * **1.96:1** in light mode (dark is fine at 11.19:1, so it is a light-only
- * defect and one this card would have inherited on two of its four states).
- * Both are redrawn here on `--faction-wow-plum-surface` / `-on-plum` at
- * **5.16:1**, theme-invariant, and both say the SAME shared words — the
+ * THE TWO SHARED HELPERS ARE NOT REUSED, AND THE REASON IS THAT A SPINE HUE IS
+ * A FILL, not that this one is unreadable. `StatusBadge` and `InvitationNote`
+ * both paint text in `factionCssVar(slug)` — the faction's SPINE hue, which is a
+ * fill and not an ink. When this card was built that hue was `#e0a800` and
+ * measured **1.96:1** on the cream, a light-only defect (dark reached 11.19:1)
+ * that the card would have inherited on two of its four states. #2068 made the
+ * spine a plum, so the same call now reads 5.79:1 light / 5.23:1 dark and would
+ * clear AA — the original arithmetic is gone, and the rule it was an instance of
+ * is not. A spine hue answers to the rainbow, moves by owner ruling (it just
+ * did), and no test pairs it against this cream: `factionContrast.test.ts` has
+ * no `--faction-wow`-as-ink row, only `-card-accent`. Both helpers are therefore
+ * still redrawn here on `--faction-wow-plum-surface` / `-on-plum` at
+ * **5.16:1**, theme-invariant and measured, and both say the SAME shared words — the
  * `factionCard.status.*` set and `factionCard.newInvitation` — so nothing is
  * gained or lost but the paint. Everymen drew its own ribbon for the same
  * reason; the gap is noted in place on the branch it lives in.
