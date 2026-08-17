@@ -101,6 +101,10 @@ async def list_characters(
         .order_by(Character.created_at.desc())
     )
     if faction:
+        # Deliberately NOT `faction_slugs.faction_filter_slugs`: that helper
+        # folds Albescent under Unaffiliated for the player-facing facet
+        # (#1975), and moderation reads the roster as it is. `?faction=albescent`
+        # here means Albescent, and `?faction=na` means only `na`.
         query = query.where(Character.faction_slug == faction)
     if status:
         query = query.where(Character.status == status)

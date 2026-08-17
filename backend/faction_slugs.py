@@ -1,6 +1,7 @@
 """Canonical faction-slug sentinels.
 
-A **leaf** module: it imports nothing, so the pure-math layer
+A **leaf** module: it imports nothing of this project's (the single import
+below is stdlib and costs no edge), so the pure-math layer
 (``services/scoring.py``), the config layer (``game_config.py``), the async
 services, the routers and ``seed.py`` can all name the same string without any
 of them importing each other. Before #1559 the string ``"na"`` was re-declared
@@ -20,6 +21,8 @@ the era doc wins. Services read ``era.starting_faction_slug``; they must not
 read the constant below to answer "what faction does a new character get?".
 """
 
+from collections.abc import Iterable
+
 #: A **character** has joined no faction — the unaffiliated state every
 #: character is born into by default (ADR-0019 / ADR-0030). This is a real,
 #: seeded ``Faction`` row (hidden, so it never appears in the faction registry)
@@ -33,3 +36,74 @@ UNAFFILIATED_FACTION_SLUG: str = "na"
 #: :data:`UNAFFILIATED_FACTION_SLUG`: a cross-faction task is not "a task that
 #: failed to join a faction", it is a task deliberately open to all of them.
 CROSS_FACTION_SLUG: str = "na"
+
+#: The secret society (ADR-0027). Unlike ``na`` this is a ``visible`` ``Faction``
+#: row — its tasks and its members appear in ordinary listings, and the slug is
+#: on the wire there — but the *word* is never shown to an account that has not
+#: been revealed to it (#1891 / #1926 mask ``factionName()`` client-side), and it
+#: is never a filter option of its own.
+#:
+#: Declared here rather than in ``services.character`` (which now re-exports it,
+#: so every existing importer is unchanged) because
+#: :func:`faction_filter_slugs` below needs it and this module is the leaf that
+#: every layer may import. Membership *rules* still live on the era —
+#: ``EraConfig.albescent_level_required``, ``ERA_1.factions["albescent"]``.
+ALBESCENT_FACTION_SLUG: str = "albescent"
+
+#: The one filter bucket ``na`` and ``albescent`` share. Order is the answer's
+#: order; the group is a tuple rather than a set so a predicate built from it is
+#: deterministic (and so the SQL is stable to read in a log).
+_UNAFFILIATED_FILTER_GROUP: tuple[str, ...] = (
+    UNAFFILIATED_FACTION_SLUG,
+    ALBESCENT_FACTION_SLUG,
+)
+
+
+def faction_filter_slugs(
+    selected: Iterable[str | None] | None,
+) -> list[str]:
+    """The slugs a caller's faction *filter* must match — #1975's one seam.
+
+    Every faceted list service turns a caller-supplied faction selection into a
+    ``... IN (:slugs)`` predicate. This is the only place that translation
+    happens, because the four surfaces sharing the facet
+    (``GET /tasks``, ``GET /praxes``, ``GET /characters``, ``GET /leaderboard``)
+    would otherwise drift and one of them would leak.
+
+    **Selecting Unaffiliated matches ``na`` OR ``albescent``.** ``default ≡ na ≡
+    Unaffiliated`` is one identity (ADR-0039 / ADR-0046 / ADR-0048) and an
+    Albescent member is *shown* as Unaffiliated everywhere. Matching on slug
+    equality made that identity a lie in one direction only: the facet correctly
+    keeps Albescent out of its options, so before this an Albescent row matched
+    **no** filter at all — unreachable rather than hidden behind another option.
+    Folding it under Unaffiliated is also what preserves the secret, because it
+    produces exactly the result an observer would expect if Albescent did not
+    exist.
+
+    An explicit ``?faction=albescent`` — a slug a client was never told — is
+    **normalised into that same group**, not refused: it answers exactly what
+    ``?faction=na`` answers, so the Albescent slice is never separable by any
+    query. Rejecting it would be the louder tell: a 422 for this one string
+    while every other unrecognised slug returns 200-with-nothing is an oracle
+    for the slug's existence.
+
+    Not applied to the admin roster (``services.admin_service``): moderation
+    reads the truth, and that surface has no facet of this kind.
+
+    An empty selection — or one holding only blanks, which is what a cleared
+    client-side filter sends — returns ``[]``, which every call site reads as
+    "no faction filter", never as "match nothing" (#1364).
+    """
+    out: list[str] = []
+    for slug in selected or ():
+        if not slug:
+            continue
+        group = (
+            _UNAFFILIATED_FILTER_GROUP
+            if slug in _UNAFFILIATED_FILTER_GROUP
+            else (slug,)
+        )
+        for member in group:
+            if member not in out:
+                out.append(member)
+    return out
