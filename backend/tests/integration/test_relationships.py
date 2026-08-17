@@ -1,8 +1,11 @@
 """Integration tests for /relationships endpoints."""
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
+from models.character_block import CharacterBlock
 
 
 # ---------------------------------------------------------------------------
@@ -132,14 +135,22 @@ async def test_list_relationships_unauthenticated(client: AsyncClient):
 # ---------------------------------------------------------------------------
 
 
+# The two edge-addressed routes below are the ADR-0009 shape, kept for one
+# release while the client moves to /relationships/blocks (#1907). They write
+# the ADR-0077 record like everything else — what is asserted here is that they
+# still answer, that they no longer touch the edge, and that the guards on the
+# path (404, 403) survive the reimplementation.
+
+
 @pytest.mark.asyncio
-async def test_block_relationship(
+async def test_block_by_edge_id_writes_the_record_and_leaves_the_edge_alone(
     client: AsyncClient,
+    db_session: AsyncSession,
     character: Character,
     character2: Character,
     auth_headers: dict,
 ):
-    """A relationship can be blocked."""
+    """A block outranks an active edge; it does not consume one (ADR-0077)."""
     create_resp = await client.post(
         "/relationships",
         json={"to_character_id": character2.id, "type": "friend"},
@@ -151,19 +162,24 @@ async def test_block_relationship(
         f"/relationships/{relationship_id}",
         headers=auth_headers,
     )
+
     assert block_resp.status_code == 200
-    assert block_resp.json()["status"] == "blocked"
+    assert block_resp.json()["status"] == "active"
+    assert block_resp.json()["display_status"] == "One-sided Friend"
+    blocks = (await db_session.execute(select(CharacterBlock))).scalars().all()
+    assert [(b.blocker_character_id, b.blocked_character_id) for b in blocks] == [
+        (character.id, character2.id)
+    ]
 
 
 @pytest.mark.asyncio
-async def test_unblock_relationship_restores_active(
+async def test_unblock_by_edge_id_deletes_the_record(
     client: AsyncClient,
+    db_session: AsyncSession,
     character: Character,
     character2: Character,
     auth_headers: dict,
 ):
-    """Unblock reverses a block (ADR-0009, superseded by ADR-0077): the edge
-    returns to active and its display status re-derives from the type."""
     create_resp = await client.post(
         "/relationships",
         json={"to_character_id": character2.id, "type": "friend"},
@@ -176,25 +192,23 @@ async def test_unblock_relationship_restores_active(
         f"/relationships/{relationship_id}/unblock",
         headers=auth_headers,
     )
-    assert unblock_resp.status_code == 200
-    assert unblock_resp.json()["status"] == "active"
 
-    # Display status reverts from "Blocked" to the type-derived label.
-    list_resp = await client.get("/relationships", headers=auth_headers)
-    item = next(r for r in list_resp.json() if r["id"] == relationship_id)
-    assert item["display_status"] != "Blocked"
+    assert unblock_resp.status_code == 200
+    assert (await db_session.execute(select(CharacterBlock))).scalars().all() == []
 
 
 @pytest.mark.asyncio
-async def test_unblock_relationship_by_target(
+async def test_the_target_cannot_lift_the_declarers_block(
     client: AsyncClient,
+    db_session: AsyncSession,
     character: Character,
     character2: Character,
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Either party can unblock — the target (who did not declare the edge) may
-    reverse a block too, symmetric with block."""
+    """ADR-0009 let either party unblock, because they shared one row. ADR-0077
+    gives the record's authorship to the blocker alone — and the target's call
+    still answers 200, because a refusal here would name the block."""
     create_resp = await client.post(
         "/relationships",
         json={"to_character_id": character2.id, "type": "friend"},
@@ -203,13 +217,13 @@ async def test_unblock_relationship_by_target(
     relationship_id = create_resp.json()["id"]
     await client.put(f"/relationships/{relationship_id}", headers=auth_headers)
 
-    # character2 is the target, not the declarer — they can still unblock.
     unblock_resp = await client.post(
         f"/relationships/{relationship_id}/unblock",
         headers=auth_headers2,
     )
+
     assert unblock_resp.status_code == 200
-    assert unblock_resp.json()["status"] == "active"
+    assert len((await db_session.execute(select(CharacterBlock))).scalars().all()) == 1
 
 
 @pytest.mark.asyncio
@@ -225,6 +239,34 @@ async def test_unblock_relationship_non_party_forbidden(
         headers=auth_headers,
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_a_third_party_cannot_act_on_someone_elses_edge(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    auth_headers: dict,
+    auth_headers3: dict,
+):
+    """The 403 guard on the dyad still holds: character3 is not a party to it."""
+    create_resp = await client.post(
+        "/relationships",
+        json={"to_character_id": character2.id, "type": "friend"},
+        headers=auth_headers,
+    )
+    relationship_id = create_resp.json()["id"]
+
+    blocked = await client.put(
+        f"/relationships/{relationship_id}", headers=auth_headers3
+    )
+    unblocked = await client.post(
+        f"/relationships/{relationship_id}/unblock", headers=auth_headers3
+    )
+
+    assert blocked.status_code == 403
+    assert unblocked.status_code == 403
 
 
 # ---------------------------------------------------------------------------
@@ -277,109 +319,58 @@ async def test_delete_relationship_wrong_owner(
 
 
 # ---------------------------------------------------------------------------
-# Blocked display status (ADR-0009, superseded by ADR-0077 — which retires
-# the label entirely)
+# The retired "Blocked" display status (ADR-0009, reversed by ADR-0077)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_display_status_blocked_outgoing(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-):
-    """An outgoing edge with status=blocked reports display_status='Blocked'."""
-    create_resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "foe"},
-        headers=auth_headers,
-    )
-    relationship_id = create_resp.json()["id"]
-
-    await client.put(f"/relationships/{relationship_id}", headers=auth_headers)
-
-    list_resp = await client.get("/relationships", headers=auth_headers)
-    assert list_resp.status_code == 200
-    items = list_resp.json()
-    match = next(r for r in items if r["to_character_id"] == character2.id)
-    assert match["display_status"] == "Blocked"
-
-
-@pytest.mark.asyncio
-async def test_display_status_blocked_incoming(
+async def test_a_block_produces_no_label_for_either_party(
     client: AsyncClient,
     character: Character,
     character2: Character,
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """A blocked incoming edge overrides the outgoing type label to 'Blocked'."""
-    # character declares character2 a friend
+    """ADR-0009 surfaced "Blocked" on both sides of the pair, and ADR-0077
+    reverses it: the blocker reads their own block from /relationships/blocks,
+    and the blocked party reads nothing anywhere.
+
+    Mutual Friends is the strongest case for the old label — it is the one the
+    block used to overwrite — so it is the one asserted here.
+    """
     await client.post(
         "/relationships",
         json={"to_character_id": character2.id, "type": "friend"},
         headers=auth_headers,
     )
-    # character2 declares character a friend — now Mutual Friends
-    create_resp2 = await client.post(
-        "/relationships",
-        json={"to_character_id": character.id, "type": "friend"},
-        headers=auth_headers2,
-    )
-    # character2 blocks their own outgoing edge
-    rel2_id = create_resp2.json()["id"]
-    await client.put(f"/relationships/{rel2_id}", headers=auth_headers2)
-
-    # character's list should now show Blocked (incoming edge is blocked)
-    list_resp = await client.get("/relationships", headers=auth_headers)
-    assert list_resp.status_code == 200
-    items = list_resp.json()
-    match = next(r for r in items if r["to_character_id"] == character2.id)
-    assert match["display_status"] == "Blocked"
-
-
-@pytest.mark.asyncio
-async def test_display_status_blocked_overrides_mutual_friends(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """Blocked status overrides a Mutual Friends label for both parties."""
-    # Establish Mutual Friends
     await client.post(
         "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
-        headers=auth_headers,
-    )
-    create_resp2 = await client.post(
-        "/relationships",
         json={"to_character_id": character.id, "type": "friend"},
         headers=auth_headers2,
     )
 
-    # Verify Mutual Friends before block
     pre_block = await client.get("/relationships", headers=auth_headers)
-    pre_items = pre_block.json()
-    mutual = next(r for r in pre_items if r["to_character_id"] == character2.id)
+    mutual = next(r for r in pre_block.json() if r["to_character_id"] == character2.id)
     assert mutual["display_status"] == "Mutual Friends"
     # The raw reverse edge is NOT emitted (#1387). A reverse edge exists here —
     # that is what makes the pair Mutual Friends — so a leftover serializer
     # would put a non-null "friend" in the payload, not a defaulted null.
     assert "reverse_type" not in mutual
 
-    # character2 blocks their own outgoing edge → both should see Blocked
-    rel2_id = create_resp2.json()["id"]
-    await client.put(f"/relationships/{rel2_id}", headers=auth_headers2)
+    blocked = await client.post(
+        "/relationships/blocks",
+        json={"character_id": character.id},
+        headers=auth_headers2,
+    )
+    assert blocked.status_code == 201
 
-    # character sees Blocked
-    list_char = await client.get("/relationships", headers=auth_headers)
-    match_char = next(r for r in list_char.json() if r["to_character_id"] == character2.id)
-    assert match_char["display_status"] == "Blocked"
-
-    # character2 sees Blocked (their own outgoing is blocked)
-    list_char2 = await client.get("/relationships", headers=auth_headers2)
-    match_char2 = next(r for r in list_char2.json() if r["to_character_id"] == character.id)
-    assert match_char2["display_status"] == "Blocked"
+    for headers, counterpart in (
+        (auth_headers, character2.id),
+        (auth_headers2, character.id),
+    ):
+        listing = await client.get("/relationships", headers=headers)
+        match = next(
+            r for r in listing.json() if r["to_character_id"] == counterpart
+        )
+        assert match["display_status"] == "Mutual Friends"
+        assert match["status"] == "active"

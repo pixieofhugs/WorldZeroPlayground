@@ -8,8 +8,8 @@ reference — the sender's send-time faction voice (``faction_slug``) plus the
 ADR-0068 owns *delivery*: **declaring a foe subscribes you to that rival's
 taunts**. A taunt from sender S reaches recipient R only when R holds an active
 foe edge → S, and a block between the pair silences it in both directions
-(ADR-0077, superseding ADR-0009 — under which the block rides on an edge, so
-either blocked edge of the pair is what silences it).
+(ADR-0077: the block is its own record, read here in both directions, and it
+outranks the edge without consuming it).
 The activity feed is the only delivery surface — there is no standalone read
 route, and ``services.activity_feed`` reads the rows this module writes.
 
@@ -24,8 +24,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.character_stats import CharacterStats
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.taunt_message import TauntMessage, TauntTriggerType
+from services.block_service import blocked_counterpart_ids
 
 
 @dataclass(frozen=True)
@@ -47,11 +48,11 @@ class FoeEdges:
 async def load_foe_edges(character_id: int, session: AsyncSession) -> FoeEdges:
     """Resolve the ADR-0068 subscription sets for ``character_id``.
 
-    One query over every edge touching the character, partitioned in Python:
-    the pair rule needs *both* directions (an edge is silenced if either side of
-    the pair is blocked, ADR-0009 — superseded by ADR-0077, under which the
-    block record is read directly and outranks the edge), and a character
-    holds few edges.
+    Two queries. One over every edge touching the character, partitioned in
+    Python because the pair rule needs both directions and a character holds few
+    edges; one over the block records, which are read in both directions too —
+    a block is directed in authorship and symmetric in effect (ADR-0077), so
+    either party's block silences the pair.
     """
     edges = (
         await session.execute(
@@ -64,19 +65,19 @@ async def load_foe_edges(character_id: int, session: AsyncSession) -> FoeEdges:
         )
     ).scalars().all()
 
-    blocked: set[int] = set()
+    blocked: set[int] = set(
+        (await session.execute(blocked_counterpart_ids(character_id))).scalars().all()
+    )
     subscribers: set[int] = set()
     subscribed_to: set[int] = set()
     for edge in edges:
+        # Blocked wins, in both directions, whatever the edge says — and the
+        # edge survives, so unblocking restores the subscription for free.
         counterpart_id = (
             edge.to_character_id
             if edge.from_character_id == character_id
             else edge.from_character_id
         )
-        if edge.status is RelationshipStatus.blocked:
-            # Blocked wins, in both directions, whatever the other edge says.
-            blocked.add(counterpart_id)
-            continue
         if edge.type is not RelationshipType.foe:
             continue
         if edge.to_character_id == character_id:

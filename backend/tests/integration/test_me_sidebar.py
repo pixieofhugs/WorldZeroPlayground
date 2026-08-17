@@ -220,6 +220,9 @@ async def four_request_types(
     open_duel_praxis = praxis(character2.id, PraxisType.duel, "Open duel")
     answered_duel_praxis = praxis(character2.id, PraxisType.duel, "Answered duel")
     # --- awaiting_submission: viewer un-submitted (counts) / submitted (not) -
+    # Both carry their creator's member row as well as the viewer's: an
+    # obligation needs somebody else to be party to it (#1980), and a collab the
+    # creator never appeared in is a shape no route can produce.
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
     db_session.add_all([
@@ -257,7 +260,15 @@ async def four_request_types(
             praxis_id=my_turn.id, character_id=character.id, has_submitted=False
         ),
         PraxisMember(
+            praxis_id=my_turn.id, character_id=character2.id, has_submitted=False
+        ),
+        PraxisMember(
             praxis_id=already_filed.id, character_id=character.id, has_submitted=True
+        ),
+        # The twin differs from ``my_turn`` in ``has_submitted`` and nothing
+        # else, or it stops being a twin.
+        PraxisMember(
+            praxis_id=already_filed.id, character_id=character2.id, has_submitted=False
         ),
         # A letter for a faction the viewer does NOT stand in is an open ask...
         InvitationLetter(

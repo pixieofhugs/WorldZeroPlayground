@@ -211,85 +211,103 @@ export default function EverymenTaskCard({
             <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
               {/* The dateline carried the uniform "Task {id}" ordinal and nothing
                   else, so #1124's retirement of the id takes the whole line. */}
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
-                <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
-                  <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>
-                    {i18n.t("feed:taskCard.everymen.levelCaption")}
-                  </span>
-                  <span style={{ fontFamily: POSTER, fontSize: size.levelSize, lineHeight: 0.82 }}>
-                    {task.level_required}
-                  </span>
-                </div>
+              {/* LEVEL and the seal ride in two EQUAL halves with the cog
+                  between them, so the cog lands on the sheet's own centreline —
+                  the axis the masthead pair and the rays' convergence already
+                  share (#1965). It used to be the midpoint of the dashed rule,
+                  which begins after LEVEL and ends before the seal: a span whose
+                  centre is (levelWidth − sealWidth) / 2 ≈ 20px LEFT of the card's,
+                  which is exactly how far off true the cog read.
 
-                <div aria-hidden="true" style={{ flex: 1, display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-                  <span style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
-                  <Gear size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
-                  <span style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
-                </div>
-
-                {/* The faction modifier — hidden at ×1.00, so invisible under
-                    era_1's neutralized modifiers and automatic the day one moves
-                    (ADR-0055). */}
-                {showMultiplier && (
-                  <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
-                    <span
-                      style={{
-                        ...LABEL,
-                        fontSize: "var(--text-lg)",
-                        letterSpacing: "0.04em",
-                        color: "var(--faction-everymen-bill-mult-ink)",
-                        border: "1.5px solid var(--everymen-gold)",
-                        borderRadius: 2,
-                        padding: "var(--space-xs) var(--space-sm)",
-                      }}
-                    >
-                      {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                  ponytail: the halves are equal only while each holds less than
+                  half the row. LEVEL always does; the right half does too until
+                  the ×modifier badge appears beside the seal, which era_1's
+                  neutralized multipliers never let happen. Ceiling: an era that
+                  ships a non-1.0 modifier pushes the cog left again on mobile.
+                  Upgrade path: at that point the badge wants its own line under
+                  the seal rather than a third thing crowding one row. */}
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
+                <div style={{ flex: "1 1 0", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+                  <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
+                    <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>
+                      {i18n.t("feed:taskCard.everymen.levelCaption")}
                     </span>
-                    <span style={{ ...LABEL, fontSize: "var(--text-md)", color: "var(--everymen-muted)" }}>
-                      {i18n.t("feed:taskCard.modifierCaption")}
+                    <span style={{ fontFamily: POSTER, fontSize: size.levelSize, lineHeight: 0.82 }}>
+                      {task.level_required}
                     </span>
                   </div>
-                )}
+                  <span aria-hidden="true" style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
+                </div>
 
-                {/* The rubber-stamp points seal, struck a few degrees off true. */}
-                <div
-                  style={{
-                    position: "relative",
-                    flex: "0 0 auto",
-                    width: size.seal,
-                    height: size.seal,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transform: "rotate(-4deg)",
-                    color: "var(--everymen-red)",
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
+                <Gear size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
+
+                <div style={{ flex: "1 1 0", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+                  <span aria-hidden="true" style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
+
+                  {/* The faction modifier — hidden at ×1.00, so invisible under
+                      era_1's neutralized modifiers and automatic the day one moves
+                      (ADR-0055). */}
+                  {showMultiplier && (
+                    <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
+                      <span
+                        style={{
+                          ...LABEL,
+                          fontSize: "var(--text-lg)",
+                          letterSpacing: "0.04em",
+                          color: "var(--faction-everymen-bill-mult-ink)",
+                          border: "1.5px solid var(--everymen-gold)",
+                          borderRadius: 2,
+                          padding: "var(--space-xs) var(--space-sm)",
+                        }}
+                      >
+                        {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                      </span>
+                      <span style={{ ...LABEL, fontSize: "var(--text-md)", color: "var(--everymen-muted)" }}>
+                        {i18n.t("feed:taskCard.modifierCaption")}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* The rubber-stamp points seal, struck a few degrees off true. */}
+                  <div
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      border: "2px solid var(--everymen-red)",
-                      boxShadow: "inset 0 0 0 3px var(--everymen-paper), inset 0 0 0 4px var(--everymen-red)",
+                      position: "relative",
+                      flex: "0 0 auto",
+                      width: size.seal,
+                      height: size.seal,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: "rotate(-4deg)",
+                      color: "var(--everymen-red)",
                     }}
-                  />
-                  <span style={{ fontFamily: POSTER, fontSize: size.pointsSize, lineHeight: 0.8 }}>
-                    {basePoints}
-                  </span>
-                  {/* The seal's unit word ("POINTS",
-                      `feed:taskCard.everymen.sealUnit`) stood here. #1909 cut
-                      it: Everymen was the only faction with the slot.
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "50%",
+                        border: "2px solid var(--everymen-red)",
+                        boxShadow: "inset 0 0 0 3px var(--everymen-paper), inset 0 0 0 4px var(--everymen-red)",
+                      }}
+                    />
+                    <span style={{ fontFamily: POSTER, fontSize: size.pointsSize, lineHeight: 0.8 }}>
+                      {basePoints}
+                    </span>
+                    {/* The seal's unit word ("POINTS",
+                        `feed:taskCard.everymen.sealUnit`) stood here. #1909 cut
+                        it: Everymen was the only faction with the slot.
 
-                      ponytail: this leaves the struck seal a bare figure, and
-                      `taskCard.everymen` has no `pointsUnit` to fall back on —
-                      it is the one faction card that never had one. Ceiling: no
-                      unit word on this card until the shared key exists.
-                      Upgrade path: #1910 collapses `taskCard.{F}.pointsUnit` to
-                      ONE shared key; read it here when it lands. Inventing a
-                      cross-faction read now would collide with that PR. */}
+                        ponytail: this leaves the struck seal a bare figure, and
+                        `taskCard.everymen` has no `pointsUnit` to fall back on —
+                        it is the one faction card that never had one. Ceiling: no
+                        unit word on this card until the shared key exists.
+                        Upgrade path: #1910 collapses `taskCard.{F}.pointsUnit` to
+                        ONE shared key; read it here when it lands. Inventing a
+                        cross-faction read now would collide with that PR. */}
+                  </div>
                 </div>
               </div>
 

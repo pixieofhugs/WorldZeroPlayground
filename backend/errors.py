@@ -185,6 +185,11 @@ class ErrorCode(str, enum.Enum):
     # -- Relationships ------------------------------------------------------
     relationship_not_found = "RELATIONSHIP_NOT_FOUND"
     relationship_not_declarer = "RELATIONSHIP_NOT_DECLARER"
+    #: ADR-0077. The one refusal the block route has: a self-block is
+    #: meaningless and every read would have to special-case it. Every *other*
+    #: outcome of a block is a success, deliberately — a refusal that fired only
+    #: across a block would announce the block (ADR-0077 ruling 2).
+    block_self = "BLOCK_SELF"
 
     # -- Activity feed ------------------------------------------------------
     feed_item_key_unknown = "FEED_ITEM_KEY_UNKNOWN"
