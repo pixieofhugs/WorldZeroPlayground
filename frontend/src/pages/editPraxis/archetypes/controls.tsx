@@ -980,8 +980,8 @@ export function BodyTextarea({
         // Undo reaches the document through Yjs rather than through a
         // transaction of its own, so it arrives at the filter above wearing no
         // user event. Caught here instead, at higher precedence than
-        // `yUndoManagerKeymap` below — returning false when disarmed falls
-        // straight through to it.
+        // `yUndoManagerKeymap` above — returning false when disarmed falls
+        // straight through to it, so nothing changes when no proposal is live.
         Prec.high(
           keymap.of(
             ["Mod-z", "Mod-y", "Mod-Shift-z"].map((key) => ({
