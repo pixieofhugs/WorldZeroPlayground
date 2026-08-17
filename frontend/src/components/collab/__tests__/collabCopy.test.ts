@@ -79,17 +79,17 @@ describe('collabCopy — the resolver still resolves', () => {
   })
 
   it('falls back to the shared block for an unknown slug', () => {
-    expect(collabCopy('not-a-faction', 'castAction')).toBe(
-      forms.editPraxis.collab.castAction,
+    expect(collabCopy('not-a-faction', 'proposeAction')).toBe(
+      forms.editPraxis.collab.proposeAction,
     )
   })
 
   it('interpolates counts', () => {
     expect(collabCopy(null, 'castStatus', { cast: 1, total: 3 })).toBe(
-      '1 of 3 submitted',
+      '1 of 3 approved',
     )
     expect(collabCopy('coven', 'castStatus', { cast: 1, total: 3 })).toBe(
-      '1 of 3 submitted',
+      '1 of 3 approved',
     )
   })
 })
@@ -129,10 +129,11 @@ describe('collabCopy — no faction voices the collab keys (#1812)', () => {
  * (`status = submitted`), and "filed"/"cast" are the words it tells you to
  * avoid for it.
  *
- * The key NAMES are deliberately exempt: `castAction`/`pillWeaving` stay put,
- * because renaming them touches every call site for nothing a player sees and
- * #1811 is about to re-cut the vocabulary anyway. This guard is about the
- * values only.
+ * The key NAMES are exempt: this guard is about the values only. #1811 did move
+ * the action names — `castAction`/`castFinalAction`/`pullBackAction` became
+ * `doneAction`/`proposeAction`/`approveAction`/`withdrawAction` — but because
+ * the MECHANIC moved under them (ADR-0079 split one button into three signals),
+ * not because the wording changed.
  */
 describe('collabCopy — the shared tier speaks the domain noun (#1154)', () => {
   const FACTION_VERBS =
@@ -169,10 +170,14 @@ describe('collabCopy — the shared tier speaks the domain noun (#1154)', () => 
    * lower-case: a praxis is either a collab or a duel side, so those two never
    * render beside these four, and #1832 scoped itself to the roster's set.
    */
-  it('labels the four roster states in sentence case', () => {
-    expect(collabCopy(null, 'pillCast')).toBe('Submitted')
+  it('labels the roster states in sentence case', () => {
+    // `pillCast` reads Approved since ADR-0079: `has_submitted` is a vote on the
+    // live proposal now, not "this member filed their part".
+    expect(collabCopy(null, 'pillCast')).toBe('Approved')
     expect(collabCopy(null, 'pillWeaving')).toBe('Accepted')
     expect(collabCopy(null, 'pillInvited')).toBe('Invited')
     expect(collabCopy(null, 'pillDeclined')).toBe('Declined')
+    // Done rides alongside the four rather than replacing one of them.
+    expect(collabCopy(null, 'pillDone')).toBe('Done')
   })
 })

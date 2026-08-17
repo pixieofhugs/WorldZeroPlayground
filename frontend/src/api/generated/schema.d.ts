@@ -3972,6 +3972,8 @@ export interface components {
             has_submitted: boolean;
             /** Id */
             id: number;
+            /** Is Done */
+            is_done: boolean;
             /**
              * Joined At
              * Format: date-time

@@ -12,6 +12,7 @@ function member(id: number, cast: boolean): PraxisMemberOut {
     character_id: id,
     character_display_name: `M${id}`,
     has_submitted: cast,
+    is_done: false,
     joined_at: '2026-01-01T00:00:00Z',
     nudged_at: null,
     submitted_at: null,
@@ -116,7 +117,7 @@ describe('CollabRoster render', () => {
     )
     expect(html).toContain(collabCopy(null, 'pillCast'))
     expect(html).toContain(collabCopy(null, 'pillWeaving'))
-    expect(html).toContain('1 of 2 submitted')
+    expect(html).toContain('1 of 2 approved')
   })
 
   // #1812 — the roster used to reframe every state in the task faction's voice
@@ -304,7 +305,7 @@ describe('CollabRoster — the panel header (#1416)', () => {
   it('reports the gate beside the count once there is one', () => {
     const html = header([member(1, true), member(2, false), member(3, false)])
     expect(html).toContain('Collaborators · 3')
-    expect(html).toContain('1 of 3 submitted')
+    expect(html).toContain('1 of 3 approved')
   })
 
   // The count is MEMBERS, not rows — an invited row is somebody who has been
@@ -320,7 +321,7 @@ describe('CollabRoster — the panel header (#1416)', () => {
       />,
     )
     expect(html).toContain('Collaborators · 2')
-    expect(html).toContain('1 of 2 submitted')
+    expect(html).toContain('1 of 2 approved')
   })
 })
 

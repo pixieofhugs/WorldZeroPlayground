@@ -106,12 +106,13 @@ describe('composer confirms — each names its own consequence', () => {
     expect(request.note).toMatch(/drop/i)
   })
 
-  it('kick names the member and says every submission is cleared (ADR-0013)', () => {
+  it('kick names the member and says every approval is cleared (ADR-0013)', () => {
     const request = kickMemberConfirm('coven', 'Bramblewick')
     expect(request.title).toContain('Bramblewick')
     expect(request.body).toContain('Bramblewick')
-    // Shared-tier mechanics copy, so it reads in the domain noun (#1154).
-    expect(request.body).toMatch(/every submission/i)
+    // Shared-tier mechanics copy, so it reads in the domain noun (#1154) — and
+    // the noun is APPROVAL since ADR-0079 split `has_submitted`'s three jobs.
+    expect(request.body).toMatch(/every approval/i)
     // #1076 restricted kicking to in_progress/pending, and the roster hides the
     // × on a submitted collab — so the copy must not offer to unpublish one.
     expect(request.body).not.toMatch(/unpublish|take it down/i)

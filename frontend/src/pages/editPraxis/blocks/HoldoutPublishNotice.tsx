@@ -17,9 +17,9 @@
  *
  *  - **Only the holdout.** `deriveCollabGate` owns that state, so it is asked
  *    rather than re-derived here. Anyone else's composer draws nothing.
- *  - **Only once the window is open.** It opens when the FIRST member submits,
- *    so a collab nobody has submitted into has no `submit_proposed_at` and no
- *    line — `collabPublishWindow` returns null and this renders nothing.
+ *  - **Only once the window is open.** It opens when a member **proposes**
+ *    (ADR-0079), so a collab with no live proposal has no `submit_proposed_at`
+ *    and no line — `collabPublishWindow` returns null and this renders nothing.
  *  - **Never a hardcoded 10.** The duration is an `EraConfig` field arriving on
  *    `/game-config`; unknown means undrawn, never assumed.
  *
@@ -27,13 +27,14 @@
  * countdown is computed from the props at render, so it recomputes whenever the
  * praxis payload does.
  *
- * What that used to buy is gone, and the caption had to change with it (#1745).
- * Typing was what cancelled the window, so the holdout warned about a deadline
- * was also the player most likely to make it obsolete mid-sentence. The write-up
- * is now **frozen** for the whole crew while the window runs, so this viewer's
- * way out is to reopen it — which is the same cancellation, said out loud. The
- * reopen affordance itself sits in the write-up region rather than here, next to
- * the editor that is refusing them.
+ * The caption moved twice, and is back where it started. #1745 froze the
+ * write-up while the window ran, so the holdout's only move was to reopen it;
+ * ADR-0079 retires that freeze, and typing is once again what cancels the
+ * countdown. So the caption offers the two real moves — approve it, or keep
+ * writing — rather than a door out of a lock that no longer exists. What makes
+ * silence-is-consent fair is precisely that this player can always answer it by
+ * typing; the confirm on the first keystroke (`proposalGuard.ts`) is what keeps
+ * that from happening by accident.
  */
 import type { PraxisMemberOut } from "../../../api/praxis";
 import { deriveCollabGate } from "../../../components/collab/CollabRoster";

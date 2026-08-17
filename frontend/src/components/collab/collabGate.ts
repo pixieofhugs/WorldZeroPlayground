@@ -13,10 +13,16 @@
  * the old path had to change.
  *
  *   member_count < 2                      → awaiting  (S0) a crew of one
- *   cast_count === 0                      → writing   (S1) nobody cast yet
- *   0 < cast < count, I cast               → waiting   (S2) my part is in
- *   0 < cast < count, I didn't             → holdout   (S3) the circle waits on me
- *   cast_count === member_count           → published (S4) every part woven
+ *   cast_count === 0                      → writing   (S1) no proposal is live
+ *   0 < cast < count, I cast               → waiting   (S2) I have approved
+ *   0 < cast < count, I didn't             → holdout   (S3) the crew waits on me
+ *   cast_count === member_count           → published (S4) everyone approved
+ *
+ * `has_submitted` is an **approval of the live proposal** since ADR-0079, not
+ * "this member filed their part" — so `cast_count` is zero whenever no window
+ * is open, and `writing` is the ordinary drafting state rather than a beat
+ * before the first submit. The states themselves are unchanged; what they are
+ * counting is.
  */
 import type { PraxisMemberOut } from '../../api/praxis'
 
