@@ -2442,6 +2442,11 @@ export interface components {
              */
             albescent_revealed: boolean;
             /**
+             * Can Apply Metatask
+             * @default false
+             */
+            can_apply_metatask: boolean;
+            /**
              * Can Comment
              * @default false
              */

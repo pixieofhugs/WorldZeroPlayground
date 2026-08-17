@@ -1598,6 +1598,11 @@
             "title": "Albescent Revealed",
             "type": "boolean"
           },
+          "can_apply_metatask": {
+            "default": false,
+            "title": "Can Apply Metatask",
+            "type": "boolean"
+          },
           "can_comment": {
             "default": false,
             "title": "Can Comment",
@@ -1683,6 +1688,7 @@
           "can_see_retired_tasks",
           "can_see_pending_tasks",
           "can_comment",
+          "can_apply_metatask",
           "level_jump_reach",
           "level_jump_available"
         ],
