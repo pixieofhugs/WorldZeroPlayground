@@ -88,6 +88,19 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
     rows.push({ key: "meta", label: t("card.stamp.meta"), value: `+${meta}` });
   }
 
+  /**
+   * The flat terms — the only thing that can follow the leader-line rows, and
+   * the sole predicate for the block that draws them. Named once so the disc's
+   * margin below can reuse it without restating it (#1894).
+   */
+  const hasFlatTerms = votes !== null || habit !== null;
+  /**
+   * Is there anything BELOW the disc at all? Both halves are needed: rows alone
+   * (a sealed metatask nobody has voted on) and flat terms alone are each
+   * reachable, so neither predicate implies the other.
+   */
+  const hasWorking = rows.length > 0 || hasFlatTerms;
+
   return (
     <div
       style={{
@@ -130,12 +143,19 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
       )}
 
       {/* The struck disc: total over its unit caption, tilted off-square so it
-          reads as a mark pressed into the sheet rather than a printed field. */}
+          reads as a mark pressed into the sheet rather than a printed field.
+
+          The margin separates the disc from the working; with no working there
+          is nothing to separate it FROM, and it became trailing dead space
+          inside a symmetrically padded box (#1894). The box shrinks to
+          padding + disc + padding rather than holding a `min-height` — a number
+          pinned to whatever a one-row stamp measures today would rot the moment
+          DISC or the padding moved. */}
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          marginBottom: "var(--space-md)",
+          marginBottom: hasWorking ? "var(--space-md)" : undefined,
         }}
       >
         <span
@@ -248,8 +268,13 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
 
           `rows.length > 0` whenever this block is drawn — votes or habit both
           un-suppress the base row — so the rule is only ever conditional in the
-          direction the compiler cannot see. */}
-      {(votes !== null || habit !== null) && (
+          direction the compiler cannot see.
+
+          The guard is `hasFlatTerms`, NOT `hasWorking`: the implication runs one
+          way only. A sealed metatask nobody has voted on has rows and no flat
+          terms, and widening this to `hasWorking` would draw the block's rule
+          under it with nothing beneath — the orphan ADR-0076 exists to stop. */}
+      {hasFlatTerms && (
         <div
           style={{
             borderTop: rows.length > 0 ? "1px solid var(--faction-default-card-line)" : undefined,

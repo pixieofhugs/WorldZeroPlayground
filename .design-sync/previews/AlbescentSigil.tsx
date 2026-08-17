@@ -1,42 +1,49 @@
-// AlbescentSigil preview cells — the hushed mark. Albescent carries no palette
-// of its own (it resolves to the neutral default), so the interest here is the
-// opacity range: it is a mark that is meant to be almost not there.
+// AlbescentSigil preview cells — the labyrinth (Sigil Studies v2). The mark
+// carries no palette of its own: it is cut out of the unaffiliated conic, so
+// what the cells below are actually showing is how much of the spectrum a given
+// SIZE lets through. The three sizes are the study's own — 84, 34 and 15 — and
+// the study says the last is the one that decides it.
 import { AlbescentSigil } from 'worldzero-frontend'
 
 const row: React.CSSProperties = {
   padding: 28,
   display: 'flex',
-  alignItems: 'flex-end',
+  alignItems: 'center',
   gap: 32,
 }
 
-/** The size run: chip, card, hero. */
+/** The study's size run. 15px is the size that decides it. */
 export function SizeRun() {
   return (
     <div style={row}>
-      <AlbescentSigil size={24} />
-      <AlbescentSigil size={48} />
-      <AlbescentSigil size={96} />
+      <AlbescentSigil size={84} />
+      <AlbescentSigil size={34} />
+      <AlbescentSigil size={15} />
     </div>
   )
 }
 
-/** The drift: the same mark fading out, which is the whole Albescent idea. */
-export function OpacityRun() {
+/** The mount sizes the app actually asks for: chip, activity rail, roster,
+ *  faction-select tile, invitation letter. */
+export function MountRun() {
   return (
     <div style={row}>
-      <AlbescentSigil size={64} opacity={1} />
-      <AlbescentSigil size={64} opacity={0.6} />
-      <AlbescentSigil size={64} opacity={0.25} />
+      <AlbescentSigil size={14} />
+      <AlbescentSigil size={18} />
+      <AlbescentSigil size={22} />
+      <AlbescentSigil size={26} />
+      <AlbescentSigil size={44} />
     </div>
   )
 }
 
-/** Tinted against the neutral text token. */
-export function Tinted() {
+/** The `color` override — any `background`, not just a colour, which is what
+ *  lets the sidebar's rail sample a window of the ramp per row. */
+export function Painted() {
   return (
     <div style={row}>
-      <AlbescentSigil size={64} color="var(--color-text-primary)" />
+      <AlbescentSigil size={64} />
+      <AlbescentSigil size={64} color="var(--faction-default-rainbow) 0% 0 / 600% 100%" />
       <AlbescentSigil size={64} color="var(--color-text-tertiary)" />
     </div>
   )

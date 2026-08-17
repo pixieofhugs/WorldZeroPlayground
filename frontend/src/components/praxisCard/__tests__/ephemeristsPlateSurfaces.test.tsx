@@ -127,24 +127,29 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     // deleted with the pill, and a key kept alive by a negative assertion is a
     // key the next dead-key sweep cannot tell from a live one.
     expect(rendered).not.toContain('Ephemeris · sealed entry')
-    // The masthead's own register, at the card scale's rung.
-    expect(rendered).toContain('星')
+    // The four-kanji register (星 暦 観 録) is GONE, and so is the English it
+    // was glossed with: #1909 CUT all eight `ephemerists.masthead.*` strings —
+    // no other faction had a register row, and the audit ruled the masthead
+    // generic. Asserted as an absence so a voice pass cannot quietly put a
+    // faction-only band back on a surface ruled shared.
+    expect(rendered).not.toContain('星')
     expect(html()).toContain('var(--faction-ephemerists-plate-band-quiet)')
   })
 
-  it('reads the task through the plate gloss rather than as a bare reference', () => {
-    expect(text(html())).toContain(i18n.t('praxis:card.ephemerists.for'))
-  })
+  /* The plate gloss ("for:", `praxis:card.ephemerists.for`) and the card's own
+     vote prompt ("Cast your metal", `votes:chrome.ephemerists.prompt`) each had
+     a test here. #1909 CUT both keys — the gloss was a two-faction flourish on a
+     surface ruled generic, and the whole `chrome.{F}.prompt` slot went because
+     only three of nine factions rendered one. What remains of the second test —
+     the drift strip breathing on the shared gate rather than inline — is the
+     assertion below, which is the part that was never about copy. */
 
-  it('drifts a glyph strip above the vote block, and heads the cast', () => {
+  it('drifts a glyph strip above the vote block', () => {
     const markup = html()
     // The strip breathes on the shared `.epg-glyph` gate rather than an inline
     // animation, so a reduced-motion reader still gets the marks.
     expect(text(markup)).toContain('∮')
     expect(markup).not.toContain('animation:')
-    // The CARD states the vote prompt — the widget carries none, so the detail
-    // page's own section heading is not doubled up.
-    expect(text(markup)).toContain(i18n.t('votes:chrome.ephemerists.prompt'))
   })
 
   it('keeps no hex in the frame it draws', () => {
@@ -223,13 +228,19 @@ describe('the fluted rule is retired kit-wide (#1638)', () => {
     expect(sources().filter(({ source }) => source.includes('FlutedRule'))).toEqual([])
   })
 
-  it('mounts the rune band on all seven surfaces the flute had', () => {
+  it('mounts the rune band on every surface the flute had', () => {
     // Six imports plus the task page, whose local copy #1638 collapsed into the
     // shared one. Counted as FILES rather than mounts because the task page
     // draws it twice, and the number that can silently drift is how many
     // surfaces reach the kit at all.
+    //
+    // Seven until #1314. `EphemeristsFactionPage` was one of them and is gone
+    // with the whole `mobileFactionPage` surface (ADR-0077) — the band it drew
+    // is still on the phone, because `EphemeristsFactionBody` (already counted)
+    // now serves both widths. A DELETED surface is the one way this number may
+    // fall; it must never fall because a mount was dropped.
     const mounts = sources().filter(({ source }) => source.includes('<RuneRule'))
-    expect(mounts.length).toBe(7)
+    expect(mounts.length).toBe(6)
   })
 
   it('draws the band out of the kit register, in brass rather than gold', () => {

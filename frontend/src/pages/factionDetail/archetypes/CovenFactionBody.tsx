@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
-import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import {
   Braid,
   CAPTION,
@@ -26,6 +25,7 @@ import {
   SlipAvatar,
   SLIP_SHEET,
   SOFT,
+  Spark,
 } from "../../../components/factionMarks/covenSlip";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
@@ -54,13 +54,22 @@ import type { FactionDetailState } from "../useFactionDetail";
  * — so the member list and the spotlight are built from the two list shapes the
  * design DOES draw: the submission card and the comment row.
  *
- * NO COPY CHANGED. Every string is the `factions` catalog key it was.
+ * NO COPY CHANGED when this file replaced the memo board — every string was the
+ * `factions` catalog key it was. That is exactly how `join.exe` survived the
+ * window it titled: #1948 is the one string since changed (`join.windowTitle` →
+ * `join.heading`, "the circle").
  */
 
 const CHROME = "var(--font-faction-rounded)"; // Quicksand
 
-/** Section heading — the display face, a braid, then the kicker. */
-function SectionHead({ children, kicker }: { children: ReactNode; kicker?: ReactNode }) {
+/**
+ * Section heading — the display face, then a braid.
+ *
+ * It used to close on a kicker (`coven.tasks.kicker` / `coven.praxis.kicker`).
+ * #1909 cut the slot: the audit found the kicker restated its own heading, and
+ * only the seven bespoke bodies had one at all.
+ */
+function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
@@ -84,7 +93,6 @@ function SectionHead({ children, kicker }: { children: ReactNode; kicker?: React
         {children}
       </span>
       <Braid style={{ flex: 1 }} />
-      {kicker !== undefined && <span style={{ ...CAPTION, flex: "0 0 auto" }}>{kicker}</span>}
     </div>
   );
 }
@@ -165,7 +173,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHead kicker={t("coven.tasks.kicker")}>{t("coven.tasks.heading")}</SectionHead>
+          <SectionHead>{t("coven.tasks.heading")}</SectionHead>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.tasks.empty")}</p>
           ) : (
@@ -188,7 +196,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHead kicker={t("coven.praxis.kicker")}>{t("coven.praxis.heading")}</SectionHead>
+          <SectionHead>{t("coven.praxis.heading")}</SectionHead>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.praxis.empty")}</p>
           ) : (
@@ -235,14 +243,21 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               }}
             >
               <SigilMark size={26} />
-              <span style={{ ...CAPTION, marginLeft: "auto" }}>{t("coven.join.windowTitle")}</span>
+              {/*
+                #1948: this bar used to read `join.exe` — the title of the
+                pushpinned window #1209 deleted, re-hung on the panel that
+                replaced it. Every sibling names its join panel in its own voice
+                (`road.heading` "The Road", `roll.heading` "THE ROLL",
+                `access.heading` "ACCESS"), so Coven's is `join.heading` too.
+              */}
+              <span style={{ ...CAPTION, marginLeft: "auto" }}>{t("coven.join.heading")}</span>
             </div>
 
             <div style={{ background: CARD, padding: "var(--space-lg)" }}>
               {membership.state === "member" && (
                 <div style={{ textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)" }}>
-                    <CovenSigil size={30} color={GOLD} />
+                    <Spark size={30} color={GOLD} />
                   </div>
                   <div
                     style={{
@@ -304,7 +319,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                       cursor: "pointer",
                     }}
                   >
-                    <CovenSigil size={12} color={CTA_INK} />
+                    <Spark size={12} color={CTA_INK} />
                     {t("coven.join.joinButton")}
                   </button>
                 </div>
@@ -370,7 +385,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
                     {/* eslint-disable-next-line local/no-raw-style-values -- ornament: optical nudge aligning the sparkle glyph to the script cap-height. */}
                     <span style={{ marginTop: 3 }}>
-                      <CovenSigil size={20} color={GOLD} />
+                      <Spark size={20} color={GOLD} />
                     </span>
                     <span
                       style={{

@@ -2,7 +2,6 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
-import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   Braid,
@@ -24,6 +23,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
+  Spark,
 } from '../../../components/factionMarks/covenSlip'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
@@ -67,8 +67,15 @@ const PROSE: CSSProperties = {
   color: SOFT,
 }
 
-/** A slip band over a candle-lit panel. */
-function Plate({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * A slip band over a candle-lit panel.
+ *
+ * The band used to close on a window title (`fieldDesk.home.coven.charWindow`
+ * / `.questsWindow` — "you" and "quests"). #1909 CUT both: Coven was the only
+ * faction with the slot, and the audit ruled the field desk generic. The sigil
+ * and the slip stay — they are the band.
+ */
+function Plate({ children }: { children: ReactNode }) {
   return (
     <section
       style={{
@@ -89,7 +96,6 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
         }}
       >
         <SigilMark size={22} />
-        <span style={{ ...CAPTION, marginLeft: 'auto' }}>{title}</span>
       </div>
       <div style={{ background: CARD, padding: 'var(--space-lg)' }}>{children}</div>
     </section>
@@ -202,7 +208,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         </header>
 
         {/* ── Character plate ── */}
-        <Plate title={t('fieldDesk.home.coven.charWindow')}>
+        <Plate>
           <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-md)' }}>
             <button
               type="button"
@@ -344,13 +350,13 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
               color: INK,
               textDecoration: 'none',
             }}
-            glyph={<CovenSigil size={12} color={GOLD} />}
+            glyph={<Spark size={12} color={GOLD} />}
             chevron={<span aria-hidden style={{ color: SOFT }}>›</span>}
           />
         )}
 
         {/* ── Quests plate ── */}
-        <Plate title={t('fieldDesk.home.coven.questsWindow')}>
+        <Plate>
           <div className="flex items-center" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
             <span
               style={{
@@ -420,7 +426,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
         <div className="flex gap-2.5">
           <Link to={FIND_TASK_LINK} style={primaryButton}>
-            <CovenSigil size={13} color={CTA_INK} />
+            <Spark size={13} color={CTA_INK} />
             {t('fieldDesk.home.findTask')}
           </Link>
           <Link to={CAST_VOTES_LINK} style={ghostButton}>

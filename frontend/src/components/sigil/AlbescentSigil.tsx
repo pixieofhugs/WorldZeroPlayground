@@ -1,107 +1,87 @@
-import { useId, type CSSProperties } from "react";
-
-/** --faction-default-rainbow's own cut, as [stop index, offset %] pairs. */
-const SPECTRUM_CUT: ReadonlyArray<readonly [number, number]> = [
-  [1, 0],
-  [2, 17],
-  [3, 33],
-  [4, 50],
-  [5, 67],
-  [6, 83],
-  [7, 100],
-];
+import type { CSSProperties } from "react";
 
 /**
- * AlbescentSigil — the surveyor's cross-hair, the Albescent faction's only mark.
- * Outer ring (18% opacity) · inner ring (55%) · four cardinal tick marks · a
- * filled centre dot. It asks only: where are you, exactly?
+ * AlbescentSigil — THE LABYRINTH, and no palette of its own (Sigil Studies v2).
  *
- * The single canonical Albescent emblem, reused across every surface that carries
- * the mark (avatar, task/praxis cards, edit-praxis, task-detail, faction hero,
- * the faction-select tile, invitation). Draws in the faction's near-black ink
- * token by default — no hue, always-light, never hardcode hex.
+ * Three nested rings, each a band that turns back on itself. It asks the only
+ * question this society ever asks: not where are you, but how did you get here.
  *
- * `spectrum` paints the same drawing in the unaffiliated ramp instead (#1658,
- * the design's credential treatment). It is a prop and not the default because
- * the register a mount belongs to is the CALLER's question: the invitation
- * letter and the faction-select tile are reveal surfaces and stay in ink, while
- * `FactionSigil` turns it on for any dispatched mount with no colour of its own.
+ * THIS FILE IS A REINSTATEMENT, and the scope of it is narrow. #1891 / PR #1926
+ * deleted `AlbescentSigil` by owner ruling hours before this design was drawn.
+ * The mark then was a surveyor's cross-hair inked on the always-light
+ * `--albescent-reveal-*` register, and a distinct emblem in a distinct PALETTE,
+ * worn by an otherwise-hidden faction on surfaces an unrevealed player reads, is
+ * a tell. The owner has ruled that this design supersedes that deletion. **Only
+ * the mark comes back.** Every other half of #1891/#1926 is untouched and still
+ * correct — `factionName()` still masks the NAME, the choosers still drop the
+ * row rather than showing it, and the `join_albescent` ladder rung is still
+ * filtered server-side. Nothing here decides what the faction is called.
+ *
+ * What makes the return safe is the paint, and it is the design's: the labyrinth
+ * carries NO hue of its own. It is filled with `--faction-default-rainbow-conic`
+ * — the same spectrum `DefaultSigil` sweeps and an unaffiliated player wears —
+ * so what is new is a SHAPE, not a livery. The society still has no colour
+ * anyone could point at.
+ *
+ * A MASK OVER A `public/` ASSET, which is `Enso`'s delivery and for the same two
+ * reasons. The drawing is ~3.2 KB of path data: inlining it would ship one copy
+ * per rendered instance (the players roster draws a column of them), and putting
+ * it in `index.css` measured **+1.9 KB gzipped on the initial CSS**, which took
+ * the payload past the budget's warn line for one faction's mark. As an asset it
+ * is non-blocking, cached after first paint, and costs the initial load nothing.
+ * The file supplies only the ALPHA; the colour comes from `background`, i.e.
+ * from a token, so the mark follows the `[data-theme="dark"]` cascade with no
+ * ternary.
+ *
+ * The design's own after-band is `clip-path: path('...')`, which takes ABSOLUTE
+ * units — which is why the study ships three hand-scaled copies of the path, one
+ * per size. A mask at `contain` scales natively, so ONE drawing serves every
+ * size a caller asks for; the vendored 84px variant is canonical, being the
+ * highest-precision of the three.
+ *
+ * Nothing in the markup names the society: an `id`, a class or a label carrying
+ * the word would print its name into the DOM of every page the mark appears on
+ * (#783). The asset's filename says "labyrinth" for the same reason.
  */
-export default function AlbescentSigil({
-  size = 20,
-  color = "var(--albescent-reveal-text)",
-  spectrum = false,
-  opacity = 1,
-  style,
-}: {
-  size?: number;
-  color?: string;
-  spectrum?: boolean;
-  opacity?: number;
-  style?: CSSProperties;
-}) {
-  /* HOW THE CSS RAMP CROSSES INTO SVG. `stroke` takes a paint server or a
-     colour and nothing else, so --faction-default-rainbow — a `linear-gradient()`
-     VALUE — cannot be handed to it, and no `<linearGradient>` can read one
-     either. What both sides DO share is the seven stops the token composes
-     from: `stop-color="var(--faction-default-stop-3)"` resolves through the
-     ordinary cascade, so rebuilding the ramp here from the same tokens at the
-     same cut is the bridge, and the mark flips with [data-theme="dark"] for
-     free. This is the shape index.css already prescribes for a surface that
-     needs its own cut — "a surface that wants wedges composes them" — rather
-     than an eighth rainbow token nothing else would read.
 
-     The offsets are --faction-default-rainbow's own (17/33/50/67/83): the bar
-     ramp, because this is a straight sweep. The conic cut is for round
-     GEOMETRY, and SVG 1.1 has no conic gradient to point at anyway. */
-  const uid = `wz-spectrum-${useId().replace(/:/g, "")}`;
-  const ink = spectrum ? `url(#${uid})` : color;
-  const c = size / 2;
-  const rO = size * 0.43;
-  const rI = size * 0.235;
-  const rD = size * 0.05;
-  const tS = rI + size * 0.025;
-  const tE = tS + size * 0.13;
-  const tick = (deg: number) => {
-    const a = (deg * Math.PI) / 180;
-    return {
-      x1: c + tS * Math.cos(a),
-      y1: c + tS * Math.sin(a),
-      x2: c + tE * Math.cos(a),
-      y2: c + tE * Math.sin(a),
-    };
+/** Where the alpha stencil lives under `public/`. */
+const LABYRINTH_ASSET = "url(/factionMarks/labyrinth.svg)";
+
+interface AlbescentSigilProps {
+  /** px, square. */
+  size?: number;
+  /**
+   * What to paint the labyrinth with instead of the whole conic sweep. Any CSS
+   * `background` value, not just a colour — the mark is PAINTED through a mask
+   * rather than stroked, exactly as `DefaultSigil` is, so a caller can hand it
+   * the position-sampled window of `--faction-default-rainbow` the sidebar's
+   * neutral rows get. Named `color` to line up with `FactionSigilProps`, so a
+   * caller reaching this through the dispatcher spells it the way the other
+   * eight marks do.
+   */
+  color?: string;
+}
+
+export default function AlbescentSigil({ size = 22, color }: AlbescentSigilProps) {
+  const maskStyle: CSSProperties = {
+    display: "block",
+    width: size,
+    height: size,
+    flex: "none",
+    background: color ?? "var(--faction-default-rainbow-conic)",
+    WebkitMaskImage: LABYRINTH_ASSET,
+    maskImage: LABYRINTH_ASSET,
+    WebkitMaskRepeat: "no-repeat",
+    maskRepeat: "no-repeat",
+    WebkitMaskPosition: "center",
+    maskPosition: "center",
+    WebkitMaskSize: "contain",
+    maskSize: "contain",
   };
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      fill="none"
-      style={{ display: "block", flexShrink: 0, opacity, ...style }}
-      aria-hidden
-    >
-      {spectrum ? (
-        <defs>
-          {/* userSpaceOnUse, not the objectBoundingBox default: two of the four
-              ticks are horizontal lines, whose bounding box has zero height —
-              and an element with a degenerate gradient box is not rendered at
-              all. It is also the only way the seven stops read as ONE sweep
-              across the mark rather than seven private ramps. Corner to corner
-              so the four ticks land on four different hues. */}
-          <linearGradient id={uid} gradientUnits="userSpaceOnUse" x1={0} y1={0} x2={size} y2={size}>
-            {SPECTRUM_CUT.map(([index, offset]) => (
-              <stop key={index} offset={`${offset}%`} stopColor={`var(--faction-default-stop-${index})`} />
-            ))}
-          </linearGradient>
-        </defs>
-      ) : null}
-      <circle cx={c} cy={c} r={rO} stroke={ink} strokeWidth={size * 0.022} opacity={0.18} />
-      <circle cx={c} cy={c} r={rI} stroke={ink} strokeWidth={size * 0.05} opacity={0.55} />
-      {[0, 90, 180, 270].map((deg) => {
-        const { x1, y1, x2, y2 } = tick(deg);
-        return <line key={deg} x1={x1} y1={y1} x2={x2} y2={y2} stroke={ink} strokeWidth={size * 0.05} />;
-      })}
-      <circle cx={c} cy={c} r={rD} fill={ink} />
-    </svg>
-  );
+  // Decorative, like the other eight faction marks and UNLIKE `DefaultSigil` —
+  // the surface that mounts the mark is what names the faction, through the
+  // masked `factionName()`. A `role="img"` with a label of its own would both
+  // double up the sidebar row's own label and put this component in the business
+  // of naming a society whose name is masked everywhere else.
+  return <span aria-hidden style={maskStyle} />;
 }

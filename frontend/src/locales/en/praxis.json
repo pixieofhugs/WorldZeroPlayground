@@ -26,6 +26,9 @@
       "voted": "Voted"
     }
   },
+  "gallery": {
+    "openImage": "View full-size image"
+  },
   "mobileCard": {
     "rosterMore": "+{{count}} more",
     "mediaMore": "+{{count}}",
@@ -52,14 +55,7 @@
       "pointsShort": "pts",
       "tally": "TALLY",
       "group": "group",
-      "onTheRecord": "★ VERIFIED ★ ON THE RECORD ",
-      "ephemerists": {
-        "base": "基",
-        "points": "点",
-        "fromVotes": "票",
-        "fromVotesGloss": "from votes",
-        "habit": "習"
-      }
+      "onTheRecord": "★ VERIFIED ★ ON THE RECORD "
     },
     "mediaEmpty": "no proof attached",
     "adminStatus": {
@@ -74,27 +70,6 @@
     "errors": {
       "hide": "Failed to hide.",
       "fail": "Failed to fail."
-    },
-    "masthead": {
-      "ua": "Acquisition · filed",
-      "everymen": "The Everymen",
-      "snide": "evidence locker",
-      "albescent": "Account · filed",
-      "singularity": "singularity protocol",
-      "coven": "dispatch no. {{id}} · all done! ✿",
-      "wow": "Chronicle of proof · № {{id}}"
-    },
-    "wow": {
-      "forQuest": "for the quest —",
-      "sealed": "Sealed by the Court",
-      "illumination": "❦ here, an illumination ❦"
-    },
-    "coven": {
-      "mediaEmpty": "Drop a happy little photo ✿"
-    },
-    "ephemerists": {
-      "for": "for:",
-      "mediaEmpty": "Affix the observation"
     }
   },
   "detail": {
@@ -213,39 +188,33 @@
     "editError": "Could not save the edit.",
     "withdrawError": "Could not withdraw the comment.",
     "ua": {
-      "house": "University of Asthmatics",
       "edited": "edited",
       "prompt": "Leave a note in the margin…"
     },
     "everymen": {
-      "masthead": "EVERYMEN · DISPATCH FROM THE FLOOR",
-      "edited": "revised"
+      "edited": "edited"
     },
     "coven": {
       "edited": "edited"
     },
     "snide": {
       "prompt": "say your piece —",
-      "edited": "EDITED"
+      "edited": "edited"
     },
     "ephemerists": {
       "prompt": "inscribe a note in the margin",
-      "edited": "emended"
+      "edited": "edited"
     },
     "singularity": {
-      "protocol": "singularity function",
       "edited": "edited"
     },
     "albescent": {
-      "letterhead": "Albescent — correspondence",
-      "edited": "amended"
+      "edited": "edited"
     },
     "wow": {
       "prompt": "Add thy counsel to the chronicle…",
-      "post": "Proclaim",
-      "react": "Huzzah",
       "empty": "No counsel yet. Be the first to cry Huzzah.",
-      "edited": "amended"
+      "edited": "edited"
     }
   },
   "duelBanner": {
@@ -278,31 +247,16 @@
   },
   "duelRoster": {
     "you": "You",
-    "sealed": "sealed ✓",
+    "sealed": "submitted ✓",
     "walking": "still walking…"
   },
   "duelSeal": {
-    "heading": "Seal the duel?",
-    "confirm": "Seal it",
+    "heading": "Lock the duel?",
+    "confirm": "Lock it",
     "cancel": "Not yet",
-    "bodyActive": "{{name}} has accepted. Casting now seals the duel — once you have both cast, pulling back is a permanent forfeit.",
+    "bodyActive": "{{name}} has accepted. Casting now locks the duel — once you have both cast, pulling back is a permanent forfeit.",
     "bodyPending": "{{name}} hasn't accepted yet. You can cast now; if they decline, this scores as an ordinary praxis.",
-    "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit.",
-    "wow": {
-      "submit": {
-        "sub": "Enter the lists · submitting proof",
-        "confirm": "Take the Field",
-        "cancel": "Withdraw"
-      },
-      "forfeit": {
-        "sub": "Leave the lists · yielding the joust",
-        "confirm": "Yield the Field",
-        "cancel": "Hold thy Ground"
-      },
-      "rosterLabel": "The Roster",
-      "stakesLabel": "The Stakes",
-      "ribbonLine": "A ribbon for the courage to enter — in our lists both riders are honoured."
-    }
+    "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit."
   },
   "duelForfeit": {
     "confirmPrompt": "Pulling back now FORFEITS the duel.",

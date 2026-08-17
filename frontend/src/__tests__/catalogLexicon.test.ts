@@ -101,18 +101,17 @@ describe('the arrow that emoji-renders on iOS is gone; the triangle is not (#170
   })
 })
 
-/**
- * The one UA-namespaced string the ruling exempts. `Mark {{value}}` is the
- * accessible name of a star-rating control, where *mark* is the imperative verb
- * — "mark this three" — and not the unit being counted. Renaming it would make
- * the aria-label describe the score rather than the action.
+/*
+ * This ruling used to exempt one UA-namespaced string: `chrome.ua.rateAria`
+ * read `Mark {{value}} — {{label}}`, where *mark* was the imperative verb
+ * ("mark this three") rather than the unit being counted. #1863 settled the
+ * vote star's screen-reader label on `Rate {{value}} — {{label}}` for every
+ * faction, so the last UA *mark* is gone and the carve-out with it — the rule
+ * is now unconditional, which is stricter than it was.
  */
-const VERB_NOT_UNIT = 'locales/en/votes.json:chrome.ua.rateAria'
-
 describe('the University of Asthmatics counts points, not marks (#1702)', () => {
   it('no UA-namespaced string says mark', () => {
     const offenders = catalogLeaves()
-      .filter(([key]) => key !== VERB_NOT_UNIT)
       .filter(([key, value]) => key.split(/[.:]/).includes('ua') && MARK.test(value))
       .map(([key, value]) => `${key} — ${value}`)
     expect(offenders).toEqual([])

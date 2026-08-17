@@ -33,7 +33,10 @@ const ALL_SLUGS = [
   'coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua', 'wow', 'albescent', 'na',
 ]
 
-// The six with a full bespoke desktop + mobile treatment.
+// The six with a full bespoke treatment. (They HAD a bespoke desktop skin and a
+// separate bespoke phone one on several surfaces; ADR-0056/0058/0061/0065/0067
+// and ADR-0077 have collapsed every one of those pairs, so on the rows below
+// this is one component per faction serving both widths.)
 const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua']
 
 // surface → slugs that ship a bespoke skin there. Everything in ALL_SLUGS not
@@ -46,17 +49,19 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // registration freeze was reversed with the praxis-detail epic (#1151), which
 // changes whether a row may exist, not what shape it takes.
 //
-// FOUR MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all four used
+// FIVE MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all five used
 // to exist. There is no mobile task-card row (ADR-0056, surface retired by
 // #1044), no mobile task-detail row (ADR-0058, #1068), no mobile praxis-detail
-// row (ADR-0061 + epic #1085, #1089) and, since #1181, no `mobileEditPraxis` row
-// (ADR-0065): each verdict accepted one responsive component per faction, so
-// task cards partition on `taskCard` alone, task detail on `taskDetail` alone,
-// praxis detail on `praxisDetail` alone and the composer on `editPraxis` alone,
-// for both form factors. Re-adding any of the four means re-adding the surface,
-// which those ADRs call drift rather than a rollback. Note what that buys
-// albescent: its single `taskDetail` registration now covers the phone too, and
-// it never needs a second row it would have had to stay out of.
+// row (ADR-0061 + epic #1085, #1089), since #1181 no `mobileEditPraxis` row
+// (ADR-0065), and since #1314 no `mobileFactionPage` row (ADR-0077): each
+// verdict accepted one responsive component per faction, so task cards partition
+// on `taskCard` alone, task detail on `taskDetail` alone, praxis detail on
+// `praxisDetail` alone, the composer on `editPraxis` alone and faction detail on
+// `factionBody` alone, for both form factors. Re-adding any of the five means
+// re-adding the surface, which those ADRs call drift rather than a rollback.
+// Note what that buys albescent: its single `taskDetail` registration now covers
+// the phone too, and it never needs a second row it would have had to stay out
+// of.
 //
 // THE `editPraxis` ROW IS NEW (#1181) and, like `praxisDetail` above, it grows
 // no further — all seven skins are already registered and epic #1179 rebuilds
@@ -89,7 +94,13 @@ const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
   editPraxis: [...CORE_SIX, 'wow'],
-  mobileFactionPage: [...CORE_SIX, 'wow'],
+  // Was `mobileFactionPage` with this exact slug list until ADR-0077 collapsed
+  // faction detail to one responsive component per faction. Same move the
+  // praxis-card row made below: the row follows the surviving surface rather
+  // than dying with the retired one. `factionBody` is what a phone renders now,
+  // and it carries the same seven registrations the phone twin did — which is
+  // why the deleted twin was drift rather than a second design.
+  factionBody: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   // Was `mobilePraxisCard` with this exact slug list until ADR-0067 collapsed
   // the praxis card to one responsive component per faction. The row moved to

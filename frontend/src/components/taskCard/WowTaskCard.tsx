@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -130,6 +131,7 @@ export default function WowTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.wow.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -221,27 +223,6 @@ export default function WowTaskCard({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "var(--space-xs)" }}>
-                  {/* WOW hangs its points upside down (#1716) — an owner ruling,
-                      and only where a player is BROWSING. This card mounts on
-                      the tasks list AND on the character profile, the faction
-                      page and the task detail, which are exempt, so the angle
-                      is not the card's to decide: it asks its mount. A browsing
-                      surface answers with `.scanning-surface` (index.css); an
-                      exempt one says nothing and gets the `0deg` fallback,
-                      which renders exactly what this rendered before the flip
-                      existed. That direction is the point — a page built
-                      tomorrow is upright until it opts in, rather than turning
-                      unless someone remembers to add it to a list.
-
-                      A TRANSFORM on the presentation, never reversed or
-                      substituted characters: the digits keep their reading
-                      order in the DOM, so the numeral is still announced and
-                      still selectable. It composes with the plaque's own
-                      two-degree strike for free — that tilt lives on the
-                      wrapper above, and a child's transform multiplies into its
-                      ancestor's rather than replacing it. `inline-block` is
-                      inert on a flex item (which blockifies it anyway) and is
-                      stated so the turn survives the row losing its flex. */}
                   <span
                     style={{
                       fontFamily: MED,
@@ -249,7 +230,6 @@ export default function WowTaskCard({
                       lineHeight: 0.8,
                       color: GILT,
                       display: "inline-block",
-                      transform: "rotate(var(--wow-points-flip, 0deg))",
                     }}
                   >
                     {basePoints}
@@ -267,7 +247,7 @@ export default function WowTaskCard({
               </div>
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: MED,
                 fontWeight: 400,
@@ -278,7 +258,7 @@ export default function WowTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
@@ -307,12 +287,14 @@ export default function WowTaskCard({
             )}
           </Link>
 
-          {onSignup && (
+          {cta && (
             <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
               <button
-                onClick={() => onSignup(task.id)}
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
                 style={{
-                  cursor: "pointer",
+                  cursor: cta.denied ? "not-allowed" : "pointer",
                   fontFamily: MED,
                   fontSize: "var(--text-content)",
                   letterSpacing: "0.04em",
@@ -324,7 +306,7 @@ export default function WowTaskCard({
                   border: `2px solid ${PLUM_SURFACE}`,
                 }}
               >
-                {i18n.t("feed:taskCard.wow.signup")}
+                {cta.label}
               </button>
             </div>
           )}

@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { useTranslation } from "react-i18next";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -83,7 +82,6 @@ const scanSweepStyle: CSSProperties = {
 const ledStyle: CSSProperties = { width: 7, height: 7, borderRadius: "50%", flexShrink: 0 };
 
 export function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -124,16 +122,10 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
           <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-red)" }} />
           <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-amber)" }} />
           <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-green)" }} />
-          <span
-            className="label-heading"
-            style={{
-              marginLeft: "auto",
-              letterSpacing: "0.14em",
-              color: "var(--faction-singularity-vote-off)",
-            }}
-          >
-            {t("card.masthead.singularity")}
-          </span>
+          {/* "singularity protocol" closed this LED bar
+              (`card.masthead.singularity`). #1909 cut the slot: once the praxis
+              masthead is generic it reads "Praxis" on a praxis card, and this
+              one was the faction naming itself. The lamps stay. */}
         </div>
 
         <AdminOverlay {...adminProps} />

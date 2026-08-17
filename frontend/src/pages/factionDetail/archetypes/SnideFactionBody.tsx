@@ -118,19 +118,10 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-const KICKER: CSSProperties = {
-  fontFamily: MARKER,
-  // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside slapped over the flyer — illustration, not copy.
-  fontSize: 16,
-  color: PINK,
-  transform: "rotate(-1deg)",
-  marginBottom: "var(--space-lg)",
-};
-
-/** Scrawled marker kicker. */
-function Kicker({ children }: { children: ReactNode }) {
-  return <div style={KICKER}>{children}</div>;
-}
+/* The scrawled marker `Kicker` under each section title lived here. #1909 cut
+   its two strings (`snide.tasks.kicker` / `.praxis.kicker`): the audit ruled the
+   line restated its own heading, and no faction outside the seven bespoke bodies
+   ever had one. The style went with the only component that used it. */
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
@@ -221,7 +212,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         {/* ④ TASKS */}
         <div>
           <SectionHeading>{t("snide.tasks.heading")}</SectionHeading>
-          <Kicker>{t("snide.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.tasks.empty")}</p>
           ) : (
@@ -245,7 +235,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         {/* ⑤ PRAXIS */}
         <div>
           <SectionHeading>{t("snide.praxis.heading")}</SectionHeading>
-          <Kicker>{t("snide.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.praxis.empty")}</p>
           ) : (
@@ -482,18 +471,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
                 <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 rgba(0,0,0,.3)", padding: "var(--space-lg)", textAlign: "center" }}>
                   <Halftone on="ink" />
-                  <div
-                    style={{
-                      position: "relative",
-                      fontFamily: COND,
-                      // eslint-disable-next-line local/no-raw-style-values -- ornament: WANTED-poster furniture — wide-tracked condensed caps.
-                      fontSize: 13,
-                      letterSpacing: "0.35em",
-                      color: PINK,
-                    }}
-                  >
-                    {t("snide.spotlight.wanted")}
-                  </div>
+                  {/* The poster's "★ WANTED ★" rule stood here. #1909 cut
+                      `snide.spotlight.wanted`: Snide was the only faction with
+                      the slot, on a surface the audit ruled generic. The
+                      spotlight LABEL below it stays — that one keeps its voice. */}
                   <div
                     style={{
                       position: "relative",

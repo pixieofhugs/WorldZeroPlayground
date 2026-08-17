@@ -96,14 +96,20 @@ async def build_praxis_out(
     praxis: Praxis,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-    viewer: Optional[Character] = None,
     *,
+    viewer: Optional[Character],
     crowned_ids: Optional[set[int]] = None,
 ) -> PraxisOut:
     """Build a PraxisOut for any praxis type.
 
     ``viewer`` is the authenticated viewer's character, used to compute
-    viewer-relative flags such as ``can_flag`` and invite visibility.
+    viewer-relative flags such as ``can_flag``, ``viewer_can_vote`` and invite
+    visibility. It is REQUIRED and keyword-only (#1974): it used to default to
+    ``None``, which is also the honest answer for an anonymous reader, so a route
+    that simply forgot it got the anonymous payload — ``viewer_can_vote=True`` on
+    the caller's own praxis, and a vote widget drawn on it. ``viewer=None`` is
+    still legal; it just has to be typed out, which turns "I forgot" into
+    "I meant anonymous".
 
     ``crowned_ids`` are the Task Crown holders (ADR-0028); list routes
     precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
@@ -548,6 +554,7 @@ async def build_praxis_card_out(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
     *,
+    viewer: Optional[Character],
     crowned_ids: Optional[set[int]] = None,
     viewer_votes: Optional[dict[int, ViewerVote]] = None,
     author_contributions: Optional[dict[int, Contribution]] = None,
@@ -586,10 +593,16 @@ async def build_praxis_card_out(
     query (N+1). When absent, this builder loads the single praxis's metatasks
     itself (single-card callers). A missing entry means no metatasks applied.
 
+    ``viewer`` is the authenticated viewer's character, REQUIRED and keyword-only
+    for the reason spelled out on :func:`build_praxis_out` (#1974): a permission
+    field whose input can be forgotten is a permission field that fails open.
+
     ``viewer_can_vote`` maps praxis id → whether the viewer may vote (#998); list
     routes precompute it once via :func:`~services.vote.viewer_can_vote_map` so
-    the ownership/duel-participation check is not a per-card query. ``None`` or a
-    missing entry defaults to ``True`` (the vote module renders as usual).
+    the ownership/duel-participation check is not a per-card query. When absent —
+    or missing an entry, which means "not in the batch", exactly as ``tallies``
+    does — this builder resolves the single praxis itself from ``viewer`` rather
+    than assuming ``True`` (#1974).
 
     ``duel_ids`` maps praxis id → its duel id when the praxis is a duel side
     (#992, ADR-0011); list routes precompute it once via :func:`duel_id_map` so
@@ -674,6 +687,17 @@ async def build_praxis_card_out(
     else:
         opponent = (await duel_opponents_for([praxis], session)).get(praxis.id)
 
+    # Vote eligibility (#998). Reuse the precomputed page-wide map when the list
+    # route supplies it; otherwise ask the same predicate for this praxis alone.
+    # A missing entry is NOT read as "yes" (#1974): absence means "not in the
+    # batch", and answering a permission question from the absence of an answer
+    # is precisely how this field shipped a vote widget onto its author's praxis.
+    can_vote = viewer_can_vote.get(praxis.id) if viewer_can_vote else None
+    if can_vote is None:
+        can_vote = (await viewer_can_vote_map([praxis], viewer, session)).get(
+            praxis.id, False
+        )
+
     return PraxisCardOut(
         id=praxis.id,
         task_id=praxis.task_id,
@@ -707,9 +731,7 @@ async def build_praxis_card_out(
         media_items=[MediaItemOut.model_validate(item) for item in praxis.media_items],
         viewer_vote=viewer_vote_info.value if viewer_vote_info else None,
         voted_by_name=viewer_vote_info.voted_by_name if viewer_vote_info else None,
-        viewer_can_vote=(
-            viewer_can_vote.get(praxis.id, True) if viewer_can_vote else True
-        ),
+        viewer_can_vote=can_vote,
         duel_id=praxis_duel_id,
         opponent_praxis_id=opponent.praxis_id if opponent else None,
         opponent_display_name=opponent.display_name if opponent else None,
@@ -778,6 +800,7 @@ async def build_praxis_cards(
         await build_praxis_card_out(
             praxis,
             session,
+            viewer=viewer,
             crowned_ids=crowned,
             viewer_votes=viewer_votes,
             author_contributions=author_contributions,

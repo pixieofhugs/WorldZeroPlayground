@@ -67,6 +67,7 @@ function metatask(): TaskOut {
     can_sign_up: false,
     allowed_modes: [],
     eligible_for_current_user: false,
+    start_here: false,
   }
 }
 

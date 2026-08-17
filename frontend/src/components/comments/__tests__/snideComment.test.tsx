@@ -145,11 +145,12 @@ describe('SnideComment — row states', () => {
     // The sheet's body face is Special Elite, and somebody else's prose is not
     // shouted: no forced uppercase on the body slot.
     expect(html).toContain('--faction-snide-font-type')
-    expect(html).not.toContain('EDITED')
+    // #1863: the marker is `edited` on every faction, no longer SNIDE's shout.
+    expect(html).not.toContain('edited')
   })
 
   it('row · edited: the typed edited mark joins the byline', () => {
-    expect(row({ ...COMMENT, is_edited: true })).toContain('EDITED')
+    expect(row({ ...COMMENT, is_edited: true })).toContain('edited')
   })
 
   it('shows no owner row and no flag affordance to a signed-out viewer', () => {

@@ -69,15 +69,21 @@ because the manifest barrel still anchored every archetype in the shared chunk.
 If a split doesn't move the budget number, the weight is being held somewhere
 else — find out where before shipping the split.
 
-**4. A new font family.** `index.html` requests a Google Fonts stylesheet that
-is render-blocking and on a third-party origin. Every family added to that URL
-adds `@font-face` blocks to a file that must download before first paint. Before
-adding one, check that the one you want isn't already there.
+**4. A new font family.** The 18 families are self-hosted since #1977:
+`scripts/fetch-fonts.mjs` writes `src/fonts.css` and `src/assets/fonts/*.woff2`,
+and index.css `@import`s the stylesheet — so every `@font-face` block lands in
+the one render-blocking stylesheet, and the woff2 files are content-hashed into
+`/assets` where render.yaml serves them `immutable`. Adding a family costs
+`@font-face` bytes on the critical path and a woff2 in the repo. Before adding
+one, check that the one you want isn't already there, and add it to `FACES` in
+the script rather than hand-editing the generated CSS.
 
-`fontsLoaded.test.ts` guards this in both directions: a family named in source
-but not requested renders as a silent fallback (#839), and a family requested but
-named nowhere is weight nobody uses. The second half matters most when a surface
-is *deleted* — the card goes, the font request stays behind.
+`fontsLoaded.test.ts` guards this in three directions: a family named in source
+but not shipped renders as a silent fallback (#839); a family shipped but named
+nowhere is weight nobody uses — which matters most when a surface is *deleted*,
+because the card goes and the font stays behind; and since self-hosting, a
+`src:` path that does not match a file on disk, which is the same silent
+fallback wearing the delivery mechanism's clothes.
 
 ## Assets
 

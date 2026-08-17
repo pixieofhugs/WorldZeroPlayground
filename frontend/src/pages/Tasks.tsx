@@ -61,7 +61,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       </div>
 
       {signupMsg && (
-        <p className={`font-body content-text mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'border-red-300 text-red-600'}`}>
+        <p className={`font-body content-text mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'danger-edge danger-text'}`}>
           {signupMsg.msg}
         </p>
       )}
@@ -69,7 +69,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       {loading && tasks.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {extractError(error, "Couldn't load tasks.")}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
@@ -85,22 +85,22 @@ function DesktopTasks({ state }: { state: TasksState }) {
               <MetataskSeal metatasks={tasks} />
             </div>
           ) : (
-            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6).
-               `scanning-surface` declares this a browsing list (#1716): a WOW
-               card hangs its points upside down here, and upright on the
-               profile / faction / detail pages that mount the same card and
-               declare nothing. See the class in index.css. */
-            <div
-              className="scanning-surface"
-              style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}
-            >
+            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
+              {/* `onSignup` is offered to any signed-in viewer. Whether the slot
+                  it produces is a claim or a statement of why not is the CARD's
+                  call, off `task.signup_reason` (#1976) — gating it on
+                  `can_sign_up` here is what made this list go silent about a
+                  task it was still showing, and with the eligibility filter
+                  switched off, silent about most of them. An anonymous viewer
+                  still gets nothing: the server sends no reason to explain. */}
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
                   basePoints={task.point_value}
                   multiplier={displayMultiplierFor(task)}
-                  onSignup={user && task.can_sign_up ? handleSignup : undefined}
+                  onSignup={user ? handleSignup : undefined}
                 />
               ))}
             </div>

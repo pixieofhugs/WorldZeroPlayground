@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 
@@ -209,6 +211,7 @@ export default function CovenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.coven.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -266,9 +269,14 @@ export default function CovenTaskCard({
             />
             <circle cx="22" cy="22" r="3" fill="var(--faction-coven-slip-gold)" />
           </svg>
+          {/* The slip's own `feed:taskCard.coven.masthead` held a second copy of
+              the faction's name ("the cozy coven") and is gone with #1910. The
+              lower case belonged to the hand-lettering rather than to the word,
+              so it moves to `textTransform`, where casing belongs — the name
+              itself now comes from the one place that owns it (ADR-0038). */}
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat masthead, not typeset copy. */}
-          <div style={{ fontFamily: HAND, fontSize: 26, lineHeight: 0.9, marginTop: "var(--space-xs)" }}>
-            {i18n.t("feed:taskCard.coven.masthead")}
+          <div style={{ fontFamily: HAND, fontSize: 26, lineHeight: 0.9, marginTop: "var(--space-xs)", textTransform: "lowercase" }}>
+            {factionName("coven")}
           </div>
           <Thread style={{ marginTop: "var(--space-sm)" }} />
         </div>
@@ -325,7 +333,7 @@ export default function CovenTaskCard({
               <Sigil size={size.sigil} points={basePoints} />
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: DISPLAY,
                 fontWeight: 600,
@@ -337,7 +345,7 @@ export default function CovenTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
@@ -379,13 +387,15 @@ export default function CovenTaskCard({
           </Link>
         </div>
 
-        {onSignup && (
+        {cta && (
           <button
-            onClick={() => onSignup(task.id)}
+            type="button"
+            onClick={cta.onPress}
+            aria-disabled={cta.denied || undefined}
             style={{
               position: "relative",
               zIndex: 2,
-              cursor: "pointer",
+              cursor: cta.denied ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -410,7 +420,7 @@ export default function CovenTaskCard({
                 fill="currentColor"
               />
             </svg>
-            {i18n.t("feed:taskCard.coven.signup")}
+            {cta.label}
           </button>
         )}
       </article>

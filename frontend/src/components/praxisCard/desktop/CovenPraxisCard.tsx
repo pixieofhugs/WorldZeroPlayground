@@ -1,9 +1,7 @@
-import { useTranslation } from "react-i18next";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import {
   Braid,
-  CAPTION,
   CARD,
   BORDER,
   DEEP,
@@ -40,7 +38,6 @@ import {
  * and a name, not a card's whole content.
  */
 export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -73,13 +70,13 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           display: DISPLAY,
           body: READING,
         }}
-        eyebrow={
-          <div style={{ marginBottom: "var(--space-sm)" }}>
-            <div style={CAPTION}>{t("card.masthead.coven", { id: praxis.id })}</div>
-            <Braid style={{ marginTop: "var(--space-xs)" }} />
-          </div>
-        }
-        mediaEmptyLabel={t("card.coven.mediaEmpty")}
+        /* The eyebrow's dispatch line ("dispatch no. {{id}} · all done!",
+           `card.masthead.coven`) and the empty gallery's "Drop a happy little
+           photo" (`card.coven.mediaEmpty`) were both CUT by #1909 — the masthead
+           because a generic one just says "Praxis" on a praxis card, the media
+           label because Coven was one of two factions with the slot. The braid
+           stays: it is drawn, not written. */
+        eyebrow={<Braid style={{ marginBottom: "var(--space-sm)" }} />}
         mediaEmptyStyle={{
           height: 158,
           borderRadius: 12,

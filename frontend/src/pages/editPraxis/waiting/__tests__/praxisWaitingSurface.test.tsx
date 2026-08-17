@@ -200,7 +200,7 @@ describe("collab — my part is in, the crew is not", () => {
     // one thing this rule is not. Apostrophes are HTML-escaped in the emitted
     // markup, so these are punctuation-free fragments.
     expect(html).toContain("frozen");
-    expect(html).toContain("seals it for everyone");
+    expect(html).toContain("locks it for everyone");
   });
 
   it("offers the authoring re-entry, and says what it costs the crew first", () => {
@@ -525,7 +525,7 @@ describe("duel — sealed, waiting on the rival", () => {
   it("labels the rival's side as sealed rather than pretending to conceal it", () => {
     // #999 already hides a live duel side from everyone but its author; this
     // only says so.
-    expect(html).toContain(collabCopy(SLUG, "duelSealedPlaceholder"));
+    expect(html).toContain(collabCopy(SLUG, "duelHiddenPlaceholder"));
     expect(html).not.toContain("I took the road east.".replace("east", "west"));
   });
 
@@ -679,7 +679,7 @@ describe("duel — both sides are in (#1164)", () => {
     // That view was deliberately cut from the composer. The placeholder names
     // where it lives instead of pretending the rival's text is here.
     expect(html).toContain(collabCopy(SLUG, "duelCompletedPlaceholder"));
-    expect(html).not.toContain(collabCopy(SLUG, "duelSealedPlaceholder"));
+    expect(html).not.toContain(collabCopy(SLUG, "duelHiddenPlaceholder"));
     expect(html).toContain('href="/praxis/1"');
   });
 

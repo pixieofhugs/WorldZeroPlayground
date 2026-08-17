@@ -18,6 +18,7 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import { usePraxisRoom, ROOM_TITLE_KEY } from "../praxisRoom";
+import { composerWritable } from "../roomSeal";
 import { paintedAwareness } from "../roomPresence";
 import {
   BODY_EDITOR_BASE_THEME,
@@ -119,7 +120,7 @@ function DuelPairSide({
         )}
         {collabCopy(
           factionSlug,
-          side.is_submitted ? "duelPillSealed" : "duelPillWriting",
+          side.is_submitted ? "duelPillSubmitted" : "duelPillWriting",
         )}
       </span>
     </div>
@@ -481,7 +482,10 @@ export function InviteSearch({
             border: "none",
             padding: 0,
             cursor: "pointer",
-            color: "var(--color-text-tertiary)",
+            // No `color` here: `.label-caption` already paints `--label-ink`,
+            // and restating it inline is the fork #1783 ruled on — an inline
+            // value the class can no longer reach, so a frame that repoints the
+            // seam on its own root stops being able to move this link (#1819).
             ...skin.leaveStyle,
           }}
         >
@@ -638,7 +642,11 @@ export function SaveDraftButton({
         border: "none",
         padding: 0,
         cursor: "pointer",
-        color: "var(--color-text-tertiary)",
+        // `--label-ink`, not the neutral it defaults to: a skin may pass its own
+        // `className` here, so this cannot lean on `.label-caption` the way the
+        // leave link above does — but it must still read the seam a faction
+        // frame repoints on its own root (#1819).
+        color: "var(--label-ink)",
         ...skin?.style,
       }}
     >
@@ -798,6 +806,36 @@ export interface BodyTextareaSkin {
   hideToolbar?: boolean;
 }
 
+/**
+ * The attributes the body editor puts on its own content element (#1978).
+ *
+ * Exported, and pure, because it is the seam a DOM-less harness can reach: the
+ * editor is built inside an effect that never runs here, but this value can be
+ * handed to `EditorView.contentAttributes` and read back off an
+ * `EditorState`. Same move `bodyEditorTheme.ts` makes for the theme.
+ *
+ * `spellcheck` is the reason this is a function at all. `@codemirror/view`
+ * hard-codes `spellcheck: "false"` on `.cm-content` (it is a code editor by
+ * birth), and `contentAttributes` is merged over those defaults, so this facet
+ * is the only place that decision can be reversed. A `<textarea>` had it for
+ * free; when #1742 moved the write-up into the room it silently lost it. This
+ * is the long-form prose a player is judged on — it gets the browser's
+ * dictionary back. Note that is an authoring aid, not an accessibility
+ * affordance; the `aria-*` entries below are the accessibility half and are
+ * unrelated.
+ */
+export function bodyContentAttributes(
+  skin: Pick<BodyTextareaSkin, "id" | "ariaLabel">,
+): Record<string, string> {
+  const attributes: Record<string, string> = { spellcheck: "true" };
+  // `<label for>` does nothing for a contenteditable div, so the section's
+  // label reaches the editor as `aria-labelledby` instead (ComposerSection
+  // gives that label its id).
+  if (skin.id) attributes["aria-labelledby"] = `${skin.id}-label`;
+  if (skin.ariaLabel) attributes["aria-label"] = skin.ariaLabel;
+  return attributes;
+}
+
 // Toolbar buttons in render order. Each glyph is referenced through
 // `button.glyph` (an identifier expression, not JSX text) so it never trips
 // i18next/no-literal-string; the accessible name comes from the t() labelKey.
@@ -854,20 +892,16 @@ export function BodyTextarea({
   // same thing. `seeded` is "not yet" — the document has not arrived. Frozen is
   // "not now" — it has arrived and is sealed for the whole group until somebody
   // reopens it (#1745). The server drops the update messages either way; this
-  // only stops the member typing into a void.
-  const writable = seeded && !state.documentFrozen;
+  // only stops the member typing into a void. The rule itself is one line in
+  // `roomSeal.ts`, where the harness can call it (#1931).
+  const writable = composerWritable(seeded, state.documentFrozen);
   const setBodyRef = useRef(state.setBody);
   setBodyRef.current = state.setBody;
 
-  const contentAttributes = useMemo(() => {
-    const attributes: Record<string, string> = {};
-    // `<label for>` does nothing for a contenteditable div, so the section's
-    // label reaches the editor as `aria-labelledby` instead (ComposerSection
-    // gives that label its id).
-    if (skin.id) attributes["aria-labelledby"] = `${skin.id}-label`;
-    if (skin.ariaLabel) attributes["aria-label"] = skin.ariaLabel;
-    return attributes;
-  }, [skin.id, skin.ariaLabel]);
+  const contentAttributes = useMemo(
+    () => bodyContentAttributes(skin),
+    [skin.id, skin.ariaLabel],
+  );
 
   // ---- The editor, bound to the ROOM's text (never seeded from here) ----
   useEffect(() => {
@@ -1020,10 +1054,7 @@ export function BodyTextarea({
         style={{ ...BODY_EDITOR_HOST_STYLE, ...skin.textareaStyle }}
       />
       {awaitingRoom && (
-        <p
-          className="label-caption"
-          style={{ color: "var(--color-text-tertiary)" }}
-        >
+        <p className="label-caption">
           {/* Two states, one line. The room has either not arrived yet or has
               stopped trying (#1804), and the difference matters entirely to the
               person waiting: "…" is worth sitting through, and the other is
@@ -1048,11 +1079,19 @@ export function BodyTextarea({
           className="flex flex-col items-start gap-1"
           style={{ marginTop: "var(--space-xs)" }}
         >
-          <p
-            className="label-caption"
-            style={{ color: "var(--color-text-tertiary)" }}
-          >
-            {t("editPraxis.composer.bodyFrozen")}
+          {/* Two sentences for two different members (#1931). Whoever loaded a
+              praxis that was already sealed has lost nothing and is told the
+              rule. Whoever was still typing when the room hung up under them
+              has lost whatever they typed after that — it never reached the
+              server and cannot be recovered — and being told the rule instead
+              of the loss would leave them believing text they can still see on
+              screen is safe. */}
+          <p className="label-caption">
+            {t(
+              state.sealedMidEdit
+                ? "editPraxis.composer.bodyFrozenMidEdit"
+                : "editPraxis.composer.bodyFrozen",
+            )}
           </p>
           <button
             type="button"
@@ -1063,7 +1102,12 @@ export function BodyTextarea({
               background: "none",
               border: "none",
               padding: 0,
-              color: "var(--color-text-secondary)",
+              // The link seam, not the neutral it is unset to (#1636/#1819).
+              // This sits one line under the frozen notice above, which reads
+              // `--label-ink` through its class — leaving the global secondary
+              // here would fix the sentence and leave its way out unreachable
+              // on exactly the three near-black sheets that needed both.
+              color: "var(--link-ink)",
               textDecoration: "underline",
               cursor: "pointer",
             }}

@@ -21,6 +21,7 @@ from errors import (
     detail_message,
     raise_coded,
 )
+from faction_slugs import faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.flag import Flag, FlagReason, stored_flag_reason
@@ -344,11 +345,14 @@ async def list_praxes(
     # need it, and joining once keeps ``?faction=x&q=y`` from double-joining.
     query = query.join(Task, Praxis.task_id == Task.id)
 
-    if faction:
-        # Praxis has no faction of its own; it inherits the linked task's
-        # faction. Multi-select (#1362): an EMPTY list means "no faction filter",
-        # never "match nothing" — clearing every checkbox shows everything.
-        query = query.where(Task.primary_faction_slug.in_(faction))
+    # Praxis has no faction of its own; it inherits the linked task's faction.
+    # Multi-select (#1362): an EMPTY list means "no faction filter", never
+    # "match nothing" — clearing every checkbox shows everything. Routed through
+    # the same helper as the task browse so Unaffiliated means the same set of
+    # slugs on both, Albescent included (#1975).
+    faction_slugs = faction_filter_slugs(faction)
+    if faction_slugs:
+        query = query.where(Task.primary_faction_slug.in_(faction_slugs))
 
     if search:
         term = search.strip()

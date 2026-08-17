@@ -6,12 +6,24 @@ import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
 import DefaultTaskCard from './DefaultTaskCard'
+import StartHereMark from '../StartHereMark'
 import { factionCssVar, factionFill, factionName } from '../../utils/factions'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 
 /**
  * The contract every faction task-card skin is built against (ADR-0055).
+ *
+ * THE TITLE IS AN `<h2>` (#1950). Every skin draws its own title element — the
+ * layouts are too different to share a slot — so the level is a convention this
+ * doc holds rather than a component that enforces it, and
+ * `components/__tests__/cardHeadingOutline.test.tsx` is what makes the
+ * convention bite. A card is a top-level item of whatever page mounts it, one
+ * level under that page's `<h1>`; it cannot see the page, so it may not assume
+ * a section heading sits in between. It was an `<h3>`, which skipped a level on
+ * every surface that lists cards straight under its title, and Lighthouse said
+ * so. Do not add a `headingLevel` prop: no consumer wants a different one
+ * (#1817 refused the same prop for the same reason).
  *
  * Points arrive UNMULTIPLIED, with the viewer's faction modifier alongside,
  * rather than as the pre-multiplied product the pre-v2 `displayPoints` prop
@@ -111,6 +123,25 @@ export default function TaskCard({
         inProgressCount={shownInProgressCount}
         onSignup={onSignup}
       />
+      {/* THE TASK MARKS ITSELF (#1861, SPEC-onboarding § The hand-off). Mounted
+          on the dispatcher rather than in the nine skins, exactly as the META
+          pill is: one place, every faction, and no skin can forget it.
+          `start_here` is derived server-side from the viewing character's own
+          praxis history, so this surface stays new-player-unaware. Top RIGHT,
+          so it never collides with the META stack on the left. */}
+      {shown.start_here && (
+        <div
+          style={{
+            position: 'absolute',
+            top: -6,
+            right: -6,
+            zIndex: 5,
+            pointerEvents: 'none',
+          }}
+        >
+          <StartHereMark />
+        </div>
+      )}
       {isMetatask && (
         <div
           style={{

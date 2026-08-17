@@ -156,11 +156,17 @@ export function formatAutosave(date: Date | null): string {
 /**
  * The stage word in the status row's first slot.
  *
- * `Draft` while you are writing; `Sealed` on a duel side you have filed;
- * `Submitted` on anything else that is in. Shared rather than inlined at the one
- * call site because SNIDE draws the same word in its MASTHEAD, and a masthead
- * still shouting DRAFT over a submitted praxis would be the page contradicting
- * itself — the exact failure the dress exists to prevent.
+ * `Draft` while you are writing; `Submitted` on anything that is in. Shared
+ * rather than inlined at the one call site because SNIDE draws the same word in
+ * its MASTHEAD, and a masthead still shouting DRAFT over a submitted praxis
+ * would be the page contradicting itself — the exact failure the dress exists to
+ * prevent.
+ *
+ * #1863 retired "sealed": a duel side used to read `statusSealed` and everything
+ * else `statusSubmitted`, chosen on `isDuel`. Both held the same word, so the
+ * branch chose between two identical strings and went with the sweep. #1910
+ * deleted the orphaned key behind it — one stage word, one key, no ternary that
+ * reads like a distinction the app does not make.
  *
  * The completed reading takes the collab block's own word, which says
  * `Submitted` rather than `Submitted by you`: a lapsed window publishes over a
@@ -173,13 +179,7 @@ export function composerStageWord(state: EditPraxisState): string {
   if (state.phase === "completed") {
     return collabCopy(state.praxis?.task_faction_slug, "completedStatusMeta");
   }
-  // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
-  const isDuel = state.praxis?.duel_id != null && state.duel != null;
-  return i18n.t(
-    isDuel
-      ? "forms:editPraxis.composer.statusSealed"
-      : "forms:editPraxis.composer.statusSubmitted",
-  );
+  return i18n.t("forms:editPraxis.composer.statusSubmitted");
 }
 
 /* ========================================================================== *

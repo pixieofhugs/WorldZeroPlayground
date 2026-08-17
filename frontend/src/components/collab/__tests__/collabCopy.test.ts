@@ -165,7 +165,7 @@ describe('collabCopy — the shared tier speaks the domain noun (#1154)', () => 
    * capitalised. Capitalising only the one the ruling names would read as an
    * accident next to three lower-case siblings.
    *
-   * The duel pair (`duelPillSealed` / `duelPillWriting`) is deliberately left
+   * The duel pair (`duelPillSubmitted` / `duelPillWriting`) is deliberately left
    * lower-case: a praxis is either a collab or a duel side, so those two never
    * render beside these four, and #1832 scoped itself to the roster's set.
    */

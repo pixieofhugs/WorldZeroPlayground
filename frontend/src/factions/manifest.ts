@@ -151,13 +151,25 @@ export interface FactionManifest {
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
   // Task cards, task detail, praxis detail, the EDIT-PRAXIS COMPOSER, the PRAXIS
-  // CARD, the CHARACTER PROFILE and now the DUEL SEAL have no mobile twin:
-  // ADR-0056, ADR-0058, ADR-0061/#1085, ADR-0065/#1181, ADR-0067, #1319 and
-  // #1313 each collapsed their surface to one responsive component per faction
-  // and retired it. Every one of those licences is scoped to its own surface —
-  // ADR-0035 still governs the twins below, and each record says in terms that
-  // it licenses no further collapse: the next surface needs its own record, the
-  // same way.
+  // CARD, the CHARACTER PROFILE, the DUEL SEAL and now the FACTION PAGE have no
+  // mobile twin: ADR-0056, ADR-0058, ADR-0061/#1085, ADR-0065/#1181, ADR-0067,
+  // #1319, #1313 and ADR-0077 each collapsed their surface to one responsive
+  // component per faction and retired it. Every one of those licences is scoped
+  // to its own surface — ADR-0035 still governs `mobileFieldDesk` below, and
+  // each record says in terms that it licenses no further collapse: the next
+  // surface needs its own record, the same way. `mobileFieldDesk` is not the
+  // next one: it is a genuinely different screen rather than a narrow rendering
+  // of the roster, and #1320 says so.
+  //
+  // `mobileFactionPage` is the eighth (ADR-0077). It looked like the others —
+  // eight skins beside eight bodies — and was not: the two registries held two
+  // DIFFERENT CONTENT SETS. Coven's body reads twenty bespoke `coven.*` keys;
+  // Coven's phone skin read one, plus a shared generic set, so a phone got
+  // generic chrome in a faction dress and the manifesto, the spotlight and the
+  // bespoke join flow did not exist there at all. The collapse was therefore not
+  // output-neutral, and that was the point of it. `.wz-faction-grid` already
+  // carried the ≤860px drop to one column, so no chassis was needed; the one
+  // skin that wants the viewport reads `useFormFactor()` itself.
   //
   // `mobileDuelSeal` is the seventh (#1313). It was the tightest pair in the
   // set: SEVEN twins whose difference was the positioning shell — a centred
@@ -200,7 +212,6 @@ export interface FactionManifest {
   // render the Default directly. A future faction skin for one of them adds the
   // field back with a registration in the same commit — a slot no faction fills
   // is not a seam, it is a lookup that always returns the same answer.
-  readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
 }
 
@@ -235,7 +246,6 @@ export const SURFACE_KEYS = [
   'factionBody',
   'profileBody',
   'duelSeal',
-  'mobileFactionPage',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]
 

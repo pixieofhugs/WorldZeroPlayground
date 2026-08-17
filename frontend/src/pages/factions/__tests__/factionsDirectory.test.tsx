@@ -14,6 +14,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { FactionOut, FactionPageOut, FactionStatusOut, InvitationLetterOut } from '../../../api/factions'
 import FactionsDirectoryView from '../mobileArchetypes/FactionsDirectoryView'
+import DefaultFactionsDirectory from '../mobileArchetypes/DefaultFactionsDirectory'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -168,5 +169,27 @@ describe('mobile factions directory — states (#743)', () => {
   it('shows the unaffiliated banner only to a factionless viewer', () => {
     expect(view({ unaffiliated: true }).html).toContain('sidebar-card')
     expect(view({ unaffiliated: false }).html).not.toContain('sidebar-card')
+  })
+})
+
+/**
+ * The container above that view. Carried here from
+ * `factionDetail/__tests__/mobileArchetypeSlots.test.tsx`, which walked the
+ * retired `mobileFactionPage` registry and kept this one directory assertion as
+ * a passenger (#1314). It is thin on purpose — effects never fire in this
+ * harness, so the container only ever reaches its loading state — but it is the
+ * one thing proving the container wires the view's chrome up at all.
+ */
+describe('mobile factions directory — the container', () => {
+  it('renders the heading and the unaffiliated banner', () => {
+    // The directory fetch lives in the page dispatcher now (#1116), so the skin
+    // takes the same still-loading state it used to produce for itself.
+    const { text } = render(
+      <DefaultFactionsDirectory
+        state={{ factions: [], factionPage: null, invitations: [], loading: true, error: null }}
+      />,
+    )
+    expect(text).toContain('Factions')
+    expect(text).toContain('Unaffiliated')
   })
 })

@@ -1,6 +1,7 @@
 import { Trans } from "react-i18next";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
+import { useFormFactor } from "../../hooks/useFormFactor";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 
 /**
@@ -41,6 +42,16 @@ export default function SingularityFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
+  // #1314 sent this hero to a phone for the first time. Every OTHER faction hero
+  // lays its masthead out with `flexWrap: "wrap"`, which reflows on its own;
+  // this one is the single hard `1fr 240px` grid in the set, and a hard grid at
+  // 375px squeezes the boot lines to nothing and pushes the readout off the
+  // edge. The same trap `WowFactionBody`'s header comment names about
+  // `.wz-faction-grid`. One `useFormFactor()` read in the one file that needs
+  // it — the CSS fix (a media query on a class) belongs to `index.css`, which is
+  // not this PR's to edit.
+  const stacked = useFormFactor() === "mobile";
+
   // The faction labels its own counts — page passes raw numbers only. Per the
   // standardization rule these sit in a side "system readout" column beside the
   // sigil, never a full-width band under the blurb.
@@ -104,9 +115,11 @@ export default function SingularityFactionHero({
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "var(--space-2xl) var(--space-3xl) var(--space-3xl)",
+          padding: stacked
+            ? "var(--space-xl) var(--space-lg) var(--space-2xl)"
+            : "var(--space-2xl) var(--space-3xl) var(--space-3xl)",
           display: "grid",
-          gridTemplateColumns: "1fr 240px",
+          gridTemplateColumns: stacked ? "1fr" : "1fr 240px",
           gap: "var(--space-2xl)",
           alignItems: "start",
         }}

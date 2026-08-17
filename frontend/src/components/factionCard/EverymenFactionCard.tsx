@@ -7,7 +7,7 @@ import { EverymenSigil } from "../sigil/EverymenSigil";
  * EverymenFactionCard — the Everymen faction PREVIEW card.
  *
  * A union recruitment poster: a masthead with the faction name in a big Bebas
- * headline and the motto/blurb from factionDescription(slug). Pure preview —
+ * headline and the blurb from factionDescription(slug). Pure preview —
  * the whole card is a link to the faction detail page, where the enlist / leave
  * membership block lives (issue #347). No interactive controls here.
  *
@@ -75,11 +75,9 @@ export default function EverymenCard({
 }: FactionCardProps) {
   const blurb = factionDescription(faction.slug);
 
-  const perks = [
-    i18n.t("feed:factionCard.everymen.perks.honestPoints"),
-    i18n.t("feed:factionCard.everymen.perks.finishesWork"),
-    i18n.t("feed:factionCard.everymen.perks.stampedWork"),
-  ];
+  // The three-perk checklist under the blurb was Everymen's alone — no other
+  // faction card had one — and #1909 cut all three strings with the surface.
+  // The card ends on the description, which is where the other eight end.
 
   return (
     <div
@@ -98,29 +96,38 @@ export default function EverymenCard({
       <Sunburst color="var(--everymen-field-deep)" from="50% 32%" opacity={0.55} step={7.5} />
       <Halftone color="var(--everymen-cream)" opacity={0.09} />
 
-      {/* gold top rule + kicker */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          background: "var(--everymen-ink)",
-          color: "var(--everymen-gold)",
-          textAlign: "center",
-          fontFamily: "var(--faction-everymen-card-font)",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: struck banner ribbon across the card head — illustration, not chrome
-          fontSize: 15,
-          letterSpacing: "0.34em",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: lead of the struck banner ribbon; rounding reflows it.
-          padding: "7px 0",
-        }}
-      >
-        {invitationNote
-          ? i18n.t("feed:factionCard.everymen.summons", {
-              note: invitationNote.toUpperCase(),
-            })
-          : i18n.t("feed:factionCard.everymen.kicker")}
-      </div>
-      <div style={{ height: 4, background: "var(--everymen-gold)", position: "relative", zIndex: 2 }} />
+      {/* The struck banner ribbon, now ONLY for an invitation.
+          #1909 cut both of its strings. `factionCard.everymen.summons` ("NEW
+          SUMMONS · {{note}}") is covered by the generic
+          `factionCard.newInvitation` the shared card already prints, so the
+          ribbon reads that instead — the note is appended here rather than
+          interpolated, because the generic key takes no variable.
+          `factionCard.everymen.kicker` ("THE EVERYMEN WANT YOU") had no generic
+          twin, so with no invitation there is nothing for the ribbon to say and
+          it is not drawn. */}
+      {invitationNote && (
+        <>
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              background: "var(--everymen-ink)",
+              color: "var(--everymen-gold)",
+              textAlign: "center",
+              fontFamily: "var(--faction-everymen-card-font)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: struck banner ribbon across the card head — illustration, not chrome
+              fontSize: 15,
+              letterSpacing: "0.34em",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead of the struck banner ribbon; rounding reflows it.
+              padding: "7px 0",
+            }}
+          >
+            <span>{i18n.t("feed:factionCard.newInvitation")}</span>
+            <span> · {invitationNote.toUpperCase()}</span>
+          </div>
+          <div style={{ height: 4, background: "var(--everymen-gold)", position: "relative", zIndex: 2 }} />
+        </>
+      )}
 
       <div style={{ position: "relative", zIndex: 2, padding: "var(--space-2xl)", textAlign: "center" }}>
         {/* sigil seal */}
@@ -141,19 +148,9 @@ export default function EverymenCard({
           </div>
         </div>
 
-        {/* World Zero · Faction eyebrow */}
-        <div
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--text-base)",
-            letterSpacing: "0.3em",
-            textTransform: "uppercase",
-            color: "var(--everymen-gold)",
-            marginBottom: "var(--space-sm)",
-          }}
-        >
-          {i18n.t("feed:factionCard.everymen.eyebrow")}
-        </div>
+        {/* A "WORLD ZERO · FACTION" eyebrow sat here
+            (`factionCard.everymen.eyebrow`). #1909 cut it — two factions wrote
+            one, seven never had the slot, and the audit ruled the card generic. */}
 
         {/* big Bebas headline = faction name */}
         <h1
@@ -171,24 +168,9 @@ export default function EverymenCard({
           {factionName(faction.slug)}
         </h1>
 
-        {/* motto plaque */}
-        <div
-          style={{
-            display: "inline-block",
-            marginTop: "var(--space-lg)",
-            background: "var(--everymen-ink)",
-            color: "var(--everymen-gold)",
-            fontFamily: "var(--faction-everymen-card-font)",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: struck motto plaque — poster type set to the ink block
-            fontSize: 16,
-            letterSpacing: "0.2em",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its struck ink plaque; rounding reflows the plaque.
-            padding: "4px 16px",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {i18n.t("feed:factionCard.everymen.motto")}
-        </div>
+        {/* The struck motto plaque ("UNITED · WE · STAND") sat here.
+            #1909 cut `factionCard.everymen.motto`: Everymen was the only faction
+            with a motto on this card, on a surface the audit ruled generic. */}
 
         {/* blurb from description */}
         <p
@@ -204,51 +186,8 @@ export default function EverymenCard({
           {blurb}
         </p>
 
-        {/* what you get */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 0,
-            maxWidth: 380,
-            margin: "var(--space-xl) auto 0",
-            textAlign: "left",
-          }}
-        >
-          {perks.map((perk) => (
-            <div
-              key={perk}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-md)",
-                padding: "var(--space-md) 0",
-                borderTop: "1px dashed color-mix(in srgb, var(--everymen-cream) 35%, transparent)",
-              }}
-            >
-              <span
-                style={{
-                  flexShrink: 0,
-                  width: 22,
-                  height: 22,
-                  background: "var(--everymen-gold)",
-                  color: "var(--everymen-ink)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--faction-everymen-card-font)",
-                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the checkmark is a dingbat glyph used as an icon in a 22px chip
-                  fontSize: 14,
-                }}
-              >
-                ✓
-              </span>
-              <span className="content-text" style={{ fontFamily: "var(--font-body)", color: "var(--everymen-cream)" }}>
-                {perk}
-              </span>
-            </div>
-          ))}
-        </div>
+        {/* The "what you get" checklist stood here — see the note beside the
+            blurb above. #1909 cut all three of its strings. */}
       </div>
     </div>
   );

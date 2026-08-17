@@ -61,6 +61,10 @@ export const aTask = (over: Partial<TaskOut> = {}): TaskOut => ({
   can_sign_up: true,
   allowed_modes: ['solo'],
   eligible_for_current_user: true,
+  // The *start here* mark (#1861), derived server-side. False on every task but
+  // the one game-wide onboarding task, and on that one only until the viewing
+  // character has completed it — so false is the modal value by a mile.
+  start_here: false,
   ...over,
 })
 

@@ -5,7 +5,7 @@
  * a checkered barrier rail, a rosette for the rider who comes from elsewhere,
  * and a ribbon that goes home with the loser. This module holds the pieces that
  * would otherwise be drawn twice — the token names, the barrier band, the
- * rosette, and the seal's voice resolver. It shipped serving FOUR surfaces; the
+ * rosette, and (until #1909) the seal's voice resolver. It shipped serving FOUR surfaces; the
  * two `*DuelRail` skins went with the rail in #1090 and the phone seal went with
  * the `mobileDuelSeal` SURFACE in #1313, so the consumer is now
  * `WowDuelSealConfirm` — one responsive component, both form factors.
@@ -27,9 +27,6 @@
  * keyframes the crest already declares.
  */
 import type { CSSProperties } from 'react'
-import { useTranslation } from 'react-i18next'
-
-import type { DuelSealMode } from './shared'
 
 /* -------------------------------------------------------------------------- */
 /* Tokens                                                                     */
@@ -184,55 +181,24 @@ export function ListsRibbonMark({ color = PLUM }: { color?: string }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Voice                                                                      */
+/* Voice — RETIRED (#1909)                                                    */
 /* -------------------------------------------------------------------------- */
 
-/** The strings WOW's seal supplies on top of the shared, faction-neutral copy. */
-export interface WowSealVoice {
-  sub: string
-  confirm: string
-  cancel: string
-  rosterLabel: string
-  stakesLabel: string
-  ribbonLine: string
-}
-
-/**
- * WOW's chrome voice for the seal.
+/*
+ * `useWowSealVoice` and its `WowSealVoice` shape lived here. It supplied nine
+ * strings on top of the shared, faction-neutral seal copy: a KICKER above the
+ * heading ("Enter the lists · submitting proof" / "Leave the lists · yielding
+ * the joust"), the two section headings ("The Roster", "The Stakes"), the ribbon
+ * line, and the two button labels per mode.
  *
- * It deliberately does NOT replace `useDuelSealCopy`. That helper owns
- * `heading`, `body`, `note` and `danger`, and the seal skins render all four
- * unchanged. Two reasons, and the second one is enforced:
+ * ALL NINE ARE ON THE COPY AUDIT'S CUT LIST. WOW was the only faction with a
+ * voiced duel seal — the other eight skins already rendered `useDuelSealCopy`'s
+ * neutral strings alone — and the audit ruled the surface generic. The buttons
+ * are the interesting case: dropping the override is the whole fix, because
+ * `SealActions` already falls back to `duelSeal.confirm` / `duelSeal.cancel`,
+ * and `useDuelSealCopy` already carries the forfeit-mode label.
  *
- *  1. `body` and `note` carry live figures and the pending/active/forfeit
- *     branch. Re-authoring them here would be a skin re-implementing a slot,
- *     which `duel/shared.tsx` forbids outright.
- *  2. `heading` is a CONTRACT, not a flourish. `duelSkinSlots.test.tsx` asserts
- *     that every registered seal skin renders "Seal the duel?" in submit mode
- *     and "Forfeit" in forfeit mode — that is #718's faction-neutral-copy
- *     decision with a guard behind it. A WOW-voiced title was drafted here and
- *     removed when the guard (correctly) caught it.
- *
- * What is left, and what WOW takes: the KICKER above the heading, the two
- * section headings the kit draws, the ribbon line, and the two button labels.
- * That is the same faction-scoped-key pattern `praxis.json`'s `card.wow` block
- * already uses, so the shared resolver stays neutral and only this skin reads
- * the WOW keys. (Praxis DETAIL is the counter-example, not a sibling: ADR-0061
- * keeps that page on one neutral block, and its per-faction WOW block was
- * deleted when the voiced amendment was withdrawn.)
- *
- * The single branch here is on `mode`, which arrives as a prop — no duel fact is
- * re-derived.
+ * What the hook DELIBERATELY did not own — `heading`, `body`, `note`, `danger` —
+ * was never WOW's, and `duelSkinSlots.test.tsx` still enforces that. Nothing
+ * about that contract changes here; there is simply nothing left on top of it.
  */
-export function useWowSealVoice(mode: DuelSealMode): WowSealVoice {
-  const { t } = useTranslation('praxis')
-  const scope = mode === 'forfeit' ? 'forfeit' : 'submit'
-  return {
-    sub: t(`duelSeal.wow.${scope}.sub`),
-    confirm: t(`duelSeal.wow.${scope}.confirm`),
-    cancel: t(`duelSeal.wow.${scope}.cancel`),
-    rosterLabel: t('duelSeal.wow.rosterLabel'),
-    stakesLabel: t('duelSeal.wow.stakesLabel'),
-    ribbonLine: t('duelSeal.wow.ribbonLine'),
-  }
-}

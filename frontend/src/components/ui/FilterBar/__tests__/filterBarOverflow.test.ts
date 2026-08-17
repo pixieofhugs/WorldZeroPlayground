@@ -93,6 +93,51 @@ describe('.filter-bar is a surface card with a rainbow top edge (#1854)', () => 
 })
 
 /**
+ * #1944 — the rainbow edge has to be able to HOLD the corner it declares.
+ *
+ * `border-radius` is a request, not a guarantee: where the radii along one edge
+ * sum to more than that edge, CSS scales every radius on the box down by the
+ * same factor until they fit. The strip asked for the bar's 12px top corners at
+ * `height: 3px`, got 0.25 of it, and drew a 3px corner alongside a padding box
+ * that turns at 11px — so its left end overhung the bar's rounded corner and
+ * sat out over the border.
+ *
+ * The sibling `describe` above already asserted a radius WAS declared, and that
+ * assertion passed throughout. What it could not see is the box: this harness
+ * has no layout, so the clamp is unobservable at runtime and the only thing a
+ * DOM-less test can check is that the strip's box is at least as tall as the
+ * corner it is drawing. That is the whole contract here — the band's thickness
+ * moves to `padding-top`, and a mask is what keeps the rest of the taller box
+ * from painting as a 12px rainbow slab.
+ */
+describe('.filter-bar__spectrum can hold the bar\'s corner (#1944)', () => {
+  const strip = ruleBodies(css, '.filter-bar__spectrum').join('\n')
+
+  it('sizes its BOX to the radius and its BAND to the rail pad', () => {
+    expect(strip).toMatch(/height\s*:\s*var\(--space-md\)/)
+    // The tell for the regression: the band thickness back in `height`.
+    expect(strip).not.toMatch(/height\s*:\s*var\(--filter-rail-pad\)/)
+    expect(strip).toMatch(/padding-top\s*:\s*var\(--filter-rail-pad\)/)
+  })
+
+  it('builds its radius from the same token the bar rounds with', () => {
+    // `calc(var(--space-md) - 1px)`: the bar's PADDING-box radius, one border
+    // in from the 12px it rounds its own border box with.
+    const radius = /border-radius\s*:\s*([^;]+);/.exec(strip)
+    expect(radius, 'the strip must declare a radius').not.toBeNull()
+    expect(radius![1]).toContain('var(--space-md)')
+  })
+
+  it('gives back the flow the taller box would add, and masks the rest', () => {
+    expect(strip).toMatch(
+      /margin-bottom\s*:\s*calc\(\s*var\(--filter-rail-pad\)\s*-\s*var\(--space-md\)\s*\)/,
+    )
+    // Without the exclude, the extra 9px paints as rainbow instead of nothing.
+    expect(strip).toMatch(/mask[^;]*content-box[^;]*exclude/)
+  })
+})
+
+/**
  * #1726 — a segment must never be narrower than its own label.
  *
  * `.filter-rail__segment` used to be `flex: 1` with zero horizontal padding, so

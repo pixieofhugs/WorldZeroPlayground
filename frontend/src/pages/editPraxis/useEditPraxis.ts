@@ -45,6 +45,7 @@ import {
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore } from "./praxisRoom";
+import { applyRoomSeal, documentIsFrozen } from "./roomSeal";
 import {
   deleteCollabConfirm,
   dropDuelSideConfirm,
@@ -118,6 +119,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
+  // This client's room was hung up because the praxis froze (#1931). Held here
+  // rather than read off the praxis because it is the NEWER fact — the row in
+  // hand still says `in_progress`, and every keystroke taken between the
+  // hang-up and the refetch below would be dropped by the server in silence.
+  // See `roomSeal.ts` for both halves of the rule.
+  const [sawSealClose, setSawSealClose] = useState(false);
   const [task, setTask] = useState<TaskOut | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -421,6 +428,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       // `refetch` only refreshes auth — without reloading the praxis the roster
       // would keep showing my part as cast right after I pulled it back.
       setPraxis(await getPraxis(praxisId));
+      // The one transition that makes a sealed room writable again from this
+      // tab, so it is the one place the seal latch is released (#1931).
+      // Ordered after the read on purpose: clearing it first would unfreeze the
+      // editor for the length of a round trip, against a praxis still sealed.
+      setSawSealClose(false);
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
     } finally {
@@ -628,11 +640,26 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
+  // The room hung up with `WS_ROOM_FROZEN` (#1931). `EditPraxis.tsx` hands this
+  // to the provider as `onSealed`; nothing else calls it, and it is idempotent
+  // because the provider may fire it more than once.
+  //
+  // The freeze goes on HERE, off the close code, not off the answer below —
+  // the round trip is exactly the window in which the member's typing is being
+  // dropped, and a read that fails or never returns must not hand the editor
+  // back. The refetch catches the rest of the composer up.
+  const noteRoomSealed = useCallback(() => {
+    setSawSealClose(true);
+    if (!idParam) return;
+    void applyRoomSeal(parseInt(idParam, 10), getPraxis, setPraxis);
+  }, [idParam]);
+
   // ---- Derived ----
-  // The freeze (#1745), stated as the server states it. Drafting is the only
-  // status in which the room accepts a change, so it is the only status in
-  // which the editor may accept a keystroke.
-  const documentFrozen = !!praxis && praxis.status !== "in_progress";
+  // The freeze (#1745), stated as the server states it, plus the close code
+  // that says so before the status can (#1931) — see `roomSeal.ts`. Drafting is
+  // the only status in which the room accepts a change, so it is the only
+  // status in which the editor may accept a keystroke.
+  const documentFrozen = documentIsFrozen(praxis, sawSealClose);
   const isPublished = praxis?.status === "submitted";
 
   // A published praxis has no room document any more — the server destroyed it
@@ -775,6 +802,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
     autoSubmitDays,
     documentFrozen,
+    sealedMidEdit: sawSealClose,
+    noteRoomSealed,
     isPublished: !!isPublished,
     controlsLocked,
     modeIsLocked,

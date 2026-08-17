@@ -257,6 +257,24 @@ export interface EditPraxisState {
    * everything else about it still working.
    */
   documentFrozen: boolean;
+  /**
+   * This member's room was sealed **under them**, mid-session (#1931) — the
+   * server hung their socket up with `WS_ROOM_FROZEN` rather than their having
+   * loaded a praxis that was already frozen.
+   *
+   * The one thing that distinguishes the two cases client-side, and the only
+   * reason to distinguish them: whatever they typed after that close never
+   * reached the server and **cannot be recovered**, so the frozen notice owes
+   * them a different sentence. See `roomSeal.ts` for why nothing tries to save
+   * it.
+   */
+  sealedMidEdit: boolean;
+  /**
+   * Called by `EditPraxis.tsx` as the room provider's `onSealed`; nothing else
+   * calls it. Freezes the document off the close code and refetches the praxis.
+   * Idempotent — the provider may fire it more than once.
+   */
+  noteRoomSealed: () => void;
   isPublished: boolean;
   /**
    * The composer is read-only. Since #1164 this means **"hand off"** rather than

@@ -12,9 +12,10 @@
  * hex — colours via --faction-singularity-* vars.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 const VOID = 'var(--faction-singularity-card-bg)' // terminal black
 const PHOSPHOR = 'var(--faction-singularity-card-accent)' // green
@@ -79,7 +80,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'singularity',
   dataTheme: 'dark',
   pageBackground: 'var(--faction-singularity-card-bg)',
@@ -120,17 +121,9 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'lvl',
   barFill: 'linear-gradient(90deg, var(--faction-singularity-border-hard), var(--faction-singularity-card-accent))',
   barTrack: signal(25),
-  nextLevelLabel: (next) => `next // lvl ${next}`,
-  scoreFootnote: (score) => `> ${score} PTS LOGGED`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `Sealed outputs // by ${name}`,
-  praxisEmpty: {
-    title: '> NO OUTPUT SEALED',
-    body: 'Run a protocol. Cast the first signal.',
-  },
   emptyStateStyle: {
     border: `1px dashed ${signal(50)}`,
     padding: 'var(--space-2xl)',
@@ -138,7 +131,6 @@ const kit: ProfileKit = {
     background: VOID,
   },
   laurel: <SpectrumLaurel centerBg={VOID} glyphColor={PHOSPHOR} />,
-  badgeTitle: 'Verified',
   badgeBoardStyle: {
     border: `1px solid ${signal(40)}`,
     background: VOID,
@@ -188,5 +180,28 @@ const kit: ProfileKit = {
 }
 
 export default function SingularityProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.singularity.ringLabel'),
+        nextLevelLabel: (next) => t('profile.singularity.nextLevel', { level: next }),
+        /* It was the one kit with a footnote — it logged the absolute score and
+           ignored the threshold, which is why it took a key of its own.
+           `scoreFootnote` read `profile.singularity.scoreFootnote`
+           ("> {{score}} PTS LOGGED"). #1909 CUT it: Singularity was the only
+           kit that set the optional footnote, on a surface the audit ruled
+           generic. `ProfileSkin` draws no footnote when the knob is unset,
+           which is what the other six kits already do. */
+        praxisEyebrow: (name) => t('profile.singularity.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.singularity.praxisEmptyTitle'),
+          body: t('profile.singularity.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.singularity.badgeTitle'),
+      }}
+    />
+  )
 }

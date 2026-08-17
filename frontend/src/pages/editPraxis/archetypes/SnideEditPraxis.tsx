@@ -496,7 +496,7 @@ export default function SnideEditPraxis({ state }: Props) {
 
         {state.showSealStack && (
           <ComposerSection
-            label={t("editPraxis.composer.sealsLabel")}
+            label={t("editPraxis.composer.metatasksLabel")}
             rule={false}
             labelStyle={{ color: MUTED }}
           >

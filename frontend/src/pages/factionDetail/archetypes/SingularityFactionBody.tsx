@@ -106,18 +106,10 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-const KICKER: CSSProperties = {
-  fontFamily: FONT,
-  fontSize: "var(--text-md)",
-  letterSpacing: "0.24em",
-  textTransform: "uppercase",
-  color: phosphor(40),
-  marginBottom: "var(--space-lg)",
-};
-
-function Kicker({ children }: { children: ReactNode }) {
-  return <div style={KICKER}>{children}</div>;
-}
+/* The system `Kicker` under each section title lived here. #1909 cut its two
+   strings (`singularity.tasks.kicker` / `.praxis.kicker`): the audit ruled the
+   line restated its own heading, and no faction outside the seven bespoke bodies
+   ever had one. The style went with the only component that used it. */
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
@@ -177,18 +169,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
         {/* ② MANIFEST */}
         <div style={{ ...PANEL, padding: "var(--space-xl)" }}>
           <Scanlines />
-          <div
-            style={{
-              position: "relative",
-              fontFamily: FONT,
-              fontSize: "var(--text-md)",
-              letterSpacing: "0.14em",
-              color: signal(55),
-              marginBottom: "var(--space-lg)",
-            }}
-          >
-            {t("singularity.manifest.command")}
-          </div>
+          {/* The panel opened on a shell prompt (`singularity.manifest.command`,
+              "> cat /faction/manifest.txt"). #1909 cut it: no other faction had
+              a command line over its about panel, and the audit ruled the
+              surface generic. Singularity is the one faction with no
+              about-panel HEADING to fall back on — #1910 gives all seven the
+              shared "About", and until it lands this block opens on the
+              description itself. */}
           <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
             {paragraphs.length ? (
               paragraphs.map((para, i) => (
@@ -216,7 +203,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
         {/* ④ TASKS */}
         <div>
           <SectionHeading>{t("singularity.tasks.heading")}</SectionHeading>
-          <Kicker>{t("singularity.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
               {t("singularity.tasks.empty")}
@@ -242,7 +228,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
         {/* ⑤ PRAXIS */}
         <div>
           <SectionHeading>{t("singularity.praxis.heading")}</SectionHeading>
-          <Kicker>{t("singularity.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
               {t("singularity.praxis.empty")}

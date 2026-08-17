@@ -100,18 +100,10 @@ function SectionHeading({ children, right }: { children: ReactNode; right?: Reac
   );
 }
 
-const KICKER: CSSProperties = {
-  fontFamily: MONO,
-  fontSize: "var(--text-md)",
-  letterSpacing: "0.2em",
-  textTransform: "uppercase",
-  color: MUTED,
-  marginBottom: "var(--space-lg)",
-};
-
-function Kicker({ children }: { children: ReactNode }) {
-  return <div style={KICKER}>{children}</div>;
-}
+/* The union `Kicker` under each section title lived here. #1909 cut its two
+   strings (`everymen.tasks.kicker` / `.praxis.kicker`): the audit ruled the line
+   restated its own heading, and no faction outside the seven bespoke bodies ever
+   had one. The style went with the only component that used it. */
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
@@ -191,7 +183,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
         {/* ④ TASKS */}
         <div>
           <SectionHeading>{t("everymen.tasks.heading")}</SectionHeading>
-          <Kicker>{t("everymen.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.tasks.empty")}</p>
           ) : (
@@ -215,7 +206,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
         {/* ⑤ PRAXIS */}
         <div>
           <SectionHeading>{t("everymen.praxis.heading")}</SectionHeading>
-          <Kicker>{t("everymen.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.praxis.empty")}</p>
           ) : (

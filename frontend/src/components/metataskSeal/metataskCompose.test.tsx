@@ -41,6 +41,7 @@ function metatask(
     can_sign_up: true,
     allowed_modes: ["solo"],
     eligible_for_current_user: true,
+    start_here: false,
   };
 }
 
@@ -125,8 +126,8 @@ describe("MetataskPicker", () => {
         state={mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
     );
-    expect(html).toContain(i18n.t("editPraxis.seal.pickerTitle", { ns: "forms" }));
-    expect(html).toContain(i18n.t("editPraxis.seal.filterAll", { ns: "forms" }));
+    expect(html).toContain(i18n.t("editPraxis.attach.pickerTitle", { ns: "forms" }));
+    expect(html).toContain(i18n.t("editPraxis.attach.filterAll", { ns: "forms" }));
     expect(html).toContain("Cite a source");
     expect(html).toContain("Log the signal");
   });
@@ -141,7 +142,7 @@ describe("MetataskPicker", () => {
         })}
       />,
     );
-    expect(html).toContain(i18n.t("editPraxis.seal.alreadySealed", { ns: "forms" }));
+    expect(html).toContain(i18n.t("editPraxis.attach.alreadyAttached", { ns: "forms" }));
   });
 });
 
@@ -160,7 +161,7 @@ describe("MetataskRemoveConfirm", () => {
         state={mkState({ metataskRemovalTarget: target })}
       />,
     );
-    expect(html).toContain(i18n.t("editPraxis.seal.removeTitle", { ns: "forms" }));
-    expect(html).toContain(i18n.t("editPraxis.seal.removeConfirm", { ns: "forms" }));
+    expect(html).toContain(i18n.t("editPraxis.attach.removeTitle", { ns: "forms" }));
+    expect(html).toContain(i18n.t("editPraxis.attach.removeConfirm", { ns: "forms" }));
   });
 });

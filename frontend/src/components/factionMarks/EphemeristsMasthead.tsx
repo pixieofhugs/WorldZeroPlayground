@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import {
   BAND_INK,
@@ -6,7 +5,6 @@ import {
   BRASS,
   CAPS,
   GOLD,
-  GlossedGlyph,
   READING,
 } from "./ephemeristsPlate";
 import { factionName } from "../../utils/factions";
@@ -16,10 +14,11 @@ import { formatDate } from "../../utils/dates";
  * THE ENGRAVED MASTHEAD (#1634) — the head of every Ephemerists surface, and the
  * end of the deco wordmark it replaces.
  *
- * A row: the kite sigil on the left, and a column holding three stacked bands —
- * the wordmark in incised small caps, a four-kanji register ruled off above and
- * below, and a datum row of date, right ascension and declination closed by the
- * sigil again at inline scale.
+ * A row: the kite sigil on the left, and a column holding two stacked bands —
+ * the wordmark in incised small caps, and a datum row of date, right ascension
+ * and declination, ruled off above and below and closed by the sigil again at
+ * inline scale. A four-kanji register sat between them until #1909 cut all eight
+ * of its strings; the note below the coordinates records what went.
  *
  * WHAT IT REPLACED, AND WHY IT IS ONE COMPONENT. Four surfaces each drew the
  * same centred stack — a 150–176px winged sun disc over the faction's name in
@@ -42,9 +41,10 @@ import { formatDate } from "../../utils/dates";
  * spacing scale — see {@link SIZES} for the three places the scale had no step.
  */
 
-/** The design's grid, shared by the glyph row and the datum row so their cells
- *  line up. The fourth column is narrower and right-aligned: it is the row's
- *  closing mark rather than a fourth reading. */
+/** The design's grid. It was shared by the glyph row and the datum row so their
+ *  cells lined up; the glyph row is gone (#1909) and the datum row keeps it. The
+ *  fourth column is narrower and right-aligned: it is the row's closing mark
+ *  rather than a fourth reading. */
 const COLUMNS = "1.1fr 1fr 1fr 0.9fr";
 
 /**
@@ -71,41 +71,39 @@ const COLUMNS = "1.1fr 1fr 1fr 0.9fr";
 const RIGHT_ASCENSION = "8ʰ 13ᵐ";
 const DECLINATION = "+44° 03′";
 
-/**
- * The four-kanji register — 星 暦 観 録, "star · almanac · observation · record".
+/*
+ * THE FOUR-KANJI REGISTER IS GONE (#1909) — 星 暦 観 録, "star · almanac ·
+ * observation · record", and the ruled band it sat in.
  *
- * The design set this row in cuneiform; the owner replaced cuneiform with kanji
- * across the kit, and the four chosen here read top-to-bottom as what an
- * ephemeris IS: the thing watched, the table it is kept in, the act of watching,
- * and what survives the watcher. 暦 is the load-bearing one — an ephemeris is
- * literally an almanac of positions, so the faction's name is in its own
- * masthead a second time in a script most readers cannot spend.
+ * All EIGHT of its strings are on the copy audit's CUT list: the four marks and
+ * the four English glosses that `title`'d them. No other faction had a register
+ * row, and the audit ruled the masthead a generic surface, so the slot goes
+ * rather than settling to a shared wording — there is nothing shared to settle
+ * onto. The wordmark now sits straight above the datum row.
  *
- * Each is a {@link GlossedGlyph}: the English is on `title`, so hover and focus
- * reveal it and assistive tech reads it out. Written as literal pairs — never a
- * template literal — so every key survives both a grep and the catalog's own
- * key types, which a computed key silently widens out of.
+ * ponytail: this leaves a masthead of two bands where the design drew three, and
+ * the datum row inherits none of the register's rules. Ceiling: I have no
+ * browser, so the two-band proportion is unverified at either scale. Upgrade
+ * path: `frontend-style` re-rules the wordmark/datum seam, or the audit's own
+ * "put it back in intentionally" restores a register under keys of its own.
  */
-const REGISTER = [
-  ["ephemerists.masthead.starMark", "ephemerists.masthead.star"],
-  ["ephemerists.masthead.almanacMark", "ephemerists.masthead.almanac"],
-  ["ephemerists.masthead.observationMark", "ephemerists.masthead.observation"],
-  ["ephemerists.masthead.recordMark", "ephemerists.masthead.record"],
-] as const;
 
 export type MastheadScale = "page" | "card";
 
 interface MastheadSize {
-  /** The sigil's HEIGHT; the mark owns its 486:560 ratio (#1635). Ornament. */
+  /** The sigil's box. It was a HEIGHT while the mark owned a 486:560 ratio
+   *  (#1635); Sigil Studies v2 draws the kite square, so this is both
+   *  dimensions and the mark is ~15% wider here than it was. Ornament. */
   sigil: number;
   wordmark: string;
-  glyph: string;
   datum: string;
   padding: string;
   gap: string;
   /** The grid's own column gap. Ornament geometry rounded to the scale. */
   columnGap: string;
-  /** The datum row's closing sigil, below the reduced cut's 20px (#1635). */
+  /** The datum row's closing sigil. It used to sit below #1635's 20px reduced
+   *  cut on purpose; v2 is filled rather than stroked and has no cut, so this
+   *  is now simply the size the datum row was drawn at. */
   inlineSigil: number;
 }
 
@@ -113,18 +111,15 @@ interface MastheadSize {
  * The design's two size tables, mapped onto the type and spacing scales.
  *
  * The sigil sizes stay raw: a drawn mark's dimensions are ornament geometry and
- * never spacing (§4a). Everything else takes a rung, and three of them needed a
+ * never spacing (§4a). Everything else takes a rung, and one of them needed a
  * decision because the scale has no step at the design's number:
  *
- *  • the page glyph row is drawn at 16px, which sits exactly between `--text-xl`
- *    (14) and `--text-content` (18). It rounds UP, for #1637's reason rather
- *    than §4a's: a kanji at 14px is at the bottom of the legible band and these
- *    four are the row, not a caption beside one.
- *  • the card glyph row is drawn at 13 and takes `--text-xl` (14), the same
- *    rung #1637 already chose for a glossed kanji.
  *  • the wordmarks are drawn at 26 and 19 and take `--text-title` (24) and
  *    `--text-content` (18) — the rungs the composer's own wordmark comment
  *    already picked for 19.
+ *
+ * The two glyph rungs that used to be decided here left with the kanji register
+ * (#1909); the `glyph` field went with them.
  *
  * The four spacing values are all ties (20, 14, 14, 10) and all round UP, per
  * §4a. The paddings are asymmetric, so they are checked against §4a's carve-out
@@ -135,7 +130,6 @@ const SIZES: Record<MastheadScale, MastheadSize> = {
   page: {
     sigil: 62,
     wordmark: "var(--text-title)",
-    glyph: "var(--text-content)",
     datum: "var(--text-md)",
     padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
     gap: "var(--space-xl)",
@@ -145,7 +139,6 @@ const SIZES: Record<MastheadScale, MastheadSize> = {
   card: {
     sigil: 44,
     wordmark: "var(--text-content)",
-    glyph: "var(--text-xl)",
     datum: "var(--text-base)",
     padding: "var(--space-md) var(--space-lg) var(--space-sm)",
     gap: "var(--space-lg)",
@@ -181,7 +174,6 @@ export function EphemeristsMasthead({ slug, scale, date }: {
    */
   date?: string | null;
 }) {
-  const { t } = useTranslation("factions");
   const size = SIZES[scale];
   const grid = { display: "grid", gridTemplateColumns: COLUMNS, gap: `0 ${size.columnGap}` } as const;
 
@@ -212,9 +204,14 @@ export function EphemeristsMasthead({ slug, scale, date }: {
           {factionName(slug)}
         </div>
 
-        {/* The register, ruled 1px above and 3px double below. The double rule
-            is the design's, and it is what makes the row read as an engraved
-            band rather than a line of type with a border. */}
+        {/* The datum row. It used to sit under the four-kanji register, which
+            carried the design's 1px + 3px-double rules; #1909 cut all eight of
+            the register's strings, so the rules move here to keep the wordmark
+            reading as an engraved band rather than free type.
+
+            `tabular-nums` is the design's, and it is doing real
+            work: three of the four cells are figures that must not shimmy as the
+            date changes underneath them. */}
         <div
           style={{
             ...grid,
@@ -222,23 +219,6 @@ export function EphemeristsMasthead({ slug, scale, date }: {
             padding: "var(--space-sm) 0",
             borderTop: `1px solid ${BRASS}`,
             borderBottom: `3px double ${BRASS}`,
-            color: GOLD,
-          }}
-        >
-          {REGISTER.map(([mark, gloss], index) => (
-            <span key={mark} style={{ textAlign: index === REGISTER.length - 1 ? "right" : "left" }}>
-              <GlossedGlyph glyph={t(mark)} gloss={t(gloss)} size={size.glyph} />
-            </span>
-          ))}
-        </div>
-
-        {/* The datum row. `tabular-nums` is the design's, and it is doing real
-            work: three of the four cells are figures that must not shimmy as the
-            date changes underneath them. */}
-        <div
-          style={{
-            ...grid,
-            marginTop: "var(--space-xs)",
             fontFamily: READING,
             fontSize: size.datum,
             fontVariantNumeric: "tabular-nums",

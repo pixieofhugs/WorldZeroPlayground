@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -108,6 +109,7 @@ export default function SingularityTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.singularity.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -176,10 +178,11 @@ export default function SingularityTaskCard({
             <Lamp fill="var(--faction-singularity-led-amber)" />
             <Lamp fill="var(--faction-singularity-led-green)" />
           </span>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: window-bar lettering, sized to the 8px lamps beside it rather than the label ramp (§4a). */}
-          <span style={{ ...LABEL, fontSize: 10.5 }}>
-            {i18n.t("feed:taskCard.singularity.windowTitle")}
-          </span>
+          {/* The window bar read "task.proc — singularity"
+              (`feed:taskCard.singularity.windowTitle`). #1909 cut it:
+              Singularity was the only faction with a window title on a task
+              card, on a surface the audit ruled generic. The lamps and the
+              chrome band stay — they are the window, not its caption. */}
         </div>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
@@ -252,7 +255,7 @@ export default function SingularityTaskCard({
               </div>
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: MONO,
                 fontWeight: 400,
@@ -264,7 +267,7 @@ export default function SingularityTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
@@ -298,12 +301,14 @@ export default function SingularityTaskCard({
             )}
           </Link>
 
-          {onSignup && (
+          {cta && (
             <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
               <button
-                onClick={() => onSignup(task.id)}
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
                 style={{
-                  cursor: "pointer",
+                  cursor: cta.denied ? "not-allowed" : "pointer",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -318,7 +323,7 @@ export default function SingularityTaskCard({
                   border: `1.5px solid ${BRIGHT}`,
                 }}
               >
-                {i18n.t("feed:taskCard.singularity.signup")}
+                {cta.label}
                 {/* The block cursor trailing the prompt. `.sg-cursor` carries the
                     reduced-motion-guarded blink; stilled it stays drawn, because
                     it is punctuation on the prompt, not an indicator. */}

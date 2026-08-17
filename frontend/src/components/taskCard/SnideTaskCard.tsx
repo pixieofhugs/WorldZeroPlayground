@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 
@@ -196,6 +198,7 @@ export default function SnideTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.snide.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -233,7 +236,7 @@ export default function SnideTaskCard({
         >
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead. */}
           <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
-            {i18n.t("feed:identity.snide.wordmark")}
+            {factionName("snide")}
           </span>
           <span
             aria-hidden="true"
@@ -316,7 +319,7 @@ export default function SnideTaskCard({
                 inline flow instead — the cuts are `inline-block`, separated by
                 REAL space characters, and they still wrap, still sit on a shared
                 baseline and still carry their own grounds. */}
-            <h3
+            <h2
               style={{
                 fontSize: size.titleSize,
                 fontWeight: 400,
@@ -339,7 +342,7 @@ export default function SnideTaskCard({
                   </span>
                 </span>
               ))}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
@@ -374,13 +377,15 @@ export default function SnideTaskCard({
           </Link>
         </div>
 
-        {onSignup && (
+        {cta && (
           <button
-            onClick={() => onSignup(task.id)}
+            type="button"
+            onClick={cta.onPress}
+            aria-disabled={cta.denied || undefined}
             style={{
               position: "relative",
               zIndex: 2,
-              cursor: "pointer",
+              cursor: cta.denied ? "not-allowed" : "pointer",
               width: "100%",
               background: "var(--faction-snide-note-cta-bg)",
               color: "var(--faction-snide-note-cta-ink)",
@@ -393,7 +398,7 @@ export default function SnideTaskCard({
               border: "none",
             }}
           >
-            {i18n.t("feed:taskCard.snide.signup")}
+            {cta.label}
           </button>
         )}
       </article>

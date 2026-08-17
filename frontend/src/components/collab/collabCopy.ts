@@ -27,11 +27,19 @@ import i18n from '../../i18n'
  * dev/test missing-key throw before the result could be inspected. A faction
  * with no entry for a key is a normal miss, not a defect.
  *
- * The key NAMES are deliberately untouched — `castAction`, `pillWeaving` and
+ * Most key NAMES are deliberately untouched — `castAction`, `pillWeaving` and
  * friends are named for the mechanic, not the wording. Renaming them would
  * touch every call site for nothing a player sees, and #1811 is already going
  * to re-cut this vocabulary when Cast/PullBack become Done/Propose/Approve/
  * Withdraw.
+ *
+ * The two exceptions are #1910's: `duelPillSealed` and `duelSealedPlaceholder`
+ * were named for a state — *sealed* — that #1863 abolished. They are not the
+ * `cast`/`weave` case, where the name outlives a wording change because the
+ * mechanic is still there; the duel side is now *submitted*, and *hidden* is
+ * what the placeholder describes. `duelPillSubmitted` and
+ * `duelHiddenPlaceholder` name what is left. (#1910's own table filed both
+ * under `composer.` — they have always lived here, under `collab`.)
  *
  * Despite the name, this is the resolver for the whole *multi-party composer
  * footer*, not just the roster: the one footer button casts and pulls back for
@@ -132,10 +140,10 @@ export type CollabCopyKey =
   | 'duelAwaitingHeading'
   | 'duelAwaitingTaskLabel'
   | 'duelAwaitingWriteUpLabel'
-  | 'duelSealedPlaceholder'
+  | 'duelHiddenPlaceholder'
   | 'duelElapsedLine'
   | 'duelPendingLine'
-  | 'duelPillSealed'
+  | 'duelPillSubmitted'
   | 'duelPillWriting'
   | 'duelPullBackDescription'
   // Nudging the person the praxis is still waiting on (#1083).

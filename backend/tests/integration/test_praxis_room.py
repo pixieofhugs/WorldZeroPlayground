@@ -14,7 +14,9 @@ each seeding a document from the same text and merging into two copies of it.
 """
 
 import asyncio
-from contextlib import asynccontextmanager
+import io
+import linecache
+from contextlib import asynccontextmanager, suppress
 from typing import Any, AsyncIterator, Callable
 
 import pytest
@@ -50,6 +52,89 @@ from services.praxis_room import (
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
 _TIMEOUT_SECONDS = 5.0
+
+#: The ceiling on the waits here that are not a poll — a client connecting or
+#: disconnecting, the room server starting or stopping, a cancelled socket task
+#: unwinding (#1930).
+#:
+#: Every one of them was unbounded, and a hang in any of them surfaced as
+#: ``pytest-timeout`` firing at 60s with a stack ending in
+#: ``EpollSelector.select`` — the event loop asleep, which names neither end of
+#: the socket. Both observed hangs left every polled wait uncovered, so they were
+#: in one of these.
+#:
+#: It has to stay well under pytest-timeout's 60s so the seam is named before the
+#: backstop fires. Worst case is one trip plus the ceilings the unwinding then
+#: passes through: two nested clients, ``aclose`` and the server stopping — 4 x
+#: 10s, which still leaves headroom.
+_CEILING_SECONDS = 10.0
+
+
+def _await_chain(task: asyncio.Task) -> str:
+    """Where ``task`` is suspended, outermost coroutine first.
+
+    ``Task.get_stack`` is not enough: a suspended coroutine's frame has no
+    ``f_back``, so it prints the *one* outermost line and stops — which for a
+    socket task is ``await self.rooms.serve(...)`` and nothing about why. Walking
+    ``cr_await`` instead gives the whole chain down to the await that is stuck.
+    """
+    lines: list[str] = []
+    awaited: Any = task.get_coro()
+    seen: set[int] = set()
+    while awaited is not None and id(awaited) not in seen:
+        seen.add(id(awaited))
+        frame = getattr(awaited, "cr_frame", None) or getattr(awaited, "gi_frame", None)
+        if frame is not None:
+            source = linecache.getline(frame.f_code.co_filename, frame.f_lineno).strip()
+            lines.append(
+                f'  File "{frame.f_code.co_filename}", line {frame.f_lineno},'
+                f" in {frame.f_code.co_name}\n    {source}"
+            )
+        awaited = getattr(awaited, "cr_await", None) or getattr(
+            awaited, "gi_yieldfrom", None
+        )
+    return "\n".join(lines) or "  <no frames>"
+
+
+def _pending_task_dump() -> str:
+    """Every unfinished task on this loop, and where it is waiting.
+
+    A socket has two ends, and a hang needs both of them to diagnose.
+    ``pytest-timeout`` dumps *threads*, and every task in this suite shares one
+    thread, so its report shows the loop asleep and nothing else — which is
+    exactly what #1930 arrived as. This is the other half.
+    """
+    buffer = io.StringIO()
+    # Everything except the caller: this task's own stack is the one the failure
+    # is already raised from, and under pytest it is mostly plugin frames.
+    running = asyncio.current_task()
+    tasks = sorted(
+        (task for task in asyncio.all_tasks() if task is not running),
+        key=lambda task: task.get_name(),
+    )
+    buffer.write(f"\n\n--- {len(tasks)} other pending task(s) on this event loop ---")
+    for task in tasks:
+        state = "cancelling" if task.cancelling() else "pending"
+        buffer.write(f"\n\n== {task.get_name()} [{state}]\n")
+        try:
+            buffer.write(_await_chain(task))
+        except Exception as exc:  # pragma: no cover — diagnostics must not raise
+            buffer.write(f"  <could not read stack: {exc!r}>")
+    return buffer.getvalue()
+
+
+@asynccontextmanager
+async def _bounded(description: str) -> AsyncIterator[None]:
+    """Give an otherwise unbounded wait a ceiling and a name (#1930)."""
+    try:
+        async with asyncio.timeout(_CEILING_SECONDS):
+            yield
+    except TimeoutError:
+        raise AssertionError(
+            f"timed out after {_CEILING_SECONDS}s waiting for "
+            f"{description}{_pending_task_dump()}"
+        ) from None
+
 
 #: The mount ``main.py`` puts the room app behind, read off the live app rather
 #: than restated here — the prefix is the mount's to own, and a test holding its
@@ -181,6 +266,7 @@ class _Rooms:
         #: it reads as a room bug rather than as the harness bug it is.
         self.sessions = sessions
         self._tasks: list[asyncio.Task] = []
+        self._sockets: list[_Socket] = []
 
     async def open(
         self,
@@ -218,6 +304,7 @@ class _Rooms:
             "headers": headers,
         }
 
+        self._sockets.append(socket)
         self._tasks.append(
             asyncio.create_task(
                 (through or self.app)(scope, socket.receive, socket.send)
@@ -230,18 +317,73 @@ class _Rooms:
         )
         return socket
 
+    async def submit(self, praxis_id: int, character_id: int) -> Any:
+        """``submit_praxis``, holding the lock the room's own tasks queue behind.
+
+        A harness affordance, not a rule. Since #1808 a submit that seals an
+        **open** room closes its sockets, so the room tears down inside this
+        call and its closing flush writes the praxis. That flush runs on its own
+        session in production; here one SAVEPOINT-backed session serves both
+        sides, and two tasks using it at once raises "this session is in
+        'prepared' state" out of a room task — where it reads as a room bug
+        rather than as the harness bug it is.
+
+        Callers must let the teardown finish (wait for the room to be dropped)
+        before taking this lock again: ``release`` holds ``_open_lock`` while it
+        waits for the session, and ``discard_document`` wants ``_open_lock``.
+        """
+        async with self.sessions() as session:
+            return await submit_praxis(praxis_id, character_id, session)
+
     def room_doc(self, praxis_id: int) -> Doc | None:
         room = self.server.rooms.get(room_name_for(praxis_id))
         return None if room is None else room.ydoc
 
     async def aclose(self) -> None:
-        for task in self._tasks:
+        """Hang every socket up, then cancel whatever is left (#1930).
+
+        **The disconnect is what ends these tasks; the cancel is the backstop.**
+        This used to cancel outright. Roughly once in 400 cycles a raw
+        ``Task.cancel`` on a socket task suspended in the task group inside
+        :meth:`_RoomConnection._receive` left it wedged: the task counted the
+        cancellation (``cancelling() == 1``) and stayed asleep in anyio's
+        ``TaskGroup.__aexit__``, while that group's cancel scope still read
+        ``cancel_called is False`` — so neither half of the revoke race was ever
+        told to stop, and the loop went idle with the room still open. That is
+        #1930, whose CI signature is a 60s pytest-timeout ending in
+        ``EpollSelector.select``.
+
+        Hanging up avoids the question. It is also what a real client does:
+        ``websocket.disconnect`` unwinds the serve loop through the door the room
+        already has, with no cancellation involved on the happy path.
+
+        ``asyncio.wait`` rather than ``await task`` for the ceiling:
+        :meth:`PraxisRoomServer.release` runs its half of the teardown inside
+        ``anyio.CancelScope(shield=True)``, and that shield holds against a plain
+        ``Task.cancel`` — so a ceiling that works by cancelling *this* task would
+        not reach a socket stuck in there. Giving up on the wait does.
+        """
+        if not self._tasks:
+            return
+        for socket in self._sockets:
+            await socket.disconnect()
+        _, pending = await asyncio.wait(self._tasks, timeout=_CEILING_SECONDS)
+        for task in pending:
             task.cancel()
+        if pending:
+            _, pending = await asyncio.wait(pending, timeout=_CEILING_SECONDS)
         for task in self._tasks:
-            try:
-                await task
-            except (asyncio.CancelledError, Exception):
-                pass
+            # Read the outcome so a cancelled or failed socket task is not
+            # reported as an unretrieved exception on some later, unrelated test.
+            if task.done():
+                with suppress(asyncio.CancelledError, Exception):
+                    task.result()
+        if pending:
+            raise AssertionError(
+                f"{len(pending)} praxis-room socket task(s) were still running "
+                f"{_CEILING_SECONDS}s after being hung up on and cancelled."
+                f"{_pending_task_dump()}"
+            )
 
 
 @asynccontextmanager
@@ -270,11 +412,18 @@ async def running_rooms(
     # process-wide database session.
     monkeypatch.setattr(praxis_room.PRAXIS_ROOM_APP, "rooms", server)
     rooms = _Rooms(server, sessions)
-    async with server:
-        try:
-            yield rooms
-        finally:
-            await rooms.aclose()
+    # ``__aenter__``/``__aexit__`` by hand rather than ``async with server``:
+    # the ceilings belong on the two ends, not around the test body. The body's
+    # own waits are already bounded by :func:`_wait_for`, and a clock around it
+    # would be a second timeout competing with pytest-timeout's.
+    async with _bounded("the room server to start"):
+        await server.__aenter__()
+    try:
+        yield rooms
+    finally:
+        await rooms.aclose()
+        async with _bounded("the room server to stop"):
+            await server.__aexit__(None, None, None)
 
 
 @asynccontextmanager
@@ -285,8 +434,14 @@ async def client_doc(socket: _Socket) -> AsyncIterator[Doc]:
     everything in it arrives from the server.
     """
     doc = Doc()
-    async with Provider(doc, _ChannelAdapter(socket)):
+    provider = Provider(doc, _ChannelAdapter(socket))
+    async with _bounded(f"the client on {socket.path} to connect"):
+        await provider.__aenter__()
+    try:
         yield doc
+    finally:
+        async with _bounded(f"the client on {socket.path} to disconnect"):
+            await provider.__aexit__(None, None, None)
 
 
 async def _wait_for(predicate: Callable[[], bool], description: str) -> None:
@@ -296,7 +451,9 @@ async def _wait_for(predicate: Callable[[], bool], description: str) -> None:
         if predicate():
             return
         await asyncio.sleep(0.01)
-    raise AssertionError(f"timed out waiting for {description}")
+    raise AssertionError(
+        f"timed out waiting for {description}{_pending_task_dump()}"
+    )
 
 
 def _body(doc: Doc) -> str:
@@ -1008,14 +1165,79 @@ async def _settle() -> None:
         await asyncio.sleep(0.01)
 
 
+async def _wait_for_the_freeze_to_settle(rooms: _Rooms, praxis_id: int) -> None:
+    """The freeze closed every socket (#1808), so the room tears down. Wait it out.
+
+    The teardown includes the closing flush, which runs on the room's session
+    factory — the test's own session, here. Touching the database before it
+    finishes is two tasks on one session, and the second collab submit is a
+    database call.
+    """
+    await _wait_for(
+        lambda: rooms.room_doc(praxis_id) is None, "the sealed room to be dropped"
+    )
+
+
+async def test_the_freeze_closes_every_socket_that_was_in_the_room(
+    db_session, collab, account, account2, character, monkeypatch
+) -> None:
+    """The freeze's second door (#1808) — and the data-loss bug it exists for.
+
+    Reproduced on production: two members drafting, one submits, and **the other
+    is never told**. ``documentFrozen`` is derived from the fetched praxis, so
+    their browser goes on accepting keystrokes and rendering them while the
+    server drops every one. The text is on screen, so the player believes it is
+    saved. It is not, and it never can be — the update never reached the server,
+    a CRDT never reverts, and it exists only in that tab's memory.
+
+    So the assertion here is deliberately **not** "a frozen room rejects an
+    update". It already did, and that is not the bug. It is that a client cannot
+    be left believing an accepted keystroke was saved: the socket it was typing
+    down is gone, which is what makes the composer re-read the status.
+
+    The close code is checked against its constant *and* its number, because the
+    number is a wire contract — ``roomReconnect.ts`` decides on it, and it must
+    not be 1008: that one means "stop asking", and a member holding a sealed
+    write-up still has to reconnect to read it.
+    """
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        submitter = await rooms.open(collab.id, account.id)
+        holdout = await rooms.open(collab.id, account2.id)
+        async with (
+            client_doc(submitter) as submitter_doc,
+            client_doc(holdout) as holdout_doc,
+        ):
+            await _wait_for_body(submitter_doc, SEED_BODY, "the submitter")
+            await _wait_for_body(holdout_doc, SEED_BODY, "the holdout")
+
+            # `character` is `account`'s, so the first client is the submitter.
+            await rooms.submit(collab.id, character.id)
+
+            await _wait_for(holdout.closed.is_set, "the holdout's socket to close")
+            # The submitter's too: the freeze binds every member equally.
+            await _wait_for(submitter.closed.is_set, "the submitter's socket to close")
+
+        assert holdout.close_code == praxis_room._WS_ROOM_FROZEN == 4001
+        assert submitter.close_code == praxis_room._WS_ROOM_FROZEN
+        assert praxis_room._WS_ROOM_FROZEN != praxis_room._WS_POLICY_VIOLATION
+
+
 async def test_a_pending_praxis_refuses_every_member_s_edits(
     db_session, collab, account, account2, character, monkeypatch
 ) -> None:
     """The freeze is a server rule, and it binds the submitter too.
 
-    The before/after inside one test is the point: the same socket that lands a
+    The before/after inside one test is the point: the same member who lands a
     keystroke while the collab is drafting lands nothing once it is pending. A
     test asserting only the second half would pass against a dead transport.
+
+    The refused write is attempted on a **reconnected** socket, because since
+    #1808 the freeze closes the ones that were open. That close is a courtesy to
+    the client and must not be mistaken for the rule: the server is still the
+    enforcer, and this is what proves it — a member who comes back, syncs and
+    types is refused by the room, not by their own editor. Their local document
+    takes the text anyway, which is the last assertion here and the whole reason
+    the close has to happen at all.
     """
     async with running_rooms(db_session, monkeypatch) as rooms:
         first = await rooms.open(collab.id, account.id)
@@ -1030,14 +1252,75 @@ async def test_a_pending_praxis_refuses_every_member_s_edits(
             )
 
             # `character` is `account`'s, so the first client is the submitter.
-            await submit_praxis(collab.id, character.id, db_session)
-            frozen = f"drafting {SEED_BODY}"
+            await rooms.submit(collab.id, character.id)
+            await _wait_for(second.closed.is_set, "the holdout's socket to close")
 
-            second_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "holdout ")
-            first_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "submitter ")
+        frozen = f"drafting {SEED_BODY}"
+        await _wait_for_the_freeze_to_settle(rooms, collab.id)
+
+        rejoined = await rooms.open(collab.id, account2.id)
+        async with client_doc(rejoined) as doc:
+            await _wait_for_body(doc, frozen, "the holdout coming back to read")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "holdout ")
             await _settle()
 
             assert _body(rooms.room_doc(collab.id)) == frozen
+            # And this is the loss, stated: their own document holds the text
+            # and the room's does not. Nothing recovers it; the close is only
+            # what stops them writing a paragraph into it.
+            assert _body(doc) == f"holdout {frozen}"
+
+
+async def test_opening_an_already_frozen_praxis_keeps_the_reader_s_socket(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """A sealed write-up is still readable, and reading it is not a transition.
+
+    Two rules in one, because getting either wrong produces the same symptom
+    from opposite directions:
+
+    - ``SYNC_STEP1`` passes the refusal hook on purpose, so the document
+      arrives. Remove that exemption and the composer stares at an empty box.
+    - ``_read_freeze`` sets the flag on **every** room that opens frozen, so
+      "the flag went from unset to set" is true of every reader. Closing on that
+      would hang up on the socket that just asked to see the praxis — and on its
+      every retry, for as long as the tab is open.
+
+    Nobody was connected when this praxis sealed, which is exactly the arrival
+    the second half describes.
+    """
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        await submit_praxis(collab.id, character.id, db_session)
+
+        reader = await rooms.open(collab.id, account2.id)
+        assert reader.accepted.is_set()
+        async with client_doc(reader) as doc:
+            await _wait_for_body(doc, SEED_BODY, "a reader of the sealed write-up")
+            await _settle()
+            assert not reader.closed.is_set()
+
+
+async def test_a_re_freeze_does_not_hang_up_on_a_frozen_room(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """Only the transition closes sockets (#1808), never the state.
+
+    ``follow_praxis_status`` is derived from the status rather than from the
+    move, and is documented as idempotent, so it is called on transitions that
+    change nothing. A close on every call would knock every reader of a pending
+    collab off once per call and, with the reconnect that follows, churn.
+    """
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        await submit_praxis(collab.id, character.id, db_session)
+        reader = await rooms.open(collab.id, account2.id)
+        async with client_doc(reader) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the reader")
+
+            rooms.server.follow_status(collab.id, True)
+            await _settle()
+
+            assert not reader.closed.is_set()
+            assert _body(doc) == SEED_BODY
 
 
 async def test_pull_back_thaws_the_room_and_clears_the_group_s_consent(
@@ -1071,9 +1354,14 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
 ) -> None:
     """The document becomes the record and is then destroyed.
 
-    The debounce is set past the test's life, so only the publish-time flatten
-    can put the typed sentence in ``body_text``: a praxis that sealed with the
-    room's last words missing would be the visible half of this bug.
+    The debounce is set past the test's life, so no *timed* flush can carry the
+    typed sentence into ``body_text``. It has to arrive by one of the two writes
+    that are not on a timer, and after #1808 which one depends on the shape of
+    the seal: the freeze closes the room, so the **closing** flush does it here,
+    and the publish-time flatten does it whenever a room is still live at the
+    seal (see the solo test below). A praxis that sealed with the room's last
+    words missing is the visible half of this bug either way, which is what this
+    asserts and why it does not care which write got there.
     """
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
         socket = await rooms.open(collab.id, account.id)
@@ -1085,12 +1373,58 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
             )
             assert await _stored_updates(rooms, collab.id) != []
 
-            await submit_praxis(collab.id, character.id, db_session)
-            published = await submit_praxis(collab.id, character2.id, db_session)
+            await rooms.submit(collab.id, character.id)
+        await _wait_for_the_freeze_to_settle(rooms, collab.id)
+        published = await submit_praxis(collab.id, character2.id, db_session)
 
         assert published.status == PraxisStatus.submitted
         assert await _stored_updates(rooms, collab.id) == []
         assert await _record(rooms, collab.id) == ("Collab Praxis", f"final {SEED_BODY}")
+
+
+async def test_a_solo_seal_flattens_the_live_room_into_the_record(
+    db_session, active_task, character, account, monkeypatch
+) -> None:
+    """The publish-time flatten, isolated — the one seal with no freeze before it.
+
+    A solo praxis has one member, so ``on_submit`` seals straight to Live: there
+    is no pending step, so #1808's freeze never fires, so the room is still open
+    when ``discard_document`` runs and its ``abandon()`` cancels the closing
+    flush. The flatten inside the sealing transaction is then the *only* thing
+    that can put the last sentence in ``body_text`` — which is why the debounce
+    is set past the test's life, and why this case needs its own test now that
+    the collab above reaches the same column by the other road.
+    """
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+        socket = await rooms.open(solo.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the solo author")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "last sentence ")
+            await _wait_for_body(
+                rooms.room_doc(solo.id), f"last sentence {SEED_BODY}", "the room"
+            )
+
+            published = await submit_praxis(solo.id, character.id, db_session)
+
+        assert published.status == PraxisStatus.submitted
+        assert await _stored_updates(rooms, solo.id) == []
+        assert await _record(rooms, solo.id) == (
+            "Solo Praxis",
+            f"last sentence {SEED_BODY}",
+        )
 
 
 async def test_reopening_a_published_praxis_seeds_a_fresh_document_once(
@@ -1110,8 +1444,9 @@ async def test_reopening_a_published_praxis_seeds_a_fresh_document_once(
             await _wait_for_body(
                 rooms.room_doc(collab.id), f"published {SEED_BODY}", "the room"
             )
-            await submit_praxis(collab.id, character.id, db_session)
-            await submit_praxis(collab.id, character2.id, db_session)
+            await rooms.submit(collab.id, character.id)
+        await _wait_for_the_freeze_to_settle(rooms, collab.id)
+        await submit_praxis(collab.id, character2.id, db_session)
 
         await unsubmit_praxis(collab.id, character2.id, db_session)
 
@@ -1157,8 +1492,9 @@ async def test_text_a_member_deleted_does_not_outlive_the_draft(
                 "text, so this test would pass without discarding anything"
             )
 
-            await submit_praxis(collab.id, character.id, db_session)
-            await submit_praxis(collab.id, character2.id, db_session)
+            await rooms.submit(collab.id, character.id)
+        await _wait_for_the_freeze_to_settle(rooms, collab.id)
+        await submit_praxis(collab.id, character2.id, db_session)
 
         assert await _stored_updates(rooms, collab.id) == []
         for update in await _every_stored_update(rooms):

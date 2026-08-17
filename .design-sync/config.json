@@ -37,7 +37,6 @@
     "CovenEditPraxis": "src/pages/editPraxis/archetypes/CovenEditPraxis.tsx",
     "CovenFactionBody": "src/pages/factionDetail/archetypes/CovenFactionBody.tsx",
     "CovenFactionHero": "src/components/factionHero/CovenFactionHero.tsx",
-    "CovenFactionPage": "src/pages/factionDetail/mobileArchetypes/CovenFactionPage.tsx",
     "CovenFeedFrame": "src/components/feed/CovenFeedFrame.tsx",
     "CovenFieldDesk": "src/pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx",
     "CovenPraxisCard": "src/components/praxisCard/desktop/CovenPraxisCard.tsx",
@@ -54,7 +53,6 @@
     "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
-    "DefaultFactionPage": "src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx",
     "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
     "DefaultPraxisCard": "src/components/praxisCard/desktop/DefaultPraxisCard.tsx",
@@ -80,7 +78,6 @@
     "EphemeristsEditPraxis": "src/pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
     "EphemeristsFactionBody": "src/pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
     "EphemeristsFactionHero": "src/components/factionHero/EphemeristsFactionHero.tsx",
-    "EphemeristsFactionPage": "src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx",
     "EphemeristsFeedFrame": "src/components/feed/EphemeristsFeedFrame.tsx",
     "EphemeristsPraxisCard": "src/components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
     "EphemeristsPraxisDetail": "src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail.tsx",
@@ -99,7 +96,6 @@
     "EverymenEditPraxis": "src/pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
     "EverymenFactionBody": "src/pages/factionDetail/archetypes/EverymenFactionBody.tsx",
     "EverymenFactionHero": "src/components/factionHero/EverymenFactionHero.tsx",
-    "EverymenFactionPage": "src/pages/factionDetail/mobileArchetypes/EverymenFactionPage.tsx",
     "EverymenFeedFrame": "src/components/feed/EverymenFeedFrame.tsx",
     "EverymenPraxisCard": "src/components/praxisCard/desktop/EverymenPraxisCard.tsx",
     "EverymenPraxisDetail": "src/pages/praxisDetail/archetypes/EverymenPraxisDetail.tsx",
@@ -171,7 +167,6 @@
     "SingularityEditPraxis": "src/pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
     "SingularityFactionBody": "src/pages/factionDetail/archetypes/SingularityFactionBody.tsx",
     "SingularityFactionHero": "src/components/factionHero/SingularityFactionHero.tsx",
-    "SingularityFactionPage": "src/pages/factionDetail/mobileArchetypes/SingularityFactionPage.tsx",
     "SingularityFeedFrame": "src/components/feed/SingularityFeedFrame.tsx",
     "SingularityPraxisCard": "src/components/praxisCard/desktop/SingularityPraxisCard.tsx",
     "SingularityPraxisDetail": "src/pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
@@ -190,7 +185,6 @@
     "SnideEditPraxis": "src/pages/editPraxis/archetypes/SnideEditPraxis.tsx",
     "SnideFactionBody": "src/pages/factionDetail/archetypes/SnideFactionBody.tsx",
     "SnideFactionHero": "src/components/factionHero/SnideFactionHero.tsx",
-    "SnideFactionPage": "src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx",
     "SnideFeedFrame": "src/components/feed/SnideFeedFrame.tsx",
     "SnideMasthead": "src/components/factionCard/SnideMasthead.tsx",
     "SnidePraxisCard": "src/components/praxisCard/desktop/SnidePraxisCard.tsx",
@@ -211,7 +205,6 @@
     "UaEditPraxis": "src/pages/editPraxis/archetypes/UaEditPraxis.tsx",
     "UaFactionBody": "src/pages/factionDetail/archetypes/UaFactionBody.tsx",
     "UaFactionHero": "src/components/factionHero/UaFactionHero.tsx",
-    "UaFactionPage": "src/pages/factionDetail/mobileArchetypes/UaFactionPage.tsx",
     "UaFeedFrame": "src/components/feed/UaFeedFrame.tsx",
     "UaMandala": "src/components/factionMarks/UaMandala.tsx",
     "UaPraxisCard": "src/components/praxisCard/desktop/UaPraxisCard.tsx",
@@ -234,7 +227,6 @@
     "WowEditPraxis": "src/pages/editPraxis/archetypes/WowEditPraxis.tsx",
     "WowFactionBody": "src/pages/factionDetail/archetypes/WowFactionBody.tsx",
     "WowFactionHero": "src/components/factionHero/WowFactionHero.tsx",
-    "WowFactionPage": "src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx",
     "WowFeedFrame": "src/components/feed/WowFeedFrame.tsx",
     "WowFieldDesk": "src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx",
     "WowPraxisCard": "src/components/praxisCard/desktop/WowPraxisCard.tsx",
@@ -313,10 +305,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "CovenFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "CovenFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -351,10 +339,6 @@
     "DefaultFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "DefaultFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "DefaultFactionsDirectory": {
       "cardMode": "single",
@@ -415,10 +399,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "EphemeristsFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "EphemeristsPraxisCard": {
       "cardMode": "column"
     },
@@ -452,10 +432,6 @@
     "EverymenFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "EverymenFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "EverymenPraxisCard": {
       "cardMode": "column"
@@ -556,10 +532,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "SingularityFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "SingularityPraxisCard": {
       "cardMode": "column"
     },
@@ -593,10 +565,6 @@
     "SnideFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "SnideFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "SnidePraxisCard": {
       "cardMode": "column"
@@ -632,10 +600,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "UaFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "UaPraxisCard": {
       "cardMode": "column"
     },
@@ -666,10 +630,6 @@
     "WowEditPraxis": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "WowFactionPage": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "WowFieldDesk": {
       "cardMode": "single",

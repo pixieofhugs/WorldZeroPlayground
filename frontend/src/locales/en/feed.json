@@ -54,7 +54,7 @@
     "friend_signup": "Signup",
     "friend_defection": "Defection",
     "global_task": "New task",
-    "collaborator_submitted": "Collaborator filed",
+    "collaborator_submitted": "Collaborator submitted",
     "awaiting_submission": "Your turn",
     "nudge": "Nudge",
     "era_announcement": "Era",
@@ -83,10 +83,10 @@
     "feedEmptyBody": "The city is quiet. Go do something."
   },
   "rowAction": {
-    "fileIt": "File it",
+    "fileIt": "Submit it",
     "dropOut": "Drop out",
     "answer": "Answer",
-    "fileYours": "File yours",
+    "fileYours": "Submit yours",
     "reply": "Reply",
     "failed": "That didn't go through."
   },
@@ -115,12 +115,7 @@
     "points": "{{points}} pts",
     "pointsEarned": "+{{points}} pts",
     "level": "lvl {{level}}",
-    "quotedHeadline": "“{{headline}}”",
-    "wow": {
-      "questTaken": "{{name}} took up a quest, breastplate agleam.",
-      "praxisSealed": "{{name}} sealed a chronicle of proof.",
-      "levelUp": "{{name}} was elevated a rank by the Court."
-    }
+    "quotedHeadline": "“{{headline}}”"
   },
   "dateDivider": {
     "today": "Today",
@@ -183,33 +178,12 @@
       "cancel": "Cancel"
     }
   },
-  "frame": {
-    "albescent": {
-      "masthead": "Albescent · the standing record"
-    },
-    "singularity": {
-      "masthead": "DISPATCH · SIGNAL ONLINE"
-    }
-  },
   "identity": {
     "snide": {
-      "wordmark": "S.N.I.D.E.",
       "fullName": "Society for Nihilistic Intent & Disruptive Efforts"
-    },
-    "ephemerists": {
-      "wordmark": "THE EPHEMERISTS"
-    },
-    "coven": {
-      "windowTitle": "coven.exe"
-    },
-    "singularity": {
-      "protocol": "singularity protocol"
     },
     "na": {
       "sigilLabel": "Unaffiliated — all paths open"
-    },
-    "wow": {
-      "dispatch": "Herald's Dispatch"
     }
   },
   "taskCrown": {
@@ -225,66 +199,44 @@
       "signup": "Sign up"
     },
     "albescent": {
-      "eyebrow": "Albescent",
       "signup": "acknowledge",
       "level": "Lvl {{level}}",
       "pointsUnit": "pts"
     },
     "ephemerists": {
-      "motto": "exhibit C · no single here",
-      "coordXPrefix": "x 14 · y ",
-      "coordPolar": "r 47 · θ 31°",
-      "vanishingLabel": "∞ · vanishing",
-      "marginalia": "¼″ wider within than without †",
       "level": "level {{level}}",
       "points": "{{points}} pvncta",
-      "footnote": "† the road does not return you to where you began — <1>see †</1>",
-      "signup": "Triangulate the truth ▸",
-      "masthead": "Ephemerists",
+      "signup": "Sign up",
       "levelCaption": "Level",
       "pointsUnit": "pvncta"
     },
     "everymen": {
-      "masthead": "THE EVERYMEN",
-      "sealUnit": "POINTS",
       "points": "{{points}} PTS",
-      "signup": "Report for duty",
-      "billMasthead": "Help Wanted!",
+      "signup": "Sign up",
       "levelCaption": "Level"
     },
     "snide": {
-      "dispatchNumber": "dispatch №{{number}}",
-      "scrawl": "your assignment, should you ignore it —",
-      "signup": "I'M IN",
+      "signup": "Sign up",
       "pointsUnit": "PTS",
       "levelCaption": "level"
     },
     "singularity": {
-      "pointsLabel": "PTS:",
-      "levelLabel": "LVL: {{level}}",
-      "signup": "sign up",
-      "levelPill": "lvl {{level}}",
-      "windowTitle": "task.proc — singularity",
+      "signup": "Sign up",
       "levelCaption": "lvl",
       "pointsUnit": "pts"
     },
     "ua": {
-      "estLine": "A daily practice",
-      "pointsLine": "{{points}} points",
       "signup": "Sign up",
       "levelCaption": "Level",
       "pointsUnit": "points"
     },
     "coven": {
-      "signup": "sign up",
-      "masthead": "the cozy coven",
+      "signup": "Sign up",
       "levelCaption": "level",
       "pointsUnit": "points"
     },
     "wow": {
-      "signup": "Take Up the Quest",
-      "decree": "By Royal Decree",
-      "byOrder": "by order of the Whimsy Court",
+      "signup": "Sign up",
       "pointsUnit": "points",
       "levelCaption": "level"
     }
@@ -297,23 +249,8 @@
       "welcomeBack": "WELCOME BACK"
     },
     "newInvitation": "NEW INVITATION",
-    "ephemerists": {
-      "eyebrow": "World Zero · Faction №5"
-    },
-    "snide": {
-      "subtitle": "field dispatch"
-    },
     "everymen": {
-      "kicker": "THE EVERYMEN WANT YOU",
-      "summons": "NEW SUMMONS · {{note}}",
-      "eyebrow": "World Zero · Faction",
-      "motto": "UNITED · WE · STAND",
-      "blurbFallback": "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start.",
-      "perks": {
-        "honestPoints": "Honest tasks with honest points",
-        "finishesWork": "A faction that finishes what it starts",
-        "stampedWork": "Your work stamped by the people beside you"
-      }
+      "blurbFallback": "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start."
     }
   },
   "factionHero": {
@@ -410,7 +347,7 @@
       "subtitle": "A daily practice of making things.",
       "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the making itself. Come sit with the work.",
       "status": {
-        "locked": "Seal work worth holding up to earn your place.",
+        "locked": "Submit work worth holding up to earn your place.",
         "eligible": "A seat is kept for you.",
         "member": "Practising — one true piece a day."
       },
@@ -420,7 +357,7 @@
     },
     "coven": {
       "name": "Cozy Coven",
-      "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a quest, cast a small spell, let the circle cheer.",
+      "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
       "status": {
         "locked": "Do the tiny brave thing to be invited ✦",
         "eligible": "The circle has opened for you ✦",

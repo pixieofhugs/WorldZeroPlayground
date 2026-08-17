@@ -225,6 +225,7 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
               can_sign_up: false,
               allowed_modes: [],
               eligible_for_current_user: false,
+              start_here: false,
             },
           ],
         },
@@ -352,22 +353,6 @@ describe("WOW praxis detail — the dress", () => {
     expect(html, "bunting is drawn").toContain("18px solid var(--faction-wow-card-accent)");
     expect(html.match(/wow-balloon-bunch/g)?.length, "one bunch, not a soup").toBe(1);
     expect(html, "motion is never inline").not.toContain("animation:");
-  });
-
-  /**
-   * #1716 — WOW hangs its points upside down where a player is BROWSING, and
-   * this page is where they CHECK what they earned, so the total stays upright.
-   * The guard is here rather than in the flip's own file because `ScoreStamp`
-   * is one component (ADR-0049) shared with the card that DOES turn: the angle
-   * arrives through `--wow-points-flip`, which only a browsing mount sets, and a
-   * skin that set it here — or a stamp that hardcoded 180deg — would turn the
-   * total on a surface the ruling exempts. `frontend/src/components/__tests__/
-   * wowPointsUpsideDown.test.tsx` pins the other side.
-   */
-  it("keeps the score rail's total the right way up (#1716)", () => {
-    const { html } = render(state());
-    expect(html, "the mount sets no flip").not.toContain("--wow-points-flip:");
-    expect(html, "and nothing here turns").not.toContain("rotate(180deg)");
   });
 
   it("carries no unaffiliated spectrum of its own", () => {

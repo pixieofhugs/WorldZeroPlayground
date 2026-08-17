@@ -57,8 +57,11 @@ const notesTextareaStyle: CSSProperties = {
   resize: "vertical",
 };
 
+// The AT-the-limit message, not the approach — the counter above it turns
+// amber (`.warning-text`) from 180/4500 and this only appears at 200/5000, so
+// this one is genuinely danger (#1609).
 const tooLongStyle: CSSProperties = {
-  color: "#dc2626",
+  color: "var(--color-danger)",
   display: "block",
   marginTop: "var(--space-xs)",
 };
@@ -307,7 +310,7 @@ export default function DefaultProposeTask({
                   style={taskNameInputStyle(factionSlug, Boolean(title))}
                 />
                 <span
-                  className={`label-caption self-end ${title.length >= 180 ? "text-red-600" : ""}`}
+                  className={`label-caption self-end ${title.length >= 180 ? "warning-text" : ""}`}
                   style={{ marginTop: "var(--space-xs)" }}
                 >
                   {title.length}/200
@@ -336,7 +339,7 @@ export default function DefaultProposeTask({
                   style={descriptionTextareaStyle}
                 />
                 <span
-                  className={`label-caption self-end ${description.length >= 4500 ? "text-red-600" : ""}`}
+                  className={`label-caption self-end ${description.length >= 4500 ? "warning-text" : ""}`}
                   style={{ marginTop: "var(--space-xs)" }}
                 >
                   {description.length}/5000

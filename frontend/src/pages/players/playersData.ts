@@ -24,7 +24,11 @@
  *   a deliberate deviation, ruled in #1855.
  */
 import type { CharacterOut } from '../../api/auth'
-import { FACTION_RAINBOW_ORDER, UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
+import {
+  FACTION_RAINBOW_ORDER,
+  UNAFFILIATED_FACTION_SLUG,
+  isFactionHiddenFromChoosers,
+} from '../../utils/factions'
 
 /** How many players stand on the podium. The roster starts below them. */
 export const PODIUM_SIZE = 3
@@ -46,6 +50,49 @@ export interface RankedPlayer {
 /** Unaffiliated characters carry a null-ish slug; normalise to the sentinel. */
 export function slugKey(slug: string | null | undefined): string {
   return slug ?? UNAFFILIATED_FACTION_SLUG
+}
+
+/**
+ * Where a faction NAME printed on this page links to — or `null` when that name
+ * must not be a link at all (#1953).
+ *
+ * ONE rule for all three sections, because two would eventually disagree and
+ * only one of the disagreements is cosmetic.
+ *
+ * Two slugs answer `null`, for two unrelated reasons:
+ *
+ *   - **`na` / a null slug.** Unaffiliated is a state, not a faction (ADR-0030 /
+ *     ADR-0039), so there is nothing to open. `/factions/na` is not merely
+ *     pointless, it is broken: `na` is seeded hidden, `GET /factions` returns
+ *     visible rows only and `FactionDetail` derives from that list, so it
+ *     renders "Faction not found" for exactly the population the link would
+ *     serve. `DefaultEditCharacter` sends `na` to the `/factions` DIRECTORY
+ *     instead; that is a page about the viewer's own character offering them a
+ *     next step. A roster row is a LABEL on someone else, and a label whose
+ *     only honest destination is "here are all the factions" is not a link.
+ *
+ *   - **`albescent`, for a viewer who has not been revealed to it (#1926).**
+ *     `factionName()` already masks the word to "Unaffiliated" for them — but an
+ *     href is the leak the mask exists to prevent, wearing a different label.
+ *     `/factions/albescent` in the markup names the secret society in plain
+ *     text, and following it lands on `AlbescentSecretPlaceholder`, which tells
+ *     an unrevealed player that the "Unaffiliated" row they just clicked is a
+ *     sealed door. `isFactionHiddenFromChoosers` is the exported read of that
+ *     reveal flag; its name is about choosers, and a link is the stronger case
+ *     of the same question — do not show this viewer a way to pick this out.
+ *     A REVEALED viewer gets the ordinary `/factions/albescent`, which
+ *     `AlbescentGate` hands the real faction page.
+ *
+ * The race lanes can be neither by construction (`factionStandings` keys off
+ * `FACTION_RAINBOW_ORDER`, which holds neither slug), and they still route
+ * through here on purpose: the mask must not depend on the lane list staying
+ * that way.
+ */
+export function factionHref(slug: string | null | undefined): string | null {
+  const key = slugKey(slug)
+  if (key === UNAFFILIATED_FACTION_SLUG) return null
+  if (isFactionHiddenFromChoosers(key)) return null
+  return `/factions/${key}`
 }
 
 /**

@@ -6,7 +6,7 @@ import { setActiveCharacter } from '../api/me'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
 import { factionName } from '../utils/factions'
-import AlbescentSigil from './sigil/AlbescentSigil'
+import FactionSigil from './sigil/FactionSigil'
 
 /**
  * AlbescentInvitation — the order's standing correspondence (#395).
@@ -47,11 +47,16 @@ const HAIRLINE_FAINT = 'rgba(0,0,0,0.055)'
 const RULE = 'rgba(0,0,0,0.07)'
 
 // i18n key stems under factions:albescent.letter — resolved at render.
+//
+// The fourth row was "standing / unranked, by design"
+// (`terms.standingLabel` + `terms.standingValue`). #1909 CUT both: they are the
+// Albescent twin of the `{F}.invitation.terms[3]` standing row the audit cut
+// across all seven other letters, which meant three different things by faction
+// and was static flavour presented as live standing.
 const TERM_KEYS: ReadonlyArray<{ label: string; value: string }> = [
   { label: 'terms.tollLabel', value: 'terms.tollValue' },
   { label: 'terms.skillsLabel', value: 'terms.skillsValue' },
   { label: 'terms.outputLabel', value: 'terms.outputValue' },
-  { label: 'terms.standingLabel', value: 'terms.standingValue' },
 ]
 
 const PERK_KEYS: ReadonlyArray<string> = [
@@ -120,8 +125,12 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       {/* §4a asymmetric-inset exception: ties round DOWN so the wide side gutters
           of the stationery survive instead of flattening into a uniform box. */}
       <div style={{ position: 'relative', padding: 'var(--space-2xl) var(--space-3xl) var(--space-2xl)', textAlign: 'center' }}>
+        {/* The unaffiliated spectrum ring, at the cross-hair's old 44px. The
+            order has no mark of its own any more (#1891 ruling 6) — the owner's
+            call, made knowingly: a letter that arrives before the reveal cannot
+            wear an emblem only members would recognise. */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
-          <AlbescentSigil size={44} />
+          <FactionSigil slug={ALBESCENT_SLUG} size={44} />
         </div>
         <div style={{
           ...monoCaps, letterSpacing: '0.34em', color: ACCENT, marginBottom: 'var(--space-sm)',

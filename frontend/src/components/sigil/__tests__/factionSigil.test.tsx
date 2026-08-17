@@ -8,7 +8,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import FactionSigil from "../FactionSigil";
-import AlbescentSigil from "../AlbescentSigil";
 import UaMandala from "../../factionMarks/UaMandala";
 
 describe("FactionSigil dispatcher (#659)", () => {
@@ -40,29 +39,50 @@ describe("FactionSigil dispatcher (#659)", () => {
     expect(html).not.toContain("#");
   });
 
-  it("renders the S.N.I.D.E. circled-A for the snide slug", () => {
+  it("renders the S.N.I.D.E. brushed A for the snide slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="snide" />);
-    expect(html).toContain('viewBox="0 0 48 48"');
     expect(html).toContain("var(--faction-snide-acid)");
+    // Sigil Studies v2: four FILLED shapes cantered at -22deg, on a viewBox
+    // that bleeds 8 units past the drawing so the legs break out of the ring.
+    // The old mark was stroked on a 48-unit square; both facts are the reason
+    // it held at 84px and smudged at 15.
+    expect(html).toContain('viewBox="-8 -8 116 116"');
+    expect(html).toContain("rotate(-22 50 50)");
+    expect(html.match(/<path /g), "ring, two legs, crossbar").toHaveLength(4);
+    expect(html).not.toContain('viewBox="0 0 48 48"');
   });
 
-  it("renders the Everymen union cog for the everymen slug", () => {
+  it("renders the Everymen meshed cogs for the everymen slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="everymen" />);
     expect(html).toContain("var(--everymen-red)");
-    expect(html).toContain("var(--everymen-cream)");
+    // Sigil Studies v2: two cogs, one path, bores punched by evenodd rather
+    // than filled with a second ink. `--everymen-cream` was the old hub disc
+    // and is what a scaled-down single gear turned to mud at 15px.
+    expect(html).toContain('fill-rule="evenodd"');
+    expect(html).not.toContain("var(--everymen-cream)");
   });
 
-  // #1626. `factions/albescent.ts` registers no `sigil` row — and must not,
-  // since its manifest takes only Default-plus-a-flourish surfaces (#783) — so
-  // the dispatcher used to hand albescent the unaffiliated ring while its own
-  // cross-hair sat one directory over. Resolved HERE, once, rather than by a
-  // slug branch in each of the four callers.
-  it("renders the surveyor's cross-hair for the albescent slug", () => {
+  it("renders the Cozy Coven witch hat for the coven slug", () => {
+    const html = renderToStaticMarkup(<FactionSigil slug="coven" />);
+    expect(html).toContain("var(--faction-coven)");
+    // Sigil Studies v2: the brim's opening curve, and the evenodd rule the six
+    // discs need. The four-point sparkle that used to answer here is now
+    // `covenSlip`'s `Spark`, an ornament rather than a badge.
+    expect(html).toContain("M4 78C14 66 32 62 50 62");
+    expect(html).toContain('fill-rule="evenodd"');
+    expect(html).not.toContain('viewBox="0 0 24 24"');
+  });
+
+  // #1626 gave albescent its own adapter row here, holding the surveyor's
+  // cross-hair; #1891 deleted it; Sigil Studies v2 reinstates it holding the
+  // labyrinth, by owner ruling. `factions/albescent.ts` still registers no
+  // `sigil` row and still must not (its manifest takes only
+  // Default-plus-a-flourish surfaces, #783), so the row lives in the dispatcher.
+  // Asserted in full further down.
+  it("renders the labyrinth for the albescent slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
-    // The four cardinal ticks — the cross-hair's own geometry, and what tells
-    // it apart from any ring. Its INK is #1658's business, asserted below.
-    expect(html.match(/<line /g), "four cardinal ticks").toHaveLength(4);
-    expect(html, "not the unaffiliated ring").not.toContain("var(--faction-default-rainbow-conic)");
+    expect(html).toContain("/factionMarks/labyrinth.svg");
+    expect(html.match(/<line /g), "no cross-hair ticks").toBeNull();
   });
 
   it("falls back to the unaffiliated ring for an unknown slug", () => {
@@ -80,94 +100,86 @@ describe("FactionSigil dispatcher (#659)", () => {
 });
 
 /**
- * Albescent's spectrum-stroked cross-hair (#1658, the last half of #1630).
+ * Albescent's labyrinth — the mark reinstated (Sigil Studies v2, superseding
+ * #1891 ruling 6).
  *
- * The seam is the markup the DISPATCHER produces, because that is where the
- * decision lives: `AlbescentSigil` still draws whatever ink it is handed, and
- * `CredentialCard` still knows nothing about slugs. The rule the adapter
- * encodes is "a caller with no ink of its own gets the spectrum", so both
- * halves are asserted here — the spectrum when nothing is passed, the caller's
- * colour when something is.
+ * This block has asserted three different things in three issues, and the
+ * reason it keeps moving is worth stating once. #1658 asserted a cross-hair
+ * stroked in the spectrum; #1891 asserted no mark at all, because a distinct
+ * emblem in a distinct PALETTE, worn by an otherwise-hidden faction on surfaces
+ * an unrevealed player reads, is a tell. The design answers the palette half —
+ * the labyrinth carries no hue of its own — and the owner has accepted the
+ * remaining shape half. So what is asserted here is not just "a mark exists"
+ * but the property that makes the mark safe: it introduces **no colour**.
  *
- * `stroke` cannot take a CSS gradient, so the ramp is an in-document
- * `<linearGradient>` rebuilt from the same seven `--faction-default-stop-*`
- * tokens `--faction-default-rainbow` composes from. That is the bridge, and it
- * is what keeps the mark on the dark cascade: the stops flip, the SVG does not
- * have to know.
+ * The seam is the DISPATCHER's markup, because that is where the decision
+ * lives: the primitive draws whatever it is handed, and `CredentialCard` and
+ * the filter facet stay slug-blind.
+ *
+ * NOT ASSERTED, and no test here can: whether the mark READS at 15px. The
+ * harness is `renderToStaticMarkup` — no DOM, no layout, no rasterisation.
  */
-const STOP_TOKENS = [1, 2, 3, 4, 5, 6, 7].map(
-  (index) => `var(--faction-default-stop-${index})`,
-);
+describe("Albescent's labyrinth (Sigil Studies v2)", () => {
+  it("no longer draws what an unknown slug draws", () => {
+    // The exact inverse of #1891's assertion, and the one line that says the
+    // ruling was reversed rather than the mark quietly re-added somewhere else.
+    const albescent = renderToStaticMarkup(<FactionSigil slug="albescent" size={40} />);
+    const unknown = renderToStaticMarkup(<FactionSigil slug="not_a_faction" size={40} />);
+    expect(albescent).not.toBe(unknown);
+    expect(albescent).toContain("/factionMarks/labyrinth.svg");
+    expect(unknown).not.toContain("/factionMarks/labyrinth.svg");
+  });
 
-/** Every gradient id declared in a render, in document order. */
-const gradientIds = (html: string) =>
-  [...html.matchAll(/<linearGradient[^>]*\bid="([^"]+)"/g)].map((match) => match[1]);
-
-describe("AlbescentSigil spectrum strokes (#1658)", () => {
-  it("strokes the dispatched mark in the spectrum, not a flat ink", () => {
+  it("carries no palette of its own — the unaffiliated conic and nothing else", () => {
+    // This is the property that makes reinstating the mark safe. The drawing
+    // is an alpha stencil under `public/`; the PAINT is the same spectrum na
+    // wears — so a
+    // stranger meets a shape and never a livery.
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
-    for (const token of STOP_TOKENS) {
-      expect(html, `${token} stop`).toContain(`stop-color="${token}"`);
+    expect(html).not.toContain("var(--albescent-reveal-text)");
+    expect(html).not.toContain("var(--albescent-reveal-ink)");
+    expect(html).not.toMatch(/var\(--faction-albescent/);
+    expect(html).not.toContain("#");
+  });
+
+  it("takes a caller's paint, so the rail can sample the ramp per row", () => {
+    // The mark is painted through a mask rather than stroked — the same
+    // mechanism as `DefaultSigil` — so `color` is any `background`, not just a
+    // colour. The sidebar's neutral rows rely on that shape.
+    const sampled = "var(--faction-default-rainbow) 40% 0 / 600% 100%";
+    const html = renderToStaticMarkup(<FactionSigil slug="albescent" color={sampled} />);
+    expect(html).toContain(sampled);
+  });
+
+  it("keeps no trace of the cross-hair", () => {
+    // The old mark was seven parts stroked from an in-document
+    // `<linearGradient>`. None of it survives, coloured or not.
+    for (const html of [
+      renderToStaticMarkup(<FactionSigil slug="albescent" />),
+      renderToStaticMarkup(<FactionSigil slug="albescent" color="var(--color-text-tertiary)" />),
+    ]) {
+      expect(html).not.toContain("<linearGradient");
+      expect(html).not.toContain("<line ");
     }
-    const [id] = gradientIds(html);
-    expect(id, "one gradient declared").toBeTruthy();
-    // Every stroke AND the centre dot read the ramp — a single flat ink left
-    // anywhere is the half-done version of this change.
-    // Two rings, four ticks and the centre dot — a single flat ink left
-    // anywhere is the half-done version of this change.
-    expect(html.match(new RegExp(`url\\(#${id}\\)`, "g")), "seven painted parts").toHaveLength(7);
-    expect(html, "the flat reveal ink").not.toContain("var(--albescent-reveal-text)");
-    // Not an eighth rainbow, and not the conic either: the conic is the
-    // unaffiliated RING's ramp and counting it is how CredentialCard tells the
-    // two marks apart.
-    expect(html, "the na ring's conic").not.toContain("var(--faction-default-rainbow-conic)");
   });
 
-  it("leaves a direct mount on the reveal register", () => {
-    // The invitation letter passes no colour and must NOT go spectrum: the
-    // decision is the dispatcher's, so the primitive's own default is untouched.
-    const html = renderToStaticMarkup(<AlbescentSigil size={44} />);
-    expect(html).toContain("var(--albescent-reveal-text)");
-    expect(html).not.toContain("<linearGradient");
+  it("never puts the word in the markup", () => {
+    // UNCHANGED BY THE REINSTATEMENT, and deliberately: #1891/#1926's mask on
+    // the NAME is untouched and still correct. A slug-derived id, class or
+    // label would print the society's name into the DOM of every page the mark
+    // appears on — the leak #783 closed. Only the mark came back.
+    for (const size of [15, 22, 84]) {
+      const html = renderToStaticMarkup(<FactionSigil slug="albescent" size={size} />);
+      expect(html.toLowerCase(), `${size}px`).not.toContain("albescent");
+    }
   });
 
-  it("spans the ramp across the whole mark, not per stroke", () => {
-    // objectBoundingBox is the default and it is a trap here: the horizontal
-    // ticks have a zero-height box, and SVG does not render an element whose
-    // gradient box is degenerate. userSpaceOnUse also gets what the design
-    // draws — one sweep over the mark rather than seven private ones.
-    const html = renderToStaticMarkup(<FactionSigil slug="albescent" size={40} />);
-    expect(html).toContain('gradientUnits="userSpaceOnUse"');
-    expect(html).toContain('x2="40"');
-  });
-
-  it("still honours an explicit colour at every other mount", () => {
-    // The faction filter facet passes `factionCssVar(slug)`; the invitation and
-    // the faction-select tile mount the sigil directly on the reveal register.
-    const html = renderToStaticMarkup(
-      <FactionSigil slug="albescent" color="var(--albescent-reveal-ink)" />,
-    );
-    expect(html).toContain("var(--albescent-reveal-ink)");
-    expect(html, "no gradient where a colour was given").not.toContain("<linearGradient");
-  });
-
-  it("gives every sigil on a page its own gradient id", () => {
-    // The mobile players chip row and the FieldDesk roster both draw the mark
-    // many times over; duplicate ids would make every later sigil read the
-    // first one's ramp.
-    const html = renderToStaticMarkup(
-      <>
-        <FactionSigil slug="albescent" />
-        <FactionSigil slug="albescent" />
-        <FactionSigil slug="albescent" />
-      </>,
-    );
-    const ids = gradientIds(html);
-    expect(ids).toHaveLength(3);
-    expect(new Set(ids).size, "collided ids").toBe(3);
-    // And no id names the society: an `id="…albescent…"` would put the word in
-    // the markup of every page the mark appears on (#783).
-    for (const id of ids) expect(id).not.toContain("albescent");
+  it("renders at every size the study shows, and at the app's own mounts", () => {
+    for (const size of [84, 34, 15, 44, 26, 18]) {
+      const html = renderToStaticMarkup(<FactionSigil slug="albescent" size={size} />);
+      expect(html, `${size}px`).toContain(`width:${size}px`);
+      expect(html, `${size}px`).toContain(`height:${size}px`);
+    }
   });
 });
 

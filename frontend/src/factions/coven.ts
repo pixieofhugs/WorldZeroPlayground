@@ -18,7 +18,6 @@ const CovenDuelSealConfirm = lazyArchetype(() => import('../components/duel/Cove
 const CovenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/CovenEditPraxis'))
 const CovenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/CovenFactionBody'))
 const CovenFactionHero = lazyArchetype(() => import('../components/factionHero/CovenFactionHero'))
-const CovenFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/CovenFactionPage'))
 const CovenFeedFrame = lazyArchetype(() => import('../components/feed/CovenFeedFrame'))
 const CovenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/CovenFieldDesk'))
 const CovenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/CovenPraxisDetail'))
@@ -55,6 +54,5 @@ export const COVEN_MANIFEST: FactionManifest = {
   factionBody: () => CovenFactionBody,
   profileBody: () => CovenProfileBody,
   duelSeal: () => CovenDuelSealConfirm,
-  mobileFactionPage: () => CovenFactionPage,
   mobileFieldDesk: () => CovenFieldDesk,
 }

@@ -77,10 +77,29 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  * is a genuine wall rather than a formality. TARGET stays at 20,000 and is now
  * BELOW warn, giving CSS the same shape JS has: a number to ratchet back down
  * to, not a restatement of the warn line.
+ *
+ * CSS ledger (#1977): 23,000 -> 23,600, against a measured 23,371.
+ *
+ * READ THIS ONE AS A WIN, NOT A COST — it is the only entry here where the
+ * number going up means the critical path got shorter. Self-hosting the 18 font
+ * families moved 79 `@font-face` rules into `src/fonts.css`, which index.css
+ * @imports, so they land in this stylesheet: 21,917 -> 23,371 gzipped, +1,454.
+ * What they REPLACED was a render-blocking `<link>` to fonts.googleapis.com
+ * serving 3,627 gzipped bytes of the same declarations, and this check could
+ * never see it, because it parses dist/index.html for same-origin assets and a
+ * third-party stylesheet is neither. Honest critical-path CSS is therefore
+ * 25,544 -> 23,371: a 2,173-byte win reported as a 1,454-byte loss.
+ *
+ * The woff2 files themselves are NOT in this number and should not be. They are
+ * fetched by the stylesheet, not by index.html, and only the `unicode-range`
+ * cuts a page's glyphs fall in — the same lazy fetch Google's CDN did. Counting
+ * all 1.2 MB here would price a download nobody makes as blocking weight.
+ *
+ * FAIL stays at 25,000. The headroom is now 1.6 KB, which is the point.
  */
 const BUDGETS = {
   js: { warn: 134_000, fail: 180_000, target: 120_000 },
-  css: { warn: 23_000, fail: 25_000, target: 20_000 },
+  css: { warn: 23_600, fail: 25_000, target: 20_000 },
 }
 
 /** Asset paths the entry HTML forces the browser to fetch before first render. */

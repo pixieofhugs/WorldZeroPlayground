@@ -18,6 +18,7 @@ import { useGameConfig } from '../../hooks/useGameConfig'
 import { useLevelTrack } from '../../hooks/useLevelTrack'
 import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
 import FactionSigil from '../sigil/FactionSigil'
+import DefaultSigil from '../sigil/DefaultSigil'
 import { feedKicker, feedItemTitle } from '../feed/feedItemLabels'
 import { normalizeFeedItem } from '../feed/normalizeFeedItem'
 
@@ -26,6 +27,34 @@ const DEFAULT_MAX_TASK_SLOTS = 20
 /** The task-faction mark on an in-progress row (#1711), set to the row's own
  *  type size so it reads as part of the line rather than as an emblem. */
 const ROW_SIGIL = 14
+
+/** The context-faction mark on an activity row (#1892). Bigger than the
+ *  in-progress mark above because it is the row's own bullet rather than a
+ *  trailing annotation on a line of type — a sigil at the 6px the old rainbow
+ *  dot used is a smudge. */
+const ACTIVITY_SIGIL = 18
+
+/** The slugs whose mark IS the unaffiliated ring, and which therefore take the
+ *  position-sampled spectrum below instead of a livery of their own.
+ *
+ *  `albescent` used to be a third member. #1892 put it here because #1891 had
+ *  just deleted `AlbescentSigil`, so the slug had no mark of its own to draw.
+ *  Sigil Studies v2 gives it one — the labyrinth — and the owner has accepted
+ *  that these rows show it. So the set is back to the two slugs the predicate
+ *  above actually describes. Note the entry was never load-bearing for the
+ *  MECHANISM: the labyrinth is painted through a mask like `DefaultSigil`, so
+ *  it would take the sampled background just as happily; it is out because its
+ *  mark is no longer the ring, not because it could not be sampled. */
+const NEUTRAL_SIGIL_SLUGS = new Set(['na', 'default'])
+
+/** The window onto `--faction-default-rainbow` a row at `index` samples — the
+ *  same `600%`-wide, `index * 20%`-offset slice the panel's old dots used, so
+ *  the neutral rows still walk the spectrum down the column instead of
+ *  repeating one identical ring. Expressed as a `background` shorthand because
+ *  the sampling is a gradient window; there is no single stop to name. */
+function sampledSpectrum(index: number): string {
+  return `var(--faction-default-rainbow) ${index * 20}% 0 / 600% 100%`
+}
 
 /**
  * Each reorderable panel's heading key.
@@ -476,6 +505,11 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
             const kicker = item.actor_display_name
               ? `${feedKicker(item.type)} · ${item.actor_display_name}`
               : feedKicker(item.type)
+            // A null slug means the server found no faction to frame this item
+            // with — neutral, same as the unaffiliated slugs.
+            const isNeutral =
+              item.context_faction_slug === null ||
+              NEUTRAL_SIGIL_SLUGS.has(item.context_faction_slug)
             const titleStyle: CSSProperties = {
               fontSize: 'var(--text-content)',
               lineHeight: 1.3,
@@ -491,19 +525,34 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                   borderBottom: isLast ? undefined : '1px solid var(--color-border)',
                 }}
               >
-                {/* rainbow bullet — sampled from the default spectrum by position */}
-                <span
-                  className="shrink-0"
-                  style={{
-                    width: 6,
-                    height: 6,
-                    marginTop: 'var(--space-xs)',
-                    borderRadius: 2,
-                    background: 'var(--faction-default-rainbow)',
-                    backgroundSize: '600% 100%',
-                    backgroundPosition: `${index * 20}% 0`,
-                  }}
-                />
+                {/* The row's FACTION, not a decoration shaped like a signal
+                    (#1892). The slug is the same `context_faction_slug` the
+                    card on `/updates` frames itself with, for the reason the
+                    kicker above is shared: this panel is a window onto that
+                    page, and a mark that disagreed with the frame the player
+                    lands on would be one more private vocabulary.
+
+                    No `marginTop`: at 18px the mark aligns optically to the
+                    kicker line on its own, and the old nudge — sized for a 6px
+                    dot — now floats it above the row. */}
+                {isNeutral ? (
+                  // `DefaultSigil` names itself; a wrapper label here would
+                  // only overwrite that copy with something shorter.
+                  <span className="shrink-0 flex">
+                    <DefaultSigil size={ACTIVITY_SIGIL} color={sampledSpectrum(index)} />
+                  </span>
+                ) : (
+                  // The seven faction marks are aria-hidden SVGs, so the row
+                  // names them — as the in-progress row above does, and for the
+                  // same reason: nothing else in the row spells the faction out.
+                  <span
+                    className="shrink-0 flex"
+                    role="img"
+                    aria-label={factionName(item.context_faction_slug)}
+                  >
+                    <FactionSigil slug={item.context_faction_slug} size={ACTIVITY_SIGIL} />
+                  </span>
+                )}
                 <div className="min-w-0">
                   <div
                     className="truncate"

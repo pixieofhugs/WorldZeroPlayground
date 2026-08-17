@@ -1,5 +1,6 @@
 import hmac
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from pydantic import ConfigDict
@@ -10,7 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
-from dependencies import require_admin
+from dependencies import get_current_character_optional, require_admin
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.praxis import ModerationStatus, Praxis
@@ -44,6 +45,7 @@ from services.comment import build_comment_out, list_flagged_comments, moderate_
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
     admin_edit_task,
+    apply_ban,
     archive_message,
     find_admin_accounts,
     flags_for_comments,
@@ -223,8 +225,17 @@ async def admin_cli_token(
 async def admin_list_flagged_praxes(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Return praxes with moderation_status == flagged, each with its flag rows (#237)."""
+    # NB: this docstring is published verbatim into `backend/openapi.json`, a
+    # committed artifact in a public repo — the rationale below stays a comment.
+    #
+    # `require_admin` resolves an Account, but the viewer-relative fields on this
+    # payload (`viewer_can_vote`, `can_flag`) are the moderator's CHARACTER's, so
+    # the optional character dependency rides along. Without it the builder got
+    # `viewer=None` and answered every viewer-relative question as if nobody were
+    # signed in — `viewer_can_vote=True` on the moderator's own praxis (#1974).
     result = await session.execute(
         select(Praxis)
         .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
@@ -241,7 +252,11 @@ async def admin_list_flagged_praxes(
     )
     return [
         FlaggedPraxisOut(
-            **(await build_praxis_out(praxis, session, crowned_ids=crowned)).model_dump(),
+            **(
+                await build_praxis_out(
+                    praxis, session, viewer=viewer, crowned_ids=crowned
+                )
+            ).model_dump(),
             flags=flags_by_praxis.get(praxis.id, []),
         )
         for praxis in praxis_list
@@ -254,9 +269,15 @@ async def admin_moderate_praxis(
     data: ModerationAction,
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
+    """Rule on a praxis and return it as the moderator sees it."""
+    # The praxis detail page feeds this response straight back into its praxis
+    # state (`usePraxisDetail.handleModerate`), so the viewer-relative fields have
+    # to be the moderator's own. Built with no viewer, this put the vote widget
+    # back on a moderator's own praxis the moment they hid or failed it (#1974).
     praxis = await moderate_praxis(praxis_id, data.status, data.admin_note, session)
-    return await build_praxis_out(praxis, session)
+    return await build_praxis_out(praxis, session, viewer=viewer)
 
 
 @router.get("/comments/flagged", response_model=list[FlaggedCommentOut])
@@ -373,8 +394,7 @@ async def ban_character(
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
-    character.status = CharacterStatus.banned if data.banned else CharacterStatus.active
-    await session.flush()
+    await apply_ban(character, data.banned, session)
     return BanActionOut(character_id=character_id, banned=data.banned)
 
 

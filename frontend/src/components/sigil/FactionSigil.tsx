@@ -38,33 +38,30 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
 }
 
 /**
- * Albescent's surveyor's cross-hair (#1626). It is the faction's only mark and
- * it is drawn everywhere else it appears — the invitation, the faction-select
- * tile — but `factions/albescent.ts` registers no `sigil` row, so asking this
- * dispatcher for `albescent` handed back the unaffiliated spectrum ring while a
- * finished `AlbescentSigil` sat one directory over. Every caller that hit it
- * (the faction filter facet, the mobile players chip row, the requests-queue
- * tray, and now the credential footer) had to either live with the wrong mark
- * or branch on the slug itself — four copies of one gap.
+ * Albescent's labyrinth (#1626's row, deleted by #1891 and REINSTATED by owner
+ * ruling on Sigil Studies v2).
+ *
+ * #1891's objection was to the mark it deleted, not to the existence of one: a
+ * surveyor's cross-hair, inked on the always-light `--albescent-reveal-*`
+ * register, was a distinct emblem in a distinct PALETTE worn by an otherwise-
+ * hidden faction. The labyrinth answers that half — it carries no hue of its
+ * own, it is filled with the unaffiliated conic, so what a stranger meets is a
+ * shape and never a livery. The owner has accepted the remaining consequence
+ * knowingly: an unrevealed viewer sees a mark they do not recognise on the
+ * filter facet, the players roster, the requests tray, the credential footer
+ * and the sidebar's activity rail. Everything about the NAME stays masked —
+ * that is #1891/#1926's other half and it is untouched.
  *
  * WHY THE ADAPTER AND NOT THE MANIFEST. `albescent.ts`'s contract is explicit:
  * anything added there must be "a flourish LAYERED OVER Default's structure",
  * because a surface that repaints Albescent in its own colours un-hides the
- * society (#783). A bespoke emblem drawn on the always-light
- * `--albescent-reveal-*` register is not Default-plus-a-flourish, so it is not a
- * manifest row. It resolves here instead, where the mark→slug question already
- * lives — and it sits BEFORE the spread, so the day albescent does declare a
- * `sigil` the manifest wins and this line quietly stops mattering.
+ * society (#783). A bespoke emblem is not Default-plus-a-flourish, so it is not
+ * a manifest row. It resolves here, where the mark→slug question already lives —
+ * and it sits BEFORE the spread, so the day albescent does declare a `sigil` the
+ * manifest wins and this line quietly stops mattering.
  */
 function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
-  /* #1658. A dispatched mount with no colour of its own gets the mark stroked
-     in the unaffiliated spectrum — the design's credential treatment, and the
-     same answer to #783 the adapter itself is: the spectrum is what na wears,
-     so a member's mark reads as camouflage rather than as a livery. A caller
-     that DID name an ink keeps it (the faction filter facet passes
-     `factionCssVar`), and a direct mount on the reveal register — the
-     invitation letter, the faction-select tile — never comes through here. */
-  return <AlbescentSigil size={size ?? 22} color={color} spectrum={!color} />;
+  return <AlbescentSigil size={size ?? 22} color={color} />;
 }
 
 /**

@@ -1,5 +1,6 @@
 import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
+import { factionName } from "../../utils/factions";
 import { hasOwnKey } from "../../utils/hasOwnKey";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "../sigil/UaSigil";
@@ -12,7 +13,7 @@ import * as eph from "../factionMarks/ephemeristsPlate";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { WowSigil } from "../sigil/WowSigil";
-import AlbescentSigil from "../sigil/AlbescentSigil";
+import FactionSigil from "../sigil/FactionSigil";
 import DefaultSelectCard from "./DefaultSelectCard";
 
 /**
@@ -186,7 +187,7 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
           <SnideSigil size={40} color="var(--snide-acid)" />
           <div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
-            <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.snide.wordmark")}</div>
+            <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{factionName("snide")}</div>
             <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: "var(--space-xs)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
           </div>
         </div>
@@ -239,7 +240,7 @@ export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Om
           <div>
             <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.24em", color: eph.GOLD }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
-            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.BAND_INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
+            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.BAND_INK, marginTop: "var(--space-xs)" }}>{factionName("ephemerists")}</div>
           </div>
         </div>
         <div style={{ height: 1.5, background: `linear-gradient(90deg, ${eph.BRASS_LIGHT} 0%, transparent 100%)`, margin: "var(--space-lg) 0 var(--space-md)" }} />
@@ -276,9 +277,12 @@ export function SingularitySelectCard({ state = "locked", members, onVisit }: Om
         {Array.from({ length: 9 }).map((_, i) => <i key={i} style={{ width: 6, height: 6, borderRadius: 1, background: "rgba(96,165,250,0.5)" }} />)}
       </div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-lg) 0" }}>
-        <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.14em", color: "#60a5fa", textTransform: "uppercase" }}>
-          {i18n.t("feed:identity.singularity.protocol")}<span aria-hidden className="sg-cursor" style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: "var(--space-xs)", verticalAlign: "middle" }} />
-        </div>
+        {/* The card opened on "singularity protocol" with the blinking cursor
+            after it (`feed:identity.singularity.protocol`). That key is on
+            #1864's CUT list, so #1909 removed it here too — the surface KEPT by
+            the audit is `feed:factionSelect.*`, every one of which this card
+            still reads; the `identity.*` overline was a different, single-faction
+            slot on top of it. */}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)" }}>
           <SingularitySigil size={30} color={green} />
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
@@ -477,7 +481,10 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-2xl) 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.34em", color: "var(--albescent-reveal-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
-          <AlbescentSigil size={26} color="var(--albescent-reveal-ink)" />
+          {/* Was the surveyor's cross-hair on the reveal ink; the order has no
+              mark of its own any more (#1891 ruling 6). Same 26px, so the
+              header row's metrics are unchanged. */}
+          <FactionSigil slug="albescent" size={26} />
         </div>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: vellum-letter name — the archetype's calligraphic display type */}
         <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: "var(--space-lg)" }}>{i18n.t("feed:factionSelect.albescent.name")}</div>

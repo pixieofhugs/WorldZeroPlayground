@@ -74,16 +74,14 @@ function RuledLabel({ children }: { children: ReactNode }) {
   );
 }
 
-function SectionHeading({
-  kicker,
-  children,
-}: {
-  kicker: string;
-  children: ReactNode;
-}) {
+/**
+ * A section title. It used to open on an eyebrow kicker (`ua.tasks.kicker` /
+ * `ua.praxis.kicker`); #1909 cut the slot, because the audit ruled the line
+ * restated its own heading and only the seven bespoke bodies ever had one.
+ */
+function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <div style={{ marginBottom: "var(--space-xl)" }}>
-      <div style={UA_EYEBROW}>{kicker}</div>
       <h2
         style={{
           fontFamily: UA_DISPLAY,
@@ -209,7 +207,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading kicker={t("ua.tasks.kicker")}>
+          <SectionHeading>
             {t("ua.tasks.heading")}
           </SectionHeading>
           {tasks.length === 0 ? (
@@ -246,7 +244,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading kicker={t("ua.praxis.kicker")}>
+          <SectionHeading>
             {t("ua.praxis.heading")}
           </SectionHeading>
           {recentPraxis.length === 0 ? (

@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import {
@@ -188,6 +190,7 @@ export default function EphemeristsTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.ephemerists.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -266,7 +269,11 @@ export default function EphemeristsTaskCard({
                 whiteSpace: "nowrap",
               }}
             >
-              {i18n.t("feed:taskCard.ephemerists.masthead")}
+              {/* #1910: the band spells the faction's name, so it reads the one
+                  key that stays per-faction rather than a second copy. The
+                  `textTransform` above already carried the plate's upper case,
+                  so the band reads THE EPHEMERISTS either way. */}
+              {factionName("ephemerists")}
             </span>
           </div>
         </div>
@@ -368,7 +375,7 @@ export default function EphemeristsTaskCard({
               </div>
             </div>
 
-            <h3
+            <h2
               style={{
                 fontFamily: DECO,
                 fontWeight: 400,
@@ -380,7 +387,7 @@ export default function EphemeristsTaskCard({
               }}
             >
               {task.title}
-            </h3>
+            </h2>
 
             {task.description && (
               <p
@@ -424,13 +431,15 @@ export default function EphemeristsTaskCard({
           </Link>
         </div>
 
-        {onSignup && (
+        {cta && (
           <button
-            onClick={() => onSignup(task.id)}
+            type="button"
+            onClick={cta.onPress}
+            aria-disabled={cta.denied || undefined}
             style={{
               position: "relative",
               zIndex: 2,
-              cursor: "pointer",
+              cursor: cta.denied ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -451,7 +460,7 @@ export default function EphemeristsTaskCard({
             <svg width={17} height={17} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
               <path d={GLYPHS.platinum} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span>{i18n.t("feed:taskCard.ephemerists.signup")}</span>
+            <span>{cta.label}</span>
             <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
               <path d={GLYPHS.planet} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

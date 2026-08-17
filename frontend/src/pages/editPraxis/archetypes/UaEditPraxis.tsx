@@ -431,7 +431,7 @@ export default function UaEditPraxis({ state }: Props) {
 
         {state.showSealStack && (
           <ComposerSection
-            label={t("editPraxis.composer.sealsLabel")}
+            label={t("editPraxis.composer.metatasksLabel")}
             rule={false}
             labelStyle={labelStyle}
           >

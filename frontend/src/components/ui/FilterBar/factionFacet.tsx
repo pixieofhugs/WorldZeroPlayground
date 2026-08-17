@@ -19,6 +19,7 @@ import FactionSigil from '../../sigil/FactionSigil'
 import {
   factionCssVar,
   factionName,
+  isFactionHiddenFromChoosers,
   sortFactionsByRainbowOrder,
   UNAFFILIATED_FACTION_SLUG,
 } from '../../../utils/factions'
@@ -46,11 +47,21 @@ const SIGIL_SIZE: Record<OrnamentPlace, number> = {
  * the filter supplies it by hand. The design's hardcoded nine is the thing this
  * must not be: `/factions` returns visible factions only, so `albescent` is
  * absent pre-reveal (ADR-0027) and a literal list would leak it.
+ *
+ * The `isFactionHiddenFromChoosers` filter is belt AND braces on top of that
+ * server gate (#1891). This is a CHOOSER, so the row is REMOVED rather than
+ * masked: `factionName()` answers "Unaffiliated" for an unrevealed viewer, and
+ * this roster appends the real `na` sentinel unconditionally — a masked row
+ * would hand that viewer two identical Unaffiliated checkboxes, which is louder
+ * than the leak it replaces.
  */
 export function filterRoster(factions: FactionOut[]): string[] {
   const visible = sortFactionsByRainbowOrder(factions)
     .map((faction) => faction.slug)
-    .filter((slug) => slug !== UNAFFILIATED_FACTION_SLUG)
+    .filter(
+      (slug) =>
+        slug !== UNAFFILIATED_FACTION_SLUG && !isFactionHiddenFromChoosers(slug),
+    )
   return [...visible, UNAFFILIATED_FACTION_SLUG]
 }
 
@@ -71,7 +82,13 @@ export function factionFacet(
   // without this a deep link like `?factions=ua` printed the raw slug on the
   // chip for one round trip — `deriveChips` reads labels off this list, where
   // the old faction-shaped version called `factionName` directly.
-  const unlisted = selected.filter((slug) => !roster.includes(slug))
+  // ...but a hand-typed `?factions=albescent` must not put the row back (#1891).
+  // Without this filter the deep link re-adds it — as a second "Unaffiliated",
+  // since the mask already owns the label — which both duplicates a row and
+  // tells the viewer their guessed slug was real.
+  const unlisted = selected.filter(
+    (slug) => !roster.includes(slug) && !isFactionHiddenFromChoosers(slug),
+  )
   return {
     key: 'faction',
     label: i18n.t('common:filters.bar.factions'),

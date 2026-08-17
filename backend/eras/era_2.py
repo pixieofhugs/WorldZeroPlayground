@@ -78,6 +78,12 @@ ERA_2_FACTIONS = {
         duel_loss_modifier=0.5,
         can_hold_multiple_memberships=True,   # Double Dipper
     ),
+    # Albescent's charter carries across too (#1871): the values below are its
+    # floor and `EraConfig.__post_init__` widens them to the best perk any
+    # faction in THIS era holds — Snide's duel gamble (whole: 2.0 / 0.0), WOW's
+    # level jump, Everymen's Double Dipper. There are no Ephemerists here, so
+    # nobody holds Task Vision and Albescent does not conjure it: the era's
+    # `allow_praxis_on_retired_task_factions` stays empty.
     "albescent": FactionConfig(
         slug="albescent",
         can_always_rejoin=True,       # can always be rejoined after defecting
@@ -87,6 +93,11 @@ ERA_2_FACTIONS = {
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
+        # Stated, not inherited: this is Albescent's own perk. Before #1871 it
+        # was a slug branch in services/praxis_metatask.py, which is how Era 2
+        # came to hold it without ever saying so.
+        can_apply_metatask_at_any_level=True,
+        inherits_faction_perks=True,
     ),
     "na": FactionConfig(
         slug="na",

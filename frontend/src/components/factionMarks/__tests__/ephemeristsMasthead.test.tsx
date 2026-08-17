@@ -28,22 +28,29 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import { EphemeristsMasthead } from "../EphemeristsMasthead";
 
-const AXIS_H = "M100 272 L392 272";
+/** The v2 kite's opening move — the swept sail, first of its six shapes. */
+const SAIL = "M19.1 30.8";
 const render = (scale: "page" | "card", date?: string | null) =>
   renderToStaticMarkup(<EphemeristsMasthead slug="ephemerists" scale={scale} date={date} />);
 
 describe("EphemeristsMasthead — the two scales", () => {
-  it("hands the sigil one number and gets the design's frame back at each scale", () => {
-    expect(render("page")).toContain('width="54" height="62"');
-    expect(render("card")).toContain('width="38" height="44"');
+  it("hands the sigil one number and gets a square box back at each scale", () => {
+    // Sigil Studies v2 draws the kite square. It used to hand back the design's
+    // 486:560 frame (54x62 and 38x44), which is what made these two mounts one
+    // prop apart; they are still one prop apart, and now they are square.
+    expect(render("page")).toContain('width="62" height="62"');
+    expect(render("card")).toContain('width="44" height="44"');
   });
 
-  it("draws the datum row's closing sigil at its own inline size, below the reduced cut", () => {
-    expect(render("page")).toContain('width="12" height="14"');
-    expect(render("card")).toContain('width="10" height="12"');
-    // One kite each — the full cut's crossed axes would be a smear at 12-14px.
+  it("draws the datum row's closing sigil at its own inline size", () => {
+    expect(render("page")).toContain('width="14" height="14"');
+    expect(render("card")).toContain('width="12" height="12"');
+    // Two marks per masthead — the big one and the datum row's closer — and
+    // BOTH are now the full drawing. #1635's reduced cut drew a sparser mark
+    // below 20px because its stroke went sub-pixel; v2 is filled and has no
+    // cut, so the two mounts differ only in size.
     for (const scale of ["page", "card"] as const) {
-      expect(render(scale).match(new RegExp(AXIS_H, "g")) ?? []).toHaveLength(1);
+      expect(render(scale).match(new RegExp(SAIL, "g")) ?? []).toHaveLength(2);
     }
   });
 
@@ -78,24 +85,35 @@ describe("EphemeristsMasthead — the datum row", () => {
   });
 });
 
-describe("EphemeristsMasthead — the register", () => {
+/**
+ * THE REGISTER IS GONE (#1909), and this block is what says so.
+ *
+ * It used to assert the four kanji and their glossed `title=`. All EIGHT of its
+ * strings are on the copy audit's CUT list — the marks AND the English — because
+ * no other faction had a register row and the audit ruled the masthead a shared
+ * surface. Kept as an ABSENCE rather than deleted: the way a faction-only band
+ * comes back onto a settled surface is a later voice pass, and only a negative
+ * assertion can fail on that.
+ */
+describe("EphemeristsMasthead — the register, deleted", () => {
   const html = render("page");
 
-  it("sets four kanji, each with its English one gesture away", () => {
-    for (const [mark, gloss] of [
-      ["星", "Star"],
-      ["暦", "Almanac"],
-      ["観", "Observation"],
-      ["録", "Record"],
-    ]) {
-      expect(html).toContain(`title="${gloss}"`);
-      expect(html).toContain(`>${mark}</abbr>`);
+  it("sets no kanji, at either scale", () => {
+    for (const mark of ["星", "暦", "観", "録"]) {
+      expect(html).not.toContain(mark);
+      expect(render("card")).not.toContain(mark);
     }
   });
 
-  it("reaches the focus gloss the tooltip cannot give a keyboard user", () => {
-    expect((html.match(/class="eph-gloss"/g) ?? []).length).toBe(4);
-    expect((html.match(/tabindex="0"/g) ?? []).length).toBe(4);
+  it("carries no glossed abbreviation at all", () => {
+    expect(html).not.toContain('class="eph-gloss"');
+    expect(html).not.toContain("</abbr>");
+  });
+
+  it("still rules the datum row off, top and bottom", () => {
+    // The register carried the design's 1px + 3px-double band; those rules moved
+    // to the datum row rather than leaving with the copy.
+    expect(html).toContain("3px double");
   });
 });
 

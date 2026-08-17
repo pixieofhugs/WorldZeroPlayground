@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { useTranslation } from "react-i18next";
 import {
   BAND,
   BAND_INK,
@@ -16,7 +15,6 @@ import {
   QUIET,
   READING,
   SHADOW,
-  SMALL_CAPS,
 } from "../../factionMarks/ephemeristsPlate";
 import { EphemeristsMasthead } from "../../factionMarks/EphemeristsMasthead";
 import { AdminOverlay } from "../shared";
@@ -57,10 +55,11 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *  • the byline keeps the shared portrait (`FactionAvatar`) rather than the
  *    design's octagon monogram: the byline slot is shared card chrome (#888) and
  *    the avatar is one convention across every faction;
- *  • the "for:" gloss is upright, not italic — `PraxisBody` owns that line's
- *    style, and a faction may not reach into a shared slot to italicise it;
  *  • the design's `border-radius` is 0 here (the design draws none), against the
  *    8 the codex folio used.
+ *
+ * The fourth deviation — "the 'for:' gloss is upright, not italic" — retired with
+ * its string: #1909 CUT `card.ephemerists.for`, so there is no gloss to set.
  */
 
 /** Masthead band, and the field its register is drawn across. Geometry (§4a).
@@ -81,9 +80,6 @@ const DRIFT = [
 ];
 
 export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
-  const { t } = useTranslation("praxis");
-  const { t: tVotes } = useTranslation("votes");
-
   return (
     <div
       style={{
@@ -161,8 +157,11 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           titleStyle={{ fontFamily: DECO, fontWeight: 400, letterSpacing: "0.02em", color: INK }}
           // Poiret One for the display line, Spectral for the reading matter.
           fonts={{ display: DECO, body: READING }}
-          taskLead={t("card.ephemerists.for")}
-          mediaEmptyLabel={t("card.ephemerists.mediaEmpty")}
+          // #1909 CUT the two strings that used to fill the shared slots here:
+          // `card.ephemerists.for` ("for:") and `card.ephemerists.mediaEmpty`
+          // ("Affix the observation"). Both were single- or two-faction
+          // flourishes on a surface the audit ruled generic; the slots survive
+          // unfilled and the shared card draws its own.
           mediaEmptyStyle={{
             borderRadius: 0,
             border: `1px solid ${BRASS}`,
@@ -216,16 +215,11 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
                   marginBottom: "var(--space-md)",
                 }}
               >
-                <span
-                  style={{
-                    ...SMALL_CAPS,
-                    fontSize: "var(--text-base)",
-                    letterSpacing: "0.26em",
-                    color: CAPTION,
-                  }}
-                >
-                  {tVotes("chrome.ephemerists.prompt")}
-                </span>
+                {/* "Cast your metal" (`votes:chrome.ephemerists.prompt`) headed
+                    this rule. #1909 cut the whole `chrome.{F}.prompt` slot:
+                    only three of nine factions ever rendered one, two more held
+                    dead strings, and six ship none at all. The rule and the
+                    lotus stay — they are the vote panel's frame, not its copy. */}
                 <span aria-hidden style={{ flex: 1, height: 1, background: BRASS, opacity: 0.5 }} />
                 <LotusSign width={16} color={BRASS} />
               </div>

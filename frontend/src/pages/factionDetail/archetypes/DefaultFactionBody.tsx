@@ -1,11 +1,15 @@
-import { type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { MobileStickyBar } from "../MobileStickyBar";
 import type { FactionDetailState } from "../useFactionDetail";
+
+const NA_SLUG = "na";
 
 /** Shared flex-wrap card grid — varied card sizes are intentional, not a CSS grid. */
 const CARD_GRID: CSSProperties = {
@@ -25,6 +29,24 @@ const CARD_GRID: CSSProperties = {
  * design is deferred to Claude design. Data wiring + structure are final; the
  * section chrome (member tiles, layout) is meant to be restyled by a faction's
  * own body archetype.
+ *
+ * THE JOIN BLOCK (#1314). This archetype used to carry only the burn notice,
+ * because the factions falling through to it were waiting on #951's join/gate
+ * design. WOW got a body of its own in #1611 and Albescent is the only faction
+ * left here, so that note was stale — and worse, it described a real asymmetry:
+ * the phone twin `mobileArchetypes/DefaultFactionPage` DID carry a join block,
+ * so you could join from a phone and not from a laptop. Collapsing the pair
+ * without acting would have taken the phone's away too. What follows is that
+ * skin's block moved across — sticky Join with a confirm step, confirm-switch
+ * copy, the soft gate and the burn, all ADR-0019-gated to a viewer who can
+ * actually act. It keeps the `mobile.*` catalog keys it arrived with; renaming
+ * them is a catalog change and this PR makes none.
+ *
+ * ITS PAINT DID NOT MOVE ACROSS UNCHANGED, because #1819 landed between the cut
+ * and the merge and the block's four global-ink sites came with it. Migrating
+ * them rather than re-listing the debt under its new filename is the whole of
+ * that difference; the two button blocks below carry the measurements, and one
+ * of the four turned out to be a live dark-mode defect rather than debt.
  */
 export default function DefaultFactionBody({
   state,
@@ -34,21 +56,79 @@ export default function DefaultFactionBody({
   const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } =
     state;
+  const [confirming, setConfirming] = useState(false);
+  const phone = useFormFactor() === "mobile";
 
   // Guarded non-null by the dispatcher.
   if (!faction) return null;
 
   const accent = factionCssVar(faction.slug, "border");
+  const name = factionName(faction.slug);
+  const currentSlug = membership.currentFactionSlug;
+  const switching = currentSlug && currentSlug !== NA_SLUG;
+
+  /**
+   * The primary verb. Rendered ONCE — inline under the standing line on a
+   * laptop, pinned above the tab bar on a phone (#495 / #1566). Only an
+   * "eligible" viewer can act (ADR-0019), and a control nobody can use is
+   * hidden rather than disabled.
+   */
+  const joinAction = membership.state === "eligible" && (
+    <>
+      {membership.joinError && (
+        // The phone skin this came from wrote `text-red-600`, and its legacy
+        // exemption died with the file. The token says the same thing and is
+        // what every other body's join error already uses (#1853).
+        <p className="font-body content-text" style={{ color: "var(--color-danger)" }}>
+          {membership.joinError}
+        </p>
+      )}
+      {!confirming ? (
+        <button type="button" onClick={() => setConfirming(true)} style={joinButtonStyle(faction.slug)}>
+          {t("mobile.join", { faction: name })}
+        </button>
+      ) : (
+        <>
+          {/* No `color:` — `body` is `text-ink`, i.e. --color-text-primary, so
+              this prose INHERITS exactly what it used to restate. The inline
+              copy was the defect (#1819): a faction frame that repoints ink on
+              its own root cannot reach past it, and this archetype is the
+              fall-through every unbespoke faction lands on. */}
+          <p className="font-body content-text">
+            {switching
+              ? t("detail.join.confirmSwitch", { faction: name, current: factionName(currentSlug) })
+              : t("detail.join.confirm", { faction: name })}
+          </p>
+          <div style={{ display: "flex", gap: "var(--space-sm)" }}>
+            <button
+              type="button"
+              onClick={() => void membership.join()}
+              disabled={membership.joining}
+              style={{ ...joinButtonStyle(faction.slug), flex: 1, opacity: membership.joining ? 0.6 : 1 }}
+            >
+              {membership.joining ? t("mobile.joining") : t("mobile.confirm")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={membership.joining}
+              style={CANCEL_BUTTON_STYLE}
+            >
+              {t("detail.join.cancel")}
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  );
 
   return (
     <>
       {/* ── The burn (#1305) ── this viewer left this faction this era, so
-          joining is refused for the rest of it. ponytail: this archetype has
-          no join block at all — the factions that fall through to it (WOW,
-          Albescent) are waiting on the join/gate design in #951 — so only the
-          state a viewer can be MISLED about is surfaced here. When #951 lands
-          the full standing / join / gate panel, fold this notice into it
-          rather than leaving two. ── */}
+          joining is refused for the rest of it. The phone twin said this in its
+          own words (`mobile.burnedHint`); that delta was cosmetic, so it
+          collapses to the neutral platform wording every other body uses
+          (ADR-0057: the dress is ours, the words are not). ── */}
       {membership.state === "burned" && (
         <div
           className="sidebar-card mb-6"
@@ -58,6 +138,39 @@ export default function DefaultFactionBody({
           <p className="font-body content-text text-ink">
             {t("detail.burned.body", { faction: factionName(faction.slug) })}
           </p>
+        </div>
+      )}
+
+      {/* ── Standing / the soft gate ── the two states a viewer cannot act on.
+          "gate" is "not invited YET" (#454), which is why its copy tells you to
+          keep going; the burn above is a closed door and must stay a different
+          sentence. ── */}
+      {membership.state === "member" && (
+        <p className="label-caption mb-6" style={{ color: accent }}>
+          {t("mobile.memberBadge")}
+        </p>
+      )}
+      {membership.state === "gate" && (
+        <p className="font-body text-muted content-text mb-6">
+          {t("mobile.gateHint", { faction: name })}
+        </p>
+      )}
+
+      {/* ponytail: on a laptop the verb sits here, in a plain 420px column,
+          because this archetype has no rail to put it in — the whole file is
+          placeholder chrome and #951's join/gate design is what will place it
+          properly. On a phone it pins instead, at the bottom of the page. ── */}
+      {!phone && joinAction && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-sm)",
+            maxWidth: 420,
+            marginBottom: "var(--space-xl)",
+          }}
+        >
+          {joinAction}
         </div>
       )}
 
@@ -126,6 +239,77 @@ export default function DefaultFactionBody({
           </div>
         )}
       </section>
+
+      {/* ── The pinned action band ── phone only, and the LAST child of the
+          page's tall box so `position: sticky` has something to pin against
+          (#495, #1566). ── */}
+      {phone && joinAction && <MobileStickyBar>{joinAction}</MobileStickyBar>}
     </>
   );
 }
+
+/**
+ * The primary verb's pill, in the mounted faction's own accent pair (#1819).
+ *
+ * IT ARRIVED WITH A REAL DARK-MODE DEFECT, and the tier was how it hid. The
+ * phone skin this moved from (#1314) filled with `--color-text-primary` and
+ * inked with `--color-text-on-accent`, which reads as "near-black pill, white
+ * label" — true in LIGHT and only there. `--color-text-primary` flips to a warm
+ * cream (`#f0e6d0`) in dark while `--color-text-on-accent` is declared in
+ * `:root` alone and stays `#ffffff`, so the dark pill was white-on-cream at
+ * **1.24:1** — the label all but gone. That is #1169's shape exactly: a
+ * *neutral* is a statement about the page ground, never about legibility on a
+ * fill, and the pairing it makes is unmeasured by construction.
+ *
+ * The faction accent pair is the same two values in light and a designed pair in
+ * dark: `-card-accent` is `#1a1209` / `#f0e6d0` — byte-identical to the primary
+ * neutral in BOTH cascades, so nothing moves — and `-on-accent` is `#ffffff` /
+ * `#14110b`, i.e. 18.51:1 light (unchanged) and 15.19:1 dark (the fix). Both are
+ * gated by ACCENT_PAIRS in `factionContrast.test.ts`, in both themes, which the
+ * neutral pairing never could be.
+ *
+ * A function rather than a const because it now reads the mounted slug, the same
+ * way `accent` above does. Seven of the eight keys declare `-on-accent`;
+ * `ephemerists` deleted its in #1232 and never lands here, because it has a
+ * bespoke body of its own (ADR-0077) — as do the other six. Only `albescent`
+ * falls through today, and it resolves to `default`.
+ */
+function joinButtonStyle(slug: string): CSSProperties {
+  return {
+    width: "100%",
+    fontFamily: "var(--font-body)",
+    fontSize: "var(--text-xl)",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    color: factionCssVar(slug, "on-accent"),
+    background: factionCssVar(slug, "card-accent"),
+    border: "none",
+    borderRadius: 999,
+    padding: "var(--space-md) var(--space-lg)",
+    cursor: "pointer",
+  };
+}
+
+/**
+ * The quiet half of the pair. Uppercase, letter-spaced, `--text-md` — this is
+ * label register, not prose, so it reads the label SEAM rather than restating a
+ * global neutral (#1819). The swap spends no contrast in either cascade: on the
+ * page (and on the sticky bar, whose `--color-nav-bg` is the page at 0.9/0.92
+ * alpha over itself) `--color-text-secondary` read 7.78 light / 8.33 dark and
+ * `--label-ink` reads 7.83 / 8.94. What changes is hue — warm grey to the
+ * lavender the third tier is (#1549) — which is the "this is chrome, not
+ * content" signal a cancel beside a primary verb is asking for, and it now
+ * follows any frame that repoints the seam on its own root.
+ */
+const CANCEL_BUTTON_STYLE: CSSProperties = {
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--text-md)",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "var(--label-ink)",
+  background: "transparent",
+  border: "1px solid var(--color-border-strong)",
+  borderRadius: 999,
+  padding: "var(--space-md) var(--space-lg)",
+  cursor: "pointer",
+};

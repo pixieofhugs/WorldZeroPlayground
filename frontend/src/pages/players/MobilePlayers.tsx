@@ -12,6 +12,7 @@ import {
   PLAYERS_FILTERS_DEFAULT,
   PODIUM_SIZE,
   ROSTER_PAGE_STEP,
+  factionHref,
   factionStandings,
   rosterView,
   selectRoster,
@@ -128,9 +129,13 @@ export default function MobilePlayers({
                 }}
               >
                 <FactionSigil slug={lane.slug} size={18} />
-                <span className="font-display truncate" style={{ fontSize: 'var(--text-content)' }}>
-                  {factionName(lane.slug)}
-                </span>
+                {/* The lane's name opens its faction page (#1953). A race row is
+                    a plain div — it links to nothing else — so this is one
+                    anchor, not the nested-anchor case the roster has on
+                    desktop. `factionHref` still gates it: see its docblock for
+                    why a lane can never be `na` or a masked Albescent and why
+                    it is asked anyway. */}
+                <FactionLaneName slug={lane.slug} />
                 <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-content)' }}>
                   {Math.round(lane.points)}
                 </span>
@@ -242,6 +247,32 @@ export default function MobilePlayers({
   )
 }
 
+/**
+ * A race lane's name, linked to its faction page (#1953).
+ *
+ * `<a>` is blockified as a grid item, so `truncate` still clips exactly as the
+ * `<span>` it replaces did, and Tailwind's preflight (`color: inherit;
+ * text-decoration: inherit`) leaves it looking identical. Whether a linked
+ * faction name should grow a hover affordance of its own is a style question,
+ * deliberately not answered here.
+ */
+function FactionLaneName({ slug }: { slug: string }) {
+  const href = factionHref(slug)
+  const style = { fontSize: 'var(--text-content)' }
+  if (href === null) {
+    return (
+      <span className="font-display truncate" style={style}>
+        {factionName(slug)}
+      </span>
+    )
+  }
+  return (
+    <Link to={href} className="font-display truncate" style={style}>
+      {factionName(slug)}
+    </Link>
+  )
+}
+
 /** One podium row: rank ring, avatar, name / level / what they last did, points. */
 function PodiumRow({
   row,
@@ -277,6 +308,10 @@ function PodiumRow({
         textDecoration: 'none',
       }}
     >
+      {/* Ring, bloom and wash carry the faction; the numeral inherits
+          `--color-text-primary` from the row (#1932). This is the 18px/400
+          "1" the nightly measured at 4.46:1 in UA's sienna — 18px regular is
+          NOT WCAG large text, so 4.5:1 is the floor it owes. */}
       <span
         className="font-display flex items-center justify-center"
         style={{
@@ -286,7 +321,6 @@ function PodiumRow({
           border: `1px solid ${color}`,
           boxShadow: `0 0 0 4px color-mix(in oklab, ${color} 14%, transparent)`,
           fontSize: 'var(--text-content)',
-          color,
           flex: 'none',
         }}
       >
@@ -301,7 +335,9 @@ function PodiumRow({
           <span className="font-display truncate" style={{ fontSize: 'var(--text-content)', lineHeight: 1.05 }}>
             {character.display_name}
           </span>
-          <span className="label-heading" style={{ color }}>
+          {/* Label tier, so the ink is the `--label-ink` seam and not the
+              faction hue (#1932) — see DesktopPlayers' twin. */}
+          <span className="label-heading">
             {t('leaderboard.level', { level: character.level })}
           </span>
           {/* Content floor, not the design's 10px — a task title is prose that

@@ -62,7 +62,14 @@
       "cta": "Sign up",
       "ctaAgain": "Begin again",
       "slots": "You have {{open}} of {{max}} task slots open",
-      "levelMet": "Level {{level}} met"
+      "levelMet": "Level {{level}} met",
+      "denied": {
+        "belowLevel": "Must be level {{level}}",
+        "taskStatusClosed": "No longer open",
+        "alreadyActiveMember": "You're on this task",
+        "bankFull": "No task slots open",
+        "isMetatask": "Applied to praxis, not claimed"
+      }
     },
     "inProgress": {
       "text": "You're on this task",
@@ -70,7 +77,7 @@
       "drop": "drop"
     },
     "submitted": {
-      "text": "You've filed praxis for this task",
+      "text": "You've submitted praxis for this task",
       "view": "Read your praxis"
     },
     "brief": {
@@ -84,7 +91,7 @@
       },
       "viewAll": "View all {{count}} praxis →",
       "showFewer": "Show fewer ↑",
-      "empty": "No praxis filed yet. Be the first."
+      "empty": "No praxis submitted yet. Be the first."
     },
     "comments": {
       "heading": "Discussion"

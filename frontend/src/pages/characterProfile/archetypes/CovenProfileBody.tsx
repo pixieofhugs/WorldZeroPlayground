@@ -30,6 +30,7 @@
  * relationship every Coven detail page has with the site ground.
  */
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import {
@@ -45,9 +46,9 @@ import {
   READING,
   SHADOW,
   SOFT,
+  Spark,
 } from '../../../components/factionMarks/covenSlip'
-import { CovenSigil } from '../../../components/sigil/CovenSigil'
-import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
 const CHROME = 'var(--font-faction-rounded)' // Quicksand
 const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
@@ -63,7 +64,7 @@ const BAR = `linear-gradient(90deg, var(--faction-coven-slip-pk), ${DEEP})`
  * the field re-flows with the band at both widths — nothing here is a fixed-px
  * layout dimension.
  *
- * The mark is `CovenSigil` at --faction-coven-slip-gold, the token whose own
+ * The mark is `covenSlip`'s `Spark` at --faction-coven-slip-gold, the token whose own
  * declaration names "twinkles" as its job (§6: a faction's ornament is ONE
  * primitive at named strengths — this is that primitive, not a second drawing of
  * it). The design's #f6d76b is that token's dark value; light gets the warmer
@@ -89,7 +90,7 @@ function Sparkfield() {
           className="cvn-profile-spark"
           style={{ left: `${left}%`, top: `${top}%`, ['--cvn-spark-delay' as string]: `${delay}s` }}
         >
-          <CovenSigil size={size} color="var(--faction-coven-slip-gold)" />
+          <Spark size={size} color="var(--faction-coven-slip-gold)" />
         </span>
       ))}
     </div>
@@ -141,7 +142,7 @@ function heading(title: string, eyebrow: string): ReactNode {
   )
 }
 
-const kit: ProfileKit = {
+const dress: ProfileDress = {
   slug: 'coven',
   pageBackground: PAGE,
   ink: INK,
@@ -180,16 +181,9 @@ const kit: ProfileKit = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  ringLabel: 'lvl',
   barFill: BAR,
   barTrack: BORDER,
-  nextLevelLabel: (next) => `next · lvl ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `sealed by ${name}`,
-  praxisEmpty: {
-    title: 'No spells sealed yet',
-    body: 'The first bit of mischief is always the hardest ✦',
-  },
   emptyStateStyle: {
     border: `1.5px dashed ${BORDER}`,
     borderRadius: 14,
@@ -198,7 +192,6 @@ const kit: ProfileKit = {
     background: CARD,
   },
   laurel: <SpectrumLaurel centerBg={CARD} glyphColor={DEEP} rotate={-8} />,
-  badgeTitle: 'Charms earned',
   badgeBoardStyle: {
     border: `2px solid ${BORDER}`,
     borderRadius: 14,
@@ -242,5 +235,21 @@ const kit: ProfileKit = {
 }
 
 export default function CovenProfileBody(props: ProfileBodyProps) {
-  return <ProfileSkin props={props} kit={kit} />
+  const { t } = useTranslation('common')
+  return (
+    <ProfileSkin
+      props={props}
+      kit={{
+        ...dress,
+        ringLabel: t('profile.coven.ringLabel'),
+        nextLevelLabel: (next) => t('profile.coven.nextLevel', { level: next }),
+        praxisEyebrow: (name) => t('profile.coven.praxisEyebrow', { name }),
+        praxisEmpty: {
+          title: t('profile.coven.praxisEmptyTitle'),
+          body: t('profile.coven.praxisEmptyBody'),
+        },
+        badgeTitle: t('profile.coven.badgeTitle'),
+      }}
+    />
+  )
 }

@@ -142,7 +142,16 @@ export function rosterNames(
   return { names, overflow }
 }
 
-/** Slot: the praxis title, linked to the praxis detail page. */
+/**
+ * Slot: the praxis title, linked to the praxis detail page.
+ *
+ * An `<h2>`, and the one place that is decided for all nine archetypes — every
+ * skin composes this through `desktop/shared`'s `PraxisBody`. A card is a
+ * top-level item of whatever page mounts it and cannot see whether a section
+ * heading sits between it and the page `<h1>`, so it takes level 2 and never
+ * assumes one does (#1950). As an `<h3>` it skipped a level on `/praxis` in
+ * both form factors and in all eight task-detail praxis galleries.
+ */
 export function PraxisTitle({
   praxis,
   style,
@@ -154,7 +163,7 @@ export function PraxisTitle({
 }) {
   return (
     <Link to={`/praxis/${praxis.id}`}>
-      <h3
+      <h2
         className="content-title font-display font-semibold leading-tight hover:underline"
         style={{
           marginBottom: "var(--space-sm)",
@@ -163,7 +172,7 @@ export function PraxisTitle({
         }}
       >
         {praxis.title}
-      </h3>
+      </h2>
     </Link>
   );
 }
@@ -775,7 +784,11 @@ export function PraxisMediaGallery({
   const tiles = items.slice(0, 3);
   const overflow = items.length - tiles.length;
   return (
-    <div className="flex" style={{ gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
+    // `.user-media` marks the region that is the PLAYER's, not the site's, so a
+    // faction flourish can be told to stop at it (#1646). Inert everywhere but
+    // Albescent, and deliberately absent from the empty slot above — a dashed
+    // drop-target is chrome, and the drift keeps washing it.
+    <div className="flex user-media" style={{ gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
       {tiles.map((item, index) => {
         const showOverflow = index === tiles.length - 1 && overflow > 0;
         return (

@@ -1488,12 +1488,33 @@ const ARCHETYPE_PAIRS: Pair[] = [
  * `-on-night` ink against `--sky-bg`, the Constellation's own night canvas.
  *
  * #1855 retires the Constellation, and with it both the canvas and the tier —
- * the Players page draws on the ordinary page ground, where the ordinary
- * faction hue is the theme-correct ink and `FILL_PAIRS` / `ACCENT_PAIRS`
- * already gate it. The rows are not relaxed; they have no surface left to
- * measure on. Anything that paints a permanently dark ground again needs its
- * own measured ink and its own rows here — #1792's reasoning is why, and it is
- * kept in git rather than as a comment about a token nobody declares.
+ * the Players page draws on the ordinary page ground. The rows are not relaxed;
+ * they have no surface left to measure on. Anything that paints a permanently
+ * dark ground again needs its own measured ink and its own rows here — #1792's
+ * reasoning is why, and it is kept in git rather than as a comment about a token
+ * nobody declares.
+ *
+ * THE SENTENCE THAT USED TO FOLLOW WAS WRONG, AND IT IS WHY #1932 SHIPPED.
+ * It read: "where the ordinary faction hue is the theme-correct ink and
+ * `FILL_PAIRS` / `ACCENT_PAIRS` already gate it." Both halves fail.
+ *
+ * THEME-CORRECT IS NOT LEGIBLE. `--faction-{key}` flipping with the cascade was
+ * the whole of #1792's bug, so a hue that flips reads as the fix — and it is,
+ * for the flip. It says nothing about the ratio. Light `--faction-wow` is
+ * 1.96:1 on `--color-bg-page` and 2.09:1 on the frost the signed-in player's own
+ * roster row wears; dark's is 11.47 / 10.47. Every one of the nightly's fourteen
+ * failures was LIGHT, which is the tell: a bug that sorts cleanly by cascade is
+ * one bug, and this one is "the light hue is a fill".
+ *
+ * AND NEITHER BLOCK GATES THAT PAIRING. `FILL_PAIRS` measures
+ * `--faction-{key}-on-fill` ON the hue — the hue is the GROUND there, which is
+ * the same arithmetic seen from the other side and is exactly why
+ * `--faction-wow-on-fill`'s declaration already carries the words "white only
+ * 2.15:1". `ACCENT_PAIRS` measures a named accent against a named sheet. The
+ * bare spine hue as INK on the app's own neutral stock is a pairing neither one
+ * can name, and no row is added here for it: the honest assertion is not a ratio
+ * but that nothing paints it, which is
+ * `pages/players/__tests__/playersFactionInk.test.tsx`.
  */
 
 const PAIRS: Pair[] = [

@@ -11,6 +11,16 @@ import { factionCssVar, isKnownFaction } from "../../utils/factions";
  * gem lands on instead of a saturated faction fill, which keeps it legible on
  * every card archetype without per-faction contrast tuning.
  *
+ * AND THE NUMERAL THEREFORE TAKES THE SURFACE'S OWN INK, NOT THE HUE (#1932).
+ * The paragraph above was the intent from #728 and the code did the opposite:
+ * `--gem-ink` was the faction hue, i.e. exactly the per-faction contrast tuning
+ * the outline exists to make unnecessary, and on the Players page's near-white
+ * that is 1.96:1 for WOW on the page and 2.09:1 on the frost — worse than the
+ * filled gem the outline replaced. `currentColor` is what the docstring already
+ * promised: the numeral reads whatever ink its mount sets, so a future mount
+ * inside a faction card frame is correct without this file learning about it.
+ * The stroke and the glow keep the hue; the gem is still faction-coded.
+ *
  * An unaffiliated / unknown slug gets the rainbow stroke and numeral (ADR-0039,
  * #636) — the outline frames the spectrum. It never falls back to grey, and it
  * must not fall through to factionCssVar's silent `ua` default, hence the
@@ -41,7 +51,7 @@ export default function LevelGem({
     "--gem-stroke": known
       ? factionCssVar(factionSlug)
       : "var(--faction-default-rainbow)",
-    "--gem-ink": known ? factionCssVar(factionSlug) : "transparent",
+    "--gem-ink": known ? "currentColor" : "transparent",
     "--gem-glow": known ? factionCssVar(factionSlug) : "var(--glow-neutral)",
   } as CSSProperties;
 

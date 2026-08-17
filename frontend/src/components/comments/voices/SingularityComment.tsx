@@ -197,7 +197,11 @@ export default function SingularityComment(props: CommentProps) {
         <div aria-busy={submitting}>
           <div style={{ ...LABEL, color: BLUE, marginBottom: 'var(--space-sm)' }}>
             <span aria-hidden="true">{'> '}</span>
-            {t('comments.singularity.protocol')}
+            {/* The prompt read "singularity function"
+                (`comments.singularity.protocol`). #1909 cut it: Singularity was
+                the only faction with the slot, and the audit ruled the comment
+                masthead generic. The `> ` and the caret are the prompt's
+                punctuation and stay. */}
             {/* `.sg-cursor` owns the blink AND its reduced-motion guard (#1003:
                 keyframes never live in a component). The caret is punctuation on
                 the prompt, so it stays drawn when the blink is stilled. */}

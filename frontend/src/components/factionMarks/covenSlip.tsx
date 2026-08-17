@@ -103,6 +103,34 @@ export function Braid({ style }: { style?: CSSProperties }) {
   return <span aria-hidden className="cvn-braid" style={{ minWidth: 20, ...style }} />;
 }
 
+/**
+ * The four-point twinkle — the coven's ORNAMENT glyph, not its badge.
+ *
+ * It lived in `components/sigil/CovenSigil.tsx` until Sigil Studies v2 gave the
+ * faction's sigil the witch hat. The drawing is unchanged to the byte; only its
+ * address moved, and it moved HERE because every one of its nine mounts is a
+ * swept-surface ornament rather than a mark of identity — a bullet before button
+ * text, the glyph beside a stat numeral, eight at a time drifting across the
+ * profile band's scatter field — which is exactly the set this module was
+ * created to hold once (#1209).
+ *
+ * `color` keeps `--faction-coven` as its default so a mount that passes nothing
+ * is byte-identical; in practice all nine pass `GOLD` or `CTA_INK`.
+ */
+export function Spark({
+  size = 22,
+  color = "var(--faction-coven)",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>
+      <path d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z" fill={color} />
+    </svg>
+  );
+}
+
 /** The coven's pentagram badge — dashed gold ring, pink field, lit centre. */
 export function SigilMark({ size }: { size: number }) {
   return (
