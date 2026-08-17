@@ -259,9 +259,13 @@ export default function EphemeristsFeedFrame({
             {time}
           </span>
           {/* The dismiss control, tinted by the band's own `color` — it paints in
-              `currentColor` and arrives finished (dormant until hover OR focus,
-              labelled, keyboard reachable, and `null` on a card that cannot be
-              archived, which is `awaiting_submission`). Placed, never rebuilt. */}
+              `currentColor` and arrives finished (boxed, labelled, keyboard
+              reachable, and `null` on a card that cannot be archived, which is
+              `awaiting_submission`). Placed, never rebuilt. BAND_INK is what it
+              spends, at full strength since #2091 — 14.00:1 here in both themes,
+              and this band is also the reason that control's target is 24px and
+              not 44: the masthead's `height` is fixed and clipped, so nothing
+              taller than it can be hit. */}
           {archive}
         </div>
       </div>
