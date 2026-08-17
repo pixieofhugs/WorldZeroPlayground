@@ -700,6 +700,12 @@ Two separate rules meet at the bottom 3.5rem of a phone viewport, and the filter
 
 The corollary at the sheet: **a `max-height` measured from `bottom: 0` is not the height it claims.** `70vh` was spending its last 3.5rem on chrome, so it grows by the clearance to go back to meaning 70vh of *usable* panel. And a panel with a pinned action gives the scroll to the **list**, not to itself — the label row and the Done button stay put, a long facet can never push the action below the fold, and the bottom padding stays out of a scrollport, where browsers have a long history of dropping it on a flex column.
 
+### A card that owns its width needs a column that CENTRES, not one that stretches (#1964)
+
+§10's "do not regularize card sizes" and a `flex-col` disagree, and on the phone the column wins by default. Every faction task card sets its own `width` (`size.cardWidth` — 340 on the phone, 384 on the desktop) with `maxWidth: 100%` under it, so it is narrower than a single-column results list. `align-items` defaults to `stretch`, which makes the card's wrapper full-bleed; the card then draws at its own width *inside* that wrapper and lands flush against the left edge. The report reads as "the cards are narrower than the filter bar", and the tempting fix — widen the card, or make it fluid — is the one the style guide forbids. **`align-items: center` is the compatible fix: the card keeps the width it chose and the column stops pretending it chose 100%.**
+
+Which columns take it is decided by whether the CHILD carries a width. A praxis card does not — it fills whatever it is given, so the praxis lists stay stretched, and a metatask seal is the same, which is why the mobile browse applies the class conditionally rather than to the whole results column. The three lists that stack a fixed-width `<TaskCard>` (mobile browse, and the mobile Default and WOW profile task tabs) centre. **A flex-WRAP container is a separate question and is deliberately left alone**: the faction bodies and the desktop board wrap left-flush on purpose, and centring them would recentre a partial last row on the desktop, which is the "intentional chaos" this section is protecting.
+
 ---
 
 ## 6. Faction Card Archetypes
