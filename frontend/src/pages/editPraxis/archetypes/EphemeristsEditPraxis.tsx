@@ -161,6 +161,7 @@ import {
   Sign,
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
+import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -803,35 +804,50 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             </>
           }
           end={
-            <PublishButton
-              state={state}
-              skin={{
-                idleLabel: t("editPraxis.composer.submit"),
-                busyLabel: t("editPraxis.composer.submitBusy"),
-                trailingOrnament: (
-                  <Sign
-                    name="openEye"
-                    size={SUBMIT_SIGN}
-                    color={CTA_INK}
-                    weight={1.4}
-                  />
-                ),
-                style: {
-                  ...composerBandStyle(sizes, {
-                    /* Design band: 12 / 500 / 0.24em — the engraved label
-                       metrics exactly, which is the one skin whose band and
-                       label agree, and 12 is the --text-lg rung. */
-                    fontFamily: CAPS,
-                    fontWeight: 500,
-                    letterSpacing: "0.24em",
-                    frame: LINE,
-                    color: CTA_INK,
-                    background: CTA,
-                  }),
-                  cursor: state.submitting ? "wait" : "pointer",
-                },
-              }}
-            />
+            <>
+              {/* The rune strip ahead of the cast (#2067) — the same component
+                  the task card and the task page mount, so the motif is one
+                  drawing on all three surfaces that paint a plate CTA.
+
+                  ONLY THE LEADING STRIP, and that is a reported gap rather than
+                  a choice. #1828 makes this skin's cast a FULL-BLEED BAND that
+                  closes the sheet: `composerBandStyle` gives it
+                  `margin-bottom: calc(-1 * padBottom)`, so a trailing sibling is
+                  pulled back up over the brass instead of sitting under it.
+                  There is no room below the band inside the sheet, and taking it
+                  would mean undoing #1828 — which this issue puts out of scope.
+                  The card and the task page carry both strips. */}
+              <EphemeristsRuneStrip side="top" />
+              <PublishButton
+                state={state}
+                skin={{
+                  idleLabel: t("editPraxis.composer.submit"),
+                  busyLabel: t("editPraxis.composer.submitBusy"),
+                  trailingOrnament: (
+                    <Sign
+                      name="openEye"
+                      size={SUBMIT_SIGN}
+                      color={CTA_INK}
+                      weight={1.4}
+                    />
+                  ),
+                  style: {
+                    ...composerBandStyle(sizes, {
+                      /* Design band: 12 / 500 / 0.24em — the engraved label
+                         metrics exactly, which is the one skin whose band and
+                         label agree, and 12 is the --text-lg rung. */
+                      fontFamily: CAPS,
+                      fontWeight: 500,
+                      letterSpacing: "0.24em",
+                      frame: LINE,
+                      color: CTA_INK,
+                      background: CTA,
+                    }),
+                    cursor: state.submitting ? "wait" : "pointer",
+                  },
+                }}
+              />
+            </>
           }
         />
       </ComposerSheet>
