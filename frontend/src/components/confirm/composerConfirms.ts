@@ -154,12 +154,54 @@ export function kickMemberConfirm(
 }
 
 /**
- * Take your own cast back out of a collab so you can edit it (#1080).
+ * Propose publishing (ADR-0079, #1811) — the consequential one of the three.
  *
- * Only ever asked on a collab: pulling back is scoped to you, but the edit it
- * exists for cancels the pending-publish window and clears every member's cast
- * (`cancel_pending_publish_on_edit`, ADR-0012). A duel side's pull-back is free
- * before the duel settles (ADR-0011 §Forfeit) and asks nothing.
+ * Done asks nothing (it is reversible and gates nothing) and Approve asks
+ * nothing (it is a vote on a proposal already in front of the player). This one
+ * asks, because it starts a clock on everybody else: silence is consent, so a
+ * crew that simply stops reading publishes.
+ */
+export function proposePublishConfirm(factionSlug: Slug): ConfirmRequest {
+  return {
+    kind: 'proposePublish',
+    title: collabCopy(factionSlug, 'proposeTitle'),
+    body: collabCopy(factionSlug, 'proposeConfirm'),
+    confirmLabel: collabCopy(factionSlug, 'proposeAction'),
+    danger: false,
+  }
+}
+
+/**
+ * The first keystroke after a proposal goes live (ADR-0079, #1811).
+ *
+ * Not a permission check and not a lock — the room takes the edit either way,
+ * and the server cancels the proposal off the document's own movement. This is
+ * the deliberateness ADR-0073 wanted when it chose a freeze instead: the freeze
+ * cost the holdout their only move, and one dialog buys the same thing.
+ *
+ * `danger` is false on purpose. Nothing is destroyed: the countdown stops and
+ * the approvals clear, both of which any member can re-do in one press. Red
+ * here would be crying wolf on the exact affordance the redesign exists to make
+ * usable.
+ */
+export function editCancelsProposalConfirm(factionSlug: Slug): ConfirmRequest {
+  return {
+    kind: 'editCancelsProposal',
+    title: collabCopy(factionSlug, 'editCancelsTitle'),
+    body: collabCopy(factionSlug, 'editCancelsConfirm'),
+    confirmLabel: collabCopy(factionSlug, 'editCancelsAction'),
+    danger: false,
+  }
+}
+
+/**
+ * The waiting surface's way back into the text (#1080, ADR-0059 → ADR-0079).
+ *
+ * Only ever asked on a collab, and it now names a GROUP consequence rather than
+ * a personal one: since ADR-0079 there is no per-member submission to take back,
+ * so this cancels the live proposal — countdown stopped, every approval cleared,
+ * back to drafting. A duel side's pull-back is free before the duel settles
+ * (ADR-0011 §Forfeit) and asks nothing.
  */
 export function reopenForEditConfirm(factionSlug: Slug): ConfirmRequest {
   return {

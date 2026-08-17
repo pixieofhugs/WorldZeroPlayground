@@ -31,6 +31,7 @@ import {
   deletePraxis,
   getPraxis,
   leavePraxis,
+  setPraxisDone,
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
@@ -45,14 +46,16 @@ import {
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore } from "./praxisRoom";
-import { applyRoomSeal, documentIsFrozen } from "./roomSeal";
+import { editNeedsProposalConfirm } from "./proposalGuard";
 import {
   deleteCollabConfirm,
   dropDuelSideConfirm,
   dropTaskConfirm,
   duelDropsCoauthorsConfirm,
+  editCancelsProposalConfirm,
   leaveCollabConfirm,
   modeSwitchConfirm,
+  proposePublishConfirm,
   reopenForEditConfirm,
 } from "../../components/confirm/composerConfirms";
 import { useComposerConfirm } from "./useComposerConfirm";
@@ -119,12 +122,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
-  // This client's room was hung up because the praxis froze (#1931). Held here
-  // rather than read off the praxis because it is the NEWER fact — the row in
-  // hand still says `in_progress`, and every keystroke taken between the
-  // hang-up and the refetch below would be dropped by the server in silence.
-  // See `roomSeal.ts` for both halves of the rule.
-  const [sawSealClose, setSawSealClose] = useState(false);
+  // The proposal this member has already agreed to cancel by typing (#1811) —
+  // its `submit_proposed_at`, not a boolean, so "once per proposal" survives a
+  // withdraw-and-repropose with no reset to remember. See `proposalGuard.ts`.
+  const [agreedProposalAt, setAgreedProposalAt] = useState<string | null>(null);
   const [task, setTask] = useState<TaskOut | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -411,12 +412,17 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     navigate(characterId != null ? `/characters/${characterId}` : "/tasks");
   }, [idParam, navigate, user?.character?.id]);
 
-  // Pull my own part back out of a pending collab (#591) — clears my cast so the
-  // composer unlocks for editing. Backend re-opens only my membership (#590).
-  // Also the duel side's neutral reopen (#1077): same endpoint, and for a duel
-  // still at `active` it takes the praxis back to `in_progress` without touching
-  // `forfeited_by_character_id` — forfeit begins only at `settled` (ADR-0011
-  // §Forfeit). No confirm: the consequence-free case earns none.
+  // **Withdraw proposal** on a pending collab, and the duel side's neutral
+  // reopen (#1077) — one endpoint, two doors, told apart server-side by status
+  // (ADR-0079). On a collab it is now a GROUP act: the countdown stops, every
+  // approval clears, the praxis is back to drafting. Per-member pull-back is
+  // gone because per-member submission is.
+  //
+  // No confirm here. The composer's Withdraw button is pressed by somebody
+  // already reading the proposal it cancels, and the duel case is
+  // consequence-free — forfeit begins only at `settled` (ADR-0011 §Forfeit).
+  // The one caller that DOES ask is `reopenForEdit` below, whose player is
+  // looking at a countdown rather than at the button that started it.
   const pullBack = useCallback(async () => {
     if (!idParam) return;
     setSubmitting(true);
@@ -426,19 +432,72 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       await unsubmitPraxis(praxisId);
       await refetch();
       // `refetch` only refreshes auth — without reloading the praxis the roster
-      // would keep showing my part as cast right after I pulled it back.
+      // would keep showing approvals this call just cleared.
       setPraxis(await getPraxis(praxisId));
-      // The one transition that makes a sealed room writable again from this
-      // tab, so it is the one place the seal latch is released (#1931).
-      // Ordered after the read on purpose: clearing it first would unfreeze the
-      // editor for the length of a round trip, against a praxis still sealed.
-      setSawSealClose(false);
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
     } finally {
       setSubmitting(false);
     }
   }, [idParam, refetch]);
+
+  // **Done** — "my part is finished" (ADR-0079). Social only: no window opens,
+  // no status moves, nothing is gated. It sends the VALUE rather than toggling,
+  // because the server owns the flag and a client guessing from local state is
+  // one dropped response away from disagreeing with it.
+  //
+  // No `refetch()`: Done banks no points and delivers no invitation letter, so
+  // there is nothing on the auth payload for it to move. The praxis it swaps in
+  // is the route's own answer, which carries the whole refreshed roster.
+  const markDone = useCallback(
+    async (isDone: boolean) => {
+      if (!idParam) return;
+      setSubmitting(true);
+      setError("");
+      try {
+        setPraxis(await setPraxisDone(parseInt(idParam, 10), isDone));
+      } catch (err) {
+        setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [idParam],
+  );
+
+  // **Propose** — "I think we're ready to publish" (ADR-0079). The same request
+  // Approve makes; what makes it a proposal is that no window is open yet, and
+  // what makes it worth a dialog is that it starts a clock on everybody else.
+  // Silence is consent, so a crew that simply stops reading publishes.
+  const propose = useCallback(async () => {
+    if (!praxis) return;
+    if (!(await askConfirm(proposePublishConfirm(praxis.task_faction_slug))))
+      return;
+    await publish();
+  }, [praxis, askConfirm, publish]);
+
+  // The first keystroke after a proposal goes live (ADR-0079, owner-specified).
+  //
+  // Fire-and-forget, and deliberately NOT async: the caller is a CodeMirror
+  // transaction filter, which is synchronous and has already dropped the edit
+  // by the time this runs. Declining therefore costs the player that one
+  // keystroke and nothing else — the editor stays editable and focused, so the
+  // next one asks again and nothing is left half-applied.
+  //
+  // `askConfirm` declines any confirm already open, so the guard against a
+  // second ask is the latch below rather than a busy flag: agreeing pins THIS
+  // proposal's `submit_proposed_at`, which disarms the filter for as long as
+  // that proposal lives and re-arms for the next one.
+  const proposalConfirmArmed = editNeedsProposalConfirm(praxis, agreedProposalAt);
+  const confirmProposalEdit = useCallback(() => {
+    if (!praxis) return;
+    const proposedAt = praxis.submit_proposed_at;
+    void askConfirm(editCancelsProposalConfirm(praxis.task_faction_slug)).then(
+      (accepted) => {
+        if (accepted) setAgreedProposalAt(proposedAt);
+      },
+    );
+  }, [praxis, askConfirm]);
 
   // The waiting surface's "edit my write-up" (ADR-0059). Re-entry is NOT a PUT:
   // on a collab any praxis PUT hard-resets every member's `has_submitted`
@@ -640,26 +699,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
-  // The room hung up with `WS_ROOM_FROZEN` (#1931). `EditPraxis.tsx` hands this
-  // to the provider as `onSealed`; nothing else calls it, and it is idempotent
-  // because the provider may fire it more than once.
-  //
-  // The freeze goes on HERE, off the close code, not off the answer below —
-  // the round trip is exactly the window in which the member's typing is being
-  // dropped, and a read that fails or never returns must not hand the editor
-  // back. The refetch catches the rest of the composer up.
-  const noteRoomSealed = useCallback(() => {
-    setSawSealClose(true);
-    if (!idParam) return;
-    void applyRoomSeal(parseInt(idParam, 10), getPraxis, setPraxis);
-  }, [idParam]);
-
   // ---- Derived ----
-  // The freeze (#1745), stated as the server states it, plus the close code
-  // that says so before the status can (#1931) — see `roomSeal.ts`. Drafting is
-  // the only status in which the room accepts a change, so it is the only
-  // status in which the editor may accept a keystroke.
-  const documentFrozen = documentIsFrozen(praxis, sawSealClose);
   const isPublished = praxis?.status === "submitted";
 
   // A published praxis has no room document any more — the server destroyed it
@@ -794,6 +834,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
     submitting,
     publish,
+    markDone,
+    propose,
     saveDraft,
     pullBack,
     reopenForEdit,
@@ -814,9 +856,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setAutosaveAt,
 
     autoSubmitDays,
-    documentFrozen,
-    sealedMidEdit: sawSealClose,
-    noteRoomSealed,
+    proposalConfirmArmed,
+    confirmProposalEdit,
     isPublished: !!isPublished,
     controlsLocked,
     modeIsLocked,

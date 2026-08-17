@@ -62,7 +62,7 @@ import {
   publishPresence,
   samePresence,
 } from "./roomPresence";
-import { isRoomSealedClose, shouldReconnectRoom } from "./roomReconnect";
+import { shouldReconnectRoom } from "./roomReconnect";
 
 /**
  * The body's root key — `ROOM_BODY_KEY` in `praxis_room.py`. The server seeds a
@@ -199,7 +199,6 @@ export function usePraxisRoom(): PraxisRoom | null {
 export function PraxisRoomProvider({
   praxisId,
   onUpdate,
-  onSealed,
   children,
 }: {
   praxisId: number | null;
@@ -214,22 +213,10 @@ export function PraxisRoomProvider({
    * `EditPraxisState`, and `useEditPraxis` runs outside this provider.
    */
   onUpdate?: (at: Date) => void;
-  /**
-   * The room hung up because the praxis **froze** (#1931).
-   *
-   * The server closes every socket on the open→frozen transition with
-   * `WS_ROOM_FROZEN`, and this is the only moment a client can learn of it: the
-   * socket reconnects immediately (a sealed room still serves reads), so
-   * nothing else about the room ever looks different afterwards. Without this,
-   * the member goes on typing into a document the server is dropping every
-   * update from.
-   *
-   * Passed in beside `onUpdate` for the same reason: `useEditPraxis` holds the
-   * praxis and runs OUTSIDE this provider, so the signal has to travel down the
-   * props rather than up the context. May fire more than once — a re-close
-   * before the page re-renders — so the handler must be idempotent.
-   */
-  onSealed?: () => void;
+  /* #1931's `onSealed` is gone with the freeze it announced (ADR-0079, #1811).
+   * The server no longer hangs a socket up on a status transition — the room
+   * takes writes in every status a member can reach — so there is no close
+   * code left for a client to interpret. */
   children: ReactNode;
 }) {
   // The room's long-lived handles, kept apart from `seeded` and `present` so
@@ -256,8 +243,6 @@ export function PraxisRoomProvider({
   // socket down and rebuild it on every render.
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
-  const onSealedRef = useRef(onSealed);
-  onSealedRef.current = onSealed;
 
   useEffect(() => {
     if (praxisId == null) {
@@ -314,20 +299,6 @@ export function PraxisRoomProvider({
     // already stopped. Nothing else will happen in this room now, so say so.
     const onClosed = () => setUnreachable(true);
     provider.on("closed", onClosed);
-    // The praxis froze under us (#1931). `connection-close` carries the close
-    // event for EVERY close, terminal or not — `closed` fires only for the
-    // terminal ones, and a seal is deliberately not terminal (the socket comes
-    // straight back so the sealed write-up can still be read). `event` is null
-    // when WE closed the socket, which is a teardown and not a signal.
-    //
-    // This is the one and only moment the client can learn the document is
-    // sealed. Nothing else about the reconnected room looks any different, and
-    // `unreachable` cannot stand in — `controls.tsx` draws that only while
-    // `!seeded`, and a room that reconnects is seeded.
-    const onConnectionClose = (event: CloseEvent | null) => {
-      if (event && isRoomSealedClose(event.code)) onSealedRef.current?.();
-    };
-    provider.on("connection-close", onConnectionClose);
     const awareness = provider.awareness;
     setTypes({ body, meta, awareness });
 
@@ -370,7 +341,6 @@ export function PraxisRoomProvider({
       provider.off("sync", onSync);
       provider.off("status", onStatus);
       provider.off("closed", onClosed);
-      provider.off("connection-close", onConnectionClose);
       awareness.off("change", syncPresence);
       offline.off("synced", onOfflineLoaded);
       // Also drops this client's awareness state — the socket closing is what

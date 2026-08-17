@@ -146,7 +146,29 @@ export interface EditPraxisState {
 
   // Save / publish / drop
   submitting: boolean;
+  /**
+   * **Approve**, and every other mode's seal — `POST /praxes/{id}/submit`.
+   *
+   * On a multi-member collab the server tells Propose and Approve apart by the
+   * praxis's own state (ADR-0079): no window open means this opened one, a
+   * window already open means this was a vote on it. The composer still asks
+   * before the first of those, which is {@link propose}; this is the raw call
+   * every other affordance shares.
+   */
   publish: () => Promise<void>;
+  /**
+   * **Done** (ADR-0079) — "my part is finished". Purely social: a roster badge,
+   * freely reversible, gating nothing and starting nothing. Takes the value, so
+   * the toggle can never guess wrong about which way it is going.
+   */
+  markDone: (isDone: boolean) => Promise<void>;
+  /**
+   * **Propose** (ADR-0079) — "I think we're ready to publish".
+   *
+   * {@link publish} behind a confirm. The only one of the three signals that
+   * asks: it starts a countdown on everybody else, and silence is consent.
+   */
+  propose: () => Promise<void>;
   /**
    * The composer's third exit (#1081): keep the draft and leave.
    *
@@ -158,16 +180,22 @@ export interface EditPraxisState {
    * that can fail, and nothing to refuse leaving over.
    */
   saveDraft: () => Promise<void>;
-  /** Pull my own cast back on a pending collab (#591). */
+  /**
+   * **Withdraw proposal** on a pending collab, and a duel side's neutral reopen
+   * (#591, #1077, ADR-0079). One endpoint, told apart server-side by status.
+   *
+   * A GROUP act on a collab now: the countdown stops, every approval clears and
+   * the praxis returns to drafting — the same cancellation a keystroke performs,
+   * for a member who has read the draft and has no edit to make yet.
+   */
   pullBack: () => Promise<void>;
   /**
-   * The waiting surface's authoring re-entry (ADR-0059) — "edit my write-up".
+   * The waiting surface's authoring re-entry (ADR-0059) — "edit the write-up".
    *
-   * Routes through `pullBack`, never a PUT: on a collab any praxis PUT hard-
-   * resets every member's `has_submitted` (ADR-0012), whereas unsubmit re-opens
-   * only the caller's membership (#590). On a collab it asks first, because the
-   * edit this exists for *will* cancel the pending-publish window the surface
-   * was showing a countdown for.
+   * Routes through `pullBack` rather than opening the editor optimistically,
+   * because on a collab that is the cancellation: the countdown the surface was
+   * drawing stops and every approval clears. It asks first for exactly that
+   * reason; a duel side, whose reopen costs nothing, does not.
    */
   reopenForEdit: () => Promise<void>;
   /**
@@ -240,41 +268,29 @@ export interface EditPraxisState {
    */
   autoSubmitDays: number | null;
 
+  /**
+   * A proposal is live and this member has not yet agreed to cancel it by
+   * typing (ADR-0079, #1811).
+   *
+   * The body editor's transaction filter reads this and drops the member's own
+   * edits while it is true, calling {@link confirmProposalEdit} instead. It is
+   * NOT a freeze — #1745's is retired, the room takes every frame, and remote
+   * updates from co-authors apply untouched. It is one dialog standing where a
+   * lock used to, so the cancellation is deliberate rather than an accident.
+   *
+   * False for solo and duel, which have one member and never open a window.
+   * The rule itself is one predicate in `proposalGuard.ts`, where the DOM-less
+   * harness can call it.
+   */
+  proposalConfirmArmed: boolean;
+  /**
+   * Ask, once per proposal. Synchronous and fire-and-forget: its caller is a
+   * CodeMirror filter that has already dropped the keystroke, so declining
+   * costs that keystroke and leaves nothing half-applied.
+   */
+  confirmProposalEdit: () => void;
+
   // Derived locked-state flags
-  /**
-   * The shared document is **frozen** (#1745): sealed for every member, the one
-   * who submitted included. Freeze, not lock — a lock is something one member
-   * holds against the others.
-   *
-   * Deliberately the same predicate the server enforces, `status !==
-   * 'in_progress'`, and not a rewording of it: the server drops the room
-   * messages that would change a frozen document, so a client that disagreed
-   * here would let a member type into an editor whose keystrokes go nowhere.
-   * Read-only is the honest half of a rule that is kept elsewhere.
-   *
-   * Distinct from `controlsLocked`, which is about a *moderated* praxis and
-   * covers the whole composer. A frozen document is a live collab mid-consensus,
-   * everything else about it still working.
-   */
-  documentFrozen: boolean;
-  /**
-   * This member's room was sealed **under them**, mid-session (#1931) — the
-   * server hung their socket up with `WS_ROOM_FROZEN` rather than their having
-   * loaded a praxis that was already frozen.
-   *
-   * The one thing that distinguishes the two cases client-side, and the only
-   * reason to distinguish them: whatever they typed after that close never
-   * reached the server and **cannot be recovered**, so the frozen notice owes
-   * them a different sentence. See `roomSeal.ts` for why nothing tries to save
-   * it.
-   */
-  sealedMidEdit: boolean;
-  /**
-   * Called by `EditPraxis.tsx` as the room provider's `onSealed`; nothing else
-   * calls it. Freezes the document off the close code and refetches the praxis.
-   * Idempotent — the provider may fire it more than once.
-   */
-  noteRoomSealed: () => void;
   isPublished: boolean;
   /**
    * The composer is read-only. Since #1164 this means **"hand off"** rather than

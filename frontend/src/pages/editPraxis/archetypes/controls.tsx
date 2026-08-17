@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Compartment } from "@codemirror/state";
+import { Compartment, EditorState, Prec, Transaction } from "@codemirror/state";
 import { EditorView, keymap, placeholder as cmPlaceholder } from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
@@ -19,6 +19,7 @@ import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import { usePraxisRoom, ROOM_TITLE_KEY } from "../praxisRoom";
 import { composerWritable } from "../roomSeal";
+import { proposalIsLive } from "../proposalGuard";
 import { paintedAwareness } from "../roomPresence";
 import {
   BODY_EDITOR_BASE_THEME,
@@ -910,14 +911,25 @@ export function BodyTextarea({
   // Stable across the editor's life; reconfigured rather than remounted.
   const editableSlot = useRef(new Compartment()).current;
   // Two separate reasons the editor may refuse a keystroke, and they are not the
-  // same thing. `seeded` is "not yet" — the document has not arrived. Frozen is
-  // "not now" — it has arrived and is sealed for the whole group until somebody
-  // reopens it (#1745). The server drops the update messages either way; this
-  // only stops the member typing into a void. The rule itself is one line in
-  // `roomSeal.ts`, where the harness can call it (#1931).
-  const writable = composerWritable(seeded, state.documentFrozen);
+  // same thing. `seeded` is "not yet" — the document has not arrived. Locked is
+  // "not here" — the praxis is moderated, which since #1164 is the only state
+  // that still renders a composer read-only. #1745's freeze was a third, and it
+  // is gone (ADR-0079): the room takes writes in every status a member can
+  // reach. The rule is one line in `roomSeal.ts`, where the harness can call it.
+  const writable = composerWritable(seeded, state.controlsLocked);
   const setBodyRef = useRef(state.setBody);
   setBodyRef.current = state.setBody;
+  // The live proposal's guard (#1811, ADR-0079), read through a ref so the
+  // editor is reconfigured by nothing and rebuilt by nothing when it flips.
+  // The filter below runs at dispatch time and reads it then.
+  const proposalGuardRef = useRef({
+    armed: state.proposalConfirmArmed,
+    ask: state.confirmProposalEdit,
+  });
+  proposalGuardRef.current = {
+    armed: state.proposalConfirmArmed,
+    ask: state.confirmProposalEdit,
+  };
 
   const contentAttributes = useMemo(
     () => bodyContentAttributes(skin),
@@ -941,6 +953,47 @@ export function BodyTextarea({
         cmPlaceholder(skin.placeholder ?? ""),
         BODY_EDITOR_BASE_THEME,
         editableSlot.of(EditorView.editable.of(writable)),
+        // The first keystroke after a proposal goes live asks once (ADR-0079).
+        //
+        // A transaction filter and not the `editable` compartment, though that
+        // is the seam the issue named: `EditorView.editable.of(false)` renders
+        // `contenteditable="false"` and leaves the content div unfocusable, so
+        // the keystroke that is supposed to raise the question never reaches
+        // any handler and the player is silently blocked — the exact failure
+        // ADR-0079 removed the freeze to end. Dropping the transaction instead
+        // keeps the editor editable and focused: the edit does not land, no
+        // half-state is left behind, and the very next keystroke asks again.
+        //
+        // `userEvent` is what separates this member's edit from a co-author's.
+        // `y-codemirror.next` applies remote updates with `view.dispatch({
+        // changes, annotations: [ySyncAnnotation…] })` and no user event, so a
+        // filter that dropped those would desync the CRDT. Every local path
+        // carries one — typing (`input.type`), paste, drop, delete, and the
+        // markdown toolbar, which states its own below.
+        EditorState.transactionFilter.of((tr) => {
+          if (!tr.docChanged) return tr;
+          if (tr.annotation(Transaction.userEvent) === undefined) return tr;
+          if (!proposalGuardRef.current.armed) return tr;
+          proposalGuardRef.current.ask();
+          return [];
+        }),
+        // Undo reaches the document through Yjs rather than through a
+        // transaction of its own, so it arrives at the filter above wearing no
+        // user event. Caught here instead, at higher precedence than
+        // `yUndoManagerKeymap` below — returning false when disarmed falls
+        // straight through to it.
+        Prec.high(
+          keymap.of(
+            ["Mod-z", "Mod-y", "Mod-Shift-z"].map((key) => ({
+              key,
+              run: () => {
+                if (!proposalGuardRef.current.armed) return false;
+                proposalGuardRef.current.ask();
+                return true;
+              },
+            })),
+          ),
+        ),
         EditorView.contentAttributes.of(contentAttributes),
         // Co-authors' carets and selections, each in their own faction's hue
         // (#1744). PAINTED, never raw: `y-codemirror.next` interpolates the
@@ -1005,6 +1058,10 @@ export function BodyTextarea({
     view.dispatch({
       changes: minimalReplacement(text, result.text),
       selection: { anchor: result.selectionStart, head: result.selectionEnd },
+      // Says this edit is the player's, which is what the live-proposal filter
+      // dispatches on (#1811). Without it a toolbar press would slip past the
+      // confirm and cancel everyone's countdown in silence.
+      userEvent: "input",
     });
     view.focus();
   };
@@ -1032,7 +1089,7 @@ export function BodyTextarea({
 
   return (
     <div>
-      {skin.hideToolbar || awaitingRoom || state.documentFrozen ? null : (
+      {skin.hideToolbar || awaitingRoom || state.controlsLocked ? null : (
       <div
         role="toolbar"
         aria-label={t("editPraxis.toolbar.label")}
@@ -1088,54 +1145,16 @@ export function BodyTextarea({
           )}
         </p>
       )}
-      {/* Said where it is felt (#1745). This is the member who has just tried to
-          type and found nothing happening, and the difference between a rule and
-          a broken editor is entirely whether anyone told them. The way out is in
-          the same breath, because `pullBack` is the only one — and it is right
-          here rather than in the footer because the footer's button belongs to
-          whoever has already cast, and the member most likely to be reading this
-          is the holdout, who has not. */}
-      {state.documentFrozen && (
-        <div
-          className="flex flex-col items-start gap-1"
-          style={{ marginTop: "var(--space-xs)" }}
-        >
-          {/* Two sentences for two different members (#1931). Whoever loaded a
-              praxis that was already sealed has lost nothing and is told the
-              rule. Whoever was still typing when the room hung up under them
-              has lost whatever they typed after that — it never reached the
-              server and cannot be recovered — and being told the rule instead
-              of the loss would leave them believing text they can still see on
-              screen is safe. */}
-          <p className="label-caption">
-            {t(
-              state.sealedMidEdit
-                ? "editPraxis.composer.bodyFrozenMidEdit"
-                : "editPraxis.composer.bodyFrozen",
-            )}
-          </p>
-          <button
-            type="button"
-            className="label-caption"
-            onClick={() => void state.reopenForEdit()}
-            disabled={state.submitting}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              // The link seam, not the neutral it is unset to (#1636/#1819).
-              // This sits one line under the frozen notice above, which reads
-              // `--label-ink` through its class — leaving the global secondary
-              // here would fix the sentence and leave its way out unreachable
-              // on exactly the three near-black sheets that needed both.
-              color: "var(--link-ink)",
-              textDecoration: "underline",
-              cursor: "pointer",
-            }}
-          >
-            {t("editPraxis.composer.bodyFrozenAction")}
-          </button>
-        </div>
+      {/* Said where it is felt, to the member most likely to be reading it: the
+          one who has NOT approved, kept on the ordinary composer while a
+          countdown runs (#1164). Nothing here is a refusal — the room takes the
+          keystroke and the confirm is what makes cancelling the window
+          deliberate (ADR-0079) — so it names the consequence and offers no exit,
+          because typing IS the exit. */}
+      {state.proposalConfirmArmed && (
+        <p className="label-caption" style={{ marginTop: "var(--space-xs)" }}>
+          {t("editPraxis.composer.bodyProposalLive")}
+        </p>
       )}
     </div>
   );
@@ -1401,50 +1420,34 @@ export function PublishButton({
   // negated: `settled`/`resolved` are where forfeit begins and belong to the
   // detail page, and a `declined` challenge leaves an ordinary published solo
   // praxis, which stays unpublishable-back.
-  //
-  // The `collab?.iCast` route below survives by the identical mechanism — a
-  // `failed` multi-member collab also short-circuits to `composing` — so the two
-  // halves live or die together. Both are covered in `PublishButton.test.tsx`.
   const duelPullBack =
     state.isPublished &&
     state.duelMode &&
     (state.duel?.status === "active" || state.duel?.status === "pending");
   if (state.isPublished && !duelPullBack) return null;
-  // Multi-member collabs cast (and pull back) through this same footer button
-  // (#646). The consensus gate decides the action and the idle label; the busy
-  // label stays the archetype's mode-agnostic present participle.
-  const collab =
-    praxis?.type === "collab" && praxis.members.length > 1
-      ? deriveCollabGate(praxis.members, state.currentCharacterId)
-      : null;
+  // A multi-member collab has three things to say, not one (ADR-0079), so it
+  // gets its own control below rather than a fourth relabelling of this button.
+  if (!duelPullBack && praxis?.type === "collab" && praxis.members.length > 1) {
+    return <CollabSignals state={state} skin={skin} />;
+  }
   // Neutral wording, deliberately: no forfeit language and no consequence
   // dialog before the duel settles (#718 rejected that framing once already;
   // `praxisDetail/__tests__/duelForfeitWarning.test.tsx` is the standing guard).
   // Shared voice, like every line `collabCopy` resolves since #1812.
   const idleLabel = duelPullBack
     ? collabCopy(praxis?.task_faction_slug, "duelPullBackAction")
-    : collab && praxis
-      ? collabCopy(
-          praxis.task_faction_slug,
-          collab.iCast
-            ? "pullBackAction"
-            : collab.castCount === collab.memberCount - 1
-              ? "castFinalAction"
-              : "castAction",
-        )
-      : skin.idleLabel;
+    : skin.idleLabel;
   // A duel side asks before it casts (#718): the button opens the seal
   // confirmation, whose confirm calls this same `publish()`. Only once an
   // opponent is actually attached — duel mode with an empty opponent slot casts
   // as an ordinary solo praxis, so there is nothing to warn about. Once cast,
   // the same button reverses it through `pullBack` and asks nothing.
   const sealsADuel = state.duelMode && state.duel != null;
-  const onClick =
-    duelPullBack || collab?.iCast
-      ? state.pullBack
-      : sealsADuel
-        ? async () => state.requestDuelSeal()
-        : state.publish;
+  const onClick = duelPullBack
+    ? state.pullBack
+    : sealsADuel
+      ? async () => state.requestDuelSeal()
+      : state.publish;
   return (
     <button
       type="button"
@@ -1457,6 +1460,122 @@ export function PublishButton({
       {state.submitting ? skin.busyLabel : idleLabel}
       {skin.trailingOrnament}
     </button>
+  );
+}
+
+/**
+ * The quiet twin of `PublishButton`'s dressed primary — the composer's existing
+ * link idiom, already used by the mode block's "leave collab" and by the body
+ * field's own inline exits.
+ *
+ * `--link-ink` and not the global secondary: these sit on the archetype's own
+ * sheet, and three of the nine are near-black, where an unset neutral leaves the
+ * words unreachable (#1636/#1819).
+ */
+const SECONDARY_SIGNAL_STYLE: CSSProperties = {
+  background: "none",
+  border: "none",
+  padding: 0,
+  color: "var(--link-ink)",
+  textDecoration: "underline",
+  cursor: "pointer",
+};
+
+/**
+ * A multi-member collab's footer: **Done**, **Propose** / **Approve**, and
+ * **Withdraw proposal** (ADR-0079, #1811).
+ *
+ * One button used to say all three things, and its effect matched none of them.
+ * Each of these says exactly one:
+ *
+ *  - **Done** — "my part is finished". Social, reversible, gates nothing, warns
+ *    about nothing. A toggle, and `aria-pressed` is what makes it one: the
+ *    label names the state it is in, so a screen reader is not left inferring
+ *    the flag from two different words for the same button.
+ *  - **Propose** — "I think we're ready". The only one that asks first, because
+ *    it starts a clock on everybody else and silence is consent.
+ *  - **Approve** — "I'm happy with this text". A vote on the live proposal, so
+ *    it is drawn only while there is one to vote on, and only for a member who
+ *    has not. `publish()` unchanged: Propose and Approve are one endpoint that
+ *    the server tells apart by state.
+ *  - **Withdraw proposal** — for the member who has read the draft and has no
+ *    edit to make. Any member, not just the proposer (ADR-0013).
+ *
+ * **Hidden, never disabled.** Propose and Approve are mutually exclusive by
+ * construction — a window is open or it is not — and Withdraw has nothing to
+ * withdraw while the crew is drafting.
+ *
+ * The WORDS are shared across all nine factions (ADR-0079's exception to
+ * ADR-0065): they are a mechanical fact a player must read correctly in order
+ * to act. The DRESS is the archetype's, and arrives as the same
+ * {@link PublishButtonSkin} the single button wears.
+ */
+function CollabSignals({
+  state,
+  skin,
+}: {
+  state: EditPraxisState;
+  skin: PublishButtonSkin;
+}) {
+  const praxis = state.praxis;
+  if (!praxis) return null;
+  const slug = praxis.task_faction_slug;
+  const gate = deriveCollabGate(praxis.members, state.currentCharacterId);
+  const proposalLive = proposalIsLive(praxis);
+  const iAmDone = praxis.members.some(
+    (member) =>
+      member.character_id === state.currentCharacterId && member.is_done,
+  );
+  const busy = state.submitting || state.switchingMode !== null;
+  // The last approval outstanding, so the button can say what pressing it does
+  // instead of leaving the player to count the roster.
+  const finalApproval = gate.castCount === gate.memberCount - 1;
+  const primaryLabel = proposalLive
+    ? collabCopy(slug, finalApproval ? "approveFinalAction" : "approveAction")
+    : collabCopy(slug, "proposeAction");
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        aria-pressed={iAmDone}
+        title={collabCopy(slug, "doneDescription")}
+        onClick={() => void state.markDone(!iAmDone)}
+        disabled={busy}
+        className="label-caption"
+        style={SECONDARY_SIGNAL_STYLE}
+      >
+        {collabCopy(slug, iAmDone ? "doneUndoAction" : "doneAction")}
+      </button>
+      {(!proposalLive || !gate.iCast) && (
+        <button
+          type="button"
+          title={collabCopy(
+            slug,
+            proposalLive ? "approveDescription" : "proposeDescription",
+          )}
+          onClick={() => void (proposalLive ? state.publish() : state.propose())}
+          disabled={busy}
+          className={skin.className}
+          style={skin.style}
+        >
+          {skin.ornament}
+          {state.submitting ? skin.busyLabel : primaryLabel}
+          {skin.trailingOrnament}
+        </button>
+      )}
+      {proposalLive && (
+        <button
+          type="button"
+          title={collabCopy(slug, "withdrawDescription")}
+          onClick={() => void state.pullBack()}
+          disabled={busy}
+          className="label-caption"
+          style={SECONDARY_SIGNAL_STYLE}
+        >
+          {collabCopy(slug, "withdrawAction")}
+        </button>
+      )}
+    </div>
   );
 }
 
