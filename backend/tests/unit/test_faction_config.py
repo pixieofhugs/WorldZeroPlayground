@@ -1,8 +1,24 @@
-"""Unit tests for faction configuration values and modifier semantics."""
+"""Unit tests for faction configuration values and modifier semantics.
+
+**These values are advertised to players.** Every perk pinned here is stated in
+words in ``frontend/src/locales/en/factions.json`` — ``{F}.invitation.perks[1]``
+(``albescent.letter.perks.duties`` for Albescent, which uses a named object
+rather than an array) and ``descriptions.{F}``. #1874 rewrote that copy to state
+each faction's real mechanic, so a value moving here without the sentence moving
+too leaves the game advertising something it no longer does.
+
+If a test in this file fails, the fix is not just the config: go read the copy
+the number is quoted in and move it in the same change.
+
+This file is deliberately backend-only. It does NOT assert a mapping from copy
+string to config field — that would write each rule down a *third* time, which
+is the drift that produced Coven's and Albescent's since-corrected false claims
+(#1874). It pins the values; the docstring routes the reader to the words.
+"""
 
 from dataclasses import replace
 
-from game_config import ERA_1
+from game_config import _ANY_PERK_FIELDS, ERA_1
 from services.praxis import multi_membership_faction_slugs
 
 # Albescent holds every other faction's perk (#1871), so "only faction X has
@@ -128,6 +144,23 @@ def test_ua_baseline():
     assert config.other_task_modifier == 1.0
 
 
+def test_ua_habit_bonus_numbers_are_pinned():
+    """The two numbers UA's invitation letter says out loud (#1874).
+
+    The copy states "+5 points" and "within seven days". ``test_habit_bonus.py``
+    reads both off the config rather than restating them, which is right for
+    testing the *behaviour* but means a re-tune from 5 to 8 keeps every other
+    test green while the advertisement silently lies. These are the two literals
+    that break instead — the habit bonus is UA's only perk, and both halves of
+    it are quoted to the player.
+
+    Note the two live on different objects: the points are the faction's, the
+    cadence is the era's.
+    """
+    assert ERA_1.factions["ua"].habit_bonus_points == 5
+    assert ERA_1.habit_window_days == 7
+
+
 def test_ephemerists_modifiers():
     config = ERA_1.factions["ephemerists"]
     assert config.own_task_modifier == 1.0
@@ -149,10 +182,36 @@ def test_all_factions_flat_cross_faction_modifiers():
         assert config.collab_other_modifier == 1.0, slug
 
 
-def test_singularity_defaults():
+def test_singularity_holds_no_perk_on_any_axis():
+    """Singularity's invitation letter promises nothing because it HAS nothing.
+
+    #1869 tracks giving it a mechanic. Until then the copy deliberately offers
+    no perk rather than inventing one, so the emptiness is pinned here as the
+    *expected* value on every axis a perk can live on. The day Singularity gains
+    one, this fails and the placeholder copy gets replaced in the same breath.
+    """
     config = ERA_1.factions["singularity"]
+
+    # Multiplier axes, all at the Era 1 baseline every faction starts from.
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 1.0
+    assert config.collab_own_modifier == 1.0
+    assert config.collab_other_modifier == 1.0
+    assert config.duel_win_modifier == 1.5
+    assert config.duel_loss_modifier == 0.5
+
+    # Countable perks: none of either.
+    assert config.level_jump_reach == 0
+    assert config.habit_bonus_points == 0
+
+    # Held-or-not perks, read off the registry so a perk field classified later
+    # is covered here the day it is added rather than silently skipped.
+    for name in _ANY_PERK_FIELDS:
+        assert getattr(config, name) is False, name
+
+    # Perks have TWO homes (#1871) — Task Vision is an EraConfig frozenset, not
+    # a FactionConfig field, and an audit reading only the dataclass misses it.
+    assert "singularity" not in ERA_1.allow_praxis_on_retired_task_factions
 
 
 def test_na_sentinel():
