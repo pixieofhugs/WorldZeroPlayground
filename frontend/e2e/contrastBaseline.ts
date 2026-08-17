@@ -32,6 +32,13 @@
  * `triageFindings` below, ratcheted by count in the spec.
  */
 
+import {
+  compositeOver,
+  contrastRatio,
+  parseColor,
+  relativeLuminance,
+  type Rgba,
+} from '../src/utils/contrast';
 import type { Finding } from './contrastScan';
 
 export type BaselineEntry = {
@@ -253,6 +260,213 @@ export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
   "light | rgba(96, 165, 250, 0.7) on rgb(5, 15, 8) @4.5": { ratio: 4.24, issue: 651, where: 'singularity/light/desktop header > div > div > div' },
 };
 
+/* ------------------------------------------------------------------------ *
+ * #1727 — resolving a decorative fill, structurally.
+ *
+ * The scanner refuses a `background-image` with an opaque stop because the
+ * colour under the text genuinely varies. That refusal is too coarse, and it
+ * was costing 8-9 surfaces per faction: most of the app's "gradients" are
+ * paper stocks — a two-stop ramp between two near-identical creams, under a
+ * few translucent tints — and a ramp only defeats measurement when the INK's
+ * own luminance falls inside the band the fill spans. Outside that band, the
+ * worst case is the band edge nearest the ink, and it is exact rather than
+ * estimated: interpolating a gradient is a per-channel lerp, so every colour
+ * it paints has a luminance between its stops'.
+ *
+ * THIS IS THE STRUCTURAL EXEMPTION the issue asks for, and it is structural in
+ * the strongest available sense: the marker is the fill's own computed CSS.
+ * There is no list of selectors, no data attribute to remember, and a new
+ * faction frame is classified on the day it ships without anyone editing this
+ * file. A hand-maintained array would have rotted, and — worse — could have
+ * exempted a ground that IS measurable, which is the failure mode the #1675
+ * ruling called worse than the red.
+ *
+ * WHAT IT DELIBERATELY DOES NOT TOUCH. A finding that already carries a
+ * `background` never reaches here: translucent-over-solid grounds (#1715's
+ * `--color-bg-surface-alt` over the page, #1579's `--filter-thumb` over
+ * `--filter-well`) are resolved by the scanner and measured exactly as before.
+ * And a faction hue used as ink on a flat near-white ground (#1932) was never
+ * an unresolved finding at all. Both classes are covered by tests in
+ * `src/utils/__tests__/contrastTriage.test.ts` for exactly that reason.
+ *
+ * PURE, AND NODE-SIDE, ON PURPOSE (#1762, #1780). The scanner runs inside
+ * `page.evaluate`, which nothing typechecks and no PR exercises. So the
+ * scanner reports facts — the fill's CSS, the background-color under it, the
+ * translucent stack over it — and every DECISION lives here, in milliseconds,
+ * with no browser.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The darkest and lightest opaque colour a fill can put under text. `lo`/`hi`
+ * are ordered by WCAG relative luminance, not by stop order.
+ */
+export type FillBand = { lo: Rgba; hi: Rgba };
+
+/** A finding whose ground is known — either resolved by the scanner or banded here. */
+type Resolved = Finding & { background: string };
+
+/**
+ * Give up past this many distinct candidate colours. The paper stocks stack up
+ * to seven gradient layers; the product of their stops is in the low hundreds,
+ * and anything beyond this is a fill nobody should be putting text on.
+ */
+const MAX_CANDIDATES = 512;
+
+/** `background-image` layers, in CSS order — the FIRST one paints on top. */
+function splitLayers(css: string): string[] {
+  const layers: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < css.length; index += 1) {
+    const char = css[index];
+    if (char === '(') depth += 1;
+    else if (char === ')') depth -= 1;
+    else if (char === ',' && depth === 0) {
+      layers.push(css.slice(start, index).trim());
+      start = index + 1;
+    }
+  }
+  layers.push(css.slice(start).trim());
+  return layers.filter(Boolean);
+}
+
+/**
+ * Every colour stop in one layer, or null if the layer is not a gradient we can
+ * read — an image, or one whose stops we cannot parse. Never guess: a stop
+ * silently dropped narrows the band, and a narrow band turns a real failure
+ * into a pass.
+ */
+const STOP = /(?:rgba?|color)\([^()]*\)|\btransparent\b/g;
+
+function stopsOf(layer: string): Rgba[] | null {
+  if (layer === 'none') return [];
+  if (!/gradient\(/.test(layer)) return null; // url(), cross-fade(), anything else
+  const tokens = layer.match(STOP);
+  if (!tokens) return null;
+  const stops: Rgba[] = [];
+  for (const token of tokens) {
+    const color = parseColor(token);
+    if (color === null) return null;
+    stops.push(color);
+  }
+  return stops.length ? stops : null;
+}
+
+/**
+ * Source-over where the BACKDROP may itself be translucent — `compositeOver`
+ * in `src/utils/contrast.ts` assumes an opaque ground and hard-codes `a: 1`,
+ * which is right for its callers and wrong halfway up a stack of fills.
+ */
+function sourceOver(fore: Rgba, back: Rgba): Rgba {
+  const alpha = fore.a + back.a * (1 - fore.a);
+  if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };
+  const mix = (front: number, behind: number) =>
+    (front * fore.a + behind * back.a * (1 - fore.a)) / alpha;
+  return { r: mix(fore.r, back.r), g: mix(fore.g, back.g), b: mix(fore.b, back.b), a: alpha };
+}
+
+function dedupe(colors: Rgba[]): Rgba[] {
+  const seen = new Map<string, Rgba>();
+  for (const color of colors) {
+    const key = [color.r, color.g, color.b, color.a].map((channel) => channel.toFixed(3)).join('|');
+    if (!seen.has(key)) seen.set(key, color);
+  }
+  return [...seen.values()];
+}
+
+/**
+ * The luminance band a decorative fill spans, or null when it cannot be pinned
+ * down — an image layer, an unparseable stop, or a fill that never reaches
+ * opacity, in which case whatever sits below the element is still showing
+ * through and we do not know what that is.
+ *
+ * The candidate set is a deliberate over-estimate: it composites every stop of
+ * every layer over every stop of the layer beneath, whether or not those two
+ * points coincide on screen. Over-wide is the safe direction — it can only
+ * push a fill back into the unmeasurable report, never quietly widen a passing
+ * ratio.
+ */
+export function resolveFillBand(finding: Finding): FillBand | null {
+  if (finding.backdropCss === null || finding.backdropBase === null) return null;
+
+  const base = parseColor(finding.backdropBase);
+  if (base === null) return null;
+
+  let candidates: Rgba[] = [base];
+  // Bottom layer first: the last one in the CSS list is painted first.
+  for (const layer of splitLayers(finding.backdropCss).reverse()) {
+    const stops = stopsOf(layer);
+    if (stops === null) return null;
+    if (stops.length === 0) continue;
+    const next: Rgba[] = [];
+    for (const stop of stops) for (const under of candidates) next.push(sourceOver(stop, under));
+    candidates = dedupe(next);
+    if (candidates.length > MAX_CANDIDATES) return null;
+  }
+
+  if (candidates.some((color) => color.a < 0.999)) return null;
+
+  let opaque = candidates.map((color) => ({ ...color, a: 1 }));
+  if (finding.backdropOverlay !== null) {
+    const overlay = parseColor(finding.backdropOverlay);
+    if (overlay === null) return null;
+    opaque = opaque.map((color) => compositeOver(overlay, color));
+  }
+
+  let lo = opaque[0];
+  let hi = opaque[0];
+  for (const color of opaque) {
+    if (relativeLuminance(color) < relativeLuminance(lo)) lo = color;
+    if (relativeLuminance(color) > relativeLuminance(hi)) hi = color;
+  }
+  return { lo, hi };
+}
+
+/** Match the scanner's `show()` so a banded finding keys into the same baseline. */
+function showOpaque(color: Rgba): string {
+  const [r, g, b] = [color.r, color.g, color.b].map((channel) => Math.round(channel));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/**
+ * Measure a finding the scanner gave up on, against the worst point of the
+ * fill beneath it — or return null when the fill genuinely defeats it.
+ *
+ * The one case that stays unmeasurable is the ink CROSSING the band: if the
+ * text is lighter than the fill's dark end and darker than its light end, the
+ * two match somewhere along the ramp and the true ratio there is 1:1. There is
+ * no worst stop to quote, and quoting one would be a guess. That residue is
+ * what the #1675 report should be left holding: the unaffiliated spectrum, the
+ * gilt wordmark, the WOW title bars.
+ *
+ * Otherwise the ratio is monotone across the band, so its minimum is at the
+ * edge nearest the ink, and that edge is the honest ground to record.
+ */
+export function measureOverFill(finding: Finding): Resolved | null {
+  const band = resolveFillBand(finding);
+  if (band === null) return null;
+
+  const text = parseColor(finding.text);
+  if (text === null) return null;
+
+  const lift = (surface: Rgba) =>
+    relativeLuminance(compositeOver(text, surface)) - relativeLuminance(surface);
+  const atLo = lift(band.lo);
+  const atHi = lift(band.hi);
+  if (atLo === 0 || atHi === 0 || atLo > 0 !== atHi > 0) return null;
+
+  const ratioLo = contrastRatio(text, band.lo);
+  const ratioHi = contrastRatio(text, band.hi);
+  const worst = ratioLo <= ratioHi ? band.lo : band.hi;
+  return {
+    ...finding,
+    background: showOpaque(worst),
+    ratio: Math.min(ratioLo, ratioHi),
+    unresolved: null,
+    unresolvedKind: null,
+  };
+}
+
 /** What the sweep does with one test's worth of findings. */
 export type Triage = {
   /** Measured below AA and not grandfathered — these FAIL the run. */
@@ -265,6 +479,14 @@ export type Triage = {
    * `contrast.spec.ts` — never a per-finding failure, and never grandfathered.
    */
   unmeasurable: Map<string, Finding[]>;
+  /**
+   * Fills the scanner gave up on that THIS module resolved (#1727), grouped
+   * the same way. They have already been measured — they are in `failures` if
+   * they came up short — and this map exists so the report can say which
+   * surfaces stopped being decorative-and-unchecked. Without it, a pairing that
+   * appears for the first time after this change has no visible provenance.
+   */
+  resolvedFills: Map<string, Finding[]>;
 };
 
 /**
@@ -286,14 +508,30 @@ export function triageFindings(theme: string, findings: readonly Finding[]): Tri
   const failures: Finding[] = [];
   const stale: string[] = [];
   const unmeasurable = new Map<string, Finding[]>();
+  const resolvedFills = new Map<string, Finding[]>();
 
-  for (const finding of findings) {
-    if (finding.background === null) {
-      const surface = finding.backdropCss ?? 'unknown';
-      const over = unmeasurable.get(surface);
-      if (over) over.push(finding);
-      else unmeasurable.set(surface, [finding]);
-      continue;
+  const bucket = (into: Map<string, Finding[]>, surface: string, entry: Finding) => {
+    const over = into.get(surface);
+    if (over) over.push(entry);
+    else into.set(surface, [entry]);
+  };
+
+  for (const raw of findings) {
+    let finding: Resolved;
+    if (raw.background === null) {
+      // The scanner could not resolve the ground. Try to band the fill (#1727)
+      // before writing it off — most of them are paper stocks, and a stock the
+      // sweep declines to look at is a stock nothing checks.
+      const measured = measureOverFill(raw);
+      const surface = raw.backdropCss ?? 'unknown';
+      if (measured === null) {
+        bucket(unmeasurable, surface, raw);
+        continue;
+      }
+      bucket(resolvedFills, surface, measured);
+      finding = measured;
+    } else {
+      finding = raw as Resolved;
     }
 
     const key = baselineKey(theme, finding.text, finding.background, finding.required);
@@ -310,5 +548,5 @@ export function triageFindings(theme: string, findings: readonly Finding[]): Tri
     failures.push(finding);
   }
 
-  return { failures, stale, unmeasurable };
+  return { failures, stale, unmeasurable, resolvedFills };
 }

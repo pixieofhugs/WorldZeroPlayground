@@ -33,6 +33,20 @@ export type Finding = {
    * is not.
    */
   backdropCss: string | null;
+  /**
+   * The two halves of the sandwich `backdropCss` sits in, so the node side can
+   * try to resolve the fill without a browser (#1727):
+   *  - `backdropBase`    — the fill-painting element's own background-color,
+   *                        which every `background-image` layer paints OVER.
+   *  - `backdropOverlay` — everything already accumulated ABOVE the fill
+   *                        (translucent cards, washes), or null if the text
+   *                        sits directly on it.
+   * Facts, not a verdict: `resolveFillBand` in `contrastBaseline.ts` decides
+   * what they add up to, and vitest can reach that. Only set when `background`
+   * is null — a resolved backdrop needs no reconstruction.
+   */
+  backdropBase: string | null;
+  backdropOverlay: string | null;
   ratio: number;
   required: number;
   fontSizePx: number;
@@ -236,6 +250,8 @@ export function scanPageForContrast(): Finding[] {
     why: string | null;
     kind: Finding["unresolvedKind"];
     css: string | null;
+    base: string | null;
+    overlay: string | null;
   } {
     let stack: Rgba | null = null;
     let node: Element | null = element;
@@ -250,6 +266,8 @@ export function scanPageForContrast(): Finding[] {
           why: `${pathOf(node)} background-color "${style.backgroundColor}" is not a solid color`,
           kind: "other",
           css: style.backgroundColor,
+          base: null,
+          overlay: null,
         };
       }
 
@@ -262,6 +280,10 @@ export function scanPageForContrast(): Finding[] {
             why: `${pathOf(node)} paints ${style.backgroundImage.slice(0, 80)}`,
             kind: isGradient && texture === undefined ? "opaque-gradient" : "other",
             css: style.backgroundImage,
+            // `layer` is still the element's own background-color here: the
+            // reassignment below is the texture path, which we did not take.
+            base: show(layer),
+            overlay: stack === null ? null : show(stack),
           };
         }
         layer = srcOver(texture, layer);
@@ -269,14 +291,23 @@ export function scanPageForContrast(): Finding[] {
 
       if (layer.a > 0) {
         stack = stack === null ? layer : srcOver(stack, layer);
-        if (stack.a >= 0.999) return { color: { ...stack, a: 1 }, why: null, kind: null, css: null };
+        if (stack.a >= 0.999) {
+          return { color: { ...stack, a: 1 }, why: null, kind: null, css: null, base: null, overlay: null };
+        }
       }
       node = node.parentElement;
     }
 
     // Nothing opaque all the way up: the canvas is the browser default white.
     const canvas: Rgba = { r: 255, g: 255, b: 255, a: 1 };
-    return { color: stack === null ? canvas : srcOver(stack, canvas), why: null, kind: null, css: null };
+    return {
+      color: stack === null ? canvas : srcOver(stack, canvas),
+      why: null,
+      kind: null,
+      css: null,
+      base: null,
+      overlay: null,
+    };
   }
 
   const findings: Finding[] = [];
@@ -320,6 +351,8 @@ export function scanPageForContrast(): Finding[] {
       unresolved: backdrop.why,
       unresolvedKind: backdrop.kind,
       backdropCss: backdrop.css,
+      backdropBase: backdrop.base,
+      backdropOverlay: backdrop.overlay,
       ratio: backdrop.color === null ? 0 : ratioOf(inked, backdrop.color),
       required,
       fontSizePx,
