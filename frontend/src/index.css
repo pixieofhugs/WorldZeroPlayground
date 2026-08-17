@@ -966,6 +966,29 @@
   --faction-snide-note-cta-bg: #b6ff2e;
   --faction-snide-note-cta-ink: #14110b;
   --faction-snide-note-shadow: 0 12px 28px -14px rgba(20, 17, 11, 0.55);
+  /* THE CLIPPING'S GROUND IS THE FLYPOSTED WALL (#2065), not its own stock.
+     The card prints five layers over `--faction-snide-wall`/`-wall-deep`; the
+     recipe stays inline in `SnideTaskCard` (one mount, unlike `.snd-backdrop`'s
+     three), so only the pigments it needs live here. Each takes a DIFFERENT
+     colour per theme, which is why they are tokens: the flip goes through the
+     dark cascade, never a `dark ? a : b` (§8).
+
+     `-note-scan` is not `-note-grain` re-used. The scanline DARKENS in both
+     themes; `-note-grain` flips polarity (ink by day, cream by night). Two
+     jobs, two tokens. Nor is `-note-wall-shadow` a retune of `-note-shadow`
+     above — that one is shared with both detail pages (#2066) and stays put.
+     The light shadow is a hard printed offset with NO blur: a clipping pasted
+     flat on a wall, not a card floating over one. */
+  --faction-snide-note-scan: rgba(20, 17, 11, 0.05);
+  --faction-snide-note-wash-acid: rgba(111, 174, 0, 0.14);
+  --faction-snide-note-wash-pink: rgba(190, 24, 93, 0.1);
+  /* The edge and the shadow are LOAD-BEARING, not ornament: the S.N.I.D.E.
+     faction page paints its own ground with the same wall recipe through
+     `useFactionBackdrop`, so these two are the only thing that separates the
+     card from what it is pasted to. */
+  --faction-snide-note-wall-edge: rgba(20, 17, 11, 0.55);
+  --faction-snide-note-wall-shadow:
+    3px 4px 0 rgba(20, 17, 11, 0.28), 0 18px 40px -26px rgba(20, 17, 11, 0.5);
 
   /* ══ S.N.I.D.E. — THE FLYPOSTED SHEET (edit-praxis composer, #1184) ══
      The composer is a xerox sheet flyposted to the wall: grain raster, a
@@ -2578,9 +2601,15 @@
   --faction-wow-card-muted: #b69c64; /* chronicle metadata — 6.85:1 */
   --faction-coven-card-muted: #dd719c;
   --faction-snide-card-muted: #cfcdbf;
-  /* SNIDE flyposted wall flips to concrete-at-night */
-  --faction-snide-wall: #141310;
-  --faction-snide-wall-deep: #0b0a08;
+  /* SNIDE flyposted wall flips to concrete-at-night. Retuned to the design's
+     blacks in #2065, when the task card's ground became this wall: pitch black
+     by night against xerox stock by day. The light pair already matched the
+     design hex-for-hex and did not move. This DELIBERATELY moves three other
+     surfaces that read the wall — `.snd-detail-sheet` on both detail pages and
+     `SnideFieldDesk` — because this is the new S.N.I.D.E. look, not a card-local
+     tweak. Every wall-scoped ink is bright, so the pairings only gain. */
+  --faction-snide-wall: #0a0a0b;
+  --faction-snide-wall-deep: #050506;
   --faction-snide-wall-text: #e9e6da;
   /* The night pair: the faction's own bright pink and amber, unwalked — on a
      near-black wall the light values would be the miss, so only light moved. */
@@ -2607,6 +2636,19 @@
   --faction-snide-note-bar-ink: #ff2d8b; /* the bar's ordinal goes pink — 5.75:1 */
   --faction-snide-note-pink-ink: #ff69ac;
   --faction-snide-note-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.85);
+  /* The wall the clipping is pasted to, lights out (#2065). The scanline still
+     darkens — a scan is subtractive in both themes — while the two washes and
+     the edge take the faction's BRIGHT pigments, because on a near-black wall
+     the deep ones composite to nothing. The shadow loses its printed offset and
+     becomes a hairline plus a deep drop: an offset in the dark is invisible, and
+     the hairline is what keeps the card an object on the faction page's
+     identical ground. */
+  --faction-snide-note-scan: rgba(0, 0, 0, 0.5);
+  --faction-snide-note-wash-acid: rgba(182, 255, 46, 0.13);
+  --faction-snide-note-wash-pink: rgba(255, 45, 139, 0.14);
+  --faction-snide-note-wall-edge: rgba(182, 255, 46, 0.35);
+  --faction-snide-note-wall-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.9), 0 18px 40px -22px rgba(0, 0, 0, 1);
 
   /* ── The flyposted sheet, lights out (#1184) ──
      The stock and its type SWAP, exactly as the clipping's do: photocopier black
