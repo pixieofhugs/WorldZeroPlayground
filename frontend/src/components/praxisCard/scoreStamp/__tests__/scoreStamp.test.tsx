@@ -384,6 +384,14 @@ function expectVotesRow(html: string, showsVotes: boolean, votesLabel = 'from vo
 const EPHEMERISTS_LABEL = { base: 'base', points: 'points', fromVotes: 'votes' } as const
 
 /**
+ * Coven's arched Points plate (#2019) — the elliptical head over a die-cut foot.
+ * The plate is what holds the working, so this fragment is Coven's entry in the
+ * "no working, no rule" family below; the braid it replaced was the same test
+ * one identity earlier.
+ */
+const COVEN_ARCH = '92px 92px 20px 20px / 108px 108px 20px 20px'
+
+/**
  * The five conditional states of design v2, on both #841 stamps. The failure
  * mode this guards is not a missing row — `scoreBreakdown` is tested above —
  * but a stamp that stops READING as itself when a row drops out: a tally whose
@@ -453,17 +461,25 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).not.toMatch(HEX)
     })
 
-    it(`Coven prints the working and keeps the sparkle — ${name}`, () => {
+    it(`Coven prints the working and keeps the cauldron — ${name}`, () => {
       const markup = renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />)
       const html = text(markup)
       expectBaseRow(html, showsBase)
-      expectVotesRow(html, showsVotes)
-      // The braid rules the working off from the total, so with no working there
-      // is nothing to rule (ADR-0076).
-      if (showsBase) expect(markup).toContain('cvn-braid')
-      else expect(markup).not.toContain('cvn-braid')
+      // #2019 moved the tally onto the plate as a ✦-bulleted row, so it takes
+      // `card.stamp.votes` and sets its own `+ N` — the same bound the
+      // Ephemerists row already sits inside (#1637). No copy changed.
+      expectVotesRow(html, showsVotes, 'votes')
+      // The plate holds the working, so it is drawn only when there IS working:
+      // an arch over an empty block is the orphaned rule ADR-0076 warns about,
+      // and it replaces the braid #1209 had ruling the slip.
+      if (showsBase) expect(markup).toContain(COVEN_ARCH)
+      else expect(markup).not.toContain(COVEN_ARCH)
+      expect(markup).not.toContain('cvn-braid')
       expect(html).toContain(formatPoints(fields.score))
-      expect(html).toContain('✨')
+      // The `✨` retired with the slip — the cauldron is the total mark now, and
+      // it is the one object that survives every state (#2019).
+      expect(html).not.toContain('✨')
+      expect(markup).toContain('cvn-cauldron-sigil')
       expect(html).not.toMatch(HEX)
     })
   }
@@ -490,15 +506,17 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
    * both with the same level bordered box. Geometry, unlike copy, has no other
    * assertion that would catch it going flat again.
    */
-  it('keeps each faction its own geometry: WOW struck at -2deg, Coven pinned crooked at -3deg under a braid', () => {
+  it('keeps each faction its own geometry: WOW struck at -2deg, Coven arched over a cauldron', () => {
     const wow = renderToStaticMarkup(<WowScoreStamp praxis={praxis({})} />)
     const coven = renderToStaticMarkup(<CovenScoreStamp praxis={praxis({})} />)
     expect(wow).toContain('rotate(-2deg)')
-    expect(coven).toContain('rotate(-3deg)')
-    // #1209: the DASHED edge went with the pink marker sticker — it existed to
-    // match a die-cut this faction no longer draws. The braid is what rules a
-    // Coven surface, so that is what the working is tallied under now.
-    expect(coven).toContain('cvn-braid')
+    // #2019: Coven's own signature is no longer a TILT. The slip was pinned
+    // crooked and its gold chip counter-rotated to read level on it; the plate
+    // and the cauldron are a symmetrical composition and stand upright, so a
+    // stamp that still leans is one that never left the sticker.
+    expect(coven).not.toContain('rotate(-3deg)')
+    expect(coven).toContain(COVEN_ARCH)
+    expect(coven).toContain('cvn-cauldron-sigil')
   })
 
   it('shows the UA multiplier chip only when a multiplier is live', () => {
@@ -638,7 +656,7 @@ describe('a base-only score reads as a bare total on every stamp (ADR-0076)', ()
     ['S.N.I.D.E.', SnideScoreStamp, 'base', /votes/, '2px dashed'],
     ['Singularity', SingularityScoreStamp, 'base', /votes/, '--faction-singularity-stamp-rule'],
     ['WOW', WowScoreStamp, 'base', /votes/, 'linear-gradient(90deg'],
-    ['Coven', CovenScoreStamp, 'base', /votes/, 'cvn-braid'],
+    ['Coven', CovenScoreStamp, 'base', /votes/, COVEN_ARCH],
     ['UA', UaScoreStamp, 'base', /votes/, '--faction-ua-card-box-bg'],
   ] as const
 
@@ -1001,7 +1019,10 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
     ['S.N.I.D.E.', SnideScoreStamp, 'habit', 'habit +5'],
     ['Singularity', SingularityScoreStamp, 'habit', 'habit+05'],
     ['WOW', WowScoreStamp, 'habit', 'habit +5'],
-    ['Coven', CovenScoreStamp, 'habit', 'habit +5'],
+    // #2019 set the working as label/figure pairs at opposite ends of a flex
+    // row, so the two butt together once the tags are stripped. The label and
+    // the notation are unchanged — this issue changed no copy.
+    ['Coven', CovenScoreStamp, 'habit', 'habit+5'],
     ['UA', UaScoreStamp, 'habit', '+ 5 habit'],
   ] as const
 
