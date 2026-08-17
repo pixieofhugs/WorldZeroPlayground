@@ -364,7 +364,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Admin Moderate Praxis */
+        /**
+         * Admin Moderate Praxis
+         * @description Rule on a praxis and return it as the moderator sees it.
+         */
         patch: operations["admin_moderate_praxis_admin_praxes__praxis_id__moderate_patch"];
         trace?: never;
     };
@@ -2960,10 +2963,7 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
-            /**
-             * Viewer Can Vote
-             * @default true
-             */
+            /** Viewer Can Vote */
             viewer_can_vote: boolean;
             /** Viewer Vote */
             viewer_vote: number | null;
@@ -3790,10 +3790,7 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
-            /**
-             * Viewer Can Vote
-             * @default true
-             */
+            /** Viewer Can Vote */
             viewer_can_vote: boolean;
             /** Viewer Vote */
             viewer_vote: number | null;
@@ -3960,10 +3957,7 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
-            /**
-             * Viewer Can Vote
-             * @default true
-             */
+            /** Viewer Can Vote */
             viewer_can_vote: boolean;
             /** Viewer Vote */
             viewer_vote: number | null;

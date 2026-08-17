@@ -123,7 +123,15 @@ class PraxisOut(WireModel):
     # (#309) — the two PERMANENT vote blocks. Budget exhaustion is excluded (the
     # module stays visible). Anonymous → True (client shows the login gate).
     # Drives hiding the whole vote module for logged-in-but-ineligible viewers.
-    viewer_can_vote: bool = True
+    #
+    # REQUIRED, no default (#1974). It used to default to ``True`` and a route
+    # that never computed it therefore shipped "yes, vote here" — silently, with
+    # nothing to see at the call site. A permission field that fails open is one
+    # forgotten caller away from a bug. Costs nothing on the wire: ``WireModel``
+    # already marks default-carrying fields required in the SERIALIZATION schema
+    # (#1400), so this field was always required in ``openapi.json`` — removing
+    # the default only removes the way to forget it in Python.
+    viewer_can_vote: bool
     # The viewer's own star (1-5); None if unvoted or anonymous — the same field
     # and the same meaning as ``PraxisCardOut.viewer_vote`` (#1382). Detail used
     # to be the ONE surface without it, which is why the client recovered the
@@ -191,9 +199,10 @@ class PraxisCardOut(WireModel):
     # viewer's account who voted this praxis, set only when the carried character
     # did not vote it. None otherwise (incl. anonymous). Computed, no column.
     voted_by_name: Optional[str] = None
-    # Viewer-relative (#998); see ``PraxisOut.viewer_can_vote``. Precomputed
-    # page-wide by the card-list route (no N+1) via ``viewer_can_vote_map``.
-    viewer_can_vote: bool = True
+    # Viewer-relative (#998); see ``PraxisOut.viewer_can_vote``, including why
+    # this one carries no default (#1974). Precomputed page-wide by the card-list
+    # route (no N+1) via ``viewer_can_vote_map``.
+    viewer_can_vote: bool
     # Set when this praxis is a side of a duel (ADR-0011): a duel side is stored
     # ``type='solo'`` + a non-null ``duel_id``, so mode labels/chips must gate on
     # this, not ``type`` (#992). Precomputed page-wide by the card-list route (no
