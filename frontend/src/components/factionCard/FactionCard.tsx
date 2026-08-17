@@ -26,7 +26,18 @@ export interface FactionCardProps {
 
 // ─── Status badge ────────────────────────────────────────────────────────────
 
-function StatusBadge({ status, slug }: { status: string; slug: string }) {
+/**
+ * The viewer's standing with this faction, in the shared status words.
+ *
+ * Exported for `WowFactionCard.tsx`, which lives in its own module so WOW's
+ * ornament vocabulary stays out of this five-faction chunk. Nothing else should
+ * mount it: the badge belongs to this surface, and the reason it is shared at
+ * all is that "burned" must not start meaning two different things on two
+ * cards. (`InvitationNote` below is deliberately NOT exported — its ink is
+ * `factionCssVar(slug)`, a fill rather than an ink, which is exactly the seam
+ * the WOW card had to replace.)
+ */
+export function StatusBadge({ status, slug }: { status: string; slug: string }) {
   if (status === "member") {
     return (
       <span
