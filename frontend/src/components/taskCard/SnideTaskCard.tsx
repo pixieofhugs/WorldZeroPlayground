@@ -55,7 +55,11 @@ const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARKER = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
-const PAPER = "var(--faction-snide-note-paper)";
+/* `--faction-snide-note-paper` stood here. #2065 pasted this card onto the
+   flyposted wall instead of onto a second sheet of the clipping's own stock, so
+   nothing on this surface reads the stock any more. The token itself stays
+   declared — whether a family with no consumer left gets retired is not this
+   card's call. */
 const INK = "var(--faction-snide-note-ink)";
 const MUTED = "var(--faction-snide-note-muted)";
 
@@ -219,16 +223,36 @@ export default function SnideTaskCard({
       data-form-factor={formFactor}
       style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
+      {/* THE GROUND IS THE FLYPOSTED WALL (#2065), not a second sheet of the
+          clipping's own stock. Five layers over the `-wall` ramp: the diagonal
+          xerox raster, a vertical scanline, an acid wash off the top-left and a
+          pink one off the bottom-right. One recipe, and it FLIPS — xerox stock by
+          day, pitch black by night — which is why every pigment is a token and
+          none of it is a `dark ? a : b`. The recipe stays inline rather than
+          earning a class: `.snd-backdrop` has three mounts, this has one, and
+          five gradients is a lot of BLOCKING stylesheet for one component.
+
+          THE EDGE AND THE SHADOW ARE LOAD-BEARING. On the S.N.I.D.E. faction
+          page `useFactionBackdrop` paints the page with this same wall, so these
+          two are the only thing that still separates the card from what it is
+          pasted to. They are not decoration and they do not come off. The shadow
+          is its own token, not `-note-shadow`, which the two detail pages
+          share (#2066). */}
       <article
         style={{
           position: "relative",
           boxSizing: "border-box",
           width: "100%",
           color: INK,
-          background: PAPER,
-          backgroundImage:
-            "repeating-linear-gradient(0deg, var(--faction-snide-note-grain) 0 1px, transparent 1px 3px)",
-          boxShadow: "var(--faction-snide-note-shadow)",
+          background: [
+            "repeating-linear-gradient(115deg, var(--faction-snide-note-grain) 0 2px, transparent 2px 7px)",
+            "repeating-linear-gradient(0deg, var(--faction-snide-note-scan) 0 1px, transparent 1px 4px)",
+            "radial-gradient(120% 80% at 8% -10%, var(--faction-snide-note-wash-acid), transparent 60%)",
+            "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
+            "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
+          ].join(", "),
+          border: "1px solid var(--faction-snide-note-wall-edge)",
+          boxShadow: "var(--faction-snide-note-wall-shadow)",
           transform: "rotate(-0.4deg)",
         }}
       >
@@ -423,12 +447,22 @@ export default function SnideTaskCard({
                 textTransform: "uppercase",
                 padding: "var(--space-sm) var(--space-2xl)",
                 border: "none",
-                // The halo: one tight pass in the acid itself, two soft ones in
-                // the faction's 16% tint, which is the same pigment already
-                // declared as a wash. The design's own ramp of five bespoke
-                // alphas is three tokenless colours; this is the shape of it.
-                textShadow:
-                  "0 0 1px var(--faction-snide-acid), 0 0 10px var(--faction-snide-light), 0 0 22px var(--faction-snide-light)",
+                // The halo, at the design's intensity (#2065). It used to put
+                // two of its three passes on `--faction-snide-light`, a FIXED
+                // 16% tint (12% in dark) — so every pass was capped at 16%
+                // however wide the radius, which is why it read muted, and it
+                // was dimmer at night, when a sprayed stencil should be
+                // loudest. `color-mix` grades the acid itself per layer, so the
+                // alphas rise as the radii TIGHTEN, and the last two passes are
+                // offset: that asymmetry is what reads as sprayed rather than
+                // lit. Still no raw colour anywhere in it.
+                textShadow: [
+                  "0 0 1px color-mix(in srgb, var(--faction-snide-acid) 95%, transparent)",
+                  "0 0 6px color-mix(in srgb, var(--faction-snide-acid) 70%, transparent)",
+                  "0 0 16px color-mix(in srgb, var(--faction-snide-acid) 45%, transparent)",
+                  "1px 2px 0 color-mix(in srgb, var(--faction-snide-note-bar) 65%, transparent)",
+                  "-2px 1px 5px color-mix(in srgb, var(--faction-snide-acid) 35%, transparent)",
+                ].join(", "),
                 boxShadow:
                   "0 0 0 2px var(--faction-snide-acid-deep), inset 0 0 18px var(--faction-snide-light)",
                 transform: "rotate(-1.6deg)",
