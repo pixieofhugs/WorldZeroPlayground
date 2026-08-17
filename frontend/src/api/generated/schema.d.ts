@@ -1136,6 +1136,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/praxes/{praxis_id}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Done Route */
+        post: operations["set_done_route_praxes__praxis_id__done_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/praxes/{praxis_id}/flag": {
         parameters: {
             query?: never;
@@ -3903,6 +3920,19 @@ export interface components {
             /** @default solo */
             type: components["schemas"]["PraxisType"];
         };
+        /**
+         * PraxisDoneUpdate
+         * @description The **Done** signal's body (ADR-0079) — "my part is finished".
+         *
+         *     A field rather than two routes (``/done`` and ``/undone``) because Done is
+         *     explicitly reversible and the client holds a checkbox, not a one-way button:
+         *     a toggle that has to guess which endpoint to call from local state is one
+         *     dropped response away from disagreeing with the server.
+         */
+        PraxisDoneUpdate: {
+            /** Is Done */
+            is_done: boolean;
+        };
         /** PraxisInviteCreate */
         PraxisInviteCreate: {
             /** Invitee Id */
@@ -6576,6 +6606,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_done_route_praxes__praxis_id__done_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                praxis_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PraxisDoneUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PraxisOut"];
                 };
             };
             /** @description Validation Error */
