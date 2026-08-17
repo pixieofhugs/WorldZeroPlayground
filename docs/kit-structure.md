@@ -24,7 +24,7 @@ Do not maintain those two numbers here. Count them with
 `SURFACE_KEYS.length` and `FACTION_MANIFESTS.length + 1`; this section exists to
 say what the numbers *mean*, not to cache them. (They were 21 and 9 when this
 file was written, which is worth stating only because the epic that commissioned
-it went in believing the second number was 10. The first is 20 since ADR-0077
+it went in believing the second number was 10. The first is 20 since ADR-0078
 retired `mobileFactionPage` — a surface count falls when a collapse lands, and
 that is the only reason it may fall.)
 
@@ -121,7 +121,7 @@ its ground and its card, the chassis picks modal-over-scrim or full-bleed sheet.
   a phone. Different content, different job. Do not write it up as a split to be
   collapsed, and do not "finish" it by building a desktop counterpart.
 
-`mobileFactionPage` was the other one until ADR-0077 (#1314) — the last twin, and
+`mobileFactionPage` was the other one until ADR-0078 (#1314) — the last twin, and
 the one that closed the epic's collapse programme. It is worth knowing *why* it
 was the last, because the reason was not size: the two registries held two
 different CONTENT SETS rather than two renderings of one. On a phone every
@@ -132,9 +132,9 @@ an owner ruling rather than an engineering judgement.
 Every collapse was licensed by its own record, one surface at a time —
 ADR-0056 (task cards), ADR-0058 (task detail), ADR-0061/0063 (praxis detail),
 ADR-0065 (the composer), ADR-0067 (praxis cards), #1319 (character profile),
-#1313 (the duel seal), ADR-0077 (faction detail). ADR-0035 still governs what
+#1313 (the duel seal), ADR-0078 (faction detail). ADR-0035 still governs what
 remains. **A licence to collapse one surface is not a licence to collapse the
-next**; each record says so in terms, and ADR-0077 says in terms that it does not
+next**; each record says so in terms, and ADR-0078 says in terms that it does not
 reach `mobileFieldDesk`.
 
 ## The two ways a faction silently loses a surface

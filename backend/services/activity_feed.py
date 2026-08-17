@@ -45,6 +45,7 @@ from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
+from services.block_service import blocked_counterpart_ids
 from services.praxis import praxis_visibility_condition
 from models.task import Task, TaskStatus
 from models.taunt_message import TauntMessage
@@ -269,12 +270,22 @@ async def _get_related_ids(
     rel_type: RelationshipType,
     session: AsyncSession,
 ) -> list[int]:
-    """Get IDs of characters the current character has declared with this relationship type."""
+    """Get IDs of characters the current character has declared with this relationship type.
+
+    Minus anyone the pair has blocked, in either direction: a blocked
+    counterpart stops being a related character, which is how a block starves
+    the four feed sources built from your declarations (ADR-0077). The
+    exclusion is a subquery rather than a second round trip because the feed's
+    statement count is pinned (``test_activity_feed_query_count``), and the
+    declaration itself survives — unblocking restores the source with no
+    further action.
+    """
     result = await session.execute(
         select(Relationship.to_character_id).where(
             Relationship.from_character_id == character_id,
             Relationship.type == rel_type,
             Relationship.status == RelationshipStatus.active,
+            Relationship.to_character_id.not_in(blocked_counterpart_ids(character_id)),
         )
     )
     return list(result.scalars().all())
@@ -933,16 +944,32 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
 
 
 def _awaiting_submission_query(ctx: FeedContext) -> Select:
-    """Collab / duel praxes waiting on the VIEWER's own submission.
+    """Praxes waiting on the VIEWER's own submission, where somebody else is party to it.
 
     A ``PraxisMember`` for the viewer with ``has_submitted=False`` on a still-open
-    (in_progress / mid-consensus pending) collab or duel praxis — i.e. it's their
-    turn to post. The mirror of ``_collaborator_submitted_query`` (which surfaces
-    *others'* submissions). Solo drafts are excluded: a solo praxis-in-progress is
-    just your own draft, not an awaited action, so it would only be badge noise.
+    (in_progress / mid-consensus pending) praxis that has **at least one other
+    member** — i.e. it's their turn to post. The mirror of
+    ``_collaborator_submitted_query`` (which surfaces *others'* submissions).
     Ordered by ``joined_at`` — when the praxis landed in the viewer's court
     (collab accept / duel accept both create the member row then).
+
+    The last clause is membership, not type (#1980). Solo drafts have always been
+    excluded — a praxis-in-progress you are alone on is your own draft, not an
+    awaited action, so it is only badge noise — but the exclusion was written as
+    ``type in (collab, duel)``, and a collab you created and never invited anyone
+    to is a solo draft in every respect this rule cares about. It told its author,
+    the instant they pressed save, that it was waiting on them. The EXISTS says
+    the thing the type check was standing in for; it excludes solo praxes for
+    free (they can only ever hold their author) and leaves duels alone, both
+    sides of one being a ``solo`` praxis with a single member (ADR-0011).
+
+    One-member collabs stay legal: creating one and inviting later is fine, and
+    the item appears the moment the second member row lands. Nothing has to clean
+    up when it goes the other way (a kick) — ``awaiting_submission`` is in
+    ``NON_ARCHIVABLE_ITEM_TYPES`` precisely because it is state read live, with no
+    stored row to retire.
     """
+    other_member = aliased(PraxisMember)
     query = (
         select(
             PraxisMember.id,
@@ -959,8 +986,13 @@ def _awaiting_submission_query(ctx: FeedContext) -> Select:
         .where(
             PraxisMember.character_id == ctx.character_id,
             PraxisMember.has_submitted.is_(False),
-            Praxis.type.in_([PraxisType.collab, PraxisType.duel]),
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+            select(other_member.id)
+            .where(
+                other_member.praxis_id == PraxisMember.praxis_id,
+                other_member.character_id != ctx.character_id,
+            )
+            .exists(),
         )
     )
     if ctx.before is not None:
@@ -1007,8 +1039,11 @@ def _nudge_query(ctx: FeedContext) -> Select:
     actually open — their own editor.
 
     A nudge is about an **obligation**, so it lives exactly as long as one: the
-    predicate below is ``_awaiting_submission_query``'s, read through the
-    recipient's own member row (#1301). Both halves are load-bearing and neither
+    predicate below is ``_awaiting_submission_query``'s open-and-unfiled pair,
+    read through the recipient's own member row (#1301). It deliberately does not
+    carry that query's "somebody else is here" clause (#1980) — the ``Nudge`` row
+    IS somebody else, and for a duel the sender is not a member of the praxis
+    they are nudging about at all. Both halves are load-bearing and neither
     subsumes the other — a collab stays ``in_progress`` while the group waits on
     somebody else, which is precisely when *this* member's nudge stops applying;
     and a member row can sit unfiled on a praxis that has since been published,
@@ -1667,10 +1702,11 @@ async def get_sidebar_feed(
     character_id: int,
     session: AsyncSession,
     session_factory: Callable,
-) -> tuple[int, list[ActivityFeedItemDC]]:
+) -> tuple[int, list[ActivityFeedItemDC], int]:
     """The rail's pending-request COUNT and its activity panel, in one pass.
 
-    Returns ``(pending_requests_count, recent_activity)``, the list newest-first.
+    Returns ``(pending_requests_count, recent_activity, activity_count)``, the
+    list newest-first and sliced to :data:`SIDEBAR_ACTIVITY_LIMIT`.
 
     WHAT THE PANEL CARRIES (#1556)
     ------------------------------
@@ -1714,6 +1750,28 @@ async def get_sidebar_feed(
     disagreed with the list under it is precisely what that ADR exists to
     prevent, and the equality is pinned by
     ``test_sidebar_badge_equals_the_requests_queue_card_count``.
+
+    WHY THE ACTIVITY SIDE GETS A COUNT FOR FREE (#1587)
+    ---------------------------------------------------
+    The parallel note for the other side. The activity panel needed a number
+    too — the mobile home's pending row says "12 notifications" — and the
+    obvious way to get one is what this function does NOT do: a second pass,
+    ``_count_sources`` over the *twelve* live ``all`` sources, on a first-wave
+    request. It is not needed. :func:`_fetch_sources` takes no limit; it
+    already returns every row from every source, and ``SIDEBAR_ACTIVITY_LIMIT``
+    is a Python slice applied afterwards. **The length before that slice is the
+    number**, from the same fetch, so ADR-0036 holds by construction rather
+    than by assertion: the badge cannot disagree with the list because it IS
+    the list.
+
+    It is a floor, not always an exact total. Each source query stops at
+    ``SUB_QUERY_LIMIT`` rows, so a player with more than that in one source is
+    undercounted. The honest threshold falls out of the same arithmetic: a
+    total **below** ``SUB_QUERY_LIMIT`` is provably exact, because no single
+    source can have hit its cap while the sum is under it. The client shows the
+    real number below the cap and a "50+" form at or above it — see
+    ``ACTIVITY_COUNT_CAP`` in ``frontend/src/api/sidebar.ts``, which is pinned
+    to this constant by a test rather than copied from it.
     """
     fetch_ctx, archive_view = await _build_fetch_context(
         character_id, session, before_cursor=None, archived=False
@@ -1731,7 +1789,11 @@ async def get_sidebar_feed(
     )
 
     recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
-    return sum(request_counts.values()), recent_activity[:SIDEBAR_ACTIVITY_LIMIT]
+    return (
+        sum(request_counts.values()),
+        recent_activity[:SIDEBAR_ACTIVITY_LIMIT],
+        len(recent_activity),
+    )
 
 
 async def get_activity_feed(

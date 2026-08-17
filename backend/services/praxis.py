@@ -48,7 +48,11 @@ from services.character_stats import (
     recalculate_members_stats,
 )
 from services.faction_service import faction_permits
-from services.media import process_and_save_media
+from services.media import (
+    process_and_save_media,
+    restore_media_to_mount,
+    withdraw_media_from_mount,
+)
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -1948,6 +1952,9 @@ async def moderate_praxis(
     their score until their own next edit. Same shape as the forfeit recalc in
     :func:`unsubmit_praxis`, for the same reason: the ruling changes what a second
     player is worth.
+
+    It is also the one place a praxis enters or leaves ``hidden``, so it is where
+    :func:`_apply_media_publication` keeps the disk in step (#1593).
     """
     praxis = await get_praxis(praxis_id, session)
 
@@ -1966,6 +1973,7 @@ async def moderate_praxis(
         praxis.admin_note = None
 
     await session.flush()
+    await _apply_media_publication(praxis, session)
     era_row = await get_era_row_for_praxis(praxis, session)
     await recalculate_members_stats(praxis, session, era, era_row=era_row)
 
@@ -1976,6 +1984,43 @@ async def moderate_praxis(
         )
         await session.flush()
     return await get_praxis(praxis_id, session)
+
+
+async def _apply_media_publication(praxis: Praxis, session: AsyncSession) -> None:
+    """Match this praxis's files on disk to its moderation status (#1593).
+
+    ``/media`` is mounted unauthenticated, so "off the site entirely" — which is
+    what ``models.praxis`` says ``hidden`` means — has to reach the filesystem or
+    it is only true of the HTML. A hidden praxis's uploads move to a directory
+    outside the mount; every other status moves them back.
+
+    ``hidden`` **only**, deliberately. ``failed`` shares the unscored set
+    (``UNSCORED_MODERATION_STATUSES``) but that set answers a scoring question:
+    a failed praxis keeps its banner and its place in the feed, so withdrawing
+    its media would break a praxis that is still meant to be displayed. The
+    predicate here is the status itself, not that set.
+
+    Stated as a total invariant rather than as two transitions: the else branch
+    runs on every non-hidden moderation, and restoring what is not in quarantine
+    costs a `stat` per file. That makes a re-hide, a half-completed withdrawal
+    and a praxis whose files never existed all converge on the right disk
+    instead of drifting.
+    """
+    stored_paths = list(
+        (
+            await session.execute(
+                select(MediaItem.file_path).where(MediaItem.praxis_id == praxis.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not stored_paths:
+        return
+    if praxis.moderation_status == ModerationStatus.hidden:
+        withdraw_media_from_mount(stored_paths)
+    else:
+        restore_media_to_mount(stored_paths)
 
 
 async def _duel_opponent_character_id(

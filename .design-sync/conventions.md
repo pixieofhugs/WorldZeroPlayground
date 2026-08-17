@@ -76,7 +76,7 @@ internally and stacks single-column on a phone):
 - `characterprofile` `*ProfileBody` and `factiondetail` `*FactionBody` — the page bodies.
 
 **Nothing is split by form factor any more.** Faction detail was the last pair —
-`*FactionBody` beside a `*FactionPage` mobile screen — and ADR-0077 (#1314) retired
+`*FactionBody` beside a `*FactionPage` mobile screen — and ADR-0078 (#1314) retired
 the phone skins. Character profile went the same way in #1319 (`*ProfileBody`).
 
 **Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaFieldDesk` / `SnideFieldDesk` …

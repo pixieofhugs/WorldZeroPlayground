@@ -235,7 +235,7 @@ describe('the fluted rule is retired kit-wide (#1638)', () => {
     // surfaces reach the kit at all.
     //
     // Seven until #1314. `EphemeristsFactionPage` was one of them and is gone
-    // with the whole `mobileFactionPage` surface (ADR-0077) — the band it drew
+    // with the whole `mobileFactionPage` surface (ADR-0078) — the band it drew
     // is still on the phone, because `EphemeristsFactionBody` (already counted)
     // now serves both widths. A DELETED surface is the one way this number may
     // fall; it must never fall because a mount was dropped.
