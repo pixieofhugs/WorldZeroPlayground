@@ -185,13 +185,26 @@ describe('UA mandala strengths (brief §5)', () => {
     // `absent` is a real strength, not a missing case: a task list, a feed row
     // and a comment thread are read in bulk and stay clean.
     for (const [name, render] of [
-      ['task card', taskCard],
       ['feed row', feedRow],
       ['comment row', comment],
       ['comment composer', composer],
     ] as const) {
       expect(render(), `${name} grew a mandala`).not.toMatch(PETAL)
     }
+  })
+
+  it('keeps the task card\'s READING COLUMN clean, and flanks only its sign-up (#2031)', () => {
+    // The task card used to be in the list above. It gained two mandalas in the
+    // ornament pass — and the strength ruling is not overruled, it simply does
+    // not reach them: `absent` protects COPY the pattern would sit under, and
+    // the sign-up region below `data-cta-rule="ua"` carries none. So the column
+    // is asserted apart from the row beneath it, and a mandala that drifted up
+    // into the title, the description or the hero still fails here.
+    const html = taskCard()
+    const rule = html.indexOf('data-cta-rule="ua"')
+    expect(rule, 'the rule the column is measured to').toBeGreaterThan(0)
+    expect(html.slice(0, rule), 'a mandala reached the reading column').not.toMatch(PETAL)
+    expect(html.slice(rule), 'the sign-up lost its flanking mandalas').toMatch(PETAL)
   })
 })
 
