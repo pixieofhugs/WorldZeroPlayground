@@ -1,6 +1,26 @@
 # ADR-0014: Praxis scoring is per-character Contribution; the card shows Merit
 
-Status: Accepted (2026-06-24)
+> **Superseded in part — the *Merit (the card number)* section only.** The half
+> of this ADR the title's second clause names is retired;
+> [ADR-0047](0047-praxis-card-shows-computed-total-not-merit.md) moved the card
+> to the computed total, and
+> [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md) then retired
+> **Merit** as a live concept entirely: a praxis has one number, `score`, the
+> computed total resolved for its author, for every praxis type. `PraxisOut.score`
+> / `PraxisCardOut.score` are no longer Merit, and Merit is no longer the
+> collab-card number or the task-submission sort key.
+>
+> **Everything else here stands.** The Contribution model — scoring is
+> per-`(character, praxis)`, `(base + metatasks) × faction × duel + votes`,
+> computed by the `compute_contributions` batch primitive over a frozen breakdown
+> dataclass — the vote-tally read-model, and the `stars` → `value` vocabulary are
+> all live. ADR-0053 removed the *second* number, not the per-character one.
+>
+> The argument below is preserved as written, including the Merit section that
+> ADR-0047 and ADR-0053 had to answer.
+
+Status: Accepted (2026-06-24); the *Merit (the card number)* section superseded by
+ADR-0047 (2026-07-19) and retired by ADR-0053 (2026-07-21).
 
 ## Context
 

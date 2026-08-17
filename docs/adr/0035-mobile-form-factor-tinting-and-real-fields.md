@@ -1,6 +1,26 @@
 # ADR-0035: Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields
 
-Status: Accepted (2026-07-14)
+> **Superseded per surface, not in whole.** The tinting cascade, the mandatory
+> `Default` (na) skin and the real-domain-fields rule below still govern every
+> mobile surface. What has moved is the **form-factor split itself**: surface by
+> surface, the parallel `MOBILE_ARCHETYPE_BY_SLUG` registry is being replaced by
+> one responsive component per faction. Each of these supersedes ADR-0035 for its
+> own surface and no other:
+>
+> - task cards — [ADR-0056](0056-task-cards-collapse-to-one-responsive-component-per-faction.md)
+> - task detail — [ADR-0058](0058-task-detail-collapses-to-one-responsive-component-per-faction.md)
+> - praxis cards — [ADR-0067](0067-praxis-cards-collapse-to-one-responsive-component-per-faction.md)
+> - the edit-praxis composer — [ADR-0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md)
+> - the character profile and the duel seal — [ADR-0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md)
+> - faction detail — [ADR-0078](0078-faction-detail-collapses-to-one-responsive-component-per-faction.md)
+>
+> [ADR-0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md)
+> did the same to **praxis detail** (#1089 retired its mobile archetypes) without
+> writing a supersession line; treat that surface as moved too.
+>
+> ADR-0035 remains the live decision for every surface not listed above.
+
+Status: Accepted (2026-07-14); superseded per surface — see the banner above.
 
 ## Context
 
