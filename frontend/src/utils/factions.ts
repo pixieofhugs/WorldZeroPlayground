@@ -61,10 +61,12 @@ const CSS_KEY: Record<string, string> = {
   // Warriors of Whimsy is themed again (#812) — this is the flip the #784
   // comment anticipated. This ONE line is what re-themes WOW, because
   // isKnownFaction tests the mapped VALUE (`!== "default"`), not key presence
-  // (#749). Its colour is the rainbow's yellow; its SKIN is the cream/gold/plum
-  // chronicle, which is a different thing and does not follow the hue (#838,
-  // ADR-0050). WOW still registers only a few manifest surfaces, so the rest
-  // fall back to Default* until #840.
+  // (#749). Its colour was the rainbow's yellow and is the chronicle plum since
+  // #2068; its SKIN is the cream/gold/plum chronicle, which is a different thing
+  // and does not follow the hue (#838, ADR-0050) — the two merely agree on a
+  // value now, in light, which is not the same as being one token. WOW still
+  // registers only a few manifest surfaces, so the rest fall back to Default*
+  // until #840.
   wow: "wow",
   ephemerists: "ephemerists",
   singularity: "singularity",
@@ -438,6 +440,16 @@ export function getAllFactions(): FactionConfig[] {
  * → Cozy Coven. Red, orange, yellow, green, teal, blue, pink — the order is the
  * spectrum, so a slug's position is decided by its hue and nothing else.
  *
+ * TWO SLOTS ARE OUT OF SPECTRAL ORDER SINCE #2068, DELIBERATELY LEFT THAT WAY.
+ * That issue swapped two hues without touching this array: WOW went from the
+ * yellow to a plum (h314) and Ephemerists from the teal to a brass (h85), so the
+ * strip now runs red, orange, PLUM, green, GOLD, blue, pink. Sorting by hue again
+ * means moving `wow` between `singularity` and `coven` and `ephemerists` up to
+ * index 2, which repaints every stripe bar, pennant, legend and Meadow bloom in
+ * the app — a visual call the owner reserved along with whether the na spectrum
+ * keeps a teal stop. Do not "fix" the sort as tidy-up; it is an open decision,
+ * and this comment is the record that the drift is known rather than missed.
+ *
  * Albescent is deliberately absent (#783). It is a secret society hiding in
  * plain sight: /factions omits it server-side until an account is revealed to it
  * (ADR-0027, #390), so any bar built from this array would have leaked its
@@ -452,8 +464,9 @@ export function getAllFactions(): FactionConfig[] {
 export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "everymen",
   "ua",
-  // Yellow, between UA's orange and S.N.I.D.E.'s green (#812). The array is a
-  // literal spectrum, so once WOW is yellow this is the only index it can hold.
+  // Was the yellow, between UA's orange and S.N.I.D.E.'s green (#812), which was
+  // the only index a yellow could hold. WOW is a plum since #2068 and this index
+  // is now the array's one lie — see the note above before moving it.
   "wow",
   "snide",
   "ephemerists",

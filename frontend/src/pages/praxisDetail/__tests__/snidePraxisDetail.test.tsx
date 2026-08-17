@@ -232,6 +232,21 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
     expect(render(hidden).text).not.toContain("Discussion");
   });
 
+  it("collapses the clipping into the black slab, censor rules and all (#2066)", () => {
+    // The page carried TWO grounds: the flipping xerox clipping
+    // (`--faction-snide-note-paper`) and the theme-invariant black plate. The
+    // owner collapsed them to one — the plate — so no ink that flips can land
+    // on a sheet any more, and `.snd-censor` (photocopier ink, invisible ON the
+    // plate) can no longer rule a head that sits on one.
+    const { html } = render(state());
+    expect(html, "the stock has no consumer left on this page").not.toContain(
+      "--faction-snide-note-paper",
+    );
+    expect(html, "one ground, and it is the plate").toContain("--faction-snide-card-bg");
+    // The censor half of the same ruling is counted by "heads sections with the
+    // censor rule" below, which is where the shape assertion already lives.
+  });
+
   it("carries its ground on the column, never the viewport", () => {
     // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
     // the page. `.snide-backdrop` is the `position: fixed` mount of the same
@@ -359,11 +374,13 @@ describe("S.N.I.D.E. praxis detail — the dress traps", () => {
     // where it separated the last line of the body from the box's own edge a
     // few pixels down — i.e. from nothing.
     const { html } = render(state());
-    // One rule per non-plate section head on a solo, visible praxis: proof,
-    // write-up, who-voted, discussion. The score and vote heads sit ON the
-    // black plate and take the broken ACID rule instead, which is a different
-    // ornament and deliberately not counted here.
-    expect(html.split("snd-censor").length - 1).toBe(4);
+    // One rule per section head that sits on the WALL, on a solo, visible
+    // praxis: proof, write-up, discussion. A head INSIDE a slab takes the broken
+    // ACID rule instead — the censor's blocks are photocopier ink and are
+    // invisible on black — which is a different ornament and deliberately not
+    // counted here. It was FOUR until #2066: the who-voted head moved onto the
+    // slab with its section when the clipping and the plate became one ground.
+    expect(html.split("snd-censor").length - 1).toBe(3);
     // …and the count alone can be rebalanced. Pin the SHAPE too: the first rule
     // after the body text must belong to the next section's head, so it has to
     // trail that heading's label rather than sit between the body and the edge.

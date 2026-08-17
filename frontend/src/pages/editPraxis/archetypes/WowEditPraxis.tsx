@@ -76,9 +76,12 @@
  *   `--faction-wow-chronicle-gold` measures 2.24:1 on the cream, so it frames,
  *   rules and fills and never sets text. Where gold has to be READ — the plaque's
  *   figure, the submit button's label — the pairing is a different token:
- *   `--faction-wow-stamp-total` as ink, `--faction-wow-on-fill` (7.6:1 on the
+ *   `--faction-wow-stamp-total` as ink, `--faction-wow-on-gold` (7.64:1 on the
  *   gold, both themes) on the fill. There is no `dark ?` anywhere below; the flip
- *   is the `[data-theme="dark"]` cascade's.
+ *   is the `[data-theme="dark"]` cascade's. That was `-on-fill` until #2068 gave
+ *   the spine hue a plum, at which point `-on-fill` had to go white in light and
+ *   white on this gold is 2.47:1 — one ink, two grounds of opposite polarity, so
+ *   the gold role took its own name at the value it always had.
  * - **`--faction-wow-card-muted` is legible on the CREAM and not on the PANEL.**
  *   4.77:1 on `--faction-wow-card-bg`, 4.25:1 on `--faction-wow-chronicle-panel`
  *   — a pairing, not a property (§3, #1028). So the muted ink is spent only on
@@ -209,7 +212,7 @@ const RULE = "var(--faction-wow-rule)";
 /** Burnt gold that is legible AS TEXT — the plaque's figure. */
 const GOLD_INK = "var(--faction-wow-stamp-total)";
 /** The AA ink for anything printed ON the gold. */
-const ON_GOLD = "var(--faction-wow-on-fill)";
+const ON_GOLD = "var(--faction-wow-on-gold)";
 
 /** The band along the head of the writ: gold 0-11px, plum 11-22px. */
 const RIBBON = "var(--faction-wow-quest-ribbon)";

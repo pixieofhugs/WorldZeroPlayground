@@ -64,11 +64,33 @@ import type { TaskDetailState } from "../useTaskDetail";
  * drops the two-column split. The separate Snide mobile skin and the manifest
  * surface that held it were deleted by #1068 when the ADR was accepted.
  *
- * All colour via the existing `--faction-snide-note-*` clipping family (which
- * FLIPS under `[data-theme="dark"]` — the dossier is a sheet of paper) plus the
- * theme-invariant `--faction-snide-*` pigments where the design draws a LINE
- * rather than sets type. No new tokens: the family #1023 built for the ransom
- * clipping is the same dress at page scale.
+ * ## TWO GROUNDS, and only one of them flips (#2066)
+ *
+ * The WALL is `.snd-detail-sheet`, the flyposted xerox column shared with the
+ * praxis-detail page so the two cannot drift. It flips under
+ * `[data-theme="dark"]`, and the type printed straight onto it flips with it:
+ * that is what the `--faction-snide-note-*` inks are for, and all they are for.
+ *
+ * Every SHEET pasted on that wall — the brief, and the two boxes punched into
+ * the action plate — is a black slab instead, `--faction-snide-card-*`: the
+ * photocopier ink S.N.I.D.E.'s praxis card and praxis-detail page already print
+ * on. The owner's ruling is that a clipping cut from the same stock as the wall
+ * stops reading as a thing pasted ON something.
+ *
+ * **The move is a PAIRING, not a repaint.** `-note-ink` is `#14110b` by day and
+ * `#f4f1e8` by night, so pinning a ground black and leaving that ink on it is
+ * black type on a black sheet in light mode — the WOW-masthead failure shape at
+ * 1.08:1. `-card-text` is cream in BOTH themes on a ground that is black in
+ * both, measured as a pair. So nothing on a slab may read a token that flips,
+ * and the two families do not mix: `PLATE_*` on a slab, `INK`/`MUTED`/`PINK_INK`
+ * on the wall. The `-note-*` CTA, knockout and masthead-bar pairs are unaffected
+ * — all three were already black-grounded and already invariant in the pair.
+ *
+ * The theme-invariant `--faction-snide-*` pigments still draw every LINE (the
+ * pen circle, the X marks, the hazard tape, printed borders and shadows), which
+ * is the faction's standing rule: acid and pink are a ring, a rule or a fill,
+ * never an ink on paper. On the slab acid IS an ink — that is what a black
+ * ground buys — and there it is spelt `--faction-snide-card-accent`.
  */
 
 const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
@@ -76,12 +98,23 @@ const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARK = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
-/** The clipping's stock and its inks — these two SWAP under the dark cascade. */
-const PAPER = "var(--faction-snide-note-paper)";
+/**
+ * The WALL's inks, which SWAP under the dark cascade because the wall does.
+ * They belong to type printed straight on it — the headline cuts, breadcrumb,
+ * byline, section heads, header stats. NOTHING ON A SLAB READS THEM (#2066).
+ */
 const INK = "var(--faction-snide-note-ink)";
 const MUTED = "var(--faction-snide-note-muted)";
-/** The pink that is TEXT (AA-walked), as opposed to the pink that is a line. */
+/** The pink that is TEXT on the wall (AA-walked), not the pink that is a line. */
 const PINK_INK = "var(--faction-snide-note-pink-ink)";
+/**
+ * The SLAB — every sheet pasted on the wall, black in BOTH themes, with the ink
+ * family it was measured against. Acid carries type only here.
+ */
+const PLATE = "var(--faction-snide-card-bg)";
+const PLATE_TEXT = "var(--faction-snide-card-text)";
+const PLATE_MUTED = "var(--faction-snide-card-muted)";
+const PLATE_ACCENT = "var(--faction-snide-card-accent)";
 /** The pink that is a DRAWN LINE — pen circle, strike-out cross. Invariant. */
 const PINK = "var(--faction-snide-pink)";
 /** Photocopier black that does NOT flip: borders and shadows printed on acid. */
@@ -213,25 +246,37 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     textTransform: "uppercase",
     color: MUTED,
   };
-  /** A xeroxed sheet: warm stock, raster grain, hard printed shadow. */
+  /**
+   * A sheet pasted on the wall: the black slab, ruled in acid, with the same
+   * hard printed shadow. The raster grain went with the stock (#2066) — it was
+   * a translucent BLACK in light, which the black ground swallows whole, and a
+   * screen that only prints in one theme is dress that disagrees with itself.
+   */
   const panel: CSSProperties = {
-    background: PAPER,
-    backgroundImage:
-      "repeating-linear-gradient(0deg, var(--faction-snide-note-grain) 0 1px, transparent 1px 3px)",
-    border: `2px solid ${INK}`,
+    background: PLATE,
+    border: `2px solid var(--faction-snide-acid)`,
     boxShadow: "var(--faction-snide-note-shadow)",
+    color: PLATE_TEXT,
     boxSizing: "border-box",
   };
   /** A box punched into the acid plate. Its border is printed, so invariant. */
   const innerBox: CSSProperties = {
-    background: PAPER,
+    background: PLATE,
     border: `3px solid ${HARD}`,
+    color: PLATE_TEXT,
     padding: "var(--space-lg)",
     boxSizing: "border-box",
   };
   /**
    * The skewed, hard-shadowed call to action. `done` inverts it — near-black
    * plate, acid rule, pink shadow — so "continue" never looks like "sign up".
+   *
+   * The done shadow takes the INVARIANT pink now (#2066): it is a drawn block
+   * that falls on the slab, and the slab does not flip, so the walked
+   * `-note-pink-ink` it used to wear would have been the one value on this sheet
+   * that changed character between themes. The `done` FILL is deliberately left
+   * as printed photocopier black, which is `-card-bg`'s own light value — see
+   * the note on the base chip in `worth`.
    */
   const plateButton = (done: boolean): CSSProperties => ({
     position: "relative",
@@ -248,7 +293,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     textTransform: "uppercase",
     border: `3px solid ${done ? "var(--faction-snide-acid)" : HARD}`,
     padding: desktop ? "var(--space-lg) var(--space-xl)" : "var(--space-md)",
-    boxShadow: `7px 7px 0 ${done ? PINK_INK : HARD}`,
+    boxShadow: `7px 7px 0 ${done ? PINK : HARD}`,
     transform: "skewX(-4deg) rotate(-0.8deg)",
     display: "flex",
     alignItems: "center",
@@ -311,6 +356,20 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   // ── The worth: base chip, the (usually absent) ×mult, the circled total ──
+  //
+  // This whole block sits INSIDE a punched box, so its ground is the slab and
+  // every ink here is `-card-*` or an invariant drawn line. The pen circle stays
+  // `--faction-snide-pink` — it is a stroke, and it measures 5.4:1 on the slab —
+  // but the caption inside it and the ×mult annotation are TYPE, and the walked
+  // pink they used to wear falls to 3.1:1 on black, so they take the acid the
+  // slab admits as ink (#2066).
+  //
+  // The base chip's photocopier-black fill is LEFT ALONE and is worth knowing
+  // about: `--faction-snide-ink` is the same `#14110b` as `-card-bg` in light, so
+  // in light theme the chip's ground now matches the sheet under it exactly and
+  // the block reads as acid type rather than as a stamped chip. Its acid stays
+  // 15.6:1 either way, so this is dress, not legibility, and re-inking it is a
+  // design call the ruling did not make.
   const worth = (
     <div
       style={{
@@ -350,7 +409,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               fontFamily: MARK,
               fontSize: "var(--text-title)",
               lineHeight: 1,
-              color: PINK_INK,
+              color: PLATE_ACCENT,
               transform: "rotate(4deg)",
               whiteSpace: "nowrap",
             }}
@@ -397,7 +456,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             fontFamily: IMPACT,
             fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
             lineHeight: 0.9,
-            color: INK,
+            color: PLATE_TEXT,
           }}
         >
           {modifiedPoints}
@@ -411,7 +470,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             letterSpacing: "0.22em",
             // eslint-disable-next-line local/no-raw-style-values -- ornament: the caption's lead inside the drawn loop; a 4px rung pushes it off the numeral.
             marginTop: 3,
-            color: PINK_INK,
+            color: PLATE_ACCENT,
           }}
         >
           {t("detail.points.total")}
@@ -438,7 +497,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               fontSize: "var(--text-md)",
               lineHeight: 1.55,
               textAlign: "center",
-              color: MUTED,
+              color: PLATE_MUTED,
               marginTop: "var(--space-lg)",
             }}
           >
@@ -446,7 +505,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             {!levelJumpSignup && (
               <>
                 {" · "}
-                <span style={{ color: PINK_INK }}>
+                <span style={{ color: PLATE_ACCENT }}>
                   {t("detail.signup.levelMet", { level: task.level_required })}
                 </span>
               </>
@@ -463,7 +522,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               fontFamily: MARK,
               fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
               lineHeight: 1.2,
-              color: INK,
+              color: PLATE_TEXT,
               marginBottom: "var(--space-md)",
               transform: "rotate(-1.4deg)",
             }}
@@ -490,7 +549,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               fontFamily: MARK,
               fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
               lineHeight: 1.2,
-              color: INK,
+              color: PLATE_TEXT,
               marginBottom: "var(--space-md)",
               transform: "rotate(-1.4deg)",
               textDecoration: `underline 3px ${PINK}`,
@@ -519,7 +578,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textDecoration: "line-through",
-              color: MUTED,
+              color: PLATE_MUTED,
             }}
           >
             {t("detail.inProgress.drop")}
@@ -571,15 +630,18 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            // The dot screen inverts with the sheet: it was photocopier black on
+            // cream, which on the slab prints black-on-black in light. Newsprint
+            // grey is the slab's own quiet pigment and is light in both themes.
             backgroundImage:
-              "radial-gradient(var(--faction-snide-note-ink) 22%, transparent 23%), radial-gradient(var(--faction-snide-note-ink) 22%, transparent 23%)",
+              "radial-gradient(var(--faction-snide-card-muted) 22%, transparent 23%), radial-gradient(var(--faction-snide-card-muted) 22%, transparent 23%)",
             backgroundSize: "6px 6px, 6px 6px",
             backgroundPosition: "0 0, 3px 3px",
           }}
         >
           {/* The halftone reads through at the edges only — the sheet is a
               photocopy of a photocopy, not a dot-screen illustration. */}
-          <span aria-hidden="true" style={{ position: "absolute", inset: 3, background: PAPER, opacity: 0.86 }} />
+          <span aria-hidden="true" style={{ position: "absolute", inset: 3, background: PLATE, opacity: 0.86 }} />
           <span style={{ position: "relative" }}>{worth}</span>
         </div>
         {hasAction && (
@@ -839,7 +901,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: TYPE,
               lineHeight: 1.55,
-              color: INK,
+              color: PLATE_TEXT,
               whiteSpace: "pre-wrap",
               margin: 0,
             }}
@@ -884,8 +946,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               display: "flex",
               gap: "var(--space-xs)",
               padding: "var(--space-xs)",
-              border: `2px solid ${INK}`,
-              background: PAPER,
+              // A chip of the same slab, so its edge is drawn in acid rather
+              // than in an ink that would print black-on-black in light.
+              border: `2px solid var(--faction-snide-acid)`,
+              background: PLATE,
             }}
           >
             {(["score", "recent"] as const).map((sort) => (
@@ -904,7 +968,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
                   background:
                     submissionSort === sort ? "var(--faction-snide-note-cta-bg)" : "transparent",
                   color:
-                    submissionSort === sort ? "var(--faction-snide-note-cta-ink)" : MUTED,
+                    submissionSort === sort
+                      ? "var(--faction-snide-note-cta-ink)"
+                      : PLATE_MUTED,
                 }}
               >
                 {sort === "score"

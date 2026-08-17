@@ -4,10 +4,10 @@
  * The shared praxis-detail anatomy (`DefaultPraxisDetail`, ADR-0061) in
  * S.N.I.D.E.'s dress: somebody's proof flyposted on the faction's xerox wall.
  * Receipts pasted up under a censor rule, a headline cut word by word from four
- * faces, clippings taped along the rail, and the score and the meter bolted to a
- * black plate. Anton, Archivo Black, Special Elite and Permanent Marker all
- * appear, because a ransom note mixes faces by definition; the grain is the
- * wall's own raster plus each clipping's photocopier screen.
+ * faces, and every block on the rail — proof, write-up, score, duel, meter,
+ * tallies — bolted to the same black slab (#2066). Anton, Archivo Black, Special
+ * Elite and Permanent Marker all appear, because a ransom note mixes faces by
+ * definition; the grain is the wall's own raster, and the slabs are unscreened.
  *
  * ## The layout is the contract, not this file's invention
  *
@@ -68,31 +68,47 @@
  * stay dispatched on `comment.author.faction_slug` — a Coven player's comment
  * reads Coven on this page, and ADR-0061 protects that explicitly.
  *
- * ## Two grounds, and which block gets which is a MEASUREMENT, not a taste call
+ * ## ONE ground on the wall, and it is the slab (#2066)
  *
  * The wall (`.snd-detail-sheet`, shared with the task-detail column so the two
- * pages cannot drift) and the paper clippings on it both FLIP under
- * `[data-theme="dark"]`. The black plate does not. The rule:
+ * pages cannot drift) FLIPS under `[data-theme="dark"]`. Everything pasted on it
+ * is the same theme-INVARIANT black slab, `--faction-snide-card-*` — the
+ * photocopier ink S.N.I.D.E.'s praxis card already prints its evidence on. This
+ * page used to carry two grounds, the flipping xerox clipping
+ * (`--faction-snide-note-*`) and that plate; the owner collapsed them, because a
+ * clipping cut from the same stock as the wall stops reading as a thing pasted
+ * ON something.
  *
- * - **A block whose ink this file does not control gets the stock that ink was
- *   measured on.** The vote summary paints `--color-text-secondary`, which flips
- *   with the theme and so needs a ground that flips with it: a paper clipping.
- *   `DuelCard` was the same case until #1153 gave it an `ink` seam — this file
- *   now hands it `--faction-snide-note-*`, and the clipping is the stock THAT
- *   family was measured on, so the block lands on the same ground for the
- *   stronger reason. The rule is unchanged; only who owns the ink is.
- * - **S.N.I.D.E.'s own always-dark widgets keep their ink stock.** The evidence
- *   tag (`SnideScoreStamp`) is acid on a `rgba(0,0,0,0.4)` well and the amp face
- *   is a black chassis with acid/vote-off captions; on cream paper the acid
- *   caption falls to 2.6:1. They are bolted to `--faction-snide-card-bg`, the
- *   photocopier ink the praxis card already prints them on, where acid measures
- *   15.7:1. This is WORLD_ZERO_STYLE §3's "a new ground invalidates every
- *   contrast claim measured on the old one" applied before the fact.
+ * **The collapse is a PAIRING move, not a repaint.** `-note-ink` is `#14110b` by
+ * day and `#f4f1e8` by night, so pinning the ground black and leaving that ink
+ * on it is black type on a black slab in light mode — the WOW-masthead failure
+ * shape at 1.08:1. `-card-text` is cream in BOTH themes on a ground that is
+ * black in both, measured as a pair. So a block that moved onto the slab took
+ * the whole `-card-*` family with it, and nothing on a slab reads a token that
+ * flips. What the slab also buys: S.N.I.D.E.'s own always-dark widgets no longer
+ * need a ground of their own — the evidence tag (`SnideScoreStamp`) and the amp
+ * face paint acid captions that fall to 2.6:1 on cream paper and measure 15.7:1
+ * here, and the vote summary's `--color-text-secondary` is the one ink this file
+ * does not own, which is why the vote block was already on the plate.
  *
- * The corollary is the faction's standing rule: **acid and pink are held as a
- * ring, a rule or a bar on paper, never as ink.** Acid is text only on the black
- * plate. Pink appears as ink only through `--faction-snide-note-pink-ink`, the
- * AA-walked member of the clipping family (5.4:1 on paper, 7.1:1 in dark).
+ * Two consequences worth knowing before editing:
+ *
+ * - **`.snd-censor` cannot rule a head that sits ON the slab.** Its blocks are
+ *   photocopier ink, invisible on black, so such a head takes the broken acid
+ *   rule instead — `sectionHead(..., { onPlate: true })`. The heads on the WALL
+ *   (proof, write-up, crew, metatasks, discussion) still rule with the censor
+ *   and still ink with the wall's own flipping `-note-*`.
+ * - **The crew keeps its invariant xerox insert** (`--faction-snide-paper`), and
+ *   that is not an exception to the rule above but the same rule: `CollabRoster`
+ *   fills a cast row with `--faction-snide-card-muted`, a LIGHT grey in both
+ *   themes, so the roster needs a light ground of its own. Printed black on
+ *   invariant stock measures 13:1 against that fill in either theme.
+ *
+ * The faction's standing rule survives intact: **acid and pink are held as a
+ * ring, a rule or a bar on paper, never as an ink.** On the slab acid IS an ink —
+ * that is exactly what a black ground buys — and it is spelt
+ * `--faction-snide-card-accent` when it carries type; `--faction-snide-pink`
+ * stays the drawn line and fill (the voter tallies).
  *
  * The ground belongs to the COLUMN, not the viewport (§5, the #1028 ruling): the
  * site background still shows around the page, which is why `.snide-backdrop`'s
@@ -128,12 +144,16 @@ const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
 const MARK = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
-/** The clipping family — stock and inks. These FLIP under the dark cascade. */
-const PAPER = "var(--faction-snide-note-paper)";
+/**
+ * The WALL's inks — the flyposted xerox column, which FLIPS under the dark
+ * cascade, so these do too. They belong to type printed straight onto the wall:
+ * the headline cuts, the byline, the section heads, the task reference.
+ * NOTHING ON THE SLAB READS THEM (#2066).
+ */
 const INK = "var(--faction-snide-note-ink)";
 const MUTED = "var(--faction-snide-note-muted)";
 const RULE = "var(--faction-snide-note-rule)";
-/** The pink that is TEXT (AA-walked on the clipping stock, both themes). */
+/** The pink that is TEXT (AA-walked on the wall's stock, both themes). */
 const PINK_INK = "var(--faction-snide-note-pink-ink)";
 /** The pink that is a DRAWN LINE or FILL — pen circle, tally bar. Invariant. */
 const PINK = "var(--faction-snide-pink)";
@@ -141,16 +161,17 @@ const PINK = "var(--faction-snide-pink)";
 const HARD = "var(--faction-snide-ink)";
 /** Warm xerox stock that does NOT flip — the notebook insert taped on. */
 const STOCK = "var(--faction-snide-paper)";
-/** The black plate S.N.I.D.E.'s always-dark widgets are bolted to. */
+/**
+ * The SLAB — the page's one ground, black in both themes, with the ink family it
+ * was measured against. Everything pasted on the wall is one of these.
+ */
 const PLATE = "var(--faction-snide-card-bg)";
 const PLATE_TEXT = "var(--faction-snide-card-text)";
 const PLATE_MUTED = "var(--faction-snide-card-muted)";
-/** Acid is INK only on the plate; on paper it is a rule or a fill. */
+/** Acid as the plate's INK, which is the one ground that admits it as type. */
+const PLATE_ACCENT = "var(--faction-snide-card-accent)";
+/** Acid as a drawn RULE or ring. Same pigment, and never type on paper. */
 const ACID = "var(--faction-snide-acid)";
-
-/** The photocopier screen every clipping is printed through. */
-const GRAIN =
-  "repeating-linear-gradient(0deg, var(--faction-snide-note-grain) 0 1px, transparent 1px 3px)";
 
 /**
  * The four sources a headline is cut from — the same four `SnideTaskCard` and
@@ -273,18 +294,15 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
     color: MUTED,
   };
 
-  /** A taped-up clipping: xerox stock, raster grain, hard printed shadow. */
-  const clipping: CSSProperties = {
-    background: PAPER,
-    backgroundImage: GRAIN,
-    border: `2px solid ${INK}`,
-    boxShadow: "var(--faction-snide-note-shadow)",
-    color: INK,
-    padding: "var(--space-lg)",
-    boxSizing: "border-box",
-  };
+  /** The same micro-label once it is pasted ON a slab, where the ink flips. */
+  const plateEyebrow: CSSProperties = { ...eyebrow, color: PLATE_MUTED };
 
-  /** The black plate. See the header: this ground is a measurement, not dress. */
+  /**
+   * THE PAGE'S ONE GROUND (#2066): a black slab pasted on the wall, ruled in
+   * acid, printed with the same hard shadow the clippings wore. Every block this
+   * file mounts takes it — score, duel, vote, voters, proof, write-up. The
+   * clipping's flipping xerox stock is gone; see the header for why.
+   */
   const plate: CSSProperties = {
     background: PLATE,
     border: `2px solid ${ACID}`,
@@ -295,9 +313,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   };
 
   /**
-   * A slab headline with a rule running out of it. The rule differs by ground:
+   * A cut headline with a rule running out of it. The rule differs by ground:
    * `.snd-censor`'s blocks are photocopier ink, which is invisible ON the black
-   * plate, so a plate head takes a broken acid rule instead.
+   * slab, so a head INSIDE one takes a broken acid rule and acid type instead.
+   * `onPlate` is therefore not dress — it is which ground the head sits on.
    */
   const sectionHead = (
     label: ReactNode,
@@ -325,7 +344,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             lineHeight: 1.02,
             letterSpacing: "0.01em",
             textTransform: "uppercase",
-            color: onPlate ? ACID : INK,
+            color: onPlate ? PLATE_ACCENT : INK,
           }}
         >
           {label}
@@ -607,22 +626,29 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // Mounted, not re-narrated. It self-hides for a praxis with no duel, for a
   // DECLINED challenge, and for the run-up the composer owns (#1071/ADR-0059).
   //
-  // Still a paper clipping, and now for a stronger reason than before. The card
-  // used to arrive painting `--faction-default-*`, so it needed a ground that
-  // flipped the way those inks do; since #1153 it takes THIS file's inks, and
-  // the clipping is the stock `--faction-snide-note-*` was measured on. The
-  // ground rule in the header is unchanged — the block still gets the stock its
-  // ink was measured on; the ink is simply ours now.
+  // On the slab, and the `ink` seam is why that is safe. The card used to arrive
+  // painting `--faction-default-*`, so it needed a ground that flipped the way
+  // those inks do; since #1153 it takes THIS file's inks, so the ground is now a
+  // free choice and the pairing is the only constraint — every field here is
+  // `-card-*`, measured on `-card-bg` in both themes. `line` draws the two
+  // hairlines and the rival disc's outline, which is the "plate edge" the
+  // faction rule already grants (12:1 newsprint grey on the slab), and `plate`
+  // sits behind the viewer's own disc, so it is the slab itself.
   //
-  // Acid and pink stay off it, per the faction's standing rule: they are a ring,
-  // a rule or a bar on paper, never ink. And the rival's own faction hue never
-  // reaches the card at all — the foreign side is a disc and an outline.
+  // The rival's own faction hue still never reaches the card — the foreign side
+  // is a disc and an outline.
   const duelBlock: ReactNode = (
     <DuelCard
       state={state}
-      style={clipping}
-      heading={sectionHead(t("duelCrossLink.label"))}
-      ink={{ name: INK, total: INK, muted: MUTED, line: RULE, plate: PAPER }}
+      style={plate}
+      heading={sectionHead(t("duelCrossLink.label"), { onPlate: true })}
+      ink={{
+        name: PLATE_TEXT,
+        total: PLATE_TEXT,
+        muted: PLATE_MUTED,
+        line: PLATE_MUTED,
+        plate: PLATE,
+      }}
     />
   );
 
@@ -667,12 +693,15 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // by `usePraxisDetail`. Each rung is marked in pen — pink as a FILL, never as
   // ink. NO AVERAGE anywhere (ADR-0014): the standing is the sum and the count.
   const votersBlock = voters.length > 0 && (
-    <section style={clipping}>
+    <section style={plate}>
       {sectionHead(
         t("detail.voters.heading"),
         {
+          onPlate: true,
           trailing: (
-            <span style={eyebrow}>{t("detail.voters.count", { count: voters.length })}</span>
+            <span style={plateEyebrow}>
+              {t("detail.voters.count", { count: voters.length })}
+            </span>
           ),
         },
       )}
@@ -692,7 +721,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 fontFamily: TYPE,
-                color: INK,
+                color: PLATE_TEXT,
                 textDecoration: "none",
               }}
             >
@@ -706,8 +735,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 position: "relative",
                 overflow: "hidden",
                 flexShrink: 0,
-                background: RULE,
-                border: `1px solid ${INK}`,
+                // The empty part of the track is the slab's own xerox tooth —
+                // `-note-rule` was a translucent BLACK here, which the black
+                // ground swallowed whole in light mode.
+                background: "var(--faction-snide-slab-tooth)",
+                border: `1px solid ${PLATE_MUTED}`,
                 boxSizing: "border-box",
               }}
             >
@@ -727,7 +759,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 fontFamily: IMPACT,
                 fontSize: "var(--text-title)",
                 lineHeight: 1,
-                color: INK,
+                color: PLATE_TEXT,
               }}
             >
               {voter.value}
@@ -751,7 +783,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.proof"), { big: true })}
-      <div style={clipping}>
+      <div style={plate}>
         <MediaGallery media={praxis.media_items} layout={desktop ? "grid" : "column"} />
       </div>
     </section>
@@ -760,21 +792,36 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   const writeUp = praxis.body_text && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.writeUp"), { big: true })}
-      <div style={clipping}>
+      {/* The one block whose ink this file does not fully own: `.markdown-preview
+          a` reads the `--link-ink` SEAM, and unset that seam is a light-cascade
+          neutral which measures 2.19:1 on this slab (the figure the seam was
+          built for, factionContrast.test.ts). The clipping used to flip with the
+          theme and carry it; the slab does not, so the seam is repointed at the
+          pair the slab was measured with — acid 15.6:1, cream 16.7:1. Shape
+          taken from the Ephemerists plate, the other dark-in-light sheet. */}
+      <div
+        style={{
+          ...plate,
+          ["--link-ink" as string]: PLATE_ACCENT,
+          ["--link-ink-hover" as string]: PLATE_TEXT,
+        }}
+      >
         <MarkdownPreview
           source={praxis.body_text}
           className="markdown-preview content-text"
-          style={{ fontFamily: TYPE, lineHeight: 1.6, color: INK }}
+          style={{ fontFamily: TYPE, lineHeight: 1.6, color: PLATE_TEXT }}
         />
       </div>
     </section>
   );
 
-  // The roster rides an INVARIANT stock insert. `CollabRoster` fills a cast
-  // member's row with `--faction-snide-card-muted`, which is a LIGHT grey in
-  // both themes; on a clipping that flips, the dark half would put pale ink on a
-  // pale pill. Printed black on invariant xerox stock measures 13:1 against that
-  // fill in either theme.
+  // THE ONE BLOCK THAT IS NOT THE SLAB, and it is the slab's own rule that keeps
+  // it off: `CollabRoster` fills a cast member's row with
+  // `--faction-snide-card-muted`, a LIGHT grey in both themes, so it needs a
+  // light ground under it — on the black slab that pill would sit pale-on-pale
+  // with the slab's cream ink inside it. Printed black on the INVARIANT xerox
+  // stock measures 13:1 against that fill in either theme (#2066 left it alone
+  // deliberately; the ruling moved the clipping, not this insert).
   const crew = isCollab && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.members"), { big: true })}
