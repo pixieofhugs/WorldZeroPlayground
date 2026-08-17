@@ -232,6 +232,23 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
     expect(render(hidden).text).not.toContain("Discussion");
   });
 
+  it("collapses the clipping into the black slab, censor rules and all (#2066)", () => {
+    // The page carried TWO grounds: the flipping xerox clipping
+    // (`--faction-snide-note-paper`) and the theme-invariant black plate. The
+    // owner collapsed them to one — the plate — so no ink that flips can land
+    // on a sheet any more, and `.snd-censor` (photocopier ink, invisible ON the
+    // plate) can no longer rule a head that sits on one.
+    const { html } = render(state());
+    expect(html, "the stock has no consumer left on this page").not.toContain(
+      "--faction-snide-note-paper",
+    );
+    expect(html, "one ground, and it is the plate").toContain("--faction-snide-card-bg");
+    // Only the heads on the WALL still rule with the censor — proof, write-up
+    // and discussion on this fixture. It was FOUR: the voters head moved onto
+    // the plate with its section and takes the broken acid rule instead.
+    expect(html.split("snd-censor").length - 1, "censor rules, wall heads only").toBe(3);
+  });
+
   it("carries its ground on the column, never the viewport", () => {
     // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
     // the page. `.snide-backdrop` is the `position: fixed` mount of the same
