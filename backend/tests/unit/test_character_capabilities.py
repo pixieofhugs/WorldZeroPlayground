@@ -85,10 +85,72 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         can_see_retired_tasks=False,
         can_see_pending_tasks=False,
         can_comment=True,
+        # metatask_apply_level is untouched (stays 5), so a level-9 char can
+        # still apply metatasks under the stricter thresholds.
+        can_apply_metatask=True,
         # No faction_slug passed, so no faction grants a jump (#811).
         level_jump_reach=0,
         level_jump_available=False,
     )
+
+
+# --- the metatask APPLY gate (#1973) ----------------------------------------
+#
+# Distinct from ``can_propose_metatask`` (``level_to_propose_metatask``): this is
+# the gate on pinning an existing metatask to a praxis, enforced by
+# ``services.praxis_metatask._check_metatask_eligibility``. Era 1 sets
+# ``metatask_apply_level=5``.
+
+
+def test_cannot_apply_metatask_below_the_apply_level() -> None:
+    assert (
+        compute_capabilities(
+            CURRENT_ERA.metatask_apply_level - 1, is_admin=False
+        ).can_apply_metatask
+        is False
+    )
+
+
+def test_can_apply_metatask_at_the_apply_level() -> None:
+    assert (
+        compute_capabilities(
+            CURRENT_ERA.metatask_apply_level, is_admin=False
+        ).can_apply_metatask
+        is True
+    )
+
+
+def test_albescent_can_apply_metatask_below_the_apply_level() -> None:
+    """The case a client-side level comparison gets wrong (#1973).
+
+    Albescent carries ``can_apply_metatask_at_any_level``, so a member below
+    ``metatask_apply_level`` may still apply — and must still be offered the
+    controls. A ``level >= 5`` check in the frontend would deny them.
+    """
+    result = compute_capabilities(
+        0, is_admin=False, faction_slug="albescent", level_jump_used_at_level=None
+    )
+    assert result.can_apply_metatask is True
+
+
+def test_non_bypassing_faction_below_the_level_cannot_apply() -> None:
+    """The control for the test above — the bypass is Albescent's, not everyone's."""
+    result = compute_capabilities(0, is_admin=False, faction_slug="wow")
+    assert result.can_apply_metatask is False
+
+
+def test_no_character_cannot_apply_metatask() -> None:
+    assert compute_capabilities(None, is_admin=False).can_apply_metatask is False
+
+
+def test_admin_below_the_level_cannot_apply_metatask() -> None:
+    """NOT short-circuited by is_admin, unlike the propose/see flags.
+
+    ``services.praxis_metatask.apply_metatask`` has no admin escape hatch, so a
+    True here would offer an admin a picker the API answers 403 to — the exact
+    class of lie #1973 exists to remove. Same reasoning as ``level_jump_*``.
+    """
+    assert compute_capabilities(0, is_admin=True).can_apply_metatask is False
 
 
 # --- faction level-jump flags (#811) ----------------------------------------

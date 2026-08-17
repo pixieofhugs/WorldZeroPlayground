@@ -56,6 +56,7 @@ const RATIO_LABEL_KEY = {
   '1:1': 'imageEdit.ratio1x1',
   '4:3': 'imageEdit.ratio4x3',
   '16:9': 'imageEdit.ratio16x9',
+  '9:16': 'imageEdit.ratio9x16',
 } as const satisfies Record<CropRatioChoice, string>
 
 export interface ImageEditModalProps {
@@ -413,7 +414,8 @@ const ratioGroupStyle: CSSProperties = {
   flexWrap: 'wrap',
   gap: 'var(--space-sm)',
 }
-// Same ghost button, tightened so four of them fit beside the label.
+// Same ghost button, tightened to fit beside the label; the group wraps, which
+// is what absorbs the fifth (9:16, #1968) on a narrow card.
 const ratioButtonStyle: CSSProperties = {
   fontFamily: FONT_BODY,
   textTransform: 'uppercase',

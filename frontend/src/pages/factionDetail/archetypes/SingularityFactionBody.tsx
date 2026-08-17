@@ -208,7 +208,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               {t("singularity.tasks.empty")}
             </p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}

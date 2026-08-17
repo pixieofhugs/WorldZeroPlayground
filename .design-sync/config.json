@@ -222,6 +222,7 @@
     "WatercolorBackground": "src/components/layout/WatercolorBackground.tsx",
     "WowAvatar": "src/components/avatar/WowAvatar.tsx",
     "WowBackdrop": "src/components/backdrop/WowBackdrop.tsx",
+    "WowCard": "src/components/factionCard/WowFactionCard.tsx",
     "WowComment": "src/components/comments/voices/WowComment.tsx",
     "WowDuelSealConfirm": "src/components/duel/WowDuelSealConfirm.tsx",
     "WowEditPraxis": "src/pages/editPraxis/archetypes/WowEditPraxis.tsx",

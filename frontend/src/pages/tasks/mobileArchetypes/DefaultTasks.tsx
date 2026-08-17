@@ -82,7 +82,19 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         ) : tasks.length === 0 ? (
           <TaskListEmpty state={state} />
         ) : (
-          <div className="flex flex-col gap-3">
+          /* Every faction card carries its own fixed `width` and the style
+             guide forbids regularizing those (§10), so the phone's 340px card
+             is narrower than this column. A `flex-col` stretches its items by
+             default, which pinned each card to the left edge and left a ragged
+             right against the full-width filter bar above (#1964) — centre the
+             items instead of widening the card. Not for the SEAL branch: a
+             metatask seal has no width of its own and fills the column, so
+             `items-center` would shrink each seal to its text. The load-more
+             button keeps `w-full`, which still resolves against this column. */
+          <div
+            className={`flex flex-col gap-3${isMetatask ? '' : ' items-center'}`}
+            data-testid="mobile-tasks-results"
+          >
             {isMetatask ? (
               <MetataskSeal metatasks={tasks} />
             ) : (
