@@ -91,6 +91,25 @@ describe('effectiveAspect — avatar locks 1:1, praxis picks its ratio', () => {
     expect(effectiveAspect(undefined, iphonePortrait, '16:9')).toBeCloseTo(16 / 9)
   })
 
+  /**
+   * #1968: every named ratio used to be square or wider-than-tall, so a player
+   * cropping a vertical subject (one person standing) out of a square photo had
+   * nothing to pick. At least one choice must be taller than it is wide.
+   */
+  it('offers a portrait shape at all (#1968)', () => {
+    const portrait = CROP_RATIO_CHOICES.filter(
+      (choice) => effectiveAspect(undefined, undefined, choice) < 1,
+    )
+    expect(portrait).not.toHaveLength(0)
+  })
+
+  it('9:16 is the exact mirror of 16:9 (#1968)', () => {
+    expect(effectiveAspect(undefined, 1, '9:16')).toBeCloseTo(9 / 16)
+    expect(effectiveAspect(undefined, 1, '9:16')).toBeCloseTo(
+      1 / effectiveAspect(undefined, 1, '16:9'),
+    )
+  })
+
   it('a picked ratio still loses to a caller lock — avatars stay square', () => {
     for (const choice of CROP_RATIO_CHOICES) {
       expect(effectiveAspect(AVATAR_ASPECT, 1.78, choice)).toBe(1)

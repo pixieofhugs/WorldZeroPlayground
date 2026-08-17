@@ -73,6 +73,21 @@ function wrap(
 /**
  * Prefix every line touched by the selection. `makePrefix` receives the
  * zero-based index of the line within the selection (used for numbered lists).
+ *
+ * The returned selection never covers a marker (#1969). The marker is the
+ * formatting the author just asked for; selecting it means their first
+ * keystroke deletes the list they just made. So:
+ *
+ * - Empty line → the placeholder is inserted and the selection covers ONLY the
+ *   placeholder, starting after the marker and its trailing space.
+ * - Existing lines → there is no placeholder to select, so the author's own
+ *   selection survives, mapped past every marker inserted inside it: it starts
+ *   after the first line's marker and ends where their text now ends. A bare
+ *   caret stays a bare caret, shifted. Nothing they did not select becomes
+ *   selected, and nothing they did select is dropped.
+ *
+ * Marker lengths are read per line rather than assumed, because they differ
+ * (`- ` is 2, `1. ` is 3, and an ordered list reaches `10. ` at item ten).
  */
 function prefixLines(
   current: MarkdownSelection,
@@ -81,16 +96,29 @@ function prefixLines(
 ): MarkdownSelection {
   const { text, selectionStart, selectionEnd } = current;
   const lineStart = text.lastIndexOf("\n", selectionStart - 1) + 1;
-  const block = text.slice(lineStart, selectionEnd) || placeholder;
-  const prefixed = block
+  const block = text.slice(lineStart, selectionEnd);
+  const isPlaceholder = block === "";
+  const prefixed = (isPlaceholder ? placeholder : block)
     .split("\n")
     .map((line, index) => makePrefix(index) + line)
     .join("\n");
   const nextText = text.slice(0, lineStart) + prefixed + text.slice(selectionEnd);
+  const firstMarker = makePrefix(0).length;
+  if (isPlaceholder) {
+    const start = lineStart + firstMarker;
+    return {
+      text: nextText,
+      selectionStart: start,
+      selectionEnd: start + placeholder.length,
+    };
+  }
+  // Every marker except the first sits between the two ends of the author's
+  // selection; the first sits before it.
+  const inserted = prefixed.length - block.length;
   return {
     text: nextText,
-    selectionStart: lineStart,
-    selectionEnd: lineStart + prefixed.length,
+    selectionStart: selectionStart + firstMarker,
+    selectionEnd: selectionEnd + inserted,
   };
 }
 

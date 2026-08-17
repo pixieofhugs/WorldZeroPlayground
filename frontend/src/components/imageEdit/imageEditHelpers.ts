@@ -47,6 +47,13 @@ export function cropOutputSize(cropArea: Pick<Area, 'width' | 'height'>): Size {
  * `original` is the image's own ratio — the pre-#1713 behaviour, and still the
  * default, so the picker unlocks rather than changes what you land on.
  *
+ * `9:16` is the one taller-than-wide shape (#1968). Until it landed every named
+ * choice was square or landscape, so a player cropping a vertical subject — one
+ * person standing — out of a square photo had nothing to pick. It is the phone
+ * portrait ratio and the exact mirror of `16:9`; `3:4` (the mirror of `4:3`) is
+ * deliberately absent, because the ask was for one standard phone shape and a
+ * sixth button would wrap the row.
+ *
  * ponytail: there is no `free` (drag-any-rectangle) choice. react-easy-crop
  * 6.2.2 — the installed version — takes `aspect` as a plain number with a
  * default and exposes no resize handles, so a user-draggable rect is not in its
@@ -56,7 +63,7 @@ export function cropOutputSize(cropArea: Pick<Area, 'width' | 'height'>): Size {
  * fix. Upgrade path: swap the cropper, then add 'free' here and let
  * {@link effectiveAspect} return undefined for it.
  */
-export const CROP_RATIO_CHOICES = ['original', '1:1', '4:3', '16:9'] as const
+export const CROP_RATIO_CHOICES = ['original', '1:1', '4:3', '16:9', '9:16'] as const
 
 export type CropRatioChoice = (typeof CROP_RATIO_CHOICES)[number]
 
@@ -69,6 +76,7 @@ const RATIO_ASPECTS: Readonly<Record<CropRatioChoice, number | undefined>> = {
   '1:1': 1,
   '4:3': 4 / 3,
   '16:9': 16 / 9,
+  '9:16': 9 / 16,
 }
 
 /**

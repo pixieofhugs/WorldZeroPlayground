@@ -2,6 +2,10 @@
 
 Relationships are instant one-directional declarations. The combination of
 A→B and B→A produces a display status (e.g. "Mutual Friends", "Tsundere").
+
+An edge carries a type and nothing else that anyone reads: blocking lives in
+``services/block_service.py`` on its own record (ADR-0077), and
+``Relationship.status`` is a dormant column that is always ``active``.
 """
 from typing import Optional
 
@@ -12,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.character import Character
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from schemas.relationship import RelationshipListItem
+from services.block_service import block_character, unblock_character
 
 
 # -- Display status labels ----------------------------------------------------
@@ -24,24 +29,19 @@ DISPLAY_STATUS_ONE_SIDED_FRIEND = "One-sided Friend"
 DISPLAY_STATUS_ONE_SIDED_FOE = "One-sided Foe"
 DISPLAY_STATUS_SECRET_ADMIRER = "Secret Admirer"
 DISPLAY_STATUS_TARGETED = "Targeted"
-DISPLAY_STATUS_BLOCKED = "Blocked"
 DISPLAY_STATUS_UNKNOWN = "Unknown"
 
 
 def compute_display_status(
     outgoing_type: Optional[str],
-    outgoing_status: str,
     incoming_type: Optional[str],
-    incoming_status: Optional[str],
 ) -> str:
     """Derive the human-readable relationship label from both sides.
 
-    A block on either edge takes absolute precedence over the type-derived label
-    (ADR-0009, superseded by ADR-0077 — under which a block is its own
-    record, is silent, and produces no display label at all).
+    Types only. There is no ``Blocked`` label and no status argument: ADR-0077
+    moves the block onto its own record and makes it silent to the party it
+    names, so a block changes nothing either party reads here.
     """
-    if outgoing_status == "blocked" or incoming_status == "blocked":
-        return DISPLAY_STATUS_BLOCKED
     if outgoing_type == "friend" and incoming_type == "friend":
         return DISPLAY_STATUS_MUTUAL_FRIENDS
     if outgoing_type == "foe" and incoming_type == "foe":
@@ -65,16 +65,14 @@ def _to_list_item(
     relationship: Relationship,
     target_character: Character,
     incoming_type: Optional[str],
-    incoming_status: Optional[str],
 ) -> RelationshipListItem:
     """Assemble one display-ready edge.
 
     The item describes THE EDGE, not the viewer: ``to_*`` always names
     ``relationship.to_character_id`` and ``display_status`` is computed with this
-    edge as the outgoing side. Block and unblock may be performed by either party
-    (ADR-0009, superseded by ADR-0077, which gives a block its own record and
-    its authorship to the blocker alone), so a viewer-relative shape would
-    hand back the same row mirrored depending on who acted.
+    edge as the outgoing side. ``status`` is emitted but dormant — it is always
+    ``active`` now that a block is its own record (ADR-0077), and the column
+    survives only because dropping a value from a PG enum buys nothing.
     """
     outgoing_type = relationship.type.value
     outgoing_status = relationship.status.value
@@ -88,9 +86,7 @@ def _to_list_item(
         to_display_name=target_character.display_name,
         to_avatar_url=target_character.avatar_url,
         to_faction_slug=target_character.faction_slug,
-        display_status=compute_display_status(
-            outgoing_type, outgoing_status, incoming_type, incoming_status
-        ),
+        display_status=compute_display_status(outgoing_type, incoming_type),
     )
 
 
@@ -120,7 +116,6 @@ async def build_relationship_item(
         relationship,
         target_character,
         reverse.type.value if reverse else None,
-        reverse.status.value if reverse else None,
     )
 
 
@@ -159,21 +154,37 @@ async def create_relationship(
     return relationship
 
 
+def _counterpart(relationship: Relationship, character: Character) -> int:
+    """The other party to an edge this caller is a party to."""
+    return (
+        relationship.to_character_id
+        if relationship.from_character_id == character.id
+        else relationship.from_character_id
+    )
+
+
 async def block_relationship(
     relationship_id: int,
     character: Character,
     session: AsyncSession,
 ) -> Relationship:
-    """Block a relationship. Either party can block."""
+    """Block the other party to this edge, by the edge's id.
+
+    ponytail (#1906): the edge id is not how a block is addressed any more —
+    ``POST /relationships/blocks`` takes a character id and needs no edge at
+    all, which is the entire point of ADR-0077. This route survives one release
+    because ``frontend/src/api/relationships.ts`` still names the path, and it
+    retires with #1907. It writes the same record the new route does, so the
+    two cannot disagree; the edge itself is left exactly as the player declared
+    it, because a block outranks an edge without consuming one.
+    """
     relationship = await session.get(Relationship, relationship_id)
     if relationship is None:
         raise HTTPException(status_code=404, detail="Relationship not found.")
     if character.id not in (relationship.from_character_id, relationship.to_character_id):
         raise HTTPException(status_code=403, detail="Not a party to this relationship.")
 
-    relationship.status = RelationshipStatus.blocked
-    await session.flush()
-    await session.refresh(relationship)
+    await block_character(character, _counterpart(relationship, character), session)
     return relationship
 
 
@@ -182,20 +193,20 @@ async def unblock_relationship(
     character: Character,
     session: AsyncSession,
 ) -> Relationship:
-    """Reverse a block. Either party can unblock; the edge returns to active
-    and its display status re-derives from the relationship types.
+    """Lift this caller's block on the other party to this edge, by the edge's id.
 
-    ADR-0009, superseded by ADR-0077: a block becomes its own record, unblock
-    becomes that record's deletion, and only the blocker may perform it."""
+    ponytail (#1906): the legacy half of ``block_relationship`` above, retiring
+    with it at #1907. Only the caller's own block is lifted — ADR-0077 gives the
+    record's authorship to the blocker alone, so the ADR-0009 behaviour where
+    either party could reverse a block is gone even through this path.
+    """
     relationship = await session.get(Relationship, relationship_id)
     if relationship is None:
         raise HTTPException(status_code=404, detail="Relationship not found.")
     if character.id not in (relationship.from_character_id, relationship.to_character_id):
         raise HTTPException(status_code=403, detail="Not a party to this relationship.")
 
-    relationship.status = RelationshipStatus.active
-    await session.flush()
-    await session.refresh(relationship)
+    await unblock_character(character, _counterpart(relationship, character), session)
     return relationship
 
 
@@ -223,8 +234,8 @@ async def list_relationships(
     if not rows:
         return []
 
-    # Gather the reverse relationships in one query — include blocked edges so
-    # compute_display_status can surface the "Blocked" label for both parties.
+    # Gather the reverse relationships in one query — their type is the whole of
+    # what the display label needs (ADR-0077 took the block off this row).
     target_ids = [row[1].id for row in rows]
     reverse_query = select(Relationship).where(
         and_(
@@ -233,22 +244,17 @@ async def list_relationships(
         )
     )
     reverse_result = await session.execute(reverse_query)
-    reverse_map: dict[int, tuple[str, str]] = {
-        reverse_relationship.from_character_id: (
-            reverse_relationship.type.value,
-            reverse_relationship.status.value,
-        )
+    reverse_map: dict[int, str] = {
+        reverse_relationship.from_character_id: reverse_relationship.type.value
         for reverse_relationship in reverse_result.scalars().all()
     }
 
     items = []
     for relationship, target_character in rows:
-        incoming = reverse_map.get(target_character.id)
         items.append(_to_list_item(
             relationship,
             target_character,
-            incoming[0] if incoming else None,
-            incoming[1] if incoming else None,
+            reverse_map.get(target_character.id),
         ))
 
     return items

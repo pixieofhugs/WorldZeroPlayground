@@ -37,12 +37,15 @@ const ACTIVITY_SIGIL = 18
 /** The slugs whose mark IS the unaffiliated ring, and which therefore take the
  *  position-sampled spectrum below instead of a livery of their own.
  *
- *  `albescent` is named here rather than left to `FactionSigil`'s fallback:
- *  #1891 deletes `AlbescentSigil` and routes the slug to `DefaultSigil`, but
- *  until it lands the dispatcher still answers `albescent` with the surveyor's
- *  cross-hair — and handing THAT a background shorthand as its stroke `color`
- *  would draw nothing. Once #1891 lands this entry is redundant, not wrong. */
-const NEUTRAL_SIGIL_SLUGS = new Set(['na', 'default', 'albescent'])
+ *  `albescent` used to be a third member. #1892 put it here because #1891 had
+ *  just deleted `AlbescentSigil`, so the slug had no mark of its own to draw.
+ *  Sigil Studies v2 gives it one — the labyrinth — and the owner has accepted
+ *  that these rows show it. So the set is back to the two slugs the predicate
+ *  above actually describes. Note the entry was never load-bearing for the
+ *  MECHANISM: the labyrinth is painted through a mask like `DefaultSigil`, so
+ *  it would take the sampled background just as happily; it is out because its
+ *  mark is no longer the ring, not because it could not be sampled. */
+const NEUTRAL_SIGIL_SLUGS = new Set(['na', 'default'])
 
 /** The window onto `--faction-default-rainbow` a row at `index` samples — the
  *  same `600%`-wide, `index * 20%`-offset slice the panel's old dots used, so

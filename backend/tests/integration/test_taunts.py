@@ -24,12 +24,14 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
+from models.character_block import CharacterBlock
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from models.task import Task
 from models.taunt_message import TauntMessage, TauntTriggerType
 from services.character_stats import recalculate_character_stats
 from services.collab_consensus import on_submit
 from services.era import apply_era_reset
+from services.taunt_service import load_foe_edges
 
 # A stale score high enough that a recalc from an empty praxis set drops the
 # character below a rival — the passive half of the overtake rule.
@@ -225,34 +227,34 @@ async def test_friend_edge_does_not_subscribe(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("blocker_is_the_subscriber", [True, False])
-async def test_a_block_on_either_edge_silences_the_pair(
+async def test_unblocking_restores_the_subscription_with_no_further_action(
     db_session: AsyncSession,
     era: Era,
     character: Character,
     character3: Character,
-    active_task: Task,
-    blocker_is_the_subscriber: bool,
 ):
-    """Blocked wins (ADR-0009, superseded by ADR-0077), whichever edge of the
-    pair carries it."""
-    if blocker_is_the_subscriber:
-        # The subscription edge itself is blocked.
-        await _declare_foe(
-            db_session, character3, character, status=RelationshipStatus.blocked
-        )
-    else:
-        # The subscription is active but the reverse edge is blocked.
-        await _declare_foe(db_session, character3, character)
-        await _declare_foe(
-            db_session, character, character3, status=RelationshipStatus.blocked
-        )
-    await _set_score(db_session, character3, era, 1)
-    await _seed_scored_praxis(db_session, character, active_task, "blocked")
+    """A block outranks an active edge without consuming it (ADR-0077), so the
+    subscription comes back on its own when the block goes — no re-declaration.
 
-    await recalculate_character_stats(character.id, db_session)
+    Asserted on the subscription sets themselves, because that is the state the
+    block changes; that a silenced set produces no taunt is asserted end to end
+    in ``test_blocks.py``, and in the era-reset tests below.
+    """
+    await _declare_foe(db_session, character3, character)
+    block = CharacterBlock(
+        blocker_character_id=character.id, blocked_character_id=character3.id
+    )
+    db_session.add(block)
+    await db_session.flush()
 
-    assert await _taunts(db_session) == []
+    assert (await load_foe_edges(character.id, db_session)).subscribers == frozenset()
+
+    await db_session.delete(block)
+    await db_session.flush()
+
+    assert (await load_foe_edges(character.id, db_session)).subscribers == frozenset(
+        {character3.id}
+    )
 
 
 # ---------------------------------------------------------------------------

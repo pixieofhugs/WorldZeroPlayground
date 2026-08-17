@@ -86,9 +86,11 @@ export function WowCheckerBand({ height, square = 8 }: { height: number; square?
  * and the gold rule that closes it. `tally` rides the top-right corner where the
  * kit put the score.
  *
- * The crest is set at 58px — under `WowSigil`'s 56px motto floor the Pig-Latin
- * band would render as a smudge, and at phone width the coin is the one place
- * the motto is still legible.
+ * The mark is set at 58px. That number was chosen to clear `WowSigil`'s old
+ * 56px motto floor, back when the mark was the gilt crest and its Pig-Latin
+ * band smudged below it. Sigil Studies v2 replaced the crest with the googly
+ * crown, which has no lettering and no floor, so 58 is now just the size the
+ * pavilion header was drawn at.
  */
 export function WowPavilionHeader({
   name,
