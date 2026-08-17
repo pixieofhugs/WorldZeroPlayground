@@ -51,7 +51,13 @@
  * Every value here is a `--faction-singularity-term-*` token — with one
  * deliberate exception, the three window lamps, which are the kit's
  * `SingularityLamps` and its theme-invariant `--faction-singularity-led-*`
- * trio (#1979). This bar used to map its own `[MUTED, BLUE, ACCENT]` onto
+ * trio (#1979). The bar's fourth mark, the process light at its right end, is
+ * the kit's `SingularityProcessLight` for the same reason and is `term-*` all
+ * the same: it was this file's own dot in the ACCENT (green) while the task card
+ * and the task detail drew `term-blue-bright`, and #2092 ruled blue. Its hue,
+ * bloom and cadence are the mark's — read that file, not this one.
+ *
+ * This bar used to map its own `[MUTED, BLUE, ACCENT]` onto
  * three dots, which came out green/blue/green while the faction's five other
  * window bars came out red/amber/green. Nothing in this docblock ever argued
  * for that palette: the blanket "every value is a `term-*` token" rule above
@@ -78,9 +84,13 @@
  *
  * ## Motion — three classes, no inline `animation:`
  *
- * `.ep-pulse` on the status lamp (re-timed to the design's 1.6s through
- * `--ep-pulse-dur`, the documented hook), `.ep-blink` on the submit cursor, and
- * `.sg-scan` on the travelling band. All three are class-gated behind the
+ * `.sg-pulse` on the session lamp, `.ep-blink` on the submit cursor, and
+ * `.sg-scan` on the travelling band. The lamp ran `.ep-pulse` re-timed to the
+ * design's 1.6s through `--ep-pulse-dur` until #2092 made the light one kit
+ * drawing: the mark hangs on a task card too, so it breathes on the faction's
+ * own `.sg-pulse` (2.6s) rather than on the composer kit's pulse, and the 1.6s
+ * re-time is the cost of that. Named at the mark, where it can be reversed for
+ * all three surfaces at once. All three are class-gated behind the
  * shared `prefers-reduced-motion` guard in `index.css`; an inline `animation:`
  * would bypass it, which is what #1003 retired. This file touches `index.css`
  * for nothing.
@@ -158,6 +168,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
+import SingularityProcessLight from "../../../components/factionMarks/SingularityProcessLight";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
@@ -337,25 +348,20 @@ export default function SingularityEditPraxis({ state }: Props) {
                   letterSpacing: "0.1em",
                   textTransform: "none",
                   marginLeft: "var(--space-sm)",
+                  /* What pushes the process light to the far end of the bar. The
+                     margin belongs to the bar's layout, so it rides on the name
+                     rather than on the mark — the mark takes no props (#2092). */
+                  marginRight: "auto",
                 })}
               >
                 {PROC_NAME}
               </span>
-              {/* The session lamp: lit, breathing, and glowing only where a
-                  glow reads (the halo token is `none` on the lighter black). */}
-              <span
-                className="ep-pulse"
-                style={{
-                  marginLeft: "auto",
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: ACCENT,
-                  boxShadow: HALO_GREEN,
-                  flexShrink: 0,
-                  ...({ "--ep-pulse-dur": "1.6s" } as CSSProperties),
-                }}
-              />
+              {/* The session lamp — the kit's process light since #2092, drawn
+                  once for this bar, the task card and the task detail. It was
+                  this file's own span in the chassis' GREEN accent while the
+                  other two surfaces drew blue; the owner ruled blue. The hue,
+                  the bloom and the breathing all live in the mark now. */}
+              <SingularityProcessLight />
             </div>
           </ComposerMasthead>
   );
