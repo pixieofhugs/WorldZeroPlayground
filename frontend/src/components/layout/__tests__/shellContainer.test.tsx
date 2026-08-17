@@ -3,8 +3,10 @@
  * it worth pinning: the nav and the page under it read the SAME cap.
  *
  * The seam is the rendered className of two containers in two different files.
- * They were `max-w-5xl` (1024px) and `max-w-[min(92vw,1600px)]`, i.e. up to
- * ~576px apart on a wide monitor, on every route — and nothing anywhere failed.
+ * They were Tailwind's 5xl (1024px) and a `min(92vw, 1600px)` clamp, i.e. up
+ * to ~576px apart on a wide monitor, on every route — and nothing failed.
+ * (Neither old class is spelled out here on purpose: this file is on Tailwind's
+ * content path, so naming a utility in a COMMENT is enough to keep emitting it.)
  * A shared `--shell-max-width` fixes that only for as long as both keep reading
  * it, so the invariant asserted here is "both name the token", not "both say
  * 1392px": the value's home is `index.css` and this harness cannot resolve it
