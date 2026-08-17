@@ -333,7 +333,9 @@ function DesktopProfile({
             {submissions.map((praxis) => (
               <div key={praxis.id} style={{ position: 'relative' }}>
                 {praxis.id === laurelId && <FdlLaurel />}
-                <PraxisCard praxis={praxis} />
+                {/* One fleur per corner: the laurel replaces the card's own
+                    Task Crown rather than stacking on it (#1960). */}
+                <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />
               </div>
             ))}
           </div>
@@ -854,7 +856,8 @@ function MobileProfile({
               {submissions.map((praxis) => (
                 <div key={praxis.id} style={{ position: 'relative' }}>
                   {praxis.id === laurelId && <FdlLaurel />}
-                  <PraxisCard praxis={praxis} />
+                  {/* One fleur per corner — see the desktop branch (#1960). */}
+                  <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />
                 </div>
               ))}
             </div>
