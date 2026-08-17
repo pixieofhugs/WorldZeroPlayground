@@ -43,15 +43,17 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * of paper, so it goes photocopier-black at night rather than staying dark. Two
  * light-half inks are walked down for AA — see index.css.
  *
- * The design's fourth face, Permanent Marker, is deliberately absent. It had one
- * job there — setting the in-progress COUNT apart from its words — and the
- * uniform "{n} in progress" label (#1020) is a single indivisible string, so
- * recovering the effect would mean regex-slicing a localized sentence.
+ * The design's fourth face, Permanent Marker, arrives on the SPRAYED CTA and
+ * nowhere else (#2035). It stays out of the in-progress line, which is the one
+ * job v2's design gave it — setting the COUNT apart from its words — because
+ * the uniform "{n} in progress" label (#1020) is a single indivisible string,
+ * and recovering that effect would mean regex-slicing a localized sentence.
  */
 
 const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
+const MARKER = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
 const PAPER = "var(--faction-snide-note-paper)";
 const INK = "var(--faction-snide-note-ink)";
@@ -130,7 +132,16 @@ function CensorRule({ style }: { style?: CSSProperties }) {
   return <span aria-hidden="true" className="snd-censor" style={style} />;
 }
 
-/** The points, circled in pink pen. */
+/**
+ * The points, circled in pink pen — the loop grown 1.18x (#2035).
+ *
+ * The GROWTH IS ON THE SVG ALONE, so the numeral and its caption stay where
+ * they are and the loop opens away from them. That is the point of the move
+ * (UA's ensō makes the same one): a scale on the whole stamp would grow the
+ * type with the line and clear nothing. The loop spans 80 of the 100 viewBox
+ * units, so at 1.18x it reaches 94.4 — still inside its own box, which is why
+ * nothing beside it in the hero row has to move.
+ */
 function PenCircle({ size, points }: { size: number; points: number }) {
   return (
     <div
@@ -151,7 +162,7 @@ function PenCircle({ size, points }: { size: number; points: number }) {
         height="100%"
         viewBox="0 0 100 78"
         aria-hidden="true"
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
+        style={{ position: "absolute", inset: 0, overflow: "visible", transform: "scale(1.18)" }}
       >
         <g fill="none" stroke="var(--faction-snide-pink)" strokeLinecap="round">
           <path
@@ -372,7 +383,23 @@ export default function SnideTaskCard({
 
         {/* The acid bar was full-bleed — the clipping's bottom edge. #2030
             shrinks it to a pasted-on block with clearance under it; no rule
-            above, because the censor strip already rules the section off. */}
+            above, because the censor strip already rules the section off.
+
+            SPRAYED, NOT PRINTED (#2035). v2 inked near-black type onto an acid
+            ground; the stencil is the flip — the letters are the paint, glowing
+            off a black that is the masthead's own band token, so the clipping's
+            two blacks bracket the card. Contrast goes UP, not down: acid on
+            `-note-bar` is 15.6:1 by day and higher by night, against 15.55:1
+            for the pairing it replaces. Nothing lands ON the label; a speckle
+            layer over a control is ornament eating a control.
+
+            THE RING IS LOAD-BEARING, not decoration. `--faction-snide-note-*`
+            FLIPS, so at night the stock is #14110b and this ground is #080706:
+            without an OPAQUE edge the button would be a black rectangle on a
+            black card. `-acid-deep` is theme-invariant and reads on both — a
+            translucent acid would composite to almost nothing over the dark.
+            The ring is a `box-shadow` rather than a `border` so it cannot
+            change the box the 44px floor was solved against. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
             <button
@@ -382,14 +409,23 @@ export default function SnideTaskCard({
               style={{
                 ...CARD_CTA,
                 cursor: cta.denied ? "not-allowed" : "pointer",
-                background: "var(--faction-snide-note-cta-bg)",
-                color: "var(--faction-snide-note-cta-ink)",
-                fontFamily: IMPACT,
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.16em",
+                background: "var(--faction-snide-note-bar)",
+                color: "var(--faction-snide-acid)",
+                fontFamily: MARKER,
+                fontSize: "var(--text-content)",
+                letterSpacing: "0.06em",
                 textTransform: "uppercase",
                 padding: "var(--space-sm) var(--space-2xl)",
                 border: "none",
+                // The halo: one tight pass in the acid itself, two soft ones in
+                // the faction's 16% tint, which is the same pigment already
+                // declared as a wash. The design's own ramp of five bespoke
+                // alphas is three tokenless colours; this is the shape of it.
+                textShadow:
+                  "0 0 1px var(--faction-snide-acid), 0 0 10px var(--faction-snide-light), 0 0 22px var(--faction-snide-light)",
+                boxShadow:
+                  "0 0 0 2px var(--faction-snide-acid-deep), inset 0 0 18px var(--faction-snide-light)",
+                transform: "rotate(-1.6deg)",
               }}
             >
               {cta.label}
