@@ -49,10 +49,14 @@ import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
  *    replacement `--faction-wow-gilt-mid` (#e7b94e) is itself theme-invariant
  *    and measures 3.47:1 on that plum, clearing both the AA-large floor the
  *    24px wordmark needs and the 1.4.11 floor the mark needs.
- *  - THE MARK SITS ON THE CARD'S EDGE. The band drops its horizontal inset, so
- *    the sigil breaks the banner's left line and stands on the gold frame.
- *    Zeroing BOTH sides rather than just the left is what keeps #2029's centred
- *    title on the CARD's centreline instead of shifting it half an inset over.
+ *  - THE MARK SITS NEAR THE CARD'S EDGE. The band takes a horizontal inset well
+ *    inside the kit's default, so the sigil reads as standing on the card's own
+ *    gold frame rather than inside the band's type block. #2032 zeroed the inset
+ *    outright and #2070 walked it back to `--space-sm`, because flush against a
+ *    2px frame reads as touching it. What both agree on is that the inset is
+ *    SYMMETRIC: #2029 centres the title on the band's content box, so clearance
+ *    on the left alone shifts the wordmark half an inset off the CARD's
+ *    centreline.
  *  - THE BAND REGAINS A BOTTOM RULE, in gold. Phase 1 dropped it because the
  *    design drew it in `--faction-wow-card-accent`, which in light IS the band's
  *    own ground to the hex; drawn in the gilt it is a real line, and it is the
@@ -199,11 +203,23 @@ export default function WowTaskCard({
             theme-invariant plum the CTA already stands on, and lettered in the
             gilt the mark now takes with it.
 
-            THE HORIZONTAL INSET IS ZERO, which is the issue's edge-breaking
-            sigil: the mark stands on the card's own gold frame rather than
-            inside the band's type block. Both sides, not just the left —
-            #2029's centred title is centred on the band's content box, so an
-            asymmetric inset would walk it off the card's centreline.
+            THE HORIZONTAL INSET IS SYMMETRIC, AND IT IS NO LONGER ZERO (#2070).
+            #2032 zeroed it so the mark would break the banner's left line and
+            stand on the card's own gold frame; in production that read as
+            touching the border, and the owner's ruling is that it overshot. The
+            mark sits inboard with clearance now — `--space-sm`, which is the
+            band's own vertical inset, so the mark keeps a uniform 8px surround
+            instead of 2px of frame. Still half the kit's `--space-lg` default,
+            so the sigil stays nearer the edge than the type block, which is the
+            half of #2032 that was right.
+
+            WHAT DOES NOT CHANGE IS THAT BOTH SIDES MOVE TOGETHER. #2029's title
+            is centred on the band's CONTENT box, so left-only clearance walks
+            the centred wordmark off the card's centreline by half the inset —
+            symmetry is what keeps the title true, and it was #2032's reason for
+            zeroing both rather than just the left. `--space-xs` was the smaller
+            candidate and is only 2px past the frame's own 2px weight, i.e. the
+            reported symptom again at half strength.
 
             THE BOTTOM RULE COMES BACK IN GOLD. Phase 1 dropped the design's 2px
             `--faction-wow-card-accent` line because in light that token IS the
@@ -216,7 +232,7 @@ export default function WowTaskCard({
           style={{
             background: PLUM_SURFACE,
             color: "var(--faction-wow-on-plum)",
-            padding: "var(--space-sm) 0",
+            padding: "var(--space-sm) var(--space-sm)",
             borderBottom: `2px solid ${GILT_MID}`,
           }}
         >
@@ -310,12 +326,11 @@ export default function WowTaskCard({
                   >
                     {basePoints}
                   </span>
-                  {/* The ✦ is a dingbat, not text (§4) — which is the only reason
-                      it may be painted in the gold, at 2.00:1 on the panel. */}
-                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the faction glyph, sized to the numeral it trails. */}
-                  <span aria-hidden="true" style={{ fontFamily: MED, fontSize: 13, color: GOLD }}>
-                    ✦
-                  </span>
+                  {/* The gold ✦ that trailed the numeral is gone (#2070): it is
+                      not in the design and the owner ruled it out. The row stays
+                      a baseline flex line with one child — in block flow the
+                      parent's line-height strut would add height the plaque was
+                      not drawn with. */}
                 </div>
                 <div style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-md)", color: PLUM, marginTop: "var(--space-xs)" }}>
                   {i18n.t("feed:taskCard.pointsUnit")}

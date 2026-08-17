@@ -100,11 +100,36 @@ describe('the WOW banner is legible in the gold it is lettered in (#2032)', () =
     expect(head, 'the burnt stamp gold is not a banner ink').not.toContain('--faction-wow-stamp-total')
   })
 
-  it('sets the mark on the card edge rather than inside the band inset', () => {
-    // The edge-breaking sigil (#2032): the band drops its horizontal inset
-    // entirely, so the mark sits on the card's own gold frame. Zeroing BOTH
-    // sides is what keeps #2029's centred title on the card's centreline.
-    expect(band(render())).toContain('padding:var(--space-sm) 0')
+  it.each(['desktop', 'mobile'] as const)('insets the band SYMMETRICALLY on %s', (formFactor) => {
+    // #2070 walks #2032's edge-breaking sigil back one step: zero horizontal
+    // inset read as touching the card's 2px frame, so the mark moves inboard
+    // with visible clearance. What survives unchanged is the reason #2032 gave
+    // for zeroing BOTH sides — #2029 centres the title on the band's CONTENT
+    // box, so an inset on the left alone walks the wordmark off the card's
+    // centreline by half of it.
+    //
+    // So this asserts the SHAPE, not the rung: a two-value `padding` shorthand,
+    // whose second value is the horizontal one and applies to both sides. A
+    // future re-tune of the rung keeps the test green; an asymmetric
+    // three-or-four-value shorthand does not.
+    const head = band(render(formFactor))
+    const padding = /padding:([^;"]+)/.exec(head)?.[1]?.trim()
+    expect(padding, 'the band declares its own inset').toBeDefined()
+    // Every rung is a single `var(--space-*)` with no internal spaces, so a
+    // plain split is enough to count the shorthand's values.
+    const parts = padding!.split(' ')
+    expect(parts, `two values, so left === right — got "${padding}"`).toHaveLength(2)
+    expect(parts[1], 'the horizontal inset is no longer zero').not.toBe('0')
+  })
+})
+
+describe('the crowned plaque prints the numeral and nothing beside it (#2070)', () => {
+  it('drops the ✦ that trailed the points figure', () => {
+    // Not in the design and ruled out by the owner. The glyph was this card's
+    // only `no-raw-style-values` suppression, so the disable comment goes with
+    // it — a suppression that outlives its line is how the ratchet leaks. (That
+    // half is not assertable here: a lint directive is source, not markup.)
+    expect(render(), 'the dingbat beside the points numeral').not.toContain('✦')
   })
 })
 
