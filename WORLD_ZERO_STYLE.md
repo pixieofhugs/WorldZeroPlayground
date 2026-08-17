@@ -564,6 +564,44 @@ There is deliberately no `.content-heading` / `.content-display` / `.content-sco
 
 That ink is the third text tier, and §3 records what it can and cannot do. It clears AA on every neutral stock it lands on — **5.40:1** on the page, 5.78 over the frost, 5.07 on the alt surface, 4.78 on the filter well in light; 6.21 / 5.67 / 5.37 / 5.47 in dark — and it is now visibly a different ink from `--color-text-secondary` rather than the same one under a second name. What it does **not** have is headroom: the tier sits at secondary's weight because the palette has no AA-clear room below secondary, so a label cannot be made quieter by walking its colour down. If a label rank needs to recede further, the levers left are size, tracking, casing and layout — not ink.
 
+### A wordmark is a MARK, so it scales — it never breaks mid-word (#2000)
+
+Four of the seven faction-page heroes set `overflow-wrap: anywhere` on the `<h1>` they render the
+faction name into. On a phone the Everymen hero printed **"EVER / YMEN"**, and the name it showed was
+not the name — which is why this is a different failure from a paragraph wrapping awkwardly. A faction
+name is the **mark**, in the same family as the sigil beside it: the reader identifies the faction by
+its shape, so a break that invents a new word is worse than an overflow, and `break-anywhere` is simply
+the wrong rule to have on it. **No hero wordmark carries one.** `frontend/src/components/factionHero/__tests__/factionWordmarkWrap.test.tsx`
+holds that across all seven.
+
+The name surfaced on Everymen because "Everymen" is the longest **single-word** name — every other
+hero's name is two glyphs (`UA`), carries a space to wrap at (`Cozy Coven`, `Warriors of Whimsy`,
+`The Ephemerists`) or carries dots (`S.N.I.D.E.`). All four heroes that had the rule carried the latent
+bug; only one had a name long enough to trip it. **A rule that a name's current spelling hides is still
+a bug**, so it came off Coven, UA and WOW too rather than only where the screenshot was taken.
+
+Deleting the rule is only half a fix, because the geometry doctrine above then applies and the container
+has to give. Two levers, and the Everymen hero needed both:
+
+- **The wordmark's own flex track needs a floor.** Its column carried `min-width: 0`, and its cog seal
+  is an inline flex *sibling* — so on a 340px phone the seal plus the gap ate 148px of a ~222px row and
+  the mark had ~75px to set 76px type in. `min-width: min(240px, 100%)` plus `flex-wrap: wrap` stands
+  the seal *above* the name at that width, which is what Coven (250), UA (260) and the Ephemerists (220)
+  already do. `min(…, 100%)` and not a bare `240`: a hard floor pushes the column past the hero's own
+  clipped edge on a phone, which is #1314's lesson on the S.N.I.D.E. hero.
+- **The mark caps rather than reflows.** `font-size: min(76px, 20vw)` — 76px is the poster size and the
+  ceiling, and the `vw` arm only bites below a ~380px viewport, where even the *full* column cannot hold
+  76px type. This is the drawn-container carve-out above read the other way round: a wordmark is not
+  inside a mark, it **is** one, so it takes a ceiling at its poster size and scales under it instead of
+  breaking. Above ~380px nothing moves, which is the test that the cap is fitted and not a redesign.
+
+**A test that forbids a Tailwind utility must not spell it.** The check above originally wrote
+`word-break: break-all` as a plain string. Tailwind scans `src` for class candidates — **test files and
+comments included** — so the literal emitted that utility into the *blocking* stylesheet: +17 B gzip9,
+which put the initial-load CSS budget exactly on its WARN line for the sake of a test fixture. The
+value is now assembled with `join('-')` and appears nowhere bare, and the built sheet is byte-identical
+to before the fix. The same trap applies to any assertion naming a class the code must *not* have.
+
 ### The label tier is TWO tiers, and the content floor has one exception (#1307)
 
 One class covered five jobs — section headings, metadata captions, status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the weakest neutral, on 461 sites. Four legibility costs on the same string, and the treatment had already been found not to survive real content once: `.eyebrow-sentence` existed because *"a sentence set that way is a wall"*, which is a caption wearing a heading's clothes and a variant standing in for a rethink. **Owner ruling: two intents, not five treatments and not one.**
