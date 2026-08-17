@@ -19,11 +19,13 @@ import type { ReactNode } from 'react'
  * 2. **Never print a faction name.** The skin is the identification (epic
  *    decision 5). `kicker` is a neutral domain noun — "Duel challenge", "Vote".
  * 3. **`archive` is a pre-composed node.** Place it; do not rebuild it. It is
- *    already dormant-at-40%-until-hover-or-focus, already keyboard reachable,
+ *    already boxed and squared to its own target, already keyboard reachable,
  *    already labelled, and already ABSENT when the card cannot be archived
  *    (`awaiting_submission`) — a frame must never render a disabled stand-in.
  *    It paints in `currentColor`, so a frame tints it by setting `color` on the
- *    element it sits in.
+ *    element it sits in — and it spends that ink at FULL strength, which is what
+ *    #2091 fixed and what makes the band ink a frame publishes here the one
+ *    thing standing between this control and WCAG 1.4.11.
  * 4. **One responsive component per faction** — no mobile twin (ADR-0056 /
  *    0058 / 0063). Size from `useFormFactor()` inside the component if needed.
  * 5. **Nothing else changes.** Swipe-to-archive, the undo strip and the archived
