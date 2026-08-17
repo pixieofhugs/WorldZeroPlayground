@@ -4699,6 +4699,58 @@
   }
 }
 
+/* Ephemerists — THE RUNE STRIP (#2067). The two registers above came OFF the
+   task card's masthead, and the motif returns as a pair of rows bracketing the
+   plate's call to action on the three surfaces that paint one. The only mount is
+   `components/factionMarks/EphemeristsRuneStrip.tsx`; nothing else wears these.
+
+   THE SIZE CYCLE IS HERE RATHER THAN INLINE. The design cycles 9/10/11/9/10px
+   per mark and only two of those are rungs (--text-sm, --text-md), so inline it
+   would be ornament type off the ramp — allowed by §4a's hatch, but only behind
+   an `eslint-disable` at every site. Three `nth-child` selectors say the same
+   thing in the sheet where raw lengths belong, and the component carries no
+   suppression. `--epg-op` (peak) and `--epg-delay` (phase) still arrive inline:
+   they are numbers per instance, which a stylesheet has nowhere to put.
+
+   MOTION IS OPT-IN, and note the inversion against the design for the same
+   reason `.epg-glyph` above states it. The base state IS the stilled state —
+   every mark present at its own peak — and the shimmer is added under
+   `no-preference`. Written the design's way round (0.16 as the base, the
+   animation always on) a reduced-motion reader gets a row at 0.16 and reads
+   nothing. Nothing pins the pre-delay state either: a mark holds at its peak
+   until its own cycle starts, which is legible from first paint. */
+@keyframes eph-rune-shift {
+  0%, 100% { opacity: 0.16; }
+  50% { opacity: var(--epg-op, 0.8); }
+}
+[data-eph-runes] {
+  display: flex;
+  align-items: center;
+  height: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+  width: calc(100% - 40px);
+  margin: 0 auto;
+}
+[data-eph-runes="top"] { margin-top: -7px; }
+[data-eph-runes="bottom"] { margin-bottom: 18px; }
+.eph-rune {
+  flex: 1 1 auto;
+  text-align: center;
+  line-height: 1;
+  font-size: 9px;
+  opacity: var(--epg-op, 0.8);
+}
+.eph-rune:nth-child(5n + 2), .eph-rune:nth-child(5n + 5) { font-size: 10px; }
+.eph-rune:nth-child(5n + 3) { font-size: 11px; }
+@media (prefers-reduced-motion: no-preference) {
+  .eph-rune {
+    animation: eph-rune-shift 5.2s ease-in-out infinite;
+    animation-delay: var(--epg-delay, 0s);
+  }
+}
+
 /* Ephemerists — the sheet a page-sized Valley plate is printed on (task detail
    v2, #1032). The archetype's own content column wears it: this whole page IS
    the plate, so the papyrus is the column's surface, not a tint under it.

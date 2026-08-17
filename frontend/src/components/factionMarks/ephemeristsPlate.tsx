@@ -732,9 +732,10 @@ export function EmblemOctagon({ size }: { size: number }) {
  * THE COMPASS ROSE — the plate's points medallion (#2037, task cards v3).
  *
  * A brass-ruled disc with four needles on the cardinals, the north one struck
- * solid in the register's nile and the other three left open. It replaces the
- * stepped octagon the score sat in: the plate is a FIELD JOURNAL out of the
- * Valley, and the instrument a surveyor's plate reaches for is a rose.
+ * solid in the plate's gold and the other three left open in one ink at one
+ * weight (#2067). It replaces the stepped octagon the score sat in: the plate is
+ * a FIELD JOURNAL out of the Valley, and the instrument a surveyor's plate
+ * reaches for is a rose.
  *
  * IT IS A SHARED MARK, and that is why `size` is a prop rather than a constant.
  * The octagon medallion it replaces is drawn identically on two surfaces — the
@@ -774,14 +775,26 @@ export function CompassRose({ size }: { size: number }) {
         <path d="M16.8 83.2 L21 79" />
         <path d="M83.2 83.2 L79 79" />
       </g>
-      {/* North alone is filled, which is how a rose says which way is up. The
-          design's own fallback for this fill is a navy that would vanish into
-          the night field; `-plate-nile` is the register's teal and reads on it,
-          so the TOKEN is the drawing and the fallback was never reached. */}
-      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={NILE} />
-      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS} strokeWidth="0.9" />
-      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
-      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
+      {/* North alone is filled, which is how a rose says which way is up — and
+          the other three are ONE ink at ONE weight, so the rose says it exactly
+          once (#2067). It shipped saying it three ways: north in the register's
+          teal, south in `-brass` at 0.9, east and west in `-brass-light` at 0.7.
+          North is `-plate-gold` now, which is the ink the winged disc and the
+          registers are drawn in and the brightest mark the plate has: 13.07:1 on
+          the rose's own disc against the teal's 7.36:1, so the one point that
+          carries meaning is also the one that reads first.
+
+          A SECOND DESIGN FILE DRAWS THIS NEEDLE NAVY (`ephCompassBadge()`, as
+          `var(--faction-ephemerists-plate-nile, #1e3a6e)`) and it is not the one
+          to follow: that navy measures 1.64:1 on `-plate-disc` and the needle
+          would be invisible. The two files disagree, the gold one is the one
+          naming a variable, and the navy is most likely the eventual LIGHT-mode
+          value being carried into that epic (#1627/#1636 keep this register
+          theme-invariant until then). */}
+      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={GOLD} />
+      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
+      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
+      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
       {/* The card the figure is struck on. */}
       <circle cx="50" cy="50" r="29" fill={DISC} stroke={BRASS_LIGHT} strokeWidth="0.7" />
     </svg>
