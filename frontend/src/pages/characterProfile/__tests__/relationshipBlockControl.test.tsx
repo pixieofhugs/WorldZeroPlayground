@@ -3,10 +3,10 @@
  * ADR-0077). Not × an edge — that is the whole change.
  *
  * THE DEFECT #1907 FIXES. The control used to require an edge, because a block
- * was a `status` on one and the client had to name a row id. So ADR-0009's own
- * motivating case — B declared a foe by A, holding no edge of their own —
- * rendered the friend/foe buttons and NO block. The one player the feature was
- * written for was the one who could not act. The first case below is that bug.
+ * was a `status` on one and the client had to name a row id. So the motivating
+ * case — B declared a foe by A, holding no edge of their own — rendered the
+ * friend/foe buttons and NO block. The one player the feature was written for
+ * was the one who could not act. The first case below is that bug.
  *
  * WHAT THIS PINS. Visibility is the whole safety contract of this control, and
  * it is the half a green build cannot see: a block button that renders on your
