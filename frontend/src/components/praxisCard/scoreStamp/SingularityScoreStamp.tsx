@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
+import SingularityReadout from "../../factionMarks/SingularityReadout";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
@@ -9,8 +10,11 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * well set into the system slab, ruled in cyan, printing the working as aligned
  * `LABEL … value` register rows rather than a sentence.
  *
- * Its TOTAL MARK is typographic: `TOTAL` against the figure in cyan with a soft
- * halo and a blinking block cursor, the machine still holding the line open.
+ * Its TOTAL MARK is the LIT WELL, and since #2042 it is the faction's one drawing
+ * rather than this file's: `TOTAL` stencilled against the figure in
+ * {@link SingularityReadout}, with the soft halo and the blinking block cursor
+ * that say the machine is still holding the line open. The well itself used to be
+ * the task card's alone and the figure here was bare.
  *
  * ONE DELIBERATE FORMATTING CHOICE, the design's and faction voice rather than
  * data: the votes row zero-pads to two digits (`+04`), because a terminal pads
@@ -143,7 +147,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         />
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "var(--space-sm)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-sm)" }}>
         <span
           style={{
             // eslint-disable-next-line local/no-raw-style-values -- ornament: stencilled register label on the read-out, the design's 8 (§4a)
@@ -155,20 +159,26 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         >
           {t("card.stamp.total")}
         </span>
-        <span
-          style={{
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the glowing computed total, the design's 22 in a monospace read-out (§4a)
-            fontSize: 22,
-            lineHeight: 0.8,
-            color: "var(--faction-singularity-bracket)",
-            textShadow: "0 0 8px var(--faction-singularity-total-glow)",
-          }}
-        >
-          {formatPoints(total)}
-          <span aria-hidden className="sg-cursor">
-            _
-          </span>
-        </span>
+        {/* THE TOTAL SITS IN THE LIT WELL (#2042). It was a bare glowing numeral
+            here and a bordered well on the task card — one faction drawing its
+            points mark twice — and the owner's ruling is that the point card
+            reflects the card's total look. The drawing is
+            {@link SingularityReadout} now; `live` is what keeps this surface's
+            own signature, the caret and the halo, which the task card does not
+            take (its cursor already trails the sign-up prompt).
+
+            The figure lands on `--text-title` (24) where it was a raw 22: the
+            well is the same drawing on both surfaces, so its numeral answers to
+            the type scale rather than to a per-surface tuning, and 24 is the rung
+            the card's own mobile well already asks for. No unit word — the
+            stencilled `TOTAL` to its left is this surface's caption, and the well
+            printing `POINTS` beside it would say the same thing twice.
+
+            The ink moves from `-bracket` (7.83:1 on the plate) to the well's own
+            `-term-blue-bright` — 4.68:1 light, 9.50:1 dark on the well's ground,
+            which is the pairing the well carries with it rather than a new one.
+            Over AA_NORMAL in both themes, and the figure is large text besides. */}
+        <SingularityReadout value={formatPoints(total)} valueSize="var(--text-title)" live />
       </div>
     </div>
   );
