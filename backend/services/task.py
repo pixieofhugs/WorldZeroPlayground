@@ -8,7 +8,7 @@ from sqlalchemy import and_, exists, false, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
-from faction_slugs import CROSS_FACTION_SLUG
+from faction_slugs import CROSS_FACTION_SLUG, faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -820,8 +820,10 @@ async def list_tasks(
 
     # Multi-select faction (#1364): an empty list — or one holding only blanks,
     # which is what a cleared client-side filter sends — means "no faction
-    # filter", never "match nothing".
-    faction_slugs = [slug for slug in (faction or []) if slug]
+    # filter", never "match nothing". faction_filter_slugs also folds Albescent
+    # under Unaffiliated (#1975); it is the ONE place that fold happens, shared
+    # with the praxis feed and the character roster.
+    faction_slugs = faction_filter_slugs(faction)
     if faction_slugs:
         query = query.where(Task.primary_faction_slug.in_(faction_slugs))
     if min_points is not None:
