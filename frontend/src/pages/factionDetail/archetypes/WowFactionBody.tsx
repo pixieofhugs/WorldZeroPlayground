@@ -309,7 +309,7 @@ function Quiet({ children }: { children: ReactNode }) {
  * the top of the roll taking the Champion ribbon the copy catalog already names.
  *
  * `minHeight` is #895's 46px touch target, carried over from the twin when
- * ADR-0077 retired it. It is applied at BOTH widths rather than behind a
+ * ADR-0078 retired it. It is applied at BOTH widths rather than behind a
  * `useFormFactor()` read, because it is a FLOOR and the laptop row already
  * clears it — the rank numeral alone is `--text-title` — so the branch would
  * cost a hook to change nothing. ADR-0069 preserved the same number through the
