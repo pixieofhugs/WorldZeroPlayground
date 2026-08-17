@@ -25,8 +25,9 @@ import {
   listRelationships,
   createRelationship,
   deleteRelationship,
-  blockRelationship,
-  unblockRelationship,
+  listBlocks,
+  blockCharacter,
+  unblockCharacter,
   type RelationshipListItem,
 } from "../api/relationships";
 import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
@@ -39,6 +40,32 @@ import FactionProfileBody, {
   type ProfileBodyProps,
   type ProfileProgression,
 } from "./characterProfile/FactionProfileBody";
+
+/**
+ * The identity header's status pill, minus its `background`.
+ *
+ * Two rows wear it now — the friend/foe edge and the block — because ADR-0077
+ * made them two records instead of one field with two meanings. Shared so they
+ * cannot drift apart; the caller supplies only the hue that distinguishes them.
+ */
+const statusPillStyle: React.CSSProperties = {
+  color: "var(--color-text-on-accent)",
+  fontFamily: "'Courier Prime', monospace",
+  fontSize: "var(--text-md)",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+  padding: "var(--space-xs) 0",
+  textAlign: "center",
+  borderRadius: 2,
+};
+
+/** The undo beneath a status pill — `remove` and `unblock` read identically. */
+const quietButtonStyle: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  textAlign: "center",
+};
 
 export default function CharacterProfile() {
   const { t } = useTranslation("common");
@@ -68,6 +95,10 @@ export default function CharacterProfile() {
     null,
   );
   const [relationshipLoading, setRelationshipLoading] = useState(false);
+  // Whether the VIEWER has blocked this character. A block is its own record
+  // now (ADR-0077), independent of any friend/foe edge, so it is its own piece
+  // of state rather than a status read off one.
+  const [blocked, setBlocked] = useState(false);
 
   // Theme the page backdrop to this character's faction (falls back to the
   // global watercolor until loaded / for factions with no backdrop variant).
@@ -84,6 +115,14 @@ export default function CharacterProfile() {
         );
         setRelationship(match ?? null);
       })
+      .catch(() => {});
+    // Outgoing only, always: this answers "have I blocked them", and there is
+    // no route that answers "have they blocked me". A block is silent to the
+    // party it names (ADR-0077), and that silence is structural here — the
+    // blocked side has nothing to render a label from, so there is no branch
+    // that could leak one.
+    listBlocks()
+      .then((blocks) => setBlocked(blocks.some((b) => b.character_id === cid)))
       .catch(() => {});
     // Keyed on the viewer's character id, not the whole auth object (#1390):
     // `/auth/me` returns a new object on every refetch, so `[user]` re-read the
@@ -143,18 +182,18 @@ export default function CharacterProfile() {
     }
   };
 
-  // ADR-0009 (superseded by ADR-0077) — a block is mutual, visible and
-  // reversible. The confirm that
-  // precedes this lives in RelationshipBlockControl; by the time it calls, the
-  // player has read what blocking does.
-  const handleBlockRelationship = async () => {
-    if (!relationship) return;
+  // ADR-0077 — a block is its own record: it needs no edge, creates none, and
+  // leaves any edge the viewer already holds alive but silenced. So neither
+  // handler touches `relationship`. The confirm that precedes the block lives in
+  // RelationshipBlockControl; by the time it calls, the player has read what
+  // blocking does.
+  const handleBlock = async () => {
+    if (!character) return;
     setRelationshipLoading(true);
     setRelationshipError(null);
     try {
-      // Same #1383 shape as unblock: the write answers the enriched edge, so
-      // the `Blocked` display status arrives without a re-list.
-      setRelationship(await blockRelationship(relationship.id));
+      await blockCharacter(character.id);
+      setBlocked(true);
     } catch {
       setRelationshipError(t("relationships.blockError"));
     } finally {
@@ -162,14 +201,15 @@ export default function CharacterProfile() {
     }
   };
 
-  const handleUnblockRelationship = async () => {
-    if (!relationship || !character) return;
+  const handleUnblock = async () => {
+    if (!character) return;
     setRelationshipLoading(true);
     setRelationshipError(null);
     try {
-      // The re-derived display status (Blocked → type label) comes back on the
-      // unblock itself (#1383); it used to cost a full re-list.
-      setRelationship(await unblockRelationship(relationship.id));
+      // Deletes the block record and stops there — no friend/foe edge comes
+      // back with it (ADR-0077 ruling 5).
+      await unblockCharacter(character.id);
+      setBlocked(false);
     } catch {
       setRelationshipError("Could not unblock.");
     } finally {
@@ -236,77 +276,33 @@ export default function CharacterProfile() {
           width: "100%",
         }}
       >
+        {/* The edge and the block are two independent records under ADR-0077,
+            so they are two independent rows here. A block outranks an active
+            edge; it does not consume one, and unblocking restores the edge's
+            voice with no further action. */}
         {relationship ? (
           <>
-            {/* Show relationship status */}
             <div
               style={{
                 background:
-                  relationship.display_status === "Blocked"
-                    ? "var(--color-text-tertiary)"
-                    : relationship.type === "friend"
-                      ? "var(--badge-friend)"
-                      : "var(--color-danger)",
-                color: "var(--color-text-on-accent)",
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-md)",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                padding: "var(--space-xs) 0",
-                textAlign: "center",
-                borderRadius: 2,
+                  relationship.type === "friend"
+                    ? "var(--badge-friend)"
+                    : "var(--color-danger)",
+                ...statusPillStyle,
               }}
             >
-              {relationship.display_status === "Blocked"
-                ? t("relationships.blocked")
-                : relationship.type === "friend"
-                  ? t("relationships.friends")
-                  : t("relationships.foe")}
+              {relationship.type === "friend"
+                ? t("relationships.friends")
+                : t("relationships.foe")}
             </div>
-            {relationship.display_status !== "Blocked" ? (
-              <button
-                onClick={handleRemoveRelationship}
-                disabled={relationshipLoading}
-                className="label-caption"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "center",
-                }}
-              >
-                {t("relationships.remove")}
-              </button>
-            ) : (
-              // ADR-0009 (superseded by ADR-0077) — a block is reversible;
-              // either party can unblock.
-              <button
-                onClick={handleUnblockRelationship}
-                disabled={relationshipLoading}
-                className="label-caption"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "center",
-                }}
-              >
-                {t("relationships.unblock")}
-              </button>
-            )}
-            {/* ADR-0009 (superseded by ADR-0077) — either party may block,
-                and the control hides
-                itself on the cases where it would be wrong (own profile, an
-                edge already blocked). */}
-            <RelationshipBlockControl
-              relationship={relationship}
-              viewerCharacterId={user?.character?.id}
-              targetCharacterId={character.id}
-              targetDisplayName={character.display_name}
-              factionSlug={character.faction_slug}
-              busy={relationshipLoading}
-              onBlock={handleBlockRelationship}
-            />
+            <button
+              onClick={handleRemoveRelationship}
+              disabled={relationshipLoading}
+              className="label-caption"
+              style={quietButtonStyle}
+            >
+              {t("relationships.remove")}
+            </button>
           </>
         ) : (
           <>
@@ -350,6 +346,42 @@ export default function CharacterProfile() {
             </button>
           </>
         )}
+        {/* Only ever the BLOCKER's own view: `blocked` comes from the viewer's
+            outgoing block list, which has no incoming counterpart to read. The
+            party who was blocked sees this profile exactly as they would
+            otherwise, which is the point of ADR-0077 ruling 2. */}
+        {blocked && (
+          <>
+            <div
+              style={{
+                background: "var(--color-text-tertiary)",
+                ...statusPillStyle,
+              }}
+            >
+              {t("relationships.blocked")}
+            </div>
+            <button
+              onClick={handleUnblock}
+              disabled={relationshipLoading}
+              className="label-caption"
+              style={quietButtonStyle}
+            >
+              {t("relationships.unblock")}
+            </button>
+          </>
+        )}
+        {/* Unconditional on purpose: the control owns its own visibility, so
+            the page cannot place it anywhere it would be wrong (own profile,
+            someone already blocked, no character of your own). */}
+        <RelationshipBlockControl
+          viewerCharacterId={user?.character?.id}
+          targetCharacterId={character.id}
+          targetDisplayName={character.display_name}
+          factionSlug={character.faction_slug}
+          alreadyBlocked={blocked}
+          busy={relationshipLoading}
+          onBlock={handleBlock}
+        />
         {relationshipError && (
           <p
             className="font-body"
