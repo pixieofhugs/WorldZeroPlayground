@@ -1028,8 +1028,11 @@ def _nudge_query(ctx: FeedContext) -> Select:
     actually open — their own editor.
 
     A nudge is about an **obligation**, so it lives exactly as long as one: the
-    predicate below is ``_awaiting_submission_query``'s, read through the
-    recipient's own member row (#1301). Both halves are load-bearing and neither
+    predicate below is ``_awaiting_submission_query``'s open-and-unfiled pair,
+    read through the recipient's own member row (#1301). It deliberately does not
+    carry that query's "somebody else is here" clause (#1980) — the ``Nudge`` row
+    IS somebody else, and for a duel the sender is not a member of the praxis
+    they are nudging about at all. Both halves are load-bearing and neither
     subsumes the other — a collab stays ``in_progress`` while the group waits on
     somebody else, which is precisely when *this* member's nudge stops applying;
     and a member row can sit unfiled on a praxis that has since been published,
