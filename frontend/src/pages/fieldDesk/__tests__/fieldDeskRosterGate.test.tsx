@@ -85,6 +85,7 @@ function currentUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
     albescent_revealed: false,
     can_propose_task: true,
     can_propose_metatask: false,
+    can_apply_metatask: false,
     can_see_retired_tasks: false,
     can_see_pending_tasks: false,
     can_comment: true,

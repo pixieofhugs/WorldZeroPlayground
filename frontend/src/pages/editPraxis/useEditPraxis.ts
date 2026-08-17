@@ -694,14 +694,27 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const showInviteBox =
     !controlsLocked && !!praxis && (praxis.type === "collab" || duelMode);
   // Editable only for a still-open solo praxis with at least one metatask the
-  // viewer is eligible to seal (backend ships `eligible_for_current_user`; the
-  // load effect already filters `metatasks` to it — the level threshold never
-  // reaches the client).
+  // viewer is eligible to seal, AND only when the API says the viewer may apply
+  // a metatask at all (#1973).
+  //
+  // `metatasks.length > 0` alone was NOT that second gate, though the comment
+  // here used to claim it was. The load effect filters on
+  // `eligible_for_current_user`, whose own docstring says it mirrors the metatask
+  // SCORING gate (`level >= task.level_required`) "rather than the stricter
+  // apply_metatask service gate". So a level-0 viewer passed it on any level-0
+  // metatask and was handed a picker that `POST /praxes/{id}/metatasks` answers
+  // 403 to.
+  //
+  // `user.can_apply_metatask` is that stricter gate, stated by the server:
+  // era.metatask_apply_level, OR a faction carrying the bypass. Read as a
+  // capability rather than recomputed here, because a `level >= 5` in the client
+  // would deny Albescent members the picker their charter grants them.
   const canSealMetatask =
     !controlsLocked &&
     !!praxis &&
     praxis.type === "solo" &&
     !duelMode &&
+    !!user?.can_apply_metatask &&
     metatasks.length > 0;
   // Legacy name, unchanged meaning (still gates the old per-archetype block).
   const showMetatasks = canSealMetatask;
