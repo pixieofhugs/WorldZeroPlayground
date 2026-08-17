@@ -61,6 +61,10 @@ describe('Everymen task card — the hero cog', () => {
   })
 
   it('agrees with the centreline the poster rays already fan from', () => {
-    expect(markup).toContain('repeating-conic-gradient(from 0deg at 50% 16%')
+    // What #1965 pinned is the HORIZONTAL axis — `50%` of the sheet. #2034 moved
+    // the burst's vertical convergence from the upper third to the centre, which
+    // leaves that axis exactly where it was; this asserts the `50%` that matters
+    // rather than the pair, so the two changes cannot be confused for each other.
+    expect(markup).toContain('repeating-conic-gradient(from 0deg at 50% 50%')
   })
 })
