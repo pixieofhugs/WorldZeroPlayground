@@ -9,7 +9,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * well set into the system slab, ruled in cyan, printing the working as aligned
  * `LABEL … value` register rows rather than a sentence.
  *
- * Its TOTAL MARK is typographic: `TOT` against the figure in cyan with a soft
+ * Its TOTAL MARK is typographic: `TOTAL` against the figure in cyan with a soft
  * halo and a blinking block cursor, the machine still holding the line open.
  *
  * ONE DELIBERATE FORMATTING CHOICE, the design's and faction voice rather than
@@ -24,9 +24,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * Row SELECTION stays in `scoreBreakdown` — a hidden row leaves the register
  * shorter, never gappy, so all five conditional states read as one read-out.
  * That includes `BASE`, which the resolver drops when the figure would only
- * restate `TOT` (#1131), and `VOTES`, which it drops at zero (ADR-0076). With
+ * restate `TOTAL` (#1131), and `VOTES`, which it drops at zero (ADR-0076). With
  * both gone the register is empty, so its rule goes too and the read-out is
- * `TOT` alone — the machine is not made to echo itself, nor to print `+00`.
+ * `TOTAL` alone — the machine is not made to echo itself, nor to print `+00`.
  */
 export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
@@ -130,7 +130,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         </div>
       ))}
 
-      {/* The rule between the register and `TOT`. An empty register has nothing
+      {/* The rule between the register and `TOTAL`. An empty register has nothing
           to rule off, so the read-out prints the total alone (ADR-0076). */}
       {lines.length > 0 && (
         <div
@@ -153,7 +153,7 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
             color: "var(--faction-singularity-vote-off)",
           }}
         >
-          {t("card.stamp.totalShort")}
+          {t("card.stamp.total")}
         </span>
         <span
           style={{
