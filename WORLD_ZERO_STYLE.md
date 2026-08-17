@@ -48,7 +48,7 @@ These are non-negotiable and take precedence over any visual specification.
 
 - **Framework:** React (functional components + hooks only)
 - **Styling:** Tailwind utilities + CSS custom properties. Inline styles are acceptable for truly dynamic values (rotations, faction-specific backgrounds) but repeated patterns should be CSS classes.
-- **Fonts:** Google Fonts (see Typography section)
+- **Fonts:** self-hosted woff2 (see Typography section)
 - **Icons:** CSS shapes, SVG, or typographic characters — no icon libraries
 - **Animations:** CSS transitions only; keep subtle
 - **Theme:** Light and dark mode via CSS custom properties on `:root` and `[data-theme="dark"]`
@@ -407,7 +407,11 @@ Balanced brace counts prove nothing here — the file balances either way, the b
 
 ## 4. Typography
 
-All fonts loaded from Google Fonts.
+All eighteen families come from the Google Fonts catalogue and are **self-hosted** (#1977): `frontend/scripts/fetch-fonts.mjs` downloads the woff2 cuts into `src/assets/fonts/` and generates `src/fonts.css`, which `index.css` `@import`s. There is no request to `fonts.googleapis.com` any more.
+
+Two consequences for style work. **Adding a family is now a repo change, not a URL edit** — put it in `FACES` in that script and re-run it; hand-editing the generated stylesheet is how a `src:` path drifts from the file on disk, which fails silently to a generic serif. And **`font-display: swap` is carried on every face**, unchanged from the old `&display=swap`, so text paints in the fallback and swaps in — the flash is deliberate, not a bug to tune away.
+
+The weight subsetting the two guards below enforce is unchanged by self-hosting: exactly 41 faces ship, which is exactly the set the stylesheets declare.
 
 | Role           | Font            | Usage                                     |
 | -------------- | --------------- | ----------------------------------------- |

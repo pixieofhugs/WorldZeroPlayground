@@ -81,9 +81,13 @@ const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
 /**
- * Licence file per family. Every one of these is OFL 1.1 except Archivo Black,
- * Poiret One and Quicksand, which google/fonts keeps under `apache/` — the
- * script asserts it found a real licence rather than assuming the directory.
+ * Licence file per family, fetched from the google/fonts catalogue.
+ *
+ * As it stands: 16 of the 18 are OFL 1.1 under `ofl/`, and Permanent Marker and
+ * Special Elite are Apache 2.0 under `apache/`. The script does not hardcode
+ * that split — it walks the roots and THROWS if a family yields no licence,
+ * because a font shipped without one is the one failure here that is a legal
+ * problem rather than a visual one, and it would otherwise be invisible.
  */
 const LICENCE_ROOTS = ['ofl', 'apache', 'ufl']
 const LICENCE_NAMES = ['OFL.txt', 'LICENSE.txt', 'UFL.txt']
