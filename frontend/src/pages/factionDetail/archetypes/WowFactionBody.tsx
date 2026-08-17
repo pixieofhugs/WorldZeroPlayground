@@ -163,7 +163,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           {tasks.length === 0 ? (
             <Quiet>{t("wow.tasks.empty")}</Quiet>
           ) : (
-            <div style={CARD_GRID}>
+            <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -203,7 +203,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   );
 }
 
-/** Varied card sizes are intentional, not a CSS grid — matches every other body. */
+/** Varied card sizes are intentional, not a CSS grid — matches every other body.
+ *  The PRAXIS gallery only, since #1945: the task row above wears
+ *  `.task-card-row`, which keeps the widths ragged and levels the bottom edge. */
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",

@@ -519,7 +519,7 @@ export function ProfileSkin({
             {t('profile.proposedTasksEmpty')}
           </p>
         ) : (
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="task-card-row gap-4">
             {proposedTasks.map((task) => (
               <TaskCard key={task.id} task={task} basePoints={task.point_value} />
             ))}

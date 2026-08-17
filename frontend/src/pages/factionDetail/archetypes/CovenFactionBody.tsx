@@ -177,7 +177,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
           {tasks.length === 0 ? (
             <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.tasks.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
