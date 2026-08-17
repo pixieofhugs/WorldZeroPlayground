@@ -552,7 +552,18 @@ function MobileProfile({
         ) : proposedTasks.length === 0 ? (
           <Empty>{t('profile.proposedTasksEmpty')}</Empty>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+          /* `alignItems: center` — a task card carries its own fixed width
+             (§10 forbids regularizing it), so the default stretch left it
+             flush left against a ragged right (#1964). The praxis column
+             above keeps the default: a praxis card has no width of its own. */
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 'var(--space-lg)',
+            }}
+          >
             {proposedTasks.map((task) => (
               <TaskCard key={task.id} task={task} basePoints={task.point_value} />
             ))}

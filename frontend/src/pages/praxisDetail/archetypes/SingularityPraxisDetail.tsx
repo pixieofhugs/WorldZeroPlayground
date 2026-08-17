@@ -6,6 +6,7 @@ import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
 import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
+import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
@@ -203,16 +204,6 @@ function initialsOf(name: string): string {
   );
 }
 
-/** One of the chrome bar's three lamps. Ornament geometry, so raw px. */
-function Lamp({ fill }: { fill: string }) {
-  return (
-    <span
-      aria-hidden
-      style={{ width: 8, height: 8, borderRadius: "50%", background: fill, display: "block" }}
-    />
-  );
-}
-
 /**
  * The block cursor trailing the finding. Stilled under reduced motion it stays
  * drawn — it is punctuation on the line, not an indicator. `.sg-cursor` owns the
@@ -337,11 +328,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     >
       {desktop ? (
         <>
-          <span aria-hidden style={{ display: "flex", gap: "var(--space-xs)", flex: "none" }}>
-            <Lamp fill="var(--faction-singularity-led-red)" />
-            <Lamp fill="var(--faction-singularity-led-amber)" />
-            <Lamp fill="var(--faction-singularity-led-green)" />
-          </span>
+          <SingularityLamps />
           <Link to="/tasks" style={{ ...LABEL, color: BLUE, textDecoration: "none" }}>
             {t("detail.breadcrumb.tasks")}
           </Link>

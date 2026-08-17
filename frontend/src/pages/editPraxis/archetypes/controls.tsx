@@ -29,6 +29,7 @@ import { duelSides } from "../../../components/duel/shared";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
+import FactionAvatar from "../../../components/avatar/FactionAvatar";
 import HoldoutPublishNotice from "../blocks/HoldoutPublishNotice";
 
 /** The pair's monogram, against 34 on a roster row and 28 on a waiting side. */
@@ -445,20 +446,40 @@ export function InviteSearch({
                   ...skin.dropdownItemStyle,
                 }}
               >
+                {/* Who this row IS, not merely what they are called (#1962).
+                    Display names are not unique — two lives called "Pixie" drew
+                    the same row twice — so the handle rides along, and the dot
+                    that used to sit here becomes the portrait. `FactionAvatar`
+                    rather than a fourth circle idiom: it is what the @mention
+                    typeahead already draws in exactly this shape (avatar ·
+                    name · @handle), and it falls back to the monogram when
+                    nobody has uploaded a portrait. */}
+                <FactionAvatar character={character} size="sm" />
                 <span
                   style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: "50%",
-                    background: factionCssVar(character.faction_slug, "light"),
-                    border: `1px solid ${factionCssVar(character.faction_slug, "border")}`,
-                    flexShrink: 0,
+                    fontWeight: 700,
+                    // The name yields first when the row runs out of width: it
+                    // is the ambiguous half, and truncating the handle would
+                    // take away the very thing that separates the namesakes.
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
-                />
-                <span style={{ fontWeight: 700 }}>
+                >
                   {character.display_name}
                 </span>
-                <span style={{ marginLeft: "auto", fontSize: "var(--text-lg)", opacity: 0.7 }}>
+                <span style={{ opacity: 0.7, whiteSpace: "nowrap" }}>
+                  @{character.username}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: "var(--text-lg)",
+                    opacity: 0.7,
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {factionName(character.faction_slug)}
                 </span>
               </button>
