@@ -2,7 +2,6 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
-import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   Braid,
@@ -24,6 +23,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
+  Spark,
 } from '../../../components/factionMarks/covenSlip'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
@@ -350,7 +350,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
               color: INK,
               textDecoration: 'none',
             }}
-            glyph={<CovenSigil size={12} color={GOLD} />}
+            glyph={<Spark size={12} color={GOLD} />}
             chevron={<span aria-hidden style={{ color: SOFT }}>›</span>}
           />
         )}
@@ -426,7 +426,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
         <div className="flex gap-2.5">
           <Link to={FIND_TASK_LINK} style={primaryButton}>
-            <CovenSigil size={13} color={CTA_INK} />
+            <Spark size={13} color={CTA_INK} />
             {t('fieldDesk.home.findTask')}
           </Link>
           <Link to={CAST_VOTES_LINK} style={ghostButton}>

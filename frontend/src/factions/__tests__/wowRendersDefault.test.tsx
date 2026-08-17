@@ -68,7 +68,7 @@ function Sentinel() {
  * screen the kit drew — #901 skinned five further surfaces off that screen which
  * no longer exist, its task card, its task detail, its praxis detail, its
  * PROFILE and its FACTION PAGE, because ADR-0056 (#1044), ADR-0058 (#1068),
- * ADR-0061 (#1089), #1319 and ADR-0077 (#1314) retired all five surfaces
+ * ADR-0061 (#1089), #1319 and ADR-0078 (#1314) retired all five surfaces
  * outright, so the decree `taskCard`, the parchment `taskDetail`, the crested
  * `profileBody` and the muster `factionBody` now serve WOW on both form factors
  * and praxis detail is ONE shared page every faction dresses; the pavilion
@@ -87,7 +87,7 @@ function Sentinel() {
  * muster roll, the two galleries and the enlist rail. Third of #951's four to
  * ship. Derived rather than drawn, like the two above it: the ornaments come
  * from `wowOrnament`, the section order from the `mobileFactionPage` twin
- * ADR-0077 has since retired, and the copy was already sitting unread in
+ * ADR-0078 has since retired, and the copy was already sitting unread in
  * `factions.json` from #900. It serves both form factors now.
  *
  * `factionCard` is the LAST unclaimed desktop surface.

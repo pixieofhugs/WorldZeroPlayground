@@ -42,7 +42,6 @@
  */
 import { factionCssVar } from '../../utils/factions'
 import DuelSealSheet from './DuelSealSheet'
-import { CovenSigil } from '../sigil/CovenSigil'
 import {
   Braid,
   BORDER,
@@ -56,6 +55,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
+  Spark,
 } from '../factionMarks/covenSlip'
 import {
   duelSides,
@@ -188,9 +188,9 @@ export default function CovenDuelSealConfirm({
         </div>
 
         <div style={{ marginTop: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          <CovenSigil size={12} color={GOLD} />
+          <Spark size={12} color={GOLD} />
           <Braid style={{ flex: 1 }} />
-          <CovenSigil size={12} color={GOLD} />
+          <Spark size={12} color={GOLD} />
         </div>
 
         <div style={{ marginTop: 'var(--space-md)' }}>

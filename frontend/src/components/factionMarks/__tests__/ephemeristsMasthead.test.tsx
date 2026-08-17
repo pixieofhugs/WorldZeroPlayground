@@ -28,22 +28,29 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import { EphemeristsMasthead } from "../EphemeristsMasthead";
 
-const AXIS_H = "M100 272 L392 272";
+/** The v2 kite's opening move — the swept sail, first of its six shapes. */
+const SAIL = "M19.1 30.8";
 const render = (scale: "page" | "card", date?: string | null) =>
   renderToStaticMarkup(<EphemeristsMasthead slug="ephemerists" scale={scale} date={date} />);
 
 describe("EphemeristsMasthead — the two scales", () => {
-  it("hands the sigil one number and gets the design's frame back at each scale", () => {
-    expect(render("page")).toContain('width="54" height="62"');
-    expect(render("card")).toContain('width="38" height="44"');
+  it("hands the sigil one number and gets a square box back at each scale", () => {
+    // Sigil Studies v2 draws the kite square. It used to hand back the design's
+    // 486:560 frame (54x62 and 38x44), which is what made these two mounts one
+    // prop apart; they are still one prop apart, and now they are square.
+    expect(render("page")).toContain('width="62" height="62"');
+    expect(render("card")).toContain('width="44" height="44"');
   });
 
-  it("draws the datum row's closing sigil at its own inline size, below the reduced cut", () => {
-    expect(render("page")).toContain('width="12" height="14"');
-    expect(render("card")).toContain('width="10" height="12"');
-    // One kite each — the full cut's crossed axes would be a smear at 12-14px.
+  it("draws the datum row's closing sigil at its own inline size", () => {
+    expect(render("page")).toContain('width="14" height="14"');
+    expect(render("card")).toContain('width="12" height="12"');
+    // Two marks per masthead — the big one and the datum row's closer — and
+    // BOTH are now the full drawing. #1635's reduced cut drew a sparser mark
+    // below 20px because its stroke went sub-pixel; v2 is filled and has no
+    // cut, so the two mounts differ only in size.
     for (const scale of ["page", "card"] as const) {
-      expect(render(scale).match(new RegExp(AXIS_H, "g")) ?? []).toHaveLength(1);
+      expect(render(scale).match(new RegExp(SAIL, "g")) ?? []).toHaveLength(2);
     }
   });
 
