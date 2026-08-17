@@ -97,6 +97,28 @@
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
 }
 
+/* ── Singularity task card (#2036/#2071) — the ASCII robot idling in the CTA's
+   right gutter rises and dims on a slow six-second cycle.
+
+   `sg-float` is BESPOKE, and that is the fix #2071 asked for: the face used to
+   borrow the vote readout's `spec-rise`, which is transform-only, so the drift
+   rose and fell and never breathed — half the design dropped silently by the
+   reuse. Putting opacity into `spec-rise` was not an option, because
+   `.spectrum-dot--reached` runs it and a fading vote dot reads as a value going
+   out. So the shared keyframe stays as it is and this one carries both.
+
+   `.sg-ascii`'s resting `opacity: 0.45` is in index.css: it is paint, and it is
+   this keyframe's own 0%/100% frame, so a reader who gets neither this sheet nor
+   `no-preference` sees the drift's rest rather than the robot at a brightness it
+   never reaches in motion. ── */
+@keyframes sg-float {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-6px); opacity: 0.8; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sg-ascii { animation: sg-float 6s ease-in-out infinite; }
+}
+
 /* ── Coven — moon-phase plate: rank-5 sparkles twinkle, dust drifts.
 
    `eph-twinkle` moved with them and is no longer an Ephemerists keyframe at all
