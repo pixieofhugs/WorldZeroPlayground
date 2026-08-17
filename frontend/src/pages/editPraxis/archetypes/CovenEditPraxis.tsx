@@ -246,15 +246,33 @@ function SigilDisc({ size }: { size: number }) {
   );
 }
 
-/** Gold twinkles behind the masthead row, stretched across the band. */
+/**
+ * Gold twinkles behind the masthead row, stretched across the band's OUTER
+ * thirds — x below 105 or above 375 of the 480-unit viewBox (#1983).
+ *
+ * The exclusion is the whole design of this field, not a nudge. The svg is
+ * `width="100%"` with `preserveAspectRatio="none"`, so a star's x is a fixed
+ * FRACTION of the band, while the wordmark above is a centred flex row at a
+ * FIXED size. Narrow the viewport and the row grows as a fraction while the star
+ * stays put, so a star near the centre drifts further UNDER the lettering rather
+ * than clear of it — which is how a twinkle came to sit against the "c" in
+ * "cozy" and read as one crossed letter, "tozy". y is no escape: the 72-unit box
+ * is stretched over the wordmark row PLUS the `Braid`, so a star's y does not
+ * map to "above the text".
+ *
+ * At the narrowest supported viewport (375px) the centred row measures ~127px in
+ * a 319px band — 30%…70%, i.e. 145…335 — so 105/375 clears it either side. If a
+ * future wordmark grows, WIDEN the exclusion; never re-enter the centre.
+ * `covenTwinkleClearBand.test.tsx` holds this and shows the arithmetic.
+ */
 function TwinkleField() {
   const stars: [number, number, number][] = [
-    [34, 22, 2.4],
-    [118, 52, 1.4],
-    [206, 18, 1.8],
-    [292, 46, 2],
-    [366, 24, 1.4],
-    [452, 50, 1.7],
+    [22, 22, 2.4],
+    [62, 52, 1.4],
+    [96, 18, 1.8],
+    [388, 46, 2],
+    [424, 24, 1.4],
+    [462, 50, 1.7],
   ];
   return (
     <svg
