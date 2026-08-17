@@ -15,10 +15,19 @@ const DEFAULT_MAX_TASK_SLOTS = 20
  * hold twenty" — and letting a full-bank player believe otherwise is the same
  * false-affordance class as #1263.
  *
- * Mounted ONLY from the `canSignUp && tasks.length === 0` branch, which is what
- * keeps `useMyActiveTasks`'s fetch off the default page load: the filter defaults
- * off, so the common path never mounts this and never pays the round trip that
- * #1218 is trying to claw back.
+ * Mounted ONLY from the `canSignUp && tasks.length === 0` branch — an EMPTY
+ * eligible list, which is what keeps `useMyActiveTasks`'s fetch off the page
+ * load that has tasks to show. Since #1972 the filter defaults ON for a viewer
+ * carrying a character, so this is no longer a corner: a level-0 player who has
+ * claimed their one task lands here on their second screen of the game, and the
+ * round trip #1218 is clawing back is only paid on a board that came back with
+ * nothing to draw.
+ *
+ * That is also why the button says "see everything" rather than "clear all
+ * filters": the player did not apply this filter, the default did, and a button
+ * naming a thing they never did reads as chrome for someone else's mistake. It
+ * is still `clearFilters` behind it — which writes an explicit `can_sign_up=0`
+ * precisely so that clearing beats the default (see `clearedFilterParams`).
  *
  * ponytail: the count is the client's own, taken from the same request the
  * Sidebar's slot meter uses, so the two always agree on screen. It is not the
@@ -49,9 +58,17 @@ export default function CanSignUpEmpty({
       hint={
         bankFull
           ? t('listPage.bankFull', { used: activeTasks.length, max: maxTaskSlots })
-          : t('listPage.emptyEligible')
+          : activeTasks.length > 0
+            ? // The level-0 case the default exists for: one task on the board,
+              // now claimed, so the eligible list is empty and the right answer
+              // is "go do the one you have" — not 64 tasks they cannot start.
+              // Deliberately countless: it reads true whether they hold one or
+              // nineteen, and the bank meter is where a number belongs.
+              t('listPage.finishWhatYouHold')
+            : t('listPage.emptyEligible')
       }
       onClearAll={onClearAll}
+      actionLabel={t('listPage.seeEverything')}
     />
   )
 }
