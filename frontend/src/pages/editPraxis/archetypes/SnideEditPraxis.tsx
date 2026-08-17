@@ -505,8 +505,6 @@ export default function SnideEditPraxis({ state }: Props) {
         )}
 
         <ComposerSection
-          label={t("editPraxis.composer.writeUpLabel")}
-          htmlFor="composer-body"
           rule={false}
           labelStyle={{ color: MUTED }}
           meta={
@@ -522,14 +520,6 @@ export default function SnideEditPraxis({ state }: Props) {
                       ago: formatAutosave(state.autosaveAt),
                     })
                   : t("editPraxis.composer.statusUnsaved")}
-              </span>
-              <span
-                style={punkLabel({
-                  color: FAINT,
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
               <WriteUpTabs
                 tab={tab}
@@ -555,7 +545,6 @@ export default function SnideEditPraxis({ state }: Props) {
             <BodyTextarea
               state={state}
               skin={{
-                id: "composer-body",
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 toolbarButtonStyle: {
                   background: FIELD,
@@ -658,7 +647,6 @@ export default function SnideEditPraxis({ state }: Props) {
                     whiteSpace: "pre-line",
                     color: MUTED,
                   }),
-                  buttonLabel: t("editPraxis.composer.proofButton"),
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: BODY_FACE,

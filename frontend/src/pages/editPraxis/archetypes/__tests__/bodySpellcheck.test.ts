@@ -15,6 +15,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import "../../../../i18n";
+import i18n from "../../../../i18n";
 import { bodyContentAttributes } from "../controls";
 
 // The facet accepts an attribute object OR a `(view) => Attrs` function. The
@@ -45,6 +47,19 @@ describe("the composer body editor's spell check (#1978)", () => {
     expect(attrs["aria-labelledby"]).toBe("wow-body-label");
     expect(attrs["aria-label"]).toBe("Body");
     expect(attrs.spellcheck).toBe("true");
+  });
+
+  it("names the editor even when the section draws no label (#2085)", () => {
+    // #2085 took the visible `Write-up` heading off all eight sheets, and with
+    // it the label element `aria-labelledby` pointed at. A skin that passes
+    // neither an id nor a name is now the ordinary case, and it must not be an
+    // anonymous text field: the issue's own argument — "the text box already
+    // includes placeholder text" — is not an accessible name.
+    const attrs = bodyContentAttributes({});
+    expect(attrs["aria-labelledby"]).toBeUndefined();
+    expect(attrs["aria-label"]).toBe(
+      i18n.t("forms:editPraxis.composer.writeUpLabel"),
+    );
   });
 
   it("is what the composer body actually mounts", () => {

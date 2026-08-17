@@ -550,11 +550,11 @@ export default function SingularityEditPraxis({ state }: Props) {
           </ComposerSection>
         )}
 
-        {/* Write-up — the tabs sit in the section's meta slot, so the label row
-            reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
+        {/* Write-up — the tabs and the autosave line sit in the section's meta
+            slot, and since #2085 that slot is the whole row: the `Write-up`
+            heading said nothing the box's own placeholder does not. The editor
+            keeps its accessible name from `bodyContentAttributes`. */}
         <ComposerSection
-          label={t("editPraxis.composer.writeUpLabel")}
-          htmlFor="composer-body"
           rule={false}
           labelStyle={{ fontFamily: FACE, color: MUTED }}
           meta={
@@ -570,14 +570,6 @@ export default function SingularityEditPraxis({ state }: Props) {
                       ago: formatAutosave(state.autosaveAt),
                     })
                   : t("editPraxis.composer.statusUnsaved")}
-              </span>
-              <span
-                style={termLabel({
-                  color: MUTED,
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
               <WriteUpTabs
                 tab={tab}
@@ -604,7 +596,6 @@ export default function SingularityEditPraxis({ state }: Props) {
             <BodyTextarea
               state={state}
               skin={{
-                id: "composer-body",
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
                   ...fieldBox,
@@ -707,7 +698,6 @@ export default function SingularityEditPraxis({ state }: Props) {
                     whiteSpace: "pre-line",
                     color: ACCENT,
                   }),
-                  buttonLabel: t("editPraxis.composer.proofButton"),
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: FACE,

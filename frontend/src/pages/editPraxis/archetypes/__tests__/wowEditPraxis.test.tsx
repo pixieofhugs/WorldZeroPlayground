@@ -93,7 +93,6 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     setTitle: () => {},
     body: "## What I did\n\nWheeled them down.",
     setBody: () => {},
-    wordCount: 4,
     media: [],
     fileError: "",
     handleFileChange: () => {},
@@ -205,11 +204,12 @@ describe("WOW composer — copy is neutral, and the old block is GONE (ADR-0065 
 
   it.each(WIDTHS)("reads the shared neutral words on %s", (width) => {
     const markup = render(width);
+    // No `writeUpLabel`: #2085 took that heading off the page, and the key now
+    // names the editor through an aria-label a static render cannot see.
     for (const key of [
       "taskLabel",
       "titleLabel",
       "modeLabel",
-      "writeUpLabel",
       "proofLabel",
       "submit",
       "pointsUnit",

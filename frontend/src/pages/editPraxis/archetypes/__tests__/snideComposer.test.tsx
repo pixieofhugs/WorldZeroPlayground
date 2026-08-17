@@ -71,7 +71,6 @@ const state = {
   setTitle: () => {},
   body: "Caught the papers.",
   setBody: () => {},
-  wordCount: 3,
   media: [],
   fileError: "",
   handleFileChange: () => {},
@@ -110,7 +109,8 @@ const WIDTHS = ["desktop", "mobile"] as const;
 const NEUTRAL_KEYS = [
   "forms:editPraxis.composer.taskLabel",
   "forms:editPraxis.composer.titleLabel",
-  "forms:editPraxis.composer.writeUpLabel",
+  // No `writeUpLabel`: #2085 took that heading off the page, and the key now
+  // names the editor through an aria-label a static render cannot see.
   "forms:editPraxis.composer.proofLabel",
   "forms:editPraxis.composer.submit",
 ] as const;
