@@ -504,7 +504,12 @@ export function ProfileSkin({
             {submissions.map((praxis) => (
               <div key={praxis.id} style={{ position: 'relative' }}>
                 {praxis.id === laurelId && kit.laurel}
-                <PraxisCard praxis={praxis} />
+                {/* The laurel IS a fleur medallion, floated over this same
+                    corner, so the card's built-in one would land under it and
+                    peek out past its rim (#1960). Same call the six faction-page
+                    bodies make: the surface that stamps its own mark suppresses
+                    the card's. Only this one card — every other keeps its. */}
+                <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />
               </div>
             ))}
           </div>

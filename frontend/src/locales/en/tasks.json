@@ -11,7 +11,7 @@
     "emptyPendingHint": "A new proposal is admin-only for its first {{hours}} hours, so an admin can edit or reject it first. Anything newer than that isn't here yet.",
     "loadMore": "Load more",
     "filter": {
-      "searchPlaceholder": "Search tasks or players...",
+      "searchPlaceholder": "Search titles, descriptions or authors…",
       "searchLabel": "Search tasks"
     }
   },

@@ -18,6 +18,7 @@ import { describe, it, expect } from "vitest";
 import "../../../../i18n";
 import type { PraxisInviteOut, PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../../api/duel";
+import type { CharacterOut } from "../../../../api/characters";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { InviteSearch, type InviteSearchSkin } from "../controls";
 import { collabCopy } from "../../../../components/collab/collabCopy";
@@ -272,5 +273,93 @@ describe("InviteSearch — the + invite chip (#1417)", () => {
       member(2, "Early Filer", true),
     ]));
     expect(html).toContain("+ invite");
+  });
+});
+
+/**
+ * #1962 — a search result row has to identify a PERSON, not a display name.
+ *
+ * Two characters may legitimately carry the same `display_name` (the reporter
+ * has two called "Pixie"); the handle is the unique one and the avatar is what
+ * the eye picks out. The dropdown drew neither — a bare faction-tinted dot and
+ * the name — so the two rows were the same row twice.
+ *
+ * The seam is the dropdown ROW inside `InviteSearch`, which is where both the
+ * duel-opponent picker and the collab-invite picker route: one control, one
+ * markup, nine composer skins dressing it. Asserted in duel mode because that
+ * is the guise this static harness can render open (the collab's picker sits
+ * behind the `+ invite` chip, and a click is beyond `renderToStaticMarkup`).
+ */
+function searchResult(
+  id: number,
+  displayName: string,
+  username: string,
+  avatarUrl = "",
+): CharacterOut {
+  return {
+    id,
+    username,
+    display_name: displayName,
+    avatar_url: avatarUrl,
+    faction_slug: "na",
+    bio: "",
+    tagline: "",
+    location: "",
+    level: 1,
+    score: 0,
+    all_time_score: 0,
+    status: "active",
+    invitations: [],
+    badges: [],
+    created_at: "2026-01-01T00:00:00Z",
+  };
+}
+
+/** A duel picker with its dropdown open: no duel attached, so the box shows. */
+function searchState(results: CharacterOut[]): EditPraxisState {
+  const praxis = {
+    id: 1,
+    type: "solo",
+    duel_id: null,
+    created_by_id: 1,
+    task_faction_slug: "na",
+    members: [],
+    invites: [],
+  } as unknown as PraxisOut;
+  return {
+    praxis,
+    duel: null,
+    duelMode: true,
+    currentCharacterId: 1,
+    inviteQuery: "pixie",
+    inviteResults: results,
+    inviteOpen: true,
+    inviting: false,
+    sendChallenge: () => {},
+  } as unknown as EditPraxisState;
+}
+
+describe("InviteSearch — a result row names the person (#1962)", () => {
+  const NAMESAKES = [
+    searchResult(2, "Pixie", "pixieofhugs", "avatars/pixie.png"),
+    searchResult(3, "Pixie", "pixie_alt"),
+  ];
+
+  it("prints each result's handle, which is what tells namesakes apart", () => {
+    const html = chipHtml(searchState(NAMESAKES));
+    expect(html).toContain("@pixieofhugs");
+    expect(html).toContain("@pixie_alt");
+  });
+
+  it("draws the uploaded portrait rather than a bare tinted dot", () => {
+    const html = chipHtml(searchState(NAMESAKES));
+    expect(html).toContain("avatars/pixie.png");
+  });
+
+  // No portrait uploaded: the avatar still has to differ from a plain circle,
+  // or the fallback re-creates the ambiguity for two unphotographed namesakes.
+  it("falls back to the handle's monogram when there is no portrait", () => {
+    const html = chipHtml(searchState([NAMESAKES[1]]));
+    expect(html).toContain(">P<");
   });
 });

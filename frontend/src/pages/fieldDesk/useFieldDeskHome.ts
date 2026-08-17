@@ -72,10 +72,29 @@ export type PendingRowKind = 'requests' | 'notifications' | 'clear'
 
 export interface PendingRowState {
   kind: PendingRowKind
-  /** Interpolated into the requests copy; 0 for the other two kinds. */
+  /**
+   * Interpolated into the copy: outstanding requests on `'requests'`, waiting
+   * news on `'notifications'`. Always 0 on `'clear'`.
+   *
+   * ZERO ON `'notifications'` MEANS "NO NUMBER", not "no news" — that state is
+   * only reachable with news waiting. It is the deploy-skew case: a client
+   * ahead of its API gets no `global_activity_count` and the pill falls back to
+   * wording that needs none. See {@link selectPendingRow}.
+   */
   count: number
   /** Where the row leads, or `null` when it is a statement rather than a control. */
   to: string | null
+}
+
+/** The news side of `/me/sidebar`, which reports it twice over. */
+export interface NewsWaiting {
+  /**
+   * `global_activity_count` — how many items there are. `undefined` only under
+   * deploy skew, when the API predates the field (#1587).
+   */
+  total: number | undefined
+  /** `global_activity.length` — the five-item glance, so at most 5. */
+  glanced: number
 }
 
 /**
@@ -94,24 +113,32 @@ export interface PendingRowState {
  * caught up" over a queue with four invites in it, then swap under the reader a
  * moment later. A row that appears late is honest; a row that lies briefly is not.
  *
- * THE NOTIFICATIONS STATE CARRIES NO NUMBER, and that is a deliberate shortfall
- * against the design's `N notifications` — see the copy key's note. `/me/sidebar`
- * sends the activity panel as a five-item glance (`SIDEBAR_ACTIVITY_LIMIT`), not
- * a count, so the only number available here is a display cap that would read
- * "5" for a player with fifty. Restoring the number needs a real count field on
- * that response; approximating it from the list length would be exactly the
- * badge-disagrees-with-the-list drift ADR-0036 exists to prevent.
+ * THE NOTIFICATIONS STATE CARRIES ITS NUMBER (#1587), from
+ * `global_activity_count` and never from `global_activity.length`. The list is a
+ * five-item glance (`SIDEBAR_ACTIVITY_LIMIT`), so its length would read "5" for a
+ * player with fifty — the badge-disagrees-with-the-list drift ADR-0036 exists to
+ * prevent. The count field is the server's own pre-slice length, from the same
+ * fetch, and it costs no extra query. `PendingRowPill` caps it honestly at
+ * `ACTIVITY_COUNT_CAP`, above which it is a floor rather than a total.
+ *
+ * The glance length is still read, for PRESENCE only: under deploy skew a client
+ * ahead of its API gets no count at all, and a non-empty glance is then the only
+ * proof there is news. `total: undefined` reaches the pill as `count: 0` — the
+ * row still leads to `/updates`, it just says "New updates" as it did before this
+ * issue, rather than rendering `undefined`.
  */
 export function selectPendingRow(
   pendingRequests: number,
-  otherActivity: number,
+  news: NewsWaiting,
   loading: boolean,
 ): PendingRowState | null {
   if (loading) return null
   if (pendingRequests > 0) {
     return { kind: 'requests', count: pendingRequests, to: REQUESTS_QUEUE_LINK }
   }
-  if (otherActivity > 0) return { kind: 'notifications', count: 0, to: UPDATES_LINK }
+  if ((news.total ?? news.glanced) > 0) {
+    return { kind: 'notifications', count: news.total ?? 0, to: UPDATES_LINK }
+  }
   return { kind: 'clear', count: 0, to: null }
 }
 
@@ -128,6 +155,7 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
     // the whole live feed minus the obligations, which is precisely the
     // "notifications that are not requests" side of the row.
     global_activity: recentActivity,
+    global_activity_count: activityCount,
     loading: loadingTasks,
   } = useSidebarPanels()
   const track = useLevelTrack(character?.level ?? 0, character?.score ?? 0)
@@ -139,7 +167,11 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
     eraName: user?.era_name ?? '',
     levelTrack: track,
     activeTasks,
-    pendingRow: selectPendingRow(pendingCount, recentActivity.length, loadingTasks),
+    pendingRow: selectPendingRow(
+      pendingCount,
+      { total: activityCount, glanced: recentActivity.length },
+      loadingTasks,
+    ),
     loadingTasks,
   }
 }
