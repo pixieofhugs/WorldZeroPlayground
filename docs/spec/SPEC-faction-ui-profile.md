@@ -190,7 +190,11 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 - **2026-06-06** — Rebranded the **Journeymen → The Ephemerists** (slug kept as
   `journeymen`; no DB migration). New archetype: the *Discordant Map* illuminated codex
   (lapis-verdigris `#1d6e72`/`#3aa0a4`, Cinzel/EB Garamond/Cormorant, vellum + gold-leaf +
-  rubric). Added `--eph-*` pigments + `.eph-backdrop` to `index.css` and registered the
+  rubric). **Those two hexes are history, not the current spine hue** — this entry keeps
+  its original values as the 2026-06-24 entry says change-log entries do. `#2068` moved
+  `--faction-ephemerists` to the plate's own brass (`#c9a24b`/`#e6c877`) and left the teal
+  ownerless; the archetype's vellum/gold-leaf skin did not move with it, which is the
+  spine-vs-skin split §1 draws. Added `--eph-*` pigments + `.eph-backdrop` to `index.css` and registered the
   faction in all five Tier-3 dispatchers (vote = the wax-seal *Concordance* ramp,
   progression = roman-numeral grade, backdrop, avatar, feed frame), which it previously
   inherited as global defaults.
