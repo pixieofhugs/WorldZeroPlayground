@@ -4414,7 +4414,13 @@
    wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion
    so the widget never writes `animation:` inline and bypass the gate; the dot
    still fills with the rainbow when stilled, only the bob stops. Per-dot
-   duration/delay/travel arrive as inline custom properties. */
+   duration/delay/travel arrive as inline custom properties.
+
+   IT IS TRANSFORM-ONLY AND MUST STAY SO: this is a vote READOUT, so a dot that
+   faded would read as a value going out. The Singularity ASCII face borrowed
+   this keyframe until #2071, which is why the fade the design asked for could
+   not simply be added here — the face got its own `sg-float` instead. Keep it
+   this way, and mint a bespoke keyframe for any ornament that needs more. */
 @keyframes spec-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--spec-bounce, -3px)); } }
 @media (prefers-reduced-motion: no-preference) {
   .spectrum-dot--reached {
@@ -4443,14 +4449,19 @@
    the sweep's resting offset, because that is layout: it is what parks the band
    off-slab for a reader who gets neither the motion sheet nor `no-preference`. */
 .sg-scan { top: -24%; }
-@media (prefers-reduced-motion: no-preference) {
-  /* The task card's ASCII face drifts beside the sign-up key (#2036). No new
-     keyframe: `spec-rise` is already a bob to a tunable height, and this file
-     already reuses across factions where the motion is the same shape
-     (`.coven-moon-dust` runs `eph-twinkle`). Stilled, the robot stays parked
-     and drawn — it is ornament, not an indicator. */
-  .sg-ascii { --spec-bounce: -5px; animation: spec-rise 6s ease-in-out infinite; }
-}
+
+/* The task card's ASCII face drifts beside the sign-up key (#2036) — and since
+   #2071 it drifts on its OWN keyframe, `sg-float` in `src/motion.ornament.css`.
+   It borrowed `spec-rise` (the vote readout's bob), which is transform-only, so
+   the design's fade was dropped silently by the reuse; opacity could not be
+   added to the shared keyframe without fading every reached spectrum dot.
+
+   WHAT STAYS HERE IS THE RESTING FRAME, because opacity is paint. 0.45 is
+   `sg-float`'s own 0%/100% value, so stilled — or with the deferred motion sheet
+   never received — the robot is parked and drawn at the drift's rest rather than
+   at a brightness it never reaches in motion. It is ornament, not an indicator,
+   and it must not vanish; same reading as `.epg-glyph` below. */
+.sg-ascii { opacity: 0.45; }
 
 /* ══ Praxis-card redesign vote widgets (#821) ══
    Every animation is gated on reduced-motion and driven by a class, never an
@@ -4612,6 +4623,20 @@
 /* Everymen — the gearworks' turn and sparks are in motion.ornament.css (#2073).
    Stilled, the gears keep their heat/glow (that carries the rank) and the sparks
    stay hidden (opacity:0 inline), so nothing here has a resting form to hold. */
+
+/* Everymen — the HELP WANTED bill's fists-and-lightning at the sign-up (#2034).
+   The discharge MOVES since #2071: `evm-crackle` on the arcs and `evm-flicker`
+   on the bolt, both in `src/motion.ornament.css` off the critical path, with the
+   per-arc stagger arriving as an inline `animation-delay`.
+
+   THIS LINE IS THE WHOLE REASON THE STILLED MARK IS STILL A DISCHARGE.
+   `evm-crackle` opens at `opacity: 0`, so a reduced-motion reader — or anyone
+   who never receives the deferred sheet — would otherwise get a fist and a bolt
+   with no lightning, and the mark would lose the thing it is a picture of. 0.9
+   is the crackle's own 13% peak, so the rest state is a frame somebody drew,
+   the same reading as `.epg-glyph` below and Coven's static pentagram. The bolt
+   needs no counterpart: `evm-flicker` never leaves full strength. */
+.evm-arc { opacity: 0.9; }
 
 /* Ephemerists — the Valley plate's incised glyph registers (#1023). Two rows of
    signs (Egypt, Greece, the middle ages, 1925) surface and recede on a long,

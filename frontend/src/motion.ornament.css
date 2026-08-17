@@ -97,6 +97,28 @@
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
 }
 
+/* ── Singularity task card (#2036/#2071) — the ASCII robot idling in the CTA's
+   right gutter rises and dims on a slow six-second cycle.
+
+   `sg-float` is BESPOKE, and that is the fix #2071 asked for: the face used to
+   borrow the vote readout's `spec-rise`, which is transform-only, so the drift
+   rose and fell and never breathed — half the design dropped silently by the
+   reuse. Putting opacity into `spec-rise` was not an option, because
+   `.spectrum-dot--reached` runs it and a fading vote dot reads as a value going
+   out. So the shared keyframe stays as it is and this one carries both.
+
+   `.sg-ascii`'s resting `opacity: 0.45` is in index.css: it is paint, and it is
+   this keyframe's own 0%/100% frame, so a reader who gets neither this sheet nor
+   `no-preference` sees the drift's rest rather than the robot at a brightness it
+   never reaches in motion. ── */
+@keyframes sg-float {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-6px); opacity: 0.8; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sg-ascii { animation: sg-float 6s ease-in-out infinite; }
+}
+
 /* ── Coven — moon-phase plate: rank-5 sparkles twinkle, dust drifts.
 
    `eph-twinkle` moved with them and is no longer an Ephemerists keyframe at all
@@ -211,6 +233,49 @@
   .ev-gear--cw { transform-origin: center; animation: ev-gear-cw var(--ev-gear-dur, 3s) linear infinite; }
   .ev-gear--ccw { transform-origin: center; animation: ev-gear-ccw var(--ev-gear-dur, 3s) linear infinite; }
   .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
+}
+
+/* ── Everymen — the HELP WANTED bill's fists-and-lightning, at the sign-up
+   (#2034/#2071). Two motions: each generated arc strikes on its own beat, and
+   the bolt in the fist flickers as it discharges. The per-arc delay is an inline
+   `animation-delay` computed from the arc's index and its group's seed
+   (`crackle()` in `EverymenTaskCard.tsx`) — a per-instance number, while the
+   animation itself stays in the class so the gate can reach it.
+
+   `steps(1, end)` IS THE EFFECT. Eased, `evm-crackle` reads as a fade in and
+   out; stepped, it snaps between levels and reads as electrical. Do not smooth
+   it, and do not give the arcs a shorter cycle.
+
+   THE DESIGN'S TWO SHAKE KEYFRAMES ARE NOT HERE, by owner ruling (#2071): a
+   0.32s stepped jitter on a mark that appears twice per card, in a flex-wrap
+   grid of up to forty cards, is the arithmetic that stood WOW's balloon bobbing
+   down. The newer hammer-strike set in the same design (evmHammer / evmQuake /
+   evmCrack / evmFlash / evmSpark / evmStreak) is not being built either.
+
+   `.evm-arc`'s resting `opacity: 0.9` is in index.css, and it matters more here
+   than anywhere else in this file: `evm-crackle` opens at 0, so without it a
+   stilled mark is a fist and a bolt with no lightning at all. 0.9 is the
+   crackle's own peak, so the rest is a frame somebody drew. ── */
+@keyframes evm-crackle {
+  0%, 100% { opacity: 0; }
+  4% { opacity: 1; }
+  9% { opacity: 0.15; }
+  13% { opacity: 0.9; }
+  18% { opacity: 0; }
+  52% { opacity: 0; }
+  56% { opacity: 0.8; }
+  60% { opacity: 0; }
+}
+@keyframes evm-flicker {
+  0%, 100% { opacity: 1; }
+  38% { opacity: 0.72; }
+  44% { opacity: 1; }
+  61% { opacity: 0.85; }
+  67% { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .evm-arc { animation: evm-crackle 1.15s steps(1, end) infinite; }
+  .evm-bolt { animation: evm-flicker 2.4s ease-in-out infinite; }
 }
 
 /* ── Coven — the spell slip's pentagram watermark turns, once every two minutes

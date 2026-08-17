@@ -21,6 +21,12 @@
  *     component must not write `animation:` inline, which would bypass the gate
  *     while every render test stayed green.
  *
+ * TWO SHEETS, ONE QUESTION (#2073/#2071). The drift now lives in
+ * `src/motion.ornament.css`, delivered past first paint; the face's RESTING
+ * opacity stayed in `index.css`, because it is paint. "Is the drift gated, with
+ * no unguarded twin, and does the still frame exist" is a question about the
+ * pair, so both files are read.
+ *
  * What is NOT checkable here is whether it looks right. That is visual QA and
  * is stated as outstanding on the PR.
  */
@@ -43,9 +49,17 @@ import SingularityTaskCard from '../SingularityTaskCard'
 import { aTask } from '../../../test/fixtures'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
 
-const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'),
-)
+const sheet = (name: string): string =>
+  stripComments(readFileSync(fileURLToPath(new URL(`../../../${name}`, import.meta.url)), 'utf8'))
+
+const CSS = sheet('index.css')
+const MOTION = sheet('motion.ornament.css')
+
+const GATE = '@media (prefers-reduced-motion: no-preference)'
+
+/** One `@keyframes` body, by name. Names are document-global across the pair. */
+const keyframe = (name: string, css: string): string =>
+  ruleBodies(css, `@keyframes ${name}`).join('')
 
 const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
@@ -132,10 +146,56 @@ describe('the drift is gated on reduced motion (#2036)', () => {
   })
 
   it('declares the motion only inside the no-preference gate', () => {
-    const gated = ruleBodies(CSS, '@media (prefers-reduced-motion: no-preference)').join('\n')
+    const gated = [...ruleBodies(MOTION, GATE), ...ruleBodies(CSS, GATE)].join('\n')
     expect(animates(gated), 'the drift is inside the gate').toBe(1)
-    // Same count sheet-wide, so there is no ungated twin outside it. A reader
-    // who asks for less motion gets the face STILLED, not removed.
-    expect(animates(CSS), 'and nowhere else').toBe(1)
+    // Same count across BOTH sheets, so there is no ungated twin anywhere. A
+    // reader who asks for less motion gets the face STILLED, not removed.
+    expect(animates(`${CSS}\n${MOTION}`), 'and nowhere else').toBe(1)
+  })
+
+  it('runs its own keyframe, so the vote readout does not fade (#2071)', () => {
+    // The drift used to borrow `spec-rise`, which is transform-only — so the
+    // design's fade was silently dropped, and adding opacity there would have
+    // made every reached spectrum dot fade too. `sg-float` carries both.
+    const drift = ruleBodies(MOTION, GATE)
+      .flatMap((body) => [...body.matchAll(/\.sg-ascii\s*\{([^}]*)\}/g)])
+      .map((rule) => rule[1])
+      .join('')
+    expect(drift).toContain('sg-float')
+    expect(drift, 'the readout keyframe is not the ornament keyframe').not.toContain('spec-rise')
+
+    const float = keyframe('sg-float', MOTION)
+    expect(float, 'the robot rises').toContain('transform')
+    expect(float, 'and dims — the half the reuse dropped').toContain('opacity')
+
+    // The vote readout is untouched: `spec-rise` still transform-only, still
+    // driving the reached dot. It bobs; it must not fade.
+    const rise = keyframe('spec-rise', CSS)
+    expect(rise, 'a fading vote dot reads as a value going out').not.toContain('opacity')
+    expect(
+      ruleBodies(CSS, GATE).join('\n'),
+      'the reached dot still bobs',
+    ).toMatch(/\.spectrum-dot--reached\s*\{[^}]*spec-rise/)
+  })
+
+  it('rests at the frame the drift returns to, in index.css (#2071)', () => {
+    // THE BUG THIS EXISTS FOR: `sg-float` fades, so with no base opacity a
+    // stilled robot renders at full strength — brighter than it ever appears in
+    // motion, a fourth appearance nobody drew. And since the animation now
+    // arrives on a deferred sheet, anyone who never receives that sheet lands in
+    // the same state, so this is no longer only a reduced-motion concern.
+    const resting = ruleBodies(CSS, '.sg-ascii')
+    expect(resting, 'the resting form is paint, so it stays in index.css').toHaveLength(1)
+    expect(
+      ruleBodies(ruleBodies(CSS, GATE).join('\n'), '.sg-ascii'),
+      'a resting opacity inside the gate is no resting state at all',
+    ).toEqual([])
+
+    const stop = /0%,\s*100%\s*\{([^}]*)\}/.exec(keyframe('sg-float', MOTION))?.[1] ?? ''
+    const at0 = /opacity:\s*([\d.]+)/.exec(stop)?.[1]
+    expect(at0, 'the drift opens and closes on an opacity').toBeDefined()
+    expect(resting[0], "and the rest is that frame, not a brightness nobody drew").toContain(
+      `opacity: ${at0}`,
+    )
   })
 })
