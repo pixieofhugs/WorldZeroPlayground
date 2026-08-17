@@ -25,9 +25,11 @@ import type { CSSProperties, ReactElement } from "react";
  *
  * Colour arrives as a token (default --faction-ua-glow, the ornament-only hue),
  * so the figure follows the `[data-theme="dark"]` cascade with no ternary. All
- * motion is the reduced-motion-gated `.ua-mandala-ring` class from index.css —
- * never an inline `animation:`. Geometry numbers are raw by design: this is
- * ornament, and ornament does not sit on the type/space scales (§4a).
+ * motion is a reduced-motion-gated class from `src/motion.ornament.css` —
+ * `.ua-mandala-ring` for `spin`, `.ua-mandala-pulse` for `pulse` — never an
+ * inline `animation:`; this component only hands over per-band tempo. Geometry
+ * numbers are raw by design: this is ornament, and ornament does not sit on the
+ * type/space scales (§4a).
  */
 
 /** How loudly the pattern speaks on a surface. `absent` draws nothing. */
@@ -57,6 +59,19 @@ export interface UaMandalaProps {
   color?: string;
   /** Turn the bands slowly, alternating direction. Reduced-motion gated. */
   spin?: boolean;
+  /**
+   * Pop the petals and cycle their hue, band by band on a stagger (#2072).
+   *
+   * The task card's CTA flanks and nothing else so far. Reduced-motion gated
+   * like `spin`, and it degrades to the untouched figure: stilled, the bands
+   * keep the resting alpha the pop's own plateau frame interpolates to, and the
+   * fill stays whatever `color` is — so there is no state in which the rosette
+   * is missing petals or wearing a hue it never reaches in motion.
+   *
+   * Not combinable with `spin`: both animate `transform` on the same band. See
+   * the note in motion.ornament.css.
+   */
+  pulse?: boolean;
   /**
    * Draw the outermost circle that closes the petals into a disc.
    *
@@ -116,6 +131,51 @@ function bandMotion(band: number): CSSProperties {
   };
 }
 
+/**
+ * The band's own alpha: outer bands sit back so the figure has depth rather than
+ * one flat weight. ONE expression, because the number is both the `opacity`
+ * attribute and (when pulsing) the custom property the pop's plateau frame
+ * interpolates to — two copies could drift and a stilled figure would then be a
+ * frame the animation never draws.
+ */
+function bandAlpha(band: number): number {
+  return 1 - (band - 1) * 0.14;
+}
+
+/**
+ * Per-band pulse tempo (#2072), for `.ua-mandala-pulse` in motion.ornament.css.
+ *
+ * The stagger comes from the band index, not from `nth-child`: the design's
+ * `g:nth-child(1…6)` assumes six groups, and this primitive is mounted at three
+ * rings on the task card and could be mounted at five. `--ua-hue-delay` is
+ * NEGATIVE on purpose — each band opens mid-cycle rather than in lockstep.
+ *
+ * `--ua-band-alpha` is the pop's plateau. The keyframe interpolates to it rather
+ * than to 1 so that popping does not override the `opacity` attribute below and
+ * flatten the figure's depth for as long as it runs — and so the rest state and
+ * the held frame are the same number by construction. Tenths, again by integer
+ * arithmetic: `0.4 + 1.4` is `1.7999999999999998` in floating point.
+ */
+function bandPulse(band: number): CSSProperties {
+  return {
+    ["--ua-band-alpha" as string]: `${bandAlpha(band)}`,
+    ["--ua-pop-delay" as string]: `${((band - 1) * 8) / 10}s`,
+    ["--ua-hue-delay" as string]: `${-(4 + (band - 1) * 14) / 10}s`,
+  };
+}
+
+/**
+ * Which of the hue cycle's three variants a band runs. Hub outward: the first
+ * band is the inner cycle, the last is the outer, everything between is the mid
+ * — so a mandala at five rings still reads as one figure rather than dropping
+ * two bands out of the effect.
+ */
+function pulseBand(band: number, rings: number): string {
+  if (band === 1) return "ua-mandala-pulse--inner";
+  if (band === rings) return "ua-mandala-pulse--outer";
+  return "ua-mandala-pulse--mid";
+}
+
 export default function UaMandala({
   size = 240,
   strength = "texture",
@@ -125,6 +185,7 @@ export default function UaMandala({
   opacity,
   color = "var(--faction-ua-glow)",
   spin = false,
+  pulse = false,
   boundary = true,
   className,
   style,
@@ -147,13 +208,22 @@ export default function UaMandala({
       const angle = (index / petalsPerRing) * Math.PI * 2 + phase;
       petals.push(<path key={index} d={lensPetal(angle, inner, outer)} />);
     }
+    const classes = [
+      spin && "ua-mandala-ring",
+      pulse && "ua-mandala-pulse",
+      pulse && pulseBand(band, rings),
+    ].filter(Boolean);
     bands.push(
       <g
         key={band}
-        className={spin ? "ua-mandala-ring" : undefined}
-        style={spin ? bandMotion(band) : undefined}
+        className={classes.length ? classes.join(" ") : undefined}
+        style={
+          spin || pulse
+            ? { ...(spin ? bandMotion(band) : null), ...(pulse ? bandPulse(band) : null) }
+            : undefined
+        }
         // Outer bands sit back so the figure has depth rather than one flat weight.
-        opacity={1 - (band - 1) * 0.14}
+        opacity={bandAlpha(band)}
       >
         {petals}
       </g>,

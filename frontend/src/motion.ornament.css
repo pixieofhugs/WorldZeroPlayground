@@ -317,3 +317,82 @@
   .ua-mandala-halo { animation: ua-halo-pulse 0.7s ease-out both; }
   .ua-mandala-alive { animation: ua-twist var(--ua-twist-dur, 2s) ease-in-out infinite; }
 }
+
+/* ── UA — the task card's CTA flank: the petals pop and the hue cycles (#2072).
+   `UaMandala`'s `pulse` prop, which only `UaTaskCard`'s two flanking rosettes
+   set. Every other mount of the primitive — backdrop, faction hero, select card,
+   field desk — passes nothing and is untouched, and the vote control draws its
+   own SVG with `.ua-mandala-ring` above.
+
+   THE POP'S PLATEAU IS `var(--ua-band-alpha)`, NOT 1, and that is the whole
+   join with index.css. The band `<g>` carries an `opacity` presentation
+   attribute that sits the outer bands back so the figure has depth; a CSS
+   animation on `opacity` beats a presentation attribute, so a plateau of 1
+   would flatten that depth for as long as the animation ran, which is forever.
+   The component hands the band's own alpha over as a custom property and the
+   keyframe interpolates to exactly it, so the pop's held frame IS the resting
+   figure and `uaTaskCardOrnament.test.tsx` compares the two so they cannot
+   drift.
+
+   WHICH IS ALSO THE REST STATE, and it needed nothing added to index.css. The
+   0% frame is `opacity: 0`, so a stilled rosette had to not be that: with this
+   sheet absent, or under `prefers-reduced-motion: reduce`, the `<g>` keeps its
+   attribute alpha and its inherited `fill` and renders as the fully drawn,
+   full-petalled, single-hue mandala the card ships today. There is no resting
+   paint to move here because the rest state is the untouched markup.
+
+   THE HUE CYCLE ANIMATES `fill`, NOT the design's `color`. The design mutates a
+   DOM it did not write, so it had to drive `currentColor`; we own the component,
+   and `currentColor` on this row is the trap `UaTaskCard`'s docstring names —
+   it resolves to the leaf's BODY INK, which is what a stilled or sheet-less
+   viewer would then get. Animating `fill` leaves the primitive's own
+   `fill="var(--faction-ua-glow)"` as the rest.
+
+   Nine stops, `--faction-ua-glow` plus the eight-name ramp beside it in
+   index.css. THE RAMP FLIPS PER THEME and the design's hexes are its dark half
+   only — index.css carries that measurement and the ORNAMENT-ONLY,
+   no-contrast-floor ruling with it.
+
+   ponytail: `pulse` and `spin` both animate `transform` on the same `<g>`, so a
+   mount that passed both would get whichever of the two rules the cascade put
+   last and lose the other. No mount does — the flank is static apart from this
+   (`spin` defaults to false and `UaTaskCard` never sets it). Wanting both means
+   folding the spin into these keyframes, not adding a third class. ── */
+@keyframes ua-petal-pop {
+  0% { opacity: 0; transform: scale(0.55); }
+  12%, 62% { opacity: var(--ua-band-alpha, 1); transform: scale(1); }
+  80%, 100% { opacity: 0; transform: scale(0.55); }
+}
+@keyframes ua-hue-outer {
+  0%, 100% { fill: var(--faction-ua-glow); }
+  25% { fill: var(--faction-ua-glow-gold); }
+  50% { fill: var(--faction-ua-glow-clay); }
+  75% { fill: var(--faction-ua-glow-apricot); }
+}
+@keyframes ua-hue-mid {
+  0%, 100% { fill: var(--faction-ua-glow-straw); }
+  30% { fill: var(--faction-ua-glow-flame); }
+  65% { fill: var(--faction-ua-glow-umber); }
+}
+@keyframes ua-hue-inner {
+  0%, 100% { fill: var(--faction-ua-glow-sand); }
+  40% { fill: var(--faction-ua-glow-ember); }
+  70% { fill: var(--faction-ua-glow-gold); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* The base rule names no animation, so it is inert on its own — the band class
+     the component picks from the ring's index supplies the pair of names. The
+     two delays are the stagger, and the hue's is NEGATIVE on purpose: every band
+     opens mid-cycle rather than all nine stops marching together. */
+  .ua-mandala-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation-duration: 8s, 11s;
+    animation-delay: var(--ua-pop-delay, 0s), var(--ua-hue-delay, 0s);
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  .ua-mandala-pulse--outer { animation-name: ua-petal-pop, ua-hue-outer; }
+  .ua-mandala-pulse--mid { animation-name: ua-petal-pop, ua-hue-mid; }
+  .ua-mandala-pulse--inner { animation-name: ua-petal-pop, ua-hue-inner; }
+}

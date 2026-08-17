@@ -1395,6 +1395,43 @@
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
+  /* ── The mandala's HUE RAMP (#2072) — ORNAMENT ONLY, exactly as -glow above is,
+     and NO CONTRAST FLOOR APPLIES TO IT. Its one reader is the hue cycle in
+     src/motion.ornament.css, which paints the `aria-hidden` rosettes flanking
+     the UA task card's sign-up. Neither 4.5:1 nor 1.4.11's 3:1 is owed on a
+     decorative figure, and factionContrast.test.ts already exempts -glow in as
+     many words ("ornament with no text use"). Do NOT walk these down for
+     contrast: that is a rule reaching something it does not govern.
+
+     Stop A of the ramp is --faction-ua-glow itself, reused, so it is not
+     restated — which is also why the whole family is named after it.
+
+     THE DESIGN'S NINE HEXES ARE THE DARK HALVES, all nine. The tell: its first
+     stop is #f0894a, which is -glow's dark #f08a4e to within 4/255 per channel,
+     so the ramp was sampled off a dark card. Shipped theme-invariant it would be
+     nine pale oranges on the parchment. Each light half here holds its dark hue
+     and takes the two factors -glow itself takes between themes — HSL lightness
+     ×0.789, saturation ×0.902 — which re-derives -glow's own #dd5a1e from
+     #f08a4e to within 6/255. DERIVED, NOT INVERTED: a gold stays a gold and the
+     cream stays a pale sand, each one simply deeper.
+
+     Three of the nine matched an existing token exactly and none of the three
+     was reusable. #f4d472 is --faction-coven-slip-gold (another faction's ink).
+     #e07a3a is --faction-default-stop-2 — the UNAFFILIATED SPECTRUM's orange,
+     which is the drift §3 of WORLD_ZERO_STYLE names by example, UA having sat on
+     that stop for months. #e86a2c is --faction-ua-card-chip-bg, which carries
+     --faction-ua-card-chip-ink at a measured ratio, so aliasing contrast-exempt
+     ornament to it would let a future contrast fix drag the mandala, or a
+     mandala tweak drag the chip. ── */
+  --faction-ua-glow-gold: #dea917; /* B — outer 25%, inner 70% */
+  --faction-ua-glow-clay: #945236; /* C — outer 50% */
+  --faction-ua-glow-apricot: #d67e2b; /* D — outer 75% */
+  --faction-ua-glow-straw: #e5ba36; /* E — mid 0%/100% */
+  --faction-ua-glow-flame: #b85f26; /* F — mid 30% */
+  --faction-ua-glow-umber: #884820; /* G — mid 65% */
+  --faction-ua-glow-sand: #f6b452; /* H — inner 0%/100% */
+  --faction-ua-glow-ember: #bc521e; /* I — inner 40% */
+
 /* ── UA · PRAXIS CARD ONLY — the parchment-and-ensō exception (#857) ──
      WHY THIS SURFACE KEEPS A VOICE THE FACTION NO LONGER HAS.
      Two live plans for UA disagree on purpose, and the owner split them by
@@ -2761,6 +2798,19 @@
   --faction-ua-hair: #332b22; /* faintest divider, below -rule */
   --faction-ua-glow: #f08a4e; /* ORNAMENT ONLY — ensō, mandala. Never text. */
   --faction-ua-vermil: #d9542a; /* the ensō score numeral — large display only */
+
+  /* The mandala's hue ramp after dark (#2072) — the design's own nine hexes,
+     which were sampled here. The light block above carries the derivation and
+     the ORNAMENT-ONLY / no-contrast-floor ruling; read it before touching
+     either half. Stop A is --faction-ua-glow, reused. */
+  --faction-ua-glow-gold: #f5c542;
+  --faction-ua-glow-clay: #c1653f;
+  --faction-ua-glow-apricot: #e8a15e;
+  --faction-ua-glow-straw: #f4d472;
+  --faction-ua-glow-flame: #e07a3a;
+  --faction-ua-glow-umber: #b45a22;
+  --faction-ua-glow-sand: #ffd9a0;
+  --faction-ua-glow-ember: #e86a2c;
 
   /* The reading ramp, mirrored (#849). Not the light ramp lightened: the light
      ladder climbs toward depth and would arrive at its dimmest rung here, so

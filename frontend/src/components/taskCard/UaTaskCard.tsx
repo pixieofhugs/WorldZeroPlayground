@@ -120,8 +120,16 @@ function UaCtaFlank({ side, size }: { side: "start" | "end"; size: number }) {
     >
       {/* The boundary ring is off (`trimMarks()`): closed into a disc, the
           figure reads as a second boxed seal beside a boxed button. Trimmed, it
-          is a rosette, and the button keeps the only edge in the row. */}
-      <UaMandala size={size} strength="full" rings={3} petalsPerRing={8} boundary={false} />
+          is a rosette, and the button keeps the only edge in the row.
+
+          `pulse` IS THE FLANK'S OWN MOTION (#2072) — the petals pop and the hue
+          cycles, band by band on a stagger, from the reduced-motion-gated
+          classes in `src/motion.ornament.css`. This is the only mount of the
+          primitive that asks for it, and the only motion this rosette has: it
+          does not spin (`spin` defaults to false and the vote control is where
+          the slow bands turn). Stilled — reduced motion, or the deferred sheet
+          not yet arrived — it is the fully drawn glow-coloured rosette below. */}
+      <UaMandala size={size} strength="full" rings={3} petalsPerRing={8} boundary={false} pulse />
     </span>
   );
 }
