@@ -124,6 +124,26 @@ describe("SNIDE task detail — the ransom dossier", () => {
     expect(text).toContain(TITLE);
   });
 
+  it("prints every clipping as the black slab, inked out of -card-* (#2066)", () => {
+    // The dossier's sheets used to be the flipping xerox stock
+    // (`--faction-snide-note-paper`: cream by day, near-black by night). They
+    // are the theme-INVARIANT slab now, so nothing on them may be inked with a
+    // token that flips — `-note-ink` is #14110b by day, which is black type on
+    // a black sheet. Same failure shape as the WOW masthead at 1.08:1.
+    const { html } = render(<SnideTaskDetail state={baseState()} />);
+    expect(html, "the stock has no consumer left on this page").not.toContain(
+      "--faction-snide-note-paper",
+    );
+    expect(html, "and the slab is what replaced it").toContain("--faction-snide-card-bg");
+    // Every pink ink on this page sat on a sheet: the ×mult annotation, the
+    // pen-circle caption and the "level met" note. Pink measures 3.13:1 on the
+    // slab, so on this fixture (no metatask, where the only pink left is the
+    // WALL's own line) nothing may ink with it at all.
+    expect(html, "no walked pink ink survives on the slab").not.toMatch(
+      /color:var\(--faction-snide-note-pink-ink\)/,
+    );
+  });
+
   it("speaks the shared neutral copy, not the retired case-file voice", () => {
     const { text } = render(<SnideTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");
