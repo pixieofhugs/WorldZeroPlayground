@@ -9,7 +9,11 @@ from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
-from faction_slugs import UNAFFILIATED_FACTION_SLUG
+from faction_slugs import (
+    ALBESCENT_FACTION_SLUG,
+    UNAFFILIATED_FACTION_SLUG,
+    faction_filter_slugs,
+)
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character, CharacterStatus
@@ -81,7 +85,11 @@ async def get_character_by_id(character_id: int, session: AsyncSession) -> Chara
     return result.scalar_one_or_none()
 
 
-ALBESCENT_FACTION_SLUG = "albescent"
+# ALBESCENT_FACTION_SLUG now lives in `faction_slugs` alongside the other
+# sentinels — the leaf module `faction_filter_slugs` needed it from, and the one
+# place a slug string may be declared (#1559). Re-exported from here so the
+# existing importers (`character_stats`, `faction_service`, `routers/factions`)
+# are unchanged; `__all__`-less module, so the name above is the export.
 
 _ALBESCENT_SENTINEL_SLUGS: frozenset[str] = frozenset(
     {UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG}
@@ -643,8 +651,13 @@ async def list_characters_for_viewer(
             ),
             else_=2,
         )
-    if faction_slug:
-        query = query.where(Character.faction_slug == faction_slug)
+    # One slug in, possibly several out: selecting Unaffiliated also matches
+    # Albescent members (#1975), who are shown as Unaffiliated everywhere and
+    # otherwise matched no filter at all. `.in_()` rather than `==` because the
+    # fold is the shared helper's answer, not this route's.
+    roster_faction_slugs = faction_filter_slugs([faction_slug])
+    if roster_faction_slugs:
+        query = query.where(Character.faction_slug.in_(roster_faction_slugs))
     if exclude_account_id is not None:
         query = query.where(Character.account_id != exclude_account_id)
     if exclude_active_task_id is not None:
