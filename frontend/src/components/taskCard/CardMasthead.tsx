@@ -44,9 +44,13 @@ import FactionSigil from "../sigil/FactionSigil";
  */
 
 /**
- * The mark's box, on every card. Geometry, so a raw number
- * (WORLD_ZERO_STYLE §4a) — and a SHARED one, which is the point: the design
- * draws one 20px mark per band and the kit has exactly one place to say so.
+ * The mark's SLOT, on every card — the box the three-cell grid measures its
+ * centring against. Geometry, so a raw number (WORLD_ZERO_STYLE §4a), and a
+ * SHARED one, which is the point: the kit has exactly one place to say how much
+ * room a faction mark gets.
+ *
+ * It is also the default DRAWN size, which for eight of the nine skins is the
+ * whole story. See `markSize` for the one that draws bigger.
  */
 const MARK = 20;
 
@@ -59,6 +63,26 @@ export interface CardMastheadProps {
    * plum mark on the plum banner. A token, always.
    */
   markColor?: string;
+  /**
+   * How big the mark is DRAWN, when a design grows one past the kit's 20.
+   * S.N.I.D.E.'s brushed A at 24 is the only caller (#2035); everyone else omits
+   * it and gets {@link MARK}.
+   *
+   * IT IS THE DRAWING THAT GROWS, NOT THE SLOT. The box below stays `MARK` for
+   * every card on purpose: it is what the `1fr auto 1fr` grid measures, so a
+   * slot that moved with the mark would take the centred wordmark — and
+   * `leading`, Singularity's lamps — off true because one faction's mark got
+   * louder. A bigger drawing is centred in the fixed box and bleeds
+   * symmetrically into the band's own inset instead, which is what `SnideSigil`
+   * sets `overflow: visible` for.
+   *
+   * ponytail: the ceiling is that inset, so roughly 24–26px. A mark that needs
+   * more room than the band's padding has to spare wants the SLOT to grow too —
+   * and the moment it does, re-check the gutters: a `1fr` track is floored at
+   * its own min-content, so a left cluster wider than half the band's free space
+   * wins that floor and the title stops sitting on the card's centreline.
+   */
+  markSize?: number;
   /**
    * Chrome that rides with the mark in the left cluster. One caller: the
    * Singularity terminal's three window lamps, which are the window and not a
@@ -74,6 +98,7 @@ export interface CardMastheadProps {
 export default function CardMasthead({
   slug,
   markColor,
+  markSize = MARK,
   leading,
   style,
   children,
@@ -117,7 +142,7 @@ export default function CardMasthead({
             justifyContent: "center",
           }}
         >
-          <FactionSigil slug={slug} size={MARK} color={markColor} />
+          <FactionSigil slug={slug} size={markSize} color={markColor} />
         </span>
         {leading}
       </span>

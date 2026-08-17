@@ -150,6 +150,50 @@ describe.each(SKINS)('$slug masthead anatomy (#2029)', (skin) => {
   })
 })
 
+/**
+ * The drawn size of the mark is a PROP, and the slot it sits in is not (#2056).
+ *
+ * S.N.I.D.E. draws its A at 24 where the kit draws 20. Until now that lived in
+ * `index.css` as `[data-masthead-mark="snide"] svg { width: 24px }` — a rule
+ * reaching past `CardMasthead`'s API into the SVG it renders, which no test
+ * here could see and which would have broken silently the day `SnideSigil`'s
+ * markup changed. It is `markSize` now, so the size is in the markup and these
+ * assertions can hold it.
+ *
+ * The second `it` is the answer to the question #2056 asks: growing the drawing
+ * does NOT grow the box the `1fr auto 1fr` grid measures its centring against,
+ * so a louder mark cannot take the wordmark off the card's centreline.
+ */
+describe('the mark\'s drawn size (#2056)', () => {
+  /** Everything from the mark's slot to the end of the tag that follows it. */
+  function mark(html: string, slug: string): string {
+    return html.slice(html.indexOf(`data-masthead-mark="${slug}"`)).slice(0, 400)
+  }
+
+  it('is 24 for S.N.I.D.E., from the card rather than from the stylesheet', () => {
+    const snide = mark(render(SKINS.find((s) => s.slug === 'snide')!).html, 'snide')
+    expect(snide.slice(snide.indexOf('<svg'))).toContain('width="24"')
+  })
+
+  it('leaves the grid\'s measured slot at 20 on all seven bands', () => {
+    // The box is the kit's, whatever the drawing does — the wordmark has no
+    // business moving because one faction's mark got louder. A `markSize` that
+    // grew the span instead of the drawing fails here.
+    for (const skin of SKINS.filter((s) => MASTHEADED.includes(s.slug))) {
+      expect(mark(render(skin).html, skin.slug), skin.slug).toContain('width:20px;height:20px')
+    }
+  })
+
+  it('is the slot\'s own 20 for every skin that asks for nothing', () => {
+    // UA is absent on purpose: its ensō is a CSS mask on a <div>, not an <svg>,
+    // so it carries no width attribute to read. Its slot is covered above.
+    for (const slug of ['coven', 'ephemerists', 'everymen', 'singularity', 'wow']) {
+      const band = mark(render(SKINS.find((s) => s.slug === slug)!).html, slug)
+      expect(band.slice(band.indexOf('<svg')), slug).toContain('width="20"')
+    }
+  })
+})
+
 describe('the anatomy lives in one place (#2029)', () => {
   it('is the same band markup on all seven, up to the skin\'s own paint', () => {
     // Every masthead is the same three-cell grid from `CardMasthead`; nothing
