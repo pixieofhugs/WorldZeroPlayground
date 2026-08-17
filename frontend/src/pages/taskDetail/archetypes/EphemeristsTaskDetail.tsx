@@ -5,7 +5,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -492,10 +492,14 @@ export default function EphemeristsTaskDetail({
       </h1>
 
       {isMetatask && (
+        // `eyebrow`'s own `QUIET` — `-plate-quiet`, this column's register,
+        // 6.38 / 5.98 / 5.52:1 on its three grounds in BOTH cascades (#1754).
+        // The override was a foreign faction's spine hue, a FILL (§3, #1932);
+        // on the plate the brass this faction was itself given in #2068 is the
+        // one that fails hardest, which is what #2077 was filed about.
         <p
           style={{
             ...eyebrow,
-            color: factionCssVar(task.metatask_faction_slug),
             margin: 0,
             marginBottom: "var(--space-lg)",
           }}

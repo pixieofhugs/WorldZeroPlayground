@@ -86,7 +86,9 @@ export default function UaFactionHero({
                   letterSpacing: "-0.01em",
                   color: "var(--faction-ua-card-text)",
                   margin: "var(--space-xs) 0 var(--space-sm)",
-                  overflowWrap: "anywhere",
+                  // No overflow-wrap: a wordmark never breaks mid-word (#2000).
+                  // "UA" is two glyphs at --text-display; the 260px column
+                  // floor above is many times what it needs.
                 }}
               >
                 {name}

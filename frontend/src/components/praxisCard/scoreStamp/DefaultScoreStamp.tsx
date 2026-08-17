@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
+import DefaultPointsRing from "../../factionMarks/DefaultPointsRing";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
@@ -11,10 +12,16 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * Rebuilt to the Unaffiliated praxis-detail design (#1091, epic #1085). That
  * skin IS the unaffiliated one, so "restyle the default stamp" and "build the
- * design's score rail" are the same object: a STRUCK DISC carrying the total
+ * design's score rail" are the same object: a total mark carrying the total
  * over a `POINTS` caption, then the working out as RULED LEADER-LINE ROWS —
  * `LABEL … hairline … value` — and, under a rule of its own, the votes tally.
  * A 2px spectrum bar is pinned across the top edge.
+ *
+ * THE MARK IS NO LONGER THIS DESIGN'S STRUCK DISC. #2042 found `na` drawing its
+ * points mark twice and the owner ruled that the point card takes the task card's,
+ * so the disc is {@link DefaultPointsRing} — the spectrum ring — and everything
+ * below it is untouched. See the comment at the mount for what moved and what it
+ * measures.
  *
  * ## The design's arithmetic is not built
  *
@@ -60,12 +67,14 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * through the `[data-theme="dark"]` cascade with no `dark ?` branch.
  */
 
-/** The struck disc — ornament geometry, the design's own 96 (§4a). */
-const DISC = 96;
-/** Inset of the disc's hairline ring from its edge. */
-const RING_INSET = 5;
 /**
- * One width in every mount. Wide enough for the 96px disc plus the stamp's
+ * The total mark — ornament geometry, the struck disc's own 96 (§4a), kept when
+ * the disc became {@link DefaultPointsRing} (#2042) so nothing around it moved.
+ * `RING_INSET` left with the disc's inner hairline.
+ */
+const MARK = 96;
+/**
+ * One width in every mount. Wide enough for the 96px mark plus the stamp's
  * padding, narrow enough that a praxis card's title column still reads.
  */
 const STAMP_WIDTH = 150;
@@ -142,15 +151,35 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         />
       )}
 
-      {/* The struck disc: total over its unit caption, tilted off-square so it
-          reads as a mark pressed into the sheet rather than a printed field.
+      {/* THE TOTAL SITS IN THE SPECTRUM RING (#2042).
 
-          The margin separates the disc from the working; with no working there
-          is nothing to separate it FROM, and it became trailing dead space
-          inside a symmetrically padded box (#1894). The box shrinks to
-          padding + disc + padding rather than holding a `min-height` — a number
-          pinned to whatever a one-row stamp measures today would rot the moment
-          DISC or the padding moved. */}
+          A STRUCK DISC stood here — a double hairline circle tilted -7deg holding
+          a rainbow-clipped numeral over a `--faction-default-gold` caption, from
+          the unaffiliated praxis-detail design (#1091). `na` was drawing its points
+          mark twice, because the task card rings the same figure in a conic
+          rainbow, and the owner's ruling on #2042 is that the point card reflects
+          the card's total look. {@link DefaultPointsRing} is the one drawing now.
+
+          THE RAINBOW IS STILL ON THIS OBJECT TWICE, and both appearances are
+          structural rather than clipped to type: the 2px spectrum bar across the
+          top edge, and the ring's annulus. What goes is the four-stop
+          `-total-rainbow` fill on the figure and the gold caption under it — the
+          ring letters its unit in `-card-muted`, which measures 6.15:1 light and
+          4.82:1 dark on this plate against the gold's 5.00:1 / 8.23:1. Both clear
+          AA_NORMAL; dark has less room than it did, which is the trade the ruling
+          asks for. The figure reads 18.51:1 light / 12.20:1 dark.
+
+          `ground` is this surface's plate rather than the ring's default card
+          sheet, so the disc inside the annulus IS the plate and the mark reads as
+          struck into it. The ring is drawn at the disc's own 96, so the stamp's
+          `STAMP_WIDTH` still holds it with the padding it always had.
+
+          The margin separates the mark from the working; with no working there is
+          nothing to separate it FROM, and it became trailing dead space inside a
+          symmetrically padded box (#1894). The box shrinks to padding + mark +
+          padding rather than holding a `min-height` — a number pinned to whatever
+          a one-row stamp measures today would rot the moment MARK or the padding
+          moved. */}
       <div
         style={{
           display: "flex",
@@ -158,61 +187,12 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           marginBottom: hasWorking ? "var(--space-md)" : undefined,
         }}
       >
-        <span
-          style={{
-            position: "relative",
-            width: DISC,
-            height: DISC,
-            flexShrink: 0,
-            borderRadius: "50%",
-            border: "2px solid var(--faction-default-card-line)",
-            transform: "rotate(-7deg)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            lineHeight: 1,
-          }}
-        >
-          {/* The inset hairline ring inside the disc's edge. */}
-          <span
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: RING_INSET,
-              borderRadius: "50%",
-              border: "1px solid var(--faction-default-card-line)",
-            }}
-          />
-          <span
-            style={{
-              fontFamily: "var(--faction-default-card-font)",
-              fontSize: "var(--text-heading)",
-              lineHeight: 1,
-              // The total, clipped to the design's warmer four-stop ramp rather
-              // than the full seven-stop spectrum, which smears to mud at four
-              // glyphs wide.
-              background: "var(--faction-default-total-rainbow)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            {formatPoints(total)}
-          </span>
-          <span
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "var(--text-base)",
-              textTransform: "uppercase",
-              letterSpacing: "0.16em",
-              color: "var(--faction-default-gold)",
-              marginTop: "var(--space-xs)",
-            }}
-          >
-            {t("card.stamp.points")}
-          </span>
-        </span>
+        <DefaultPointsRing
+          value={formatPoints(total)}
+          unit={t("card.stamp.points")}
+          size={MARK}
+          ground="var(--faction-default-stamp-bg)"
+        />
       </div>
 
       {/* Ruled leader-line rows — label, a hairline running out to fill the gap,

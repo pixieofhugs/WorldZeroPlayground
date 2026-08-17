@@ -18,6 +18,33 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * this stamp is being rebuilt. It is the faction's total mark, not decoration:
  * whichever rows drop out, the total and its star stay.
  *
+ * ## WOW IS THE ONE FACTION #2042 COULD NOT UNIFY, and it is not for want of trying
+ *
+ * #2042 rules that a faction's points mark is ONE drawing and the point card takes
+ * the task card's. Singularity, S.N.I.D.E. and `na` did that. WOW cannot, because
+ * the two directions are each closed — one by arithmetic, one by an owner ruling:
+ *
+ *   - TAKING THE CARD'S MARK. `WowTaskCard`'s device is the crowned points plaque:
+ *     `--faction-wow-chronicle-panel` behind a 2px gold frame, an inset plate
+ *     struck into the decree's parchment. This stamp's plate is
+ *     `--faction-wow-stamp-bg`, and index.css declares that
+ *     `var(--faction-wow-chronicle-panel)` on `:root, [data-theme]` — the SAME
+ *     token. So the plaque here is **1.00:1 in both themes**: an inset plate with
+ *     nothing to be inset into, reduced to a second gold frame inside the first,
+ *     and `--faction-wow-chronicle-gold` on that panel is only 2.00:1 in light.
+ *     Giving the plaque a fill that reads would mean picking a new WOW pairing,
+ *     which is a design decision and not an extraction.
+ *   - TAKING THIS STAMP'S MARK. The `✦` is WOW's total mark and the #840 design
+ *     README carves it out by name. #2070 removed the `✦` from the card's plaque
+ *     by owner ruling — "it is not in the design and the owner ruled it out" — so
+ *     the star cannot travel the other way either.
+ *
+ * A `star?` prop on a shared plaque (the {@link PointsRoundel} `arcLabel` shape:
+ * one optional element the other surface has not earned) would answer the second
+ * objection and not the first. So WOW keeps two marks until somebody rules on the
+ * plaque's ground here. Do not "fix" this by repainting the shared plaque to suit
+ * one surface — that is how the other surface breaks.
+ *
  * The design files WOW under the shared box pattern ("the remaining box-pattern
  * factions … follow the Unaffiliated mechanism exactly"), so the ROWS match
  * {@link DefaultScoreStamp} and row selection stays in `scoreBreakdown`

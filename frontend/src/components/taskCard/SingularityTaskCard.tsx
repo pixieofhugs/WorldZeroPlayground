@@ -9,6 +9,7 @@ import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import SingularityLamps from "../factionMarks/SingularityLamps";
+import SingularityReadout from "../factionMarks/SingularityReadout";
 
 /**
  * Singularity — THE TERMINAL SESSION (task card v2, #1023).
@@ -61,7 +62,10 @@ const BOT = "[^-^]\n /|_|\\\n  d b";
 const BG = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
 const DIM = "var(--faction-singularity-term-dim)";
-const BLUE = "var(--faction-singularity-term-blue)";
+/* `--faction-singularity-term-blue` stood here — the unit stencilled beside the
+   points figure. It moved into {@link SingularityReadout} with the rest of the
+   well (#2042), because a shared mark that took its inks from whichever surface
+   mounted it would be two marks wearing one name. */
 const HAIR = "var(--faction-singularity-term-hair)";
 
 interface SizeSet {
@@ -229,33 +233,18 @@ export default function SingularityTaskCard({
                 </div>
               )}
 
-              {/* The points, in a lit well. */}
-              <div
-                style={{
-                  flex: "0 0 auto",
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: "var(--space-xs)",
-                  padding: "var(--space-sm) var(--space-md)",
-                  background: "var(--faction-singularity-term-readout)",
-                  border: "1px solid var(--faction-singularity-term-border)",
-                  borderRadius: 5,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: size.pointsSize,
-                    lineHeight: 0.85,
-                    color: "var(--faction-singularity-term-blue-bright)",
-                  }}
-                >
-                  {basePoints}
-                </span>
-                <span style={{ ...LABEL, fontSize: "var(--text-base)", color: BLUE }}>
-                  {i18n.t("feed:taskCard.pointsUnit")}
-                </span>
-              </div>
+              {/* The points, in the lit well — the faction's points mark, and
+                  since #2042 a shared one: the praxis-card score stamp mounts
+                  the same drawing for its total instead of the bare glowing
+                  numeral it drew before. The well is drawn ONCE, in
+                  {@link SingularityReadout}; nothing about the mark is this
+                  card's any more except the tier it asks for. */}
+              <SingularityReadout
+                value={basePoints}
+                unit={i18n.t("feed:taskCard.pointsUnit")}
+                valueSize={size.pointsSize}
+                style={{ flex: "0 0 auto" }}
+              />
             </div>
 
             <h2

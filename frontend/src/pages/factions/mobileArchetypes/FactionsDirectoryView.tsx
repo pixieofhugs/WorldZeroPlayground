@@ -154,7 +154,11 @@ export default function FactionsDirectoryView({
                   values={{ faction: factionName(inv.faction_slug) }}
                   components={[
                     <span key="0" />,
-                    <span key="1" style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }} />,
+                    // WEIGHT, NOT HUE (#2077) — the desktop twin in
+                    // `pages/Factions.tsx` carries the measurements. The wash
+                    // and the left rule keep the hue; the name inherits
+                    // `--color-text-primary` from the span around it.
+                    <span key="1" style={{ fontWeight: 700 }} />,
                   ]}
                 />
               </span>

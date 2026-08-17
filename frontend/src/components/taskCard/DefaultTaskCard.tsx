@@ -6,6 +6,7 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 
 /**
  * DefaultTaskCard — THE SPECTRUM SHEET. The task-card archetype for the
@@ -156,40 +157,16 @@ export default function DefaultTaskCard({
 
             <div style={{ flex: 1, height: 1, background: "var(--faction-default-border)" }} />
 
-            <div
-              style={{
-                flex: "0 0 auto",
-                boxSizing: "border-box",
-                width: size.ringSize,
-                height: size.ringSize,
-                borderRadius: "50%",
-                padding: "var(--space-xs)",
-                background: "var(--faction-default-rainbow-conic)",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "50%",
-                  background: "var(--faction-default-card-bg)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  lineHeight: 0.9,
-                }}
-              >
-                <span style={{ fontFamily: LORA, fontWeight: 600, fontSize: size.numeralSize }}>
-                  {basePoints}
-                </span>
-                <span
-                  style={{ ...CAPTION, fontSize: "var(--text-md)", marginTop: "var(--space-xs)" }}
-                >
-                  {i18n.t("feed:taskCard.pointsUnit")}
-                </span>
-              </div>
-            </div>
+            {/* The points in their spectrum ring — the unaffiliated points mark,
+                and since #2042 a shared one: the praxis-card score stamp mounts
+                the same ring for its total instead of the struck disc it drew
+                before. The ring is drawn ONCE, in {@link DefaultPointsRing}. */}
+            <DefaultPointsRing
+              value={basePoints}
+              unit={i18n.t("feed:taskCard.pointsUnit")}
+              size={size.ringSize}
+              valueSize={size.numeralSize}
+            />
 
             {/* Faction modifier — hidden at ×1.00, so invisible under era_1's
                 neutralized modifiers and automatic the day one moves

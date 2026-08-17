@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -360,11 +360,14 @@ export default function SingularityTaskDetail({
       </h1>
 
       {isMetatask && (
+        // `LABEL`'s own `DIM` — 5.17:1 light / 5.80:1 dark on this terminal,
+        // which is near-black in BOTH cascades (#2077). A light-cascade spine
+        // hue on a permanently dark stage is #1792's shape exactly, and the hue
+        // is a FILL besides (§3, #1932).
         <p
           style={{
             ...LABEL,
             margin: "0 0 var(--space-lg)",
-            color: factionCssVar(task.metatask_faction_slug),
           }}
         >
           {t("detail.metataskFor", {

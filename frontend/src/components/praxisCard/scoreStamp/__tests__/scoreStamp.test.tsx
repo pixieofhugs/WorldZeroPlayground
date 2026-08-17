@@ -612,11 +612,19 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       const html = text(markup)
       expectBaseRow(html, showsBase)
       expectVotesRow(html, showsVotes)
-      // `--faction-default-card-muted` dresses the leader-line row labels and
-      // the tally block, and nothing else on the sheet: in the base-only state
-      // the disc is alone and neither survives (ADR-0076).
-      if (showsBase) expect(markup).toContain('--faction-default-card-muted')
-      else expect(markup).not.toContain('--faction-default-card-muted')
+      // The LEADER HAIRLINE is what only a working row draws — the rule that
+      // runs out from a label to fill the gap before its figure. In the
+      // base-only state the mark is alone and no row survives (ADR-0076), and a
+      // tally block implies rows (votes un-suppress the base row), so the
+      // hairline is present exactly when there is working to show.
+      //
+      // This used to read `--faction-default-card-muted`, on the stated grounds
+      // that the ink dressed the rows and the tally "and nothing else on the
+      // sheet". #2042 made that false: the total mark is
+      // `DefaultPointsRing` now and it letters its unit in the same ink, so the
+      // proxy stopped distinguishing a sheet with working from one without.
+      if (showsBase) expect(markup).toContain('min-width:6px')
+      else expect(markup).not.toContain('min-width:6px')
       expect(html).toContain(formatPoints(fields.score))
       expect(html).toContain('points')
       expect(html).not.toMatch(HEX)
@@ -650,7 +658,10 @@ describe('a base-only score reads as a bare total on every stamp (ADR-0076)', ()
    * have nothing to check here.
    */
   const STAMPS = [
-    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/, '--faction-default-card-muted'],
+    // `min-width:6px` is the leader hairline a working row runs out to its
+    // figure — see the note in the conditional-states block above for why this
+    // is no longer `--faction-default-card-muted`.
+    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/, 'min-width:6px'],
     ['Everymen', EverymenScoreStamp, 'base', /votes/, 'TALLY'],
     ['the Ephemerists', EphemeristsScoreStamp, EPHEMERISTS_LABEL.base, /票/, null],
     ['S.N.I.D.E.', SnideScoreStamp, 'base', /votes/, '2px dashed'],
@@ -754,10 +765,14 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
     expect(html).toContain('7 from votes')
   })
 
-  it('keeps the struck disc and the spectrum bar, both from tokens', () => {
+  it('keeps a total mark and the spectrum bar, both from tokens', () => {
     const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({})} />)
-    // The disc is tilted off-square — a mark pressed in, not a printed field.
-    expect(markup).toContain('rotate(-7deg)')
+    // The mark is the shared spectrum ring (#2042). It was this design's STRUCK
+    // DISC — pinned here as its `rotate(-7deg)` tilt — until the owner ruled that
+    // the point card takes the task card's mark; `na` was drawing one points mark
+    // twice. What the assertion is for is unchanged: a rebuild must not lose the
+    // mark, because under ADR-0049 it is the one figure that never drops out.
+    expect(markup).toContain('var(--faction-default-rainbow-conic)')
     // The spectrum is the shared token, never a pasted gradient literal.
     expect(markup).toContain('var(--faction-default-rainbow)')
     expect(markup).not.toMatch(HEX)

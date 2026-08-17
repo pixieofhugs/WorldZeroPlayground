@@ -166,7 +166,7 @@ Two things this leaves behind.
 
 **`--gem-ink` is the shape to recognise: an ink one indirection from the property that paints it.** `LevelGem`'s docstring has said since #728 that the gem is "outlined rather than filled … so the numeral sits on the surface the gem lands on … without per-faction contrast tuning", and the code then handed the numeral the faction hue — the exact tuning the outline exists to make unnecessary. Nothing named `color` was wrong at the call site, so a reader scanning for inks walked past it. It is `currentColor` now, which is what the docstring promised and what makes a future mount inside a faction frame correct without this component learning about it.
 
-**And `local/no-global-ink-on-faction-surface` (#1819) could not have caught this, in two independent ways.** Its path scope is `archetypes/`, `mobileArchetypes/` and `components/factionMarks/`, and `pages/players/` is in none of them — correctly, because the Players page is neutral chrome that merely *dispatches* on a slug, and widening the glob would ban the global tiers on the surface they are right for. But even inside the scope the rule has the opposite polarity: it bans a global ink on a faction sheet. **The label tier's `--label-ink` seam is guarded in one direction only** — nothing stops an inline faction hue painting over it on a neutral sheet, which is what all three label sites did. The inverse rule is real work with its own legacy list; the cheap standing guard meanwhile is a DOM-less assertion at the mount, `pages/players/__tests__/playersFactionInk.test.tsx`, in the shape `composerQuietInk.test.tsx` already set.
+**And `local/no-global-ink-on-faction-surface` (#1819) could not have caught this, in two independent ways.** Its path scope is `archetypes/`, `mobileArchetypes/` and `components/factionMarks/`, and `pages/players/` is in none of them — correctly, because the Players page is neutral chrome that merely *dispatches* on a slug, and widening the glob would ban the global tiers on the surface they are right for. But even inside the scope the rule has the opposite polarity: it bans a global ink on a faction sheet. **The label tier's `--label-ink` seam is guarded in one direction only** — nothing stops an inline faction hue painting over it on a neutral sheet, which is what all three label sites did. The inverse rule is real work with its own legacy list; the cheap standing guard meanwhile is a DOM-less assertion at the mount, `pages/players/__tests__/playersFactionInk.test.tsx`, in the shape `composerQuietInk.test.tsx` already set. (**#2077 built the inverse rule** — `local/no-faction-hue-as-ink`. Read the subsection below before reaching for the glob: widening this one is the fix that looks obvious and is wrong twice over.)
 
 ### The fill-as-ink hides best in a SHARED helper, where no call site names a colour (#951)
 
@@ -175,6 +175,26 @@ The section above found the spine hue used as text in six slots of one page, and
 **A helper parameterised by slug multiplies one line by the number of factions, and it does not report which of them are wrong.** That is the reason the fix here was scoped to one card rather than to the helper: WOW's muster bill (#951) draws its own standing plate and summons strip on `--faction-wow-plum-surface` / `-on-plum` at 5.16:1, and the shared branch is left in place with the measurement written beside it for whoever owns all six cards at once. Redrawing the helper means measuring six grounds against six hues, which is a different job with a different diff — but leaving the *note* on the branch is what stops the next card inheriting it silently.
 
 **A negative guard is the cheap standing check, and its token string must be exact.** `components/factionCard/__tests__/wowMusterBill.test.tsx` asserts that `var(--faction-wow)` never appears as a colour in the rendered card, for every standing including both API aliases. The closing paren is load-bearing — eighty `--faction-wow-*` tokens share the prefix, and a guard matching the prefix would fail on the card's own correct inks. The obvious future edit ("why does WOW duplicate the badge? use the shared one") is what the guard exists to catch, because that edit is green and looks like cleanup.
+
+### The rule that catches this is the INVERSE of #1819, not a wider glob on it (#2077)
+
+The two sections above each ended with the same deferral: the inverse rule is real work, so a hand guard at the mount will do for now. #2077 is that work, and it arrived as the third instance — the Ephemerists brass, which #2068 dropped into the slot WOW's gold had been failing, at **2.19:1** on the page. Twelve inline sites: three in `FactionCard`, the metatask chip on `TaskCard`, both invitation rows, and **all seven** of the eight task-detail bylines that were painting a hue (S.N.I.D.E. already routed its own `PINK_INK`, which is the tell that the fix was known and applied once).
+
+**Widening `no-global-ink-on-faction-surface`'s path list to `components/factionCard/` and `pages/` is the fix the issue asked for, and it is wrong twice over.** It cannot see a `--faction-*` token at all — its whole vocabulary is `var(--color-text-*)` — and on those two paths it would ban `var(--color-text-primary)`, *the token the fix reaches for*. The paragraph above had already recorded half of that for `pages/players/` ("widening the glob would ban the global tiers on the surface they are right for") and it holds identically for a faction card's generic branch, which is neutral chrome with a faction border. **When a rule's polarity is inverted relative to a defect, its scope is not the knob.**
+
+`local/no-faction-hue-as-ink` therefore has **no path glob at all**, and that is the cleaner half of the design: the tier arm needs a list because the neutral tiers are genuinely *correct* on neutral chrome, whereas a bare spine hue is a FILL on every surface in the app and there is no ground where it becomes an ink. One rule, one claim, nothing to keep in step with the filesystem.
+
+Three things worth carrying.
+
+**It matches the HELPER CALL and not the token text, which is why eleven of the twelve sites were invisible to a `var()`-matching rule.** They are written `factionCssVar(slug)` — a `CallExpression`, containing the string `--faction-` nowhere. **Arity is the whole test**: a second argument names a shape (`'light'`, `'border'`, `'card-text'`) and those are measured pairings `CARD_PAIRS` has gated since #651, so a rule sweeping the prefix would report a measured pairing as a defect and teach the next editor to strip it. It also resolves a hue laundered through an in-module `const` — `const accent = factionCssVar(slug)` then `color: accent` — which is `--gem-ink`'s shape from #1932 and how five of the further sites it found are written. **A defect nobody named at the call site is the one a reader scanning for inks walks past.**
+
+**A property NAME is not proof of a CSS role, and the one false positive is the useful part.** `editPraxis/roomPresence.ts` builds `{ color, colorLight }` for y-codemirror's awareness payload — a collaborator's **caret** and selection wash, not type — and takes the bare hue deliberately, because the mark lands on the viewer's editor ground rather than the remote's card sheet. It is exempted outright rather than grandfathered, for the reason the tier arm gives about `??` fallbacks: nothing there will ever migrate, and a shrink-only list holding a line nobody can delete is lying about the size of the debt. **Before listing a report as debt, check that the property is a CSS declaration and that the mark is type.**
+
+**And the rule and the render guard are companions, not duplicates — each is blind where the other sees.** The rule reads source, so it stops the shape at the point of writing and reaches files no test mounts; it cannot follow a hue arriving as a prop, out of a `surfaceMap` dispatch, or from a slug-parameterised helper, which is exactly how `StatusBadge` hid this from seven call sites (#951). `src/__tests__/factionHueAsInkMounts.test.tsx` reads the emitted `style=` attribute and does not care how the value got there; it cannot reach a row behind a `useState(false)` toggle, which is where `pages/Factions.tsx` keeps its invitation panel — #694's "the surface is skinned by a faction is not the same claim as the sweep has been there", arriving at a click this harness cannot perform. Both halves read one shared `utils/__tests__/inkSeam.ts`, because a second copy of `INK_PROPS` reports green over precisely the property nobody added to it.
+
+**Which ink replaces the hue is a WASH question as often as a ground question.** Two of the twelve pair the hue's own 10–16 % self-tint (`--faction-{key}-light`) with the hue as text, and a wash made of the ink's own hue can only tighten the reading (#1302). Measured over `-card-bg`, `-card-muted` — the role-correct token, and the one the sibling `burned` badge in the same helper already used — drops to **4.02:1** for WOW and **4.40:1** for Everymen in light, from 4.76 / 5.09 bare. So the two washed marks take `-card-text` (worst 10.32:1 light, 9.83:1 dark across all eight keys) and the one unwashed badge takes `-card-muted` (worst 4.76:1). **The same mark, twice, with two different answers because one of them lies under a tint.** Seven of the eight task-detail bylines needed no ink named at all: their `eyebrow` / `.label-caption` base already carried the ink every sibling caption on that ground wears, so the fix was deleting the override. WOW is the exception and names `--faction-wow-accent-deep`, because its `QUIET` is type-only and its headers lie straight on a darker parchment field that `-card-muted` does not clear.
+
+The four files the rule found outside the report are on a shrink-only list with their measurements in its header, not fixed here: each is neutral chrome painting a faction name in the bare hue, and each is also a visible repaint of a page #2077 did not rule on. One of them (`DefaultProposeTask`) argues for itself in prose — "the faction accent stays — ink is measured separately" — and reversing a written decision on the strength of a rule one commit old is the one-at-a-time failure this section names from the other side.
 
 ### Contrast is a pairing, not a property (#1028)
 
@@ -569,6 +589,44 @@ There is deliberately no `.content-heading` / `.content-display` / `.content-sco
 **Label text:** Courier Prime, off the `--text-*` label ramp, painted in `var(--label-ink)`. Use `.label-heading` or `.label-caption` — the split below says which. Never add an inline `fontSize`, `letterSpacing` or neutral `color` to an element that already carries one: the class owns all three, and restating the neutral is what stops a faction frame repointing the tier. **`.eyebrow` is gone** (#1307): 124 class sites across 61 files moved onto the pair, and the rule was deleted with the last of them.
 
 That ink is the third text tier, and §3 records what it can and cannot do. It clears AA on every neutral stock it lands on — **5.40:1** on the page, 5.78 over the frost, 5.07 on the alt surface, 4.78 on the filter well in light; 6.21 / 5.67 / 5.37 / 5.47 in dark — and it is now visibly a different ink from `--color-text-secondary` rather than the same one under a second name. What it does **not** have is headroom: the tier sits at secondary's weight because the palette has no AA-clear room below secondary, so a label cannot be made quieter by walking its colour down. If a label rank needs to recede further, the levers left are size, tracking, casing and layout — not ink.
+
+### A wordmark is a MARK, so it scales — it never breaks mid-word (#2000)
+
+Four of the seven faction-page heroes set `overflow-wrap: anywhere` on the `<h1>` they render the
+faction name into. On a phone the Everymen hero printed **"EVER / YMEN"**, and the name it showed was
+not the name — which is why this is a different failure from a paragraph wrapping awkwardly. A faction
+name is the **mark**, in the same family as the sigil beside it: the reader identifies the faction by
+its shape, so a break that invents a new word is worse than an overflow, and `break-anywhere` is simply
+the wrong rule to have on it. **No hero wordmark carries one.** `frontend/src/components/factionHero/__tests__/factionWordmarkWrap.test.tsx`
+holds that across all seven.
+
+The name surfaced on Everymen because "Everymen" is the longest **single-word** name — every other
+hero's name is two glyphs (`UA`), carries a space to wrap at (`Cozy Coven`, `Warriors of Whimsy`,
+`The Ephemerists`) or carries dots (`S.N.I.D.E.`). All four heroes that had the rule carried the latent
+bug; only one had a name long enough to trip it. **A rule that a name's current spelling hides is still
+a bug**, so it came off Coven, UA and WOW too rather than only where the screenshot was taken.
+
+Deleting the rule is only half a fix, because the geometry doctrine above then applies and the container
+has to give. Two levers, and the Everymen hero needed both:
+
+- **The wordmark's own flex track needs a floor.** Its column carried `min-width: 0`, and its cog seal
+  is an inline flex *sibling* — so on a 340px phone the seal plus the gap ate 148px of a ~222px row and
+  the mark had ~75px to set 76px type in. `min-width: min(240px, 100%)` plus `flex-wrap: wrap` stands
+  the seal *above* the name at that width, which is what Coven (250), UA (260) and the Ephemerists (220)
+  already do. `min(…, 100%)` and not a bare `240`: a hard floor pushes the column past the hero's own
+  clipped edge on a phone, which is #1314's lesson on the S.N.I.D.E. hero.
+- **The mark caps rather than reflows.** `font-size: min(76px, 20vw)` — 76px is the poster size and the
+  ceiling, and the `vw` arm only bites below a ~380px viewport, where even the *full* column cannot hold
+  76px type. This is the drawn-container carve-out above read the other way round: a wordmark is not
+  inside a mark, it **is** one, so it takes a ceiling at its poster size and scales under it instead of
+  breaking. Above ~380px nothing moves, which is the test that the cap is fitted and not a redesign.
+
+**A test that forbids a Tailwind utility must not spell it.** The check above originally wrote
+`word-break: break-all` as a plain string. Tailwind scans `src` for class candidates — **test files and
+comments included** — so the literal emitted that utility into the *blocking* stylesheet: +17 B gzip9,
+which put the initial-load CSS budget exactly on its WARN line for the sake of a test fixture. The
+value is now assembled with `join('-')` and appears nowhere bare, and the built sheet is byte-identical
+to before the fix. The same trap applies to any assertion naming a class the code must *not* have.
 
 ### The label tier is TWO tiers, and the content floor has one exception (#1307)
 

@@ -8,6 +8,7 @@ import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { PenCircle } from "../factionMarks/snideAtoms";
 
 /**
  * S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023).
@@ -136,75 +137,13 @@ function CensorRule({ style }: { style?: CSSProperties }) {
   return <span aria-hidden="true" className="snd-censor" style={style} />;
 }
 
-/**
- * The points, circled in pink pen — the loop grown 1.18x (#2035).
- *
- * The GROWTH IS ON THE SVG ALONE, so the numeral and its caption stay where
- * they are and the loop opens away from them. That is the point of the move
- * (UA's ensō makes the same one): a scale on the whole stamp would grow the
- * type with the line and clear nothing. The loop spans 80 of the 100 viewBox
- * units, so at 1.18x it reaches 94.4 — still inside its own box, which is why
- * nothing beside it in the hero row has to move.
- */
-function PenCircle({ size, points }: { size: number; points: number }) {
-  return (
-    <div
-      style={{
-        position: "relative",
-        flex: "0 0 auto",
-        width: size,
-        height: size * 0.78,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        transform: "rotate(-5deg)",
-      }}
-    >
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 100 78"
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, overflow: "visible", transform: "scale(1.18)" }}
-      >
-        <g fill="none" stroke="var(--faction-snide-pink)" strokeLinecap="round">
-          <path
-            d="M14 40 C13 19 38 7 56 9 C79 11 91 24 89 40 C87 59 61 71 43 68 C23 65 12 55 13 37 C13 28 18 19 27 13"
-            strokeWidth="2.6"
-          />
-          <path d="M27 12 C16 18 11 28 11 39" strokeWidth="1.8" opacity="0.75" />
-        </g>
-      </svg>
-      <span
-        style={{
-          position: "relative",
-          fontFamily: IMPACT,
-          fontSize: "var(--text-heading)",
-          lineHeight: 0.9,
-          color: INK,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {points}
-      </span>
-      <span
-        style={{
-          position: "relative",
-          fontFamily: IMPACT,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: pen-circle caption, sized to the drawn loop rather than the label ramp (§4a).
-          fontSize: 10,
-          letterSpacing: "0.22em",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the caption's lead inside the drawn loop; a 4px rung pushes it off the numeral.
-          marginTop: 2,
-          color: "var(--faction-snide-note-pink-ink)",
-        }}
-      >
-        {i18n.t("feed:taskCard.pointsUnit")}
-      </span>
-    </div>
-  );
-}
+/* The pink pen loop was drawn here. #2042 moved it into `snideAtoms` as
+   {@link PenCircle}: the praxis-card score stamp drew a bare Anton numeral for
+   its total, and the owner's ruling is that the point card takes the card's mark.
+   It is one drawing on two surfaces now, and its inks are props — the stamp's
+   plate is near-black in both themes, where this card's `-note-ink` is near-black
+   in LIGHT (1.05:1 there). The card keeps the atom's defaults, which ARE these
+   inks, so nothing about the mark changes on this surface. */
 
 export default function SnideTaskCard({
   task,
@@ -341,7 +280,11 @@ export default function SnideTaskCard({
                 </div>
               )}
 
-              <PenCircle size={size.stamp} points={basePoints} />
+              <PenCircle
+                size={size.stamp}
+                value={basePoints}
+                unit={i18n.t("feed:taskCard.pointsUnit")}
+              />
             </div>
 
             {/* The headline, cut from four sources word by word.

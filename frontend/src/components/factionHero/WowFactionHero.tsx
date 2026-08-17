@@ -98,7 +98,9 @@ export default function WowFactionHero({
               lineHeight: 1.05,
               color: "var(--faction-wow-card-text)",
               margin: "var(--space-sm) 0 var(--space-xs)",
-              overflowWrap: "anywhere",
+              // No overflow-wrap: a wordmark never breaks mid-word (#2000). The
+              // banner is full-width and centred, and "Warriors of Whimsy" sets
+              // at --text-heading with two spaces to wrap at.
             }}
           >
             {name}
