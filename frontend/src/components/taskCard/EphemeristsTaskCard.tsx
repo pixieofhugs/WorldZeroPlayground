@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
@@ -108,6 +108,112 @@ const SMALL_CAPS: CSSProperties = {
   textTransform: "uppercase",
 };
 
+/* ── THE SCRIPT ROTATION (#2038) ────────────────────────────────────────────
+ *
+ * The points label and the sign-up turn through five scripts. Frame 1 is the
+ * LIVE CATALOGUE STRING — `Points` / `Sign up` today, `Puntos` / `Apuntarse` on
+ * a Spanish site — and frames 2 to 5 are the ornament below. They are constants
+ * here and NOT catalogue entries on purpose: in `feed.json` they would be four
+ * strings no translator could act on (#440), and every one of them is the same
+ * word frame 1 already carries.
+ *
+ * The wordmark does NOT turn. `rotateEphWordmark()` retires itself in its own
+ * body in the vendored design; only these two elements rotate.
+ *
+ * WHAT MAKES IT SAFE, in three parts, none of them in this file's control flow:
+ *
+ *  1. The CLOCK is a CSS animation in index.css, gated on
+ *     `prefers-reduced-motion: no-preference`. No animation means no
+ *     `animationiteration`, which means the frame never advances — a reduced
+ *     motion reader gets frame 1, static, with nothing here branching on it.
+ *  2. Every frame is rendered, all in ONE grid cell, and all but the current
+ *     one hidden. The box is therefore the widest frame BY LAYOUT. The design
+ *     measures each variant into a pinned pixel width; this needs no
+ *     measurement pass, no `important`, and cannot go stale when a font swaps
+ *     in. Nothing reflows: the card's own width is fixed and the button centres.
+ *  3. The whole stack is `aria-hidden` over a visually-hidden copy of the live
+ *     string, so the accessible name is the WORD at every instant — never a
+ *     glyph, never a concatenation of the two (owner ruling, epic #2027 §4).
+ */
+
+/** One turn of the wheel: what it says, and the hand it says it in. */
+export interface ScriptTurn {
+  text: string;
+  style: CSSProperties;
+}
+
+/* The three faces are self-hosted subsets of ten codepoints
+   (`scripts/fetch-fonts.mjs`, `TEXT_FACES`). The design's stacks name a system
+   font ahead of the generic — `Geeza Pro`, `Hiragino Mincho ProN`,
+   `Segoe UI Historic` — and those are deliberately dropped: each covers its
+   script on ONE platform, so relying on them renders cuneiform on Windows and
+   tofu on Android with nothing to tell the two apart on a reviewer's screen. */
+const NASKH = "'Noto Naskh Arabic', Georgia, serif";
+const MINCHO = "'Noto Serif JP', Georgia, serif";
+const CUNEIFORM = "'Noto Sans Cuneiform', Georgia, serif";
+
+/** Frames 2–5 of the points label. Frame 1 is `feed:taskCard.pointsUnit`. */
+export const POINTS_TURNS: ScriptTurn[] = [
+  { text: "PVNCTA", style: { fontFamily: CAPS, letterSpacing: "0.2em" } },
+  { text: "نقاط", style: { fontFamily: NASKH, letterSpacing: "0" } },
+  { text: "点数", style: { fontFamily: MINCHO, letterSpacing: "0.04em" } },
+  { text: "𒌦𒋫", style: { fontFamily: CUNEIFORM, letterSpacing: "0.04em" } },
+];
+
+/** Frames 2–5 of the sign-up. Frame 1 is `feed:taskCard.signup`. */
+export const CTA_TURNS: ScriptTurn[] = [
+  { text: "ADSCRIBE", style: { fontFamily: CAPS, letterSpacing: "0.26em" } },
+  { text: "اشترك", style: { fontFamily: NASKH, letterSpacing: "0" } },
+  { text: "参加", style: { fontFamily: MINCHO, letterSpacing: "0.08em" } },
+  { text: "𒃻𒈬", style: { fontFamily: CUNEIFORM, letterSpacing: "0.06em" } },
+];
+
+/**
+ * A random frame that is never the one showing.
+ *
+ * The design draws from the whole set and re-rolls on a collision, which can
+ * loop. Stepping by 1..count-1 and wrapping picks uniformly from the other
+ * frames in one roll, which is the same distribution without the loop.
+ */
+export function nextTurn(current: number, count: number): number {
+  return (current + 1 + Math.floor(Math.random() * (count - 1))) % count;
+}
+
+/**
+ * One turning label. `variant` picks the cycle length in index.css — the two
+ * differ (6.5s and 7s) so the card never has both scripts change at once.
+ */
+function Turning({
+  turns,
+  variant,
+}: {
+  turns: ScriptTurn[];
+  variant: "points" | "cta";
+}) {
+  const [frame, setFrame] = useState(0);
+  return (
+    <span
+      className={`eph-turn eph-turn-${variant}`}
+      aria-hidden="true"
+      style={{ display: "grid", textAlign: "center", whiteSpace: "nowrap" }}
+      onAnimationIteration={() => setFrame((showing) => nextTurn(showing, turns.length))}
+    >
+      {turns.map((turn, index) => (
+        <span
+          key={turn.text}
+          style={{
+            gridArea: "1 / 1",
+            visibility: index === frame ? "visible" : "hidden",
+            ...turn.style,
+          }}
+        >
+          {turn.text}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /*
  * The glyph library stood here — a 15-key transcription of the kit's own table,
  * identical path for identical path. #1654 collapsed it: `GLYPHS` is imported
@@ -215,7 +321,11 @@ export default function EphemeristsTaskCard({
       data-form-factor={formFactor}
       style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
+      {/* `eph-turn-scope` is WCAG 2.2.2's mechanism, not decoration: pointing
+          at the card or focusing anything in it pauses both rotations. See
+          index.css, where the rule lives. */}
       <article
+        className="eph-turn-scope"
         style={{
           position: "relative",
           overflow: "hidden",
@@ -391,10 +501,18 @@ export default function EphemeristsTaskCard({
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
                   <span style={{ fontFamily: DECO, fontSize: size.pointsSize }}>{basePoints}</span>
                   {/* Ornament: the unit engraved inside the rose, sized to the
-                      disc rather than to the label ramp (§4a). */}
+                      disc rather than to the label ramp (§4a). #2037 kept this
+                      as one HTML node over the rose so #2038 could turn it. */}
                   {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the rose. */}
                   <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-muted)" }}>
-                    {i18n.t("feed:taskCard.pointsUnit")}
+                    <span className="sr-only">{i18n.t("feed:taskCard.pointsUnit")}</span>
+                    <Turning
+                      variant="points"
+                      turns={[
+                        { text: i18n.t("feed:taskCard.pointsUnit"), style: {} },
+                        ...POINTS_TURNS,
+                      ]}
+                    />
                   </span>
                 </div>
               </div>
@@ -496,7 +614,22 @@ export default function EphemeristsTaskCard({
                 <svg width={17} height={17} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
                   <path d={GLYPHS.platinum} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>{cta.label}</span>
+                {/* A REFUSAL DOES NOT TURN. When sign-up is shut the label is
+                    the reason it is shut ("Reach level 4 first"), and the four
+                    ornament frames all mean *sign up* — turning them over a
+                    denial would advertise a claim the server will reject. The
+                    accessible name is `cta.label` either way. */}
+                {cta.denied ? (
+                  <span>{cta.label}</span>
+                ) : (
+                  <>
+                    <span className="sr-only">{cta.label}</span>
+                    <Turning
+                      variant="cta"
+                      turns={[{ text: cta.label, style: {} }, ...CTA_TURNS]}
+                    />
+                  </>
+                )}
                 <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
                   <path d={GLYPHS.planet} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>

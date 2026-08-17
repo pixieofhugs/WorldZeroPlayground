@@ -76,6 +76,36 @@ const FACES = [
  */
 const KEEP_SUBSETS = new Set(['latin', 'latin-ext'])
 
+/**
+ * Faces subset to a LITERAL STRING rather than to Google's subset cuts (#2038).
+ *
+ * The Ephemerists task card turns its points label and its sign-up through five
+ * scripts, and the repo carries no Noto family. Taking these the normal way is
+ * not an option at either end: Google slices Noto Serif JP into ~120 cuts, so
+ * `FACES` above would add ~120 `@font-face` rules to a render-blocking
+ * stylesheet that has 1.6 KB of headroom, and the design's system fallback
+ * chain (`Geeza Pro`, `Hiragino Mincho ProN`, `Segoe UI Historic`) fails
+ * asymmetrically by platform — cuneiform is tofu on Linux and Android while a
+ * Mac reviewer sees nothing wrong.
+ *
+ * So these three use the v1 API's `text=` parameter, which returns ONE
+ * @font-face over a font containing only the requested codepoints. Ten
+ * codepoints across three faces; the woff2 files are ~1–2 KB each, against
+ * ~4 MB for Noto Serif JP whole.
+ *
+ * `text` IS the contract with the component: it must hold every character
+ * `EphemeristsTaskCard.tsx` sets in that family and nothing else. A character
+ * dropped here does not throw — it renders as tofu, which on a task card is
+ * indistinguishable from a bug. `ephemeristsScriptTurn.test.tsx` reads the
+ * turns out of the component and checks them against the `unicode-range` these
+ * rules ship, so the two cannot drift.
+ */
+const TEXT_FACES = [
+  { family: 'Noto Naskh Arabic', text: 'نقاطاشترك' },
+  { family: 'Noto Serif JP', text: '点数参加' },
+  { family: 'Noto Sans Cuneiform', text: '𒌦𒋫𒃻𒈬' },
+]
+
 /** A desktop UA, or Google serves the ttf/woff cuts instead of woff2. */
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -115,6 +145,40 @@ function parseBlocks(css) {
 }
 
 const field = (body, name) => body.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim()
+
+/**
+ * The code points a `unicode-range` value covers. Only ever called on the
+ * literal-string subsets, whose ranges are ten code points long — expanding a
+ * `U+0-10FFFF` would not be sane, so it refuses one.
+ */
+function codePointsIn(range) {
+  const points = new Set()
+  for (const part of range.split(',')) {
+    const [from, to] = part.trim().replace(/^u\+/i, '').split('-')
+    const start = parseInt(from, 16)
+    const end = to === undefined ? start : parseInt(to, 16)
+    if (!(end - start < 64)) throw new Error(`unicode-range ${part} is not a subset`)
+    for (let point = start; point <= end; point++) points.add(point)
+  }
+  return points
+}
+
+/** The licence ships with the font — see the header of src/fonts.css. */
+async function fetchLicence(family) {
+  let licence
+  for (const root of LICENCE_ROOTS) {
+    for (const name of LICENCE_NAMES) {
+      if (licence) continue
+      licence = await text(
+        `https://raw.githubusercontent.com/google/fonts/main/${root}/${catalogueDir(family)}/${name}`,
+      ).catch(() => undefined)
+      if (licence) {
+        writeFileSync(join(LICENCE_DIR, `${slug(family)}-${name}`), licence)
+      }
+    }
+  }
+  if (!licence) throw new Error(`no licence found for ${family}`)
+}
 
 async function main() {
   rmSync(FONT_DIR, { recursive: true, force: true })
@@ -184,21 +248,54 @@ async function main() {
       }
     }
 
-    // The licence ships with the font — see the header of src/fonts.css.
-    let licence
-    for (const root of LICENCE_ROOTS) {
-      for (const name of LICENCE_NAMES) {
-        if (licence) continue
-        licence = await text(
-          `https://raw.githubusercontent.com/google/fonts/main/${root}/${catalogueDir(family)}/${name}`,
-        ).catch(() => undefined)
-        if (licence) {
-          writeFileSync(join(LICENCE_DIR, `${slug(family)}-${name}`), licence)
-        }
-      }
-    }
-    if (!licence) throw new Error(`no licence found for ${family}`)
+    await fetchLicence(family)
     console.log(`${family.padEnd(20)} ${kept.length} cut(s)`)
+  }
+
+  // The literal-string subsets (#2038). Same file naming, same licence rule,
+  // one rule each — only the request differs, so this is a short second pass
+  // rather than a branch through the loop above.
+  for (const { family, text: characters } of TEXT_FACES) {
+    const css = await text(
+      `https://fonts.googleapis.com/css?family=${encodeURIComponent(family)}` +
+        `&text=${encodeURIComponent(characters)}`,
+    )
+    const [block] = parseBlocks(css)
+    if (!block) throw new Error(`no @font-face for ${family}`)
+    const source = field(block.body, 'src')?.match(/url\(([^)]+)\)/)?.[1]
+    const range = field(block.body, 'unicode-range')
+    if (!source) throw new Error(`the ${family} subset has no src`)
+    // The whole point of this pass is that the face carries exactly the
+    // characters asked for. Compare CODE POINTS, not commas: Google collapses
+    // adjacent ones (`U+642-643`), so counting the list would be off by
+    // however many happened to be neighbours.
+    const covered = codePointsIn(range ?? '')
+    const wanted = new Set([...characters].map((character) => character.codePointAt(0)))
+    if ([...wanted].some((point) => !covered.has(point))) {
+      throw new Error(`${family} came back covering ${range}, not ${characters}`)
+    }
+
+    const file = `${slug(family)}-400-subset.woff2`
+    const woff2 = Buffer.from(
+      await (await fetch(source, { headers: { 'User-Agent': UA } })).arrayBuffer(),
+    )
+    if (woff2.length < 400) throw new Error(`suspiciously small ${file}`)
+    writeFileSync(join(FONT_DIR, file), woff2)
+    bytes += woff2.length
+
+    rules.push(
+      `/* ${family} 400 — subset to '${characters}' (#2038) */\n` +
+        `@font-face {\n` +
+        `  font-family: '${family}';\n` +
+        `  font-style: normal;\n` +
+        `  font-weight: 400;\n` +
+        `  font-display: swap;\n` +
+        `  src: url('./assets/fonts/${file}') format('woff2');\n` +
+        `  unicode-range: ${range};\n` +
+        `}`,
+    )
+    await fetchLicence(family)
+    console.log(`${family.padEnd(20)} 1 subset cut (${woff2.length} B)`)
   }
 
   writeFileSync(
@@ -220,6 +317,11 @@ async function main() {
  *
  * Every family also keeps Google's own 'unicode-range', so a browser still
  * downloads only the cuts a page's glyphs actually need.
+ *
+ * The last three rules are different in kind (#2038): three Noto faces subset
+ * to the TEN CODEPOINTS the Ephemerists card's script rotation prints, and to
+ * nothing else. Their 'unicode-range' is therefore the literal list of those
+ * characters, so a page that prints none of them fetches none of them.
  *
  * Licences ship alongside the fonts in src/assets/fonts/licences/ and are
  * credited on the Attributions page. Do not strip them.
