@@ -5,6 +5,7 @@ import CardMasthead from "./CardMasthead";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
+import { CovenCat } from "../factionMarks/covenSlip";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -16,8 +17,8 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * A slip of paper that fades pink → lavender under a gold twinkle field, headed
  * by a pentagram badge and the coven's name hand-lettered in Caveat. A celtic
  * braid, hearts tied off at both ends, rules off each section; the points bubble
- * in a cauldron; a slow pentagram watermark turns behind the copy; and the call
- * to action is a rounded pink box. Grenze Gotisch carries the title, Cormorant
+ * in a cauldron; a slow-turning cat watches from the corner; and the call to
+ * action is a rounded pink box. Grenze Gotisch carries the title, Cormorant
  * Garamond the reading copy, Quicksand the chrome.
  *
  * This REPLACES the lo-fi `coven.exe` window archetype wholesale (ADR-0055 /
@@ -182,24 +183,24 @@ export default function CovenTaskCard({
           fontFamily: CHROME,
         }}
       >
-        {/* The turning pentagram watermark. `.cvn-wheel` owns the motion and its
-            reduced-motion guard (#911 — no component-injected <style>). */}
-        <svg
-          className="cvn-wheel"
-          width={420}
-          height={420}
-          viewBox="0 0 100 100"
-          aria-hidden="true"
-          style={{ position: "absolute", right: -118, bottom: -64, zIndex: 0, pointerEvents: "none", opacity: 0.09 }}
-        >
-          <path
-            d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
-            fill="none"
-            stroke="var(--faction-coven-slip-deep)"
-            strokeWidth="1.2"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {/* THE WATERMARK IS A CAT NOW (#2041) — same slow turn, new drawing.
+            `.cvn-wheel` still owns the motion and its reduced-motion guard
+            (#911 — no component-injected <style>); only the artwork moved, and
+            it moved into `covenSlip` because four other surfaces turn it too.
+
+            It also SHRINKS AND COMES INSIDE. The pentacle was 420px hung 118px
+            off the right edge and 64px below the bottom, which is fine for a
+            radially-symmetric abstract mark and fatal for a face: the design's
+            own note is that "a face can't bleed off the card the way the
+            pentacle did". 190px at -6/-4 is #2041's placement verbatim. The
+            only thing that leaves the card is the right whisker's round cap —
+            its tip is at x=97 of the 100-unit box, so 5.7px inside a box whose
+            edge sits 6px out, leaving ~2px of a 3.6px cap clipped. The face is
+            38px clear of the edge.
+
+            Opacity holds at 0.09 rather than taking #2041's 0.15; the reason,
+            with the measurements, is at {@link CovenCat}. */}
+        <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
 
         {/* Masthead. THE WORDMARK MOVES (#2029): it floated over the slip under
             a pentagram badge, with a braid tied off beneath it; v3 pins it into
@@ -210,9 +211,9 @@ export default function CovenTaskCard({
             kit's own `CovenSigil`, because a card may not draw two faction
             marks in its header; and the braid under the wordmark goes, because
             a band that already names the coven does not need an ornament run
-            repeating it. Both marks live on elsewhere on the slip — the braid
-            rules off every section below, and the pentagram still turns as the
-            watermark.
+            repeating it. The braid lives on below, ruling off every section.
+            The pentagram does not: it was still turning as the watermark when
+            #2029 wrote this, and #2041 has since made that a cat.
 
             The twinkle field moves INTO the band, over its ground: with a
             painted band the stars would otherwise be hidden behind it. */}
