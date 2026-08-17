@@ -63,6 +63,14 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
     );
   }
   if (status === "welcome_back" || status === "can_return") {
+    // KNOWN CONTRAST GAP, measured on #951 and left alone there because fixing
+    // it belongs to whoever owns all six cards at once. This branch is the one
+    // that paints a faction's SPINE HUE as an ink — every other branch uses a
+    // house token or a `-card-*` ink — and a spine hue is a fill: WOW's gold is
+    // 1.96:1 on its own cream card ground in light mode. Dark is fine (11.19:1),
+    // so it is a light-only defect on whichever cards have a pale ground. WOW's
+    // own card does not mount this badge for that reason; see the standing plate
+    // in `WowFactionCard.tsx`.
     return (
       <span
         className="label-caption"
