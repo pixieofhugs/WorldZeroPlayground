@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
+import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { Lotus } from "../factionMarks";
-import { UaSigil } from "../sigil/UaSigil";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/uaAtoms";
 
 /**
@@ -28,7 +30,9 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/ua
  * sign-up button. The third is the mark spent as decoration, so it is dropped:
  * the ensō is reserved for the SCORE and the FACTION MARK, and a seal on a
  * button is neither. The eyebrow mark stood beside the uniform "Task {id}"
- * ordinal until #1124 retired the id; it keeps its line alone.
+ * ordinal until #1124 retired the id, and kept its line alone until #2029 gave
+ * the card a masthead — the faction mark now sits in the band, which is the
+ * same one mark in a better place, and the count is still two.
  *
  * THE LOTUS COMES BACK, and that reverses a line in this file's old docstring.
  * #851 read the kit's corner-bleed as something "the brief's strength ruling
@@ -102,7 +106,6 @@ export default function UaTaskCard({
           borderRadius: 7,
           color: "var(--faction-ua-card-text)",
           fontFamily: UA_TEXT,
-          padding: size.pad,
         }}
       >
         {/* The ground wash — the lotus hangs off the top-left corner with its
@@ -122,17 +125,43 @@ export default function UaTaskCard({
           }}
         />
 
-        <div style={{ position: "relative" }}>
+        {/* THE LEAF GAINS A MASTHEAD (#2029). UA shipped none: the top of the
+            card was a bare eyebrow holding the ensō alone, once #1124 took the
+            "Task {id}" ordinal that stood beside it. The band is the kit's
+            shared anatomy — the mark hard left, the faction's name centred — and
+            the eyebrow stands down with it, because the ensō it held is the
+            same mark the band now carries and no card draws two.
+
+            THE WORDMARK TAKES THE BODY INK, NOT THE ACCENT. The design sets it
+            in `--faction-ua-card-accent` on `--faction-ua-hair`, which measures
+            4.46:1 in light — under AA for a 24px non-bold face, and the band's
+            whole job is to be read. `-card-text` is 10.35:1 on the same ground
+            (11.45:1 in dark) and is the leaf's own ink; the accent keeps the
+            band's bottom rule, where a hairline owes nothing. */}
+        <CardMasthead
+          slug="ua"
+          style={{
+            background: "var(--faction-ua-hair)",
+            borderBottom: "1px solid var(--faction-ua-card-accent)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: UA_DISPLAY,
+              fontWeight: 600,
+              fontSize: "var(--text-title)",
+              letterSpacing: "0.08em",
+              lineHeight: 1,
+            }}
+          >
+            {factionName("ua")}
+          </span>
+        </CardMasthead>
+
+        <div style={{ position: "relative", padding: size.pad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-            {/* The eyebrow — the faction mark alone. The uniform "Task {id}"
-                ordinal sat beside it until #1124 retired the id from every card;
-                the mark stays because it is the ensō, not the number. */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
-              <UaSigil width={16} height={16} />
-            </div>
-
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span style={{ ...UA_EYEBROW, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
@@ -234,12 +263,27 @@ export default function UaTaskCard({
           </Link>
 
           {cta && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+            <>
+              {/* The leaf's faintest rule, closing the reading column off from
+                  the sign-up (#2030) — the same `-hair` the hero already draws
+                  between the level and the ensō, so the card rules its two
+                  divisions with one line and not two. */}
+              <div
+                aria-hidden="true"
+                data-cta-rule="ua"
+                style={{
+                  height: 1,
+                  background: "var(--faction-ua-hair)",
+                  margin: "var(--space-lg) 0",
+                }}
+              />
+              <div style={{ display: "flex", justifyContent: "center" }}>
               <button
                 type="button"
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
+                  ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   fontFamily: UA_DISPLAY,
                   fontWeight: 600,
@@ -255,7 +299,8 @@ export default function UaTaskCard({
               >
                 {cta.label}
               </button>
-            </div>
+              </div>
+            </>
           )}
         </div>
       </article>

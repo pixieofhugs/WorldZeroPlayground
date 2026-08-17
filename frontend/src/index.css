@@ -4927,6 +4927,15 @@
   pointer-events: none;
   border-radius: 14px;
 }
+/* The third flourish washed over the na sheet (#2030). The spectrum hairline
+   above the sign-up is the unaffiliated card's own; Albescent draws it fainter,
+   0.45 against 0.6, which is a shimmer's worth of difference and not a colour —
+   the same rule every other Albescent delta obeys (ADR-0048). Declared here
+   rather than passed as a prop so `AlbescentTaskCard` still forwards
+   `CardProps` whole and the sheet inside it stays byte-for-byte na's. */
+.alb-task {
+  --faction-default-cta-rule-opacity: 0.45;
+}
 .alb-task-edge {
   padding: 3px;
   background-image: var(--faction-default-rainbow-loop);

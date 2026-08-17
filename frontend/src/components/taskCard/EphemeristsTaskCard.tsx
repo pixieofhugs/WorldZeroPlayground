@@ -1,6 +1,10 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
+/* No `CARD_CTA_ROW` here: the plate's rule and its button share one inset box,
+   so the clearance comes from that box's own `bodyPad` bottom. */
+import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -235,47 +239,55 @@ export default function EphemeristsTaskCard({
             {register(REGISTER_BOTTOM, 97, 0.3, "bottom")}
           </svg>
 
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "var(--space-xs)",
-            }}
+          {/* The plate band on the kit's shared anatomy (#2029) — the mark hard
+              left, the winged disc and the wordmark centred on the band. The
+              night band's own backdrop stays where it was, behind this: the
+              glyph registers are painted by the box around us, so the anatomy
+              needs no ornament slot of its own. The sigil takes `currentColor`,
+              which is the band's gold ink. */}
+          <CardMasthead
+            slug="ephemerists"
+            style={{ height: "100%", padding: "0 var(--space-lg)" }}
           >
-            <svg
-              width={size.discWidth}
-              height={40}
-              viewBox="-88 -20 176 40"
-              aria-hidden="true"
-              style={{ display: "block", flex: "0 0 auto" }}
-            >
-              <Wing />
-              <Wing flip />
-              <circle r={10} fill="none" stroke="var(--faction-ephemerists-plate-gold)" strokeWidth="1.5" />
-              <circle r={5} fill="var(--faction-ephemerists-plate-gold)" opacity={0.8} />
-              <path d="M-13 0 H-10.5 M10.5 0 H13" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="1" />
-            </svg>
             <span
               style={{
-                fontFamily: DECO,
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "var(--space-xs)",
               }}
             >
-              {/* #1910: the band spells the faction's name, so it reads the one
-                  key that stays per-faction rather than a second copy. The
-                  `textTransform` above already carried the plate's upper case,
-                  so the band reads THE EPHEMERISTS either way. */}
-              {factionName("ephemerists")}
+              <svg
+                width={size.discWidth}
+                height={40}
+                viewBox="-88 -20 176 40"
+                aria-hidden="true"
+                style={{ display: "block", flex: "0 0 auto" }}
+              >
+                <Wing />
+                <Wing flip />
+                <circle r={10} fill="none" stroke="var(--faction-ephemerists-plate-gold)" strokeWidth="1.5" />
+                <circle r={5} fill="var(--faction-ephemerists-plate-gold)" opacity={0.8} />
+                <path d="M-13 0 H-10.5 M10.5 0 H13" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="1" />
+              </svg>
+              <span
+                style={{
+                  fontFamily: DECO,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {/* #1910: the band spells the faction's name, so it reads the
+                    one key that stays per-faction rather than a second copy.
+                    The `textTransform` above already carried the plate's upper
+                    case, so the band reads THE EPHEMERISTS either way. */}
+                {factionName("ephemerists")}
+              </span>
             </span>
-          </div>
+          </CardMasthead>
         </div>
         <Cornice flutes={40} />
 
@@ -431,40 +443,53 @@ export default function EphemeristsTaskCard({
           </Link>
         </div>
 
+        {/* The plate's CTA was a full-bleed band closing the leaf. #2030 sets
+            it as an inset cartouche with air under it, beneath the plate's own
+            double brass rule — two hairlines, which is how this card rules
+            everything it rules (the hero's stepped lead-in, the cornice). */}
         {cta && (
-          <button
-            type="button"
-            onClick={cta.onPress}
-            aria-disabled={cta.denied || undefined}
-            style={{
-              position: "relative",
-              zIndex: 2,
-              cursor: cta.denied ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "var(--space-md)",
-              width: "100%",
-              background: "var(--faction-ephemerists-plate-cta-bg)",
-              color: "var(--faction-ephemerists-plate-cta-ink)",
-              border: "none",
-              borderTop: "2px solid var(--faction-ephemerists-plate-brass)",
-              padding: "var(--space-md) 0",
-              fontFamily: CAPS,
-              fontWeight: 500,
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.24em",
-              textTransform: "uppercase",
-            }}
-          >
-            <svg width={17} height={17} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
-              <path d={GLYPHS.platinum} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>{cta.label}</span>
-            <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
-              <path d={GLYPHS.planet} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
+            <div
+              aria-hidden="true"
+              data-cta-rule="ephemerists"
+              style={{
+                height: 3,
+                borderTop: "1px solid var(--faction-ephemerists-plate-brass)",
+                borderBottom: "1px solid var(--faction-ephemerists-plate-brass)",
+                margin: "0 0 var(--space-md)",
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
+                style={{
+                  ...CARD_CTA,
+                  cursor: cta.denied ? "not-allowed" : "pointer",
+                  display: "flex",
+                  gap: "var(--space-md)",
+                  background: "var(--faction-ephemerists-plate-cta-bg)",
+                  color: "var(--faction-ephemerists-plate-cta-ink)",
+                  border: "2px solid var(--faction-ephemerists-plate-brass)",
+                  padding: "var(--space-sm) var(--space-xl)",
+                  fontFamily: CAPS,
+                  fontWeight: 500,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.24em",
+                  textTransform: "uppercase",
+                }}
+              >
+                <svg width={17} height={17} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+                  <path d={GLYPHS.platinum} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>{cta.label}</span>
+                <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+                  <path d={GLYPHS.planet} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
         )}
       </article>
     </div>

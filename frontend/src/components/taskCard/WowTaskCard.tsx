@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
+import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { BalloonBunch, Zig } from "../factionMarks/wowOrnament";
@@ -152,6 +155,31 @@ export default function WowTaskCard({
           color: INK,
         }}
       >
+        {/* THE DECREE GAINS A MASTHEAD (#2029). WOW shipped none — the ribbon
+            was the card's whole top note — so this is a new band on the kit's
+            shared anatomy: the mark hard left, the faction's name centred, on
+            the theme-invariant plum the CTA already stands on (5.16:1 against
+            `-on-plum`, both themes).
+
+            NO BOTTOM RULE ON THE BAND, where the design draws a 2px
+            `--faction-wow-card-accent` one: in light that token IS
+            `--faction-wow-plum-surface` to the hex, so the rule would be an
+            invisible line on its own ground. The barber ribbon underneath is
+            already the band's edge and says it in the decree's own voice.
+
+            The mark takes the gilt rather than the sigil's default plum, which
+            would vanish into the banner — the same pairing `SwordAndShield`
+            already draws on this plum. */}
+        <CardMasthead
+          slug="wow"
+          markColor={GILT}
+          style={{ background: PLUM_SURFACE, color: "var(--faction-wow-on-plum)" }}
+        >
+          <span style={{ fontFamily: MED, fontSize: "var(--text-title)", letterSpacing: "0.04em", lineHeight: 1 }}>
+            {factionName("wow")}
+          </span>
+        </CardMasthead>
+
         {/* The barber ribbon. A 6px stripe carrying NO text, which is what lets
             the undimmed gold/plum ship as drawn (§3, #840). */}
         <div aria-hidden="true" style={{ height: 6, background: "var(--faction-wow-quest-ribbon)" }} />
@@ -162,7 +190,7 @@ export default function WowTaskCard({
           <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             {/* The decree-lettered eyebrow held the uniform "Task {id}" ordinal and
               nothing else, so #1124's retirement of the id takes the line with
-              it. The barber ribbon above is now the card's top note. */}
+              it. The masthead and its ribbon are the card's top note now. */}
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span
@@ -294,6 +322,7 @@ export default function WowTaskCard({
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
+                  ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   fontFamily: MED,
                   fontSize: "var(--text-content)",

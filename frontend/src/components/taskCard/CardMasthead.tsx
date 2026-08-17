@@ -1,0 +1,130 @@
+import type { CSSProperties, ReactNode } from "react";
+import FactionSigil from "../sigil/FactionSigil";
+
+/**
+ * The one masthead anatomy the task-card kit shares (#2029, task cards v3):
+ * **the faction's mark hard left, the faction's title centred on the band.**
+ *
+ * Seven of the nine cards carry one. `na` and `albescent` mount none — that is
+ * deliberate (ADR-0048: the Albescent card IS the unaffiliated sheet plus a
+ * drift, and a band naming the society would un-hide it), not an omission.
+ *
+ * WHY A COMPONENT AND NOT A CONVENTION. The epic's sequencing ruling exists
+ * because seven agents each inventing this shape yields seven slightly
+ * different mastheads — every branch green, `main` red. The precedent is the
+ * composer's `ComposerMasthead`: a shared wrapper each archetype PAINTS,
+ * carrying none of the paint itself. So everything faction here arrives as
+ * `style` (the band's ground, its rule, its ink) or as `children` (the
+ * wordmark, in the faction's own hand and at its own size). What the wrapper
+ * owns is only the anatomy: the inset, the mark's box, and the centring.
+ *
+ * THE TITLE IS CENTRED ON THE BAND, not on the space left over beside the
+ * mark. That is a three-column grid with equal `1fr` gutters rather than a flex
+ * row, and the difference is the whole point: a flex row centres the title in
+ * the remainder, so every card whose left cluster is a different width centres
+ * it somewhere else. With `1fr auto 1fr` the two gutters are equal by
+ * construction, so the title sits on the card's own centreline whatever stands
+ * beside the mark — Singularity's window lamps included. (The vendored design
+ * reached the same place by absolutely positioning the title and measuring the
+ * band back, which is what a DOM-mutating spec sheet has to do; a real
+ * component knows its own layout.)
+ *
+ * THE BAND IS THE ANATOMY'S, so ornament that used to fill it stands down —
+ * S.N.I.D.E.'s broken acid rule and Everymen's pair of cogs both occupied the
+ * space the centred title now takes. Ornament that sits BESIDE the mark without
+ * reaching the centre survives, which is why Singularity keeps its lamps. Where
+ * a band carries a backdrop (the Ephemerists' glyph registers, Coven's twinkle
+ * field), the skin wraps this component in its own positioned box and paints
+ * there — no ornament slot is needed here, and none is offered.
+ *
+ * NO CARD RENDERS TWO FACTION MARKS IN ITS HEADER. The mark below is the kit's
+ * `FactionSigil`, so a card that drew its own header mark hands it over rather
+ * than gaining a second: UA's eyebrow ensō and Coven's pentagram badge were
+ * both stood down when their bands were built.
+ */
+
+/**
+ * The mark's box, on every card. Geometry, so a raw number
+ * (WORLD_ZERO_STYLE §4a) — and a SHARED one, which is the point: the design
+ * draws one 20px mark per band and the kit has exactly one place to say so.
+ */
+const MARK = 20;
+
+export interface CardMastheadProps {
+  /** Whose band this is. Real components know their own faction (#2027). */
+  slug: string;
+  /**
+   * The mark's ink, when the sigil's own default would land on a ground it
+   * cannot be seen against — Everymen's red mark on the red bill mast, WOW's
+   * plum mark on the plum banner. A token, always.
+   */
+  markColor?: string;
+  /**
+   * Chrome that rides with the mark in the left cluster. One caller: the
+   * Singularity terminal's three window lamps, which are the window and not a
+   * faction mark.
+   */
+  leading?: ReactNode;
+  /** The band's own paint — ground, rule, ink, height. All of it the skin's. */
+  style?: CSSProperties;
+  /** The wordmark, in the faction's hand. */
+  children: ReactNode;
+}
+
+export default function CardMasthead({
+  slug,
+  markColor,
+  leading,
+  style,
+  children,
+}: CardMastheadProps) {
+  return (
+    <div
+      data-card-masthead={slug}
+      style={{
+        position: "relative",
+        zIndex: 2,
+        display: "grid",
+        gridTemplateColumns: "1fr auto 1fr",
+        alignItems: "center",
+        gap: "var(--space-sm)",
+        padding: "var(--space-sm) var(--space-lg)",
+        ...style,
+      }}
+    >
+      <span
+        style={{
+          justifySelf: "start",
+          minWidth: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+        }}
+      >
+        {/* Decorative: the band says the faction's name in words right beside
+            it, so a screen reader that also announced the mark would say it
+            twice. */}
+        <span
+          aria-hidden="true"
+          data-masthead-mark={slug}
+          style={{
+            flex: "0 0 auto",
+            width: MARK,
+            height: MARK,
+            lineHeight: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FactionSigil slug={slug} size={MARK} color={markColor} />
+        </span>
+        {leading}
+      </span>
+      <span style={{ minWidth: 0, textAlign: "center" }}>{children}</span>
+      {/* The right gutter. Empty by design — it is what makes the centre column
+          land on the band's centreline rather than beside the mark. */}
+      <span aria-hidden="true" />
+    </div>
+  );
+}

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -287,33 +288,49 @@ export default function DefaultTaskCard({
         </Link>
 
         {cta && (
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <button
-              type="button"
-              onClick={cta.onPress}
-              aria-disabled={cta.denied || undefined}
+          <>
+            {/* The spectrum, one hairline thick, closing the sheet off from the
+                sign-up (#2030). The FOURTH place the rainbow appears on this
+                card, and the quietest — 0.6 of it, so it rules rather than
+                repeats the 3px border. Albescent draws the same line fainter
+                still; the opacity is a custom property so that stays a cascade
+                and not a prop (index.css, `.alb-task`). */}
+            <div
+              aria-hidden="true"
+              data-cta-rule="default"
               style={{
-                cursor: cta.denied ? "not-allowed" : "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                whiteSpace: "nowrap",
-                fontFamily: LORA,
-                fontWeight: 600,
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                padding: "var(--space-md) var(--space-2xl)",
-                borderRadius: 11,
-                color: "var(--faction-default-card-text)",
-                background: "transparent",
-                border:
-                  "1px solid color-mix(in srgb, var(--faction-default-card-accent) 35%, transparent)",
+                height: 1,
+                background: "var(--faction-default-rainbow)",
+                opacity: "var(--faction-default-cta-rule-opacity, 0.6)",
+                margin: "0 0 var(--space-lg)",
               }}
-            >
-              {cta.label}
-            </button>
-          </div>
+            />
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
+                style={{
+                  ...CARD_CTA,
+                  cursor: cta.denied ? "not-allowed" : "pointer",
+                  whiteSpace: "nowrap",
+                  fontFamily: LORA,
+                  fontWeight: 600,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  padding: "var(--space-md) var(--space-2xl)",
+                  borderRadius: 11,
+                  color: "var(--faction-default-card-text)",
+                  background: "transparent",
+                  border:
+                    "1px solid color-mix(in srgb, var(--faction-default-card-accent) 35%, transparent)",
+                }}
+              >
+                {cta.label}
+              </button>
+            </div>
+          </>
         )}
       </article>
     </div>

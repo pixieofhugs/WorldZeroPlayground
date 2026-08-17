@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
+import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -219,17 +221,17 @@ export default function SnideTaskCard({
           transform: "rotate(-0.4deg)",
         }}
       >
-        {/* The header bar — wordmark and a broken acid rule. The bar's right end
-            carried the uniform "Task {id}" ordinal until #1124 retired the id
-            from every card; the rule takes the freed width. */}
-        <div
+        {/* The header bar, on the kit's shared anatomy (#2029) — the mark hard
+            left, the wordmark centred on the band.
+
+            The broken acid rule that used to fill the bar's right end is gone
+            with the centring: it was a flex filler taking the width #1124's
+            retired ordinal left behind, and that width is exactly where the
+            centred wordmark now sits. The clipping keeps its acid elsewhere —
+            the CTA, the knockout cuts, the pen circle. */}
+        <CardMasthead
+          slug="snide"
           style={{
-            position: "relative",
-            zIndex: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-md)",
-            padding: "var(--space-sm) var(--space-lg)",
             background: "var(--faction-snide-note-bar)",
             color: "var(--faction-snide-note-bar-ink)",
           }}
@@ -238,16 +240,7 @@ export default function SnideTaskCard({
           <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
             {factionName("snide")}
           </span>
-          <span
-            aria-hidden="true"
-            style={{
-              flex: 1,
-              height: 3,
-              background:
-                "repeating-linear-gradient(90deg, var(--faction-snide-acid) 0 6px, transparent 6px 10px)",
-            }}
-          />
-        </div>
+        </CardMasthead>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
@@ -377,29 +370,31 @@ export default function SnideTaskCard({
           </Link>
         </div>
 
+        {/* The acid bar was full-bleed — the clipping's bottom edge. #2030
+            shrinks it to a pasted-on block with clearance under it; no rule
+            above, because the censor strip already rules the section off. */}
         {cta && (
-          <button
-            type="button"
-            onClick={cta.onPress}
-            aria-disabled={cta.denied || undefined}
-            style={{
-              position: "relative",
-              zIndex: 2,
-              cursor: cta.denied ? "not-allowed" : "pointer",
-              width: "100%",
-              background: "var(--faction-snide-note-cta-bg)",
-              color: "var(--faction-snide-note-cta-ink)",
-              fontFamily: IMPACT,
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              textAlign: "center",
-              padding: "var(--space-md) 0",
-              border: "none",
-            }}
-          >
-            {cta.label}
-          </button>
+          <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
+            <button
+              type="button"
+              onClick={cta.onPress}
+              aria-disabled={cta.denied || undefined}
+              style={{
+                ...CARD_CTA,
+                cursor: cta.denied ? "not-allowed" : "pointer",
+                background: "var(--faction-snide-note-cta-bg)",
+                color: "var(--faction-snide-note-cta-ink)",
+                fontFamily: IMPACT,
+                fontSize: "var(--text-xl)",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                padding: "var(--space-sm) var(--space-2xl)",
+                border: "none",
+              }}
+            >
+              {cta.label}
+            </button>
+          </div>
         )}
       </article>
     </div>

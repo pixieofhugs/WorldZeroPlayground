@@ -1,8 +1,11 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
+import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 
@@ -180,15 +183,22 @@ export default function EverymenTaskCard({
             }}
           />
 
-          {/* Masthead — cogs either side of the call, on the union's red bar. */}
-          <div
+          {/* Masthead — the union's red bar, on the kit's shared anatomy
+              (#2029): the mark hard left, the faction's name centred.
+
+              The band read "Help Wanted!" between two cogs
+              (`feed:taskCard.everymen.billMasthead`) until #1909 cut the slot
+              as generic, which left the cogs alone on the bar. v3 answers the
+              same objection the other way round — the band names THE FACTION,
+              which is the one thing on it no other card says — and the pair of
+              cogs stands down with the naming, because they flanked the centre
+              the wordmark now holds. The cog stays the bill's motif on the
+              hero rule and the in-progress line. */}
+          <CardMasthead
+            slug="everymen"
+            /* On the red mast the sigil's own `--everymen-red` is invisible. */
+            markColor="var(--faction-everymen-bill-mast-ink)"
             style={{
-              position: "relative",
-              zIndex: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "var(--space-sm)",
               padding: size.mastPad,
               background: "var(--faction-everymen-bill-mast)",
               color: "var(--faction-everymen-bill-mast-ink)",
@@ -196,14 +206,10 @@ export default function EverymenTaskCard({
               boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
             }}
           >
-            {/* The masthead read "Help Wanted!" between the two gears
-                (`feed:taskCard.everymen.billMasthead`). #1909 cut it: Everymen
-                was the only faction with a masthead on a task card, and the
-                audit ruled the surface generic. The gears and the double rule
-                are the band, and they stay. */}
-            <Gear size={15} fill="currentColor" hub="var(--faction-everymen-bill-mast)" opacity={0.95} />
-            <Gear size={15} fill="currentColor" hub="var(--faction-everymen-bill-mast)" opacity={0.95} />
-          </div>
+            <span style={{ ...LABEL, fontSize: "var(--text-title)", lineHeight: 1 }}>
+              {factionName("everymen")}
+            </span>
+          </CardMasthead>
 
           <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
             {/* Everything but the CTA reads the full call — a card-sized target
@@ -354,30 +360,33 @@ export default function EverymenTaskCard({
             </Link>
           </div>
 
+          {/* The report-for-duty bar ran the width of the bill. #2030 makes it
+              a struck block with air under it; the dashed red rule above the
+              in-progress line is the bill's own bottom treatment, so no rule is
+              added here. */}
           {cta && (
-            <button
-              type="button"
-              onClick={cta.onPress}
-              aria-disabled={cta.denied || undefined}
-              style={{
-                position: "relative",
-                zIndex: 2,
-                cursor: cta.denied ? "not-allowed" : "pointer",
-                width: "100%",
-                background: "var(--faction-everymen-bill-cta-bg)",
-                color: "var(--faction-everymen-bill-cta-ink)",
-                fontFamily: POSTER,
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                textAlign: "center",
-                padding: "var(--space-md) 0",
-                border: "none",
-                borderTop: `2px solid ${INK}`,
-              }}
-            >
-              {cta.label}
-            </button>
+            <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
+              <button
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
+                style={{
+                  ...CARD_CTA,
+                  cursor: cta.denied ? "not-allowed" : "pointer",
+                  background: "var(--faction-everymen-bill-cta-bg)",
+                  color: "var(--faction-everymen-bill-cta-ink)",
+                  fontFamily: POSTER,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  padding: "var(--space-sm) var(--space-2xl)",
+                  border: `2px solid ${INK}`,
+                  borderRadius: 2,
+                }}
+              >
+                {cta.label}
+              </button>
+            </div>
           )}
         </div>
       </article>
