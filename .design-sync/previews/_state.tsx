@@ -225,7 +225,6 @@ export function editPraxisState(slug: string): EditPraxisState {
     setTitle: noop,
     body: 'Two hours at the north portico with a stick of vine charcoal. I let the cornice go soft and pressed hard only where the light broke.',
     setBody: noop,
-    wordCount: 26,
     media: [],
     fileError: '',
     handleFileChange: noop,

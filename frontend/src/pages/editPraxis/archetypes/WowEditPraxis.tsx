@@ -527,11 +527,11 @@ export default function WowEditPraxis({ state }: Props) {
           </ComposerSection>
         )}
 
-        {/* Write-up — the tabs ride the label row's meta slot, so it reads
-            `Write-up … [Write|Preview]` exactly as the design draws it. */}
+        {/* Write-up — the tabs and the autosave line ride the label row's meta
+            slot, and since #2085 that slot is the whole row: the `Write-up`
+            heading said nothing the box's own placeholder does not. The editor
+            keeps its accessible name from `bodyContentAttributes`. */}
         <ComposerSection
-          label={t("editPraxis.composer.writeUpLabel")}
-          htmlFor="composer-body"
           rule={false}
           labelStyle={LABEL_STYLE}
           meta={
@@ -542,9 +542,6 @@ export default function WowEditPraxis({ state }: Props) {
                       ago: formatAutosave(state.autosaveAt),
                     })
                   : t("editPraxis.composer.statusUnsaved")}
-              </span>
-              <span style={composerLabelStyle(QUIET_STYLE)}>
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
               <WriteUpTabs
                 tab={tab}
@@ -571,7 +568,6 @@ export default function WowEditPraxis({ state }: Props) {
             <BodyTextarea
               state={state}
               skin={{
-                id: "composer-body",
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 toolbarButtonStyle: {
                   background: FIELD,
@@ -684,7 +680,6 @@ export default function WowEditPraxis({ state }: Props) {
                     whiteSpace: "pre-line",
                     color: LABEL,
                   }),
-                  buttonLabel: t("editPraxis.composer.proofButton"),
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: LORA,

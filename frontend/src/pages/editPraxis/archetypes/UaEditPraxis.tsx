@@ -439,11 +439,11 @@ export default function UaEditPraxis({ state }: Props) {
           </ComposerSection>
         )}
 
-        {/* Write-up — the tabs sit in the section's meta slot, so the label row
-            reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
+        {/* Write-up — the tabs and the autosave line sit in the section's meta
+            slot, and since #2085 that slot is the whole row: the `Write-up`
+            heading said nothing the box's own placeholder does not. The editor
+            keeps its accessible name from `bodyContentAttributes`. */}
         <ComposerSection
-          label={t("editPraxis.composer.writeUpLabel")}
-          htmlFor="composer-body"
           rule={false}
           labelStyle={labelStyle}
           meta={
@@ -460,15 +460,6 @@ export default function UaEditPraxis({ state }: Props) {
                       ago: formatAutosave(state.autosaveAt),
                     })
                   : t("editPraxis.composer.statusUnsaved")}
-              </span>
-              <span
-                style={composerLabelStyle({
-                  fontFamily: UA_TEXT,
-                  color: MUTED,
-                  letterSpacing: "0.06em",
-                })}
-              >
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
               <WriteUpTabs
                 tab={tab}
@@ -496,7 +487,6 @@ export default function UaEditPraxis({ state }: Props) {
             <BodyTextarea
               state={state}
               skin={{
-                id: "composer-body",
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 toolbarButtonStyle: {
                   fontFamily: UA_TEXT,
@@ -601,7 +591,6 @@ export default function UaEditPraxis({ state }: Props) {
                     whiteSpace: "pre-line",
                     color: MUTED,
                   }),
-                  buttonLabel: t("editPraxis.composer.proofButton"),
                   errorColor: "var(--faction-ua-vermil)",
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
