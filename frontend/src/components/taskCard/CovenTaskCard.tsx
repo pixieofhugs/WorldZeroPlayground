@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
+import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -404,41 +405,46 @@ export default function CovenTaskCard({
           </Link>
         </div>
 
+        {/* The pink band ran the slip's full width. #2030 tucks it in with
+            clearance under it, rounded to the same 20 the modifier chip takes —
+            the slip has no square corner on it anywhere. No rule above: the
+            braid under the description is the section's own tie-off, and the
+            dotted-with-a-gem rule the design defines for Coven is dead code it
+            skips in the same pass. */}
         {cta && (
-          <button
-            type="button"
-            onClick={cta.onPress}
-            aria-disabled={cta.denied || undefined}
-            style={{
-              position: "relative",
-              zIndex: 2,
-              cursor: cta.denied ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "var(--space-sm)",
-              width: "100%",
-              background:
-                "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
-              color: "var(--faction-coven-slip-cta-ink)",
-              fontFamily: CHROME,
-              fontWeight: 700,
-              fontSize: "var(--text-lg)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              padding: "var(--space-md) 0",
-              border: "none",
-              borderTop: "1.5px solid var(--faction-coven-slip-cta-to)",
-            }}
-          >
-            <svg width={12} height={12} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
-              <path
-                d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
-                fill="currentColor"
-              />
-            </svg>
-            {cta.label}
-          </button>
+          <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
+            <button
+              type="button"
+              onClick={cta.onPress}
+              aria-disabled={cta.denied || undefined}
+              style={{
+                ...CARD_CTA,
+                cursor: cta.denied ? "not-allowed" : "pointer",
+                display: "flex",
+                gap: "var(--space-sm)",
+                background:
+                  "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
+                color: "var(--faction-coven-slip-cta-ink)",
+                fontFamily: CHROME,
+                fontWeight: 700,
+                fontSize: "var(--text-lg)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "var(--space-sm) var(--space-xl)",
+                border: "1.5px solid var(--faction-coven-slip-cta-to)",
+                borderRadius: 20,
+                boxShadow: "0 3px 8px var(--faction-coven-slip-glow)",
+              }}
+            >
+              <svg width={12} height={12} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+                <path
+                  d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
+                  fill="currentColor"
+                />
+              </svg>
+              {cta.label}
+            </button>
+          </div>
         )}
       </article>
     </div>

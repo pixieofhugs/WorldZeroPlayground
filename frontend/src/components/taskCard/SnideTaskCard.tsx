@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
+import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -369,29 +370,31 @@ export default function SnideTaskCard({
           </Link>
         </div>
 
+        {/* The acid bar was full-bleed — the clipping's bottom edge. #2030
+            shrinks it to a pasted-on block with clearance under it; no rule
+            above, because the censor strip already rules the section off. */}
         {cta && (
-          <button
-            type="button"
-            onClick={cta.onPress}
-            aria-disabled={cta.denied || undefined}
-            style={{
-              position: "relative",
-              zIndex: 2,
-              cursor: cta.denied ? "not-allowed" : "pointer",
-              width: "100%",
-              background: "var(--faction-snide-note-cta-bg)",
-              color: "var(--faction-snide-note-cta-ink)",
-              fontFamily: IMPACT,
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              textAlign: "center",
-              padding: "var(--space-md) 0",
-              border: "none",
-            }}
-          >
-            {cta.label}
-          </button>
+          <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
+            <button
+              type="button"
+              onClick={cta.onPress}
+              aria-disabled={cta.denied || undefined}
+              style={{
+                ...CARD_CTA,
+                cursor: cta.denied ? "not-allowed" : "pointer",
+                background: "var(--faction-snide-note-cta-bg)",
+                color: "var(--faction-snide-note-cta-ink)",
+                fontFamily: IMPACT,
+                fontSize: "var(--text-xl)",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                padding: "var(--space-sm) var(--space-2xl)",
+                border: "none",
+              }}
+            >
+              {cta.label}
+            </button>
+          </div>
         )}
       </article>
     </div>

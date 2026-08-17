@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
+import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -321,6 +322,7 @@ export default function WowTaskCard({
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
+                  ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   fontFamily: MED,
                   fontSize: "var(--text-content)",

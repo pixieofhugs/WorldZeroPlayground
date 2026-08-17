@@ -31,7 +31,17 @@ import DefaultTaskCard from "./DefaultTaskCard";
  */
 export default function AlbescentTaskCard(props: CardProps) {
   return (
-    <div style={{ position: "relative", width: "fit-content", maxWidth: "100%" }}>
+    <div
+      /* The wrapper's one job besides holding the overlays: it repoints
+         `--faction-default-cta-rule-opacity` for everything inside it, so the
+         spectrum rule above the sign-up lands at 0.45 here and 0.6 on the
+         unaffiliated sheet (#2030). A THIRD flourish of the same kind as the
+         other two — the difference is a shimmer, never a colour — and it stays
+         a cascade rather than a prop, which is what keeps the markup below
+         byte-for-byte the na card's. */
+      className="alb-task"
+      style={{ position: "relative", width: "fit-content", maxWidth: "100%" }}
+    >
       <DefaultTaskCard {...props} />
       <span aria-hidden="true" className="alb-task-aurora" />
       <span aria-hidden="true" className="alb-task-edge" />

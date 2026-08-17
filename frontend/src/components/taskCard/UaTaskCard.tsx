@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
+import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -262,12 +263,27 @@ export default function UaTaskCard({
           </Link>
 
           {cta && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+            <>
+              {/* The leaf's faintest rule, closing the reading column off from
+                  the sign-up (#2030) — the same `-hair` the hero already draws
+                  between the level and the ensō, so the card rules its two
+                  divisions with one line and not two. */}
+              <div
+                aria-hidden="true"
+                data-cta-rule="ua"
+                style={{
+                  height: 1,
+                  background: "var(--faction-ua-hair)",
+                  margin: "var(--space-lg) 0",
+                }}
+              />
+              <div style={{ display: "flex", justifyContent: "center" }}>
               <button
                 type="button"
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
+                  ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   fontFamily: UA_DISPLAY,
                   fontWeight: 600,
@@ -283,7 +299,8 @@ export default function UaTaskCard({
               >
                 {cta.label}
               </button>
-            </div>
+              </div>
+            </>
           )}
         </div>
       </article>

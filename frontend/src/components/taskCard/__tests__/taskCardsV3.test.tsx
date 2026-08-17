@@ -162,3 +162,73 @@ describe('the anatomy lives in one place (#2029)', () => {
     }
   })
 })
+
+/* -------------------------------------------------------------------------- */
+/* C (#2030) — the sign-up as an inset button                                  */
+/* -------------------------------------------------------------------------- */
+
+/** The reconciled rule table. The other five draw their own bottom treatment. */
+const RULED: Record<string, string> = {
+  na: 'default',
+  albescent: 'default',
+  ua: 'ua',
+  ephemerists: 'ephemerists',
+}
+
+describe.each(SKINS)('$slug sign-up affordance (#2030)', (skin) => {
+  it('is an inset button — never the card\'s own bottom edge', () => {
+    const { html } = render(skin)
+    const button = html.slice(html.indexOf('<button'))
+    expect(button, 'a control to look at').toContain('</button>')
+    // The four bar skins shipped `width:100%` on the button itself, which is
+    // what made it the card's edge. Nothing may say it again.
+    expect(button.slice(0, button.indexOf('</button>'))).not.toContain('width:100%')
+  })
+
+  it('meets the 44px floor, on both form factors', () => {
+    for (const formFactor of ['desktop', 'mobile'] as const) {
+      mocks.formFactor = formFactor
+      const { html } = render(skin)
+      expect(html.slice(html.indexOf('<button')), formFactor).toContain('min-height:44px')
+    }
+    mocks.formFactor = 'desktop'
+  })
+
+  it('draws the rule its faction draws, and no other', () => {
+    const { html } = render(skin)
+    const rules = [...html.matchAll(/data-cta-rule="([a-z]+)"/g)].map((m) => m[1])
+    expect(rules).toEqual(skin.slug in RULED ? [RULED[skin.slug]] : [])
+  })
+
+  it('renders no control at all where sign-up is not on offer', () => {
+    // #2030 changes what the affordance LOOKS like; `signupAffordance.ts` still
+    // decides whether there is one. A rule with nothing under it would be the
+    // tell that the two got tangled.
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <skin.Card
+          task={TASK}
+          basePoints={TASK.point_value}
+          multiplier={1}
+          inProgressCount={0}
+        />
+      </MemoryRouter>,
+    )
+    expect(html, 'no onSignup → no button').not.toContain('<button')
+    expect(html, 'and no rule left ruling off nothing').not.toContain('data-cta-rule')
+  })
+})
+
+describe('albescent draws the same rule, fainter (#2030)', () => {
+  it('carries the opacity as a cascade rather than a fork in the sheet', () => {
+    // The na sheet must still come out byte-for-byte inside the Albescent one
+    // (ADR-0048), so the 0.45 cannot be a prop or a branch — it is
+    // `--faction-default-cta-rule-opacity`, repointed by `.alb-task` in
+    // index.css and inherited by the sheet inside.
+    const albescent = render(SKINS.find((s) => s.slug === 'albescent')!)
+    const unaffiliated = render(SKINS.find((s) => s.slug === 'na')!)
+    expect(albescent.html).toContain(unaffiliated.html)
+    expect(albescent.html).toContain('class="alb-task"')
+    expect(unaffiliated.html).toContain('opacity:var(--faction-default-cta-rule-opacity, 0.6)')
+  })
+})

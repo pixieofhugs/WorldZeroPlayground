@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import CardMasthead from "./CardMasthead";
+import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -359,30 +360,33 @@ export default function EverymenTaskCard({
             </Link>
           </div>
 
+          {/* The report-for-duty bar ran the width of the bill. #2030 makes it
+              a struck block with air under it; the dashed red rule above the
+              in-progress line is the bill's own bottom treatment, so no rule is
+              added here. */}
           {cta && (
-            <button
-              type="button"
-              onClick={cta.onPress}
-              aria-disabled={cta.denied || undefined}
-              style={{
-                position: "relative",
-                zIndex: 2,
-                cursor: cta.denied ? "not-allowed" : "pointer",
-                width: "100%",
-                background: "var(--faction-everymen-bill-cta-bg)",
-                color: "var(--faction-everymen-bill-cta-ink)",
-                fontFamily: POSTER,
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                textAlign: "center",
-                padding: "var(--space-md) 0",
-                border: "none",
-                borderTop: `2px solid ${INK}`,
-              }}
-            >
-              {cta.label}
-            </button>
+            <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
+              <button
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
+                style={{
+                  ...CARD_CTA,
+                  cursor: cta.denied ? "not-allowed" : "pointer",
+                  background: "var(--faction-everymen-bill-cta-bg)",
+                  color: "var(--faction-everymen-bill-cta-ink)",
+                  fontFamily: POSTER,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  padding: "var(--space-sm) var(--space-2xl)",
+                  border: `2px solid ${INK}`,
+                  borderRadius: 2,
+                }}
+              >
+                {cta.label}
+              </button>
+            </div>
           )}
         </div>
       </article>
