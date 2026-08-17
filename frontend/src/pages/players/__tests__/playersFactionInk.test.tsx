@@ -17,9 +17,12 @@
  *
  *   - `factionContrast.test.ts` measures a token against the surface its
  *     DECLARATION names. `--faction-wow` declares a fill, and its own comment at
- *     `--faction-wow-on-fill` records the measurement from the other side
- *     ("white only 2.15:1"). Nothing there is wrong; the pairing this page drew
- *     was simply not one the manifest could name.
+ *     `--faction-wow-on-fill` records the measurement from the other side (at the
+ *     time, of the gold that hue then was: "white only 2.15:1"). Nothing there is
+ *     wrong; the pairing this page drew was simply not one the manifest could
+ *     name. Which faction is the worst offender moves — #2068 swapped WOW's gold
+ *     for a plum and gave Ephemerists a brass — so read the measured block below
+ *     rather than any faction name in this prose.
  *   - `local/no-global-ink-on-faction-surface` (#1819) is scoped to
  *     `archetypes/`, `mobileArchetypes/` and `components/factionMarks/`, and
  *     `pages/players/` is in none of them — correctly, because this page is
@@ -215,7 +218,7 @@ describe('the Players surfaces paint no faction hue as text', () => {
 })
 
 describe('why the hue cannot be the ink here, measured', () => {
-  it('two of the seven spine hues are illegible as text on this page in light', () => {
+  it('four of the seven spine hues are illegible as text on this page in light', () => {
     const { page, frost } = grounds('light')
     const measured = Object.fromEntries(
       SPINE_KEYS.map((key) => {
@@ -224,16 +227,30 @@ describe('why the hue cannot be the ink here, measured', () => {
       }),
     )
 
-    // WOW's gold is the large miss and the one its own declaration already
-    // records from the other side (`--faction-wow-on-fill`: "white only
-    // 2.15:1"). Clearing 4.5:1 on the frost needs an ink of relative luminance
-    // <= 0.1774; the hue sits at 0.4385, so it would have to shed 60 % of its
-    // luminance and land near rgb(148, 111, 0) — a bronze, not this kit's gold —
-    // and `--faction-wow-on-fill` (#14110b, 8.76:1 on the hue) would stop
-    // clearing on the fill it was measured for. That is the ceiling: it is not
-    // that nobody found the right yellow, it is that there is no yellow.
-    expect(measured.wow.page).toBeLessThan(AA_NORMAL)
-    expect(measured.wow.frost).toBeLessThan(AA_NORMAL)
+    // THE LARGE MISS MOVED FACTIONS IN #2068 AND THE ARITHMETIC DID NOT.
+    // It was WOW's gold (1.96:1 on the page, 2.09 on the frost). WOW vacated the
+    // yellow slot for a plum and Ephemerists took a brass, so the miss is now
+    // Ephemerists' — 2.19:1 and 2.34:1 — and its own declaration records the same
+    // measurement from the other side (`--faction-ephemerists-on-fill`: "white
+    // only 2.40:1"), exactly as WOW's did. The ceiling is unchanged and is still
+    // arithmetic rather than a failure of search: clearing 4.5:1 on the frost
+    // needs an ink of relative luminance <= 0.1776, this hue sits at 0.3877 (the
+    // gold it replaced sat at 0.4385), so a passing colour on its own hue line is
+    // a dark bronze and `--faction-ephemerists-on-fill` would stop clearing on
+    // the fill it was measured for. The brass says so at its own declaration in
+    // index.css — "rules, borders — never an ink".
+    expect(measured.ephemerists.page).toBeLessThan(AA_NORMAL)
+    expect(measured.ephemerists.frost).toBeLessThan(AA_NORMAL)
+
+    // And WOW now CLEARS both grounds — 5.80:1 and 6.20:1 — which is asserted so
+    // that this row keeps saying something. #1932 concluded "there is no yellow",
+    // and the fix was never a yellow: #2068 gave the spine the plum the chronicle
+    // skin already wore. The page still paints no hue as text (the guard above),
+    // because the rule is about the SLOT and not about which faction is failing
+    // it this week — but a reader who finds WOW in a list of misses would be
+    // reading a stale file.
+    expect(measured.wow.page).toBeGreaterThanOrEqual(AA_NORMAL)
+    expect(measured.wow.frost).toBeGreaterThanOrEqual(AA_NORMAL)
 
     // UA is the near miss, and it is instructive: 4.46:1 on the bare page while
     // clearing on the frost. `--faction-ua-on-fill`'s comment measured the hue
@@ -243,10 +260,10 @@ describe('why the hue cannot be the ink here, measured', () => {
     // per-faction on-page ink tier is minted to rescue a 0.04 shortfall.
     expect(measured.ua.page).toBeLessThan(AA_NORMAL)
 
-    // The other five clear, and they are asserted so that a repaint of any one
-    // of them cannot quietly join the two above while this file still reads as
-    // if it were about WOW and UA only.
-    for (const key of ['everymen', 'ephemerists', 'singularity'] as const) {
+    // The rest clear, and they are asserted so that a repaint of any one of them
+    // cannot quietly join the misses above while this file still reads as if it
+    // were about two factions.
+    for (const key of ['everymen', 'singularity'] as const) {
       expect(measured[key].page).toBeGreaterThanOrEqual(AA_NORMAL)
     }
     // snide's acid and coven's pink are under AA on this ground too. They are

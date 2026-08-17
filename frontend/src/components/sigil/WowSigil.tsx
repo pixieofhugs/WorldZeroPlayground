@@ -24,10 +24,17 @@ import type { SigilVariantProps } from "./FactionSigil";
  * the token that word already names in this repo — declared once in `:root` and
  * theme-INVARIANT, which is right for a struck mark: the crest was invariant for
  * the same reason and the chrome that FRAMES the mark is what carries the
- * cascade. WOW's spine hue `--faction-wow` is a gold (`#e0a800`), and #1932
- * measured what happens when that gold is asked to be a figure rather than a
- * fill — 1.96:1 on the page — so the design choosing plum here is the same
- * arithmetic arriving from the drawing side.
+ * cascade. When this was written WOW's spine hue `--faction-wow` was a gold
+ * (`#e0a800`) and #1932 had measured what happens when that gold is asked to be
+ * a figure rather than a fill — 1.96:1 on the page — so the design choosing plum
+ * here was the same arithmetic arriving from the drawing side.
+ *
+ * SINCE #2068 THE SPINE IS THE SAME PLUM, AND THIS STILL IS NOT `--faction-wow`.
+ * The hue is `#7a4a9e` in light — byte-identical to `-plum-surface` — and
+ * `#a875c9` in dark, because a spine hue lifts for the dark page. A struck mark
+ * does not: the invariant token is the whole reason the crown reads the same on
+ * every one of its eight mounts, light or dark. Two tokens, one value in one
+ * theme, and the one that moves is not this one.
  *
  * The mark is drawn ONCE here and reused by every WOW surface that carries it
  * (masthead, avatar, decree task card, faction hero, backdrop watermark, mobile
