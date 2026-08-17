@@ -49,6 +49,15 @@ import SingularityLamps from "../factionMarks/SingularityLamps";
 
 const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
 
+/**
+ * The face that idles beside the sign-up key (#2036) — three lines of
+ * characters, which is why this ornament costs the bundle almost nothing.
+ *
+ * Text, and therefore ornament for assistive tech: the element that carries it
+ * is `aria-hidden` and is not inside the button.
+ */
+const BOT = "[^-^]\n /|_|\\\n  d b";
+
 const BG = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
 const DIM = "var(--faction-singularity-term-dim)";
@@ -296,13 +305,22 @@ export default function SingularityTaskCard({
           </Link>
 
           {cta && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr auto 1fr",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+                marginTop: "var(--space-lg)",
+              }}
+            >
               <button
                 type="button"
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
                   ...CARD_CTA,
+                  gridColumn: 2,
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   whiteSpace: "nowrap",
                   fontFamily: MONO,
@@ -332,6 +350,40 @@ export default function SingularityTaskCard({
                   }}
                 />
               </button>
+
+              {/* The little robot idling in the right gutter (#2036). It is
+                  ornament: `aria-hidden`, and OUTSIDE the button, so it never
+                  joins the control's accessible name (epic #2027, ruling 4).
+                  Its drift is `.sg-ascii` in index.css, behind the shared
+                  reduced-motion gate — stilled it stays parked, drawn.
+
+                  WHY A GRID COLUMN AND NOT `position:absolute`. The design
+                  parks it at `right:18px` over a centred flex row, which is
+                  what a spec sheet mutating someone else's DOM has to do. Here
+                  the two are siblings in two columns of one grid, so they
+                  cannot overlap at any card width and the 44px tap target stays
+                  whole — the same reasoning `CardMasthead` uses for its equal
+                  `1fr` gutters, and the button sits on the card's centreline
+                  for the same reason. `minWidth: 0` lets the gutter collapse
+                  under the longest denial label ("Applied to praxis, not
+                  claimed"): the ornament clips, the control never does. */}
+              <pre
+                aria-hidden="true"
+                className="sg-ascii"
+                style={{
+                  gridColumn: 3,
+                  justifySelf: "center",
+                  minWidth: 0,
+                  overflow: "hidden",
+                  margin: 0,
+                  fontFamily: MONO,
+                  fontSize: "var(--text-lg)",
+                  lineHeight: 1.2,
+                  color: DIM,
+                }}
+              >
+                {BOT}
+              </pre>
             </div>
           )}
         </div>

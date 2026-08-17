@@ -4332,6 +4332,12 @@
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
+  /* The task card's ASCII face drifts beside the sign-up key (#2036). No new
+     keyframe: `spec-rise` is already a bob to a tunable height, and this file
+     already reuses across factions where the motion is the same shape
+     (`.coven-moon-dust` runs `eph-twinkle`). Stilled, the robot stays parked
+     and drawn — it is ornament, not an indicator. */
+  .sg-ascii { --spec-bounce: -5px; animation: spec-rise 6s ease-in-out infinite; }
 }
 
 /* ══ Praxis-card redesign vote widgets (#821) ══
