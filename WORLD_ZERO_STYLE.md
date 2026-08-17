@@ -817,6 +817,12 @@ Owner ruling, dated 2026-08-14, and the reason it is written down is that every 
 
 **Not everything called tape is this tape.** SNIDE's task detail draws diagonal HAZARD stripes on its action plate, and its praxis detail hangs "taped-up clippings" along a rail. Both are different visual families, both stay, and neither reaches for the retired name — which is why the guard needs no exceptions list. The test for the ruling is "does it look like a strip of tape", never "does the identifier contain the string".
 
+### A surface that floats its own corner mark must SUPPRESS the card's (#1960)
+
+A praxis card carries its own Task Crown, drawn by `ScoreStamp` in the score tag's corner whenever the praxis is top for its task. Three surfaces float a *second* fleur medallion over the same corner from outside the card — the six faction-page bodies, and the character profile's laurel over the character's highest-scoring praxis. The faction pages pass `showCrown={false}`; the profile did not, so on a praxis that was both top-for-task and the profile's best, two medallions stacked in one corner and the smaller one's rim escaped past the larger one's edge. It reads as one mark drawn wrong, which is what the bug report said, and it is really **two marks the reader has no way to tell apart** — the same failure as a faction wearing two heads (#1634), one level down.
+
+**The rule is the mark, not the meaning.** The profile's laurel means "this character's best" and the card's crown means "best for this task"; they are different facts wearing one drawing, so they cannot both be shown at that size in that corner and only the outer one survives. `showCrown` is where that decision lives, and the question to ask at any mount that decorates a card's corner is *does the card already draw something here?* — the built-in mark is on by default, so a new surface inherits the collision silently.
+
 ---
 
 ## 7. Components
