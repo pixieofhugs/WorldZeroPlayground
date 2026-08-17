@@ -144,7 +144,7 @@ export default function InvitationLetterPopup({
         border: `2px solid ${border}`,
         borderRadius: 12,
         padding: 'var(--space-xl)',
-        boxShadow: '0 18px 46px -14px rgba(26,18,9,0.5)',
+        boxShadow: '0 18px 46px -14px var(--color-cast-shadow)',
         textAlign: 'left',
         fontFamily: FONT_BODY,
       }}
@@ -387,7 +387,7 @@ export default function InvitationLetterPopup({
         justifyContent: 'center',
         padding: 'var(--space-xl)',
         zIndex: 1000,
-        background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
+        background: 'var(--color-overlay-strong)',
       }}
     >
       <div onClick={(e) => e.stopPropagation()}>{card}</div>

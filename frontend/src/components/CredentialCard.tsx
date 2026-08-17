@@ -101,7 +101,7 @@ export default function CredentialCard({
     background: 'var(--fc-bg)',
     color: 'var(--fc-text)',
     border: skin.border,
-    boxShadow: '0 16px 34px rgba(0,0,0,0.18)',
+    boxShadow: '0 16px 34px var(--color-cast-shadow)',
     // §4a asymmetric-inset exception: 18/20/16 is optical trim on a near-uniform
     // inset, so the tie rounds DOWN to one rung rather than inverting the shape.
     padding: 'var(--space-lg)',
@@ -150,7 +150,7 @@ export default function CredentialCard({
             background: skinned ? 'var(--fc-accent)' : 'var(--faction-default-rainbow-conic)',
             border: 'none',
             cursor: onAvatarClick ? 'pointer' : 'default',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+            boxShadow: '0 4px 14px var(--color-cast-shadow)',
           }
           const inner = (
             <div

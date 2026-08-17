@@ -99,7 +99,10 @@ function FdlLaurel() {
         zIndex: 20,
         width: 44,
         height: 44,
-        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))',
+        // Same cast as the two boxShadows below, and the rule cannot see it:
+        // `filter` is not a COLOUR_PROP, so this one was laundered past the
+        // ratchet by the property it was written on rather than by its value.
+        filter: 'drop-shadow(0 4px 8px var(--color-cast-shadow))',
       }}
     >
       <span
@@ -377,7 +380,7 @@ function DesktopProfile({
           borderRadius: 16,
           padding: 'var(--space-xs)',
           background: 'var(--faction-default-rainbow)',
-          boxShadow: '0 20px 50px -26px rgba(0,0,0,0.4)',
+          boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
           marginBottom: 'var(--space-2xl)',
         }}
       >
@@ -648,7 +651,7 @@ function MobileProfile({
             borderRadius: 16,
             padding: 'var(--space-xs)',
             ...factionFill(character.faction_slug, 'bar'),
-            boxShadow: '0 20px 50px -26px rgba(0,0,0,0.4)',
+            boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
           }}
         >
           {identityOrnament}

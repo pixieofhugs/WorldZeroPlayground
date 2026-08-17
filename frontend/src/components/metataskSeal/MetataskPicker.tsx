@@ -83,7 +83,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
         padding: isMobile ? 0 : "var(--space-lg)",
         background: isMobile
           ? "var(--color-bg-page)"
-          : "radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))",
+          : "var(--color-overlay-strong)",
       }}
     >
       <div

@@ -53,7 +53,7 @@ export function CollabSuccess({
         // Mobile fills the screen outright; desktop dims the composer behind.
         background: isMobile
           ? 'var(--color-bg-page)'
-          : 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))',
+          : 'var(--color-overlay-strong)',
       }}
     >
       <div

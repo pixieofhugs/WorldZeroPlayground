@@ -33,6 +33,13 @@ const lint = async (code: string, filePath = 'src/rawColourFixture.tsx'): Promis
 const reports = async (code: string, filePath?: string): Promise<boolean> =>
   (await lint(code, filePath)).length > 0
 
+/** The un-migrated paths on the shrink-only list, comments stripped. */
+const legacyEntries = (): string[] =>
+  readFileSync(new URL('../../.eslint-legacy-raw-colours.txt', import.meta.url), 'utf8')
+    .split('\n')
+    .map((line) => line.split('#')[0].trim())
+    .filter(Boolean)
+
 describe('local/no-raw-colour-values reports raw colour', () => {
   it('flags a colour function inside a shadow string — the #1851 shape', async () => {
     expect(await reports("export const s = { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }")).toBe(
@@ -111,11 +118,13 @@ describe('local/no-raw-colour-values stays silent where colour is tokenized', ()
   })
 
   it('says nothing in a file on the legacy list', async () => {
+    // Read from the LIST rather than naming a file. A hardcoded path here is a
+    // fixture that goes red the day someone migrates that file — which is the
+    // one thing this list is for, so the check would be punishing the work it
+    // exists to track. (#1609 hit exactly that: the fixture named
+    // `AlbescentInvitation.tsx`, and burning group 2 down broke it.)
     expect(
-      await lint(
-        "export const s = { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }",
-        'src/components/AlbescentInvitation.tsx',
-      ),
+      await lint("export const s = { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }", legacyEntries()[0]),
     ).toEqual([])
   })
 
@@ -126,13 +135,7 @@ describe('local/no-raw-colour-values stays silent where colour is tokenized', ()
 
 describe('the legacy list stays honest', () => {
   it('is not empty, and every entry is a real path the rule can be turned off for', async () => {
-    const entries = readFileSync(
-      new URL('../../.eslint-legacy-raw-colours.txt', import.meta.url),
-      'utf8',
-    )
-      .split('\n')
-      .map((line) => line.split('#')[0].trim())
-      .filter(Boolean)
+    const entries = legacyEntries()
 
     expect(entries.length).toBeGreaterThan(0)
     // A path that no longer exists is a line nobody can delete by migrating it,
