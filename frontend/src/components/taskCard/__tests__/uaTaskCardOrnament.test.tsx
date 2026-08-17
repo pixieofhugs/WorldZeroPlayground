@@ -16,6 +16,9 @@
  * primitive SIX other UA surfaces mount — a regression there is invisible on
  * this card and wrong on the faction hero.
  */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -136,5 +139,139 @@ describe('the flanking mandalas lose their outer boundary ring (#2031)', () => {
 
   it('still draws it everywhere else — the primitive default is unchanged', () => {
     expect(renderToStaticMarkup(<UaMandala size={240} />)).toMatch(BOUNDARY)
+  })
+})
+
+/**
+ * The petal pop and the hue cycle (#2072).
+ *
+ * The seam is the JOIN between this markup and `src/motion.ornament.css`: the
+ * component publishes per-band custom properties and the sheet's keyframes read
+ * them. Neither half can be checked alone, and the two ways this ships broken
+ * are both invisible in a passing build —
+ *
+ *  - the pop opens at `opacity: 0`, so a band whose REST is not one of the
+ *    animation's own drawn frames leaves a reduced-motion reader (or anyone the
+ *    deferred sheet has not reached yet) looking at a rosette with no petals;
+ *  - the plateau is `var(--ua-band-alpha)` rather than `1` precisely so the
+ *    figure's depth survives the animation, which only holds while the property
+ *    the component sets and the frame the keyframe draws stay the same number.
+ *
+ * So the keyframe is PARSED and compared against the markup, rather than either
+ * number being re-typed here.
+ */
+describe('the flanking mandalas pop and cycle hue (#2072)', () => {
+  const SHEET = readFileSync(
+    fileURLToPath(new URL('../../../motion.ornament.css', import.meta.url)),
+    'utf8',
+  )
+
+  /** One `@keyframes NAME { … }` body, brace-matched. */
+  function keyframes(name: string): string {
+    const at = SHEET.indexOf(`@keyframes ${name}`)
+    if (at < 0) throw new Error(`no @keyframes ${name} in src/motion.ornament.css`)
+    const open = SHEET.indexOf('{', at)
+    let depth = 1
+    let index = open + 1
+    while (index < SHEET.length && depth > 0) {
+      if (SHEET[index] === '{') depth += 1
+      else if (SHEET[index] === '}') depth -= 1
+      index += 1
+    }
+    return SHEET.slice(open + 1, index - 1)
+  }
+
+  /** Every band `<g>` of the start flank, opening tag only. */
+  function bands(html: string): string[] {
+    return [...flankSlot(html, 'start').matchAll(/<g [^>]*class="ua-mandala-pulse[^>]*>/g)].map(
+      (m) => m[0],
+    )
+  }
+
+  it('runs both animations on every band, one hue variant per ring', () => {
+    const html = render()
+    // rings={3}: hub outward, the inner cycle, the mid, then the outer.
+    expect(bands(html).map((g) => g.match(/ua-mandala-pulse--(\w+)/)?.[1])).toEqual([
+      'inner',
+      'mid',
+      'outer',
+    ])
+    for (const flank of ['start', 'end'] as const) {
+      expect(flankSlot(html, flank), flank).toContain('ua-mandala-pulse')
+    }
+  })
+
+  it('staggers the bands from their index, and opens the hue cycle mid-way', () => {
+    const html = render()
+    const prop = (g: string, name: string): string =>
+      g.match(new RegExp(`${name}:\\s*([^;"]+)`))?.[1] ?? ''
+    expect(bands(html).map((g) => prop(g, '--ua-pop-delay'))).toEqual(['0s', '0.8s', '1.6s'])
+    // NEGATIVE: each band is already mid-cycle on first paint (#2072).
+    expect(bands(html).map((g) => prop(g, '--ua-hue-delay'))).toEqual(['-0.4s', '-1.8s', '-3.2s'])
+  })
+
+  it('never writes an inline animation — that would bypass the gate', () => {
+    // The classes are the only route to motion, and every rule behind them is
+    // inside `@media (prefers-reduced-motion: no-preference)`.
+    expect(render()).not.toContain('animation')
+    for (const rule of ['.ua-mandala-pulse ', '.ua-mandala-pulse--outer']) {
+      const at = SHEET.indexOf(rule)
+      expect(at, rule).toBeGreaterThan(-1)
+      const gate = SHEET.lastIndexOf('@media (prefers-reduced-motion: no-preference)', at)
+      expect(gate, rule).toBeGreaterThan(-1)
+      // …and no gate closed between that wrapper and the rule.
+      expect(SHEET.slice(gate, at)).not.toMatch(/^\}/m)
+    }
+  })
+
+  it('stills to the drawn figure: full petals at the pop’s own plateau', () => {
+    // The pop opens at 0 and the sheet may never arrive, so the rest state has
+    // to be a frame the animation actually holds. It is the band's `opacity`
+    // attribute — untouched markup — and the keyframe interpolates to exactly
+    // that number through `--ua-band-alpha`.
+    const pop = keyframes('ua-petal-pop')
+    expect(pop).toMatch(/0%\s*\{\s*opacity:\s*0\b/)
+    expect(pop).toContain('opacity: var(--ua-band-alpha, 1)')
+
+    const html = render()
+    const drawn = bands(html)
+    expect(drawn).toHaveLength(3)
+    for (const g of drawn) {
+      const attribute = g.match(/opacity="([\d.]+)"/)?.[1]
+      const published = g.match(/--ua-band-alpha:\s*([\d.]+)/)?.[1]
+      expect(attribute, g).toBe(published)
+      expect(Number(attribute)).toBeGreaterThan(0)
+    }
+    // Every petal is drawn either way: 3 rings x 8 petals, per flank.
+    expect(flankSlot(html, 'start').match(/<path/g) ?? []).toHaveLength(24)
+  })
+
+  it('cycles `fill` from the ramp, never `color` and never a hex', () => {
+    // `currentColor` on this row resolves to the leaf's BODY INK — the trap
+    // UaTaskCard's docstring names. Animating `fill` leaves the primitive's own
+    // `--faction-ua-glow` as the resting hue.
+    for (const variant of ['ua-hue-outer', 'ua-hue-mid', 'ua-hue-inner']) {
+      const body = keyframes(variant)
+      expect(body, variant).not.toContain('color:')
+      expect(body, variant).not.toMatch(/#[0-9a-fA-F]{3}/)
+      expect(body.match(/fill:/g) ?? [], variant).not.toHaveLength(0)
+    }
+    // Both halves of every stop are declared, so the ramp is not a dark-only
+    // palette leaking onto the light card.
+    const css = readFileSync(
+      fileURLToPath(new URL('../../../index.css', import.meta.url)),
+      'utf8',
+    )
+    const stops = new Set(
+      ['ua-hue-outer', 'ua-hue-mid', 'ua-hue-inner']
+        .flatMap((name) => [...keyframes(name).matchAll(/var\((--[\w-]+)\)/g)])
+        .map((m) => m[1]),
+    )
+    expect(stops.size).toBe(9)
+    for (const stop of stops) {
+      const declarations = css.match(new RegExp(`${stop}:\\s*#[0-9a-f]{6}`, 'g')) ?? []
+      expect(declarations, `${stop} needs a light and a dark half`).toHaveLength(2)
+      expect(new Set(declarations).size, `${stop} declares the same hex twice`).toBe(2)
+    }
   })
 })
