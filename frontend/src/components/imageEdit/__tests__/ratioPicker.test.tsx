@@ -35,6 +35,8 @@ const RATIO_KEYS = [
   'imageEdit.ratio1x1',
   'imageEdit.ratio4x3',
   'imageEdit.ratio16x9',
+  // #1968 — the one taller-than-wide shape.
+  'imageEdit.ratio9x16',
 ] as const
 
 type CopyKey =

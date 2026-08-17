@@ -575,12 +575,14 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       )
       const html = text(markup)
       expectBaseRow(html, showsBase)
-      expect(html).toContain('tot')
+      // The word, not the abbreviation (#1966). `toContain('tot')` passed on
+      // either, which is why the label read TOT for as long as it did.
+      expect(html).toContain('total')
       // The terminal pads its output: two decimals, and a zero-padded votes row —
       // which is exactly the `+00` ADR-0076 stops it printing.
       expect(html).toContain(formatPoints(fields.score))
       expectVotesRow(html, showsVotes, `+${String(fields.points_from_votes).padStart(2, '0')}`)
-      // The read-out's rule sits between the register and `TOT`; an empty
+      // The read-out's rule sits between the register and the total; an empty
       // register has no register to rule off.
       if (showsBase) expect(markup).toContain('--faction-singularity-stamp-rule')
       else expect(markup).not.toContain('--faction-singularity-stamp-rule')
