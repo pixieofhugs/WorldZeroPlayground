@@ -108,8 +108,6 @@ export interface ProfileKit {
   /* ── progression panel ── */
   /** Style for the progression panel container. */
   progressionStyle: CSSProperties
-  /** Small label above the level number inside the ring (e.g. "lvl", "ANNO"). */
-  ringLabel: string
   /** Ink for that label. Defaults to `muted` — which is the RIGHT default and
    *  not a placeholder: the label sits inside the ring's disc, and the disc
    *  grounds on `surface`, which is the stock `muted` was measured for.
@@ -127,22 +125,12 @@ export interface ProfileKit {
   barTrack: string
   /** Render the level number (default: the integer; e.g. roman for ephemerists). */
   formatLevel?: (level: number) => string
-  /** Copy for "pts this level" (defaults to "pts this level"). */
-  levelUnitLabel?: string
-  /** Copy for "next · lvl {n}". */
-  nextLevelLabel: (nextLevel: number) => string
-  /** Copy for the absolute-score footer line ("{score} / {next} pts"). */
-  scoreFootnote?: (score: number, nextThreshold: number) => string
 
   /* ── section headings ── */
   /** Renders a section heading (⑤ praxis, proposed tasks). */
   sectionHeading: (title: string, eyebrow: string) => ReactNode
 
   /* ── praxis ── */
-  /** Eyebrow for the praxis section, e.g. "sealed by {name}". */
-  praxisEyebrow: (name: string) => string
-  /** Empty-state title + body copy for the praxis section. */
-  praxisEmpty: { title: string; body: string }
   /** Empty-state container style. */
   emptyStateStyle: CSSProperties
   /** The FDL laurel stamped on the top praxis (spectrum ring by default; some
@@ -150,8 +138,6 @@ export interface ProfileKit {
   laurel: ReactNode
 
   /* ── badges (③) ── */
-  /** Section title, e.g. "Distinctions", "Citations", "Commendations". */
-  badgeTitle: string
   /** Board container style. */
   badgeBoardStyle: CSSProperties
   /** Renders one badge row (medallion + name). */
@@ -161,26 +147,17 @@ export interface ProfileKit {
 }
 
 /**
- * The `ProfileKit` fields that are user-facing COPY rather than dress (#1858).
+ * A kit is dress ONLY — everything a faction can declare at module scope.
  *
- * They used to be raw English literals inside each kit — invisible to a
- * `locales/` sweep, so never reviewed and impossible to translate, while the na
- * kit beside them read `common.json` `profile.*` properly. The words now live in
- * `common.json` under `profile.<slug>.*` and a `<Faction>ProfileBody` resolves
- * them with `useTranslation`, because `t()` is only reachable inside a
- * component and a kit is a module-scope const.
+ * It used to carry seven copy fields too. #1858 moved their English out of the
+ * `.tsx` and into `common.json` under `profile.<slug>.*`, which is why each
+ * `<Faction>ProfileBody` grew a `useTranslation` and spread its resolved words
+ * over the dress. #1911 collapsed those seven families to one shared string
+ * each, so all seven kits were passing the SAME words — the knobs were
+ * indirection around a constant. `ProfileSkin` reads them itself now, once, and
+ * `ProfileDress` is the whole of a kit rather than a subtraction from it.
  */
-export type ProfileCopyField =
-  | 'ringLabel'
-  | 'levelUnitLabel'
-  | 'nextLevelLabel'
-  | 'scoreFootnote'
-  | 'praxisEyebrow'
-  | 'praxisEmpty'
-  | 'badgeTitle'
-
-/** A kit minus its copy: everything a faction can declare at module scope. */
-export type ProfileDress = Omit<ProfileKit, ProfileCopyField>
+export type ProfileDress = ProfileKit
 
 /** A reusable spectrum-ring FDL laurel (used by all colored factions; the
  *  colorless ones supply their own ink-outline variant). `ringBg` defaults to
@@ -461,8 +438,6 @@ export function ProfileSkin({
   const levelText = kit.formatLevel
     ? kit.formatLevel(character.level)
     : String(character.level)
-  // The shared unit, for the four kits that name no unit of their own.
-  const levelUnit = kit.levelUnitLabel ?? t('profile.levelUnit')
 
   const credential = (
     <CredentialCard
@@ -479,7 +454,10 @@ export function ProfileSkin({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
       {/* ── ⑤ Praxis ── */}
       <section>
-        {kit.sectionHeading(t('profile.praxisHeading'), kit.praxisEyebrow(character.display_name))}
+        {kit.sectionHeading(
+          t('profile.praxisHeading'),
+          t('profile.praxisEyebrow', { name: character.display_name }),
+        )}
         {submissions.length === 0 ? (
           <div style={kit.emptyStateStyle}>
             <div
@@ -489,7 +467,7 @@ export function ProfileSkin({
                 color: kit.ink,
               }}
             >
-              {kit.praxisEmpty.title}
+              {t('profile.praxisEmptyTitle')}
             </div>
             <div
               style={{
@@ -499,7 +477,7 @@ export function ProfileSkin({
                 marginTop: 'var(--space-xs)',
               }}
             >
-              {kit.praxisEmpty.body}
+              {t('profile.praxisEmptyBody')}
             </div>
           </div>
         ) : (
@@ -650,7 +628,7 @@ export function ProfileSkin({
                           color: kit.ringLabelInk ?? kit.muted,
                         }}
                       >
-                        {kit.ringLabel}
+                        {t('profile.lvl')}
                       </span>
                       <span
                         style={{
@@ -682,7 +660,7 @@ export function ProfileSkin({
                           color: headerMuted,
                         }}
                       >
-                        {pointsIntoLevel} / {levelSpan} {levelUnit}
+                        {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
                       </span>
                       <span
                         style={{
@@ -693,7 +671,7 @@ export function ProfileSkin({
                           color: headerMuted,
                         }}
                       >
-                        {kit.nextLevelLabel(progression.nextLevel)}
+                        {t('profile.nextLevel', { level: progression.nextLevel })}
                       </span>
                     </div>
                     <div
@@ -714,19 +692,13 @@ export function ProfileSkin({
                         }}
                       />
                     </div>
-                    {kit.scoreFootnote && (
-                      <div
-                        style={{
-                          fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                          // absolute score toward the next threshold: read, not scanned
-                          fontSize: 'var(--text-content)',
-                          color: headerMuted,
-                          marginTop: 'var(--space-xs)',
-                        }}
-                      >
-                        {kit.scoreFootnote(character.score, progression.nextThreshold)}
-                      </div>
-                    )}
+                    {/* An absolute-score footnote ("> 1880 PTS LOGGED") hung
+                        here, drawn only when a kit set `scoreFootnote`.
+                        Singularity was the one kit that did, #1909 CUT its
+                        string, and #1911 took the knob: a slot no kit can fill
+                        draws nothing, which is what the other six already
+                        looked like. `common:profile.ptsToNext` still holds the
+                        neutral wording if the line is ever wanted back. */}
                   </div>
                 </div>
               )}
@@ -771,7 +743,7 @@ export function ProfileSkin({
                 }}
               >
                 <h2 style={{ fontFamily: kit.displayFont, fontSize: 'var(--text-title)', margin: 0, color: kit.ink }}>
-                  {kit.badgeTitle}
+                  {t('profile.badgesHeading')}
                 </h2>
                 <span style={kit.badgeChipStyle}>{t('profile.badgesEarned', { count: badges.length })}</span>
               </div>

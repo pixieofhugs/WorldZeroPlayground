@@ -1,24 +1,28 @@
 /**
- * The seam: `<Faction>ProfileBody` → `ProfileSkin` → rendered words (#1858).
+ * The seam: `<Faction>ProfileBody` → `ProfileSkin` → rendered words (#1858 →
+ * #1911).
  *
- * The seven faction kits used to hold their English as raw literals; the words
- * now come from `common.json` `profile.<slug>.*`. The catalog test next door
- * proves the KEYS resolve — it cannot prove each kit reads its OWN key, and a
- * kit pointed at a neighbour's branch would render fluent, wrong, green copy.
+ * #1858 moved the seven kits' English out of raw `.tsx` literals and into
+ * `common.json` `profile.<slug>.*`, and this suite pinned each kit's own words
+ * so the MOVE could be read as a move. #1911 collapsed those seven families to
+ * one shared string each, so there are no per-kit words left — and the question
+ * inverts. It is no longer "does each kit read its OWN key"; it is "do all
+ * EIGHT kits render the SAME words".
  *
- * So this renders every faction profile and asserts the exact strings that
- * shipped before the extraction. It is a MOVE, not a rewrite: a copy review is
- * in flight separately, and these assertions are what makes its diff readable —
- * when it reworders a line, exactly one place here changes with it.
+ * That is the harder question after a 300-site sweep, and the one a catalog
+ * check cannot answer: a kit that kept a raw literal, or quietly lost a slot
+ * when its knob was removed, still typechecks and still renders. Only rendering
+ * all eight and reading the words back catches it.
  *
- * Empty `submissions` on purpose: the praxis empty state is copy on all seven
- * kits and is otherwise only reachable on a brand-new character.
+ * Empty `submissions` on purpose: the praxis empty state is copy on every kit
+ * and is otherwise only reachable on a brand-new character.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 
 import '../../../i18n'
+import i18n from '../../../i18n'
 import type { CharacterOut } from '../../../api/auth'
 
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
@@ -71,101 +75,65 @@ function renderText(factionSlug: string): string {
     .replace(/&amp;/g, '&')
 }
 
-/** Every string the kit used to carry as a literal, at level 7 → 8. */
-const KIT_COPY: Record<string, readonly string[]> = {
-  ua: [
-    'anno',
-    '380 / 500 points this anno',
-    'next · anno 8',
-    'Sealed by Reza',
-    'Nothing sealed yet',
-    'One true piece, then another. The first is always the boldest.',
-    'Seals of the practice',
-  ],
-  snide: [
-    'lvl',
-    '380 / 500 pts this level',
-    'next · lvl 8',
-    'cases closed by Reza',
-    'No priors. Yet.',
-    "Clean record's a bad look around here. Go pull a job.",
-    'The record',
-  ],
-  wow: [
-    'rank',
-    '380 / 500 huzzahs toward the next rank',
-    'next · rank 8',
-    'Chronicles sealed by Reza',
-    'No chronicle yet',
-    'The Court waits. Go and do something gloriously daft, then write it down.',
-    // WOW's badge heading was 'Honours & Credentials' (`profile.wow.honours`),
-    // shared with its phone stack. #1909 CUT the key with the rest of the
-    // `profile.wow.*` block, so the kit reads the SHARED 'Badges' — which is
-    // where #1910's `profileKit.{F}.badgeTitle` collapse settles every kit.
-    'Badges',
-  ],
-  coven: [
-    'lvl',
-    '380 / 500 pts this level',
-    'next · lvl 8',
-    'sealed by Reza',
-    'No spells sealed yet',
-    'The first bit of mischief is always the hardest ✦',
-    'Charms earned',
-  ],
-  ephemerists: [
-    'level',
-    '380 / 500 pvncta this level',
-    // The kit formats the level as a roman numeral; the catalog value takes
-    // whatever the kit hands it, so VIII must survive the {{level}} move.
-    'next · level VIII',
-    'Filed to the codex by Reza',
-    'The codex holds no entry yet',
-    'Walk a road, and set the first record down.',
-    'Concordances',
-  ],
-  everymen: [
-    'lvl',
-    '380 / 500 pts this level',
-    'NEXT · LVL 8',
-    'Work Reza finished',
-    'No work on the board yet',
-    'Answer a call. Put in the first shift.',
-    'Citations',
-  ],
-  singularity: [
-    'lvl',
-    '380 / 500 pts this level',
-    'next // lvl 8',
-    // It was the only kit with a score footnote — it named the absolute score,
-    // not the threshold, which is why it could not share na's `ptsToNext`.
-    // #1909 CUT `profile.singularity.scoreFootnote`, so no footnote is drawn.
-    'Sealed outputs // by Reza',
-    '> NO OUTPUT SEALED',
-    'Run a protocol. Cast the first signal.',
-    'Verified',
-  ],
-}
+/**
+ * Every word `ProfileSkin` now draws for a level-7 character 380/500 into the
+ * level, resolved from the catalog rather than written out — a copy edit to the
+ * shared string moves this suite with it instead of breaking it.
+ */
+const SHARED_COPY: readonly string[] = [
+  i18n.t('common:profile.lvl'),
+  i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 }),
+  i18n.t('common:profile.nextLevel', { level: 8 }),
+  i18n.t('common:profile.praxisEyebrow', { name: 'Reza' }),
+  i18n.t('common:profile.praxisEmptyTitle'),
+  i18n.t('common:profile.praxisEmptyBody'),
+  i18n.t('common:profile.badgesHeading'),
+]
 
-describe('faction profile kits render their catalog copy, unchanged', () => {
-  for (const [slug, strings] of Object.entries(KIT_COPY)) {
-    it(`${slug} says exactly what it said before the extraction`, () => {
+/** The eight kits `FactionProfileBody` dispatches to. */
+const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity']
+
+describe('every profile kit renders the one shared set of words (#1911)', () => {
+  it('has words to look for, so the loop below cannot pass by asserting nothing', () => {
+    expect(SHARED_COPY).toHaveLength(7)
+    for (const word of SHARED_COPY) expect(word.length).toBeGreaterThan(0)
+  })
+
+  for (const slug of SLUGS) {
+    it(`${slug} draws all seven, and none of them blank`, () => {
       const text = renderText(slug)
-      for (const expected of strings) {
+      for (const expected of SHARED_COPY) {
         expect(text, `${slug}: "${expected}"`).toContain(expected)
       }
     })
   }
 
   it('keeps the shared praxis section heading ProfileSkin owns', () => {
-    expect(renderText('coven')).toContain('Praxis')
+    expect(renderText('coven')).toContain(i18n.t('common:profile.praxisHeading'))
   })
 
-  it('leaves the na kit saying what it always said', () => {
-    const text = renderText('na')
-    expect(text).toContain('sealed by Reza')
-    expect(text).toContain('No praxis sealed yet')
-    expect(text).toContain('380 / 500 pts this level')
-    expect(text).toContain('next · lvl 8')
+  it('speaks none of the retired per-kit words', () => {
+    // One from each collapsed family, chosen where the kit's own wording was
+    // most distinct — a kit that kept a literal instead of losing its knob
+    // renders exactly these, and nothing else in this suite would notice.
+    const RETIRED = [
+      'anno', // ua ringLabel + levelUnit
+      'pvncta', // ephemerists levelUnit
+      'huzzahs toward the next rank', // wow levelUnit
+      'next · rank', // wow nextLevel
+      'next // lvl', // singularity nextLevel
+      'NEXT · LVL', // everymen nextLevel
+      'cases closed by', // snide praxisEyebrow
+      'Filed to the codex by', // ephemerists praxisEyebrow
+      'No spells sealed yet', // coven praxisEmptyTitle
+      '> NO OUTPUT SEALED', // singularity praxisEmptyTitle
+      'The codex holds no entry yet', // ephemerists praxisEmptyTitle
+      'Charms earned', // coven badgeTitle
+      'Concordances', // ephemerists badgeTitle
+      'Seals of the practice', // ua badgeTitle
+      'The record', // snide badgeTitle
+    ]
+    const all = SLUGS.map(renderText).join(' ')
+    for (const word of RETIRED) expect(all, word).not.toContain(word)
   })
 })

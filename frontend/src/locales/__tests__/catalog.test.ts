@@ -149,73 +149,57 @@ describe('UA taunts', () => {
 
 // #1858: the seven faction character-profile kits held their copy as raw
 // literals in `.tsx` — invisible to any `locales/` sweep, never reviewed,
-// untranslatable — while the na kit next to them was properly i18n'd. This
-// guards the SHAPE: every slug that ships a profile kit must resolve the full
-// set of copy keys its kit reads. A missing one throws at t() (the catalog's
-// missingKeyHandler), so a kit that quietly grows a raw literal back fails here
-// as soon as its key is listed, and a kit that drops one fails immediately.
-describe('faction profile kits keep their copy in the catalog', () => {
-  // Per slug, the `profile.<slug>.*` keys ProfileSkin reads. Not a uniform
-  // shape on purpose: `levelUnit` is an optional knob only some kits set (the
-  // rest take ProfileSkin's shared `profile.levelUnit`).
-  //
-  // Two rows lost an entry to #1909's CUT list rather than to a code change:
-  // WOW's badge heading was `profile.wow.honours` and Singularity was the one
-  // kit setting `scoreFootnote`. WOW's kit now reads the SHARED
-  // `profile.badgesHeading` and Singularity draws no footnote, which is what
-  // the other six already did — so neither key belongs in a per-slug list.
-  const PROFILE_KIT_KEYS: Record<string, readonly string[]> = {
-    ua: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    snide: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    wow: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody'],
-    coven: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    ephemerists: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    everymen: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    singularity: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-  }
+// untranslatable — while the na kit next to them was properly i18n'd. They
+// moved into `common.json` under `profile.<slug>.*`, and this guarded that
+// every slug resolved the full set its kit read.
+//
+// #1911 collapsed those seven families to one shared string each, so there is
+// no per-slug set left to enumerate — every kit reads the SAME keys, which
+// `ProfileSkin` now resolves itself rather than taking through seven knobs.
+// What is left to guard here is that the shared set exists and interpolates;
+// `characterProfile/__tests__/profileKitCopy.test.tsx` renders all eight kits
+// and reads the words back, which is the half a catalog check cannot do.
+describe('the profile kits share one set of copy in the catalog', () => {
+  const SHARED_KEYS = [
+    'lvl',
+    'ptsThisLevel',
+    'nextLevel',
+    'praxisEyebrow',
+    'praxisEmptyTitle',
+    'praxisEmptyBody',
+    'badgesHeading',
+    'praxisHeading',
+    'topPraxis',
+  ] as const
 
-  for (const [slug, keys] of Object.entries(PROFILE_KIT_KEYS)) {
-    it(`${slug} resolves every profile copy key its kit reads`, () => {
-      for (const key of keys) {
-        const value = i18n.t(`common:profile.${slug}.${key}` as 'common:profile.lvl')
-        expect(value, `${slug}.${key}`).toBeTypeOf('string')
-        expect(value.length, `${slug}.${key}`).toBeGreaterThan(0)
-      }
-    })
-  }
+  it('resolves every key ProfileSkin reads, none of them blank', () => {
+    for (const key of SHARED_KEYS) {
+      const value = i18n.t(`common:profile.${key}` as 'common:profile.lvl')
+      expect(value, key).toBeTypeOf('string')
+      expect(value.length, key).toBeGreaterThan(0)
+    }
+  })
 
-  it('has the two shared profile keys the skins fell back on', () => {
-    // `profile.levelUnit` was ProfileSkin's hardcoded `?? 'pts this level'`
-    // default and `profile.topPraxis` the laurel's `title=` — both live copy on
-    // eight surfaces, both outside the catalog until #1858.
-    expect(i18n.t('common:profile.levelUnit')).toBe('pts this level')
+  it('carries no per-faction profile branch any more', () => {
+    // `profile.levelUnit` went with them: it was ProfileSkin's `?? 'pts this
+    // level'` fallback for the four kits that named no unit, and the shared
+    // `ptsThisLevel` says the whole sentence.
+    const branches = catalogLeaves()
+      .map(([id]) => id)
+      .filter((id) => /^common\.json:profile\.(coven|ephemerists|everymen|singularity|snide|ua|wow)\./.test(id))
+    expect(branches).toEqual([])
     expect(i18n.t('common:profile.topPraxis')).toBe('Top praxis')
     expect(i18n.t('common:profile.praxisHeading')).toBe('Praxis')
-    expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('sealed by Reza')
   })
 
   it('interpolates the two copy fields that take a named variable', () => {
     // `nextLevelLabel(next)` and `praxisEyebrow(name)` were template literals.
     // A template literal cannot be translated; a named {{var}} can be moved
     // anywhere in the sentence, which is the whole point of the extraction.
-    expect(i18n.t('common:profile.coven.nextLevel', { level: 8 })).toBe('next · lvl 8')
-    // Ephemerists interpolates the ROMAN numeral its kit formats, not the int.
-    expect(i18n.t('common:profile.ephemerists.nextLevel', { level: 'VIII' })).toBe('next · level VIII')
-    expect(i18n.t('common:profile.everymen.praxisEyebrow', { name: 'Reza' })).toBe('Work Reza finished')
-  })
-
-  it('carries the odd characters over verbatim', () => {
-    // The copy review that follows #1858 rewords these; the MOVE may not. A
-    // stray ornament or a lost `> ` prefix would be a silent copy edit.
-    expect(i18n.t('common:profile.coven.praxisEmptyBody')).toBe(
-      'The first bit of mischief is always the hardest ✦',
-    )
-    expect(i18n.t('common:profile.singularity.praxisEmptyTitle')).toBe('> NO OUTPUT SEALED')
-    // `profile.singularity.scoreFootnote` ("> 1880 PTS LOGGED") was pinned here
-    // for its `> ` prefix. #1909 CUT the key; `praxisEmptyTitle` above still
-    // carries the prefix, so the character check is not lost with it.
-    expect(i18n.t('common:profile.snide.praxisEmptyBody')).toBe(
-      "Clean record's a bad look around here. Go pull a job.",
+    expect(i18n.t('common:profile.nextLevel', { level: 8 })).toBe('next · lvl 8')
+    expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('Submitted by Reza')
+    expect(i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 })).toBe(
+      '380 / 500 pts this level',
     )
   })
 })
