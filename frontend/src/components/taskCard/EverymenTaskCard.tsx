@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -139,6 +140,7 @@ export default function EverymenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.everymen.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -332,13 +334,15 @@ export default function EverymenTaskCard({
             </Link>
           </div>
 
-          {onSignup && (
+          {cta && (
             <button
-              onClick={() => onSignup(task.id)}
+              type="button"
+              onClick={cta.onPress}
+              aria-disabled={cta.denied || undefined}
               style={{
                 position: "relative",
                 zIndex: 2,
-                cursor: "pointer",
+                cursor: cta.denied ? "not-allowed" : "pointer",
                 width: "100%",
                 background: "var(--faction-everymen-bill-cta-bg)",
                 color: "var(--faction-everymen-bill-cta-ink)",
@@ -352,7 +356,7 @@ export default function EverymenTaskCard({
                 borderTop: `2px solid ${INK}`,
               }}
             >
-              {i18n.t("feed:taskCard.everymen.signup")}
+              {cta.label}
             </button>
           )}
         </div>

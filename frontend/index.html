@@ -34,12 +34,18 @@
          download. Harmless in dev, where the origin differs and the hint is
          simply unused. -->
     <link rel="preconnect" href="https://api.worldzero.org" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,500;1,600;1,700&family=Courier+Prime:wght@400;700&family=Special+Elite&family=Share+Tech+Mono&family=Bebas+Neue&family=Permanent+Marker&family=Caveat:wght@400;700&family=MedievalSharp&family=IM+Fell+English:ital@1&family=Cinzel:wght@400;500;600;700;800&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Quicksand:wght@400;700&family=Grenze+Gotisch:wght@400;600&family=Poiret+One&family=Spectral:ital,wght@0,400;1,400&display=swap"
-      rel="stylesheet"
-    />
+    <!-- The 18 faction faces used to be one render-blocking stylesheet on
+         fonts.googleapis.com, which needed the two preconnects that stood here
+         and still cost a serial hop: fetch Google's CSS, THEN discover the
+         gstatic woff2 URLs inside it. They are self-hosted now (#1977) —
+         `src/fonts.css` is @imported by index.css, so the @font-face rules
+         arrive inside the stylesheet the browser was already blocked on, from
+         an origin it is already connected to.
+
+         Deliberately no `rel="preload"` for the faces themselves. Which of the
+         41 a page needs depends on the visitor's faction and route, so a static
+         preload list would either be wrong or download faces nobody renders;
+         `font-display: swap` covers the gap. -->
   </head>
   <body>
     <div id="root"></div>

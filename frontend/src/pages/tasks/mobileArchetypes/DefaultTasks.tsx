@@ -86,13 +86,16 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
             {isMetatask ? (
               <MetataskSeal metatasks={tasks} />
             ) : (
+              // Same rule as the desktop list: the card decides claim-vs-reason
+              // off `task.signup_reason` (#1976), so this only decides whether
+              // there is a viewer to say anything to.
               tasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
                   basePoints={task.point_value}
                   multiplier={displayMultiplierFor(task)}
-                  onSignup={user && task.can_sign_up ? handleSignup : undefined}
+                  onSignup={user ? handleSignup : undefined}
                 />
               ))
             )}

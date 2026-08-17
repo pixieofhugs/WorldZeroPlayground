@@ -232,7 +232,9 @@ export default function Home() {
               newestTask.primary_faction_slug,
               factionConfigs,
             )}
-            onSignup={user && newestTask.can_sign_up ? handleSignup : undefined}
+            // The card decides claim-vs-reason off `newestTask.signup_reason`
+            // (#1976); this only decides whether there is a viewer at all.
+            onSignup={user ? handleSignup : undefined}
           />
         ) : (
           <p className="font-body text-muted">{t('sections.newestTask.empty')}</p>

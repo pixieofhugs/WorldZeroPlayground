@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -197,6 +198,7 @@ export default function SnideTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.snide.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -375,13 +377,15 @@ export default function SnideTaskCard({
           </Link>
         </div>
 
-        {onSignup && (
+        {cta && (
           <button
-            onClick={() => onSignup(task.id)}
+            type="button"
+            onClick={cta.onPress}
+            aria-disabled={cta.denied || undefined}
             style={{
               position: "relative",
               zIndex: 2,
-              cursor: "pointer",
+              cursor: cta.denied ? "not-allowed" : "pointer",
               width: "100%",
               background: "var(--faction-snide-note-cta-bg)",
               color: "var(--faction-snide-note-cta-ink)",
@@ -394,7 +398,7 @@ export default function SnideTaskCard({
               border: "none",
             }}
           >
-            {i18n.t("feed:taskCard.snide.signup")}
+            {cta.label}
           </button>
         )}
       </article>
