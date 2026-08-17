@@ -6,7 +6,7 @@
  * page `DefaultPraxisDetail` draws — same regions, same slots, same API
  * contract (ADR-0061) — wearing the ward the task detail (#1031) and the spell
  * slip (#1023) already established for this faction: a candlelight haze
- * drifting over the column, a pentagram watermark turning behind the copy,
+ * drifting over the column, a cat watermark turning behind the copy,
  * braided thread rules heading every section, and a candle flicker under the
  * score. Grenze Gotisch carries the display, Cormorant Garamond the reading
  * voice, Caveat the hand, Quicksand the chrome.
@@ -80,6 +80,7 @@ import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
 import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
+import { CovenCat } from '../../../components/factionMarks/covenSlip'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
@@ -118,7 +119,14 @@ const ASIDE_TRACK = 330
 interface SizeSet {
   /** The byline's ringed disc. Ornament geometry (WORLD_ZERO_STYLE §4a). */
   disc: number
-  /** The turning pentagram watermark. Ornament geometry. */
+  /**
+   * The turning cat watermark. Ornament geometry.
+   *
+   * It shrank with #2041: the pentacle was 620/420 with a quarter of it hung
+   * off the right edge, and a face may not be cropped that way. These are the
+   * sizes that sit wholly on the sheet — mobile's 240 + a 24px inset clears a
+   * 320px viewport, where 420 could not.
+   */
   wheel: number
   titleSize: string
   headingSize: string
@@ -127,13 +135,13 @@ interface SizeSet {
 const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
   desktop: {
     disc: 46,
-    wheel: 620,
+    wheel: 400,
     titleSize: 'var(--text-display)',
     headingSize: 'var(--text-title)',
   },
   mobile: {
     disc: 38,
-    wheel: 420,
+    wheel: 240,
     titleSize: 'var(--text-heading)',
     headingSize: 'var(--text-title)',
   },
@@ -727,32 +735,18 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           boxSizing: 'border-box',
         }}
       >
-        {/* The pentagram watermark, turning once every two minutes. `.cvn-wheel`
-            carries the motion and its reduced-motion guard (#911/#1023). */}
-        <svg
-          className="cvn-wheel"
-          width={size.wheel}
-          height={size.wheel}
-          viewBox="0 0 100 100"
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            right: desktop ? -170 : -140,
-            top: 140,
-            zIndex: 0,
-            pointerEvents: 'none',
-            opacity: 0.09,
-          }}
-        >
-          <circle cx="50" cy="50" r="44" fill="none" stroke={DEEP} strokeWidth="0.8" />
-          <path
-            d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
-            fill="none"
-            stroke={DEEP}
-            strokeWidth="1.1"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {/* The cat watermark, turning once every two minutes (#2041 — it was a
+            pentagram, and the drawing lives in `covenSlip` because five Coven
+            surfaces turn the same one). `.cvn-wheel` still carries the motion
+            and its reduced-motion guard (#911/#1023).
+
+            IT COMES INSIDE. `size.wheel` was 620/420 hung 170/140px off the
+            right edge, so a quarter of the mark was clipped — which a
+            radially-symmetric star survives and a face does not. The values
+            below are what fits wholly on the sheet at each width; `right`
+            stops being a form-factor branch because the offset no longer has
+            to hide a crop. */}
+        <CovenCat size={size.wheel} style={{ right: 24, top: 140, opacity: 0.09 }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           {banners}

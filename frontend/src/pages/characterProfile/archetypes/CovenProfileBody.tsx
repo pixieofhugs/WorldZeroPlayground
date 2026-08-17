@@ -2,7 +2,7 @@
  * CovenProfileBody — the Cozy Coven player profile, on the coven's own paper
  * (#460, re-dressed by #1209).
  *
- * The candlelit page under a turning pentagram watermark, every block a panel of
+ * The candlelit page under a slow-turning cat watermark, every block a panel of
  * ward paper inside the slip's pink edge, braided thread heading each section,
  * and the player's name hand-lettered in Caveat.
  *
@@ -13,10 +13,12 @@
  * they were painted in. Structure is DefaultProfileBody's locked spine via
  * `ProfileSkin`, unchanged — #1209 swaps the dress, not the layout.
  *
- * Two things kept on purpose. The **watermark** is `.cvn-wheel`, the same
- * slow-turning pentagram the task card and both detail pages draw, mounted as
- * the header's decoration where the pushpins were; index.css owns its motion and
- * its reduced-motion guard. And the **spectrum laurel** stays the shared
+ * Two things kept on purpose. The **watermark** is `.cvn-wheel`, mounted as the
+ * header's decoration where the pushpins were; index.css owns its motion and its
+ * reduced-motion guard. THE SHARING IS THE POINT AND IT IS WIDER THAN IT LOOKS —
+ * the same mark turns on the task card, both detail pages and the praxis
+ * composer, five surfaces in all, which is why #2041's pentagram-to-cat swap is
+ * one edit in `covenSlip` rather than five. And the **spectrum laurel** stays the shared
  * `SpectrumLaurel` — the top-praxis mark is site furniture (ADR-0028), not
  * faction ornament, and only its medallion is tinted.
  *
@@ -37,6 +39,7 @@ import {
   CAPTION,
   CARD,
   BORDER,
+  CovenCat,
   DEEP,
   DISPLAY,
   HAND,
@@ -96,27 +99,24 @@ function Sparkfield() {
   )
 }
 
-/** The slow-turning pentagram, watermarking the identity banner. */
+/**
+ * The slow-turning cat, watermarking the identity banner (#2041).
+ *
+ * SIZE IS NOT THE CARD'S. #2041 pins 190px on the task card and says in the
+ * same breath to pick this one by the mark's weight on the page rather than by
+ * pasting that number. The pentacle here was 420px with a ringed circle around
+ * it, hung 140px off the right and 80px above the top of a header that clips —
+ * about a 280×340 visible figure. 240px fully inside is the closest thing to
+ * that footprint the banner can hold without guessing at its height: the header
+ * carries a credential card and the progression panel stacked inside
+ * `var(--space-2xl)` of padding, so it never comes near 240 + 16 short.
+ *
+ * The ring goes with the pentacle. It was there to close the star's silhouette;
+ * a cat's head already closes its own, and a circle behind it reads as a second
+ * device rather than a frame.
+ */
 function Watermark() {
-  return (
-    <svg
-      className="cvn-wheel"
-      width={420}
-      height={420}
-      viewBox="0 0 100 100"
-      aria-hidden="true"
-      style={{ position: 'absolute', right: -140, top: -80, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }}
-    >
-      <circle cx="50" cy="50" r="44" fill="none" stroke={DEEP} strokeWidth="0.8" />
-      <path
-        d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
-        fill="none"
-        stroke={DEEP}
-        strokeWidth="1.1"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <CovenCat size={240} style={{ right: 16, top: 16, opacity: 0.08 }} />
 }
 
 /** Section heading — the display face, a braid, then the gloss. */

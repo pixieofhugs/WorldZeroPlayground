@@ -5,9 +5,9 @@
  *
  * The shared composer layout (`shared.tsx`) wearing Coven's dress: a centred
  * masthead of a turning pentacle disc under a twinkle field, a glow-and-lavender
- * ground carrying the coven wheel and a scatter of arcane glyphs, one braid of
- * thread closing the sheet, an 88px haloed ward for the points, a 40px pentacle
- * for the stage mark, and a full-bleed band for the cast.
+ * ground carrying the coven wheel's cat and a scatter of arcane glyphs, one
+ * braid of thread closing the sheet, an 88px haloed ward for the points, a 40px
+ * pentacle for the stage mark, and a full-bleed band for the cast.
  *
  * ## This REPLACES the `wow.exe` window wholesale
  *
@@ -55,7 +55,7 @@
  * Motion is reached by CLASS only: `.ep-spin` (the masthead disc at 42s, the
  * ward's spokes at 30s, both re-timed through `--ep-spin-dur`), `.ep-twinkle`
  * (the ward's five stars, staggered through `--ep-delay`) and `.cvn-wheel` (the
- * ground's pentagram, Coven's own 120s turn). Every keyframe already lives in
+ * ground's cat, Coven's own 120s turn). Every keyframe already lives in
  * `index.css` behind the shared `prefers-reduced-motion` guard; an inline
  * `animation:` would bypass that guard (#1003).
  *
@@ -71,6 +71,7 @@ import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
+import { CovenCat } from "../../../components/factionMarks/covenSlip";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
@@ -472,29 +473,18 @@ export default function CovenEditPraxis({ state }: Props) {
               background={`radial-gradient(62% 48% at 12% 0%, ${PINK}, transparent 70%), radial-gradient(58% 46% at 100% 100%, var(--faction-coven-slip-lav), transparent 72%)`}
             />
             {/* The wheel and the glyphs, on their own layer so each keeps its
-                own strength instead of inheriting the wash's. */}
+                own strength instead of inheriting the wash's.
+
+                THE WHEEL TURNS A CAT NOW (#2041) — the drawing is `covenSlip`'s
+                because five Coven surfaces share it, and it comes inside: 520px
+                hung 150px right and 110px below put a third of the mark off the
+                sheet, which is survivable for a star and not for a face. 240 at
+                a 16px inset is the size that fits the composer at its narrowest
+                (this file has no form-factor branch to size against, so the
+                figure is the narrow one and the wide sheet simply carries a
+                quieter mark). */}
             <ComposerGround inset={0}>
-              <svg
-                className="cvn-wheel"
-                width={520}
-                height={520}
-                viewBox="0 0 100 100"
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  right: -150,
-                  bottom: -110,
-                  opacity: 0.1,
-                }}
-              >
-                <path
-                  d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
-                  fill="none"
-                  stroke={DEEP}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <CovenCat size={240} style={{ right: 16, bottom: 16, opacity: 0.1 }} />
               <GlyphScatter />
             </ComposerGround>
           </>
