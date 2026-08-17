@@ -23,6 +23,7 @@ from models.duel import Duel, DuelStatus
 from models.flag import Flag
 from models.comment import Comment, CommentMention
 from models.relationship import Relationship
+from models.character_block import CharacterBlock
 from models.meta_task import PraxisMetaTask
 from models.contact import ContactMessage
 from models.taunt_message import TauntMessage
@@ -61,6 +62,7 @@ __all__ = [
     "Comment",
     "CommentMention",
     "Relationship",
+    "CharacterBlock",
     "PraxisMetaTask",
     "ContactMessage",
     "TauntMessage",
