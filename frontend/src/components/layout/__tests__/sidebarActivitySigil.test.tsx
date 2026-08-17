@@ -16,11 +16,12 @@
  * CONTEXT's mark. The panel is a window onto `/updates` and the mark has to
  * agree with the frame the player lands on when they click through.
  *
- * The neutral rows are asserted through the sampling expression rather than
- * through `AlbescentSigil`'s or `DefaultSigil`'s internals: #1891 deletes
- * `AlbescentSigil`, and a negative assertion naming it would have to be deleted
- * with it. `albescent` drawing the sampled ring is true before that issue lands
- * and after it.
+ * The neutral rows are asserted through the sampling EXPRESSION rather than
+ * through `DefaultSigil`'s internals, which is what has let this block survive
+ * three rulings on Albescent's mark without rewriting the mechanism each time.
+ * `albescent` is no longer one of them: Sigil Studies v2 gives it a mark of its
+ * own again and the owner has accepted these rows showing it, so it has its own
+ * case below and `na`/`default`/`null` keep theirs unchanged.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -131,12 +132,28 @@ describe('the rows with no faction still walk the spectrum', () => {
     return `var(--faction-default-rainbow) ${index * 20}% 0 / 600% 100%`
   }
 
-  it.each([null, 'na', 'default', 'albescent'])(
+  it.each([null, 'na', 'default'])(
     'draws %s on the sampled ring rather than a mark of its own',
     (slug) => {
       expect(railFor(slug)).toContain(sampledAt(0))
     },
   )
+
+  it('lets albescent draw its own labyrinth instead', () => {
+    // #1892 named `albescent` in the neutral set because #1891 had just deleted
+    // its mark, so the slug had none to draw. Sigil Studies v2 gives it the
+    // labyrinth and the owner has accepted these rows showing it — so the set
+    // is back to the slugs whose mark really IS the unaffiliated ring. Note the
+    // labyrinth would take the sampled background perfectly well (it is painted
+    // through a mask, like `DefaultSigil`); it is out of the set because its
+    // mark is no longer the ring, not because it could not be sampled.
+    const rail = railFor('albescent')
+    expect(rail, 'the labyrinth').toContain('/factionMarks/labyrinth.svg')
+    expect(rail, 'not the sampled ring').not.toContain(sampledAt(0))
+    // And na is undisturbed by the removal — the whole point of the set.
+    expect(railFor('na'), 'na still samples').toContain(sampledAt(0))
+    expect(railFor('na')).not.toContain('/factionMarks/labyrinth.svg')
+  })
 
   it('moves the sample down the column, as the dots did', () => {
     // Without this the neutral rows would all wear one identical ring and the

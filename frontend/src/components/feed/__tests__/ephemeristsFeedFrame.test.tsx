@@ -95,7 +95,9 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
     // was the winged sun disc until #1634 retired it kit-wide; this row was its
     // last caller anywhere, so the disc's own `plate-disc` medallion fill must
     // not survive here.
-    expect(html).toContain('M243 120 L55 272 L243 490 L425 272 Z')
+    // The kite's opening move. Redrawn brushed by Sigil Studies v2 — six fills
+    // on a square 100-unit box, where #1635's was a stroked diamond on 486x560.
+    expect(html).toContain('M19.1 30.8')
     expect(html).not.toContain('--faction-ephemerists-plate-disc')
     expect(html).toContain('epg-glyph')
   })
