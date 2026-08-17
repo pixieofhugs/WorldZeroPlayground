@@ -43,9 +43,13 @@ const ELIGIBILITY_ON = 'canSignUp'
  *     stamp above a rail — the exact inconsistency this epic exists to remove.
  *     It is now viewer-gated on `can_apply_metatask` (#1973); see below.
  *
- * The eligibility rail (#1130) keeps its `user &&` gate: the server answers `[]`
- * for an anonymous viewer, so it is a control that cannot work logged out, and
- * this page hides unusable controls rather than disabling them (STYLE §1.4).
+ * The eligibility rail (#1130) is gated on carrying a CHARACTER (#1972): the
+ * server answers `[]` for an anonymous viewer, so it is a control that cannot
+ * work logged out, and this page hides unusable controls rather than disabling
+ * them (STYLE §1.4). It is also the one rail that does not open on its
+ * `defaultValue` — the filter defaults ON for a character, which raises its
+ * applied chip in the bar, and that chip's `×` is the one-tap way back to the
+ * whole board.
  * Status keeps its viewer-gated segment count for the same reason — `retired`
  * and `pending` are a permission boundary, and a logged-out viewer gets two
  * segments, not four.
@@ -144,7 +148,11 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
     },
   )
 
-  if (user) {
+  // A CHARACTER, not merely a session (#1972): eligibility is a question about
+  // a life, so an account between characters has nothing to ask it about, and
+  // `readTaskFilters` forces the axis off for them. Same hide-don't-disable
+  // rule as the type rail above.
+  if (user?.character) {
     rails.push({
       key: 'eligibility',
       label: t('browse.eligibility'),
