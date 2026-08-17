@@ -74,6 +74,7 @@ def _build_member_out(
         character_id=member.character_id,
         character_display_name=member.character.display_name,
         has_submitted=member.has_submitted,
+        is_done=member.is_done,
         submitted_at=member.submitted_at,
         joined_at=member.joined_at,
         nudged_at=nudged_at,

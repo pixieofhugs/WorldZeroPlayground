@@ -269,6 +269,8 @@ export function editPraxisState(slug: string): EditPraxisState {
     cancelRemoveMetatask: noop,
     submitting: false,
     publish: anoop,
+    markDone: anoop,
+    propose: anoop,
     saveDraft: anoop,
     pullBack: anoop,
     reopenForEdit: anoop,
@@ -285,11 +287,10 @@ export function editPraxisState(slug: string): EditPraxisState {
     autosaveAt: null,
     setAutosaveAt: () => {},
     autoSubmitDays: null,
-    // Drafting, so the shared document is open (#1745).
-    documentFrozen: false,
-    // Nothing has sealed under this preview: no room, so no 4001 (#1931).
-    sealedMidEdit: false,
-    noteRoomSealed: noop,
+    // Drafting: no proposal is live, so the editor asks nothing (ADR-0079).
+    // #1745's `documentFrozen` and #1931's seal latch went with the freeze.
+    proposalConfirmArmed: false,
+    confirmProposalEdit: noop,
     isPublished: false,
     controlsLocked: false,
     modeIsLocked: false,

@@ -18,33 +18,12 @@
  */
 export const WS_POLICY_VIOLATION = 1008;
 
-/**
- * What the room hangs up with when the praxis it holds **freezes** —
- * `_WS_ROOM_FROZEN` in `backend/services/praxis_room.py` (#1808 / PR #1923).
- *
- * A private-use code (RFC 6455 reserves 4000-4999) and deliberately **not**
- * 1008: a frozen praxis still answers its members' `SYNC_STEP1`, so the member
- * must be able to come back and read the write-up that was just sealed. Sent
- * on the open→frozen *transition* only, so it never reaches someone opening an
- * already-frozen praxis.
- *
- * **This is the wire contract.** A backend test pins the literal as well as
- * the constant, so renumbering either side fails in CI rather than in a
- * browser. Do not renumber it here.
- */
-export const WS_ROOM_FROZEN = 4001;
-
-/**
- * Did this close mean "the praxis froze under you"?
- *
- * The only thing on the client that can know. `documentFrozen` is derived from
- * the fetched praxis, and nothing refetches it on its own — so without this
- * the holdout's editor stays writable, they keep typing, and the server keeps
- * dropping it (#1931). What follows a `true` here lives in `roomSeal.ts`.
- */
-export function isRoomSealedClose(code: number): boolean {
-  return code === WS_ROOM_FROZEN;
-}
+/* #1808's `WS_ROOM_FROZEN` (4001) and `isRoomSealedClose` are gone with the
+ * state they announced (ADR-0079, #1811). The freeze existed to make `pending`
+ * unwritable; `pending` is writable now, the server sends 1008 and nothing
+ * else, and a client special-case for a code that can no longer arrive is a
+ * handler nobody can ever prove still works. What replaced the freeze is one
+ * confirmation on the first keystroke — `proposalGuard.ts`. */
 
 /**
  * How many consecutive failures a room that has never opened will tolerate.
@@ -74,12 +53,6 @@ export function shouldReconnectRoom(
 ): boolean {
   // Door two, post-accept: the member was kicked. Re-asking changes nothing.
   if (code === WS_POLICY_VIOLATION) return false;
-  // {@link WS_ROOM_FROZEN} is NOT listed here, and that is the point of its
-  // being a private code rather than a second 1008: a sealed room still serves
-  // reads, so the member reconnects and gets the sealed text back. What stops
-  // them typing into it is the freeze — see `roomSeal.ts` — not a refusal to
-  // reconnect. It falls through to `hasOpened`, which a sealed room always has.
-
   // Everything else asks one question instead of reading a status the browser
   // never received. A refusal always fails BEFORE the first open — the viewer
   // was never admitted, so the offline store holds nothing that could merge and

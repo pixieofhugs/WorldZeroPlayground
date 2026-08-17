@@ -23,7 +23,11 @@ import type { DuelDetailOut, DuelStatus } from "../../../../api/duel";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { deriveEditPraxisPhase } from "../../useEditPraxis";
 import { collabCopy } from "../../../../components/collab/collabCopy";
-import { PublishButton, type PublishButtonSkin } from "../controls";
+import {
+  CollabSignals,
+  PublishButton,
+  type PublishButtonSkin,
+} from "../controls";
 
 function member(id: number, cast: boolean): PraxisMemberOut {
   return {
@@ -32,6 +36,7 @@ function member(id: number, cast: boolean): PraxisMemberOut {
     character_id: id,
     character_display_name: `M${id}`,
     has_submitted: cast,
+    is_done: false,
     joined_at: "2026-01-01T00:00:00Z",
     nudged_at: null,
     submitted_at: null,
@@ -172,65 +177,20 @@ function expectComposerMounts(state: EditPraxisState): void {
   expect(deriveEditPraxisPhase(state.praxis, state.duel, 1)).toBe("composing");
 }
 
-describe("PublishButton — collab cast/pull-back gate (#646)", () => {
-  it("a multi-member collab I have not cast shows the cast label and calls publish", () => {
-    const publish = vi.fn(async () => {});
-    const pullBack = vi.fn(async () => {});
-    const state = collabState([member(1, false), member(2, false)], {
-      publish,
-      pullBack,
-    });
+describe("PublishButton — a multi-member collab hands over to CollabSignals (#1811)", () => {
+  // The routing claim only. What the three affordances say and do is
+  // `collabSignals.test.tsx`, which walks every skin.
+  it("draws the signal group rather than a fourth relabelling of one button", () => {
+    const state = collabState([member(1, false), member(2, false)]);
     const el = renderButton(state);
-
-    expect(renderToStaticMarkup(el)).toContain(collabCopy(null, "castAction"));
-    el.props.onClick();
-    expect(publish).toHaveBeenCalledTimes(1);
-    expect(pullBack).not.toHaveBeenCalled();
+    expect(el.type).toBe(CollabSignals);
   });
 
-  // Re-described by #1177, exactly like the duel cases below. An unmoderated
-  // collab member who has cast derives `waiting`, so the archetype shows
-  // `PraxisWaitingSurface` and never builds this footer; the `iCast` route
-  // survives on the MODERATED composer, reached by the identical short-circuit
-  // (`deriveEditPraxisPhase` tests moderation before the collab branch). The two
-  // halves of the condition live or die together, so both are asserted.
-  it("once I have cast on a failed collab it shows the pull-back label and calls pullBack", () => {
-    const publish = vi.fn(async () => {});
-    const pullBack = vi.fn(async () => {});
-    const state = collabState([member(1, true), member(2, false)], {
-      moderationStatus: "failed",
-      publish,
-      pullBack,
-    });
-    expectComposerMounts(state);
-    const el = renderButton(state);
-
-    expect(renderToStaticMarkup(el)).toContain(
-      collabCopy(null, "pullBackAction"),
-    );
-    el.props.onClick();
-    expect(pullBack).toHaveBeenCalledTimes(1);
-    expect(publish).not.toHaveBeenCalled();
-  });
-
-  it("is not the ordinary cast member's surface — that one derives a waiting stage", () => {
+  it("is not the approver's surface — that one derives a waiting stage", () => {
     const ordinary = collabState([member(1, true), member(2, false)]);
     expect(deriveEditPraxisPhase(ordinary.praxis, ordinary.duel, 1)).toBe(
       "waiting",
     );
-  });
-
-  it("resolves the idle label through collabCopy, in the one shared voice", () => {
-    const state = collabState([member(1, false), member(2, false)], {
-      factionSlug: "everymen",
-    });
-    const html = renderToStaticMarkup(renderButton(state));
-
-    // The Everymen used to override castAction ("Sign off on my part"); #1812
-    // deleted all eight blocks, so the footer button reads the same on every
-    // faction. The resolver is still the seam — that is what this asserts.
-    expect(html).toContain(collabCopy(null, "castAction"));
-    expect(html).not.toContain("Sign off on my part");
   });
 
   it("keeps the archetype's own idle label for a solo praxis", () => {

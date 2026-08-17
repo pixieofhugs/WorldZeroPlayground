@@ -83,10 +83,10 @@ async def test_done_is_reversible(
 ):
     """"Freely reversible" — a member who un-ticks Done leaves nothing behind.
 
-    Read off the row rather than the wire, because ``is_done`` is not on
-    ``PraxisMemberOut`` yet: adding a field to a response model makes it required
-    in the generated client (#1400), which is a frontend edit, and this issue's
-    pair (#1811) owns that half.
+    Asserted on the wire AND on the row. ``is_done`` reached
+    ``PraxisMemberOut`` in #1811, which is what lets the composer's Done toggle
+    come back the same after a reload; the row check stays because the wire
+    reading is only worth anything if it is the column's.
     """
     for value in (True, False, True):
         resp = await client.post(
@@ -95,6 +95,10 @@ async def test_done_is_reversible(
             headers=auth_headers,
         )
         assert resp.status_code == 200, resp.text
+        wire = next(
+            m for m in resp.json()["members"] if m["character_id"] == character.id
+        )
+        assert wire["is_done"] is value
 
         await db_session.commit()
         praxis = await db_session.get(Praxis, praxis_collab.id)
