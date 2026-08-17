@@ -73,21 +73,96 @@
 # WORLD_ZERO_STYLE.md §4a forbids. #1609 must decide per site, and a site that
 # stays raw stays on THIS list with the reason written down — never behind an
 # inline eslint-disable, which hides the decision from the next reader.
-src/components/factionCard/FactionCard.tsx
-src/components/factionHero/SingularityFactionHero.tsx
+#
+# WORKED THROUGH by #1609, per site: 18 files / 66 violations -> 12 files / 27.
+# Six files came off. The rule of decision was not "is this ornament" but
+# "does index.css ALREADY own this colour" — because a site whose answer is a
+# NEW token is a site that costs the one blocking stylesheet bytes it does not
+# have (§6, #2019: ornament for a lazy archetype belongs in the .tsx, and this
+# is measured). So nothing was minted. What moved, moved onto a name that was
+# already declared and in most cases already read by other surfaces:
+#
+#   - THREE AA FAILURES, all the same pairing. White on
+#     `--faction-snide-pink` measures 3.50:1 and `--faction-snide-paper` on it
+#     3.10:1; `--faction-snide-on-accent` is the ink that hue's own
+#     `-on-accent` line measured, at 5.38:1. The Field Desk's PRIMARY action
+#     was the 3.10. Five other surfaces that fill with this pink already inked
+#     it dark, so the outliers were the bug and not the rule.
+#   - A token's value hardcoded, which is group 1's defect wearing a faction
+#     name: `#d8d6c8` (the LIGHT value of `--faction-snide-card-muted`) in the
+#     faction body, `#cfcdbf` (its DARK value) in the hero, on surfaces that
+#     render in both. Plus `#e7e4d8` and `#b7b5a7`, two more rungs invented on
+#     a ground that declares exactly two. All four now read the token; the
+#     worst ratio afterwards is 11.79:1 on the photocopier ink.
+#   - A MODULE CONSTANT, the laundering shape §4a names. `FactionSelectCard`'s
+#     `const green = "#4ade80"` reached four style objects and two hover
+#     handlers as an Identifier, invisible to this rule — while the S.N.I.D.E.
+#     tile directly above it already read `var(--snide-*)` throughout. Every
+#     value on that tile had an exact theme-invariant token waiting.
+#   - ONE ORNAMENT DRAWN N WAYS. The Singularity raster has been named in
+#     index.css since #723 and eight surfaces read it; `FactionCard` was a
+#     ninth density hand-rolled at 0.015, and the faction hero's was WHITE on a
+#     green-phosphor terminal. The Everymen poster drop shadow is one drawing
+#     on five surfaces, three of which struck it from `--everymen-ink` while
+#     two hand-rolled black. The phosphor glow had a helper in its own file.
+#   - A RIM THAT COULD NOT FLIP. `TaskCrown`'s two inset hairlines were fixed
+#     blacks on discs that flip (`--fdl-disc` #faf6ee -> #1a1712), so in dark
+#     the inner rim was black on near-black. They take `--fdl-glyph`, the twin
+#     that flips the other way.
+#
+# THE 27 THAT STAY are six ornament classes, and the reason is per class rather
+# than per line — this is one metaphor at a time, not a residue of stragglers:
+#
+#   1. THE FLAT OFFSET PRINT SHADOW (16 of the 27, and the whole reason
+#      S.N.I.D.E. and the Everymen banner dominate what is left).
+#      `8px 10px 0`, `6px 8px 0`, `4px 5px 0`, `2px 3px 0` — zero blur, hard
+#      edge, at eight alphas from 0.2 to 0.55. It is a flyposter's register
+#      offset, not elevation: nothing is lifted, so `--color-cast-shadow` would
+#      be a category error, and its 0.25 -> 0.7 dark lift would swell a printed
+#      mark. Collapsing the eight alphas onto ONE print token is the honest next
+#      move and it is a NEW rung — deferred only because the blocking sheet is
+#      ~1.0 KB from its FAIL line. That is the upgrade path; take it when the
+#      sheet has room.
+#   2. HALFTONE DOT FIELDS — `rgba(182,255,46,0.055)` / `0.08` acid on ink,
+#      `rgba(20,17,11,0.06)` ink on the medallion. The list's own example. The
+#      density IS the drawing; `--faction-snide-acid` names the tier the strip
+#      and the chit rules read, and pointing grain at it couples the two.
+#   3. INSET PLATE WELLS — the Coven moon plate, the Ephemerists vote plate,
+#      the S.N.I.D.E. amp panel. An inset recess is not a cast: the cast token
+#      names what a surface throws onto the ground BEHIND it, and all three
+#      plates are dark in both cascades, so the token's dark lift would deepen
+#      a well whose ground never moved (§3, #1792). #2020 left the Coven one
+#      deliberately; re-decided here and the call holds.
+#   4. THE PASTED-FLYER GHOSTS — a border and a fill at 0.07 / 0.035 / 0.025,
+#      alternating acid and pink. Five absolutely-positioned rectangles that
+#      exist to be barely visible.
+#   5. THE BROADSHEET'S RULED LINE — `rgba(100,140,200,0.08)` every 17/18px.
+#      Deliberately NOT `--faction-everymen-dispatch-rule` (0.12, every 24px),
+#      which names the dispatch SLIP's rule: two drawings the family keeps
+#      apart, and de-duplicating them would be picking a winner (§6, #1654).
+#      The masthead's `0 2px 0` underline is the same call — a printed rule
+#      drawn as a zero-blur shadow, lifting nothing.
+#   6. TWO SINGLETONS. `FactionSelectCard`'s `1px solid #000` is a hairline
+#      drawn one stop BELOW the tile's own `--snide-ink` fill; the family has
+#      no rung under its ink and minting one for a single hairline is the
+#      `-weak`/`-medium` mistake index.css already records. `EphemeristsSeal`'s
+#      disc casts onto `--faction-ephemerists-plate-bg`, declared once with no
+#      dark override — nothing behind it flips, so neither cast rung applies.
+#
+# TWO BLIND SPOTS confirmed still open, neither a hole in the regex (§4a):
+# `filter:` is not a COLOUR_PROP, so `SnideFactionBody`'s
+# `shadow="drop-shadow(2px 2px 0 rgba(0,0,0,.35))"` prop — which `TaskCrown`
+# applies as `filter` — is unreported; it is class 1 above. And a module
+# constant is Gap D wearing paint, which is how `const green` survived.
 src/components/factionHero/SnideFactionHero.tsx
-src/components/factionMarks/TaskCrown.tsx
 src/components/metataskSeal/skins/EphemeristsSeal.tsx
 src/components/metataskSeal/skins/SnideSeal.tsx
 src/components/praxisCard/desktop/EverymenPraxisCard.tsx
-src/components/praxisCard/desktop/SingularityPraxisCard.tsx
 src/components/selectCard/FactionSelectCard.tsx
 src/components/vote/CovenVote.tsx
 src/components/vote/EphemeristsVote.tsx
 src/components/vote/SnideVote.tsx
 src/pages/characterProfile/archetypes/EverymenProfileBody.tsx
-src/pages/characterProfile/archetypes/SingularityProfileBody.tsx
 src/pages/characterProfile/archetypes/SnideProfileBody.tsx
-src/pages/factionDetail/archetypes/EverymenFactionBody.tsx
 src/pages/factionDetail/archetypes/SnideFactionBody.tsx
 src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx

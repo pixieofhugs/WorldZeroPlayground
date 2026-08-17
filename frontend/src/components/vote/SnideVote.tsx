@@ -56,6 +56,11 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
             'linear-gradient(var(--faction-snide-amp-panel-from), var(--faction-snide-amp-panel-to))',
           border: '2px solid var(--faction-snide-amp-panel-border)',
           borderRadius: 6,
+          // ornament (#1609): the amp panel's inset well — same call as the
+          // Coven and Ephemerists vote plates. An inset recess is not a cast,
+          // and this panel is dark in both cascades, so the cast token's dark
+          // lift would deepen a well whose ground never moved. The sheen beside
+          // it is already a token; only the well is raw. See the legacy list.
           boxShadow:
             'inset 0 2px 7px rgba(0, 0, 0, 0.75), inset 0 0 0 1px var(--faction-snide-amp-panel-sheen)',
         }}

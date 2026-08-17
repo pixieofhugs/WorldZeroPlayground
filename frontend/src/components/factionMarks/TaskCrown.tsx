@@ -62,7 +62,12 @@ export function TaskCrown({
           inset: 0,
           borderRadius: "50%",
           background: "var(--faction-default-rainbow-conic)",
-          boxShadow: "inset 0 0 0 1px rgba(0,0,0,.2)",
+          // Both rims are a percentage of the mark's OWN ink (#1609). They were
+          // fixed blacks on two discs that flip — `--fdl-disc` goes #faf6ee ->
+          // #1a1712 — so in dark the inner rim was black on near-black and did
+          // nothing. `--fdl-glyph` is the twin that flips the other way
+          // (#1a1209 -> #f0e6d0), which is what a rim wants.
+          boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--fdl-glyph) 20%, transparent)",
         }}
       />
       <span
@@ -74,7 +79,7 @@ export function TaskCrown({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "inset 0 0 0 1px rgba(0,0,0,.12)",
+          boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--fdl-glyph) 12%, transparent)",
         }}
       >
         {/* Fleur-de-lis: central lance, two out-curling arms, band, foot + side feet. */}

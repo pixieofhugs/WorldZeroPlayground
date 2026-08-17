@@ -88,6 +88,12 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
           height: DISC_SIZE,
           borderRadius: '50%',
           background: BAND,
+          // ornament (#1609): the disc casts onto PLATE, and
+          // `--faction-ephemerists-plate-bg` is declared once with no dark
+          // override — near-black in BOTH cascades. `--color-cast-shadow`
+          // exists to deepen 0.25 -> 0.7 when the ground behind flips; here
+          // nothing flips, so the token would darken a shadow whose ground
+          // never moved (§3, #1792). Stays raw; see the legacy list.
           boxShadow: '0 2px 7px rgba(20, 12, 6, 0.3)',
           display: 'flex',
           alignItems: 'center',
