@@ -159,12 +159,38 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
     }
   })
 
-  it('hides the CTA on both when the task refuses the viewer a praxis', () => {
+  it('hides the CTA on both when the task refuses the viewer without saying why', () => {
+    // `can_sign_up: false` with no `signup_reason` is a shape the server does
+    // not send to a signed-in viewer, but it is the shape a sixth backend gate
+    // would arrive in before this build has copy for it — and the answer then
+    // is silence, never a button the server will refuse (#1976).
     const barred: TaskOut = { ...TASK, can_sign_up: false }
     for (const formFactor of ['mobile', 'desktop'] as const) {
       dispatch.formFactor = formFactor
       state.current = { ...CANNED, user: VIEWER, tasks: [barred] }
       expect(text(), formFactor).not.toContain(SIGNUP)
+    }
+  })
+
+  // #1976 — the owner-reported surface. This list used to withhold `onSignup`
+  // whenever `can_sign_up` was false, so a task the browse was still SHOWING
+  // said nothing at all about why it could not be taken, while the detail page
+  // for that same task had read `signup_reason` since #1497.
+  it('states the reason on both when the task names why it refuses', () => {
+    const barred: TaskOut = {
+      ...TASK,
+      can_sign_up: false,
+      signup_reason: 'below_level',
+      level_required: 4,
+    }
+    for (const formFactor of ['mobile', 'desktop'] as const) {
+      dispatch.formFactor = formFactor
+      state.current = { ...CANNED, user: VIEWER, tasks: [barred] }
+      expect(text(), formFactor).toContain(
+        i18n.t('tasks:detail.signup.denied.belowLevel', { level: 4 }),
+      )
+      expect(text(), `${formFactor}: no longer calls it a sign-up`).not.toContain(SIGNUP)
+      expect(html(), `${formFactor}: and it is not pressable`).toContain('aria-disabled="true"')
     }
   })
 

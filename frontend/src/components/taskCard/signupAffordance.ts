@@ -72,15 +72,23 @@ export function taskCardSignupCta(
 ): TaskCardSignupCta | null {
   if (!onSignup) return null;
 
-  const key = signupCtaKey(task.signup_reason);
-  if (key === SIGNUP_CTA_KEY) {
-    return { label: signupLabel, denied: false, onPress: () => onSignup(task.id) };
+  if (isSignupDenial(task.signup_reason)) {
+    // `level` is only read by `denied.belowLevel`; passing it to the others is
+    // free and keeps this a single call rather than a branch per reason.
+    const key = signupCtaKey(task.signup_reason);
+    return { label: i18n.t(`tasks:${key}`, { level: task.level_required }), denied: true };
   }
 
-  // `level` is only read by `denied.belowLevel`; passing it to the others is
-  // free and keeps this a single call rather than a branch per reason.
-  const label = i18n.t(`tasks:${key}`, { level: task.level_required });
-  return isSignupDenial(task.signup_reason)
-    ? { label, denied: true }
-    : { label, denied: false, onPress: () => onSignup(task.id) };
+  // Shut, with nothing to say about it — hide rather than lie. Reachable two
+  // ways: a backend that grows a sixth gate this build has no copy for, and any
+  // payload where the two fields disagree. The old behaviour for BOTH was to
+  // hide, because the list gated on `can_sign_up` and never asked why; keeping
+  // that as the fallback is what makes a new backend reason a missing
+  // explanation rather than a live button the server will refuse.
+  if (!task.can_sign_up) return null;
+
+  const key = signupCtaKey(task.signup_reason);
+  const label =
+    key === SIGNUP_CTA_KEY ? signupLabel : i18n.t(`tasks:${key}`, { level: task.level_required });
+  return { label, denied: false, onPress: () => onSignup(task.id) };
 }
