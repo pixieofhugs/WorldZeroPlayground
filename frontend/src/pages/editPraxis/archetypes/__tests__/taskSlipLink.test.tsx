@@ -92,7 +92,6 @@ function state(slug: string | null, phase: "composing" | "waiting"): EditPraxisS
     setTitle: () => {},
     body: "## What I did",
     setBody: () => {},
-    wordCount: 3,
     media: [],
     fileError: "",
     handleFileChange: () => {},

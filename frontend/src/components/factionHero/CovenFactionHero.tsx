@@ -86,7 +86,9 @@ export default function CovenFactionHero({
               lineHeight: 0.9,
               margin: "var(--space-xs) 0 0",
               color: INK,
-              overflowWrap: "anywhere",
+              // No overflow-wrap: a wordmark never breaks mid-word (#2000). The
+              // slip's 250px floor above already holds "Cozy Coven" hand-set at
+              // 52px, and a name that outgrew it would wrap at its space.
             }}
           >
             {name}

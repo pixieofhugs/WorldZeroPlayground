@@ -401,14 +401,13 @@ export default function DefaultEditPraxis({ state }: Props) {
           </ComposerSection>
         )}
 
-        {/* Write-up — the tabs sit in the section's meta slot, so the label row
-            reads `Write-up … saved a moment ago … N words [Write|Preview]`
-            exactly as the design draws it. The word count rides the same row
-            (#1706) and the autosave line joined it (#1828); the cluster WRAPS,
-            which is what keeps three nowrap children on a phone's header row. */}
+        {/* Write-up — the tabs sit in the section's meta slot, so the row reads
+            `saved a moment ago [Write|Preview]`. The heading itself is gone
+            (#2085: the placeholder already says what the box is for) and so is
+            the word count (#2086), leaving the autosave line #1828 moved up
+            here; the cluster still WRAPS on a phone's header row. The editor
+            names itself — see `bodyContentAttributes`. */}
         <ComposerSection
-          label={t("editPraxis.composer.writeUpLabel")}
-          htmlFor="composer-body"
           rule={false}
           labelStyle={labelStyle}
           meta={
@@ -419,9 +418,6 @@ export default function DefaultEditPraxis({ state }: Props) {
                       ago: formatAutosave(state.autosaveAt),
                     })
                   : t("editPraxis.composer.statusUnsaved")}
-              </span>
-              <span style={{ color: FAINT }}>
-                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </span>
               <WriteUpTabs
                 tab={tab}
@@ -448,7 +444,6 @@ export default function DefaultEditPraxis({ state }: Props) {
             <BodyTextarea
               state={state}
               skin={{
-                id: "composer-body",
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
                   ...fieldBox,
@@ -544,7 +539,6 @@ export default function DefaultEditPraxis({ state }: Props) {
                     whiteSpace: "pre-line",
                     color: MUTED,
                   }),
-                  buttonLabel: t("editPraxis.composer.proofButton"),
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: TITLE_FACE,

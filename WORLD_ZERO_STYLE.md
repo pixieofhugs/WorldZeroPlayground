@@ -590,6 +590,44 @@ There is deliberately no `.content-heading` / `.content-display` / `.content-sco
 
 That ink is the third text tier, and §3 records what it can and cannot do. It clears AA on every neutral stock it lands on — **5.40:1** on the page, 5.78 over the frost, 5.07 on the alt surface, 4.78 on the filter well in light; 6.21 / 5.67 / 5.37 / 5.47 in dark — and it is now visibly a different ink from `--color-text-secondary` rather than the same one under a second name. What it does **not** have is headroom: the tier sits at secondary's weight because the palette has no AA-clear room below secondary, so a label cannot be made quieter by walking its colour down. If a label rank needs to recede further, the levers left are size, tracking, casing and layout — not ink.
 
+### A wordmark is a MARK, so it scales — it never breaks mid-word (#2000)
+
+Four of the seven faction-page heroes set `overflow-wrap: anywhere` on the `<h1>` they render the
+faction name into. On a phone the Everymen hero printed **"EVER / YMEN"**, and the name it showed was
+not the name — which is why this is a different failure from a paragraph wrapping awkwardly. A faction
+name is the **mark**, in the same family as the sigil beside it: the reader identifies the faction by
+its shape, so a break that invents a new word is worse than an overflow, and `break-anywhere` is simply
+the wrong rule to have on it. **No hero wordmark carries one.** `frontend/src/components/factionHero/__tests__/factionWordmarkWrap.test.tsx`
+holds that across all seven.
+
+The name surfaced on Everymen because "Everymen" is the longest **single-word** name — every other
+hero's name is two glyphs (`UA`), carries a space to wrap at (`Cozy Coven`, `Warriors of Whimsy`,
+`The Ephemerists`) or carries dots (`S.N.I.D.E.`). All four heroes that had the rule carried the latent
+bug; only one had a name long enough to trip it. **A rule that a name's current spelling hides is still
+a bug**, so it came off Coven, UA and WOW too rather than only where the screenshot was taken.
+
+Deleting the rule is only half a fix, because the geometry doctrine above then applies and the container
+has to give. Two levers, and the Everymen hero needed both:
+
+- **The wordmark's own flex track needs a floor.** Its column carried `min-width: 0`, and its cog seal
+  is an inline flex *sibling* — so on a 340px phone the seal plus the gap ate 148px of a ~222px row and
+  the mark had ~75px to set 76px type in. `min-width: min(240px, 100%)` plus `flex-wrap: wrap` stands
+  the seal *above* the name at that width, which is what Coven (250), UA (260) and the Ephemerists (220)
+  already do. `min(…, 100%)` and not a bare `240`: a hard floor pushes the column past the hero's own
+  clipped edge on a phone, which is #1314's lesson on the S.N.I.D.E. hero.
+- **The mark caps rather than reflows.** `font-size: min(76px, 20vw)` — 76px is the poster size and the
+  ceiling, and the `vw` arm only bites below a ~380px viewport, where even the *full* column cannot hold
+  76px type. This is the drawn-container carve-out above read the other way round: a wordmark is not
+  inside a mark, it **is** one, so it takes a ceiling at its poster size and scales under it instead of
+  breaking. Above ~380px nothing moves, which is the test that the cap is fitted and not a redesign.
+
+**A test that forbids a Tailwind utility must not spell it.** The check above originally wrote
+`word-break: break-all` as a plain string. Tailwind scans `src` for class candidates — **test files and
+comments included** — so the literal emitted that utility into the *blocking* stylesheet: +17 B gzip9,
+which put the initial-load CSS budget exactly on its WARN line for the sake of a test fixture. The
+value is now assembled with `join('-')` and appears nowhere bare, and the built sheet is byte-identical
+to before the fix. The same trap applies to any assertion naming a class the code must *not* have.
+
 ### The label tier is TWO tiers, and the content floor has one exception (#1307)
 
 One class covered five jobs — section headings, metadata captions, status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the weakest neutral, on 461 sites. Four legibility costs on the same string, and the treatment had already been found not to survive real content once: `.eyebrow-sentence` existed because *"a sentence set that way is a wall"*, which is a caption wearing a heading's clothes and a variant standing in for a rethink. **Owner ruling: two intents, not five treatments and not one.**
@@ -976,6 +1014,16 @@ A faction shows a figure twice — the score stamp's total on a praxis card, and
 **A mount that omits an element does not just lose it — it inherits room, and the proportions have to answer.** The roundel's arced legend reads "★ VERIFIED ★ ON THE RECORD", a claim only a *scored* praxis can make, so a task card passes no `arcLabel`. That leaves two texts in a ring tuned for three, and the unit caption keeps a size chosen to make space for a legend that is not there — at the task card's 70px seal, sub-6px mush. The caption grows when the legend is absent (`7.5` → `10.5` in the drawing's own user space), which is the *component* owning its geometry rather than the caller nudging a prop. The praxis mount passes a legend and is untouched, so one drawing still holds both. Optionality on a shared mark is a proportion decision, not just a `?`.
 
 **Ornament for a LAZY archetype belongs in the `.tsx`, and this is measured, not stylistic.** The nine task cards are lazy (`factions/*.ts` → `lazyArchetype`), so `EverymenTaskCard` ships in its own 3.7 KB chunk the initial load never fetches — bytes drawn there cost the budget nothing. A rule in `index.css` lands in the one blocking stylesheet, which sits ~1 KB under its FAIL line. So geometry goes inline as SVG, and only MOTION has to be CSS, because a reduced-motion gate cannot be expressed inline. The corollary is that dropping a design's animation is sometimes the *whole* saving: Everymen's fists-and-lightning is drawn and not played, and jagged arcs thrown off a bolt read as a discharge standing perfectly still.
+
+### Motion is the one thing a stylesheet may deliver LATE, and it now lives in its own sheet (#2073)
+
+The paragraph above says only MOTION has to be CSS, because a reduced-motion gate cannot be expressed inline — and then prices it against a blocking stylesheet ~1 KB under its FAIL line. Both halves are still true; what changed is that ornament motion no longer lands in that stylesheet at all. `frontend/src/motion.ornament.css` carries it, `src/factionFaces.ts` is its only importer, and that module is reached across a chunk boundary — so `dist/index.html` never links the sheet and `bundle-budget.mjs`, which parses that HTML, cannot see it. Measured: the blocking sheet went **23,383 → 22,428 gzipped** and `css.warn` ratcheted 23,400 → 22,700 with it. **A new gated ornament animation goes in that file, not in `index.css`.**
+
+**The permission is narrow, and the narrowness is the entire safety argument.** A late `@keyframes` shifts no layout — nothing reflows — and flashes no unstyled content, because the element is already drawn, in its final colours, at its final size; it simply begins moving a beat later. And every rule in the sheet is behind `prefers-reduced-motion: no-preference`, so a viewer who never receives it lands in exactly the state a reduced-motion viewer lands in, which every one of these ornaments is *already* required to make a legible, fully drawn frame. **None of that survives being applied to colour, size, position or type**, which would flash or reflow — on a cold load, for a stranger on a phone, and never in review. So a rule that mixes motion with paint is split and the paint stays in `index.css`: the scanline's parked `top`, the metals ladder's resting opacities, the watermark's `transform-origin`. The one shape that looks like an exception and is not is a rule declared *nowhere but inside the gate* — `.wow-balloon-sweep::after`, the balloon plate's travelling band — which has no resting form to leave behind and therefore moves whole.
+
+**"Ornament" is a claim about the CONSUMER, not about the class name.** `spec-rise` looks exactly like the rest and stays, because `.spectrum-dot--reached` is a vote readout; `wz-blink` stays because the activity ticker's LIVE dot reaches it from an inline `animation:` string. A keyframe is checked against every one of its consumers before it moves, and a rule may perfectly well stay in the deferred sheet while borrowing a keyframe that did not travel — names are document-global. The vote widgets went first for a documentary reason: `index.css` states the property that makes deferral safe for them *in words* ("meaning is carried by the fill/selection, not the motion"), so the judgement was already recorded rather than newly made.
+
+**Two sheets ride one loader, and their failure modes are why that is safe rather than sloppy.** `src/factionFaces.ts` imports both the 62 faction `@font-face` rules (#2079) and this sheet. A stranded FACE is a change of identity that looks like a slow network, so `factionFaceSplit.test.ts` asserts every chunk the app can load on its own can reach the module. A stranded ANIMATION is the reduced-motion state — a state the design already ships — so that assertion is deliberately **not** restated for motion; asserting it would forbid the degradation the whole deferral rests on. `motionSplit.test.ts` guards the two things that *are* invisible in a green build: that the sheet holds motion and nothing else, and that it has exactly one importer.
 
 ### Ornament can MOVE, and where it lands decides whether it is still card-local (#2067)
 

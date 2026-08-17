@@ -88,7 +88,6 @@ function state(): EditPraxisState {
     setTitle: () => {},
     body: "## What I did\n\nWheeled them down.",
     setBody: () => {},
-    wordCount: 4,
     media: [],
     fileError: "",
     handleFileChange: () => {},
@@ -207,34 +206,10 @@ describe("the last two archetype seams of #1706", () => {
     expect(markup).not.toMatch(/\d+\/200/);
   });
 
-  it.each(SLUGS)("%s puts the word count in the Write-up header row", (slug) => {
-    const markup = render(slug === "na" ? null : slug);
-    const words = i18n.t("forms:editPraxis.composer.wordCount", { words: 4 });
-    // The header row is the one holding the Write/Preview tablist. Both live
-    // inside the section's `meta` span, so the count sits before the tablist
-    // and — the part that used to be false — before the body box.
-    //
-    // `data-composer-body` is that box since #1742: the body is a CodeMirror
-    // editor built into this host on mount, so there is no `<textarea>` left to
-    // name and nothing inside the host to see in a DOM-less render.
-    expect(count(markup, words)).toBe(1);
-    expect(markup.indexOf(words)).toBeLessThan(markup.indexOf('role="tablist"'));
-    expect(markup.indexOf(words)).toBeLessThan(
-      markup.indexOf("data-composer-body"),
-    );
-  });
-
-  it("the drop target's label carries the design's second line", () => {
-    // One catalog assertion for all eight: `or browse files` is the design's
-    // own second line, and the target renders the label verbatim.
-    expect(i18n.t("forms:editPraxis.composer.proofButton")).toContain("\n");
-  });
-
   it.each(SLUGS)("%s centres the drop target at the design's padding", (slug) => {
     const markup = render(slug === "na" ? null : slug);
-    expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofButton"));
     // The three together are the target's geometry, and only the target's:
-    // `pre-line` is what makes the label's second line a second line.
+    // `pre-line` is what makes the desktop label's second line a second line.
     expect(markup).toContain(
       "padding:var(--space-2xl) var(--space-lg);text-align:center;white-space:pre-line",
     );
@@ -246,5 +221,70 @@ describe("the last two archetype seams of #1706", () => {
   it.each(SLUGS)("%s left-rules the task slip in its accent", (slug) => {
     const markup = render(slug === "na" ? null : slug);
     expect(markup).toMatch(/border-left:2px solid var\(--[a-z-]+\)/);
+  });
+});
+
+/**
+ * The composer's title row, write-up row and drop target — #2093 / #2085 /
+ * #2086 / #2089.
+ *
+ * All four are one-catalog-plus-eight-mounts changes, which is exactly the shape
+ * this file already tests: the claim is what each of the eight skins DRAWS, the
+ * strings come from the catalog rather than from a literal, and two of the four
+ * differ by form factor.
+ */
+describe("the composer's title, write-up and proof rows", () => {
+  it("the title label says the field is required (#2093)", () => {
+    // One catalog value, inherited by all eight mounts. The composer's label
+    // register is uppercase (`composerLabelStyle`), so this renders as
+    // `TITLE (REQUIRED)` — the case here is what a screen reader reads.
+    expect(i18n.t("forms:editPraxis.composer.titleLabel")).toMatch(/required/i);
+  });
+
+  it.each(SLUGS)("%s marks the title input required (#2093)", (slug) => {
+    const markup = render(slug === "na" ? null : slug);
+    // The native attribute, not a drawn asterisk: it is what carries the
+    // required STATE into the accessibility tree, which a `*` glyph does not.
+    // Matched off the tag rather than the whole document so attribute order
+    // cannot make this pass by accident.
+    const input = markup.match(/<input[^>]*id="composer-title"[^>]*>/)?.[0];
+    expect(input).toBeDefined();
+    expect(input).toContain("required");
+  });
+
+  it.each(SLUGS)("%s draws no visible Write-up label (#2085)", (slug) => {
+    const markup = render(slug === "na" ? null : slug);
+    expect(markup).not.toContain(i18n.t("forms:editPraxis.composer.writeUpLabel"));
+    // And no dangling accessible name. `id` on the editor host is what made
+    // `ComposerSection`'s `htmlFor` reachable as `aria-labelledby="<id>-label"`;
+    // with the heading gone that label element no longer exists, so the id goes
+    // with it and `bodyContentAttributes` names the editor from the catalog
+    // instead (see bodySpellcheck.test.ts). A placeholder is not a name.
+    expect(markup).not.toContain('id="composer-body"');
+  });
+
+  it.each(SLUGS)("%s prints no word count (#2086)", (slug) => {
+    const markup = render(slug === "na" ? null : slug);
+    expect(markup).not.toMatch(/\d+\s+words/);
+  });
+
+  it("the drop target's label loses the drag half on a phone (#2089)", () => {
+    // The desktop line offers something a phone cannot do. Two catalog
+    // assertions for all eight mounts: the design's second line is still there
+    // on desktop, and the phone's copy is a single line.
+    expect(i18n.t("forms:editPraxis.composer.proofButton")).toContain("\n");
+    expect(i18n.t("forms:editPraxis.composer.proofButtonMobile")).not.toContain(
+      "\n",
+    );
+  });
+
+  it.each(AT_BOTH)("%s draws its %s drop-target label (#2089)", (slug, width) => {
+    const markup = render(slug === "na" ? null : slug, width);
+    const desktop = i18n.t("forms:editPraxis.composer.proofButton");
+    const mobile = i18n.t("forms:editPraxis.composer.proofButtonMobile");
+    const [drawn, absent] =
+      width === "mobile" ? [mobile, desktop] : [desktop, mobile];
+    expect(markup).toContain(drawn);
+    expect(markup).not.toContain(absent);
   });
 });

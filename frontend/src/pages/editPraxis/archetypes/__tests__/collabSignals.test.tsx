@@ -152,7 +152,6 @@ function state(scenario: Scenario = {}): EditPraxisState {
     setTitle: () => {},
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
-    wordCount: 4,
     media: [],
     fileError: "",
     handleFileChange: () => {},

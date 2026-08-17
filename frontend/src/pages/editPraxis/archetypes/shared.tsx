@@ -299,13 +299,14 @@ export function composerLabelStyle(
 
 /**
  * The right-hand cluster of a section's label row — the write-up header's
- * `saved a moment ago · N words · [Write|Preview]` (#1828).
+ * `saved a moment ago · [Write|Preview]` (#1828; #2086 took the word count out
+ * of it, and #2085 the `Write-up` heading it used to sit beside).
  *
- * It WRAPS, and that is the whole reason it is a shared style rather than three
+ * It WRAPS, and that is the whole reason it is a shared style rather than two
  * spans: the design's note says so in as many words — *"at the faction's real
  * label metrics (Cinzel 0.24em, Bebas 13px) three nowrap children don't fit a
- * phone's header row."* Moving the autosave line up here out of the status row
- * without this lands a third nowrap child on that row on every phone.
+ * phone's header row."* One of those three has since gone, but the metrics have
+ * not, and the autosave string is the one that grows with a translation.
  *
  * `flex: 1 1 auto` + `minWidth: 0` so the cluster gives the label its intrinsic
  * width first and then takes what is left; `justifyContent: flex-end` keeps it
@@ -631,7 +632,7 @@ interface ComposerStatusRowProps {
    *
    * The COMPOSER passes nothing since #1828: its row reads `Draft` alone, and
    * the autosave string it used to carry sits in the write-up header beside the
-   * word count (see {@link composerMetaCluster}). What still passes one is the
+   * Write/Preview tabs (see {@link composerMetaCluster}). What still passes one is the
    * waiting surface, whose second line is a fact about the wait — when you
    * filed, what the crew is still waiting on — and not a save state.
    */
@@ -687,7 +688,7 @@ interface ComposerSectionProps {
    * printing the count twice and letting the two disagree.
    */
   label?: ReactNode;
-  /** The right-hand end of the label row — a counter, a word count, a hint. */
+  /** The right-hand end of the label row — a counter, a hint, a tab pair. */
   meta?: ReactNode;
   /**
    * Make the label a real <label> for the control this section holds. Pass the
@@ -745,17 +746,22 @@ export function ComposerSection({
                 : "var(--space-lg) 0 var(--space-md)",
           }}
         >
-          {htmlFor ? (
-            // The id is what a control that is NOT a labelable element reaches
-            // for: since #1742 the body is a CodeMirror editor, and `for` does
-            // nothing for a contenteditable div — it names itself with
-            // `aria-labelledby="<htmlFor>-label"` instead.
-            <label id={`${htmlFor}-label`} htmlFor={htmlFor} style={heading}>
-              {label}
-            </label>
-          ) : (
-            <span style={heading}>{label}</span>
-          )}
+          {/* A row may be headed by its META alone — the write-up's has been
+              since #2085 removed the `Write-up` heading — and an empty <label>
+              is worse than none: it is an accessible name that computes to the
+              empty string for whatever `htmlFor` points at. */}
+          {label != null &&
+            (htmlFor ? (
+              // The id is what a control that is NOT a labelable element reaches
+              // for: since #1742 the body is a CodeMirror editor, and `for` does
+              // nothing for a contenteditable div — it names itself with
+              // `aria-labelledby="<htmlFor>-label"` instead.
+              <label id={`${htmlFor}-label`} htmlFor={htmlFor} style={heading}>
+                {label}
+              </label>
+            ) : (
+              <span style={heading}>{label}</span>
+            ))}
           {meta != null && (
             <span
               style={composerLabelStyle({ letterSpacing: "0.06em", ...metaStyle })}

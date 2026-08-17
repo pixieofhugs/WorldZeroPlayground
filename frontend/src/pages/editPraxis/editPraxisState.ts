@@ -42,7 +42,6 @@ export interface EditPraxisState {
   setTitle: (value: string) => void;
   body: string;
   setBody: (value: string) => void;
-  wordCount: number;
 
   // Media
   media: MediaItemOut[];

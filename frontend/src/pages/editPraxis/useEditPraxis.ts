@@ -204,7 +204,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setTitle,
     body,
     setBody,
-    wordCount,
     autosaveAt,
     setAutosaveAt,
     hydrate: hydrateDraft,
@@ -793,7 +792,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setTitle,
     body,
     setBody,
-    wordCount,
 
     media,
     fileError,
