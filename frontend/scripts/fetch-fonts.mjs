@@ -127,14 +127,37 @@ async function main() {
     const kept = parseBlocks(css).filter((block) => KEEP_SUBSETS.has(block.subset))
     if (kept.length === 0) throw new Error(`no latin cut for ${family}`)
 
-    for (const { subset, body } of kept) {
-      const weight = field(body, 'font-weight') ?? '400'
-      const style = field(body, 'font-style') ?? 'normal'
-      const range = field(body, 'unicode-range')
-      const source = field(body, 'src')?.match(/url\(([^)]+)\)/)?.[1]
-      if (!source) throw new Error(`no src for ${family} ${weight} ${style}`)
+    const cuts = kept.map(({ subset, body }) => ({
+      subset,
+      weight: field(body, 'font-weight') ?? '400',
+      style: field(body, 'font-style') ?? 'normal',
+      range: field(body, 'unicode-range'),
+      source: field(body, 'src')?.match(/url\(([^)]+)\)/)?.[1],
+    }))
+    if (cuts.some((cut) => !cut.source)) throw new Error(`a cut of ${family} has no src`)
 
-      const file = `${slug(family)}-${weight}${style === 'italic' ? 'i' : ''}-${subset}.woff2`
+    // Google serves ONE variable woff2 per (family, slant, subset) and points
+    // every requested weight at it — Cinzel's five weights are five @font-face
+    // rules over a single file. Downloading per rule would carry 36 byte-identical
+    // duplicates (1.15 MB) in git; Vite would dedupe them on the way out, so the
+    // waste would be invisible in dist and permanent in the repo. Group by the
+    // gstatic URL, which IS the file's identity.
+    const groups = new Map()
+    for (const cut of cuts) {
+      const group = groups.get(cut.source) ?? { ...cut, weights: [] }
+      group.weights.push(cut.weight)
+      groups.set(cut.source, group)
+    }
+
+    for (const group of groups.values()) {
+      const { subset, style, range, source, weights } = group
+      const numeric = weights.map(Number).sort((a, b) => a - b)
+      // A shared file is the variable font over that whole range, and saying so
+      // in the name is the difference between `cinzel-400to800-latin.woff2` and
+      // a `cinzel-400-latin.woff2` that four other rules quietly also point at.
+      const cut =
+        numeric.length > 1 ? `${numeric[0]}to${numeric.at(-1)}` : `${numeric[0]}`
+      const file = `${slug(family)}-${cut}${style === 'italic' ? 'i' : ''}-${subset}.woff2`
       const woff2 = Buffer.from(
         await (await fetch(source, { headers: { 'User-Agent': UA } })).arrayBuffer(),
       )
@@ -142,17 +165,19 @@ async function main() {
       writeFileSync(join(FONT_DIR, file), woff2)
       bytes += woff2.length
 
-      rules.push(
-        `/* ${family} ${weight}${style === 'italic' ? ' italic' : ''} — ${subset} */\n` +
-          `@font-face {\n` +
-          `  font-family: '${family}';\n` +
-          `  font-style: ${style};\n` +
-          `  font-weight: ${weight};\n` +
-          `  font-display: swap;\n` +
-          `  src: url('./assets/fonts/${file}') format('woff2');\n` +
-          (range ? `  unicode-range: ${range};\n` : '') +
-          `}`,
-      )
+      for (const weight of weights) {
+        rules.push(
+          `/* ${family} ${weight}${style === 'italic' ? ' italic' : ''} — ${subset} */\n` +
+            `@font-face {\n` +
+            `  font-family: '${family}';\n` +
+            `  font-style: ${style};\n` +
+            `  font-weight: ${weight};\n` +
+            `  font-display: swap;\n` +
+            `  src: url('./assets/fonts/${file}') format('woff2');\n` +
+            (range ? `  unicode-range: ${range};\n` : '') +
+            `}`,
+        )
+      }
     }
 
     // The licence ships with the font — see the header of src/fonts.css.
