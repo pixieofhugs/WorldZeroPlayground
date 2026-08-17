@@ -647,8 +647,11 @@ describe("used weights are requested (#1294)", () => {
   it("sees the weights source files actually set (sanity check)", () => {
     const declared = declaredFaces(families);
     expect(declared.length).toBeGreaterThan(100);
-    // WowSigil's motto band, via `--font-display` — reachable only by resolving
-    // the token, and only inside its own scope.
+    // Lora at 700, via `--font-display` — reachable only by resolving the
+    // token. This used to name WowSigil's Pig-Latin motto band as the live
+    // instance; Sigil Studies v2 replaced that crest with a lettering-free
+    // crown, and the weight is still declared by the `font-display font-bold`
+    // headings the admin and About pages set.
     expect(declared).toContainEqual({ family: "lora", weight: 700, italic: false });
   });
 

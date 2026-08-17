@@ -130,7 +130,8 @@ describe("Ephemerists task detail — the Valley plate", () => {
     expect(html, "incised glyph registers").toContain("epg-glyph");
     expect(html, "the stepped octagon medallion").toContain("M30 4 L70 4 L96 30");
     expect(text, "the masthead wordmark").toContain("The Ephemerists");
-    expect(html, "the masthead's kite sigil").toContain("M243 120 L55 272 L243 490 L425 272 Z");
+    // The kite's opening move; brushed rather than ruled since Sigil Studies v2.
+    expect(html, "the masthead's kite sigil").toContain("M19.1 30.8");
     // The masthead's four-kanji register (星 暦 観 録) was asserted here.
     // #1909 CUT all EIGHT of its strings — the marks and their English glosses
     // — because no other faction had a register row and the audit ruled the

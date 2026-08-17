@@ -157,7 +157,23 @@ async def add_content_type_options(request: Request, call_next):
     return response
 
 
-# Static file serving for local media uploads
+# Player-uploaded media, served straight off the disk. The settled posture
+# (#1593), recorded here so it is not re-opened by accident:
+#
+# * **Unauthenticated, and staying that way.** Avatars and praxis images are
+#   published content on a public site; putting Python in front of every one of
+#   them would tax every page load to constrain a handful of files.
+# * **Unguessable, not secret.** Every upload gets a uuid directory segment
+#   (#1336 for praxis media, #1565 for avatars), so a URL cannot be derived from
+#   ids. It can still be *shared* — a leaked URL is permanently fetchable and
+#   nothing here expires it. That is close to what publishing means, and it is
+#   accepted for anything the site is currently showing.
+# * **A hidden praxis is the exception.** ``models.praxis`` says ``hidden`` is
+#   "off the site entirely", which was untrue of its pictures. Hiding now moves
+#   the files to a sibling directory this mount cannot see, so the URL 404s
+#   while the bytes survive for moderators; un-hiding moves them back. See
+#   ``services.media.QUARANTINE_SUFFIX``. ``failed`` is NOT in that case — it
+#   keeps its banner and its place in the feed, so it keeps its media too.
 app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT, check_dir=False), name="media")
 
 # Praxis rooms — one WebSocket per open composer, at /rooms/praxis/{praxis_id}
