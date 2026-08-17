@@ -86,7 +86,7 @@
 
 /* ── Singularity system slab (#842) — the travelling scanline and the block
    cursor. `.sg-scan`'s resting `top: -24%` is in index.css: it parks the sweep
-   off-slab, which is layout, and the slab must still still into a legible
+   off-slab, which is layout, and the slab has to still into a legible
    screenshot with this sheet absent. `.sg-cursor` runs `wz-blink`, which stays
    in index.css (the activity ticker's LIVE dot reaches it inline) — the cursor
    stops blinking but stays drawn, since it is punctuation on the number rather
