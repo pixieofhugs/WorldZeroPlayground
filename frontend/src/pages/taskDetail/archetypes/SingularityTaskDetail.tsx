@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -117,16 +118,6 @@ function initialsOf(name: string): string {
 function Rule({ style }: { style?: CSSProperties }) {
   return (
     <div aria-hidden style={{ height: 0, borderTop: `1px dashed ${HAIR}`, ...style }} />
-  );
-}
-
-/** One of the chrome bar's three lamps. Ornament geometry, so raw px. */
-function Lamp({ fill }: { fill: string }) {
-  return (
-    <span
-      aria-hidden
-      style={{ width: 8, height: 8, borderRadius: "50%", background: fill, display: "block" }}
-    />
   );
 }
 
@@ -283,11 +274,7 @@ export default function SingularityTaskDetail({
       }}
     >
       {desktop ? (
-        <span aria-hidden style={{ display: "flex", gap: "var(--space-xs)", flex: "none" }}>
-          <Lamp fill="var(--faction-singularity-led-red)" />
-          <Lamp fill="var(--faction-singularity-led-amber)" />
-          <Lamp fill="var(--faction-singularity-led-green)" />
-        </span>
+        <SingularityLamps />
       ) : (
         <Link
           to="/tasks"

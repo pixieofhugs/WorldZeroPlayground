@@ -30,6 +30,12 @@ class CurrentUser(WireModel):
     can_see_retired_tasks: bool = False
     can_see_pending_tasks: bool = False
     can_comment: bool = False
+    # May the viewer pin an existing metatask to a praxis (#1973)? Not
+    # `can_propose_metatask`, which is about authoring one. The frontend hides
+    # the browse filter's metatask option and the composer's picker when False.
+    # Not short-circuited by is_admin, and True for a faction carrying the
+    # apply-level bypass even below the level — see character_capabilities.
+    can_apply_metatask: bool = False
     # Faction level-jump allowance (#811). reach = levels above own level this
     # faction grants (0 = no such ability, so hide the affordance entirely);
     # available = unspent at the current level. Neither is short-circuited by

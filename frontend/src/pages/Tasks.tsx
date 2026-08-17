@@ -85,8 +85,14 @@ function DesktopTasks({ state }: { state: TasksState }) {
               <MetataskSeal metatasks={tasks} />
             </div>
           ) : (
-            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
+            /* Flex-wrap container — NOT a grid. Varied WIDTHS and rotations are
+               intentional and stay (Style Guide §6); equal HEIGHTS across a row
+               are not a regularization but the absence of a layout accident
+               (#1945, §6's own note). `.task-card-row` owns the stretch and the
+               chain that carries it down to each skin's frame — the display and
+               the wrap live there too, because an inline `display` here would
+               beat every rule in that chain. */
+            <div className="task-card-row" style={{ gap: 'var(--space-lg)' }}>
               {/* `onSignup` is offered to any signed-in viewer. Whether the slot
                   it produces is a claim or a statement of why not is the CARD's
                   call, off `task.signup_reason` (#1976) — gating it on

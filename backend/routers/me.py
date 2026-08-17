@@ -84,10 +84,17 @@ async def my_sidebar(
     character = await resolve_active_character(account, session)
     if character is None:
         return SidebarOut(
-            pending_requests_count=0, global_activity=[], active_praxes=[]
+            pending_requests_count=0,
+            global_activity=[],
+            global_activity_count=0,
+            active_praxes=[],
         )
 
-    pending_requests_count, global_activity = await get_sidebar_feed(
+    (
+        pending_requests_count,
+        global_activity,
+        global_activity_count,
+    ) = await get_sidebar_feed(
         character_id=character.id,
         session=session,
         session_factory=session_factory,
@@ -107,5 +114,6 @@ async def my_sidebar(
             ACTIVITY_FEED_ITEM_ADAPTER.validate_python(asdict(item))
             for item in global_activity
         ],
+        global_activity_count=global_activity_count,
         active_praxes=await build_praxis_cards(active_praxes, session, character),
     )

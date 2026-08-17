@@ -708,6 +708,12 @@ Two separate rules meet at the bottom 3.5rem of a phone viewport, and the filter
 
 The corollary at the sheet: **a `max-height` measured from `bottom: 0` is not the height it claims.** `70vh` was spending its last 3.5rem on chrome, so it grows by the clearance to go back to meaning 70vh of *usable* panel. And a panel with a pinned action gives the scroll to the **list**, not to itself — the label row and the Done button stay put, a long facet can never push the action below the fold, and the bottom padding stays out of a scrollport, where browsers have a long history of dropping it on a flex column.
 
+### A card that owns its width needs a column that CENTRES, not one that stretches (#1964)
+
+§10's "do not regularize card sizes" and a `flex-col` disagree, and on the phone the column wins by default. Every faction task card sets its own `width` (`size.cardWidth` — 340 on the phone, 384 on the desktop) with `maxWidth: 100%` under it, so it is narrower than a single-column results list. `align-items` defaults to `stretch`, which makes the card's wrapper full-bleed; the card then draws at its own width *inside* that wrapper and lands flush against the left edge. The report reads as "the cards are narrower than the filter bar", and the tempting fix — widen the card, or make it fluid — is the one the style guide forbids. **`align-items: center` is the compatible fix: the card keeps the width it chose and the column stops pretending it chose 100%.**
+
+Which columns take it is decided by whether the CHILD carries a width. A praxis card does not — it fills whatever it is given, so the praxis lists stay stretched, and a metatask seal is the same, which is why the mobile browse applies the class conditionally rather than to the whole results column. The three lists that stack a fixed-width `<TaskCard>` (mobile browse, and the mobile Default and WOW profile task tabs) centre. **A flex-WRAP container is a separate question and is deliberately left alone**: the faction bodies and the desktop board wrap left-flush on purpose, and centring them would recentre a partial last row on the desktop, which is the "intentional chaos" this section is protecting.
+
 ---
 
 ## 6. Faction Card Archetypes
@@ -731,7 +737,11 @@ The corollary at the sheet: **a `max-height` measured from `bottom: 0` is not th
 
 **Badge art is the second game-wide shape**, for the same reason. `badgeArtFor(key)` (`components/badges/badgeArt.tsx`) dispatches on the badge key and nothing else — a badge means the same thing to every player, so it must not acquire a faction seam. Most glyphs are line art in `currentColor` and inherit the surrounding skin's ink; a badge whose design *is* a colour (the `duel_victor` seal carries the ADR-0039 spectrum) names its own tokens instead. Either way, nothing about a badge is chosen by who is wearing it.
 
-Cards are arranged in a `flex-wrap` container with varied heights and slight rotations. This is intentional — they are NOT on a strict grid.
+Cards are arranged in a `flex-wrap` container with varied widths and slight rotations. This is intentional — they are NOT on a strict grid.
+
+**HEIGHT IS THE ONE EXEMPTION FROM "do not regularize", and it is not a loophole (#1945, owner ruling 2026-08-17).** Within a row, every task card is the same height; this sentence used to read "varied heights" and it was wrong. Nothing about a card's height is drawn by its archetype — it is whatever its description happened to wrap to — so a row that ends ragged is not nine identities disagreeing, it is one container's `align-items` losing an argument with the copy. **Widths and rotations are the load-bearing half and they do not move**: every `cardWidth` in the size sets and every `rotate()` stays exactly as its archetype drew it, and the class that does this (`.task-card-row` in `index.css`) is written so that the row's own items can never grow — growth starts one level in, where the flex axis is vertical, precisely so equalizing a bottom edge can never turn into equalizing a width. Read the block's comment before changing it; it names the whole chain and the four archetypes whose CTA bar depends on it.
+
+The class belongs on **every** flex-wrap row of `<TaskCard>`s — the tasks board, each faction body's tasks section, a profile's proposed tasks — because the raggedness is the container's, not the page's. Praxis-card rows are a different component and still set `items-start`; they have the same shape and no ruling yet.
 
 Each faction's archetype lives in its card component — see `frontend/src/components/taskCard/*TaskCard.tsx`. Every one carries a one-line docstring naming its archetype (metaphor, colors, headline font); that docstring is the source of truth and is edited in the same commit as any redesign. A table here would only cache — and drift from — what those components already state. Colors are CSS variables (§3).
 
@@ -783,6 +793,8 @@ Every faction sigil renders in `BadgedAvatar`'s membership badge, whose glyph is
 
 The Ephemerists drew one masthead — a winged sun disc over the faction's name in letterspaced Poiret One, centred on a night band — on four surfaces, in four copies that could not see each other: the praxis card, the praxis detail, the task detail and the composer. The task detail carried a *fifth* copy, of the disc itself, byte-identical to the shared kit's and invisible to it. §6's rule above says a device is drawn once; this is the same rule one level up, where what repeats is not a mark but **an arrangement of marks plus type**. `EphemeristsMasthead` is that arrangement, and the four skins now mount it.
 
+**The second instance was Singularity's window lamps, and it shows what the copies drift into (#1979).** Three traffic-light dots on a terminal chrome bar, drawn on five surfaces — the praxis card, the task card, the praxis detail, the task detail and the feed frame — with a private `Lamp` declared in four of them and the fifth spreading a bare `ledStyle` onto three spans at a different size. What drifted was the PALETTE: four bars painted `--faction-singularity-led-red`/`-amber`/`-green` and the feed frame painted `-term-dim`/`-term-blue`/`-term-bright`, which is green, blue, green. Both trios are legitimate faction tokens, so no ratchet, no lint rule and no contrast test could see it, and each file rendered perfectly on its own — it was reported by eye, like #1634. **The consolidation that closes the seam takes NO props.** One exported `Lamp({ fill })` mounted three times by five callers is still five call sites owning the palette, and a sixth surface may still invent a trio; the kit owning the whole cluster — hues, wrapper and pitch — leaves nothing to pass and so nothing to disagree about. That is the shape to reach for whenever the repeated thing is an arrangement with no variation in it, and it is why the two ideas in this section's title are one idea: the copy is the drift.
+
 Four things generalise off it, none of them Ephemerists-specific.
 
 **A masthead's TWO SCALES are one prop, and everything else is a table.** `page` heads a page, `card` heads a sheet — and because #1635 made the sigil own its 486:560 ratio, the two scales differ by exactly one number per row. A `compact` boolean would have forked every internal (§1.2's rejected escape); a size *record* keyed by scale keeps them side by side where a typo in one is visible against the other.
@@ -824,6 +836,12 @@ Owner ruling, dated 2026-08-14, and the reason it is written down is that every 
 **A strip can be carrying more than ornament, so check each removal site rather than sweeping the draw calls.** Ten of the eleven were absolutely positioned decoration and left nothing behind. The eleventh was not: the faction hero's eyebrow printed in the press's near-black *because* it sat on a tape ground, and that near-black is the wall it would have been dropped onto — an invisible line, not a plainer one. It takes the faction's xerox paper as ink instead, an existing token repointed rather than a new value. The same shape appears in the composer, where `ComposerGround`'s default negative inset exists so a layer can overhang the sheet: the strips were the only thing allowed to run off, so the ground stays pinned at `inset={0}` and the raster stays inside the stock.
 
 **Not everything called tape is this tape.** SNIDE's task detail draws diagonal HAZARD stripes on its action plate, and its praxis detail hangs "taped-up clippings" along a rail. Both are different visual families, both stay, and neither reaches for the retired name — which is why the guard needs no exceptions list. The test for the ruling is "does it look like a strip of tape", never "does the identifier contain the string".
+
+### A surface that floats its own corner mark must SUPPRESS the card's (#1960)
+
+A praxis card carries its own Task Crown, drawn by `ScoreStamp` in the score tag's corner whenever the praxis is top for its task. Three surfaces float a *second* fleur medallion over the same corner from outside the card — the six faction-page bodies, and the character profile's laurel over the character's highest-scoring praxis. The faction pages pass `showCrown={false}`; the profile did not, so on a praxis that was both top-for-task and the profile's best, two medallions stacked in one corner and the smaller one's rim escaped past the larger one's edge. It reads as one mark drawn wrong, which is what the bug report said, and it is really **two marks the reader has no way to tell apart** — the same failure as a faction wearing two heads (#1634), one level down.
+
+**The rule is the mark, not the meaning.** The profile's laurel means "this character's best" and the card's crown means "best for this task"; they are different facts wearing one drawing, so they cannot both be shown at that size in that corner and only the outer one survives. `showCrown` is where that decision lives, and the question to ask at any mount that decorates a card's corner is *does the card already draw something here?* — the built-in mark is on by default, so a new surface inherits the collision silently.
 
 ---
 
@@ -878,7 +896,7 @@ Controlled by `data-theme="dark"` attribute on `<html>`. All colors reference CS
 
 Brief design intent for each page. For implementation details, read the component code.
 
-- **Tasks:** Flex-wrap card grid with faction filter pennants, status stamps, and level nodes. Cards flow naturally with varied sizes.
+- **Tasks:** Flex-wrap card grid with faction filter pennants, status stamps, and level nodes. Cards flow naturally with varied widths; a row's heights are equalized (§6, #1945).
 - **Task Detail:** Faction card archetype expanded to full width as hero block. Sign-up block with mode selector (Solo/Collab/Duel) as stamp buttons. Meta tasks section. Praxis gallery below. Since v2 (#1028) it is **one responsive component per faction** (ADR-0058) carrying **no faction voice** in its copy (ADR-0057), and it draws **no in-progress roster** — not one of the nine designs did, so the header's in-progress count is the only place that number appears. What that gives up is stated rather than forgotten: task detail is no longer where a player learns a *foe* is working the same task.
 - **Praxis Submission:** Faction-framed byline block. Media gallery with thumbnail strip. Lora prose body with drop-cap in faction color. Vote stamps (1-5, word labels) replace star ratings. Voter tile grid.
 - **Player Profile:** Faction-framed header. Level track (horizontal, 9 levels). Praxis grid. Friends/Foes panels with score deltas.
@@ -909,5 +927,5 @@ Brief design intent for each page. For implementation details, read the componen
 - **No disabled buttons for permission gates** — hide controls users can't use
 - **No dead buttons** — every interactive control must have a working handler; no placeholders, no stubs, no `onClick={() => {}}`
 - **No parallel faction styling** — reuse the card archetype everywhere, don't recreate it
-- **Do not regularize card sizes** — varied widths and rotations are intentional
+- **Do not regularize card sizes** — varied widths and rotations are intentional. **Heights are exempt** (§6, #1945): a row of task cards is equal-height via `.task-card-row`, because a bottom edge nobody drew is an accident, not an archetype
 - **Do not use emoji as icons** — use CSS or SVG

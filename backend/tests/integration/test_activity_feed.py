@@ -348,6 +348,93 @@ async def test_activity_feed_awaiting_submission_in_requests(
     assert not [i for i in after["items"] if i["type"] == "awaiting_submission"]
 
 
+@pytest.mark.asyncio
+async def test_one_member_collab_owes_nobody_until_someone_joins(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A collab you created and never added anyone to is not an obligation (#1980).
+
+    The rule ``_awaiting_submission_query`` means is "somebody else is involved",
+    and it used to be written as a *type* check — so a collab with one member
+    told its creator, the instant they pressed save, that it was waiting on them.
+    Asserted on **both** halves of the ADR-0070 partition: the item has to leave
+    the Requests queue and the ``/me/sidebar`` badge together, since the badge is
+    a COUNT over the same source query rather than a second predicate.
+    """
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Just me"},
+        headers=auth_headers2,
+    )
+    assert create.status_code in (200, 201), create.text
+    praxis_id = create.json()["id"]
+
+    async def awaiting_for_creator() -> list[dict]:
+        requests = (
+            await client.get(
+                "/activity-feed", params={"filter": "requests", "limit": 100},
+                headers=auth_headers2,
+            )
+        ).json()
+        # The badge and the queue must agree at every step, not just at the end.
+        sidebar = await client.get("/me/sidebar", headers=auth_headers2)
+        assert sidebar.json()["pending_requests_count"] == len(requests["items"])
+        return [i for i in requests["items"] if i["type"] == "awaiting_submission"]
+
+    assert await awaiting_for_creator() == [], (
+        "a collab with only its creator in it is a solo draft in every respect "
+        "the rule cares about — nobody is waiting on anybody"
+    )
+
+    # The moment a second member lands, somebody genuinely is waiting.
+    inv = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{inv.json()['id']}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+
+    appeared = await awaiting_for_creator()
+    assert len(appeared) == 1, appeared
+    assert appeared[0]["payload"]["praxis_id"] == praxis_id
+
+
+@pytest.mark.asyncio
+async def test_solo_praxis_never_awaits_its_own_author(
+    client: AsyncClient,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """The behaviour the old type check bought, kept by the membership rule.
+
+    A duel side is a ``solo`` praxis with one member (ADR-0011), so this is also
+    the guard that #1980 left duels alone.
+    """
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Mine"},
+        headers=auth_headers,
+    )
+    assert create.status_code in (200, 201), create.text
+
+    requests = (
+        await client.get(
+            "/activity-feed", params={"filter": "requests", "limit": 100},
+            headers=auth_headers,
+        )
+    ).json()
+    assert not [i for i in requests["items"] if i["type"] == "awaiting_submission"]
+
+
 # ---------------------------------------------------------------------------
 # The type axis and the cursor, at the HTTP seam (#1420 part 2)
 #

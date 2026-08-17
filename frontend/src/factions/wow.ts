@@ -74,7 +74,7 @@
  * exactly one phone screen, and what survives of it is `mobileFieldDesk`.
  * (#901 derived five more surfaces off that screen which no longer exist: its
  * task card, its task detail, its praxis detail, its PROFILE and its FACTION
- * PAGE. ADR-0056, ADR-0058, ADR-0061, #1319 and ADR-0077 retired all five
+ * PAGE. ADR-0056, ADR-0058, ADR-0061, #1319 and ADR-0078 retired all five
  * surfaces outright, so `taskCard`, `taskDetail`, `praxisDetail` — since
  * #1121 — `profileBody` and `factionBody` each serve WOW on both form factors.
  * The pavilion profile was not deleted with its surface: it is the phone branch
@@ -150,7 +150,7 @@ export const WOW_MANIFEST: FactionManifest = {
   // body defaulting, so a WOW faction page was a gilt banner over the na
   // placeholder — and, at the time, with no way to enlist. Derived rather than
   // drawn (no sheet exists): the ornaments come from `wowOrnament`, the section
-  // order from the phone twin that ADR-0077 has since retired, and the main +
+  // order from the phone twin that ADR-0078 has since retired, and the main +
   // rail shape from the other six bodies. The copy was already in
   // `factions.json` from #900, unread until now. This now serves BOTH widths.
   // Third of #951's four bullets.
@@ -178,7 +178,7 @@ export const WOW_MANIFEST: FactionManifest = {
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
   // phone screen, and this is it. (Five more were derived from it and are gone:
   // ADR-0056 retired the task-card twin, ADR-0058 the task-detail one, ADR-0061
-  // the praxis-detail one, #1319 the PROFILE one and ADR-0077 the FACTION PAGE
+  // the praxis-detail one, #1319 the PROFILE one and ADR-0078 the FACTION PAGE
   // one, so `taskCard`, `taskDetail`, `profileBody` and `factionBody` now serve
   // both form factors and praxis detail is one shared page. The pavilion
   // profile itself survives inside `WowProfileBody`.)

@@ -186,7 +186,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.tasks.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}

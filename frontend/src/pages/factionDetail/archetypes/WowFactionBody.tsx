@@ -163,7 +163,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           {tasks.length === 0 ? (
             <Quiet>{t("wow.tasks.empty")}</Quiet>
           ) : (
-            <div style={CARD_GRID}>
+            <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -203,7 +203,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   );
 }
 
-/** Varied card sizes are intentional, not a CSS grid — matches every other body. */
+/** Varied card sizes are intentional, not a CSS grid — matches every other body.
+ *  The PRAXIS gallery only, since #1945: the task row above wears
+ *  `.task-card-row`, which keeps the widths ragged and levels the bottom edge. */
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -309,7 +311,7 @@ function Quiet({ children }: { children: ReactNode }) {
  * the top of the roll taking the Champion ribbon the copy catalog already names.
  *
  * `minHeight` is #895's 46px touch target, carried over from the twin when
- * ADR-0077 retired it. It is applied at BOTH widths rather than behind a
+ * ADR-0078 retired it. It is applied at BOTH widths rather than behind a
  * `useFormFactor()` read, because it is a FLOOR and the laptop row already
  * clears it — the rank numeral alone is `--text-title` — so the branch would
  * cost a hook to change nothing. ADR-0069 preserved the same number through the

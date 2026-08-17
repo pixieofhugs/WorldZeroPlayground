@@ -35,7 +35,7 @@ const ALL_SLUGS = [
 
 // The six with a full bespoke treatment. (They HAD a bespoke desktop skin and a
 // separate bespoke phone one on several surfaces; ADR-0056/0058/0061/0065/0067
-// and ADR-0077 have collapsed every one of those pairs, so on the rows below
+// and ADR-0078 have collapsed every one of those pairs, so on the rows below
 // this is one component per faction serving both widths.)
 const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua']
 
@@ -53,7 +53,7 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // to exist. There is no mobile task-card row (ADR-0056, surface retired by
 // #1044), no mobile task-detail row (ADR-0058, #1068), no mobile praxis-detail
 // row (ADR-0061 + epic #1085, #1089), since #1181 no `mobileEditPraxis` row
-// (ADR-0065), and since #1314 no `mobileFactionPage` row (ADR-0077): each
+// (ADR-0065), and since #1314 no `mobileFactionPage` row (ADR-0078): each
 // verdict accepted one responsive component per faction, so task cards partition
 // on `taskCard` alone, task detail on `taskDetail` alone, praxis detail on
 // `praxisDetail` alone, the composer on `editPraxis` alone and faction detail on
@@ -94,7 +94,7 @@ const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
   editPraxis: [...CORE_SIX, 'wow'],
-  // Was `mobileFactionPage` with this exact slug list until ADR-0077 collapsed
+  // Was `mobileFactionPage` with this exact slug list until ADR-0078 collapsed
   // faction detail to one responsive component per faction. Same move the
   // praxis-card row made below: the row follows the surviving surface rather
   // than dying with the retired one. `factionBody` is what a phone renders now,

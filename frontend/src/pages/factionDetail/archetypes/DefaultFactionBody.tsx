@@ -11,7 +11,10 @@ import type { FactionDetailState } from "../useFactionDetail";
 
 const NA_SLUG = "na";
 
-/** Shared flex-wrap card grid — varied card sizes are intentional, not a CSS grid. */
+/** Flex-wrap card grid — varied card sizes are intentional, not a CSS grid.
+ *  The recently-completed PRAXIS gallery only, since #1945: the task row above
+ *  wears `.task-card-row`, which keeps the widths ragged and levels the bottom
+ *  edge. */
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -207,7 +210,7 @@ export default function DefaultFactionBody({
         {tasks.length === 0 ? (
           <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
         ) : (
-          <div style={CARD_GRID}>
+          <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
             {tasks.map((task) => (
               <TaskCard
                 key={task.id}
@@ -271,7 +274,7 @@ export default function DefaultFactionBody({
  * A function rather than a const because it now reads the mounted slug, the same
  * way `accent` above does. Seven of the eight keys declare `-on-accent`;
  * `ephemerists` deleted its in #1232 and never lands here, because it has a
- * bespoke body of its own (ADR-0077) — as do the other six. Only `albescent`
+ * bespoke body of its own (ADR-0078) — as do the other six. Only `albescent`
  * falls through today, and it resolves to `default`.
  */
 function joinButtonStyle(slug: string): CSSProperties {
