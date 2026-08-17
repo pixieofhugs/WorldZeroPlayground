@@ -173,10 +173,14 @@ export function useCreateCharacter(): CreateCharacterState {
       //
       // DERIVED from the character's own state via `task.start_here`, never
       // from a flag onboarding passes in, so it holds however they arrived —
-      // sticker, search engine, or a second character years from now. The
-      // profile stays the destination for anyone with no marked task, which is
-      // anyone who has already completed the onboarding one.
-      navigate(await resolveHandoffDestination(`/characters/${character.id}`))
+      // sticker, search engine, or a second character years from now.
+      //
+      // The fallback is the TASK BOARD, not the new character's profile
+      // (#1972). Anyone with no marked task has already done the onboarding
+      // one, and the board now opens on what they can start rather than on all
+      // 65 rows — so it is the "somewhere with something to do" this hand-off
+      // was written to reach, where the empty profile never was.
+      navigate(await resolveHandoffDestination('/tasks'))
     } catch (err) {
       setError(extractError(err))
     } finally {

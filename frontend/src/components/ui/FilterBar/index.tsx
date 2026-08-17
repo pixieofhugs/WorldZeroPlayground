@@ -188,10 +188,18 @@ export function FilterBarEmpty({
   title,
   hint,
   onClearAll,
+  actionLabel,
 }: {
   title: string
   hint?: string
   onClearAll?: () => void
+  /**
+   * Override for the button's words. "Clear all filters" is right when the
+   * player applied the filters; a page whose filter was on before they touched
+   * anything (the task board's eligibility default, #1972) has to say what the
+   * tap DOES instead — the button is the same one either way.
+   */
+  actionLabel?: string
 }) {
   const { t } = useTranslation('common')
   return (
@@ -206,7 +214,7 @@ export function FilterBarEmpty({
           className="filter-empty__action"
           onClick={onClearAll}
         >
-          {t('filters.bar.clearAllFilters')}
+          {actionLabel ?? t('filters.bar.clearAllFilters')}
         </button>
       )}
     </div>
