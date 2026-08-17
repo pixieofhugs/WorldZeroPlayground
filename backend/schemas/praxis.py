@@ -42,7 +42,14 @@ class PraxisMemberOut(WireModel):
     praxis_id: int
     character_id: int
     character_display_name: str  # populated by build_praxis_out
+    # APPROVAL of the live proposal since ADR-0079, not "this member filed their
+    # part" — the name stayed because it is the wire field and the feed's column.
     has_submitted: bool
+    # DONE (ADR-0079, #1811): "my part is finished." Purely social — the roster's
+    # own badge — and freely reversible, which is why it survives everything that
+    # clears an approval. On the wire because the composer's Done toggle has to
+    # come back the same after a reload; `POST /praxes/{id}/done` is what moves it.
+    is_done: bool
     # When `has_submitted` last flipped True (#571, #1415). NULL while the member
     # still owes a part, and NULL again the moment they pull it back or the
     # collab is unpublished — `collab_consensus` clears both together, so this is

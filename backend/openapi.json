@@ -4830,6 +4830,10 @@
             "title": "Id",
             "type": "integer"
           },
+          "is_done": {
+            "title": "Is Done",
+            "type": "boolean"
+          },
           "joined_at": {
             "format": "date-time",
             "title": "Joined At",
@@ -4870,6 +4874,7 @@
           "character_id",
           "character_display_name",
           "has_submitted",
+          "is_done",
           "submitted_at",
           "joined_at",
           "nudged_at"

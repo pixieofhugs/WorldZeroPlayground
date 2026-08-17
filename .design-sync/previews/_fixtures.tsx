@@ -187,7 +187,10 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     praxis_id: 501,
     character_id: 7,
     character_display_name: 'Ada Reed',
+    // Approval, and Done, are orthogonal since ADR-0079 — a member may hold
+    // either, both or neither — so the fixture carries one of each.
     has_submitted: true,
+    is_done: true,
     joined_at: EARLIER,
     submitted_at: NOW,
     nudged_at: null,
@@ -198,6 +201,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_id: 12,
     character_display_name: 'Sam Okafor',
     has_submitted: false,
+    is_done: false,
     joined_at: EARLIER,
     submitted_at: null,
     nudged_at: null,

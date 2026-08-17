@@ -19,8 +19,6 @@ import { describe, it, expect } from 'vitest'
 import {
   PRE_OPEN_RETRY_LIMIT,
   WS_POLICY_VIOLATION,
-  WS_ROOM_FROZEN,
-  isRoomSealedClose,
   shouldReconnectRoom,
 } from '../roomReconnect'
 
@@ -64,33 +62,14 @@ describe('shouldReconnectRoom', () => {
     expect(shouldReconnectRoom(WS_POLICY_VIOLATION, 1, true)).toBe(false)
   })
 
-  it('reconnects after the room is sealed, so the sealed text can be read back', () => {
-    // 4001 is NOT 1008 on purpose (#1808/#1923): the member is still a member
-    // and the server still answers their `SYNC_STEP1`, so the room must come
-    // back or the write-up they just sealed is off their screen for good.
-    // Unbounded like any other post-open close — the seal is told to them by
-    // `isRoomSealedClose` below, not by refusing to reconnect.
-    expect(shouldReconnectRoom(WS_ROOM_FROZEN, 1, true)).toBe(true)
+  it('reconnects after any other post-open close, unbounded', () => {
+    // #1808's 4001 is gone with the freeze it announced (ADR-0079, #1811), and
+    // 1008 is once again the only code the room sends. Anything else that
+    // arrives after an open is a drop over queued offline edits (#1743), which
+    // must still sync, so that side stays unbounded.
+    expect(shouldReconnectRoom(WS_ABNORMAL_CLOSURE, 1, true)).toBe(true)
     expect(
-      shouldReconnectRoom(WS_ROOM_FROZEN, PRE_OPEN_RETRY_LIMIT * 100, true),
+      shouldReconnectRoom(WS_ABNORMAL_CLOSURE, PRE_OPEN_RETRY_LIMIT * 100, true),
     ).toBe(true)
-  })
-})
-
-describe('isRoomSealedClose', () => {
-  it('recognises the code the room hangs up with when a praxis freezes', () => {
-    // The wire contract: `_WS_ROOM_FROZEN` in `backend/services/praxis_room.py`,
-    // where a backend test pins the literal as well as the constant.
-    expect(WS_ROOM_FROZEN).toBe(4001)
-    expect(isRoomSealedClose(WS_ROOM_FROZEN)).toBe(true)
-  })
-
-  it('reads nothing into the codes that mean something else', () => {
-    // A drop and a kick are not a seal. Only 4001 says "the praxis froze under
-    // you"; anything else that reached this would freeze an editor that is
-    // still perfectly writable.
-    expect(isRoomSealedClose(WS_ABNORMAL_CLOSURE)).toBe(false)
-    expect(isRoomSealedClose(WS_POLICY_VIOLATION)).toBe(false)
-    expect(isRoomSealedClose(1000)).toBe(false)
   })
 })

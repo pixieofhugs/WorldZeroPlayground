@@ -1,12 +1,21 @@
 /**
  * The waiting surface (#1080, ADR-0059) — what the composer becomes once you
- * have filed your part of a multi-party praxis.
+ * have approved a multi-party praxis and it is waiting on somebody else.
  *
- * Submitting a collab part or a duel side no longer navigates. `publish()`
- * holds, the faction's archetype swaps this in for its own composer regions, and
- * the player stays somewhere that can still let them back into their own text.
- * The public read view could show roster state but offers no authoring exit, and
- * putting author-only controls on a public page is exactly what #646 undid.
+ * Approving a live proposal, or sealing a duel side, no longer navigates.
+ * `publish()` holds, the faction's archetype swaps this in for its own composer
+ * regions, and the player stays somewhere that can still let them back into
+ * their own text. The public read view could show roster state but offers no
+ * authoring exit, and putting author-only controls on a public page is exactly
+ * what #646 undid.
+ *
+ * **It is a reading, not a lock** (ADR-0079, #1811). #1745 froze the document
+ * while a collab's window ran, so this surface was also the *reason* the text
+ * could not be edited; the freeze is retired, the room takes writes in every
+ * status a member can reach, and the re-entry below is the deliberate door
+ * ADR-0059 wanted rather than the only one there is. What it costs is the whole
+ * proposal — the countdown stops and every approval clears — which is why it
+ * still asks first.
  *
  * ## Dressed, not neutral (#1189, closing #1071 decision 7)
  *

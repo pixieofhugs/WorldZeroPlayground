@@ -299,9 +299,14 @@ export async function changePraxisType(id: number, type: PraxisType): Promise<Pr
 // Lifecycle transitions
 // ---------------------------------------------------------------------------
 
-// Unsubmit a praxis back to editing (#590 renamed withdraw → unsubmit). For a
-// sealed solo/collab this reopens the whole group; for a pending collab where
-// the caller has submitted, it clears only the caller's part.
+/**
+ * One route, two doors, told apart by status (#590, ADR-0079).
+ *
+ * - `submitted` — reopen a sealed praxis. The whole group comes back out.
+ * - `pending` — **Withdraw proposal**: the same cancellation an edit performs,
+ *   for a member who has read the draft and has no edit to make yet. Any member
+ *   may (ADR-0013); per-member pull-back is gone with per-member submission.
+ */
 export async function unsubmitPraxis(id: number): Promise<PraxisOut> {
   const { data } = await apiPost('/praxes/{praxis_id}/unsubmit', {
     params: { path: { praxis_id: id } },
@@ -311,6 +316,31 @@ export async function unsubmitPraxis(id: number): Promise<PraxisOut> {
   return data
 }
 
+/**
+ * **Done** — "my part is finished" (ADR-0079, #1811).
+ *
+ * Purely social: a roster badge, freely reversible, gating nothing and starting
+ * nothing. It takes the value rather than toggling because the server owns the
+ * flag and a client that guessed which of two endpoints to call from local
+ * state is one dropped response away from disagreeing with it.
+ *
+ * No `notifyRequestsChanged`: Done does not move this praxis in or out of
+ * anyone's "awaiting your submission" bucket — that bucket is about approval.
+ */
+export async function setPraxisDone(id: number, isDone: boolean): Promise<PraxisOut> {
+  const { data } = await apiPost('/praxes/{praxis_id}/done', {
+    params: { path: { praxis_id: id } },
+    body: { is_done: isDone },
+  })
+  return data
+}
+
+/**
+ * **Propose**, then **Approve** — one endpoint, told apart by praxis state
+ * (ADR-0079). No window open makes this a proposal, which opens the
+ * silence-is-consent window and records the caller as approved; a window
+ * already open makes it a vote on that proposal. All approved → Live.
+ */
 export async function submitPraxis(id: number): Promise<PraxisOut> {
   const { data } = await apiPost('/praxes/{praxis_id}/submit', {
     params: { path: { praxis_id: id } },

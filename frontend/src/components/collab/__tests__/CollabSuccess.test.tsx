@@ -24,6 +24,7 @@ function member(id: number, name: string, cast: boolean): PraxisMemberOut {
     character_id: id,
     character_display_name: name,
     has_submitted: cast,
+    is_done: false,
     joined_at: '2026-01-01T00:00:00Z',
     nudged_at: null,
     submitted_at: null,
@@ -78,7 +79,7 @@ describe('CollabSuccess render', () => {
     // A collab pays every member in full — not a split.
     expect(html.match(/\+30/g)).toHaveLength(2)
     expect(html).toContain('The praxis is submitted')
-    expect(html).toContain('2 of 2 submitted')
+    expect(html).toContain('2 of 2 approved')
   })
 
   // #1812 — the success screen used to close in the task faction's voice ("Sealed"

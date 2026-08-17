@@ -76,8 +76,10 @@ const NON_COPY_WORDS = [
   '^/[\\w\\-./:?=&]*$',
   '^https?://.*$',
   // Decorative typographic glyphs / ornaments (not sentences) — separators,
-  // faction ornaments, and window-chrome marks like "▭ ✕".
-  /^[\s·•‹›«»“”‘’—–→←↑↓★☆✦✧✓✔✕✗×⚔⚜†◆◇▢▭■●○◦∞°▦¼½¾″′…]+$/u,
+  // faction ornaments, and window-chrome marks like "▭ ✕". ☾ ☽ join the set
+  // with Coven's arched Points plate (#2019), where they are the finials either
+  // side of the heading — the same role ✦ plays as its row bullet.
+  /^[\s·•‹›«»“”‘’—–→←↑↓★☆✦✧✓✔✕✗×☾☽⚔⚜†◆◇▢▭■●○◦∞°▦¼½¾″′…]+$/u,
   // HTML-entity ornaments (&middot; &rsaquo; &rdquo; &#10007; &#x2694; …),
   // possibly a run of them (&#x2709;&#xFE0F; = 📧).
   /^(?:&(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);)+$/,
