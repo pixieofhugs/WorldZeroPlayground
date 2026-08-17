@@ -1488,6 +1488,41 @@
   --faction-coven-slip-glow: rgba(236, 79, 146, 0.3);
   --faction-coven-slip-shadow: 0 14px 32px -14px rgba(236, 79, 146, 0.45);
 
+  /* ── The score stamp's arched Points plate (#2019) ──
+     The plate is a vertical ramp from the ward's paper down to a pink foot.
+     Only the FOOT is minted: its head is `--faction-coven-ward-card`, which is
+     the design's `--card` to the byte. It is a scalar rather than the design's
+     `color-mix(--pk-lt 34%, --card)` so the contrast test can measure it — a
+     `color-mix()` parses as null there, which is the same reason
+     `--faction-coven-slip-sigil-ground` is a scalar.
+
+     THE THREE ROW INKS below carry the design's deliberate colour code — base
+     pink, multiplier gold, votes blue, the blue because votes are the one term
+     that comes from other people. All three of the design's own values FAIL AA
+     on the light plate (3.27 / 1.89 / 3.18 on the foot), so each is walked along
+     its own hue line until it clears, in BOTH cascades: the design annotated
+     against a near-white card and this is the same walk `-soft` and `-label`
+     already record above. Every figure is measured on the FOOT, the plate's
+     darker stop — measuring the head would repeat the design's mistake — and
+     `factionContrast.test.ts` holds the rows. The type is 19px/600 serif and
+     21px on the group subtotal, so AA_NORMAL governs, not AA_LARGE. */
+  --faction-coven-slip-plate-foot: #fee5f1;
+  /* #d1568a → light 4.58:1 on the foot (5.14 on the head), dark 4.59 / 5.26.
+     The light value also carries +13% saturation off the design's hue: at the
+     lightness AA allows it was ΔE 16.5 from `-ink` — the ink the meta, group and
+     habit rows wear, which is the SAME hue at a lower lightness — and two rows a
+     viewer cannot tell apart are one row with two colours (§3, #1549). At 70%
+     it is ΔE 23.4, over that section's floor of 20. */
+  --faction-coven-slip-row-base: #c82360;
+  /* #d9a521 → light 4.57:1 on the foot (5.12 on the head), dark 6.88 / 7.89.
+     Light is the big walk: a bright gold on near-white paper is 1.89:1 and there
+     is no yellow that clears — the ceiling is arithmetic, not a failure of
+     search (§3, #1932) — so light lands on the same olive `--faction-wow-accent-
+     deep` had to. Dark keeps the design's gold, which clears there untouched. */
+  --faction-coven-slip-row-mult: #856514;
+  /* #4f86c6 → light 4.55:1 on the foot (5.10 on the head), dark 4.59 / 5.26. */
+  --faction-coven-slip-row-votes: #376caa;
+
   /* WOW — cream/gold/plum chronicle frame (the chronicle is WOW's, ADR-0050) */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg); /* cream parchment */
   --faction-wow-chronicle-gold: #c8a02a; /* frame + rules; theme-invariant */
@@ -2713,6 +2748,15 @@
   --faction-coven-slip-cta-ink: #14110b;
   --faction-coven-slip-glow: rgba(244, 114, 182, 0.42);
   --faction-coven-slip-shadow: 0 16px 38px -14px rgba(0, 0, 0, 0.7);
+  /* The night plate (#2019). The foot is the same 34% of `-mid` into the ward
+     paper the light ramp mixes, taken on the dark stops (#5e2a46 into #2a0f1e).
+     The three row inks lift on their own hue lines; the gold needs no lift at
+     all by night, which is the whole shape of the light walk seen from the far
+     side. Ratios are in the light block above, both cascades together. */
+  --faction-coven-slip-plate-foot: #3c182c;
+  --faction-coven-slip-row-base: #d66796;
+  --faction-coven-slip-row-mult: #d9a521;
+  --faction-coven-slip-row-votes: #5c8fca;
 
   /* WOW — cream/gold/plum chronicle (dark). The gold #c8a02a does NOT lift; the
      plum is what carries the flip (#7a4a9e → #c79be0). */
@@ -4226,6 +4270,41 @@
 @media (prefers-reduced-motion: no-preference) {
   .coven-moon-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* Coven — THE CAULDRON (#2019), the score stamp's total mark and, per the owner
+   ruling, the vessel the Coven task card mounts too. Two motions, both drawn by
+   the design as inline `animation:` and both classes here so the reduced-motion
+   gate can reach them: the pot's seal-pink glow breathes, and three bubbles rise
+   off the brew. Stilled, the pot keeps its glow-less outline and all three
+   bubbles stay drawn at their static opacity — they are ornament, so nothing is
+   carried by the motion.
+
+   The stagger reuses `--tw-delay`, the same real app variable the moon plate's
+   dust and sparkles take theirs from (#1318).
+
+   The glow RADIUS is a custom property rather than a pair of literals, because
+   the vessel is size-parameterised: the component derives it from `size`, so an
+   84px cauldron on a task card wears a proportional halo instead of the 158px
+   one's. The bubbles need no such help — they are geometry inside the viewBox,
+   and a CSS `translateY` on an SVG element is in user-space units. */
+@keyframes cvn-cauldron-glow {
+  0%, 100% { filter: drop-shadow(0 0 calc(var(--cvn-cauldron-glow, 8px) * 0.25) var(--faction-coven-slip-deep)); }
+  50% { filter: drop-shadow(0 0 var(--cvn-cauldron-glow, 8px) var(--faction-coven-slip-deep)); }
+}
+@keyframes cvn-cauldron-bub {
+  0% { opacity: 0; transform: translateY(7px) scale(0.7); }
+  30% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-22px) scale(1.05); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-cauldron-sigil { animation: cvn-cauldron-glow 3.4s ease-in-out infinite; }
+  .cvn-cauldron-bub {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: cvn-cauldron-bub 3.2s ease-in-out infinite;
+    animation-delay: var(--tw-delay, 0s);
+  }
 }
 
 /* Ephemerists — THE METALS LADDER (#1207), which replaced the constellation

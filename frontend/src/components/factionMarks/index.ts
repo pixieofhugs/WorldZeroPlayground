@@ -26,3 +26,4 @@
 export { default as Lotus, type FactionMarkProps } from "./Lotus";
 export { default as Enso } from "./Enso";
 export { default as PointsRoundel, type PointsRoundelProps } from "./PointsRoundel";
+export { default as CovenCauldron, type CovenCauldronProps } from "./CovenCauldron";

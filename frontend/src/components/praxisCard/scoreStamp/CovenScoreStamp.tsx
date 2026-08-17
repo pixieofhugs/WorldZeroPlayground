@@ -1,84 +1,181 @@
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
+import CovenCauldron from "../../factionMarks/CovenCauldron";
 import {
-  Braid,
-  CAPTION,
-  CARD,
-  BORDER,
   DEEP,
+  DISPLAY,
   GOLD,
-  HAND,
-  HOLD_INK,
   INK,
   READING,
   SHADOW,
+  SOFT,
 } from "../../factionMarks/covenSlip";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
- * The Cozy Coven score stamp (#840, ADR-0049, ADR-0050 → re-dressed by #1209).
+ * The Cozy Coven score stamp (#840, ADR-0049, ADR-0050 → #1209 → rebuilt by
+ * #2019 to the vendored `TallyStamp` design).
  *
- * The working, written on the coven's candle-lit paper and pinned slightly
- * crooked. The rows and their selection are the shared box's (ADR-0047 via
- * `scoreBreakdown`); only the presentation is Coven's. That includes the base
- * line dropping out when it would only repeat the bottom-line total (#1131).
+ * TWO STACKED OBJECTS, where there used to be one crooked slip: an arched plate
+ * headed `☾ Points ☽` carrying the working as ✦-bulleted rows, and the cauldron
+ * below it holding the total. The rows and their selection are still the shared
+ * box's (`scoreBreakdown`, ADR-0049/0076); only the presentation is Coven's.
  *
- * WHAT #1209 SWAPPED, and what it kept.
+ * WHAT #2019 RETIRED, and why each went.
+ *  • The `rotate(-3deg)` tilt and the chip's `+3deg` counter-rotation. The new
+ *    composition is symmetrical and reads upright; the counter-rotation was
+ *    moot the moment the chip stopped being a chip.
+ *  • The gold multiplier chip, now an ordinary `mult` row in the working. The
+ *    plate's rows ARE the working, so a term pinned to the right of the base
+ *    line was the odd one out.
+ *  • The `✨`. It was decoration beside the figure; the cauldron IS the mark now.
+ *  • The braid, whose job — ruling the working off from the total — belongs to
+ *    the plate's own dashed rule above the group subtotal.
+ * `<TaskCrown>` STAYS. The design draws a `♛` glyph, but at size 26 / `8deg` /
+ * a few px off the top-right corner it is describing the shared component this
+ * stamp already mounted at those numbers.
  *
- * The `--faction-coven-stamp-*` family went with the pink marker sticker: the
- * blush stock, the dusty-rose 2px DASHED edge, the theme-invariant amber
- * highlighter chip and the flat drop under it were all the retired identity.
- * The paper is the ward's panel inside the slip's pink edge now, and the
- * multiplier chip takes the "you already hold this" gold — a measured pair
- * (`--faction-coven-slip-gold` under `--faction-coven-ward-hold-ink`, 6.20:1
- * light / 7.03:1 dark) where the amber was never measured against anything.
+ * THE GROUP ROW IS COVEN-LOCAL, AND IT MUST NOT SWALLOW THE HABIT BONUS.
+ * It exists so `×1.50` is visibly applied to `17` and not to `12`, and it is a
+ * subtotal of two figures `scoreBreakdown` already returns — arithmetic, not a
+ * new term, which is why `ScoreBreakdown` gains no `group` field and ADR-0049 is
+ * unamended. The bonus is FLAT and sits outside the multiplier (#1617), so it is
+ * written beside the votes and never inside the group. This skin genuinely meets
+ * that case: the stamp dispatches on the TASK's faction (`ScoreStamp.tsx`), so a
+ * UA character's praxis on a Coven task lands here with a live habit row — a
+ * state the design never draws, because its vendored `breakdown()` predates
+ * #1617 and has no habit term at all.
  *
- * THREE MARKS STAY, and each is a shape rather than a lo-fi token:
- *  • the `rotate(-3deg)` tilt and its `+3deg` counter-rotated chip — a thing
- *    pressed on by hand, and the ward pages keep everything hand-placed
- *    slightly off-square;
- *  • the working set in Caveat — this is the coven's HAND doing arithmetic in
- *    the margin, which is exactly the register Caveat is kept for;
- *  • the `✨` that closes the tally. Decorative; the figure beside it is the
- *    value.
- *
- * The dashed rule above the total is the one that did NOT survive: it existed to
- * match the sticker's dashed edge, and with the edge gone it matched nothing. It
- * is a braid, which is what rules a Coven surface.
+ * THE COLOURS ARE TOKENS, NOT THE DESIGN'S HEXES. Six of the design's palette
+ * entries are `--faction-coven-slip-*` to the byte and all six have dark values,
+ * so building from the literals would have shipped a light-only card — a
+ * regression dressed as fidelity. The design's two near-misses (`--pk-soft`,
+ * `--label`) are the values `index.css` records walking DOWN for AA. The three
+ * row-value inks are the one genuinely new decision, and they are minted there
+ * with both cascades measured.
  */
+
+/** Between the ✦ bullet and its label, and between a label and its figure. */
+const ROW: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "baseline",
+  gap: "var(--space-md)",
+};
+
+/**
+ * A figure in the working. `strong` is the group subtotal, a step up from the
+ * terms it sums; both are drawn figures rather than copy, so they sit off the
+ * type scale as ornament (WORLD_ZERO_STYLE §4a).
+ */
+function value(strong: boolean, color: string): CSSProperties {
+  return {
+    fontFamily: READING,
+    fontWeight: 600,
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's figures, the design's 19/21 (§4a)
+    fontSize: strong ? 21 : 19,
+    color,
+  };
+}
+
 export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
   const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
-  /** The working's voice — the coven's hand, in the margin. */
-  const workingStyle = {
-    fontFamily: HAND,
-    fontWeight: 700,
-    fontSize: "var(--text-xl)",
-    color: DEEP,
-    marginTop: "var(--space-xs)",
-  };
+  /** One ✦-bulleted line of the working. */
+  const row = (key: string, label: string, figure: ReactNode, style: CSSProperties) => (
+    <div key={key} style={{ ...ROW, ...style }}>
+      <span
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "var(--space-xs)",
+          fontFamily: READING,
+          fontStyle: "italic",
+          fontWeight: 600,
+          fontSize: "var(--text-content)",
+          color: SOFT,
+        }}
+      >
+        <span aria-hidden style={{ fontSize: "var(--text-base)", color: DEEP, opacity: 0.7 }}>
+          ✦
+        </span>
+        {label}
+      </span>
+      {figure}
+    </div>
+  );
+
+  const rows: ReactNode[] = [];
+  if (base !== null) {
+    rows.push(
+      row("base", t("card.stamp.base"), (
+        <span style={value(false, "var(--faction-coven-slip-row-base)")}>{base}</span>
+      ), {}),
+    );
+  }
+  if (meta !== null) {
+    rows.push(
+      row("meta", t("card.stamp.meta"), <span style={value(false, INK)}>+{meta}</span>, {}),
+      /*
+       * The subtotal, under the dashed rule that says "the multiplier applies
+       * from here". `base` is non-null whenever `meta` is — the resolver hides
+       * it exactly when NO other term is in play — so `?? 0` is the compiler's
+       * proof rather than a fourth state.
+       */
+      row("group", t("card.stamp.group"), (
+        <span style={value(true, INK)}>{(base ?? 0) + meta}</span>
+      ), {
+        borderTop: `1.5px dashed color-mix(in srgb, ${DEEP} 45%, transparent)`,
+        paddingTop: "var(--space-xs)",
+      }),
+    );
+  }
+  if (mult !== null) {
+    rows.push(
+      row("mult", t("card.stamp.mult"), (
+        <span style={value(false, "var(--faction-coven-slip-row-mult)")}>{formatMult(mult)}</span>
+      ), {}),
+    );
+  }
+  if (votes !== null) {
+    rows.push(
+      row("votes", t("card.stamp.votes"), (
+        <span style={value(false, "var(--faction-coven-slip-row-votes)")}>+{votes}</span>
+      ), {}),
+    );
+  }
+  /*
+   * The habit bonus (#1617), written after the tally: flat, outside the group.
+   * The design draws no such row and this skin still has to — see the header.
+   */
+  if (habit !== null) {
+    rows.push(
+      row("habit", t("card.stamp.habit"), <span style={value(false, INK)}>+{habit}</span>, {}),
+    );
+  }
 
   return (
     <div
       style={{
         position: "relative",
         flexShrink: 0,
-        minWidth: 118,
-        boxSizing: "border-box",
-        transform: "rotate(-3deg)",
-        background: CARD,
-        border: `2px solid ${BORDER}`,
-        borderRadius: 16, // the slip's die-cut corner — see frameBase's note
-        boxShadow: SHADOW,
-        padding: "var(--space-sm) var(--space-md)",
-        lineHeight: 1.1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "var(--space-md)",
       }}
     >
+      {/*
+       * The crown rides the whole stamp rather than the plate, because the plate
+       * is conditional (below) and the crown is not — a praxis can top its task
+       * on a bare score. Size, tilt and offset are the ones it already wore.
+       */}
       {crowned && (
         <TaskCrown
           size={26}
@@ -88,111 +185,81 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         />
       )}
 
-      {/* Base, with the gold chip pinned right and counter-rotated. The line is
-          only written when something moved the figure (#1131) — the bottom line
-          already carries it otherwise — and the chip rides this line, which is
-          safe: a live multiplier is one of the things that keeps the line. */}
-      {base !== null && (
+      {/*
+       * The arched plate, and ONLY where there is working to hold. `base !== null`
+       * is that test: the resolver nulls it exactly when no other term is in play
+       * (ADR-0076), so a base-only praxis is the cauldron alone rather than an
+       * arch drawn over an empty block. The design's spec sheet draws this state
+       * twice and disagrees with itself — plateless in one case, a "no working
+       * shown" plate in the other — and the repo already ruled it.
+       */}
+      {rows.length > 0 && (
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-xs)",
-            whiteSpace: "nowrap",
+            position: "relative",
+            minWidth: 150,
+            boxSizing: "border-box",
+            padding: "var(--space-2xl) var(--space-lg) var(--space-lg)",
+            background: `linear-gradient(180deg, var(--faction-coven-ward-card), var(--faction-coven-slip-plate-foot))`,
+            border: `2.5px solid ${DEEP}`,
+            // The arch: an elliptical head over a die-cut foot, as drawn.
+            borderRadius: "92px 92px 20px 20px / 108px 108px 20px 20px",
+            boxShadow: `${SHADOW}, inset 0 0 22px color-mix(in srgb, ${DEEP} 12%, transparent)`,
+            lineHeight: 1.1,
           }}
         >
-          <span style={{ ...CAPTION, fontSize: "var(--text-base)" }}>
-            {t("card.stamp.base")}
-          </span>
+          {/* The seal's inner keepsake border, following the arch inside it. */}
           <span
+            aria-hidden
             style={{
-              fontFamily: READING,
-              fontWeight: 600,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: the slip's base numeral, the design's 28 (§4a)
-              fontSize: 28,
-              lineHeight: 0.7,
-              color: INK,
+              position: "absolute",
+              inset: 4,
+              border: `1px dashed color-mix(in srgb, ${DEEP} 55%, transparent)`,
+              borderRadius: "88px 88px 16px 16px / 104px 104px 16px 16px",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "var(--space-sm)",
+              marginBottom: "var(--space-sm)",
             }}
           >
-            {base}
-          </span>
-          {mult !== null && (
+            {/* The moons are the plate's finials — the ornament gold, not ink. */}
+            <span aria-hidden style={{ fontSize: "var(--text-xl)", color: GOLD }}>
+              ☾
+            </span>
             <span
               style={{
-                marginLeft: "auto",
-                fontFamily: "var(--font-faction-rounded)",
-                fontWeight: 700,
-                fontSize: "var(--text-lg)",
-                // Counter-rotation, so the chip reads level on the crooked slip.
-                transform: "rotate(3deg)",
-                color: HOLD_INK,
-                background: GOLD,
-                borderRadius: 10,
-                padding: "0 var(--space-sm)",
+                fontFamily: DISPLAY,
+                fontSize: "var(--text-title)",
+                letterSpacing: "0.06em",
+                lineHeight: 1,
+                // The design heads the plate "Points". The shared key is the
+                // lowercase one every other stamp's caption reads, so the case
+                // is presentation here rather than a ninth copy string.
+                textTransform: "capitalize",
+                color: DEEP,
               }}
             >
-              {formatMult(mult)}
+              {t("card.stamp.points")}
             </span>
-          )}
+            <span aria-hidden style={{ fontSize: "var(--text-xl)", color: GOLD }}>
+              ☽
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
+            {rows}
+          </div>
         </div>
       )}
 
-      {meta !== null && (
-        <div style={workingStyle}>
-          {t("card.stamp.meta")} +{meta}
-        </div>
-      )}
-
-      {/* The tally, when the coven has votes to count (ADR-0076). Its lead
-          belongs to the line above it, so it goes when the base line does
-          (#1131) and the slip keeps its own padding. */}
-      {votes !== null && (
-        <div
-          style={{
-            ...workingStyle,
-            marginTop: base !== null ? workingStyle.marginTop : undefined,
-          }}
-        >
-          {t("card.stamp.fromVotes", { votes })}
-        </div>
-      )}
-
-      {/* The habit bonus, written after the tally: flat, outside the multiplier
-          (#1617). It always has a line above it, so it always keeps its lead. */}
-      {habit !== null && (
-        <div style={workingStyle}>
-          {t("card.stamp.habit")} +{habit}
-        </div>
-      )}
-
-      {/* The braid — what rules a Coven surface, and only where there is working
-          to rule off. `base !== null` is that test: the resolver nulls it exactly
-          when no other term is in play (ADR-0076), so a base-only slip is the
-          bottom line alone rather than a braid drawn under nothing. */}
-      {base !== null && <Braid style={{ margin: "var(--space-sm) 0 var(--space-xs)" }} />}
-
-      <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
-        <span
-          style={{
-            fontFamily: READING,
-            fontWeight: 600,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the slip's bottom-line total, the design's 32 (§4a)
-            fontSize: 32,
-            lineHeight: 0.72,
-            color: DEEP,
-          }}
-        >
-          {formatPoints(total)}
-        </span>
-        {/* Coven's total mark. Decorative — the figure beside it is the value. */}
-        <span
-          aria-hidden
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the ✨ device sized as a glyph, the design's 15 (§4a)
-          style={{ fontSize: 15, lineHeight: 1 }}
-        >
-          ✨
-        </span>
-      </div>
+      <CovenCauldron total={formatPoints(total)} caption={t("card.stamp.points")} />
     </div>
   );
 }

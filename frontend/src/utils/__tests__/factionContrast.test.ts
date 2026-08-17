@@ -552,6 +552,32 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-coven-slip-deep",
   },
 
+  // Coven — THE ARCHED POINTS PLATE (score stamp, #2019). The plate is a ramp
+  // from `--faction-coven-ward-card` down to `-plate-foot`, so every ink on it
+  // is measured on the FOOT: it is the darker stop in BOTH cascades, and
+  // measuring the head would repeat the mistake the slip block above records.
+  // The three row inks carry the design's colour code (base pink, multiplier
+  // gold, votes blue) and ALL THREE of the design's own values fail here in
+  // light — 3.27 / 1.89 / 3.18 — which is why index.css ships them walked.
+  // 19px/600 serif, 21px on the group subtotal, so AA_NORMAL governs.
+  { what: "coven plate, base figure", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-row-base" },
+  { what: "coven plate, multiplier figure", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-row-mult" },
+  { what: "coven plate, votes figure", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-row-votes" },
+  // The meta, group and habit figures take the plain ink, and the ✦-bulleted
+  // labels beside all six take the brief ink. Same ground, so the plate's whole
+  // working is gated rather than only the coloured half.
+  { what: "coven plate, subtotal figure", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-ink" },
+  { what: "coven plate, row label", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-soft" },
+  // The cauldron below it is not on the plate: its own belly is the ground, a
+  // 94% wash of the ward paper, and it carries the total and the `points`
+  // caption. `coven ward panel, brief` already gates the caption's ink on that
+  // stock; the large display figure is the pairing this row adds.
+  {
+    what: "coven cauldron belly, total figure",
+    surface: "--faction-coven-ward-card",
+    text: "--faction-coven-slip-deep",
+  },
+
   // Coven — THE CANDLELIT WARD (task detail v2, #1031). The detail page opens
   // the slip out, so the same three inks meet two NEW grounds: the page wash the
   // header sits directly on, and the panel the brief sits on. Both are flat, not
