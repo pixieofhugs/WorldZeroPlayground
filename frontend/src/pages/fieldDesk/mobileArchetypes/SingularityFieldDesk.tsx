@@ -145,7 +145,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
         <div style={kicker}>{t('nav.home')}</div>
         <h1 style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.04em', margin: 'var(--space-xs) 0 0' }}>
           {'> '}
-          {t('fieldDesk.home.singularity.masthead')}
+          {t('fieldDesk.home.title')}
           <Cursor />
         </h1>
         <div style={{ height: 1, marginTop: 'var(--space-md)', background: `linear-gradient(90deg, ${BORDER_HARD}, transparent)` }} />
@@ -280,7 +280,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
       <Panel>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: PHOSPHOR }}>
-            {t('fieldDesk.home.singularity.questsHeading')}
+            {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: signal(30) }} />
           <Link to="/tasks" style={{ ...kicker, color: SIGNAL, textDecoration: 'none' }}>

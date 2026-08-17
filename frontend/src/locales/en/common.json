@@ -137,35 +137,7 @@
       "notificationsCapped": "{{cap}}+ notifications",
       "caughtUp": "All caught up",
       "findTask": "Find a Task",
-      "castVotes": "Cast Your Votes",
-      "coven": {
-        "questsHeading": "quests"
-      },
-      "ua": {
-        "masthead": "One true piece today. Begin.",
-        "questsHeading": "On the sheet"
-      },
-      "singularity": {
-        "masthead": "FieldDesk.sys",
-        "questsHeading": "// running_processes"
-      },
-      "everymen": {
-        "masthead": "The Union Desk",
-        "questsHeading": "On the job"
-      },
-      "ephemerists": {
-        "masthead": "The Codex Desk",
-        "questsHeading": "Surveys underway"
-      },
-      "snide": {
-        "masthead": "The Job Board",
-        "questsHeading": "jobs in play"
-      },
-      "wow": {
-        "greeting": "Good morrow, Sir {{name}}.",
-        "masthead": "Thy crusade awaits. The noodle sword is where thou left it.",
-        "questsHeading": "Thy Open Quests"
-      }
+      "castVotes": "Cast Your Votes"
     }
   },
   "about": {

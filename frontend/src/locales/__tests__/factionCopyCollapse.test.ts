@@ -85,8 +85,15 @@ const ABOUT = '(about|manifesto|charter|practice|apparatus|manifest)'
 const JOIN = '(join|roll|road|dispatch|registry|access)'
 const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // --- common.json: the phone FieldDesk masthead -------------------------
-  { banned: `common:fieldDesk\\.home\\.{F}\\.greeting`, shared: 'common:fieldDesk.home.greeting', wording: 'Welcome back, {{name}}.' },
-  { banned: `common:fieldDesk\\.home\\.{F}\\.masthead`, shared: 'common:fieldDesk.home.masthead', wording: 'Home' },
+  //
+  // ⚠ The masthead does NOT take #1864's agreed "Home", and the deviation is
+  // deliberate. That word is already on this page: all eight desks print
+  // `common:nav.home` as the kicker directly above the h1, so "Home" there
+  // would read "Home / Home". The h1's shared string is the one the na, Coven
+  // and Everymen desks already carry — `fieldDesk.home.title` — and pointing
+  // the other four at it is what makes the eight say one thing. If the owner
+  // wants the literal "Home", it is a one-leaf value edit on that key.
+  { banned: `common:fieldDesk\\.home\\.{F}\\.masthead`, shared: 'common:fieldDesk.home.title', wording: 'FieldDesk' },
   { banned: `common:fieldDesk\\.home\\.{F}\\.questsHeading`, shared: 'common:fieldDesk.home.questsHeading', wording: 'In progress' },
 
   // --- factions.json: the faction detail page ---------------------------
@@ -164,6 +171,11 @@ const COLLAPSED_TO_NOTHING = [
   `feed:taskCard\\.{F}\\.level`,
   `feed:taskCard\\.{F}\\.points`,
   `praxis:comments\\.{F}\\.empty`,
+  // WOW's "Good morrow, Sir {{name}}." was the app's only greeting. The slot it
+  // sat in is the carried life's NAME on the FieldDesk identity card, and the
+  // other seven desks print `character.display_name` into it — there is no copy
+  // string to share, so the shared behaviour is the name.
+  `common:fieldDesk\\.home\\.{F}\\.greeting`,
 ]
 
 function bannedRe(pattern: string): RegExp {

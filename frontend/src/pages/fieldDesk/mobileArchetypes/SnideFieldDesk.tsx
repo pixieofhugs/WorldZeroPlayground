@@ -127,7 +127,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
       <header>
         <div style={kicker}>{t('nav.home')}</div>
         <h1 style={{ fontFamily: COND, fontSize: 'var(--text-display)', letterSpacing: '0.03em', lineHeight: 0.95, color: WALL_TEXT, margin: 'var(--space-xs) 0 0' }}>
-          {t('fieldDesk.home.snide.masthead')}
+          {t('fieldDesk.home.title')}
         </h1>
         <div style={{ height: 2, marginTop: 'var(--space-sm)', background: ACCENT_WALL }} />
       </header>
@@ -248,7 +248,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
       <RansomCard tilt={0.7}>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', color: ACID }}>
-            {t('fieldDesk.home.snide.questsHeading')}
+            {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: LINE }} />
           <Link to="/tasks" style={{ ...kicker, color: PINK, textDecoration: 'none' }}>
