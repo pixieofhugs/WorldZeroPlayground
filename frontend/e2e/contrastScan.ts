@@ -94,6 +94,16 @@ export type Finding = {
  * failure. It is reported, loudly, and ratcheted. The reasoning lives on the
  * assertions in `contrast.spec.ts`; nothing in THIS file changed, because the
  * scanner's job is to say honestly that it could not measure, and it still does.
+ *
+ * AND AMENDED AGAIN by #1727 — but still not here. "Any stop opaque → a FILL"
+ * turned out to be too coarse a refusal: a paper stock is a ramp between two
+ * near-identical creams, and it only hides text whose own luminance falls
+ * between its stops'. That distinction needs the whole stop list, arithmetic,
+ * and a real test suite, so it is NOT in this file. `resolveFillBand` in
+ * `contrastBaseline.ts` does it node-side, from `backdropCss` / `backdropBase`
+ * / `backdropOverlay` below. This module gained three reported facts and no
+ * new judgement — deliberately, because nothing typechecks the inside of a
+ * `page.evaluate` payload (#1780) and no PR runs it.
  */
 export function scanPageForContrast(): Finding[] {
   type Rgba = { r: number; g: number; b: number; a: number };

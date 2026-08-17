@@ -385,6 +385,14 @@ function dedupe(colors: Rgba[]): Rgba[] {
  * points coincide on screen. Over-wide is the safe direction — it can only
  * push a fill back into the unmeasurable report, never quietly widen a passing
  * ratio.
+ *
+ * ponytail: stops only, ignoring geometry. A gradient's stop POSITIONS say
+ * where each colour lands, and text usually covers a fraction of the element,
+ * so the true band under one line is narrower than this. The ceiling is that a
+ * fill can be called unmeasurable because of a corner the text never touches.
+ * The upgrade path is the text node's own box against the fill's box and stop
+ * offsets — which needs layout, so it belongs in the scanner, which is where
+ * this file exists to avoid putting decisions.
  */
 export function resolveFillBand(finding: Finding): FillBand | null {
   if (finding.backdropCss === null || finding.backdropBase === null) return null;
