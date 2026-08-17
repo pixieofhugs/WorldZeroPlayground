@@ -1,11 +1,30 @@
 """The ADR-0012 lazy-consensus state machine for collab submission.
 
-A collab goes Live by *silence is consent*: the first member to submit opens a
-``collab_auto_submit_days`` window; an edit hard-resets it; if everyone has
-submitted the collab seals immediately; a leave can release the last hold; a kick
+A collab goes Live by *silence is consent*: a member **proposes**, which opens a
+``collab_auto_submit_days`` window; an edit hard-resets it; once every member has
+approved the collab seals immediately; a leave can release the last hold; a kick
 resets the whole group. This module owns that window/deadline math and the
-``has_submitted`` bookkeeping so the rule lives in one place instead of leaking
+per-member bookkeeping so the rule lives in one place instead of leaking
 across submit/leave/kick/edit/read in ``services.praxis``.
+
+**Three signals, not one button** (ADR-0079). What used to be one per-member
+``has_submitted`` doing three jobs is now:
+
+- **Done** — :func:`mark_done`, and ``PraxisMember.is_done``. Purely social, a
+  roster badge, freely reversible. It gates nothing and starts nothing, which is
+  why nothing else in this module reads it.
+- **Propose** — one per praxis, held on ``Praxis.submit_proposed_at``. Opens the
+  publish window; the proposer implicitly approves.
+- **Approve** — per member, against the live proposal, and still carried by
+  ``PraxisMember.has_submitted``. All approved → publish.
+
+``has_submitted`` keeps its name because it is also the wire field and the feed's
+column; ADR-0079 splits the *meanings*, and this is the one that stayed.
+
+The rule that replaces #1745's freeze: **an edit while a proposal is live cancels
+the proposal** — approvals clear, the countdown stops, the praxis is back to
+drafting. ADR-0012's "an edit means we're not done" survives verbatim; it simply
+fires on a CRDT update now (:func:`on_room_edit`) instead of on a discrete save.
 
 This module also owns the ``collab → solo`` mutation (:func:`convert_to_solo`),
 because a collab that drops to one member converts (ADR-0060) and the *voluntary*
@@ -20,6 +39,7 @@ the collab sealed.
 """
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
@@ -31,7 +51,7 @@ from services.character_stats import (
 )
 from services.era import get_current_era_row_safe, get_era_row_for_praxis
 from services.habit_bonus import stamp_habit_bonus
-from services.praxis_room import discard_room_document, follow_praxis_status
+from services.praxis_room import discard_room_document
 from services.taunt_service import fan_out_taunt
 
 
@@ -146,20 +166,44 @@ async def settle_if_window_lapsed(
     await seal_to_live(praxis, session, era)
 
 
+async def mark_done(
+    praxis: Praxis, character_id: int, is_done: bool, session: AsyncSession
+) -> None:
+    """**Done**: "my part is finished" (ADR-0079). Social only, and reversible.
+
+    It deliberately does nothing else. No window opens, no status moves, no
+    approval is recorded and nobody's document changes — which is the whole
+    reason this signal exists as its own flag rather than as a third meaning
+    stacked on ``has_submitted``. If a future rule ever gates on it, ADR-0079
+    already rejected the obvious one: Done gating Propose hands any member a veto
+    by never marking Done, and the override you would then want *is* Propose.
+
+    No ``era`` parameter, because there is no rule here to read a value for.
+    """
+    for member in praxis.members:
+        if member.character_id == character_id:
+            member.is_done = is_done
+            break
+    await session.flush()
+
+
 async def on_member_edit(
     praxis: Praxis, session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
     """Hard reset on a collab edit (ADR-0012): an edit means "we're not done".
 
-    Cancels the pending-publish window, clears *everyone's* ``has_submitted``, and
-    returns the collab to drafting. No-op for solo/duel, or a collab that is neither
-    pending nor Live.
+    Cancels the live proposal, clears *everyone's* approval, and returns the
+    collab to drafting. No-op for solo/duel, or a collab that is neither pending
+    nor Live.
 
-    Two kinds of caller, and the second is why this reads oddly for its name:
-    media add/remove, which really are discrete edits; and ``pullBack``, which
-    since #1745 *is* the edit event for the write-up. A CRDT has none of its own
-    — text simply moves — so submitting freezes the document and reopening it is
-    the act that says "we're not done". Returning to drafting thaws the room.
+    **The one implementation of that rule**, and every trigger routes here:
+    media add/remove; Withdraw (``pullBack``), which is the same cancellation for
+    a member who has read the draft and has no edit to make yet; and, since
+    ADR-0079, a text change in the room via :func:`on_room_edit`.
+
+    ``is_done`` is deliberately untouched. An edit says the *group* is not ready
+    to publish; it says nothing about whether a member considers their own part
+    finished, and collapsing those two again is exactly what ADR-0079 split.
     """
     if praxis.type != PraxisType.collab:
         return
@@ -172,22 +216,59 @@ async def on_member_edit(
         member.has_submitted = False
         member.submitted_at = None
     await session.flush()
-    follow_praxis_status(praxis)
     if was_live:
         # Leaving Live changes scoring — recompute every member's stats.
         await recalculate_members_stats(praxis, session, era)
 
 
+async def on_room_edit(
+    praxis_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> None:
+    """A room's document moved: the live proposal, if any, is cancelled (ADR-0079).
+
+    The **domain event** behind ``services.praxis_room``'s debounced flush, kept
+    here so that "an edit cancels the proposal" has one implementation rather
+    than one per trigger. The room knows *that* the text moved; only this module
+    knows what that means.
+
+    Takes an id rather than an entity because the caller is a room task with no
+    praxis loaded, and leads with a column select so the overwhelmingly common
+    case — someone drafting, with no proposal live — costs one cheap query and
+    touches no identity map. It does not commit: the caller's transaction is the
+    one that also carries the new ``body_text``, and the two must land together
+    or the praxis holds new text under an old countdown.
+    """
+    proposed_at = await session.scalar(
+        select(Praxis.submit_proposed_at).where(Praxis.id == praxis_id)
+    )
+    if proposed_at is None:
+        return
+    praxis = await session.get(Praxis, praxis_id)
+    if praxis is None:  # pragma: no cover — deleted between the two statements
+        return
+    await on_member_edit(praxis, session, era)
+
+
 async def on_submit(
     praxis: Praxis, character_id: int, session: AsyncSession, era: EraConfig
 ) -> bool:
-    """Record a member's submission and advance the window.
+    """Record a member's approval and advance the window — Propose, then Approve.
 
-    Marks the member submitted, then either seals the collab (everyone in) or opens
-    the silence-is-consent window (first collab submit). Solo/duel always have one
-    member, so they seal immediately. Returns ``True`` iff the praxis just sealed to
-    Live, so the caller can settle any duel and recalc member stats (both kept in
-    ``services.praxis`` to avoid a ``services.duel`` import cycle).
+    One entry point for two of ADR-0079's three signals, because they are the same
+    act at different moments and the praxis's own state is what tells them apart:
+
+    - no window open → this is **Propose**. It opens the silence-is-consent
+      window, and records the proposer as approved (they implicitly approve).
+    - a window already open → this is **Approve**, a vote on the live proposal.
+
+    Either way, once every member has approved the collab seals. Solo and duel
+    always have one member, so ``all(...)`` holds on the first submit and none of
+    Propose / Approve / countdown ever engages — a duel being two solo praxes
+    (ADR-0011), that is the solo case twice.
+
+    Returns ``True`` iff the praxis just sealed to Live, so the caller can settle
+    any duel and recalc member stats (both kept in ``services.praxis`` to avoid a
+    ``services.duel`` import cycle).
     """
     for member in praxis.members:
         if member.character_id == character_id:
@@ -202,17 +283,14 @@ async def on_submit(
         await session.flush()
         return True
     if praxis.type == PraxisType.collab:
-        # A partial collab submit is a first-class "pending" state (#590): some
-        # members are in, not all. The first submit also opens the
-        # silence-is-consent countdown.
+        # ``pending`` now means "a proposal is live" (ADR-0079) rather than
+        # "some members are in, not all" — and, since #1745's freeze is retired,
+        # it no longer means the document is sealed. Every member may still
+        # write, and writing is what cancels this.
         praxis.status = PraxisStatus.pending
         if praxis.submit_proposed_at is None:
             praxis.submit_proposed_at = datetime.now(timezone.utc)
         await session.flush()
-        # Pending publish seals the document for everyone (#1745). Nothing has
-        # to be reset while nothing can change, which is what lets ADR-0012's
-        # hard reset stand verbatim over a CRDT.
-        follow_praxis_status(praxis)
     return False
 
 
@@ -307,25 +385,26 @@ async def on_member_leave(
 
 async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
     """A kick resets the changed group back to drafting (ADR-0013): cancel any
-    pending-publish window and clear submissions so the group must re-consent.
-    Call after removing the kicked member."""
+    live proposal and clear every approval so the group must re-consent.
+    Call after removing the kicked member.
+
+    ``is_done`` survives, as it does across an edit: the group has to agree
+    again, but nobody's own part became unfinished because someone left."""
     for member in praxis.members:
         member.has_submitted = False
         member.submitted_at = None
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()
-    follow_praxis_status(praxis)
 
 
 # ``on_member_unsubmit`` — #590's *partial* pull-back, where one member's
-# submission cleared and the others' stood — is gone (#1745).
+# submission cleared and the others' stood — is gone (#1745), and ADR-0079
+# **dissolves** the question rather than settling it: there is no longer a
+# per-member submission for a pull-back to take back some or all of.
 #
-# It only ever made sense while typing was the reset trigger. A member who
-# pulled back from a collab that stayed ``pending`` had a document they could
-# still write in, and their first keystroke ran the hard reset that this
-# skipped. Freezing the document on pending removes that second door: leaving
-# the praxis pending would leave the member who just reopened it unable to type,
-# and would leave the holdout — who never submitted, and so had nothing to pull
-# back — with no door at all. So reopening a pending collab is ADR-0012's hard
-# reset, for any member, and that is :func:`on_member_edit`.
+# What ``pullBack`` is now is **Withdraw proposal**: a group action any member
+# may take, with exactly the effect of an edit, for someone who has read the
+# draft and has no edit to make yet. So it routes through :func:`on_member_edit`
+# like every other trigger, and ``services.praxis.unsubmit_praxis`` is where the
+# two doors it serves — Withdraw a proposal, reopen a published praxis — part.

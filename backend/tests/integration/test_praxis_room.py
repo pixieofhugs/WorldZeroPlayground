@@ -21,7 +21,7 @@ from typing import Any, AsyncIterator, Callable
 
 import pytest
 import pytest_asyncio
-from pycrdt import Doc, Map, Provider, Text
+from pycrdt import Awareness, Doc, Map, Provider, Text, create_awareness_message
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -320,17 +320,13 @@ class _Rooms:
     async def submit(self, praxis_id: int, character_id: int) -> Any:
         """``submit_praxis``, holding the lock the room's own tasks queue behind.
 
-        A harness affordance, not a rule. Since #1808 a submit that seals an
-        **open** room closes its sockets, so the room tears down inside this
-        call and its closing flush writes the praxis. That flush runs on its own
-        session in production; here one SAVEPOINT-backed session serves both
-        sides, and two tasks using it at once raises "this session is in
-        'prepared' state" out of a room task — where it reads as a room bug
-        rather than as the harness bug it is.
-
-        Callers must let the teardown finish (wait for the room to be dropped)
-        before taking this lock again: ``release`` holds ``_open_lock`` while it
-        waits for the session, and ``discard_document`` wants ``_open_lock``.
+        A harness affordance, not a rule. A submit that seals an **open** room
+        flattens and discards its document inside this call, and a submit that
+        merely proposes may be cancelled by a flush arriving in the middle of it.
+        Both of those run on their own session in production; here one
+        SAVEPOINT-backed session serves both sides, and two tasks using it at
+        once raises "this session is in 'prepared' state" out of a room task —
+        where it reads as a room bug rather than as the harness bug it is.
         """
         async with self.sessions() as session:
             return await submit_praxis(praxis_id, character_id, session)
@@ -1138,7 +1134,12 @@ async def test_the_last_edit_before_a_room_closes_still_lands(
 
 
 # ---------------------------------------------------------------------------
-# The freeze — submitting seals the document (#1745, ADR-0012)
+# The proposal — an edit cancels it, and nothing is ever refused (ADR-0079)
+#
+# #1745's freeze and #1808's close code are gone, and so are their four tests:
+# a pending praxis no longer refuses a member's edits, so there is no refusal to
+# assert, no socket closed on a transition, and no ``follow_status`` to be
+# idempotent about. What replaced them is the pair below.
 # ---------------------------------------------------------------------------
 
 
@@ -1165,172 +1166,125 @@ async def _settle() -> None:
         await asyncio.sleep(0.01)
 
 
-async def _wait_for_the_freeze_to_settle(rooms: _Rooms, praxis_id: int) -> None:
-    """The freeze closed every socket (#1808), so the room tears down. Wait it out.
+async def _proposal(rooms: _Rooms, praxis_id: int) -> tuple[PraxisStatus, Any]:
+    """``(status, submit_proposed_at)`` straight off the row.
 
-    The teardown includes the closing flush, which runs on the room's session
-    factory — the test's own session, here. Touching the database before it
-    finishes is two tasks on one session, and the second collab submit is a
-    database call.
+    A column select, not an entity load: the same session serves the test body
+    and the room's own tasks, and the identity map may be holding a ``Praxis``
+    the room has since moved.
     """
-    await _wait_for(
-        lambda: rooms.room_doc(praxis_id) is None, "the sealed room to be dropped"
-    )
-
-
-async def test_the_freeze_closes_every_socket_that_was_in_the_room(
-    db_session, collab, account, account2, character, monkeypatch
-) -> None:
-    """The freeze's second door (#1808) — and the data-loss bug it exists for.
-
-    Reproduced on production: two members drafting, one submits, and **the other
-    is never told**. ``documentFrozen`` is derived from the fetched praxis, so
-    their browser goes on accepting keystrokes and rendering them while the
-    server drops every one. The text is on screen, so the player believes it is
-    saved. It is not, and it never can be — the update never reached the server,
-    a CRDT never reverts, and it exists only in that tab's memory.
-
-    So the assertion here is deliberately **not** "a frozen room rejects an
-    update". It already did, and that is not the bug. It is that a client cannot
-    be left believing an accepted keystroke was saved: the socket it was typing
-    down is gone, which is what makes the composer re-read the status.
-
-    The close code is checked against its constant *and* its number, because the
-    number is a wire contract — ``roomReconnect.ts`` decides on it, and it must
-    not be 1008: that one means "stop asking", and a member holding a sealed
-    write-up still has to reconnect to read it.
-    """
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        submitter = await rooms.open(collab.id, account.id)
-        holdout = await rooms.open(collab.id, account2.id)
-        async with (
-            client_doc(submitter) as submitter_doc,
-            client_doc(holdout) as holdout_doc,
-        ):
-            await _wait_for_body(submitter_doc, SEED_BODY, "the submitter")
-            await _wait_for_body(holdout_doc, SEED_BODY, "the holdout")
-
-            # `character` is `account`'s, so the first client is the submitter.
-            await rooms.submit(collab.id, character.id)
-
-            await _wait_for(holdout.closed.is_set, "the holdout's socket to close")
-            # The submitter's too: the freeze binds every member equally.
-            await _wait_for(submitter.closed.is_set, "the submitter's socket to close")
-
-        assert holdout.close_code == praxis_room._WS_ROOM_FROZEN == 4001
-        assert submitter.close_code == praxis_room._WS_ROOM_FROZEN
-        assert praxis_room._WS_ROOM_FROZEN != praxis_room._WS_POLICY_VIOLATION
-
-
-async def test_a_pending_praxis_refuses_every_member_s_edits(
-    db_session, collab, account, account2, character, monkeypatch
-) -> None:
-    """The freeze is a server rule, and it binds the submitter too.
-
-    The before/after inside one test is the point: the same member who lands a
-    keystroke while the collab is drafting lands nothing once it is pending. A
-    test asserting only the second half would pass against a dead transport.
-
-    The refused write is attempted on a **reconnected** socket, because since
-    #1808 the freeze closes the ones that were open. That close is a courtesy to
-    the client and must not be mistaken for the rule: the server is still the
-    enforcer, and this is what proves it — a member who comes back, syncs and
-    types is refused by the room, not by their own editor. Their local document
-    takes the text anyway, which is the last assertion here and the whole reason
-    the close has to happen at all.
-    """
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        first = await rooms.open(collab.id, account.id)
-        second = await rooms.open(collab.id, account2.id)
-        async with client_doc(first) as first_doc, client_doc(second) as second_doc:
-            await _wait_for_body(first_doc, SEED_BODY, "the first client")
-            await _wait_for_body(second_doc, SEED_BODY, "the second client")
-
-            first_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "drafting ")
-            await _wait_for_body(
-                rooms.room_doc(collab.id), f"drafting {SEED_BODY}", "the room"
+    async with rooms.sessions() as session:
+        row = (
+            await session.execute(
+                select(Praxis.status, Praxis.submit_proposed_at).where(
+                    Praxis.id == praxis_id
+                )
             )
+        ).one()
+    return row[0], row[1]
 
-            # `character` is `account`'s, so the first client is the submitter.
+
+async def _wait_for_drafting(rooms: _Rooms, praxis_id: int, description: str) -> None:
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + _TIMEOUT_SECONDS
+    while True:
+        status, proposed_at = await _proposal(rooms, praxis_id)
+        if status == PraxisStatus.in_progress and proposed_at is None:
+            return
+        if loop.time() >= deadline:
+            raise AssertionError(
+                f"timed out waiting for {description}: the row holds "
+                f"status={status} submit_proposed_at={proposed_at!r}"
+            )
+        await asyncio.sleep(0.02)
+
+
+async def test_typing_while_a_proposal_is_live_cancels_it(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """ADR-0079's rule, at the seam it fires from.
+
+    ADR-0012's "an edit means we're not done" survives verbatim; what changed is
+    that it now keys on a CRDT update rather than on a discrete save. The seam is
+    the room's own document observer — the one ``_RoomFlusher`` already debounces
+    — so the signal is a real text change and nothing else.
+
+    The member who types is the **holdout**: they never approved, and until
+    ADR-0079 the room refused their keystrokes precisely while the countdown was
+    running against them. Typing is now their answer to it.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+
+            # `character` is `account`'s and is not connected: they propose from
+            # the REST side, which is what a Propose click is.
+            proposed = await rooms.submit(collab.id, character.id)
+            assert proposed.status == PraxisStatus.pending
+            assert proposed.submit_proposed_at is not None
+
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "not yet ")
+            await _wait_for_drafting(
+                rooms, collab.id, "the edit to cancel the proposal"
+            )
+            # The socket the holdout typed down is still open — the whole point
+            # of retiring the freeze is that nobody is ever hung up on for
+            # writing.
+            assert not holdout.closed.is_set()
+
+        await _wait_for_record(
+            rooms, collab.id, "the cancelled proposal's text", body_text=f"not yet {SEED_BODY}"
+        )
+        async with rooms.sessions() as session:
+            approvals = (
+                await session.execute(
+                    select(PraxisMember.has_submitted).where(
+                        PraxisMember.praxis_id == collab.id
+                    )
+                )
+            ).scalars().all()
+        assert list(approvals) == [False, False]
+
+
+async def test_an_awareness_update_never_cancels_a_proposal(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """Cursors and presence are a separate channel and must not stop a countdown.
+
+    Awareness never reaches the document, so observing the document is already
+    the answer — this pins it, because the tempting implementation is a hook on
+    inbound messages, and that one cannot tell a caret from a keystroke.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account2.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
             await rooms.submit(collab.id, character.id)
-            await _wait_for(second.closed.is_set, "the holdout's socket to close")
 
-        frozen = f"drafting {SEED_BODY}"
-        await _wait_for_the_freeze_to_settle(rooms, collab.id)
-
-        rejoined = await rooms.open(collab.id, account2.id)
-        async with client_doc(rejoined) as doc:
-            await _wait_for_body(doc, frozen, "the holdout coming back to read")
-            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "holdout ")
+            awareness = Awareness(Doc())
+            awareness.set_local_state({"user": {"name": "Holdout"}, "cursor": 7})
+            await socket.send_bytes(
+                create_awareness_message(
+                    awareness.encode_awareness_update([awareness.client_id])
+                )
+            )
             await _settle()
 
-            assert _body(rooms.room_doc(collab.id)) == frozen
-            # And this is the loss, stated: their own document holds the text
-            # and the room's does not. Nothing recovers it; the close is only
-            # what stops them writing a paragraph into it.
-            assert _body(doc) == f"holdout {frozen}"
+            status, proposed_at = await _proposal(rooms, collab.id)
+            assert status == PraxisStatus.pending
+            assert proposed_at is not None
 
 
-async def test_opening_an_already_frozen_praxis_keeps_the_reader_s_socket(
-    db_session, collab, account2, character, monkeypatch
-) -> None:
-    """A sealed write-up is still readable, and reading it is not a transition.
-
-    Two rules in one, because getting either wrong produces the same symptom
-    from opposite directions:
-
-    - ``SYNC_STEP1`` passes the refusal hook on purpose, so the document
-      arrives. Remove that exemption and the composer stares at an empty box.
-    - ``_read_freeze`` sets the flag on **every** room that opens frozen, so
-      "the flag went from unset to set" is true of every reader. Closing on that
-      would hang up on the socket that just asked to see the praxis — and on its
-      every retry, for as long as the tab is open.
-
-    Nobody was connected when this praxis sealed, which is exactly the arrival
-    the second half describes.
-    """
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        await submit_praxis(collab.id, character.id, db_session)
-
-        reader = await rooms.open(collab.id, account2.id)
-        assert reader.accepted.is_set()
-        async with client_doc(reader) as doc:
-            await _wait_for_body(doc, SEED_BODY, "a reader of the sealed write-up")
-            await _settle()
-            assert not reader.closed.is_set()
-
-
-async def test_a_re_freeze_does_not_hang_up_on_a_frozen_room(
-    db_session, collab, account2, character, monkeypatch
-) -> None:
-    """Only the transition closes sockets (#1808), never the state.
-
-    ``follow_praxis_status`` is derived from the status rather than from the
-    move, and is documented as idempotent, so it is called on transitions that
-    change nothing. A close on every call would knock every reader of a pending
-    collab off once per call and, with the reconnect that follows, churn.
-    """
-    async with running_rooms(db_session, monkeypatch) as rooms:
-        await submit_praxis(collab.id, character.id, db_session)
-        reader = await rooms.open(collab.id, account2.id)
-        async with client_doc(reader) as doc:
-            await _wait_for_body(doc, SEED_BODY, "the reader")
-
-            rooms.server.follow_status(collab.id, True)
-            await _settle()
-
-            assert not reader.closed.is_set()
-            assert _body(doc) == SEED_BODY
-
-
-async def test_pull_back_thaws_the_room_and_clears_the_group_s_consent(
+async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
     db_session, collab, account2, character, character2, monkeypatch
 ) -> None:
-    """``pullBack`` is the one door back in, and it is ADR-0012's hard reset.
+    """``pullBack`` is **Withdraw proposal** now (ADR-0079).
 
-    Any member may open it — the holdout most of all, because until #1743 they
-    reopened the collab simply by typing, and that trigger is gone. Here the
-    member who pulls back (``character2``) is not the one who submitted.
+    A group action any member may take, for someone who has read the draft and
+    has no edit to make yet — so it must land the collab in exactly the state
+    typing would: countdown stopped, every approval cleared, back to drafting.
+    The member who withdraws (``character2``) is deliberately not the proposer.
     """
     async with running_rooms(db_session, monkeypatch) as rooms:
         await submit_praxis(collab.id, character.id, db_session)
@@ -1343,9 +1297,9 @@ async def test_pull_back_thaws_the_room_and_clears_the_group_s_consent(
         socket = await rooms.open(collab.id, account2.id)
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "the reopening client")
-            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "thawed ")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "withdrawn ")
             await _wait_for_body(
-                rooms.room_doc(collab.id), f"thawed {SEED_BODY}", "the thawed room"
+                rooms.room_doc(collab.id), f"withdrawn {SEED_BODY}", "the room"
             )
 
 
@@ -1355,13 +1309,11 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
     """The document becomes the record and is then destroyed.
 
     The debounce is set past the test's life, so no *timed* flush can carry the
-    typed sentence into ``body_text``. It has to arrive by one of the two writes
-    that are not on a timer, and after #1808 which one depends on the shape of
-    the seal: the freeze closes the room, so the **closing** flush does it here,
-    and the publish-time flatten does it whenever a room is still live at the
-    seal (see the solo test below). A praxis that sealed with the room's last
-    words missing is the visible half of this bug either way, which is what this
-    asserts and why it does not care which write got there.
+    typed sentence into ``body_text``. It has to arrive by the publish-time
+    flatten inside the sealing transaction, which is the only write left that is
+    not on a timer — the room is still open at the seal now that nothing closes
+    it before one (ADR-0079). A praxis that sealed with the room's last words
+    missing is the visible half of this bug.
     """
     async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
         socket = await rooms.open(collab.id, account.id)
@@ -1373,9 +1325,8 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
             )
             assert await _stored_updates(rooms, collab.id) != []
 
-            await rooms.submit(collab.id, character.id)
-        await _wait_for_the_freeze_to_settle(rooms, collab.id)
-        published = await submit_praxis(collab.id, character2.id, db_session)
+            await rooms.submit(collab.id, character.id)          # Propose
+            published = await rooms.submit(collab.id, character2.id)  # Approve → Live
 
         assert published.status == PraxisStatus.submitted
         assert await _stored_updates(rooms, collab.id) == []
@@ -1385,15 +1336,14 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
 async def test_a_solo_seal_flattens_the_live_room_into_the_record(
     db_session, active_task, character, account, monkeypatch
 ) -> None:
-    """The publish-time flatten, isolated — the one seal with no freeze before it.
+    """The publish-time flatten on the seal that never had a proposal at all.
 
-    A solo praxis has one member, so ``on_submit`` seals straight to Live: there
-    is no pending step, so #1808's freeze never fires, so the room is still open
-    when ``discard_document`` runs and its ``abandon()`` cancels the closing
-    flush. The flatten inside the sealing transaction is then the *only* thing
-    that can put the last sentence in ``body_text`` — which is why the debounce
-    is set past the test's life, and why this case needs its own test now that
-    the collab above reaches the same column by the other road.
+    A solo praxis has one member, so ``on_submit`` seals straight to Live with no
+    pending step — and ``abandon()`` cancels the closing flush, so the flatten
+    inside the sealing transaction is the *only* thing that can put the last
+    sentence in ``body_text``. Kept beside the collab case because "solo and duel
+    are untouched" (ADR-0079) is a claim worth a test of its own: a duel is two
+    solo praxes (ADR-0011), so this is that case too.
     """
     solo = Praxis(
         task_id=active_task.id,
@@ -1444,9 +1394,8 @@ async def test_reopening_a_published_praxis_seeds_a_fresh_document_once(
             await _wait_for_body(
                 rooms.room_doc(collab.id), f"published {SEED_BODY}", "the room"
             )
-            await rooms.submit(collab.id, character.id)
-        await _wait_for_the_freeze_to_settle(rooms, collab.id)
-        await submit_praxis(collab.id, character2.id, db_session)
+            await rooms.submit(collab.id, character.id)     # Propose
+            await rooms.submit(collab.id, character2.id)    # Approve → Live
 
         await unsubmit_praxis(collab.id, character2.id, db_session)
 
@@ -1492,9 +1441,8 @@ async def test_text_a_member_deleted_does_not_outlive_the_draft(
                 "text, so this test would pass without discarding anything"
             )
 
-            await rooms.submit(collab.id, character.id)
-        await _wait_for_the_freeze_to_settle(rooms, collab.id)
-        await submit_praxis(collab.id, character2.id, db_session)
+            await rooms.submit(collab.id, character.id)     # Propose
+            await rooms.submit(collab.id, character2.id)    # Approve → Live
 
         assert await _stored_updates(rooms, collab.id) == []
         for update in await _every_stored_update(rooms):

@@ -4733,6 +4733,20 @@
         "title": "PraxisCreate",
         "type": "object"
       },
+      "PraxisDoneUpdate": {
+        "description": "The **Done** signal's body (ADR-0079) — \"my part is finished\".\n\nA field rather than two routes (``/done`` and ``/undone``) because Done is\nexplicitly reversible and the client holds a checkbox, not a one-way button:\na toggle that has to guess which endpoint to call from local state is one\ndropped response away from disagreeing with the server.",
+        "properties": {
+          "is_done": {
+            "title": "Is Done",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_done"
+        ],
+        "title": "PraxisDoneUpdate",
+        "type": "object"
+      },
       "PraxisInviteCreate": {
         "properties": {
           "invitee_id": {
@@ -10192,6 +10206,79 @@
         "summary": "Create Praxis Comment",
         "tags": [
           "comments"
+        ]
+      }
+    },
+    "/praxes/{praxis_id}/done": {
+      "post": {
+        "operationId": "set_done_route_praxes__praxis_id__done_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "praxis_id",
+            "required": true,
+            "schema": {
+              "title": "Praxis Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PraxisDoneUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PraxisOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Done Route",
+        "tags": [
+          "praxes"
         ]
       }
     },

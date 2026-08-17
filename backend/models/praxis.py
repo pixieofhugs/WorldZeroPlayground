@@ -236,11 +236,27 @@ class PraxisMember(Base):
     character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
+    # APPROVAL, since ADR-0079: this member is happy with the text of the live
+    # proposal. It keeps the old name because it is also the wire field and the
+    # feed's column, and because approval is the meaning that stayed when
+    # ``has_submitted``'s three jobs were split — the social half moved to
+    # ``is_done`` below, and the proposal itself lives on
+    # ``Praxis.submit_proposed_at``. All members approved → the collab publishes;
+    # any edit while a proposal is live clears every one of these.
     has_submitted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    # DONE (ADR-0079): "my part is finished." Purely social — a roster badge,
+    # freely reversible, gating nothing and starting nothing. It is a separate
+    # column rather than a third meaning on ``has_submitted`` precisely because it
+    # must survive the things that clear an approval: an edit, a Withdraw and a
+    # kick all say the *group* is not ready to publish, and none of them says a
+    # member's own part became unfinished.
+    is_done: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     # When has_submitted last flipped True (#571). The collaborator-submitted feed
-    # sorts strictly by this, not joined_at. NULL = never submitted / pulled back.
+    # sorts strictly by this, not joined_at. NULL = never approved / cancelled.
     submitted_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

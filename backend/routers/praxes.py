@@ -35,6 +35,7 @@ from schemas.praxis import (
     MediaUploadResultOut,
     PraxisCardOut,
     PraxisCreate,
+    PraxisDoneUpdate,
     PraxisInviteCreate,
     PraxisInviteOut,
     PraxisOut,
@@ -89,6 +90,7 @@ from services.praxis import (
     PraxisSort,
     VotedFilter,
     respond_to_invite,
+    set_member_done,
     submit_praxis,
     unsubmit_praxis,
 )
@@ -309,6 +311,22 @@ async def unsubmit_praxis_route(
         character_id=character.id,
         session=session,
         era=CURRENT_ERA,
+    )
+    return await build_praxis_out(praxis, session, viewer=character)
+
+
+@router.post("/{praxis_id}/done", response_model=PraxisOut)
+async def set_done_route(
+    praxis_id: int,
+    data: PraxisDoneUpdate,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    praxis = await set_member_done(
+        praxis_id=praxis_id,
+        character_id=character.id,
+        is_done=data.is_done,
+        session=session,
     )
     return await build_praxis_out(praxis, session, viewer=character)
 

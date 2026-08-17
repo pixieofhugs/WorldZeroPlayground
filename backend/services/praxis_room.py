@@ -32,20 +32,18 @@ rule that runs on the client is not a rule:
 5. **Exactly one backend instance may run**, because rooms live in-process.
    Enforced by :func:`acquire_single_instance_lock`. ADR-0073 states the
    constraint once; ADR-0012's lazy-on-access timeout depends on the same fact.
-6. **Drafting is the only status a document may change in** (#1745). Submitting
-   *freezes* the document for every member, the submitter included, so ADR-0012
-   survives verbatim: its hard reset keys on an edit being a discrete event, and
-   a CRDT has none — text simply moves. Nothing has to be reset while nothing
-   can change. ``pullBack`` is the one door back in, and it is that ADR's hard
-   reset. The freeze is enforced in :meth:`PraxisRoomServer._refuse_writes_when_frozen`
-   rather than by a read-only editor, because a rule that runs on the client is
-   not a rule — the composer must not be able to talk a frozen room into
-   accepting text. Like rule 4, it needs **two doors** (#1808): the freeze also
-   *closes* the room's sockets as it lands, with a close code that says "come
-   back, and re-read the praxis". Without that a co-author mid-sentence is never
-   told, and their browser goes on accepting and rendering keystrokes the server
-   is dropping — the worst shape a data-loss bug can take, because the text is on
-   screen and so the player believes it is saved.
+6. **The document may be written in every status a member can reach**
+   (ADR-0079). #1745's freeze is gone, and with it #1808's close code: the room
+   no longer drops a co-author's frames, so there is no write ban to enforce at
+   connect *and* at transition. What replaced it is the rule below — the
+   document's own movement is ADR-0012's edit event, so a member answering a
+   countdown by typing cancels it instead of being refused.
+
+   The signal is :meth:`_RoomFlusher.write`, on the trailing edge of the same
+   debounce the record write already sits on, and the *rule* is not here: it
+   lives in ``services.collab_consensus.on_room_edit``, which media edits and
+   Withdraw also route through. Awareness never reaches the document, so
+   observing the document is what keeps a caret from stopping a countdown.
 7. **Publishing destroys the document** (:meth:`PraxisRoomServer.discard_document`).
    It is flattened into ``body_text`` first and ``pullBack`` re-seeds a fresh one
    through rule 1, so nothing is lost that a reader could ever see. This is a
@@ -67,7 +65,7 @@ from typing import Any
 import anyio
 from anyio import Event, Lock
 from fastapi import HTTPException
-from pycrdt import Doc, Map, Text, YMessageType, YSyncMessageType
+from pycrdt import Doc, Map, Text
 from pycrdt.store import BaseYStore, YDocNotFound
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
 from pycrdt.websocket.asgi_server import ASGIWebsocket
@@ -79,7 +77,7 @@ from starlette.routing import get_route_path
 from config import settings
 from db import AsyncSessionLocal
 from models.account import Account, AccountStatus
-from models.praxis import Praxis, PraxisStatus
+from models.praxis import Praxis
 from models.praxis_room import PraxisRoomUpdate
 from services.auth import decode_jwt
 from services.character import resolve_active_character
@@ -121,22 +119,10 @@ _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 # roomReconnect.ts` reads it as exactly that and stops redialling (#1804).
 _WS_POLICY_VIOLATION = 1008
 
-# The room sealed under the members who were in it (#1808).
-#
-# An application close code — RFC 6455 reserves 4000-4999 for exactly this — and
-# **not** 1008, because the two say opposite things to the client. 1008 is "stop
-# asking"; this one is "come back, and re-read the praxis before you type again".
-# Reading a sealed write-up still works: the reconnected socket's ``SYNC_STEP1``
-# passes :meth:`PraxisRoomServer._refuse_writes_when_frozen` on purpose.
-#
-# Why a close at all, rather than a message saying "frozen": the freeze is
-# enforced server-side, so a client that is not told keeps accepting keystrokes,
-# renders them, and watches every one of them be dropped — the text is on screen,
-# so the player believes it is saved. The socket closing is what makes the
-# composer re-read the status it derives ``documentFrozen`` from, through
-# machinery that already exists. It is #1740's "a gate needs two doors" applied
-# to the freeze: the server refusing writes was door one, and this is door two.
-_WS_ROOM_FROZEN = 4001
+# #1808's ``_WS_ROOM_FROZEN`` (4001) is gone with the state it announced
+# (ADR-0079). Sockets still close on kick, leave and publish — every one of those
+# is 1008, "do not come back" — so 1008 is once again the only code this server
+# sends. The composer's reconnect special-case for 4001 goes with it (#1811).
 
 _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 
@@ -164,17 +150,6 @@ def room_name_for(praxis_id: int) -> str:
 
 def _praxis_id_of(room_name: str) -> int:
     return int(room_name.split(":", 1)[1])
-
-
-def is_frozen_status(status: PraxisStatus) -> bool:
-    """Whether a praxis at this status has a sealed document (#1745).
-
-    Written as "not drafting" rather than "pending or submitted" on purpose: a
-    status added later arrives frozen, which is the safe direction. Drafting is
-    the one state the ADR-0012 machine calls open, and it is the one state in
-    which "everyone co-writes freely" is true.
-    """
-    return status != PraxisStatus.in_progress
 
 
 def _document_values(document: Doc) -> dict[str, str]:
@@ -376,11 +351,28 @@ class _RoomFlusher:
             self._cancel_scope.cancel()
 
     async def write(self) -> None:
-        """One UPDATE, from whatever the document says right now.
+        """One UPDATE, from whatever the document says right now — and the edit event.
 
         A Core statement rather than an ORM load: the entity's relationships are
         ``lazy='raise'``, and a room task has no business waking the identity map
         of a session that a request may also be holding.
+
+        **This is also where a live proposal is cancelled** (ADR-0079). The
+        document having moved is ADR-0012's "an edit means we're not done", and
+        this is the one place in the process that knows it moved *and* has waited
+        out the debounce. Two things it is careful about, both of them the reason
+        the trigger is here rather than on the inbound message:
+
+        - Awareness — carets, presence — never reaches ``ydoc``, so it can never
+          get this far. A hook on messages could not tell the two apart.
+        - :meth:`abandon` is what the publish-time discard calls, so a seal never
+          cancels the proposal it is sealing.
+
+        The rule itself is ``services.collab_consensus.on_room_edit``, not
+        anything here: media edits and Withdraw cancel through the same function,
+        and one rule with two implementations is two rules. Same transaction as
+        the record write, so a praxis cannot end up holding the new text with the
+        old countdown still running.
         """
         values = _document_values(self._room.ydoc)
 
@@ -388,6 +380,11 @@ class _RoomFlusher:
             await session.execute(
                 sql_update(Praxis).where(Praxis.id == self._praxis_id).values(**values)
             )
+            # Imported here, not at module scope: ``collab_consensus`` imports
+            # this module for the publish-time discard, so the cycle is real.
+            from services.collab_consensus import on_room_edit
+
+            await on_room_edit(self._praxis_id, session)
             await session.commit()
         # Only once the write is committed: cancelled halfway, the room still
         # owes the praxis this text and :meth:`close` has to know it.
@@ -465,27 +462,22 @@ class _RoomConnection:
         self.character_id = character_id
         self.room_name = room_name_for(praxis_id)
         self.revoked = False
-        #: The code this socket will close with, once revoked. Read by the ASGI
-        #: app on its way out, because the *reason* is what the client acts on:
-        #: 1008 stops it redialling, :data:`_WS_ROOM_FROZEN` does not (#1808).
-        self.close_code = _WS_POLICY_VIOLATION
         self._raw_receive = receive
         self._revoke_event = Event()
         self.channel = ASGIWebsocket(self._receive, send, self.room_name)
 
-    def revoke(self, code: int = _WS_POLICY_VIOLATION) -> None:
+    def revoke(self) -> None:
         """End this socket. Safe to call from any task: it only sets an event.
 
         The socket is not closed from the revoking task — a WebSocket has one
         writer, and that is the task serving it. Waking its ``receive`` with a
         disconnect unwinds the serve loop, which closes on its way out.
 
-        ``code`` defaults to the revocation this door was built for — a member
-        who may no longer be here at all. Pass :data:`_WS_ROOM_FROZEN` for the
-        one revocation that is not a removal.
+        Every revocation is a removal — kicked, left, or the document is gone —
+        so every one of them closes 1008, "do not come back". The one revocation
+        that was not a removal was #1808's freeze, retired with it (ADR-0079).
         """
         self.revoked = True
-        self.close_code = code
         self._revoke_event.set()
 
     async def _receive(self) -> dict[str, Any]:
@@ -537,10 +529,6 @@ class PraxisRoomServer(WebsocketServer):
         self._flush_debounce_seconds = flush_debounce_seconds
         self._connections: set[_RoomConnection] = set()
         self._flushers: dict[str, _RoomFlusher] = {}
-        #: Praxes whose document is sealed (#1745). Only ever holds ids with a
-        #: room open — :meth:`release` and :meth:`discard_document` drop theirs —
-        #: because a room that is not open re-reads the status when it opens.
-        self._frozen: set[int] = set()
         self.__open_lock: Lock | None = None
 
     @property
@@ -581,110 +569,9 @@ class PraxisRoomServer(WebsocketServer):
             await self.start_room(room)
             await self._load_or_seed(room, name)
             self._start_flusher(room, name)
-            praxis_id = _praxis_id_of(name)
-            room.on_message = self._refuse_writes_when_frozen(praxis_id)
-            await self._read_freeze(praxis_id)
             # Only now may clients synchronize against it.
             room.ready = True
             return room
-
-    async def _read_freeze(self, praxis_id: int) -> None:
-        """Open the room in whatever state its praxis is already in (#1745).
-
-        The consensus transitions push the flag onto rooms that are *live* when
-        a praxis is submitted or reopened; this is what makes a praxis submitted
-        while nobody was connected still open frozen. It is also the self-heal:
-        the flag is derived from the status either way, so a push that never
-        happened costs one reconnect rather than a permanently wrong room.
-        """
-        async with self._session_factory() as session:
-            status = await session.scalar(
-                select(Praxis.status).where(Praxis.id == praxis_id)
-            )
-        self.set_frozen(praxis_id, status is not None and is_frozen_status(status))
-
-    def set_frozen(self, praxis_id: int, frozen: bool) -> None:
-        """Seal or reopen this praxis's document. Idempotent, and takes no lock.
-
-        Callable from a request task while the room's own tasks run: it only
-        moves an ``int`` in or out of a set, which the message hook reads.
-
-        **State, not transition** — nothing is closed here. :meth:`_read_freeze`
-        calls this for a room that is *opening*, where "the flag went from unset
-        to set" is true of every frozen praxis anybody reads, and closing on it
-        would hang up on the socket that just asked to see the write-up and
-        then on its every retry. :meth:`follow_status` is the transition.
-        """
-        if frozen:
-            self._frozen.add(praxis_id)
-        else:
-            self._frozen.discard(praxis_id)
-
-    def follow_status(self, praxis_id: int, frozen: bool) -> None:
-        """A praxis moved in or out of drafting; the live room follows (#1808).
-
-        The freeze's second door. :meth:`_refuse_writes_when_frozen` is the
-        first: it drops the inbound updates, which is correct and is *not* the
-        defect. The defect is that nobody told the client — ``documentFrozen``
-        is derived from the fetched praxis, so a co-author mid-sentence when
-        someone else submits keeps typing into a document their browser accepts,
-        renders, and cannot save. **The text is on screen, so they believe it is
-        saved**, and it exists nowhere but that tab.
-
-        Closing their sockets is what makes them re-read the praxis. It cannot
-        recover the keystrokes already dropped — a CRDT merges additively and
-        the server never took them — so this is only about how short the gap is.
-
-        **Only on the open-to-frozen transition.** Re-freezing an already frozen
-        room is a no-op here: this is called from every ADR-0012 transition and
-        the flag is derived from the status rather than from the move, so a
-        thaw-shaped call on a drafting praxis, or a second submit on a pending
-        one, must not hang up on everyone reading it.
-        """
-        sealing = frozen and praxis_id not in self._frozen
-        self.set_frozen(praxis_id, frozen)
-        if not sealing:
-            return
-        for connection in list(self._connections):
-            if connection.praxis_id == praxis_id:
-                # The submitter's own socket too. The freeze binds every member
-                # equally — that is the word: a lock is something one member
-                # holds against the others — and their client is refetching the
-                # praxis anyway, so the reconnect costs them nothing.
-                connection.revoke(_WS_ROOM_FROZEN)
-
-    def _refuse_writes_when_frozen(
-        self, praxis_id: int
-    ) -> Callable[[bytes], bool]:
-        """``YRoom.on_message``: drop what a frozen room must not accept.
-
-        Returning ``True`` skips the message before the room applies it, which
-        is what makes the freeze a rule instead of a client-side courtesy. It is
-        a *room*-level hook rather than a per-socket one because the freeze binds
-        every member equally — including whoever submitted. That is the word:
-        a lock is something one member holds against the others.
-
-        Two kinds of message still pass, and both have to:
-
-        - ``SYNC_STEP1`` is a client asking what the server holds. Reading a
-          sealed write-up is the whole point of showing it, and refusing this
-          would leave the composer staring at an empty document.
-        - Awareness carries no document state (presence is #1744), and
-          ``y-websocket`` rides it as its keepalive, so dropping it would take
-          the socket down rather than the edit.
-        """
-
-        def refuse(message: bytes) -> bool:
-            if praxis_id not in self._frozen or not message:
-                return False
-            if message[0] != YMessageType.SYNC:
-                return False
-            # SYNC_STEP2 carries the client's missing updates and SYNC_UPDATE
-            # its new ones; a truncated SYNC message is refused rather than
-            # indexed past its end.
-            return len(message) < 2 or message[1] != YSyncMessageType.SYNC_STEP1
-
-        return refuse
 
     def _start_flusher(self, room: YRoom, name: str) -> None:
         """Watch this room's document and copy it into the praxis (#1743).
@@ -743,7 +630,6 @@ class PraxisRoomServer(WebsocketServer):
                     if flusher is not None:
                         await flusher.close()
                     await self.delete_room(room=room)
-                    self._frozen.discard(connection.praxis_id)
 
     async def discard_document(self, praxis: Praxis, session: AsyncSession) -> None:
         """Publish: the document becomes the record, and is then destroyed (#1745).
@@ -781,7 +667,6 @@ class PraxisRoomServer(WebsocketServer):
                     PraxisRoomUpdate.praxis_id == praxis.id
                 )
             )
-        self._frozen.discard(praxis.id)
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -908,8 +793,7 @@ class PraxisRoomASGIServer(ASGIServer):
         finally:
             await self.rooms.release(connection)
             if connection.revoked:
-                # The revoking task chose the code; this is only the writer.
-                await self._refuse(send, connection.close_code)
+                await self._refuse(send)
 
     async def _refuse(
         self,
@@ -927,23 +811,6 @@ class PraxisRoomASGIServer(ASGIServer):
 # app below; ``services.praxis`` reaches it through :func:`close_member_sockets`.
 PRAXIS_ROOM_SERVER = PraxisRoomServer()
 PRAXIS_ROOM_APP = PraxisRoomASGIServer(PRAXIS_ROOM_SERVER)
-
-
-def follow_praxis_status(praxis: Praxis) -> None:
-    """The room's freeze follows the praxis's status (#1745).
-
-    Called by every ADR-0012 transition that moves a praxis in or out of
-    drafting. Derived from the status rather than from the transition, so it is
-    idempotent and the call sites do not each have to know which way they moved
-    a praxis — and a room that is not open ignores it and reads the status when
-    it opens.
-
-    Sealing a room that was open also **closes its sockets** (#1808), which is
-    why this goes through :meth:`PraxisRoomServer.follow_status` rather than
-    ``set_frozen``: the transition is the thing the members have to be told
-    about, and only this function's callers know one happened.
-    """
-    PRAXIS_ROOM_SERVER.follow_status(praxis.id, is_frozen_status(praxis.status))
 
 
 async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
