@@ -35,7 +35,10 @@ const TASK = aTask({
 
 const VIEWER: CurrentUser = {
   account_id: 1,
-  character: null,
+  // Carries a character: the eligibility rail is gated on a LIFE, not on a
+  // session (#1972), and the browse's signed-in cases are all played by a
+  // player. An account between characters is `metataskFilterGate`'s viewer.
+  character: { id: 3, level: 2, faction_slug: 'na' } as never,
   is_admin: false,
   can_create_additional_character: false,
   can_start_as_albescent: false,
@@ -223,11 +226,14 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
 
 /**
  * The "tasks I can sign up for" filter (#1130), which replaced the level filter.
- * Two decisions worth pinning because both are the less obvious option: the
- * control is HIDDEN when logged out (the server answers `[]` for an anonymous
- * viewer, so it could only ever empty the page), and it defaults OFF (the page
- * is a catalogue; defaulting on would make tasks look scarce and tie first
- * paint to auth resolving).
+ * The decision worth pinning here is that the control is HIDDEN from a viewer
+ * with no character (the server answers `[]` for an anonymous viewer, so it
+ * could only ever empty the page) — `eligibilityRailGate.test.tsx` holds the
+ * account-with-no-character half of that gate.
+ *
+ * It defaults ON for a viewer who carries one since #1972; which viewer gets
+ * which default is `readTaskFilters`' call and is pinned in
+ * `taskFilterParams.test.ts`. This page takes `canSignUp` as a given.
  */
 describe('can-sign-up filter (#1130)', () => {
   const CAN_SIGN_UP = i18n.t('tasks:browse.canSignUp')
