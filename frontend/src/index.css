@@ -4770,6 +4770,28 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%23f4f1e8'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%238ed11f'/%3E%3C/svg%3E");
 }
 
+/* S.N.I.D.E. — the masthead mark, grown 20px → 24px (#2035, task cards v3).
+
+   WHY HERE AND NOT AS A PROP. `CardMasthead` (#2029) owns exactly one mark box
+   for the whole kit and offers no size, which is the anatomy doing its job —
+   seven skins that can each pick a mark size are seven mastheads again. It
+   does publish `data-masthead-mark="<slug>"`, and this is the one skin the
+   design grows, so the exception is written here as an exception instead of
+   becoming a parameter every card could reach for. If a SECOND faction ever
+   needs a different mark size, that is the moment `CardMasthead` grows a
+   `markSize` prop and this block is deleted — not before.
+
+   The span and the svg both, because `FactionSigil` sets width/height as
+   presentation attributes: growing only the box would leave a 20px mark
+   rattling inside a 24px slot. The A already breaks out of its own circle
+   (`SnideSigil` — `overflow: visible` is the drawing), and the band's grid
+   gutters are `1fr`, so nothing beside it moves. */
+[data-masthead-mark="snide"],
+[data-masthead-mark="snide"] svg {
+  width: 24px;
+  height: 24px;
+}
+
 /* Coven — the spell slip's pentagram watermark turns, once every two minutes
    (#1023). The design injected this keyframe from the component; #911 retired
    that whole shape repo-wide, so it lives here and the card carries only the
