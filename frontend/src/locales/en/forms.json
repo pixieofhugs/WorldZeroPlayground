@@ -285,7 +285,7 @@
       "link": "link"
     },
     "dropTask": "drop task",
-    "saveDraft": "save draft",
+    "saveDraft": "Finish later",
     "composer": {
       "statusDraft": "Draft",
       "statusSaved": "Saved {{ago}}",
