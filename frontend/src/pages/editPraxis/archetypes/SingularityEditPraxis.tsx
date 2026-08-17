@@ -48,7 +48,21 @@
  *
  * ## Colour
  *
- * Every value is a `--faction-singularity-term-*` token, the two-theme contract
+ * Every value here is a `--faction-singularity-term-*` token — with one
+ * deliberate exception, the three window lamps, which are the kit's
+ * `SingularityLamps` and its theme-invariant `--faction-singularity-led-*`
+ * trio (#1979). This bar used to map its own `[MUTED, BLUE, ACCENT]` onto
+ * three dots, which came out green/blue/green while the faction's five other
+ * window bars came out red/amber/green. Nothing in this docblock ever argued
+ * for that palette: the blanket "every value is a `term-*` token" rule above
+ * is what produced it, and the lamps are the one place it was wrong. The
+ * cluster is ORNAMENT (see the copy note) rather than this chassis' ink, so it
+ * belongs to the faction's mark kit and not to this skin. Its invariance is
+ * safe on this bar specifically because `term-chrome` is near-black in BOTH
+ * halves (#0c2016 light / #0a1a10 dark), so a fixed bright dot reads on it
+ * either way — the pairing, not the family, is what had to be checked.
+ *
+ * Everything else is the two-theme contract
  * the v2 task card minted (#1023) and the task/praxis details extended (#1034).
  * WORLD_ZERO_STYLE §6 is explicit that this family is NOT theme-invariant even
  * though both its halves are near-black: the chassis stays black and the
@@ -143,6 +157,7 @@ import {
   WriteUpTabs,
   type ComposerTab,
 } from "./controls";
+import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
@@ -315,18 +330,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 gap: "var(--space-sm)",
               }}
             >
-              {[MUTED, BLUE, ACCENT].map((tone) => (
-                <span
-                  key={tone}
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: tone,
-                    flexShrink: 0,
-                  }}
-                />
-              ))}
+              <SingularityLamps />
               <span
                 style={termLabel({
                   color: MUTED,

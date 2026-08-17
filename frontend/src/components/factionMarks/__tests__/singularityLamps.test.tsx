@@ -119,12 +119,25 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
     expect(restating.map((file) => file.path)).toEqual([]);
   });
 
-  it("mounts the kit on all five window bars", () => {
-    // Praxis card, task card, praxis detail, task detail, feed frame. The issue
-    // named four; the task detail carried a fifth copy nobody had counted, and
-    // the praxis card's was an inline twin with no `Lamp` in it at all — which
-    // is why this counts MOUNTS and not just declarations.
+  it("mounts the kit on every window bar the faction draws", () => {
+    // Named rather than counted, because a count is what let the census be
+    // wrong twice. The issue named four sites; the first pass found five (the
+    // task detail carried a copy nobody had counted, and the praxis card's was
+    // an inline twin with no `Lamp` in it at all — which is why this counts
+    // MOUNTS and not declarations). It was SIX. The edit-praxis composer mapped
+    // its own `[MUTED, BLUE, ACCENT]` onto three dots, so it was invisible to
+    // both scans above at once: no `Lamp` identifier to find, and no LED token
+    // to find either. Only a roll-call of the surfaces can see that, and only
+    // if it is written down.
+    const rel = (path: string) => path.slice(SRC.length).replace(/\\/g, "/");
     const mounts = sources().filter(({ source }) => source.includes("<SingularityLamps"));
-    expect(mounts.map((file) => file.path).sort()).toHaveLength(5);
+    expect(mounts.map((file) => rel(file.path)).sort()).toEqual([
+      "components/feed/SingularityFeedFrame.tsx",
+      "components/praxisCard/desktop/SingularityPraxisCard.tsx",
+      "components/taskCard/SingularityTaskCard.tsx",
+      "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
+      "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
+      "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
+    ]);
   });
 });
