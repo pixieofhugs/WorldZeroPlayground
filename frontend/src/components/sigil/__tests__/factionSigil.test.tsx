@@ -45,10 +45,14 @@ describe("FactionSigil dispatcher (#659)", () => {
     expect(html).toContain("var(--faction-snide-acid)");
   });
 
-  it("renders the Everymen union cog for the everymen slug", () => {
+  it("renders the Everymen meshed cogs for the everymen slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="everymen" />);
     expect(html).toContain("var(--everymen-red)");
-    expect(html).toContain("var(--everymen-cream)");
+    // Sigil Studies v2: two cogs, one path, bores punched by evenodd rather
+    // than filled with a second ink. `--everymen-cream` was the old hub disc
+    // and is what a scaled-down single gear turned to mud at 15px.
+    expect(html).toContain('fill-rule="evenodd"');
+    expect(html).not.toContain("var(--everymen-cream)");
   });
 
   // #1626 gave albescent its own adapter row here, holding the surveyor's
