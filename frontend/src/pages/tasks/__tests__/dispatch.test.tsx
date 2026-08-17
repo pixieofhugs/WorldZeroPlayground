@@ -321,3 +321,43 @@ describe('the task rails', () => {
     )
   })
 })
+
+/**
+ * #1964 — the mobile results column is the seam.
+ *
+ * Every faction task card sets its own fixed `width` (`size.cardWidth`, 340 on
+ * the phone) and §10 of the style guide forbids regularizing those widths, so
+ * the column may not fix this by widening the card. A `flex-col` STRETCHES its
+ * items by default, which makes each card's wrapper full-bleed and leaves the
+ * narrower card pinned to the left edge — ragged right, and visibly narrower
+ * than the filter bar above it. Centring the items is the compatible fix.
+ *
+ * The metatask branch is deliberately NOT centred: a seal carries no width of
+ * its own and fills the column, so `items-center` would shrink every seal to
+ * the width of its text. That is why the class is conditional, and why both
+ * arms are pinned here.
+ */
+describe('mobile task cards are centred in their column (#1964)', () => {
+  function resultsColumnClass(): string {
+    const m = /class="([^"]*)"[^>]*data-testid="mobile-tasks-results"/.exec(html())
+    if (m === null) throw new Error('mobile results column was not rendered')
+    return m[1]
+  }
+
+  it('centres the card list rather than stretching it left-flush', () => {
+    dispatch.formFactor = 'mobile'
+    state.current = { ...CANNED, user: VIEWER, tasks: [TASK] }
+    expect(resultsColumnClass()).toContain('items-center')
+  })
+
+  it('leaves the metatask seal stack full-bleed', () => {
+    dispatch.formFactor = 'mobile'
+    state.current = {
+      ...CANNED,
+      user: VIEWER,
+      taskType: 'metatask',
+      tasks: [aTask({ id: 91, task_type: 'metatask', metatask_faction_slug: 'coven' })],
+    }
+    expect(resultsColumnClass()).not.toContain('items-center')
+  })
+})
