@@ -862,6 +862,34 @@ export function RingMark({
   );
 }
 
+/**
+ * The measure below which the slip's borrowed copy takes the whole line (#1961).
+ *
+ * The slip is two rows, and each is [something fixed] beside [the task's own
+ * copy]: the score mark against the text column, the level pill against the
+ * description. Both fixed halves hold their width whatever the sheet does — the
+ * mark is `flexShrink: 0` over a 118px floor, the pill is `flexShrink: 0` — so
+ * the copy was the only thing left to give, and on a phone it gave down to
+ * about 145px: three words to a line, twenty lines tall, with the mark's column
+ * standing empty beside all but the first of them.
+ *
+ * As a flex-basis this is a WRAP THRESHOLD, not a width (WORLD_ZERO_STYLE §1.2
+ * — pick it by where the row wraps). Both rows run it, so both wrap together:
+ * a basis on the outer row alone widens the column enough that the description
+ * stops dropping under the level pill, and the gutter reappears on the other
+ * side of it. The two thresholds it has to sit between, on today's sheets:
+ *
+ *  - the desktop slip's 624px inner width, less the mark's 118 and the row's
+ *    16px gap, leaves 490 — anything at or under that keeps the desktop slip
+ *    on one line, and keeps #1706's pill-beside-description with it;
+ *  - a 402px phone's slip is 279px inside its padding, so anything over 145
+ *    wraps there.
+ *
+ * 260 sits mid-range in both directions and is a readable measure in its own
+ * right. It is geometry, so a raw px number (§4a).
+ */
+const COPY_MEASURE = 260;
+
 export interface TaskSlipProps {
   praxis: PraxisOut;
   task: TaskOut | null;
@@ -921,10 +949,13 @@ export function TaskSlip({
         display: "flex",
         gap: "var(--space-lg)",
         alignItems: "flex-start",
+        // The mark drops UNDER the copy on a narrow sheet rather than holding
+        // its column beside it (#1961) — see COPY_MEASURE.
+        flexWrap: "wrap",
         ...style,
       }}
     >
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: `1 1 ${COPY_MEASURE}px`, minWidth: 0 }}>
         <div style={composerLabelStyle(labelStyle)}>
           {label ?? t("editPraxis.composer.taskLabel")}
         </div>
@@ -962,10 +993,17 @@ export function TaskSlip({
           // both parts used to set for themselves, so a skin that repaints
           // either cannot shift the spacing.
           //
-          // `1 1 50%` rather than `1 1 auto`: a basis of zero-or-auto never
-          // wraps, so a slip squeezed narrow (the phone, a long level word, a
-          // wide points mark) would go on shaving the description's column
-          // instead of letting it drop below the pill.
+          // A LENGTH basis rather than `1 1 auto`: a basis of zero-or-auto
+          // never wraps, so a slip squeezed narrow (the phone, a long level
+          // word, a wide points mark) would go on shaving the description's
+          // column instead of letting it drop below the pill.
+          //
+          // It was `1 1 50%`, which wraps when the pill takes half the column —
+          // a threshold set by the PILL's width and not by the copy's, and one
+          // that therefore moves whenever a skin redresses the pill or a level
+          // word gets longer. `COPY_MEASURE` is the same threshold stated as
+          // what it is about, and it is the outer row's, so the two wrap
+          // together (#1961).
           <div
             style={{
               display: "flex",
@@ -995,7 +1033,7 @@ export function TaskSlip({
                   fontSize: "var(--text-content)",
                   lineHeight: 1.55,
                   margin: 0,
-                  flex: "1 1 50%",
+                  flex: `1 1 ${COPY_MEASURE}px`,
                   minWidth: 0,
                   ...descriptionStyle,
                 }}
