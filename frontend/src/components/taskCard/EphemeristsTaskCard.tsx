@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -235,47 +236,55 @@ export default function EphemeristsTaskCard({
             {register(REGISTER_BOTTOM, 97, 0.3, "bottom")}
           </svg>
 
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "var(--space-xs)",
-            }}
+          {/* The plate band on the kit's shared anatomy (#2029) — the mark hard
+              left, the winged disc and the wordmark centred on the band. The
+              night band's own backdrop stays where it was, behind this: the
+              glyph registers are painted by the box around us, so the anatomy
+              needs no ornament slot of its own. The sigil takes `currentColor`,
+              which is the band's gold ink. */}
+          <CardMasthead
+            slug="ephemerists"
+            style={{ height: "100%", padding: "0 var(--space-lg)" }}
           >
-            <svg
-              width={size.discWidth}
-              height={40}
-              viewBox="-88 -20 176 40"
-              aria-hidden="true"
-              style={{ display: "block", flex: "0 0 auto" }}
-            >
-              <Wing />
-              <Wing flip />
-              <circle r={10} fill="none" stroke="var(--faction-ephemerists-plate-gold)" strokeWidth="1.5" />
-              <circle r={5} fill="var(--faction-ephemerists-plate-gold)" opacity={0.8} />
-              <path d="M-13 0 H-10.5 M10.5 0 H13" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="1" />
-            </svg>
             <span
               style={{
-                fontFamily: DECO,
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "var(--space-xs)",
               }}
             >
-              {/* #1910: the band spells the faction's name, so it reads the one
-                  key that stays per-faction rather than a second copy. The
-                  `textTransform` above already carried the plate's upper case,
-                  so the band reads THE EPHEMERISTS either way. */}
-              {factionName("ephemerists")}
+              <svg
+                width={size.discWidth}
+                height={40}
+                viewBox="-88 -20 176 40"
+                aria-hidden="true"
+                style={{ display: "block", flex: "0 0 auto" }}
+              >
+                <Wing />
+                <Wing flip />
+                <circle r={10} fill="none" stroke="var(--faction-ephemerists-plate-gold)" strokeWidth="1.5" />
+                <circle r={5} fill="var(--faction-ephemerists-plate-gold)" opacity={0.8} />
+                <path d="M-13 0 H-10.5 M10.5 0 H13" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="1" />
+              </svg>
+              <span
+                style={{
+                  fontFamily: DECO,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {/* #1910: the band spells the faction's name, so it reads the
+                    one key that stays per-faction rather than a second copy.
+                    The `textTransform` above already carried the plate's upper
+                    case, so the band reads THE EPHEMERISTS either way. */}
+                {factionName("ephemerists")}
+              </span>
             </span>
-          </div>
+          </CardMasthead>
         </div>
         <Cornice flutes={40} />
 

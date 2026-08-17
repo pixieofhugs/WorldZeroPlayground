@@ -37,6 +37,7 @@ import SnideTaskCard from '../SnideTaskCard'
 import UaTaskCard from '../UaTaskCard'
 import WowTaskCard from '../WowTaskCard'
 import { aTask } from '../../../test/fixtures'
+import { factionName } from '../../../utils/factions'
 
 const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
@@ -105,5 +106,59 @@ describe.each(SKINS)('$slug speaks the kit\'s three words (#2028)', (skin) => {
     // decorative constant; until then no card may spell it, and none may
     // resurrect `lvl` / `pts` / `PTS` / Albescent's `acknowledge`.
     expect(text).not.toMatch(/\b(?:lvl|pts|pvncta|puncta|acknowledge)\b/i)
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* B (#2029) — one masthead anatomy                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Seven cards carry a band; `na` and `albescent` carry none, which ADR-0048
+ * makes a rule rather than a gap — a band naming the society would un-hide it.
+ */
+const MASTHEADED = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow']
+
+function mastheads(html: string): string[] {
+  return [...html.matchAll(/data-card-masthead="([a-z]+)"/g)].map((m) => m[1])
+}
+
+describe.each(SKINS)('$slug masthead anatomy (#2029)', (skin) => {
+  it('mounts the shared band exactly once, or not at all', () => {
+    const { html } = render(skin)
+    const bands = mastheads(html)
+    expect(bands).toEqual(MASTHEADED.includes(skin.slug) ? [skin.slug] : [])
+  })
+
+  it('names the faction on the band, and marks it once', () => {
+    if (!MASTHEADED.includes(skin.slug)) return
+    const { html, text } = render(skin)
+    expect(text, 'the band says whose card this is').toContain(factionName(skin.slug))
+    // The one-mark rule (#2029): UA's eyebrow ensō and Coven's pentagram badge
+    // both stood down when their bands were built, and a card that grows a
+    // second header mark fails here rather than at review.
+    expect(html.match(/data-masthead-mark=/g) ?? []).toHaveLength(1)
+  })
+
+  it('centres the title on the band rather than beside the mark', () => {
+    if (!MASTHEADED.includes(skin.slug)) return
+    // The tell is the grid: equal `1fr` gutters are what put the title on the
+    // card's centreline whatever stands next to the mark. A skin that reverted
+    // to a flex row would still LOOK centred on the one card whose left
+    // cluster is only the mark, and be off true on Singularity's.
+    expect(render(skin).html).toContain('grid-template-columns:1fr auto 1fr')
+  })
+})
+
+describe('the anatomy lives in one place (#2029)', () => {
+  it('is the same band markup on all seven, up to the skin\'s own paint', () => {
+    // Every masthead is the same three-cell grid from `CardMasthead`; nothing
+    // re-implements it. Asserted as the shared declarations appearing together
+    // on each band, which a hand-rolled twin would not reproduce by accident.
+    for (const skin of SKINS.filter((s) => MASTHEADED.includes(s.slug))) {
+      const band = render(skin).html.split(`data-card-masthead="${skin.slug}"`)[1] ?? ''
+      expect(band.slice(0, 400), skin.slug).toContain('display:grid')
+      expect(band.slice(0, 400), skin.slug).toContain('grid-template-columns:1fr auto 1fr')
+    }
   })
 })

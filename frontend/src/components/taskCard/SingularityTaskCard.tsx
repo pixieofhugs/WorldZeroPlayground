@@ -1,8 +1,10 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import SingularityLamps from "../factionMarks/SingularityLamps";
@@ -151,26 +153,30 @@ export default function SingularityTaskCard({
           }}
         />
 
-        {/* Window chrome — lamps and the process name. */}
-        <div
+        {/* Window chrome, on the kit's shared anatomy (#2029) — the mark hard
+            left, the window's title centred on the bar.
+
+            The bar read "task.proc — singularity"
+            (`feed:taskCard.singularity.windowTitle`) until #1909 cut it as
+            generic, leaving the lamps alone. v3 gives it back the one title
+            that is not generic and is not a second copy of anything: the
+            faction's own name, from the one place that owns it (ADR-0038). The
+            lamps ride with the mark rather than standing down — they are the
+            window, not a faction mark, and the grid centres the title on the
+            BAND, so a wider left cluster does not push it off true. */}
+        <CardMasthead
+          slug="singularity"
+          leading={<SingularityLamps />}
           style={{
-            position: "relative",
-            zIndex: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
             padding: "var(--space-sm) var(--space-md)",
             background: "var(--faction-singularity-term-chrome)",
             borderBottom: `1px solid ${HAIR}`,
           }}
         >
-          <SingularityLamps />
-          {/* The window bar read "task.proc — singularity"
-              (`feed:taskCard.singularity.windowTitle`). #1909 cut it:
-              Singularity was the only faction with a window title on a task
-              card, on a surface the audit ruled generic. The lamps and the
-              chrome band stay — they are the window, not its caption. */}
-        </div>
+          <span style={{ ...LABEL, fontSize: "var(--text-xl)", lineHeight: 1 }}>
+            {factionName("singularity")}
+          </span>
+        </CardMasthead>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

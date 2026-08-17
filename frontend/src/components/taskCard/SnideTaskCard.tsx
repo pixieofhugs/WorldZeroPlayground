@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import CardMasthead from "./CardMasthead";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -219,17 +220,17 @@ export default function SnideTaskCard({
           transform: "rotate(-0.4deg)",
         }}
       >
-        {/* The header bar — wordmark and a broken acid rule. The bar's right end
-            carried the uniform "Task {id}" ordinal until #1124 retired the id
-            from every card; the rule takes the freed width. */}
-        <div
+        {/* The header bar, on the kit's shared anatomy (#2029) — the mark hard
+            left, the wordmark centred on the band.
+
+            The broken acid rule that used to fill the bar's right end is gone
+            with the centring: it was a flex filler taking the width #1124's
+            retired ordinal left behind, and that width is exactly where the
+            centred wordmark now sits. The clipping keeps its acid elsewhere —
+            the CTA, the knockout cuts, the pen circle. */}
+        <CardMasthead
+          slug="snide"
           style={{
-            position: "relative",
-            zIndex: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-md)",
-            padding: "var(--space-sm) var(--space-lg)",
             background: "var(--faction-snide-note-bar)",
             color: "var(--faction-snide-note-bar-ink)",
           }}
@@ -238,16 +239,7 @@ export default function SnideTaskCard({
           <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
             {factionName("snide")}
           </span>
-          <span
-            aria-hidden="true"
-            style={{
-              flex: 1,
-              height: 3,
-              background:
-                "repeating-linear-gradient(90deg, var(--faction-snide-acid) 0 6px, transparent 6px 10px)",
-            }}
-          />
-        </div>
+        </CardMasthead>
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
