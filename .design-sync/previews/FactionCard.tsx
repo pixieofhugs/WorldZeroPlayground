@@ -1,10 +1,16 @@
 // FactionCard preview cells. FactionCard is the DISPATCHER: it reads
 // faction.slug and renders that faction's bespoke directory/summary card
-// (gilt placard, whimsy.exe window, ransom sheet, codex leaf, terminal
-// printout, union poster), falling back to a generic bordered card for any
+// (gilt placard, muster bill, ransom sheet, codex leaf, terminal printout,
+// union poster, spell slip), falling back to a generic bordered card for any
 // slug without an archetype. It carries no controls — the whole card is a link
 // to the faction detail page. Each card wants a column width, so cells lay them
 // out in a fixed-width flex wrap.
+//
+// WOW's cell used to caption itself "whimsy.exe window" — the lo-fi pink
+// identity #784 moved wholesale to Cozy Coven, leaving this cell rendering the
+// generic Default under a promise of a window that was by then another
+// faction's. #951 gave the surface its own card and the caption its subject
+// back.
 import { FactionCard } from 'worldzero-frontend'
 import type { FactionOut } from '../../frontend/src/api/factions'
 
@@ -31,8 +37,8 @@ const FACTIONS: Record<string, FactionOut> = {
   albescent: { slug: 'albescent', status: 'visible' },
 }
 
-/** The gilt-salon (UA), whimsy.exe window (Wow), and ransom sheet (Snide)
- *  archetypes side by side — the switcher's three most distinct chromes. */
+/** The gilt-salon (UA), muster bill (Wow), and ransom sheet (Snide) archetypes
+ *  side by side — the switcher's three most distinct chromes. */
 export function GiltWhimsyRansom() {
   return (
     <div style={wrap}>

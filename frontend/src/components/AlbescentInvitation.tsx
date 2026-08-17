@@ -238,7 +238,7 @@ const letter: CSSProperties = {
   background: BG,
   color: INK,
   border: `1px solid ${HAIRLINE}`,
-  boxShadow: '0 2px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+  boxShadow: '0 2px 24px var(--color-cast-shadow-soft), 0 1px 3px var(--color-cast-shadow-soft)',
   overflow: 'hidden',
   marginTop: 'var(--space-3xl)',
 }

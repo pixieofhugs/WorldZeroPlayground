@@ -28,7 +28,15 @@
  * only the surfaces in WOW_SKINNED are claimed, the rest fall back, WOW resolves
  * its own hue, and it still has a name and description of its own.
  *
- * DELETE (or re-scope) THIS FILE when WOW's remaining surfaces ship.
+ * RE-SCOPED, NOT DELETED (#951, the `factionCard` bill). The docblock used to
+ * say "delete or re-scope this file when WOW's remaining surfaces ship"; they
+ * have all shipped, and WOW_SKINNED is now every key in SURFACE_KEYS. The
+ * completeness half of the file is therefore a stronger statement than it was
+ * (WOW is fully dressed, and de-registering any surface reds a row) and the
+ * theme half is untouched by the change — the second failure mode above, a
+ * lapsed theme silently labelling a populated faction "Unaffiliated", is not a
+ * skin question and never was. The file is misnamed now rather than obsolete:
+ * `wowRendersDefault` is the state it disproves.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -90,20 +98,33 @@ function Sentinel() {
  * ADR-0078 has since retired, and the copy was already sitting unread in
  * `factions.json` from #900. It serves both form factors now.
  *
- * `factionCard` is the LAST unclaimed desktop surface.
+ * and `factionCard` — THE MUSTER BILL, the last of #951's four and the surface
+ * that closed it. Bunting across the head, the googly crown struck on a cream
+ * plate, a wavy gold→plum rule and a still balloon bunch in the corner, over the
+ * chronicle parchment. Derived rather than drawn, like the three above it: the
+ * ornaments come from `wowOrnament` and the content slots from the six cards
+ * that already existed, and it adds not one copy key — #1909's audit ruled this
+ * surface's words generic and deleted every per-faction string on it, so the
+ * card says the shared four (name, description, standing, invitation) in WOW's
+ * dress and nothing else.
  *
- * It is a PENDING DESIGN BUG, tracked by #951.
- * #899/#900/#840 scoped them out on a design-fidelity argument (the kit drew
- * WOW's cards and hero, not the desktop pages beneath them, so a page skin would
- * be invention), but the owner ruled (2026-07-23) that a faction missing a
- * custom experience is a bug regardless: WOW players get the generic Default on
- * those pages. They fall to the neutral Default (N/A), never to Coven — which is
- * the point of pinning the set here. When #951 ships a skin, move that surface
- * into WOW_SKINNED and this list shrinks; `surfaceDispatch.test.ts` enforces the
- * same #951 allowlist. That shrink has now happened three times: `taskDetail`
- * moved down into WOW_SKINNED in #1037, `praxisDetail` in #1121 and
- * `factionBody` with the muster page — each out of both allowlists in the same
- * commit as its skin.
+ * SO THE SET IS NOW EXHAUSTIVE, and that is what this file records. #951 is
+ * closed and there is no pending list left in either guard. #899/#900/#840 had
+ * scoped the four desktop surfaces out on a design-fidelity argument (the kit
+ * drew WOW's cards and hero, not the desktop pages beneath them, so a page skin
+ * would be invention), but the owner ruled (2026-07-23) that a faction missing a
+ * custom experience is a bug regardless, and ruled again (2026-08-16) that a
+ * surface with no sheet gets DERIVED rather than left generic. The set shrank
+ * four times, each in the same commit as its skin: `taskDetail` in #1037,
+ * `praxisDetail` in #1121, `factionBody` with the muster page and `factionCard`
+ * with the bill.
+ *
+ * WHAT THE FALL-BACK BRANCH IS STILL FOR. Nothing is unclaimed today, so the
+ * `else` below does not run — it is the contract a NEW surface key lands on. A
+ * fallback goes to the neutral Default (N/A), never to Coven, which took WOW's
+ * old aesthetic. `surfaceDispatch.test.ts` is the guard that actually bites
+ * there: it derives the bar from what the five reference factions skin, so a new
+ * core surface raises it automatically and WOW must follow.
  *
  * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
  * and `mobilePlayersDirectory` used to be listed here as Default-for-everyone
@@ -132,9 +153,10 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'duelSeal',
   'mobileFieldDesk',
   'metataskSeal',
+  'factionCard',
 ])
 
-describe('wow is partly skinned: nineteen surfaces claimed, the rest fall back', () => {
+describe('wow is fully skinned: every surface the manifest declares is claimed', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

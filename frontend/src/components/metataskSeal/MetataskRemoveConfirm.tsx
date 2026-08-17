@@ -39,7 +39,7 @@ export default function MetataskRemoveConfirm({
       }`}
       style={{
         padding: isMobile ? 0 : "var(--space-lg)",
-        background: "radial-gradient(circle, rgba(0,0,0,0.45), rgba(0,0,0,0.65))",
+        background: "var(--color-overlay-strong)",
       }}
     >
       <div
@@ -51,7 +51,7 @@ export default function MetataskRemoveConfirm({
           background: "var(--color-bg-page)",
           border: isMobile ? "none" : "1px solid var(--color-border)",
           borderRadius: isMobile ? "16px 16px 0 0" : 12,
-          boxShadow: "0 8px 28px rgba(0,0,0,0.28)",
+          boxShadow: "0 8px 28px var(--color-cast-shadow)",
         }}
       >
         <h2

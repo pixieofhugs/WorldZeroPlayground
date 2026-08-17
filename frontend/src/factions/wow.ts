@@ -118,6 +118,7 @@ const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchet
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
+const WowCard = lazyArchetype(() => import('../components/factionCard/WowFactionCard'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -152,8 +153,18 @@ export const WOW_MANIFEST: FactionManifest = {
   // order from the phone twin that ADR-0078 has since retired, and the main +
   // rail shape from the other six bodies. The copy was already in
   // `factions.json` from #900, unread until now. This now serves BOTH widths.
-  // Third of #951's four bullets; `factionCard` is the last one open.
+  // Third of #951's four bullets.
   factionBody: () => WowFactionBody,
+  // The LAST of #951's four, and the row that closes it — THE MUSTER BILL, the
+  // directory PREVIEW card. Derived like the body above it (no sheet exists):
+  // the bunting, the wavy rule and the balloons from `wowOrnament`, the frame
+  // and the type from the decree the kit calls "the archetype the others
+  // mirror", and the four content slots from the six cards that already ship
+  // one. Not one new copy key — #1909 ruled this surface's words generic and
+  // cut every per-faction string on it, so the bill says the shared four in
+  // WOW's dress. In its own module rather than the shared `FactionCard.tsx`, so
+  // WOW's ornament is not posted to the five factions that chunk serves.
+  factionCard: () => WowCard,
   backdrop: () => WowBackdrop,
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WOWSelectCard,

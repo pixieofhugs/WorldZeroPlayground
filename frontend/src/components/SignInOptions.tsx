@@ -129,7 +129,7 @@ const sheet: CSSProperties = {
   padding: 'var(--space-md) var(--space-lg) var(--space-xl)',
   // The colour half is the half that would drift between themes, so it is the
   // half that comes from a token (CharacterSwitcherSheet, ConfirmDialog).
-  boxShadow: '0 -12px 34px var(--color-overlay-strong)',
+  boxShadow: '0 -12px 34px var(--color-cast-shadow)',
 }
 const grab: CSSProperties = {
   display: 'block', width: 38, height: 4, borderRadius: 999,

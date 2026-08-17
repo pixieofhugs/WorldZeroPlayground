@@ -288,6 +288,29 @@
   --color-overlay-strong: rgba(0, 0, 0, 0.25);
   --color-surface-scrim: rgba(255, 255, 255, 0.9);
 
+  /* The colour a lifted surface casts (#1609, group 2 of the raw-colour list).
+     Geometry stays at the call site — `0 8px 28px var(--color-cast-shadow)` —
+     because blur and offset are a component's business and only the paint is
+     off-theme. Nineteen surfaces had hand-rolled this as `rgba(0,0,0,α)` at
+     eleven alphas between 0.04 and 0.5.
+
+     It is NOT `--color-overlay-strong`, even though the light value matches and
+     four sites reached for that token as a shadow. A scrim and a cast want
+     OPPOSITE things of the dark theme: a scrim answers "the page behind is
+     unavailable" and reads correctly on a near-black page unchanged, while a
+     cast shadow is a black smudge on a black ground and disappears. Splitting
+     them is what lets this one deepen — the same move --dropdown-shadow makes
+     below, and the reason that token could not simply be reused either (its
+     geometry is a floating listbox's, not every card's).
+
+     Two rungs, not eleven. `-soft` is the ambient lift a sheet of paper has
+     while sitting ON the page rather than floating above it: the Albescent
+     invitation letter, whose 0.06/0.04 pair would become a grey halo at the
+     floating rung. Mint a third when a surface needs it — §3's rule, and the
+     note above on -weak/-medium is what minting one nobody reads looks like. */
+  --color-cast-shadow: rgba(0, 0, 0, 0.25);
+  --color-cast-shadow-soft: rgba(0, 0, 0, 0.06);
+
   /* The lift under an attached listbox — the @-mention popover and the invite
      picker's results, both absolutely positioned under their input. They had
      written the same alpha by hand at two different geometries (`0 4px 12px`
@@ -2132,6 +2155,23 @@
   --space-5xl: 64px;
   --space-6xl: 96px;
 
+  /* ── Desktop shell width (#1562) ──
+     The ONE number the desktop chrome and the desktop page agree on. The nav
+     bar capped itself at Tailwind's `max-w-5xl` (1024px) while the page region
+     ran to `min(92vw, 1600px)`, so on a wide monitor the bar and the content
+     under it disagreed by up to ~576px — on every route. The Home design's
+     shell settles both at 1392px, and a token is what stops them drifting
+     apart again: two consumers, `ShellContent`'s DESKTOP_REGION and
+     `NavBar`'s inner container, both read this and neither owns it.
+
+     GEOMETRY, not spacing — deliberately not on the --space-* ramp, for the
+     same reason `identityActionStyle`'s 44px target is not.
+
+     `SiteFooter` still caps at `max-w-5xl`. That is left alone here on
+     purpose: #1562 ruled on the nav, and widening the footer in the same pass
+     would fold a second site-wide visual change into one QA sweep. */
+  --shell-max-width: 1392px;
+
   /* ── Mobile bottom-chrome clearance (#1566) ──
      `MobileTabBar` is `fixed bottom-0` and ~3.5rem tall, and it pads ITSELF by
      the home indicator. Anything else pinned to the bottom of a phone viewport
@@ -2272,6 +2312,14 @@
   /* A cast shadow on a near-black page needs far more of it to read at all —
      the same move --filter-popover-shadow makes below. */
   --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  /* Same reasoning, generalised (#1609). The light 0.25 over #f7f4ee is a
+     legible smudge; the same 0.25 over #13121a is nothing at all. These track
+     --dropdown-shadow's ~4x lift rather than inventing a second answer to the
+     one question. --color-overlay-strong deliberately gets NO dark counterpart
+     — a scrim is already correct at 0.25 on a dark page — which is precisely
+     the disagreement that made these their own token. */
+  --color-cast-shadow: rgba(0, 0, 0, 0.7);
+  --color-cast-shadow-soft: rgba(0, 0, 0, 0.4);
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
   --faction-ua: #e8703a; /* sienna lifted for dark — UA */
@@ -3428,6 +3476,77 @@
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+  }
+
+  /* ── The equal-height task-card row (#1945) ───────────────────────────────
+     Every surface that lists <TaskCard>s in a flex-wrap row wears this class.
+     The rows used to set `align-items: flex-start`, so each card kept its own
+     content height and a row's bottom edges disagreed by the length of a
+     description — cards that are meant to look hand-made looked unfinished.
+
+     THIS DOES NOT REOPEN §6. "Do not regularize card sizes" is about WIDTHS and
+     ROTATIONS, and both are untouched: the row's own items never grow (see the
+     third rule's note), so every `cardWidth` and every `rotate()` still reads
+     exactly as its archetype drew it. A ragged bottom edge in a wrapping row is
+     a layout accident, not an archetype (owner ruling 2026-08-17, §6).
+
+     WHY `align-items: stretch` ALONE DOES NOTHING HERE. The row's flex item is
+     not the thing that gets painted. Every task card mounts as
+
+       row > TaskCard's positioned wrapper > skin root ([data-form-factor])
+           > <article>   ← the frame, the ground and the shadow live here
+           > … > <a>     ← the region a player reads
+
+     and a block box does not inherit its parent's height. So the height is
+     handed down that chain one level at a time, and it stops at the region
+     holding the card's link — which is what makes the four archetypes with a
+     full-width CTA BAR (Coven, Ephemerists, S.N.I.D.E., Everymen) keep that bar
+     flush with the bottom edge instead of leaving paper under it. The other
+     five centre a pill instead, and it settles to the bottom of its own frame.
+     No archetype's internal geometry is reflowed: the slack is empty ground.
+
+     WHAT IS DELIBERATELY NOT TOUCHED. Every ornament these cards position
+     absolutely — START HERE, the META stack and the admin controls on the
+     dispatcher, Albescent's aurora and drifting edge, Coven's wheel, WoW's
+     balloons — is out of flow, so none of it is a flex item and none of these
+     rules reach it. The two `bottom`-anchored ones (that wheel, those balloons)
+     ride down with the frame, which is where a corner ornament belongs.
+
+     A SKIN MAY NOT BREAK THE CHAIN. `[data-form-factor] > article` and the one
+     anchor per card are the contract this file is written against;
+     `pages/tasks/__tests__/equalHeightRow.test.tsx` renders all nine skins and
+     fails if a redraw moves the frame off the skin root or adds a second link.
+     Nothing here can be restated inline in a component: an inline `display`
+     would beat every rule below. */
+  .task-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  /* Each box on the path from the row down to the card's link becomes a column,
+     so the height keeps travelling instead of stopping at the first block.
+     `:has(> [data-form-factor])` is Albescent: its tell wraps a second skin root
+     one level deeper than the other eight, and it is named by what it contains
+     rather than counted, so nesting may change without this going quiet. */
+  .task-card-row > *,
+  .task-card-row > * :has(> [data-form-factor]),
+  .task-card-row [data-form-factor],
+  .task-card-row [data-form-factor] > article,
+  .task-card-row [data-form-factor] > article :has(a[href]) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* …and each takes the slack. NEVER `.task-card-row > *` itself: the row's own
+     item grows along the ROW's main axis, which is horizontal, so a `flex-grow`
+     there would stretch cards to fill the line — the exact width-regularizing
+     §6 forbids. Growth starts one level in, where the axis is vertical. */
+  .task-card-row > * :has(> [data-form-factor]),
+  .task-card-row [data-form-factor],
+  .task-card-row [data-form-factor] > article,
+  .task-card-row [data-form-factor] > article :is(a[href], :has(a[href])) {
+    flex: 1 1 auto;
   }
 
   /* ── Buttons ──
