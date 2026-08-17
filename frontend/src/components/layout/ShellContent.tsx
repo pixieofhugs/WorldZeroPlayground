@@ -54,8 +54,20 @@ export interface ShellContentProps {
 
 /** Full-bleed on the phone; bottom padding clears the fixed tab bar + safe area. */
 const MOBILE_REGION = 'flex-1 relative px-4 py-4'
-/** Centred content column (Style Guide §4.1). */
-const DESKTOP_REGION = 'flex-1 relative max-w-[min(92vw,1600px)] mx-auto w-full px-4 sm:px-6 py-5'
+/**
+ * Centred content column (Style Guide §4.1), on the Home design's shell (#1562).
+ *
+ * `--shell-max-width` rather than a literal, because `NavBar` caps itself at the
+ * same number and the two must not drift — see the token's note in `index.css`.
+ * The padding is the design's `32px 40px 72px`: `pt-8 px-10 pb-[72px]`, and 72
+ * is arbitrary because it is the one rung the --space-* ramp skips (64 → 96).
+ *
+ * NOT uniformly a narrowing. At 1920px the old cap resolved to 1600 and this is
+ * 1392, so pages lose ~208px; at 1440px the old cap resolved to 92vw = 1325 and
+ * this is 1392, so pages GAIN ~67px. Both directions are real regressions to
+ * look for.
+ */
+const DESKTOP_REGION = 'flex-1 relative max-w-[var(--shell-max-width)] mx-auto w-full pt-8 px-10 pb-[72px]'
 
 const MOBILE_REGION_STYLE: CSSProperties = {
   zIndex: 5,
@@ -63,10 +75,19 @@ const MOBILE_REGION_STYLE: CSSProperties = {
 }
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 
-/** Desktop rail + content grid; single column while signed out or on a phone. */
-const SIDEBAR_GRID_EXPANDED = 'gap-4 items-start lg:grid lg:grid-cols-[minmax(280px,340px)_1fr]'
+/**
+ * Desktop rail + content grid; single column while signed out or on a phone.
+ *
+ * The design's `320px minmax(0, 1fr)` with a `36px` gutter (#1562). The rail is
+ * a FIXED 320 now rather than the old `minmax(280px,340px)` elastic band, so the
+ * page column absorbs every width change on its own and the rail's line lengths
+ * are the same on a 1440 and a 4K monitor. `minmax(0, 1fr)` is the safe form of
+ * `1fr` — `<main>`'s `min-w-0` says the same thing, and both are kept because
+ * either one alone is one edit away from an overflowing content column.
+ */
+const SIDEBAR_GRID_EXPANDED = 'gap-9 items-start lg:grid lg:grid-cols-[320px_minmax(0,1fr)]'
 /** Folded away: the column shrinks to just the handle and the page takes the rest. */
-const SIDEBAR_GRID_COLLAPSED = 'gap-4 items-start lg:grid lg:grid-cols-[auto_1fr]'
+const SIDEBAR_GRID_COLLAPSED = 'gap-9 items-start lg:grid lg:grid-cols-[auto_minmax(0,1fr)]'
 
 export default function ShellContent({
   isMobile,

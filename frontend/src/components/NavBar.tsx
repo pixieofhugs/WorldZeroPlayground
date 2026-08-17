@@ -83,7 +83,12 @@ export default function NavBar() {
         transition: 'background 150ms',
       }}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
+      {/* Shares `ShellContent`'s cap, not a number of its own (#1562). At
+          `max-w-5xl` (1024px) this bar was up to ~576px narrower than the page
+          region beneath it on every route; one token is what keeps them
+          agreeing. The horizontal padding is still the bar's own — matching the
+          page's 40px gutter is a separate call the ruling did not make. */}
+      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
         {/* Wordmark — Lora italic with rainbow gradient underline */}
         <NavLink to="/" className="shrink-0 leading-none" style={{ textDecoration: 'none' }}>
           <span

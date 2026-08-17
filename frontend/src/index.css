@@ -2132,6 +2132,23 @@
   --space-5xl: 64px;
   --space-6xl: 96px;
 
+  /* ── Desktop shell width (#1562) ──
+     The ONE number the desktop chrome and the desktop page agree on. The nav
+     bar capped itself at Tailwind's `max-w-5xl` (1024px) while the page region
+     ran to `min(92vw, 1600px)`, so on a wide monitor the bar and the content
+     under it disagreed by up to ~576px — on every route. The Home design's
+     shell settles both at 1392px, and a token is what stops them drifting
+     apart again: two consumers, `ShellContent`'s DESKTOP_REGION and
+     `NavBar`'s inner container, both read this and neither owns it.
+
+     GEOMETRY, not spacing — deliberately not on the --space-* ramp, for the
+     same reason `identityActionStyle`'s 44px target is not.
+
+     `SiteFooter` still caps at `max-w-5xl`. That is left alone here on
+     purpose: #1562 ruled on the nav, and widening the footer in the same pass
+     would fold a second site-wide visual change into one QA sweep. */
+  --shell-max-width: 1392px;
+
   /* ── Mobile bottom-chrome clearance (#1566) ──
      `MobileTabBar` is `fixed bottom-0` and ~3.5rem tall, and it pads ITSELF by
      the home indicator. Anything else pinned to the bottom of a phone viewport
