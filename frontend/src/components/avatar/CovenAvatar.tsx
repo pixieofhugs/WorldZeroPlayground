@@ -22,7 +22,8 @@ function MoonGlyph({ size, color }: { size: number; color: string }) {
  * panel ground and left the glyph alone: the crescent is not a lo-fi mark, it is
  * the same moon `CovenVote`'s phase plate is built from, and that plate was
  * explicitly kept. A pentagram at badge size (12–16px) would be mud anyway,
- * which is the reason `CovenSigil`'s four-point sparkle exists at all.
+ * which is the reason the four-point sparkle exists at all (`covenSlip`'s
+ * `Spark` since Sigil Studies v2 gave `CovenSigil` the witch hat).
  *
  * The monogram takes the slip's reading face rather than Caveat: Cormorant is
  * what the design letters a disc in, and one hand-script capital inside a 24px
