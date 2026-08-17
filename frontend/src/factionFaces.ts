@@ -1,11 +1,26 @@
 /**
- * The faction @font-face sheet, as a chunk (#2079).
+ * The deferred faction-dress chunk (#2079, widened by #2073).
+ *
+ * TWO SHEETS, ONE CHUNK.
  *
  * `src/fonts.faction.css` carries the 62 `@font-face` rules for the 15 families
- * only a faction surface renders in. This module exists to be the ONE importer
- * of that file, so Vite has exactly one chunk to attach the emitted CSS asset
- * to: import the stylesheet from several places instead and it is copied into
- * each importing chunk's sheet.
+ * only a faction surface renders in. `src/motion.ornament.css` carries the
+ * reduced-motion-gated ORNAMENT MOTION — the vote widgets' set, the Singularity
+ * scanline and cursor, the Coven watermark's turn, the UA mandala. Neither is
+ * first-paint content, and this module exists to be the ONE importer of both, so
+ * Vite has exactly one chunk to attach the emitted CSS asset to: import either
+ * stylesheet from several places instead and it is copied into each importing
+ * chunk's sheet.
+ *
+ * They ride together because they need the identical delivery — off the entry
+ * HTML, reachable from every chunk that draws faction dress — and one loader is
+ * simpler than two parallel ones. Their FAILURE modes differ, and that
+ * difference is why only one of them gets a reachability assertion: a stranded
+ * face is a change of identity that looks like a slow network, so
+ * `factionFaceSplit.test.ts` proves every load root can reach this module. A
+ * stranded animation is just the reduced-motion state, which every ornament in
+ * that sheet already has to render as a legible drawn frame — so
+ * `motionSplit.test.ts` guards the sheet's CONTENTS and its gates instead.
  *
  * IMPORTING THIS MODULE IS THE REQUEST. There is nothing to call — the side
  * effect is the point, and Vite injects the `<link>` when the chunk loads.
@@ -30,3 +45,4 @@
  * nothing statically reachable from `main.tsx` imports it.
  */
 import "./fonts.faction.css";
+import "./motion.ornament.css";

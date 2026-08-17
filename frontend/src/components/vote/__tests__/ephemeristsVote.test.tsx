@@ -278,6 +278,13 @@ describe('EphemeristsVote markup', () => {
  * brace still balances, the stylesheet still builds, and the animation escapes
  * into the unguarded cascade.
  *
+ * TWO SHEETS, ONE QUESTION (#2073). The ladder's four animations moved to
+ * `src/motion.ornament.css`, delivered past first paint; the resting states
+ * stayed in `index.css`. "Is the burst guarded, and is there no unguarded twin"
+ * is a question about the pair, not about either file, so both are read and
+ * concatenated — which is also what keeps the second assertion honest, since an
+ * unguarded `animation` reintroduced in EITHER sheet must still fail.
+ *
  * ponytail: this partition function is copied from `#1630`'s block in
  * `pages/characterProfile/__tests__/factionProfileBody.test.tsx`, which is the
  * only other place asserting the guard from the stylesheet. Ceiling: two copies.
@@ -285,10 +292,9 @@ describe('EphemeristsVote markup', () => {
  * than make it three.
  */
 describe('#1638 the metals burst sits behind the reduced-motion guard', () => {
-  const css = readFileSync(
-    fileURLToPath(new URL('../../../index.css', import.meta.url)),
-    'utf8',
-  )
+  const css = ['../../../index.css', '../../../motion.ornament.css']
+    .map((sheet) => readFileSync(fileURLToPath(new URL(sheet, import.meta.url)), 'utf8'))
+    .join('\n')
 
   /** The source split into (inside a no-preference block, outside it). */
   const partitionByGuard = (source: string): [string, string] => {
