@@ -60,7 +60,6 @@ from services.era import (
     get_or_create_stats,
 )
 from services.level_jump import available_level_reach, consume_level_jump
-import services.praxis_room as praxis_room
 from services.praxis_room import close_member_sockets
 from models.duel import Duel, DuelStatus
 
@@ -1906,19 +1905,18 @@ async def set_member_done(
     is_done: bool,
     session: AsyncSession,
 ) -> Praxis:
-    """**Done** — "my part is finished" (ADR-0079). Collab only, and reversible.
+    """**Done** — "my part is finished" (ADR-0079). Per member, and reversible.
 
-    422 on a solo or duel praxis rather than a silent write: one member means
-    Done and Publish are the same click, so a per-member Done there is a caller
-    that has misread the model, and storing a flag nothing can ever read would
-    hide that.
+    Membership is the only gate (ADR-0013). There is deliberately **no** guard
+    against marking Done on a solo or duel praxis: the flag gates nothing and
+    starts nothing, so on a one-member praxis it is a no-op that no player can
+    reach — the composer only draws the control for a crew — and a refusal would
+    cost a new error code and a catalog entry to protect against nothing.
+    ``ponytail:`` if a solo surface ever grows a Done control by accident, the
+    upgrade is a coded 422 here rather than a second rule somewhere else.
     """
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, "mark done on")
-    if praxis.type != PraxisType.collab:
-        raise HTTPException(
-            status_code=422, detail="Only a collab has a per-member Done."
-        )
     await collab_consensus.mark_done(praxis, character_id, is_done, session)
     return await get_praxis(praxis_id, session)
 

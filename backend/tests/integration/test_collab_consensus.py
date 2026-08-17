@@ -140,21 +140,38 @@ async def test_a_cancelled_proposal_leaves_done_alone(
 
 
 @pytest.mark.asyncio
-async def test_done_is_refused_on_a_solo_praxis(
+async def test_done_on_a_solo_praxis_publishes_nothing(
     client: AsyncClient,
-    praxis_solo: Praxis,
+    active_task: Task,
     auth_headers: dict,
 ):
     """Solo and duel are untouched (ADR-0079) — including by the new signal.
 
-    One member means Done and Publish are the same click, so a per-member Done
-    there is a caller that has misread the model. A duel is two solo praxes
-    (ADR-0011), so it is this case twice.
+    A solo praxis has one member, so ``all(approved)`` would hold the instant
+    anything recorded consent. This is the test that Done records none: the
+    dangerous failure is a Done that publishes, not one that is accepted where
+    no surface offers it. A duel is two solo praxes (ADR-0011), so this is that
+    case twice.
     """
-    resp = await client.post(
-        f"/praxes/{praxis_solo.id}/done", json={"is_done": True}, headers=auth_headers
+    created = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Alone"},
+        headers=auth_headers,
     )
-    assert resp.status_code == 422, resp.text
+    assert created.status_code == 201, created.text
+
+    resp = await client.post(
+        f"/praxes/{created.json()['id']}/done",
+        json={"is_done": True},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+
+    assert body["status"] == "in_progress"
+    assert body["submitted_at"] is None
+    assert body["submit_proposed_at"] is None
+    assert not any(m["has_submitted"] for m in body["members"])
 
 
 @pytest.mark.asyncio

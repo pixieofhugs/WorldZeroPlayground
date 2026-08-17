@@ -1656,11 +1656,12 @@ async def test_collab_all_submit_clears_window(
     assert data["submit_proposed_at"] is None
 
 
-# A *text* edit no longer cancels a pending publish. ADR-0012's hard reset needs
-# a discrete edit event and a CRDT has none, so ADR-0073 answers it with freeze:
-# submitting freezes the room read-only and ``pullBack`` is the one door back in
-# (#1745). The reset MECHANISM is unchanged and still triggered by media edits —
-# ``test_praxis_media_batch.py`` holds those assertions.
+# A *text* edit cancels a live proposal again (ADR-0079), but not through any
+# route: it fires from the room's own document observer, so its assertions live
+# in ``test_praxis_room.py`` where a real CRDT client can make the text move.
+# Media edits reach the same rule through ``on_member_edit`` —
+# ``test_praxis_media_batch.py`` holds those — and Withdraw through this router,
+# in ``test_collab_consensus.py``.
 
 
 @pytest.mark.asyncio
@@ -1694,12 +1695,11 @@ async def test_roster_row_carries_when_each_member_filed(
     # The member who has not filed is still NULL — one row moved, not the pair.
     assert rows[character.id]["submitted_at"] is None
 
-    # ...and NULL again when that part is pulled back. The trigger used to be a
-    # praxis PUT and its ADR-0012 hard reset; since #1743 there is no PUT, so it
-    # is the door ADR-0059 leaves open — ``pullBack``, which on a pending collab
-    # retracts only the caller's own part (#590). The claim is unchanged: a
-    # "when they filed" that outlived the filing would be worse than never
-    # shipping the field.
+    # ...and NULL again when the proposal is withdrawn. Withdraw is a group
+    # action now (ADR-0079) — there is no per-member submission left to retract
+    # some or all of — so it clears the pair. The claim is unchanged: a "when
+    # they filed" that outlived the filing would be worse than never shipping
+    # the field.
     reset = await client.post(
         f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2
     )
@@ -2931,17 +2931,16 @@ async def test_unsubmit_pending_reopens_the_whole_group(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """Reopening a pending collab is ADR-0012's hard reset, for any member (#1745).
+    """Withdraw is ADR-0012's hard reset, for any member (ADR-0079).
 
-    #590 cleared only the caller's part and left the collab pending. That was
-    right while a member who had pulled back could still type — their first
-    keystroke ran the reset this skipped. Since #1745 the document is frozen for
-    the whole group until the praxis is drafting again, so a partial pull-back
-    would hand a member a write-up they still could not write in.
+    #590 cleared only the caller's part and left the collab pending. ADR-0079
+    dissolves that question rather than settling it: with the proposal held on
+    the praxis and approvals cast against it, there is no per-member submission
+    for a pull-back to take back some or all of.
 
-    Which is also why the **holdout** is the one who reopens it here: they never
-    submitted, so under #590 they had nothing of their own to pull back and got
-    a 422 — and #1743 took away the typing that used to be their way in.
+    Which is why the **holdout** is the one who withdraws here: they never
+    approved, so under #590 they had nothing of their own to pull back and got a
+    422 — the member the countdown is running against was the one with no move.
     """
     create = await client.post(
         "/praxes",
