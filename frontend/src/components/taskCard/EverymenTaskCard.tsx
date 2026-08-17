@@ -200,8 +200,9 @@ const SPARKS = [
  * here is that there is only ever one box in the row.
  *
  * It is STATIC. The design crackles the arcs, jitters the fist and flickers the
- * bolt on three keyframes; the same pass disables the seal's stamp animation
- * outright, and the arcs read as a discharge standing still.
+ * bolt on three keyframes, and the same design stands its own stamp animation
+ * down in the pass after — this card's ornament is drawn, not played. Jagged
+ * arcs thrown off a bolt read as a discharge standing perfectly still.
  *
  * ponytail: the ceiling is the motion, dropped for the CSS budget — three
  * keyframes plus their reduced-motion gate is ~0.5 KB in `index.css`, which is
