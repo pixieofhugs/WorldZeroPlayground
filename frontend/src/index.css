@@ -509,8 +509,11 @@
      It buys the plate: Ephemerists' hue on its own near-black plate went
      2.91:1 → 7.22:1. It does NOT touch --faction-default-stop-1…7 — the
      rainbow is a separately tuned spectrum whose yellow (#ca8a04) and teal
-     (#1d6e72) answer to nobody's hue but their own — nor FACTION_RAINBOW_ORDER,
-     whose spectral sort is now stale by two slots and is an owner call.
+     (#1d6e72) answer to nobody's hue but their own. FACTION_RAINBOW_ORDER DID
+     follow, in #2078: the owner ruled the re-sort in, so the Ephemerists' brass
+     moved to index 2 and WOW's plum to index 5. There is no teal in that
+     spectrum now, and the na stops above still have theirs — the two lists are
+     separate on purpose, which is why only one of them moved.
 
      THE SKIN. WOW's surfaces are the CHRONICLE: cream parchment, a gold frame
      (#c8a02a, theme-invariant — it does not lift in dark) and plum ink (#7a4a9e
