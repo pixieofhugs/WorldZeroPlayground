@@ -44,19 +44,24 @@
 # global amber-500, FieldDesk's dot field mixes `--color-text-primary` so it
 # survives dark mode, and FeedCardEraAnnouncement mixes `--badge-admin-text`.
 #
-# The six below are the same shape and are LEFT ONLY to avoid colliding with
-# concurrent card work — four cast shadows (`0 3px 14px rgba(34,26,18,0.1)`,
-# `0 2px 6px` the same, `0 12px 32px -14px rgba(0,0,0,0.4)`,
-# `0 16px 40px -24px rgba(0,0,0,0.5)`) that `--color-cast-shadow`/`-soft` now
-# answer directly, plus two that are not lift at all and want their own call:
-# `shared.tsx`'s `1px dashed rgba(128,128,128,0.3)` divider and `TaskCard`'s
-# `textShadow: 0 1px 2px rgba(0,0,0,0.3)`.
-src/components/praxisCard/desktop/DefaultPraxisCard.tsx
-src/components/praxisCard/scoreStamp/DefaultScoreStamp.tsx
-src/components/praxisCard/shared.tsx
-src/components/taskCard/DefaultTaskCard.tsx
-src/components/taskCard/TaskCard.tsx
-src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx
+# CLEARED — the six parked for a scheduling collision are done. The four cast
+# shadows took the tokens the rest of the group already had: the two warm
+# `rgba(34,26,18,0.1)` lifts on the praxis card and its score stamp are paper
+# RESTING on the page, so `-soft`; the two deep negative-spread casts
+# (`0 12px 32px -14px`, `0 16px 40px -24px`) are floating and take
+# `--color-cast-shadow` at the geometry `DefaultSelectCard` and
+# `OnboardingCard` already write it at.
+# The two that were not lift got their own call, and neither wanted a token:
+#   - `shared.tsx`'s `1px dashed rgba(128,128,128,0.3)` byline rule is mounted
+#     inside NINE faction frames, cream to near-black, so one mid-grey could
+#     not be right on any of them. It is a percentage of `currentColor` — the
+#     frame's own `--faction-*-card-text` — which serves every faction and both
+#     cascades without a new name.
+#   - `TaskCard`'s `textShadow: 0 1px 2px rgba(0,0,0,0.3)` on the META pill is
+#     DELETED. `factionFill(slug,'pill')` paints an opaque ground under that
+#     ink in both branches (a real faction gets the AA-measured `-on-fill`; na
+#     gets the rainbow on the border-box only, with card ink on card paper), so
+#     the smudge sat under type that already cleared.
 #
 # GROUP 3 — faction skins and ornament marks. READ THESE BEFORE REPOINTING.
 # Gap B's judgement applies to colour exactly as it does to `text-[13px]`: a

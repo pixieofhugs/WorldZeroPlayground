@@ -165,7 +165,14 @@ export default function TaskCard({
               letterSpacing: '0.15em',
               padding: 'var(--space-xs) var(--space-sm)',
               border: `1.5px solid ${factionCssVar(shown.metatask_faction_slug, 'border')}`,
-              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              // A `0 1px 2px rgba(0,0,0,0.3)` textShadow stood here (#1609).
+              // It was never load-bearing: `factionFill(slug, 'pill')` paints
+              // an OPAQUE ground under this ink in both branches — a real
+              // faction gets `--faction-{key}-on-fill`, which is the ink that
+              // hue's `-on-fill` line measures for AA, and `na` gets the
+              // rainbow on the BORDER-box only with card ink on card paper
+              // inside. So the smudge sat under type that already cleared,
+              // and it was a raw colour with no dark counterpart.
               // na → rainbow frame (overrides the faction border below); real
               // faction → solid hue + on-fill ink, keeping its 1.5px border.
               ...factionFill(shown.metatask_faction_slug, 'pill'),

@@ -294,7 +294,14 @@ export function PraxisByline({
         fontSize: "var(--text-xl)",
         marginTop: "var(--space-sm)",
         paddingTop: "var(--space-sm)",
-        borderTop: "1px dashed rgba(128,128,128,0.3)",
+        // A percentage of the ink already on the card, not a mid-grey hedge
+        // (#1609). The byline is mounted inside nine faction frames whose
+        // grounds run from cream to near-black, so a fixed rgba(128,128,128)
+        // was the one value that could not be right on any of them — and it
+        // could not flip. `currentColor` is the frame's own
+        // `--faction-*-card-text`, which every archetype already sets on the
+        // sheet, so one rule serves every faction and both cascades.
+        borderTop: "1px dashed color-mix(in srgb, currentColor 30%, transparent)",
         gap: "var(--space-sm)",
         ...style,
       }}

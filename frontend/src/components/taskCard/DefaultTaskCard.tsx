@@ -104,7 +104,7 @@ export default function DefaultTaskCard({
             "linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)), var(--faction-default-rainbow)",
           backgroundOrigin: "border-box",
           backgroundClip: "padding-box, border-box",
-          boxShadow: "0 12px 32px -14px rgba(0,0,0,0.4)",
+          boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
           color: "var(--faction-default-card-text)",
           fontFamily: MONO,
           padding: size.pad,

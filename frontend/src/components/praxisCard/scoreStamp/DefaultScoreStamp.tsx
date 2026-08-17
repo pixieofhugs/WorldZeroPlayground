@@ -113,7 +113,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         borderRadius: 10,
         background: "var(--faction-default-stamp-bg)",
         color: "var(--faction-default-card-text)",
-        boxShadow: "0 2px 6px rgba(34, 26, 18, 0.1)",
+        boxShadow: "0 2px 6px var(--color-cast-shadow-soft)",
         padding: "var(--space-md)",
       }}
     >
