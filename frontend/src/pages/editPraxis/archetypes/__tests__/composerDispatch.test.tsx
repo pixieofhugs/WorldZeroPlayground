@@ -102,7 +102,6 @@ function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     setTitle: () => {},
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
-    wordCount: 4,
     media: [],
     fileError: "",
     handleFileChange: () => {},
@@ -214,7 +213,10 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     const markup = render(width, baseState());
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.taskLabel"));
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.titleLabel"));
-    expect(markup).toContain(i18n.t("forms:editPraxis.composer.writeUpLabel"));
+    // No `writeUpLabel`: #2085 took that heading off the page as redundant
+    // beside the box's own placeholder. The key still names the editor, through
+    // `bodyContentAttributes` — an attribute on an element CodeMirror builds in
+    // an effect, so it is not in a static render at all (bodySpellcheck.test.ts).
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofLabel"));
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.submit"));
   });
@@ -460,11 +462,16 @@ describe("the composer's shared seams (#1828)", () => {
       const markup = composer(slug);
       const text = markup.replace(/<[^>]*>/g, "");
       expect(text).toContain(i18n.t("forms:editPraxis.composer.statusDraft"));
-      // The autosave string is still on the page — and now AFTER the write-up
-      // label, which is the whole move. Before #1828 it sat in the status row,
-      // i.e. above the task slip and every section.
+      // The autosave string is still on the page — and now down in the write-up
+      // header, which is the whole move. Before #1828 it sat in the status row,
+      // i.e. above the task slip and every section. Pinned BETWEEN the title row
+      // and the Proof region: #2085 removed the `Write-up` heading this used to
+      // anchor on, and those two are the rows either side of the one it moved to.
       expect(text.indexOf(SAVED)).toBeGreaterThan(
-        text.indexOf(i18n.t("forms:editPraxis.composer.writeUpLabel")),
+        text.indexOf(i18n.t("forms:editPraxis.composer.titleLabel")),
+      );
+      expect(text.indexOf(SAVED)).toBeLessThan(
+        text.indexOf(i18n.t("forms:editPraxis.composer.proofLabel")),
       );
     },
   );
