@@ -41,6 +41,13 @@ import '../../i18n'
 // Task cards read the form factor; SSR runs no effects, so it has to be stubbed
 // rather than measured. Registered before the card modules are imported.
 vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+// `useTheme` throws outside its provider by design (#701), and the Coven card
+// mounts `CovenVote`, which reads it to pick sun or moon (#2020). Dark is what
+// an unconfigured visitor gets (`DEFAULT_THEME`); the headings this file counts
+// are the same under either motif.
+vi.mock('../../hooks/useTheme', () => ({
+  useTheme: () => ({ theme: 'dark' as const, toggle: () => {} }),
+}))
 
 import { FACTION_MANIFESTS, surfaceMap } from '../../factions'
 import { pickVariant } from '../../utils/factionDispatch'
