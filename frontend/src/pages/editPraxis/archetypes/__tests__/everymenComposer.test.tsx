@@ -65,7 +65,6 @@ function state(overrides: Record<string, unknown> = {}): EditPraxisState {
     setTitle: () => {},
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
-    wordCount: 4,
     media: [],
     fileError: "",
     error: "",
@@ -101,14 +100,9 @@ const WIDTHS = ["desktop", "mobile"] as const;
 describe("Everymen composer copy is the neutral set (ADR-0065 §3)", () => {
   it.each(WIDTHS)("draws the shared region labels on %s", (width) => {
     const markup = render(width);
-    for (const key of [
-      "taskLabel",
-      "titleLabel",
-      "modeLabel",
-      "writeUpLabel",
-      "proofLabel",
-      "submit",
-    ]) {
+    // No `writeUpLabel`: #2085 took that heading off the page, and the key now
+    // names the editor through an aria-label a static render cannot see.
+    for (const key of ["taskLabel", "titleLabel", "modeLabel", "proofLabel", "submit"]) {
       expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}` as never));
     }
   });

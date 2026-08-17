@@ -7,11 +7,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../../i18n";
 import { Compartment, EditorState, Prec, Transaction } from "@codemirror/state";
 import { EditorView, keymap, placeholder as cmPlaceholder } from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import { factionCssVar, factionName } from "../../../utils/factions";
+import { useFormFactor } from "../../../hooks/useFormFactor";
 import type { PraxisType } from "../../../api/praxis";
 import type { DuelSideOut } from "../../../api/duel";
 import MarkdownPreview from "../blocks/MarkdownPreview";
@@ -520,7 +522,16 @@ export function InviteSearch({
 
 export interface FilePickerSkin {
   buttonStyle: CSSProperties;
-  buttonLabel: string;
+  /**
+   * Optional since #2089, and unset by all eight composers: the words depend on
+   * the FORM FACTOR, not on the faction. Desktop offers a drag target ("Drop a
+   * photo of the work / or browse files"); a phone cannot drag between apps, so
+   * the drag half is noise there and the label says only what a tap does. All
+   * eight passed the same catalog key, so the choice is made once below — the
+   * override stays for a faction that later wants its own voice, the way
+   * `DropButton` and `SaveDraftButton` in this file already do.
+   */
+  buttonLabel?: string;
   errorColor?: string;
   helperText?: string;
   helperStyle?: CSSProperties;
@@ -535,6 +546,8 @@ export function FilePicker({
   state: EditPraxisState;
   skin: FilePickerSkin;
 }) {
+  const { t } = useTranslation("forms");
+  const mobile = useFormFactor() === "mobile";
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div style={skin.containerStyle}>
@@ -543,7 +556,12 @@ export function FilePicker({
         onClick={() => inputRef.current?.click()}
         style={skin.buttonStyle}
       >
-        {skin.buttonLabel}
+        {skin.buttonLabel ??
+          t(
+            mobile
+              ? "editPraxis.composer.proofButtonMobile"
+              : "editPraxis.composer.proofButton",
+          )}
       </button>
       <input
         ref={inputRef}
@@ -774,6 +792,13 @@ export function TitleField({
       ref={inputRef}
       type="text"
       maxLength={200}
+      // A praxis cannot be published without a title, and until #2093 nothing
+      // said so before the submit failed. The catalog's label carries the word
+      // (`titleLabel`); this carries the STATE, which is what a screen reader
+      // announces and what a drawn asterisk could never do. No `<form>` wraps
+      // the composer — publish is an onClick — so this adds no browser bubble
+      // and changes no validation path.
+      required
       id={skin.id}
       aria-label={skin.ariaLabel}
       className="content-text"
@@ -845,16 +870,28 @@ export interface BodyTextareaSkin {
  * dictionary back. Note that is an authoring aid, not an accessibility
  * affordance; the `aria-*` entries below are the accessibility half and are
  * unrelated.
+ *
+ * The editor ALWAYS comes back named, by one of three routes. #2085 took the
+ * visible `Write-up` heading off all eight sheets as redundant, and the heading
+ * was also the element `aria-labelledby` pointed at — so a skin that now passes
+ * neither an id nor a name is the ordinary case, not an edge one, and it falls
+ * back to the same catalog key the heading used to print. The placeholder is
+ * NOT an accessible name, which is the half of #2085's argument that was wrong.
  */
 export function bodyContentAttributes(
   skin: Pick<BodyTextareaSkin, "id" | "ariaLabel">,
 ): Record<string, string> {
   const attributes: Record<string, string> = { spellcheck: "true" };
-  // `<label for>` does nothing for a contenteditable div, so the section's
-  // label reaches the editor as `aria-labelledby` instead (ComposerSection
-  // gives that label its id).
+  // `<label for>` does nothing for a contenteditable div, so a section label
+  // reaches the editor as `aria-labelledby` instead (ComposerSection gives that
+  // label its id).
   if (skin.id) attributes["aria-labelledby"] = `${skin.id}-label`;
   if (skin.ariaLabel) attributes["aria-label"] = skin.ariaLabel;
+  // Neither: no heading row exists to borrow a name from. `i18n.t` rather than
+  // the hook because this is a pure value the editor is BUILT from — the same
+  // reason the function is exported at all.
+  else if (!skin.id)
+    attributes["aria-label"] = i18n.t("forms:editPraxis.composer.writeUpLabel");
   return attributes;
 }
 
@@ -1031,7 +1068,8 @@ export function BodyTextarea({
   // ---- The room's text → `state.body` ----
   //
   // One direction only, and now the ONLY direction: `state.body` feeds
-  // `BodyPreview` and the word count, and nothing else. Since #1743 no client
+  // `BodyPreview`, and since #2086 took the word count out, nothing
+  // else. Since #1743 no client
   // write exists to feed, so there is not even a reason to be tempted — and
   // nothing may push `state.body` back into the document, or the praxis would
   // seed the room it is supposed to be seeded BY.
