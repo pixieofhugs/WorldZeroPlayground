@@ -1,8 +1,9 @@
 # ADR-0079 — Submitting a collab is three signals, not one button
 
-**Status:** Accepted — **design only**, except the copy constraint. Nothing in the
-mechanism is built; the build issues cite this record rather than restating it.
-The one piece already shipped is the shared submission-status vocabulary (#1812).
+**Status:** Accepted, and **built**. The shared submission-status vocabulary
+shipped first (#1812), the state machine and the retired freeze in #1810, and
+the composer's three affordances, the first-keystroke confirm and the rewritten
+copy in #1811.
 **Date:** 2026-08-15
 **Relates to:** ADR-0011 (a duel is two solo praxes),
 ADR-0012 (lazy consensus; "an edit means we're not done"),
