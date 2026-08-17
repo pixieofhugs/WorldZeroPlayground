@@ -160,7 +160,13 @@ describe("Ephemerists task detail — the Valley plate", () => {
 
   it("hides the modifier row at the identity factor and shows it off it", () => {
     const neutral = render(<EphemeristsTaskDetail state={baseState()} />);
-    expect(neutral.text).not.toContain("×");
+    // `×\d`, not a bare `×`. The modifier row's whole copy is `×{{multiplier}}`
+    // (`tasks.json`), so the FACTOR is what makes the row a row — and #2067's
+    // rune strips march a `×` of their own through the page's text content as
+    // ornament. A bare-character proxy for the concept fails the moment the
+    // sheet grows a decorative row of mathematical symbols, which is exactly
+    // what happened; the ornament is `aria-hidden` and reads to nobody.
+    expect(neutral.text).not.toMatch(/×\d/);
     expect(neutral.text, "the base is legible regardless").toContain("30");
 
     const modified = render(
