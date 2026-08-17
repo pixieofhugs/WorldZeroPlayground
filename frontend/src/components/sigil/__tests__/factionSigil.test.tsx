@@ -62,6 +62,17 @@ describe("FactionSigil dispatcher (#659)", () => {
     expect(html).not.toContain("var(--everymen-cream)");
   });
 
+  it("renders the Cozy Coven witch hat for the coven slug", () => {
+    const html = renderToStaticMarkup(<FactionSigil slug="coven" />);
+    expect(html).toContain("var(--faction-coven)");
+    // Sigil Studies v2: the brim's opening curve, and the evenodd rule the six
+    // discs need. The four-point sparkle that used to answer here is now
+    // `covenSlip`'s `Spark`, an ornament rather than a badge.
+    expect(html).toContain("M4 78C14 66 32 62 50 62");
+    expect(html).toContain('fill-rule="evenodd"');
+    expect(html).not.toContain('viewBox="0 0 24 24"');
+  });
+
   // #1626 gave albescent its own adapter row here, holding the surveyor's
   // cross-hair; #1891 deleted it. `factions/albescent.ts` registers no `sigil`
   // row and never did, so with the adapter gone the slug simply falls through —

@@ -1,6 +1,5 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { CovenSigil } from "../sigil/CovenSigil";
 import {
   Braid,
   CAPTION,
@@ -16,6 +15,7 @@ import {
   SigilMark,
   SLIP_SHEET,
   SOFT,
+  Spark,
 } from "../factionMarks/covenSlip";
 
 /**
@@ -133,7 +133,7 @@ export default function CovenFactionHero({
                 padding: "var(--space-xs) var(--space-md)",
               }}
             >
-              <CovenSigil size={14} color={GOLD} />
+              <Spark size={14} color={GOLD} />
               {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the panel's numeral, set to the mark beside it rather than the type ramp. */}
               <span style={{ fontFamily: READING, fontSize: 28, fontWeight: 600, lineHeight: 1, color: DEEP }}>
                 {stat.value}
