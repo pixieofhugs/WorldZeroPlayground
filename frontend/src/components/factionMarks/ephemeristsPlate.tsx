@@ -728,6 +728,66 @@ export function EmblemOctagon({ size }: { size: number }) {
   );
 }
 
+/**
+ * THE COMPASS ROSE — the plate's points medallion (#2037, task cards v3).
+ *
+ * A brass-ruled disc with four needles on the cardinals, the north one struck
+ * solid in the register's nile and the other three left open. It replaces the
+ * stepped octagon the score sat in: the plate is a FIELD JOURNAL out of the
+ * Valley, and the instrument a surveyor's plate reaches for is a rose.
+ *
+ * IT IS A SHARED MARK, and that is why `size` is a prop rather than a constant.
+ * The octagon medallion it replaces is drawn identically on two surfaces — the
+ * task card and the praxis card's score stamp — and the owner has ruled the two
+ * unify, so #2042 mounts THIS from the stamp rather than transcribing it. The
+ * module's standing rule applies (#1654): redraw the rose here and both
+ * surfaces move; transcribe it and only one does, silently, forever.
+ *
+ * WHAT IT DOES NOT HOLD is the figure. `CovenCauldron` typesets its total
+ * inside its own viewBox, and this deliberately does not: both mounts overlay
+ * the score and its unit as HTML on the type ramp, and the Ephemerists label is
+ * the one the script rotation (#2038) has to swap — a `<text>` node inside an
+ * SVG would put that behind a pinned box it cannot measure. So this is the
+ * PLATE only, positioned to fill its host box, with the figure laid over it.
+ *
+ * THE NEEDLES CLEAR THE FIGURE. North and south reach in to y=26 and y=74, east
+ * and west to x=26 and x=74, so the inner disc (r=29) is the clear field and the
+ * host has to be big enough that the figure fits inside 48 of the 100 units.
+ * That is why the design grows the box to 128px where the octagon was 104.
+ */
+export function CompassRose({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+      style={{ position: "absolute", inset: 0 }}
+    >
+      <circle cx="50" cy="50" r="47" fill={DISC} stroke={BRASS} strokeWidth="1.6" />
+      <circle cx="50" cy="50" r="41" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
+      {/* The ordinals, struck as ticks between the two rims rather than as
+          needles — the design gives the quarter winds a mark, not a point. */}
+      <g stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.7">
+        <path d="M16.8 16.8 L21 21" />
+        <path d="M83.2 16.8 L79 21" />
+        <path d="M16.8 83.2 L21 79" />
+        <path d="M83.2 83.2 L79 79" />
+      </g>
+      {/* North alone is filled, which is how a rose says which way is up. The
+          design's own fallback for this fill is a navy that would vanish into
+          the night field; `-plate-nile` is the register's teal and reads on it,
+          so the TOKEN is the drawing and the fallback was never reached. */}
+      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={NILE} />
+      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS} strokeWidth="0.9" />
+      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
+      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
+      {/* The card the figure is struck on. */}
+      <circle cx="50" cy="50" r="29" fill={DISC} stroke={BRASS_LIGHT} strokeWidth="0.7" />
+    </svg>
+  );
+}
+
 /** A stepped octagon, inset from its box's edge. */
 export function Octagon({ inset, stroke, width, fill }: {
   inset: number
