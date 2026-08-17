@@ -29,6 +29,14 @@
  *     NEUTRAL chrome that happens to dispatch on a slug. And the rule's polarity
  *     is the other one anyway: it bans a global ink on a faction sheet. This was
  *     a faction ink on a global sheet, which no rule bans. See the PR body.
+ *
+ * ONE RULE DOES BAN IT NOW (#2077): `local/no-faction-hue-as-ink`, the inverse
+ * arm, with no path glob — a bare spine hue is a fill on every ground, so there
+ * is no scope question to get wrong. It would have caught five of this page's six
+ * slots at the point of writing. Not the sixth: `--gem-ink` reached the numeral
+ * through `LevelGem`'s props from another file, and no single-module AST walk
+ * follows that. Which is why this file did not become redundant when the rule
+ * landed, and why both now read one shared `utils/__tests__/inkSeam.ts`.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
