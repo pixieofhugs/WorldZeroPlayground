@@ -1,6 +1,8 @@
 /**
  * Cozy Coven full-page backdrop (#1209) — the candlelight wash, drifting behind
- * a Coven player's profile. Fixed at z-index 0; `.coven-backdrop` in index.css
+ * a Coven player's profile AND behind the Coven faction page (#2039: both of
+ * `useFactionBackdrop`'s callers reach it, and both stack `<TaskCard>` on it, so
+ * this is a ground a card sits on). Fixed at z-index 0; `.coven-backdrop` in index.css
  * owns the ground, the four blooms and the light/dark flip, and shares all of it
  * with `.coven-candle-backdrop` (the detail pages' column wash).
  *

@@ -6032,8 +6032,12 @@
   transition: background-color 300ms;
 }
 /* The same wash on the VIEWPORT. `.coven-backdrop` is the `backdrop` surface,
-   which `FactionBackdrop` mounts behind a Coven player's character profile —
-   `useFactionBackdrop` has exactly one caller, so that page is the whole of it.
+   which `FactionBackdrop` mounts behind a Coven player's character profile AND
+   behind the Coven faction page — `useFactionBackdrop` has TWO callers
+   (`CharacterProfile`, `useFactionDetail`), and both stack `<TaskCard>` on this
+   ground, so it is a surface a card sits on and not only a portrait wall
+   (verified #2039; this note used to claim one caller and that is what got the
+   backdrops filed as unable to disagree with a card).
    It was the lo-fi `coven.exe` desktop until #1209; the blooms are SHARED with
    the column wash above rather than restated, because a second copy of four
    radial gradients is a second thing to re-tune. The vignette went with the
