@@ -57,6 +57,16 @@ export interface UaMandalaProps {
   color?: string;
   /** Turn the bands slowly, alternating direction. Reduced-motion gated. */
   spin?: boolean;
+  /**
+   * Draw the outermost circle that closes the petals into a disc.
+   *
+   * On by default, which is every surface that mounted this before the task
+   * card's ornament pass (#2031). The card's CTA flank turns it OFF: with the
+   * boundary the figure reads as a second boxed seal beside a boxed button,
+   * and the design trims it there (`trimMarks()`, `circle[r="47"]`) for exactly
+   * that reason. The hub circle is untouched — only the outer ring goes.
+   */
+  boundary?: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -115,6 +125,7 @@ export default function UaMandala({
   opacity,
   color = "var(--faction-ua-glow)",
   spin = false,
+  boundary = true,
   className,
   style,
 }: UaMandalaProps) {
@@ -170,7 +181,7 @@ export default function UaMandala({
         opacity={0.7}
       >
         <circle cx={CENTRE} cy={CENTRE} r={HUB_RADIUS} />
-        <circle cx={CENTRE} cy={CENTRE} r={MAX_RADIUS} />
+        {boundary && <circle cx={CENTRE} cy={CENTRE} r={MAX_RADIUS} />}
       </g>
     </svg>
   );
