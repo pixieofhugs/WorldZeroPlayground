@@ -12,7 +12,7 @@ import {
   uaShade,
 } from "../../../components/factionMarks/uaAtoms";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -558,12 +558,14 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       </h1>
 
       {isMetatask && (
+        // `UA_EYEBROW`'s own `--faction-ua-card-muted` — 5.45:1 light / 5.64:1
+        // dark on this parchment (#2077). The override was the metatask
+        // faction's spine hue, a FILL (§3, #1932).
         <p
           style={{
             ...UA_EYEBROW,
             marginTop: 0,
             marginBottom: "var(--space-md)",
-            color: factionCssVar(task.metatask_faction_slug),
           }}
         >
           {t("detail.metataskFor", {

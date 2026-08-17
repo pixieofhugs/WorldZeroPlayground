@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -363,12 +363,15 @@ export default function EverymenTaskDetail({
       </h1>
 
       {isMetatask && (
+        // `.label-caption` bare — `--label-ink`, 5.53:1 on this page's newsprint
+        // in light and 9.00:1 in dark (#2077). It printed the metatask faction's
+        // spine hue, a FILL (§3, #1932), which the newsprint fails just as the
+        // neutral page does.
         <p
           className="label-caption"
           style={{
             marginTop: 0,
             marginBottom: "var(--space-md)",
-            color: factionCssVar(task.metatask_faction_slug),
           }}
         >
           {t("detail.metataskFor", {
