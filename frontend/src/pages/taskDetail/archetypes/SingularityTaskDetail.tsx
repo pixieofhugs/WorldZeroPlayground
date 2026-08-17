@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
+import SingularityProcessLight from "../../../components/factionMarks/SingularityProcessLight";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -312,19 +313,9 @@ export default function SingularityTaskDetail({
           flexWrap: "wrap",
         }}
       >
-        {/* The process light — the terminal's one live thing. */}
-        <span
-          aria-hidden
-          className="sg-pulse"
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: "50%",
-            background: BLUE_BRIGHT,
-            display: "block",
-            flex: "none",
-          }}
-        />
+        {/* The process light — the terminal's one live thing, and the kit's own
+            drawing since #2092: the composer's window bar had it in green. */}
+        <SingularityProcessLight />
         <span style={{ ...LABEL, fontSize: "var(--text-base)" }}>{factionName(slug)}</span>
         {isMetatask && (
           <span

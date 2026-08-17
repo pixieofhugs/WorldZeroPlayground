@@ -129,7 +129,10 @@ describe("Singularity composer — structure", () => {
     ]) {
       expect(html, token).toContain(token);
     }
-    expect(html, "the three motions").toContain("ep-pulse");
+    // The three motions. The session lamp breathes on `.sg-pulse` since #2092 —
+    // it is the kit's mark now and hangs on a task card too, so it cannot depend
+    // on the composer kit's `.ep-pulse`.
+    expect(html, "the session lamp").toContain("sg-pulse");
     expect(html).toContain("sg-scan");
     expect(html).toContain("ep-blink");
     expect(html, "no injected keyframes").not.toContain("@keyframes");
@@ -196,6 +199,31 @@ describe("Singularity composer — structure", () => {
     expect(open, "the cluster is on the bar at all").toBeGreaterThan(-1);
     expect(close).toBeGreaterThan(open);
     expect(html.slice(open, close)).not.toContain("--faction-singularity-term-");
+  });
+
+  // #2092. The window bar's fourth mark — the process light at its right end —
+  // was this file's own dot in the chassis' GREEN accent while the task card and
+  // the task detail drew `term-blue-bright`, and the owner ruled blue. Same shape
+  // as the lamps above: one device, no shared home, so the hue drifted. The
+  // source census is `factionMarks/__tests__/singularityProcessLight.test.tsx`;
+  // the rendered bar is the only place the hue itself can be read, so it is here.
+  it("wears the kit's BLUE process light on the window bar, not the green accent", () => {
+    const html = render("desktop", state());
+    const at = html.indexOf('class="sg-pulse"');
+    // Located, or the slice below is empty and this asserts nothing — the shape
+    // that passes loudest while the bug ships.
+    expect(at, "the process light is on the bar at all").toBeGreaterThan(-1);
+    const light = html.slice(at, html.indexOf(">", at));
+    expect(light).toContain("--faction-singularity-term-blue-bright");
+    // Scoped to the light's own element: `term-bright` is the chassis' accent and
+    // stays everywhere else in this file (the titles, the slip's rule, the `[ok]`
+    // mark). What must not come back is a process light drawn in it.
+    expect(light, "the green accent is off the light").not.toContain(
+      "--faction-singularity-term-bright",
+    );
+    expect(light, "and its bloom is the blue one").toContain(
+      "--faction-singularity-term-halo-blue",
+    );
   });
 
   it("renders at both widths with one breadcrumb", () => {

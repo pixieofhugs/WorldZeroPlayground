@@ -9,6 +9,7 @@ import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import SingularityLamps from "../factionMarks/SingularityLamps";
+import SingularityProcessLight from "../factionMarks/SingularityProcessLight";
 import SingularityReadout from "../factionMarks/SingularityReadout";
 
 /**
@@ -274,18 +275,10 @@ export default function SingularityTaskCard({
 
             {inProgressCount > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-                <span
-                  aria-hidden="true"
-                  className="sg-pulse"
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: "var(--faction-singularity-term-blue-bright)",
-                    display: "block",
-                    flex: "0 0 auto",
-                  }}
-                />
+                {/* The process light — the kit's mark since #2092, the same
+                    drawing the composer's window bar and the task detail's
+                    header wear. */}
+                <SingularityProcessLight />
                 <span style={{ fontFamily: MONO, fontSize: "var(--text-xl)", color: DIM }}>
                   {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
                 </span>
@@ -343,8 +336,12 @@ export default function SingularityTaskCard({
               {/* The little robot idling in the right gutter (#2036). It is
                   ornament: `aria-hidden`, and OUTSIDE the button, so it never
                   joins the control's accessible name (epic #2027, ruling 4).
-                  Its drift is `.sg-ascii` in index.css, behind the shared
-                  reduced-motion gate — stilled it stays parked, drawn.
+                  Its drift is `.sg-ascii`'s own `sg-float` keyframe, which #2071
+                  moved into the deferred ornament sheet `src/motion.ornament.css`
+                  (index.css keeps only the resting `opacity: 0.45` — paint, not
+                  motion). Behind the reduced-motion gate either way, and a
+                  viewer who never receives that sheet lands exactly where a
+                  reduced-motion viewer does: parked, drawn.
 
                   WHY A GRID COLUMN AND NOT `position:absolute`. The design
                   parks it at `right:18px` over a centred flex row, which is

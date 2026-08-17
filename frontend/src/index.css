@@ -1189,6 +1189,18 @@
   --faction-singularity-stamp-rule: rgba(74, 222, 128, 0.25);
   --faction-singularity-stamp-glow: rgba(96, 165, 250, 0.1); /* inner box glow */
   --faction-singularity-total-glow: rgba(96, 165, 250, 0.7); /* the TOT halo */
+  /* The window bar's three LAMPS — one drawing, `SingularityLamps` (#1979), and
+     theme-invariant like the rest of the always-dark terminal ornament (§6).
+
+     A DELIBERATE HYBRID, and the ruling is here so no future consistency pass
+     reads it as drift: `-led-red` is EXACTLY the macOS red, while the amber and
+     green are the kit's own where macOS uses #ffbd2e / #27c93f. Raised on #1979
+     as the likeliest remaining reason the cluster reads "macOS" and ruled by the
+     owner on #2092 — "Mac os thing is cute and staying". So one borrowed hue
+     beside two of ours is the intent, not an oversight; it is the only
+     borrowed-OS literal in the tree, which is exactly why it needed writing
+     down. The bar's fourth mark, the process light, is a `-term-*` blue and
+     lives in `SingularityProcessLight` (#2092) — not one of these. */
   --faction-singularity-led-red: #ff5f56;
   --faction-singularity-led-amber: #f0c400;
   --faction-singularity-led-green: #4ade80;
