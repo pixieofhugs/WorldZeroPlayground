@@ -151,7 +151,12 @@ export default function EverymenFactionHero({
                 // mid-word reads as a different word, which is a worse failure
                 // than one that overflows, so the fit is bought by the track
                 // above and the cap here instead of by licensing a break.
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: union-poster wordmark — accent face at 0.82 leading, hard drop shadow
+                //
+                // ornament: union-poster wordmark — accent face at 0.82 leading,
+                // hard drop shadow. This carried a no-raw-style-values disable
+                // while it was a bare `76`; the ratchet does not look inside
+                // `min()`, so the directive reported unused and had to come off.
+                // The value is still an ornament and still off the type scale.
                 fontSize: "min(76px, 20vw)",
                 lineHeight: 0.82,
                 letterSpacing: "0.01em",

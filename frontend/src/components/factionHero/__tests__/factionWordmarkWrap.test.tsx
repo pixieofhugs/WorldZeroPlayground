@@ -12,7 +12,7 @@
  * The harness is `renderToStaticMarkup` — no DOM, no layout — so no test here
  * can observe a line break. What it CAN hold is the declaration that permits
  * one, which is the actual defect: assert no hero's wordmark ships a
- * break-anywhere (or break-all) wrap. Whether the name then FITS is layout, and
+ * break-anywhere wrap (see FORBIDDEN). Whether the name then FITS is layout, and
  * is visual QA at 340px; the Everymen case below pins the two properties that
  * buy the fit so a later edit cannot quietly take them back.
  *
@@ -60,6 +60,21 @@ const render = (Hero: ComponentType<FactionHeroProps>, slug: string) =>
     />,
   )
 
+/**
+ * The two declarations a wordmark may not carry, spelled so Tailwind's content
+ * scanner cannot read them. It scans THIS FILE — comments included — for class
+ * candidates, and the hyphenated spelling of word-break's break/all value is one
+ * of its own utilities. Written as a plain literal anywhere in this file it
+ * emits that utility into the BLOCKING stylesheet and moves the initial-load CSS
+ * budget 17 B, onto its WARN line, for the sake of a test string. Hence the
+ * join() below, and hence no bare occurrence in this docblock either.
+ * `anywhere` and `break-word` are not utilities and are safe spelled out.
+ */
+const FORBIDDEN = [
+  /overflow-wrap:\s*(anywhere|break-word)/,
+  new RegExp(`word-break:\\s*${['break', 'all'].join('-')}`),
+]
+
 /** The wordmark is the only h1 each hero draws. */
 function wordmarkTag(html: string): string {
   const open = html.indexOf('<h1')
@@ -70,12 +85,9 @@ function wordmarkTag(html: string): string {
 describe('a faction wordmark never breaks mid-word', () => {
   it.each(HEROES)('%s hero', (slug, Hero) => {
     const tag = wordmarkTag(render(Hero, slug))
-    expect(tag, 'wordmark must not license a break at any character').not.toMatch(
-      /overflow-wrap:\s*(anywhere|break-word)/,
-    )
-    expect(tag, 'wordmark must not license a break at any character').not.toMatch(
-      /word-break:\s*break-all/,
-    )
+    for (const rule of FORBIDDEN) {
+      expect(tag, 'wordmark must not license a break at any character').not.toMatch(rule)
+    }
   })
 
   /**
