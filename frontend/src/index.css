@@ -7128,3 +7128,54 @@
     animation-delay: var(--cvn-spark-delay, 0s);
   }
 }
+
+/* ══ Ephemerists — THE SCRIPT ROTATION (task cards v3, #2038) ══════════════
+   The task card's points label and its sign-up turn through five scripts: the
+   catalogue's own word, then PVNCTA, then the same word in Arabic, Japanese
+   and cuneiform. All of it lives here because all of it is MOTION, and motion
+   in this repo is a class the media query can reach, never an inline
+   `animation` a preference cannot see.
+
+   THE ANIMATION IS THE CLOCK, not just the fade. `EphemeristsTaskCard` swaps
+   the visible frame on `animationiteration`, so a browser that never starts
+   this animation never advances the frame either: under
+   `prefers-reduced-motion: reduce` the label sits on frame 1, which is the
+   live i18n string, with nothing in the component branching on the preference.
+   That is the whole reduced-motion story — there is no JS twin.
+
+   The keyframes end and begin at opacity 0 so the swap happens at the
+   invisible instant: the word fades out, changes script while nobody can see
+   it, and fades back in. A cycle that returned to opacity 1 would pop.
+
+   WCAG 2.2.2 (Pause, Stop, Hide). The turn auto-updates, starts on its own and
+   sits beside other content, so it owes the reader a way to stop it. Two ship:
+     • the platform's reduce-motion setting, which stills it outright — WCAG's
+       own glossary allows a mechanism "relied upon to be provided by either
+       the platform or by user agents";
+     • hovering the card, or focusing anything in it, which pauses both turns
+       in place. That one is also why the CTA's word cannot change under a
+       cursor or a focus ring on its way to a click.
+   `animation-play-state` is a pause proper, not a reset: the frame showing
+   stays showing and the cycle resumes where it stopped.
+
+   The BOX is pinned in the component, not here — every frame renders into one
+   grid cell, so the label is as wide as its widest script and the button never
+   resizes under it. */
+@keyframes eph-turn {
+  0%, 6% { opacity: 0; }
+  12%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .eph-turn-points {
+    animation: eph-turn 6.5s ease-in-out infinite;
+  }
+  /* Half a second longer, so the card never changes both words at once. */
+  .eph-turn-cta {
+    animation: eph-turn 7s ease-in-out infinite;
+  }
+  .eph-turn-scope:hover .eph-turn,
+  .eph-turn-scope:focus-within .eph-turn {
+    animation-play-state: paused;
+  }
+}
