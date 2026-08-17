@@ -8,6 +8,7 @@ import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { Lotus } from "../factionMarks";
+import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/uaAtoms";
 
 /**
@@ -39,8 +40,16 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/ua
  * supersedes" — but that ruling is `UaMandala`'s, and the mandala is a different
  * mark: radial concentric geometry, `absent` on dense text surfaces. The lotus
  * has its own precedent on exactly this kind of surface (`UaPraxisCard` floats
- * one off its left edge at the same opacity token). The MANDALA stays absent
- * here; the lotus is drawn as the design draws it.
+ * one off its left edge at the same opacity token).
+ *
+ * AND THE MANDALA COMES BACK TOO (#2031), which reverses the line that used to
+ * close that paragraph. `absent` is the strength for "dense and text-heavy
+ * surfaces: feed rows, comments, task lists, the editor" — copy the pattern
+ * would sit under and make harder to read. The two mandalas below sit in the
+ * SIGN-UP region, beneath the rule that closes the reading column off (#2030),
+ * where there is no prose at all: they flank the button rather than lie behind
+ * anything. So the strength ruling is not overruled here, it simply does not
+ * reach past the rule. Inside the reading column the mandala is still absent.
  *
  * Both marks are inline/masked components tinted from tokens, so the design's
  * four `filter:` recolour hacks (`brightness(0) invert(1)`, `saturate(1.35)` and
@@ -59,24 +68,63 @@ interface SizeSet {
   /** Diameter of the score's ensō, and of the lotus wash. Geometry. */
   enso: number;
   lotus: number;
+  /** Diameter of each mandala flanking the sign-up. Geometry. */
+  flank: number;
 }
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     cardWidth: 384,
     pad: "var(--space-lg) var(--space-xl) var(--space-xl)",
-    levelSize: "var(--text-heading)",
-    enso: 96,
+    levelSize: "var(--text-display)",
+    enso: 124,
     lotus: 360,
+    flank: 46,
   },
   mobile: {
     cardWidth: 340,
     pad: "var(--space-lg)",
-    levelSize: "var(--text-title)",
-    enso: 84,
+    levelSize: "var(--text-heading)",
+    enso: 108,
     lotus: 300,
+    flank: 38,
   },
 };
+
+/**
+ * One of the two mandalas standing either side of the sign-up (#2031).
+ *
+ * IN FLOW, NEVER POSITIONED, and that is the whole safety argument. The design
+ * hangs its single mandala off `position:absolute; right:6px`, which is what a
+ * DOM-mutating spec sheet has to do — it cannot re-layout a row it did not
+ * write. An absolute flank takes no width, so it rides over the button the
+ * moment the card is narrower than the sheet drew it, which is the failure
+ * `docs/agents/design-fidelity.md` names by example (44px hit boxes on a plate
+ * drawn for smaller marks). Three flex siblings cannot overlap at any width:
+ * past the point where they stop fitting they overflow, and the article's
+ * `overflow: hidden` trims the ornament rather than the control.
+ *
+ * The figure takes `UaMandala`'s own default ink — `--faction-ua-glow`, the
+ * ornament-only hue the ensō and the lotus already use — not the design's
+ * `currentColor`, which on this row resolves to the leaf's BODY INK. The
+ * primitive's contract says it in as many words: "never pass an ink token".
+ * One hue for all three of the card's drawn marks is also simply the read.
+ */
+function UaCtaFlank({ side, size }: { side: "start" | "end"; size: number }) {
+  return (
+    <span
+      data-ua-flank={side}
+      aria-hidden="true"
+      // Ornament only: the button is the one thing in this row a finger may hit.
+      style={{ flex: "0 0 auto", lineHeight: 0, pointerEvents: "none" }}
+    >
+      {/* The boundary ring is off (`trimMarks()`): closed into a disc, the
+          figure reads as a second boxed seal beside a boxed button. Trimmed, it
+          is a rosette, and the button keeps the only edge in the row. */}
+      <UaMandala size={size} strength="full" rings={3} petalsPerRing={8} boundary={false} />
+    </span>
+  );
+}
 
 export default function UaTaskCard({
   task,
@@ -167,6 +215,14 @@ export default function UaTaskCard({
                 <span style={{ ...UA_EYEBROW, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
                   {i18n.t("feed:taskCard.levelCaption")}
                 </span>
+                {/* A RUNG UP THE SCALE, TO WEIGH THE SAME (#2031). This numeral
+                    sat at --text-heading while Snide, Everymen and the
+                    Ephemerists set theirs at --text-display, and it read
+                    smaller than all three — Cormorant Garamond is a small-faced
+                    old-style cut, so 32px of it carries visibly less ink than
+                    32px of Impact or of a poster gothic. Matching the WEIGHT
+                    means not matching the number: the tier moves up one on both
+                    form factors so the gate reads at the kit's strength. */}
                 <span style={{ fontFamily: UA_DISPLAY, fontWeight: 700, fontSize: size.levelSize, lineHeight: 0.9 }}>
                   {task.level_required}
                 </span>
@@ -205,7 +261,19 @@ export default function UaTaskCard({
                   than the design's brighter `--faction-ua-glow`, which measures
                   2.93:1 on the parchment's darkest stop and so misses even the
                   large-text floor; the accent is 4.88:1 there and clears the
-                  normal one. */}
+                  normal one.
+
+                  THE RING GREW FOR THE WORD (#2031). The caption used to be the
+                  four-letter `pts`-class unit this skin shipped; #2028 made it
+                  the kit's one word, and "POINTS" set at --text-md with the
+                  eyebrow's 0.22em tracking is ~51px of ink — wider than the
+                  ~48px the 96px ring left clear across its middle, and it sits
+                  BELOW the middle where the chord is shorter still. So the
+                  container yields, which is §4's own rule: type wins, geometry
+                  moves. 96 -> 124 is the design's measured number
+                  (`growUaScoreRing()`); the mobile ring takes the same ratio.
+                  The numeral does not grow with it — `valueSize` is a ceiling
+                  and it is still --text-heading. */}
               <UaEnsoScore
                 size={size.enso}
                 value={basePoints}
@@ -277,7 +345,10 @@ export default function UaTaskCard({
                   margin: "var(--space-lg) 0",
                 }}
               />
-              <div style={{ display: "flex", justifyContent: "center" }}>
+              {/* THE MANDALAS FLANK THE SIGN-UP (#2031). One row, three
+                  in-flow items, the control in the middle — see UaCtaFlank. */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-md)" }}>
+              <UaCtaFlank side="start" size={size.flank} />
               <button
                 type="button"
                 onClick={cta.onPress}
@@ -299,6 +370,7 @@ export default function UaTaskCard({
               >
                 {cta.label}
               </button>
+              <UaCtaFlank side="end" size={size.flank} />
               </div>
             </>
           )}
