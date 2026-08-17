@@ -39,6 +39,7 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import type { CharacterOut } from '../../../api/auth'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import { fillUses, inkOffenders } from '../../../utils/__tests__/inkSeam'
 import {
   AA_NORMAL,
   compositeOver,
@@ -90,53 +91,13 @@ function grounds(theme: Theme): { page: Rgba; frost: Rgba } {
 const SPINE_KEYS = ['ua', 'everymen', 'wow', 'snide', 'ephemerists', 'singularity', 'coven'] as const
 
 // ── The render seam ────────────────────────────────────────────────────────
-
-/**
- * Every declaration in every inline `style` attribute of the rendered markup,
- * as `[property, value]`.
- *
- * Split on `;` then on the FIRST `:`, which is what keeps `color-mix(` and
- * `linear-gradient(` out of the answer: they carry the substring `color` and no
- * colon after it, so a naive `/color:/` scan reads the leader's faction wash as
- * an ink. The wash is a fill and is meant to stay.
- */
-function declarations(html: string): Array<[string, string]> {
-  const out: Array<[string, string]> = []
-  for (const match of html.matchAll(/style="([^"]*)"/g)) {
-    for (const decl of match[1].split(';')) {
-      const colon = decl.indexOf(':')
-      if (colon === -1) continue
-      out.push([decl.slice(0, colon).trim(), decl.slice(colon + 1).trim()])
-    }
-  }
-  return out
-}
-
-/**
- * Properties that end up as an ink.
- *
- * `--gem-ink` is here because it IS `.level-gem-number`'s `color`, one
- * indirection away in index.css — and the indirection is exactly what hid it.
- * `LevelGem`'s own docstring says the gem is "outlined rather than filled … so
- * the numeral sits on the surface the gem lands on … without per-faction
- * contrast tuning", and then handed the numeral the faction hue, which is the
- * per-faction tuning the outline was supposed to make unnecessary. A visitor
- * that only knows the CSS property name `color` never reaches it.
- */
-const INK_PROPS = new Set(['color', '--gem-ink'])
-
-/**
- * The BARE spine hue — `var(--faction-wow)`, never `var(--faction-wow-card-text)`.
- *
- * The suffixed members of the family are a different claim entirely: they are
- * inks measured against a named ground, and `FactionAvatar` correctly paints its
- * monogram in `--faction-{key}-card-text` on the faction's own circle, a pairing
- * `CARD_PAIRS` has gated since #651. A regex that swept the whole prefix would
- * report that as a defect and teach the next editor to strip a measured pairing.
- * `[a-z]+` stops at the first hyphen, which is exactly the line between "this
- * hue" and "this hue's ink for a ground".
- */
-const FACTION_TOKEN = /var\(\s*--faction-[a-z]+\s*\)/
+//
+// `declarations` / `INK_PROPS` / `FACTION_TOKEN` were defined here until #2077
+// needed the identical question asked of the faction cards, the two invitation
+// rows, the task card's metatask chip and all eight task-detail bylines. They
+// live in `utils/__tests__/inkSeam.ts` now — one definition, two callers, and
+// the reason that matters is in that file's header: a guard reading a stale
+// `INK_PROPS` reports green over exactly the property nobody added to it.
 
 function render(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -199,20 +160,14 @@ describe('the Players surfaces paint no faction hue as text', () => {
     ['mobile', <MobilePlayers {...props()} />],
   ] as const) {
     it(`${surface}: no inline ink resolves to a faction spine hue`, () => {
-      const offenders = declarations(render(element))
-        .filter(([property, value]) => INK_PROPS.has(property) && FACTION_TOKEN.test(value))
-        .map(([property, value]) => `${property}: ${value}`)
-      expect(offenders).toEqual([])
+      expect(inkOffenders(render(element))).toEqual([])
     })
 
     it(`${surface}: the hue still dresses the fills, rules and marks`, () => {
       // The other half of the fix, and the one a careless sweep would break:
       // this page is meant to be loudly faction-coded. Borders, washes, race
       // bars, gem strokes and glows all keep the spine hue.
-      const kept = declarations(render(element)).filter(
-        ([property, value]) => !INK_PROPS.has(property) && FACTION_TOKEN.test(value),
-      )
-      expect(kept.length).toBeGreaterThan(0)
+      expect(fillUses(render(element)).length).toBeGreaterThan(0)
     })
   }
 })
