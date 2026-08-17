@@ -933,16 +933,32 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
 
 
 def _awaiting_submission_query(ctx: FeedContext) -> Select:
-    """Collab / duel praxes waiting on the VIEWER's own submission.
+    """Praxes waiting on the VIEWER's own submission, where somebody else is party to it.
 
     A ``PraxisMember`` for the viewer with ``has_submitted=False`` on a still-open
-    (in_progress / mid-consensus pending) collab or duel praxis — i.e. it's their
-    turn to post. The mirror of ``_collaborator_submitted_query`` (which surfaces
-    *others'* submissions). Solo drafts are excluded: a solo praxis-in-progress is
-    just your own draft, not an awaited action, so it would only be badge noise.
+    (in_progress / mid-consensus pending) praxis that has **at least one other
+    member** — i.e. it's their turn to post. The mirror of
+    ``_collaborator_submitted_query`` (which surfaces *others'* submissions).
     Ordered by ``joined_at`` — when the praxis landed in the viewer's court
     (collab accept / duel accept both create the member row then).
+
+    The last clause is membership, not type (#1980). Solo drafts have always been
+    excluded — a praxis-in-progress you are alone on is your own draft, not an
+    awaited action, so it is only badge noise — but the exclusion was written as
+    ``type in (collab, duel)``, and a collab you created and never invited anyone
+    to is a solo draft in every respect this rule cares about. It told its author,
+    the instant they pressed save, that it was waiting on them. The EXISTS says
+    the thing the type check was standing in for; it excludes solo praxes for
+    free (they can only ever hold their author) and leaves duels alone, both
+    sides of one being a ``solo`` praxis with a single member (ADR-0011).
+
+    One-member collabs stay legal: creating one and inviting later is fine, and
+    the item appears the moment the second member row lands. Nothing has to clean
+    up when it goes the other way (a kick) — ``awaiting_submission`` is in
+    ``NON_ARCHIVABLE_ITEM_TYPES`` precisely because it is state read live, with no
+    stored row to retire.
     """
+    other_member = aliased(PraxisMember)
     query = (
         select(
             PraxisMember.id,
@@ -959,8 +975,13 @@ def _awaiting_submission_query(ctx: FeedContext) -> Select:
         .where(
             PraxisMember.character_id == ctx.character_id,
             PraxisMember.has_submitted.is_(False),
-            Praxis.type.in_([PraxisType.collab, PraxisType.duel]),
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+            select(other_member.id)
+            .where(
+                other_member.praxis_id == PraxisMember.praxis_id,
+                other_member.character_id != ctx.character_id,
+            )
+            .exists(),
         )
     )
     if ctx.before is not None:
