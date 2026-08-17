@@ -1642,6 +1642,23 @@
   /* WOW — cream/gold/plum chronicle frame (the chronicle is WOW's, ADR-0050) */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg); /* cream parchment */
   --faction-wow-chronicle-gold: #c8a02a; /* frame + rules; theme-invariant */
+  /* The AA ink for the rare thing printed ON a WOW gold — the writ's submit
+     button and its plaque figure (WowEditPraxis), and the duel seal's champion
+     tile. #14110b: 7.64:1 on the frame gold above and 10.27 / 10.07 on the
+     champion tile's own gold, theme-invariant like both grounds.
+
+     IT IS A SPLIT OFF `-on-fill`, AND THE SPLIT IS ARITHMETIC (#2068). This was
+     `--faction-wow-on-fill` for the same reason `--faction-wow-on-plum` exists:
+     it was the WOW near-black, and the gold happened to be the fill. #2068 made
+     the spine hue a PLUM, so `-on-fill` — whose whole contract is
+     `factionCssVar(slug, 'on-fill')`, the ink on `--faction-wow` (the feed
+     avatar disc, the task card's metatask pill) — had to go white in light. One
+     ink cannot serve two grounds of opposite polarity: white reads 2.47:1 on the
+     frame gold and 1.83:1 on the champion tile. So the gold role keeps the value
+     it always had under a name that says which ground it was measured on
+     (WORLD_ZERO_STYLE §3, #1766). Nothing repaints — this token is #14110b in
+     both themes, exactly as `-on-fill` resolved on every gold before the swap. */
+  --faction-wow-on-gold: #14110b;
   /* The kit's olive-gold eyebrow/label ink — the small caps that head a section
      ("TASK CARD", "BY ORDER OF"). The kit states #8a6d1f, which measures
      4.46:1 on --faction-wow-card-bg and so misses AA: that value was picked
