@@ -1,4 +1,5 @@
-import { apiGet, apiPost, apiPut, apiDelete } from './client'
+import { apiGet, apiPost, apiDelete } from './client'
+import type { components } from './generated/schema'
 
 /**
  * Matches backend RelationshipListItem (enriched list response).
@@ -16,14 +17,21 @@ export interface RelationshipListItem {
   from_character_id: number
   to_character_id: number
   type: 'friend' | 'foe'
-  status: 'active' | 'blocked'
+  /**
+   * Dormant since ADR-0077: always `active`. A block is its own record now, so
+   * nothing writes `blocked` here and nothing reads this field. The column
+   * survives only because dropping a value from a PG enum costs a table rewrite
+   * and buys a tidier enum.
+   */
+  status: 'active'
   created_at: string
   to_display_name: string
   to_avatar_url: string
   to_faction_slug: string
   // The reverse edge's raw type is not emitted: `display_status` is the
-  // server's word on what the pair of edges means (#1387).
-  display_status: 'Mutual Friends' | 'Rivals' | 'Tsundere' | 'One-sided Friend' | 'One-sided Foe' | 'Secret Admirer' | 'Targeted' | 'Blocked' | 'Unknown'
+  // server's word on what the pair of edges means (#1387). No `Blocked` arm —
+  // ADR-0077 stopped computing one.
+  display_status: 'Mutual Friends' | 'Rivals' | 'Tsundere' | 'One-sided Friend' | 'One-sided Foe' | 'Secret Admirer' | 'Targeted' | 'Unknown'
 }
 
 export interface RelationshipFilters {
@@ -36,42 +44,67 @@ export async function listRelationships(filters?: RelationshipFilters): Promise<
   return data as RelationshipListItem[]
 }
 
-// The three mutations below answer the same enriched item the list emits
-// (#1383). They used to answer the bare row, so every caller re-ran
-// `listRelationships()` and searched it for the edge it had just written.
+// `createRelationship` answers the enriched item the list emits (#1383). It
+// used to answer the bare row, so every caller re-ran `listRelationships()` and
+// searched it for the edge it had just written.
 //
 // The item describes THE EDGE, not the viewer: `to_*` always names
-// `to_character_id`, and either party may block or unblock (ADR-0009,
-// superseded by ADR-0077 — under which a block is its own record and only
-// the blocker may lift it).
+// `to_character_id`.
 
 export async function createRelationship(to_character_id: number, type: 'friend' | 'foe'): Promise<RelationshipListItem> {
   const { data } = await apiPost('/relationships', { body: { to_character_id, type } })
   return data as RelationshipListItem
 }
 
-/** Block a relationship. Either party can block. */
-export async function blockRelationship(id: number): Promise<RelationshipListItem> {
-  const { data } = await apiPut('/relationships/{relationship_id}', {
-    params: { path: { relationship_id: id } },
-  })
-  return data as RelationshipListItem
-}
-
-/**
- * Reverse a block — restores the edge to active. Either party can unblock.
- * ADR-0009, superseded by ADR-0077: unblock becomes the deletion of a block
- * record, authored by the blocker alone.
- */
-export async function unblockRelationship(id: number): Promise<RelationshipListItem> {
-  const { data } = await apiPost('/relationships/{relationship_id}/unblock', {
-    params: { path: { relationship_id: id } },
-  })
-  return data as RelationshipListItem
-}
-
 export async function deleteRelationship(id: number): Promise<void> {
   await apiDelete('/relationships/{relationship_id}', {
     params: { path: { relationship_id: id } },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Blocks (ADR-0077) — their own record, addressed by CHARACTER, never by edge.
+//
+// This is why #1907 exists. While a block was a `status` on a friend/foe edge,
+// blocking meant naming a row id, and the only ids the client ever held were
+// its own outgoing edges — so a player foe'd by someone they had never declared
+// anything about had nothing to act on, which is the one player the feature was
+// written for. A character id is something the profile always has.
+// ---------------------------------------------------------------------------
+
+/** One character this viewer has blocked, enriched for the profile. */
+export type BlockListItem = components['schemas']['BlockListItem']
+
+/**
+ * The characters this viewer has blocked. Outgoing only, always.
+ *
+ * There is no incoming counterpart to add here: a block is silent to the party
+ * it names (ADR-0077 ruling 2), and the backend emits no route, field or error
+ * that would report one. The blocked side's silence is therefore structural in
+ * this client — there is nothing to render it from and no branch to get wrong.
+ */
+export async function listBlocks(): Promise<BlockListItem[]> {
+  const { data } = await apiGet('/relationships/blocks')
+  return data as BlockListItem[]
+}
+
+/**
+ * Block a character. Needs no friend or foe declaration and creates none, and
+ * blocking someone already blocked answers the existing record rather than a
+ * conflict.
+ */
+export async function blockCharacter(character_id: number): Promise<BlockListItem> {
+  const { data } = await apiPost('/relationships/blocks', { body: { character_id } })
+  return data as BlockListItem
+}
+
+/**
+ * Lift this viewer's own block. Only the blocker authored the record, so only
+ * the blocker can delete one, and deleting it restores nothing else — no
+ * friend/foe edge comes back with it (ADR-0077 ruling 5).
+ */
+export async function unblockCharacter(character_id: number): Promise<void> {
+  await apiDelete('/relationships/blocks/{character_id}', {
+    params: { path: { character_id } },
   })
 }
