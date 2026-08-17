@@ -1178,6 +1178,22 @@
          title, captions and the brief
      The dark half is 5.10:1 and up as drawn and ships unchanged. */
   --faction-singularity-term-bg: #07130c; /* the chassis */
+  /* The DESK the chassis stands on — `SingularityBackdrop`'s ground (#2039).
+     Named after `--faction-ephemerists-plate-page`, which states the same role
+     for the other always-dark register. It joins the family rather than staying
+     on `--faction-singularity-card-bg` because that name is theme-INVARIANT
+     while this one is a two-theme contract: a frozen desk under a card that
+     flips painted the LIGHT page in the DARK chassis's own colour, and in dark
+     put the two at ΔE 0.0 — the chassis had no fill separation from the desk.
+     The rule is one rung below the chassis on the terminal's own black ramp, so
+     neither value is new paint: light takes #050f08 (today's ground, and the
+     dark chassis), dark takes #030b06 (already the score stamp's well). The
+     remaining lift is small on purpose — ΔE 1.8 light / 1.7 dark, and 1.03:1 /
+     1.02:1 — because what actually separates the card here is its phosphor
+     inset ring plus the page texture STOPPING at the card's edge. A desk that
+     out-contrasted the chassis would be a lit page, which is not this metaphor.
+     Nothing sets text on it: the backdrop is not a text ground. */
+  --faction-singularity-term-page: #050f08;
   --faction-singularity-term-chrome: #0c2016; /* the window bar */
   --faction-singularity-term-ink: #22c55e; /* the card's inherited phosphor */
   --faction-singularity-term-bright: #4ade80; /* title, level, CTA border */
@@ -2599,6 +2615,7 @@
      5.10:1 (dim on the chrome bar) and up, as drawn: only the light half needed
      walking. */
   --faction-singularity-term-bg: #050f08;
+  --faction-singularity-term-page: #030b06; /* the desk, one rung under it (#2039) */
   --faction-singularity-term-chrome: #0a1a10;
   --faction-singularity-term-ink: #4ade80;
   --faction-singularity-term-bright: #86efac;
