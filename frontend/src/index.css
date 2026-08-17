@@ -321,10 +321,10 @@
 
   /* ── Faction primary colors (rainbow palette) ── */
   --faction-ua: #c24a18; /* burnt sienna — the practice's one hue (#848) */
-  --faction-wow: #e0a800; /* yellow (deep — see the WOW note below) */
+  --faction-wow: #7a4a9e; /* chronicle plum — see the WOW note below (#2068) */
   --faction-coven: #ec5f99; /* redesign pink */
   --faction-snide: #6fae00; /* acid green (deep — legible on light chrome) */
-  --faction-ephemerists: #1d6e72; /* lapis-verdigris — Ephemerists reskin of the teal slot */
+  --faction-ephemerists: #c9a24b; /* plate brass — Ephemerists took the gold slot (#2068) */
   --faction-singularity: #2563eb; /* blue */
 
   /* ── Text on faction fills (#649) ── The AA-legible ink for text painted on a
@@ -333,13 +333,23 @@
      where it clears AA (>=4.5:1); near-black #14110b where white fails. Read via
      factionCssVar(slug, 'on-fill'); guarded by factionContrast.test.ts. Dark
      overrides (for fills that brighten in dark) live in the dark block; tokens
-     omitted there inherit these :root values through the cascade. */
+     omitted there inherit these :root values through the cascade.
+
+     WOW RUNS THE FAMILY BACKWARDS SINCE #2068, and that is what makes its dark
+     row load-bearing rather than noise. Every other flipping row is white in
+     light and ink in dark, because a lifted fill is brighter. WOW's spine went
+     from a yellow to a plum, so its LIGHT fill is the dark one (white, 6.36:1)
+     and the lifted plum is the pale one (ink, 5.43:1) — the pair flips
+     ink→white as you go the other way. An "omitted, so it inherits" reading of
+     its dark row would therefore paint white on the lifted plum at 3.47:1.
+     Ephemerists is the mirror image and stopped needing a dark row at all: both
+     its golds take ink, so the row below was deleted rather than restated. */
   --faction-ua-on-fill: #fcf7ef; /* #c24a18 — 4.59:1 (warm white, not pure) */
-  --faction-wow-on-fill: #14110b; /* #e0a800 — white only 2.15:1; ink 8.76:1 */
+  --faction-wow-on-fill: #ffffff; /* #7a4a9e — ink only 2.96:1; white 6.36:1 */
   --faction-everymen-on-fill: #ffffff; /* #c1272d — 5.84:1 */
   --faction-coven-on-fill: #14110b; /* #ec5f99 — white only 3.15:1; ink 5.98:1 */
   --faction-snide-on-fill: #14110b; /* #6fae00 — white only 2.72:1; ink 6.93:1 */
-  --faction-ephemerists-on-fill: #ffffff; /* #1d6e72 — 5.96:1 */
+  --faction-ephemerists-on-fill: #14110b; /* #c9a24b — white only 2.40:1; ink 7.85:1 */
   --faction-singularity-on-fill: #ffffff; /* #2563eb — 5.17:1 */
 
   /* ── Text on the comment-composer ACCENT (#924) ── The AA-legible ink for the
@@ -373,20 +383,20 @@
 
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: #f2e0cb; /* sand tint — opaque, same stock as -panel */
-  --faction-wow-light: rgba(224, 168, 0, 0.12);
+  --faction-wow-light: rgba(122, 74, 158, 0.12);
   --faction-coven-light: rgba(236, 95, 153, 0.1);
   --faction-snide-light: rgba(182, 255, 46, 0.16);
-  --faction-ephemerists-light: rgba(29, 110, 114, 0.1);
+  --faction-ephemerists-light: rgba(201, 162, 75, 0.1);
   --faction-singularity-light: rgba(37, 99, 235, 0.1);
 
   /* ── Faction borders ── */
   /* The ORANGE hairline. Its neutral sibling is --faction-ua-rule; the two are
      different tokens and the design kit calls both of them "border". */
   --faction-ua-border: rgba(194, 74, 24, 0.28);
-  --faction-wow-border: rgba(224, 168, 0, 0.4);
+  --faction-wow-border: rgba(122, 74, 158, 0.4);
   --faction-coven-border: rgba(236, 95, 153, 0.3);
   --faction-snide-border: rgba(111, 174, 0, 0.45);
-  --faction-ephemerists-border: rgba(29, 110, 114, 0.35);
+  --faction-ephemerists-border: rgba(201, 162, 75, 0.35);
   --faction-singularity-border: rgba(37, 99, 235, 0.35);
 
   /* ── Faction card backgrounds (light mode) ── */
@@ -478,21 +488,24 @@
   --faction-ephemerists-body-font: var(--eph-serif);
   --faction-singularity-card-font: var(--font-faction-terminal);
 
-  /* ── WARRIORS OF WHIMSY · yellow SPINE, cream/gold/plum SKIN (#812, #838) ──
+  /* ── WARRIORS OF WHIMSY · plum SPINE, cream/gold/plum SKIN (#812, #838, #2068) ──
      These are two different things and conflating them is the mistake ADR-0050
-     exists to stop.
+     exists to stop. They now agree on a HUE, which is not the same as agreeing
+     on a token — see the third paragraph.
 
-     THE SPINE. `--faction-wow` is yellow (#e0a800 light / #f5c542 dark) and its
-     stop in --faction-default-rainbow is yellow. That is WOW's membership of the
-     rainbow, settled in #812/#814, and #838 does not touch it. Yellow is the
-     palette's hard case (#651, #669, #677); this one is deep (l44) rather than
-     bright, because hue 45° puts daylight between it and UA's burnt-orange 20°
-     — the two sit ADJACENT in FACTION_RAINBOW_ORDER and are painted touching in
-     the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom, where a
-     goldenrod nearer 40° reads as a second brown. Every ink measured against it
-     clears AA with room to spare. It is a shade brighter and yellower than the
-     rainbow gradient's own yellow stop (#ca8a04), which is unchanged — that
-     gradient is `na`'s spectrum and answers to nobody's hue but its own.
+     THE SPINE. `--faction-wow` is plum (#7a4a9e light / #a875c9 dark) since
+     #2068, where it was a yellow (#e0a800 / #f5c542) from #812 through #2067.
+     The owner vacated the yellow slot for the Ephemerists' brass and gave WOW
+     the colour its own skin had been wearing since #838 — a spine hue is a FILL
+     (WORLD_ZERO_STYLE §3, #1932) and the fill it kept failing to be legible
+     against was its own cream. Two things the swap bought and one it did not.
+     It buys the hue-as-ink call sites: the same token read as text measured
+     1.96:1 on the page and on the cream (#951, #1932) and now reads 5.80 / 5.79.
+     It buys the plate: Ephemerists' hue on its own near-black plate went
+     2.91:1 → 7.22:1. It does NOT touch --faction-default-stop-1…7 — the
+     rainbow is a separately tuned spectrum whose yellow (#ca8a04) and teal
+     (#1d6e72) answer to nobody's hue but their own — nor FACTION_RAINBOW_ORDER,
+     whose spectral sort is now stale by two slots and is an owner call.
 
      THE SKIN. WOW's surfaces are the CHRONICLE: cream parchment, a gold frame
      (#c8a02a, theme-invariant — it does not lift in dark) and plum ink (#7a4a9e
@@ -501,7 +514,19 @@
      #830 authored a yellow chronicle + yellow balloon ramp for WOW from no
      design source at all, on the strength of a mislabelled mockup heading; #838
      retired it. The chronicle was never Coven's — see ADR-0050 before moving
-     anything here. */
+     anything here.
+
+     ONE HUE, THREE TOKENS, AND THAT IS DELIBERATE (#2068 answering #896). #7a4a9e
+     is now the spine, `-card-accent` (the kit's `whimsy`) and `-plum-surface`.
+     #896 refused a `--faction-wow-whimsy` alias on "one colour, one name" and
+     that ruling stands: it bars INVENTING a synonym, not a colour turning up in
+     two registers, which is already true of Coven's #f472b6. Do not collapse any
+     of the three into `var(--faction-wow)`. The accent is measured at 5.79:1 on
+     the cream and the plum-surface is theme-INVARIANT; the spine lifts at night
+     (#a875c9), so an alias would drag a measured ink and a struck mark's colour
+     along with a fill that is allowed to move. In LIGHT all three resolve to the
+     same bytes, which is exactly why the next editor will think they are one
+     token — they are one colour with three jobs, and only one of them flips. */
 
   /* ── DEFAULT · unaffiliated (no faction; rainbow = every path still open) ──
      Not a rainbow-spine faction — the blank-slate / first-life state (na). Its
@@ -2449,18 +2474,20 @@
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
   --faction-ua: #e8703a; /* sienna lifted for dark — UA */
-  --faction-wow: #f5c542; /* yellow lifted for dark — WOW */
+  --faction-wow: #a875c9; /* plum lifted for dark — WOW (#2068) */
   --faction-coven: #f472b6; /* magenta */
   --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
-  --faction-ephemerists: #3aa0a4; /* lapis-verdigris lifted for dark — Ephemerists */
+  --faction-ephemerists: #e6c877; /* brass lifted for dark — Ephemerists (#2068) */
   --faction-singularity: #60a5fa; /* blue */
 
   /* ── Text on faction fills (dark, #649) ── The dark primaries brighten to pop
-     against the dark page, which makes white-on-fill worse. These flip to
-     ink; wow/snide (ink) are theme-invariant and inherit their :root value. */
+     against the dark page, which makes white-on-fill worse. These flip to ink;
+     snide/ephemerists (ink in both) are theme-invariant and inherit their :root
+     value. WOW is the row that reads the other way since #2068 — white in light,
+     ink here — so its line below is a DECLARATION, not a leftover. */
   --faction-ua-on-fill: #201a14; /* #e8703a — warm white only 2.89:1; ink 5.59:1 */
   --faction-everymen-on-fill: #14110b; /* #ef5350 — white only 3.49:1; ink 5.45:1 */
-  --faction-ephemerists-on-fill: #14110b; /* #3aa0a4 — white only 3.11:1; ink 6.05:1 */
+  --faction-wow-on-fill: #14110b; /* #a875c9 — white only 3.47:1; ink 5.43:1 */
   --faction-singularity-on-fill: #14110b; /* #60a5fa — white only 2.54:1; ink 7.41:1 */
 
   /* ── Text on the comment-composer ACCENT (dark, #924) ── The accents brighten in
@@ -2476,18 +2503,18 @@
 
   /* ── Faction tints (dark) ── */
   --faction-ua-light: #241e18; /* sand tint, dimmed — same stock as the card */
-  --faction-wow-light: rgba(245, 197, 66, 0.1);
+  --faction-wow-light: rgba(168, 117, 201, 0.1);
   --faction-coven-light: rgba(244, 114, 182, 0.08);
   --faction-snide-light: rgba(182, 255, 46, 0.12);
-  --faction-ephemerists-light: rgba(58, 160, 164, 0.1);
+  --faction-ephemerists-light: rgba(230, 200, 119, 0.1);
   --faction-singularity-light: rgba(96, 165, 250, 0.1);
 
   /* ── Faction borders (dark) ── */
   --faction-ua-border: rgba(232, 112, 58, 0.32); /* the orange hairline, lifted */
-  --faction-wow-border: rgba(245, 197, 66, 0.3);
+  --faction-wow-border: rgba(168, 117, 201, 0.3);
   --faction-coven-border: rgba(244, 114, 182, 0.25);
   --faction-snide-border: rgba(182, 255, 46, 0.3);
-  --faction-ephemerists-border: rgba(58, 160, 164, 0.35);
+  --faction-ephemerists-border: rgba(230, 200, 119, 0.35);
   --faction-singularity-border: rgba(96, 165, 250, 0.25);
 
   /* ── Faction card backgrounds (dark mode) ── */
