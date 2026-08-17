@@ -131,6 +131,29 @@ describe("applyMarkdown — a line prefix never selects its own marker (#1969)",
     expect(result.selectionEnd).toBe(8);
   });
 
+  // The same rule for the siblings that insert a placeholder inside
+  // delimiters. These were already correct when #1969 was fixed; the check
+  // stays so the next delimiter added has to keep them that way. `table` is the
+  // deliberate exception — its skeleton is placeholder all the way through, so
+  // selecting the whole insertion IS selecting only what you overtype.
+  it.each([
+    ["bold", "**bold**", "bold"],
+    ["italic", "*italic*", "italic"],
+    ["strikethrough", "~~strikethrough~~", "strikethrough"],
+    ["inlineCode", "`code`", "code"],
+    ["link", "[text](url)", "url"],
+    ["codeBlock", "```\ncode\n```", "code"],
+  ] as const)(
+    "selects only the placeholder, not the delimiters, for %s",
+    (command, expectedText, expectedSelection) => {
+      const result = applyMarkdown(command, sel("", 0, 0));
+      expect(result.text).toBe(expectedText);
+      expect(result.text.slice(result.selectionStart, result.selectionEnd)).toBe(
+        expectedSelection,
+      );
+    },
+  );
+
   it("selects only the partial line the author selected", () => {
     // "quick" selected inside "the quick fox".
     const result = applyMarkdown("heading", sel("the quick fox", 4, 9));
