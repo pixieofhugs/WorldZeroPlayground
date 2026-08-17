@@ -1,5 +1,4 @@
 import type { FactionCardProps } from "./FactionCard";
-import { StatusBadge } from "./FactionCard";
 import i18n from "../../i18n";
 import { factionName, factionDescription } from "../../utils/factions";
 import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
@@ -55,17 +54,26 @@ import { WowSigil } from "../sigil/WowSigil";
  * that module is one chunk for all five, so putting WOW's ornament vocabulary
  * and its sigil in there would post those bytes to every reader of a Coven,
  * Snide, UA, Ephemerists or Singularity card. `EverymenFactionCard.tsx` is the
- * precedent and the same argument. `StatusBadge` is imported back rather than
- * copied — it resolves the shared status words and the house success/warning
- * inks, and a second copy is how two cards start disagreeing about what
- * "burned" looks like.
+ * precedent and the same argument.
  *
- * THE INVITATION EYEBROW IS WOW'S OWN, and this is the one place the card does
- * not reuse the shared helper. `InvitationNote` paints its text in
- * `factionCssVar(slug)` — WOW's spine gold — which on this cream parchment is
- * the 1.96:1 the Default card was already failing at. The pennant-plum strip
- * below says the same shared words on `--faction-wow-plum-surface` at 5.16:1,
- * theme-invariant. Everymen drew its own ribbon for the same reason.
+ * THE TWO SHARED HELPERS ARE NOT REUSED, AND THE REASON IS ARITHMETIC, not
+ * taste. `StatusBadge` and `InvitationNote` both paint text in
+ * `factionCssVar(slug)` — the faction's SPINE hue, which is a fill and not an
+ * ink. WOW's is `#e0a800`, and on this cream card ground that measures
+ * **1.96:1** in light mode (dark is fine at 11.19:1, so it is a light-only
+ * defect and one this card would have inherited on two of its four states).
+ * Both are redrawn here on `--faction-wow-plum-surface` / `-on-plum` at
+ * **5.16:1**, theme-invariant, and both say the SAME shared words — the
+ * `factionCard.status.*` set and `factionCard.newInvitation` — so nothing is
+ * gained or lost but the paint. Everymen drew its own ribbon for the same
+ * reason; the gap is noted in place on the branch it lives in.
+ *
+ * ONE PLATE FOR ALL FOUR STANDINGS, where the house badge inks each state
+ * differently (success green, warning amber, muted, faction hue). The words are
+ * already self-describing — MEMBER, INVITED, BURNED, WELCOME BACK — so the
+ * colour was redundant reinforcement, and a bill endorses with one stamp. It
+ * also means there is exactly one measured pair on this card instead of four
+ * that each have to clear the parchment separately.
  *
  * ponytail: the card carries no member count, no charter and no join control.
  * That is the surface's contract, not a shortcut — every membership action
@@ -89,6 +97,41 @@ const ON_PLUM = "var(--faction-wow-on-plum)";
  *  is the low end because `.card-description` clamps to three lines anyway and
  *  a bill that overflows its own paper is a worse joke than a short one. */
 const BLURB_LIMIT = 100;
+
+/**
+ * The reader's standing with the Court, struck on a plum plate.
+ *
+ * The status→word mapping is the shared one, aliases and all: `defected` reads
+ * as burned and `can_return` as welcome-back, because those are the same two
+ * states the API spells two ways. Keys are written out in full rather than
+ * built from `status`, so an i18n sweep can still find them.
+ */
+function Standing({ status }: { status: string }) {
+  let label: string | null = null;
+  if (status === "member") label = i18n.t("feed:factionCard.status.member");
+  else if (status === "invited") label = i18n.t("feed:factionCard.status.invited");
+  else if (status === "burned" || status === "defected") label = i18n.t("feed:factionCard.status.burned");
+  else if (status === "welcome_back" || status === "can_return") label = i18n.t("feed:factionCard.status.welcomeBack");
+  if (!label) return null;
+
+  return (
+    <span
+      className="label-caption"
+      style={{
+        flex: "0 0 auto",
+        background: PLUM_SURFACE,
+        color: ON_PLUM,
+        fontFamily: MED,
+        letterSpacing: "0.08em",
+        border: `1px solid ${GOLD}`,
+        borderRadius: "var(--radius-sm)",
+        padding: "var(--space-xs) var(--space-sm)",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
 
 export default function WowCard({ faction, status, invitationNote }: FactionCardProps) {
   const full = factionDescription(faction.slug);
@@ -149,7 +192,7 @@ export default function WowCard({ faction, status, invitationNote }: FactionCard
           {/* The googly crown, plum on the parchment — the mark every WOW
               surface mounts, at the size the letterhead of a card wants. */}
           <WowSigil size={30} />
-          <StatusBadge status={status} slug="wow" />
+          <Standing status={status} />
         </div>
 
         <div
