@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -616,13 +616,23 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       </h1>
 
       {isMetatask && (
+        // `LABEL` and not the metatask faction's spine hue (#2077) — a hue is a
+        // FILL (§3, #1932). This is the one of the eight bylines that names an
+        // ink rather than dropping the override: `QUIET` is type only and sets
+        // no colour, so deleting the line would leave the paragraph inheriting
+        // whatever ancestor last spoke. `LABEL` is what the faction-name span
+        // three blocks up already paints on this same header ground, and it is
+        // the ink measured to clear BOTH the cream card (5.32:1 light / 8.83:1
+        // dark) and the darker parchment field the headers lie straight on,
+        // which `--faction-wow-card-muted` does not (4.20:1) — see its
+        // declaration.
         <p
           style={{
             ...QUIET,
             fontSize: "var(--text-xl)",
             margin: 0,
             marginBottom: "var(--space-md)",
-            color: factionCssVar(task.metatask_faction_slug),
+            color: LABEL,
           }}
         >
           {t("detail.metataskFor", { faction: factionName(task.metatask_faction_slug) })}

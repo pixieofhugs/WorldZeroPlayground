@@ -1,17 +1,28 @@
 /**
- * Fixtures for the tier arm of the style ratchet (#1819).
+ * Fixtures for the TWO faction-ink arms of the style ratchet (#1819, #2077).
  *
  * The seam is THE RULE AS WIRED — plugin registration, path globs, exemptions
  * and legacy list, all read out of the real `eslint.config.js` — not the regex.
- * That matters more here than it did for the colour arm (#1853), because this
- * rule's whole difficulty is its SCOPE: the same string is a defect inside
+ * That matters more here than it did for the colour arm (#1853), because the
+ * tier arm's whole difficulty is its SCOPE: the same string is a defect inside
  * `archetypes/` and correct one directory up, and nothing but the wiring decides
  * which. A test that exercised the matcher alone would pass with the globs
  * deleted.
  *
- * This guards the RULE. The two notices #1819 was filed about are guarded at
- * their mount, in
- * `src/pages/editPraxis/archetypes/__tests__/composerQuietInk.test.tsx`.
+ * BOTH ARMS LIVE HERE BECAUSE THEY ARE ONE SEAM READ FROM TWO SIDES, and the
+ * pair is easy to get backwards. `no-global-ink-on-faction-surface` bans a
+ * GLOBAL ink on a FACTION sheet; `no-faction-hue-as-ink` (#2077) bans a FACTION
+ * hue as ink anywhere. #2077 was filed asking for the first rule's glob to be
+ * widened to `components/factionCard/` and `pages/`, and that is the wrong lever
+ * twice: the tier arm cannot see a `--faction-*` token at all, and on those two
+ * paths it would ban `var(--color-text-primary)` — the token the #2077 fix
+ * reaches for. §3 had already recorded that ruling for `pages/players/`.
+ * Keeping the fixtures adjacent is what makes the polarity legible.
+ *
+ * These guard the RULES. The notices #1819 was filed about are guarded at their
+ * mount in `src/pages/editPraxis/archetypes/__tests__/composerQuietInk.test.tsx`;
+ * #2077's twelve are guarded at theirs in
+ * `src/__tests__/factionHueAsInkMounts.test.tsx`.
  */
 import { existsSync, readFileSync } from 'node:fs'
 
@@ -19,6 +30,7 @@ import { ESLint } from 'eslint'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 const RULE = 'local/no-global-ink-on-faction-surface'
+const HUE_RULE = 'local/no-faction-hue-as-ink'
 
 /** A faction-dispatched surface, and a neutral one, as file paths. */
 const ARCHETYPE = 'src/pages/praxisDetail/archetypes/InkFixture.tsx'
@@ -32,14 +44,27 @@ beforeAll(() => {
   eslint = new ESLint()
 })
 
-/** Rule ids reported for `code`, judged as if it lived at `filePath`. */
-const lint = async (code: string, filePath: string): Promise<string[]> => {
+/** Messages from `rule` reported for `code`, judged as if it lived at `filePath`. */
+const lintRule = async (
+  rule: string,
+  code: string,
+  filePath: string,
+): Promise<string[]> => {
   const [result] = await eslint.lintText(code, { filePath, warnIgnored: false })
-  return result.messages.filter((m) => m.ruleId === RULE).map((m) => m.message)
+  return result.messages.filter((m) => m.ruleId === rule).map((m) => m.message)
 }
+
+const lint = async (code: string, filePath: string): Promise<string[]> =>
+  lintRule(RULE, code, filePath)
 
 const reports = async (code: string, filePath: string): Promise<boolean> =>
   (await lint(code, filePath)).length > 0
+
+const lintHue = async (code: string, filePath: string): Promise<string[]> =>
+  lintRule(HUE_RULE, code, filePath)
+
+const reportsHue = async (code: string, filePath: string): Promise<boolean> =>
+  (await lintHue(code, filePath)).length > 0
 
 describe(`${RULE} reports the global ink on a dressed surface`, () => {
   it('flags the #1819 shape — the neutral restated inline over `.label-caption`', async () => {
@@ -163,6 +188,147 @@ describe(`${RULE} stays silent where the neutral is the right token`, () => {
   })
 })
 
+describe(`${HUE_RULE} reports the bare spine hue in an ink role`, () => {
+  it('flags the #2077 shape — `factionCssVar(slug)` with no shape argument', async () => {
+    // Eleven of the twelve sites were written exactly this way, and none of them
+    // contains the string `var(--faction-`. A rule matching the token text (as
+    // the tier arm does) is blind to every one of them.
+    expect(
+      await reportsHue(
+        'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
+        NEUTRAL_CHROME,
+      ),
+    ).toBe(true)
+  })
+
+  it('flags the token spelled out, on any surface, with no glob to satisfy', async () => {
+    // The scope argument, asserted rather than described: a bare spine hue is a
+    // FILL on every ground in the app, so unlike the tier arm this one has no
+    // path list and the identical string is a defect in neutral chrome and in a
+    // faction archetype alike.
+    for (const path of [NEUTRAL_CHROME, ARCHETYPE, FACTION_MARK]) {
+      expect(await reportsHue("export const s = { color: 'var(--faction-coven)' }", path), path)
+        .toBe(true)
+    }
+  })
+
+  it('flags the SEAM variables, where the defect wears the fix\'s clothes', async () => {
+    // Repointing `--label-ink` on a faction root is the sanctioned move (#1754).
+    // Pointing it at a BARE hue is the bug, and it lands on every label the frame
+    // holds at once. `--gem-ink` is here for #1932's reason: it IS the numeral's
+    // `color`, one indirection away in index.css, and the indirection is what hid
+    // the original.
+    for (const property of ['--label-ink', '--gem-ink', '--link-ink']) {
+      expect(
+        await reportsHue(`export const s = { '${property}': 'var(--faction-snide)' }`, ARCHETYPE),
+        property,
+      ).toBe(true)
+    }
+  })
+
+  it('flags a hue laundered through a module const — the `--gem-ink` shape', async () => {
+    // Five of the twelve sites the rule reported outside #2077's own list are
+    // written this way. Nothing named a colour at the call site, so a reader
+    // scanning for inks walks straight past it.
+    expect(
+      await reportsHue(
+        'const accent = factionCssVar(slug)\nexport const s = { color: accent }',
+        NEUTRAL_CHROME,
+      ),
+    ).toBe(true)
+  })
+
+  it('flags the shorthand `{ color }`, which names no value at all', async () => {
+    expect(
+      await reportsHue(
+        'const color = factionCssVar(slug)\nexport const s = { color }',
+        NEUTRAL_CHROME,
+      ),
+    ).toBe(true)
+  })
+
+  it('flags a `??` fallback, unlike the tier arm — and the asymmetry is the point', async () => {
+    // There a fallback is the legitimate neutral default. Here it is
+    // `feedRowSkin`'s live shape: a documented default that every chassis
+    // overrides, failing on the one ground for which nobody passed an ink.
+    expect(
+      await reportsHue(
+        'export const s = (ink?: string) => ({ color: ink ?? factionCssVar(slug) })',
+        NEUTRAL_CHROME,
+      ),
+    ).toBe(true)
+  })
+})
+
+describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
+  it('says nothing about the hue as a FILL, a RULE or a GLOW', async () => {
+    // The other half of the doctrine, and the half a careless sweep breaks: the
+    // hue keeps every non-ink role. If this goes red, the fix has been read as
+    // "remove the faction colour" instead of "move it off the type".
+    expect(
+      await lintHue(
+        'export const s = (slug: string) => ({\n'
+          + '  background: factionCssVar(slug),\n'
+          + "  borderLeft: `3px solid ${factionCssVar(slug)}`,\n"
+          + "  boxShadow: `0 0 0 2px ${factionCssVar(slug)}`,\n"
+          + "  '--gem-glow': factionCssVar(slug),\n"
+          + '})',
+        NEUTRAL_CHROME,
+      ),
+    ).toEqual([])
+  })
+
+  it('says nothing about a SUFFIXED member — those are measured pairings', async () => {
+    // `-card-text` is an ink measured against a named ground, gated by
+    // `CARD_PAIRS` since #651. A pattern sweeping the whole `--faction-` prefix
+    // would report a measured pairing as a defect and teach the next editor to
+    // strip it. Arity is the test for the helper; the first hyphen is the test
+    // for the token.
+    expect(
+      await lintHue(
+        'export const s = (slug: string) => ({\n'
+          + "  color: factionCssVar(slug, 'card-text'),\n"
+          + "  caretColor: 'var(--faction-wow-card-muted)',\n"
+          + '})',
+        NEUTRAL_CHROME,
+      ),
+    ).toEqual([])
+  })
+
+  it('says nothing about the neutral tiers or the seam read bare', async () => {
+    // What the #2077 fix actually reaches for. If widening the TIER arm's glob to
+    // `pages/` had been the fix, this exact code would be the build break.
+    expect(
+      await lintHue(
+        "export const s = { color: 'var(--color-text-primary)' }",
+        'src/pages/Factions.tsx',
+      ),
+    ).toEqual([])
+    expect(await lintHue("export const s = { color: 'var(--label-ink)' }", ARCHETYPE)).toEqual([])
+  })
+
+  it('says nothing in a file on the legacy list', async () => {
+    expect(
+      await lintHue(
+        'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
+        'src/components/ActivityTicker.tsx',
+      ),
+    ).toEqual([])
+  })
+
+  it('says nothing in `roomPresence.ts`, whose `color` is not a CSS declaration', async () => {
+    // A y-codemirror awareness field, not an ink — a caret is a MARK. Exempted
+    // outright rather than grandfathered, because it will never migrate and a
+    // shrinking list would be lying about it.
+    expect(
+      await lintHue(
+        'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
+        'src/pages/editPraxis/roomPresence.ts',
+      ),
+    ).toEqual([])
+  })
+})
+
 describe('the legacy list stays honest', () => {
   it('is not empty, and every entry is a real path the rule can be turned off for', async () => {
     const entries = readFileSync(
@@ -195,5 +361,33 @@ describe('the legacy list stays honest', () => {
       entries.filter((entry) => !/\/(archetypes|mobileArchetypes)\/|^src\/components\/factionMarks\//.test(entry)),
       'an entry outside the three dispatched directory names is a file the rule never judged — turning it "off" there is noise that makes the list look larger than the debt.',
     ).toEqual([])
+  })
+
+  it('the polarity arm\'s list is real paths, and each still reports (#2077)', async () => {
+    const entries = readFileSync(
+      new URL('../../.eslint-legacy-faction-hue-ink.txt', import.meta.url),
+      'utf8',
+    )
+      .split('\n')
+      .map((line) => line.split('#')[0].trim())
+      .filter(Boolean)
+
+    expect(entries.length).toBeGreaterThan(0)
+    expect(
+      entries.filter((entry) => !existsSync(new URL(`../../${entry}`, import.meta.url))),
+    ).toEqual([])
+
+    // AND THE ENTRY IS STILL EARNING ITS PLACE. The `-faction-ink` list above
+    // cannot make this check — the rule is off for those paths, so asking it what
+    // it would say means re-linting the file's own text, which for a 900-line
+    // archetype is not a fixture. This arm's list is four files, so it is cheap:
+    // read each one and confirm the rule still has something to say about it. A
+    // file that stopped violating and stayed listed is how a shrink-only list
+    // quietly stops shrinking (#750, wearing a filename).
+    for (const entry of entries) {
+      const source = readFileSync(new URL(`../../${entry}`, import.meta.url), 'utf8')
+      const messages = await lintRule(HUE_RULE, source, `src/__probe__/${entry.split('/').pop()}`)
+      expect(messages.length, `${entry} no longer violates — delete its line`).toBeGreaterThan(0)
+    }
   })
 })

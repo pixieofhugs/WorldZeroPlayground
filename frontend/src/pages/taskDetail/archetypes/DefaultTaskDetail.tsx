@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -525,12 +525,16 @@ export default function DefaultTaskDetail({
       </h1>
 
       {isMetatask && (
+        // `.label-caption` bare, i.e. `--label-ink` — the same seam every other
+        // caption on this page reads (#2077). It printed the metatask faction's
+        // spine hue, a FILL colour (§3, #1932), which on this neutral page runs
+        // 2.19:1 for the Ephemerists brass and 2.47 / 2.87 for the S.N.I.D.E.
+        // acid and Coven pink in light, against the seam's own 7.83:1.
         <p
           className="label-caption"
           style={{
             marginTop: 0,
             marginBottom: "var(--space-md)",
-            color: factionCssVar(task.metatask_faction_slug),
           }}
         >
           {t("detail.metataskFor", {

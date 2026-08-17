@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { CovenCat } from "../../../components/factionMarks/covenSlip";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -665,12 +665,17 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       </h1>
 
       {isMetatask && (
+        // The byline reads THIS page's label ink, not the metatask faction's
+        // spine hue (#2077). `eyebrow` already carries `LABEL`, the ink every
+        // other caption on this ground wears; the override was a foreign
+        // faction's FILL colour (§3, #1932) landing on the ward page — eight
+        // hues against eight archetype grounds, and the identity is carried by
+        // the faction's NAME in the copy either way.
         <p
           style={{
             ...eyebrow,
             marginTop: 0,
             marginBottom: "var(--space-md)",
-            color: factionCssVar(task.metatask_faction_slug),
           }}
         >
           {t("detail.metataskFor", { faction: factionName(task.metatask_faction_slug) })}

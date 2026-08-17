@@ -460,6 +460,118 @@ function isFallbackOperand(ancestors, node) {
   return false
 }
 
+// ---------------------------------------------------------------------------
+// The POLARITY arm (#2077). Gap E's inverse.
+//
+// The tier arm above bans a GLOBAL ink on a FACTION sheet. This one bans a
+// FACTION hue as ink anywhere, and the two are not each other's mirror in scope:
+// the tier arm needs a path list because the neutral tiers are *correct* on
+// neutral chrome, whereas a bare spine hue is a FILL on every surface in the app
+// (WORLD_ZERO_STYLE §3, #1932) and there is no ground where it becomes an ink.
+// So this arm has no glob at all, which is also why widening the tier arm to
+// cover `components/factionCard/` and `pages/` — the shape #2077 was filed
+// asking for — is the wrong lever twice over. It cannot see a `--faction-*`
+// token, and on those two paths it would ban `var(--color-text-primary)`, the
+// token the fix REACHES FOR. #1932 recorded that ruling for `pages/players/`
+// already: "widening the glob would ban the global tiers on the surface they are
+// right for".
+//
+// THE MEASUREMENT, so nobody has to re-derive it. On the app's own page ground in
+// LIGHT, the bare hue as text reads 2.19:1 (ephemerists), 2.47 (snide), 2.87
+// (coven) and 4.46 (ua); on the faction wash those hues are laid down as, six of
+// eight are under AA, worst 2.04:1. Every hue clears in DARK, 4.87 to 15.35 —
+// the cascade tell #1932 names: when a defect sorts perfectly by cascade it is
+// one bug, and the bug is that the light half of the pair was only ever a fill.
+// Which faction is worst MOVES (#2068 traded WOW's gold for a plum and handed the
+// Ephemerists the brass, so WOW went 1.96 -> 5.80 and the slot changed hands), so
+// this rule is about the ROLE and never about a hue.
+//
+// The BARE hue only. `--faction-wow-card-text` is a different claim entirely — an
+// ink measured against a named ground, gated by `CARD_PAIRS` since #651 — and a
+// pattern that swept the whole prefix would report a measured pairing as a defect
+// and teach the next editor to strip it. `[a-z]+` stops at the first hyphen,
+// which is exactly the line between "this hue" and "this hue's ink for a ground".
+const BARE_FACTION_HUE = /var\(\s*--faction-[a-z]+\s*\)/
+
+/**
+ * Properties that end up as an ink.
+ *
+ * `--gem-ink` is here for the reason `playersFactionInk.test.tsx` gives: it IS
+ * `.level-gem-number`'s `color`, one indirection away in `index.css`, and the
+ * indirection is what hid #1932 from a reader scanning for inks. The three seam
+ * variables are here because repointing a seam is the sanctioned move and
+ * pointing one at a BARE hue is the defect wearing the fix's clothes.
+ */
+const INK_PROPS = new Set([
+  'color',
+  'caretColor',
+  'textDecorationColor',
+  'WebkitTextFillColor',
+  '-webkit-text-fill-color',
+  '--gem-ink',
+  '--label-ink',
+  '--link-ink',
+  '--link-ink-hover',
+])
+
+/**
+ * Is this expression the bare spine hue, however it is spelled?
+ *
+ * Two spellings, because the repo has two. `var(--faction-coven)` as a string is
+ * the one a `var()`-matching rule sees; `factionCssVar(slug)` with a single
+ * argument is the one that actually appears at eleven of the twelve #2077 sites,
+ * and it is a CallExpression, so the tier arm's string-matching approach is
+ * blind to it. A second argument names a SHAPE (`'light'`, `'card-text'`,
+ * `'border'`) and is the measured-pairing case above, so arity is the test.
+ */
+function isBareFactionHue(node, sourceCode) {
+  if (!node) return false
+  switch (node.type) {
+    case 'Literal':
+      return typeof node.value === 'string' && BARE_FACTION_HUE.test(node.value)
+    case 'TemplateLiteral':
+      return node.quasis.some((quasi) => BARE_FACTION_HUE.test(quasi.value.raw))
+    case 'CallExpression':
+      return (
+        node.callee.type === 'Identifier'
+        && node.callee.name === 'factionCssVar'
+        && node.arguments.length === 1
+      )
+    // `hue ? factionCssVar(slug) : X` and `ink ?? factionCssVar(slug)`. NOT
+    // exempting the `??` fallback, unlike the tier arm: there a fallback is the
+    // legitimate neutral default, and here it is `feedRowSkin`'s shape — a
+    // documented default that every chassis overrides and that fails on the one
+    // ground nobody passed an ink for.
+    case 'ConditionalExpression':
+      return (
+        isBareFactionHue(node.consequent, sourceCode)
+        || isBareFactionHue(node.alternate, sourceCode)
+      )
+    case 'LogicalExpression':
+      return (
+        isBareFactionHue(node.left, sourceCode) || isBareFactionHue(node.right, sourceCode)
+      )
+    case 'JSXExpressionContainer':
+      return isBareFactionHue(node.expression, sourceCode)
+    // `const accent = factionCssVar(slug)` then `color: accent` — the laundering
+    // route, and the one this rule would be worth little without: five of the six
+    // sites it reports outside #2077's own list are written this way, and so is
+    // the `--gem-ink` shape #1932 called out by name. Resolved in-module only; a
+    // value arriving as a PROP or from another file is the standing gap below.
+    case 'Identifier': {
+      const variable = sourceCode.getScope(node).references.find(
+        (reference) => reference.identifier === node,
+      )?.resolved
+      if (!variable || variable.defs.length !== 1) return false
+      const [def] = variable.defs
+      if (def.type !== 'Variable' || def.parent?.kind !== 'const') return false
+      return isBareFactionHue(def.node.init, sourceCode)
+    }
+    default:
+      return false
+  }
+}
+
 const noRawStyleValues = {
   rules: {
     'no-raw-style-values': {
@@ -564,6 +676,41 @@ const noRawStyleValues = {
         }
       },
     },
+    // The polarity arm (#2077). See the constants above for the scope argument
+    // and for why this is a fourth id rather than a widened glob on the arm
+    // above. Own id, own list, for the reason the other two arms give: the
+    // ratchet turns a whole RULE off per file.
+    'no-faction-hue-as-ink': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow the bare faction spine hue in an ink role — a faction hue is a FILL, not an ink (WORLD_ZERO_STYLE.md §3).',
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Property(node) {
+            const name = propertyName(node)
+            if (!name || !INK_PROPS.has(name)) return
+            if (!isBareFactionHue(node.value, context.sourceCode)) return
+            context.report({
+              node,
+              message:
+                `Bare faction spine hue in "${name}" — a faction hue is a FILL, not an ink `
+                + '(WORLD_ZERO_STYLE.md §3, #1932). Keep the hue on the fill, wash, rule, ring '
+                + 'or glow beside this, and give the type a text tier: a neutral '
+                + '`--color-text-*` on neutral chrome, or the surface\'s own measured '
+                + '`factionCssVar(slug, "card-text" | "card-muted")` / `var(--label-ink)` on a '
+                + 'faction sheet. Measured on the app\'s page in LIGHT the bare hue is 2.19:1 '
+                + '(ephemerists), 2.47 (snide), 2.87 (coven), 4.46 (ua) — and every hue clears '
+                + 'in dark, so this is invisible in a dark-only check.',
+            })
+          },
+        }
+      },
+    },
   },
 }
 
@@ -581,6 +728,15 @@ const LEGACY_RAW_STYLE_FILES = fs
 // one. New files may never be added to it. #1609 burns it down.
 const LEGACY_RAW_COLOUR_FILES = fs
   .readFileSync(new URL('./.eslint-legacy-raw-colours.txt', import.meta.url), 'utf8')
+  .split('\n')
+  .map((line) => line.split('#')[0].trim())
+  .filter(Boolean)
+
+// Files still painting the bare spine hue as an ink (issue #2077). This list
+// only ever shrinks — migrating a file means deleting its line here, not adding
+// one. New files may never be added to it.
+const LEGACY_FACTION_HUE_INK_FILES = fs
+  .readFileSync(new URL('./.eslint-legacy-faction-hue-ink.txt', import.meta.url), 'utf8')
   .split('\n')
   .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
@@ -662,6 +818,9 @@ export default [
       ],
       'local/no-raw-style-values': 'error',
       'local/no-raw-colour-values': 'error',
+      // The polarity arm needs no path glob — a bare spine hue is never an ink
+      // on any surface — so unlike the tier arm it registers here (#2077).
+      'local/no-faction-hue-as-ink': 'error',
       'sonarjs/no-identical-functions': 'error',
       'no-restricted-imports': NO_AXIOS_IMPORT,
     },
@@ -758,6 +917,52 @@ export default [
           files: LEGACY_FACTION_INK_FILES,
           rules: {
             'local/no-global-ink-on-faction-surface': 'off',
+          },
+        },
+      ]
+    : []),
+  {
+    /**
+     * NOT A CSS DECLARATION (#2077). `PaintedPresenceUser.color` is a field in
+     * the awareness payload y-codemirror reads to draw a collaborator's caret
+     * and selection tint — the library names the field `color`, and this rule
+     * matches a property NAME because that is the only signal an inline style
+     * object carries. A caret is a MARK, not type: the file's own comment
+     * already explains that it takes the bare hue rather than a `card-*` ink
+     * precisely because the mark lands on the viewer's editor ground and not on
+     * the remote's card sheet, and `colorLight` beside it mixes the same hue
+     * into the selection wash. Nothing here is text.
+     *
+     * A deliberate exemption and NOT a legacy entry, for the reason the tier
+     * arm's `??` note gives: this will never migrate, so a shrinking list would
+     * be lying about it. It is the same shape as `contrast.ts`'s exemption from
+     * the colour arm — a module whose PURPOSE is the thing the rule forbids.
+     */
+    files: ['src/pages/editPraxis/roomPresence.ts'],
+    rules: {
+      'local/no-faction-hue-as-ink': 'off',
+    },
+  },
+  {
+    /**
+     * Tests name the hue they are guarding — `playersFactionInk.test.tsx` builds
+     * `var(--faction-wow)` to assert the rendered markup never carries it, and a
+     * fixture for this very rule must contain what it forbids. Same deliberate
+     * exemption as the two arms above (#2077).
+     */
+    files: ['src/**/*.test.{ts,tsx}', 'src/**/__tests__/**'],
+    rules: {
+      'local/no-faction-hue-as-ink': 'off',
+    },
+  },
+  // Same ratchet, same empty-list guard (#750). Seeded from what the rule
+  // reported on the day it landed, with the measurements in the file's header.
+  ...(LEGACY_FACTION_HUE_INK_FILES.length > 0
+    ? [
+        {
+          files: LEGACY_FACTION_HUE_INK_FILES,
+          rules: {
+            'local/no-faction-hue-as-ink': 'off',
           },
         },
       ]
