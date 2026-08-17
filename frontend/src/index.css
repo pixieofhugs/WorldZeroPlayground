@@ -1448,6 +1448,81 @@
   --faction-coven-vote-on: #d63f86;
   --faction-coven-vote-off: #a76389;
 
+  /* ── Coven — the DAY plate (#2020) ──
+     The line above ("night plate; same in both themes") was a decision, and
+     this reverses it for LIGHT ONLY: light gets a sun, dark keeps the moon,
+     unchanged. The two are different GEOMETRY — rays counted round a disc
+     against a phase swept across one — so a variable cannot carry the swap and
+     `useTheme()` picks the motif in `CovenVote.tsx`. Every colour it draws with
+     is still a token, and these are them.
+
+     THERE IS NO DARK BLOCK FOR THIS FAMILY, on purpose. The moon family has
+     none because it is a night surface in both cascades; this one has none
+     because it is never mounted in dark at all — the component renders the moon
+     there. A dark value here would be a value nothing can read, and the first
+     sweep to find one would be right to delete it.
+
+     ROLE NAMES MIRROR THE MOON'S ONE FOR ONE so the two motifs stay legibly
+     parallel; `-plate-shadow` and `-glow` are the two the moon spells inline as
+     raw rgba, and this file is where a new surface's colours go.
+
+     WHAT IS MEASURED, AND ON WHAT. Nothing on this plate is text — the caption
+     lives below it on the card and keeps `--faction-coven-vote-*`. What the
+     plate owes is 1.4.11: the rating buttons' REACHED state has to be readable
+     as more than a hue swap. So the LIT inks are held to 3:1 and the unlit ones
+     deliberately are not, which is exactly the shape the shipped moon already
+     has (its gold reads 9.82:1 on the night plate and its unlit ring 1.28:1).
+     Ratios are taken on `-plate-to`, the gradient's darker stop and the worst
+     ground for a dark ink; the head is quoted second.
+
+     TWO INKS MOVED, AND THE SECOND ONE IS #2019's LESSON ARRIVING A DAY LATER
+     ON THE SAME FACTION. The design's rays `#f4c430` read 1.26:1 here: there is
+     no bright yellow that clears cream, the ceiling is arithmetic, so the rays
+     walk down their own hue (h45) to 3.24:1. That is the routine half. The
+     design then drew the disc's limb `#d99a1f` as the SAME hue one and a half
+     stops darker — and AA spends exactly the lightness that separation was made
+     of. Walked to the floor on h40 the limb lands ΔE 15.5 from the rays, and at
+     the design's own value it is ΔE 17.6 with the same luminance as them: two
+     strokes of one drawing that a viewer cannot tell apart. Lightness was
+     spent, so the axis left is hue, and the palette already holds one — the
+     face's h32. The limb walks there instead and lands ΔE 22.1, over §3's floor
+     of 20, keeping the drawn relationship (limb darker and warmer than rays).
+     Everything else is the design's own hex. */
+  --faction-coven-sun-plate-from: #fdf1d6;
+  --faction-coven-sun-plate-to: #f6dfae;
+  --faction-coven-sun-plate-border: #e6c78a;
+  --faction-coven-sun-plate-shadow: inset 0 1px 8px rgba(170, 120, 30, 0.16);
+  --faction-coven-sun-disc-on: #fbe6a8;
+  --faction-coven-sun-disc-off: #efe6fa;
+  /* The rays. Walked from the design's #f4c430 (1.26:1) down h45 — 3.24:1 on
+     the foot, 3.77 on the head, 3.42 on `-disc-on`. Against the unlit rays it
+     is ΔE 79.0 AND 3.06:1, so lit-vs-unlit survives a reading that sees no
+     hue at all. */
+  --faction-coven-sun-gold: #9a7608;
+  /* Unlit: the design's, unwalked and deliberately a whisper — 1.06:1, the
+     moon's own unlit inks read 1.28–1.33 on their plate. The design dimmed
+     these a further 0.7 inline; that alpha is folded away rather than ported,
+     because two places to tune one whisper is one too many. */
+  --faction-coven-sun-lit-off: #e3d6f6;
+  /* The limb. See the walk above: h32 at 4.85:1 on the foot, 5.65 on the head,
+     ΔE 22.1 from the rays. */
+  --faction-coven-sun-ring-on: #8b5214;
+  --faction-coven-sun-ring-off: #c3a9e8;
+  /* The rank-5 face, the design's own and needing no walk: 3.27:1 on the foot
+     and 3.45:1 on `-disc-on`, which is the ground it is actually drawn on. */
+  --faction-coven-sun-face: #b06a1a;
+  --faction-coven-sun-cheek: rgba(236, 95, 153, 0.4);
+  /* The glint on the rank-5 disc — the rays' own gold, 3.42:1 there. An alias
+     rather than a second near-identical hex: the moon's star and gold differ by
+     ΔE 4, which is a distinction only the token names can see. */
+  --faction-coven-sun-star: var(--faction-coven-sun-gold);
+  /* The six motes across the plate: the design's edge gold, freed when the limb
+     walked off it. 1.87:1 on the foot — a mote is decoration, not state, so
+     1.4.11 does not reach it, and a mote that outshouted the rays would be the
+     defect. */
+  --faction-coven-sun-dust: #d99a1f;
+  --faction-coven-sun-glow: rgba(244, 196, 48, 0.55);
+
   /* ══ Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023) ══
      The v2 task card retires the lo-fi `coven.exe` window above; a slip of
      pink-to-lavender paper under a gold twinkle field, with the points held in
