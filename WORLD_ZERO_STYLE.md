@@ -729,7 +729,11 @@ Which columns take it is decided by whether the CHILD carries a width. A praxis 
 
 **Badge art is the second game-wide shape**, for the same reason. `badgeArtFor(key)` (`components/badges/badgeArt.tsx`) dispatches on the badge key and nothing else — a badge means the same thing to every player, so it must not acquire a faction seam. Most glyphs are line art in `currentColor` and inherit the surrounding skin's ink; a badge whose design *is* a colour (the `duel_victor` seal carries the ADR-0039 spectrum) names its own tokens instead. Either way, nothing about a badge is chosen by who is wearing it.
 
-Cards are arranged in a `flex-wrap` container with varied heights and slight rotations. This is intentional — they are NOT on a strict grid.
+Cards are arranged in a `flex-wrap` container with varied widths and slight rotations. This is intentional — they are NOT on a strict grid.
+
+**HEIGHT IS THE ONE EXEMPTION FROM "do not regularize", and it is not a loophole (#1945, owner ruling 2026-08-17).** Within a row, every task card is the same height; this sentence used to read "varied heights" and it was wrong. Nothing about a card's height is drawn by its archetype — it is whatever its description happened to wrap to — so a row that ends ragged is not nine identities disagreeing, it is one container's `align-items` losing an argument with the copy. **Widths and rotations are the load-bearing half and they do not move**: every `cardWidth` in the size sets and every `rotate()` stays exactly as its archetype drew it, and the class that does this (`.task-card-row` in `index.css`) is written so that the row's own items can never grow — growth starts one level in, where the flex axis is vertical, precisely so equalizing a bottom edge can never turn into equalizing a width. Read the block's comment before changing it; it names the whole chain and the four archetypes whose CTA bar depends on it.
+
+The class belongs on **every** flex-wrap row of `<TaskCard>`s — the tasks board, each faction body's tasks section, a profile's proposed tasks — because the raggedness is the container's, not the page's. Praxis-card rows are a different component and still set `items-start`; they have the same shape and no ruling yet.
 
 Each faction's archetype lives in its card component — see `frontend/src/components/taskCard/*TaskCard.tsx`. Every one carries a one-line docstring naming its archetype (metaphor, colors, headline font); that docstring is the source of truth and is edited in the same commit as any redesign. A table here would only cache — and drift from — what those components already state. Colors are CSS variables (§3).
 
@@ -884,7 +888,7 @@ Controlled by `data-theme="dark"` attribute on `<html>`. All colors reference CS
 
 Brief design intent for each page. For implementation details, read the component code.
 
-- **Tasks:** Flex-wrap card grid with faction filter pennants, status stamps, and level nodes. Cards flow naturally with varied sizes.
+- **Tasks:** Flex-wrap card grid with faction filter pennants, status stamps, and level nodes. Cards flow naturally with varied widths; a row's heights are equalized (§6, #1945).
 - **Task Detail:** Faction card archetype expanded to full width as hero block. Sign-up block with mode selector (Solo/Collab/Duel) as stamp buttons. Meta tasks section. Praxis gallery below. Since v2 (#1028) it is **one responsive component per faction** (ADR-0058) carrying **no faction voice** in its copy (ADR-0057), and it draws **no in-progress roster** — not one of the nine designs did, so the header's in-progress count is the only place that number appears. What that gives up is stated rather than forgotten: task detail is no longer where a player learns a *foe* is working the same task.
 - **Praxis Submission:** Faction-framed byline block. Media gallery with thumbnail strip. Lora prose body with drop-cap in faction color. Vote stamps (1-5, word labels) replace star ratings. Voter tile grid.
 - **Player Profile:** Faction-framed header. Level track (horizontal, 9 levels). Praxis grid. Friends/Foes panels with score deltas.
@@ -915,5 +919,5 @@ Brief design intent for each page. For implementation details, read the componen
 - **No disabled buttons for permission gates** — hide controls users can't use
 - **No dead buttons** — every interactive control must have a working handler; no placeholders, no stubs, no `onClick={() => {}}`
 - **No parallel faction styling** — reuse the card archetype everywhere, don't recreate it
-- **Do not regularize card sizes** — varied widths and rotations are intentional
+- **Do not regularize card sizes** — varied widths and rotations are intentional. **Heights are exempt** (§6, #1945): a row of task cards is equal-height via `.task-card-row`, because a bottom edge nobody drew is an accident, not an archetype
 - **Do not use emoji as icons** — use CSS or SVG
