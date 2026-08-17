@@ -37,10 +37,55 @@ export function canSignUpForTask(params: {
   return params.signedIn && !!params.canSignUp;
 }
 
-const CTA_KEY = "detail.signup.cta" as const;
+export const SIGNUP_CTA_KEY = "detail.signup.cta" as const;
 const CTA_AGAIN_KEY = "detail.signup.ctaAgain" as const;
 
-export type SignupCtaKey = typeof CTA_KEY | typeof CTA_AGAIN_KEY;
+/**
+ * Every reason sign-up is SHUT, mapped to the copy that says so (#1976).
+ *
+ * The left column is `services/praxis.py`'s `SignupDenialReason`, value for
+ * value — the wire's own spelling, so a new gate on the backend shows up here
+ * as a missing row rather than as a silently generic button. Anything not in
+ * this table is not a denial, which is what {@link isSignupDenial} means; the
+ * fallthrough in {@link signupCtaKey} then treats it as the plain CTA, because
+ * a reason this build has never heard of must not blank the button.
+ *
+ * These live in the SAME map as the permitting keys on purpose. The task detail
+ * hides its CTA outright when sign-up is shut, so only the card renders these
+ * today — but a card that said "Must be level 4" out of its own private table
+ * while the detail page said something else is the exact drift #1497 built this
+ * file to end. If the card ever needs shorter words than the detail page, that
+ * is a copy edit inside this table, not a second table.
+ */
+const DENIAL_KEYS = {
+  below_level: "detail.signup.denied.belowLevel",
+  task_status_closed: "detail.signup.denied.taskStatusClosed",
+  already_active_member: "detail.signup.denied.alreadyActiveMember",
+  bank_full: "detail.signup.denied.bankFull",
+  is_metatask: "detail.signup.denied.isMetatask",
+} as const;
+
+export type SignupDenialKey = (typeof DENIAL_KEYS)[keyof typeof DENIAL_KEYS];
+
+export type SignupCtaKey =
+  | typeof SIGNUP_CTA_KEY
+  | typeof CTA_AGAIN_KEY
+  | SignupDenialKey;
+
+/**
+ * Whether the server's reason is a DENIAL — i.e. whether the affordance may be
+ * pressed at all.
+ *
+ * A caller asks this rather than comparing `can_sign_up`, because the reason is
+ * the thing it also needs for the label, and two reads of two fields can
+ * disagree. Nothing is re-derived: the answer is a lookup in the table above,
+ * which is the backend's own enum.
+ */
+export function isSignupDenial(
+  signupReason: string | null | undefined,
+): boolean {
+  return !!signupReason && signupReason in DENIAL_KEYS;
+}
 
 /**
  * The i18n key for the sign-up button, given the server's `signup_reason`.
@@ -49,13 +94,20 @@ export type SignupCtaKey = typeof CTA_KEY | typeof CTA_AGAIN_KEY;
  * against the catalog — a key typo stays a compile error, which is the whole
  * point of the typed catalog.
  *
+ * `detail.signup.denied.belowLevel` is the one key with an interpolation: it
+ * wants `{ level }`, and `TaskOut.level_required` is on the card payload as
+ * well as the detail one, so no caller has to go and fetch it.
+ *
  * Undefined and null get the same answer as any unrecognised reason: the plain
- * CTA. A reason this build has never heard of must not blank the button.
+ * CTA.
  */
 export function signupCtaKey(
   signupReason: string | null | undefined,
 ): SignupCtaKey {
+  if (signupReason && signupReason in DENIAL_KEYS) {
+    return DENIAL_KEYS[signupReason as keyof typeof DENIAL_KEYS];
+  }
   return signupReason === SIGNUP_REASON_MULTI_MEMBERSHIP
     ? CTA_AGAIN_KEY
-    : CTA_KEY;
+    : SIGNUP_CTA_KEY;
 }

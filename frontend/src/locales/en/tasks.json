@@ -62,7 +62,14 @@
       "cta": "Sign up",
       "ctaAgain": "Begin again",
       "slots": "You have {{open}} of {{max}} task slots open",
-      "levelMet": "Level {{level}} met"
+      "levelMet": "Level {{level}} met",
+      "denied": {
+        "belowLevel": "Must be level {{level}}",
+        "taskStatusClosed": "No longer open",
+        "alreadyActiveMember": "You're on this task",
+        "bankFull": "No task slots open",
+        "isMetatask": "Applied to praxis, not claimed"
+      }
     },
     "inProgress": {
       "text": "You're on this task",

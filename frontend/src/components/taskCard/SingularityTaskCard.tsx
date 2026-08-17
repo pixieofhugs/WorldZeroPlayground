@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -108,6 +109,7 @@ export default function SingularityTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.singularity.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -299,12 +301,14 @@ export default function SingularityTaskCard({
             )}
           </Link>
 
-          {onSignup && (
+          {cta && (
             <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
               <button
-                onClick={() => onSignup(task.id)}
+                type="button"
+                onClick={cta.onPress}
+                aria-disabled={cta.denied || undefined}
                 style={{
-                  cursor: "pointer",
+                  cursor: cta.denied ? "not-allowed" : "pointer",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -319,7 +323,7 @@ export default function SingularityTaskCard({
                   border: `1.5px solid ${BRIGHT}`,
                 }}
               >
-                {i18n.t("feed:taskCard.singularity.signup")}
+                {cta.label}
                 {/* The block cursor trailing the prompt. `.sg-cursor` carries the
                     reduced-motion-guarded blink; stilled it stays drawn, because
                     it is punctuation on the prompt, not an indicator. */}
