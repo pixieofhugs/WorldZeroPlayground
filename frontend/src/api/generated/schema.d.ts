@@ -1536,7 +1536,11 @@ export interface paths {
         };
         /**
          * List My Relationships
-         * @description List the authenticated character's outgoing relationships with display status.
+         * @description List the authenticated character's outgoing friend and foe declarations,
+         *     with the display status their pairing produces.
+         *
+         *     Outgoing only, and blocks do not appear here at all — a block is its own
+         *     record with its own route (ADR-0077).
          */
         get: operations["list_my_relationships_relationships_get"];
         put?: never;
@@ -1555,6 +1559,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/relationships/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Blocks
+         * @description List the characters the authenticated character has blocked.
+         *
+         *     Outgoing only. A block is silent to the party it names (ADR-0077), so there
+         *     is no route, field or error anywhere that reports an *incoming* one.
+         */
+        get: operations["list_my_blocks_relationships_blocks_get"];
+        put?: never;
+        /**
+         * Block Character Route
+         * @description Block a character. No friend or foe declaration is needed or created.
+         *
+         *     Idempotent — blocking someone already blocked answers the existing record.
+         */
+        post: operations["block_character_route_relationships_blocks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/relationships/blocks/{character_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unblock Character Route
+         * @description Lift a block. Only the character who created it can, and it restores
+         *     nothing else — no friend or foe edge comes back with it (ADR-0077).
+         */
+        delete: operations["unblock_character_route_relationships_blocks__character_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/relationships/{relationship_id}": {
         parameters: {
             query?: never;
@@ -1565,7 +1619,11 @@ export interface paths {
         get?: never;
         /**
          * Block Relationship Route
-         * @description Block a relationship. Either party can block.
+         * @description Block the other party to this relationship, addressed by the edge's id.
+         *
+         *     Superseded by `POST /relationships/blocks`, which takes a character id and
+         *     needs no edge (ADR-0077). Kept for one release while the client moves;
+         *     retires with #1907.
          */
         put: operations["block_relationship_route_relationships__relationship_id__put"];
         post?: never;
@@ -1590,12 +1648,12 @@ export interface paths {
         put?: never;
         /**
          * Unblock Relationship Route
-         * @description Reverse a block. Either party can unblock; the edge returns to active.
-         *     Separate route from PUT /{id} (block) so the two actions don't collide.
+         * @description Lift this caller's block on the other party to this relationship,
+         *     addressed by the edge's id.
          *
-         *     ADR-0009, superseded by ADR-0077 — under which a block is its own record
-         *     and unblock is that record's deletion, authored by the blocker alone. This
-         *     route still implements ADR-0009.
+         *     Superseded by `DELETE /relationships/blocks/{character_id}` (ADR-0077).
+         *     Kept for one release while the client moves; retires with #1907. Only the
+         *     blocker's own record is deleted, and no edge changes.
          */
         post: operations["unblock_relationship_route_relationships__relationship_id__unblock_post"];
         delete?: never;
@@ -1859,6 +1917,33 @@ export interface components {
             banned: boolean;
             /** Character Id */
             character_id: number;
+        };
+        /** BlockCreate */
+        BlockCreate: {
+            /** Character Id */
+            character_id: number;
+        };
+        /**
+         * BlockListItem
+         * @description One character this viewer has blocked, enriched for the profile card.
+         *
+         *     Emitted only to the blocker — an incoming block has no wire shape at all,
+         *     because the blocked party must not be able to read one.
+         */
+        BlockListItem: {
+            /** Avatar Url */
+            avatar_url: string;
+            /** Character Id */
+            character_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
         };
         /** Body_admin_import_tasks_csv_admin_tasks_import_csv_post */
         Body_admin_import_tasks_csv_admin_tasks_import_csv_post: {
@@ -2356,6 +2441,11 @@ export interface components {
              * @default false
              */
             albescent_revealed: boolean;
+            /**
+             * Can Apply Metatask
+             * @default false
+             */
+            can_apply_metatask: boolean;
             /**
              * Can Comment
              * @default false
@@ -4006,7 +4096,7 @@ export interface components {
              * Display Status
              * @enum {string}
              */
-            display_status: "Mutual Friends" | "Rivals" | "Tsundere" | "One-sided Friend" | "One-sided Foe" | "Secret Admirer" | "Targeted" | "Blocked" | "Unknown";
+            display_status: "Mutual Friends" | "Rivals" | "Tsundere" | "One-sided Friend" | "One-sided Foe" | "Secret Admirer" | "Targeted" | "Unknown";
             /** From Character Id */
             from_character_id: number;
             /** Id */
@@ -7145,6 +7235,103 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RelationshipListItem"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_blocks_relationships_blocks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockListItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    block_character_route_relationships_blocks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockListItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unblock_character_route_relationships_blocks__character_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                character_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

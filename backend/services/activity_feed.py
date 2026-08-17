@@ -45,6 +45,7 @@ from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
+from services.block_service import blocked_counterpart_ids
 from services.praxis import praxis_visibility_condition
 from models.task import Task, TaskStatus
 from models.taunt_message import TauntMessage
@@ -269,12 +270,22 @@ async def _get_related_ids(
     rel_type: RelationshipType,
     session: AsyncSession,
 ) -> list[int]:
-    """Get IDs of characters the current character has declared with this relationship type."""
+    """Get IDs of characters the current character has declared with this relationship type.
+
+    Minus anyone the pair has blocked, in either direction: a blocked
+    counterpart stops being a related character, which is how a block starves
+    the four feed sources built from your declarations (ADR-0077). The
+    exclusion is a subquery rather than a second round trip because the feed's
+    statement count is pinned (``test_activity_feed_query_count``), and the
+    declaration itself survives — unblocking restores the source with no
+    further action.
+    """
     result = await session.execute(
         select(Relationship.to_character_id).where(
             Relationship.from_character_id == character_id,
             Relationship.type == rel_type,
             Relationship.status == RelationshipStatus.active,
+            Relationship.to_character_id.not_in(blocked_counterpart_ids(character_id)),
         )
     )
     return list(result.scalars().all())
