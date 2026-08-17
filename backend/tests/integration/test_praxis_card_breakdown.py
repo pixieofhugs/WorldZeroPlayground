@@ -90,7 +90,7 @@ async def _load_card(session: AsyncSession, praxis_id: int, era=CURRENT_ERA):
         )
     )
     praxis = result.scalar_one()
-    return await build_praxis_card_out(praxis, session, era=era)
+    return await build_praxis_card_out(praxis, session, era=era, viewer=None)
 
 
 async def _load_detail(session: AsyncSession, praxis_id: int, era=CURRENT_ERA):
@@ -107,7 +107,7 @@ async def _load_detail(session: AsyncSession, praxis_id: int, era=CURRENT_ERA):
         )
     )
     praxis = result.scalar_one()
-    return await build_praxis_out(praxis, session, era=era)
+    return await build_praxis_out(praxis, session, era=era, viewer=None)
 
 
 async def _cast_vote(

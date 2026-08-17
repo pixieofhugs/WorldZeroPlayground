@@ -32,19 +32,53 @@ and the design says outright that *the last is the size that decides it*.
 | Singularity | the prompt caret |
 | Unaffiliated (`na` / `default`) | the whole spectrum |
 
-## How to read the file — this is the part that will trip you up
+## How to read the file
 
-Each faction row has **two bands**:
+Each faction row has **two bands**, each showing all three sizes (84, 34, 15):
 
-1. **Before** — an `<x-import component-from-global-scope="WZ.FactionSigil" slug="…">`.
-   That renders **the shipped app's own component**, not a drawing. It is the
-   current state, pulled live from the kit bundle. There is nothing to port here.
-2. **After** — the new mark, drawn as a `<div>` with `clip-path: path('…')` and a
-   paint (`background`). **This is the thing to port.**
+1. **Before** — three `<x-import component-from-global-scope="WZ.FactionSigil" slug="…">` tags.
+   That renders **the shipped app's own component**, pulled live from the kit
+   bundle. It is the current state, for comparison. **There is nothing to port
+   from this band.**
+2. **After** — the new mark. **This is the thing to port.**
 
-So a `grep` for `<svg` finds only 15 tags and misses Albescent entirely — its new
-mark is a clip-path, not an SVG. Do not conclude a faction is missing because it
-has no `<svg>`.
+### The after band is NOT one shape — it is two, and this matters
+
+| faction | after-band form | `<path>` per size | viewBox |
+|---|---|---|---|
+| Everymen | inline `<svg>` | 1 | `0 0 100 100` |
+| Warriors of Whimsy | inline `<svg>` | 1 | `0 0 100 100` |
+| Cozy Coven | inline `<svg>` | 1 | `0 0 100 100` |
+| **S.N.I.D.E.** | inline `<svg>` | **4**, inside `<g transform="rotate(-22 50 50)">` | **`-8 -8 116 116`** |
+| **Ephemerists** | inline `<svg>` | **6** | `0 0 100 100` |
+| **Albescent** | `<div>` + `clip-path: path(…)` | — (no SVG at all) | — |
+
+Two traps in that table:
+
+- **S.N.I.D.E. and Ephemerists are multi-path marks.** Porting one path per mark
+  drops most of the drawing, and it still typechecks and still renders
+  *something*.
+- **S.N.I.D.E.'s viewBox is `-8 -8 116 116`**, not `0 0 100 100`. The mark bleeds
+  outside the box on purpose. Do not normalise it.
+- **Albescent has no `<svg>` at all.** A `grep "<svg"` finds 15 tags across the
+  five SVG factions and misses Albescent entirely, which reads as "that faction
+  is not in the design". It is — as a clip-path.
+
+Every after-band `<svg>` carries `fill="currentColor"`, which is exactly the
+`{ slug, size, color }` contract the existing sigils use (ADR-0040, #659).
+
+### The 84px variant is the canonical mark
+
+All three sizes carry the same geometry; only `width`/`height` differ. The design
+project's `scraps/marks.json` holds the same paths in machine-readable form, and
+the 84px variants in this file were verified byte-identical to it at vendoring
+time. So read the 84px one and scale by attribute — do not diff the three.
+
+### WOW's "plum" already has tokens
+
+`--faction-wow-plum-surface`, `--faction-wow-plum-edge` and `--faction-wow-on-plum`
+are all declared in `index.css` on `origin/main`. Nothing to mint; read them
+before choosing a paint.
 
 ## Roster check (ADR-0050 — annotate, don't assume)
 

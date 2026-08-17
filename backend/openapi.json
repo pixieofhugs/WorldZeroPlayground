@@ -2810,7 +2810,6 @@
             "type": "string"
           },
           "viewer_can_vote": {
-            "default": true,
             "title": "Viewer Can Vote",
             "type": "boolean"
           },
@@ -4568,7 +4567,6 @@
             "type": "string"
           },
           "viewer_can_vote": {
-            "default": true,
             "title": "Viewer Can Vote",
             "type": "boolean"
           },
@@ -5027,7 +5025,6 @@
             "type": "string"
           },
           "viewer_can_vote": {
-            "default": true,
             "title": "Viewer Can Vote",
             "type": "boolean"
           },
@@ -7423,6 +7420,7 @@
     },
     "/admin/praxes/{praxis_id}/moderate": {
       "patch": {
+        "description": "Rule on a praxis and return it as the moderator sees it.",
         "operationId": "admin_moderate_praxis_admin_praxes__praxis_id__moderate_patch",
         "parameters": [
           {

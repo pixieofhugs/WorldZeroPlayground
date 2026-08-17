@@ -1,3 +1,8 @@
+/* The 18 self-hosted faction faces (#1977). Generated — see scripts/fetch-fonts.mjs.
+   First, because @import must precede every rule, and because these are the
+   @font-face blocks the rest of this file's --font-* tokens name. */
+@import './fonts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

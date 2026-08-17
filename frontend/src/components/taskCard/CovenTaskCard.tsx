@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -210,6 +211,7 @@ export default function CovenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.coven.signup"));
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -385,13 +387,15 @@ export default function CovenTaskCard({
           </Link>
         </div>
 
-        {onSignup && (
+        {cta && (
           <button
-            onClick={() => onSignup(task.id)}
+            type="button"
+            onClick={cta.onPress}
+            aria-disabled={cta.denied || undefined}
             style={{
               position: "relative",
               zIndex: 2,
-              cursor: "pointer",
+              cursor: cta.denied ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -416,7 +420,7 @@ export default function CovenTaskCard({
                 fill="currentColor"
               />
             </svg>
-            {i18n.t("feed:taskCard.coven.signup")}
+            {cta.label}
           </button>
         )}
       </article>
