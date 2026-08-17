@@ -243,10 +243,8 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
       "--faction-snide-note-paper",
     );
     expect(html, "one ground, and it is the plate").toContain("--faction-snide-card-bg");
-    // Only the heads on the WALL still rule with the censor — proof, write-up
-    // and discussion on this fixture. It was FOUR: the voters head moved onto
-    // the plate with its section and takes the broken acid rule instead.
-    expect(html.split("snd-censor").length - 1, "censor rules, wall heads only").toBe(3);
+    // The censor half of the same ruling is counted by "heads sections with the
+    // censor rule" below, which is where the shape assertion already lives.
   });
 
   it("carries its ground on the column, never the viewport", () => {
@@ -376,11 +374,13 @@ describe("S.N.I.D.E. praxis detail — the dress traps", () => {
     // where it separated the last line of the body from the box's own edge a
     // few pixels down — i.e. from nothing.
     const { html } = render(state());
-    // One rule per non-plate section head on a solo, visible praxis: proof,
-    // write-up, who-voted, discussion. The score and vote heads sit ON the
-    // black plate and take the broken ACID rule instead, which is a different
-    // ornament and deliberately not counted here.
-    expect(html.split("snd-censor").length - 1).toBe(4);
+    // One rule per section head that sits on the WALL, on a solo, visible
+    // praxis: proof, write-up, discussion. A head INSIDE a slab takes the broken
+    // ACID rule instead — the censor's blocks are photocopier ink and are
+    // invisible on black — which is a different ornament and deliberately not
+    // counted here. It was FOUR until #2066: the who-voted head moved onto the
+    // slab with its section when the clipping and the plate became one ground.
+    expect(html.split("snd-censor").length - 1).toBe(3);
     // …and the count alone can be rebalanced. Pin the SHAPE too: the first rule
     // after the body text must belong to the next section's head, so it has to
     // trail that heading's label rather than sit between the body and the edge.
