@@ -4781,12 +4781,16 @@
    needs a different mark size, that is the moment `CardMasthead` grows a
    `markSize` prop and this block is deleted — not before.
 
-   The span and the svg both, because `FactionSigil` sets width/height as
-   presentation attributes: growing only the box would leave a 20px mark
-   rattling inside a 24px slot. The A already breaks out of its own circle
-   (`SnideSigil` — `overflow: visible` is the drawing), and the band's grid
-   gutters are `1fr`, so nothing beside it moves. */
-[data-masthead-mark="snide"],
+   IT IS THE DRAWING THAT GROWS, NOT THE SLOT. The mark's 20px box is an
+   INLINE style on the span, so a rule here could not move it without
+   `!important` — and should not want to: the box is what the three-cell grid
+   measures its centring against, and the wordmark has no business shifting
+   because S.N.I.D.E.'s mark got louder. The svg's size is a presentation
+   ATTRIBUTE, which a stylesheet does beat, so the drawn A comes out 24px and
+   bleeds 2px into the band's own padding on each side. That is the mark
+   already doing what it was drawn to do — `SnideSigil` is four filled shapes
+   cantered -22° that break out of their own circle at four points, and
+   `overflow: visible` is set there for exactly this reason. */
 [data-masthead-mark="snide"] svg {
   width: 24px;
   height: 24px;
