@@ -4,6 +4,12 @@
  * file with a single keyed lookup so any archetype can reference any glyph.
  */
 import type { MediaArtKey } from "./useMediaArt";
+// The before/after plates letter their captions in IM Fell English, which ships
+// in the lazily-fetched faction sheet (#2079). Any archetype may reference any
+// glyph here, including the unaffiliated composer, so this file asks for the
+// sheet itself rather than relying on a faction dispatch (#1293 records that this
+// family outlived the token that named it).
+import "../../../factionFaces";
 
 interface MediaArtProps {
   art: MediaArtKey;

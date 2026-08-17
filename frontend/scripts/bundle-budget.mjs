@@ -95,11 +95,44 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  * cuts a page's glyphs fall in — the same lazy fetch Google's CDN did. Counting
  * all 1.2 MB here would price a download nobody makes as blocking weight.
  *
- * FAIL stays at 25,000. The headroom is now 1.6 KB, which is the point.
+ * CSS ledger (#2079): 23,600 -> 23,400, against a measured 24,226 -> 23,122.
+ *
+ * THE NUMBER GOING DOWN IS REAL HERE, which is the case the entry above says is
+ * the only honest one. The #1977 entry's 1,454 bytes bought 82 `@font-face`
+ * rules, and 62 of them were for the 15 families ONLY A FACTION SURFACE renders
+ * in — 19% of the blocking sheet, on 774 bytes of headroom. Those 62 now live in
+ * `src/fonts.faction.css`, which nothing @imports: `src/factionFaces.ts` is its
+ * only importer and is reached across a chunk boundary, so Vite emits it as a
+ * second CSS asset (20,886 raw / 1,296 gzipped) attached to async chunks. The
+ * shell's three families stayed in `fonts.css`.
+ *
+ * Two things worth carrying. The raw sheet went 140,721 -> 119,836 and NOTHING
+ * WAS DELETED: the two assets sum to the same bytes, so this is a delivery
+ * change, and the woff2 files are untouched — they were already lazy per
+ * `unicode-range`. And the win is not visible in a passing build: the check
+ * parses dist/index.html for the entry script plus every `modulepreload`, and if
+ * that sheet ever lands in a preloaded chunk it counts again at full price with
+ * the build still green. `factionFaceSplit.test.ts` is what asserts it cannot.
+ *
+ * WARN comes down to 23,400 — 278 bytes over today's number, which is the slack
+ * the two entries above chose (229 and 638), and it is chosen rather than
+ * pinned tighter for the reason the #1325 entry gives: a WARN a routine 100-byte
+ * tweak trips is a WARN nobody reads. Deliberately NOT set above the three queued
+ * task-card PRs (#2065 / #2067 / #2071, ~411 bytes between them). They will print
+ * the block, at ~23,533, and they should: that is a win being spent, which is
+ * exactly what this line exists to say out loud. FAIL is the wall, and it is
+ * 1,878 bytes away — which is the room those three and #1609's print token were
+ * actually waiting on.
+ *
+ * The stale 23,371 quoted in the entry above was measured at gzip's default
+ * level. This check compresses at level 9, where `main` before this change read
+ * 24,226 rather than the 24,568 the issue reports.
+ *
+ * FAIL stays at 25,000.
  */
 const BUDGETS = {
   js: { warn: 134_000, fail: 180_000, target: 120_000 },
-  css: { warn: 23_600, fail: 25_000, target: 20_000 },
+  css: { warn: 23_400, fail: 25_000, target: 20_000 },
 }
 
 /** Asset paths the entry HTML forces the browser to fetch before first render. */

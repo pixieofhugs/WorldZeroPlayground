@@ -29,6 +29,15 @@ import { describe, expect, it } from "vitest";
  * mechanism's clothes, and the same one design-fidelity.md records from #821.
  * So there is a third question now, asked first: does every rule point at a
  * file that exists?
+ *
+ * SINCE #2079 THERE ARE TWO GENERATED SHEETS, and every question in this file is
+ * asked of the pair. `fonts.css` holds the shell's three families (blocking);
+ * `fonts.faction.css` holds the other fifteen, fetched by a faction chunk. WHICH
+ * sheet a family is in is a different question and lives in
+ * `factionFaceSplit.test.ts` — the questions here are "is it loaded at all" and
+ * "at the weight something sets", and for those the two sheets are one loader.
+ * Reading only `fonts.css` would report fifteen families as unloaded and every
+ * faction surface as broken.
  */
 
 const FRONTEND_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..", "..");
@@ -36,17 +45,17 @@ const SRC_DIR = join(FRONTEND_DIR, "src");
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".css"];
 
 /**
- * The generated stylesheet is the LOADER, never a source that names families.
+ * The generated stylesheets are the LOADER, never a source that names families.
  *
- * It is a `.css` file under `src/`, so `collectSourceFiles` would sweep it up
+ * They are `.css` files under `src/`, so `collectSourceFiles` would sweep them up
  * and every check below would then read the loader's own output as evidence
  * that the loader is right: "requests no family that nothing names" would pass
  * for all 18 by self-reference, and `declaredFaces` would report all 41 faces
  * as used because each `@font-face` block pins a family and a weight in one
- * brace scope. Three guards, vacuous at once. It must be excluded here and read
+ * brace scope. Three guards, vacuous at once. They must be excluded here and read
  * only through `loadedFaces`.
  */
-const FONTS_CSS = join(SRC_DIR, "fonts.css");
+const FONT_SHEETS = [join(SRC_DIR, "fonts.css"), join(SRC_DIR, "fonts.faction.css")];
 
 /**
  * Generic CSS families and system-stack fallbacks. These are never loaded and
@@ -85,21 +94,24 @@ function collectSourceFiles(directory: string): string[] {
       // Tests quote family names as prose and fixtures.
       return entry.name === "__tests__" ? [] : collectSourceFiles(path);
     }
-    if (path === FONTS_CSS) return [];
+    if (FONT_SHEETS.includes(path)) return [];
     return SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext)) ? [path] : [];
   });
 }
 
-/** One `@font-face` block's body, in source order. */
+/** One `@font-face` block's body, in source order, across both sheets. */
 function fontFaceBlocks(): string[] {
-  const css = readFileSync(FONTS_CSS, "utf-8");
-  return [...css.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((match) => match[1]);
+  return FONT_SHEETS.flatMap((sheet) =>
+    [...readFileSync(sheet, "utf-8").matchAll(/@font-face\s*\{([^}]*)\}/g)].map(
+      (match) => match[1],
+    ),
+  );
 }
 
 const blockField = (block: string, name: string): string | undefined =>
   block.match(new RegExp(`${name}\\s*:\\s*([^;]+);`))?.[1].trim();
 
-/** The families `src/fonts.css` actually ships an `@font-face` rule for. */
+/** The families the generated sheets actually ship an `@font-face` rule for. */
 function loadedFamilies(): Set<string> {
   return new Set(
     fontFaceBlocks().map((block) =>
@@ -184,7 +196,7 @@ describe("font families are loaded (#839)", () => {
     const dangling = sources.filter(({ path }) => !existsSync(path)).map(({ url }) => url);
     expect(
       dangling,
-      `src/fonts.css points at ${dangling.join(", ")}, which is not on disk.
+      `The generated font sheets point at ${dangling.join(", ")}, which is not on disk.
 ` +
         `Nothing fails: the browser drops the @font-face and the family renders in
 ` +
@@ -243,7 +255,7 @@ describe("font families are loaded (#839)", () => {
 
     expect(
       unused,
-      `src/fonts.css ships ${unused.join(", ")}, which no source file names.
+      `The generated font sheets ship ${unused.join(", ")}, which no source file names.
 ` +
         `A family nothing names is woff2 in the repo and @font-face bytes in the
 ` +
@@ -284,7 +296,7 @@ const faceKey = (face: Face): string =>
   `${face.family}:${face.weight}${face.italic ? "i" : ""}`;
 
 /**
- * Every distinct face `src/fonts.css` ships an `@font-face` rule for.
+ * Every distinct face the generated sheets ship an `@font-face` rule for.
  *
  * Deduplicated across subsets: Anton has a `latin` rule and a `latin-ext` rule,
  * and those are one downloadable face split by `unicode-range`, not two. The
@@ -313,8 +325,11 @@ function loadedFaces(): Face[] {
  * two never-loaded fonts sat in production silently rendering as serif.
  */
 function declaredSources(): { url: string; path: string }[] {
-  return [...readFileSync(FONTS_CSS, "utf-8").matchAll(/src:\s*url\(\s*['"]?([^'")]+)/g)].map(
-    (match) => ({ url: match[1], path: resolvePath(SRC_DIR, match[1]) }),
+  return FONT_SHEETS.flatMap((sheet) =>
+    [...readFileSync(sheet, "utf-8").matchAll(/src:\s*url\(\s*['"]?([^'")]+)/g)].map((match) => ({
+      url: match[1],
+      path: resolvePath(SRC_DIR, match[1]),
+    })),
   );
 }
 
@@ -593,7 +608,7 @@ describe("font weights are used (#1230)", () => {
 
     expect(
       unused,
-      `src/fonts.css ships ${unused.join(", ")}, which nothing renders in.
+      `The generated font sheets ship ${unused.join(", ")}, which nothing renders in.
 ` +
         `Drop the axis value from the family's spec in FACES (scripts/fetch-fonts.mjs)
 ` +
@@ -679,7 +694,7 @@ describe("used weights are requested (#1294)", () => {
 
     expect(
       [...substituted].sort(),
-      `Source sets these weights and src/fonts.css does not ship them, so the
+      `Source sets these weights and the generated font sheets do not ship them, so the
 ` +
         `browser substitutes: a real face at the wrong weight, or a synthesised
 ` +

@@ -34,13 +34,16 @@
          download. Harmless in dev, where the origin differs and the hint is
          simply unused. -->
     <link rel="preconnect" href="https://api.worldzero.org" crossorigin />
-    <!-- The 18 faction faces used to be one render-blocking stylesheet on
+    <!-- The 18 faces used to be one render-blocking stylesheet on
          fonts.googleapis.com, which needed the two preconnects that stood here
          and still cost a serial hop: fetch Google's CSS, THEN discover the
          gstatic woff2 URLs inside it. They are self-hosted now (#1977) —
-         `src/fonts.css` is @imported by index.css, so the @font-face rules
-         arrive inside the stylesheet the browser was already blocked on, from
-         an origin it is already connected to.
+         `src/fonts.css` is @imported by index.css, so the SHELL's three
+         families arrive inside the stylesheet the browser was already blocked
+         on, from an origin it is already connected to. The other fifteen are in
+         `src/fonts.faction.css`, which nothing @imports: it rides the chunk of
+         whatever faction surface needs it (#2079), so it is deliberately absent
+         from this file and must stay that way.
 
          Deliberately no `rel="preload"` for the faces themselves. Which of the
          41 a page needs depends on the visitor's faction and route, so a static

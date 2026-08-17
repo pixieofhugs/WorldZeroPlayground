@@ -74,6 +74,18 @@ export function lazyArchetype<C extends AnyArchetype>(
 
   const preload = (): Promise<void> => {
     if (Resolved) return Promise.resolve()
+    // The faction @font-face sheet is off the critical path (#2079), and this is
+    // the one funnel every faction archetype's chunk comes through — so it is
+    // where the sheet gets asked for. Dynamic because this module lives in the
+    // ENTRY chunk: a static import would put all 62 rules back in the
+    // render-blocking stylesheet, which is the whole thing #2079 undid.
+    //
+    // Deliberately not awaited, and deliberately not part of `inflight`. A face
+    // must never gate a render: `font-display: swap` means the worst case is one
+    // frame of fallback type, whereas awaiting a stylesheet would let a failed
+    // CSS fetch strand the surface at `null` forever. Vite dedupes the request,
+    // so calling it once per archetype costs nothing.
+    void import('../factionFaces')
     // Cache the promise, not just the result: several cards of the same faction
     // mount together, and without this each one fires its own import().
     inflight ??= load().then((module) => {
