@@ -155,6 +155,100 @@ export function SigilMark({ size }: { size: number }) {
   );
 }
 
+/**
+ * The turning watermark — A CAT, line-drawn, replacing the pentagram (#2041).
+ *
+ * The pentacle was the corner watermark on FIVE surfaces (the task card, the
+ * character profile, both detail pages and the praxis composer), and each of
+ * them held its own copy of the same path. That is the duplication this module
+ * exists to end, and it is why the swap lands here rather than five times over:
+ * a watermark a player meets on two pages they move between may not be two
+ * different drawings (#2041 ruling 1, applied to the real mount list — the
+ * issue names two mounts and there are five).
+ *
+ * The drawing is the design's own, lifted verbatim from `TaskCards.dc.html`'s
+ * `DCLogic` — head, ears, eyes, muzzle, whiskers, each an open stroke with a
+ * round cap. Nothing is filled: at watermark strength a filled shape is a
+ * smudge, and the cat has to survive being 9% present.
+ *
+ * ## Placement is the mount's, and the reason is the design's
+ *
+ * "A face can't bleed off the card the way the pentacle did." A pentagram is
+ * radially symmetric and abstract, so a cropped one still reads as itself; a
+ * half-cropped face reads as a mistake. So every mount now sits the mark FULLY
+ * INSIDE its container, where four of the five used to hang a third of the
+ * drawing off the right edge. Nothing here pins that — the mount passes `size`
+ * and the offsets, because a card, a profile band, a detail sheet and a
+ * composer are four different scales.
+ *
+ * The one thing that may leave the frame is a whisker tip: the outermost is at
+ * x=97 of a 100-unit box, i.e. 3% in, so a mount with a small negative `right`
+ * grazes the cap and nothing else. The head sits at x∈[20,80] and cannot reach
+ * an edge before the whiskers do.
+ *
+ * ## `.cvn-wheel` is untouched, and that is the whole motion story
+ *
+ * The class, its `transform-origin`, the `@keyframes cvn-wheel` and the
+ * `prefers-reduced-motion: no-preference` gate around them are index.css's and
+ * are unchanged (#911 — no component-injected `<style>`). The cat turns once
+ * every two minutes where motion is welcome and is simply drawn, still, where
+ * it is not. Owner: "it's silly but it's cute."
+ *
+ * ## Opacity is the MOUNT's, and it is a contrast decision (#1302)
+ *
+ * `DEEP` is the sheet's own hue, so a wash of it under the copy can only
+ * tighten the reading. Measured with `utils/contrast.ts` against the two
+ * gradient stops the corner of the slip actually runs (`-slip-lav` 74%,
+ * `-slip-vio` 100%), for `--faction-coven-slip-soft`, the brief's ink:
+ *
+ *   alpha   light lav / vio      dark lav / vio
+ *   0.09    4.68 / 4.51          5.10 / 5.38     ← what every mount ships
+ *   0.13    4.44 / 4.28          4.65 / 4.91
+ *   0.15    4.33 / 4.17          4.44 / 4.68
+ *
+ * 0.09 is the last step that keeps the brief clear of AA on both stops in both
+ * cascades, which is why no mount raises it: the design's 0.15 buys a louder
+ * ornament with 0.33 of a body ink's margin, and Coven has already made this
+ * call once — the ward's gold bloom is mixed to 55% for the same reason
+ * (see `--faction-coven-ward-haze` in index.css). The title ink clears either
+ * way (5.07 / 4.89 light at 0.15).
+ */
+export function CovenCat({ size, style }: { size: number; style?: CSSProperties }) {
+  return (
+    <svg
+      className="cvn-wheel"
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+      style={{ position: "absolute", zIndex: 0, pointerEvents: "none", ...style }}
+    >
+      {CAT.map(([d, width]) => (
+        <path
+          key={d}
+          d={d}
+          fill="none"
+          stroke={DEEP}
+          strokeWidth={width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ))}
+    </svg>
+  );
+}
+
+/** `[path, stroke-width]`, in draw order. See {@link CovenCat}. */
+const CAT: ReadonlyArray<readonly [string, number]> = [
+  ["M50 24 C68 24 80 37 80 52 C80 70 66 82 50 82 C34 82 20 70 20 52 C20 37 32 24 50 24 Z", 2.2],
+  ["M28 31 L25 10 L44 23", 1.9],
+  ["M72 31 L75 10 L56 23", 1.9],
+  ["M38 47 L38 55", 1.9],
+  ["M62 47 L62 55", 1.9],
+  ["M50 60 L46 64 M50 60 L54 64 M50 60 L50 67", 1.9],
+  ["M21 57 L3 52 M21 63 L3 67 M79 57 L97 52 M79 63 L97 67", 1.9],
+];
+
 /** Initials for a name with no uploaded portrait — two letters at most. */
 export function initialsOf(name: string): string {
   return (
