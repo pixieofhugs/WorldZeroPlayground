@@ -153,7 +153,7 @@ export interface FactionManifest {
   // Task cards, task detail, praxis detail, the EDIT-PRAXIS COMPOSER, the PRAXIS
   // CARD, the CHARACTER PROFILE, the DUEL SEAL and now the FACTION PAGE have no
   // mobile twin: ADR-0056, ADR-0058, ADR-0061/#1085, ADR-0065/#1181, ADR-0067,
-  // #1319, #1313 and ADR-0077 each collapsed their surface to one responsive
+  // #1319, #1313 and ADR-0078 each collapsed their surface to one responsive
   // component per faction and retired it. Every one of those licences is scoped
   // to its own surface — ADR-0035 still governs `mobileFieldDesk` below, and
   // each record says in terms that it licenses no further collapse: the next
@@ -161,7 +161,7 @@ export interface FactionManifest {
   // next one: it is a genuinely different screen rather than a narrow rendering
   // of the roster, and #1320 says so.
   //
-  // `mobileFactionPage` is the eighth (ADR-0077). It looked like the others —
+  // `mobileFactionPage` is the eighth (ADR-0078). It looked like the others —
   // eight skins beside eight bodies — and was not: the two registries held two
   // DIFFERENT CONTENT SETS. Coven's body reads twenty bespoke `coven.*` keys;
   // Coven's phone skin read one, plus a shared generic set, so a phone got

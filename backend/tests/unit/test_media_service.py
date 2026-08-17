@@ -211,6 +211,70 @@ def test_uploaded_extension_cannot_make_the_api_serve_active_content():
     assert media._with_safe_extension("holiday.html", MediaType.image) == "holiday.jpg"
 
 
+# ---------------------------------------------------------------------------
+# Quarantine — the filesystem half of "hidden is off the site" (#1593)
+# ---------------------------------------------------------------------------
+
+
+def test_quarantine_root_is_a_sibling_of_media_root(tmp_path, monkeypatch):
+    """Never a subdirectory: both the mount and the orphan sweep scan *inside* MEDIA_ROOT.
+
+    Asserted with the containment test those two scanners actually use, rather
+    than by comparing strings, because that is the property that matters.
+    """
+    root = tmp_path / "media"
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(root))
+
+    quarantine = media.quarantine_root()
+    assert not quarantine.startswith(os.path.realpath(str(root)) + os.sep)
+    assert os.path.dirname(quarantine) == os.path.dirname(os.path.realpath(str(root)))
+
+
+def test_quarantine_refuses_paths_it_does_not_own(tmp_path, monkeypatch):
+    """The "is this a file we own?" gate is applied at BOTH roots.
+
+    An absolute, remote or ``..``-bearing stored value moves nothing — otherwise
+    a hide would be a primitive for relocating arbitrary files.
+    """
+    root = tmp_path / "media"
+    root.mkdir()
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(root))
+
+    outsider = tmp_path / "outside.jpg"
+    outsider.write_bytes(b"not ours")
+
+    hostile = ["../outside.jpg", str(outsider), "https://example.com/x.jpg", ""]
+    assert media.withdraw_media_from_mount(hostile) == 0
+    assert media.restore_media_to_mount(hostile) == 0
+    assert outsider.is_file()
+    assert not os.path.exists(media.quarantine_root())
+
+
+def test_quarantine_round_trip_is_repeatable(tmp_path, monkeypatch):
+    """Withdraw and restore are idempotent and tolerate a file that is not there."""
+    root = tmp_path / "media"
+    root.mkdir()
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(root))
+
+    relative_path = os.path.join("7", "42", "uuid", "proof.jpg")
+    absolute_path = root / relative_path
+    absolute_path.parent.mkdir(parents=True)
+    absolute_path.write_bytes(b"evidence")
+
+    assert media.withdraw_media_from_mount([relative_path]) == 1
+    assert media.withdraw_media_from_mount([relative_path]) == 0  # already gone
+    assert not absolute_path.exists()
+
+    assert media.restore_media_to_mount([relative_path]) == 1
+    assert media.restore_media_to_mount([relative_path]) == 0  # already back
+    assert absolute_path.read_bytes() == b"evidence"
+
+    # Nothing on either side: still no exception, still nothing moved.
+    absolute_path.unlink()
+    assert media.withdraw_media_from_mount([relative_path]) == 0
+    assert media.restore_media_to_mount([relative_path]) == 0
+
+
 def test_filename_sanitization_strips_path_and_unsafe_chars():
     """Path components and special characters are replaced; length capped."""
     # Path traversal attempt collapses to a safe basename.
