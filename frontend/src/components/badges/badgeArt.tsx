@@ -16,6 +16,11 @@
 import { useId } from 'react'
 import type { ComponentType } from 'react'
 import { hasOwnKey } from '../../utils/hasOwnKey'
+// `duel_victor`'s ring legend is set in --font-faction-engraved (Cinzel), which
+// ships in the lazily-fetched faction sheet (#2079). A badge is a game-wide fact
+// with no faction seam, so this renders on an unaffiliated player's profile too,
+// where no faction archetype has asked for the sheet.
+import '../../factionFaces'
 
 export interface BadgeArtProps {
   /** px box (square). */

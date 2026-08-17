@@ -7,6 +7,9 @@
  * `--albescent-reveal-*` tokens carry identical values in both themes.
  */
 import { useTranslation } from 'react-i18next'
+// Cormorant Garamond ships in the lazily-fetched faction sheet (#2079), and this
+// page draws it without dispatching an archetype.
+import '../factionFaces'
 
 const BG = 'var(--albescent-reveal-surface)'
 const INK = 'var(--albescent-reveal-text)'

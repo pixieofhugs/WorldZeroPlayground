@@ -451,9 +451,23 @@ Balanced brace counts prove nothing here — the file balances either way, the b
 
 ## 4. Typography
 
-All eighteen families come from the Google Fonts catalogue and are **self-hosted** (#1977): `frontend/scripts/fetch-fonts.mjs` downloads the woff2 cuts into `src/assets/fonts/` and generates `src/fonts.css`, which `index.css` `@import`s. There is no request to `fonts.googleapis.com` any more.
+All eighteen families come from the Google Fonts catalogue and are **self-hosted** (#1977): `frontend/scripts/fetch-fonts.mjs` downloads the woff2 cuts into `src/assets/fonts/` and generates **two** stylesheets. There is no request to `fonts.googleapis.com` any more.
 
-Two consequences for style work. **Adding a family is now a repo change, not a URL edit** — put it in `FACES` in that script and re-run it; hand-editing the generated stylesheet is how a `src:` path drifts from the file on disk, which fails silently to a generic serif. And **`font-display: swap` is carried on every face**, unchanged from the old `&display=swap`, so text paints in the fallback and swaps in — the flash is deliberate, not a bug to tune away.
+Two consequences for style work. **Adding a family is now a repo change, not a URL edit** — put it in `FACES` in that script and re-run it; hand-editing a generated stylesheet is how a `src:` path drifts from the file on disk, which fails silently to a generic serif. And **`font-display: swap` is carried on every face**, unchanged from the old `&display=swap`, so text paints in the fallback and swaps in — the flash is deliberate, not a bug to tune away.
+
+### Three of the eighteen families block first paint, and which three is a REACHABILITY fact (#2079)
+
+`src/fonts.css` is `@import`ed by `index.css`, so every `@font-face` rule in it lands in the one render-blocking stylesheet. 62 of the 82 rules were for the fifteen families **only a faction surface can render in** — 19% of that sheet, on a budget that had 774 bytes of headroom under its FAIL ceiling. They now live in `src/fonts.faction.css`, which nothing `@import`s: `src/factionFaces.ts` is its only importer, it is reached across a chunk boundary, and Vite therefore emits it as a second CSS asset that `dist/index.html` never mentions. Measured 24,226 → 23,122 gzipped; the raw bytes are unchanged, split across two files, and no woff2 moved.
+
+`SHELL_FAMILIES` in `fetch-fonts.mjs` is where the line is drawn, and it holds Lora, Courier Prime and Bebas Neue — the `--font-display` / `--font-body` / `--font-accent` triple, which is also Tailwind's three family utilities and therefore reachable from the nav, the sidebar and every neutral page.
+
+Three things worth carrying.
+
+**The question is not "is this a faction's face", it is "can a chunk that draws it fetch the sheet".** Bebas Neue *is* a faction face — it is `--font-faction-poster` and S.N.I.D.E.'s condensed cut — and it stays in the blocking sheet anyway, because the na card font and the accent utility reach it from the shell. Conversely the rule that decides where a family goes has nothing to do with how many factions use it: Cormorant Garamond is drawn by four factions and by the Albescent letter, and all five are behind a chunk boundary.
+
+**"Some archetype imports this component" is the wrong test, and it passes on a real defect.** The natural read of §1.6 — faction identity cascades from the card archetype — suggests the archetype loader is the only seam that needs to ask for the sheet, and `lazyArchetype`'s `preload()` does cover ~150 of them. But a module can be loaded by a chunk that has no archetype in it: `DefaultProfileBody` is imported both by `AlbescentProfileBody` (an archetype) and directly by `FactionProfileBody`, so an **unaffiliated** player's profile draws the duel-victor badge's Cinzel ring legend with nothing having asked. The unit of the question is a **load root** — `main.tsx` and every `import()` target — and "can everything in *its* static graph get the sheet". Four modules failed that and now import `factionFaces` themselves; `VoteShell` is the sharpest, since its logged-out gate paints six faction voices for a viewer who has no faction at all.
+
+**Both ways of getting this wrong are invisible, so the guard reads the module graph rather than a screenshot.** Strand a family and `font-display: swap` paints the fallback and leaves it there — #839's failure class, where the fallback *is* the rendering. Wire the sheet back onto the critical path with one static import from anything eager and the build stays green while the whole win evaporates, the only symptom a number in `bundle-budget.mjs`. `factionFaceSplit.test.ts` asserts both directions; `fontsLoaded.test.ts`'s three questions are unchanged and now read the two sheets as one loader, because "is it loaded at all" and "which sheet is it in" are different questions.
 
 The weight subsetting the two guards below enforce is unchanged by self-hosting: exactly 41 faces ship, which is exactly the set the stylesheets declare.
 

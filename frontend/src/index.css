@@ -1,6 +1,11 @@
-/* The 18 self-hosted faction faces (#1977). Generated — see scripts/fetch-fonts.mjs.
-   First, because @import must precede every rule, and because these are the
-   @font-face blocks the rest of this file's --font-* tokens name. */
+/* The SHELL's three self-hosted faces (#1977, #2079). Generated — see
+   scripts/fetch-fonts.mjs. First, because @import must precede every rule, and
+   because these are the @font-face blocks --font-display / --font-body /
+   --font-accent name.
+   The kit's other 15 families are NOT here: they are in ./fonts.faction.css,
+   which only src/factionFaces.ts imports and only a faction chunk fetches.
+   Adding it to this @import puts 62 @font-face rules back in front of first
+   paint — factionFaceSplit.test.ts fails if anything reaches it eagerly. */
 @import './fonts.css';
 
 @tailwind base;

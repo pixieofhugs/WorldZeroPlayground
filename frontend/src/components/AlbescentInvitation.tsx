@@ -7,6 +7,10 @@ import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
 import { factionName } from '../utils/factions'
 import FactionSigil from './sigil/FactionSigil'
+// The letter is set in Cormorant Garamond, which ships in the lazily-fetched
+// faction sheet (#2079). FieldDesk mounts this without dispatching a faction
+// archetype, so this chunk has to ask for the sheet itself.
+import '../factionFaces'
 
 /**
  * AlbescentInvitation — the order's standing correspondence (#395).

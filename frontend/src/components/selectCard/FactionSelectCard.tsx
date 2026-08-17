@@ -1,4 +1,9 @@
 import i18n from "../../i18n";
+// Each select card is drawn in its faction's own display face, all six from the
+// lazily-fetched faction sheet (#2079). `pages/Factions.tsx` imports this
+// component directly rather than through `surfaceMap`, so the directory renders
+// every card with no archetype dispatch to ask for the sheet.
+import "../../factionFaces";
 import { pickVariant } from "../../utils/factionDispatch";
 import { factionName } from "../../utils/factions";
 import { hasOwnKey } from "../../utils/hasOwnKey";

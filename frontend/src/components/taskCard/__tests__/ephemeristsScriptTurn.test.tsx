@@ -3,7 +3,10 @@
  * five scripts (#2038, epic #2027).
  *
  * THE SEAM is three files that must agree and have no compiler between them:
- * the card's rendered markup, `src/fonts.css`, and `src/index.css`. This repo
+ * the card's rendered markup, the generated font sheets, and `src/index.css`.
+ * (The three Noto rules moved to `src/fonts.faction.css` with the other faction
+ * faces in #2079; the coverage question is asked of both sheets, since it is
+ * about what the kit ships and not about which sheet blocks paint.) This repo
  * has no jsdom (`renderToStaticMarkup` only, so effects never run and geometry
  * is out of reach), and the two failures that matter here are both invisible to
  * a running browser on the developer's own machine:
@@ -12,7 +15,7 @@
  *     perfectly on the reviewer's Mac or Windows box, because the per-OS
  *     fallbacks (`Geeza Pro`, `Segoe UI Historic`) cover different scripts.
  *     So the codepoint check below reads the turns out of the component and
- *     asks whether `fonts.css` ships a `unicode-range` covering each one, in
+ *     asks whether the kit ships a `unicode-range` covering each one, in
  *     the family the turn actually names.
  *   • A ROTATION THAT CANNOT BE STOPPED is a WCAG 2.2.2 defect that looks
  *     exactly like a working feature. The stylesheet, not the component, is
@@ -46,7 +49,9 @@ import EphemeristsTaskCard, {
 import { aTask } from '../../../test/fixtures'
 
 const SRC = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '..')
-const FONTS_CSS = readFileSync(join(SRC, 'fonts.css'), 'utf-8')
+const FONTS_CSS =
+  readFileSync(join(SRC, 'fonts.css'), 'utf-8') +
+  readFileSync(join(SRC, 'fonts.faction.css'), 'utf-8')
 const INDEX_CSS = readFileSync(join(SRC, 'index.css'), 'utf-8')
 const CARD = readFileSync(join(SRC, 'components', 'taskCard', 'EphemeristsTaskCard.tsx'), 'utf-8')
 
@@ -172,7 +177,7 @@ describe('no frame can render as tofu (#2038)', () => {
     }
     expect(
       missing,
-      `src/fonts.css ships no face covering ${missing.join(', ')}.
+      `The generated font sheets ship no face covering ${missing.join(', ')}.
 ` +
         `Nothing fails: the glyph renders in whatever system font the viewer's
 ` +

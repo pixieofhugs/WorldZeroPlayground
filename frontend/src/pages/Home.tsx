@@ -11,6 +11,10 @@ import { extractError, messageForCode } from '../utils/errors'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import ActivityTicker from '../components/ActivityTicker'
+// The hero and the section headers are hand-lettered — Caveat and Permanent
+// Marker, both in the lazily-fetched faction sheet (#2079). Home dispatches no
+// faction archetype, so nothing else on this chunk's import path asks for it.
+import '../factionFaces'
 
 /** "Featured Praxis" / "Newest Task" header — marker title + rule + see-all link. */
 function SectionHeader({ title, href, linkLabel }: { title: string; href: string; linkLabel: string }) {

@@ -1,6 +1,12 @@
 import { createContext, useContext, type CSSProperties } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { hasOwnKey } from '../../utils/hasOwnKey'
+// GATE_TREATMENTS below sets six faction display faces from the lazily-fetched
+// faction sheet (#2079). This chunk is a static dependency of nearly every
+// content route, and the gate is what a SIGNED-OUT viewer sees in place of the
+// vote control — so it can paint a faction's voice on a page whose faction
+// archetype has not been asked for yet.
+import '../../factionFaces'
 
 /**
  * Shared chrome for per-faction vote UIs. The 1-5 control itself is faction-
