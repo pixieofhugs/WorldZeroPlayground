@@ -288,6 +288,29 @@
   --color-overlay-strong: rgba(0, 0, 0, 0.25);
   --color-surface-scrim: rgba(255, 255, 255, 0.9);
 
+  /* The colour a lifted surface casts (#1609, group 2 of the raw-colour list).
+     Geometry stays at the call site — `0 8px 28px var(--color-cast-shadow)` —
+     because blur and offset are a component's business and only the paint is
+     off-theme. Nineteen surfaces had hand-rolled this as `rgba(0,0,0,α)` at
+     eleven alphas between 0.04 and 0.5.
+
+     It is NOT `--color-overlay-strong`, even though the light value matches and
+     four sites reached for that token as a shadow. A scrim and a cast want
+     OPPOSITE things of the dark theme: a scrim answers "the page behind is
+     unavailable" and reads correctly on a near-black page unchanged, while a
+     cast shadow is a black smudge on a black ground and disappears. Splitting
+     them is what lets this one deepen — the same move --dropdown-shadow makes
+     below, and the reason that token could not simply be reused either (its
+     geometry is a floating listbox's, not every card's).
+
+     Two rungs, not eleven. `-soft` is the ambient lift a sheet of paper has
+     while sitting ON the page rather than floating above it: the Albescent
+     invitation letter, whose 0.06/0.04 pair would become a grey halo at the
+     floating rung. Mint a third when a surface needs it — §3's rule, and the
+     note above on -weak/-medium is what minting one nobody reads looks like. */
+  --color-cast-shadow: rgba(0, 0, 0, 0.25);
+  --color-cast-shadow-soft: rgba(0, 0, 0, 0.06);
+
   /* The lift under an attached listbox — the @-mention popover and the invite
      picker's results, both absolutely positioned under their input. They had
      written the same alpha by hand at two different geometries (`0 4px 12px`
@@ -2272,6 +2295,14 @@
   /* A cast shadow on a near-black page needs far more of it to read at all —
      the same move --filter-popover-shadow makes below. */
   --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  /* Same reasoning, generalised (#1609). The light 0.25 over #f7f4ee is a
+     legible smudge; the same 0.25 over #13121a is nothing at all. These track
+     --dropdown-shadow's ~4x lift rather than inventing a second answer to the
+     one question. --color-overlay-strong deliberately gets NO dark counterpart
+     — a scrim is already correct at 0.25 on a dark page — which is precisely
+     the disagreement that made these their own token. */
+  --color-cast-shadow: rgba(0, 0, 0, 0.7);
+  --color-cast-shadow-soft: rgba(0, 0, 0, 0.4);
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
   --faction-ua: #e8703a; /* sienna lifted for dark — UA */
