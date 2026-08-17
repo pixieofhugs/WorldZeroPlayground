@@ -192,16 +192,20 @@ describe("collab — my part is in, the crew is not", () => {
     expect(html).not.toContain("<input");
   });
 
-  it("says why the write-up is sealed, not merely that it is (#1745)", () => {
-    // Read-only here is not this surface being a status page: the document is
-    // frozen for the whole crew, the viewer who submitted included, and the
-    // reason is that their submission would otherwise be consent to words that
-    // could still change under it. A member who is told only "you cannot edit"
-    // reads a lock — one member holding it against the others — which is the
-    // one thing this rule is not. Apostrophes are HTML-escaped in the emitted
+  it("says nothing is locked, because since ADR-0079 nothing is (#1811)", () => {
+    // Read-only HERE is this surface's own reading, not a rule about the
+    // document: #1745's freeze is retired, the room takes writes in every
+    // status a member can reach, and any member may still open the write-up and
+    // type. Telling an approver their words are sealed would be false, and it
+    // would hide the one move a holdout has — which is the failure ADR-0079
+    // removed the freeze to end. Apostrophes are HTML-escaped in the emitted
     // markup, so these are punctuation-free fragments.
-    expect(html).toContain("frozen");
-    expect(html).toContain("locks it for everyone");
+    expect(html).not.toContain("frozen");
+    expect(html).not.toContain("locks it for everyone");
+    expect(html).toContain("Nothing is locked");
+    // And what an edit costs is stated in the same breath, because it is the
+    // whole reason the surface is allowed to say "go ahead".
+    expect(html).toContain("cancels the proposal");
   });
 
   it("offers the authoring re-entry, and says what it costs the crew first", () => {
