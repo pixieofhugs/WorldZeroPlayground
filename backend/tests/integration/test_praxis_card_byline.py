@@ -61,7 +61,7 @@ async def _load_card(session: AsyncSession, praxis_id: int):
             selectinload(Praxis.media_items),
         )
     )
-    return await build_praxis_card_out(result.scalar_one(), session)
+    return await build_praxis_card_out(result.scalar_one(), session, viewer=None)
 
 
 @pytest.mark.asyncio
@@ -114,6 +114,6 @@ async def test_detail_payload_is_deliberately_left_without_a_portrait(
             selectinload(Praxis.media_items),
         )
     )
-    detail = await build_praxis_out(result.scalar_one(), db_session)
+    detail = await build_praxis_out(result.scalar_one(), db_session, viewer=None)
 
     assert not hasattr(detail, "created_by_avatar_url")

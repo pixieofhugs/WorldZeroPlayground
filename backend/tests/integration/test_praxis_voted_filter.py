@@ -228,7 +228,9 @@ async def test_voted_by_name_fires_for_account_mate_only(
         {p.id for p in praxes}, character.id, character.account_id, db_session
     )
     cards = {
-        p.id: await build_praxis_card_out(p, db_session, viewer_votes=viewer_votes)
+        p.id: await build_praxis_card_out(
+            p, db_session, viewer=None, viewer_votes=viewer_votes
+        )
         for p in praxes
     }
 
@@ -292,6 +294,8 @@ async def test_carried_character_re_rating_a_mates_vote_takes_over_the_marker(
     viewer_votes = await viewer_votes_for(
         {p.id for p in praxes}, character.id, character.account_id, db_session
     )
-    card = await build_praxis_card_out(target, db_session, viewer_votes=viewer_votes)
+    card = await build_praxis_card_out(
+        target, db_session, viewer=None, viewer_votes=viewer_votes
+    )
     assert card.viewer_vote == 4
     assert card.voted_by_name is None

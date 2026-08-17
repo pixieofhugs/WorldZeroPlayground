@@ -381,16 +381,19 @@ async def test_admin_flagged_queue_is_viewer_relative(
     ``False``, and a stranger's flagged praxis in the SAME response still reads
     ``True``. A gate that over-fires would pass a one-sided assertion.
     """
+    from models.praxis import ModerationStatus, Praxis
+
     await make_admin(db_session, account)
     mine = await _create_and_submit_solo(client, active_task, auth_headers)
     theirs = await _create_and_submit_solo(client, active_task, auth_headers2)
-    for praxis_id, flagger in ((mine, auth_headers2), (theirs, auth_headers)):
-        flag = await client.post(
-            f"/praxes/{praxis_id}/flag",
-            json={"reason": "harassment"},
-            headers=flagger,
-        )
-        assert flag.status_code == 200, flag.text
+
+    # Flagged straight on the row: what is under test is the queue's PAYLOAD, not
+    # how a praxis got into the queue, and driving `POST /flag` would drag in the
+    # level gate and the anti-self-flag rule for no gain here.
+    for praxis_id in (mine, theirs):
+        row = await db_session.get(Praxis, praxis_id)
+        row.moderation_status = ModerationStatus.flagged
+    await db_session.commit()
 
     resp = await client.get("/admin/praxes/flagged", headers=auth_headers)
     assert resp.status_code == 200, resp.text
