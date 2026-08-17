@@ -38,13 +38,14 @@ vi.mock("../../praxisRoom", async (importOriginal) => ({
 
 const { BodyTextarea } = await import("../controls");
 
-function state(documentFrozen: boolean): EditPraxisState {
+function state(proposalConfirmArmed: boolean): EditPraxisState {
   return {
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
-    documentFrozen,
+    proposalConfirmArmed,
+    confirmProposalEdit: () => {},
+    controlsLocked: false,
     submitting: false,
-    reopenForEdit: async () => {},
   } as unknown as EditPraxisState;
 }
 
@@ -61,11 +62,16 @@ function waitingRoom(unreachable: boolean): PraxisRoom {
   } as unknown as PraxisRoom;
 }
 
-function html(options: { frozen?: boolean; room?: PraxisRoom | null } = {}): string {
+function html(
+  options: { proposalLive?: boolean; room?: PraxisRoom | null } = {},
+): string {
   room.current = options.room ?? null;
   try {
     return renderToStaticMarkup(
-      <BodyTextarea state={state(options.frozen ?? false)} skin={{ textareaStyle: {} }} />,
+      <BodyTextarea
+        state={state(options.proposalLive ?? false)}
+        skin={{ textareaStyle: {} }}
+      />,
     ).replace(/&#x27;|&#39;/g, "'");
   } finally {
     room.current = null;
@@ -80,8 +86,7 @@ function paragraphFor(markup: string, line: string): string | null {
 
 const connectingLine = i18n.t("forms:editPraxis.composer.bodyConnecting");
 const unreachableLine = i18n.t("forms:editPraxis.composer.bodyUnreachable");
-const frozenLine = i18n.t("forms:editPraxis.composer.bodyFrozen");
-const reopenLine = i18n.t("forms:editPraxis.composer.bodyFrozenAction");
+const proposalLine = i18n.t("forms:editPraxis.composer.bodyProposalLive");
 
 describe("the waiting notices leave the label seam reachable", () => {
   /**
@@ -93,7 +98,10 @@ describe("the waiting notices leave the label seam reachable", () => {
   const notices: [name: string, line: string, markup: () => string][] = [
     ["connecting", connectingLine, () => html({ room: waitingRoom(false) })],
     ["unreachable", unreachableLine, () => html({ room: waitingRoom(true) })],
-    ["frozen", frozenLine, () => html({ frozen: true })],
+    // #1745's frozen notice is gone with the freeze (ADR-0079); the line that
+    // replaced it sits on the same element, on the same dressed ground, and
+    // inherits the same ruling.
+    ["live proposal", proposalLine, () => html({ proposalLive: true })],
   ];
 
   for (const [name, line, markup] of notices) {
@@ -114,23 +122,9 @@ describe("the waiting notices leave the label seam reachable", () => {
     });
   }
 
-  it("the frozen notice's way out reads the link seam, not the global secondary", () => {
-    // Half a fix is its own defect here: the sentence and its only action sit
-    // one line apart on the same ground, and `--link-ink` is unset to exactly
-    // the `--color-text-secondary` it replaces, so this is a no-op everywhere
-    // no frame has repointed it.
-    const markup = html({ frozen: true });
-    const button = markup.match(new RegExp(`<button[^>]*>[^<]*${reopenLine.slice(0, 6)}`))?.[0];
-    expect(button, "the re-entry renders at all").toBeTruthy();
-    expect(button).toContain("var(--link-ink)");
-    expect(button, "the global family is what #1819 bans on a dressed surface").not.toContain(
-      "--color-text-",
-    );
-  });
-
-  it("says nothing of any of it once the room has seeded and the doc is open", () => {
+  it("says nothing of any of it once the room has seeded and nothing is proposed", () => {
     const markup = html();
-    for (const line of [connectingLine, unreachableLine, frozenLine]) {
+    for (const line of [connectingLine, unreachableLine, proposalLine]) {
       expect(markup).not.toContain(line);
     }
   });

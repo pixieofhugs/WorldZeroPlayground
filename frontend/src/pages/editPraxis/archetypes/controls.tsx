@@ -1152,9 +1152,14 @@ export function BodyTextarea({
           deliberate (ADR-0079) — so it names the consequence and offers no exit,
           because typing IS the exit. */}
       {state.proposalConfirmArmed && (
-        <p className="label-caption" style={{ marginTop: "var(--space-xs)" }}>
-          {t("editPraxis.composer.bodyProposalLive")}
-        </p>
+        <div style={{ marginTop: "var(--space-xs)" }}>
+          {/* The ink is the class's and only the class's (#1819): an inline
+              `color` here beats `--label-ink`, and the three near-black sheets
+              have no light-cascade neutral that could serve them. */}
+          <p className="label-caption">
+            {t("editPraxis.composer.bodyProposalLive")}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -1510,7 +1515,7 @@ const SECONDARY_SIGNAL_STYLE: CSSProperties = {
  * to act. The DRESS is the archetype's, and arrives as the same
  * {@link PublishButtonSkin} the single button wears.
  */
-function CollabSignals({
+export function CollabSignals({
   state,
   skin,
 }: {
