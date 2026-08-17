@@ -638,6 +638,16 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists plate, brief", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate, caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
   { what: "ephemerists cornice band, masthead", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-ink" },
+  // THE TASK CARD'S BAND IS THE DISC NOW (#2067), and that is a NEW pairing
+  // rather than the row above wearing a different ground. The restrained
+  // masthead grounds on `-plate-disc` — the medallion's own field, two values
+  // lighter than the cornice band — and keeps `-plate-band-ink`, so the gold
+  // that was measured on #0a0c15 is now also asked to clear #12151f. It does,
+  // by a wide margin either way; the row exists so that the NEXT move of this
+  // band cannot repeat #1627's failure, where an ink stayed put while the ground
+  // under it changed and every row in this file went on passing. 14.00:1 on the
+  // band, 13.07:1 on the disc — 0.93 of a very large margin.
+  { what: "ephemerists card masthead band, wordmark", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
   { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },

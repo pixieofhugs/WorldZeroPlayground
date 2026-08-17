@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
+import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -705,11 +706,19 @@ export default function EphemeristsTaskDetail({
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={primaryButton}>
+          {/* The rune strips bracket the plate's CTA on every surface that
+              paints one (#2067) — the same component the task card mounts, so
+              the motif cannot drift between the card and the page it opens.
+              Only the SIGN-UP button is bracketed: "continue" and "view your
+              praxis" below wear the same `primaryButton` paint but are exits
+              from a task already taken, not the summons. */}
+          <EphemeristsRuneStrip side="top" />
+          <button onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
           </button>
+          <EphemeristsRuneStrip side="bottom" />
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
             {!levelJumpSignup && (

@@ -10,10 +10,10 @@ import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import EphemeristsRuneStrip from "../factionMarks/EphemeristsRuneStrip";
 import {
   CompassRose,
   Cornice,
-  Glyph,
   GLYPHS,
   Tally,
 } from "../factionMarks/ephemeristsPlate";
@@ -22,14 +22,22 @@ import {
  * The Ephemerists — THE VALLEY PLATE (task card v2, #1023). Deco × Egypt: the
  * deco-space card carried into a field journal out of the Valley.
  *
- * A papyrus plate ruled in brass, headed by a cavetto cornice whose night band
- * holds a winged sun disc between two incised registers of glyphs — Egypt,
- * Greece, the middle ages, 1925 — that surface and recede on a long, staggered
- * cycle. The points ride a compass rose — v3 (#2037) struck them on the
- * surveyor's instrument in place of the v2 card's stepped octagon; the level is
- * a numeral over tally strokes; the call to action is an inset cartouche under
- * a double brass rule. Poiret One for display, Cinzel for the small caps,
+ * A papyrus plate ruled in brass, headed by a short cavetto-topped band that
+ * says only whose card this is. The points ride a compass rose — v3 (#2037)
+ * struck them on the surveyor's instrument in place of the v2 card's stepped
+ * octagon; the level is a numeral over tally strokes; the call to action is an
+ * inset cartouche under a double brass rule, bracketed by two shimmering rows of
+ * mathematical marks. Poiret One for display, Cinzel for the small caps,
  * Spectral for the reading copy.
+ *
+ * THE MASTHEAD IS RESTRAINED (#2067). It carried a winged sun disc between two
+ * incised twelve-sign registers on a 110px night band, over a tick strip — all
+ * of it drawn in the design the card was built from and all of it stripped by the
+ * re-pull. The band is the kit's plain `CardMasthead` now, on the medallion's own
+ * disc rather than the cornice band, and the glyph motif moved to the CTA as
+ * `EphemeristsRuneStrip`. The band's fixed height went with the registers: it was
+ * only ever the canvas they marched across, so the band is `CardMasthead`'s own
+ * height and no size-set field names it.
  *
  * This REPLACES "The Discordant Map" wholesale (ADR-0055 / ADR-0056 — a full
  * metaphor swap). The `--eph-*` illuminated-codex family stays DECLARED but is
@@ -59,10 +67,6 @@ const READING = "var(--font-faction-spectral)"; /* Spectral */
 interface SizeSet {
   /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
   cardWidth: number;
-  /** Masthead band height. Geometry. */
-  masthead: number;
-  /** Winged-disc width — the ornament narrows on the phone. Geometry. */
-  discWidth: number;
   /**
    * The points plate's box. Geometry — and the size that makes the compass rose
    * legible: the needles reach in to 26/74 of a 100-unit viewBox, so the clear
@@ -80,8 +84,6 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     cardWidth: 384,
-    masthead: 110,
-    discWidth: 176,
     medallion: 128,
     bodyPad: "0 var(--space-xl) var(--space-xl)",
     titleSize: "var(--text-title)",
@@ -90,8 +92,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
   mobile: {
     cardWidth: 340,
-    masthead: 98,
-    discWidth: 154,
     medallion: 112,
     bodyPad: "0 var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-title)",
@@ -219,68 +219,20 @@ function Turning({
  * identical path for identical path. #1654 collapsed it: `GLYPHS` is imported
  * from `factionMarks/ephemeristsPlate`, which is where the signs are drawn.
  *
- * The card's registers are still the CARD's, and deliberately: the design
- * marches two named 12-sign rows here where the page cycles one 16-sign
- * register to fill its width. Those orders are composition, not vocabulary.
+ * `REGISTER_TOP`, `REGISTER_BOTTOM` and the `register()` helper stood here too —
+ * two named 12-sign orders and the 20px lead-in that marched them across the
+ * night band. #2067 struck all three: the re-pulled design's masthead carries no
+ * ornament, and the motif is `EphemeristsRuneStrip` at the CTA. They were
+ * card-local (the page cycles one 16-sign register to fill its width instead), so
+ * nothing else lost a register when they went.
+ *
+ * `Wing` went with them — one wing of the winged sun disc, drawn as deco stepped
+ * bars over a 176px `viewBox="-88 -20 176 40"`. It is NOT the kit's
+ * `WingedDiscSign`, which is a separate drawing on an 24-unit square that
+ * `EmblemOctagon` and the metatask seal still read; this was the wordmark's crown
+ * on this card alone, and `ephemeristsDetail.test.tsx` already pinned that the
+ * detail page does not draw it. `discWidth` measured nothing else and went too.
  */
-
-const REGISTER_TOP = [
-  "ankh", "water", "feather", "eye", "djed", "greekKey",
-  "reed", "offering", "alchemy", "chevrons", "scarab", "sun",
-];
-const REGISTER_BOTTOM = [
-  "scarab", "greekKey", "sun", "reed", "chevrons", "ankh",
-  "water", "djed", "eye", "alchemy", "offering", "feather",
-];
-
-/**
- * A register of signs marching across the band. The SIGN is the kit's `Glyph`;
- * only the order, the 20px lead-in and the 0.72 off-beat are this card's.
- */
-function register(names: string[], y: number, strength: number, keyPrefix: string) {
-  return names.map((name, index) => (
-    <Glyph
-      key={`${keyPrefix}${index}`}
-      name={name}
-      x={20 + index * 27.5}
-      y={y}
-      strength={strength * (index % 3 === 0 ? 1 : 0.72)}
-      delay={((index * 7) % 12) * 1.6}
-    />
-  ));
-}
-
-/** One wing of the sun disc, drawn as deco stepped bars. */
-function Wing({ flip }: { flip?: boolean }) {
-  return (
-    <g transform={flip ? "scale(-1,1)" : undefined}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <rect
-          key={i}
-          x={13 + i * 11.4}
-          y={-6 + i * 1.5}
-          width={9.6}
-          height={8.4 - i * 1.4}
-          rx={1.4}
-          fill="var(--faction-ephemerists-plate-gold)"
-          opacity={0.9 - i * 0.13}
-        />
-      ))}
-      {[0, 1, 2, 3].map((i) => (
-        <rect
-          key={`covert-${i}`}
-          x={15 + i * 11.4}
-          y={4.2 + i * 1.6}
-          width={8}
-          height={3.4 - i * 0.5}
-          rx={1}
-          fill="var(--faction-ephemerists-plate-brass-light)"
-          opacity={0.62 - i * 0.11}
-        />
-      ))}
-    </g>
-  );
-}
 
 /* The stepped `Octagon` and the cavetto `Cornice` stood here — the octagon
    identical to the kit's, the cornice identical but for its FLUTE COUNT. Both
@@ -298,11 +250,17 @@ function Wing({ flip }: { flip?: boolean }) {
    column between the description and the in-progress line.
 
    #1638 converts the kit's fluted rules to RUNE BANDS, and this is the one mount
-   that is DROPPED rather than converted: the masthead 300px above it already
-   marches two full registers of the same signs, so a third row of them below the
-   description would read as the band repeating rather than as a divider. The
-   description's own bottom margin is the separation the rule was carrying, and
-   `ruleBleed` went with it — it measured nothing else. */
+   that is DROPPED rather than converted: the card already marched two full
+   registers of the same signs, so a third row of them mid-leaf would read as the
+   band repeating rather than as a divider. The description's own bottom margin is
+   the separation the rule was carrying, and `ruleBleed` went with it — it
+   measured nothing else.
+
+   #2067 does NOT reopen this. The registers left the masthead, so the argument
+   above now points at the two rune strips bracketing the CTA rather than at the
+   band — the card still carries the motif twice, and a third row of it between
+   the description and the in-progress line would still be the repeat rather than
+   the divider. Restoring a rule here is a design decision, not a consequence. */
 
 export default function EphemeristsTaskCard({
   task,
@@ -339,79 +297,51 @@ export default function EphemeristsTaskCard({
           boxShadow: "var(--faction-ephemerists-plate-shadow)",
         }}
       >
-        {/* Masthead — the night band, its glyph registers, the winged disc. */}
-        <div
+        {/* THE RESTRAINED MASTHEAD (#2067) — the kit's shared anatomy and
+            nothing else: the mark hard left at the kit's 20, the wordmark on the
+            card's centreline. No wrapper box, because the box existed to hold
+            the registers and to pin a 110px canvas for them to march across;
+            the band is `CardMasthead`'s own height now, which is what makes the
+            hero row rise ~75px.
+
+            THE GROUND IS THE MEDALLION'S DISC, not the cornice band. `-plate-disc`
+            is two values lighter than `-plate-band`, so the header reads as a
+            brass-edged plate rather than as a night strip, and the compass rose
+            below it is struck on the same field. THE INK IS UNCHANGED:
+            `-plate-band-ink` is the gold measured on the band, and moving the
+            ground under it spends 0.93 of a very large margin — 14.00:1 on the
+            band, 13.07:1 on the disc. That is a NEW pairing rather than the old
+            row wearing a new ground, so `factionContrast.test.ts` records it.
+            The sigil takes `currentColor`, so it is that same gold.
+
+            `boxSizing` is load-bearing next to the border: the band is a block
+            child of a card with `overflow: hidden`, so a content-box border
+            would push it 2px wider than the card and be clipped on the right. */}
+        <CardMasthead
+          slug="ephemerists"
           style={{
-            position: "relative",
-            overflow: "hidden",
-            height: size.masthead,
-            background: "var(--faction-ephemerists-plate-band)",
+            boxSizing: "border-box",
+            background: "var(--faction-ephemerists-plate-disc)",
             color: "var(--faction-ephemerists-plate-band-ink)",
+            border: "1px solid var(--faction-ephemerists-plate-brass)",
           }}
         >
-          <svg
-            width="100%"
-            height={size.masthead}
-            viewBox="0 0 340 110"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-            style={{ position: "absolute", inset: 0, zIndex: 1 }}
+          <span
+            style={{
+              fontFamily: DECO,
+              fontSize: "var(--text-xl)",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}
           >
-            <path d="M8 24 H332 M8 86 H332" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="0.6" opacity="0.28" />
-            {register(REGISTER_TOP, 13, 0.34, "top")}
-            {register(REGISTER_BOTTOM, 97, 0.3, "bottom")}
-          </svg>
-
-          {/* The plate band on the kit's shared anatomy (#2029) — the mark hard
-              left, the winged disc and the wordmark centred on the band. The
-              night band's own backdrop stays where it was, behind this: the
-              glyph registers are painted by the box around us, so the anatomy
-              needs no ornament slot of its own. The sigil takes `currentColor`,
-              which is the band's gold ink. */}
-          <CardMasthead
-            slug="ephemerists"
-            style={{ height: "100%", padding: "0 var(--space-lg)" }}
-          >
-            <span
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "var(--space-xs)",
-              }}
-            >
-              <svg
-                width={size.discWidth}
-                height={40}
-                viewBox="-88 -20 176 40"
-                aria-hidden="true"
-                style={{ display: "block", flex: "0 0 auto" }}
-              >
-                <Wing />
-                <Wing flip />
-                <circle r={10} fill="none" stroke="var(--faction-ephemerists-plate-gold)" strokeWidth="1.5" />
-                <circle r={5} fill="var(--faction-ephemerists-plate-gold)" opacity={0.8} />
-                <path d="M-13 0 H-10.5 M10.5 0 H13" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="1" />
-              </svg>
-              <span
-                style={{
-                  fontFamily: DECO,
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.3em",
-                  textTransform: "uppercase",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {/* #1910: the band spells the faction's name, so it reads the
-                    one key that stays per-faction rather than a second copy.
-                    The `textTransform` above already carried the plate's upper
-                    case, so the band reads THE EPHEMERISTS either way. */}
-                {factionName("ephemerists")}
-              </span>
-            </span>
-          </CardMasthead>
-        </div>
+            {/* #1910: the band spells the faction's name, so it reads the one
+                key that stays per-faction rather than a second copy. The
+                `textTransform` above already carried the plate's upper case, so
+                the band reads THE EPHEMERISTS either way. */}
+            {factionName("ephemerists")}
+          </span>
+        </CardMasthead>
         <Cornice flutes={40} />
 
         {/* The journal leaf. */}
@@ -577,9 +507,19 @@ export default function EphemeristsTaskCard({
         {/* The plate's CTA was a full-bleed band closing the leaf. #2030 sets
             it as an inset cartouche with air under it, beneath the plate's own
             double brass rule — two hairlines, which is how this card rules
-            everything it rules (the hero's stepped lead-in, the cornice). */}
+            everything it rules (the hero's stepped lead-in, the cornice).
+
+            #2067 BRACKETS IT WITH THE MASTHEAD'S OWN MOTIF. The two rune strips
+            are the registers that came off the band, and they are the reason this
+            block no longer sits inside one `bodyPad` box: `[data-eph-runes]` is
+            `calc(100% - 40px)` wide of ITS OWN parent, which is the design's
+            20px inset from the CARD's edges. Nested inside a box already inset by
+            `--space-xl` they would have come out 44px in each side and read as a
+            short line rather than as a register. So the wrapper is bare, the
+            brass rule carries its own inset as a margin, and the trailing strip's
+            18px is what closes the card in place of `bodyPad`'s bottom. */}
         {cta && (
-          <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
+          <div style={{ position: "relative", zIndex: 2 }}>
             <div
               aria-hidden="true"
               data-cta-rule="ephemerists"
@@ -587,9 +527,10 @@ export default function EphemeristsTaskCard({
                 height: 3,
                 borderTop: "1px solid var(--faction-ephemerists-plate-brass)",
                 borderBottom: "1px solid var(--faction-ephemerists-plate-brass)",
-                margin: "0 0 var(--space-md)",
+                margin: "0 var(--space-xl) var(--space-md)",
               }}
             />
+            <EphemeristsRuneStrip side="top" />
             <div style={{ display: "flex", justifyContent: "center" }}>
               <button
                 type="button"
@@ -600,6 +541,9 @@ export default function EphemeristsTaskCard({
                   cursor: cta.denied ? "not-allowed" : "pointer",
                   display: "flex",
                   gap: "var(--space-md)",
+                  /* The design's 14px, on the rung below it: the air between the
+                     button and the two strips it sits between. */
+                  margin: "var(--space-md) auto",
                   background: "var(--faction-ephemerists-plate-cta-bg)",
                   color: "var(--faction-ephemerists-plate-cta-ink)",
                   border: "2px solid var(--faction-ephemerists-plate-brass)",
@@ -635,6 +579,7 @@ export default function EphemeristsTaskCard({
                 </svg>
               </button>
             </div>
+            <EphemeristsRuneStrip side="bottom" />
           </div>
         )}
       </article>

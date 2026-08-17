@@ -951,6 +951,24 @@ A faction shows a figure twice — the score stamp's total on a praxis card, and
 
 **Ornament for a LAZY archetype belongs in the `.tsx`, and this is measured, not stylistic.** The nine task cards are lazy (`factions/*.ts` → `lazyArchetype`), so `EverymenTaskCard` ships in its own 3.7 KB chunk the initial load never fetches — bytes drawn there cost the budget nothing. A rule in `index.css` lands in the one blocking stylesheet, which sits ~1 KB under its FAIL line. So geometry goes inline as SVG, and only MOTION has to be CSS, because a reduced-motion gate cannot be expressed inline. The corollary is that dropping a design's animation is sometimes the *whole* saving: Everymen's fists-and-lightning is drawn and not played, and jagged arcs thrown off a bolt read as a discharge standing perfectly still.
 
+### Ornament can MOVE, and where it lands decides whether it is still card-local (#2067)
+
+The Ephemerists card headed itself with a 110px night band carrying a winged sun disc between two twelve-sign glyph registers. The re-pulled design strips the band to the kit's plain `CardMasthead` and returns the motif as two shimmering rows of mathematical marks bracketing the sign-up button. Three things follow, and none of them is "delete the ornament".
+
+**A band's fixed height is usually the ornament's canvas, so it goes with the ornament.** `masthead: 110 / 98` existed only to give the registers somewhere to march; with them gone the right value is not a smaller number but *no field* — the band is `CardMasthead`'s own height. The same is true of `discWidth`, which measured the disc and nothing else. A size-set field that survives its only reader is how a band stays tall for a year after the reason left.
+
+**Where the motif lands decides its scope.** The registers were card-local *and correctly so*: the page cycles one 16-sign register to fill its width, so the two orders were composition. At the CTA the same motif is on **every** Ephemerists surface that paints a button through `--faction-ephemerists-plate-cta-bg` — the task card, the task page, the composer — so it is a component in `components/factionMarks/` on the fourth-consumer rule (#1634), not three transcriptions. The surface that has no button gets no strip; the surface that has a button it does not paint with the plate CTA is not one of the three. **Ask what the ornament is attached to, not which file you found it in.**
+
+**A per-instance cycle splits: numbers inline, the ramp in the sheet.** Peak opacity and phase are one value per mark and belong inline (`--epg-op`, `--epg-delay` — the register's own names, reused because it is the same motif). A 9/10/11/9/10 px size cycle is *not* per-instance: it is three `nth-child` rules, and putting it in `index.css` is what keeps 32 spans from each needing an `eslint-disable` for ornament type off the ramp. The hatch above is for a site, not for a loop.
+
+**And a bare glyph is a terrible proxy for a concept in a test.** `ephemeristsDetail.test.tsx` asserted the page's text did not contain `×` to mean "no modifier row at ×1.00". A decorative row of mathematical symbols contains `×`, is `aria-hidden`, and reads to nobody — the assertion was measuring a character where the concept is `×{{multiplier}}`. `/×\d/` is the same guard against the thing it was actually for.
+
+### A rose says which way is up exactly ONCE (#2067)
+
+`CompassRose` shipped with four needles in three treatments: north filled in the register's teal, south outlined in `-brass` at 0.9, east and west outlined in `-brass-light` at 0.7. Three answers to one question, and the reader has to work out which difference carries meaning. The design gives the three open needles **one ink at one weight** and fills only north — so the single contrast in the drawing is the single fact it states.
+
+**North took the plate's gold rather than the register's teal, and the ratio is why.** `-plate-gold` measures 13.07:1 on the rose's own `-plate-disc` against the teal's 7.36:1: the one point that carries meaning is also the one that reads first. A second design file draws that needle `var(--faction-ephemerists-plate-nile, #1e3a6e)` — a navy at **1.64:1** on the same disc, i.e. invisible. When two design files disagree about a colour, **the one naming a variable is the one to follow**, and a hex fallback that measures under 2:1 on the ground it lands on is a value from another cascade, not an alternative. (Here, almost certainly the eventual light mode — which #1627/#1636 keep out of this register until its own epic.)
+
 ---
 
 ## 7. Components

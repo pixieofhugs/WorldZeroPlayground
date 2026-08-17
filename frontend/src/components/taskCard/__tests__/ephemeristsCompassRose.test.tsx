@@ -98,6 +98,49 @@ describe('the Ephemerists points plate is a compass rose (#2037)', () => {
 })
 
 /**
+ * THE THREE NEEDLE VALUES (#2067). The rose shipped saying "north" three ways —
+ * north filled in the register's teal, south outlined in `-brass` at 0.9, east
+ * and west outlined in `-brass-light` at 0.7 — where the design says it once:
+ * one ink at one weight on the three open needles, and only north filled.
+ *
+ * Asserted on the RENDERED needle paths rather than on the file, because the
+ * question is which ink reaches which of four otherwise identical triangles, and
+ * the paths are what carry the answer to the screen.
+ */
+describe('the rose says which way is up exactly once (#2067)', () => {
+  /** The `fill`/`stroke` on the `<path>` whose `d` is given. */
+  function needle(html: string, d: string): string {
+    const at = html.indexOf(`d="${d}"`)
+    expect(at, `the ${d} needle is drawn`).toBeGreaterThan(-1)
+    return html.slice(at, html.indexOf('/>', at))
+  }
+
+  const SOUTH = 'M50 92 L55.5 74 L44.5 74 Z'
+  const EAST = 'M8 50 L26 44.5 L26 55.5 Z'
+  const WEST = 'M92 50 L74 44.5 L74 55.5 Z'
+
+  it('fills north in the plate gold, not the register teal', () => {
+    // 13.07:1 on the rose's own disc against the teal's 7.36:1 — the one point
+    // that carries meaning is also the one that reads first. The design's OTHER
+    // file draws this navy (`-plate-nile`'s 1.64:1 fallback), which would make
+    // the needle invisible; the gold file is the one naming a variable.
+    const north = needle(render('desktop'), NORTH)
+    expect(north).toContain('fill="var(--faction-ephemerists-plate-gold)"')
+    expect(north).not.toContain('plate-nile')
+  })
+
+  it('outlines the other three in one ink at one weight', () => {
+    const html = render('desktop')
+    for (const d of [SOUTH, EAST, WEST]) {
+      const open = needle(html, d)
+      expect(open, d).toContain('fill="none"')
+      expect(open, d).toContain('stroke="var(--faction-ephemerists-plate-brass-light)"')
+      expect(open, d).toContain('stroke-width="0.9"')
+    }
+  })
+})
+
+/**
  * #1654's rule, applied ahead of the surface that is about to want the mark.
  * The path string is the sharp half: a copy can be renamed, inlined or split up
  * and a component-name sweep misses it; the north needle is the same 24

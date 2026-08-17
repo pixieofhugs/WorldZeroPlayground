@@ -356,11 +356,15 @@ describe('the Ephemerists card keeps its own ornament densities (#1654)', () => 
     expect(card().match(/height:3\.5px/g)).toHaveLength(20)
   })
 
-  it('marches two registers of 12 signs — the card order, not the page cycle', () => {
-    // The page fills its width from a cycled 16-sign register; the card names
-    // its two rows. `Glyph` is shared, the ORDER is not, which is why the kit
-    // exports the sign as well as the register.
-    expect(card().match(/class="epg-glyph"/g)).toHaveLength(24)
+  it('marches no register at all — the motif is at the CTA now (#2067)', () => {
+    // It used to march two named 12-sign rows across a 110px night band, where
+    // the page fills its width from a cycled 16-sign register. The re-pulled
+    // design's masthead carries no ornament and the motif returns as
+    // `EphemeristsRuneStrip`, so the card's own orders and the `register()`
+    // helper are gone with the canvas they needed. `Glyph` is still kit
+    // vocabulary and four other Ephemerists surfaces still cut it — what this
+    // asserts is that no register creeps back onto THIS band.
+    expect(card()).not.toContain('class="epg-glyph"')
   })
 
   it('draws the level as the kit tally, one stroke per level', () => {
