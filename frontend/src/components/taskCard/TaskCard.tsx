@@ -183,7 +183,18 @@ export default function TaskCard({
           <span
             style={{
               background: factionCssVar(shown.metatask_faction_slug, 'light'),
-              color: factionCssVar(shown.metatask_faction_slug),
+              // THE TINT KEEPS THE HUE, THE TYPE DOES NOT (#2077). This chip
+              // paired `background: -light` with `color:` the bare spine hue —
+              // half the doctrine (§3, #1932: a hue is a FILL) applied. `-light`
+              // is a 10–16 % self-tint for six of seven keys, so the wash is a
+              // tint OF the ink and can only tighten the reading (#1302);
+              // measured over `-card-bg` the bare hue paid 2.54:1 (Coven),
+              // 3.52 (Singularity), 3.80 (UA) and 3.89 (Everymen) in light,
+              // with every key clearing in dark — the cascade tell again.
+              // `-card-text` is the ink of the sheet this mark overhangs and
+              // clears 10.32:1 at worst in light, 9.83:1 in dark, on all eight.
+              // Not `-card-muted`: under this wash that drops to 4.02:1 (WOW).
+              color: factionCssVar(shown.metatask_faction_slug, 'card-text'),
               fontFamily: "'Courier Prime', monospace",
               fontSize: 'var(--text-md)',
               fontWeight: 700,

@@ -4394,8 +4394,8 @@
 /* The codex's slow motion — turning astrolabe rings, breathing points — went
    with the surfaces that used it (#1208). `eph-twinkle` is the survivor and is
    no longer an Ephemerists keyframe at all: `.coven-moon-dust` is its only
-   consumer, and it carries the name it was written under. */
-@keyframes eph-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+   consumer, and it carries the name it was written under. Both moved to
+   `src/motion.ornament.css` in #2073, off the critical path. */
 
 /* Players page faction race (#1855) — each lane's bar grows from the left, one
    after another. Class-gated on reduced-motion like every other motion here, so
@@ -4437,12 +4437,13 @@
    slab stills into a legible screenshot: the sweep parks off-slab and the
    cursor stops blinking but stays drawn (it is punctuation on the number, not
    an indicator, so it must not vanish). The sweep element is a scrim, not
-   content — the card gives it `position:absolute; pointer-events:none`. */
-@keyframes sg-scan-sweep { 0% { top: -24%; } 100% { top: 120%; } }
+   content — the card gives it `position:absolute; pointer-events:none`.
+
+   THE TWO ANIMATIONS MOVED to `src/motion.ornament.css` (#2073). What stays is
+   the sweep's resting offset, because that is layout: it is what parks the band
+   off-slab for a reader who gets neither the motion sheet nor `no-preference`. */
 .sg-scan { top: -24%; }
 @media (prefers-reduced-motion: no-preference) {
-  .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
-  .sg-cursor { animation: wz-blink 1s step-end infinite; }
   /* The task card's ASCII face drifts beside the sign-up key (#2036). No new
      keyframe: `spec-rise` is already a bob to a tunable height, and this file
      already reuses across factions where the motion is the same shape
@@ -4455,14 +4456,15 @@
    Every animation is gated on reduced-motion and driven by a class, never an
    inline `animation:` (the widgets would bypass the gate otherwise). Meaning is
    carried by the fill/selection, not the motion — the widgets read correctly
-   stilled. */
+   stilled.
 
-/* Coven — moon-phase plate: rank-5 sparkles twinkle, dust drifts. */
-@keyframes coven-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
-@media (prefers-reduced-motion: no-preference) {
-  .coven-moon-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
-  .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
-}
+   THAT LAST SENTENCE IS WHY THIS SET WENT FIRST in #2073: every widget's motion
+   is now in `src/motion.ornament.css`, off the critical path, and only the
+   RESTING form is below — the burst's gradient and mask, the shock and sheen at
+   `opacity: 0`, the sweep's clipping track, the confetti hidden. Add a resting
+   declaration here and its animation there; do not put the two in one file. */
+
+/* Coven — the moon-phase plate's sparkles and dust are in motion.ornament.css. */
 
 /* Coven — THE CAULDRON (#2019), the score stamp's total mark and, per the owner
    ruling, the vessel the Coven task card mounts too. Two motions, both drawn by
@@ -4524,22 +4526,10 @@
    loading spinner, and the pitch is the meaning here.
 
    `@keyframes eph-metal-ray` and `.eph-metal-rail` / `eph-metal-current` were
-   deleted with the fan and the dashed track (#1638). */
-@keyframes eph-metal-burst { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.68; } }
-@keyframes eph-metal-shock {
-  0% { opacity: 0.38; transform: scale(0.94); }
-  70%, 100% { opacity: 0; transform: scale(1.4); }
-}
-@keyframes eph-metal-sheen {
-  0% { background-position: 220% 0; opacity: 0; }
-  12% { opacity: 0.45; }
-  62% { background-position: -120% 0; opacity: 0.45; }
-  78%, 100% { background-position: -120% 0; opacity: 0; }
-}
-@keyframes eph-metal-filing {
-  0%, 100% { opacity: 0; transform: scale(0.5) translate(0, 0); }
-  45% { opacity: 0.95; transform: scale(1) translate(2px, -2px); }
-}
+   deleted with the fan and the dashed track (#1638). The four keyframes and the
+   four gated rules that run them moved to `src/motion.ornament.css` (#2073);
+   the three resting states below stayed, because they are what a reader sees
+   without them. */
 .eph-metal-burst {
   border-radius: 50%;
   pointer-events: none;
@@ -4554,45 +4544,21 @@
 /* Pure motion: a shock ring and a wipe have no resting form to show. */
 .eph-metal-shock, .eph-metal-sheen { opacity: 0; }
 .eph-metal-filing { opacity: 0.55; }
-@media (prefers-reduced-motion: no-preference) {
-  .eph-metal-burst {
-    animation: eph-metal-burst 3.2s ease-in-out infinite;
-    animation-delay: var(--metal-delay);
-  }
-  .eph-metal-shock {
-    animation: eph-metal-shock var(--metal-dur, 3s) ease-out infinite;
-    animation-delay: var(--metal-delay, 0s);
-  }
-  .eph-metal-sheen {
-    animation: eph-metal-sheen var(--metal-dur, 3.6s) cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    animation-delay: var(--metal-delay, 0s);
-  }
-  .eph-metal-filing {
-    animation: eph-metal-filing 3.2s ease-in-out infinite;
-    animation-delay: var(--metal-delay, 0s);
-  }
-}
 
-/* S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU. */
-@keyframes snide-amp-party { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.9); } }
-@media (prefers-reduced-motion: no-preference) {
-  .snide-amp-party { transform-origin: center; animation: snide-amp-party var(--amp-dur, 0.4s) ease-in-out infinite; animation-delay: var(--amp-delay, 0s); }
-}
+/* S.N.I.D.E. — the amp/EQ meter's party VU is in motion.ornament.css (#2073).
+   The segments' lit HEIGHT carries the rank and is set by the widget. */
 
 /* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes
    wiggle, and a rainbow sweep travels behind the whole row (#840). The sweep is
    pure decoration layered UNDER the balloons — it carries no rank, so stilling
    it costs nothing; the same is true of the rank-5 confetti, which is hidden
-   entirely at rest rather than frozen mid-fall. */
-@keyframes wow-bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 55% { transform: translateY(0); } 72% { transform: translateY(-4px); } }
-@keyframes wow-group-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-@keyframes wow-eye-wiggle { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1.5px, -1px); } 50% { transform: translate(-1px, 1.5px); } 75% { transform: translate(1px, 1px); } }
-@keyframes wow-sweep { 0% { left: -55%; } 100% { left: 120%; } }
-@keyframes wow-confetti {
-  0% { transform: translateY(-4px) rotate(0deg); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(34px) rotate(220deg); opacity: 0; }
-}
+   entirely at rest rather than frozen mid-fall.
+
+   The five keyframes and the gated rules moved to `src/motion.ornament.css`
+   (#2073), INCLUDING `.wow-balloon-sweep::after`, which carries paint: that
+   pseudo-element exists only inside the gate, so it is motion scaffolding with
+   no resting form to leave behind. The two rules below have resting forms and
+   therefore stay. */
 /* The sweep's TRACK clips at all times — the travelling band must never escape
    the plate — so only the band itself lives behind the motion gate. */
 .wow-balloon-sweep {
@@ -4611,27 +4577,6 @@
   border-radius: 1px;
   opacity: 0;
   pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
-  .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
-  /* --wow-eye-delay lets a caller stagger a bunch so no two pupils travel
-     together (#1023's quest decree does); it defaults to 0s, which is the
-     vote widget's existing behaviour unchanged. */
-  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; animation-delay: var(--wow-eye-delay, 0s); }
-  .wow-balloon-sweep::after {
-    content: "";
-    position: absolute;
-    top: -12%;
-    bottom: -12%;
-    left: -55%;
-    width: 46%;
-    background: var(--faction-wow-sweep);
-    transform: skewX(-16deg);
-    mix-blend-mode: screen;
-    animation: wow-sweep 3.2s linear infinite;
-  }
-  .wow-balloon-confetti { animation: wow-confetti 1.3s ease-in infinite; animation-delay: var(--tw-delay, 0s); }
 }
 
 /* WOW — THE CREST (#897). Four motions, all pure ornament: the whole seal sways
@@ -4664,19 +4609,9 @@
   .wow-crest-glint { transform-box: fill-box; transform-origin: center; animation: wow-twinkle 1.6s ease-in-out infinite; }
 }
 
-/* Everymen — gearworks: reached gears turn (odd tiers clockwise, even counter),
-   rank-5 sparks fly outward. Per-gear duration (--ev-gear-dur) and per-spark
-   travel/tempo (--ev-sx/--ev-sy/--ev-spark-dur/--ev-spark-delay) arrive as inline
-   custom properties. Class-gated on reduced-motion: stilled, the gears keep their
-   heat/glow (that carries the rank) and the sparks stay hidden (opacity:0 inline). */
-@keyframes ev-gear-cw { to { transform: rotate(360deg); } }
-@keyframes ev-gear-ccw { to { transform: rotate(-360deg); } }
-@keyframes ev-gear-spark { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 10% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--ev-sx, 0), var(--ev-sy, 0)) scale(0.3); } }
-@media (prefers-reduced-motion: no-preference) {
-  .ev-gear--cw { transform-origin: center; animation: ev-gear-cw var(--ev-gear-dur, 3s) linear infinite; }
-  .ev-gear--ccw { transform-origin: center; animation: ev-gear-ccw var(--ev-gear-dur, 3s) linear infinite; }
-  .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
-}
+/* Everymen — the gearworks' turn and sparks are in motion.ornament.css (#2073).
+   Stilled, the gears keep their heat/glow (that carries the rank) and the sparks
+   stay hidden (opacity:0 inline), so nothing here has a resting form to hold. */
 
 /* Ephemerists — the Valley plate's incised glyph registers (#1023). Two rows of
    signs (Egypt, Greece, the middle ages, 1925) surface and recede on a long,
@@ -4954,12 +4889,10 @@
    that whole shape repo-wide, so it lives here and the card carries only the
    class. Motion is opt-in under `no-preference`, the repo's inverted form of
    the design's `reduce → none`: stilled, the watermark is simply a static
-   pentagram, which is what it is at any single frame anyway. */
-@keyframes cvn-wheel { to { transform: rotate(360deg); } }
+   pentagram, which is what it is at any single frame anyway. The keyframe and
+   the turn moved to `src/motion.ornament.css` (#2073); the resting frame below
+   stays, inert without them. */
 .cvn-wheel { transform-origin: 50% 50%; }
-@media (prefers-reduced-motion: no-preference) {
-  .cvn-wheel { animation: cvn-wheel 120s linear infinite; }
-}
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
    with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
@@ -5609,30 +5542,11 @@
   .alb-feed-edge { animation: alb-feed-edge 16s linear infinite; }
 }
 
-/* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell
-   pops (bloom), rank-5 breathes (twist), rings turn (spin) and a halo pulses out
-   on selection. Every motion is class-gated on reduced-motion so the widget
-   never writes `animation:` inline; meaning is carried by the mandala's fullness
-   and the reading word, not the motion — it reads correctly stilled. Per-cell
-   spin duration/direction/grow-delay and twist tempo arrive as custom props. */
-@keyframes ua-ring-grow { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-@keyframes ua-spin { to { transform: rotate(360deg); } }
-@keyframes ua-bloom { 0% { transform: scale(0.5) rotate(-24deg); opacity: 0.3; } 55% { transform: scale(1.18) rotate(4deg); } 78% { transform: scale(0.96); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
-@keyframes ua-halo-pulse { 0% { transform: scale(0.6); opacity: 0.55; } 100% { transform: scale(1.9); opacity: 0; } }
-@keyframes ua-twist { 0% { transform: rotate(-5deg) scale(1); } 50% { transform: rotate(5deg) scale(1.05); } 100% { transform: rotate(-5deg) scale(1); } }
-@media (prefers-reduced-motion: no-preference) {
-  .ua-mandala-ring {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation:
-      ua-ring-grow 0.5s var(--ua-grow-delay, 0s) both ease-out,
-      ua-spin var(--ua-spin-dur, 34s) linear infinite;
-    animation-direction: normal, var(--ua-spin-dir, normal);
-  }
-  .ua-mandala-bloom { animation: ua-bloom 0.7s cubic-bezier(0.2, 1.25, 0.35, 1) both; }
-  .ua-mandala-halo { animation: ua-halo-pulse 0.7s ease-out both; }
-  .ua-mandala-alive { animation: ua-twist var(--ua-twist-dur, 2s) ease-in-out infinite; }
-}
+/* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
+   are in `src/motion.ornament.css` (#2073). Meaning is carried by the mandala's
+   fullness and the reading word, not the motion — it reads correctly stilled,
+   which is what let it move. Nothing resting is left here: the widget's own
+   inline styles hold the geometry and the halo's `opacity: 0`. */
 
 /* FieldDesk life-card hover-lift (#274). The CredentialCard owns its own rotation;
    this lifts the clickable wrapper without touching the card's tilt. */

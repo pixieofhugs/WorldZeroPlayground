@@ -52,7 +52,16 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
       <span
         className="label-caption"
         style={{
-          color: factionCssVar(slug, "card-muted"),
+          // `-card-text`, NOT `-card-muted`, BECAUSE OF THE WASH (#2077).
+          // `-light` is a 10–16 % self-tint of the faction's own hue for six of
+          // the seven keys, and a wash made of the ink's own hue can only
+          // tighten the reading (§3, #1302). Measured on `-light` composited
+          // over `-card-bg`: `-card-muted` drops to 4.02:1 for WOW and 4.40:1
+          // for Everymen in light — both under AA on the bare sheet's 4.76 /
+          // 5.09 — while `-card-text` bottoms out at 10.32:1 across all eight
+          // keys in light and 9.83:1 in dark. The typographic tier does the
+          // quieting here; `.label-caption` is small caps at letterspacing.
+          color: factionCssVar(slug, "card-text"),
           background: factionCssVar(slug, "light"),
           border: `1px solid ${factionCssVar(slug, "border")}`,
           padding: "var(--space-xs) var(--space-sm)",
@@ -63,18 +72,26 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
     );
   }
   if (status === "welcome_back" || status === "can_return") {
-    // KNOWN CONTRAST GAP, measured on #951 and left alone there because fixing
-    // it belongs to whoever owns all six cards at once. This branch is the one
-    // that paints a faction's SPINE HUE as an ink — every other branch uses a
-    // house token or a `-card-*` ink — and a spine hue is a fill: WOW's gold is
-    // 1.96:1 on its own cream card ground in light mode. Dark is fine (11.19:1),
-    // so it is a light-only defect on whichever cards have a pale ground. WOW's
-    // own card does not mount this badge for that reason; see the standing plate
-    // in `WowFactionCard.tsx`.
+    // THE GAP #951 MEASURED AND DEFERRED, CLOSED (#2077). This was the one
+    // branch painting a faction's SPINE HUE as an ink — every other branch
+    // already used a house token or a `-card-*` ink — and a spine hue is a
+    // FILL (§3, #1932). #951 recorded WOW's gold at 1.96:1 on its own cream in
+    // light against 11.19:1 in dark, and deferred the fix because redrawing a
+    // slug-parameterised helper means measuring six grounds against six hues.
+    // #2068 then moved the miss rather than removing it: WOW took a plum (now
+    // 5.79:1 on that cream) and the Ephemerists took the plate brass, whose own
+    // declaration says "rules, borders — never an ink".
+    //
+    // The six grounds are measured now. This badge carries NO fill, so it sits
+    // on the bare `-card-bg`, where the muted role clears on all eight keys —
+    // worst 4.76:1 (WOW) light, 5.44:1 (`na`) dark. It is `-card-muted` rather
+    // than `-card-text` for the same reason the `burned` branch above is not:
+    // that one lies under a self-tint wash which costs it up to a full ratio
+    // point, and this one does not.
     return (
       <span
         className="label-caption"
-        style={{ color: factionCssVar(slug) }}
+        style={{ color: factionCssVar(slug, "card-muted") }}
       >
         {i18n.t("feed:factionCard.status.welcomeBack")}
       </span>
@@ -93,7 +110,12 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
         display: "inline-flex",
         alignItems: "center",
         gap: "var(--space-sm)",
-        color: factionCssVar(slug),
+        // The fill and the rule keep the hue; only the ink moves (#2077). Same
+        // shape and the same reading as the `burned` badge above — see the note
+        // there for why the wash rules out `-card-muted`. The bare hue on this
+        // pairing measured 2.54:1 (Coven) to 4.90:1 in light across the six
+        // cards that mount this note, with all six clearing in dark.
+        color: factionCssVar(slug, "card-text"),
         background: factionCssVar(slug, "light"),
         border: `1px solid ${factionCssVar(slug, "border")}`,
         padding: "var(--space-xs) var(--space-sm)",
@@ -661,11 +683,17 @@ export function DefaultFactionCard(props: FactionCardProps) {
               marginBottom: "var(--space-sm)",
             }}
           >
+            {/* The generic card is NEUTRAL chrome with a faction border: its
+                ground is `--color-bg-surface` and its root already sets
+                `--color-text-primary`, so the heading simply inherits it
+                (#2077). It printed `factionCssVar(slug)` — the spine hue — on
+                that near-white frost, where the hue reads 2.34:1 for the
+                Ephemerists brass, 2.65 for the S.N.I.D.E. acid and 3.07 for the
+                Coven pink in light against the inherited ink's 18.04:1. */}
             <div
               style={{
                 fontSize: "var(--text-lg)",
                 fontWeight: 700,
-                color: factionCssVar(props.faction.slug),
               }}
             >
               {factionName(props.faction.slug)}

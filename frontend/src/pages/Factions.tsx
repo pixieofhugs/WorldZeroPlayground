@@ -152,7 +152,20 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
                         values={{ faction: factionName(inv.faction_slug) }}
                         components={[
                           <span key="0" />,
-                          <span key="1" style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }} />,
+                          // WEIGHT, NOT HUE (#2077). The faction name used to
+                          // print `factionCssVar(slug)` — the bare spine hue,
+                          // which is a FILL (§3, #1932). The row already lays
+                          // that hue down as a wash and rules its left edge in
+                          // it; measured ON that wash over the page, the hue as
+                          // ink is 2.04:1 for the Ephemerists brass, 2.41 for
+                          // the S.N.I.D.E. acid, 2.59 Coven, 3.80 UA, 4.12
+                          // Singularity and 4.26 for `na` in light — six of
+                          // eight under AA, and all eight clear in dark, which
+                          // is the cascade tell #1932 names. The ink inherited
+                          // from the parent span is `--color-text-primary` at
+                          // 14.26–16.44:1 on the same wash. `fontWeight: 700`
+                          // is what still marks the name out.
+                          <span key="1" style={{ fontWeight: 700 }} />,
                         ]}
                       />
                     </span>
