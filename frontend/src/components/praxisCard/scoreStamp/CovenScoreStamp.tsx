@@ -239,6 +239,10 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
                 fontSize: "var(--text-title)",
                 letterSpacing: "0.06em",
                 lineHeight: 1,
+                // The design heads the plate "Points". The shared key is the
+                // lowercase one every other stamp's caption reads, so the case
+                // is presentation here rather than a ninth copy string.
+                textTransform: "capitalize",
                 color: DEEP,
               }}
             >

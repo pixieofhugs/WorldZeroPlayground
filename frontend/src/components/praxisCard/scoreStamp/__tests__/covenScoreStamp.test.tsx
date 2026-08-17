@@ -108,6 +108,14 @@ describe('the states the design does not draw', () => {
     expect(html).not.toContain('group')
     expect(html.split('12')).toHaveLength(2)
   })
+
+  /** A scored praxis worth nothing still stamps — `0` is a total, not an absence. */
+  it('still hangs the cauldron on a zero score', () => {
+    const html = text(
+      renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ task_point_value: 0, score: 0 })} />),
+    )
+    expect(html).toBe('0points')
+  })
 })
 
 describe('what #2019 replaced', () => {
