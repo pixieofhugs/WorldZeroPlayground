@@ -447,10 +447,17 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // What is left are the chronicle's own primitives, which no generator reaches.
   //
   // The kit's "on-fill / gold" pair puts ink on the frame gold. Its stated ink
-  // #2a1d02 has no token and does not need one: --faction-wow-on-fill is the
+  // #2a1d02 has no token and does not need one: --faction-wow-on-gold is the
   // WOW ink, is theme-invariant like the gold it sits on, and measures 7.64:1
   // where the kit's own value manages 6.68:1 — not the 8.1:1 the kit claims.
-  { what: "wow chronicle gold element, ink", surface: "--faction-wow-chronicle-gold", text: "--faction-wow-on-fill" },
+  //
+  // THE TEXT COLUMN SAID `-on-fill` UNTIL #2068 and this row is how that was
+  // caught. The two tokens held the same near-black, so the borrow was free
+  // right up to the moment the spine hue stopped being a gold: a plum fill needs
+  // white, and white on this gold is 2.47:1. A row that names the ink by the
+  // ground it was measured on cannot be re-broken by a hue change somewhere else
+  // (WORLD_ZERO_STYLE §3, #1766).
+  { what: "wow chronicle gold element, ink", surface: "--faction-wow-chronicle-gold", text: "--faction-wow-on-gold" },
   // The kit's "gold / card-bg dk" pair. The bright total is a *dark*-theme
   // value; measuring the token in both themes also gates its light sibling,
   // which the kit never states.
@@ -487,11 +494,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // ink and never as a text ground — so there is no text pair to measure. If a
   // future edit paints a string in it, THAT is what needs a row here.
   {
-    // The winning stakes tile: WOW's ink on the champion gold. Both are
-    // per-theme, so this measures the pairing twice.
+    // The winning stakes tile: WOW's ink on the champion gold. The tile's gold
+    // is per-theme (#e7b94e / #e3b84a) and the ink is not, so this measures the
+    // pairing twice — 10.27:1 and 10.07:1. `-on-gold`, not `-on-fill`, for the
+    // reason the chronicle-gold row above spells out (#2068).
     what: "wow duel champion tile, ink",
     surface: "--faction-wow-duel-champion",
-    text: "--faction-wow-on-fill",
+    text: "--faction-wow-on-gold",
   },
   {
     // The losing tile — the ribbon. `--faction-wow-stamp-chip-text` is the
