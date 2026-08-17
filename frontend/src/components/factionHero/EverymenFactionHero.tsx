@@ -94,6 +94,12 @@ export default function EverymenFactionHero({
             minWidth: 300,
             display: "flex",
             alignItems: "center",
+            // The cog seal is an inline sibling of the wordmark, so on a phone
+            // it and the gap eat 148px of a ~222px row and the mark has no
+            // track left (#2000). Wrapping stands the seal above the name the
+            // way Coven / UA / the Ephemerists already do at that width; it is
+            // inert wherever the row has room, so no desktop rendering moves.
+            flexWrap: "wrap",
             gap: "var(--space-2xl)",
             padding: "var(--space-2xl) var(--space-3xl) var(--space-2xl)",
           }}
@@ -115,7 +121,14 @@ export default function EverymenFactionHero({
             <EverymenSigil size={58} color={RED} />
           </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* The wordmark's own column. `min(240px, 100%)` rather than the
+              `minWidth: 0` this had: 0 let the track collapse next to the seal,
+              which is what let the mark break mid-word. 240 is the wordmark's
+              measured need (~215px at 76px Bebas) plus slack, so the row wraps
+              the moment the name would not fit beside the seal; the `min(…,
+              100%)` keeps the floor from pushing the column past the hero's
+              clipped edge on a phone — #1314's lesson on the S.N.I.D.E. hero. */}
+          <div style={{ flex: 1, minWidth: "min(240px, 100%)" }}>
             <div
               style={{
                 fontFamily: "var(--font-body)",
@@ -131,14 +144,20 @@ export default function EverymenFactionHero({
             <h1
               style={{
                 fontFamily: "var(--font-accent)",
+                // The mark SCALES rather than breaks (#2000). 76px is the
+                // poster size and the cap; the 20vw arm only bites below a
+                // ~380px viewport, where even the full column is too narrow for
+                // it. No overflow-wrap here on purpose: a wordmark that breaks
+                // mid-word reads as a different word, which is a worse failure
+                // than one that overflows, so the fit is bought by the track
+                // above and the cap here instead of by licensing a break.
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: union-poster wordmark — accent face at 0.82 leading, hard drop shadow
-                fontSize: 76,
+                fontSize: "min(76px, 20vw)",
                 lineHeight: 0.82,
                 letterSpacing: "0.01em",
                 margin: 0,
                 color: CREAM,
                 textShadow: `3px 3px 0 ${INK}`,
-                overflowWrap: "anywhere",
               }}
             >
               {name}
