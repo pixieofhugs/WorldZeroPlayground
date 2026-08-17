@@ -2246,7 +2246,13 @@ describe("the Ephemerists faction page paints the page's ink outside its cards (
 
   // The two strings the nightly sweep measured, plus the roster's — the third
   // is INSIDE a `CARD` and is here to prove the guard can tell them apart.
-  for (const key of ["ephemerists.tasks.empty", "ephemerists.praxis.empty"]) {
+  //
+  // The keys were `ephemerists.tasks.empty` / `.praxis.empty` / `.roster.
+  // emptyWithSpotlight` until #1911 collapsed all three families onto the
+  // shared `detail.*` block. The ELEMENTS did not move and neither did their
+  // inks: this guard is about which ground a paragraph sits on, and that is
+  // still a property of this file rather than of the catalog.
+  for (const key of ["detail.default.tasksEmpty", "detail.default.recentEmpty"]) {
     it(`\`${key}\` reads the page's quiet ink, not the plate's`, () => {
       const at = SOURCE.indexOf(`t("${key}")`);
       expect(at, `no \`t("${key}")\` call in EphemeristsFactionBody`).toBeGreaterThan(-1);
@@ -2263,7 +2269,7 @@ describe("the Ephemerists faction page paints the page's ink outside its cards (
   }
 
   it("prose that IS inside a card keeps the plate's ink", () => {
-    const at = SOURCE.indexOf('t("ephemerists.roster.emptyWithSpotlight")');
+    const at = SOURCE.indexOf('t("detail.membersEmptyWithSpotlight")');
     expect(at, "no roster empty state in EphemeristsFactionBody").toBeGreaterThan(-1);
     expect(
       SOURCE.slice(at - 400, at),
