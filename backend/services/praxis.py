@@ -959,11 +959,12 @@ async def create_praxis(
 # one implementation of ADR-0013's "any member may edit" — the room's door one
 # calls it at connect, which is where it moved to, not where it was duplicated.
 #
-# The text edit no longer triggers ADR-0012's hard reset. That is deliberate and
-# is the ADR's "freeze, not reset": a CRDT has no discrete edit event to key on,
-# so submitting freezes the document instead and ``pullBack`` is the one door
-# back in (#1745). Media edits still call ``on_member_edit`` — the reset
-# mechanism is intact, it simply has one fewer trigger until the freeze lands.
+# A text edit triggers ADR-0012's hard reset again (ADR-0079), through the room
+# rather than through a route: ``services.praxis_room._RoomFlusher.write`` calls
+# ``collab_consensus.on_room_edit`` on the trailing edge of its debounce. #1745's
+# freeze — which existed because a CRDT has no discrete edit event to key on — is
+# gone, and with it #1808's close code. Media edits and Withdraw reach the same
+# rule through ``on_member_edit``.
 
 
 async def unsubmit_praxis(
@@ -972,29 +973,28 @@ async def unsubmit_praxis(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
-    """Unsubmit a praxis back to editing. Any member may act (ADR-0013). #590.
+    """Withdraw a proposal, or reopen a published praxis. Any member may act
+    (ADR-0013). #590, ADR-0079.
 
-    Since #1745 this is **the one door back into a sealed document**, which is
-    what ADR-0059 already said re-entry after submitting had to be. Three cases
-    by status:
+    One route, two doors, told apart by status — and ADR-0059's point stands for
+    both: re-entry is a deliberate act, not a raw write.
+
     - ``submitted``: the whole group reopens. Votes are preserved but stop scoring
-      until resubmitted; every member's ``has_submitted`` clears. Unsubmitting a
+      until resubmitted; every member's approval clears. Unsubmitting a
       *settled* duel side forfeits the contest permanently (ADR-0011 §Forfeit):
       the opponent wins by default and the duel stays ``settled``.
-    - ``pending`` (a collab mid-consensus): ADR-0012's hard reset. The window
-      closes, *everyone's* ``has_submitted`` clears, and the room thaws. Pending
-      praxes are unscored — no stat recalc.
-    - ``in_progress``: 422 — the document is already open, and this is the only
-      status in which it is.
+    - ``pending`` (a proposal is live): **Withdraw proposal**. Same effect as an
+      edit — the countdown stops, every approval clears, the praxis is back to
+      drafting. Pending praxes are unscored, so no stat recalc.
+    - ``in_progress``: 422 — there is nothing to withdraw and nothing to reopen.
     """
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, "reopen")
 
-    # Pending collab: the document is frozen for every member, so reopening it
-    # is not a per-member pull-back but the edit that ADR-0012 resets on — see
-    # the note where ``on_member_unsubmit`` used to be. Any member may open it,
-    # the holdout included: they never submitted, so there is nothing of *theirs*
-    # to pull back, and until #1743 they reopened the collab simply by typing.
+    # Withdraw: a group action, for a member who has read the draft and has no
+    # edit to make yet (ADR-0079). It is not a per-member pull-back — there is no
+    # per-member submission left to take back — so it runs the same cancellation
+    # a keystroke would.
     if praxis.status == PraxisStatus.pending:
         await collab_consensus.on_member_edit(praxis, session, era)
         return await get_praxis(praxis_id, session)
@@ -1027,9 +1027,10 @@ async def unsubmit_praxis(
     for member in praxis.members:
         member.has_submitted = False
     await session.flush()
-    # Back to drafting, so the room thaws — and the document it thaws is a fresh
-    # one, seeded from the ``body_text`` this praxis published with (#1745).
-    praxis_room.follow_praxis_status(praxis)
+    # No thaw to announce (ADR-0079): the room was never sealed. The document
+    # this reopens is a fresh one all the same, seeded on first connect from the
+    # ``body_text`` this praxis published with, because publishing destroyed the
+    # old one (ADR-0073 rule 7, which survives).
 
     # Recalc *every* member: on a collab, co-authors' scores also counted this
     # praxis while it was submitted, so all of them must drop (the submit paths
@@ -1899,18 +1900,45 @@ async def leave_praxis(
     return await get_praxis(praxis_id, session)
 
 
+async def set_member_done(
+    praxis_id: int,
+    character_id: int,
+    is_done: bool,
+    session: AsyncSession,
+) -> Praxis:
+    """**Done** — "my part is finished" (ADR-0079). Collab only, and reversible.
+
+    422 on a solo or duel praxis rather than a silent write: one member means
+    Done and Publish are the same click, so a per-member Done there is a caller
+    that has misread the model, and storing a flag nothing can ever read would
+    hide that.
+    """
+    praxis = await get_praxis(praxis_id, session)
+    _require_member(praxis, character_id, "mark done on")
+    if praxis.type != PraxisType.collab:
+        raise HTTPException(
+            status_code=422, detail="Only a collab has a per-member Done."
+        )
+    await collab_consensus.mark_done(praxis, character_id, is_done, session)
+    return await get_praxis(praxis_id, session)
+
+
 async def submit_praxis(
     praxis_id: int,
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
-    """Mark the member's has_submitted=True.
+    """**Propose**, then **Approve** — the two signals that publish (ADR-0079).
 
-    All members submitted → Live now. Otherwise, on a collab, this opens the
-    pending-publish window (ADR-0012): silence for ``era.collab_auto_submit_days``
-    auto-publishes via the lazy-on-access timeout. Solo/duel always have one member,
-    so they publish immediately and never enter the window.
+    On a collab: the first call opens the ``era.collab_auto_submit_days`` window
+    and records the proposer as approved; later calls are approvals against that
+    live proposal. Every member approved → Live now; silence for the whole window
+    → Live anyway, via the lazy-on-access timeout. Solo and duel always have one
+    member, so they publish immediately and never enter the window.
+
+    See ``services.collab_consensus.on_submit`` for why one entry point carries
+    both signals.
     """
     praxis = await get_praxis(praxis_id, session)
 

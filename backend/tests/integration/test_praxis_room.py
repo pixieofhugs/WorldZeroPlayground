@@ -21,7 +21,7 @@ from typing import Any, AsyncIterator, Callable
 
 import pytest
 import pytest_asyncio
-from pycrdt import Doc, Map, Provider, Text
+from pycrdt import Awareness, Doc, Map, Provider, Text, create_awareness_message
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -1176,6 +1176,116 @@ async def _wait_for_the_freeze_to_settle(rooms: _Rooms, praxis_id: int) -> None:
     await _wait_for(
         lambda: rooms.room_doc(praxis_id) is None, "the sealed room to be dropped"
     )
+
+
+async def _proposal(rooms: _Rooms, praxis_id: int) -> tuple[PraxisStatus, Any]:
+    """``(status, submit_proposed_at)`` straight off the row.
+
+    A column select, not an entity load: the same session serves the test body
+    and the room's own tasks, and the identity map may be holding a ``Praxis``
+    the room has since moved.
+    """
+    async with rooms.sessions() as session:
+        row = (
+            await session.execute(
+                select(Praxis.status, Praxis.submit_proposed_at).where(
+                    Praxis.id == praxis_id
+                )
+            )
+        ).one()
+    return row[0], row[1]
+
+
+async def _wait_for_drafting(rooms: _Rooms, praxis_id: int, description: str) -> None:
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + _TIMEOUT_SECONDS
+    while True:
+        status, proposed_at = await _proposal(rooms, praxis_id)
+        if status == PraxisStatus.in_progress and proposed_at is None:
+            return
+        if loop.time() >= deadline:
+            raise AssertionError(
+                f"timed out waiting for {description}: the row holds "
+                f"status={status} submit_proposed_at={proposed_at!r}"
+            )
+        await asyncio.sleep(0.02)
+
+
+async def test_typing_while_a_proposal_is_live_cancels_it(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """ADR-0079's rule, at the seam it fires from.
+
+    ADR-0012's "an edit means we're not done" survives verbatim; what changed is
+    that it now keys on a CRDT update rather than on a discrete save. The seam is
+    the room's own document observer — the one ``_RoomFlusher`` already debounces
+    — so the signal is a real text change and nothing else.
+
+    The member who types is the **holdout**: they never approved, and until
+    ADR-0079 the room refused their keystrokes precisely while the countdown was
+    running against them. Typing is now their answer to it.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+
+            # `character` is `account`'s and is not connected: they propose from
+            # the REST side, which is what a Propose click is.
+            proposed = await rooms.submit(collab.id, character.id)
+            assert proposed.status == PraxisStatus.pending
+            assert proposed.submit_proposed_at is not None
+
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "not yet ")
+            await _wait_for_drafting(
+                rooms, collab.id, "the edit to cancel the proposal"
+            )
+            # The socket the holdout typed down is still open — the whole point
+            # of retiring the freeze is that nobody is ever hung up on for
+            # writing.
+            assert not holdout.closed.is_set()
+
+        await _wait_for_record(
+            rooms, collab.id, "the cancelled proposal's text", body_text=f"not yet {SEED_BODY}"
+        )
+        async with rooms.sessions() as session:
+            approvals = (
+                await session.execute(
+                    select(PraxisMember.has_submitted).where(
+                        PraxisMember.praxis_id == collab.id
+                    )
+                )
+            ).scalars().all()
+        assert list(approvals) == [False, False]
+
+
+async def test_an_awareness_update_never_cancels_a_proposal(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """Cursors and presence are a separate channel and must not stop a countdown.
+
+    Awareness never reaches the document, so observing the document is already
+    the answer — this pins it, because the tempting implementation is a hook on
+    inbound messages, and that one cannot tell a caret from a keystroke.
+    """
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+        socket = await rooms.open(collab.id, account2.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            await rooms.submit(collab.id, character.id)
+
+            awareness = Awareness(Doc())
+            awareness.set_local_state({"user": {"name": "Holdout"}, "cursor": 7})
+            await socket.send_bytes(
+                create_awareness_message(
+                    awareness.encode_awareness_update([awareness.client_id])
+                )
+            )
+            await _settle()
+
+            status, proposed_at = await _proposal(rooms, collab.id)
+            assert status == PraxisStatus.pending
+            assert proposed_at is not None
 
 
 async def test_the_freeze_closes_every_socket_that_was_in_the_room(

@@ -61,6 +61,18 @@ class PraxisMemberOut(WireModel):
     model_config = {"from_attributes": True}
 
 
+class PraxisDoneUpdate(WireModel):
+    """The **Done** signal's body (ADR-0079) — "my part is finished".
+
+    A field rather than two routes (``/done`` and ``/undone``) because Done is
+    explicitly reversible and the client holds a checkbox, not a one-way button:
+    a toggle that has to guess which endpoint to call from local state is one
+    dropped response away from disagreeing with the server.
+    """
+
+    is_done: bool
+
+
 class PraxisInviteOut(WireModel):
     id: int
     praxis_id: int
