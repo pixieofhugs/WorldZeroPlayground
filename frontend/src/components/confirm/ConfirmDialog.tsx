@@ -146,7 +146,7 @@ export default function ConfirmDialog({
           borderRadius: isMobile ? '16px 16px 0 0' : 12,
           // No --shadow-* token exists; the colour half is the one that would
           // drift between themes, so it is the half that comes from a token.
-          boxShadow: '0 8px 28px var(--color-overlay-strong)',
+          boxShadow: '0 8px 28px var(--color-cast-shadow)',
         }}
       >
         <h2

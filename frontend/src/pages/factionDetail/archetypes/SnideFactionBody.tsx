@@ -215,7 +215,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.tasks.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}

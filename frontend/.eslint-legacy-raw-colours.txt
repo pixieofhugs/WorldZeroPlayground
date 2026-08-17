@@ -16,32 +16,46 @@
 # was ever wrong. The eight length counters went to `--color-warning` rather
 # than danger — approaching a limit is not an error — which also lifts them off
 # the 4.40:1 the red measured on the page.
-# `FieldDesk.tsx` was in this group and stays on the list for a GROUP 2
-# violation: its page dot-field writes its own `rgba(0,0,0,0.035)`.
+# `FieldDesk.tsx` was in this group and stayed on the list for a GROUP 2
+# violation (its page dot-field wrote its own `rgba(0,0,0,0.035)`); #1609's
+# group-2 pass cleared that too, so it is gone from here entirely.
+#
+# STANDING AT THE END OF GROUP 2: 24 files, 72 violations. Groups 1 and 2 are
+# done bar six files parked for a scheduling collision; group 3 is untouched.
 #
 # GROUP 2 — hand-rolled lift. Neutral chrome carrying its own
 # `rgba(0,0,0,α)` shadow or modal scrim at a geometry nobody else uses. This is
 # the class #1851 fixed twice already, at two different geometries; a third
 # (`AlbescentInvitation`) is here. Wants a shared elevation token, not 19 edits.
-src/pages/FieldDesk.tsx
-src/components/AlbescentInvitation.tsx
-src/components/collab/CollabRoster.tsx
-src/components/collab/CollabSuccess.tsx
-src/components/comments/CommentThread.tsx
-src/components/CredentialCard.tsx
-src/components/feed/FeedCardEraAnnouncement.tsx
-src/components/imageEdit/ImageEditModal.tsx
-src/components/InvitationLetterPopup.tsx
-src/components/LevelUpPopup.tsx
-src/components/metataskSeal/MetataskPicker.tsx
-src/components/metataskSeal/MetataskRemoveConfirm.tsx
+#
+# MOSTLY CLEARED by #1609: 23 violations across 14 files. The shared elevation
+# token is `--color-cast-shadow` (+ `-soft` for an ambient paper lift), a
+# COLOUR — geometry stays at the call site, because blur and offset are a
+# component's business and only the paint was off-theme. It is deliberately not
+# `--color-overlay-strong`: a scrim reads correctly on a near-black page
+# unchanged while a cast shadow disappears into it, so only the cast gets a
+# dark counterpart (0.25 -> 0.7, tracking --dropdown-shadow's lift). Four sites
+# that had already reached for --color-overlay-strong AS a shadow moved too —
+# they were the same defect laundered through a token, invisible to this rule.
+# The seven modal scrims flattened to `var(--color-overlay-strong)` outright,
+# per the ruling `.filter-factions__scrim` already carries in index.css: "one
+# scrim for every overlay". Three non-elevation strays went with them —
+# CollabRoster's warn veil now mixes the banner's OWN faction ink instead of a
+# global amber-500, FieldDesk's dot field mixes `--color-text-primary` so it
+# survives dark mode, and FeedCardEraAnnouncement mixes `--badge-admin-text`.
+#
+# The six below are the same shape and are LEFT ONLY to avoid colliding with
+# concurrent card work — four cast shadows (`0 3px 14px rgba(34,26,18,0.1)`,
+# `0 2px 6px` the same, `0 12px 32px -14px rgba(0,0,0,0.4)`,
+# `0 16px 40px -24px rgba(0,0,0,0.5)`) that `--color-cast-shadow`/`-soft` now
+# answer directly, plus two that are not lift at all and want their own call:
+# `shared.tsx`'s `1px dashed rgba(128,128,128,0.3)` divider and `TaskCard`'s
+# `textShadow: 0 1px 2px rgba(0,0,0,0.3)`.
 src/components/praxisCard/desktop/DefaultPraxisCard.tsx
 src/components/praxisCard/scoreStamp/DefaultScoreStamp.tsx
 src/components/praxisCard/shared.tsx
-src/components/selectCard/DefaultSelectCard.tsx
 src/components/taskCard/DefaultTaskCard.tsx
 src/components/taskCard/TaskCard.tsx
-src/pages/characterProfile/archetypes/DefaultProfileBody.tsx
 src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx
 #
 # GROUP 3 — faction skins and ornament marks. READ THESE BEFORE REPOINTING.

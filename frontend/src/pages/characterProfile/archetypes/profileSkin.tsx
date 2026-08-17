@@ -208,7 +208,10 @@ export function SpectrumLaurel({
         width: 44,
         height: 44,
         transform: rotate ? `rotate(${rotate}deg)` : undefined,
-        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))',
+        // The top-praxis ribbon's lift, verbatim in DefaultProfileBody too.
+        // Rule-blind (`filter` is not a COLOUR_PROP), so neither copy was on
+        // the legacy list while both painted a fixed black on a themed page.
+        filter: 'drop-shadow(0 4px 8px var(--color-cast-shadow))',
       }}
     >
       <span
@@ -524,7 +527,7 @@ export function ProfileSkin({
             {t('profile.proposedTasksEmpty')}
           </p>
         ) : (
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="task-card-row gap-4">
             {proposedTasks.map((task) => (
               <TaskCard key={task.id} task={task} basePoints={task.point_value} />
             ))}
