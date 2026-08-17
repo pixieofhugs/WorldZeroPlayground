@@ -137,7 +137,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
         {/* ── the muster roll ── */}
         <section>
-          <SectionHead>{t("wow.roster.heading")}</SectionHead>
+          <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
           {roll.length === 0 ? (
             <Quiet>{t("detail.membersEmpty")}</Quiet>
           ) : (
@@ -152,16 +152,16 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
               ))}
               {/* The champion IS the whole roll — say so rather than leaving one
                   lonely row reading as a truncated list. */}
-              {roll.length === 1 && <Quiet>{t("wow.roster.emptyWithSpotlight")}</Quiet>}
+              {roll.length === 1 && <Quiet>{t("detail.membersEmptyWithSpotlight")}</Quiet>}
             </div>
           )}
         </section>
 
         {/* ── quests awaiting a champion ── */}
         <section>
-          <SectionHead>{t("wow.tasks.heading")}</SectionHead>
+          <SectionHead>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHead>
           {tasks.length === 0 ? (
-            <Quiet>{t("wow.tasks.empty")}</Quiet>
+            <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
               {tasks.map((task) => (
@@ -183,10 +183,10 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
         {/* ── chronicles of proof ── the one bunch of balloons on the page ── */}
         <section>
           <SectionHead balloons>
-            {t("wow.praxis.heading")}
+            {t("detail.default.recentHeading")}
           </SectionHead>
           {recentPraxis.length === 0 ? (
-            <Quiet>{t("wow.praxis.empty")}</Quiet>
+            <Quiet>{t("detail.default.recentEmpty")}</Quiet>
           ) : (
             <div className="praxis-gallery" style={CARD_GRID}>
               {recentPraxis.map((praxis) => (
@@ -237,7 +237,7 @@ function Charter({ slug }: { slug: string }) {
       <Bunting style={{ padding: "var(--space-sm) var(--space-lg) 0" }} />
       <div style={{ padding: "var(--space-lg) var(--space-xl) var(--space-xl)" }}>
         <div className="label-heading" style={{ fontFamily: MED }}>
-          {t("wow.charter.heading")}
+          {t("detail.aboutHeading")}
         </div>
         <Zig id="charter" style={{ margin: "var(--space-md) 0" }} />
         {paragraphs.map((paragraph) => (
@@ -386,11 +386,11 @@ function MemberRow({
       )}
       <span className="label-caption" style={{ flex: "none" }}>
         {champion
-          ? t("wow.spotlight.stat", {
+          ? t("detail.spotlightStat", {
               level: member.level,
               score: member.all_time_score.toLocaleString(),
             })
-          : t("wow.roster.level", { level: member.level })}
+          : t("detail.memberLevel", { level: member.level })}
       </span>
     </Link>
   );
@@ -532,7 +532,7 @@ function JoinBlock({
                 disabled={membership.joining}
                 style={{ ...GILT_BUTTON, flex: 1, opacity: membership.joining ? 0.6 : 1 }}
               >
-                {membership.joining ? t("wow.join.joining") : t("wow.join.confirmButton")}
+                {membership.joining ? t("wow.join.joining") : t("mobile.confirm")}
               </button>
             </div>
           </>
@@ -563,7 +563,7 @@ function JoinBlock({
               className="content-text"
               style={{ fontFamily: LORA, lineHeight: 1.6, color: MUTED, margin: 0 }}
             >
-              {t("wow.join.gateBody", { faction: name })}
+              {t("mobile.gateHint", { faction: name })}
             </p>
           </>
         )}

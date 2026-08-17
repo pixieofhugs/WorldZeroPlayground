@@ -69,9 +69,13 @@ describe('en copy catalog shape', () => {
   // `invitation.prospectus` string is a DIFFERENT key: it is the overline of the
   // one adaptive popup shared by every faction and deliberately survives.
   it('frames the UA faction page as the practice, not a prospectus', () => {
+    // The `ua.practice` block itself is gone: its two leaves were the about
+    // panel's heading and empty state, and #1911 settled both onto
+    // `detail.aboutHeading` / `detail.descriptionEmpty` for all seven bodies.
+    // What #850 actually forbids — the WORD, on a key of UA's own — is still
+    // what this asserts, and it now covers the whole block rather than one name.
     expect(factions.ua).not.toHaveProperty('prospectus')
-    expect(factions.ua.practice.heading).toBe('The Practice')
-    expect(factions.ua.practice.empty).toBe('Nothing written down yet.')
+    expect(factions.ua).not.toHaveProperty('practice')
   })
 
   it('keeps the shared invitation prospectus overline', () => {
@@ -370,32 +374,19 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'feed.json:factionSelect.wow.status.member',
     // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
     'factions.json:ephemerists.road.joining',
-    // #1864 GENERIC — the per-faction task/praxis list headings, empties and
-    // kickers all collapse to one shared string ("Recent praxis", "No praxis
-    // submitted yet."), so the retired word leaves with the key.
-    'factions.json:ephemerists.praxis.empty',
-    'factions.json:ua.praxis.heading',
-    'factions.json:ua.praxis.empty',
-    'factions.json:ua.registry.gateBody',
-    'feed.json:factionHero.ephemerists.stats.praxes',
-    'feed.json:factionHero.singularity.stats.praxes',
-    'feed.json:factionHero.ua.stats.praxes',
-    'feed.json:factionHero.wow.stats.praxes',
-    // `feed.json:row.wow.praxisSealed` and `praxis.json:card.wow.sealed` were
-    // listed here as #1864 CUTs waiting on their child. #1909 deleted both.
-    // #1864 GENERIC, blocked on the profile-kit collapse. The decision record's
-    // own agreed wording for these rows still reads "No praxis sealed yet",
-    // which contradicts this ruling — flagged on #1863 rather than picked here.
-    'common.json:profile.praxisEyebrow',
+    // #1864 GENERIC, and the ONE row its collapse could not settle. Fifteen
+    // entries stood here waiting on the children; #1909, #1910 and #1911 took
+    // every other one — the per-faction task/praxis headings and empties, the
+    // faction-hero stat labels and six of the seven profile-kit branches all
+    // left with their keys.
+    //
+    // This leaf is the clash the sweep could not resolve on its own: #1864's
+    // agreed wording for the collapsed praxis empty state is literally "No
+    // praxis sealed yet", and #1863's ruling C retires exactly that phrase.
+    // #1911 owns key STRUCTURE, so the key collapsed and the WORD shipped
+    // unchanged rather than being picked by an agent. An owner ruling on #1863
+    // rewords this one leaf and empties this list.
     'common.json:profile.praxisEmptyTitle',
-    'common.json:profile.coven.praxisEyebrow',
-    'common.json:profile.coven.praxisEmptyTitle',
-    'common.json:profile.singularity.praxisEyebrow',
-    'common.json:profile.singularity.praxisEmptyTitle',
-    'common.json:profile.ua.praxisEyebrow',
-    'common.json:profile.ua.praxisEmptyTitle',
-    'common.json:profile.ua.badgeTitle',
-    'common.json:profile.wow.praxisEyebrow',
   ].sort()
 
   const FILED_SURVIVORS = [
@@ -404,13 +395,9 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'praxis.json:listPage.emptyFiltered',
     // Pure metaphor — a mind filing contingencies submits no praxis.
     'progression.json:unlocks.three_plans.desc',
-    // #1864 GENERIC, as above. The three CUTs that sat here —
-    // `ephemerists.praxis.kicker` and both `card.masthead.*` — left with #1909.
-    'factions.json:everymen.praxis.empty',
-    'feed.json:factionHero.coven.stats.praxes',
-    'feed.json:factionHero.everymen.stats.praxes',
-    'feed.json:factionHero.snide.stats.praxes',
-    'common.json:profile.ephemerists.praxisEyebrow',
+    // The five #1864 GENERIC rows that sat here — `everymen.praxis.empty`,
+    // three `factionHero.{F}.stats.praxes` and `profile.ephemerists.
+    // praxisEyebrow` — all left with their keys under #1911.
   ].sort()
 
   it('says seal only where the word is an oath, an object, or a doomed key', () => {
@@ -516,7 +503,6 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
    * pattern does not need a `.txt` arm.
    */
   const TERMINAL_VOICE = [
-    'common.json:profile.singularity.praxisEmptyTitle',
     'factions.json:singularity.access.eligibleKicker',
     'factions.json:singularity.access.gateKicker',
     'factions.json:singularity.access.joinButton',
@@ -526,13 +512,12 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     // the line refuses in the array's own register — caught by the `> ` prompt.
     // It goes when #1869 gives Singularity something to advertise.
     'factions.json:singularity.invitation.perks.1',
-    'factions.json:singularity.manifest.empty',
-    'factions.json:singularity.mobile.eyebrow',
-    'factions.json:singularity.praxis.empty',
-    'factions.json:singularity.roster.empty',
-    'factions.json:singularity.roster.emptyWithSpotlight',
-    'factions.json:singularity.roster.heading',
-    'factions.json:singularity.tasks.empty',
+    // Eight more rows stood here: `profile.singularity.praxisEmptyTitle`,
+    // `manifest.empty`, `mobile.eyebrow`, the three `roster.*`, `praxis.empty`
+    // and `tasks.empty`. #1911 collapsed every one of those families to a
+    // shared, register-free string, so the prompt left with the keys. What
+    // survives is join-panel and invitation copy — the two surfaces the audit
+    // ruled KEEP their voice — which is exactly the shape #1948 wanted.
   ].sort()
 
   it('finds catalog leaves to scan, so the sweep cannot pass by scanning nothing', () => {
@@ -548,14 +533,21 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
   })
 
   it('renames the key the retired window titled, and keeps the panel labelled', () => {
-    // ponytail: "the circle" and "The Circle" are PROVISIONAL — assembled from
-    // the four strings already in this panel ("You're in the circle", "The
-    // circle is open", "Not in the circle — yet", "the circle is recruiting"),
-    // not written. The owner writes strings in this repo; pinning them here
-    // means a later voice pass reads as a deliberate edit, not a drift.
+    // ponytail: "the circle" is PROVISIONAL — assembled from the four strings
+    // already in this panel ("You're in the circle", "The circle is open", "Not
+    // in the circle — yet", "the circle is recruiting"), not written. The owner
+    // writes strings in this repo; pinning it here means a later voice pass
+    // reads as a deliberate edit, not a drift.
+    //
+    // `coven.mobile.eyebrow` was pinned beside it at "The Circle", the other
+    // half of #1948's fix. #1911 deleted the whole `{F}.mobile.eyebrow` family:
+    // it was already orphaned — the faction page reads the shared
+    // `detail.eyebrow` ("Faction") and has since the phone/desktop skins
+    // collapsed — so #1948's rename never reached a screen. Nothing renders
+    // `coven.exe` either way, which is what the ruling was for.
     expect(factions.coven.join).not.toHaveProperty('windowTitle')
     expect(factions.coven.join.heading).toBe('the circle')
-    expect(factions.coven.mobile.eyebrow).toBe('The Circle')
+    expect(factions.coven).not.toHaveProperty('mobile')
   })
 
   it('names the join panel in every faction voice, so none falls back to chrome', () => {

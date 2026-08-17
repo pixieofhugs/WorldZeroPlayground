@@ -31,7 +31,6 @@ import {
   Tally,
   PLATE as SHEET,
 } from "../../../components/factionMarks/ephemeristsPlate";
-import { toRoman } from "../../../utils/roman";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
@@ -133,8 +132,10 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-// "level {roman}"; level 0 shows an em-dash, matching the ephemerists convention.
-const romanLevel = (level: number) => (level > 0 ? toRoman(level) : "—");
+// `romanLevel` formatted the roster and spotlight levels as "level {roman}".
+// #1863 retired the roman numeral as a name for a character's level, and #1911
+// settled both rows onto the shared "Level {{level}}", which takes the integer.
+// `toRoman` still numbers the codex's own ornament below.
 
 /**
  * A keeper's monogram. The codex struck these as circular vellum medallions;
@@ -175,7 +176,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
             <EphemeristsSigil size={15} color={BRASS} />
             <span style={{ ...SMALL_CAPS, fontWeight: 600, fontSize: "var(--text-md)", letterSpacing: "0.22em", color: CAPTION }}>
-              {t("ephemerists.apparatus.heading")}
+              {t("detail.aboutHeading")}
             </span>
             <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${BRASS}, transparent)` }} />
           </div>
@@ -188,7 +189,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
               ))
             ) : (
               <p className="content-text" style={{ fontFamily: READING, lineHeight: 1.78, color: QUIET, margin: 0 }}>
-                {t("ephemerists.apparatus.empty")}
+                {t("detail.descriptionEmpty")}
               </p>
             )}
           </div>
@@ -196,10 +197,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>{t("ephemerists.tasks.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHeading>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
-              {t("ephemerists.tasks.empty")}
+              {t("detail.default.tasksEmpty")}
             </p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
@@ -221,10 +222,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>{t("ephemerists.praxis.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.recentHeading")}</SectionHeading>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MARGINALIA, fontStyle: "italic", color: PAGE_QUIET }}>
-              {t("ephemerists.praxis.empty")}
+              {t("detail.default.recentEmpty")}
             </p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
@@ -341,7 +342,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       >
                         {membership.joining
                           ? t("ephemerists.road.joining")
-                          : t("ephemerists.road.confirmButton")}
+                          : t("mobile.confirm")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -388,7 +389,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.65, color: INK }}>
                       {burned
                         ? t("detail.burned.body", { faction: factionName(faction.slug) })
-                        : t("ephemerists.road.gateBody", { faction: factionName(faction.slug) })}
+                        : t("mobile.gateHint", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}
@@ -451,8 +452,8 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     {spot.display_name}
                   </div>
                   <div style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: BAND_QUIET, marginTop: "var(--space-sm)" }}>
-                    {t("ephemerists.spotlight.stat", {
-                      level: romanLevel(spot.level),
+                    {t("detail.spotlightStat", {
+                      level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
                     })}
                   </div>
@@ -463,12 +464,12 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
           <div style={{ ...CARD, padding: "var(--space-lg) var(--space-xl) var(--space-lg)" }}>
             <div style={{ position: "relative", zIndex: 2, ...SMALL_CAPS, fontWeight: 600, fontSize: "var(--text-md)", letterSpacing: "0.2em", color: CAPTION, marginBottom: "var(--space-md)" }}>
-              {t("ephemerists.roster.heading")}
+              {t("detail.default.membersHeading", { total: members.length })}
             </div>
             {roster.length === 0 ? (
               <p className="content-text" style={{ position: "relative", zIndex: 2, fontFamily: MARGINALIA, fontStyle: "italic", color: QUIET }}>
                 {spot
-                  ? t("ephemerists.roster.emptyWithSpotlight")
+                  ? t("detail.membersEmptyWithSpotlight")
                   : t("detail.membersEmpty")}
               </p>
             ) : (
@@ -486,7 +487,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   </div>
                   <Tally level={m.level} />
                   <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: NILE }}>
-                    {t("ephemerists.roster.level", { level: romanLevel(m.level) })}
+                    {t("detail.memberLevel", { level: m.level })}
                   </span>
                 </Link>
               ))

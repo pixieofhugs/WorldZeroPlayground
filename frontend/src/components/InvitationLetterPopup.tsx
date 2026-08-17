@@ -16,6 +16,12 @@ function tKey(t: TFunction<'factions'>, key: string): string {
   return resolve(key)
 }
 
+/** The shared label for a terms row that carries none of its own, or `''`. */
+function sharedTermLabel(t: TFunction<'factions'>, index: number): string {
+  const key = SHARED_TERM_LABELS[index]
+  return key ? tKey(t, key) : ''
+}
+
 function tArr<T>(t: TFunction<'factions'>, key: string): T[] {
   const resolve = t as unknown as (k: string, o: { returnObjects: true }) => unknown
   const value = resolve(key, { returnObjects: true })
@@ -47,9 +53,27 @@ const FONT_BODY = 'var(--font-body)'
 const FONT_MONO = "'Courier Prime', monospace"
 
 interface Term {
-  label: string
+  /** Absent on the rows whose label is shared — see {@link SHARED_TERM_LABELS}. */
+  label?: string
   value: string
 }
+
+/**
+ * The terms slip's row labels, by position, where the label is the SAME for
+ * every faction (#1911).
+ *
+ * Row 0 is the toll, and each house names it in its own voice — "dues", "cover
+ * charge", "oath of fealty", "handshake". Rows 1 and 2 named the same two
+ * things fourteen different ways, so the audit collapsed them; the rows now
+ * carry a `value` only and take their label from here. Positional because the
+ * slip is a positional array — a row's own `label` still wins where it has one,
+ * which is what keeps row 0 (and any row a later letter adds) unaffected.
+ */
+const SHARED_TERM_LABELS: readonly (string | null)[] = [
+  null,
+  'invitation.skillsLabel',
+  'invitation.outputLabel',
+]
 
 export interface InvitationLetterPopupProps {
   factionSlug: string
@@ -272,7 +296,7 @@ export default function InvitationLetterPopup({
                   color: FAINT,
                 }}
               >
-                {term.label}
+                {term.label ?? sharedTermLabel(t, idx)}
               </span>
               <span
                 style={{
