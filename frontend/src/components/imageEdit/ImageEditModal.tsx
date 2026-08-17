@@ -360,7 +360,7 @@ const overlayStyle: CSSProperties = {
   justifyContent: 'center',
   padding: 'var(--space-xl)',
   zIndex: 1000,
-  background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
+  background: 'var(--color-overlay-strong)',
 }
 const cardStyle: CSSProperties = {
   width: 420,
@@ -372,7 +372,7 @@ const cardStyle: CSSProperties = {
   // §4a asymmetric-inset exception: the tie at 20 rounds DOWN so the shorter
   // bottom inset survives instead of flattening into a uniform box.
   padding: 'var(--space-xl) var(--space-xl) var(--space-lg)',
-  boxShadow: '0 18px 46px -14px rgba(26,18,9,0.5)',
+  boxShadow: '0 18px 46px -14px var(--color-cast-shadow)',
   fontFamily: FONT_BODY,
 }
 const headingStyle: CSSProperties = {

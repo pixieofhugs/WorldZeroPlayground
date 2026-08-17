@@ -65,7 +65,7 @@ export default function DefaultSelectCard({
         borderRadius: 14,
         color: "var(--faction-default-card-text)",
         fontFamily: MONO,
-        boxShadow: "0 12px 32px -14px rgba(0,0,0,0.4)",
+        boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
       }}
     >
       <div style={{ flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>

@@ -207,7 +207,7 @@ const sheet: CSSProperties = {
   padding: 'var(--space-md) var(--space-lg)',
   // No --shadow-* token exists; the colour half is the half that would drift
   // between themes, so it is the half that comes from a token (ConfirmDialog).
-  boxShadow: '0 -12px 34px var(--color-overlay-strong)', maxHeight: '80vh', overflowY: 'auto',
+  boxShadow: '0 -12px 34px var(--color-cast-shadow)', maxHeight: '80vh', overflowY: 'auto',
 }
 const grab: CSSProperties = {
   display: 'block', width: 38, height: 4, borderRadius: 999,

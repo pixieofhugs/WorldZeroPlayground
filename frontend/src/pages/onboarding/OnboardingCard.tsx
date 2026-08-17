@@ -136,7 +136,7 @@ export default function OnboardingCard({
           backgroundClip: 'padding-box, border-box',
           // Geometry raw, colour tokenised — the colour half is the half that
           // would drift between themes (`SignInOptions`, `ConfirmDialog`).
-          boxShadow: '0 12px 32px -14px var(--color-overlay-strong)',
+          boxShadow: '0 12px 32px -14px var(--color-cast-shadow)',
           color: 'var(--faction-default-card-text)',
           fontFamily: MONO,
           padding: 'var(--space-xl)',

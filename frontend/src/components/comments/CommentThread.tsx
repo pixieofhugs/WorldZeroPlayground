@@ -95,7 +95,7 @@ function Sheet({
           // the @mention listbox, an absolutely positioned child, and a
           // clipping ancestor cuts it off. The hairline below rounds its own
           // ends instead, which is all the clip was ever doing.
-          boxShadow: '0 4px 14px -10px rgba(0,0,0,0.4)',
+          boxShadow: '0 4px 14px -10px var(--color-cast-shadow)',
         }}
       >
         {/* The spectrum hairline — the na tell. A rainbow for default/na via

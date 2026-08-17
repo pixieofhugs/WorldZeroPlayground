@@ -52,8 +52,14 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
         {i18n.t('feed:eraAnnouncement.headline', { name: era_name })}
       </h2>
 
+      {/* The notes and the archive rule take the card's OWN ink at 75% / 40%,
+          not a restated #f7f4ee (#1609). The notes composite reads 9.86:1 on
+          --badge-admin-bg, so the softening costs nothing at the contrast
+          floor. This card is dark in BOTH themes — --badge-admin-bg/-text are
+          declared once in :root — so the mix has no second value to track; the
+          win is that the ink can now only ever be the card's. */}
       {era_notes && (
-        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'rgba(247,244,238,0.75)', marginBottom: 'var(--space-lg)', lineHeight: 1.5 }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'color-mix(in srgb, var(--badge-admin-text) 75%, transparent)', marginBottom: 'var(--space-lg)', lineHeight: 1.5 }}>
           {era_notes}
         </p>
       )}
@@ -83,7 +89,7 @@ export default function FeedCardEraAnnouncement({ item, archive }: Props) {
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
-            border: '1px solid rgba(247,244,238,0.4)',
+            border: '1px solid color-mix(in srgb, var(--badge-admin-text) 40%, transparent)',
             color: 'var(--badge-admin-text)',
             padding: 'var(--space-sm) var(--space-lg)',
             textDecoration: 'none',

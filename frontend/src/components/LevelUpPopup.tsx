@@ -301,7 +301,7 @@ function MobileLevelUpCard({
         overflowX: 'hidden',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
-        background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.44), rgba(26,18,9,0.74))',
+        background: 'var(--color-overlay-strong)',
       }}
     >
       <MobileConfetti />
@@ -325,7 +325,7 @@ function MobileLevelUpCard({
           padding: 'var(--space-xl)',
           textAlign: 'center',
           fontFamily: FONT_BODY,
-          boxShadow: '0 20px 50px -12px rgba(26,18,9,0.5)',
+          boxShadow: '0 20px 50px -12px var(--color-cast-shadow)',
         }}
       >
         <SealStamp level={level} sealRing={sealRing} />
@@ -432,7 +432,7 @@ export default function LevelUpPopup({
         // §4a asymmetric-inset exception: the tie at 28 rounds DOWN so the card
         // keeps its heavier top inset instead of flattening to a uniform box.
         padding: 'var(--space-2xl) var(--space-xl) var(--space-xl)',
-        boxShadow: '0 18px 46px -14px rgba(26,18,9,0.5)',
+        boxShadow: '0 18px 46px -14px var(--color-cast-shadow)',
         textAlign: 'center',
         fontFamily: FONT_BODY,
       }}
@@ -500,7 +500,7 @@ export default function LevelUpPopup({
         overflowY: 'auto',
         overscrollBehavior: 'contain',
         zIndex: 1000,
-        background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
+        background: 'var(--color-overlay-strong)',
       }}
     >
       <div style={{ margin: 'auto' }} onClick={(e) => e.stopPropagation()}>{card}</div>

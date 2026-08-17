@@ -461,7 +461,15 @@ export function CollabRoster({
             borderRadius: 4,
             color: banner.tone,
             border: `1px solid ${banner.tone}`,
-            background: banner.warn ? 'rgba(234,179,8,0.08)' : 'transparent',
+            // The veil is the banner's OWN ink at 8%, not a global amber
+            // (#1609). It was `rgba(234,179,8,…)` — Tailwind's amber-500, which
+            // is neither --color-warning nor any faction's notice, so the one
+            // fill sat under eight different inks in both themes. Reading
+            // `banner.tone` is the same move the border above makes and cannot
+            // drift from it.
+            background: banner.warn
+              ? `color-mix(in srgb, ${banner.tone} 8%, transparent)`
+              : 'transparent',
           }}
         >
           {banner.text}
