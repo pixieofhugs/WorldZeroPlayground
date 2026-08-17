@@ -99,7 +99,15 @@ describe('mobile factions directory — stripe/card correspondence (#743)', () =
     const bar = stripeBar(html)
     // Coven is a member here; a member-first sort would float it to the front.
     // Rainbow order pins it last (pink) and Everymen first (red).
-    const order = ['everymen', 'ua', 'snide', 'ephemerists', 'singularity', 'coven']
+    //
+    // The Ephemerists precede S.N.I.D.E. since #2078: they took a gold (h41)
+    // when #2068 emptied the teal slot (h183), so their stripe moved from
+    // between green and blue to between orange and green. This bar is the one
+    // surface that paints these fills with a hard edge between them, so it is
+    // the sequence worth pinning — UA's sienna (h18) and the brass (h41) are
+    // now the tightest touching pair on the page at ΔE2000 31.1 light /
+    // 30.3 dark, measured against index.css.
+    const order = ['everymen', 'ua', 'ephemerists', 'snide', 'singularity', 'coven']
     const positions = order.map((slug) => bar.indexOf(`--faction-${slug}`))
     for (const [index, pos] of positions.entries()) {
       expect(pos, `${order[index]} present in bar`).toBeGreaterThan(-1)
