@@ -44,10 +44,15 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         overflow: "hidden",
         background: factionCssVar("everymen", "card-bg"),
         border: "1px solid var(--everymen-frame)",
-        boxShadow: "0 3px 14px rgba(34, 26, 18, 0.16)",
+        boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         position: "relative",
         fontFamily: "var(--font-faction-typewriter)",
         color: factionCssVar("everymen", "card-text"),
+        // ornament (#1609): the BROADSHEET's ruled line, at its own 17/18px
+        // pitch and its own 0.08. It is deliberately NOT
+        // `--faction-everymen-dispatch-rule` (0.12, every 24px) — that token
+        // names the dispatch SLIP's rule, and collapsing two drawings the
+        // family keeps apart would be picking a winner (§6, #1654). Stays raw.
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent, transparent 17px, rgba(100,140,200,0.08) 17px, rgba(100,140,200,0.08) 18px)",
         transition: "background 150ms, color 150ms",
@@ -68,6 +73,8 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
           fontSize: 15,
           letterSpacing: "0.3em",
           textTransform: "uppercase",
+          // ornament (#1609): a printed RULE under the masthead, drawn as a
+          // zero-blur shadow. Nothing is lifted, so no cast token. Stays raw.
           boxShadow: "0 2px 0 rgba(34, 26, 18, 0.22)",
         }}
       >
