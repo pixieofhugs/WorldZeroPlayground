@@ -141,6 +141,11 @@ export default function EphemeristsVote({
             padding: 'var(--space-lg) var(--space-xl)',
             background:
               'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
+            // ornament (#1609): the same inset well the Coven and S.N.I.D.E.
+            // vote plates carry — a recess INSIDE a plate that is dark in both
+            // cascades, not a cast onto a ground that flips. This one is also
+            // tinted to its own plate (30,34,51 is the valley blue-black, not
+            // neutral), which is the drawing rather than a stray alpha. Raw.
             boxShadow: 'inset 0 1px 8px rgba(30, 34, 51, 0.7)',
             clipPath: stepClip(SHEET_STEP),
           }}

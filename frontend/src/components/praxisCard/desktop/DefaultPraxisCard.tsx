@@ -37,7 +37,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         background: "var(--faction-default-card-bg)",
         color: "var(--faction-default-card-text)",
         border: "1px solid var(--faction-default-card-line)",
-        boxShadow: "0 3px 14px rgba(34, 26, 18, 0.1)",
+        boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
       }}
     >

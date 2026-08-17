@@ -17,6 +17,14 @@ import FactionSigil from "../sigil/FactionSigil";
 import DefaultSelectCard from "./DefaultSelectCard";
 
 /**
+ * Every tile casts onto the FEED page, not onto itself (#1609). The tiles are
+ * dark; the ground behind them is `--color-bg-page`, which flips — so this is
+ * the ordinary lift `--color-cast-shadow` exists for, and the three hand-rolled
+ * alphas that stood here (0.28 / 0.4 / 0.5) were one shadow written three ways.
+ */
+const CAST = "var(--color-cast-shadow)";
+
+/**
  * FactionSelectCard — the faction-DIRECTORY tile, one per faction. The compact
  * card a player meets when browsing "Choose your faction": each renders in its
  * faction's full archetype (gilt placard, candlelit spell slip, ransom dispatch,
@@ -178,7 +186,12 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--snide-ink)", color: "var(--snide-paper)", fontFamily: "var(--font-faction-typewriter)",
-      border: "1px solid #000", boxShadow: "0 8px 26px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column",
+      // ornament (#1609): the `#000` hairline is drawn one stop BELOW the
+      // tile's own `--snide-ink` fill, to keep the edge crisp where the tile
+      // meets a light page. The S.N.I.D.E. family has no rung under its ink,
+      // and minting one for a single hairline is the `-weak`/`-medium` mistake
+      // index.css already records. Stays raw; see the legacy list.
+      border: "1px solid #000", boxShadow: `0 8px 26px ${CAST}`, display: "flex", flexDirection: "column",
     }}>
       <div style={{ position: "absolute", top: -40, right: -40, width: 130, height: 130, borderRadius: "50%",
         background: "radial-gradient(circle, var(--snide-acid) 0%, transparent 62%)", opacity: 0.22, filter: "blur(2px)" }} />
@@ -191,7 +204,9 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
             <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: "var(--space-xs)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
           </div>
         </div>
-        <div style={{ borderTop: "1px dashed rgba(255,255,255,0.25)", margin: "var(--space-lg) 0 var(--space-md)" }} />
+        {/* A percentage of the ink already on the tile, not a white hedge
+            (#1609) — the same call `PraxisByline`'s dashed rule makes. */}
+        <div style={{ borderTop: "1px dashed color-mix(in srgb, var(--snide-paper) 25%, transparent)", margin: "var(--space-lg) 0 var(--space-md)" }} />
         <p className="content-text" style={{ margin: 0, lineHeight: 1.65, color: "var(--snide-paper)" }}>
           {i18n.t("feed:factionSelect.snide.blurb")}
         </p>
@@ -262,19 +277,41 @@ export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Om
   );
 }
 
+/**
+ * The Singularity tile's palette (#1609).
+ *
+ * This tile was the last select card still painting itself in hexes — a
+ * `const green = "#4ade80"` plus `#050f08`, `#2563eb`, `#8fe6ac` and `#60a5fa`
+ * — while the S.N.I.D.E. tile directly above it already read `var(--snide-*)`
+ * throughout. The module constant is why a colour grep found the tile clean:
+ * `green` reaches four style objects and two hover handlers as an Identifier,
+ * which the colour rule's `someStringIn` walk cannot see (§4a, "a module
+ * constant is Gap D's indirection wearing paint").
+ *
+ * These are `var()` strings rather than values, so the names below carry no
+ * colour of their own. Every one is theme-INVARIANT in `index.css` — Singularity
+ * is always-dark, and this tile is near-black in both cascades, so an ink that
+ * flipped underneath it would be the #1792 defect (a token that moves on a
+ * ground that does not).
+ */
+const TERM_VOID = "var(--faction-singularity-card-bg)";
+const TERM_GREEN = "var(--faction-singularity-card-text)";
+const TERM_BLUE = "var(--faction-singularity-border-hard)";
+const TERM_CYAN = "var(--faction-singularity-card-muted)";
+const TERM_CTA_BG = `color-mix(in srgb, ${TERM_BLUE} 14%, transparent)`;
+
 export function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
-  const green = "#4ade80";
   return (
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "#050f08", color: green, fontFamily: "var(--font-faction-terminal)",
-      border: "1px solid #2563eb", boxShadow: "0 8px 26px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column",
+      background: TERM_VOID, color: TERM_GREEN, fontFamily: "var(--font-faction-terminal)",
+      border: `1px solid ${TERM_BLUE}`, boxShadow: `0 8px 26px ${CAST}`, display: "flex", flexDirection: "column",
     }}>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none",
-        background: "repeating-linear-gradient(rgba(74,222,128,0.05) 0 1px, transparent 1px 3px)" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "var(--space-sm) var(--space-md)", borderBottom: "1px solid rgba(96,165,250,0.4)" }}>
-        {Array.from({ length: 9 }).map((_, i) => <i key={i} style={{ width: 6, height: 6, borderRadius: 1, background: "rgba(96,165,250,0.5)" }} />)}
+        background: "repeating-linear-gradient(var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "var(--space-sm) var(--space-md)", borderBottom: `1px solid color-mix(in srgb, ${TERM_CYAN} 40%, transparent)` }}>
+        {Array.from({ length: 9 }).map((_, i) => <i key={i} style={{ width: 6, height: 6, borderRadius: 1, background: `color-mix(in srgb, ${TERM_CYAN} 50%, transparent)` }} />)}
       </div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-lg) 0" }}>
         {/* The card opened on "singularity protocol" with the blinking cursor
@@ -284,23 +321,29 @@ export function SingularitySelectCard({ state = "locked", members, onVisit }: Om
             still reads; the `identity.*` overline was a different, single-faction
             slot on top of it. */}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)" }}>
-          <SingularitySigil size={30} color={green} />
+          <SingularitySigil size={30} color={TERM_GREEN} />
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
-          <span style={{ fontSize: 30, color: green, letterSpacing: "0.02em" }}>{i18n.t("feed:factionSelect.singularity.name")}</span>
+          <span style={{ fontSize: 30, color: TERM_GREEN, letterSpacing: "0.02em" }}>{i18n.t("feed:factionSelect.singularity.name")}</span>
         </div>
-        <p className="content-text" style={{ margin: "var(--space-lg) 0 0", lineHeight: 1.65, color: "#8fe6ac" }}>
+        {/* `#8fe6ac` stood here (#1609) — a fourth green, and BRIGHTER than the
+            phosphor accent above it (13.06:1 against the accent's 11.18:1),
+            which inverts the weighting every other Singularity surface uses.
+            `--faction-singularity-phosphor-dim` is the token minted for exactly
+            this slot: a SOLID dim green so prose can sit below the accent
+            without sitting below AA (7.31:1 on this ground). */}
+        <p className="content-text" style={{ margin: "var(--space-lg) 0 0", lineHeight: 1.65, color: "var(--faction-singularity-phosphor-dim)" }}>
           &gt; {i18n.t("feed:factionSelect.singularity.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 var(--space-lg) var(--space-lg)" }}>
-        <div style={{ fontSize: "var(--text-md)", color: "#60a5fa", marginBottom: "var(--space-md)" }}>{status}{members != null && <span style={{ float: "right", color: green }}>{i18n.t("feed:factionSelect.singularity.members", { count: members })}</span>}</div>
+        <div style={{ fontSize: "var(--text-md)", color: TERM_CYAN, marginBottom: "var(--space-md)" }}>{status}{members != null && <span style={{ float: "right", color: TERM_GREEN }}>{i18n.t("feed:factionSelect.singularity.members", { count: members })}</span>}</div>
         <button onClick={onVisit} style={{
           display: "flex", alignItems: "center", width: "100%", cursor: "pointer", gap: "var(--space-sm)",
-          border: "1px solid #2563eb", background: "rgba(37,99,235,0.14)", color: green,
+          border: `1px solid ${TERM_BLUE}`, background: TERM_CTA_BG, color: TERM_GREEN,
           fontFamily: "var(--font-faction-terminal)", fontSize: "var(--text-xl)", letterSpacing: "0.06em", padding: "var(--space-sm) var(--space-md)",
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = green; e.currentTarget.style.color = "#050f08"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(37,99,235,0.14)"; e.currentTarget.style.color = green; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = TERM_GREEN; e.currentTarget.style.color = TERM_VOID; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = TERM_CTA_BG; e.currentTarget.style.color = TERM_GREEN; }}
         ><span style={{ opacity: 0.7 }}>$</span> {i18n.t("feed:factionSelect.singularity.cta")}</button>
       </div>
     </div>
@@ -313,7 +356,7 @@ export function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--everymen-field)", color: "var(--everymen-cream)", fontFamily: "var(--font-body)",
-      border: "3px solid var(--everymen-ink)", boxShadow: "0 0 0 3px var(--everymen-paper), 0 8px 26px rgba(0,0,0,0.28)",
+      border: "3px solid var(--everymen-ink)", boxShadow: `0 0 0 3px var(--everymen-paper), 0 8px 26px ${CAST}`,
       display: "flex", flexDirection: "column",
     }}>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5,

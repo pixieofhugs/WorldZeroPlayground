@@ -156,6 +156,12 @@ const MOON_PLATE: CSSProperties = {
   background:
     'radial-gradient(120% 150% at 50% -20%, var(--faction-coven-moon-plate-from), var(--faction-coven-moon-plate-to))',
   border: '1px solid var(--faction-coven-moon-plate-border)',
+  // ornament (#1609, re-decided after #2020): an INSET well, not a cast. Two
+  // reasons it takes no token — `--color-cast-shadow` names the colour a
+  // surface throws onto the ground BEHIND it, and this is the recess inside the
+  // plate; and the plate is dark in both cascades, so the token's 0.25 -> 0.7
+  // dark lift would deepen a well whose ground never moved. #2020's author left
+  // it deliberately and that call still holds. Stays raw; see the legacy list.
   boxShadow: 'inset 0 1px 8px rgba(0, 0, 0, 0.5)',
 }
 

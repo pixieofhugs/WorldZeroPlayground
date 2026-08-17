@@ -69,7 +69,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           textTransform: 'uppercase',
           color: PHOSPHOR,
           margin: 0,
-          textShadow: '0 0 8px rgba(74,222,128,0.4)',
+          textShadow: `0 0 8px ${phosphor(40)}`,
         }}
       >
         {title}
@@ -108,7 +108,7 @@ const dress: ProfileDress = {
   taglineExtra: {
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
-    textShadow: '0 0 12px rgba(74,222,128,0.35)',
+    textShadow: `0 0 12px ${phosphor(35)}`,
   },
   progressionStyle: {
     marginTop: 'var(--space-xl)',

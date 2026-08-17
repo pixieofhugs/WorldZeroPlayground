@@ -48,8 +48,10 @@ const INK_PANEL: CSSProperties = {
   position: "relative",
   overflow: "hidden",
   background: INK,
-  color: "#fff",
+  color: PAPER,
   border: "1px solid color-mix(in srgb, var(--faction-snide-acid) 18%, transparent)",
+  // ornament (#1609): flat offset print shadow — the flyposter metaphor, not
+  // elevation, so it does not take `--color-cast-shadow`. Stays raw.
   boxShadow: "6px 8px 0 rgba(0,0,0,0.45)",
 };
 
@@ -60,6 +62,8 @@ const PAPER_PANEL: CSSProperties = {
   background: PAPER,
   color: INK,
   border: `1.5px solid ${INK}`,
+  // ornament (#1609): same flat offset print shadow, one stop lighter for the
+  // paper stock. Stays raw.
   boxShadow: "4px 6px 0 rgba(0,0,0,0.22)",
 };
 
@@ -342,7 +346,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     >
                       {t("snide.dispatch.eligibleTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: "#d8d6c8", marginBottom: "var(--space-lg)" }}>
+                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: "var(--faction-snide-card-muted)", marginBottom: "var(--space-lg)" }}>
                       {t("snide.dispatch.eligibleBody")}
                     </div>
                     <button
@@ -350,7 +354,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       style={{
                         width: "100%",
                         background: PINK,
-                        color: "#fff",
+                        // #1609: white on `--faction-snide-pink` measures
+                        // 3.50:1 — below AA. The ink that clears it is already
+                        // declared and already measured: 5.38:1.
+                        color: "var(--faction-snide-on-accent)",
                         fontFamily: BLACK,
                         fontSize: "var(--text-xl)",
                         padding: "var(--space-md)",
@@ -367,7 +374,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#e7e4d8", marginBottom: "var(--space-lg)" }}>
+                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "var(--faction-snide-card-muted)", marginBottom: "var(--space-lg)" }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -388,7 +395,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         style={{
                           flex: 1,
                           background: PINK,
-                          color: "#fff",
+                          // #1609: white on `--faction-snide-pink` is 3.50:1,
+                          // below AA; `-on-accent` is the measured 5.38:1 ink.
+                          color: "var(--faction-snide-on-accent)",
                           fontFamily: BLACK,
                           fontSize: "var(--text-xl)",
                           padding: "var(--space-md)",
@@ -452,7 +461,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         ? t("detail.burned.title", { faction: factionName(faction.slug) })
                         : t("snide.dispatch.gateTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#d8d6c8" }}>
+                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "var(--faction-snide-card-muted)" }}>
                       {burned
                         ? t("detail.burned.body", { faction: factionName(faction.slug) })
                         : t("mobile.gateHint", { faction: factionName(faction.slug) })}
@@ -504,7 +513,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   >
                     {spot.display_name}
                   </div>
-                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: "var(--space-xs)" }}>
+                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faction-snide-card-muted)", marginTop: "var(--space-xs)" }}>
                     {t("detail.spotlightStat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),

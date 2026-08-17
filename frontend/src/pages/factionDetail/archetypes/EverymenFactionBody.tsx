@@ -417,7 +417,9 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       fontSize: 32,
                       lineHeight: 0.9,
                       color: CREAM,
-                      textShadow: "2px 2px 0 rgba(0,0,0,.4)",
+                      // The Everymen poster drop shadow, struck from the ink
+                      // its four sibling surfaces already use (#1609).
+                      textShadow: `2px 2px 0 color-mix(in srgb, ${INK} 40%, transparent)`,
                     }}
                   >
                     {spot.display_name}

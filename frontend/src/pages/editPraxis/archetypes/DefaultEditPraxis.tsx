@@ -188,7 +188,7 @@ const ground = (
 const sheetStyle = {
   background: SHEET,
   border: `1px solid ${BORDER}`,
-  boxShadow: "0 16px 40px -24px rgba(0,0,0,0.5)",
+  boxShadow: "0 16px 40px -24px var(--color-cast-shadow)",
 };
 const statusMark = (
   <RingMark size={44} inset={5} ring={RING} inner={FIELD} spin />

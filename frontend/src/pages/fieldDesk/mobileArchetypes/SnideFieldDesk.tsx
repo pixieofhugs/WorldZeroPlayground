@@ -191,7 +191,11 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
             scale. */}
         <div
           className="overflow-hidden"
-          style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.04)', marginTop: 'var(--space-md)' }}
+          // The unfilled track is a percentage of the ink already on the desk
+          // (#1609), not a fixed white — the desk ground flips #14110b ->
+          // #0c0a07, and a 4% white wash was the one value that could not
+          // follow it.
+          style={{ height: 6, borderRadius: 999, background: 'color-mix(in srgb, var(--faction-snide-card-text) 4%, transparent)', marginTop: 'var(--space-md)' }}
           {...(levelTrack
             ? {
                 role: 'progressbar',
@@ -302,7 +306,13 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
         <Link
           to={FIND_TASK_LINK}
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: BLACK, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: 'var(--faction-snide-paper)', background: PINK, boxShadow: '2px 3px 0 rgba(0,0,0,.4)', textDecoration: 'none' }}
+          // `--faction-snide-paper` on the zine pink measures 3.10:1 — below
+          // AA, and this is the desk's PRIMARY action (#1609). Every other
+          // surface that fills with this pink already inks it dark: the seal's
+          // clip chip, the comment voice, the score stamp's multiplier and the
+          // task card's CTA. `-on-accent` is the measured 5.38:1.
+          // The boxShadow stays raw — a flat offset print shadow, not lift.
+          style={{ fontFamily: BLACK, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: 'var(--faction-snide-on-accent)', background: PINK, boxShadow: '2px 3px 0 rgba(0,0,0,.4)', textDecoration: 'none' }}
         >
           {t('fieldDesk.home.findTask')}
         </Link>
