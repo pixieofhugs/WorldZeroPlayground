@@ -333,12 +333,12 @@
      var(--color-print-offset) 32%, transparent)` — which is the same split the
      cast token makes for blur and offset and the same one `shared.tsx`'s byline
      rule makes as a percentage of `currentColor`: how hard THIS mark is printed
-     is the component's drawing, and only the paint was ever off-theme. The eight
-     strengths that survive (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.55,
-     and 0.5 on the two filters) are kept exactly, so this rung repaints no pixel.
-     Collapsing them onto one is the honest next move and it is a DESIGN call that
-     needs eyes on seventeen surfaces; minting the name is what makes it a
-     one-line change when someone makes it.
+     is the component's drawing, and only the paint was ever off-theme. All NINE
+     strengths that survive (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.5 /
+     0.55) are kept exactly, so this rung repaints no pixel. Collapsing them onto
+     one is the honest next move and it is a DESIGN call that needs eyes on
+     seventeen surfaces; minting the name is what makes it a one-line change when
+     someone makes it.
 
      THEME-INVARIANT ON PURPOSE — there is no dark half, and that is the decision
      rather than an omission. Nothing behind these marks moves: they are struck on
