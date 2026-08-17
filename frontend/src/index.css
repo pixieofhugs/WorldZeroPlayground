@@ -4332,6 +4332,12 @@
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
+  /* The task card's ASCII face drifts beside the sign-up key (#2036). No new
+     keyframe: `spec-rise` is already a bob to a tunable height, and this file
+     already reuses across factions where the motion is the same shape
+     (`.coven-moon-dust` runs `eph-twinkle`). Stilled, the robot stays parked
+     and drawn — it is ornament, not an indicator. */
+  .sg-ascii { --spec-bounce: -5px; animation: spec-rise 6s ease-in-out infinite; }
 }
 
 /* ══ Praxis-card redesign vote widgets (#821) ══
@@ -4768,6 +4774,32 @@
 }
 [data-theme="dark"] .snd-censor {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%23f4f1e8'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%238ed11f'/%3E%3C/svg%3E");
+}
+
+/* S.N.I.D.E. — the masthead mark, grown 20px → 24px (#2035, task cards v3).
+
+   WHY HERE AND NOT AS A PROP. `CardMasthead` (#2029) owns exactly one mark box
+   for the whole kit and offers no size, which is the anatomy doing its job —
+   seven skins that can each pick a mark size are seven mastheads again. It
+   does publish `data-masthead-mark="<slug>"`, and this is the one skin the
+   design grows, so the exception is written here as an exception instead of
+   becoming a parameter every card could reach for. If a SECOND faction ever
+   needs a different mark size, that is the moment `CardMasthead` grows a
+   `markSize` prop and this block is deleted — not before.
+
+   IT IS THE DRAWING THAT GROWS, NOT THE SLOT. The mark's 20px box is an
+   INLINE style on the span, so a rule here could not move it without
+   `!important` — and should not want to: the box is what the three-cell grid
+   measures its centring against, and the wordmark has no business shifting
+   because S.N.I.D.E.'s mark got louder. The svg's size is a presentation
+   ATTRIBUTE, which a stylesheet does beat, so the drawn A comes out 24px and
+   bleeds 2px into the band's own padding on each side. That is the mark
+   already doing what it was drawn to do — `SnideSigil` is four filled shapes
+   cantered -22° that break out of their own circle at four points, and
+   `overflow: visible` is set there for exactly this reason. */
+[data-masthead-mark="snide"] svg {
+  width: 24px;
+  height: 24px;
 }
 
 /* Coven — the spell slip's pentagram watermark turns, once every two minutes

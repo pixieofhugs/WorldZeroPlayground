@@ -11,10 +11,10 @@ import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import {
+  CompassRose,
   Cornice,
   Glyph,
   GLYPHS,
-  Octagon,
   Tally,
 } from "../factionMarks/ephemeristsPlate";
 
@@ -25,9 +25,10 @@ import {
  * A papyrus plate ruled in brass, headed by a cavetto cornice whose night band
  * holds a winged sun disc between two incised registers of glyphs — Egypt,
  * Greece, the middle ages, 1925 — that surface and recede on a long, staggered
- * cycle. The points ride a stepped octagon medallion; the level is a numeral
- * over tally strokes; the call to action is a full-bleed band with an open eye
- * and a ringed planet. Poiret One for display, Cinzel for the small caps,
+ * cycle. The points ride a compass rose — v3 (#2037) struck them on the
+ * surveyor's instrument in place of the v2 card's stepped octagon; the level is
+ * a numeral over tally strokes; the call to action is an inset cartouche under
+ * a double brass rule. Poiret One for display, Cinzel for the small caps,
  * Spectral for the reading copy.
  *
  * This REPLACES "The Discordant Map" wholesale (ADR-0055 / ADR-0056 — a full
@@ -62,7 +63,13 @@ interface SizeSet {
   masthead: number;
   /** Winged-disc width — the ornament narrows on the phone. Geometry. */
   discWidth: number;
-  /** Medallion box. Geometry. */
+  /**
+   * The points plate's box. Geometry — and the size that makes the compass rose
+   * legible: the needles reach in to 26/74 of a 100-unit viewBox, so the clear
+   * field the figure and its unit sit on is 48% of this number. The design
+   * grows it to 128 (the octagon it replaces was 104) for exactly that reason;
+   * the phone keeps the ratio the two sizes always had.
+   */
   medallion: number;
   bodyPad: string;
   titleSize: string;
@@ -75,7 +82,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cardWidth: 384,
     masthead: 110,
     discWidth: 176,
-    medallion: 104,
+    medallion: 128,
     bodyPad: "0 var(--space-xl) var(--space-xl)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-display)",
@@ -85,7 +92,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cardWidth: 340,
     masthead: 98,
     discWidth: 154,
-    medallion: 90,
+    medallion: 112,
     bodyPad: "0 var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-heading)",
@@ -171,9 +178,15 @@ function Wing({ flip }: { flip?: boolean }) {
 
 /* The stepped `Octagon` and the cavetto `Cornice` stood here — the octagon
    identical to the kit's, the cornice identical but for its FLUTE COUNT. Both
-   are imported from `factionMarks/ephemeristsPlate` since #1654; the count is
-   now `<Cornice flutes={40} />`, which is the task-card design's density on a
-   384px band and always was. */
+   moved to `factionMarks/ephemeristsPlate` in #1654; the count is now
+   `<Cornice flutes={40} />`, which is the task-card design's density on a 384px
+   band and always was.
+
+   The octagon is no longer mounted here at all: #2037 replaces the points
+   medallion with `CompassRose`, drawn in the same kit module for the same
+   reason — the praxis card's score stamp strikes the identical plate, and the
+   owner's ruling is that the two marks unify (#2042). The octagon stays kit
+   vocabulary; four other Ephemerists surfaces still cut it. */
 
 /* `JournalRule` stood here — this card's own fluted band, bleeding past the text
    column between the description and the in-progress line.
@@ -357,7 +370,12 @@ export default function EphemeristsTaskCard({
                 </div>
               )}
 
-              {/* The stepped octagon medallion. */}
+              {/* The compass-rose points plate (#2037). The plate is the kit's
+                  `CompassRose`; the figure and its unit stay HTML laid over it,
+                  on the type ramp, which is also what keeps the unit a SINGLE
+                  REPLACEABLE NODE — #2038 swaps that one span through five
+                  scripts and needs to pin its box, which it cannot do to a
+                  `<text>` node inside somebody else's viewBox. */}
               <div
                 style={{
                   position: "relative",
@@ -369,18 +387,13 @@ export default function EphemeristsTaskCard({
                   justifyContent: "center",
                 }}
               >
-                <svg width={size.medallion} height={size.medallion} viewBox="0 0 100 100" aria-hidden="true" style={{ position: "absolute", inset: 0 }}>
-                  <Octagon inset={0} stroke="var(--faction-ephemerists-plate-brass)" width={1.6} fill="var(--faction-ephemerists-plate-disc)" />
-                  <Octagon inset={6} stroke="var(--faction-ephemerists-plate-brass-light)" width={0.7} />
-                  <circle cx="50" cy="50" r="34" fill="none" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="0.7" opacity="0.55" />
-                  <path d="M18 74 H82" stroke="var(--faction-ephemerists-plate-brass-light)" strokeWidth="0.7" opacity="0.5" />
-                </svg>
+                <CompassRose size={size.medallion} />
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
                   <span style={{ fontFamily: DECO, fontSize: size.pointsSize }}>{basePoints}</span>
-                  {/* Ornament: the unit engraved inside the medallion, sized to
-                      the disc rather than to the label ramp (§4a). */}
-                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the medallion. */}
-                  <span style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-muted)" }}>
+                  {/* Ornament: the unit engraved inside the rose, sized to the
+                      disc rather than to the label ramp (§4a). */}
+                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the rose. */}
+                  <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-muted)" }}>
                     {i18n.t("feed:taskCard.pointsUnit")}
                   </span>
                 </div>
