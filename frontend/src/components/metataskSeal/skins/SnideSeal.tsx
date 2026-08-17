@@ -15,7 +15,10 @@ import type { SealSkinProps } from '../types'
 const CLIP_STYLES = [
   { bg: 'var(--faction-snide-paper)', color: 'var(--faction-snide-ink)', font: 'var(--faction-snide-font-black)', rotate: -3 },
   { bg: 'var(--faction-snide-ink)', color: 'var(--faction-snide-acid)', font: 'var(--faction-snide-font-cond)', rotate: 3 },
-  { bg: 'var(--faction-snide-pink)', color: '#fff', font: 'var(--faction-snide-font-impact)', rotate: -2 },
+  // `#fff` stood on the pink chip and measured 3.50:1 — below AA (#1609). The
+  // other two chips already read the ink their own ground was measured for;
+  // `--faction-snide-on-accent` is pink's, at 5.38:1.
+  { bg: 'var(--faction-snide-pink)', color: 'var(--faction-snide-on-accent)', font: 'var(--faction-snide-font-impact)', rotate: -2 },
 ]
 
 function ClippedCondition({ text }: { text: string }) {
@@ -48,6 +51,8 @@ function ClippedCondition({ text }: { text: string }) {
                 lineHeight: 1,
                 padding: 'var(--space-xs) var(--space-xs)',
                 transform: `rotate(${clip.rotate}deg)`,
+                // ornament (#1609): the cut-out chip's flat offset shadow —
+                // print metaphor, not elevation. Stays raw; see the list.
                 boxShadow: '1px 2px 0 rgba(0,0,0,0.4)',
                 textTransform: 'uppercase',
               }}
@@ -75,6 +80,8 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
         borderRadius: 2,
         padding: 'var(--space-md) var(--space-lg)',
         transform: 'rotate(-1deg)',
+        // ornament (#1609): flat offset print shadow, and the halftone dot
+        // field below is a one-off density rather than the acid tier.
         boxShadow: '4px 5px 0 rgba(0,0,0,0.35)',
         overflow: 'hidden',
       }}

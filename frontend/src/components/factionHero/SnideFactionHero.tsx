@@ -50,11 +50,19 @@ export default function SnideFactionHero({
         overflow: "hidden",
         marginBottom: "var(--space-xl)",
         background: "var(--faction-snide-ink)",
-        color: "#fff",
+        color: "var(--faction-snide-card-text)",
+        // ornament (#1609): the flyposter's flat offset shadow — the print
+        // metaphor, not elevation. It stays raw; see the legacy list.
         boxShadow: "8px 10px 0 rgba(0,0,0,0.32)",
         paddingBottom: "var(--space-xs)",
       }}
     >
+      {/* ornament (#1609): the halftone dot field and the pasted-flyer ghosts
+          below name a ONE-OFF drawing, not a tier. `--faction-snide-acid` at
+          5.5% is not the acid the strip and the chit rules read — it is the
+          density this wall's grain was drawn at, and pointing it at the tier
+          would couple the ghost lettering to every future edit of the hue
+          (§4a). They stay raw; see the legacy list. */}
       <div
         className="ht-dots"
         style={{
@@ -155,7 +163,7 @@ export default function SnideFactionHero({
               fontSize: "var(--text-base)",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "#b7b5a7",
+              color: "var(--faction-snide-card-muted)",
               margin: "var(--space-md) 0 0",
               transform: "rotate(-0.4deg)",
             }}
@@ -188,7 +196,7 @@ export default function SnideFactionHero({
               lineHeight: 1.6,
               maxWidth: 560,
               margin: "var(--space-lg) 0 0",
-              color: "#e7e4d8",
+              color: "var(--faction-snide-card-muted)",
             }}
           >
             {description ?? i18n.t("feed:factionHero.snide.descriptionFallback")}
@@ -270,7 +278,7 @@ export default function SnideFactionHero({
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  color: "#cfcdbf",
+                  color: "var(--faction-snide-card-muted)",
                 }}
               >
                 {s.label}
