@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { CovenCat } from "../../../components/factionMarks/covenSlip";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -19,7 +20,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
  *
  * The spell slip opened out to a full page: a candlelight haze washes the
- * viewport, a pentagram watermark turns slowly behind the copy, braided thread
+ * viewport, a cat watermark turns slowly behind the copy, braided thread
  * rules head every section, and the points are held inside a glowing pentagram
  * ward on a 452px action plate. Grenze Gotisch carries the display, Cormorant
  * Garamond the numerals and the brief, Caveat the hand, Quicksand the chrome —
@@ -932,32 +933,21 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           boxSizing: "border-box",
         }}
       >
-        {/* The pentagram watermark, turning once every two minutes. `.cvn-wheel`
-            carries the motion and its reduced-motion guard (#911/#1023). */}
-        <svg
-          className="cvn-wheel"
-          width={640}
-          height={640}
-          viewBox="0 0 100 100"
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            right: -180,
-            top: 120,
-            zIndex: 0,
-            pointerEvents: "none",
-            opacity: 0.09,
-          }}
-        >
-          <circle cx="50" cy="50" r="44" fill="none" stroke={DEEP} strokeWidth="0.8" />
-          <path
-            d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
-            fill="none"
-            stroke={DEEP}
-            strokeWidth="1.1"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {/* The cat watermark, turning once every two minutes (#2041 — it was a
+            pentagram, and the swap is `covenSlip`'s because five Coven surfaces
+            turn the same mark). `.cvn-wheel` still carries the motion and its
+            reduced-motion guard (#911/#1023).
+
+            IT COMES INSIDE, and the size becomes responsive to make that
+            possible. The pentacle was a fixed 640px hung 180px off the right,
+            so a quarter of it was clipped — fine for an abstract star, wrong
+            for a face. `right: 24` puts the whole drawing on the sheet, which
+            means the size now has to fit the narrow sheet too: 240 + 24 clears
+            a 320px viewport, where 400 would not. */}
+        <CovenCat
+          size={desktop ? 400 : 240}
+          style={{ right: 24, top: 120, opacity: 0.09 }}
+        />
 
         <div
           style={{
