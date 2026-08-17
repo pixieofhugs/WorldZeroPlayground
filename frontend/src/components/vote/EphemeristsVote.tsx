@@ -162,7 +162,7 @@ export default function EphemeristsVote({
               disabled={saving}
               onClick={() => void vote(tier.value)}
               onMouseEnter={() => setHovered(tier.value)}
-              aria-label={t('chrome.ephemerists.rateAria', { value: tier.value, label: tier.label })}
+              aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
               style={{
                 position: 'relative',
@@ -345,7 +345,7 @@ export default function EphemeristsVote({
           tag — stood here. #1638 struck both: each disc's `aria-label` already
           names its metal, and `VoteSummary` below states the cast once it is
           made, so the caption row was a third restatement of the row above it.
-          `votes:chrome.ephemerists.idle` and `.tag` went with it. */}
+          `votes:chrome.idle` and `.tag` went with it. */}
 
       <VoteSummary
         selected={selected}

@@ -64,7 +64,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.coven.idle')
+  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
 
   return (
     <div>
@@ -121,7 +121,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
               disabled={saving}
               onClick={() => void vote(tier.value)}
               onMouseEnter={() => setHovered(tier.value)}
-              aria-label={t('chrome.coven.rateAria', { value: tier.value, label: tier.label })}
+              aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
               style={{
                 position: 'relative',
@@ -226,7 +226,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
               color: 'var(--faction-coven-vote-off)',
             }}
           >
-            {`· ${t('chrome.coven.tag')}`}
+            {`· ${t('chrome.tag')}`}
           </span>
         )}
       </div>

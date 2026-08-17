@@ -459,49 +459,41 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
 })
 
 describe('the four functional controls say one thing across every faction (#1863)', () => {
-  // Each already had 3+ factions saying the same words; the audit settled the
-  // rest onto them. The keys stay per-faction until #1864 collapses them, so
-  // the guard is that every branch resolves to the SAME string.
-  const SLUGS = ['ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity'] as const
-
+  // Each already had 3+ factions saying the same words; #1863 settled the rest
+  // onto them, and #1911 collapsed the nine branches into one key each. What is
+  // left to guard here is the VALUE — #1911's own suite next door owns the key
+  // structure, and neither check is the other's.
   it('the join-panel confirm button reads Confirm, in one casing', () => {
-    // The join panel's key sits under a per-faction section name (`road`,
-    // `access`, `dispatch`…), so this walks the faction block rather than
-    // guessing the path.
+    // The join panel's key used to sit under a per-faction section name
+    // (`road`, `access`, `dispatch`…), which is why a literal grep for it
+    // returned zero and the audit undercounted the family. One key now.
     const buttons = catalogLeaves()
       .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
       .map(([, value]) => value)
-    expect(buttons.length).toBe(SLUGS.length)
-    expect([...new Set(buttons)]).toEqual(['Confirm'])
+    expect(buttons).toEqual([])
+    expect(i18n.t('factions:mobile.confirm')).toBe('Confirm')
   })
 
   it('the task-card signup reads Sign up', () => {
-    for (const slug of SLUGS) {
-      expect(i18n.t(`feed:taskCard.${slug}.signup` as 'feed:taskCard.signup')).toBe('Sign up')
-    }
-    // `taskCard.albescent.signup` is deliberately NOT settled: ADR-0048 makes
-    // the Albescent card the na sheet plus drift, so it renders na's verb and
-    // its own is orphaned copy. `factionTaskCardsV2.test.tsx` asserts the
-    // orphan never reaches a screen, which only holds while it differs.
-    expect(i18n.t('feed:taskCard.signup')).not.toBe(i18n.t('feed:taskCard.signup'))
+    // Albescent's own verb ("acknowledge") was orphaned copy — ADR-0048 makes
+    // its card the na sheet plus drift, so the verb never reached a screen —
+    // and #1911 deleted it with the rest of the family.
+    expect(i18n.t('feed:taskCard.signup')).toBe('Sign up')
   })
 
   it('the comment edited marker reads edited', () => {
-    for (const slug of [...SLUGS, 'albescent']) {
-      expect(i18n.t(`praxis:comments.${slug}.edited` as 'praxis:comments.edited')).toBe('edited')
-    }
+    expect(i18n.t('praxis:comments.edited')).toBe('edited')
   })
 
   it('the vote star reads Rate {{value}} — {{label}}', () => {
-    for (const slug of [...SLUGS, 'unaffiliated']) {
-      expect(i18n.t(`votes:chrome.${slug}.rateAria` as 'votes:chrome.ua.rateAria', { value: 3, label: 'solid' })).toBe(
-        'Rate 3 — solid',
-      )
-    }
-    // Albescent and the mobile widget keep `Rate {{value}} of 5`: neither ships
-    // per-faction tier labels (#783 took Albescent's away, because a vote word
-    // is a tell), so their call sites have no `label` to interpolate.
-    expect(i18n.t('votes:chrome.albescent.rateAria', { value: 3 })).toBe('Rate 3 of 5')
+    expect(i18n.t('votes:chrome.rateAria', { value: 3, label: 'solid' })).toBe('Rate 3 — solid')
+    // Albescent keeps `Rate {{value}} of 5`: it ships no tier labels (#783 took
+    // them away, because a vote word is a tell), so its call site has no
+    // `label` to interpolate and the shared sentence would trail off after the
+    // dash. The mobile widget carried the identical string under
+    // `chrome.mobile.rateAria`; #1911 collapsed that pair onto one key with no
+    // faction slug in its name.
+    expect(i18n.t('votes:chrome.rateAriaPlain', { value: 3 })).toBe('Rate 3 of 5')
   })
 })
 

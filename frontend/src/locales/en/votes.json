@@ -53,9 +53,7 @@
     "decent": "decent",
     "good": "good",
     "great": "great",
-    "brilliant": "brilliant",
-    "idle": "cast a vote",
-    "tag": "your vote"
+    "brilliant": "brilliant"
   },
   "chrome": {
     "loginGate": "Log in to vote",
@@ -63,44 +61,9 @@
     "tally_one": "{{count}} vote · <1>{{points}}</1> pts",
     "tally_other": "{{count}} votes · <1>{{points}}</1> pts",
     "saveError": "Could not save your vote. Please try again.",
-    "mobile": {
-      "rateAria": "Rate {{value}} of 5"
-    },
-    "ephemerists": {
-      "rateAria": "Rate {{value}} — {{label}}"
-    },
-    "everymen": {
-      "rateAria": "Rate {{value}} — {{label}}",
-      "idle": "awaiting",
-      "tag": "earned"
-    },
-    "coven": {
-      "rateAria": "Rate {{value}} — {{label}}",
-      "idle": "tap to cheer",
-      "tag": "yay!"
-    },
-    "wow": {
-      "rateAria": "Rate {{value}} — {{label}}",
-      "idle": "— awaiting thy judgment —"
-    },
-    "snide": {
-      "rateAria": "Rate {{value}} — {{label}}",
-      "idle": "call it",
-      "tag": "locked in"
-    },
-    "singularity": {
-      "rateAria": "Rate {{value}} — {{label}}",
-      "idle": "no signal",
-      "tag": "locked"
-    },
-    "ua": {
-      "rateAria": "Rate {{value}} — {{label}}"
-    },
-    "albescent": {
-      "rateAria": "Rate {{value}} of 5"
-    },
-    "unaffiliated": {
-      "rateAria": "Rate {{value}} — {{label}}"
-    }
+    "idle": "cast a vote",
+    "tag": "your vote",
+    "rateAria": "Rate {{value}} — {{label}}",
+    "rateAriaPlain": "Rate {{value}} of 5"
   }
 }
