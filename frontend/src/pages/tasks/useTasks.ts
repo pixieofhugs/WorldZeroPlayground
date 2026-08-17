@@ -26,6 +26,12 @@
  * were invisible in the browse. `canSignUp` asks the server the question the
  * game actually answers; every rule stays backend-side, so nothing here reads
  * an era value and #1046's "never hardcode an EraConfig value" is not reopened.
+ *
+ * Eligibility is the ONE axis whose default is viewer-relative (#1972): ON for
+ * a viewer who carries a character, unavailable for everyone else. A level-0
+ * character can start exactly one of the era's tasks, so the unfiltered board
+ * is 65 rows with no way to tell which. See {@link readTaskFilters} for the
+ * tri-state that costs, and what a shared link does about it.
  */
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -46,7 +52,7 @@ import { useFactions } from '../../hooks/useFactions'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { extractError } from '../../utils/errors'
 import { readOneOf } from '../../utils/urlParams'
-import { useAuth } from '../../auth/AuthContext'
+import { hadSessionLastVisit, useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
@@ -90,8 +96,14 @@ export const TASK_TYPE_DEFAULT: TaskType = 'standard'
  */
 export const TASK_SORT_DEFAULT: TaskSort = 'level'
 export const TASK_STATUS_DEFAULT: TaskStatusFilter = 'All'
-/** The eligibility axis is a flag; this is its one non-default value. */
+/**
+ * The eligibility axis is a TRI-STATE, not a flag (#1972): `1` on, `0` off,
+ * absent = whatever this viewer's default is. Every other axis can spell its
+ * default by omission because the default is the same for everyone; this one
+ * cannot, so both states are written out.
+ */
 export const CAN_SIGN_UP_ON = '1'
+export const CAN_SIGN_UP_OFF = '0'
 
 /**
  * The legal value of each enumerated axis, for {@link readOneOf} (#1537). A URL
@@ -133,8 +145,31 @@ export interface TaskFilterAxes {
  *
  * The three enumerated axes go through the shared whitelist, so an unknown value
  * clamps to the default instead of riding out to a route that 422s on it.
+ *
+ * `hasCharacter` is the only viewer-relative input, and it decides the whole
+ * eligibility axis (#1972):
+ *
+ *   - **No character, no eligibility.** There is no question to ask the server,
+ *     so the axis is forced off whatever the URL says. `/tasks` is public and it
+ *     is the shop window — a stranger gets all 65 tasks, never an empty page.
+ *   - **With a character it is ON unless the URL says `0`.** A brand-new
+ *     character can start one task out of 65; opening the board on that one is
+ *     the point.
+ *
+ * That answers the shareable-link question the ruling leaves open. The axis is
+ * viewer-relative, so it cannot round-trip faithfully; what it round-trips
+ * instead is the viewer's *intent*, clamped to what the recipient can do. A
+ * pasted `can_sign_up=0` shows everyone the full board, so switching the filter
+ * off is a link you can send. A pasted `can_sign_up=1` is a request the
+ * recipient honours only if they carry a character — for anyone else it
+ * degrades to the full board rather than to nothing at all. A bare `/tasks`
+ * link means "the board, as it opens for you", which is now different for a
+ * player and a stranger by design.
  */
-export function readTaskFilters(params: URLSearchParams): TaskFilterAxes {
+export function readTaskFilters(
+  params: URLSearchParams,
+  hasCharacter: boolean,
+): TaskFilterAxes {
   return {
     taskType: readOneOf(
       params.get(TASK_FILTER_PARAMS.taskType),
@@ -150,7 +185,8 @@ export function readTaskFilters(params: URLSearchParams): TaskFilterAxes {
     // Unknown slugs are left alone, as on the praxis feed: `/factions` is
     // fetched separately and a slug that matches nothing simply returns no rows.
     factions: params.getAll(TASK_FILTER_PARAMS.faction).filter((slug) => slug !== ''),
-    canSignUp: params.get(TASK_FILTER_PARAMS.canSignUp) === CAN_SIGN_UP_ON,
+    canSignUp:
+      hasCharacter && params.get(TASK_FILTER_PARAMS.canSignUp) !== CAN_SIGN_UP_OFF,
   }
 }
 
@@ -183,13 +219,23 @@ export function nextFactionParams(
 }
 
 /**
- * Every axis back to its default, search included — what "clear all filters"
- * means. Params this page does not own are left alone.
+ * Every axis off, search included — what "clear all filters" means. Params this
+ * page does not own are left alone.
+ *
+ * Note "off", not "back to its default": for a viewer whose eligibility default
+ * is ON, deleting that param would hand them straight back to the filtered
+ * board, so clear-all writes the explicit `0` instead (#1972). A button that
+ * says it cleared the filters has to leave a list with no filters on it — and
+ * this is the same tap `CanSignUpEmpty` offers as "see everything".
  */
-export function clearedFilterParams(previous: URLSearchParams): URLSearchParams {
+export function clearedFilterParams(
+  previous: URLSearchParams,
+  hasCharacter: boolean,
+): URLSearchParams {
   const next = new URLSearchParams(previous)
   for (const key of Object.values(TASK_FILTER_PARAMS)) next.delete(key)
   next.delete(SEARCH_QUERY_PARAM)
+  if (hasCharacter) next.set(TASK_FILTER_PARAMS.canSignUp, CAN_SIGN_UP_OFF)
   return next
 }
 
@@ -282,11 +328,11 @@ export interface TasksState {
   selectedFactions: string[]
   setSelectedFactions: (slugs: string[]) => void
   /**
-   * "Tasks I can sign up for" (#1130). Defaults OFF — the tasks page is a
-   * catalogue, and hiding most of it by default would make tasks look scarce
-   * and tie first paint to auth resolving (against #1229). Callers hide the
-   * control entirely when logged out: the server answers `[]` for an anonymous
-   * viewer, so it is a control that cannot work.
+   * "Tasks I can sign up for" (#1130). Defaults **ON** for a viewer who carries
+   * a character and is unavailable to everyone else (#1972) — see
+   * {@link readTaskFilters}. Callers hide the control entirely for a viewer
+   * with no character: the server answers `[]` for an anonymous viewer, so it
+   * is a control that cannot work.
    */
   canSignUp: boolean
   setCanSignUp: (canSignUp: boolean) => void
@@ -320,8 +366,24 @@ export interface TasksState {
 }
 
 export function useTasks(): TasksState {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const hasCharacter = Boolean(user?.character)
+
+  /**
+   * Hold the read while the viewer is still unknown (#1972).
+   *
+   * The eligibility default is viewer-relative, so a cold load cannot resolve
+   * it until `/auth/me` answers. Fetching anyway would send a signed-in player
+   * the full board and then swap it for their eligible one: two trips on the
+   * heaviest read on the site, and a visible jump from 65 rows to 1.
+   *
+   * `hadSessionLastVisit` is a HINT and nothing renders off it (#1380) — it
+   * only decides whether to wait, so a stale hint costs a wait or an extra
+   * fetch, never a wrong list. A stranger has no hint, does not wait, and still
+   * paints on one round trip, which is the property #1229 was protecting.
+   */
+  const viewerPending = authLoading && hadSessionLastVisit()
 
   // One `/factions` read for the whole app (#1284) and one `/game-config`
   // (#1141) — both from shared module caches, derived rather than mirrored into
@@ -339,7 +401,7 @@ export function useTasks(): TasksState {
     status,
     factions: selectedFactions,
     canSignUp,
-  } = readTaskFilters(searchParams)
+  } = readTaskFilters(searchParams, hasCharacter)
   const [query, setQueryState] = useSearchQueryParam()
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
 
@@ -353,24 +415,26 @@ export function useTasks(): TasksState {
   const factionKey = selectedFactions.join(',')
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
     (limit) =>
-      listTasks({
-        // 'standard' → omit task_type so the backend applies its default
-        // (metatasks excluded); 'metatask' → list only metatask rows.
-        task_type: taskType === 'metatask' ? 'metatask' : undefined,
-        status: status === TASK_STATUS_DEFAULT ? undefined : status,
-        faction: selectedFactions.length > 0 ? selectedFactions : undefined,
-        // Every default is omitted rather than spelled out, so the common
-        // request keeps the exact shape it had before the axis existed. An
-        // absent `sort` already means level-ascending server-side.
-        sort: sort === TASK_SORT_DEFAULT ? undefined : sort,
-        can_sign_up: canSignUp || undefined,
-        q: trimmedQuery || undefined,
-        // The server excludes the authenticated viewer's own started tasks by
-        // default (#1229). Echoing the character id back here added an
-        // auth-dependent dep that made the page fetch twice.
-        limit,
-      }),
-    [taskType, sort, status, factionKey, canSignUp, trimmedQuery],
+      viewerPending
+        ? Promise.resolve<TaskOut[]>([])
+        : listTasks({
+            // 'standard' → omit task_type so the backend applies its default
+            // (metatasks excluded); 'metatask' → list only metatask rows.
+            task_type: taskType === 'metatask' ? 'metatask' : undefined,
+            status: status === TASK_STATUS_DEFAULT ? undefined : status,
+            faction: selectedFactions.length > 0 ? selectedFactions : undefined,
+            // Every default is omitted rather than spelled out, so the common
+            // request keeps the exact shape it had before the axis existed. An
+            // absent `sort` already means level-ascending server-side.
+            sort: sort === TASK_SORT_DEFAULT ? undefined : sort,
+            can_sign_up: canSignUp || undefined,
+            q: trimmedQuery || undefined,
+            // The server excludes the authenticated viewer's own started tasks
+            // by default (#1229). Echoing the character id back here added an
+            // auth-dependent dep that made the page fetch twice.
+            limit,
+          }),
+    [taskType, sort, status, factionKey, canSignUp, trimmedQuery, viewerPending],
     PAGE_LIMIT,
   )
   const tasks = data ?? []
@@ -394,10 +458,18 @@ export function useTasks(): TasksState {
     setAxis(TASK_FILTER_PARAMS.status, next, TASK_STATUS_DEFAULT)
   const setSelectedFactions = (slugs: string[]) =>
     writeParams((previous) => nextFactionParams(previous, slugs))
+  // Both states are written out, unlike every other axis: '' is not a value
+  // this axis can take, so the "same as default → delete" branch never fires
+  // and an omitted param keeps meaning "whatever your default is".
   const setCanSignUp = (next: boolean) =>
-    setAxis(TASK_FILTER_PARAMS.canSignUp, next ? CAN_SIGN_UP_ON : '', '')
+    setAxis(
+      TASK_FILTER_PARAMS.canSignUp,
+      next ? CAN_SIGN_UP_ON : CAN_SIGN_UP_OFF,
+      '',
+    )
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
-  const clearFilters = () => writeParams(clearedFilterParams)
+  const clearFilters = () =>
+    writeParams((previous) => clearedFilterParams(previous, hasCharacter))
 
   const handleSignup = async (id: number) => {
     setSignupMsg(null)
@@ -432,7 +504,10 @@ export function useTasks(): TasksState {
     user,
 
     tasks,
-    loading,
+    // The held read is a load, not an empty board: `viewerPending` returns no
+    // rows, and every consumer's `loading && tasks.length === 0` branch is what
+    // keeps the empty state off the screen until the viewer is known.
+    loading: loading || viewerPending,
     error,
 
     factions,

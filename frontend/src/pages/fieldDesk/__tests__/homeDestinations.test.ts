@@ -14,6 +14,10 @@
  * asserted to come out ON. If `TASK_FILTER_PARAMS.canSignUp` or `VOTED_PARAM`
  * is ever renamed, or `CAN_SIGN_UP_ON` stops being `'1'`, this fails here rather
  * than turning the home screen's buttons into a plain browse in production.
+ *
+ * `readTaskFilters` takes the viewer's has-a-character answer since #1972, and
+ * `true` is the only honest value here: the field desk is the signed-in home,
+ * and eligibility is exactly the axis a viewer without a character cannot use.
  */
 import { describe, it, expect } from 'vitest'
 import { CAST_VOTES_LINK, FIND_TASK_LINK, UPDATES_LINK } from '../homeDestinations'
@@ -21,6 +25,9 @@ import { readTaskFilters } from '../../tasks/useTasks'
 import { readFeedFilters } from '../../praxes/feedFilterParams'
 
 /** Split a same-origin app link into its path and its parsed query. */
+/** The field desk only renders for a signed-in viewer carrying a character. */
+const HAS_CHARACTER = true
+
 function parse(link: string): { path: string; params: URLSearchParams } {
   const [path, query = ''] = link.split('?')
   return { path, params: new URLSearchParams(query) }
@@ -30,7 +37,9 @@ describe('the mobile home CTA destinations', () => {
   it('sends "Find a Task" to the task browse with the eligibility axis on', () => {
     const { path, params } = parse(FIND_TASK_LINK)
     expect(path, 'the task browse').toBe('/tasks')
-    expect(readTaskFilters(params).canSignUp, 'can-sign-up axis').toBe(true)
+    expect(readTaskFilters(params, HAS_CHARACTER).canSignUp, 'can-sign-up axis').toBe(
+      true,
+    )
   })
 
   it('does not pin a status alongside eligibility', () => {
@@ -38,7 +47,7 @@ describe('the mobile home CTA destinations', () => {
     // faction ability bend the level bar (the Ephemerists reach retired tasks).
     // A `status=active` riding along would cancel that silently.
     const { params } = parse(FIND_TASK_LINK)
-    const filters = readTaskFilters(params)
+    const filters = readTaskFilters(params, HAS_CHARACTER)
     expect(filters.status, 'no status narrowing').toBe('All')
     expect(filters.factions, 'no faction narrowing').toEqual([])
   })
