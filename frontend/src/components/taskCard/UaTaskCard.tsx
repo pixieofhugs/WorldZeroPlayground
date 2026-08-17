@@ -83,7 +83,7 @@ export default function UaTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.ua.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -136,7 +136,7 @@ export default function UaTaskCard({
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span style={{ ...UA_EYEBROW, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
-                  {i18n.t("feed:taskCard.ua.levelCaption")}
+                  {i18n.t("feed:taskCard.levelCaption")}
                 </span>
                 <span style={{ fontFamily: UA_DISPLAY, fontWeight: 700, fontSize: size.levelSize, lineHeight: 0.9 }}>
                   {task.level_required}
@@ -180,7 +180,7 @@ export default function UaTaskCard({
               <UaEnsoScore
                 size={size.enso}
                 value={basePoints}
-                unit={i18n.t("feed:taskCard.ua.pointsUnit")}
+                unit={i18n.t("feed:taskCard.pointsUnit")}
                 valueColor="var(--faction-ua-card-accent)"
               />
             </div>

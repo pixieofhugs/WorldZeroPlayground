@@ -128,7 +128,7 @@ export default function AlbescentVote({
 
   const active = hovered || selected
   // Plain numerals, not a word ladder — see the TIER WORDS note above.
-  const caption = active ? reframeLabel('albescent', active) : t('unaffiliated.idle')
+  const caption = active ? reframeLabel('albescent', active) : t('chrome.idle')
   const step = Math.floor((tick * TICK_MS) / MORPH_STEP_MS)
   let offset = 0
 
@@ -178,7 +178,14 @@ export default function AlbescentVote({
               disabled={saving}
               onClick={() => void vote(value)}
               onMouseEnter={() => setHovered(value)}
-              aria-label={t('chrome.albescent.rateAria', { value })}
+              /* The plain form, not `chrome.rateAria`: #783 took Albescent's
+                 tier words away because a vote word is a tell, so this widget
+                 has no `{{label}}` to interpolate and the shared sentence would
+                 read "Rate 3 — ". `rateAriaPlain` is the same string the mobile
+                 widget carried under `chrome.mobile.rateAria`; #1911 collapsed
+                 that pair into one key rather than leaving a faction slug on
+                 it. */
+              aria-label={t('chrome.rateAriaPlain', { value })}
               aria-pressed={picked}
               style={{
                 border: 'none',
@@ -232,7 +239,7 @@ export default function AlbescentVote({
               color: 'var(--faction-default-vote-off)',
             }}
           >
-            {`· ${t('unaffiliated.tag')}`}
+            {`· ${t('chrome.tag')}`}
           </span>
         )}
       </div>

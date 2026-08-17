@@ -100,7 +100,7 @@ export default function SingularityTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.singularity.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -179,7 +179,7 @@ export default function SingularityTaskCard({
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span style={{ ...LABEL, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
-                  {i18n.t("feed:taskCard.singularity.levelCaption")}
+                  {i18n.t("feed:taskCard.levelCaption")}
                 </span>
                 <span style={{ fontFamily: MONO, fontSize: size.levelSize, lineHeight: 0.85, color: BRIGHT }}>
                   {String(task.level_required).padStart(2, "0")}
@@ -237,7 +237,7 @@ export default function SingularityTaskCard({
                   {basePoints}
                 </span>
                 <span style={{ ...LABEL, fontSize: "var(--text-base)", color: BLUE }}>
-                  {i18n.t("feed:taskCard.singularity.pointsUnit")}
+                  {i18n.t("feed:taskCard.pointsUnit")}
                 </span>
               </div>
             </div>

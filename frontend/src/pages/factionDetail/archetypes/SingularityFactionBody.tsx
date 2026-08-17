@@ -194,7 +194,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               ))
             ) : (
               <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
-                {t("singularity.manifest.empty")}
+                {t("detail.descriptionEmpty")}
               </p>
             )}
           </div>
@@ -202,10 +202,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>{t("singularity.tasks.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHeading>
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
-              {t("singularity.tasks.empty")}
+              {t("detail.default.tasksEmpty")}
             </p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
@@ -227,10 +227,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>{t("singularity.praxis.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.recentHeading")}</SectionHeading>
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
-              {t("singularity.praxis.empty")}
+              {t("detail.default.recentEmpty")}
             </p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
@@ -386,7 +386,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                       >
                         {membership.joining
                           ? t("singularity.access.joining")
-                          : t("singularity.access.confirmButton")}
+                          : t("mobile.confirm")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -434,7 +434,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60) }}>
                       {burned
                         ? t("detail.burned.body", { faction: factionName(faction.slug) })
-                        : t("singularity.access.gateBody")}
+                        : t("mobile.gateHint")}
                     </div>
                   </div>
                 )}
@@ -467,7 +467,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   {spot.display_name}
                 </div>
                 <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.1em", color: signal(55), marginTop: "var(--space-sm)", textTransform: "uppercase" }}>
-                  {t("singularity.spotlight.stat", {
+                  {t("detail.spotlightStat", {
                     level: spot.level,
                     score: spot.all_time_score.toLocaleString(),
                   })}
@@ -479,13 +479,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           <div style={{ ...PANEL, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
             <Scanlines />
             <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: "var(--space-md)" }}>
-              {t("singularity.roster.heading")}
+              {t("detail.default.membersHeading", { total: members.length })}
             </div>
             {array.length === 0 ? (
               <p className="content-text" style={{ position: "relative", fontFamily: FONT, color: phosphor(45) }}>
                 {spot
-                  ? t("singularity.roster.emptyWithSpotlight")
-                  : t("singularity.roster.empty")}
+                  ? t("detail.membersEmptyWithSpotlight")
+                  : t("detail.membersEmpty")}
               </p>
             ) : (
               array.map((m) => (
@@ -520,7 +520,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     </div>
                   </div>
                   <span style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: AMBER, letterSpacing: "0.04em" }}>
-                    {t("singularity.roster.level", { level: m.level })}
+                    {t("detail.memberLevel", { level: m.level })}
                   </span>
                 </Link>
               ))

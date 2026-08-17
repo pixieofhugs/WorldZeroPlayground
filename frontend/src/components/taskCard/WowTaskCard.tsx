@@ -131,7 +131,7 @@ export default function WowTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.wow.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -174,7 +174,7 @@ export default function WowTaskCard({
                     marginBottom: "var(--space-xs)",
                   }}
                 >
-                  {i18n.t("feed:taskCard.wow.levelCaption")}
+                  {i18n.t("feed:taskCard.levelCaption")}
                 </span>
                 <span style={{ fontFamily: MED, fontSize: size.levelSize, lineHeight: 0.85 }}>
                   {task.level_required}
@@ -242,7 +242,7 @@ export default function WowTaskCard({
                   </span>
                 </div>
                 <div style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-md)", color: PLUM, marginTop: "var(--space-xs)" }}>
-                  {i18n.t("feed:taskCard.wow.pointsUnit")}
+                  {i18n.t("feed:taskCard.pointsUnit")}
                 </div>
               </div>
             </div>

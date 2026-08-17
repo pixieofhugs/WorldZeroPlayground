@@ -185,36 +185,7 @@
     "confirmWithdraw": "Withdraw this comment?",
     "charCount": "{{count}}/{{max}}",
     "editError": "Could not save the edit.",
-    "withdrawError": "Could not withdraw the comment.",
-    "ua": {
-      "edited": "edited",
-      "prompt": "Leave a note in the margin…"
-    },
-    "everymen": {
-      "edited": "edited"
-    },
-    "coven": {
-      "edited": "edited"
-    },
-    "snide": {
-      "prompt": "say your piece —",
-      "edited": "edited"
-    },
-    "ephemerists": {
-      "prompt": "inscribe a note in the margin",
-      "edited": "edited"
-    },
-    "singularity": {
-      "edited": "edited"
-    },
-    "albescent": {
-      "edited": "edited"
-    },
-    "wow": {
-      "prompt": "Add thy counsel to the chronicle…",
-      "empty": "No counsel yet. Be the first to cry Huzzah.",
-      "edited": "edited"
-    }
+    "withdrawError": "Could not withdraw the comment."
   },
   "duelBanner": {
     "versus": "vs.",

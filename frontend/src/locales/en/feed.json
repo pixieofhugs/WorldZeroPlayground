@@ -193,53 +193,9 @@
     "inProgress": "{{count}} in progress",
     "multiplier": "×{{value}}",
     "modifierCaption": "modifier",
-    "na": {
-      "levelCaption": "Level",
-      "pointsUnit": "points",
-      "signup": "Sign up"
-    },
-    "albescent": {
-      "signup": "acknowledge",
-      "level": "Lvl {{level}}",
-      "pointsUnit": "pts"
-    },
-    "ephemerists": {
-      "level": "level {{level}}",
-      "points": "{{points}} pvncta",
-      "signup": "Sign up",
-      "levelCaption": "Level",
-      "pointsUnit": "pvncta"
-    },
-    "everymen": {
-      "points": "{{points}} PTS",
-      "signup": "Sign up",
-      "levelCaption": "Level"
-    },
-    "snide": {
-      "signup": "Sign up",
-      "pointsUnit": "PTS",
-      "levelCaption": "level"
-    },
-    "singularity": {
-      "signup": "Sign up",
-      "levelCaption": "lvl",
-      "pointsUnit": "pts"
-    },
-    "ua": {
-      "signup": "Sign up",
-      "levelCaption": "Level",
-      "pointsUnit": "points"
-    },
-    "coven": {
-      "signup": "Sign up",
-      "levelCaption": "level",
-      "pointsUnit": "points"
-    },
-    "wow": {
-      "signup": "Sign up",
-      "pointsUnit": "points",
-      "levelCaption": "level"
-    }
+    "levelCaption": "Level",
+    "pointsUnit": "Points",
+    "signup": "Sign up"
   },
   "factionCard": {
     "status": {
@@ -248,20 +204,19 @@
       "burned": "BURNED",
       "welcomeBack": "WELCOME BACK"
     },
-    "newInvitation": "NEW INVITATION",
-    "everymen": {
-      "blurbFallback": "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start."
-    }
+    "newInvitation": "NEW INVITATION"
   },
   "factionHero": {
+    "stats": {
+      "tasks": "Tasks open",
+      "praxes": "Praxis submitted"
+    },
     "albescent": {
       "factionLine": "Faction · {{name}}",
       "unrankedLine": "Unranked · By design",
       "motto": "The work is the work",
       "stats": {
-        "members": "Keepers",
-        "tasks": "Open Work",
-        "praxes": "Returned"
+        "members": "Keepers"
       }
     },
     "ephemerists": {
@@ -270,9 +225,7 @@
       "descriptionFallback": "Wanderers who set down what is true before it passes.",
       "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
-        "members": "ephemerists",
-        "tasks": "open truths",
-        "praxes": "sealed lately"
+        "members": "ephemerists"
       }
     },
     "everymen": {
@@ -280,9 +233,7 @@
       "motto": "THE WORK OUTLASTS THE WORKER",
       "descriptionFallback": "Nobody's coming to fix it but us. Report for duty.",
       "stats": {
-        "members": "card-carrying",
-        "tasks": "work orders",
-        "praxes": "reports filed"
+        "members": "card-carrying"
       }
     },
     "singularity": {
@@ -295,9 +246,7 @@
       },
       "readoutTitle": "SYSTEM READOUT",
       "stats": {
-        "members": "nodes online",
-        "tasks": "open protocols",
-        "praxes": "sealed lately"
+        "members": "nodes online"
       }
     },
     "snide": {
@@ -305,18 +254,14 @@
       "motto": "NOTHING MATTERS — DO IT ANYWAY",
       "descriptionFallback": "Nothing matters. We do it anyway.",
       "stats": {
-        "members": "operatives",
-        "tasks": "open jobs",
-        "praxes": "filed lately"
+        "members": "operatives"
       }
     },
     "ua": {
       "eyebrow": "World Zero · A daily practice",
       "descriptionFallback": "One true piece, then another. The satisfaction is in the making, not the tally.",
       "stats": {
-        "members": "practising",
-        "tasks": "sheets open",
-        "praxes": "pieces sealed"
+        "members": "practising"
       }
     },
     "coven": {
@@ -324,9 +269,7 @@
       "motto": "make it weird, make it matter",
       "descriptionFallback": "Nobody said the work couldn't be fun. Cast something.",
       "stats": {
-        "members": "witches",
-        "tasks": "quests open",
-        "praxes": "spells filed"
+        "members": "witches"
       }
     },
     "wow": {
@@ -334,9 +277,7 @@
       "motto": "“Whimsy for everyone.”",
       "descriptionFallback": "Gold-clad knights who take the silly seriously. We deliver soliloquies to houseplants, joust with pool noodles, and mean every word of it.",
       "stats": {
-        "members": "Knights",
-        "tasks": "Quests Afoot",
-        "praxes": "Chronicles Sealed"
+        "members": "Knights"
       }
     }
   },

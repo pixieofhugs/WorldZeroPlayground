@@ -25,7 +25,7 @@
   },
   "profile": {
     "praxisHeading": "Praxis",
-    "praxisEyebrow": "sealed by {{name}}",
+    "praxisEyebrow": "Submitted by {{name}}",
     "praxisEmptyTitle": "No praxis sealed yet",
     "praxisEmptyBody": "Every path is still open — the first finding is the hardest.",
     "topPraxis": "Top praxis",
@@ -34,7 +34,6 @@
     "proposedTasksEmpty": "No proposed tasks yet.",
     "handleJoined": "@{{username}} · joined {{joined}}",
     "lvl": "lvl",
-    "levelUnit": "pts this level",
     "ptsThisLevel": "{{current}} / {{span}} pts this level",
     "nextLevel": "next · lvl {{level}}",
     "ptsToNext": "{{score}} / {{threshold}} pts",
@@ -44,64 +43,6 @@
     "mobile": {
       "tabPraxis": "Praxis",
       "tabTasks": "Tasks"
-    },
-    "coven": {
-      "ringLabel": "lvl",
-      "nextLevel": "next · lvl {{level}}",
-      "praxisEyebrow": "sealed by {{name}}",
-      "praxisEmptyTitle": "No spells sealed yet",
-      "praxisEmptyBody": "The first bit of mischief is always the hardest ✦",
-      "badgeTitle": "Charms earned"
-    },
-    "ephemerists": {
-      "ringLabel": "level",
-      "levelUnit": "pvncta this level",
-      "nextLevel": "next · level {{level}}",
-      "praxisEyebrow": "Filed to the codex by {{name}}",
-      "praxisEmptyTitle": "The codex holds no entry yet",
-      "praxisEmptyBody": "Walk a road, and set the first record down.",
-      "badgeTitle": "Concordances"
-    },
-    "everymen": {
-      "ringLabel": "lvl",
-      "nextLevel": "NEXT · LVL {{level}}",
-      "praxisEyebrow": "Work {{name}} finished",
-      "praxisEmptyTitle": "No work on the board yet",
-      "praxisEmptyBody": "Answer a call. Put in the first shift.",
-      "badgeTitle": "Citations"
-    },
-    "singularity": {
-      "ringLabel": "lvl",
-      "nextLevel": "next // lvl {{level}}",
-      "praxisEyebrow": "Sealed outputs // by {{name}}",
-      "praxisEmptyTitle": "> NO OUTPUT SEALED",
-      "praxisEmptyBody": "Run a protocol. Cast the first signal.",
-      "badgeTitle": "Verified"
-    },
-    "snide": {
-      "ringLabel": "lvl",
-      "nextLevel": "next · lvl {{level}}",
-      "praxisEyebrow": "cases closed by {{name}}",
-      "praxisEmptyTitle": "No priors. Yet.",
-      "praxisEmptyBody": "Clean record's a bad look around here. Go pull a job.",
-      "badgeTitle": "The record"
-    },
-    "ua": {
-      "ringLabel": "anno",
-      "levelUnit": "points this anno",
-      "nextLevel": "next · anno {{level}}",
-      "praxisEyebrow": "Sealed by {{name}}",
-      "praxisEmptyTitle": "Nothing sealed yet",
-      "praxisEmptyBody": "One true piece, then another. The first is always the boldest.",
-      "badgeTitle": "Seals of the practice"
-    },
-    "wow": {
-      "ringLabel": "rank",
-      "levelUnit": "huzzahs toward the next rank",
-      "nextLevel": "next · rank {{level}}",
-      "praxisEyebrow": "Chronicles sealed by {{name}}",
-      "praxisEmptyTitle": "No chronicle yet",
-      "praxisEmptyBody": "The Court waits. Go and do something gloriously daft, then write it down."
     }
   },
   "leaderboard": {
@@ -196,35 +137,7 @@
       "notificationsCapped": "{{cap}}+ notifications",
       "caughtUp": "All caught up",
       "findTask": "Find a Task",
-      "castVotes": "Cast Your Votes",
-      "coven": {
-        "questsHeading": "quests"
-      },
-      "ua": {
-        "masthead": "One true piece today. Begin.",
-        "questsHeading": "On the sheet"
-      },
-      "singularity": {
-        "masthead": "FieldDesk.sys",
-        "questsHeading": "// running_processes"
-      },
-      "everymen": {
-        "masthead": "The Union Desk",
-        "questsHeading": "On the job"
-      },
-      "ephemerists": {
-        "masthead": "The Codex Desk",
-        "questsHeading": "Surveys underway"
-      },
-      "snide": {
-        "masthead": "The Job Board",
-        "questsHeading": "jobs in play"
-      },
-      "wow": {
-        "greeting": "Good morrow, Sir {{name}}.",
-        "masthead": "Thy crusade awaits. The noodle sword is where thou left it.",
-        "questsHeading": "Thy Open Quests"
-      }
+      "castVotes": "Cast Your Votes"
     }
   },
   "about": {

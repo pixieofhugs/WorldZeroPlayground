@@ -140,7 +140,7 @@ export default function EverymenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.everymen.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -230,7 +230,7 @@ export default function EverymenTaskCard({
                 <div style={{ flex: "1 1 0", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
                   <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                     <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>
-                      {i18n.t("feed:taskCard.everymen.levelCaption")}
+                      {i18n.t("feed:taskCard.levelCaption")}
                     </span>
                     <span style={{ fontFamily: POSTER, fontSize: size.levelSize, lineHeight: 0.82 }}>
                       {task.level_required}
@@ -296,17 +296,19 @@ export default function EverymenTaskCard({
                     <span style={{ fontFamily: POSTER, fontSize: size.pointsSize, lineHeight: 0.8 }}>
                       {basePoints}
                     </span>
-                    {/* The seal's unit word ("POINTS",
-                        `feed:taskCard.everymen.sealUnit`) stood here. #1909 cut
-                        it: Everymen was the only faction with the slot.
-
-                        ponytail: this leaves the struck seal a bare figure, and
-                        `taskCard.everymen` has no `pointsUnit` to fall back on —
-                        it is the one faction card that never had one. Ceiling: no
-                        unit word on this card until the shared key exists.
-                        Upgrade path: #1910 collapses `taskCard.{F}.pointsUnit` to
-                        ONE shared key; read it here when it lands. Inventing a
-                        cross-faction read now would collide with that PR. */}
+                    {/* The seal's unit word. It was `feed:taskCard.everymen.
+                        sealUnit` ("POINTS") until #1909 cut the slot — Everymen
+                        was the only faction that had one — which left the struck
+                        seal a bare figure, because this was also the one faction
+                        card with no `pointsUnit` of its own to fall back on. The
+                        ponytail note parked here named the upgrade path: read
+                        the shared key once it exists. #1911 made it exist. The
+                        stamp still uppercases, so the catalog's "Points" strikes
+                        as POINTS exactly as before. */}
+                    {/* eslint-disable-next-line local/no-raw-style-values -- ornament: stamp text, sized to the struck seal rather than the label ramp (§4a). */}
+                    <span style={{ ...LABEL, fontSize: 8, letterSpacing: "0.22em", marginTop: "var(--space-xs)" }}>
+                      {i18n.t("feed:taskCard.pointsUnit")}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -214,7 +214,7 @@ export default function CovenComment(props: CommentProps) {
             }}
           >
             <span aria-hidden="true">· </span>
-            {t('comments.coven.edited')}
+            {t('comments.edited')}
           </span>
         )}
       </div>

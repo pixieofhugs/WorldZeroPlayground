@@ -55,7 +55,10 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * Moving to paper is also what forces the three walk-downs, and this is the
  * #1224 trap the design notes name outright: acid is a DRAWN thing, not an ink.
  *   • resolved @mentions: `--faction-snide-acid` → `-slip-acid-ink` (1.35 → 5.20)
- *   • the composer's marker prompt: `-pink` → `-slip-pink-ink` (3.10 → 5.35)
+ *   • the composer's marker prompt: `-pink` → `-slip-pink-ink` (3.10 → 5.35).
+ *     #1911 took the prompt line itself (it would have restated the shared
+ *     placeholder), so nothing on this card reads `-slip-pink-ink` today; the
+ *     walk-down stands as the ruling for whatever writes in pink next.
  *   • the pink ransom tile's letter: paper-white → `-on-accent` (3.50 → 5.38)
  * Acid keeps its bright pigment wherever it is drawn rather than read — the
  * ransom scraps, the submit button's fill, the field's rule.
@@ -190,17 +193,12 @@ export default function SnideComment(props: CommentProps) {
         <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1, minWidth: 0 }}>
-            {/* The marker scrawl across the head of the slip. Pink as TEXT, so
-                the walked-down ink rather than the poster pigment. */}
-            <div style={{
-              fontFamily: 'var(--faction-snide-font-marker)',
-              color: 'var(--faction-snide-slip-pink-ink)',
-              transform: 'rotate(-1deg)', marginBottom: 'var(--space-sm)',
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: rotated marker scrawl, an optical size the type scale has no rung for
-              fontSize: 11,
-            }}>
-              {t('comments.snide.prompt')}
-            </div>
+            {/* The marker scrawl across the head of the slip ("say your piece
+                —", `comments.snide.prompt`) stood here. #1911 collapsed the
+                four bespoke prompts onto `comments.composerPlaceholder`, which
+                the textarea below already shows, so the scrawl would have
+                repeated it word for word. The slip keeps its paper; the line it
+                was written on is gone with the words. */}
             {/* The draft is content-tier free text; the textarea inherits the
                 size from this wrapper (`font: inherit`), which is why the class
                 rides here rather than on any slot inside. */}
@@ -256,7 +254,7 @@ export default function SnideComment(props: CommentProps) {
               {comment.is_edited && (
                 <>
                   <span aria-hidden="true"> · </span>
-                  {t('comments.snide.edited')}
+                  {t('comments.edited')}
                 </>
               )}
             </span>

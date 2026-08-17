@@ -14,7 +14,8 @@ import i18n from '../../../i18n'
 import { aTask } from '../../../test/fixtures'
 import { taskCardSignupCta } from '../signupAffordance'
 
-const FACTION_VERB = 'FALL IN'
+/** The one shared verb all nine cards now read (#1911 collapsed the nine). */
+const SIGNUP_VERB = i18n.t('feed:taskCard.signup')
 
 /** Every value of `services/praxis.py`'s `SignupDenialReason`. */
 const DENIALS = [
@@ -28,7 +29,7 @@ const DENIALS = [
 describe('the card asks for a slot at all', () => {
   it('gives none to a surface that withheld onSignup, however shut sign-up is', () => {
     const shut = aTask({ can_sign_up: false, signup_reason: 'below_level' })
-    expect(taskCardSignupCta(shut, undefined, FACTION_VERB)).toBeNull()
+    expect(taskCardSignupCta(shut, undefined)).toBeNull()
   })
 })
 
@@ -36,25 +37,25 @@ describe.each(DENIALS)('a %s denial', (reason) => {
   const task = aTask({ can_sign_up: false, signup_reason: reason, level_required: 4 })
 
   it('carries no press handler — the dead end cannot be reattached by a skin', () => {
-    const cta = taskCardSignupCta(task, vi.fn(), FACTION_VERB)!
+    const cta = taskCardSignupCta(task, vi.fn())!
     expect(cta.denied).toBe(true)
     expect(cta.onPress, 'a denied slot has nothing to press').toBeUndefined()
   })
 
-  it('says why, in the words the shared mapper holds, not the faction verb', () => {
-    const cta = taskCardSignupCta(task, vi.fn(), FACTION_VERB)!
-    expect(cta.label).not.toBe(FACTION_VERB)
+  it('says why, in the words the shared mapper holds, not the sign-up verb', () => {
+    const cta = taskCardSignupCta(task, vi.fn())!
+    expect(cta.label).not.toBe(SIGNUP_VERB)
     expect(cta.label, 'no unfilled placeholder').not.toContain('{{')
     expect(cta.label.length, 'a reason, not an empty string').toBeGreaterThan(0)
   })
 })
 
 describe('a permitted sign-up', () => {
-  it('keeps the faction verb and calls the surface back with the task id', () => {
+  it('keeps the shared verb and calls the surface back with the task id', () => {
     const onSignup = vi.fn()
-    const cta = taskCardSignupCta(aTask({ id: 42 }), onSignup, FACTION_VERB)!
+    const cta = taskCardSignupCta(aTask({ id: 42 }), onSignup)!
     expect(cta.denied).toBe(false)
-    expect(cta.label).toBe(FACTION_VERB)
+    expect(cta.label).toBe(SIGNUP_VERB)
     cta.onPress!()
     expect(onSignup).toHaveBeenCalledWith(42)
   })
@@ -66,22 +67,20 @@ describe('a permitted sign-up', () => {
     const cta = taskCardSignupCta(
       aTask({ signup_reason: 'multi_membership' }),
       vi.fn(),
-      FACTION_VERB,
     )!
     expect(cta.denied).toBe(false)
     expect(cta.onPress).toBeTypeOf('function')
     expect(cta.label).toBe(i18n.t('tasks:detail.signup.ctaAgain'))
   })
 
-  it('falls back to the faction verb for a reason this build has never heard of', () => {
+  it('falls back to the sign-up verb for a reason this build has never heard of', () => {
     // A backend that ships a sixth ALLOWING reason must not blank the button.
     const cta = taskCardSignupCta(
       aTask({ signup_reason: 'a_gate_from_the_future' }),
       vi.fn(),
-      FACTION_VERB,
     )!
     expect(cta.denied).toBe(false)
-    expect(cta.label).toBe(FACTION_VERB)
+    expect(cta.label).toBe(SIGNUP_VERB)
   })
 
   it('hides rather than lying when sign-up is shut and no reason came with it', () => {
@@ -94,11 +93,10 @@ describe('a permitted sign-up', () => {
       taskCardSignupCta(
         aTask({ can_sign_up: false, signup_reason: 'a_gate_from_the_future' }),
         vi.fn(),
-        FACTION_VERB,
       ),
     ).toBeNull()
     expect(
-      taskCardSignupCta(aTask({ can_sign_up: false }), vi.fn(), FACTION_VERB),
+      taskCardSignupCta(aTask({ can_sign_up: false }), vi.fn()),
     ).toBeNull()
   })
 
@@ -106,7 +104,6 @@ describe('a permitted sign-up', () => {
     const cta = taskCardSignupCta(
       aTask({ can_sign_up: false, signup_reason: 'below_level', level_required: 7 }),
       vi.fn(),
-      FACTION_VERB,
     )!
     expect(cta.label).toBe(i18n.t('tasks:detail.signup.denied.belowLevel', { level: 7 }))
     expect(cta.label).toContain('7')

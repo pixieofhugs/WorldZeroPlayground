@@ -252,30 +252,16 @@ const dress: ProfileDress = {
 }
 
 export default function WowProfileBody(props: ProfileBodyProps) {
-  const { t } = useTranslation('common')
   return useFormFactor() === 'mobile' ? (
     <MobileProfile {...props} />
   ) : (
     <ProfileSkin
       props={props}
-      kit={{
-        ...dress,
-        ringLabel: t('profile.wow.ringLabel'),
-        levelUnitLabel: t('profile.wow.levelUnit'),
-        nextLevelLabel: (next) => t('profile.wow.nextLevel', { level: next }),
-        praxisEyebrow: (name) => t('profile.wow.praxisEyebrow', { name }),
-        praxisEmpty: {
-          title: t('profile.wow.praxisEmptyTitle'),
-          body: t('profile.wow.praxisEmptyBody'),
-        },
-        // This read `profile.wow.honours` ("Honours & Credentials"), shared
-        // with the phone stack's badge heading below so one string covered one
-        // section. #1909 CUT that key with the rest of WOW's profile block, and
-        // `badgeTitle` is required, so both now read the SHARED
-        // `profile.badgesHeading` ("Badges") — which is the wording #1910's
-        // `profileKit.{F}.badgeTitle` collapse settles every kit onto anyway.
-        badgeTitle: t('profile.badgesHeading'),
-      }}
+      /* Dress only. Seven copy knobs used to be spread on here, resolved from
+         `profile.<slug>.*`; #1911 collapsed those families to one shared string
+         each, so every kit was passing the same words and `ProfileSkin` reads
+         them itself now. */
+      kit={dress}
     />
   )
 }

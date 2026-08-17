@@ -127,7 +127,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
           <span style={{ ...kicker, color: CAPTION }}>{t('nav.home')}</span>
         </div>
         <h1 style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1.05, letterSpacing: '0.04em', color: INK, margin: 'var(--space-xs) 0 0' }}>
-          {t('fieldDesk.home.ephemerists.masthead')}
+          {t('fieldDesk.home.title')}
         </h1>
         <div style={{ marginTop: 'var(--space-sm)' }}>
           <RuneRule />
@@ -270,7 +270,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
       <Leaf>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.18em', color: INK }}>
-            {t('fieldDesk.home.ephemerists.questsHeading')}
+            {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: brassRule }} />
           <Link to="/tasks" style={{ ...kicker, color: NILE, textDecoration: 'none' }}>

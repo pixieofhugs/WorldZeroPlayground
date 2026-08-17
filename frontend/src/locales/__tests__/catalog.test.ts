@@ -69,9 +69,13 @@ describe('en copy catalog shape', () => {
   // `invitation.prospectus` string is a DIFFERENT key: it is the overline of the
   // one adaptive popup shared by every faction and deliberately survives.
   it('frames the UA faction page as the practice, not a prospectus', () => {
+    // The `ua.practice` block itself is gone: its two leaves were the about
+    // panel's heading and empty state, and #1911 settled both onto
+    // `detail.aboutHeading` / `detail.descriptionEmpty` for all seven bodies.
+    // What #850 actually forbids — the WORD, on a key of UA's own — is still
+    // what this asserts, and it now covers the whole block rather than one name.
     expect(factions.ua).not.toHaveProperty('prospectus')
-    expect(factions.ua.practice.heading).toBe('The Practice')
-    expect(factions.ua.practice.empty).toBe('Nothing written down yet.')
+    expect(factions.ua).not.toHaveProperty('practice')
   })
 
   it('keeps the shared invitation prospectus overline', () => {
@@ -149,73 +153,57 @@ describe('UA taunts', () => {
 
 // #1858: the seven faction character-profile kits held their copy as raw
 // literals in `.tsx` — invisible to any `locales/` sweep, never reviewed,
-// untranslatable — while the na kit next to them was properly i18n'd. This
-// guards the SHAPE: every slug that ships a profile kit must resolve the full
-// set of copy keys its kit reads. A missing one throws at t() (the catalog's
-// missingKeyHandler), so a kit that quietly grows a raw literal back fails here
-// as soon as its key is listed, and a kit that drops one fails immediately.
-describe('faction profile kits keep their copy in the catalog', () => {
-  // Per slug, the `profile.<slug>.*` keys ProfileSkin reads. Not a uniform
-  // shape on purpose: `levelUnit` is an optional knob only some kits set (the
-  // rest take ProfileSkin's shared `profile.levelUnit`).
-  //
-  // Two rows lost an entry to #1909's CUT list rather than to a code change:
-  // WOW's badge heading was `profile.wow.honours` and Singularity was the one
-  // kit setting `scoreFootnote`. WOW's kit now reads the SHARED
-  // `profile.badgesHeading` and Singularity draws no footnote, which is what
-  // the other six already did — so neither key belongs in a per-slug list.
-  const PROFILE_KIT_KEYS: Record<string, readonly string[]> = {
-    ua: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    snide: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    wow: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody'],
-    coven: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    ephemerists: ['ringLabel', 'levelUnit', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    everymen: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-    singularity: ['ringLabel', 'nextLevel', 'praxisEyebrow', 'praxisEmptyTitle', 'praxisEmptyBody', 'badgeTitle'],
-  }
+// untranslatable — while the na kit next to them was properly i18n'd. They
+// moved into `common.json` under `profile.<slug>.*`, and this guarded that
+// every slug resolved the full set its kit read.
+//
+// #1911 collapsed those seven families to one shared string each, so there is
+// no per-slug set left to enumerate — every kit reads the SAME keys, which
+// `ProfileSkin` now resolves itself rather than taking through seven knobs.
+// What is left to guard here is that the shared set exists and interpolates;
+// `characterProfile/__tests__/profileKitCopy.test.tsx` renders all eight kits
+// and reads the words back, which is the half a catalog check cannot do.
+describe('the profile kits share one set of copy in the catalog', () => {
+  const SHARED_KEYS = [
+    'lvl',
+    'ptsThisLevel',
+    'nextLevel',
+    'praxisEyebrow',
+    'praxisEmptyTitle',
+    'praxisEmptyBody',
+    'badgesHeading',
+    'praxisHeading',
+    'topPraxis',
+  ] as const
 
-  for (const [slug, keys] of Object.entries(PROFILE_KIT_KEYS)) {
-    it(`${slug} resolves every profile copy key its kit reads`, () => {
-      for (const key of keys) {
-        const value = i18n.t(`common:profile.${slug}.${key}` as 'common:profile.lvl')
-        expect(value, `${slug}.${key}`).toBeTypeOf('string')
-        expect(value.length, `${slug}.${key}`).toBeGreaterThan(0)
-      }
-    })
-  }
+  it('resolves every key ProfileSkin reads, none of them blank', () => {
+    for (const key of SHARED_KEYS) {
+      const value = i18n.t(`common:profile.${key}` as 'common:profile.lvl')
+      expect(value, key).toBeTypeOf('string')
+      expect(value.length, key).toBeGreaterThan(0)
+    }
+  })
 
-  it('has the two shared profile keys the skins fell back on', () => {
-    // `profile.levelUnit` was ProfileSkin's hardcoded `?? 'pts this level'`
-    // default and `profile.topPraxis` the laurel's `title=` — both live copy on
-    // eight surfaces, both outside the catalog until #1858.
-    expect(i18n.t('common:profile.levelUnit')).toBe('pts this level')
+  it('carries no per-faction profile branch any more', () => {
+    // `profile.levelUnit` went with them: it was ProfileSkin's `?? 'pts this
+    // level'` fallback for the four kits that named no unit, and the shared
+    // `ptsThisLevel` says the whole sentence.
+    const branches = catalogLeaves()
+      .map(([id]) => id)
+      .filter((id) => /^common\.json:profile\.(coven|ephemerists|everymen|singularity|snide|ua|wow)\./.test(id))
+    expect(branches).toEqual([])
     expect(i18n.t('common:profile.topPraxis')).toBe('Top praxis')
     expect(i18n.t('common:profile.praxisHeading')).toBe('Praxis')
-    expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('sealed by Reza')
   })
 
   it('interpolates the two copy fields that take a named variable', () => {
     // `nextLevelLabel(next)` and `praxisEyebrow(name)` were template literals.
     // A template literal cannot be translated; a named {{var}} can be moved
     // anywhere in the sentence, which is the whole point of the extraction.
-    expect(i18n.t('common:profile.coven.nextLevel', { level: 8 })).toBe('next · lvl 8')
-    // Ephemerists interpolates the ROMAN numeral its kit formats, not the int.
-    expect(i18n.t('common:profile.ephemerists.nextLevel', { level: 'VIII' })).toBe('next · level VIII')
-    expect(i18n.t('common:profile.everymen.praxisEyebrow', { name: 'Reza' })).toBe('Work Reza finished')
-  })
-
-  it('carries the odd characters over verbatim', () => {
-    // The copy review that follows #1858 rewords these; the MOVE may not. A
-    // stray ornament or a lost `> ` prefix would be a silent copy edit.
-    expect(i18n.t('common:profile.coven.praxisEmptyBody')).toBe(
-      'The first bit of mischief is always the hardest ✦',
-    )
-    expect(i18n.t('common:profile.singularity.praxisEmptyTitle')).toBe('> NO OUTPUT SEALED')
-    // `profile.singularity.scoreFootnote` ("> 1880 PTS LOGGED") was pinned here
-    // for its `> ` prefix. #1909 CUT the key; `praxisEmptyTitle` above still
-    // carries the prefix, so the character check is not lost with it.
-    expect(i18n.t('common:profile.snide.praxisEmptyBody')).toBe(
-      "Clean record's a bad look around here. Go pull a job.",
+    expect(i18n.t('common:profile.nextLevel', { level: 8 })).toBe('next · lvl 8')
+    expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('Submitted by Reza')
+    expect(i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 })).toBe(
+      '380 / 500 pts this level',
     )
   })
 })
@@ -386,32 +374,19 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'feed.json:factionSelect.wow.status.member',
     // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
     'factions.json:ephemerists.road.joining',
-    // #1864 GENERIC — the per-faction task/praxis list headings, empties and
-    // kickers all collapse to one shared string ("Recent praxis", "No praxis
-    // submitted yet."), so the retired word leaves with the key.
-    'factions.json:ephemerists.praxis.empty',
-    'factions.json:ua.praxis.heading',
-    'factions.json:ua.praxis.empty',
-    'factions.json:ua.registry.gateBody',
-    'feed.json:factionHero.ephemerists.stats.praxes',
-    'feed.json:factionHero.singularity.stats.praxes',
-    'feed.json:factionHero.ua.stats.praxes',
-    'feed.json:factionHero.wow.stats.praxes',
-    // `feed.json:row.wow.praxisSealed` and `praxis.json:card.wow.sealed` were
-    // listed here as #1864 CUTs waiting on their child. #1909 deleted both.
-    // #1864 GENERIC, blocked on the profile-kit collapse. The decision record's
-    // own agreed wording for these rows still reads "No praxis sealed yet",
-    // which contradicts this ruling — flagged on #1863 rather than picked here.
-    'common.json:profile.praxisEyebrow',
+    // #1864 GENERIC, and the ONE row its collapse could not settle. Fifteen
+    // entries stood here waiting on the children; #1909, #1910 and #1911 took
+    // every other one — the per-faction task/praxis headings and empties, the
+    // faction-hero stat labels and six of the seven profile-kit branches all
+    // left with their keys.
+    //
+    // This leaf is the clash the sweep could not resolve on its own: #1864's
+    // agreed wording for the collapsed praxis empty state is literally "No
+    // praxis sealed yet", and #1863's ruling C retires exactly that phrase.
+    // #1911 owns key STRUCTURE, so the key collapsed and the WORD shipped
+    // unchanged rather than being picked by an agent. An owner ruling on #1863
+    // rewords this one leaf and empties this list.
     'common.json:profile.praxisEmptyTitle',
-    'common.json:profile.coven.praxisEyebrow',
-    'common.json:profile.coven.praxisEmptyTitle',
-    'common.json:profile.singularity.praxisEyebrow',
-    'common.json:profile.singularity.praxisEmptyTitle',
-    'common.json:profile.ua.praxisEyebrow',
-    'common.json:profile.ua.praxisEmptyTitle',
-    'common.json:profile.ua.badgeTitle',
-    'common.json:profile.wow.praxisEyebrow',
   ].sort()
 
   const FILED_SURVIVORS = [
@@ -420,13 +395,9 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'praxis.json:listPage.emptyFiltered',
     // Pure metaphor — a mind filing contingencies submits no praxis.
     'progression.json:unlocks.three_plans.desc',
-    // #1864 GENERIC, as above. The three CUTs that sat here —
-    // `ephemerists.praxis.kicker` and both `card.masthead.*` — left with #1909.
-    'factions.json:everymen.praxis.empty',
-    'feed.json:factionHero.coven.stats.praxes',
-    'feed.json:factionHero.everymen.stats.praxes',
-    'feed.json:factionHero.snide.stats.praxes',
-    'common.json:profile.ephemerists.praxisEyebrow',
+    // The five #1864 GENERIC rows that sat here — `everymen.praxis.empty`,
+    // three `factionHero.{F}.stats.praxes` and `profile.ephemerists.
+    // praxisEyebrow` — all left with their keys under #1911.
   ].sort()
 
   it('says seal only where the word is an oath, an object, or a doomed key', () => {
@@ -459,49 +430,41 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
 })
 
 describe('the four functional controls say one thing across every faction (#1863)', () => {
-  // Each already had 3+ factions saying the same words; the audit settled the
-  // rest onto them. The keys stay per-faction until #1864 collapses them, so
-  // the guard is that every branch resolves to the SAME string.
-  const SLUGS = ['ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity'] as const
-
+  // Each already had 3+ factions saying the same words; #1863 settled the rest
+  // onto them, and #1911 collapsed the nine branches into one key each. What is
+  // left to guard here is the VALUE — #1911's own suite next door owns the key
+  // structure, and neither check is the other's.
   it('the join-panel confirm button reads Confirm, in one casing', () => {
-    // The join panel's key sits under a per-faction section name (`road`,
-    // `access`, `dispatch`…), so this walks the faction block rather than
-    // guessing the path.
+    // The join panel's key used to sit under a per-faction section name
+    // (`road`, `access`, `dispatch`…), which is why a literal grep for it
+    // returned zero and the audit undercounted the family. One key now.
     const buttons = catalogLeaves()
       .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
       .map(([, value]) => value)
-    expect(buttons.length).toBe(SLUGS.length)
-    expect([...new Set(buttons)]).toEqual(['Confirm'])
+    expect(buttons).toEqual([])
+    expect(i18n.t('factions:mobile.confirm')).toBe('Confirm')
   })
 
   it('the task-card signup reads Sign up', () => {
-    for (const slug of SLUGS) {
-      expect(i18n.t(`feed:taskCard.${slug}.signup` as 'feed:taskCard.na.signup')).toBe('Sign up')
-    }
-    // `taskCard.albescent.signup` is deliberately NOT settled: ADR-0048 makes
-    // the Albescent card the na sheet plus drift, so it renders na's verb and
-    // its own is orphaned copy. `factionTaskCardsV2.test.tsx` asserts the
-    // orphan never reaches a screen, which only holds while it differs.
-    expect(i18n.t('feed:taskCard.albescent.signup')).not.toBe(i18n.t('feed:taskCard.na.signup'))
+    // Albescent's own verb ("acknowledge") was orphaned copy — ADR-0048 makes
+    // its card the na sheet plus drift, so the verb never reached a screen —
+    // and #1911 deleted it with the rest of the family.
+    expect(i18n.t('feed:taskCard.signup')).toBe('Sign up')
   })
 
   it('the comment edited marker reads edited', () => {
-    for (const slug of [...SLUGS, 'albescent']) {
-      expect(i18n.t(`praxis:comments.${slug}.edited` as 'praxis:comments.ua.edited')).toBe('edited')
-    }
+    expect(i18n.t('praxis:comments.edited')).toBe('edited')
   })
 
   it('the vote star reads Rate {{value}} — {{label}}', () => {
-    for (const slug of [...SLUGS, 'unaffiliated']) {
-      expect(i18n.t(`votes:chrome.${slug}.rateAria` as 'votes:chrome.ua.rateAria', { value: 3, label: 'solid' })).toBe(
-        'Rate 3 — solid',
-      )
-    }
-    // Albescent and the mobile widget keep `Rate {{value}} of 5`: neither ships
-    // per-faction tier labels (#783 took Albescent's away, because a vote word
-    // is a tell), so their call sites have no `label` to interpolate.
-    expect(i18n.t('votes:chrome.albescent.rateAria', { value: 3 })).toBe('Rate 3 of 5')
+    expect(i18n.t('votes:chrome.rateAria', { value: 3, label: 'solid' })).toBe('Rate 3 — solid')
+    // Albescent keeps `Rate {{value}} of 5`: it ships no tier labels (#783 took
+    // them away, because a vote word is a tell), so its call site has no
+    // `label` to interpolate and the shared sentence would trail off after the
+    // dash. The mobile widget carried the identical string under
+    // `chrome.mobile.rateAria`; #1911 collapsed that pair onto one key with no
+    // faction slug in its name.
+    expect(i18n.t('votes:chrome.rateAriaPlain', { value: 3 })).toBe('Rate 3 of 5')
   })
 })
 
@@ -540,7 +503,6 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
    * pattern does not need a `.txt` arm.
    */
   const TERMINAL_VOICE = [
-    'common.json:profile.singularity.praxisEmptyTitle',
     'factions.json:singularity.access.eligibleKicker',
     'factions.json:singularity.access.gateKicker',
     'factions.json:singularity.access.joinButton',
@@ -550,13 +512,12 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     // the line refuses in the array's own register — caught by the `> ` prompt.
     // It goes when #1869 gives Singularity something to advertise.
     'factions.json:singularity.invitation.perks.1',
-    'factions.json:singularity.manifest.empty',
-    'factions.json:singularity.mobile.eyebrow',
-    'factions.json:singularity.praxis.empty',
-    'factions.json:singularity.roster.empty',
-    'factions.json:singularity.roster.emptyWithSpotlight',
-    'factions.json:singularity.roster.heading',
-    'factions.json:singularity.tasks.empty',
+    // Eight more rows stood here: `profile.singularity.praxisEmptyTitle`,
+    // `manifest.empty`, `mobile.eyebrow`, the three `roster.*`, `praxis.empty`
+    // and `tasks.empty`. #1911 collapsed every one of those families to a
+    // shared, register-free string, so the prompt left with the keys. What
+    // survives is join-panel and invitation copy — the two surfaces the audit
+    // ruled KEEP their voice — which is exactly the shape #1948 wanted.
   ].sort()
 
   it('finds catalog leaves to scan, so the sweep cannot pass by scanning nothing', () => {
@@ -572,14 +533,21 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
   })
 
   it('renames the key the retired window titled, and keeps the panel labelled', () => {
-    // ponytail: "the circle" and "The Circle" are PROVISIONAL — assembled from
-    // the four strings already in this panel ("You're in the circle", "The
-    // circle is open", "Not in the circle — yet", "the circle is recruiting"),
-    // not written. The owner writes strings in this repo; pinning them here
-    // means a later voice pass reads as a deliberate edit, not a drift.
+    // ponytail: "the circle" is PROVISIONAL — assembled from the four strings
+    // already in this panel ("You're in the circle", "The circle is open", "Not
+    // in the circle — yet", "the circle is recruiting"), not written. The owner
+    // writes strings in this repo; pinning it here means a later voice pass
+    // reads as a deliberate edit, not a drift.
+    //
+    // `coven.mobile.eyebrow` was pinned beside it at "The Circle", the other
+    // half of #1948's fix. #1911 deleted the whole `{F}.mobile.eyebrow` family:
+    // it was already orphaned — the faction page reads the shared
+    // `detail.eyebrow` ("Faction") and has since the phone/desktop skins
+    // collapsed — so #1948's rename never reached a screen. Nothing renders
+    // `coven.exe` either way, which is what the ruling was for.
     expect(factions.coven.join).not.toHaveProperty('windowTitle')
     expect(factions.coven.join.heading).toBe('the circle')
-    expect(factions.coven.mobile.eyebrow).toBe('The Circle')
+    expect(factions.coven).not.toHaveProperty('mobile')
   })
 
   it('names the join panel in every faction voice, so none falls back to chrome', () => {

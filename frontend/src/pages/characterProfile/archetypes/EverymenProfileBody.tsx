@@ -10,7 +10,6 @@
  * hex — colours via --everymen-* / --faction-everymen-* vars.
  */
 import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
@@ -164,21 +163,14 @@ const dress: ProfileDress = {
 }
 
 export default function EverymenProfileBody(props: ProfileBodyProps) {
-  const { t } = useTranslation('common')
   return (
     <ProfileSkin
       props={props}
-      kit={{
-        ...dress,
-        ringLabel: t('profile.everymen.ringLabel'),
-        nextLevelLabel: (next) => t('profile.everymen.nextLevel', { level: next }),
-        praxisEyebrow: (name) => t('profile.everymen.praxisEyebrow', { name }),
-        praxisEmpty: {
-          title: t('profile.everymen.praxisEmptyTitle'),
-          body: t('profile.everymen.praxisEmptyBody'),
-        },
-        badgeTitle: t('profile.everymen.badgeTitle'),
-      }}
+      /* Dress only. Seven copy knobs used to be spread on here, resolved from
+         `profile.<slug>.*`; #1911 collapsed those families to one shared string
+         each, so every kit was passing the same words and `ProfileSkin` reads
+         them itself now. */
+      kit={dress}
     />
   )
 }

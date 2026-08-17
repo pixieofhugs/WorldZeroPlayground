@@ -81,7 +81,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.singularity.idle')
+  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
 
   return (
     <div style={{ fontFamily: 'var(--font-faction-terminal)' }}>
@@ -116,7 +116,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
               disabled={saving}
               onClick={() => void vote(tier.value)}
               onMouseEnter={() => setHovered(tier.value)}
-              aria-label={t('chrome.singularity.rateAria', { value: tier.value, label: tier.label })}
+              aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
               style={{
                 display: 'flex',
@@ -171,7 +171,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
               color: 'var(--faction-singularity-vote-off)',
             }}
           >
-            {`· ${t('chrome.singularity.tag')}`}
+            {`· ${t('chrome.tag')}`}
           </span>
         )}
       </div>

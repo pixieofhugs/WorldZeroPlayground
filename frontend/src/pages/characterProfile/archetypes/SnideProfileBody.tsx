@@ -11,7 +11,6 @@
  * hex — colours via --faction-snide-* vars.
  */
 import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
@@ -182,21 +181,14 @@ const dress: ProfileDress = {
 }
 
 export default function SnideProfileBody(props: ProfileBodyProps) {
-  const { t } = useTranslation('common')
   return (
     <ProfileSkin
       props={props}
-      kit={{
-        ...dress,
-        ringLabel: t('profile.snide.ringLabel'),
-        nextLevelLabel: (next) => t('profile.snide.nextLevel', { level: next }),
-        praxisEyebrow: (name) => t('profile.snide.praxisEyebrow', { name }),
-        praxisEmpty: {
-          title: t('profile.snide.praxisEmptyTitle'),
-          body: t('profile.snide.praxisEmptyBody'),
-        },
-        badgeTitle: t('profile.snide.badgeTitle'),
-      }}
+      /* Dress only. Seven copy knobs used to be spread on here, resolved from
+         `profile.<slug>.*`; #1911 collapsed those families to one shared string
+         each, so every kit was passing the same words and `ProfileSkin` reads
+         them itself now. */
+      kit={dress}
     />
   )
 }

@@ -161,7 +161,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           <Halftone />
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
             <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
-              {t("everymen.charter.heading")}
+              {t("detail.aboutHeading")}
             </span>
             <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
           </div>
@@ -174,7 +174,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
               ))
             ) : (
               <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: MUTED, margin: 0 }}>
-                {t("everymen.charter.empty")}
+                {t("detail.descriptionEmpty")}
               </p>
             )}
           </div>
@@ -182,9 +182,9 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>{t("everymen.tasks.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHeading>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.tasks.empty")}</p>
+            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
@@ -205,9 +205,9 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>{t("everymen.praxis.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.recentHeading")}</SectionHeading>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.praxis.empty")}</p>
+            <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
@@ -348,7 +348,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       >
                         {membership.joining
                           ? t("everymen.roll.joining")
-                          : t("everymen.roll.confirmButton")}
+                          : t("mobile.confirm")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -385,7 +385,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                     <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.65, color: INK }}>
                       {burned
                         ? t("detail.burned.body", { faction: factionName(faction.slug) })
-                        : t("everymen.roll.gateBody", { faction: factionName(faction.slug) })}
+                        : t("mobile.gateHint", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}
@@ -423,7 +423,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                     {spot.display_name}
                   </div>
                   <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: GOLD, marginTop: "var(--space-sm)" }}>
-                    {t("everymen.spotlight.stat", {
+                    {t("detail.spotlightStat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
                     })}
@@ -436,12 +436,12 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
             <Halftone />
             <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
-              {t("everymen.roster.heading")}
+              {t("detail.default.membersHeading", { total: members.length })}
             </div>
             {roster.length === 0 ? (
               <p className="content-text" style={{ position: "relative", fontFamily: MONO, color: MUTED }}>
                 {spot
-                  ? t("everymen.roster.emptyWithSpotlight")
+                  ? t("detail.membersEmptyWithSpotlight")
                   : t("detail.membersEmpty")}
               </p>
             ) : (
@@ -477,7 +477,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       color: RED,
                     }}
                   >
-                    {t("everymen.roster.level", { level: m.level })}
+                    {t("detail.memberLevel", { level: m.level })}
                   </span>
                 </Link>
               ))

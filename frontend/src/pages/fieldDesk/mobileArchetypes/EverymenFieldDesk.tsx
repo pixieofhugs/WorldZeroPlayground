@@ -167,9 +167,11 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
           }}
         >
           <CogSeal size={16} />
-          <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.2em' }}>
-            {t('fieldDesk.home.everymen.masthead')}
-          </span>
+          {/* "The Union Desk" (`fieldDesk.home.everymen.masthead`) was stamped
+              on this band. It is the only desk with a second title slot — the
+              h1 below already reads the shared `fieldDesk.home.title` — so
+              #1911's collapse leaves nothing to put here: the shared string
+              would have restated the heading four lines down. */}
           <span style={{ ...kicker, marginLeft: 'auto', color: CREAM }}>{t('nav.home')}</span>
         </div>
         <div style={{ height: 4, background: GOLD }} />
@@ -324,7 +326,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
       {/* ── On the job ── */}
       <Plate>
         <SectionHead
-          title={t('fieldDesk.home.everymen.questsHeading')}
+          title={t('fieldDesk.home.questsHeading')}
           trailing={
             // 11px on the Plate's PAPER, so #1341's paper-stock sibling and not
             // the bare red, which is 4.49 / 4.16 there.

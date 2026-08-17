@@ -57,7 +57,7 @@ export default function DefaultVote({
   const active = hovered || selected
   const caption = active
     ? t(`unaffiliated.${TIER_KEYS[active - 1]}`)
-    : t('unaffiliated.idle')
+    : t('chrome.idle')
 
   return (
     <div>
@@ -108,7 +108,7 @@ export default function DefaultVote({
               disabled={saving}
               onClick={() => void vote(value)}
               onMouseEnter={() => setHovered(value)}
-              aria-label={t('chrome.unaffiliated.rateAria', {
+              aria-label={t('chrome.rateAria', {
                 value,
                 label: t(`unaffiliated.${TIER_KEYS[index]}`),
               })}
@@ -157,7 +157,7 @@ export default function DefaultVote({
               color: 'var(--faction-default-vote-off)',
             }}
           >
-            {`· ${t('unaffiliated.tag')}`}
+            {`· ${t('chrome.tag')}`}
           </span>
         )}
       </div>

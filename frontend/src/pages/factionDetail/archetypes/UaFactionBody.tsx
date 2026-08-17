@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
-import { toRoman } from "../../../utils/roman";
 import {
   UA_DISPLAY,
   UA_EYEBROW,
@@ -100,8 +99,9 @@ function SectionHeading({ children }: { children: ReactNode }) {
 }
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
-// "Anno {roman}"; level 0 shows an em-dash, matching the ephemerists convention.
-const anno = (level: number) => (level > 0 ? toRoman(level) : "—");
+// `anno` formatted the roster and spotlight levels as "Anno {roman}". #1863
+// retired *anno* as a name for a character's level and #1911 settled both rows
+// onto the shared "Level {{level}}", which takes the integer.
 
 /** Circular initials medallion — panel face, display glyph. */
 function Medallion({
@@ -180,7 +180,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
       >
         {/* ② THE PRACTICE */}
         <div style={{ ...SHEET, padding: "var(--space-xl) var(--space-2xl)" }}>
-          <RuledLabel>{t("ua.practice.heading")}</RuledLabel>
+          <RuledLabel>{t("detail.aboutHeading")}</RuledLabel>
           <div
             style={{
               display: "flex",
@@ -199,7 +199,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                 className="content-text"
                 style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
               >
-                {t("ua.practice.empty")}
+                {t("detail.descriptionEmpty")}
               </p>
             )}
           </div>
@@ -208,14 +208,14 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
         {/* ④ TASKS */}
         <div>
           <SectionHeading>
-            {t("ua.tasks.heading")}
+            {t("detail.default.tasksHeading", { total: tasks.length })}
           </SectionHeading>
           {tasks.length === 0 ? (
             <p
               className="content-text"
               style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
             >
-              {t("ua.tasks.empty")}
+              {t("detail.default.tasksEmpty")}
             </p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
@@ -238,14 +238,14 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
         {/* ⑤ PRAXIS */}
         <div>
           <SectionHeading>
-            {t("ua.praxis.heading")}
+            {t("detail.default.recentHeading")}
           </SectionHeading>
           {recentPraxis.length === 0 ? (
             <p
               className="content-text"
               style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
             >
-              {t("ua.praxis.empty")}
+              {t("detail.default.recentEmpty")}
             </p>
           ) : (
             <div
@@ -401,7 +401,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   >
                     {membership.joining
                       ? t("ua.registry.joining")
-                      : t("ua.registry.confirmButton")}
+                      : t("mobile.confirm")}
                   </button>
                   <button
                     onClick={() => setConfirming(false)}
@@ -437,7 +437,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   {t("ua.registry.gateTitle")}
                 </div>
                 <p className="content-text" style={prose}>
-                  {t("ua.registry.gateBody", {
+                  {t("mobile.gateHint", {
                     faction: factionName(faction.slug),
                   })}
                 </p>
@@ -489,8 +489,8 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   {spot.display_name}
                 </div>
                 <div style={{ ...UA_EYEBROW, marginTop: "var(--space-sm)" }}>
-                  {t("ua.spotlight.stat", {
-                    anno: anno(spot.level),
+                  {t("detail.spotlightStat", {
+                    level: spot.level,
                     score: spot.all_time_score.toLocaleString(),
                   })}
                 </div>
@@ -501,14 +501,14 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
           <div
             style={{ ...SHEET, padding: "var(--space-lg) var(--space-xl)" }}
           >
-            <RuledLabel>{t("ua.roster.heading")}</RuledLabel>
+            <RuledLabel>{t("detail.default.membersHeading", { total: members.length })}</RuledLabel>
             {register.length === 0 ? (
               <p
                 className="content-text"
                 style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
               >
                 {spot
-                  ? t("ua.roster.emptyWithSpotlight")
+                  ? t("detail.membersEmptyWithSpotlight")
                   : t("detail.membersEmpty")}
               </p>
             ) : (
@@ -543,7 +543,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     </div>
                   </div>
                   <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
-                    {t("ua.roster.level", { anno: anno(m.level) })}
+                    {t("detail.memberLevel", { level: m.level })}
                   </span>
                 </Link>
               ))

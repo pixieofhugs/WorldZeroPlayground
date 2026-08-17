@@ -91,7 +91,7 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.everymen.idle')
+  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
   const edge = 'var(--faction-everymen-vote-edge)'
 
   return (
@@ -124,7 +124,7 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
               disabled={saving}
               onClick={() => void vote(tier.value)}
               onMouseEnter={() => setHovered(tier.value)}
-              aria-label={t('chrome.everymen.rateAria', { value: tier.value, label: tier.label })}
+              aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
               style={{
                 position: 'relative',
@@ -230,7 +230,7 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
               color: 'var(--everymen-muted)',
             }}
           >
-            {`· ${t('chrome.everymen.tag')}`}
+            {`· ${t('chrome.tag')}`}
           </span>
         )}
       </div>

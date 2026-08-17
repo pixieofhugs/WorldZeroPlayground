@@ -120,7 +120,7 @@ describe('row states', () => {
     expect(html).toContain('Adabel')
     expect(html).toContain('the verge is planted')
     expect(html).toContain('content-text')
-    expect(html).not.toContain(i18n.t('praxis:comments.wow.edited'))
+    expect(html).not.toContain(i18n.t('praxis:comments.edited'))
   })
 
   it('row · with a mention: a resolved handle links to the character', () => {
@@ -143,7 +143,7 @@ describe('row states', () => {
   })
 
   it('row · edited: the amended mark joins the byline', () => {
-    expect(row({ ...COMMENT, is_edited: true })).toContain(i18n.t('praxis:comments.wow.edited'))
+    expect(row({ ...COMMENT, is_edited: true })).toContain(i18n.t('praxis:comments.edited'))
   })
 
   it('shows no owner row and no flag affordance to a signed-out viewer', () => {
@@ -169,8 +169,12 @@ describe('row states', () => {
 
 describe('composer states', () => {
   it('composer · empty: the prompt, the section rule and the @-mention hint', () => {
+    // The prompt was WOW's own gilt line ("Add thy counsel to the chronicle…").
+    // #1911 collapsed the four bespoke prompts onto the shared placeholder the
+    // textarea already carries, so the sentence is asserted where it now
+    // renders — once, in the field — rather than twice on one composer.
     const html = composer(false)
-    expect(html).toContain(i18n.t('praxis:comments.wow.prompt'))
+    expect(html).toContain(i18n.t('praxis:comments.composerPlaceholder'))
     expect(html).toContain('@ to mention')
     expect(html.split(RIBBON).length - 1, 'crown + section rule').toBe(2)
   })

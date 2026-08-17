@@ -30,8 +30,8 @@ export default function WowFactionHero({
 }: FactionHeroProps) {
   const muster = [
     { value: members, label: i18n.t("feed:factionHero.wow.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.wow.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.wow.stats.praxes") },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
 
   return (

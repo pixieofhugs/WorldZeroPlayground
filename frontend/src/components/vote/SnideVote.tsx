@@ -38,7 +38,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
 
   const active = hovered || selected
   const party = active >= 5
-  const caption = active ? TIERS[active - 1].label : t('chrome.snide.idle')
+  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
 
   return (
     <div>
@@ -95,7 +95,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
               disabled={saving}
               onClick={() => void vote(tier.value)}
               onMouseEnter={() => setHovered(tier.value)}
-              aria-label={t('chrome.snide.rateAria', { value: tier.value, label: tier.label })}
+              aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
               style={{
                 display: 'flex',
@@ -143,7 +143,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
               color: 'var(--faction-snide-vote-off)',
             }}
           >
-            {`· ${t('chrome.snide.tag')}`}
+            {`· ${t('chrome.tag')}`}
           </span>
         )}
       </div>

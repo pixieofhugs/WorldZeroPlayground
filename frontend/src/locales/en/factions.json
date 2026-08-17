@@ -34,7 +34,11 @@
     "notFound": "Faction not found.",
     "backToFactions": "Back to factions.",
     "eyebrow": "Faction",
+    "aboutHeading": "About",
     "descriptionEmpty": "No description yet.",
+    "membersEmptyWithSpotlight": "No other members yet.",
+    "memberLevel": "Level {{level}}",
+    "spotlightStat": "Level {{level}} · {{score}} points",
     "errors": {
       "load": "Couldn't load this faction.",
       "join": "Could not join faction."
@@ -54,8 +58,8 @@
       "membersHeading": "Members · {{total}}",
       "tasksHeading": "Tasks · {{total}}",
       "tasksEmpty": "No tasks yet.",
-      "recentHeading": "Recently completed",
-      "recentEmpty": "No completed praxis yet."
+      "recentHeading": "Recent praxis",
+      "recentEmpty": "No praxis submitted yet."
     }
   },
   "albescent": {
@@ -94,18 +98,6 @@
     }
   },
   "ephemerists": {
-    "apparatus": {
-      "heading": "The Apparatus",
-      "empty": "No apparatus recorded yet."
-    },
-    "tasks": {
-      "heading": "Surveys",
-      "empty": "No surveys open."
-    },
-    "praxis": {
-      "heading": "Transcriptions",
-      "empty": "Nothing sealed to the codex yet."
-    },
     "road": {
       "heading": "The Road",
       "memberTitle": "Your name is in the codex",
@@ -115,22 +107,11 @@
       "eligibleBody": "Take a task, triangulate what you find, and submit it to the record. The road is long and forks often.",
       "joinButton": "TAKE THE ROAD ▸",
       "joining": "SEALING…",
-      "confirmButton": "Confirm",
       "gateKicker": "Not yet in the codex —",
-      "gateTitle": "Earn your place on the road",
-      "gateBody": "File surveys worthy of {{faction}} and the keepers will send word. The road is long — keep triangulating, and the record will remember."
+      "gateTitle": "Earn your place on the road"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "level {{level}} · {{score}} pvncta"
-    },
-    "roster": {
-      "heading": "The keepers",
-      "emptyWithSpotlight": "No other names in the codex yet.",
-      "level": "level {{level}}"
-    },
-    "mobile": {
-      "eyebrow": "The Codex"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "the codex lies open —",
@@ -142,14 +123,11 @@
           "value": "one task, triangulated"
         },
         {
-          "label": "required skills",
           "value": "a steady hand, an open eye"
         },
         {
-          "label": "expected output",
           "value": "truths, submitted to the codex"
-        },
-        {}
+        }
       ],
       "perks": [
         "A codex that weighs your findings for concordance",
@@ -163,18 +141,6 @@
     }
   },
   "everymen": {
-    "charter": {
-      "heading": "The Charter",
-      "empty": "No charter written yet."
-    },
-    "tasks": {
-      "heading": "Jobs",
-      "empty": "No work orders posted."
-    },
-    "praxis": {
-      "heading": "Accomplishments",
-      "empty": "No reports filed yet."
-    },
     "roll": {
       "heading": "THE ROLL",
       "memberTitle": "You're on the roll",
@@ -184,22 +150,11 @@
       "eligibleBody": "Anyone willing to put in the shift belongs here. Pick up the work in front of you and finish what you start.",
       "joinButton": "ENLIST ▸",
       "joining": "ENLISTING…",
-      "confirmButton": "Confirm",
       "gateKicker": "Not on the roll — yet",
-      "gateTitle": "Earn your invitation",
-      "gateBody": "Complete tasks from {{faction}} and the ranks will send word. Keep going — the work speaks for itself."
+      "gateTitle": "Earn your invitation"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "lvl {{level}} · {{score}} pts"
-    },
-    "roster": {
-      "heading": "The roster",
-      "emptyWithSpotlight": "No others on the roll yet.",
-      "level": "lvl {{level}}"
-    },
-    "mobile": {
-      "eyebrow": "The Union Hall"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "doors are open —",
@@ -211,14 +166,11 @@
           "value": "one shift, seen through"
         },
         {
-          "label": "required skills",
           "value": "the willingness to show up"
         },
         {
-          "label": "expected output",
           "value": "honest work, finished"
-        },
-        {}
+        }
       ],
       "perks": [
         "A roll that has your back on every shift",
@@ -232,17 +184,6 @@
     }
   },
   "singularity": {
-    "manifest": {
-      "empty": "> manifest.txt: empty"
-    },
-    "tasks": {
-      "heading": "Functions",
-      "empty": "> no open functions"
-    },
-    "praxis": {
-      "heading": "Signals Generated",
-      "empty": "> no answers yet"
-    },
     "access": {
       "heading": "ACCESS",
       "reLabel": "re: you",
@@ -253,23 +194,11 @@
       "eligibleBody": "Become a node of the array. Run tasks, generate signals, cast them into the consensus. The threshold is already behind us.",
       "joinButton": "> CONNECT",
       "joining": "> CONNECTING…",
-      "confirmButton": "Confirm",
       "gateKicker": "> NODE NOT YET ONLINE",
-      "gateTitle": "{{faction}} is processing your data",
-      "gateBody": "Keep running functions and the array will bring your node online."
+      "gateTitle": "{{faction}} is processing your data"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "lvl {{level}} · {{score}} cr"
-    },
-    "roster": {
-      "heading": "> THE ARRAY",
-      "empty": "> no nodes online",
-      "emptyWithSpotlight": "> no other nodes online",
-      "level": "lvl {{level}}"
-    },
-    "mobile": {
-      "eyebrow": "> ~/faction"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "> PRIVILEGE ELEVATED",
@@ -281,14 +210,11 @@
           "value": "one submitted output"
         },
         {
-          "label": "required skills",
           "value": "none — the array compiles"
         },
         {
-          "label": "expected output",
           "value": "signal, into consensus"
-        },
-        {}
+        }
       ],
       "perks": [
         "A consensus that verifies, coalesces, amplifies",
@@ -302,18 +228,6 @@
     }
   },
   "snide": {
-    "about": {
-      "heading": "what we're about —",
-      "empty": "No manifesto pasted up yet."
-    },
-    "tasks": {
-      "heading": "Heists",
-      "empty": "No mischief here"
-    },
-    "praxis": {
-      "heading": "Good Stories",
-      "empty": "No heists pulled off yet."
-    },
     "dispatch": {
       "letterhead": "S.N.I.D.E.",
       "reLabel": "re: you",
@@ -324,19 +238,11 @@
       "eligibleBody": "No forms. No gods. No managers. Just show up and mean it.",
       "joinButton": "I'M IN",
       "joining": "BREAKING IN…",
-      "confirmButton": "Confirm",
       "gateKicker": "not one of us — yet",
-      "gateTitle": "Make some noise",
-      "gateBody": "Keep pulling off jobs and {{faction}} will come looking for you. Cause enough trouble and the invitation writes itself."
+      "gateTitle": "Make some noise"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "lvl {{level}} · {{score}} pts"
-    },
-    "roster": {
-      "heading": "the rap sheet",
-      "emptyWithSpotlight": "No other names on file yet.",
-      "level": "lvl {{level}}"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "the door's open —",
@@ -348,14 +254,11 @@
           "value": "one task, pulled off clean"
         },
         {
-          "label": "required skills",
           "value": "nerve, mostly"
         },
         {
-          "label": "expected output",
           "value": "trouble, well-made"
-        },
-        {}
+        }
       ],
       "perks": [
         "A crew that covers for you, not on you",
@@ -366,24 +269,9 @@
         "join": "I'm in",
         "joined": "you're on the inside"
       }
-    },
-    "mobile": {
-      "eyebrow": "The Dossier"
     }
   },
   "ua": {
-    "practice": {
-      "heading": "The Practice",
-      "empty": "Nothing written down yet."
-    },
-    "tasks": {
-      "heading": "Today's points",
-      "empty": "Nothing set down today."
-    },
-    "praxis": {
-      "heading": "Sealed work",
-      "empty": "Nothing sealed yet."
-    },
     "registry": {
       "heading": "Those practising",
       "memberTitle": "You practise here",
@@ -395,22 +283,11 @@
       "confirmSwitch": "Begin the practice with {{faction}}? You won't be able to rejoin {{current}} after leaving.",
       "confirm": "Begin the practice with {{faction}}?",
       "joining": "Beginning…",
-      "confirmButton": "Confirm",
       "gateKicker": "Not practising — yet",
-      "gateTitle": "Earn your place at the table",
-      "gateBody": "Seal work worth holding up and {{faction}} will send an invitation. Keep at it — talent is optional, the daily practice isn't."
+      "gateTitle": "Earn your place at the table"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "Anno {{anno}} · {{score}} pts"
-    },
-    "roster": {
-      "heading": "The circle",
-      "emptyWithSpotlight": "No one else at the table yet.",
-      "level": "Anno {{anno}}"
-    },
-    "mobile": {
-      "eyebrow": "A daily practice"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "come sit with the work",
@@ -422,14 +299,11 @@
           "value": "one true piece"
         },
         {
-          "label": "required skills",
           "value": "none — talent optional"
         },
         {
-          "label": "expected output",
           "value": "work, submitted & signed"
-        },
-        {}
+        }
       ],
       "perks": [
         "A circle that reads your work closely, and kindly",
@@ -443,18 +317,6 @@
     }
   },
   "coven": {
-    "manifesto": {
-      "heading": "the manifesto ✦",
-      "empty": "No manifesto scribbled yet."
-    },
-    "tasks": {
-      "heading": "Open Quests",
-      "empty": "No quests pinned up."
-    },
-    "praxis": {
-      "heading": "Spells cast",
-      "empty": "Nothing cast yet."
-    },
     "join": {
       "heading": "the circle",
       "memberTitle": "You're in the circle",
@@ -463,21 +325,10 @@
       "eligibleBody": "You've done the work — welcome home, witch.",
       "joinButton": "Join the coven ✦",
       "joining": "Joining…",
-      "confirmButton": "Confirm",
-      "gateTitle": "Not in the circle — yet",
-      "gateBody": "Keep casting spells worthy of {{faction}} and the coven will leave a light on. The weird ones always find their way home."
+      "gateTitle": "Not in the circle — yet"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "lvl {{level}} · {{score}} pts"
-    },
-    "roster": {
-      "heading": "the coven roster",
-      "emptyWithSpotlight": "No other witches in the circle yet.",
-      "level": "lvl {{level}}"
-    },
-    "mobile": {
-      "eyebrow": "The Circle"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "the circle is recruiting",
@@ -489,14 +340,11 @@
           "value": "one act of everyday magic"
         },
         {
-          "label": "required skills",
           "value": "none — only nerve"
         },
         {
-          "label": "expected output",
           "value": "small, brave, strange things"
-        },
-        {}
+        }
       ],
       "perks": [
         "A coven that cheers every tiny victory",
@@ -510,17 +358,6 @@
     }
   },
   "wow": {
-    "charter": {
-      "heading": "The Charter"
-    },
-    "tasks": {
-      "heading": "Quests Awaiting a Champion",
-      "empty": "No quests afoot. The realm is, briefly and tragically, sensible."
-    },
-    "praxis": {
-      "heading": "Chronicles of Proof",
-      "empty": "The chronicle stands open, its pages still blank."
-    },
     "join": {
       "heading": "THE MUSTER",
       "memberTitle": "Thou art sworn",
@@ -529,22 +366,11 @@
       "eligibleBody": "the armour is one-size, the oath is for life",
       "joinButton": "TAKE THE OATH ⚔",
       "joining": "SWEARING…",
-      "confirmButton": "Confirm",
       "gateKicker": "Unsworn — for now",
-      "gateTitle": "Earn thy summons",
-      "gateBody": "Complete quests from {{faction}} and the Court will send a herald. Keep at it — deeds carry further than petitions."
+      "gateTitle": "Earn thy summons"
     },
     "spotlight": {
-      "label": "Champion",
-      "stat": "lvl {{level}} · {{score}} pts"
-    },
-    "roster": {
-      "heading": "The Muster Roll",
-      "emptyWithSpotlight": "No other knights mustered yet.",
-      "level": "lvl {{level}}"
-    },
-    "mobile": {
-      "eyebrow": "The Field Pavilion"
+      "label": "Champion"
     },
     "invitation": {
       "kicker": "the Court is mustering —",
@@ -556,14 +382,11 @@
           "value": "one task, met with a straight face"
         },
         {
-          "label": "required arms",
           "value": "none — the Court supplies the sword"
         },
         {
-          "label": "expected output",
           "value": "the ridiculous, taken gravely seriously"
-        },
-        {}
+        }
       ],
       "perks": [
         "The Leap of Whimsy — once each level, a knight may storm a single task one rung above their station and take it anyway"
@@ -577,6 +400,8 @@
   "invitation": {
     "prospectus": "a prospectus",
     "termsHeading": "Terms of matriculation",
+    "skillsLabel": "Required skills",
+    "outputLabel": "Expected output",
     "dismiss": "Maybe later",
     "confirm": "Confirm"
   },

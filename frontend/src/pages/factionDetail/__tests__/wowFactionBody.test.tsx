@@ -23,6 +23,7 @@ import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so faction copy keys resolve to English text.
 import '../../../i18n'
+import i18n from '../../../i18n'
 import WowFactionBody from '../archetypes/WowFactionBody'
 import type { FactionDetailState, MembershipState } from '../useFactionDetail'
 
@@ -80,12 +81,19 @@ describe('the enlist rail answers every membership state', () => {
 })
 
 describe('the page speaks in WOW voice, not the phone catalog', () => {
-  it('wires the charter, the roll and both galleries', () => {
+  it('wires the about panel, the roll and both galleries', () => {
+    // Four bespoke headings stood here — "The Charter", "The Muster Roll",
+    // "Quests Awaiting a Champion", "Chronicles of Proof". #1911 collapsed the
+    // about panel, the roster and both gallery headings onto shared strings, so
+    // what this can still prove is that all four sections render at all, which
+    // is the wiring bug it was written for. WOW's own voice on this page is the
+    // muster block, and `factionDetailResponsive.test.tsx` walks that at both
+    // widths — it needs a membership state, which this `'none'` render has not.
     const markup = render('none')
-    expect(markup).toContain('The Charter')
-    expect(markup).toContain('The Muster Roll')
-    expect(markup).toContain('Quests Awaiting a Champion')
-    expect(markup).toContain('Chronicles of Proof')
+    expect(markup).toContain(i18n.t('factions:detail.aboutHeading'))
+    expect(markup).toContain(i18n.t('factions:detail.default.membersHeading', { total: 0 }))
+    expect(markup).toContain(i18n.t('factions:detail.default.tasksHeading', { total: 0 }))
+    expect(markup).toContain(i18n.t('factions:detail.default.recentHeading'))
   })
 
   /**
@@ -110,8 +118,13 @@ describe('the page speaks in WOW voice, not the phone catalog', () => {
   })
 
   it('does not fall back to the phone page copy', () => {
+    // The gate sentence used to be a tell: `mobile.gateHint` was the retired
+    // phone page's, and WOW's own `wow.join.gateBody` said the same thing in
+    // the Court's voice. #1911 collapsed that family ONTO `mobile.gateHint`, so
+    // the sentence is now the right answer rather than the wrong one and only
+    // the phone page's section headings remain a fall-through tell.
     const markup = render('gate')
-    expect(markup).not.toContain('Keep completing tasks to earn an invitation')
+    expect(markup).toContain(i18n.t('factions:mobile.gateHint', { faction: 'Warriors of Whimsy' }))
     expect(markup).not.toContain('Top members')
   })
 })

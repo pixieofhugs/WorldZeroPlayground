@@ -82,7 +82,7 @@ export default function DefaultTaskCard({
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
   const showMultiplier = !isNeutralMultiplier(multiplier);
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.na.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
 
   return (
     <div
@@ -139,7 +139,7 @@ export default function DefaultTaskCard({
               <span
                 style={{ ...CAPTION, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}
               >
-                {i18n.t("feed:taskCard.na.levelCaption")}
+                {i18n.t("feed:taskCard.levelCaption")}
               </span>
               <span
                 style={{
@@ -185,7 +185,7 @@ export default function DefaultTaskCard({
                 <span
                   style={{ ...CAPTION, fontSize: "var(--text-md)", marginTop: "var(--space-xs)" }}
                 >
-                  {i18n.t("feed:taskCard.na.pointsUnit")}
+                  {i18n.t("feed:taskCard.pointsUnit")}
                 </span>
               </div>
             </div>

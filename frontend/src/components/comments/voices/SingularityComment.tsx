@@ -284,7 +284,7 @@ export default function SingularityComment(props: CommentProps) {
           {comment.is_edited && (
             <>
               {' '}
-              {`[${t('comments.singularity.edited')}]`}
+              {`[${t('comments.edited')}]`}
             </>
           )}
         </span>

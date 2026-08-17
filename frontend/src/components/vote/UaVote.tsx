@@ -218,7 +218,7 @@ export default function UaVote({ praxisId, currentValue, points, totalVotes }: V
               disabled={saving}
               onClick={() => void vote(rank)}
               onMouseEnter={() => setHovered(rank)}
-              aria-label={t('chrome.ua.rateAria', { value: rank, label: TIERS[rank - 1].label })}
+              aria-label={t('chrome.rateAria', { value: rank, label: TIERS[rank - 1].label })}
               aria-pressed={picked}
               style={{
                 border: 'none',

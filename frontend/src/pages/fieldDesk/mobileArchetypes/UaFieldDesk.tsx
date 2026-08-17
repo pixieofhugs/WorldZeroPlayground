@@ -137,7 +137,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 margin: 'var(--space-xs) 0 0',
               }}
             >
-              {t('fieldDesk.home.ua.masthead')}
+              {t('fieldDesk.home.title')}
             </h1>
           </div>
         </div>
@@ -284,7 +284,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
       {/* ── What is out on the table ── */}
       <Sheet>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
-          <span style={{ ...smallCaps, color: INK }}>{t('fieldDesk.home.ua.questsHeading')}</span>
+          <span style={{ ...smallCaps, color: INK }}>{t('fieldDesk.home.questsHeading')}</span>
           <span aria-hidden style={{ flex: 1, minWidth: 'var(--space-xl)', height: 1, background: RULE }} />
           <Link to="/tasks" style={{ ...smallCaps, color: ACCENT, textDecoration: 'none' }}>
             {t('fieldDesk.home.viewAll')}

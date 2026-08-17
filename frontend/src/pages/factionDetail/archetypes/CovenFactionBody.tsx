@@ -153,7 +153,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               marginBottom: "var(--space-md)",
             }}
           >
-            {t("coven.manifesto.heading")}
+            {t("detail.aboutHeading")}
           </div>
           <Braid style={{ marginBottom: "var(--space-md)" }} />
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
@@ -165,7 +165,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               ))
             ) : (
               <p className="content-text" style={{ ...PROSE, lineHeight: 1.75, margin: 0 }}>
-                {t("coven.manifesto.empty")}
+                {t("detail.descriptionEmpty")}
               </p>
             )}
           </div>
@@ -173,9 +173,9 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHead>{t("coven.tasks.heading")}</SectionHead>
+          <SectionHead>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHead>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.tasks.empty")}</p>
+            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
@@ -196,9 +196,9 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHead>{t("coven.praxis.heading")}</SectionHead>
+          <SectionHead>{t("detail.default.recentHeading")}</SectionHead>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("coven.praxis.empty")}</p>
+            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
@@ -360,7 +360,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                     >
                       {membership.joining
                         ? t("coven.join.joining")
-                        : t("coven.join.confirmButton")}
+                        : t("mobile.confirm")}
                     </button>
                     <button
                       onClick={() => setConfirming(false)}
@@ -405,7 +405,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   <div className="content-text" style={PROSE}>
                     {burned
                       ? t("detail.burned.body", { faction: factionName(faction.slug) })
-                      : t("coven.join.gateBody", { faction: factionName(faction.slug) })}
+                      : t("mobile.gateHint", { faction: factionName(faction.slug) })}
                   </div>
                 </div>
               )}
@@ -447,7 +447,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   {spot.display_name}
                 </div>
                 <div style={{ ...PROSE, fontSize: "var(--text-content)", marginTop: "var(--space-xs)" }}>
-                  {t("coven.spotlight.stat", {
+                  {t("detail.spotlightStat", {
                     level: spot.level,
                     score: spot.all_time_score.toLocaleString(),
                   })}
@@ -468,13 +468,13 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 marginBottom: "var(--space-sm)",
               }}
             >
-              {t("coven.roster.heading")}
+              {t("detail.default.membersHeading", { total: members.length })}
             </div>
             <Braid style={{ marginBottom: "var(--space-sm)" }} />
             {roster.length === 0 ? (
               <p className="content-text" style={{ ...PROSE, margin: 0 }}>
                 {spot
-                  ? t("coven.roster.emptyWithSpotlight")
+                  ? t("detail.membersEmptyWithSpotlight")
                   : t("detail.membersEmpty")}
               </p>
             ) : (
@@ -508,7 +508,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   >
                     {member.display_name}
                   </span>
-                  <span style={CAPTION}>{t("coven.roster.level", { level: member.level })}</span>
+                  <span style={CAPTION}>{t("detail.memberLevel", { level: member.level })}</span>
                 </Link>
               ))
             )}

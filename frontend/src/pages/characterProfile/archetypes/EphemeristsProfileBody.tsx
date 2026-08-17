@@ -17,7 +17,6 @@
  * inherited the body's ink onto the band, where it read 2.07:1 in light.
  */
 import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import {
@@ -180,24 +179,14 @@ const dress: ProfileDress = {
 }
 
 export default function EphemeristsProfileBody(props: ProfileBodyProps) {
-  const { t } = useTranslation('common')
   return (
     <ProfileSkin
       props={props}
-      kit={{
-        ...dress,
-        ringLabel: t('profile.ephemerists.ringLabel'),
-        levelUnitLabel: t('profile.ephemerists.levelUnit'),
-        // {{level}} takes the ROMAN numeral, not the integer — the catalog
-        // holds the sentence, the kit still owns how the valley counts.
-        nextLevelLabel: (next) => t('profile.ephemerists.nextLevel', { level: romanLevel(next) }),
-        praxisEyebrow: (name) => t('profile.ephemerists.praxisEyebrow', { name }),
-        praxisEmpty: {
-          title: t('profile.ephemerists.praxisEmptyTitle'),
-          body: t('profile.ephemerists.praxisEmptyBody'),
-        },
-        badgeTitle: t('profile.ephemerists.badgeTitle'),
-      }}
+      /* Dress only. Seven copy knobs used to be spread on here, resolved from
+         `profile.<slug>.*`; #1911 collapsed those families to one shared string
+         each, so every kit was passing the same words and `ProfileSkin` reads
+         them itself now. */
+      kit={dress}
     />
   )
 }

@@ -51,8 +51,8 @@ export default function CovenFactionHero({
   // (no leaderboard/aggregate endpoint) — add panels when they are.
   const stats = [
     { value: members, label: i18n.t("feed:factionHero.coven.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.coven.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.coven.stats.praxes") },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
 
   return (

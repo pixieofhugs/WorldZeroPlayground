@@ -124,10 +124,13 @@ describe('SnideComment — acid and pink are drawn things, not inks (#1224)', ()
     expect(html).not.toContain('--faction-snide-slip-acid-ink')
   })
 
-  it('scrawls the composer prompt in the walked-down pink', () => {
-    const html = composer(false)
-    expect(html).toContain('--faction-snide-slip-pink-ink')
-    expect(html).not.toContain('color:var(--faction-snide-pink)')
+  it('never inks the composer in the pigment pink, walked down or not', () => {
+    // This used to assert the marker scrawl carried `-slip-pink-ink` (the #1224
+    // walk-down from 3.10 to 5.35). #1911 collapsed the four bespoke composer
+    // prompts onto the shared placeholder and the scrawl went with its words,
+    // so there is no pink text on this composer to measure. What the guard is
+    // FOR survives: the 1.35:1 pigment must never be an ink here again.
+    expect(composer(false)).not.toContain('color:var(--faction-snide-pink)')
   })
 
   it('carries no hardcoded colour literal — every pigment is a token', () => {

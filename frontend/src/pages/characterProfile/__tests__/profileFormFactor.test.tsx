@@ -19,6 +19,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import '../../../i18n'
+import i18n from '../../../i18n'
 import type { CharacterOut } from '../../../api/auth'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
@@ -190,7 +191,11 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
     // deleted by #1629 (guarded in factionProfileBody.test.tsx). The desktop
     // branch's own mark is the praxis section heading, which the phone stack
     // replaces with a segmented toggle.
-    expect(html, 'desktop na copy').toContain('sealed by Reza')
+    // #1911 rewords the shared eyebrow ("sealed by" → "Submitted by"), so this
+    // reads the catalog rather than a literal.
+    expect(html, 'desktop na copy').toContain(
+      i18n.t('common:profile.praxisEyebrow', { name: 'Reza' }),
+    )
   })
 })
 

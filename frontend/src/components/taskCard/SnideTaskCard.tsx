@@ -183,7 +183,7 @@ function PenCircle({ size, points }: { size: number; points: number }) {
           color: "var(--faction-snide-note-pink-ink)",
         }}
       >
-        {i18n.t("feed:taskCard.snide.pointsUnit")}
+        {i18n.t("feed:taskCard.pointsUnit")}
       </span>
     </div>
   );
@@ -198,7 +198,7 @@ export default function SnideTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.snide.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -264,7 +264,7 @@ export default function SnideTaskCard({
                     color: MUTED,
                   }}
                 >
-                  {i18n.t("feed:taskCard.snide.levelCaption")}
+                  {i18n.t("feed:taskCard.levelCaption")}
                 </span>
                 <span style={{ fontFamily: IMPACT, fontSize: size.levelSize, lineHeight: 0.82, transform: "rotate(-1.5deg)" }}>
                   {task.level_required}

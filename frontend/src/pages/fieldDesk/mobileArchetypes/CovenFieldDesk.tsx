@@ -368,7 +368,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                 color: INK,
               }}
             >
-              {t('fieldDesk.home.coven.questsHeading')}
+              {t('fieldDesk.home.questsHeading')}
             </span>
             <Braid style={{ flex: 1 }} />
             <Link to="/tasks" style={{ ...CAPTION, color: DEEP, textDecoration: 'none', flex: 'none' }}>

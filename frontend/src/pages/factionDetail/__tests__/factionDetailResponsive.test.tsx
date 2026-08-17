@@ -62,29 +62,26 @@ vi.mock('../useFactionDetail', async (importOriginal) => ({
 const FactionDetail = (await import('../../FactionDetail')).default
 
 /**
- * Three headings per faction that only that faction's body draws: its long-form
- * voice (manifesto / charter / rap sheet), its roster, and its task section.
- * None of them existed on the phone before this collapse.
+ * A string per faction that only that faction's body draws, unconditionally.
+ *
+ * This was THREE each — the long-form panel's heading, the roster's and the task
+ * section's. #1911 collapsed all three families onto shared keys, so those
+ * headings say the same words on every faction now and can no longer tell one
+ * body from another. What is left, and what the audit deliberately KEPT in each
+ * house's own voice, is the join panel's own name for itself: The Road, THE
+ * ROLL, ACCESS, the S.N.I.D.E. letterhead, Those practising, THE MUSTER, the
+ * circle. Seven distinct strings, one per body, still drawn at both widths —
+ * which is the property this suite exists for.
  */
 const OWN_VOICE: Record<string, readonly string[]> = {
-  coven: ['coven.manifesto.heading', 'coven.roster.heading', 'coven.tasks.heading'],
-  ephemerists: [
-    'ephemerists.apparatus.heading',
-    'ephemerists.roster.heading',
-    'ephemerists.tasks.heading',
-  ],
-  everymen: ['everymen.charter.heading', 'everymen.roster.heading', 'everymen.tasks.heading'],
-  // Singularity's long-form panel had no heading of its own — it opened on a
-  // shell prompt, `singularity.manifest.command`, which #1909 CUT. Its praxis
-  // heading stands in: still a string only this body draws, still unconditional.
-  singularity: [
-    'singularity.praxis.heading',
-    'singularity.roster.heading',
-    'singularity.tasks.heading',
-  ],
-  snide: ['snide.about.heading', 'snide.roster.heading', 'snide.tasks.heading'],
-  ua: ['ua.practice.heading', 'ua.roster.heading', 'ua.tasks.heading'],
-  wow: ['wow.charter.heading', 'wow.roster.heading', 'wow.tasks.heading'],
+  coven: ['coven.join.heading'],
+  ephemerists: ['ephemerists.road.heading'],
+  everymen: ['everymen.roll.heading'],
+  singularity: ['singularity.access.heading'],
+  // S.N.I.D.E.'s panel is a dispatch on letterhead rather than a titled block.
+  snide: ['snide.dispatch.letterhead'],
+  ua: ['ua.registry.heading'],
+  wow: ['wow.join.heading'],
 }
 
 /**

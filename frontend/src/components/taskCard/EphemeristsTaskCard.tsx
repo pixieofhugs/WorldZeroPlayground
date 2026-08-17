@@ -190,7 +190,7 @@ export default function EphemeristsTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
-  const cta = taskCardSignupCta(task, onSignup, i18n.t("feed:taskCard.ephemerists.signup"));
+  const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
   return (
@@ -290,7 +290,7 @@ export default function EphemeristsTaskCard({
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-md) 0 var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)", lineHeight: 1 }}>
                 <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: "var(--faction-ephemerists-plate-caption)" }}>
-                  {i18n.t("feed:taskCard.ephemerists.levelCaption")}
+                  {i18n.t("feed:taskCard.levelCaption")}
                 </span>
                 <span style={{ fontFamily: DECO, fontSize: size.levelSize, lineHeight: 0.8 }}>
                   {task.level_required}
@@ -369,7 +369,7 @@ export default function EphemeristsTaskCard({
                       the disc rather than to the label ramp (§4a). */}
                   {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the medallion. */}
                   <span style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-muted)" }}>
-                    {i18n.t("feed:taskCard.ephemerists.pointsUnit")}
+                    {i18n.t("feed:taskCard.pointsUnit")}
                   </span>
                 </div>
               </div>

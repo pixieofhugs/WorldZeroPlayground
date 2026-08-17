@@ -253,7 +253,7 @@ export default function EverymenComment(props: CommentProps) {
           {comment.is_edited && (
             <span style={DATELINE}>
               <span aria-hidden="true">· </span>
-              {t('comments.everymen.edited')}
+              {t('comments.edited')}
             </span>
           )}
         </>

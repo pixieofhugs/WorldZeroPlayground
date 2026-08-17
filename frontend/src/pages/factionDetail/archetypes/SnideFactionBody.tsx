@@ -191,7 +191,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 marginBottom: "var(--space-md)",
               }}
             >
-              {t("snide.about.heading")}
+              {t("detail.aboutHeading")}
             </div>
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
               {paragraphs.length ? (
@@ -202,7 +202,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 ))
               ) : (
                 <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)", margin: 0 }}>
-                  {t("snide.about.empty")}
+                  {t("detail.descriptionEmpty")}
                 </p>
               )}
             </div>
@@ -211,9 +211,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>{t("snide.tasks.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHeading>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.tasks.empty")}</p>
+            <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
@@ -234,9 +234,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>{t("snide.praxis.heading")}</SectionHeading>
+          <SectionHeading>{t("detail.default.recentHeading")}</SectionHeading>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.praxis.empty")}</p>
+            <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
@@ -398,7 +398,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       >
                         {membership.joining
                           ? t("snide.dispatch.joining")
-                          : t("snide.dispatch.confirmButton")}
+                          : t("mobile.confirm")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -455,7 +455,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#d8d6c8" }}>
                       {burned
                         ? t("detail.burned.body", { faction: factionName(faction.slug) })
-                        : t("snide.dispatch.gateBody", { faction: factionName(faction.slug) })}
+                        : t("mobile.gateHint", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}
@@ -505,7 +505,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     {spot.display_name}
                   </div>
                   <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: "var(--space-xs)" }}>
-                    {t("snide.spotlight.stat", {
+                    {t("detail.spotlightStat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
                     })}
@@ -529,12 +529,12 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   marginBottom: "var(--space-md)",
                 }}
               >
-                {t("snide.roster.heading")}
+                {t("detail.default.membersHeading", { total: members.length })}
               </div>
               {rapSheet.length === 0 ? (
                 <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)" }}>
                   {spot
-                    ? t("snide.roster.emptyWithSpotlight")
+                    ? t("detail.membersEmptyWithSpotlight")
                     : t("detail.membersEmpty")}
                 </p>
               ) : (
@@ -559,7 +559,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       </div>
                     </div>
                     <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: PINK_DEEP }}>
-                      {t("snide.roster.level", { level: m.level })}
+                      {t("detail.memberLevel", { level: m.level })}
                     </span>
                   </Link>
                 ))

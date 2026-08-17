@@ -158,7 +158,12 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             to={`/characters/${character.id}`}
             style={{ color: "inherit", textDecoration: "none" }}
           >
-            {t("fieldDesk.home.wow.greeting", { name: character.display_name })}
+            {/* This slot held "Good morrow, Sir {{name}}."
+                (`fieldDesk.home.wow.greeting`) — the one greeting in the app,
+                and the only desk that did not simply print the carried life's
+                name here. #1911 collapsed the family; the name is what the
+                other seven show, so it is what this shows. */}
+            {character.display_name}
           </Link>
         }
         byline={t("sidebar.characterCard.level", { level: character.level })}
@@ -264,12 +269,12 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
           paddingRight: "var(--space-lg)",
         }}
       >
-        <p
-          className="content-text"
-          style={{ fontFamily: WOW_BODY, fontStyle: "italic", color: WOW_MUTED, margin: 0 }}
-        >
-          {t("fieldDesk.home.wow.masthead")}
-        </p>
+        {/* An italic flourish line ("Thy crusade awaits. The noodle sword is
+            where thou left it.", `fieldDesk.home.wow.masthead`) opened this
+            column. No other desk carries a subtitle at all — the other seven
+            put the page's name in an h1 and get on with it — so #1911's
+            collapse of the masthead family has no shared sentence to leave
+            here. The frame, the gilt and the spacing are untouched. */}
 
         {/* ── the herald's dispatches, in all three of their states (#1554) ── */}
         {pendingRow && (
@@ -312,7 +317,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               </Link>
             }
           >
-            {t("fieldDesk.home.wow.questsHeading")}
+            {t("fieldDesk.home.questsHeading")}
           </WowSectionHead>
 
           {activeTasks.length === 0 ? (

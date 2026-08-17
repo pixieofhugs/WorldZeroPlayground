@@ -22,6 +22,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so the neutral copy keys resolve to English text.
 import '../../../i18n'
+import i18n from '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 import type { CharacterOut } from '../../../api/auth'
 import EphemeristsComment from '../voices/EphemeristsComment'
@@ -95,7 +96,7 @@ describe('EphemeristsComment — row states', () => {
   })
 
   it('row · edited: the faction mark joins the byline', () => {
-    // `comments.ephemerists.edited` held the flavour word `emended` until
+    // `comments.edited` held the flavour word `emended` until
     // #1863 settled the edited marker on one word for every faction.
     expect(row({ ...COMMENT, is_edited: true })).toContain('edited')
     expect(row()).not.toContain('edited')
@@ -132,9 +133,12 @@ describe('EphemeristsComment — row states', () => {
 })
 
 describe('EphemeristsComment — composer states', () => {
-  it('composer · empty: the faction prompt and the shared @-mention hint', () => {
+  it('composer · empty: the shared prompt and the shared @-mention hint', () => {
+    // The faction prompt line ("inscribe a note in the margin") was one of the
+    // four #1911 collapsed onto `comments.composerPlaceholder`; the textarea
+    // already showed that sentence, so the line went rather than restating it.
     const html = composer(false)
-    expect(html).toContain('inscribe a note in the margin')
+    expect(html).toContain(i18n.t('praxis:comments.composerPlaceholder'))
     expect(html).toContain('@ to mention')
     expect(html).not.toContain('aria-busy="true"')
   })

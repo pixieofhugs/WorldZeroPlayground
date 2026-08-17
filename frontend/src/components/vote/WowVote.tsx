@@ -119,7 +119,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
     ? TIERS[hovered - 1].label
     : selected
       ? t('chrome.voted', { stars: selected })
-      : t('chrome.wow.idle')
+      : t('chrome.idle')
 
   return (
     <div>
@@ -171,7 +171,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
               disabled={saving}
               onClick={() => void vote(tier.value)}
               onMouseEnter={() => setHovered(tier.value)}
-              aria-label={t('chrome.wow.rateAria', { value: tier.value, label: tier.label })}
+              aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
               style={balloonStyle}
             >

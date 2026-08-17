@@ -12,7 +12,6 @@
  * hex — colours via --faction-singularity-* vars.
  */
 import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
@@ -180,28 +179,14 @@ const dress: ProfileDress = {
 }
 
 export default function SingularityProfileBody(props: ProfileBodyProps) {
-  const { t } = useTranslation('common')
   return (
     <ProfileSkin
       props={props}
-      kit={{
-        ...dress,
-        ringLabel: t('profile.singularity.ringLabel'),
-        nextLevelLabel: (next) => t('profile.singularity.nextLevel', { level: next }),
-        /* It was the one kit with a footnote — it logged the absolute score and
-           ignored the threshold, which is why it took a key of its own.
-           `scoreFootnote` read `profile.singularity.scoreFootnote`
-           ("> {{score}} PTS LOGGED"). #1909 CUT it: Singularity was the only
-           kit that set the optional footnote, on a surface the audit ruled
-           generic. `ProfileSkin` draws no footnote when the knob is unset,
-           which is what the other six kits already do. */
-        praxisEyebrow: (name) => t('profile.singularity.praxisEyebrow', { name }),
-        praxisEmpty: {
-          title: t('profile.singularity.praxisEmptyTitle'),
-          body: t('profile.singularity.praxisEmptyBody'),
-        },
-        badgeTitle: t('profile.singularity.badgeTitle'),
-      }}
+      /* Dress only. Seven copy knobs used to be spread on here, resolved from
+         `profile.<slug>.*`; #1911 collapsed those families to one shared string
+         each, so every kit was passing the same words and `ProfileSkin` reads
+         them itself now. */
+      kit={dress}
     />
   )
 }

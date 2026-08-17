@@ -189,9 +189,10 @@ export default function EphemeristsComment(props: CommentProps) {
     return (
       <Leaf avatar={<FactionAvatar character={character} size="sm" />}>
         <div aria-busy={submitting}>
-          <div style={{ ...LABEL, marginBottom: 'var(--space-sm)' }}>
-            {t('comments.ephemerists.prompt')}
-          </div>
+          {/* The label line above the leaf said "inscribe a note in the margin"
+              (`comments.ephemerists.prompt`). #1911 collapsed the four bespoke
+              prompts onto `comments.composerPlaceholder`, which the textarea
+              below already shows, so the label would have restated it. */}
           <Marginalia>
             <ComposerControls
               value={value}
@@ -260,7 +261,7 @@ export default function EphemeristsComment(props: CommentProps) {
         {comment.is_edited && (
           <span style={{ ...LABEL, color: QUIET }}>
             <span aria-hidden="true">· </span>
-            {t('comments.ephemerists.edited')}
+            {t('comments.edited')}
           </span>
         )}
       </div>
