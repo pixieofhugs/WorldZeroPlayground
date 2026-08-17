@@ -425,6 +425,54 @@
         "title": "BanActionOut",
         "type": "object"
       },
+      "BlockCreate": {
+        "properties": {
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "character_id"
+        ],
+        "title": "BlockCreate",
+        "type": "object"
+      },
+      "BlockListItem": {
+        "description": "One character this viewer has blocked, enriched for the profile card.\n\nEmitted only to the blocker — an incoming block has no wire shape at all,\nbecause the blocked party must not be able to read one.",
+        "properties": {
+          "avatar_url": {
+            "title": "Avatar Url",
+            "type": "string"
+          },
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "faction_slug": {
+            "title": "Faction Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "character_id",
+          "display_name",
+          "avatar_url",
+          "faction_slug",
+          "created_at"
+        ],
+        "title": "BlockListItem",
+        "type": "object"
+      },
       "Body_admin_import_tasks_csv_admin_tasks_import_csv_post": {
         "properties": {
           "file": {
@@ -5162,7 +5210,6 @@
               "One-sided Foe",
               "Secret Admirer",
               "Targeted",
-              "Blocked",
               "Unknown"
             ],
             "title": "Display Status",
@@ -11335,7 +11382,7 @@
     },
     "/relationships": {
       "get": {
-        "description": "List the authenticated character's outgoing relationships with display status.",
+        "description": "List the authenticated character's outgoing friend and foe declarations,\nwith the display status their pairing produces.\n\nOutgoing only, and blocks do not appear here at all — a block is its own\nrecord with its own route (ADR-0077).",
         "operationId": "list_my_relationships_relationships_get",
         "parameters": [
           {
@@ -11487,6 +11534,185 @@
         ]
       }
     },
+    "/relationships/blocks": {
+      "get": {
+        "description": "List the characters the authenticated character has blocked.\n\nOutgoing only. A block is silent to the party it names (ADR-0077), so there\nis no route, field or error anywhere that reports an *incoming* one.",
+        "operationId": "list_my_blocks_relationships_blocks_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BlockListItem"
+                  },
+                  "title": "Response List My Blocks Relationships Blocks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List My Blocks",
+        "tags": [
+          "relationships"
+        ]
+      },
+      "post": {
+        "description": "Block a character. No friend or foe declaration is needed or created.\n\nIdempotent — blocking someone already blocked answers the existing record.",
+        "operationId": "block_character_route_relationships_blocks_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockListItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Block Character Route",
+        "tags": [
+          "relationships"
+        ]
+      }
+    },
+    "/relationships/blocks/{character_id}": {
+      "delete": {
+        "description": "Lift a block. Only the character who created it can, and it restores\nnothing else — no friend or foe edge comes back with it (ADR-0077).",
+        "operationId": "unblock_character_route_relationships_blocks__character_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "title": "Character Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Unblock Character Route",
+        "tags": [
+          "relationships"
+        ]
+      }
+    },
     "/relationships/{relationship_id}": {
       "delete": {
         "description": "Remove a relationship. Only the declaring party can delete.",
@@ -11544,7 +11770,7 @@
         ]
       },
       "put": {
-        "description": "Block a relationship. Either party can block.",
+        "description": "Block the other party to this relationship, addressed by the edge's id.\n\nSuperseded by `POST /relationships/blocks`, which takes a character id and\nneeds no edge (ADR-0077). Kept for one release while the client moves;\nretires with #1907.",
         "operationId": "block_relationship_route_relationships__relationship_id__put",
         "parameters": [
           {
@@ -11608,7 +11834,7 @@
     },
     "/relationships/{relationship_id}/unblock": {
       "post": {
-        "description": "Reverse a block. Either party can unblock; the edge returns to active.\nSeparate route from PUT /{id} (block) so the two actions don't collide.\n\nADR-0009, superseded by ADR-0077 — under which a block is its own record\nand unblock is that record's deletion, authored by the blocker alone. This\nroute still implements ADR-0009.",
+        "description": "Lift this caller's block on the other party to this relationship,\naddressed by the edge's id.\n\nSuperseded by `DELETE /relationships/blocks/{character_id}` (ADR-0077).\nKept for one release while the client moves; retires with #1907. Only the\nblocker's own record is deleted, and no edge changes.",
         "operationId": "unblock_relationship_route_relationships__relationship_id__unblock_post",
         "parameters": [
           {

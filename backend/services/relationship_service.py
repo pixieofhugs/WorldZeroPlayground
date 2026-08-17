@@ -154,23 +154,13 @@ async def create_relationship(
     return relationship
 
 
-async def _counterpart(
-    relationship_id: int,
-    character: Character,
-    session: AsyncSession,
-) -> tuple[Relationship, int]:
-    """The edge and the other party to it, for a caller who must be a party."""
-    relationship = await session.get(Relationship, relationship_id)
-    if relationship is None:
-        raise HTTPException(status_code=404, detail="Relationship not found.")
-    if character.id not in (relationship.from_character_id, relationship.to_character_id):
-        raise HTTPException(status_code=403, detail="Not a party to this relationship.")
-    other_id = (
+def _counterpart(relationship: Relationship, character: Character) -> int:
+    """The other party to an edge this caller is a party to."""
+    return (
         relationship.to_character_id
         if relationship.from_character_id == character.id
         else relationship.from_character_id
     )
-    return relationship, other_id
 
 
 async def block_relationship(
@@ -188,8 +178,13 @@ async def block_relationship(
     two cannot disagree; the edge itself is left exactly as the player declared
     it, because a block outranks an edge without consuming one.
     """
-    relationship, other_id = await _counterpart(relationship_id, character, session)
-    await block_character(character, other_id, session)
+    relationship = await session.get(Relationship, relationship_id)
+    if relationship is None:
+        raise HTTPException(status_code=404, detail="Relationship not found.")
+    if character.id not in (relationship.from_character_id, relationship.to_character_id):
+        raise HTTPException(status_code=403, detail="Not a party to this relationship.")
+
+    await block_character(character, _counterpart(relationship, character), session)
     return relationship
 
 
@@ -205,8 +200,13 @@ async def unblock_relationship(
     record's authorship to the blocker alone, so the ADR-0009 behaviour where
     either party could reverse a block is gone even through this path.
     """
-    relationship, other_id = await _counterpart(relationship_id, character, session)
-    await unblock_character(character, other_id, session)
+    relationship = await session.get(Relationship, relationship_id)
+    if relationship is None:
+        raise HTTPException(status_code=404, detail="Relationship not found.")
+    if character.id not in (relationship.from_character_id, relationship.to_character_id):
+        raise HTTPException(status_code=403, detail="Not a party to this relationship.")
+
+    await unblock_character(character, _counterpart(relationship, character), session)
     return relationship
 
 

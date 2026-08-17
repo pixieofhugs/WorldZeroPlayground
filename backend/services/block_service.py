@@ -10,10 +10,10 @@ the block, and the friends-and-foes feed sources. It does not hide a profile,
 remove anyone from the standings, or close the request-shaped channels. Widening
 that reach is a separate decision with its own record.
 """
-from fastapi import HTTPException
 from sqlalchemy import Select, case, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from models.character import Character
 from models.character_block import CharacterBlock
 from schemas.block import BlockListItem
@@ -66,11 +66,11 @@ async def block_character(
     duplicate is not worth surfacing. No edge is read, written, or required.
     """
     if character_id == blocker.id:
-        raise HTTPException(status_code=422, detail="Cannot block yourself.")
+        raise_coded(422, ErrorCode.block_self, "Cannot block yourself.")
 
     target = await session.get(Character, character_id)
     if target is None:
-        raise HTTPException(status_code=404, detail="Target character not found.")
+        raise_coded(404, ErrorCode.character_not_found, "Target character not found.")
 
     existing = (
         await session.execute(
