@@ -81,7 +81,6 @@ function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     setTitle: () => {},
     body: "Caught the papers.",
     setBody: () => {},
-    wordCount: 3,
     media: [],
     fileError: "",
     handleFileChange: () => {},
@@ -148,11 +147,14 @@ describe("Coven composer — the shared layout, neutrally worded (ADR-0065)", ()
   // Spelled out rather than built from a `${key}` template: the catalog's keys
   // are a literal union, so a template-literal key does not typecheck — and a
   // key assembled at runtime is also invisible to the i18n sweep's grep.
+  //
+  // `writeUpLabel` is NOT among them since #2085: that heading is gone from the
+  // page, and the key now reaches the editor as an aria-label an effect applies,
+  // which a static render cannot see (bodySpellcheck.test.ts holds that claim).
   const REGIONS = [
     i18n.t("forms:editPraxis.composer.taskLabel"),
     i18n.t("forms:editPraxis.composer.titleLabel"),
     i18n.t("forms:editPraxis.composer.modeLabel"),
-    i18n.t("forms:editPraxis.composer.writeUpLabel"),
     i18n.t("forms:editPraxis.composer.proofLabel"),
     i18n.t("forms:editPraxis.composer.submit"),
   ];

@@ -1,5 +1,5 @@
 /**
- * The composer's draft text: title, body, and the word count over it.
+ * The composer's draft text: the title box and the body.
  *
  * **Nothing here writes to the server.** A praxis is written in its room and
  * flushed to the record by the room server (ADR-0073, #1743), so this hook is
@@ -26,7 +26,6 @@ export interface ComposerDraft {
   setTitle: (value: string) => void;
   body: string;
   setBody: (value: string) => void;
-  wordCount: number;
   autosaveAt: Date | null;
   setAutosaveAt: (value: Date | null) => void;
   /**
@@ -53,14 +52,11 @@ export function useComposerDraft(): ComposerDraft {
     setBody(initialBody);
   }, []);
 
-  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
-
   return {
     title,
     setTitle,
     body,
     setBody,
-    wordCount,
     autosaveAt,
     setAutosaveAt,
     hydrate,

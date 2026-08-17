@@ -98,7 +98,6 @@ const state = {
   setTitle: () => {},
   body: "Caught the papers.",
   setBody: () => {},
-  wordCount: 3,
   media: [],
   fileError: "",
   handleFileChange: () => {},

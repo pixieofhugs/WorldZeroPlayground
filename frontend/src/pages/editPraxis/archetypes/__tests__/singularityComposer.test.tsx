@@ -73,7 +73,6 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     body: "## What I did",
     setTitle: () => {},
     setBody: () => {},
-    wordCount: 3,
     media: [],
     fileError: "",
     handleFileChange: () => {},
@@ -151,7 +150,8 @@ describe("Singularity composer — structure", () => {
       i18n.t("forms:editPraxis.composer.taskLabel"),
       i18n.t("forms:editPraxis.composer.titleLabel"),
       i18n.t("forms:editPraxis.composer.modeLabel"),
-      i18n.t("forms:editPraxis.composer.writeUpLabel"),
+      // No `writeUpLabel`: #2085 took that heading off the page, and the key now
+      // names the editor through an aria-label a static render cannot see.
       i18n.t("forms:editPraxis.composer.proofLabel"),
       i18n.t("forms:editPraxis.composer.submit"),
       i18n.t("forms:editPraxis.composer.pointsUnit"),

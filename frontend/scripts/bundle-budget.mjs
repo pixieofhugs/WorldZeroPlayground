@@ -128,11 +128,47 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  * level. This check compresses at level 9, where `main` before this change read
  * 24,226 rather than the 24,568 the issue reports.
  *
- * FAIL stays at 25,000.
+ * CSS ledger (#2073): 23,400 -> 22,700, against a measured 23,383 -> 22,428.
+ *
+ * ORNAMENT MOTION IS NOW OFF THE CRITICAL PATH, PERMANENTLY. The entry above
+ * moved 62 `@font-face` rules; this one moves the reduced-motion-gated motion of
+ * the six praxis-card vote widgets, the Singularity slab's scanline and cursor,
+ * the Coven watermark's turn and the UA mandala's five animations into
+ * `src/motion.ornament.css`. Same mechanism, same chunk: `src/factionFaces.ts`
+ * is the only importer of both sheets, so the deferred CSS asset went 1,296 ->
+ * 2,550 gzipped and the blocking one 23,383 -> 22,428. Raw, 140,721 -> 116,126
+ * with 25,887 alongside; nothing was deleted, this is a delivery change.
+ *
+ * WHY MOTION AND NOTHING ELSE. A late `@keyframes` shifts no layout and flashes
+ * no unstyled content — the element is already drawn, in its final colours, at
+ * its final size — and every rule moved was already behind
+ * `prefers-reduced-motion: no-preference`, so a viewer who never receives the
+ * sheet lands exactly where a reduced-motion viewer lands. That argument does
+ * NOT extend to colour, layout or type, and the narrowness is the whole safety
+ * case: `motionSplit.test.ts` asserts the sheet carries motion and nothing else,
+ * and that every rule in it kept its gate.
+ *
+ * The invisible failure is the same one #2079 named: the win does not show up in
+ * a red build. One `@import` from index.css, or one static import of
+ * `factionFaces` from anything the entry reaches, folds both sheets back into the
+ * blocking stylesheet with everything green. `factionFaceSplit.test.ts` guards
+ * the entry-reachability half and `motionSplit.test.ts` guards the
+ * only-one-importer half.
+ *
+ * WARN comes down to 22,700 — 272 bytes over today's number, inside the band the
+ * three entries above chose (638, 229, 278) and for the reason the #1325 entry
+ * gives. It is tight on purpose and it is affordable for a new reason rather
+ * than an optimistic one: #2071 and #2072 write their ornament keyframes
+ * straight into the deferred sheet, so the part of them that used to be priced
+ * here now costs nothing at all. Only their paint and geometry lands in
+ * index.css.
+ *
+ * FAIL stays at 25,000, now 2,572 bytes away. TARGET stays at 20,000 and is
+ * 2,428 away — the closest this has been since it was set.
  */
 const BUDGETS = {
   js: { warn: 134_000, fail: 180_000, target: 120_000 },
-  css: { warn: 23_400, fail: 25_000, target: 20_000 },
+  css: { warn: 22_700, fail: 25_000, target: 20_000 },
 }
 
 /** Asset paths the entry HTML forces the browser to fetch before first render. */
