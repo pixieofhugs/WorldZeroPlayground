@@ -70,13 +70,24 @@ If a split doesn't move the budget number, the weight is being held somewhere
 else — find out where before shipping the split.
 
 **4. A new font family.** The 18 families are self-hosted since #1977:
-`scripts/fetch-fonts.mjs` writes `src/fonts.css` and `src/assets/fonts/*.woff2`,
-and index.css `@import`s the stylesheet — so every `@font-face` block lands in
-the one render-blocking stylesheet, and the woff2 files are content-hashed into
-`/assets` where render.yaml serves them `immutable`. Adding a family costs
-`@font-face` bytes on the critical path and a woff2 in the repo. Before adding
-one, check that the one you want isn't already there, and add it to `FACES` in
-the script rather than hand-editing the generated CSS.
+`scripts/fetch-fonts.mjs` writes `src/assets/fonts/*.woff2` and **two**
+stylesheets, and the woff2 files are content-hashed into `/assets` where
+render.yaml serves them `immutable`. Which sheet a family lands in is what
+decides whether it costs critical-path bytes (#2079), and it is decided by
+`SHELL_FAMILIES` in that script: `src/fonts.css` is `@import`ed by index.css and
+holds the three families the shell renders in, so its rules block first paint;
+`src/fonts.faction.css` is imported only by `src/factionFaces.ts` across a chunk
+boundary, so Vite emits it as a separate CSS asset that `dist/index.html` never
+references. Adding a faction family therefore costs a woff2 in the repo and
+nothing on the critical path — adding a **shell** family costs both. Before
+adding one, check that the one you want isn't already there, and add it to
+`FACES` in the script rather than hand-editing the generated CSS.
+
+`factionFaceSplit.test.ts` is the guard on that boundary, and it is worth knowing
+why it reads the module graph rather than the sheets: a family in the wrong sheet
+fails nothing in either direction. Stranded, it paints its `font-display: swap`
+fallback forever; imported eagerly, all 62 rules rejoin the blocking stylesheet
+with the build green and only the budget number moving.
 
 `fontsLoaded.test.ts` guards this in three directions: a family named in source
 but not shipped renders as a silent fallback (#839); a family shipped but named

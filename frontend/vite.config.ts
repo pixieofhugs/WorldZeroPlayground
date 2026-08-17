@@ -12,10 +12,12 @@ export default defineConfig({
      * A FONT IS NEVER INLINED, whatever its size (#2038).
      *
      * Vite base64s any asset under 4 KB into the file that references it. Every
-     * face in `src/fonts.css` was comfortably over that line until #2038 added
-     * three subsets of ten codepoints — two of which are 1.8 KB and 3.8 KB, so
-     * they went straight into the render-blocking stylesheet and put the CSS
-     * budget 5.5 KB over its FAIL ceiling in one build.
+     * face in the generated sheets was comfortably over that line until #2038
+     * added three subsets of ten codepoints — two of which are 1.8 KB and 3.8 KB,
+     * so they went straight into the render-blocking stylesheet and put the CSS
+     * budget 5.5 KB over its FAIL ceiling in one build. (Those three moved to
+     * `src/fonts.faction.css` in #2079; inlining them would now put a KB of
+     * base64 into a faction chunk instead, which is quieter and just as wrong.)
      *
      * The size is the smaller half of it. Inlining also destroys what makes
      * self-hosting cheap (#1977): a `@font-face` behind a `unicode-range` is

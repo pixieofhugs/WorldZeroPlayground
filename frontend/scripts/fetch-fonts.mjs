@@ -263,7 +263,7 @@ function codePointsIn(range) {
   return points
 }
 
-/** The licence ships with the font — see the header of src/fonts.css. */
+/** The licence ships with the font — see either generated sheet's header. */
 async function fetchLicence(family) {
   let licence
   for (const root of LICENCE_ROOTS) {
