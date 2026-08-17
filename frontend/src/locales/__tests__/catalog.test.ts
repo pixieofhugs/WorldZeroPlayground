@@ -488,7 +488,7 @@ describe('the four functional controls say one thing across every faction (#1863
 
   it('the comment edited marker reads edited', () => {
     for (const slug of [...SLUGS, 'albescent']) {
-      expect(i18n.t(`praxis:comments.${slug}.edited` as 'praxis:comments.ua.edited')).toBe('edited')
+      expect(i18n.t(`praxis:comments.${slug}.edited` as 'praxis:comments.edited')).toBe('edited')
     }
   })
 

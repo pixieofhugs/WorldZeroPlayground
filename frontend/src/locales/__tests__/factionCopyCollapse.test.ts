@@ -120,7 +120,11 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
 
   // --- praxis.json: the comment thread ----------------------------------
   { banned: `praxis:comments\\.{F}\\.edited`, shared: 'praxis:comments.edited', wording: 'edited' },
-  { banned: `praxis:comments\\.{F}\\.empty`, shared: 'praxis:comments.empty', wording: 'No comments yet.' },
+  // The four bespoke composer PROMPTS settle onto the placeholder the shared
+  // `ComposerControls` textarea already shows in all eight voices. Pointing the
+  // prompt LINE at the same string would have printed the sentence twice on the
+  // same composer, so the line goes and the placeholder speaks — which is what
+  // the other four voices already did.
   { banned: `praxis:comments\\.{F}\\.prompt`, shared: 'praxis:comments.composerPlaceholder', wording: 'Say something worth keeping…' },
 
   // --- common.json: the seven character-profile kits (#1858) ------------
@@ -145,16 +149,21 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
 ]
 
 /**
- * Three of the 40 collapsed to NOTHING rather than to a shared key: every call
+ * Four of the 40 collapsed to NOTHING rather than to a shared key: every call
  * site for them had already gone, so the family was orphaned copy and a shared
- * key holding the agreed wording would have been dead on arrival. Listed by
- * name so "we deleted it" stays a decision on the record rather than an
- * omission — and so a future call site has to add the shared key deliberately.
+ * key holding the agreed wording would have been dead on arrival. `comments.
+ * {F}.empty` is the clearest case — WOW held the only one and no comment thread
+ * in the app renders an empty state at all.
+ *
+ * Listed by name so "we deleted it" stays a decision on the record rather than
+ * an omission, and so a future call site has to add the shared key
+ * deliberately, with the agreed wording from #1864's table.
  */
 const COLLAPSED_TO_NOTHING = [
   `feed:factionCard\\.{F}\\.blurbFallback`,
   `feed:taskCard\\.{F}\\.level`,
   `feed:taskCard\\.{F}\\.points`,
+  `praxis:comments\\.{F}\\.empty`,
 ]
 
 function bannedRe(pattern: string): RegExp {

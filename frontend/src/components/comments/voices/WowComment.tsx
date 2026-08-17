@@ -71,7 +71,8 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
 const MED = 'var(--faction-wow-card-font)' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
-const GILT = 'var(--faction-wow-stamp-total)'
+/* `--faction-wow-stamp-total` inked the composer's ✦ prompt line; #1911 took
+   the line, and the token has no other slot on this card. */
 const INK = 'var(--faction-wow-card-text)'
 const MUTED = 'var(--faction-wow-card-muted)'
 const PLUM = 'var(--faction-wow-card-accent)'
@@ -177,12 +178,13 @@ export default function WowComment(props: CommentProps) {
             of its own is the textarea (`font: inherit`), and a comment draft is
             content-tier text (§4). Every other slot names its own size. */}
         <div className="content-text" aria-busy={submitting}>
-          <div style={{ ...QUIET, marginBottom: 'var(--space-sm)' }}>
-            <span className="wow-tw" aria-hidden style={{ color: GILT, marginRight: 'var(--space-xs)' }}>
-              ✦
-            </span>
-            {t('comments.wow.prompt')}
-          </div>
+          {/* The gilt ✦ prompt line above the rule said "Add thy counsel to the
+              chronicle…" (`comments.wow.prompt`). #1911 collapsed the four
+              bespoke prompts onto `comments.composerPlaceholder`, which the
+              shared ComposerControls textarea below already shows — so keeping
+              the line would have printed the same sentence twice on one
+              composer. It goes, and this composer reads like the four voices
+              that never had a prompt line. */}
           <RibbonRule style={{ marginBottom: 'var(--space-md)' }} />
           <ComposerControls
             value={value}
@@ -249,7 +251,7 @@ export default function WowComment(props: CommentProps) {
         {comment.is_edited && (
           <span style={QUIET}>
             <span aria-hidden="true">· </span>
-            {t('comments.wow.edited')}
+            {t('comments.edited')}
           </span>
         )}
       </div>

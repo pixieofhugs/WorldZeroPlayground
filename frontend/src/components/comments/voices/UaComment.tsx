@@ -90,17 +90,10 @@ export default function UaComment(props: CommentProps) {
           <UaSigil width={38} height={38} />
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontFamily: UA_TEXT,
-              fontSize: 'var(--text-content)',
-              fontStyle: 'italic',
-              color: 'var(--faction-ua-card-muted)',
-              marginBottom: 'var(--space-md)',
-            }}
-          >
-            {t('comments.ua.prompt')}
-          </div>
+          {/* The italic prompt line here said "Leave a note in the margin…"
+              (`comments.ua.prompt`). #1911 collapsed the four bespoke prompts
+              onto `comments.composerPlaceholder`, which the textarea below
+              already shows, so the line would have repeated it verbatim. */}
           <ComposerControls
             value={value}
             onChange={onChange}
@@ -156,7 +149,7 @@ export default function UaComment(props: CommentProps) {
           </Link>
           <span style={meta({ whiteSpace: 'nowrap' })}>
             {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ` · ${t('comments.ua.edited')}` : ''}
+            {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
           </span>
         </div>
         <div
