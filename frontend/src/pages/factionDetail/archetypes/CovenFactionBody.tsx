@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
-import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import {
   Braid,
   CAPTION,
@@ -26,6 +25,7 @@ import {
   SlipAvatar,
   SLIP_SHEET,
   SOFT,
+  Spark,
 } from "../../../components/factionMarks/covenSlip";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
@@ -257,7 +257,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
               {membership.state === "member" && (
                 <div style={{ textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)" }}>
-                    <CovenSigil size={30} color={GOLD} />
+                    <Spark size={30} color={GOLD} />
                   </div>
                   <div
                     style={{
@@ -319,7 +319,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                       cursor: "pointer",
                     }}
                   >
-                    <CovenSigil size={12} color={CTA_INK} />
+                    <Spark size={12} color={CTA_INK} />
                     {t("coven.join.joinButton")}
                   </button>
                 </div>
@@ -385,7 +385,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
                     {/* eslint-disable-next-line local/no-raw-style-values -- ornament: optical nudge aligning the sparkle glyph to the script cap-height. */}
                     <span style={{ marginTop: 3 }}>
-                      <CovenSigil size={20} color={GOLD} />
+                      <Spark size={20} color={GOLD} />
                     </span>
                     <span
                       style={{
