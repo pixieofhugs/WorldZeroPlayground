@@ -906,6 +906,18 @@ Controlled by `data-theme="dark"` attribute on `<html>`. All colors reference CS
 
 **Implementation rule:** Do NOT use `const dark = theme === 'dark'` to pick colors. Use CSS variables. The only place `useTheme()` should drive color decisions is for truly structural differences (e.g., Singularity card is always dark regardless of theme).
 
+### A theme may pick GEOMETRY, and then it owes a one-motif token family (#2020)
+
+The rule above is about colour, and it stands. What it does not cover is the case Coven's vote plate became: light draws a **sun**, rays counted round a disc, and dark draws the **moon phases** that shipped. No custom property carries a `<path d>`, so the cascade cannot express that swap — `useTheme()` picks the motif, and every colour on whichever plate is built is still a token (`--faction-coven-{sun,moon}-*`). The test of whether a fork is legitimate is exactly that: **could a variable have done it?** A different fill is a variable's job; a different shape is not.
+
+Three things follow, and each is a way to get this wrong.
+
+- **Build ONE motif, never both.** Rendering both plates and hiding one with `display: none` looks equivalent and is not: it puts ten rating controls in the markup where the viewer has five, and the SSR harness counts markup. The a11y tree is the smaller half of what a doubled control set breaks.
+- **Mirror the role names, one for one.** The sun's family is `-plate-from`, `-disc-on`, `-gold`, `-ring-on`, `-face`, `-star`, `-dust` … because the moon's is. Two motifs whose token names diverge are two palettes nobody can diff, and the second one silently stops being maintained with the first.
+- **A one-motif family gets NO dark block, and the comment has to say why.** The moon family declares nothing under `[data-theme="dark"]` because it is a night surface in both cascades; the sun declares nothing because *it is never mounted in dark at all*. Those are opposite reasons with identical diffs, and the next sweep to find an undarkened family is owed the difference in writing — otherwise it either adds a value nothing can read or deletes one that is load-bearing.
+
+**What the plate owes is 1.4.11, not AA.** Nothing on a vote plate is text — the caption sits below it on the card — so the floor is 3:1 on the *reached* state, and the unlit marks are allowed to recede (the shipped moon's lit gold reads 9.82:1 on its night plate and its unlit ring 1.28:1). Held to that, the sun's design values failed the same way #2019's did: bright gold rays read **1.26:1** on cream, and there is no yellow that clears near-white paper. What is worth adding to that section is the second half. The design drew the disc's limb as **the same hue** as the rays, one and a half stops darker — and AA spends exactly the lightness that separation was made of. Walked to the floor on its own hue the limb lands **ΔE 15.5** from the rays; at the design's own value it is ΔE 17.6 *with the same luminance as them*. Lightness was spent, so the axis left is hue, and the palette already held one — the face's. The limb walks there and lands **ΔE 22.1**, keeping the drawn relationship (limb darker and warmer than rays). Where #2019 spent chroma, this spent hue; the general move is that **the axis a floor did not consume is the one to pay separation out of**, and which axis that is depends on which floor bit.
+
 ---
 
 ## 9. Page Summaries

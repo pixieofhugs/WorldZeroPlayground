@@ -33,6 +33,15 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => mocks.formFactor,
 }))
 
+// `useTheme` throws outside its provider by design (#701), and the page mounts
+// `CovenVote`, which reads it to pick its motif — sun by day, moon by night
+// (#2020). Dark is what an unconfigured visitor gets (`DEFAULT_THEME`), so this
+// keeps the page under test exactly as it renders today; the motif fork itself
+// belongs to `components/vote/__tests__/covenVote.test.tsx`.
+vi.mock('../../../hooks/useTheme', () => ({
+  useTheme: () => ({ theme: 'dark' as const, toggle: () => {} }),
+}))
+
 // Imported after the mock so the archetype picks it up.
 const { default: CovenPraxisDetail } = await import('../archetypes/CovenPraxisDetail')
 
