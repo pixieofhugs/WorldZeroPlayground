@@ -15,29 +15,47 @@ import '../../../i18n'
 import { selectPendingRow } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { UPDATES_LINK } from '../homeDestinations'
+import { ACTIVITY_COUNT_CAP } from '../../../api/sidebar'
 import { REQUESTS_QUEUE_ANCHOR } from '../../updates/requestsQueueAnchor'
+
+/** The news side as `/me/sidebar` reports it: a total, and the glance's length. */
+const news = (total: number | undefined, glanced = Math.min(total ?? 0, 5)) => ({
+  total,
+  glanced,
+})
 
 describe('selectPendingRow', () => {
   it('says nothing at all while the panels are still in flight', () => {
     // Both counts read zero before the response lands. Falling through to
     // "All caught up" there would claim an empty queue over a full one.
-    expect(selectPendingRow(0, 0, true)).toBeNull()
-    expect(selectPendingRow(4, 9, true)).toBeNull()
+    expect(selectPendingRow(0, news(0), true)).toBeNull()
+    expect(selectPendingRow(4, news(9), true)).toBeNull()
   })
 
   it('leads with the obligation when one is outstanding', () => {
-    const row = selectPendingRow(3, 0, false)
+    const row = selectPendingRow(3, news(0), false)
     expect(row).toEqual({ kind: 'requests', count: 3, to: expect.any(String) })
     // ADR-0070 deleted the `requests` filter tab; the row expands the queue.
     expect(row?.to).toContain(REQUESTS_QUEUE_ANCHOR)
   })
 
   it('still leads with the obligation when there is news as well', () => {
-    expect(selectPendingRow(1, 12, false)?.kind).toBe('requests')
+    expect(selectPendingRow(1, news(12), false)?.kind).toBe('requests')
   })
 
-  it('falls to unfiltered Updates when only news is waiting', () => {
-    expect(selectPendingRow(0, 12, false)).toEqual({
+  it('carries the WHOLE news count, not the five-item glance (#1587)', () => {
+    expect(selectPendingRow(0, news(12), false)).toEqual({
+      kind: 'notifications',
+      count: 12,
+      to: UPDATES_LINK,
+    })
+  })
+
+  it('degrades to a numberless row when the API predates the count', () => {
+    // Deploy skew: the client is ahead, `global_activity_count` is `undefined`.
+    // The glance still proves there IS news, so the row stays a link — it just
+    // says "New updates" again rather than inventing (or printing) a number.
+    expect(selectPendingRow(0, news(undefined, 5), false)).toEqual({
       kind: 'notifications',
       count: 0,
       to: UPDATES_LINK,
@@ -45,7 +63,11 @@ describe('selectPendingRow', () => {
   })
 
   it('dead-ends with nothing waiting — the row survives, the route does not', () => {
-    expect(selectPendingRow(0, 0, false)).toEqual({ kind: 'clear', count: 0, to: null })
+    expect(selectPendingRow(0, news(0), false)).toEqual({
+      kind: 'clear',
+      count: 0,
+      to: null,
+    })
   })
 })
 
@@ -69,10 +91,35 @@ describe('PendingRowPill', () => {
     expect(draw({ kind: 'requests', count: 1, to: '/x' })).toContain('1 pending request<')
   })
 
-  it('draws news as a link, without borrowing the requests copy', () => {
+  it('draws news as a link, with its number (#1587)', () => {
+    const html = draw({ kind: 'notifications', count: 12, to: UPDATES_LINK })
+    expect(html).toContain('12 notifications')
+    expect(html).toContain(`href="${UPDATES_LINK}"`)
+    expect(html, 'never the requests copy').not.toContain('pending')
+  })
+
+  it('pluralises down to a single notification', () => {
+    expect(draw({ kind: 'notifications', count: 1, to: UPDATES_LINK })).toContain(
+      '1 notification<',
+    )
+  })
+
+  it('says "50+" at the cap, where the count stops being a total', () => {
+    // At or above `SUB_QUERY_LIMIT` the server's number is a floor: one source
+    // may have been truncated. Printing it bare would be the only dishonest
+    // number this row can produce.
+    for (const count of [ACTIVITY_COUNT_CAP, ACTIVITY_COUNT_CAP + 87]) {
+      const html = draw({ kind: 'notifications', count, to: UPDATES_LINK })
+      expect(html, `${count} is past the cap`).toContain(
+        `${ACTIVITY_COUNT_CAP}+ notifications`,
+      )
+      expect(html, 'no floor printed as a total').not.toContain(`${count} notifications`)
+    }
+  })
+
+  it('falls back to the old wording when the API sent no count', () => {
     const html = draw({ kind: 'notifications', count: 0, to: UPDATES_LINK })
     expect(html).toContain('New updates')
-    expect(html).toContain(`href="${UPDATES_LINK}"`)
     expect(html, 'never a count it cannot know').not.toContain('0')
   })
 

@@ -14,6 +14,7 @@ import { onRequestsChanged } from '../utils/requestsBus'
 const EMPTY_PANELS: SidebarPanels = {
   pending_requests_count: 0,
   global_activity: [],
+  global_activity_count: 0,
   active_praxes: [],
 }
 

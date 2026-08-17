@@ -5311,6 +5311,10 @@
             "title": "Global Activity",
             "type": "array"
           },
+          "global_activity_count": {
+            "title": "Global Activity Count",
+            "type": "integer"
+          },
           "pending_requests_count": {
             "title": "Pending Requests Count",
             "type": "integer"
@@ -5319,6 +5323,7 @@
         "required": [
           "pending_requests_count",
           "global_activity",
+          "global_activity_count",
           "active_praxes"
         ],
         "title": "SidebarOut",
