@@ -19,9 +19,10 @@ RelationshipDisplayStatus = Literal[
     "One-sided Foe",
     "Secret Admirer",
     "Targeted",
-    "Blocked",
     "Unknown",
 ]
+# No "Blocked": ADR-0077 moves the block onto its own record and makes it silent
+# to the party it names, so the label is neither computed nor emitted.
 
 
 class RelationshipCreate(WireModel):

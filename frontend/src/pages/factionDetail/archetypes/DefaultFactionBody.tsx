@@ -11,7 +11,10 @@ import type { FactionDetailState } from "../useFactionDetail";
 
 const NA_SLUG = "na";
 
-/** Shared flex-wrap card grid — varied card sizes are intentional, not a CSS grid. */
+/** Flex-wrap card grid — varied card sizes are intentional, not a CSS grid.
+ *  The recently-completed PRAXIS gallery only, since #1945: the task row above
+ *  wears `.task-card-row`, which keeps the widths ragged and levels the bottom
+ *  edge. */
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -207,7 +210,7 @@ export default function DefaultFactionBody({
         {tasks.length === 0 ? (
           <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
         ) : (
-          <div style={CARD_GRID}>
+          <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
             {tasks.map((task) => (
               <TaskCard
                 key={task.id}

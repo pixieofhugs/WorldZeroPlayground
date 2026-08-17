@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { factionName } from '../../utils/factions'
+import SingularityLamps from '../factionMarks/SingularityLamps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
 
@@ -26,6 +27,16 @@ import type { FeedFrameProps } from './feedFrameProps'
  *      handle. Pure ornament, `aria-hidden` piece by piece.
  *   2. the PROMPT LINE — `>` then the kicker, the tag as a boxed readout, the
  *      time, and the dismiss control. Every functional slot lives here.
+ *
+ * The three lamps are `SingularityLamps` from the mark kit, not this file's own
+ * drawing. They were, until #1979 — a local `Lamp` filled with `DIM` / `BLUE` /
+ * `BRIGHT`, which is green, blue, green, while the faction's other four window
+ * bars drew the `--faction-singularity-led-*` trio. Two palettes on one
+ * faction's window, reported by eye. Read against THIS docblock as the issue
+ * asked: nothing here ever argued for the chassis inks as lamps. What the
+ * closing section argues is that no NEW token be minted, and the LED trio was
+ * already shipped and already named, so the trio satisfies it and the local
+ * constants were drift. They keep every other job they had on this bar.
  *
  * The split is deliberate and not merely decorative. #1243 §10/§11 record the
  * two mistakes available at this seam: the boot strip used to be `aria-hidden`
@@ -140,16 +151,6 @@ const LABEL: CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
-/** One of the window bar's three lamps. Ornament geometry, so raw px. */
-function Lamp({ fill }: { fill: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{ width: 8, height: 8, borderRadius: '50%', background: fill, display: 'block' }}
-    />
-  )
-}
-
 /**
  * The card KIND's process handle, drawn right-aligned on the window bar as the
  * sheet draws it. Ornament, never copy and never an item identifier: it is a
@@ -222,11 +223,7 @@ export default function SingularityFeedFrame({
           borderBottom: `1px solid ${HAIR}`,
         }}
       >
-        <span aria-hidden="true" style={{ display: 'flex', gap: 'var(--space-xs)', flexShrink: 0 }}>
-          <Lamp fill={DIM} />
-          <Lamp fill={BLUE} />
-          <Lamp fill={BRIGHT} />
-        </span>
+        <SingularityLamps />
         <span
           aria-hidden="true"
           style={{

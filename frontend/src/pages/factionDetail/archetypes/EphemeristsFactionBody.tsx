@@ -202,7 +202,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
               {t("ephemerists.tasks.empty")}
             </p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}

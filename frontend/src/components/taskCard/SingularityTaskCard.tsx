@@ -5,6 +5,7 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import SingularityLamps from "../factionMarks/SingularityLamps";
 
 /**
  * Singularity — THE TERMINAL SESSION (task card v2, #1023).
@@ -90,16 +91,6 @@ function Rule({ style }: { style?: CSSProperties }) {
   return <div aria-hidden="true" style={{ height: 0, borderTop: `1px dashed ${HAIR}`, ...style }} />;
 }
 
-/** One of the chrome bar's three lamps. Ornament geometry, so raw px. */
-function Lamp({ fill }: { fill: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{ width: 8, height: 8, borderRadius: "50%", background: fill, display: "block" }}
-    />
-  );
-}
-
 export default function SingularityTaskCard({
   task,
   basePoints,
@@ -173,11 +164,7 @@ export default function SingularityTaskCard({
             borderBottom: `1px solid ${HAIR}`,
           }}
         >
-          <span aria-hidden="true" style={{ display: "flex", gap: "var(--space-xs)" }}>
-            <Lamp fill="var(--faction-singularity-led-red)" />
-            <Lamp fill="var(--faction-singularity-led-amber)" />
-            <Lamp fill="var(--faction-singularity-led-green)" />
-          </span>
+          <SingularityLamps />
           {/* The window bar read "task.proc — singularity"
               (`feed:taskCard.singularity.windowTitle`). #1909 cut it:
               Singularity was the only faction with a window title on a task

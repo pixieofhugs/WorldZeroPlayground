@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
+import SingularityLamps from "../../factionMarks/SingularityLamps";
 
 /**
  * Singularity — THE SYSTEM SLAB (#842). A booted terminal: near-black glass on
@@ -79,8 +80,6 @@ const scanSweepStyle: CSSProperties = {
   zIndex: 1,
 };
 
-const ledStyle: CSSProperties = { width: 7, height: 7, borderRadius: "50%", flexShrink: 0 };
-
 export function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
@@ -112,16 +111,17 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
           style={{
             display: "flex",
             alignItems: "center",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the 6px pitch of the window-chrome LEDs, drawn geometry (§4a)
-            gap: 6,
             paddingBottom: "var(--space-sm)",
             marginBottom: "var(--space-md)",
             borderBottom: "1px solid var(--faction-singularity-rule)",
           }}
         >
-          <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-red)" }} />
-          <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-amber)" }} />
-          <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-green)" }} />
+          {/* #1979: three spans spreading a local `ledStyle` — 7px dots at a 6px
+              pitch, the one surface that drew the cluster without a `Lamp` at
+              all. The kit's 8px/`--space-xs` is what the other four already
+              drew, and the bar's own `gap` went with the copy: the cluster is
+              now this row's only child and carries its own pitch. */}
+          <SingularityLamps />
           {/* "singularity protocol" closed this LED bar
               (`card.masthead.singularity`). #1909 cut the slot: once the praxis
               masthead is generic it reads "Praxis" on a praxis card, and this

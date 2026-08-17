@@ -41,6 +41,7 @@ const ELIGIBILITY_ON = 'canSignUp'
  *   - **task type** (#934) was a hand-rolled inline-styled toggle that no
  *     `FilterStamps` sweep would have caught, so leaving it would have shipped a
  *     stamp above a rail — the exact inconsistency this epic exists to remove.
+ *     It is now viewer-gated on `can_apply_metatask` (#1973); see below.
  *
  * The eligibility rail (#1130) keeps its `user &&` gate: the server answers `[]`
  * for an anonymous viewer, so it is a control that cannot work logged out, and
@@ -82,8 +83,22 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
     pending: t('browse.status.pending'),
   }
 
-  const rails: FilterRail[] = [
-    {
+  const rails: FilterRail[] = []
+
+  // The type rail goes whole, not just its `metatask` segment (#1973). Stripping
+  // one of two segments would leave a rail offering a single choice — chrome
+  // that cannot change anything, which is the control this page hides rather
+  // than disables (STYLE §1.4), same as the eligibility rail below.
+  //
+  // `can_apply_metatask` is the API's answer, never `level >= 5` here: the flag
+  // carries Albescent's apply-level bypass, so a member below the level keeps
+  // the rail. A client-side level comparison would silently take it away.
+  //
+  // A hand-typed `?type=metatask` still resolves without this rail — it counts
+  // toward `appliedFilterCount`, so FilterBar raises clear-all, and
+  // `clearedFilterParams` deletes the param.
+  if (user?.can_apply_metatask) {
+    rails.push({
       key: 'type',
       label: t('browse.taskType'),
       value: taskType,
@@ -93,7 +108,10 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
         { value: 'metatask', label: t('browse.metatasks') },
       ],
       onChange: (next) => setTaskType(next as TaskType),
-    },
+    })
+  }
+
+  rails.push(
     {
       key: 'sort',
       label: tc('filters.bar.sortLabel'),
@@ -124,7 +142,7 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
       })),
       onChange: setStatus,
     },
-  ]
+  )
 
   if (user) {
     rails.push({
