@@ -261,6 +261,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     submit_proposed_at: null,
     created_by_id: 7,
     created_by_display_name: 'Ada Reed',
+    created_by_avatar_url: '',
     created_by_faction_slug: slug,
     created_at: EARLIER,
     updated_at: NOW,
@@ -371,6 +372,7 @@ export const mockCollaboration: PraxisCardOut = {
   opponent_praxis_id: null,
   opponent_display_name: null,
   opponent_faction_slug: null,
+  opponent_avatar_url: '',
 }
 
 // ---------------------------------------------------------------------------
@@ -555,6 +557,7 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     opponent_praxis_id: null,
     opponent_display_name: null,
     opponent_faction_slug: null,
+    opponent_avatar_url: '',
     ...overrides,
   }
 }
