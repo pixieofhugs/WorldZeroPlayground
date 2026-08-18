@@ -35,6 +35,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
 import { extractError } from "../utils/errors";
 import { factionFill } from "../utils/factions";
+import { levelTrack } from "../utils/levelTrack";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
 import FactionProfileBody, {
   type ProfileBodyProps,
@@ -240,26 +241,25 @@ export default function CharacterProfile() {
 
   const isOwn = user?.character?.id === character.id;
 
-  // ① progression toward level+1 — same thresholds the old level track used.
-  const levelThresholds = gameConfig?.level_thresholds ?? [];
-  const maxLevel = Math.max(levelThresholds.length - 1, 0);
-  const nextLevel = Math.min(character.level + 1, maxLevel);
-  const nextThreshold = levelThresholds[nextLevel] ?? 999;
-  const currentThreshold = levelThresholds[character.level] ?? 0;
-  const progression: ProfileProgression | null = gameConfig
+  // ① progression toward level+1. The arithmetic used to live here, in a
+  // second copy of the curve reader — which is how #2127 happened: this copy
+  // measured the current band and `levelTrack`'s measured the whole climb, so
+  // one character read 9% here and 56% on the home page. There is one
+  // derivation now and this page maps it onto the props the skins take.
+  const track = gameConfig
+    ? levelTrack(character.level, character.score, gameConfig.level_thresholds)
+    : null;
+  const progression: ProfileProgression | null = track
     ? {
-        nextLevel,
-        currentThreshold,
-        nextThreshold,
-        progressPercent:
-          nextThreshold > currentThreshold
-            ? Math.min(
-                ((character.score - currentThreshold) /
-                  (nextThreshold - currentThreshold)) *
-                  100,
-                100,
-              )
-            : 100,
+        // At the top of the curve `levelTrack` reports no next rung; the panel
+        // keeps the degenerate shape it has always had — the current level
+        // named as "next", the band collapsed to a point, the bar full.
+        nextLevel: track.nextLevel ?? character.level,
+        currentThreshold: track.currentThreshold,
+        nextThreshold: track.nextThreshold || track.currentThreshold,
+        pointsIntoLevel: track.pointsIntoLevel,
+        levelSpan: track.levelSpan,
+        progressPercent: track.fillPercent,
       }
     : null;
 

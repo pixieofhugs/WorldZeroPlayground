@@ -237,17 +237,10 @@ function spectrumRing(degrees: number, fill: string): string {
 
 /** ① progression numbers, shared by both branches (hidden until game config
  *  supplies thresholds). */
-function progressionFigures(
-  character: ProfileBodyProps['character'],
-  progression: ProfileBodyProps['progression'],
-) {
+function progressionFigures(progression: ProfileBodyProps['progression']) {
   return {
-    pointsIntoLevel: progression
-      ? Math.max(character.score - progression.currentThreshold, 0)
-      : 0,
-    levelSpan: progression
-      ? Math.max(progression.nextThreshold - progression.currentThreshold, 0)
-      : 0,
+    pointsIntoLevel: progression?.pointsIntoLevel ?? 0,
+    levelSpan: progression?.levelSpan ?? 0,
     ringDegrees: progression
       ? Math.round(Math.min(Math.max(progression.progressPercent, 0), 100) * 3.6)
       : 0,
@@ -298,7 +291,7 @@ function DesktopProfile({
   })
 
   const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(character, progression)
+  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(progression)
 
   const mainColumn = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
@@ -633,7 +626,7 @@ function MobileProfile({
   })
 
   const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(character, progression)
+  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(progression)
 
   return (
     <div className="py-4" data-testid="mobile-profile" style={{ position: 'relative' }}>

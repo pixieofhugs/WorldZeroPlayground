@@ -57,6 +57,8 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
       nextLevel: 4,
       currentThreshold: 200,
       nextThreshold: 500,
+      pointsIntoLevel: 120,
+      levelSpan: 300,
       progressPercent: 40,
     },
     identityActions: null,

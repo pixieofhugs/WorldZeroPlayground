@@ -84,7 +84,15 @@ const CHARACTER: CharacterOut = {
 const DESK_STATE: FieldDeskHomeState = {
   character: CHARACTER,
   eraName: 'Era 3',
-  levelTrack: { nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 },
+  levelTrack: {
+    nextLevel: 5,
+    pointsToNext: 160,
+    currentThreshold: 300,
+    nextThreshold: 500,
+    pointsIntoLevel: 40,
+    levelSpan: 200,
+    fillPercent: 20,
+  },
   activeTasks: [],
   pendingRow: null,
   loadingTasks: false,

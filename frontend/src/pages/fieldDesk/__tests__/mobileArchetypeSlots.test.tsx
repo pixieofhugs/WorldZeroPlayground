@@ -77,7 +77,15 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
   return {
     character: CHARACTER,
     eraName: 'Era 3',
-    levelTrack: { nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 },
+    levelTrack: {
+      nextLevel: 5,
+      pointsToNext: 160,
+      currentThreshold: 300,
+      nextThreshold: 500,
+      pointsIntoLevel: 40,
+      levelSpan: 200,
+      fillPercent: 20,
+    },
     activeTasks: [ACTIVE_TASK],
     pendingRow: { kind: 'requests', count: 2, to: REQUESTS_QUEUE_LINK },
     loadingTasks: false,
