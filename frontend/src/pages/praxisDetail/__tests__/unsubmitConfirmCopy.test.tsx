@@ -237,23 +237,46 @@ describe('unsubmitCase — the branch, straight off the backend', () => {
 })
 
 describe('unsubmit confirm copy (#1094)', () => {
-  it('solo: the prompt names both real costs of reopening (#1397)', () => {
+  it('solo: the prompt names every real cost of reopening (#1397, #2094)', () => {
     // Unsubmit is the way to edit a published praxis now that the dead `/edit`
-    // link is gone, so the prompt owes the player the two things it costs that
-    // are NOT free — both read straight off the backend:
+    // link is gone, so the prompt owes the player the things it costs that are
+    // NOT free — all read straight off the backend:
+    //  - the points: `unsubmit_praxis` recalculates member stats immediately,
+    //    so the praxis' score leaves the total there and then. It does not
+    //    "pause" (#2094), and on a solo the ONE author-resolved score set
+    //    (ADR-0053) IS the reader's own figure, so the dialog can name it.
+    //  - the votes: the docstring is explicit — "votes are preserved but stop
+    //    scoring". The rows survive; they just bank nothing.
     //  - visibility: `praxis_visibility_condition` (ADR-0024) shows an
     //    `in_progress` praxis to its members only, and a solo has one member.
     //  - the date: `_apply_seal` is the only writer of `submitted_at` and sets
     //    it to `now` on EVERY seal, and the feed sorts on it — so a resubmitted
     //    praxis reappears at the top with a new date.
-    // Everything else really is cheap (votes, comments, media and
-    // `all_time_score` all survive; no cooldown, no cap), so the copy must not
-    // invent a third warning.
-    const rendered = text(<PraxisSubmitControls state={state({})} />)
+    // Everything else really is cheap (comments, media and `all_time_score`
+    // survive; no cooldown, no cap), so the copy must not invent a warning.
+    const rendered = text(
+      <PraxisSubmitControls state={state({ praxis: praxis({ score: 42.5 }) })} />,
+    )
+    expect(rendered, 'the figure that leaves the total').toMatch(
+      /42\.5 points come off your total/,
+    )
+    expect(rendered, 'votes are kept, they just stop banking').toMatch(
+      /votes are kept but stop counting/i,
+    )
     expect(rendered, 'members-only while editing').toMatch(/Only you can see it/)
     expect(rendered, 'the publish date is overwritten').toMatch(/new date/)
-    expect(rendered, 'and the original promise survives').toMatch(/points & votes pause/)
+    expect(rendered, 'the retired half-truth is gone').not.toMatch(/points & votes pause/i)
     expect(rendered).toMatch(/Yes, unsubmit/)
+  })
+
+  it('solo: the figure is the score, formatted like every other total', () => {
+    // `formatPoints` — one decimal, trailing zero trimmed — so the dialog and
+    // the stamp on the same page cannot print one score two different ways.
+    const rendered = text(
+      <PraxisSubmitControls state={state({ praxis: praxis({ score: 55.0 }) })} />,
+    )
+    expect(rendered).toMatch(/55 points come off your total/)
+    expect(rendered).not.toMatch(/55\.0/)
   })
 
   it('solo: the trigger reads as the way to edit (#1397)', () => {
@@ -263,16 +286,38 @@ describe('unsubmit confirm copy (#1094)', () => {
     expect(rendered).toMatch(/unsubmit to edit/)
   })
 
-  it('collab: the prompt says the whole group reopens, not just your part', () => {
+  it('collab: the reader loses their own points AND uncasts the group', () => {
     const rendered = text(
       <PraxisSubmitControls state={state({ praxis: praxis({ members: COLLAB_MEMBERS }) })} />,
     )
+    expect(rendered, "the reader's own consequence comes first").toMatch(
+      /your points from this praxis come off your total/i,
+    )
+    expect(rendered, 'then what they are doing to everyone else').toMatch(
+      /every other member's/i,
+    )
     expect(rendered).toMatch(/whole group/i)
-    expect(rendered).toMatch(/every member's part is uncast/i)
+    expect(rendered).toMatch(/votes are kept but stop counting/i)
     expect(rendered).toMatch(/Yes, reopen for everyone/i)
+    expect(rendered).not.toMatch(/points & votes pause/i)
     // The solo promise must not be the thing a co-author reads. Anchored on the
     // SHIPPED solo string (#1397) — quoting the retired one would pass vacuously.
     expect(rendered).not.toMatch(/Only you can see it/)
+  })
+
+  it('collab: NO figure — `score` is the AUTHOR\'s, not the reader\'s (#2094)', () => {
+    // ADR-0053: the score fields are ONE set, resolved for the praxis AUTHOR on
+    // every type including collab. A co-author reading this dialog would be
+    // shown a number that is NOT what leaves their total — a worse error than
+    // the vague one #2094 set out to fix. The owner ruled the collab prompt
+    // numberless AND ruled out adding a per-member share to the wire, so this
+    // guard is that ruling, not a stylistic preference.
+    const rendered = text(
+      <PraxisSubmitControls
+        state={state({ praxis: praxis({ members: COLLAB_MEMBERS, score: 42.5 }) })}
+      />,
+    )
+    expect(rendered).not.toMatch(/42\.5/)
   })
 
   it('collab mid-consensus: only your part comes back, and no scoring promise', () => {
@@ -286,6 +331,10 @@ describe('unsubmit confirm copy (#1094)', () => {
     expect(rendered).toMatch(/only your part/i)
     expect(rendered).toMatch(/co-authors' casts stand/i)
     expect(rendered).toMatch(/Yes, pull my part back/i)
+    // #2094 deliberately did NOT sweep this one up for consistency:
+    // `unsubmit_praxis` returns early for `status == pending` and pending
+    // praxes are unscored, so a points warning here would be a fresh lie.
+    expect(rendered).not.toMatch(/points/i)
   })
 
   it.each<DuelStatus>(['pending', 'active'])(
@@ -296,10 +345,15 @@ describe('unsubmit confirm copy (#1094)', () => {
           state={state({ praxis: praxis({ duel_id: 5 }), duel: duel(status) })}
         />,
       )
-      expect(rendered).toMatch(/free reopen/i)
+      // Points FIRST, then the reassurance (#2094). The false "points pause"
+      // claim rode along unexamined precisely because it trailed the good news.
+      expect(rendered).toMatch(/your points from this entry come off your total/i)
+      expect(rendered).toMatch(/nothing is marked against you/i)
+      expect(rendered).toMatch(/pulling back now is free/i)
       expect(rendered).toMatch(/Yes, pull my entry back/i)
       expect(rendered).not.toMatch(/forfeit/i)
       expect(rendered).not.toMatch(/wins by default/i)
+      expect(rendered).not.toMatch(/points & votes pause/i)
       // Nor the solo prompt it used to fall through to (shipped string, #1397).
       expect(rendered).not.toMatch(/Only you can see it/)
     },
