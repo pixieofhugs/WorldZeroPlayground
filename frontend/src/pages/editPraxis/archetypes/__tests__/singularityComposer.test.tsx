@@ -151,6 +151,10 @@ describe("Singularity composer — structure", () => {
     // it (#1181's reason for deleting the nine blocks one issue at a time).
     for (const phrase of [
       i18n.t("forms:editPraxis.composer.taskLabel"),
+      // `titleLabel` is an aria-label too since #2179 — but on the `<input>`
+      // itself, so a static render still sees it. This asserts the wording is
+      // the neutral catalog's; that it is no longer DRAWN is
+      // composerRule.test.tsx's.
       i18n.t("forms:editPraxis.composer.titleLabel"),
       i18n.t("forms:editPraxis.composer.modeLabel"),
       // No `writeUpLabel`: #2085 took that heading off the page, and the key now

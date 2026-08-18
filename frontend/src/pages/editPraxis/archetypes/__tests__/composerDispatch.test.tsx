@@ -212,6 +212,9 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
   it.each(WIDTHS)("renders the composer's own regions on %s", (width) => {
     const markup = render(width, baseState());
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.taskLabel"));
+    // `titleLabel` is in the markup as the input's `aria-label` since #2179 —
+    // NOT as a heading. This asserts the region is present and neutrally worded;
+    // that it is no longer DRAWN is composerRule.test.tsx's countable claim.
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.titleLabel"));
     // No `writeUpLabel`: #2085 took that heading off the page as redundant
     // beside the box's own placeholder. The key still names the editor, through
@@ -467,12 +470,21 @@ describe("the composer's shared seams (#1828)", () => {
       // i.e. above the task slip and every section. Pinned BETWEEN the title row
       // and the Proof region: #2085 removed the `Write-up` heading this used to
       // anchor on, and those two are the rows either side of the one it moved to.
-      expect(text.indexOf(SAVED)).toBeGreaterThan(
-        text.indexOf(i18n.t("forms:editPraxis.composer.titleLabel")),
+      //
+      // Measured on the raw markup, not on the stripped text: #2179 took the
+      // visible `Title` heading off too, so the row's only remaining anchor is
+      // the input's own placeholder — an ATTRIBUTE, which stripping tags throws
+      // away. Anchoring on text that is no longer there would have left the
+      // lower bound as `> -1` and quietly stopped measuring anything.
+      const title = markup.indexOf(
+        `placeholder="${i18n.t("forms:editPraxis.composer.titlePlaceholder")}"`,
       );
-      expect(text.indexOf(SAVED)).toBeLessThan(
-        text.indexOf(i18n.t("forms:editPraxis.composer.proofLabel")),
-      );
+      const proof = markup.indexOf(i18n.t("forms:editPraxis.composer.proofLabel"));
+      const saved = markup.indexOf(SAVED);
+      expect(title).toBeGreaterThan(-1);
+      expect(proof).toBeGreaterThan(title);
+      expect(saved).toBeGreaterThan(title);
+      expect(saved).toBeLessThan(proof);
     },
   );
 

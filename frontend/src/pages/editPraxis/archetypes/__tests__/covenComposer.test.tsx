@@ -151,6 +151,11 @@ describe("Coven composer — the shared layout, neutrally worded (ADR-0065)", ()
   // `writeUpLabel` is NOT among them since #2085: that heading is gone from the
   // page, and the key now reaches the editor as an aria-label an effect applies,
   // which a static render cannot see (bodySpellcheck.test.ts holds that claim).
+  //
+  // `titleLabel` IS among them and is an aria-label too since #2179 — but on
+  // the `<input>` itself, so a static render still sees it. This asserts the
+  // wording is the neutral catalog's; that it is no longer DRAWN is
+  // composerRule.test.tsx's countable claim.
   const REGIONS = [
     i18n.t("forms:editPraxis.composer.taskLabel"),
     i18n.t("forms:editPraxis.composer.titleLabel"),

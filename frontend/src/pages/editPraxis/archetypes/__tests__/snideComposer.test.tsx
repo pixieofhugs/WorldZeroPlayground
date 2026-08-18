@@ -108,6 +108,9 @@ const WIDTHS = ["desktop", "mobile"] as const;
  * literal union, so an interpolated key is not a key at all to tsc. */
 const NEUTRAL_KEYS = [
   "forms:editPraxis.composer.taskLabel",
+  // `titleLabel` is an aria-label too since #2179 — but on the `<input>`
+  // itself, so a static render still sees it. This asserts the wording is the
+  // neutral catalog's; that it is no longer DRAWN is composerRule.test.tsx's.
   "forms:editPraxis.composer.titleLabel",
   // No `writeUpLabel`: #2085 took that heading off the page, and the key now
   // names the editor through an aria-label a static render cannot see.
