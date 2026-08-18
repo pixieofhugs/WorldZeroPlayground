@@ -69,7 +69,18 @@ export interface ProfileKit {
    *  already had" landing on a shared kit rather than on a skin: which stock the
    *  header sits on is the kit's own knowledge, and nothing else can see it. */
   headerMuted?: string
-  /** Accent color (progression ring, accents). */
+  /** Ink for the progression panel's LEVEL NUMERAL, and its only reader since
+   *  #2213 deleted the ring that used to draw the same value as an arc.
+   *
+   *  That deletion moved the numeral's ground: it used to sit on a hub disc
+   *  painted in `surface`, and it now sits on whatever `progressionStyle`
+   *  paints. Five kits paint the panel in `surface` and were unaffected; UA,
+   *  Everymen and WOW moved to a ground their accent still clears (4.88 / 7.03
+   *  / 6.16:1 light). Ephemerists did not — its panel is transparent over the
+   *  plate's cornice BAND, where the plate's brass reads 2.83:1 — so it
+   *  repoints `accent` to the band's own mark rather than the plate's. That is
+   *  the shape to copy if a kit ever moves its panel onto a new stock: repoint
+   *  this, do not mint a second knob beside it. */
   accent: string
   /** Card / panel surface. */
   surface: string
@@ -108,17 +119,11 @@ export interface ProfileKit {
   /* ── progression panel ── */
   /** Style for the progression panel container. */
   progressionStyle: CSSProperties
-  /** Ink for that label. Defaults to `muted` — which is the RIGHT default and
-   *  not a placeholder: the label sits inside the ring's disc, and the disc
-   *  grounds on `surface`, which is the stock `muted` was measured for.
-   *
-   *  Ephemerists is the one kit that overrides it (#1630): its level ring is a
-   *  brass instrument, so the label reads in `-plate-brass-light` beside the
-   *  numeral rather than in the plate's quiet ink — 11.04:1 on the plate against
-   *  `-plate-quiet`'s 5.98, so this buys legibility as well as dress. A knob
-   *  rather than a repoint of `muted`, because `muted` is read on three other
-   *  grounds by six other lines (#1636). */
-  ringLabelInk?: string
+  /* `ringLabelInk` lived here. It defaulted to `muted` because the "lvl" label
+   *  sat inside the ring's hub disc, which grounds on `surface`, and Ephemerists
+   *  overrode it to the plate's brass (#1630). #2213 deleted the ring, so the
+   *  label sits on the panel beside two lines that already answer this question
+   *  with `headerMuted` — one ink, one ground, no knob. */
   /** Fill for the points-into-level bar. */
   barFill: string
   /** Track behind the progression bar. */
@@ -307,7 +312,7 @@ export function AboutBlock({
  * measure in `ch` so it follows whatever face the kit hands it.
  *
  * Hidden when empty, per the house rule. No character has written one yet, so
- * on day one this column is credential card, level ring and progression bar —
+ * on day one this column is credential card, level readout and progression bar —
  * that is the design, not a missing placeholder.
  */
 export function TaglineSlot({
@@ -429,9 +434,8 @@ export function ProfileSkin({
   // no longer does this arithmetic itself.
   const pointsIntoLevel = progression?.pointsIntoLevel ?? 0
   const levelSpan = progression?.levelSpan ?? 0
-  const ringDegrees = progression
-    ? Math.round(Math.min(Math.max(progression.progressPercent, 0), 100) * 3.6)
-    : 0
+  // A `ringDegrees` (percent × 3.6) stood here for the level ring's conic and
+  // went with it (#2213). The bar reads `progressPercent` directly.
 
   const levelText = kit.formatLevel
     ? kit.formatLevel(character.level)
@@ -588,59 +592,52 @@ export function ProfileSkin({
 
               {progression && (
                 <div style={kit.progressionStyle}>
-                  {/* level ring */}
+                  {/* Level readout — text, and DELIBERATELY not a ring (#2213).
+                      A 60px conic disc drew this number as an arc and held the
+                      numeral in its hub. It has been deleted from all nine
+                      profiles and is NOT to be restored as a fix if a kit reads
+                      bare without it: the arc and the bar to its right plotted
+                      the same percentage, one number on two instruments, and
+                      the bar is what carries the within-level reading on every
+                      other surface (#2127). The numeral was the ring's second
+                      job — a bar cannot say which level you are on — so it
+                      stays, in the ring's slot, as type.
+
+                      Both inks moved ground with it. The label now takes
+                      `headerMuted`, the ink the two lines beside it in this
+                      same panel already use on this same ground; it read
+                      `muted` only because the hub disc repainted `kit.surface`
+                      under it, and that disc is gone. `kit.accent` keeps the
+                      numeral, which is now its only reader — see its note on
+                      ProfileKit for the one kit that had to repoint it. */}
                   <div
                     style={{
                       flexShrink: 0,
-                      width: 60,
-                      height: 60,
-                      borderRadius: '50%',
-                      background: `conic-gradient(${kit.accent} ${ringDegrees}deg, ${kit.barTrack} 0)`,
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      gap: 'var(--space-xs)',
+                      lineHeight: 1,
                     }}
                   >
                     <span
                       style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: '50%',
-                        background: kit.surface,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        lineHeight: 1,
+                        fontFamily: kit.eyebrowFont,
+                        fontSize: 'var(--text-md)',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: headerMuted,
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: kit.eyebrowFont,
-                          fontSize: 'var(--text-md)',
-                          letterSpacing: '0.12em',
-                          textTransform: 'uppercase',
-                          // `kit.muted`, not `headerMuted`: this label sits
-                          // inside the disc above, which grounds on
-                          // `kit.surface` — it is in the header, not ON the
-                          // header's band. The band ink is the wrong ink here
-                          // for the same reason the band ink was right for the
-                          // other five. A kit may name a different ink for this
-                          // one line (#1630) without moving the other six.
-                          color: kit.ringLabelInk ?? kit.muted,
-                        }}
-                      >
-                        {t('profile.lvl')}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: kit.displayFont,
-                          fontSize: 'var(--text-title)',
-                          color: kit.accent,
-                        }}
-                      >
-                        {levelText}
-                      </span>
+                      {t('profile.lvl')}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: kit.displayFont,
+                        fontSize: 'var(--text-title)',
+                        color: kit.accent,
+                      }}
+                    >
+                      {levelText}
                     </span>
                   </div>
 

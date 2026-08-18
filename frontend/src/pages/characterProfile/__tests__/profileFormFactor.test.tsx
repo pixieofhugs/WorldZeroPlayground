@@ -177,7 +177,8 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
     const text = html.replace(/<[^>]*>/g, '')
     expect(text, 'name (credential)').toContain('Reza')
     // #969: the mobile stats row was replaced by the redesign's progression
-    // panel (level ring + points-into-level bar toward level+1).
+    // panel (points-into-level bar toward level+1). Its level RING went with
+    // #2213 — one instrument, and the numeral relocated into text beside it.
     expect(text, 'progression next-level label').toContain('next · lvl 8')
     expect(text, 'progression points-into-level').toContain('380 / 500 pts this level')
     expect(text, 'badge').toContain('Sock Puppet')

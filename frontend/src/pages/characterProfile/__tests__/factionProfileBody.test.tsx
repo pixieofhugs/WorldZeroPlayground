@@ -348,6 +348,12 @@ describe.each(["desktop", "mobile"] as const)(
  */
 const OTHER_SLUGS = (slug: string) => SLUGS.filter((other) => other !== slug);
 
+/** The one profile that draws no progression panel at all: WOW's phone face is
+ *  the bespoke pavilion (#901), which carries neither ring nor bar and which
+ *  #2213 deliberately left alone. */
+const noPanel = (formFactor: "desktop" | "mobile", slug: string) =>
+  formFactor === "mobile" && slug === "wow";
+
 describe.each(["desktop", "mobile"] as const)(
   "① header flair on %s (#1630)",
   (formFactor) => {
@@ -368,26 +374,45 @@ describe.each(["desktop", "mobile"] as const)(
       }
     };
 
-    // `progressPercent: 40` → 144deg. The mask is the top layer of the ring's
-    // background, so its own opening stop is the fingerprint; a themed faction
-    // keeps the single-scalar `conic-gradient(<accent> Ndeg, <track> 0)` arc.
-    const RING_MASK = "conic-gradient(transparent 0 144deg";
-
-    it("reads the level ring in the spectrum for na and albescent only", () => {
-      for (const slug of ["na", "albescent"]) {
+    // #2213: the level RING is gone from all nine profiles, and is NOT to be
+    // restored as a fix if a kit reads bare without it. It plotted exactly the
+    // percentage the bar beneath it plots — one number, two instruments — so
+    // the ring went and the bar stayed, the bar being the within-level reading
+    // on every other surface too (#2127). This block used to assert the
+    // opposite: that na and albescent wear a spectrum-CUT ring and the other
+    // seven a single-scalar arc — i.e. "every slug has a ring, na's is just cut
+    // differently". That is the reading the ruling reversed.
+    //
+    // `progressPercent: 40` became a 144deg stop in every one of those conics,
+    // which makes the angle the ring's fingerprint across all nine skins at
+    // once. Everymen's header sunburst is the only other conic on a profile and
+    // it is cut in 6deg steps, so this catches a ring without catching dress.
+    it("draws no level ring on any profile (#2213)", () => {
+      for (const slug of SLUGS) {
         const html = render(slug);
-        expect(html, `${slug} ring mask`).toContain(RING_MASK);
-        expect(html, `${slug} ring ramp`).toContain(
-          `${RING_MASK}, var(--color-border) 144deg 360deg), var(--faction-default-rainbow-conic)`,
-        );
-        // The scalar arc it replaces. Its survival would mean one branch moved
-        // and the other did not — this file's whole reason for a form-factor axis.
-        expect(html, `${slug} keeps the old scalar arc`).not.toContain(
-          "conic-gradient(var(--color-text-primary)",
+        expect(html, `${slug} still draws a level arc`).not.toContain("144deg");
+        expect(html, `${slug} still draws the spectrum ring mask`).not.toContain(
+          "conic-gradient(transparent 0",
         );
       }
-      for (const slug of SLUGS.filter((s) => !["na", "albescent"].includes(s))) {
-        expect(render(slug), `${slug} took na's ring`).not.toContain(RING_MASK);
+    });
+
+    // The other half of that ruling: the ring's SECOND job survives it. A bar
+    // cannot say which level you are on, so the numeral relocated out of the
+    // disc into text beside the bar, and the panel must carry exactly one of
+    // each. Asserted against the style string because that is the only handle a
+    // `renderToStaticMarkup` suite has — the numeral is the panel's one
+    // `--text-title` figure in all nine skins.
+    it("keeps one bar and the level numeral in every panel (#2213)", () => {
+      for (const slug of SLUGS) {
+        const html = render(slug);
+        const bars = html.split("transition:width 300ms").length - 1;
+        expect(bars, `${slug} progress bars`).toBe(noPanel(formFactor, slug) ? 0 : 1);
+        if (noPanel(formFactor, slug)) continue;
+        // Level 3; ephemerists prints the codex's roman numeral for it.
+        expect(html, `${slug} lost the level numeral`).toMatch(
+          /font-size:var\(--text-title\);color:[^"]*">(?:3|III)</,
+        );
       }
     });
 
@@ -432,11 +457,14 @@ describe.each(["desktop", "mobile"] as const)(
       expect(html, "the torn strip survived").not.toContain("polygon(0 0,4% 40%");
     });
 
-    it("reads the ephemerists level label in brass", () => {
-      onlyOn(
-        "ephemerists",
-        "color:var(--faction-ephemerists-plate-brass-light)",
-      );
+    // Was the level LABEL, in the plate's brass. #2213 deleted the ring, which
+    // took the hub disc that painted `surface` under both of the panel's texts:
+    // the label joined its two neighbours on `headerMuted`, and the NUMERAL's
+    // ink moved with its ground, from the plate's brass (2.83:1 on the cornice
+    // band it now sits on) to the band's own mark at 7.59:1. Still `onlyOn`,
+    // because the leak this table guards is a kit's ink reaching all nine.
+    it("strikes the ephemerists level numeral in the band's mark", () => {
+      onlyOn("ephemerists", "color:var(--faction-ephemerists-plate-band-ink)");
     });
   },
 );
