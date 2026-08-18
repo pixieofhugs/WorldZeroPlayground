@@ -39,6 +39,7 @@
  * before. No skin needs a second opinion about the form factor.
  */
 import type { CSSProperties, ReactNode } from 'react'
+import { drawAtRoot } from '../ui/drawAtRoot'
 import { useFormFactor } from '../../hooks/useFormFactor'
 
 /**
@@ -82,8 +83,12 @@ export default function DuelSealSheet({
 }: DuelSealSheetProps) {
   const isMobile = useFormFactor() === 'mobile'
 
+  // BOTH branches draw at the root (#2244). Raised from `EditPraxis`, the sheet
+  // composited inside `ShellContent`'s `z-index: 5` band, so the phone's header
+  // and tab bar painted over it — and `justify-end` puts the seal's action band
+  // exactly where the tab bar is. See `drawAtRoot`.
   if (isMobile) {
-    return (
+    return drawAtRoot(
       <div
         role="dialog"
         aria-modal="true"
@@ -94,11 +99,11 @@ export default function DuelSealSheet({
         style={{ background: 'var(--color-bg-page)', ...ground }}
       >
         {children}
-      </div>
+      </div>,
     )
   }
 
-  return (
+  return drawAtRoot(
     <div
       role="dialog"
       aria-modal="true"
@@ -109,6 +114,6 @@ export default function DuelSealSheet({
       <div className="w-full max-w-[460px] flex flex-col" style={{ ...ground, ...card }}>
         {children}
       </div>
-    </div>
+    </div>,
   )
 }
