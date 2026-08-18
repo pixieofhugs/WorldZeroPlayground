@@ -1,18 +1,26 @@
 /**
  * THE RUNE STRIP (#2067) — the Ephemerists' glyph motif off the masthead and
- * onto the call to action.
+ * onto the call to action — HALVED AND SEEDED (#2146).
  *
- * THREE SEAMS, because the failure modes are in three different places and no
- * one of them can see the others:
+ * FOUR SEAMS, because the failure modes are in four different places and no one
+ * of them can see the others:
  *
  *   • the strip's own RENDERED MARKUP (`renderToStaticMarkup`; this repo has no
- *     jsdom, so effects never run and geometry is out of reach) — the sequence,
- *     the two inks, the two per-instance custom properties, and the fact that it
- *     is decoration;
- *   • `index.css` AS TEXT, for the reduced-motion gate. The design writes the
- *     animation always-on with `opacity: .16` as the base, which stills to an
- *     unreadable row; the repo's inversion cannot be asserted from markup,
- *     because the markup is identical either way;
+ *     jsdom, so effects never run and geometry is out of reach) — the slot
+ *     count, the two frames per slot, the two inks, the two per-slot custom
+ *     properties, and the fact that it is decoration;
+ *   • the DRAW, which is the one piece of arithmetic here. A row that has
+ *     quietly stopped varying, or that re-randomises on every render, still
+ *     renders perfectly — the owner's ruling is that a screenshot of this
+ *     ornament must reproduce, and only a same-seed/different-seed comparison
+ *     can hold that;
+ *   • the TWO STYLESHEETS, for the reduced-motion gate and for the split. The
+ *     design writes the shimmer always-on with `opacity: .16` as the base, which
+ *     stills to an unreadable row; the repo's inversion cannot be asserted from
+ *     markup, because the markup is identical either way. And since #2146 the
+ *     motion lives in the DEFERRED sheet while the resting frame stays in
+ *     index.css — a rule that slipped back would put ornament motion on the
+ *     critical path;
  *   • the SOURCE TREE, for "drawn once, mounted three times". That is the ruling
  *     this component exists to satisfy, and a transcription into a fourth file
  *     would render perfectly, pass every assertion above, and drift the first
@@ -33,19 +41,29 @@ vi.mock("../../../hooks/useFormFactor", () => ({
 }));
 
 // Imported after the mock is registered.
-import EphemeristsRuneStrip from "../EphemeristsRuneStrip";
+import EphemeristsRuneStrip, { drawRunes } from "../EphemeristsRuneStrip";
 import EphemeristsTaskCard from "../../taskCard/EphemeristsTaskCard";
 import { aTask } from "../../../test/fixtures";
+import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
 
 const SRC = fileURLToPath(new URL("../../..", import.meta.url));
-const CSS = readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8");
+const sheet = (name: string): string =>
+  stripComments(readFileSync(fileURLToPath(new URL(`../../../${name}`, import.meta.url)), "utf8"));
+const CSS = sheet("index.css");
+const MOTION = sheet("motion.ornament.css");
+const GATE = "@media (prefers-reduced-motion: no-preference)";
 const STRIP = fileURLToPath(new URL("../EphemeristsRuneStrip.tsx", import.meta.url));
 
 /** No hex may reach the markup — every colour is a token. */
 const HEX = /#[0-9a-fA-F]{3,8}\b/;
 
-/** The head of the design's sequence: the signature a transcription cannot lose. */
+/** The head of the design's pool: the signature a transcription cannot lose. */
 const SEQUENCE_HEAD = "∇ × Ψ ≡ ∂";
+
+/** Sixteen slots — half of the thirty-two the row marched before #2146. */
+const SLOTS = 16;
+/** Two marks stacked per slot, which is what lets a slot change at all. */
+const FRAMES = 2;
 
 const TASK = aTask({ in_progress_count: 2 });
 
@@ -64,22 +82,34 @@ function card(formFactor: "mobile" | "desktop"): string {
   );
 }
 
-describe("the rune strip's own drawing (#2067)", () => {
-  const html = renderToStaticMarkup(<EphemeristsRuneStrip side="top" />);
+describe("the rune strip's own drawing (#2067, halved by #2146)", () => {
+  const html = renderToStaticMarkup(<EphemeristsRuneStrip side="top" seed="task:41" />);
 
-  it("marches the design's whole sequence, one span per mark", () => {
-    // The issue says "31 spans" and lists 32 marks. The sequence is the drawing
-    // and the count is a number written beside it, so the sequence wins — but a
-    // silently TRUNCATED row would look plausible at any length, which is why
-    // this counts rather than eyeballing.
-    expect(html.match(/class="eph-rune"/g)).toHaveLength(32);
-    expect(html).toContain("∇");
-    expect(html).toContain("ϖ");
+  it("marches sixteen slots, each holding two marks", () => {
+    // Owner, on a screenshot of the CTA: "there are at least twice as many
+    // symbols as there should be". Sixteen is the row; the second mark in each
+    // slot is the one it turns to and is hidden at rest, so this counts both —
+    // a silently truncated row looks plausible at any length.
+    expect(html.match(/class="eph-rune"/g)).toHaveLength(SLOTS);
+    expect(html.match(/<span><\/?span|<span>./g)).toBeTruthy();
+    const marks = [...html.matchAll(/<span>(.)<\/span>/g)].map((match) => match[1]);
+    expect(marks).toHaveLength(SLOTS * FRAMES);
+  });
+
+  it("draws every mark from the design's own pool", () => {
+    // The vocabulary is what survives the seeding — the ORDER was the drawing
+    // until #2146 and is now the generator's. The design's replacement pool
+    // (seven planetary metals plus eight alchemical signs) is rejected: the
+    // alchemical block is U+1F700 and is in no common system font.
+    const pool = new Set(SEQUENCE_HEAD.split(" ").concat("∮ ψ Θ ∝ Σ μ ν ⊗ Δ λ ≥ ϖ ∫ ρ Φ ∕ τ · ⟨ ⟩ ‖".split(" ")));
+    for (const mark of [...html.matchAll(/<span>(.)<\/span>/g)].map((m) => m[1])) {
+      expect(pool.has(mark), mark).toBe(true);
+    }
   });
 
   it("is decoration, and carries no reachable text", () => {
-    // Thirty-two mathematical symbols read aloud between the brief and the
-    // sign-up button would be worse than useless.
+    // Sixteen mathematical symbols read aloud between the brief and the sign-up
+    // button would be worse than useless.
     expect(html).toContain('aria-hidden="true"');
     expect(html).not.toContain("aria-label");
     expect(html).not.toContain("sr-only");
@@ -87,22 +117,24 @@ describe("the rune strip's own drawing (#2067)", () => {
 
   it("names its side, so the stylesheet can offset it", () => {
     expect(html).toContain('data-eph-runes="top"');
-    expect(renderToStaticMarkup(<EphemeristsRuneStrip side="bottom" />)).toContain(
-      'data-eph-runes="bottom"',
-    );
+    expect(
+      renderToStaticMarkup(<EphemeristsRuneStrip side="bottom" seed="task:41" />),
+    ).toContain('data-eph-runes="bottom"');
   });
 
-  it("paints from tokens only, with every third mark in the caption gold", () => {
+  it("paints from tokens only, with every third slot in the caption gold", () => {
     expect(html).not.toMatch(HEX);
     const inks = [...html.matchAll(/color:var\(--faction-ephemerists-plate-(\w+)\)/g)].map(
       (match) => match[1],
     );
-    expect(inks).toHaveLength(32);
-    expect(inks.filter((ink) => ink === "caption")).toHaveLength(11);
+    expect(inks).toHaveLength(SLOTS);
+    // The cycle runs over the SLOT, not the draw, so the gold stays evenly
+    // spread however the seeded marks happen to fall.
+    expect(inks.filter((ink) => ink === "caption")).toHaveLength(6);
     expect(new Set(inks)).toEqual(new Set(["caption", "quiet"]));
   });
 
-  it("declares no animation inline — the stylesheet owns the motion", () => {
+  it("declares no animation inline — the stylesheets own the motion", () => {
     // #911's rule, and the reason the reduced-motion gate below can exist at
     // all: an inline `animation:` is outside every media query.
     expect(html).not.toContain("animation");
@@ -111,44 +143,78 @@ describe("the rune strip's own drawing (#2067)", () => {
   it("stays inside the design's peak and phase ranges", () => {
     const peaks = [...html.matchAll(/--epg-op:([\d.]+)/g)].map((match) => Number(match[1]));
     const delays = [...html.matchAll(/--epg-delay:([\d.]+)s/g)].map((match) => Number(match[1]));
-    expect(peaks).toHaveLength(32);
-    expect(delays).toHaveLength(32);
-    expect(Math.min(...peaks)).toBeCloseTo(0.34);
-    expect(Math.max(...peaks)).toBeCloseTo(0.79);
-    expect(Math.min(...delays)).toBe(0);
-    expect(Math.max(...delays)).toBeCloseTo(11.5);
+    expect(peaks).toHaveLength(SLOTS);
+    expect(delays).toHaveLength(SLOTS);
+    expect(Math.min(...peaks)).toBeGreaterThanOrEqual(0.34);
+    expect(Math.max(...peaks)).toBeLessThanOrEqual(0.79);
+    expect(Math.min(...delays)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...delays)).toBeLessThanOrEqual(11.5);
   });
 });
 
-describe("index.css owns the shimmer, and opting in is the point", () => {
-  it("declares the keyframe", () => {
-    expect(CSS).toContain("@keyframes eph-rune-shift");
-  });
-
-  it("adds the animation only under `prefers-reduced-motion: no-preference`", () => {
-    // The whole gate: every `.eph-rune` rule carrying `animation` must sit
-    // inside a no-preference block. Written the design's way round — the
-    // animation unconditional and `opacity: .16` as the base — a reader who
-    // asked for less motion gets a row at 16% and reads nothing.
-    const gated = CSS.slice(CSS.indexOf("@keyframes eph-rune-shift"));
-    const blocks = gated.split("@media (prefers-reduced-motion: no-preference)");
-    expect(blocks[0], "an ungated `.eph-rune` animation").not.toMatch(
-      /\.eph-rune[^}]*animation:/,
+describe("seeded, and STABLE — the owner's second requirement (#2146)", () => {
+  it("draws one row per seed, forever", () => {
+    // The whole point of a seed. A row redrawn on every render twitches when a
+    // vote lands or a filter moves, and a screenshot of it never reproduces —
+    // which is what this epic's visual QA runs on.
+    expect(drawRunes("task:41:top")).toEqual(drawRunes("task:41:top"));
+    expect(renderToStaticMarkup(<EphemeristsRuneStrip side="top" seed="task:41" />)).toEqual(
+      renderToStaticMarkup(<EphemeristsRuneStrip side="top" seed="task:41" />),
     );
-    expect(blocks[1], "the gated rule").toMatch(/\.eph-rune\s*{[^}]*animation: eph-rune-shift/);
   });
 
-  it("leaves a stilled strip visible at its own peak", () => {
-    // The base state IS the stilled state. `opacity: var(--epg-op)` outside the
-    // media query is what makes a reduced-motion strip a static row of marks
-    // rather than a blank 12px band.
-    expect(CSS).toMatch(/\.eph-rune\s*{[^}]*opacity: var\(--epg-op/);
+  it("draws a different row per surface, and per side of one button", () => {
+    // Two identical rows bracketing one button is the "fixed sequence" this
+    // replaces, printed twice. The side is folded into the seed inside the
+    // component so no mount can forget it.
+    expect(drawRunes("task:41:top")).not.toEqual(drawRunes("task:42:top"));
+    expect(drawRunes("task:41:top")).not.toEqual(drawRunes("task:41:bottom"));
+  });
+
+  it("holds no randomness of its own", () => {
+    // `Math.random()` anywhere in this module is the failure the seed exists to
+    // prevent, and it would pass every other assertion in this file. Comments
+    // are stripped first: this file's own docblock names the trap it avoids,
+    // and a guard that a prose mention can trip is a guard nobody keeps.
+    const code = readFileSync(STRIP, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "");
+    expect(code).not.toContain("Math.random");
+  });
+});
+
+describe("the two sheets: resting frame here, motion over there", () => {
+  it("declares the keyframes in the DEFERRED sheet, not the blocking one", () => {
+    // #2073's split. A late `@keyframes` shifts no layout and flashes nothing;
+    // the row simply begins moving a beat later.
+    expect(MOTION).toContain("@keyframes eph-rune-shift");
+    expect(MOTION).toContain("@keyframes eph-rune-turn");
+    expect(CSS).not.toContain("@keyframes eph-rune-");
+  });
+
+  it("adds both animations only under `prefers-reduced-motion: no-preference`", () => {
+    // Written the design's way round — the animation unconditional and
+    // `opacity: .16` as the base — a reader who asked for less motion gets a
+    // row at 16% and reads nothing.
+    const gated = ruleBodies(MOTION, GATE).join("\n");
+    expect(ruleBodies(gated, ".eph-rune").join("\n")).toContain("animation: eph-rune-shift");
+    expect(ruleBodies(gated, ".eph-rune > span").join("\n")).toContain("animation: eph-rune-turn");
+    const ungated = MOTION.split(GATE)[0];
+    expect(ungated, "an ungated `.eph-rune` animation").not.toMatch(/\.eph-rune[^}]*animation:/);
+  });
+
+  it("leaves a stilled strip a whole legible row", () => {
+    // The base state IS the stilled state: `opacity: var(--epg-op)` on the slot
+    // and mark one showing in it. Both must be in the BLOCKING sheet — a viewer
+    // who never receives the deferred one has to land in the reduced-motion
+    // frame, not on a blank 12px band.
+    expect(ruleBodies(CSS, ".eph-rune").join("\n")).toContain("opacity: var(--epg-op");
+    expect(ruleBodies(CSS, ".eph-rune > span").join("\n")).toContain("grid-area: 1 / 1");
+    expect(ruleBodies(CSS, ".eph-rune > span + span").join("\n")).toContain("opacity: 0");
   });
 
   it("carries the size cycle, so no site needs a suppression", () => {
-    // 9 / 10 / 11 / 9 / 10 per mark. Only 9 and 11 are rungs (--text-sm,
+    // 9 / 10 / 11 / 9 / 10 per slot. Only 9 and 11 are rungs (--text-sm,
     // --text-md), so inline this would be ornament type off the ramp behind an
-    // `eslint-disable` at 32 sites. Three selectors say it in the sheet instead.
+    // `eslint-disable` at every site. Three selectors say it in the sheet.
     expect(CSS).toMatch(/\.eph-rune\s*{[^}]*font-size: 9px/);
     expect(CSS).toContain(".eph-rune:nth-child(5n + 3) { font-size: 11px; }");
   });
@@ -167,19 +233,31 @@ describe("it is drawn once and mounted where a plate CTA is (#2067)", () => {
   };
   walk(SRC);
 
-  it("declares the sequence in exactly one file", () => {
-    // The sequence is the sharp half: a copy can be renamed, split up or
-    // inlined, and a component-name sweep misses every one of those. These
-    // five marks are the same five characters however they are smuggled.
+  it("declares the pool in exactly one file", () => {
+    // The pool is the sharp half: a copy can be renamed, split up or inlined,
+    // and a component-name sweep misses every one of those. These five marks
+    // are the same five characters however they are smuggled.
     const found = files.filter(([, source]) => source.includes(SEQUENCE_HEAD)).map(([path]) => path);
     expect(found).toEqual([STRIP]);
   });
 
+  it("holds no second copy of the seeded generator", () => {
+    // #2143 wrote it for the notation band; #2146 moved it into the kit on the
+    // second reader. A second PRNG can be tuned in one file and not the other
+    // and the drift is invisible — both rows still look random.
+    const found = files
+      .filter(([, source]) => source.includes("0x6d2b79f5"))
+      .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
+    expect(found).toEqual(["components/factionMarks/ephemeristsPlate.tsx"]);
+  });
+
   it("is mounted on the three surfaces that paint the plate CTA, and no others", () => {
     // The owner's ruling names these three. `EphemeristsComment` reads the same
-    // token as an ACCENT rather than as a button, and `EphemeristsPraxisDetail`
-    // has no button at all — neither is a mount, and a fourth one appearing
-    // here is a design decision that should fail rather than land quietly.
+    // token as an ACCENT rather than as a button; the faction page and the field
+    // desk do draw the button (both wear `.eph-cta` since #2146) but neither
+    // brackets it — where the MOTIF lives is #2067's separate ruling. A fourth
+    // mount appearing here is a design decision that should fail rather than
+    // land quietly.
     const mounts = files
       .filter(([path, source]) => path !== STRIP && source.includes("EphemeristsRuneStrip"))
       .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));

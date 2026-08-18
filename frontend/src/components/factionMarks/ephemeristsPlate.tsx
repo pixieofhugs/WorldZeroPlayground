@@ -166,6 +166,48 @@ export function stepClip(step: number): string {
   return `polygon(${step}px 0, 100% 0, 100% calc(100% - ${step}px), calc(100% - ${step}px) 100%, 0 100%, 0 ${step}px)`;
 }
 
+/**
+ * A SEEDED GENERATOR — the faction's one source of random-looking ornament.
+ *
+ * Two devices draw an unpatterned row of mathematical marks: the masthead's
+ * notation band (#2143) and the CTA's rune strips (#2146). Both need the same
+ * two properties and neither may have `Math.random()` at render.
+ *
+ *  • **Unpatterned.** A row built from a coprime stride over the index reads as
+ *    a machine counting, which is what the strips did before the owner asked
+ *    for a seeded draw.
+ *  • **Stable.** A row redrawn on every render twitches whenever anything
+ *    unrelated moves on the page — a vote lands, a filter changes, a hover
+ *    fires — and a screenshot of it never reproduces, which is exactly what
+ *    this epic's visual QA needs. Seed from something stable about the SURFACE
+ *    (`task:${id}`, `praxis:${id}`) and one seed draws one row forever.
+ *
+ * It lives in the kit rather than in either consumer because a second copy of a
+ * PRNG is a copy that can be tuned in one file and not the other, and the drift
+ * would be invisible: both rows would still look random. #2143 wrote it, #2146
+ * moved it here on the second reader — the same threshold this module exists
+ * for.
+ *
+ * FNV-1a over the seed's code units for the state, mulberry32 for the stream:
+ * a hash, not a checksum, and a generator short enough to read in one sitting
+ * with no dependency. Nothing here is cryptographic and nothing depends on the
+ * distribution beyond "looks unpatterned at a few dozen draws".
+ */
+export function seededRandom(seed: string): () => number {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  let a = hash >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /** Incised small caps — the plate's label voice, everywhere. */
 export const SMALL_CAPS: CSSProperties = {
   fontFamily: CAPS,

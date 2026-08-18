@@ -1121,6 +1121,28 @@ The section above this one — "A faction that goes dark in light mode goes dark
 
 **Finally, the faction's darkest LIGHT ground is what gates a shared functional ink.** `-card-notice` took amber-900 `#78350f` rather than the family's amber-800 `#92400e`, which clears everywhere on the vellum sheet (5.20:1) and misses on `-plate-page` `#e0d2ac` under the danger veil at 4.41:1 — the moderator's fail note. Same walk-down method the rest of the block already documents, one rung further, because this faction's page stock is darker than any other light page in the app. **The sheet is not the only ground a card ink lands on; the page under it is one too.**
 
+### A control whose ENCLOSURE flips is a class, not a token and not a call site (#2146)
+
+The Ephemerists' sign-up button inverts across the themes — the compass blue carrying the brass mark by day, the brass carrying the blue after dark. The ground and the ink flip *themselves*, because both are theme-scoped tokens that only trade places. The **border** does not: it is `2px` of the rule brass in light and `1px` of the mark brass in dark, and **a width is not a colour, so no token can carry it**. That single fact decides the whole shape of the fix.
+
+**An inline style has no cascade to change in.** Five surfaces painted this button — the task card, the task detail, the composer's submit band, the faction page's join pair and the phone's field desk — each restating ground, ink and enclosure, and the enclosures had already drifted to `2px`, `1.5px` and `2px` without anything being able to see it. Unifying them inline is impossible in principle: the only inline expression of "2px in light, 1px in dark" is the `dark ? a : b` ternary §3 forbids. So the control becomes **one class in `index.css` with a `[data-theme="dark"]` twin**, and every surface drops all three properties and wears it. The corollary is the trap: **an inline value beats the class**, so a surface that keeps one of them pins that theme's half in *both* cascades, on that surface alone, and renders perfectly while doing it.
+
+**A shared component that takes paint as a required prop blocks this, and the fix is one `?`.** The composer's submit band arrives through `ComposerBand`, whose `background` and `color` were required strings — passing them would have overridden the class. Both are optional now, documented as "omit only when a class on the same button supplies them". The band still keeps its own `1.5px` top rule: it is full-bleed by #1828 and has **no enclosure to be given one**, which is the general shape — a device takes the parts of a shared definition it has a place for, and the parts it does not are not a reason to fork the definition.
+
+**The census is the deliverable, not the three surfaces the issue named.** Two of the five were found by grepping the token, not by reading the ticket, and one of them was covered by a note in another component asserting it did *not* paint the plate CTA — written when that was true. §6's "the fifth copy is what proves it" applies to *paint* exactly as it applies to a drawing: grep the token, not the surfaces someone listed.
+
+### An ornament that must look random has to be SEEDED, and "changing" is a CSS clock (#2146, #2143)
+
+The rune strips bracketing that button marched thirty-two marks in a fixed order, identical on every card in the feed. Owner, on a screenshot: *"There are at least twice as many symbols as there should be. They should be randomly seeded and randomly changing."* Three rules come out of building it.
+
+**Sixteen, and the count is a pitch.** #2143 halved the masthead's notation band in the same pass, so the head and the foot of the sheet are marked at one density. A row built from a coprime stride over the index — which is what these carried — reads as a machine counting, not as a hand.
+
+**Seeded from the SURFACE, never from `Math.random()` at render.** A row redrawn on every render twitches whenever anything unrelated moves on the page — a vote lands, a filter changes, a hover fires — and a screenshot of it never reproduces, which is what a visual-QA pass runs on. The seed is `task:${id}` / `praxis:${id}`, the same strings the notation band takes, **with the side folded in inside the component** so the two strips bracketing one button are different rows rather than the same row printed twice, and no mount can forget to do it.
+
+**"Changing" is two seeded frames and a stylesheet, not a timer.** Each slot holds two marks stacked in one grid cell; the deferred sheet cross-cuts between them on the slot's own phase. The row therefore turns over time and *no render can change it* — the same shape the card's `Turning` label uses (a CSS clock, not a JS interval) minus its render-time `Math.random()`, which one label can afford and sixteen slots per strip cannot. The grid is what makes it free: the cell is the wider of its two marks **by layout**, so nothing measures and nothing reflows as the row turns. And the resting frame — mark one shown, mark two hidden — stays in `index.css` while both animations live in `motion.ornament.css`, because that resting frame is what a reduced-motion reader sees *and* what anyone sees before the deferred sheet lands.
+
+**One generator, in the kit.** #2143 wrote FNV-1a + mulberry32 inside the notation band; the second reader moved it to `ephemeristsPlate`. A second copy of a PRNG can be tuned in one file and not the other and **the drift is invisible, because both rows still look random** — which is why the guard for it is a source-tree assertion on the magic constant rather than anything you could see.
+
 ---
 
 ## 7. Components
