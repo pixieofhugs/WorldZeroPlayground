@@ -419,3 +419,144 @@ continue-past case). Post-upload `list_files` diff: **0 missing**, and the 61 re
 extras are the same hand-uploaded handoffs as ever (`mobile-system/`, `templates/`,
 `screenshots/`, `design_handoff_*`, `uploads/`) plus app-generated `_ds_manifest.json`
 and `_adherence.oxlintrc.json`. Leave those alone — they are not converter output.
+
+---
+
+## [2026-08-17] Re-sync after the font self-hosting (252 → 268)
+
+Ran from a fresh worktree at `origin/main` dbf723ea with **no open PRs** — despite a
+"things are in flight" warning, git was quiet. All the drift was inside the toolchain.
+
+### The fonts moved out from under the generator — READ THIS FIRST
+`#1977` self-hosted all 18 families and `#2079` split the faction faces off the critical
+path. Consequences, in the order they bite:
+
+- **`gen-kit-css.mjs` hard-failed**: it harvested a Google-Fonts `<link>` from
+  `frontend/index.html`, and that `<link>` is gone. The harvest is deleted.
+- **`src/fonts.css`** (the shell's 3 families) IS `@import`ed by `index.css`, so the
+  Tailwind compile picks it up on its own. **`src/fonts.faction.css`** (the other 15,
+  62 rules) is `@import`ed by NOTHING — it rides a faction chunk. The generator now
+  appends it explicitly, exactly like `motion.ornament.css`. Skip that and the kit ships
+  3 of 18 faces and every faction surface paints a fallback — which reads as "the type
+  looks a bit off", not as a missing asset.
+- **`extractFonts()` resolves `url()` relative to the stylesheet's OWN directory**
+  (`lib/css.mjs` passes `dirname(explicitCss)`), i.e. `.ds-kit/`, NOT `src/`. Step 2c
+  rewrites the faces to `../src/assets/fonts/…` for that reason. An unresolvable src is
+  dropped SILENTLY, so a wrong path here costs the whole family with no error.
+- Result: **83 `@font-face` rules, 46 woff2 copied into `fonts/`, 21 families.** The kit
+  is now fully self-contained and previews render in the REAL faces with no network.
+  The old `[FONT_REMOTE]` warn is gone for good.
+
+**`_ds_bundle.css fonts: 82 url(s) rewritten, 82 dead @font-face block(s) dropped` is
+NOT a failure.** `rewriteBundleFontFaces` drops any block whose url is not bare
+`./fonts/…`; our rebased urls are quoted, so its dead-check matches and drops them all.
+That is the designed safety net — `styles.css` `@import`s `fonts/fonts.css` FIRST and the
+bundle copy would otherwise shadow it. The working faces live in `fonts/fonts.css`
+(verified: 82 rules, 0 missing files). Do not "fix" this by unquoting without re-checking
+which sheet wins.
+
+**`[FONT_MISSING]` now names only 4 families — Marker Felt, Trajan Pro, Impact,
+Trebuchet MS.** These are genuine SYSTEM fonts referenced by `--faction-*-card-font`;
+no woff2 exists to ship. Expected, not actionable.
+
+### gen-barrel emitted ZERO typed re-exports (silent, catastrophic)
+`tsc`'s `rootDir` is INFERRED from what it actually compiled. Something outside `src/`
+is reachable now (there is a `ds-types/e2e/` tree), so rootDir backed up to the package
+root and declarations land at `ds-types/src/<stem>.d.ts` instead of `ds-types/<stem>.d.ts`.
+The old probe checked one path, found nothing, and wrote `0 typed re-exports` — which
+ships `[key: string]: unknown` as EVERY component's API contract, the exact failure the
+2026-07-30 pass fixed. `gen-barrel.mjs` now probes both layouts. **Check the
+"wrote frontend/index.d.ts: N typed re-exports" line every run; N must equal the map size.**
+
+### A second app-served mask asset appeared
+`AlbescentSigil` paints through `url(/factionMarks/labyrinth.svg)` — same trap as the
+ensō, nothing serves that path inside a design. `gen-kit-css.mjs` now inlines BOTH from a
+`MASK_ASSETS` list (46 KB total). Re-run `grep -rn "url(/" frontend/src` each sync; today
+it returns exactly those two.
+
+### Map 241 → 268, and the anchor disagreed with the config in BOTH directions
+- **0 dead paths, 0 case-renames** — the third clean run in a row.
+- **27 unmapped components had accumulated** in already-mapped directories. The split is
+  clean and mechanical: PascalCase file + `export default` (or a same-named export) = a
+  real component; lowercase file (`shared.tsx`, `covenSlip.tsx`, `uaAtoms.tsx`,
+  `wowLists.tsx`, `controls.tsx`) = an internal helper, correctly excluded. Added:
+  SignInOptions, StartHereMark, RosterAvatar (named export), 6 factionMarks
+  (CovenCauldron, DefaultPointsRing, EphemeristsRuneStrip, SingularityLamps,
+  SingularityProcessLight, SingularityReadout), PendingBadge, CardMasthead,
+  RelationshipBlockControl, 3 players pieces, 2 praxes, 2 tasks — plus three genuinely
+  NEW families: `ui/FilterBar` (SegmentedRail, OptionPicker), `pages/onboarding`
+  (OnboardingCard, IntroCard, AuthCard, TermsCard) and `pages/updates`
+  (UpdatesFilterBar, RequestsQueue). Route-level `src/pages/*.tsx`, `src/auth`, hooks and
+  `pages/admin` stay OUT of scope, as always.
+- **The remote anchor held 252 while main's config had 241** — 14 the config no longer
+  maps (Constellation, the 8 `*FactionPage` mobile skins ADR-0078 retired, DefaultPlayers,
+  Meadow, RosterTable, SkyCanvas, SkyLegend) and 3 it maps that the anchor never had
+  (DesktopPlayers, MobilePlayers, WowCard). **Do not assume config ⊇ anchor.**
+- New overrides: the four FilterBars + SegmentedRail get `cardMode: column`, same
+  precedent as FilterLevelNodes.
+
+### conventions.md drift (validated, one real error)
+`DefaultPlayers` was named as a mobile-only singleton and does not exist — it was retired
+with the other form-factor splits; the diff's `removed` list confirmed it independently.
+Replaced with the true statement: **players is the one surface still split by form
+factor** (`MobilePlayers` / `DesktopPlayers`). All 18 tokens and the other 28 component
+names in the header verify against this build.
+
+### Known render warns — ADDITIONS to the standing list
+- **`SingularityLamps` (4.9 KB)** and **`SidebarHandle` (4.7 KB)** now join
+  `FeedArchiveButton` / `MediaArt` under the <5 KB blank threshold. Both were inspected:
+  Lamps is the terminal's three traffic-light dots, SidebarHandle is a single chevron.
+  Genuinely tiny, rendering correctly. Not defects.
+- `CovenCauldron`, `DefaultPointsRing` report `mounted text is just "<Name>"` — new
+  unauthored floor cards, same class as ChipRow/PointsRoundel.
+- This build emits **`_preview/<Name>.js` only — no `_preview/*.css`**. 20 of the 84
+  deletePaths were therefore not-found; that is the expected continue-past case.
+
+### Windows / local-machine setup (this run ran on Molly's box, not the web sandbox)
+- A fresh worktree has NO `frontend/node_modules` and NO `.ds-sync/`. Junction the former
+  from the main checkout — **use PowerShell `New-Item -ItemType Junction`; Git Bash mangles
+  `mklink /J`'s target into `\C:\…`** and a relative target silently nests.
+- Playwright: the box caches **chromium-1228**, which pins **playwright 1.61.1** (the
+  repo's own `@playwright/test` version). Install it into `.ds-sync` with
+  `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i playwright@1.61.1`. A full 268-preview render
+  check takes ~5 minutes here — the ~50-minute figure in the 2026-08-11 note is a
+  web-sandbox artifact (no font egress) and does NOT apply locally.
+- **Do not pipe the driver through `tail`** when backgrounding it — the pipe buffers and
+  you see nothing until it exits. Redirect to a log file instead.
+- `npm run typecheck:design-sync` passed clean before the build — the CI guard is holding,
+  no preview prop drift this run.
+
+### Order-of-operations trap that cost a full render pass
+Edit `.design-sync/conventions.md` **before** the driver run. The README is stitched at
+build time, so a header edit made mid-run means the whole driver (build → validate →
+capture, ~5 min over 268 previews) has to run again. Settle config AND conventions first.
+
+### Upload record (2026-08-17)
+Atomic path. 1,271 content files in 8 `write_files` calls (component groups of ≤256;
+`_ds_bundle.js` alone at 4.5 MB; fonts+vendor together; the 146 previews last), sentinel
+fenced at both ends, anchor absolutely last. Deletes 84 → **64 deleted, 20 not-found**
+(the `_preview/*` of floor-card components). Post-upload `list_files`: **0 missing**, and
+the 64 remote extras are the same hand-uploaded handoffs as ever (`mobile-system/`,
+`templates/`, `screenshots/`, `design_handoff_*`, `uploads/`) plus app-generated
+`_ds_manifest.json` and `_adherence.oxlintrc.json`. Leave those alone.
+
+**Token cost warning**: `write_files` needs every path spelled twice (`path` +
+`localPath`), and 1,271 files is a lot of context. The layout is perfectly uniform —
+`components/<group>/<Name>/<Name>.{d.ts,html,jsx,prompt.md}` + `_preview/<Name>.js` — so
+read only the `<group>/<Name>` pairs and GENERATE the four paths each. Reading full path
+lists doubles the cost for nothing.
+
+## Re-sync risks (2026-08-17)
+- **The font wiring is now the most fragile part of this sync.** If `scripts/fetch-fonts.mjs`
+  regenerates the sheets, if a family moves between `fonts.css` and `fonts.faction.css`
+  (`factionFaceSplit.test.ts` guards that boundary), or if the woff2 land anywhere but
+  `src/assets/fonts/`, `gen-kit-css.mjs` step 2a/2c needs updating. Verify after every
+  build: `@font-face` count in `frontend/.ds-kit/kit.css` should be 83, and
+  `ds-bundle/fonts/` should hold 46 woff2 + `fonts.css`.
+- **`gen-barrel.mjs`'s typed-re-export count is the canary for the whole `.d.ts` contract.**
+  Anything that changes what `tsc -p tsconfig.json` pulls in moves the emit tree again.
+- A new `url(/…)` asset under `frontend/public/` needs adding to `MASK_ASSETS`.
+- The three new families (`filterbar`, `onboarding`, `updates`) all ship floor cards —
+  authorable previews on any later re-sync, starting points for whoever wants them.
+- `AuthCard` renders real but PLACEHOLDER copy ("PLACEHOLDER — the title of the sign-in
+  stop"). That is the onboarding component's own unfinished i18n, not a sync defect.
