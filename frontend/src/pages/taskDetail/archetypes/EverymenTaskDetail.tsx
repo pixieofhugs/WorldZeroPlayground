@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -52,63 +53,6 @@ const SHADOW = "var(--faction-everymen-bill-shadow)";
 
 const BEBAS = "var(--font-accent)";
 const COURIER = "var(--font-body)";
-
-// ── The cog, the union's one glyph. Eight teeth around a hub, generated once at
-//    module load rather than per render: it is a constant, and the arithmetic is
-//    the design's own (a hand-written path would drift from it silently).
-const GEAR_TEETH = 8;
-const GEAR_RADIUS = 9.5;
-const GEAR_TIP_LENGTH = 5;
-const GEAR_TIP_HALF = 1.6;
-const GEAR_ROOT_HALF = 2.6;
-
-function buildGearPath(): string {
-  const point = (radius: number, angle: number): string =>
-    `${12 + radius * Math.cos(angle)},${12 + radius * Math.sin(angle)}`;
-  const step = (Math.PI * 2) / GEAR_TEETH;
-  const tipRadius = GEAR_RADIUS + GEAR_TIP_LENGTH;
-  let path = "";
-  for (let tooth = 0; tooth < GEAR_TEETH; tooth++) {
-    const start = tooth * step;
-    const rootBefore = point(GEAR_RADIUS, start - GEAR_ROOT_HALF / GEAR_RADIUS);
-    const tipBefore = point(tipRadius, start - GEAR_TIP_HALF / tipRadius);
-    const tipAfter = point(tipRadius, start + GEAR_TIP_HALF / tipRadius);
-    const rootAfter = point(GEAR_RADIUS, start + GEAR_ROOT_HALF / GEAR_RADIUS);
-    const nextRoot = point(
-      GEAR_RADIUS,
-      start + step - GEAR_ROOT_HALF / GEAR_RADIUS,
-    );
-    path += `${tooth === 0 ? "M" : "L"}${rootBefore}L${tipBefore}L${tipAfter}L${rootAfter}`;
-    path += `A${GEAR_RADIUS},${GEAR_RADIUS} 0 0 1 ${nextRoot}`;
-  }
-  return `${path}Z`;
-}
-
-const GEAR_PATH = buildGearPath();
-
-/** The union cog. Ornament only — every caller marks it aria-hidden. */
-function Gear({
-  size,
-  fill,
-  hole,
-}: {
-  size: number;
-  fill: string;
-  hole: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      aria-hidden
-      style={{ display: "block", flex: "0 0 auto" }}
-    >
-      <path d={GEAR_PATH} fill={fill} />
-      <circle cx="12" cy="12" r="3" fill={hole} />
-    </svg>
-  );
-}
 
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -252,7 +196,7 @@ export default function EverymenTaskDetail({
         flexWrap: "wrap",
       }}
     >
-      <Gear size={14} fill={RED} hole={PANEL} />
+      <EverymenCog size={14} fill={RED} hub={PANEL} />
       <span
         style={{
           ...label,
@@ -318,13 +262,13 @@ export default function EverymenTaskDetail({
           boxShadow: `inset 0 -6px 0 -4px ${PAPER_DEEP}`,
         }}
       >
-        <Gear size={14} fill={MAST_INK} hole={MAST} />
+        <EverymenCog size={14} fill={MAST_INK} hub={MAST} />
         <span
           style={{ ...label, fontSize: "var(--text-content)", color: MAST_INK }}
         >
           {factionName(slug)}
         </span>
-        <Gear size={14} fill={MAST_INK} hole={MAST} />
+        <EverymenCog size={14} fill={MAST_INK} hub={MAST} />
       </div>
 
       {isMetatask && (
@@ -694,7 +638,7 @@ export default function EverymenTaskDetail({
               marginBottom: "var(--space-sm)",
             }}
           >
-            <Gear size={13} fill={OLIVE} hole={PANEL} />
+            <EverymenCog size={13} fill={OLIVE} hub={PANEL} />
             <span
               style={{
                 fontFamily: COURIER,
@@ -726,7 +670,7 @@ export default function EverymenTaskDetail({
               marginBottom: "var(--space-sm)",
             }}
           >
-            <Gear size={13} fill={OLIVE} hole={PANEL} />
+            <EverymenCog size={13} fill={OLIVE} hub={PANEL} />
             <span
               style={{
                 fontFamily: COURIER,

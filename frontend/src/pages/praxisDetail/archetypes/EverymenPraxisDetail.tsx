@@ -77,6 +77,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
+import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
@@ -120,6 +121,8 @@ const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
 /** A FILL only — the voter bars' track. Never a ground for text (see docstring). */
 const TRACK = "var(--everymen-paper)";
+/** The pasted-on sheet the section heads and their cogs sit on. */
+const PANEL = "var(--faction-everymen-sheet-panel)";
 
 const BEBAS = "var(--font-accent)";
 // Courier Prime is the sheet's chrome face and is never named here: every label
@@ -133,28 +136,6 @@ const PROSE = "var(--font-display)";
 /** Ornament geometry — the drawn side of one member's byline plate. */
 const PLATE_DESKTOP = 42;
 const PLATE_MOBILE = 36;
-
-/**
- * The union cog, set as a typographic glyph (§7 — a drawn character, not an
- * icon library and not an emoji). One size, because it does one job: flanking a
- * label. Ornament, so every caller marks it aria-hidden.
- */
-function Cog({ color }: { color: string }) {
-  return (
-    <span
-      aria-hidden
-      style={{
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: cog glyph at the design's optical size, flanking a label rather than being read (§4a)
-        fontSize: 12,
-        lineHeight: 1,
-        color,
-        flex: "0 0 auto",
-      }}
-    >
-      ⚙
-    </span>
-  );
-}
 
 /** Initials fallback for a member with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -258,7 +239,7 @@ export default function EverymenPraxisDetail({
         flexWrap: "wrap",
       }}
     >
-      <Cog color={RED} />
+      <EverymenCog size={14} fill={RED} hub={PANEL} />
       <span
         style={{
           ...label,
@@ -392,7 +373,7 @@ export default function EverymenPraxisDetail({
           borderRadius: 2,
         }}
       >
-        <Cog color={MAST_INK} />
+        <EverymenCog size={14} fill={MAST_INK} hub={MAST} />
         <span
           style={{
             ...label,
@@ -404,7 +385,7 @@ export default function EverymenPraxisDetail({
         >
           {factionName(praxis.task_faction_slug)}
         </span>
-        <Cog color={MAST_INK} />
+        <EverymenCog size={14} fill={MAST_INK} hub={MAST} />
       </div>
       <div
         aria-hidden

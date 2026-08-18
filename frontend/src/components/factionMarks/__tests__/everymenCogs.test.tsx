@@ -80,7 +80,7 @@ describe("the Everymen cog is drawn once", () => {
   it.each(MOUNTS)("%s reads the shared mark and draws none of its own", (rel) => {
     const source = read(rel);
 
-    expect(source).toMatch(/from\s+"[^"]*factionMarks\/everymenCogs"/);
+    expect(source).toMatch(/from\s+["'][^"']*factionMarks\/everymenCogs["']/);
     expect(source).toContain("EverymenCog");
 
     for (const [label, pattern] of PRIVATE_DRAWINGS) {

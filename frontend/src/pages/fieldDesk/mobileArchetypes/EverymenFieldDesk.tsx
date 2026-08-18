@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import FactionSigil from '../../../components/sigil/FactionSigil'
+import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { formatPoints } from '../../../utils/points'
@@ -110,21 +111,6 @@ const trackMetaStyle: CSSProperties = {
 /** The union's own band — the section rule's red/gold run, at track scale. */
 const TRACK_FILL = `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)`
 
-/** The Everymen cog seal — a riveted gear, the union's mark. */
-function CogSeal({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <g fill={GOLD}>
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-          <rect key={deg} x="11" y="0.5" width="2" height="5" rx="0.5" transform={`rotate(${deg} 12 12)`} />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="6.5" fill="none" stroke={GOLD} strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="2" fill={GOLD} />
-    </svg>
-  )
-}
-
 /** Cream newsprint plate framed in union ink. */
 function Plate({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
@@ -179,7 +165,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
             padding: 'var(--space-sm) var(--space-lg)',
           }}
         >
-          <CogSeal size={16} />
+          <EverymenCog size={16} fill={GOLD} hub={INK} />
           {/* "The Union Desk" (`fieldDesk.home.everymen.masthead`) was stamped
               on this band. It is the only desk with a second title slot — the
               h1 below already reads the shared `fieldDesk.home.title` — so
