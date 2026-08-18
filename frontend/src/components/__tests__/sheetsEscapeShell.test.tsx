@@ -134,9 +134,10 @@ describe('CharacterSwitcherSheet', () => {
     expect(html).toContain('aria-modal="true"')
     // The roster arrives in an effect the static renderer never runs, so the
     // rows are `CharacterSwitcherRows`' business (characterPaths.test.tsx);
-    // what is here is the sheet's own chrome.
+    // what is here is the sheet's own chrome. Its one action is gated on
+    // `can_create_additional_character`, which this file's auth stub does not
+    // carry — the gate itself is `characterSwitcherActions.test.tsx`'s subject.
     expect(html).toContain('Your characters')
-    expect(html).toContain('Create new character')
   })
 
   it('clears the tab bar on the phone and nothing on the desktop rail', () => {

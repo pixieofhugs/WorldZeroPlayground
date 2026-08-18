@@ -13,9 +13,23 @@ import { drawAtRoot } from './ui/drawAtRoot'
  * MOBILE active-character switcher (#516) — a bottom sheet over Home. Lists the
  * account's lives (active one checkmarked), swaps the carried life on tap
  * (one `POST /me/active-character`, whose answer IS the new viewer — #1383),
- * and holds the two path actions:
- * Create new character and Edit this character. Opened from the Home character
- * card's Switch / avatar caret. Presentation-only over existing endpoints.
+ * and holds ONE path action under them: Create new character. Opened from the
+ * `CHARACTERS` pill on the rail's character card and on the eight mobile field
+ * desks. Presentation-only over existing endpoints.
+ *
+ * **The one action is gated, and the trigger is too** (#2111). "Create new
+ * character" is rendered only when `can_create_additional_character` says the
+ * era's `second_character_level_required` has been met — the same
+ * server-computed flag the FieldDesk roster reads, never a level comparison
+ * here, and hidden rather than shown with a padlock (#1560: a second life must
+ * not be advertised before the gate opens; the ROUTE stays reachable). Its
+ * sibling "Edit this character" is gone outright: it led where the `EDIT` pill
+ * beside the trigger already leads, two taps further in.
+ *
+ * Which leaves the case where this sheet has nothing to offer at all — one
+ * life, shut gate. The callers hide the trigger for it, on
+ * `rosterOffersAChoice` (`hooks/useRosterChoice`), so the sheet and the desktop
+ * roster cannot disagree about whether a roster is worth showing.
  *
  * **Drawn at the document root** (#1591). Every caller — the desktop rail's
  * Characters pill (`layout/Sidebar`) and all eight mobile field desks — mounts
@@ -25,9 +39,6 @@ import { drawAtRoot } from './ui/drawAtRoot'
  * behind the scrim. `drawAtRoot` carries the full argument.
  */
 
-// Decorative edit glyph (aria-hidden icon); a const so the jsx-text-only literal
-// rule doesn't read it as user-facing copy.
-const PENCIL_GLYPH = '✎'
 export default function CharacterSwitcherSheet({
   open,
   activeCharacterId,
@@ -38,7 +49,7 @@ export default function CharacterSwitcherSheet({
   onClose: () => void
 }) {
   const { t } = useTranslation('common')
-  const { applyUser } = useAuth()
+  const { user, applyUser } = useAuth()
   const navigate = useNavigate()
   const isMobile = useFormFactor() === 'mobile'
   const [lives, setLives] = useState<CharacterOut[]>([])
@@ -82,14 +93,12 @@ export default function CharacterSwitcherSheet({
           switching={switching}
         />
 
-        <button type="button" onClick={() => navigate('/characters/create')} style={{ ...sheetAction, borderTop: '1px solid var(--color-border)' }}>
-          <span style={actionIcon}>+</span>
-          {t('fieldDesk.home.switcher.createNew')}
-        </button>
-        <button type="button" onClick={() => navigate(`/characters/${activeCharacterId}/edit`)} style={sheetAction}>
-          <span style={actionIcon}>{PENCIL_GLYPH}</span>
-          {t('fieldDesk.home.switcher.editThis')}
-        </button>
+        {user?.can_create_additional_character && (
+          <button type="button" onClick={() => navigate('/characters/create')} style={{ ...sheetAction, borderTop: '1px solid var(--color-border)' }}>
+            <span style={actionIcon}>+</span>
+            {t('fieldDesk.home.switcher.createNew')}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -201,9 +210,21 @@ const scrim: CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 39, border: 'none', padding: 0,
   background: 'var(--color-overlay-strong)', cursor: 'pointer',
 }
+/**
+ * THE GROUND IS OPAQUE, AND HAS TO BE (#2109).
+ *
+ * This filled with `--color-bg-surface`, which is ALPHA in both themes — 72%
+ * white on the cream page, 4% white on the near-black one. On the phone that
+ * composited to a panel you could read the page straight through, in light and
+ * in dark, and the reported symptom was a sheet impossible to tell from what it
+ * covered. `--color-bg-page` is the app's opaque stock and the ground
+ * `ConfirmDialog` already draws its own bottom sheet on, so the two root-drawn
+ * overlays agree; the scrim above and the cast below are what separate it from
+ * the page it matches.
+ */
 const sheet: CSSProperties = {
   position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40,
-  background: 'var(--color-bg-surface)', borderRadius: '22px 22px 0 0',
+  background: 'var(--color-bg-page)', borderRadius: '22px 22px 0 0',
   padding: 'var(--space-md) var(--space-lg)',
   // No --shadow-* token exists; the colour half is the half that would drift
   // between themes, so it is the half that comes from a token (ConfirmDialog).
