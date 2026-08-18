@@ -174,7 +174,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
       <PointsRoundel
         className="everymen-stamp-print"
         total={formatPoints(total)}
-        unitLabel={t("card.stamp.points")}
+        unitLabel={t("card.stamp.points", { count: total })}
         arcLabel={t("card.stamp.onTheRecord")}
         color="var(--everymen-red)"
       />

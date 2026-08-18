@@ -78,7 +78,7 @@ describe('Everymen task card — the stamped points seal (#2034)', () => {
 
   it('announces the figure and the shared unit word as one mark', () => {
     const html = render()
-    const unit = i18n.t('feed:taskCard.pointsUnit')
+    const unit = i18n.t('feed:taskCard.pointsUnit', { count: POINTS })
     expect(html).toContain(`aria-label="${POINTS} ${unit}"`)
     // #1911 restored the unit word on the struck seal; the stamp uppercases it,
     // so the catalog's "Points" still strikes as POINTS. Do not undo it.

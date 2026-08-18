@@ -245,7 +245,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
                 color: DEEP,
               }}
             >
-              {t("card.stamp.points")}
+              {t("card.stamp.points", { count: total })}
             </span>
             <span aria-hidden style={{ fontSize: "var(--text-xl)", color: GOLD }}>
               ☽
@@ -258,7 +258,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
-      <CovenCauldron total={formatPoints(total)} caption={t("card.stamp.points")} />
+      <CovenCauldron total={formatPoints(total)} caption={t("card.stamp.points", { count: total })} />
     </div>
   );
 }

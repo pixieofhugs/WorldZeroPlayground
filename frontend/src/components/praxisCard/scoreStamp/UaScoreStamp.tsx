@@ -275,7 +275,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         <UaEnsoScore
           size={ENSO_SIZE}
           value={formatPoints(total)}
-          unit={t("card.stamp.points")}
+          unit={t("card.stamp.points", { count: total })}
           ringColor="var(--faction-ua-card-enso)"
           valueColor="var(--faction-ua-card-total)"
           unitColor="var(--faction-ua-card-points)"

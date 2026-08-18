@@ -238,7 +238,7 @@ export default function CovenTaskCard({
                   typeset INSIDE the viewBox so one `size` scales the lot. */}
               <CovenCauldron
                 total={String(basePoints)}
-                caption={i18n.t("feed:taskCard.pointsUnit")}
+                caption={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
                 size={size.cauldron}
               />
             </div>

@@ -288,7 +288,7 @@ export default function WowTaskCard({
                       not drawn with. */}
                 </div>
                 <div style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-md)", color: PLUM, marginTop: "var(--space-xs)" }}>
-                  {i18n.t("feed:taskCard.pointsUnit")}
+                  {i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
                 </div>
               </div>
             </div>

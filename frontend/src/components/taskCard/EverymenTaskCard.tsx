@@ -435,7 +435,7 @@ export default function EverymenTaskCard({
                       POINTS. Do not undo that. */}
                   <PointsRoundel
                     total={String(basePoints)}
-                    unitLabel={i18n.t("feed:taskCard.pointsUnit")}
+                    unitLabel={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
                     size={size.seal}
                     color="var(--everymen-red)"
                   />

@@ -392,7 +392,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             marginTop: "var(--space-xs)",
           }}
         >
-          {t("detail.points.total")}
+          {t("detail.points.total", { count: modifiedPoints })}
         </div>
       </div>
     </div>

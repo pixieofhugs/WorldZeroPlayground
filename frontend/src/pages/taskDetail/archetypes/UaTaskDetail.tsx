@@ -316,7 +316,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         <UaEnsoScore
           size={size.enso}
           value={modifiedPoints}
-          unit={t("detail.points.total")}
+          unit={t("detail.points.total", { count: modifiedPoints })}
           valueColor="var(--faction-ua-vermil)"
         />
       </div>

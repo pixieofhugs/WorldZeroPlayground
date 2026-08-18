@@ -201,7 +201,13 @@ describe('the 40 per-faction key families are one shared string each (#1911)', (
       const re = bannedRe(banned)
       expect(leaves.map(([id]) => id).filter((id) => re.test(id))).toEqual([])
       const [ns, key] = shared.split(':')
-      expect(leaves.find(([id]) => id === `${ns}:${key}`)?.[1]).toBe(wording)
+      // A pluralised family lives under `_one`/`_other` rather than a bare leaf
+      // (#2239). The agreed wording is the plural, which is what the surface
+      // prints for every count but one.
+      const leaf =
+        leaves.find(([id]) => id === `${ns}:${key}`)
+        ?? leaves.find(([id]) => id === `${ns}:${key}_other`)
+      expect(leaf?.[1]).toBe(wording)
     })
   }
 
