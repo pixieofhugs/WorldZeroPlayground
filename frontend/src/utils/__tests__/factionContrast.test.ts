@@ -376,6 +376,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Everymen — "the paper surface + its text FLIP in dark"; ink is structure:
   // "borders, rules, text on gold/parchment elements".
   { what: "everymen paper", surface: "--everymen-paper", text: "--everymen-paper-text" },
+  // The stock the SAME ink lands on one rung down (#2133). `.em-backdrop` ramps
+  // from the paper to the deep stock and then vignettes 55% of the deep stock
+  // over the whole thing, so the page's ground is not one flat token — a
+  // heading near the bottom of the faction page is reading against this end of
+  // it, and only the paper end was measured.
+  { what: "everymen deep stock, ink", surface: "--everymen-paper-deep", text: "--everymen-paper-text" },
   { what: "everymen paper, muted", surface: "--everymen-paper", text: "--everymen-muted" },
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
@@ -1459,30 +1465,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
     },
   ]),
 
-  // ── THE SAME TWO NEUTRALS, THE OTHER WAY UP (#2107) ──────────────────────
-  //
-  // Every row above measures an ink ON the page. Nothing measured the page AS
-  // an ink, and ten shipped controls print it that way: `.btn-primary`,
-  // `.chip-active`, `.requests-queue__badge`, `.filter-factions__box[data-on]`,
-  // `.filter-factions__done`, `.filter-empty__action`, and inline in
-  // `FeedRowActions`, `ScoreToggle`, `ProposeTaskLink`, `DefaultTaskDetail`,
-  // the Field Desk's browse switch and the profile's segmented toggle. All of
-  // them fill with `--color-text-primary` and ink with `--color-bg-page` — the
-  // page's own pair, inverted, and so the one pairing that survives a repaint
-  // of EITHER token only if both move together.
-  //
-  // It is one row rather than eleven because there is one pairing: the surface
-  // is opaque in both cascades (#1a1209 / #f0e6d0) and no mount lays anything
-  // over the fill. 16.86:1 light, 15.00:1 dark. The wrong ink for this ground
-  // is `--color-text-on-accent`, which the source guard at the bottom of this
-  // file forbids; this row is what makes "take the page instead" a measurement
-  // rather than a claim in a comment.
-  {
-    what: "inverted pill, the page as ink",
-    surface: "--color-text-primary",
-    text: "--color-bg-page",
-  },
-
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
@@ -2451,6 +2433,103 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
       "an allowlist entry with no reader is a scope nobody is spending — delete the line with the last draw call, the way #1293 deletes an unread font token.",
     ).toEqual([]);
   });
+});
+
+/**
+ * `--everymen-ink` is STRUCTURE, and the two surfaces grounded on the paper may
+ * not set text in it (#2133).
+ *
+ * The pairing shape, in the one cascade the value test cannot see. index.css
+ * states the split in words — "the paper surface + its text FLIP in dark; ink is
+ * structure: borders, rules, text on gold/parchment elements" — and the manifest
+ * above measures both halves of it and stays green: `--everymen-ink` really does
+ * clear on the cream and on the gold, and `--everymen-paper-text` really does
+ * clear on the paper. No row of it can see a COMPONENT reaching past the
+ * flipping ink for the frozen one.
+ *
+ * It is invisible by daylight too, which is why an eyeball audit kept missing
+ * it: the two tokens are the SAME hex in light (#221a12), so the bug has no
+ * light mode at all. In dark the paper flips to #221a16 and the ink does not
+ * flip — 1.16:1 on the paper, 1.06:1 on the deep stock. That is the
+ * "theme-invariant surface, flipping ink" trap read backwards.
+ *
+ * A `color:` is the only place it bites: a border or a box-shadow struck in the
+ * frozen ink goes dim in dark, not illegible, and four sibling archetypes
+ * already say as much in their own comments ("NOT `--everymen-ink`, which
+ * vanishes on the dark sheet"). So the guard is a per-file reader rule, in the
+ * shape #1793 and #1766 set here — the files whose GROUND is the paper are
+ * named, and in those files the structure ink may not be a text colour.
+ */
+describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
+  const AS_TEXT = /color:\s*(INK\b|['"`]var\(--everymen-ink\))/g;
+  const WHY =
+    "on the paper the ink is 1.16:1 in dark (1.06:1 on the deep stock). Text on this ground takes `--everymen-paper-text`, which flips with the stock — 13.19:1 light, 13.96:1 dark — and is byte-identical to the ink in light, so nothing moves by day. Borders, fills and shadows keep `INK`.";
+
+  /**
+   * The alias every rule below is written against. A rename would otherwise
+   * pass by matching nothing.
+   */
+  function paperSource(relative: string): string {
+    const source = stripComments(sourceOf(relative));
+    expect(
+      source,
+      `${relative} no longer binds \`INK\` to --everymen-ink; retarget this guard at whatever the structure ink is called there now.`,
+    ).toMatch(/const INK = ['"]var\(--everymen-ink\)['"]/);
+    return source;
+  }
+
+  /**
+   * The faction page is a MIXED file, and that is the whole reason the bug was
+   * hard to see: nearly all of its type sits inside `PAPER_FRAME`, whose stock
+   * is `--everymen-cream` — theme-invariant, so the frozen ink is correct there
+   * and eight `color: INK` sites in this file are right. The two section
+   * headings are the only type it sets on the page itself. So the rule is
+   * per-element, in the shape #1793 uses on the Ephemerists body, not per-file.
+   */
+  it("EverymenFactionBody's section heading is inked for the page, not the frame", () => {
+    const source = paperSource("pages/factionDetail/archetypes/EverymenFactionBody.tsx");
+    const at = source.indexOf("const SECTION_HEADING_TEXT");
+    expect(at, "no `SECTION_HEADING_TEXT` in EverymenFactionBody").toBeGreaterThan(-1);
+    const style = source.slice(at, source.indexOf("};", at));
+    expect(style, WHY).not.toMatch(AS_TEXT);
+    expect(
+      style,
+      "`SectionHeading` renders straight into `.wz-faction-grid`, which stands on `.em-backdrop`.",
+    ).toContain("color: PAPER_TEXT");
+  });
+
+  /**
+   * The mobile desk is NOT mixed, which is why its rule can be the whole file:
+   * every ground it paints is the paper, the deep stock, the red band or the
+   * ink itself, and `CREAM` appears only as an ink on the last two. Six sites
+   * read the frozen ink as text, all of them on the paper family. If a cream
+   * plate is ever added here, `INK` becomes right on it and this rule has to
+   * narrow to the elements the way the faction body's did.
+   */
+  it("EverymenFieldDesk sets no text in the structure ink at all", () => {
+    const source = paperSource("pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx");
+    expect(
+      source,
+      "`CREAM` is an ink on this desk, never a ground — every stock under its type is the paper family.",
+    ).not.toMatch(/background:\s*CREAM\b/);
+    expect(source.match(AS_TEXT) ?? [], WHY).toEqual([]);
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`the ink they take instead clears AA on both stocks (${theme})`, () => {
+      const text = resolveColor("--everymen-paper-text", theme);
+      expect(text.color, `--everymen-paper-text (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+      for (const stock of ["--everymen-paper", "--everymen-paper-deep"]) {
+        const surface = resolveColor(stock, theme);
+        expect(surface.color, `${stock} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(text.color!, surface.color!);
+        expect(
+          ratio,
+          `--everymen-paper-text on ${stock} (${theme}) is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL);
+      }
+    });
+  }
 });
 
 /**
