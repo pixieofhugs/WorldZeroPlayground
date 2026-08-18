@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 
 /**
  * Unaffiliated / na vote UI — THE SPECTRUM SWEEP. The 1-5 rating is a row of
@@ -43,8 +43,6 @@ const TIER_KEYS = ['so-so', 'decent', 'good', 'great', 'brilliant'] as const
 export default function DefaultVote({
   praxisId,
   currentValue,
-  points,
-  totalVotes,
 }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
@@ -138,18 +136,7 @@ export default function DefaultVote({
           rest, so the words were the same fact a third and fourth time. The
           whole flex row goes rather than an empty one staying behind. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-default-card-muted)',
-          accent: 'var(--faction-default-card-accent)',
-          accentFont: 'var(--faction-default-card-font)',
-          errorColor: 'var(--color-danger)',
-          avgLetterSpacing: '0.04em',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

@@ -8,19 +8,28 @@
  *
  * The stars carry the fact. Everything that stood under them restated it:
  *
- *  1. `chrome.voted` — "Voted 5 pts" — from `VoteShell.VoteSummary`, which every
- *     skin mounts, AND a second time from `WowVote`'s own caption slot, so the
- *     WOW card printed the line twice.
+ *  1. `chrome.voted` — "Voted 5 pts" — from the shell's summary block, which
+ *     every skin mounts, AND a second time from `WowVote`'s own caption slot, so
+ *     the WOW card printed the line twice.
  *  2. the caption line — the tier adjective plus `· your vote` (`chrome.tag`),
  *     and its uncast placeholder `cast a vote` (`chrome.idle`).
+ *  3. the aggregate tally — "12 votes · 44 pts" (`chrome.tally`). The owner's
+ *     third ruling on #2166 pulled this one too: "no text under the stars,
+ *     none." An earlier revision of THIS FILE asserted the tally survived; that
+ *     assertion is inverted below, which is the whole reason it is called out
+ *     here rather than quietly edited.
  *
- * Ephemerists had already done this to itself in #1638; the other eight follow.
+ * Ephemerists had already done 1 and 2 to itself in #1638; the other eight
+ * follow, and all nine lose 3.
+ *
+ * THE CONSEQUENCE, NAMED AND ACCEPTED BY THE OWNER — do not "fix" it: on a
+ * praxis CARD nothing now states how many people voted. The score stamp still
+ * shows the vote contribution, so the points are accounted for, but one vote and
+ * ten no longer read differently. On the praxis DETAIL page nothing is lost —
+ * the "Who voted" panel lists the voters and carries its own count.
  *
  * WHAT MUST SURVIVE, and is asserted here so the deletion cannot overshoot:
  *
- *  • `chrome.tally` — "12 votes · 44 pts" — a DIFFERENT fact: the aggregate of
- *    everyone's votes, not the viewer's own cast. It stays (#2166 says so
- *    explicitly, and Ephemerists kept it too).
  *  • `aria-pressed` on the cast control. A screen-reader user used to learn
  *    which star was theirs from the adjective line; with the line gone the cast
  *    value must be announced from the control itself, or "no text" is a
@@ -140,6 +149,8 @@ function text(html: string): string {
   return html.replace(/<[^>]*>/g, '')
 }
 
+/** The aggregate line the widget used to print. Rendered with `points={44}`
+ *  and `totalVotes={12}`, so its absence is a real negative, not a props miss. */
 const TALLY = '12 votes · 44 pts'
 
 describe('the vote widget prints nothing under its stars (#2166)', () => {
@@ -156,8 +167,12 @@ describe('the vote widget prints nothing under its stars (#2166)', () => {
       const word = TIER_5_WORD[slug]
       if (word) expect(body).not.toContain(word)
 
-      // The aggregate tally is a different fact and stays.
-      expect(body).toContain(TALLY)
+      // 3. the aggregate tally. It IS a different fact from the viewer's cast,
+      //    which is why the first pass kept it — but the ruling is "none", and
+      //    the card's own score stamp already carries the vote contribution.
+      expect(body).not.toContain(TALLY)
+      expect(body).not.toContain('44 pts')
+      expect(body).not.toContain('12 votes')
     })
 
     it(`${slug}: the untouched control adds no words either`, () => {
@@ -191,14 +206,20 @@ const CATALOG = JSON.parse(
 ) as { chrome: Record<string, string> }
 
 describe('votes.json loses the keys the widget stopped reading (#2166)', () => {
-  for (const key of ['voted', 'idle', 'tag']) {
+  for (const key of ['voted', 'idle', 'tag', 'tally_one', 'tally_other']) {
     it(`chrome.${key} is gone`, () => {
       expect(Object.keys(CATALOG.chrome)).not.toContain(key)
     })
   }
 
-  it('keeps chrome.tally — the aggregate, a different fact from the viewer cast', () => {
-    expect(CATALOG.chrome.tally_one).toContain('{{count}} vote')
-    expect(CATALOG.chrome.tally_other).toContain('{{count}} votes')
+  it('keeps the keys the widget still reads', () => {
+    // The gate, the save error and the per-star name are all still rendered;
+    // this is the guard against the sweep taking the whole `chrome` branch.
+    expect(Object.keys(CATALOG.chrome).sort()).toEqual([
+      'loginGate',
+      'rateAria',
+      'rateAriaPlain',
+      'saveError',
+    ])
   })
 })

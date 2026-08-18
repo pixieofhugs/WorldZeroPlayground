@@ -1,5 +1,5 @@
 import { createContext, useContext, type CSSProperties } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { hasOwnKey } from '../../utils/hasOwnKey'
 // GATE_TREATMENTS below sets six faction display faces from the lazily-fetched
 // faction sheet (#2079). This chunk is a static dependency of nearly every
@@ -10,10 +10,10 @@ import '../../factionFaces'
 
 /**
  * Shared chrome for per-faction vote UIs. The 1-5 control itself is faction-
- * specific (ink stamps, hearts, …), but the logged-out gate and the
- * points/error summary are identical in structure — only their theme
- * colors differ. These two helpers keep that chrome in one place. Copy lives
- * in the votes:chrome catalog branch (ADR-0032).
+ * specific (ink stamps, hearts, …), but the logged-out gate and the save-error
+ * line are identical in structure — only their theme colors differ. These two
+ * helpers keep that chrome in one place. Copy lives in the votes:chrome catalog
+ * branch (ADR-0032).
  */
 
 /**
@@ -184,84 +184,41 @@ export function VoteLoginGate({ factionSlug }: { factionSlug?: string | null } =
 }
 
 /**
- * A skin carries font, colour and letter-spacing — never a size. The shared
- * chrome owns every size here, off the `--text-*` scale (WORLD_ZERO_STYLE §4a:
- * "if a skin is setting a size, the size has escaped the scale").
- */
-export interface VoteSummaryTheme {
-  muted: string
-  accent: string
-  accentFont: string
-  errorColor: string
-  avgLetterSpacing?: string
-}
-
-/**
- * The votes/points tally and the error line — themeable.
+ * The save-error line — the last thing any vote widget can print.
  *
- * "Voted {{stars}} pts" (`chrome.voted`) headed this block for every skin.
- * #2166 struck it: it was the fourth statement of one fact, after the star row
- * filled to the viewer's value, the tier adjective, and the `your vote` tag —
- * and on WOW it printed TWICE, because that widget called the same key again in
- * its own caption slot. The `selected` prop went with it; nothing else here
- * consulted the viewer's own cast.
+ * WHAT THIS REPLACES, AND WHY IT IS STILL A COMPONENT (#2166). It used to be
+ * `VoteSummary`, which drew two paragraphs: "Voted {{stars}} pts"
+ * (`chrome.voted`) and the aggregate tally "12 votes · 44 pts"
+ * (`chrome.tally`). The owner's ruling took both — nothing is printed under the
+ * stars now, not the viewer's own cast and not the aggregate — which left a
+ * component called "Summary" summarising nothing, so the name went too.
  *
- * The tally below is NOT that fact. It is the aggregate of everyone's votes on
- * the praxis, which no other chrome states, so it stays.
+ * The error itself does NOT have a home further up. It is per-widget state out
+ * of {@link useVote}, and `VoteUI` above it never sees it, so there is no shell
+ * element to hoist it onto; the alternative to one shared helper is the same
+ * paragraph copy-pasted into nine skins. Face, size and spacing therefore stay
+ * here and only the ink is a prop — six skins want `--color-danger`, three
+ * speak in their own (Everymen's red, UA's accent, Ephemerists' ochre).
+ *
+ * Renders NOTHING when there is no error, and it is the widget's last child on
+ * every skin — hence `margin: <top> 0 0`. A bottom margin here would leave a
+ * gap hanging off the foot of a widget that usually prints nothing at all.
  */
-export function VoteSummary({
-  points,
-  totalVotes,
-  error,
-  theme,
-}: {
-  points?: number | null
-  totalVotes?: number
-  error: string
-  theme: VoteSummaryTheme
-}) {
-  const { t } = useTranslation('votes')
+export function VoteError({ error, color }: { error: string; color: string }) {
+  if (!error) return null
 
   return (
-    <>
-      {points != null && (
-        <p
-          className="font-body"
-          style={{
-            fontSize: 'var(--text-content)',
-            color: theme.muted,
-            margin: 'var(--space-md) 0 0',
-            letterSpacing: theme.avgLetterSpacing,
-          }}
-        >
-          <Trans
-            t={t}
-            i18nKey="chrome.tally"
-            count={totalVotes ?? 0}
-            values={{ points }}
-            components={{
-              1: (
-                // The points figure is emphasis inside a running sentence, so it
-                // inherits the paragraph's --text-content (18px) rather than
-                // carrying a size of its own. The skin's contribution is the
-                // accent colour and face; weight comes from <b>.
-                <b
-                  style={{
-                    color: theme.accent,
-                    fontFamily: theme.accentFont,
-                  }}
-                />
-              ),
-            }}
-          />
-        </p>
-      )}
-
-      {error && (
-        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.errorColor, marginTop: 'var(--space-xs)' }}>
-          {error}
-        </p>
-      )}
-    </>
+    <p
+      className="font-body"
+      style={{
+        fontSize: 'var(--text-content)',
+        color,
+        // The gap the struck tally used to hold open, so the line still clears
+        // the control rather than crowding it.
+        margin: 'var(--space-md) 0 0',
+      }}
+    >
+      {error}
+    </p>
   )
 }

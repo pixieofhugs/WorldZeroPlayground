@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -98,7 +98,7 @@ function Balloon({ fill, width, height }: { fill: string; width: number; height:
   )
 }
 
-export default function WowVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -200,25 +200,17 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
       </div>
 
       {/* The MedievalSharp caption stood here: the hovered tier's word, or
-          `chrome.voted` once cast — a SECOND call to the key `VoteSummary`
-          below was already rendering, so a cast WOW card printed "Voted 4 pts"
-          twice (#2166). #2166 struck the whole slot, not just the doubled line:
-          the balloons are the scale. The 21px-tall reserved row goes with it
-          rather than staying behind as an empty box — nothing hovers into it
-          any more, so there is no reflow left to absorb. `VoteSummary`'s tally
-          carries its own top margin, so the plate keeps its breathing room. */}
+          `chrome.voted` once cast — a SECOND call to the key the shell's own
+          summary block below was already rendering, so a cast WOW card printed
+          "Voted 4 pts" twice (#2166). #2166 struck the whole slot, not just the
+          doubled line: the balloons are the scale. The 21px-tall reserved row
+          goes with it rather than staying behind as an empty box — nothing
+          hovers into it any more, so there is no reflow left to absorb. The
+          aggregate tally that used to sit under the plate went too, on the
+          owner's third ruling; the plate carries its own padding, so nothing
+          below it was holding the breathing room open. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-wow-card-muted)',
-          accent: 'var(--faction-wow-card-accent)',
-          accentFont: 'var(--faction-wow-card-font)',
-          errorColor: 'var(--color-danger)',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

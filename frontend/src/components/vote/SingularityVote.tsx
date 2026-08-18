@@ -2,7 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -69,7 +69,7 @@ function useScrambleTick(enabled: boolean): number {
   return tick
 }
 
-export default function SingularityVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function SingularityVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -150,18 +150,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
           #2166 struck the row on all nine skins — the decoded columns already
           resolve to the rank, and the tally below states the aggregate. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'color-mix(in srgb, var(--faction-singularity-card-muted) 60%, transparent)',
-          accent: 'var(--faction-singularity-card-accent)',
-          accentFont: 'var(--font-faction-terminal)',
-          errorColor: 'var(--color-danger)',
-          avgLetterSpacing: '0.08em',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

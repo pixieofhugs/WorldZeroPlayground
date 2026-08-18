@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -81,7 +81,7 @@ function teeth(fill: string, stroke: string | undefined) {
   ))
 }
 
-export default function EverymenVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function EverymenVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -203,18 +203,7 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
           struck the row on all nine skins — the gear ramp lights to the cast
           value and the tally below states the aggregate. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--everymen-muted)',
-          accent: 'var(--everymen-red)',
-          accentFont: 'var(--faction-everymen-card-font)',
-          errorColor: 'var(--everymen-red)',
-          avgLetterSpacing: '0.06em',
-        }}
-      />
+      <VoteError error={error} color="var(--everymen-red)" />
     </div>
   )
 }

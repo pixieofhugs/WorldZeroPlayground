@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -186,7 +186,7 @@ function mandalaKids(rank: number, alive: boolean): ReactElement[] {
 
 const RANKS = [1, 2, 3, 4, 5]
 
-export default function UaVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -286,20 +286,7 @@ export default function UaVote({ praxisId, currentValue, points, totalVotes }: V
           mandala blooms fuller and warmer as the rank climbs, which is the same
           reading in the widget's own vocabulary. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-ua-card-muted)',
-          accent: 'var(--faction-ua-card-accent)',
-          accentFont: 'var(--faction-ua-card-font)',
-          // Error text owes body contrast in BOTH themes; the legacy
-          // legacy deep-orange token had only a light value (deleted in #853).
-          errorColor: 'var(--faction-ua-card-accent)',
-          avgLetterSpacing: '0.04em',
-        }}
-      />
+      <VoteError error={error} color="var(--faction-ua-card-accent)" />
     </div>
   )
 }

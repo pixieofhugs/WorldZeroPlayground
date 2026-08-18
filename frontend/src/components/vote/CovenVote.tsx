@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../hooks/useTheme'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -272,7 +272,7 @@ function sunMark(value: number, reached: boolean, top: boolean, size: number): R
   )
 }
 
-export default function CovenVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function CovenVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { theme } = useTheme()
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
@@ -338,17 +338,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
           tag, stood here. #2166 struck the row on all nine skins — the phases
           fill to the cast value and the tally below states the aggregate. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-coven-card-muted)',
-          accent: 'var(--faction-coven)',
-          accentFont: 'var(--faction-coven-card-font)',
-          errorColor: 'var(--color-danger)',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

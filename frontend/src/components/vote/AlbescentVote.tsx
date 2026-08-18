@@ -2,7 +2,7 @@ import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'r
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 
 /**
  * Albescent vote UI (#843) — FERROFLUID. Ported from the vote-stamps design
@@ -113,8 +113,6 @@ function useMorphTick(enabled: boolean): number {
 export default function AlbescentVote({
   praxisId,
   currentValue,
-  points,
-  totalVotes,
 }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
@@ -213,18 +211,7 @@ export default function AlbescentVote({
           all nine skins: printing the digit the dots already draw was the
           clearest case of it. */}
 
-      <VoteSummary
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-default-card-muted)',
-          accent: 'var(--faction-default-card-accent)',
-          accentFont: 'var(--faction-default-card-font)',
-          errorColor: 'var(--color-danger)',
-          avgLetterSpacing: '0.04em',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }
