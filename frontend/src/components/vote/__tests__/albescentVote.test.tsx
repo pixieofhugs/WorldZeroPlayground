@@ -143,11 +143,24 @@ describe('AlbescentVote markup', () => {
     expect(html).not.toContain('animation:')
   })
 
-  it('prints plain numerals — Albescent gave up its vote voice (#783)', () => {
+  /**
+   * #783 gave Albescent the plain numeral instead of a vote voice of its own,
+   * and this asserted the numeral was printed. #2166 then took EVERY word from
+   * under the stars — the caption numeral with the other eight skins' tier
+   * adjectives, and the aggregate tally after it — so there is no text left to
+   * find. The surviving half of #783 is the negative, and it is the half that
+   * mattered: Albescent still borrows no faction's vocabulary.
+   *
+   * `render` passes `points={16} totalVotes={4}`, so "4 votes · 16 pts" is a
+   * line this widget WOULD print if the tally came back. That is what makes the
+   * emptiness below a real measurement rather than a props oversight — the '4'
+   * this test used to find came from that tally, not from the caption.
+   */
+  it('prints no words under the blobs at all (#783, #2166)', () => {
     mocks.user = currentUser()
     const html = render(4)
     const text = html.replace(/<[^>]*>/g, '')
-    expect(text).toContain('4')
+    expect(text.trim()).toBe('')
     for (const word of ['Witness', 'Inscribed', 'brilliant', 'great', 'so-so']) {
       expect(text).not.toContain(word)
     }

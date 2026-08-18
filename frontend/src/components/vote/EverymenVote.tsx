@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -81,7 +81,7 @@ function teeth(fill: string, stroke: string | undefined) {
   ))
 }
 
-export default function EverymenVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function EverymenVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -91,7 +91,6 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
   const edge = 'var(--faction-everymen-vote-edge)'
 
   return (
@@ -200,54 +199,11 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
         })}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 'var(--space-sm)',
-          marginTop: 'var(--space-sm)',
-          minHeight: 20,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--faction-everymen-card-font)',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the widget's tier word is part of the mark, struck at the design's 17 in the poster face (#841, design-fidelity.md standing carve-out)
-            fontSize: 17,
-            letterSpacing: '0.06em',
-            color: active ? 'var(--everymen-red)' : 'var(--everymen-muted)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--everymen-muted)',
-            }}
-          >
-            {`· ${t('chrome.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The poster-face tier word and its `· your vote` tag stood here. #2166
+          struck the row on all nine skins — the gear ramp lights to the cast
+          value and the tally below states the aggregate. */}
 
-      <VoteSummary
-        selected={selected}
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--everymen-muted)',
-          accent: 'var(--everymen-red)',
-          accentFont: 'var(--faction-everymen-card-font)',
-          errorColor: 'var(--everymen-red)',
-          avgLetterSpacing: '0.06em',
-        }}
-      />
+      <VoteError error={error} color="var(--everymen-red)" />
     </div>
   )
 }

@@ -217,7 +217,7 @@
     "UaTaskDetail": "src/pages/taskDetail/archetypes/UaTaskDetail.tsx",
     "UaVote": "src/components/vote/UaVote.tsx",
     "VoteLoginGate": "src/components/vote/VoteShell.tsx",
-    "VoteSummary": "src/components/vote/VoteShell.tsx",
+    "VoteError": "src/components/vote/VoteShell.tsx",
     "VoteUI": "src/components/vote/VoteUI.tsx",
     "WatercolorBackground": "src/components/layout/WatercolorBackground.tsx",
     "WowAvatar": "src/components/avatar/WowAvatar.tsx",

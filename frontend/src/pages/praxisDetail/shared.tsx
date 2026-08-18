@@ -176,6 +176,57 @@ export function orderedMembers(praxis: PraxisOut): PraxisMemberOut[] {
   return creator ? [creator, ...rest] : rest
 }
 
+/** One face in the byline's stack of discs/plates/octagons. */
+export interface BylineFace {
+  id: number
+  name: string
+  /**
+   * The raw wire path, NOT a resolved URL — the archetype calls `mediaUrl()`
+   * at the `img` so this stays comparable to `created_by_avatar_url` itself.
+   * `''` means "draw the monogram".
+   */
+  avatarUrl: string
+}
+
+/**
+ * Who the byline draws, and which of them has a face (#2106).
+ *
+ * Every archetype used to build this list inline with the same ternary, and
+ * every one of them then drew initials unconditionally — which is why the top
+ * of a praxis showed `H` while the comment box below it showed the portrait.
+ * The rule the praxis CARD byline already follows is the one that travels here:
+ * portrait when the path is non-empty, monogram otherwise. The COMPONENT does
+ * not travel — `FactionAvatar` would replace eight bespoke kit monograms with
+ * one generic disc, so each archetype draws the `img` inside its own frame.
+ *
+ * `ponytail:` only the CREATOR can have a face. `PraxisMemberOut` carries no
+ * avatar column, so a collab byline is one portrait among monograms. That is
+ * the narrow read of #2106 and is flagged on the issue; the upgrade path is an
+ * avatar field on `PraxisMemberOut` populated in `build_praxis_out`, after
+ * which this maps `member.character_avatar_url` and the special case goes away.
+ */
+export function bylineFaces(praxis: PraxisOut): BylineFace[] {
+  const members = orderedMembers(praxis)
+  // `|| ''` for the same reason the card byline does it: a cached payload from
+  // before #2172 has no such key, and `undefined` would reach `img src`.
+  const portrait = praxis.created_by_avatar_url || ''
+  if (members.length === 0) {
+    return [
+      {
+        id: praxis.created_by_id,
+        name: praxis.created_by_display_name,
+        avatarUrl: portrait,
+      },
+    ]
+  }
+  return members.map((member) => ({
+    id: member.character_id,
+    name: member.character_display_name || `#${member.character_id}`,
+    avatarUrl:
+      member.character_id === praxis.created_by_id ? portrait : '',
+  }))
+}
+
 export function MemberByline({
   praxis,
   linkStyle,

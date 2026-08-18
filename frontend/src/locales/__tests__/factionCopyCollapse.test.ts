@@ -150,17 +150,19 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'lvl' },
 
   // --- votes.json: the vote widget chrome -------------------------------
-  { banned: `votes:(chrome\\.)?{F}\\.idle`, shared: 'votes:chrome.idle', wording: 'cast a vote' },
   { banned: `votes:chrome\\.{F}\\.rateAria`, shared: 'votes:chrome.rateAria', wording: 'Rate {{value}} — {{label}}' },
-  { banned: `votes:(chrome\\.)?{F}\\.tag`, shared: 'votes:chrome.tag', wording: 'your vote' },
 ]
 
 /**
- * Four of the 40 collapsed to NOTHING rather than to a shared key: every call
+ * Seven of the 40 collapsed to NOTHING rather than to a shared key: every call
  * site for them had already gone, so the family was orphaned copy and a shared
  * key holding the agreed wording would have been dead on arrival. `comments.
  * {F}.empty` is the clearest case — WOW held the only one and no comment thread
  * in the app renders an empty state at all.
+ *
+ * The last two arrived later than the rest: `{F}.idle` and `{F}.tag` DID
+ * collapse onto shared keys in #1911, and then #2166 took the caption row those
+ * shared keys fed off every vote widget, so both ended up here after all.
  *
  * Listed by name so "we deleted it" stays a decision on the record rather than
  * an omission, and so a future call site has to add the shared key
@@ -176,6 +178,12 @@ const COLLAPSED_TO_NOTHING = [
   // other seven desks print `character.display_name` into it — there is no copy
   // string to share, so the shared behaviour is the name.
   `common:fieldDesk\\.home\\.{F}\\.greeting`,
+  // #2166: "cast a vote" / "your vote" — the caption line under the vote stars.
+  // The stars fill to the viewer's value, so the words restated what the row
+  // already drew. `votes:chrome.voted` ("Voted {{stars}} pts") went with them;
+  // it never had a per-faction family, so it has no row here.
+  `votes:(chrome\\.)?{F}\\.idle`,
+  `votes:(chrome\\.)?{F}\\.tag`,
 ]
 
 function bannedRe(pattern: string): RegExp {

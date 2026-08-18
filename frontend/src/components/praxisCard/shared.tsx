@@ -220,7 +220,7 @@ export function PraxisTaskLink({
 }
 
 /**
- * The praxis author as the shared avatar surface wants them (#888).
+ * A face on this card as the shared avatar surface wants them (#888).
  *
  * `FactionAvatar` reads only username / avatar_url / faction_slug off a
  * `CharacterOut`; a card payload carries those three under different names, so
@@ -230,17 +230,25 @@ export function PraxisTaskLink({
  *
  * `display_name` stands in for `username` deliberately: it is what the byline
  * shows, so it is what the monogram initial and the img alt should follow.
+ *
+ * `id` is padded with 0 for the rival (#2128): the card payload carries no
+ * character id for them, and no avatar skin reads it — the field is `CharacterOut`
+ * shape, not data this surface has or needs.
  */
-function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
-  const name = praxis.created_by_display_name || `#${praxis.created_by_id}`;
+function faceAsCharacter(face: {
+  id: number;
+  name: string;
+  avatarUrl: string | null | undefined;
+  factionSlug: string | null | undefined;
+}): CharacterOut {
   return {
-    id: praxis.created_by_id,
-    username: name,
-    display_name: name,
-    avatar_url: praxis.created_by_avatar_url || "",
+    id: face.id,
+    username: face.name,
+    display_name: face.name,
+    avatar_url: face.avatarUrl || "",
     // Unaffiliated is a slug, not a missing one (ADR-0030), and `CharacterOut`
     // says so now that it IS the generated type (#1400).
-    faction_slug: praxis.created_by_faction_slug ?? "na",
+    faction_slug: face.factionSlug ?? "na",
     bio: "",
     tagline: "",
     location: "",
@@ -252,6 +260,15 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
     badges: [],
     invitations: [],
   };
+}
+
+function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
+  return faceAsCharacter({
+    id: praxis.created_by_id,
+    name: praxis.created_by_display_name || `#${praxis.created_by_id}`,
+    avatarUrl: praxis.created_by_avatar_url,
+    factionSlug: praxis.created_by_faction_slug,
+  });
 }
 
 /**
@@ -570,11 +587,26 @@ export function PraxisRoster({
  *
  * ONE SHARED SLOT, NOT NINE TREATMENTS (owner ruling, 2026-08-01). It sits in
  * the composition where {@link PraxisRoster} sits and is themed the same way —
- * the frame's own `accent`/`paper` for the avatar, `factionCssVar` off
- * `task_faction_slug` for the ink — so a faction gets its duel banner from the
- * archetype it already passes, with no per-archetype edit. The Snide mock in
- * #596 was reference for tone; it also assumed the rival was findable in
- * `members`, which the schema never supported.
+ * `factionCssVar` off `task_faction_slug` for the ink — so a faction gets its
+ * duel banner from the archetype it already passes, with no per-archetype edit.
+ * The Snide mock in #596 was reference for tone; it also assumed the rival was
+ * findable in `members`, which the schema never supported.
+ *
+ * THE RIVAL'S FACE IS `FactionAvatar`, NOT THE ROSTER DISC (#2128). It was the
+ * accent-ringed monogram, which meant this card drew its two people two ways:
+ * the byline eight inches above already renders its author through the shared
+ * avatar surface, and a rival in a different idiom read as a different KIND of
+ * thing. `FactionAvatar` brings the faction skin and the membership sigil with
+ * it, and here that is the point rather than a cost — a duel is the one surface
+ * two factions share, the wire carries `opponent_faction_slug` for exactly this,
+ * and both composer duel surfaces already paint each side in its OWN faction.
+ * (The praxis-detail byline in #2106 declined the same dress; it draws one
+ * person inside a bespoke kit frame, where a second faction's colours would be
+ * noise. Different question, different answer.)
+ *
+ * `opponent_avatar_url` is `""` for a rival with no portrait, and the shared
+ * surface's own fallback (monogram, else spectrum ring) takes it from there —
+ * no second fallback rule is written here.
  *
  * NO NEW TOKEN IS MINTED (ADR-0061). The "vs." mark reads in `card-notice`, the
  * sheet's cautionary ink — the same ink the duel mode chip directly above it
@@ -592,12 +624,10 @@ export function PraxisRoster({
 export function PraxisDuelBanner({
   praxis,
   accent,
-  paper,
   fonts,
 }: {
   praxis: PraxisCardOut;
   accent: string;
-  paper?: string;
   fonts?: PraxisCardFonts;
 }) {
   const { t } = useTranslation("praxis");
@@ -634,7 +664,17 @@ export function PraxisDuelBanner({
       >
         {t("duelBanner.versus")}
       </span>
-      <RosterAvatar name={name} accent={accent} paper={paper} />
+      <FactionAvatar
+        character={faceAsCharacter({
+          id: 0,
+          name,
+          avatarUrl: praxis.opponent_avatar_url,
+          factionSlug: praxis.opponent_faction_slug,
+        })}
+        // The diameter the accent-ringed disc drew at, said in the shared
+        // surface's own size vocabulary rather than as a fresh number.
+        size="sm"
+      />
       <span style={{ fontSize: "var(--text-content)", minWidth: 0 }}>
         {praxis.opponent_praxis_id != null ? (
           <Link

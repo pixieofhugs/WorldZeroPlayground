@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../hooks/useTheme'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -272,7 +272,7 @@ function sunMark(value: number, reached: boolean, top: boolean, size: number): R
   )
 }
 
-export default function CovenVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function CovenVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { theme } = useTheme()
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
@@ -285,7 +285,6 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
   // The whole fork. Everything downstream reads `sun` and never the theme.
   const sun = theme === 'light'
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
 
   return (
     <div>
@@ -335,46 +334,11 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
         })}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)', minHeight: 20 }}>
-        <span
-          style={{
-            fontFamily: 'var(--faction-coven-card-font)',
-            fontWeight: 700,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament exemption: the design's own caption size (19, Caveat), not the --text-* ramp (§4a)
-            fontSize: 19,
-            letterSpacing: '0.02em',
-            color: active ? 'var(--faction-coven-vote-on)' : 'var(--faction-coven-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--faction-coven-vote-off)',
-            }}
-          >
-            {`· ${t('chrome.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The Caveat caption naming the hovered tier, and its `· your vote`
+          tag, stood here. #2166 struck the row on all nine skins — the phases
+          fill to the cast value and the tally below states the aggregate. */}
 
-      <VoteSummary
-        selected={selected}
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-coven-card-muted)',
-          accent: 'var(--faction-coven)',
-          accentFont: 'var(--faction-coven-card-font)',
-          errorColor: 'var(--color-danger)',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

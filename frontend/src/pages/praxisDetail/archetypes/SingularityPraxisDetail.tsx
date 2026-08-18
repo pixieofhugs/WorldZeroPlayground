@@ -11,6 +11,7 @@ import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
+import { mediaUrl } from "../../../utils/media";
 import {
   PraxisAdminBar,
   PraxisStatusBanners,
@@ -18,7 +19,7 @@ import {
   PraxisFlagBlock,
   PraxisDetailComments,
   MemberByline,
-  orderedMembers,
+  bylineFaces,
   scoreWasBanked,
   taskRefMeta,
 } from "../shared";
@@ -227,7 +228,15 @@ function Cursor({ height }: { height: number }) {
 }
 
 /** One member's initials, framed as a terminal cell rather than a soft disc. */
-function MemberCell({ name, size }: { name: string; size: number }) {
+function MemberCell({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name: string;
+  avatarUrl: string;
+  size: number;
+}) {
   return (
     <span
       aria-hidden
@@ -237,6 +246,9 @@ function MemberCell({ name, size }: { name: string; size: number }) {
         height: size,
         flex: "none",
         borderRadius: 4,
+        // Clips the portrait to the cell's own corner radius, so the img needs
+        // no radius of its own.
+        overflow: "hidden",
         boxSizing: "border-box",
         background: PANEL,
         border: `1px solid ${BORDER}`,
@@ -245,7 +257,16 @@ function MemberCell({ name, size }: { name: string; size: number }) {
         color: BRIGHT,
       }}
     >
-      {initialsOf(name)}
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{ display: "block", width: "100%", height: "100%" }}
+        />
+      ) : (
+        initialsOf(name)
+      )}
     </span>
   );
 }
@@ -258,7 +279,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  const members = orderedMembers(praxis);
   // A collab is a collab at ONE member (#1274). This used to read
   // `members.length > 1`, which hid the whole Members section from a collab
   // nobody had joined yet while the heading still counted them. Tested
@@ -429,15 +449,13 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             single name is parsed. A payload with no member rows still credits
             its creator, so the author is always reachable from the byline. */}
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-          {(members.length > 0
-            ? members.map((member) => ({
-                id: member.character_id,
-                name: member.character_display_name || `#${member.character_id}`,
-              }))
-            : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }]
-          ).map((author) => (
+          {bylineFaces(praxis).map((author) => (
             <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
-              <MemberCell name={author.name} size={desktop ? 40 : 34} />
+              <MemberCell
+                name={author.name}
+                avatarUrl={author.avatarUrl}
+                size={desktop ? 40 : 34}
+              />
             </Link>
           ))}
         </span>

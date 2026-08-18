@@ -28,7 +28,7 @@ function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
 function render(p: PraxisCardOut): string {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <PraxisDuelBanner praxis={p} accent="#123456" paper="#ffffff" />
+      <PraxisDuelBanner praxis={p} accent="#123456" />
     </MemoryRouter>,
   )
 }
@@ -76,5 +76,50 @@ describe('duel banner', () => {
     )
     expect(text(html)).toContain('Rax Vandal')
     expect(html).not.toContain('href=')
+  })
+})
+
+/**
+ * #2128 — the banner drew a monogram where the rival's face belongs.
+ *
+ * `opponent_avatar_url` (#2172) joined the three fields that "ALL ARRIVE
+ * TOGETHER OR NOT AT ALL", but it is NOT one of them: it is non-nullable and
+ * defaults to `""`. It answers WHAT to draw and never WHETHER to draw, so the
+ * gate above stays on `opponent_display_name` — the last case below is the one
+ * that would break if a future edit folded the portrait into that gate.
+ */
+describe('duel banner — the rival wears their face', () => {
+  const rival = {
+    duel_id: 7,
+    opponent_display_name: 'Rax Vandal',
+    opponent_praxis_id: 42,
+    opponent_faction_slug: 'snide',
+  }
+
+  it("draws the rival's portrait when the wire carries one", () => {
+    const html = render(praxis({ ...rival, opponent_avatar_url: 'avatars/rax.png' }))
+    expect(html).toContain('<img')
+    expect(html).toContain('avatars/rax.png')
+  })
+
+  it('falls back to the monogram for a rival with no portrait', () => {
+    const html = render(praxis({ ...rival, opponent_avatar_url: '' }))
+    expect(html).not.toContain('<img')
+    expect(text(html)).toContain('Rax Vandal')
+  })
+
+  it('still draws the banner during the pending window, portrait or not', () => {
+    // A duel accepted but not yet cast: no `opponent_praxis_id`, no portrait.
+    // Neither absence is "no rival" — the NAME is, and it is here.
+    const html = render(
+      praxis({
+        duel_id: 7,
+        opponent_display_name: 'Rax Vandal',
+        opponent_praxis_id: null,
+        opponent_avatar_url: '',
+      }),
+    )
+    expect(text(html)).toContain('Rax Vandal')
+    expect(text(html)).toContain('vs.')
   })
 })

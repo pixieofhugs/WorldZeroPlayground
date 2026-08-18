@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { flagComment, type CommentOut } from '../../api/comments'
 import { flagReasonOptions, type FlagReason } from '../../utils/flagReasons'
+import { extractError } from '../../utils/errors'
 
 /** May the viewer flag this comment? Signed in, and not the author. */
 export function canFlagComment(
@@ -51,8 +52,15 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
     try {
       await flagComment(comment.id, reason, detail)
       setSubmitted(true)
-    } catch {
-      setError(t('detail.flag.error'))
+    } catch (err) {
+      // The refusal is already player-facing prose, and throwing `err` away is
+      // what made a level gate read as "flagging doesn't work" (#2138): the
+      // backend raises FLAG_LEVEL_TOO_LOW with context 'comment' and
+      // `errors.json` carries the words for it, but every failure rendered as
+      // "Please try again" — an invitation to repeat something that can
+      // never succeed. Same one-liner the praxis flag path has always used
+      // (pages/praxisDetail/usePraxisDetail.ts).
+      setError(extractError(err, t('detail.flag.error')))
       setSubmitting(false)
     }
   }
