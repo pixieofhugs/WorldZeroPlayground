@@ -307,13 +307,37 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
     expect(await lintHue("export const s = { color: 'var(--label-ink)' }", ARCHETYPE)).toEqual([])
   })
 
-  it('says nothing in a file on the legacy list', async () => {
+  it('has no legacy list left to hide behind (#2108)', async () => {
+    // #2077 seeded a shrink-only allowlist at four files and eleven violations.
+    // All eleven are fixed, so the list, its `fs.readFileSync` and the
+    // `LEGACY_FACTION_HUE_INK_FILES.length > 0` guard arm are gone together —
+    // an empty list left in place reads like debt nobody has looked at.
+    expect(existsSync(new URL('../../.eslint-legacy-faction-hue-ink.txt', import.meta.url))).toBe(
+      false,
+    )
+    expect(readFileSync(new URL('../../eslint.config.js', import.meta.url), 'utf8')).not.toContain(
+      'LEGACY_FACTION_HUE_INK_FILES',
+    )
+    // And the four formerly-listed files are now judged like everything else.
     expect(
-      await lintHue(
+      await reportsHue(
         'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
         'src/components/ActivityTicker.tsx',
       ),
-    ).toEqual([])
+    ).toBe(true)
+  })
+
+  it('reaches an ink one MODULE away — `FeedRowInk.actor` (#2108)', async () => {
+    // The site #2077 could not see: the key is `actor`, not `color`, and the
+    // value crosses into `FeedRowContent` before it becomes a `color`. The rule
+    // closes it by naming the far end in INK_PROPS; see the note there for the
+    // general form that was measured and skipped.
+    expect(
+      await reportsHue(
+        'export const s = (slug: string) => ({ actor: factionCssVar(slug) })',
+        'src/components/feed/probe.ts',
+      ),
+    ).toBe(true)
   })
 
   it('says nothing in `roomPresence.ts`, whose `color` is not a CSS declaration', async () => {
@@ -363,31 +387,7 @@ describe('the legacy list stays honest', () => {
     ).toEqual([])
   })
 
-  it('the polarity arm\'s list is real paths, and each still reports (#2077)', async () => {
-    const entries = readFileSync(
-      new URL('../../.eslint-legacy-faction-hue-ink.txt', import.meta.url),
-      'utf8',
-    )
-      .split('\n')
-      .map((line) => line.split('#')[0].trim())
-      .filter(Boolean)
-
-    expect(entries.length).toBeGreaterThan(0)
-    expect(
-      entries.filter((entry) => !existsSync(new URL(`../../${entry}`, import.meta.url))),
-    ).toEqual([])
-
-    // AND THE ENTRY IS STILL EARNING ITS PLACE. The `-faction-ink` list above
-    // cannot make this check — the rule is off for those paths, so asking it what
-    // it would say means re-linting the file's own text, which for a 900-line
-    // archetype is not a fixture. This arm's list is four files, so it is cheap:
-    // read each one and confirm the rule still has something to say about it. A
-    // file that stopped violating and stayed listed is how a shrink-only list
-    // quietly stops shrinking (#750, wearing a filename).
-    for (const entry of entries) {
-      const source = readFileSync(new URL(`../../${entry}`, import.meta.url), 'utf8')
-      const messages = await lintRule(HUE_RULE, source, `src/__probe__/${entry.split('/').pop()}`)
-      expect(messages.length, `${entry} no longer violates — delete its line`).toBeGreaterThan(0)
-    }
-  })
+  // The polarity arm's own list is GONE (#2108) — burned down rather than left
+  // empty. Its replacement lives beside the rule's own cases above: the file
+  // must not exist and `eslint.config.js` must not mention it.
 })

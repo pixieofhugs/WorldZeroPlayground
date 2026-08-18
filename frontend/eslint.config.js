@@ -501,6 +501,22 @@ const BARE_FACTION_HUE = /var\(\s*--faction-[a-z]+\s*\)/
  * indirection is what hid #1932 from a reader scanning for inks. The three seam
  * variables are here because repointing a seam is the sanctioned move and
  * pointing one at a BARE hue is the defect wearing the fix's clothes.
+ *
+ * `actor` is `FeedRowInk`'s field (#2108) and is here for exactly the `--gem-ink`
+ * reason: it IS the actor name's `color`, one MODULE away in `FeedRowContent`.
+ * That distance is what let the bare hue survive #2077's sweep at the one site
+ * the report never reached.
+ *
+ * ponytail: this closes the class by NAMING the far end, not by following the
+ * value. The general form the #2108 ruling asks for — flag `factionCssVar(slug)`
+ * called with no shape argument, wherever it lands — was measured before being
+ * skipped: it reports 28 files, and all but this one are CORRECT fills
+ * (gradients, rings, gem glows, tints, colour bars). Seeding a shrink-only list
+ * of 28 correct files is debt-shaped noise, and two of those files are being
+ * deleted in the same wave, so the list would be stale before it merged. The
+ * upgrade path is type information — a bare hue reaching a field whose TYPE is
+ * an ink bag — which needs `@typescript-eslint`'s type-aware pass and a decision
+ * about running it in CI. Until then, a new ink field adds its name here.
  */
 const INK_PROPS = new Set([
   'color',
@@ -508,6 +524,7 @@ const INK_PROPS = new Set([
   'textDecorationColor',
   'WebkitTextFillColor',
   '-webkit-text-fill-color',
+  'actor',
   '--gem-ink',
   '--label-ink',
   '--link-ink',
