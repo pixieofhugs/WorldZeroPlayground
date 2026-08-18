@@ -5089,17 +5089,18 @@
    viewport media query would answer for one and lie about the other. Hence the
    container: `--space-xl` is #1633's burst clearance (re-derived by #1638 —
    12px of overhang each side, 24 rim to rim) and it holds wherever the row's
-   own intrinsic 370px fits. Below that the gap and the plate's inline padding
-   drop to the smallest rung, which seats a 226px ladder in a 258px plate: a
-   375px phone, and a card down to ~306px. Narrower still and the row wraps
-   rather than letting `stepClip` shave a disc — five circles on two lines
-   beats five ellipses on one.
-   The block padding is NOT on the query: 16px is what clears the burst
-   vertically, and nothing above or below the row is competing for it. */
+   own intrinsic width fits, which is 226 + 4×24 + 2×24 = 370px, hence the
+   372 below. Under that the two inline figures drop to the bottom of the
+   ramp — 226 + 4×4 + 2×8 = 258px — which is every phone from 360 CSS px up
+   and a praxis card down to ~306. Narrower again and the row WRAPS rather
+   than letting `stepClip` shave a disc: five circles on two lines beats five
+   ellipses on one, and 5 × 44 simply does not fit a 320px phone.
+   The BLOCK padding is not on the query: `--space-lg` is what clears the cast
+   burst vertically, and nothing above or below the row competes for it. */
 .eph-vote-plate { container-type: inline-size; }
 .eph-metal-row { gap: var(--space-lg) var(--space-xl); padding: var(--space-lg) var(--space-xl); }
 @container (width < 372px) {
-  .eph-metal-row { column-gap: var(--space-sm); padding-inline: var(--space-sm); }
+  .eph-metal-row { column-gap: var(--space-xs); padding-inline: var(--space-sm); }
 }
 
 /* S.N.I.D.E. — the amp/EQ meter's party VU is in motion.ornament.css (#2073).

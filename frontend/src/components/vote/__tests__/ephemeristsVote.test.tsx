@@ -319,10 +319,10 @@ describe('EphemeristsVote markup', () => {
     expect(SHEET).toContain('.eph-vote-plate { container-type: inline-size; }')
     const narrow = SHEET.slice(SHEET.indexOf('@container'), SHEET.indexOf('@container') + 200)
     expect(narrow).toContain('.eph-metal-row')
-    // The smallest rung, on the two axes that can pay: 226px of disc into a
-    // 258px plate. Nothing here touches the block padding, which is the burst's
-    // vertical clearance and is not what runs out.
-    expect(narrow).toContain('column-gap: var(--space-sm)')
+    // The bottom of the ramp, on the two axes that can pay: 226px of disc into
+    // a 258px plate, which is a 360px phone. Nothing here touches the block
+    // padding — that is the burst's vertical clearance, and it never runs out.
+    expect(narrow).toContain('column-gap: var(--space-xs)')
     expect(narrow).toContain('padding-inline: var(--space-sm)')
     expect(narrow).not.toContain('@media')
   })
