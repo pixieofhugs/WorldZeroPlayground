@@ -70,7 +70,6 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
     <div
       style={{
         position: "relative",
-        flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

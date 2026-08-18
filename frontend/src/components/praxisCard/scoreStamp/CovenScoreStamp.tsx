@@ -164,7 +164,6 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
     <div
       style={{
         position: "relative",
-        flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

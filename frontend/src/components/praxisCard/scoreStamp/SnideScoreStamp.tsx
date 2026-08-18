@@ -46,7 +46,6 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
     <div
       style={{
         position: "relative",
-        flexShrink: 0,
         minWidth: 116,
         boxSizing: "border-box",
         // No borderRadius: the tag is cut, not rounded.

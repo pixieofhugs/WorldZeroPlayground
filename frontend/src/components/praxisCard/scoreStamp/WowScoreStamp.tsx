@@ -71,7 +71,6 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
     <div
       style={{
         position: "relative",
-        flexShrink: 0,
         minWidth: 116,
         boxSizing: "border-box",
         transform: "rotate(-2deg)",

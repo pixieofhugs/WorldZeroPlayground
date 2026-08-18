@@ -2,9 +2,9 @@ import type { CSSProperties, MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
-import type { PraxisCardOut } from "../../api/praxis";
+import { UNSCORED_MODERATION_STATUSES, type PraxisCardOut } from "../../api/praxis";
 import { factionCssVar, factionName } from "../../utils/factions";
-import { isDuelPraxis, stampRestatesTaskPoints } from "../../utils/praxis";
+import { isDuelPraxis } from "../../utils/praxis";
 import { mediaUrl } from "../../utils/media";
 import FactionAvatar from "../avatar/FactionAvatar";
 import VoteUI from "../vote/VoteUI";
@@ -448,13 +448,22 @@ export function PraxisVotedByMarker({
  * count changed card to card — a ragged line across a wall of cards. `L0` is a
  * real answer to "what does this need?", so it renders.
  *
- * The POINTS segment is the one exception, for the opposite reason (#1833): it
- * drops when the stamp beside it already prints that same figure as its total,
- * which under Era 1's neutral multiplier is most unvoted cards on the site.
- * #888 was about a segment that always says something being hidden anyway; this
- * is a segment that, in that one state, says nothing. `stampRestatesTaskPoints`
- * owns the test, and it is #1131's rule — see it for why the figure comes back
- * on its own the moment the two numbers diverge.
+ * The POINTS segment is the one exception, for the opposite reason (#1833, and
+ * now #2114): it drops whenever the stamp beside it is printing that figure.
+ * #1833 read "printing" as `total === base` — the stamp restating the task's
+ * value as its own total — which left `L0 · 10 pts` sitting under a stamp whose
+ * BASE row already said `10` on every card a vote had touched. The owner's
+ * ruling on #2114 is the wider form of the same rule: the stamp states the base
+ * either as a labelled row or, when nothing has moved it, as the total itself,
+ * so wherever a stamp is MOUNTED the meta figure is a second printing. On a
+ * 110px text column that restatement cost a quarter of the line.
+ *
+ * What survives from #1833 is its first clause, and it is the whole predicate
+ * now: `ScoreStamp` renders nothing on a praxis that banked no points (#1444),
+ * and on those two states the meta figure is the only points readout the card
+ * has left. So the segment tracks the STAMP's presence rather than a comparison
+ * between two figures. Praxis DETAIL keeps `stampRestatesTaskPoints` — its task
+ * reference is a different line on a page with room for it.
  */
 export function PraxisStats({
   praxis,
@@ -484,7 +493,7 @@ export function PraxisStats({
       <span style={{ fontWeight: 600 }}>
         {t("card.level", { level: praxis.task_level_required })}
       </span>
-      {!stampRestatesTaskPoints(praxis) && (
+      {UNSCORED_MODERATION_STATUSES.has(praxis.moderation_status) && (
         <>
           <span aria-hidden>·</span>
           <span style={{ fontWeight: 700 }}>

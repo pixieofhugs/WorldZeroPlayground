@@ -93,6 +93,35 @@ export const frameBase: CSSProperties = {
 };
 
 /**
+ * What the heading's text column ASKS FOR before the score stamp starts giving
+ * ground (#2114).
+ *
+ * It is a flex BASIS, not a width: the column still grows into every spare
+ * pixel above this and still shrinks below it once the stamp has yielded all
+ * the slack it has, so nothing about a roomy card moves. What it buys is the
+ * one thing `flex: 1` (basis 0%) could not — a DEFICIT. With a basis of zero
+ * the row's hypothetical sizes always fitted, so there was never negative free
+ * space to distribute, the stamp's `flex-shrink` was never consulted, and it
+ * held its full 150px cap into a 280px card while the text column absorbed the
+ * whole loss: 184px of text at the 394px `frameBase` default, 110px in a 320px
+ * cell, 70px at the phone floor. Three words of preview, which is what #2114
+ * reported.
+ *
+ * So dropping `flex-shrink: 0` from the eight stamps is HALF the fix and does
+ * nothing on its own; this is the other half. Below roughly a 370px card the
+ * two now shrink together until the stamp reaches its own `min-width: auto` —
+ * its drawn min-content size, which is per-skin and correct by construction
+ * (the na plate's padding around a 96px mark yields ~28px; Coven's arched
+ * plate is 150px of ornament and yields nothing). No skin is ever squeezed
+ * below what it draws, and no number here has to know any of their geometries.
+ *
+ * 160px is a measure, not a magic constant: at the `--text-content` floor (18px,
+ * §4a) it is about fourteen characters, and it is deliberately well under the
+ * 184px the default basis already gives so a card at 394px renders unchanged.
+ */
+export const TEXT_MEASURE = 160;
+
+/**
  * Shared content body for every faction's praxis card: title + task link on the
  * left, the score hero (`{base} + {votes}` points) on the right, then a
  * points/mode line and the byline. Each faction's own frame wraps this; tint /
@@ -176,12 +205,31 @@ export function PraxisBody({
           gap: "var(--space-md)",
         }}
       >
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: `1 1 ${TEXT_MEASURE}px`, minWidth: 0 }}>
           {eyebrow}
           <PraxisTitle praxis={praxis} style={titleStyle} fonts={fonts} />
+          {/*
+           * TWO LINES, TWO INKS (#2114). These were both handed `muted` — same
+           * face, same `--text-content` size, same colour, separated by a
+           * margin — so a reader could not tell the task being answered from
+           * the answer's first words. The type CANNOT carry the distinction:
+           * both are content and the floor is the floor (§4a), and a wash on
+           * either is the mute-a-muted-token mistake #1675 already undid.
+           *
+           * So the split is the ink, and it costs no new token. The task line
+           * inherits the sheet's own `--faction-{slug}-card-text` — every frame
+           * sets it on the card root, it is the best-measured pairing each
+           * faction has, and it is what `currentColor` already means on this
+           * card (the byline's dashed rule reads it). `inherit` rather than a
+           * prop because the value differs per faction and the frame is
+           * already holding it. The excerpt keeps `muted`, so the hierarchy
+           * reads title → task → preview on all nine sheets and in both
+           * cascades. The link keeps `hover:underline`, so colour is not the
+           * only thing telling it apart from the prose under it.
+           */}
           <PraxisTaskLink
             praxis={praxis}
-            style={{ color: muted }}
+            style={{ color: "inherit" }}
             lead={taskLead}
             fonts={fonts}
           />

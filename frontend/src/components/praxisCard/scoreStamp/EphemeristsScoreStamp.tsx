@@ -133,7 +133,6 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
     <div
       style={{
         position: "relative",
-        flexShrink: 0,
         width: "100%",
         maxWidth: working ? STAMP_WIDTH : ROSE,
       }}
