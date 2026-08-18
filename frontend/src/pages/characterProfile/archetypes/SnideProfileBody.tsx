@@ -153,9 +153,13 @@ const dress: ProfileDress = {
     background: INK,
   },
   laurel: <SpectrumLaurel centerBg={PAPER} glyphColor={INK} rotate={-8} />,
+  // The board stands on the ink page, so it takes the ink (#2227) — the shape
+  // `emptyStateStyle` above already had, and the reversal of the cream slab the
+  // faction page wore. `--faction-snide-paper` has ONE value in index.css and
+  // six readers that spend it as an ink; it is not a ground.
   badgeBoardStyle: {
     border: `2px solid ${ACID}`,
-    background: PAPER,
+    background: INK,
     padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
@@ -172,20 +176,24 @@ const dress: ProfileDress = {
     <BadgeRow
       badge={badge}
       last={last}
-      dividerColor="rgba(20,17,11,0.25)"
-      nameStyle={{ fontFamily: MARKER, color: INK, lineHeight: 1.15 }}
+      dividerColor={`color-mix(in srgb, ${PAPER} 25%, transparent)`}
+      nameStyle={{ fontFamily: MARKER, color: PAPER, lineHeight: 1.15 }}
       medallion={(glyph) => (
         <span
           style={{
             flexShrink: 0,
             width: 34,
             height: 34,
-            background: INK,
+            // Struck the other way up now the board is ink (#2227): an ink chip
+            // on an ink board has no silhouette, and this kit already inverts
+            // exactly here — the ransom slip above and the `Mugshot` spotlight
+            // both put ink on acid. index.css measures the pair at 15.55:1.
+            background: ACID,
             transform: 'skewX(-5deg)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: ACID,
+            color: INK,
           }}
         >
           {glyph}

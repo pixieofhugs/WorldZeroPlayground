@@ -6,6 +6,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
+import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -33,7 +34,6 @@ const GREEN = "var(--faction-snide-acid-deep)";
 const INK = "var(--faction-snide-ink)";
 const PAPER = "var(--faction-snide-paper)";
 const PINK = "var(--faction-snide-pink)";
-const PINK_DEEP = "var(--faction-snide-pink-deep)";
 const MUTED = "var(--faction-snide-card-muted)";
 
 const IMPACT = "var(--faction-snide-font-impact)";
@@ -56,20 +56,16 @@ const INK_PANEL: CSSProperties = {
   boxShadow: "6px 8px 0 color-mix(in srgb, var(--color-print-offset) 45%, transparent)",
 };
 
-/** Warm xerox-paper panel (light card on the wall). */
-const PAPER_PANEL: CSSProperties = {
-  position: "relative",
-  overflow: "hidden",
-  background: PAPER,
-  color: INK,
-  border: `1.5px solid ${INK}`,
-  // ornament (#1609): same flat offset print register, one stop lighter for the
-  // paper stock.
-  boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 22%, transparent)",
-};
+/* The warm xerox-paper panel stood here. #2227 retired it: S.N.I.D.E. is always
+   dark, `--faction-snide-paper` has exactly one value in `index.css`, and a
+   cream slab on the wall is a headlight the wall metaphor does not defend. Both
+   sites it dressed — the About flyer and the rap sheet — now take `INK_PANEL`,
+   which the "RE: YOU" dispatch on this same page already wears, keeping only
+   their own lighter offset register. The paper stays what its six other readers
+   make it: an INK, not a ground. */
 
-/** Faint halftone dot wash — acid on ink, or ink on paper. */
-function Halftone({ on = "ink" }: { on?: "ink" | "paper" }) {
+/** Faint halftone dot wash — acid on the photocopier ink. */
+function Halftone() {
   return (
     <div
       aria-hidden="true"
@@ -78,9 +74,7 @@ function Halftone({ on = "ink" }: { on?: "ink" | "paper" }) {
         inset: 0,
         pointerEvents: "none",
         backgroundImage:
-          on === "ink"
-            ? "radial-gradient(color-mix(in srgb, var(--faction-snide-acid) 8%, transparent) 32%, transparent 34%)"
-            : "radial-gradient(color-mix(in srgb, var(--faction-snide-ink) 5%, transparent) 32%, transparent 34%)",
+          "radial-gradient(color-mix(in srgb, var(--faction-snide-acid) 8%, transparent) 32%, transparent 34%)",
         backgroundSize: "5px 5px",
       }}
     />
@@ -130,8 +124,35 @@ function SectionHeading({ children }: { children: ReactNode }) {
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
-/** Struck initials chip — ink face, acid glyph (or inverted for the spotlight). */
-function Mugshot({ name, size, invert = false }: { name: string; size: number; invert?: boolean }) {
+/** A portrait filling a mugshot's field, cropped square-to-circle. */
+const PORTRAIT: CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover",
+};
+
+/**
+ * Struck initials chip — ink face, acid glyph (or inverted for the spotlight).
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The green rule and the
+ * ink halo are this span's own border and shadow, and the -3deg tilt is its
+ * transform — so a real portrait comes out crooked, which is the point of
+ * calling the thing a mugshot.
+ */
+function Mugshot({
+  name,
+  size,
+  invert = false,
+  avatarUrl,
+}: {
+  name: string;
+  size: number;
+  invert?: boolean;
+  /** The member's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null;
+}) {
   return (
     <span
       style={{
@@ -151,7 +172,7 @@ function Mugshot({ name, size, invert = false }: { name: string; size: number; i
         transform: "rotate(-3deg)",
       }}
     >
-      {initial(name)}
+      {avatarUrl ? <img alt="" aria-hidden="true" src={mediaUrl(avatarUrl)} style={PORTRAIT} /> : initial(name)}
     </span>
   );
 }
@@ -183,8 +204,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② ABOUT — tilted xerox flyer */}
         <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-          <div style={{ ...PAPER_PANEL, padding: "var(--space-xl)" }}>
-            <Halftone on="paper" />
+          {/* Offset register (#1609) at this flyer's own 22% — the register the
+              paper panel carried, kept as-is so only the stock moved (#2227). */}
+          <div style={{ ...INK_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 22%, transparent)", padding: "var(--space-xl)" }}>
+            <Halftone />
             <div
               style={{
                 position: "relative",
@@ -201,12 +224,12 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
               {paragraphs.length ? (
                 paragraphs.map((para, i) => (
-                  <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: INK, margin: 0 }}>
+                  <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: PAPER, margin: 0 }}>
                     {para}
                   </p>
                 ))
               ) : (
-                <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)", margin: 0 }}>
+                <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: MUTED, margin: 0 }}>
                   {t("detail.descriptionEmpty")}
                 </p>
               )}
@@ -274,7 +297,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
             <div style={{ ...INK_PANEL, padding: "var(--space-xl)" }}>
-              <Halftone on="ink" />
+              <Halftone />
               <div
                 style={{
                   position: "relative",
@@ -486,7 +509,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
                 {/* Offset register (#1609) at this panel's own 30%, overriding INK_PANEL's 45%. */}
                 <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 color-mix(in srgb, var(--color-print-offset) 30%, transparent)", padding: "var(--space-lg)", textAlign: "center" }}>
-                  <Halftone on="ink" />
+                  <Halftone />
                   {/* The poster's "★ WANTED ★" rule stood here. #1909 cut
                       `snide.spotlight.wanted`: Snide was the only faction with
                       the slot, on a surface the audit ruled generic. The
@@ -505,7 +528,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     {t("snide.spotlight.label")}
                   </div>
                   <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
-                    <Mugshot name={spot.display_name} size={70} invert />
+                    <Mugshot name={spot.display_name} size={70} invert avatarUrl={spot.avatar_url} />
                   </div>
                   <div
                     style={{
@@ -533,8 +556,8 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
           <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
             {/* Offset register (#1609) at this panel's own 20% — the lightest impression on the wall. */}
-            <div style={{ ...PAPER_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 20%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
-              <Halftone on="paper" />
+            <div style={{ ...INK_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 20%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+              <Halftone />
               <div
                 style={{
                   position: "relative",
@@ -549,7 +572,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 {t("detail.default.membersHeading", { total: members.length })}
               </div>
               {rapSheet.length === 0 ? (
-                <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)" }}>
+                <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: MUTED }}>
                   {spot
                     ? t("detail.membersEmptyWithSpotlight")
                     : t("detail.membersEmpty")}
@@ -565,17 +588,17 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       alignItems: "center",
                       gap: "var(--space-md)",
                       padding: "var(--space-sm) 0",
-                      borderBottom: "1px dashed color-mix(in srgb, var(--faction-snide-ink) 22%, transparent)",
+                      borderBottom: "1px dashed color-mix(in srgb, var(--faction-snide-paper) 22%, transparent)",
                       textDecoration: "none",
                     }}
                   >
-                    <Mugshot name={m.display_name} size={30} />
+                    <Mugshot name={m.display_name} size={30} avatarUrl={m.avatar_url} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="content-text" style={{ fontFamily: MARKER, color: INK, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div className="content-text" style={{ fontFamily: MARKER, color: PAPER, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {m.display_name}
                       </div>
                     </div>
-                    <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: PINK_DEEP }}>
+                    <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: PINK }}>
                       {t("detail.memberLevel", { level: m.level })}
                     </span>
                   </Link>

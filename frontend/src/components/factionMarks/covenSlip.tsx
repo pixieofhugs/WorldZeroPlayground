@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 
+import { mediaUrl } from "../../utils/media";
+
 /**
  * Cozy Coven — the candlelit vocabulary, in one place (#1209).
  *
@@ -277,6 +279,15 @@ export function initialsOf(name: string): string {
   );
 }
 
+/** A portrait filling a medallion's field, cropped square-to-circle. */
+const PORTRAIT: CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover",
+};
+
 /**
  * One member's disc: a 2px gradient ring round a candle-lit field, the initials
  * set in the reading face inside.
@@ -284,15 +295,22 @@ export function initialsOf(name: string): string {
  * TWO KIN TREATMENTS, as the design draws them — pink→deep for a member of the
  * coven, lavender→violet for a `guest`. The list surfaces this sweep dresses
  * (profile body, faction body, field desk) show both.
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The portrait replaces
+ * the inner field, so the gradient ring — which is the OUTER span's background
+ * showing through its 2px padding — dresses the photo unchanged.
  */
 export function SlipAvatar({
   name,
   size,
   kin = "coven",
+  avatarUrl,
 }: {
   name: string;
   size: number;
   kin?: "coven" | "guest";
+  /** The member's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null;
 }) {
   return (
     <span
@@ -313,24 +331,28 @@ export function SlipAvatar({
             : `linear-gradient(150deg, ${PINK}, ${DEEP})`,
       }}
     >
-      <span
-        className="flex items-center justify-center"
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: "50%",
-          background: CARD,
-          fontFamily: READING,
-          fontWeight: 600,
-          // ornament: the monogram is sized to the disc it is engraved in, not
-          // to the type scale (WORLD_ZERO_STYLE §4a). Derived, so the ratchet
-          // never sees a literal and no per-line hatch is owed.
-          fontSize: Math.round(size * 0.42),
-          color: DEEP,
-        }}
-      >
-        {initialsOf(name)}
-      </span>
+      {avatarUrl ? (
+        <img alt="" src={mediaUrl(avatarUrl)} style={PORTRAIT} />
+      ) : (
+        <span
+          className="flex items-center justify-center"
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            background: CARD,
+            fontFamily: READING,
+            fontWeight: 600,
+            // ornament: the monogram is sized to the disc it is engraved in, not
+            // to the type scale (WORLD_ZERO_STYLE §4a). Derived, so the ratchet
+            // never sees a literal and no per-line hatch is owed.
+            fontSize: Math.round(size * 0.42),
+            color: DEEP,
+          }}
+        >
+          {initialsOf(name)}
+        </span>
+      )}
     </span>
   );
 }
