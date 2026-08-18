@@ -1,5 +1,6 @@
 {
   "listPage": {
+    "count": "{{count}} shown",
     "loading": "Loading tasks...",
     "empty": "No tasks match your filters.",
     "emptyFiltered": "Nothing open under those terms. Clear the search or pick a different faction.",
@@ -32,7 +33,6 @@
     }
   },
   "mobile": {
-    "count": "{{count}} shown",
     "loadError": "Couldn't load tasks."
   },
   "detail": {

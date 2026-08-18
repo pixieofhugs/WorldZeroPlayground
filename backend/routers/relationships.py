@@ -12,11 +12,9 @@ from schemas.block import BlockCreate, BlockListItem
 from schemas.relationship import RelationshipCreate, RelationshipListItem
 from services.block_service import block_character, list_blocks, unblock_character
 from services.relationship_service import (
-    block_relationship,
     build_relationship_item,
     create_relationship,
     list_relationships,
-    unblock_relationship,
 )
 
 router = APIRouter()
@@ -109,47 +107,6 @@ async def create_relationship_route(
         from_character=character,
         to_character_id=data.to_character_id,
         rel_type=RelationshipType[data.type],
-        session=session,
-    )
-    return await build_relationship_item(relationship, session)
-
-
-@router.put("/{relationship_id}", response_model=RelationshipListItem)
-async def block_relationship_route(
-    relationship_id: int,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-) -> RelationshipListItem:
-    """Block the other party to this relationship, addressed by the edge's id.
-
-    Superseded by `POST /relationships/blocks`, which takes a character id and
-    needs no edge (ADR-0077). Kept for one release while the client moves;
-    retires with #1907.
-    """
-    relationship = await block_relationship(
-        relationship_id=relationship_id,
-        character=character,
-        session=session,
-    )
-    return await build_relationship_item(relationship, session)
-
-
-@router.post("/{relationship_id}/unblock", response_model=RelationshipListItem)
-async def unblock_relationship_route(
-    relationship_id: int,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-) -> RelationshipListItem:
-    """Lift this caller's block on the other party to this relationship,
-    addressed by the edge's id.
-
-    Superseded by `DELETE /relationships/blocks/{character_id}` (ADR-0077).
-    Kept for one release while the client moves; retires with #1907. Only the
-    blocker's own record is deleted, and no edge changes.
-    """
-    relationship = await unblock_relationship(
-        relationship_id=relationship_id,
-        character=character,
         session=session,
     )
     return await build_relationship_item(relationship, session)

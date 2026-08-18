@@ -2,7 +2,7 @@
  * Praxis-feed form-factor dispatch (#499) — renders <Praxes /> with useFormFactor
  * mocked and pins:
  *   - phone → the single-column mobile proof stream (data-feed="mobile"),
- *   - desktop → the existing wrapped card list (its intro copy, no mobile marker).
+ *   - desktop → the existing wrapped card list (its `PageTitle`, no mobile marker).
  * SSR (renderToStaticMarkup) never runs effects, so the feed sits in its loading
  * state — enough to prove which surface the dispatch selected. listPraxes is
  * mocked so no request is attempted.
@@ -42,6 +42,10 @@ describe('praxis-feed form-factor dispatch', () => {
     mocks.formFactor = 'desktop'
     const html = render()
     expect(html).not.toContain('data-feed="mobile"')
-    expect(html.replace(/<[^>]*>/g, '')).toContain('Proof of action')
+    // `PageTitle`'s per-letter underline, which only the desktop page draws —
+    // the mobile stream rolls its own <h1>. It used to be the intro copy, and
+    // that line is deleted (#2262); the count is no discriminator either, since
+    // the shared filter bar now prints it on both surfaces.
+    expect(html).toContain('border-bottom:4px solid var(--faction-default-stop-1)')
   })
 })

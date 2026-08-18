@@ -90,7 +90,6 @@
     "EphemeristsVote": "src/components/vote/EphemeristsVote.tsx",
     "EverymenAvatar": "src/components/avatar/EverymenAvatar.tsx",
     "EverymenBackdrop": "src/components/backdrop/EverymenBackdrop.tsx",
-    "EverymenCard": "src/components/factionCard/EverymenFactionCard.tsx",
     "EverymenComment": "src/components/comments/voices/EverymenComment.tsx",
     "EverymenDuelSealConfirm": "src/components/duel/EverymenDuelSealConfirm.tsx",
     "EverymenEditPraxis": "src/pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
@@ -108,7 +107,6 @@
     "EverymenVote": "src/components/vote/EverymenVote.tsx",
     "FactionAvatar": "src/components/avatar/FactionAvatar.tsx",
     "FactionBackdrop": "src/components/backdrop/FactionBackdrop.tsx",
-    "FactionCard": "src/components/factionCard/FactionCard.tsx",
     "FactionFeedFrame": "src/components/feed/FactionFeedFrame.tsx",
     "FactionProfileBody": "src/pages/characterProfile/FactionProfileBody.tsx",
     "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
@@ -186,7 +184,6 @@
     "SnideFactionBody": "src/pages/factionDetail/archetypes/SnideFactionBody.tsx",
     "SnideFactionHero": "src/components/factionHero/SnideFactionHero.tsx",
     "SnideFeedFrame": "src/components/feed/SnideFeedFrame.tsx",
-    "SnideMasthead": "src/components/factionCard/SnideMasthead.tsx",
     "SnidePraxisCard": "src/components/praxisCard/desktop/SnidePraxisCard.tsx",
     "SnidePraxisDetail": "src/pages/praxisDetail/archetypes/SnidePraxisDetail.tsx",
     "SnideProfileBody": "src/pages/characterProfile/archetypes/SnideProfileBody.tsx",
@@ -222,7 +219,6 @@
     "WatercolorBackground": "src/components/layout/WatercolorBackground.tsx",
     "WowAvatar": "src/components/avatar/WowAvatar.tsx",
     "WowBackdrop": "src/components/backdrop/WowBackdrop.tsx",
-    "WowCard": "src/components/factionCard/WowFactionCard.tsx",
     "WowComment": "src/components/comments/voices/WowComment.tsx",
     "WowDuelSealConfirm": "src/components/duel/WowDuelSealConfirm.tsx",
     "WowEditPraxis": "src/pages/editPraxis/archetypes/WowEditPraxis.tsx",
@@ -445,9 +441,6 @@
     "EverymenBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
-    },
-    "EverymenCard": {
-      "cardMode": "column"
     },
     "EverymenDuelSealConfirm": {
       "cardMode": "single",

@@ -989,16 +989,34 @@ export default [
      * the awareness payload y-codemirror reads to draw a collaborator's caret
      * and selection tint — the library names the field `color`, and this rule
      * matches a property NAME because that is the only signal an inline style
-     * object carries. A caret is a MARK, not type: the file's own comment
-     * already explains that it takes the bare hue rather than a `card-*` ink
-     * precisely because the mark lands on the viewer's editor ground and not on
-     * the remote's card sheet, and `colorLight` beside it mixes the same hue
-     * into the selection wash. Nothing here is text.
+     * object carries. A caret is a MARK, not type. Nothing here is text.
      *
      * A deliberate exemption and NOT a legacy entry, for the reason the tier
      * arm's `??` note gives: this will never migrate, so a shrinking list would
-     * be lying about it. It is the same shape as `contrast.ts`'s exemption from
-     * the colour arm — a module whose PURPOSE is the thing the rule forbids.
+     * be lying about it.
+     *
+     * WHAT TURNING THE RULE OFF HERE DOES NOT BUY (#2267). This comment used to
+     * end by calling the file "a module whose PURPOSE is the thing the rule
+     * forbids", and that framing shipped a bug: it reads as though carrying a
+     * per-person hue also licenses NOT MEASURING it. The value is still
+     * painted, one library hop later, and it went out as the bare spine hue at
+     * 1.86:1 on a ground it owed 3:1.
+     *
+     * The exemption is not what failed, and narrowing it would not have helped:
+     * the hue is the REMOTE's and the ground is the VIEWER's composer field, so
+     * the pairing is a runtime cross-product of 8 grounds x 8 hues x 2 themes.
+     * NO rule that reads property names off a source file can measure that —
+     * there is no ground in the AST to measure against. Exempt or not, this
+     * class of defect was always going to need a value test.
+     *
+     * So the exemption stays and it is PAIRED. Its other half is
+     * `src/pages/editPraxis/__tests__/roomPresenceContrast.test.ts`, which
+     * resolves what `paintUser` hands the library against every composer ground
+     * in both themes. Do not delete that file while this entry exists — between
+     * them they are the whole guard, and either alone is the state that shipped
+     * #2267. The same reading applies to `contrast.ts`'s exemption from the
+     * colour arm: "the rule cannot judge this node" is never "this node needs
+     * no judging".
      */
     files: ['src/pages/editPraxis/roomPresence.ts'],
     rules: {

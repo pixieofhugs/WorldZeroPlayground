@@ -56,6 +56,18 @@ const MAX_PRESENCE_NAME = 64;
  */
 const SELECTION_TINT = "22%";
 
+/**
+ * How much of the remote's hue survives the anchor in {@link paintUser}.
+ *
+ * 60% is the measured pick, not a taste call. Every extra point of hue costs
+ * contrast on a light ground and buys identity: at 70% the worst pairing lands
+ * at 3.02:1, which clears 1.4.11 by nothing at all, and at 60% it lands at
+ * 3.31:1 with the eight hues still a minimum deltaE76 of ~15 apart (~21
+ * unanchored). `__tests__/roomPresenceContrast.test.ts` holds both ends — the
+ * floor AND the separation — so neither can be traded away for the other.
+ */
+const IDENTITY_WEIGHT = "60%";
+
 /** What this client publishes about itself. JSON — it crosses a socket. */
 export interface PresenceUser {
   characterId: number;
@@ -186,23 +198,45 @@ function paintStates(states: PresenceStates): PresenceStates {
 function paintUser(state: Record<string, unknown>): PaintedPresenceUser {
   const user = readUser(state);
   const slug = typeof user.factionSlug === "string" ? user.factionSlug : null;
-  // No suffix: a caret is scalar ink on the VIEWER's editor ground, not on the
-  // remote's card sheet, so the `card-*` family (measured against that sheet)
-  // is the wrong tier. `na` and `albescent` landing on `--faction-default` is
-  // ADR-0039 §2's decision, not a fallback.
-  const color = factionCssVar(slug);
+  // No suffix, and then ANCHORED (#2267).
+  //
+  // No suffix because a caret is a mark on the VIEWER's editor ground, not on
+  // the remote's card sheet, so the `card-*` family (measured against that
+  // sheet) is the wrong tier. `na` and `albescent` landing on
+  // `--faction-default` is ADR-0039 §2's decision, not a fallback.
+  //
+  // But the bare hue was the wrong VALUE, because no faction token can be the
+  // right one here: the hue is the REMOTE's identity and the ground is the
+  // VIEWER's field, so the pairing is a cross-product of 8 grounds x 8 hues
+  // that nothing in index.css measures. 21 of the 64 light pairings sat under
+  // the 3:1 a graphical mark owes — 1.86:1 at worst, a UA viewer watching an
+  // Ephemerists co-author — while all 64 dark ones passed, which is how it
+  // survived review.
+  //
+  // `currentColor` is the one ink that IS measured against whatever ground the
+  // caret lands on: inside `.cm-content` it resolves to the skin's own body
+  // ink, the value that skin's `fieldBox` pairs with that background. So the
+  // hue is pulled toward it far enough to clear the floor on every ground and
+  // no further, which keeps the eight remotes visibly different people. That is
+  // the move `bodyEditorTheme.ts` already makes twice — the local caret's
+  // `borderLeftColor: currentColor` and the selection's `currentColor` mix —
+  // rather than a new idea; this is the last mark in the editor that ignored it.
+  const color = `color-mix(in srgb, ${factionCssVar(slug)} ${IDENTITY_WEIGHT}, currentColor)`;
   return {
     name: typeof user.name === "string" ? user.name.slice(0, MAX_PRESENCE_NAME) : "",
     color,
     // The library's own fallback is `color + '33'`, which on a `var()` yields
     // the invalid `var(--faction-coven)33` and paints no selection at all.
     colorLight: `color-mix(in srgb, ${color} ${SELECTION_TINT}, transparent)`,
-    // ponytail: the hover label (`.cm-ySelectionInfo`) keeps the library's
-    // hardcoded white ink on this faction's hue. It is measured against the
-    // REMOTE's colour, so no single ink is right for all nine, and the
-    // `-on-accent` tier does not cover them all (#1232 deleted Ephemerists').
-    // Upgrade path is minting that tier in index.css (frontend-style's file)
-    // and overriding the label's `color` in `BODY_EDITOR_BASE_THEME`.
+    // ponytail: the hover-only label (`.cm-ySelectionInfo`) keeps the library's
+    // hardcoded white ink, on `background-color: inherit` — which is the value
+    // above, so the anchor moved its ground too. Light improves (24 of 64
+    // pairings under 4.5:1, now 7); dark does not (64 of 64 before and after,
+    // 1.21:1 to 1.20:1) because there the anchor pulls toward a LIGHT body ink.
+    // Untouched here because the fix is a measured on-hue ink tier and
+    // `-on-accent` does not cover all nine (#1232 deleted Ephemerists'), so it
+    // needs index.css — frontend-style's file. Upgrade path unchanged: mint
+    // that tier and override the label's `color` in `BODY_EDITOR_BASE_THEME`.
   };
 }
 

@@ -32,7 +32,12 @@ import Praxes from '../../Praxes'
 
 const NOTICE = i18n.t('praxis:listPage.taskFilter.notice')
 const CLEAR = i18n.t('praxis:listPage.taskFilter.clear')
-const INTRO = i18n.t('praxis:listPage.intro')
+// The deleted intro line (#2262), spelled out rather than read from the
+// catalog: the key is gone, and `t()` on a deleted key returns the key string,
+// which would pass an absence guard vacuously. The FULL sentence, too — the
+// task-filter notice above also opens "Proof of action", so a prefix would
+// pass here for the wrong reason.
+const INTRO = 'Proof of action. All praxis from across World Zero.'
 
 function text(entry: string): string {
   return renderToStaticMarkup(
@@ -63,10 +68,10 @@ describe.each(['desktop', 'mobile'] as const)('%s praxis feed with ?task_id=', (
   })
 })
 
-describe('desktop intro copy', () => {
-  it('drops the "all praxes from across World Zero" claim when filtered', () => {
-    mocks.formFactor = 'desktop'
-    expect(text('/praxis'), 'unfiltered still says it').toContain(INTRO)
-    expect(text('/praxis?task_id=7'), 'a subset must not claim to be all').not.toContain(INTRO)
+describe.each(['desktop', 'mobile'] as const)('%s intro copy (#2262)', (formFactor) => {
+  it('is gone — the title says "Praxis" and the body is the praxis', () => {
+    mocks.formFactor = formFactor
+    expect(text('/praxis'), 'the bare feed').not.toContain(INTRO)
+    expect(text('/praxis?task_id=7'), 'the filtered feed').not.toContain(INTRO)
   })
 })

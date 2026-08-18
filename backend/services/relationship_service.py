@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.character import Character
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from schemas.relationship import RelationshipListItem
-from services.block_service import block_character, unblock_character
 
 
 # -- Display status labels ----------------------------------------------------
@@ -96,10 +95,11 @@ async def build_relationship_item(
 ) -> RelationshipListItem:
     """Enrich one freshly-written edge into the shape the list route emits.
 
-    The three mutation routes answer with this rather than the bare row (#1383):
-    every caller of add / block / unblock immediately re-ran
-    ``GET /relationships`` for exactly these display fields, so the write already
-    held the answer to the read that chased it.
+    ``POST /relationships`` answers with this rather than the bare row (#1383):
+    every caller immediately re-ran ``GET /relationships`` for exactly these
+    display fields, so the write already held the answer to the read that chased
+    it. It served the two edge-addressed block shims too until #2021 retired
+    them.
     """
     target_character = await session.get(Character, relationship.to_character_id)
     if target_character is None:
@@ -151,62 +151,6 @@ async def create_relationship(
     session.add(relationship)
     await session.flush()
     await session.refresh(relationship)
-    return relationship
-
-
-def _counterpart(relationship: Relationship, character: Character) -> int:
-    """The other party to an edge this caller is a party to."""
-    return (
-        relationship.to_character_id
-        if relationship.from_character_id == character.id
-        else relationship.from_character_id
-    )
-
-
-async def block_relationship(
-    relationship_id: int,
-    character: Character,
-    session: AsyncSession,
-) -> Relationship:
-    """Block the other party to this edge, by the edge's id.
-
-    ponytail (#1906): the edge id is not how a block is addressed any more —
-    ``POST /relationships/blocks`` takes a character id and needs no edge at
-    all, which is the entire point of ADR-0077. This route survives one release
-    because ``frontend/src/api/relationships.ts`` still names the path, and it
-    retires with #1907. It writes the same record the new route does, so the
-    two cannot disagree; the edge itself is left exactly as the player declared
-    it, because a block outranks an edge without consuming one.
-    """
-    relationship = await session.get(Relationship, relationship_id)
-    if relationship is None:
-        raise HTTPException(status_code=404, detail="Relationship not found.")
-    if character.id not in (relationship.from_character_id, relationship.to_character_id):
-        raise HTTPException(status_code=403, detail="Not a party to this relationship.")
-
-    await block_character(character, _counterpart(relationship, character), session)
-    return relationship
-
-
-async def unblock_relationship(
-    relationship_id: int,
-    character: Character,
-    session: AsyncSession,
-) -> Relationship:
-    """Lift this caller's block on the other party to this edge, by the edge's id.
-
-    ponytail (#1906): the legacy half of ``block_relationship`` above, retiring
-    with it at #1907. Only the caller's own block is lifted — ADR-0077 gives the
-    record's authorship to the blocker alone, so the ADR-0009 behaviour where
-    either party could reverse a block is gone even through this path.
-    """
-    relationship = await session.get(Relationship, relationship_id)
-    if relationship is None:
-        raise HTTPException(status_code=404, detail="Relationship not found.")
-    if character.id not in (relationship.from_character_id, relationship.to_character_id):
-        raise HTTPException(status_code=403, detail="Not a party to this relationship.")
-
-    await unblock_character(character, _counterpart(relationship, character), session)
     return relationship
 
 

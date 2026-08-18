@@ -153,10 +153,9 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // never Coven. It shrank four times, each time in the same commit as the skin —
 // `taskDetail` in #1037 (the parchment field), `praxisDetail` in #1121 (the
 // chronicle entry, WOW's dress over the one shared page, ADR-0061),
-// `factionBody` with the muster page, and `factionCard` with the muster bill:
-// bunting, the googly crown on a cream plate, a wavy gold→plum rule and a still
-// balloon bunch in the corner, derived from the shared ornament module because
-// the kit never drew this one either.
+// and `factionBody` with the muster page. The fourth, `factionCard`, emptied a
+// different way: #2024 retired the surface outright rather than skinning it, so
+// there is no key left for WOW to claim or miss.
 //
 // So WOW is now asserted exactly the way Coven is, with no exemption to keep in
 // step — which is the whole point of an allowlist that was always meant to

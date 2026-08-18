@@ -59,9 +59,6 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         >
           {t('listPage.title')}
         </h1>
-        <p className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
-          {t('listPage.count', { count: items.length })}
-        </p>
         {/* A `?task_id=` feed is a subset (#1050) — say so, and offer the way
             out, so a narrowed stream can't read as the whole register. The
             filter bar's chip row does not speak for it. */}

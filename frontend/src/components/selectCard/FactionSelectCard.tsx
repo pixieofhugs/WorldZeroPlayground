@@ -44,7 +44,10 @@ const CAST = "var(--color-cast-shadow)";
  * are component-owned, derived from the faction slug. Joining is NOT on the
  * tile — the CTA visits the faction's detail page, which owns the Join block.
  *
- * Mirrors FactionCard.tsx's structure: dispatcher + per-faction archetypes. The
+ * Dispatcher + per-faction archetypes. (It used to say it mirrored
+ * `factionCard/FactionCard.tsx`; #2024 retired that surface — it had never had
+ * a production mount, because #422 gave the directory THIS card on both form
+ * factors — so this is the shape rather than a copy of one.) The
  * per-faction sigils are the shared canonical *Sigil components (one dedicated
  * file each), imported here — never re-drawn inline.
  *
@@ -584,7 +587,7 @@ export default function FactionSelectCard({ faction, ...rest }: FactionSelectCar
   // `na` deliberately has none (`factions/index.ts`: unaffiliated is a state,
   // not a faction, and falls through to the `Default*` skins everywhere), so
   // "register the Default archetype" means naming it here — exactly as
-  // TaskCard names DefaultTaskCard and FactionCard names DefaultFactionCard.
+  // TaskCard names DefaultTaskCard and MetataskSeal names DefaultSeal.
   // It used to be UaSelectCard, which dressed every unaffiliated and unknown
   // slug in UA's costume (#796, the third instance of #418/#636).
   const Card = pickVariant(cards, key, DefaultSelectCard);

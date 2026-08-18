@@ -116,11 +116,20 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     return (seen?.user ?? {}) as Record<string, unknown>
   }
 
+  /**
+   * The hue a remote flying `key` gets, anchored to the viewer's own body ink
+   * (#2267). The anchor is a CONTRAST fix and is measured in
+   * `roomPresenceContrast.test.ts`; what matters to THIS file is that both
+   * halves are still values we compose, with no remote string among them.
+   */
+  const painted = (key: string) =>
+    `color-mix(in srgb, var(--faction-${key}) 60%, currentColor)`
+
   it('derives the caret colour from the slug, as a CSS variable', () => {
     const user = remoteUserAsSeen({
       user: { characterId: 7, name: 'Wren', factionSlug: 'coven' },
     })
-    expect(user.color).toBe('var(--faction-coven)')
+    expect(user.color).toBe(painted('coven'))
   })
 
   // THE ONE THIS SEAM EXISTS FOR. `y-codemirror.next` interpolates `color`
@@ -136,7 +145,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
         colorLight: 'url(https://evil/beacon)',
       },
     })
-    expect(user.color).toBe('var(--faction-coven)')
+    expect(user.color).toBe(painted('coven'))
     expect(JSON.stringify(user)).not.toContain('evil')
     expect(JSON.stringify(user)).not.toContain('fixed')
   })
@@ -147,12 +156,12 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
     const user = remoteUserAsSeen({
       user: { characterId: 7, name: 'Wren', factionSlug: '); content: url(x' },
     })
-    expect(user.color).toBe('var(--faction-default)')
+    expect(user.color).toBe(painted('default'))
   })
 
   it('survives a `user` field that is not an object at all', () => {
-    expect(remoteUserAsSeen({ user: 'nope' }).color).toBe('var(--faction-default)')
-    expect(remoteUserAsSeen({ cursor: null }).color).toBe('var(--faction-default)')
+    expect(remoteUserAsSeen({ user: 'nope' }).color).toBe(painted('default'))
+    expect(remoteUserAsSeen({ cursor: null }).color).toBe(painted('default'))
   })
 
   // The library's fallback is `color + '33'`, which on a `var()` produces the
@@ -163,7 +172,7 @@ describe('paintedAwareness — the sanitizing seam (CSS injection)', () => {
       user: { characterId: 7, name: 'Wren', factionSlug: 'coven' },
     })
     expect(user.colorLight).toBe(
-      'color-mix(in srgb, var(--faction-coven) 22%, transparent)',
+      `color-mix(in srgb, ${painted('coven')} 22%, transparent)`,
     )
   })
 

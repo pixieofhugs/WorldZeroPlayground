@@ -47,6 +47,7 @@ const NEEDS_MY_VOTE = i18n.t('praxis:listPage.filter.needsMyVote')
 // would return the key string and pass this guard vacuously.
 const TYPE_LABEL = 'type:'
 const SEARCH_LABEL = i18n.t('praxis:listPage.filter.searchLabel')
+const COUNT = i18n.t('praxis:listPage.count', { count: 0 })
 
 function markup(entry: string): string {
   return renderToStaticMarkup(
@@ -152,5 +153,23 @@ describe('the three empty states (#1361 ruling 9)', () => {
     expect(out).toContain(i18n.t('praxis:listPage.emptyCaughtUp'))
     expect(out).toContain(i18n.t('praxis:listPage.emptyCaughtUpHint'))
     expect(empty('filtered')).not.toContain(i18n.t('praxis:listPage.emptyCaughtUp'))
+  })
+})
+
+describe.each(['desktop', 'mobile'] as const)('%s praxis count (#2262)', (formFactor) => {
+  it('prints once, in the bar, beside the controls that change it', () => {
+    mocks.formFactor = formFactor
+    mocks.user = { id: 1 }
+    const out = markup('/praxis')
+    expect(out, 'the bar states it').toContain(
+      `class="filter-bar__summary">${COUNT}<`,
+    )
+    // Once on the page, not once per surface: the header eyebrow that used to
+    // carry it is gone, and two copies of one number is the thing the
+    // `summary` slot was left unset to avoid.
+    expect(
+      out.replace(/<[^>]*>/g, '').split(COUNT),
+      'exactly one count on screen',
+    ).toHaveLength(2)
   })
 })
