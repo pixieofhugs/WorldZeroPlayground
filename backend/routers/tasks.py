@@ -72,7 +72,14 @@ async def list_tasks(
     # that echoed their own character id back made the page fetch twice — once
     # before /auth/me settled and once after. An explicit value still wins;
     # anonymous callers get None, which excludes nothing.
-    if exclude_character_id is None and viewer is not None:
+    #
+    # `created_by` is the one read that is not a browse (#2126): it asks "what
+    # did this character propose", and the answer cannot depend on which of
+    # those tasks the *reader* happens to be working. Defaulting it here dropped
+    # a proposer's own accepted-and-started task off their own profile, and
+    # dropped rows off a stranger's profile according to the visitor's praxis
+    # bank. An explicit value still wins, on every route.
+    if exclude_character_id is None and viewer is not None and created_by is None:
         exclude_character_id = viewer.id
     tasks = await service_list_tasks(
         session,
