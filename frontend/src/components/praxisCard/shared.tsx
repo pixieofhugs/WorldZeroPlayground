@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
 import type { PraxisCardOut } from "../../api/praxis";
 import { factionCssVar, factionName } from "../../utils/factions";
@@ -302,6 +302,52 @@ export function PraxisByline({
   // the factions.json catalog (factionName), never a hardcoded map.
   const authorFaction = praxis.created_by_faction_slug;
   const showFaction = !!authorFaction && authorFaction !== praxis.task_faction_slug;
+  const authorHref = `/characters/${praxis.created_by_id}`;
+  const authorName = praxis.created_by_display_name || `#${praxis.created_by_id}`;
+  /*
+   * #2125 — an anchor whose destination is the page you are already on is not a
+   * broken link, it is a link that should not have been an anchor: it takes the
+   * underline, the pointer and focus, and then does nothing, and a screen
+   * reader still announces it as a link. So on the author's OWN character page
+   * the name is plain text; everywhere else it stays a link. Not a "self"
+   * variant, and NOT a disabled anchor — dropping the `<a>` is what fixes the
+   * announcement.
+   *
+   * The test is destination-vs-location, character to character. Deliberately
+   * NOT account-to-account: a player viewing their own OTHER character's page
+   * is looking at a different page, and going there is meaningful (the ruling
+   * says so explicitly). Comparing the whole path rather than a bare id also
+   * keeps the link alive on `/praxis/7` when the author happens to be #7.
+   */
+  const here = useLocation().pathname.replace(/\/+$/, "");
+  const onAuthorsOwnPage = here === authorHref;
+  // Shared by both branches so the two render identically apart from the
+  // anchor: the truncation pair, and the padding that keeps it off the glyphs
+  // (#1633). `overflow: hidden` is doing two jobs: it clips, and it is what
+  // makes this a shrinkable flex item at all (min-width: auto resolves to 0
+  // rather than to the whole nowrap string), so a name too long for the card
+  // ellipsizes instead of shoving the portrait out of the frame.
+  //
+  // But it clips at the PADDING box while `text-overflow` measures the CONTENT
+  // box, and the two coincided while the 8px lived on the row as `gap`. A
+  // display face's final glyph can carry ink past its own advance width — the
+  // Ephemerists card sets this line in Poiret One — so that overhang was shaved
+  // off flush against the portrait beside it, with no ellipsis to explain it,
+  // which is what "a letter clipped behind its own avatar" looks like. Carrying
+  // the same 8px as padding here renders identically and gives the ink
+  // somewhere to land.
+  //
+  // The Ephemerists kit's own fix was `overflow: visible` + `text-overflow:
+  // clip`. It does not port: visible overflow restores min-width: auto to
+  // min-content, the name stops yielding, and a long one paints straight over
+  // the portrait and the faction tag. That is the symptom, caused on purpose.
+  const nameStyle: CSSProperties = {
+    fontFamily: fonts?.display,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    paddingInlineEnd: "var(--space-sm)",
+  };
   return (
     <div
       className="flex justify-between items-center font-body"
@@ -328,46 +374,26 @@ export function PraxisByline({
        * carried as padding on the name itself. See the link below.
        */}
       <span className="flex items-center" style={{ minWidth: 0 }}>
-        <Link
-          to={`/characters/${praxis.created_by_id}`}
-          // A person's name is readable text, not scanned chrome: content tier
-          // (18px). It ties the task link's size, and separates from it by
-          // weight and by the faction's own display face instead.
-          className="content-text font-semibold hover:underline"
-          style={{
-            fontFamily: fonts?.display,
-            /*
-             * The truncation pair, and the padding that keeps it off the
-             * glyphs (#1633). `overflow: hidden` is doing two jobs: it clips,
-             * and it is what makes this a shrinkable flex item at all
-             * (min-width: auto resolves to 0 rather than to the whole nowrap
-             * string), so a name too long for the card ellipsizes instead of
-             * shoving the portrait out of the frame.
-             *
-             * But it clips at the PADDING box while `text-overflow` measures
-             * the CONTENT box, and the two coincided while the 8px lived on
-             * the row as `gap`. A display face's final glyph can carry ink
-             * past its own advance width — the Ephemerists card sets this line
-             * in Poiret One — so that overhang was shaved off flush against
-             * the portrait beside it, with no ellipsis to explain it, which is
-             * what "a letter clipped behind its own avatar" looks like.
-             * Carrying the same 8px as padding here renders identically and
-             * gives the ink somewhere to land.
-             *
-             * The Ephemerists kit's own fix was `overflow: visible` +
-             * `text-overflow: clip`. It does not port: visible overflow
-             * restores min-width: auto to min-content, the name stops yielding,
-             * and a long one paints straight over the portrait and the faction
-             * tag. That is the symptom, caused on purpose.
-             */
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            paddingInlineEnd: "var(--space-sm)",
-          }}
-        >
-          {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-        </Link>
+        {/*
+         * A person's name is readable text, not scanned chrome: content tier
+         * (18px). It ties the task link's size, and separates from it by
+         * weight and by the faction's own display face instead. `hover:underline`
+         * is the only thing the link branch adds — a name that goes nowhere
+         * must not offer one.
+         */}
+        {onAuthorsOwnPage ? (
+          <span className="content-text font-semibold" style={nameStyle}>
+            {authorName}
+          </span>
+        ) : (
+          <Link
+            to={authorHref}
+            className="content-text font-semibold hover:underline"
+            style={nameStyle}
+          >
+            {authorName}
+          </Link>
+        )}
         <FactionAvatar
           character={authorAsCharacter(praxis)}
           size={BYLINE_PORTRAIT_SIZE}
