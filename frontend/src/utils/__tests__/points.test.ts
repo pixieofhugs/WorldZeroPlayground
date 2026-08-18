@@ -30,6 +30,9 @@ function config(
     collab_other_modifier: 1,
     duel_win_modifier: 1,
     duel_loss_modifier: 1,
+    // #1869: Singularity's perk flag. Grants information, never points, so it
+    // is irrelevant to every multiplier here — but part of the contract.
+    reads_the_array: false,
   }
 }
 
