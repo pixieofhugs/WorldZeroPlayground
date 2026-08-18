@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { BAND_INK, BRASS_RULE, READING } from "./ephemeristsPlate";
+import { BAND_INK, BRASS_RULE, READING, seededRandom } from "./ephemeristsPlate";
 
 /**
  * THE NOTATION BAND (#2143) — the masthead's last line, and the datum row's
@@ -75,31 +75,6 @@ export function markCount(width: number): number {
   return Math.min(CEILING, Math.max(FLOOR, Math.round(width / PITCH)));
 }
 
-/** FNV-1a over the seed's code units — a hash, not a checksum: all it owes is a
- *  well-spread 32-bit state for the generator below. */
-function hashSeed(seed: string): number {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < seed.length; index += 1) {
-    hash ^= seed.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
-
-/** mulberry32 — 32 bits of state, one multiply-shift round. Chosen because it
- *  is short enough to read in one sitting and needs no dependency; nothing here
- *  is cryptographic and nothing depends on the distribution beyond "looks
- *  unpatterned at 34 draws". */
-function mulberry32(state: number): () => number {
-  let a = state;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 export interface NotationMark {
   glyph: string;
   /** Raw px — ornament geometry. See {@link MARK_SIZES}. */
@@ -121,7 +96,7 @@ export interface NotationMark {
  * from the same seed are the same mark.
  */
 export function drawNotation(seed: string): NotationMark[] {
-  const next = mulberry32(hashSeed(seed));
+  const next = seededRandom(seed);
   return Array.from({ length: CEILING }, () => ({
     glyph: MARKS[Math.floor(next() * MARKS.length)],
     size: MARK_SIZES[Math.floor(next() * MARK_SIZES.length)],

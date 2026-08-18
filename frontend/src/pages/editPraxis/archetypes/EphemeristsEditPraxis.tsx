@@ -814,10 +814,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   There is no room below the band inside the sheet, and taking it
                   would mean undoing #1828 — which this issue puts out of scope.
                   The card and the task page carry both strips. */}
-              <EphemeristsRuneStrip side="top" />
+              <EphemeristsRuneStrip side="top" seed={`praxis:${praxis.id}`} />
               <PublishButton
                 state={state}
                 skin={{
+                  /* THE ONE PLATE CTA (#2146). The band takes its ground and
+                     its ink from `.eph-cta` — this is the same control the task
+                     card and the task page draw, so it may not restate them —
+                     and keeps its own 1.5px top rule, because #1828 made it
+                     full-bleed and a band has no enclosure to be given one. */
+                  className: "eph-cta",
                   idleLabel: t("editPraxis.composer.submit"),
                   busyLabel: t("editPraxis.composer.submitBusy"),
                   trailingOrnament: (
@@ -837,8 +843,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                       fontWeight: 500,
                       letterSpacing: "0.24em",
                       frame: LINE,
-                      color: CTA_INK,
-                      background: CTA,
                     }),
                     cursor: state.submitting ? "wait" : "pointer",
                   },

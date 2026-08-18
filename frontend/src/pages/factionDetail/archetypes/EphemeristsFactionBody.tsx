@@ -14,8 +14,6 @@ import {
   BRASS_LIGHT,
   CAPS,
   CAPTION,
-  CTA_BG,
-  CTA_INK,
   DECO,
   RuneRule,
   GOLD,
@@ -310,9 +308,15 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
                       {t("ephemerists.road.eligibleBody")}
                     </div>
+                    {/* THE ONE PLATE CTA (#2146) — ground, ink and enclosure
+                        from `.eph-cta`, because the enclosure changes width
+                        between the cascades and no inline style has a cascade.
+                        This surface is not one of the three the issue names; it
+                        draws the identical button, which is what decides it. */}
                     <button
+                      className="eph-cta"
                       onClick={() => setConfirming(true)}
-                      style={{ width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, padding: "var(--space-md)", cursor: "pointer" }}
+                      style={{ width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", padding: "var(--space-md)", cursor: "pointer" }}
                     >
                       {t("ephemerists.road.joinButton")}
                     </button>
@@ -335,9 +339,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     )}
                     <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
+                        className="eph-cta"
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
-                        style={{ flex: 1, ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, padding: "var(--space-md)", cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{ flex: 1, ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", padding: "var(--space-md)", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {membership.joining
                           ? t("ephemerists.road.joining")

@@ -12,8 +12,6 @@ import {
   BRASS,
   BRASS_LIGHT,
   CAPTION,
-  CTA_BG,
-  CTA_INK,
   DECO,
   RuneRule,
   INK,
@@ -327,10 +325,15 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
 
       {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
+        {/* THE ONE PLATE CTA (#2146). #2067's note that this surface "does not
+            paint it with the plate CTA" was already out of date — it does, and
+            it restated the enclosure at the width the light half happens to
+            want. `.eph-cta` carries all three, and the class sits AFTER the
+            layout utilities so the cascade order between them is explicit. */}
         <Link
           to={FIND_TASK_LINK}
-          className="flex-1 flex items-center justify-center"
-          style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, textDecoration: 'none' }}
+          className="flex-1 flex items-center justify-center eph-cta"
+          style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', textDecoration: 'none' }}
         >
           {t('fieldDesk.home.findTask')}
         </Link>

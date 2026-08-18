@@ -318,6 +318,19 @@ export default function EphemeristsTaskDetail({
     lineHeight: 1.7,
     color: QUIET,
   };
+  /**
+   * The plate's primary control, MINUS ITS PAINT (#2146).
+   *
+   * Ground, ink and enclosure arrive from `.eph-cta` in index.css, which every
+   * surface drawing this button wears. They used to be three lines here — and
+   * three more in the task card, and three more again in the composer, the
+   * faction page and the field desk — with the enclosure quietly disagreeing
+   * with itself at 2px, 1.5px and 2px. It could not have been unified inline
+   * either way: the enclosure changes WIDTH between the cascades and an inline
+   * style has no cascade to change in.
+   *
+   * Every element spreading this must also carry `className="eph-cta"`.
+   */
   const primaryButton: CSSProperties = {
     display: "flex",
     alignItems: "center",
@@ -329,9 +342,6 @@ export default function EphemeristsTaskDetail({
     cursor: "pointer",
     textAlign: "center",
     textDecoration: "none",
-    background: CTA_BG,
-    color: CTA_INK,
-    border: `2px solid ${BRASS}`,
     padding: "var(--space-md) var(--space-sm)",
     fontFamily: CAPS,
     fontWeight: 500,
@@ -725,13 +735,13 @@ export default function EphemeristsTaskDetail({
               Only the SIGN-UP button is bracketed: "continue" and "view your
               praxis" below wear the same `primaryButton` paint but are exits
               from a task already taken, not the summons. */}
-          <EphemeristsRuneStrip side="top" />
-          <button onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
+          <EphemeristsRuneStrip side="top" seed={`task:${task.id}`} />
+          <button className="eph-cta" onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
           </button>
-          <EphemeristsRuneStrip side="bottom" />
+          <EphemeristsRuneStrip side="bottom" seed={`task:${task.id}`} />
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
             {!levelJumpSignup && (
@@ -757,7 +767,7 @@ export default function EphemeristsTaskDetail({
               submitted praxis straight back to `/praxis/:id` (#1164) — so this
               button used to change nothing at all. Reopening for editing lives
               on the praxis page, one honest hop away. */}
-          <Link to={`/praxis/${mySubmission.id}`} style={primaryButton}>
+          <Link className="eph-cta" to={`/praxis/${mySubmission.id}`} style={primaryButton}>
             {t("detail.submitted.view")}
           </Link>
         </div>
@@ -770,7 +780,7 @@ export default function EphemeristsTaskDetail({
             <span style={{ ...quietItalic, color: BRASS_LIGHT }}>{t("detail.inProgress.text")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-            <Link to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
+            <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
               {t("detail.inProgress.continue")}
             </Link>
             <button onClick={handleDrop} style={quietButton}>
