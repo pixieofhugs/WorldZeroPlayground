@@ -72,6 +72,7 @@
     "PRAXIS_NOT_OPEN_FOR_COMMENTS": "This praxis is not open for comments.",
     "TASK_NOT_OPEN_FOR_COMMENTS": "This task is not open for comments.",
     "COMMENT_TARGET_AMBIGUOUS": "A comment targets exactly one of a praxis or a task.",
+    "COMMENT_ALREADY_FLAGGED": "Your account has already flagged this comment.",
 
     "DUEL_CHALLENGE_NOT_YOURS": "This challenge is not for you.",
     "DUEL_CHALLENGE_ALREADY_RESOLVED": "Challenge has already been resolved.",

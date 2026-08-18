@@ -177,6 +177,10 @@ class ErrorCode(str, enum.Enum):
     #: routes, which each pass one target; it answers any future caller that
     #: passes both or neither, and the DB CHECK behind it.
     comment_target_ambiguous = "COMMENT_TARGET_AMBIGUOUS"
+    #: One flag per ACCOUNT per comment (#2184), the twin of the praxis rule.
+    #: The praxis pair predates the ratchet and is grandfathered uncoded; this
+    #: raise is new, so it is coded — ``uncoded_error_allowlist`` only shrinks.
+    comment_already_flagged = "COMMENT_ALREADY_FLAGGED"
 
     # -- Duel challenge lifecycle --------------------------------------------
     duel_challenge_not_yours = "DUEL_CHALLENGE_NOT_YOURS"
