@@ -65,6 +65,10 @@ from game_config import (
 #   can_always_rejoin             -- rejoinable after leaving, where leaving is
 #                                    otherwise era-final
 #   can_apply_metatask_at_any_level -- exempt from metatask_apply_level
+#   reads_the_array               -- "the array" (#1869): members read this era's
+#                                    config in the browser console. Purely
+#                                    client-side — /game-config already ships to
+#                                    everyone, so there is no server door to add
 #   inherits_faction_perks        -- holds every OTHER faction's perk in this era
 #                                    (#1871). Declare the faction's own floor and
 #                                    EraConfig resolves the union; the duel pair

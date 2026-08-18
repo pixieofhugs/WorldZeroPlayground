@@ -1634,46 +1634,13 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /**
-         * Block Relationship Route
-         * @description Block the other party to this relationship, addressed by the edge's id.
-         *
-         *     Superseded by `POST /relationships/blocks`, which takes a character id and
-         *     needs no edge (ADR-0077). Kept for one release while the client moves;
-         *     retires with #1907.
-         */
-        put: operations["block_relationship_route_relationships__relationship_id__put"];
+        put?: never;
         post?: never;
         /**
          * Delete Relationship
          * @description Remove a relationship. Only the declaring party can delete.
          */
         delete: operations["delete_relationship_relationships__relationship_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/relationships/{relationship_id}/unblock": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Unblock Relationship Route
-         * @description Lift this caller's block on the other party to this relationship,
-         *     addressed by the edge's id.
-         *
-         *     Superseded by `DELETE /relationships/blocks/{character_id}` (ADR-0077).
-         *     Kept for one release while the client moves; retires with #1907. Only the
-         *     blocker's own record is deleted, and no edge changes.
-         */
-        post: operations["unblock_relationship_route_relationships__relationship_id__unblock_post"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2766,6 +2733,8 @@ export interface components {
             other_task_modifier: number;
             /** Own Task Modifier */
             own_task_modifier: number;
+            /** Reads The Array */
+            reads_the_array: boolean;
             /** Slug */
             slug: string;
         };
@@ -7445,39 +7414,6 @@ export interface operations {
             };
         };
     };
-    block_relationship_route_relationships__relationship_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                relationship_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RelationshipListItem"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     delete_relationship_relationships__relationship_id__delete: {
         parameters: {
             query?: never;
@@ -7497,39 +7433,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unblock_relationship_route_relationships__relationship_id__unblock_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                relationship_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RelationshipListItem"];
-                };
             };
             /** @description Validation Error */
             422: {

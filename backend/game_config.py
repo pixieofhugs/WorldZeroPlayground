@@ -100,6 +100,14 @@ class FactionConfig:
     # faction slug in a service. Until #1871 this WAS a slug branch inside
     # ``services.praxis_metatask``, which no era could re-tune.
     can_apply_metatask_at_any_level: bool = False
+    # "The array" (#1869): may a member read the era's configuration in the
+    # browser console? The one perk with no server-side door, because nothing is
+    # withheld — ``/game-config`` already ships to every client, and the UI
+    # merely never renders it as numbers. So this flag is not an authorisation
+    # check; it is the client's own answer to "am I the faction that looks?",
+    # read out of the very payload the perk prints. There is deliberately no
+    # ``services.`` reader to pair with it and no enforcement to add.
+    reads_the_array: bool = False
     # Albescent's charter (#1871): this faction holds every OTHER faction's perk
     # in its era. Declared here, resolved by ``EraConfig.__post_init__`` — the
     # era file states the faction's own floor and the union is computed, so a
@@ -126,6 +134,7 @@ _ANY_PERK_FIELDS: tuple[str, ...] = (
     "can_always_rejoin",
     "can_hold_multiple_memberships",
     "can_apply_metatask_at_any_level",
+    "reads_the_array",
 )
 
 #: The duel pair — inherited TOGETHER, never field by field. See

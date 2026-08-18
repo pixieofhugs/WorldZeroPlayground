@@ -2267,6 +2267,10 @@
             "title": "Own Task Modifier",
             "type": "number"
           },
+          "reads_the_array": {
+            "title": "Reads The Array",
+            "type": "boolean"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -2279,7 +2283,8 @@
           "collab_own_modifier",
           "collab_other_modifier",
           "duel_win_modifier",
-          "duel_loss_modifier"
+          "duel_loss_modifier",
+          "reads_the_array"
         ],
         "title": "FactionConfigOut",
         "type": "object"
@@ -11899,132 +11904,6 @@
           }
         ],
         "summary": "Delete Relationship",
-        "tags": [
-          "relationships"
-        ]
-      },
-      "put": {
-        "description": "Block the other party to this relationship, addressed by the edge's id.\n\nSuperseded by `POST /relationships/blocks`, which takes a character id and\nneeds no edge (ADR-0077). Kept for one release while the client moves;\nretires with #1907.",
-        "operationId": "block_relationship_route_relationships__relationship_id__put",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "relationship_id",
-            "required": true,
-            "schema": {
-              "title": "Relationship Id",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RelationshipListItem"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Block Relationship Route",
-        "tags": [
-          "relationships"
-        ]
-      }
-    },
-    "/relationships/{relationship_id}/unblock": {
-      "post": {
-        "description": "Lift this caller's block on the other party to this relationship,\naddressed by the edge's id.\n\nSuperseded by `DELETE /relationships/blocks/{character_id}` (ADR-0077).\nKept for one release while the client moves; retires with #1907. Only the\nblocker's own record is deleted, and no edge changes.",
-        "operationId": "unblock_relationship_route_relationships__relationship_id__unblock_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "relationship_id",
-            "required": true,
-            "schema": {
-              "title": "Relationship Id",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RelationshipListItem"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Unblock Relationship Route",
         "tags": [
           "relationships"
         ]
