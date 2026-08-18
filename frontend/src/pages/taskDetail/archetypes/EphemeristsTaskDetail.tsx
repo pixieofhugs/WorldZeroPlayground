@@ -426,7 +426,7 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb, faction line, title, author, stats ──
+  // ── Header: breadcrumb, faction line, title ── (byline + stats: `credentials`, below the brief — #2120)
   const header = (
     <div>
       <nav
@@ -509,7 +509,15 @@ export default function EphemeristsTaskDetail({
           })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
@@ -976,7 +984,11 @@ export default function EphemeristsTaskDetail({
               marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
             }}
           >
-            <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {header}
+              {brief}
+              {credentials}
+            </div>
             <div
               style={{
                 // 420 with a summons to answer; with none, the plate goes to its
@@ -992,7 +1004,6 @@ export default function EphemeristsTaskDetail({
           </div>
 
           <div style={{ minWidth: 0 }}>
-            {brief}
             {gallery}
             <TaskDetailComments
               state={state}

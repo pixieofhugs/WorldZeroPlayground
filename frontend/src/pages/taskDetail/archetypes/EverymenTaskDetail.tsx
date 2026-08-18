@@ -129,12 +129,13 @@ function initialsOf(name: string): string {
  * bar flanked by cogs; Bebas Neue headlines over a Courier Prime dispatch;
  * dashed red rules between everything; the points struck as a rubber stamp.
  *
- * Anatomy is #1030's contract, unchanged and in its order — breadcrumb ·
- * masthead · title · author byline · Level / In-progress stats · action plate
- * (base + the usually-absent `×mult` badge + the stamped total, sign-up /
- * in-progress / submitted, slots, level-met, {@link LevelJumpBanner},
- * {@link ErrorBanner}) · the brief in full · the praxis gallery with its sort
- * toggle · comments. Only the dress is the Everymen's.
+ * Anatomy is #1030's contract — breadcrumb · masthead · title · the brief in
+ * full · author byline · Level / In-progress stats · action plate (base + the
+ * usually-absent `×mult` badge + the stamped total, sign-up / in-progress /
+ * submitted, slots, level-met, {@link LevelJumpBanner}, {@link ErrorBanner})
+ * · the praxis gallery with its sort toggle · comments. Only the dress is the
+ * Everymen's. #2120 re-sequenced that order in every skin: the brief rose to
+ * sit under the title, and the byline and stats came down below it.
  *
  * Four contract points worth not re-deriving:
  * - **No in-progress roster.** The header's count is the only place that number
@@ -275,7 +276,7 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb, masthead, title, byline, stats ──
+  // ── Header: breadcrumb, masthead, title ── (byline + stats: `credentials`, below the brief — #2120)
   //
   // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
   // the task id, and the id WAS the second crumb, so the separator went with it
@@ -379,7 +380,15 @@ export default function EverymenTaskDetail({
           })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Byline — the character who proposed the job (#1029). */}
       {authorName && (
         <div
@@ -955,7 +964,11 @@ export default function EverymenTaskDetail({
             marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: 520 }),
@@ -967,7 +980,6 @@ export default function EverymenTaskDetail({
         </div>
 
         <div style={{ minWidth: 0 }}>
-          {brief}
           {gallery}
           {/* Comments — the shared slot, active-task gated (ADR-0006, #1030),
               under the sheet's own dressed section head. */}

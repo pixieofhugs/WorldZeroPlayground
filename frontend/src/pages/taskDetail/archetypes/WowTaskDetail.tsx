@@ -550,7 +550,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb · shield + faction line · title · author · stats ──
+  // ── Header: breadcrumb · shield + faction line · title ── (byline + stats: `credentials`, below the brief — #2120)
   const header = (
     <div>
       <nav
@@ -638,7 +638,15 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.metataskFor", { faction: factionName(task.metatask_faction_slug) })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
@@ -899,7 +907,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             marginBottom: size.sectionGap,
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: size.plate }),
@@ -911,7 +923,6 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
 
         <div style={{ minWidth: 0 }}>
-          {brief}
           {gallery}
           <TaskDetailComments
             state={state}
