@@ -57,9 +57,10 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * shows, one card per row. Nothing here is form-factor branched.
  *
  * The ornament is the shared kit's (`ephemeristsPlate`), not a second copy:
- * `GlyphRegister`, `WingedDisc`, `Cornice`, `LotusSign`, `stepClip`. The
- * register's breathing is `.epg-glyph`, whose reduced-motion gate and resting
- * state live in index.css.
+ * `Cornice`, `LotusSign`, `stepClip`. The drifting strip below breathes on
+ * `.epg-glyph`, whose reduced-motion gate and resting state live in index.css —
+ * the class outlived the incised register it was named for (#2210), and the
+ * marks it now paces are the plate's mathematical ones.
  *
  * DEVIATIONS from the vendored `#eph` / `#ephD` frames, all four in the PR body:
  *  • the drifting strip's marks are ochre and CAPTION gold, not ochre and brass

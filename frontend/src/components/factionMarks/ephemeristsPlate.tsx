@@ -316,84 +316,23 @@ export const GLYPHS: Record<string, string> = {
   platinum: PLATINUM.glyph,
 };
 
-/** The order the signs march in — the design's own register. */
-export const REGISTER = [
-  "ankh", "water", "feather", "eye", "djed", "greekKey", "reed", "offering",
-  "alchemy", "chevrons", "scarab", "sun", "ankh", "water", "djed", "eye",
-];
-
-/** Distance between two signs in a register, and their drawn size. Geometry. */
-const GLYPH_PITCH = 27.5;
-const GLYPH_SIZE = 13;
-
-/**
- * One incised sign, at its own strength and its own phase in the cycle.
+/*
+ * THE INCISED REGISTER IS GONE (#2210) — `REGISTER`, `Glyph` and `GlyphRegister`
+ * were here, marching the astro/alchemical signs across a masthead band.
  *
- * Exported for the ONE caller that composes its own register rather than taking
- * {@link GlyphRegister}: the task card's masthead marches two named 12-sign
- * rows at its own pitch, which is the card design's drawing and not the page's.
- * Everything else wants the register.
- */
-export function Glyph({ name, x, y, strength, delay, color }: {
-  name: string
-  x: number
-  y: number
-  strength: number
-  delay: number
-  color?: string
-}) {
-  return (
-    <g
-      className="epg-glyph"
-      transform={`translate(${x} ${y}) scale(${GLYPH_SIZE / 24}) translate(-12 -12)`}
-      style={{ ["--epg-op"]: strength, ["--epg-delay"]: `${delay}s` } as CSSProperties}
-    >
-      <path
-        d={GLYPHS[name]}
-        fill="none"
-        stroke={color ?? GOLD}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </g>
-  );
-}
-
-/**
- * A register of signs marching the full width of a band. The count follows the
- * viewBox rather than a fixed number, so the register reaches the edge at any
- * width instead of stopping short or blowing every sign up under `slice`.
+ * #2143 gave the masthead the NOTATION BAND (mathematical marks, ruled top and
+ * bottom) and retired none of this, so both vocabularies drew at once and
+ * overlapped: the register rows were positioned to clear a datum row the band
+ * had already replaced, and the band's lead had opened from 5px to 9px. The
+ * owner's ruling is that the register retires ENTIRELY rather than moving out
+ * of the way — the band is the faction's only ornament row, carried by the
+ * masthead wherever there is one, and nothing takes its place on the surfaces
+ * that head themselves by hand.
  *
- * `color` defaults to the gold every masthead band strikes its register in.
- * {@link RuneRule} is the one caller that overrides it: a rune band rules a
- * PAGE rather than a night band, and gold on papyrus is a stain where brass is
- * a rule.
+ * {@link GLYPHS} above SURVIVES: the signs are still the kit's vocabulary for a
+ * single mark, drawn one at a time by {@link Sign} and read directly by the task
+ * card. What retired is the ROW, not the drawings.
  */
-export function GlyphRegister({ width, y, strength, keyPrefix, color }: {
-  width: number
-  y: number
-  strength: number
-  keyPrefix: string
-  color?: string
-}) {
-  const count = Math.ceil(width / GLYPH_PITCH);
-  return (
-    <>
-      {Array.from({ length: count }).map((_, index) => (
-        <Glyph
-          key={`${keyPrefix}${index}`}
-          name={REGISTER[index % REGISTER.length]}
-          x={18 + index * GLYPH_PITCH}
-          y={y}
-          strength={strength * (index % 3 === 0 ? 1 : 0.7)}
-          delay={((index * 7) % 12) * 1.6}
-          color={color}
-        />
-      ))}
-    </>
-  );
-}
 
 /* ── The gravity field (#1830) ──
  *
@@ -542,54 +481,17 @@ export function Cornice({ glow, flutes = 52 }: { glow?: boolean; flutes?: number
   );
 }
 
-/**
- * THE RUNE BAND — the divider under every section head (#1638).
+/*
+ * THE RUNE BAND IS GONE (#2210) — `RUNE_SPAN`, `RUNE_HEIGHT` and `RuneRule`
+ * stood here. It was the divider under every section head, and it drew exactly
+ * one thing: a `GlyphRegister` in brass. With the register retired the band had
+ * nothing left to draw, so it goes with it rather than staying as an empty box.
  *
- * It replaces `FlutedRule`, which was the cavetto band reused as a rule: 48
- * brass strokes at alternating heights. The plate's own register of incised
- * signs takes its place, so a section is divided by the kit's SIGNS rather than
- * by a second drawing of its cornice — one ornament vocabulary reaching down
- * from the masthead instead of two doing the same job.
- *
- * The band SHIFTS on `.epg-glyph`, the register's shared opacity cycle, already
- * opt-in under `prefers-reduced-motion: no-preference`. Nothing here declares
- * motion, so a stilled reader gets the signs rather than a blank strip.
- *
- * NO `viewBox`, deliberately, and this is the whole reason the band fits every
- * column at one size. A viewBox plus `slice` scales by `max(w/vbW, h/vbH)`, and
- * the height here is fixed, so `h/vbH` is 1 and any column WIDER than the
- * viewBox blows every sign up — a 16px band of 32px glyphs on the 1200px task
- * page, which is precisely the failure `EphemeristsTaskDetail` documented when
- * it stopped using a fixed sign count. Without a viewBox, user units are CSS
- * pixels, the signs are drawn at their own size at every width, and the SVG
- * viewport crops the overspill for free. {@link RUNE_SPAN} is therefore a
- * CEILING — enough signs to reach the widest column the site has (the 1200px
- * page cap), not a count anyone reads.
- *
- * `rule` pairs the band with the brass hairline the write-up header carries
- * above it (`sectionHead` draws its own). A rune band mounted WITHOUT a heading
- * reads as a loose row of marks; the composer is the surface that does that, so
- * it asks for the rule and gets the same two-part divider the record has.
+ * Its seven mounts lose a row of marks and no structure: every section head
+ * that carried it already rules itself off with the brass hairline that flexes
+ * across the heading row, and the composer — the one mount with no heading —
+ * keeps that hairline through the shared `ComposerRule`.
  */
-const RUNE_SPAN = 1280;
-const RUNE_HEIGHT = 16;
-
-export function RuneRule({ rule }: { rule?: boolean }) {
-  return (
-    <div aria-hidden="true">
-      {rule && <div style={{ height: 1, background: BRASS, opacity: 0.5 }} />}
-      <svg width="100%" height={RUNE_HEIGHT} aria-hidden="true" style={{ display: "block" }}>
-        <GlyphRegister
-          width={RUNE_SPAN}
-          y={RUNE_HEIGHT / 2}
-          strength={0.42}
-          keyPrefix="rune"
-          color={BRASS}
-        />
-      </svg>
-    </div>
-  );
-}
 
 /**
  * The lotus — the plate's closing mark, drawn on its own 18×13 field. It sits

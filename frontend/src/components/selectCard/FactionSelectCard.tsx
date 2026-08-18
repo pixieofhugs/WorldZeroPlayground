@@ -234,8 +234,8 @@ export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<Fac
 
 /**
  * The Ephemerists tile — the cornice masthead the plate hangs under, standing on
- * its own (#1208). The night band, an incised glyph register above the footer,
- * the sigil ruled in brass, and the CTA in the plate’s gold. Nothing legible is
+ * its own (#1208). The night band, the sigil ruled in brass, and the CTA in the
+ * plate’s gold. Nothing legible is
  * set in `brass`; on this ground the inks are `band-ink` (12.4:1), `gold` (9.4)
  * and `band-quiet` (8.6).
  */
@@ -248,9 +248,10 @@ export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Om
       border: `1px solid ${eph.BRASS}`, boxShadow: eph.SHADOW, display: "flex", flexDirection: "column",
     }}>
       <div style={{ position: "absolute", inset: 9, border: `1px solid color-mix(in srgb, ${eph.BRASS_LIGHT} 35%, transparent)`, pointerEvents: "none" }} />
-      <svg width="100%" height={26} viewBox="0 0 360 26" preserveAspectRatio="xMinYMid slice" aria-hidden="true" style={{ position: "absolute", left: 0, bottom: 62, opacity: 0.55 }}>
-        <eph.GlyphRegister width={360} y={13} strength={0.5} keyPrefix="sel" />
-      </svg>
+      {/* An incised glyph register ran above the footer until #2210. It was
+          the OLD vocabulary the notation band replaced on the masthead, and it
+          retires kit-wide; nothing takes its place here, because this tile
+          heads itself by hand and mounts no `EphemeristsMasthead`. */}
       <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-md)", letterSpacing: "0.1em", color: eph.BAND_QUIET, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
