@@ -96,6 +96,7 @@ function currentUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
     era_name: 'Era 1',
     level_jump_reach: 0,
     level_jump_available: false,
+    task_browse_defaults_to_eligible: false,
     ...overrides,
   }
 }

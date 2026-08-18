@@ -63,6 +63,7 @@ const MOCK_USER: CurrentUser = {
   // so the affordance is correctly absent.
   level_jump_reach: 0,
   level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
 };
 
 /** The signed-in viewer a preview is drawn for, with no request behind it. */

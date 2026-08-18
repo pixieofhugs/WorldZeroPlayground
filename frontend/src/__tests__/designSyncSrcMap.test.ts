@@ -18,9 +18,9 @@
  *
  *   - it publishes 253 of 309 candidate `.tsx` files — the other 56 are
  *     deliberately not in the kit, and a walk cannot infer that intent;
- *   - five entries are aliases whose key is not the file's basename
- *     (`EverymenCard` → `EverymenFactionCard.tsx`, `BackdropProvider` →
- *     `BackdropContext.tsx`, `CommentFlagControl` → `FlagControl.tsx`);
+ *   - several entries are aliases whose key is not the file's basename
+ *     (`BackdropProvider` → `BackdropContext.tsx`, `CommentFlagControl` →
+ *     `FlagControl.tsx`);
  *   - two of those aliases — `VoteLoginGate` and `VoteSummary` — point at the
  *     *same* file, `vote/VoteShell.tsx`. A filesystem walk yields one name per
  *     file and can never produce a many-to-one mapping.

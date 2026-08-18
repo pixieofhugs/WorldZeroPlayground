@@ -37,6 +37,15 @@ WHAT EACH GROUP WAS
   creates that ``seed.py`` or another route already does, and a task update the
   admin ``PATCH`` supersedes.
 
+* **The two edge-addressed block doors** (#2021). ADR-0077 moved a block onto
+  its own record, addressed by character id. ``PUT /relationships/{id}`` and
+  ``POST /relationships/{id}/unblock`` were reimplemented over that record in
+  #1906 and kept one release past #1907's client move, because ``main``
+  auto-deploys and a browser on the pre-deploy bundle was still calling them.
+  That window closed, and the addressing they offered — by edge — is the thing
+  ADR-0077 exists to remove: a player foe'd by someone they had never declared
+  anything about held no edge id to name.
+
 * **One write path, deleted so there is only one** (#1743). ``PUT /praxes/{id}``
   took a title and a body and was the composer's debounced autosave. Every
   praxis is now written in a *room* (ADR-0073) — a server-held CRDT the composer
@@ -72,6 +81,9 @@ DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
         ("post", "/admin/characters/backfill-stats"),
         ("post", "/admin/characters/backfill-vote-budget"),
         ("post", "/admin/accounts/{account_id}/role"),
+        # #2021: the edge-addressed block doors, one release after #1907.
+        ("put", "/relationships/{relationship_id}"),
+        ("post", "/relationships/{relationship_id}/unblock"),
         # No caller, no capability lost.
         ("post", "/admin/characters"),
         ("post", "/admin/tasks"),
@@ -90,18 +102,22 @@ SURVIVING_REPLACEMENTS: frozenset[tuple[str, str]] = frozenset(
         ("put", "/admin/tasks/{task_id}/status"),  # absorbed approve/retire/reactivate
         ("patch", "/admin/tasks/{task_id}"),  # absorbed PUT /tasks/{task_id}
         ("get", "/praxes"),  # ?character_id= absorbed /characters/{id}/praxes
+        ("post", "/relationships/blocks"),  # absorbed PUT /relationships/{id}
+        # absorbed POST /relationships/{id}/unblock
+        ("delete", "/relationships/blocks/{character_id}"),
     }
 )
 
-#: Deliberately unreachable and deliberately kept — owner's call. The first two
-#: are recorded in #1667's "Explicitly NOT this issue"; the third is not, and
-#: that omission is exactly why it is here (see its comment). A later
-#: dead-endpoint sweep will find all three again; this is the note that says
-#: it already looked, and that the answer was no.
+#: Deliberately unreachable and deliberately kept — owner's call. The first is
+#: recorded in #1667's "Explicitly NOT this issue"; the second is not, and that
+#: omission is exactly why it is here (see its comment). A later dead-endpoint
+#: sweep will find both again; this is the note that says it already looked, and
+#: that the answer was no. ``PUT /relationships/{relationship_id}`` sat here
+#: too, on the deploy-skew grounds #1906 recorded rather than an owner ruling —
+#: #2021 spent that release and moved it to DELETED_OPERATIONS.
 KEPT_THOUGH_UNREACHABLE: frozenset[tuple[str, str]] = frozenset(
     {
         ("patch", "/admin/characters/{character_id}/stats"),
-        ("put", "/relationships/{relationship_id}"),
         # #1262 (2026-07-28), reaffirmed in #1386 and again when #1667 was
         # built: "who signed up for this task" is a plausible future surface
         # and costs nothing at rest. #1386 was explicit that the ruling covers

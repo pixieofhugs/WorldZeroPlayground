@@ -58,7 +58,6 @@ import type { CommentComponent } from '../components/comments/shared'
 import type { FeedFrameProps } from '../components/feed/feedFrameProps'
 import type { VoteUIProps } from '../components/vote/VoteUI'
 import type { ScoreStampProps } from '../components/praxisCard/scoreStamp/ScoreStamp'
-import type { FactionCardProps } from '../components/factionCard/FactionCard'
 import type { FactionSelectCardProps } from '../components/selectCard/FactionSelectCard'
 import type { DuelSealConfirmProps } from '../components/duel/DuelSealConfirm'
 import type { FactionHeroProps } from '../pages/FactionDetail'
@@ -92,7 +91,6 @@ export interface FactionManifest {
    */
   readonly taskCard?: Lazy<ComponentType<CardProps>>
   readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
-  readonly factionCard?: Lazy<ComponentType<FactionCardProps>>
   readonly factionSelectCard?: Lazy<
     ComponentType<Omit<FactionSelectCardProps, 'faction'>>
   >
@@ -229,7 +227,6 @@ export type FactionSurface = Exclude<keyof FactionManifest, 'slug'>
 export const SURFACE_KEYS = [
   'taskCard',
   'praxisCard',
-  'factionCard',
   'factionSelectCard',
   'avatar',
   'backdrop',

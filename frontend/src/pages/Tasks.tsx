@@ -48,7 +48,9 @@ function DesktopTasks({ state }: { state: TasksState }) {
           nothing for a viewer the server would refuse, so the row collapses to
           the title alone rather than drawing a dead control. */}
       <div className="flex items-start justify-between gap-4">
-        <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
+        {/* No eyebrow: the count rides in the filter bar now (#2262),
+            beside the controls that change it. */}
+        <PageTitle title="Tasks" />
         <ProposeTaskLink user={user} />
       </div>
 

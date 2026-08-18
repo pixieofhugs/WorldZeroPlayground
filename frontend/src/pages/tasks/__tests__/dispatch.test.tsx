@@ -53,6 +53,7 @@ const VIEWER: CurrentUser = {
   era_name: 'Era 1',
   level_jump_reach: 0,
   level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
 }
 
 // Canned task-browse state. Tests that only exercise the dispatch branch leave
@@ -112,6 +113,7 @@ function text(): string {
 }
 
 const SIGNUP = i18n.t('feed:taskCard.signup')
+const COUNT = i18n.t('tasks:listPage.count', { count: 0 })
 
 describe('Tasks form-factor dispatch', () => {
   it('renders the Default mobile browse skin on mobile', () => {
@@ -128,13 +130,35 @@ describe('Tasks form-factor dispatch', () => {
     // The desktop page title; the filter bar itself is now shared chrome and so
     // is no longer a form-factor discriminator (#1367).
     //
-    // Asserted on the eyebrow, not the word "Tasks": `PageTitle` draws the title
-    // as per-letter spans (Style Guide §7), so the title never appears
+    // Asserted on `PageTitle`'s per-letter underline, not the word "Tasks": the
+    // title is drawn as per-letter spans (Style Guide §7), so it never appears
     // contiguously in the markup. This line used to read `toContain('Tasks')`
     // and was in fact matching the type rail's "Tasks" SEGMENT — which #1973
-    // then hid from this logged-out viewer, exposing the false positive.
-    expect(out, 'desktop page title eyebrow').toContain('0 shown')
+    // then hid from this logged-out viewer, exposing the false positive. It then
+    // read the eyebrow, which #2262 moved into the shared bar, so it stopped
+    // discriminating too.
+    expect(out, 'desktop page title').toContain(
+      'border-bottom:4px solid var(--faction-default-stop-1)',
+    )
   })
+
+  it.each(['mobile', 'desktop'] as const)(
+    'states the count in the bar, once, on %s (#2262)',
+    (formFactor) => {
+      dispatch.formFactor = formFactor
+      state.current = CANNED
+      const out = html()
+      expect(out, 'the bar states it').toContain(
+        `class="filter-bar__summary">${COUNT}<`,
+      )
+      // The header eyebrow (desktop) and the header caption (mobile) both
+      // carried this number; neither does now, so one copy is on screen.
+      expect(
+        out.replace(/<[^>]*>/g, '').split(COUNT),
+        'exactly one count on screen',
+      ).toHaveLength(2)
+    },
+  )
 
   it('mounts the shared filter bar on BOTH form factors (#1367)', () => {
     for (const formFactor of ['mobile', 'desktop'] as const) {
@@ -231,9 +255,11 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
  * could only ever empty the page) — `eligibilityRailGate.test.tsx` holds the
  * account-with-no-character half of that gate.
  *
- * It defaults ON for a viewer who carries one since #1972; which viewer gets
- * which default is `readTaskFilters`' call and is pinned in
- * `taskFilterParams.test.ts`. This page takes `canSignUp` as a given.
+ * It defaults ON for a level-0 character and OFF for anyone past that (#1972,
+ * narrowed by #2025); which viewer gets which default is `readTaskFilters`'
+ * call and is pinned in `taskFilterParams.test.ts`. This page takes `canSignUp`
+ * as a given — VIEWER here is level 2, and the tests that want the filter on
+ * say so.
  */
 describe('can-sign-up filter (#1130)', () => {
   const CAN_SIGN_UP = i18n.t('tasks:browse.canSignUp')
