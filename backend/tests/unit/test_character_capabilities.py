@@ -91,6 +91,9 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         # No faction_slug passed, so no faction grants a jump (#811).
         level_jump_reach=0,
         level_jump_available=False,
+        # Level 9 is well past the tutorial state, and no era value moves that
+        # line — level 0 is the bottom of the scale, not a threshold (#2025).
+        task_browse_defaults_to_eligible=False,
     )
 
 
@@ -211,3 +214,40 @@ def test_admin_in_wow_still_reports_its_real_allowance() -> None:
 def test_no_active_character_has_no_level_jump() -> None:
     result = compute_capabilities(None, is_admin=False, faction_slug="wow")
     assert result.level_jump_available is False
+
+
+def test_task_browse_default_belongs_to_the_tutorial_state() -> None:
+    """The eligibility default is ON for level 0 only (#2025).
+
+    Level 0 is the tutorial state and it has exactly one thing to do: a
+    character reaches level 1 *by* signing up for the game-wide onboarding task
+    and posting a praxis for it (``eras/era_1.py``, level profiles). From level
+    1 the player has done the loop once, and a board that quietly hides rows is
+    the surprise #1367 spent an epic removing.
+    """
+    assert compute_capabilities(0, is_admin=False).task_browse_defaults_to_eligible is True
+    assert compute_capabilities(1, is_admin=False).task_browse_defaults_to_eligible is False
+    assert compute_capabilities(7, is_admin=False).task_browse_defaults_to_eligible is False
+
+
+def test_no_active_character_gets_no_browse_default() -> None:
+    # /tasks is public and it is the shop window: a viewer with nothing to ask
+    # the question about gets the whole board.
+    assert (
+        compute_capabilities(None, is_admin=False).task_browse_defaults_to_eligible
+        is False
+    )
+
+
+def test_admin_does_not_short_circuit_the_browse_default() -> None:
+    # Unlike the propose/see flags: this is a UI default, not a permission, and
+    # an admin at level 5 has done the loop like everybody else. The level-0
+    # admin keeps it for the same reason a level-0 player does — which is the
+    # one viewer who can still intersect it with the retired/pending tabs
+    # (#2025 names that corner and rules it not worth designing for).
+    assert compute_capabilities(5, is_admin=True).task_browse_defaults_to_eligible is False
+    assert compute_capabilities(0, is_admin=True).task_browse_defaults_to_eligible is True
+    assert (
+        compute_capabilities(None, is_admin=True).task_browse_defaults_to_eligible
+        is False
+    )

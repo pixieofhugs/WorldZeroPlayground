@@ -175,6 +175,7 @@ export const mockUser: CurrentUser = {
   // which is the correct render for this character, not a missing value.
   level_jump_reach: 0,
   level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
 }
 
 // ---------------------------------------------------------------------------

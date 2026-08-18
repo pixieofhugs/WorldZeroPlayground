@@ -2491,6 +2491,11 @@ export interface components {
              * @default 0
              */
             second_character_level_required: number;
+            /**
+             * Task Browse Defaults To Eligible
+             * @default false
+             */
+            task_browse_defaults_to_eligible: boolean;
         };
         /**
          * DevLoginOut

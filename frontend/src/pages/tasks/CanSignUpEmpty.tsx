@@ -17,11 +17,11 @@ const DEFAULT_MAX_TASK_SLOTS = 20
  *
  * Mounted ONLY from the `canSignUp && tasks.length === 0` branch — an EMPTY
  * eligible list, which is what keeps `useMyActiveTasks`'s fetch off the page
- * load that has tasks to show. Since #1972 the filter defaults ON for a viewer
- * carrying a character, so this is no longer a corner: a level-0 player who has
- * claimed their one task lands here on their second screen of the game, and the
- * round trip #1218 is clawing back is only paid on a board that came back with
- * nothing to draw.
+ * load that has tasks to show. Since #1972 the filter defaults ON — and since
+ * #2025 for a level-0 character only, which is precisely the viewer this
+ * sentence was written for: they claim their one task and land here on their
+ * second screen of the game. The round trip #1218 is clawing back is only paid
+ * on a board that came back with nothing to draw.
  *
  * That is also why the button says "see everything" rather than "clear all
  * filters": the player did not apply this filter, the default did, and a button
