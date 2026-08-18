@@ -640,6 +640,36 @@ which put the initial-load CSS budget exactly on its WARN line for the sake of a
 value is now assembled with `join('-')` and appears nowhere bare, and the built sheet is byte-identical
 to before the fix. The same trap applies to any assertion naming a class the code must *not* have.
 
+**The ceiling is universal; the ARM is per-hero, and `vw` is only right when the track is a fraction of
+the viewport (#2222).** "Singularity" is the second name long enough to trip the geometry — the only
+other single-word one, eleven characters of Share Tech Mono, which advances **0.54em per glyph**, so with
+its 0.04em tracking the mark is **6.38em** wide, or 357px at the hero's 56px display size. It has no space
+and no dots, so nothing about the name gives, and the hero clips its own overflow (correctly — that
+`overflow: hidden` holds the corner glow and the scanlines to the tile), so the failure printed as
+*Singularit* plus a sheared descender rather than as a spill.
+
+Everymen's `20vw` arm is not transferable to it. That hero's mark sits in a track that really is roughly
+the viewport minus a seal; **Singularity's is not** — a fixed 240px readout column sits beside it inside
+the hero, and the 320px desktop rail sits outside it, so one viewport width yields three different track
+widths. An arm fitted to a phone caps out around 430px and is inert by 768px, which leaves the mark
+overflowing in two bands a phone screenshot never shows: **~768–800px**, and **~1024–1160px with the rail
+open**. So the arm reads the column instead: `container-type: inline-size` on the identity column and
+`font-size: min(56px, 14cqw)` on the mark. 6.38 x 0.14 = 0.89 of the track, so the mark keeps ~11% of its
+column as air at every width and the 56px ceiling engages once the track passes ~400px.
+
+Two second-order notes. **The container declaration is half the fix, not plumbing for the other half**:
+inline-size containment takes the column's min-content contribution to zero, which is what stops the
+hero's `1fr` track being *floored* by an unbreakable word and shoving the whole grid past the clipped
+edge — the same `1fr`-is-floored-at-its-own-min-content mechanic §"a shared anatomy is a grid" names on
+the task-card masthead. And **`min()` is invisible to the raw-value ratchet either way**: the disable
+directive that rode the bare `56` reports UNUSED the moment the value moves inside `min()` and has to come
+off, exactly as it did on Everymen. The value is still ornament and still off the `--text-*` scale.
+
+The other five heroes keep a flat size (Coven 52, the Ephemerists 44, S.N.I.D.E. 82, UA and WOW on the
+scale) and that is **not** the same latent bug: every one of those names carries a space or dots to give
+at, so the container yielding is enough. They are worth re-checking the day a faction is renamed, not
+repainting now.
+
 ### The label tier is TWO tiers, and the content floor has one exception (#1307)
 
 One class covered five jobs — section headings, metadata captions, status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the weakest neutral, on 461 sites. Four legibility costs on the same string, and the treatment had already been found not to survive real content once: `.eyebrow-sentence` existed because *"a sentence set that way is a wall"*, which is a caption wearing a heading's clothes and a variant standing in for a rethink. **Owner ruling: two intents, not five treatments and not one.**
