@@ -489,7 +489,10 @@ def viewer_sees_pending_tasks(
 
 
 def pending_visibility_clause(
-    viewer_level: int, is_admin: bool, era: EraConfig = CURRENT_ERA
+    viewer_level: int,
+    is_admin: bool,
+    era: EraConfig = CURRENT_ERA,
+    viewer_id: Optional[int] = None,
 ):
     """The whole pending rule as one WHERE clause: the level AND the window.
 
@@ -515,6 +518,11 @@ def pending_visibility_clause(
     (:func:`services.admin_service.update_task_status`), so on that path the "no
     admin has looked yet" premise this window protects is already false.
 
+    ``viewer_id`` is the reading character's id, or ``None`` for an anonymous
+    caller, and exempts the rows that character *wrote* (#2126). Pass it at every
+    door: a carve-out one caller states and another forgets is how the profile
+    and the browse came to disagree about the same row in the first place.
+
     ponytail: if a NON-admin path ever sends a task back to ``pending``,
     ``created_at`` stops being the proposal clock and this wants a dedicated
     ``pending_since`` column stamped on every transition into the status.
@@ -523,14 +531,23 @@ def pending_visibility_clause(
         # Exempt, not merely early: the window exists to give admins the first
         # look, so holding it against them defeats the feature.
         return true()
+    # The author is exempt for the same reason (#2126): the window withholds a
+    # proposal from *other players* — which is what the propose-success screen
+    # promises in so many words — and its author is not one of them. They wrote
+    # the row and were just told it is under review, so there is nothing left to
+    # withhold, and hiding it made "Proposed tasks" answer "none" to the one
+    # person who knows better. This is a per-ROW carve-out, not a level, so it
+    # rides in the clause with the window rather than becoming another boolean.
+    own = false() if viewer_id is None else Task.created_by == viewer_id
     if viewer_sees_pending_tasks(viewer_level, is_admin, era):
         return or_(
             Task.status != TaskStatus.pending,
             Task.created_at
             <= datetime.now(timezone.utc)
             - timedelta(hours=era.pending_task_admin_review_hours),
+            own,
         )
-    return Task.status != TaskStatus.pending
+    return or_(Task.status != TaskStatus.pending, own)
 
 
 async def get_task_for_viewer(
@@ -568,7 +585,9 @@ async def get_task_for_viewer(
     visible = await session.scalar(
         select(Task.id).where(
             Task.id == task_id,
-            pending_visibility_clause(viewer_level, is_admin, era),
+            pending_visibility_clause(
+                viewer_level, is_admin, era, viewer_id=viewer.id if viewer else None
+            ),
         )
     )
     return task if visible is not None else None
@@ -717,7 +736,11 @@ async def list_tasks(
     # is not a gate — and the redundant `status == "all"` restatement of the
     # level rule is gone because this clause subsumes it. `get_task_for_viewer`
     # passes the same clause for the same reason (#1725).
-    query = query.where(pending_visibility_clause(viewer_level, is_admin, era))
+    query = query.where(
+        pending_visibility_clause(
+            viewer_level, is_admin, era, viewer_id=viewer.id if viewer else None
+        )
+    )
 
     if status and status != "all":
         try:
@@ -744,7 +767,17 @@ async def list_tasks(
             # task anywhere on the site. This surface is one character's own
             # proposals, reached by knowing their id, and hiding a proposer's
             # accepted work from newcomers reads as a bug rather than a reward.
-            query = query.where(Task.status != TaskStatus.pending)
+            #
+            # "All viewers" was one viewer too many (#2126): on your OWN profile
+            # this clause hid the proposal you had just written, so the section
+            # headed "Proposed tasks" said "No proposed tasks yet" and no amount
+            # of waiting fixed it — unlike the review window, this one never
+            # expired. Skipping it for the owner does not widen what anyone ELSE
+            # sees here; the shared pending clause above is still the only thing
+            # that decides whether a pending row is reachable at all, and it
+            # exempts the same author for the same reason.
+            if viewer is None or viewer.id != created_by:
+                query = query.where(Task.status != TaskStatus.pending)
         else:
             query = query.where(Task.status == TaskStatus.active)
     else:
