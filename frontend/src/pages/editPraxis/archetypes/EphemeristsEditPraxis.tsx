@@ -320,6 +320,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     descriptionStyle: { fontFamily: READING, color: QUIET },
     pillStyle: { ...label, color: QUIET, borderRadius: 0 },
   } as const;
+  /* NOT `.eph-cta`, and this is a reported gap rather than a decision (#2146).
+     This is the affirmative control on the WAITING stage, and it paints the
+     plate CTA like every other — but it reaches that surface as
+     `dress.primaryStyle`, a bare `CSSProperties`, and `PraxisWaitingSurface`
+     derives its own `className` from whether that style exists. There is no
+     seam for a class without giving the shared dress a `primaryClassName`, and
+     that file carries the stage's state rather than its paint.
+     ponytail: one optional field on `ComposerDress` and one `??` in
+     `PraxisWaitingSurface` closes it; until then this is the one Ephemerists
+     plate CTA whose enclosure does not flip with the theme. */
   const primaryStyle = composerLabelStyle({
     ...label,
     display: "inline-flex",

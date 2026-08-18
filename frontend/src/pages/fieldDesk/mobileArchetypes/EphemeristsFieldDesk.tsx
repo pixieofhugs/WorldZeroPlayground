@@ -328,8 +328,8 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         {/* THE ONE PLATE CTA (#2146). #2067's note that this surface "does not
             paint it with the plate CTA" was already out of date — it does, and
             it restated the enclosure at the width the light half happens to
-            want. `.eph-cta` carries all three, and the class sits AFTER the
-            layout utilities so the cascade order between them is explicit. */}
+            want. `.eph-cta` carries all three; the Tailwind utilities beside it
+            set only layout, so nothing here competes with the paint. */}
         <Link
           to={FIND_TASK_LINK}
           className="flex-1 flex items-center justify-center eph-cta"
