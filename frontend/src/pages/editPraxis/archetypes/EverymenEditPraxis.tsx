@@ -121,6 +121,7 @@ import {
   WriteUpTabs,
   type ComposerTab,
 } from "./controls";
+import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
@@ -164,87 +165,10 @@ const SHADOW = "var(--faction-everymen-bill-shadow)";
 const BEBAS = "var(--faction-everymen-card-font)"; /* Bebas Neue */
 const COURIER = "var(--font-body)"; /* Courier Prime */
 
-/* ── The cog, the union's one glyph on this surface. Eight teeth around a hub,
- *    generated once at module load: the arithmetic is the design's own and a
- *    hand-written path would drift from it silently. The same construction the
- *    v2 task card and task detail draw — a THIRD caller now, which by
- *    WORLD_ZERO_STYLE §6 ("the module is the enforcement") is the point at which
- *    the three should collapse into one `everymenOrnament` module. That
- *    extraction touches two shipped Everymen surfaces and is outside this
- *    issue's footprint; it is raised in the PR rather than done here. ── */
-const GEAR_TEETH = 8;
-const GEAR_RADIUS = 9.5;
-const GEAR_TIP_LENGTH = 5;
-const GEAR_TIP_HALF = 1.6;
-const GEAR_ROOT_HALF = 2.6;
-
-function buildGearPath(): string {
-  const point = (radius: number, angle: number): string =>
-    `${12 + radius * Math.cos(angle)},${12 + radius * Math.sin(angle)}`;
-  const step = (Math.PI * 2) / GEAR_TEETH;
-  const tipRadius = GEAR_RADIUS + GEAR_TIP_LENGTH;
-  let path = "";
-  for (let tooth = 0; tooth < GEAR_TEETH; tooth++) {
-    const start = tooth * step;
-    const rootBefore = point(GEAR_RADIUS, start - GEAR_ROOT_HALF / GEAR_RADIUS);
-    const tipBefore = point(tipRadius, start - GEAR_TIP_HALF / tipRadius);
-    const tipAfter = point(tipRadius, start + GEAR_TIP_HALF / tipRadius);
-    const rootAfter = point(GEAR_RADIUS, start + GEAR_ROOT_HALF / GEAR_RADIUS);
-    const nextRoot = point(
-      GEAR_RADIUS,
-      start + step - GEAR_ROOT_HALF / GEAR_RADIUS,
-    );
-    path += `${tooth === 0 ? "M" : "L"}${rootBefore}L${tipBefore}L${tipAfter}L${rootAfter}`;
-    path += `A${GEAR_RADIUS},${GEAR_RADIUS} 0 0 1 ${nextRoot}`;
-  }
-  return `${path}Z`;
-}
-
-const GEAR_PATH = buildGearPath();
-
-/** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). */
+/** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). The
+ *  cog itself is {@link EverymenCog}, shared since #2121 — this surface is the
+ *  only one that turns it, so the timing stays here with the callers. */
 const COG_PERIOD = "22s";
-
-/**
- * The union cog. Ornament only — aria-hidden at every call site.
- *
- * `spin` reaches the shared `ep-spin` / `ep-spin-rev` classes rather than an
- * inline `animation:`, so the pair stills itself under `prefers-reduced-motion`
- * (#1003). `--ep-spin-dur` re-times both without a second keyframe.
- */
-function Gear({
-  size,
-  fill,
-  hole,
-  spin,
-  duration,
-}: {
-  size: number;
-  fill: string;
-  hole: string;
-  spin?: "forward" | "reverse";
-  duration?: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      aria-hidden
-      className={
-        spin === "forward" ? "ep-spin" : spin === "reverse" ? "ep-spin-rev" : undefined
-      }
-      style={{
-        display: "block",
-        flex: "0 0 auto",
-        ...(duration ? ({ "--ep-spin-dur": duration } as CSSProperties) : {}),
-      }}
-    >
-      <path d={GEAR_PATH} fill={fill} />
-      <circle cx="12" cy="12" r="3" fill={hole} />
-    </svg>
-  );
-}
 
 export default function EverymenEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
@@ -325,10 +249,10 @@ export default function EverymenEditPraxis({ state }: Props) {
      (#1830). It is a mark on a plate, not type, so the accent's 4.49:1 on the
      paper is not the measurement that governs it. */
   const statusMark = (
-    <Gear
+    <EverymenCog
       size={40}
       fill={ACCENT}
-      hole={PANEL}
+      hub={PANEL}
       spin="forward"
       duration={COG_PERIOD}
     />
@@ -384,7 +308,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               boxShadow: `inset 0 -6px 0 -4px ${PAPER_DEEP}`,
             }}
           >
-            <Gear size={16} fill={MAST_INK} hole={MAST} spin="forward" duration={COG_PERIOD} />
+            <EverymenCog size={16} fill={MAST_INK} hub={MAST} spin="forward" duration={COG_PERIOD} />
             <span
               style={{
                 fontFamily: BEBAS,
@@ -397,7 +321,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             >
               {factionName(slug)}
             </span>
-            <Gear size={16} fill={MAST_INK} hole={MAST} spin="reverse" duration={COG_PERIOD} />
+            <EverymenCog size={16} fill={MAST_INK} hub={MAST} spin="reverse" duration={COG_PERIOD} />
           </ComposerMasthead>
   );
   const ground = (

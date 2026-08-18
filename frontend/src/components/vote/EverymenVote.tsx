@@ -63,7 +63,19 @@ const SPARK_DIRS: [number, number][] = [
 
 const TIERS = VOTE_REFRAMES['everymen'].tiers
 
-/** Eight gear teeth — filled (reached) or a thin edge outline (unreached). */
+/**
+ * Eight gear teeth — filled (reached) or a thin edge outline (unreached).
+ *
+ * THE ONE EVERYMEN GEAR THAT IS NOT `factionMarks/everymenCogs` (#2121). That
+ * consolidation gave the faction a single ornament cog and repointed all five
+ * of its other surfaces at it; this row keeps its own because the shared mark
+ * has no OUTLINE mode and cannot grow one honestly. It is a solid single path
+ * with an opaque hub, so an unreached tier drawn from it would read as the
+ * filled gear's silhouette rather than as a cold rim — and the reached vs
+ * unreached contrast IS this widget's whole sentence. Detached teeth are what
+ * make the outline state legible. A measured refusal, not "it was already
+ * there".
+ */
 function teeth(fill: string, stroke: string | undefined) {
   return [0, 1, 2, 3, 4, 5, 6, 7].map((k) => (
     <rect

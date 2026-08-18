@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { EverymenBand } from "../cardMasthead/factionBands";
 import PointsRoundel from "../factionMarks/PointsRoundel";
+import { EverymenCog } from "../factionMarks/everymenCogs";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -98,57 +99,6 @@ const LABEL: CSSProperties = {
   letterSpacing: "0.16em",
   textTransform: "uppercase",
 };
-
-/**
- * A toothed gear on a 24-unit square, built rather than drawn: eight long teeth
- * on a hub, which no hand-written path holds legibly at three different sizes.
- */
-function gearPath(): string {
-  const teeth = 8;
-  const radius = 9.5;
-  const tipLength = 5;
-  const tipHalf = 1.6;
-  const rootHalf = 2.6;
-  const point = (r: number, angle: number): [number, number] =>
-    [12 + r * Math.cos(angle), 12 + r * Math.sin(angle)];
-
-  let path = "";
-  for (let n = 0; n < teeth; n += 1) {
-    const start = (n / teeth) * Math.PI * 2;
-    const step = (Math.PI * 2) / teeth;
-    const rootA = point(radius, start - rootHalf / radius);
-    const tipA = point(radius + tipLength, start - tipHalf / (radius + tipLength));
-    const tipB = point(radius + tipLength, start + tipHalf / (radius + tipLength));
-    const rootB = point(radius, start + rootHalf / radius);
-    const nextRoot = point(radius, start + step - rootHalf / radius);
-    path += `${n === 0 ? "M" : "L"}${rootA[0]},${rootA[1]}`
-      + `L${tipA[0]},${tipA[1]}L${tipB[0]},${tipB[1]}L${rootB[0]},${rootB[1]}`
-      + `A${radius},${radius} 0 0 1 ${nextRoot[0]},${nextRoot[1]}`;
-  }
-  return `${path}Z`;
-}
-
-const GEAR_PATH = gearPath();
-
-function Gear({ size, fill, hub, opacity }: {
-  size: number
-  fill: string
-  hub: string
-  opacity?: number
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      style={{ display: "block", flex: "0 0 auto", opacity }}
-    >
-      <path d={GEAR_PATH} fill={fill} />
-      <circle cx="12" cy="12" r="3" fill={hub} />
-    </svg>
-  );
-}
 
 /**
  * The union's fist gripping a bolt, traced from the design's supplied vector:
@@ -387,7 +337,7 @@ export default function EverymenTaskCard({
                   <span aria-hidden="true" style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
                 </div>
 
-                <Gear size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
+                <EverymenCog size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
 
                 <div style={{ flex: "1 1 0", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
                   <span aria-hidden="true" style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
@@ -474,7 +424,7 @@ export default function EverymenTaskCard({
 
               {inProgressCount > 0 && (
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-                  <Gear size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
+                  <EverymenCog size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
                   <span style={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)" }}>
                     {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
                   </span>
