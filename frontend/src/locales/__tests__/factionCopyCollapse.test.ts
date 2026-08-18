@@ -139,13 +139,12 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `common:profile\\.{F}\\.levelUnit`, shared: 'common:profile.ptsThisLevel', wording: '{{current}} / {{span}} pts this level' },
   { banned: `common:profile\\.{F}\\.nextLevel`, shared: 'common:profile.nextLevel', wording: 'next · lvl {{level}}' },
   { banned: `common:profile\\.{F}\\.praxisEmptyBody`, shared: 'common:profile.praxisEmptyBody', wording: 'Every path is still open — the first finding is the hardest.' },
-  // ponytail: #1864's table and #1863's ruling DISAGREE on this one string —
-  // the table's agreed wording keeps "sealed", the seal ruling retires it. The
-  // previous agent flagged the clash rather than picking (see catalog.test.ts's
-  // SEAL_SURVIVORS); this issue owns key STRUCTURE, so the key collapses and
-  // the word stays exactly as it shipped. Upgrade path: an owner ruling on
-  // #1863 rewords this one leaf, touching nothing else.
-  { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis sealed yet' },
+  // #1864's table and #1863's ruling C disagreed on this one string — the table
+  // said "submitted", the seal ruling's own example said "sealed" — so #1911
+  // collapsed the key and shipped the word untouched. #2046 is the owner ruling
+  // that picked: the table wins, and "sealed" leaves the one place a player
+  // reads it.
+  { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis submitted yet.' },
   { banned: `common:profile\\.{F}\\.praxisEyebrow`, shared: 'common:profile.praxisEyebrow', wording: 'Submitted by {{name}}' },
   { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'lvl' },
 
