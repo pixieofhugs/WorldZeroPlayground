@@ -106,8 +106,6 @@ import {
   DECO,
   DISC,
   METAL_SIGILS,
-  RuneRule,
-  GlyphRegister,
   initialsOf,
   INK,
   INNER,
@@ -204,9 +202,8 @@ function useObservedWidth(): [(node: HTMLElement | null) => void, number | null]
 }
 
 interface SizeSet {
-  /** Masthead band height, and the width its registers are drawn to fill. */
+  /** Masthead band height. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
   masthead: number
-  mastheadView: number
   /** A byline octagon. Geometry. */
   disc: number
   titleSize: string
@@ -221,7 +218,6 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     masthead: 84,
-    mastheadView: 1200,
     disc: 46,
     titleSize: "var(--text-display)",
     pagePadding: "var(--space-2xl)",
@@ -231,7 +227,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
   mobile: {
     masthead: 68,
-    mastheadView: 440,
     disc: 40,
     titleSize: "var(--text-heading)",
     pagePadding: "var(--space-lg)",
@@ -408,14 +403,21 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
         {trailing}
       </div>
-      <RuneRule />
+      {/* A rune band ruled the head off under this row until #2210. The band's
+          glyph vocabulary retires kit-wide, and the head keeps its rule: the
+          brass hairline above already flexes the width of the row. */}
     </div>
   );
 
-  // ── The masthead: night band, one incised register, the engraved title ────
+  // ── The masthead: the night band and the engraved title ──────────────────
   //
-  // Shorter than the task page's: a record is filed ON the plate, not the plate
-  // itself, so it carries one register rather than two.
+  // AN ORNAMENT LAYER SAT BEHIND THE LOCKUP UNTIL #2210 — an absolutely
+  // positioned SVG carrying one incised glyph register plus the pair of faint
+  // brass rules that ruled it off from the title. The whole layer goes, not
+  // just the register: those two rules existed to bracket it, and #2143's
+  // notation band brought the masthead its own `1px` / `3px double` pair, which
+  // is the head's rule now. What is left on the band is the lockup, which no
+  // longer needs a stacking layer to sit above.
   const masthead = (
     <div>
       <div
@@ -427,29 +429,11 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           color: BAND_INK,
         }}
       >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${size.mastheadView} 84`}
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, zIndex: 1 }}
-        >
-          <path
-            d={`M8 20 H${size.mastheadView - 8} M8 64 H${size.mastheadView - 8}`}
-            stroke={BRASS_LIGHT}
-            strokeWidth="0.6"
-            opacity="0.28"
-          />
-          <GlyphRegister width={size.mastheadView} y={72} strength={0.3} keyPrefix="rec" />
-        </svg>
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <EphemeristsMasthead
-            slug={praxis.task_faction_slug}
-            scale={desktop ? "page" : "card"}
-            seed={`praxis:${praxis.id}`}
-          />
-        </div>
+        <EphemeristsMasthead
+          slug={praxis.task_faction_slug}
+          scale={desktop ? "page" : "card"}
+          seed={`praxis:${praxis.id}`}
+        />
       </div>
       <Cornice glow />
     </div>

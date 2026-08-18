@@ -155,7 +155,6 @@ import {
   PLATE,
   QUIET,
   READING,
-  RuneRule,
   SHADOW,
   Sign,
 } from "../../../components/factionMarks/ephemeristsPlate";
@@ -271,16 +270,20 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION };
   /**
-   * The rune band is this skin's rule (#1638, replacing the flute), drawn ONCE
-   * above the footer (#1707) rather than at the head of every section — the
-   * design calls its rule once and parts the regions with the sheet's own gap.
+   * The skin's rule, drawn ONCE above the footer (#1707) rather than at the head
+   * of every section — the design calls its rule once and parts the regions with
+   * the sheet's own gap.
    *
-   * PAIRED with the brass hairline, which the plate's other mounts are not:
-   * each of those sits under a section HEAD whose own filler rule already draws
-   * that line, while the composer's rule closes a column of bare field labels.
-   * On its own the band reads as a loose row of marks rather than as a rule.
+   * IT IS THE BRASS HAIRLINE ALONE SINCE #2210. The rule used to be that
+   * hairline PAIRED with the kit's rune band, and the pairing was the point: the
+   * plate's other mounts sat under a section HEAD whose own filler rule already
+   * drew the line, while this one closes a column of bare field labels, where a
+   * band on its own read as a loose row of marks. #2210 retires the band's glyph
+   * vocabulary kit-wide, so what is left is the half that was doing the ruling —
+   * the same 1px brass the section heads draw, through the shared
+   * `ComposerRule` rather than a second declaration of it here.
    */
-  const runes = <RuneRule rule />;
+  const composerRule = <ComposerRule style={{ background: BRASS, opacity: 0.5 }} />;
 
   /** Radius 0, borderW 1.5 — the skin's whole geometry row. */
   const fieldBox = {
@@ -448,7 +451,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     sheetStyle,
     masthead,
     ground,
-    rule: () => runes,
+    rule: () => composerRule,
     mark: statusMark,
     statusStyle: { ...label, color: INK },
     metaStyle: { fontFamily: READING, color: QUIET },
@@ -770,9 +773,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
-        {/* The footer's own divider. `ComposerRule` hands its whole box over
-            when it is given children, so the rune band replaces the hairline. */}
-        <ComposerRule>{runes}</ComposerRule>
+        {/* The footer's own divider — the plate's brass, at the shared rule's
+            own 1px. */}
+        {composerRule}
 
         {/* [Cancel] … [Submit] — the global order from #646. The cast is a
             full-bleed band (#1828) with the open eye following the word. */}

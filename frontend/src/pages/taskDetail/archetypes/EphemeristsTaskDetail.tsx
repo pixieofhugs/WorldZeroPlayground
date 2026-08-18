@@ -17,10 +17,8 @@ import {
 } from "./shared";
 import {
   Cornice,
-  GlyphRegister,
   initialsOf,
   Octagon,
-  RuneRule,
   Sign,
   SMALL_CAPS,
   Tally,
@@ -132,11 +130,12 @@ const BRIEF_LEADING = 32;
 
 /* The glyph library, its 16-sign register and their pitch stood here — a
    transcription of the kit's, path for path, which is exactly the shape that
-   lets one surface keep drawing last month's mark. #1654 collapsed it along
-   with `Glyph`, `GlyphRegister`, `Octagon`, `Cornice`, `Tally` and `Sign`: all
-   seven now come from `factionMarks/ephemeristsPlate`, imported at the top of
-   this file. Nothing on this page draws differently — the kit's `GlyphRegister`
-   defaults its ink to the same gold the local one hardcoded. */
+   lets one surface keep drawing last month's mark. #1654 collapsed all seven
+   into `factionMarks/ephemeristsPlate`, imported at the top of this file.
+   #2210 then retired the REGISTER itself, kit and copies together: the
+   mathematical notation band #2143 hung under the wordmark is the faction's
+   only ornament row, and `GLYPHS` survives as the vocabulary for a single mark
+   drawn by `Sign`. */
 
 /* The page's own `SMALL_CAPS` stood here — the kit's constant to the byte, and
    the last thing in this file that restated the plate's typography. It is now
@@ -154,16 +153,14 @@ const BRIEF_LEADING = 32;
 /* The page's own hand-copied `FlutedRule` stood here — a second, byte-identical
    declaration of the kit's divider that no import-following sweep could see, so
    #1638's "fluted rules become shifting runes" would have converted six mounts
-   and silently left this page's two on the old drawing. The rule is now
-   `RuneRule` from `factionMarks/ephemeristsPlate`, imported at the top of this
-   file: one divider, seven mounts, one place to change it. #1654 did the same
-   for the other eleven, so nothing in this file declares a mark any more. */
+   and silently left this page's two on the old drawing. Its replacement, the
+   kit's rune band, retired with the rest of the old glyph vocabulary in #2210;
+   this page's two section heads keep the brass hairline that already flexes
+   across each heading row. Nothing in this file declares a mark. */
 
 interface SizeSet {
   /** Masthead band height. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
   masthead: number
-  /** Width the masthead's registers are drawn to fill. Geometry. */
-  mastheadView: number
   /** The wordmark's winged disc. Geometry. */
   wordmarkDisc: number
   /** The disc crowning the action panel, and the room reserved above it. */
@@ -191,7 +188,6 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     masthead: 108,
-    mastheadView: 1200,
     wordmarkDisc: 176,
     medallion: 104,
     ledgerWidth: 150,
@@ -205,7 +201,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
   mobile: {
     masthead: 92,
-    mastheadView: 440,
     wordmarkDisc: 150,
     medallion: 88,
     ledgerWidth: 116,
@@ -390,11 +385,26 @@ export default function EphemeristsTaskDetail({
         <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
         {gloss !== undefined && <span style={eyebrow}>{gloss}</span>}
       </div>
-      <RuneRule />
+      {/* A rune band closed this head until #2210 retired the old glyph
+          vocabulary. The hairline above rules the head off on its own. */}
     </div>
   );
 
-  // ── The masthead: the night band, its two registers, the engraved title ──
+  // ── The masthead: the night band and the engraved title ──────────────────
+  //
+  // AN ORNAMENT LAYER SAT BEHIND THE LOCKUP UNTIL #2210 — an absolutely
+  // positioned SVG carrying two incised glyph registers, one along the top of
+  // the band and one along the foot, with a pair of faint brass rules bracketing
+  // them off from the title. This is the surface the owner reported: #2143 put
+  // the NOTATION BAND under the wordmark and left the registers standing, so the
+  // page wore two glyph vocabularies at once and the lower register ran through
+  // the band's own marks — the row had been placed to clear a datum row the band
+  // had already replaced, and the band's lead had opened from 5px to 9px.
+  //
+  // The whole layer goes, not just the two registers: the pair of rules existed
+  // to bracket them, and the notation band brought the masthead its own `1px` /
+  // `3px double` pair, which is the head's rule now. What is left on the band is
+  // the lockup, which no longer needs a stacking layer to sit above.
   const masthead = (
     <div style={{ marginBottom: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
       <div
@@ -406,30 +416,11 @@ export default function EphemeristsTaskDetail({
           color: BAND_INK,
         }}
       >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${size.mastheadView} 108`}
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, zIndex: 1 }}
-        >
-          <path
-            d={`M8 24 H${size.mastheadView - 8} M8 84 H${size.mastheadView - 8}`}
-            stroke={BRASS_LIGHT}
-            strokeWidth="0.6"
-            opacity="0.28"
-          />
-          <GlyphRegister width={size.mastheadView} y={13} strength={0.34} keyPrefix="top" />
-          <GlyphRegister width={size.mastheadView} y={95} strength={0.3} keyPrefix="bottom" />
-        </svg>
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <EphemeristsMasthead
-            slug={slug}
-            scale={desktop ? "page" : "card"}
-            seed={`task:${task.id}`}
-          />
-        </div>
+        <EphemeristsMasthead
+          slug={slug}
+          scale={desktop ? "page" : "card"}
+          seed={`task:${task.id}`}
+        />
       </div>
       <Cornice />
     </div>
@@ -946,7 +937,6 @@ export default function EphemeristsTaskDetail({
             </span>
           )}
         </div>
-        <RuneRule />
       </div>
 
       {sortedSubmissions.length === 0 ? (
