@@ -61,6 +61,7 @@ from services.era import (
 )
 from services.level_jump import available_level_reach, consume_level_jump
 from services.praxis_room import close_member_sockets
+from services.vote import void_account_vote_on_join
 from models.duel import Duel, DuelStatus
 
 
@@ -1778,6 +1779,17 @@ async def respond_to_invite(
         has_submitted=False,
     )
     session.add(member)
+
+    # #2216: any vote this account already holds on the praxis is voided here.
+    # An outstanding invite blocks *new* votes (``services.vote``), but one cast
+    # before the invitation arrived would otherwise survive into co-ownership —
+    # the exact state that gate exists to prevent. The accept itself is never
+    # refused for it: the invitee could not have known the rule when they voted.
+    # Called before the flush so ``praxis.members`` is still the set the vote was
+    # scoring, which is the set the re-tally has to move.
+    invitee = await session.get(Character, character_id)
+    if invitee is not None:
+        await void_account_vote_on_join(praxis, invitee, session, era)
 
     invite.status = PraxisInviteStatus.accepted
     await session.flush()
