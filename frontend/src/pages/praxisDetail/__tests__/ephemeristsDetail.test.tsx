@@ -381,3 +381,26 @@ describe("Ephemerists praxis detail — the state axes", () => {
     expect(bare.text).not.toContain("Write-up");
   });
 });
+
+describe("Ephemerists praxis detail — the colophon is undated here (#2124)", () => {
+  /**
+   * #2143 moved the datum row to the foot of the sheet and #2124 closed into it
+   * with a PLACEMENT requirement: the coordinates must not sit adjacent to the
+   * author, the date-of-submission, or any other player-scoped field. On a
+   * praxis the surface's own date IS `submitted_at`, so passing it to
+   * `EphemeristsColophon` puts a player's posting date and a real latitude in
+   * ONE SENTENCE — which is the inference #2124 was filed about, not merely
+   * adjacency to it.
+   *
+   * The undated form is therefore a requirement of this surface and not a
+   * styling choice, and nothing else would notice it going away: the component's
+   * own tests cover both branches, and a `date` prop restored here would render
+   * perfectly and read wrong. `EphemeristsTaskDetail` keeps its date — a task's
+   * `created_at` belongs to the task, not to a player.
+   */
+  it("prints the station but never strikes it with a date", () => {
+    const { text } = render(state());
+    expect(text, "the provenance line still names the station").toContain("+44° 03′");
+    expect(text, "and carries no struck date beside it").not.toContain("Plate struck");
+  });
+});
