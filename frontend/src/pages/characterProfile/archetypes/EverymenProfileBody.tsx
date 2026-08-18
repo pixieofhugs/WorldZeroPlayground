@@ -14,8 +14,11 @@ import type { ReactNode } from 'react'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 
-const INK = 'var(--everymen-ink)' // structure + text on the stable cream board (near-black both themes)
-const PAPER_TEXT = 'var(--everymen-paper-text)' // text on the paper page (flips in dark)
+const INK = 'var(--everymen-ink)' // structure + ink on the red banner (near-black both themes)
+// Text AND rules on the paper page and its panels (#2133, #2227). Byte-identical
+// to `INK` in light (#221a12), so nothing moves by day; it inverts to cream in
+// dark, where the frozen ink would be a rule you cannot see.
+const PAPER_TEXT = 'var(--everymen-paper-text)'
 const MUTED = 'var(--everymen-muted)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
@@ -74,7 +77,11 @@ const dress: ProfileDress = {
   slug: 'everymen',
   pageBackground: PAPER,
   pageOverlay: 'radial-gradient(rgba(34,26,18,0.05) 1px, transparent 1px)',
-  ink: INK,
+  // The page and both panels are the PAPER (#2227), so the skin's ink is the
+  // one that flips with it. `kit.ink` lands in three places: the praxis empty
+  // state, the badges heading — which stands straight on the page — and the
+  // tagline, where `taglineExtra` overrides it to cream on the red banner.
+  ink: PAPER_TEXT,
   muted: MUTED,
   accent: GOLD,
   surface: CREAM,
@@ -121,16 +128,19 @@ const dress: ProfileDress = {
   barFill: `linear-gradient(90deg, ${GOLD}, ${RED})`,
   barTrack: 'rgba(255,255,255,0.16)',
   sectionHeading: heading,
+  // Both panels stand on the paper page, so they take the paper (#2227). The
+  // cream is an ornament ink here — the laurel's centre and the badge disc's
+  // glyph — never a slab.
   emptyStateStyle: {
-    border: `2px dashed ${INK}`,
+    border: `2px dashed ${PAPER_TEXT}`,
     padding: 'var(--space-2xl)',
     textAlign: 'center',
-    background: CREAM,
+    background: PAPER,
   },
   laurel: <SpectrumLaurel centerBg={CREAM} glyphColor={RED} rotate={-8} />,
   badgeBoardStyle: {
-    border: `3px solid ${INK}`,
-    background: CREAM,
+    border: `3px solid ${PAPER_TEXT}`,
+    background: PAPER,
     padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
@@ -140,15 +150,15 @@ const dress: ProfileDress = {
     textTransform: 'uppercase',
     color: MUTED,
     marginLeft: 'auto',
-    border: `1px solid ${INK}`,
+    border: `1px solid ${PAPER_TEXT}`,
     padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow
       badge={badge}
       last={last}
-      dividerColor="rgba(34,26,18,0.18)"
-      nameStyle={{ fontFamily: BEBAS, letterSpacing: '0.02em', color: INK, lineHeight: 1.15 }}
+      dividerColor={`color-mix(in srgb, ${PAPER_TEXT} 18%, transparent)`}
+      nameStyle={{ fontFamily: BEBAS, letterSpacing: '0.02em', color: PAPER_TEXT, lineHeight: 1.15 }}
       medallion={(glyph) => (
         <span
           style={{

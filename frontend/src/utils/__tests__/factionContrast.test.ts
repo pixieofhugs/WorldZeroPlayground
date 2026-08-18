@@ -2705,14 +2705,31 @@ describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
   }
 
   /**
-   * The faction page is a MIXED file, and that is the whole reason the bug was
-   * hard to see: nearly all of its type sits inside `PAPER_FRAME`, whose stock
-   * is `--everymen-cream` — theme-invariant, so the frozen ink is correct there
-   * and eight `color: INK` sites in this file are right. The two section
-   * headings are the only type it sets on the page itself. So the rule is
-   * per-element, in the shape #1793 uses on the Ephemerists body, not per-file.
+   * The faction page WAS a mixed file, and that is the whole reason the bug was
+   * hard to see: nearly all of its type sat inside `PAPER_FRAME`, whose stock
+   * was `--everymen-cream` — theme-invariant, so the frozen ink was correct
+   * there and eight `color: INK` sites in this file were right. Only the two
+   * section headings stood on the page, so #2133's rule was per-element.
+   *
+   * #2227 ENDED THE MIX. The cream slab was ruled a mistake, the frames took
+   * `--everymen-paper`, and with that every one of those eight sites became the
+   * bug this block is about. So the rule widens to the whole file, the shape
+   * `EverymenFieldDesk` below has always had — and it is now the SAME rule for
+   * the same reason, which is the point: one stock, one ink.
+   *
+   * The heading assertion stays as its own claim. A file-wide negative can be
+   * satisfied by deleting the colour altogether; this says what the ink IS.
    */
-  it("EverymenFactionBody's section heading is inked for the page, not the frame", () => {
+  it("EverymenFactionBody sets no text in the structure ink at all", () => {
+    const source = paperSource("pages/factionDetail/archetypes/EverymenFactionBody.tsx");
+    expect(
+      source,
+      "`--everymen-cream` is an ink on this page, never a ground — the frames stand on `--everymen-paper` since #2227. A cream slab here is a headlight on a dark page AND it re-freezes the stock under eight ink sites.",
+    ).not.toMatch(/background:\s*CREAM\b/);
+    expect(source.match(AS_TEXT) ?? [], WHY).toEqual([]);
+  });
+
+  it("EverymenFactionBody's section heading is inked for the stock, not the structure", () => {
     const source = paperSource("pages/factionDetail/archetypes/EverymenFactionBody.tsx");
     const at = source.indexOf("const SECTION_HEADING_TEXT");
     expect(at, "no `SECTION_HEADING_TEXT` in EverymenFactionBody").toBeGreaterThan(-1);
@@ -2801,4 +2818,120 @@ describe("a --color-text-primary fill takes the page as its ink (#2107)", () => 
       "`--color-text-on-accent` is #ffffff in BOTH themes and `--color-text-primary` flips to cream (#f0e6d0) in dark — the pair is 1.24:1 there (#1819, #2107). Ink a primary-neutral fill with `--color-bg-page`, the ground that neutral is measured against.",
     ).toEqual([]);
   });
+});
+
+/**
+ * The cream slabs go dark (#2227) — a REVERSAL, guarded at both halves.
+ *
+ * WHAT SHIPPED AND WHY NOTHING SAW IT. Two kits grounded whole panels on a
+ * theme-invariant light token: Everymen's `PAPER_FRAME` on `--everymen-cream`
+ * (#f4ecd6 / #f3e7ce — it barely moves) and S.N.I.D.E.'s `PAPER_PANEL` on
+ * `--faction-snide-paper` (#f4f1e8, declared exactly once). Every value in play
+ * is a real token, so the value manifest above stays green; every ink on them
+ * is correct measured against them, so the pairing rows stay green too. The
+ * defect exists only as a RELATION between a surface that does not flip and a
+ * page that does, which no row of either kind can express.
+ *
+ * THE OWNER RULED IT A MISTAKE. A cream panel on a dark page reads as a
+ * headlight. So the guard below is a SOURCE guard on the grounds — the shape
+ * #1413 and #1307 use at the bottom of this file, because the bug is
+ * structural: a ground that must not be that token.
+ *
+ * S.N.I.D.E. GETS NO DARK HALF, deliberately. Six components spend
+ * `--faction-snide-paper` as a `color:` on the ink panel, which is correct and
+ * is the whole reason the token may not flip. The fix is per-site — the two
+ * page panels and the profile's badge board take the ink ground the "RE: YOU"
+ * dispatch already wears — so this block also asserts the token keeps exactly
+ * one declaration.
+ *
+ * The ratios are here too, in both themes, because "passes in one theme and
+ * fails in the other" is precisely the class of defect being reversed.
+ */
+describe("no kit grounds a panel on a light token that cannot flip (#2227)", () => {
+  /** (file, the ground it must NOT paint, why that token is an ink). */
+  const FORBIDDEN_GROUNDS: [string, RegExp, string][] = [
+    [
+      "pages/characterProfile/archetypes/EverymenProfileBody.tsx",
+      /background:\s*CREAM\b/,
+      "`--everymen-cream` is an ornament ink (a badge ring, a halftone dot). The praxis empty state and the badge board stand on the paper page, so they take `--everymen-paper` and `--everymen-paper-text`.",
+    ],
+    [
+      "pages/factionDetail/archetypes/SnideFactionBody.tsx",
+      /background:\s*PAPER\b/,
+      "`--faction-snide-paper` is the ink S.N.I.D.E. prints WITH, not on. The About flyer and the rap sheet take `INK_PANEL`, which this same page already wears for the dispatch.",
+    ],
+    [
+      "pages/characterProfile/archetypes/SnideProfileBody.tsx",
+      /background:\s*PAPER\b/,
+      "same call as the faction page: the badge board stands on the ink page, so it grounds on the ink — the shape `emptyStateStyle` in this very dress already had.",
+    ],
+  ];
+
+  for (const [relative, forbidden, why] of FORBIDDEN_GROUNDS) {
+    it(`${relative.split("/").pop()} paints no slab in the ornament ink`, () => {
+      expect(stripComments(sourceOf(relative)), why).not.toMatch(forbidden);
+    });
+  }
+
+  /**
+   * The faction body's own frame, said positively. The negative above can be
+   * satisfied by deleting the ground; this says which stock it is.
+   */
+  it("EverymenFactionBody's PAPER_FRAME grounds on the stock that flips", () => {
+    const source = stripComments(
+      sourceOf("pages/factionDetail/archetypes/EverymenFactionBody.tsx"),
+    );
+    const at = source.indexOf("const PAPER_FRAME");
+    expect(at, "no `PAPER_FRAME` in EverymenFactionBody").toBeGreaterThan(-1);
+    const style = source.slice(at, source.indexOf("};", at));
+    expect(
+      style,
+      "the frame is a panel on `.em-backdrop`, which ramps `--everymen-paper` to `--everymen-paper-deep`. Both flip; the cream does not.",
+    ).toContain("background: PAPER");
+    expect(
+      style,
+      "panel and page are 1.06:1 apart even in light, so the double rule IS the panel and it has to flip with the stock. `--everymen-ink` reads 1.16:1 on the dark paper and `--everymen-frame` only 1.38:1 — a dim rule is still no rule.",
+    ).toContain("solid ${PAPER_TEXT}");
+  });
+
+  it("--faction-snide-paper keeps exactly one declaration", () => {
+    const declarations = stripComments(CSS_TEXT).match(/--faction-snide-paper\s*:/g) ?? [];
+    expect(
+      declarations.length,
+      "minting a dark half would turn six correct `color:` readers dark-on-dark (SnideDuelSealConfirm, SnideFactionHero, SnideFeedFrame, SnideProfileBody, SnideEditPraxis, SnideFactionBody). The reversal is per-site, not per-token.",
+    ).toBe(1);
+  });
+
+  /**
+   * Every (ground, ink) pairing the reversal creates, in BOTH themes. The
+   * Everymen half is where the numbers actually move — S.N.I.D.E.'s tokens are
+   * theme-invariant by design, so both readings are the same figure, and the
+   * point of measuring twice is to prove that stays true.
+   */
+  const REVERSED_PAIRS: [string, string, string][] = [
+    ["everymen frame, body copy", "--everymen-paper", "--everymen-paper-text"],
+    ["everymen frame, eyebrow", "--everymen-paper", "--everymen-muted"],
+    ["everymen frame, accent ink", "--everymen-paper", "--everymen-paper-accent"],
+    ["snide panel, body copy", "--faction-snide-ink", "--faction-snide-paper"],
+    ["snide panel, quiet copy", "--faction-snide-ink", "--faction-snide-card-muted"],
+    ["snide panel, marker heading", "--faction-snide-ink", "--faction-snide-acid-deep"],
+    ["snide panel, roster level", "--faction-snide-ink", "--faction-snide-pink"],
+    ["snide badge chip, glyph", "--faction-snide-acid", "--faction-snide-ink"],
+  ];
+
+  for (const theme of BOTH_THEMES) {
+    for (const [what, surface, text] of REVERSED_PAIRS) {
+      it(`${what} clears AA (${theme})`, () => {
+        const ground = resolveColor(surface, theme);
+        const ink = resolveColor(text, theme);
+        expect(ground.color, `${surface} (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
+        expect(ink.color, `${text} (${theme}) resolved to "${ink.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(ink.color!, ground.color!);
+        expect(
+          ratio,
+          `${text} on ${surface} (${theme}) is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL);
+      });
+    }
+  }
 });
