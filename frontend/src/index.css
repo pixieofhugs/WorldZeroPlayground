@@ -141,8 +141,14 @@
      both owe 4.5:1) on every neutral stock in both cascades and on all eight
      card sheets in DARK — but it fails on three sheets in LIGHT, and the
      reason is polarity rather than taste: S.N.I.D.E., Singularity and, since
-     #1627, the Ephemerists plate are near-black in BOTH themes (§6), so no
-     light-cascade neutral can clear them. That is #694's shape exactly: a
+     #1627, the Ephemerists CARD sheet are near-black in BOTH themes (§6), so no
+     light-cascade neutral can clear them. (The Ephemerists card sheet is the
+     cornice band, and #2141 kept the band the compass blue in both cascades
+     while giving the SHEET under it a vellum light half — so the three-in-light
+     count is unchanged, but every plate figure quoted below is now the DARK
+     reading only. A ratio in prose is a claim about two tokens; see the
+     parenthesis further down, which makes the same point about its own
+     predecessors.) That is #694's shape exactly: a
      colour that must differ between two factions WITHIN one theme is a
      faction question, not a global one.
 
@@ -163,7 +169,8 @@
      outright — which left the Ephemerists plate as the one surface where a
      `.label-caption` actually landed on this number in light. `.eph-plate-sheet`
      now repoints the seam onto `-plate-quiet` (6.38 page / 5.98 plate / 5.52
-     panel cell, both cascades); see that rule for why it is not `-card-muted`.
+     panel cell in dark; 6.67 / 7.35 / 8.21 in light since #2141 gave the
+     register a vellum half); see that rule for why it is not `-card-muted`.
      THE SEAM IS SPENT ON ONE SHEET, NOT OPENED AS A HABIT: a faction repoints
      this only where the global genuinely cannot reach its ground, and the
      measurement is the argument.
@@ -195,19 +202,21 @@
      in the app that colours a link, and the praxis body it renders is skinned
      by all eight factions — so ONE ink was answering for the app's near-white
      page, S.N.I.D.E.'s photocopier black, Singularity's terminal and the
-     Ephemerists' plate, which since #1627 is a night ground in both cascades
-     (the hover ink, being the near-black primary, reads 1.07:1 there). A colour
-     that must differ between two factions inside one theme is #694's shape.
-     #1636 measured 3.06 / 3.17 / 2.82; #1715's lift takes the light neutral
-     down to 2.20 / 2.28 / 2.03 on the same three, for the reason the
-     `--label-ink` block above works through in full — the sheets that lose are
-     the always-dark ones, which no light-cascade neutral could ever have
-     served, and this seam is precisely how they escape it.
+     Ephemerists' plate, a night ground in both cascades from #1627 until #2141
+     gave it a vellum light half (the hover ink, being the near-black primary,
+     read 1.07:1 there). A colour that must differ between two factions inside
+     one theme is #694's shape. #1636 measured 3.06 / 3.17 / 2.82; #1715's lift
+     takes the light neutral down to 2.20 / 2.28 / 2.03 on the same three, for
+     the reason the `--label-ink` block above works through in full — the sheets
+     that lose are the always-dark ones, which no light-cascade neutral could
+     ever have served, and this seam is precisely how they escape it.
 
-     NOTHING IS MINTED for the Ephemerists half: `-plate-nile` is declared
-     "links, affirmations" and is already measured on all three of the plate's
-     grounds (7.00 / 7.47 / 6.47), and hover goes to the plate's body ink, which
-     is the same relation the two neutrals below have to each other. */
+     NOTHING IS MINTED for the Ephemerists half. It was `-plate-nile` until
+     #2141 deleted that token with the faction's aqua; the seam now takes
+     `-plate-brass-light`, which is declared "links + affirmations" and clears
+     4.5:1 on all three of the register's sheets in both halves. Hover goes to
+     the plate's body ink, which is the same relation the two neutrals below
+     have to each other. */
   --link-ink: var(--color-text-secondary);
   --link-ink-hover: var(--color-text-primary);
 }
@@ -447,13 +456,15 @@
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
-  /* The cornice masthead (#1627). Ephemerists is a DARK-IN-LIGHT card faction
-     now, beside S.N.I.D.E. and Singularity: the aged-manuscript vellum was the
-     illuminated CODEX's stock, and #1208 swept the last surface off that
-     metaphor — this contract was the only thing still holding it up. The four
-     card names take the four inks the cornice BAND admits (WORLD_ZERO_STYLE §3:
-     band-ink, gold, band-quiet, brass-light), which is the whole of the plate's
-     ink budget on that ground. */
+  /* The cornice masthead (#1627, repriced by #2141). Ephemerists is a
+     DARK-IN-LIGHT card faction, beside S.N.I.D.E. and Singularity: the
+     aged-manuscript vellum was the illuminated CODEX's stock, and #1208 swept
+     the last surface off that metaphor — this contract was the only thing still
+     holding it up. The card names take the inks the cornice BAND admits
+     (WORLD_ZERO_STYLE §3), which is the whole of the plate's ink budget on that
+     ground. The band is the compass blue in both cascades, so these aliases
+     resolve to one value each and the card sheet does not flip — which is the
+     premise the plate's own register note leans on. */
   --faction-ephemerists-card-bg: var(--faction-ephemerists-plate-band);
   --faction-singularity-card-bg: #050f08; /* terminal black */
 
@@ -462,7 +473,7 @@
   --faction-wow-card-text: #2b2412; /* chronicle body ink — 14.02:1 */
   --faction-coven-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
-  --faction-ephemerists-card-text: var(--faction-ephemerists-plate-band-ink); /* 14.00:1 */
+  --faction-ephemerists-card-text: var(--faction-ephemerists-plate-band-ink); /* 7.59:1 */
   --faction-singularity-card-text: #4ade80;
 
   /* ── Faction card accents (light mode) ── */
@@ -485,9 +496,22 @@
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
   /* The brass HIGHLIGHT, not `-plate-brass`: the darker brass is a rule and a
      frame colour on every plate ground and is never an ink. The accent is
-     metadata, so it owes 4.5:1 and pays 11.98:1 — retiring the rubric
-     vermilion's 3.72:1, which #651 allowlisted and no repaint had reached. */
-  --faction-ephemerists-card-accent: var(--faction-ephemerists-plate-brass-light);
+     metadata, so it owes 4.5:1 and pays 11.18:1 — retiring the rubric
+     vermilion's 3.72:1, which #651 allowlisted and no repaint had reached.
+
+     IT STOPPED BEING AN ALIAS IN #2141, and the reason is the shape this file
+     keeps meeting: a THEME-INVARIANT SURFACE UNDER A FLIPPING INK. It aliased
+     `-plate-brass-light`, which was one value while the whole register was
+     night-valued and is now the SHEET's link ink — #6f5620 by day. The band it
+     is measured on does not flip, so the alias would have put a 2.63:1 dark
+     brass on the compass blue in light while every check stayed green: both
+     ends are real tokens, so no census, no lint and no "is it tokenized" grep
+     can see it. Only a pairing measured in BOTH themes can, which is what
+     `ephemerists card accent` in factionContrast.test.ts now is. The value is
+     the one the band has always rendered — the night half of the highlight —
+     stated outright rather than reached through a name that no longer means it
+     on this ground. */
+  --faction-ephemerists-card-accent: #e6c877;
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
@@ -501,7 +525,7 @@
   --faction-wow-card-muted: #7a6b45;
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
-  --faction-ephemerists-card-muted: var(--faction-ephemerists-plate-band-quiet); /* 8.97:1 */
+  --faction-ephemerists-card-muted: var(--faction-ephemerists-plate-band-quiet); /* 8.37:1 */
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── Faction headline fonts (per-faction display) ──
@@ -2807,11 +2831,12 @@
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
   --faction-coven-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
-  /* Ephemerists declares no card value here at all (#1627). Its four card names
-     alias the Valley plate's cornice band, and the plate is theme-invariant, so
-     the sheet is the same near-black in both cascades — the shape S.N.I.D.E. and
-     Singularity above have (theirs restate a value; there is nothing to restate
-     when the contract is an alias). */
+  /* Ephemerists declares no card value here at all (#1627, still true after
+     #2141 split the register). Its card names alias the Valley plate's cornice
+     BAND, and the band is the compass blue in both cascades even though the
+     sheet under it now flips — so the card ground is the same near-black in
+     both, the shape S.N.I.D.E. and Singularity above have (theirs restate a
+     value; there is nothing to restate when the contract is an alias). */
   --faction-singularity-card-bg: #050f08;
 
   /* ── Faction card text (dark mode) ── */
@@ -4678,12 +4703,18 @@
 
    It is now `-plate-page`, the same ground the task detail's sheet
    sits on, wearing the plate's own marks: a gold bloom off the top
-   edge, two sets of surveyor's rings bleeding from opposite corners
-   in brass and nile, papyrus grain, and the journal's ruling. The
-   vignette follows `-plate-page` itself rather than a second sheet
-   colour, because the plate family has no "deep" twin — and it stays
-   a LIGHTENING wash at the top for the reason `.eph-plate-sheet`
-   records above: a darkening veil eats `-nile`'s measured margin.
+   edge, a set of surveyor's rings bleeding from the top corner in
+   brass, papyrus grain, and the journal's ruling. The vignette
+   follows `-plate-page` itself rather than a second sheet colour,
+   because the plate family has no "deep" twin.
+
+   #2144 OWNS THE REWRITE OF THIS RECIPE — the warped ephemeris net
+   replaces the seven-layer wash outright. What #2141 did here is the
+   minimum that leaves `main` green and the faction aqua-free: the
+   two `-plate-nile` layers (a 12% corner bloom and a 10% ring set)
+   are DELETED with the token, not repointed onto a brass that the
+   layer above them already carries. Five layers, not seven; do not
+   read the reduced stack as the design's intent, read #2144's.
    ══════════════════════════════════════════════════════════════ */
 .eph-backdrop {
   position: fixed;
@@ -4693,13 +4724,11 @@
   background-color: var(--faction-ephemerists-plate-page);
   background-image:
     radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--faction-ephemerists-plate-gold) 18%, transparent), transparent 72%),
-    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--faction-ephemerists-plate-nile) 12%, transparent), transparent 72%),
     repeating-radial-gradient(circle at 90% 8%, transparent 0 33px, color-mix(in srgb, var(--faction-ephemerists-plate-brass) 12%, transparent) 33px 34px),
-    repeating-radial-gradient(circle at 6% 96%, transparent 0 27px, color-mix(in srgb, var(--faction-ephemerists-plate-nile) 10%, transparent) 27px 28px),
     radial-gradient(var(--faction-ephemerists-plate-rule) 0.6px, transparent 0.9px),
     repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-rule) 0 1px, transparent 1px 26px),
     linear-gradient(170deg, var(--faction-ephemerists-plate-bg), var(--faction-ephemerists-plate-page));
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 5px 5px, 100% 100%, 100% 100%;
+  background-size: 100% 100%, 100% 100%, 5px 5px, 100% 100%, 100% 100%;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -5108,10 +5137,13 @@
    already settled the shape; this is the third ground to take it.
 
    ONE RULE, NOT TWO. The dark twin existed to swap the bloom's gold for a
-   dimmer one over a night plate. The plate is night in both cascades since
-   #1627, so the twin's values are simply the values, and the LINK INKS the
-   column hands down (#1636) are declared here for the same reason a faction
-   frame sets `--label-ink` once on its own root.
+   dimmer one over a night plate. Every token named below is theme-aware in its
+   own declaration since #2141, so one rule still says both halves, and the LINK
+   INKS the column hands down (#1636) are declared here for the same reason a
+   faction frame sets `--label-ink` once on its own root. THE LINK INK IS
+   `-plate-brass-light` (#2141 §4): nile is deleted, and a link is text that
+   owes 4.5:1 — 5.09:1 on the vellum sheet by day, 9.68:1 on the plate by
+   night — which `-brass-rule`'s 3.58:1 would not have paid.
 
    AND THE LABEL INK IS NOW ONE OF THEM (#1754). The seam was declared for this
    sheet and never spent on it: unset, the label tier inherits the global
@@ -5124,10 +5156,11 @@
 
    NOT `-card-muted`, which is the default the seam's own declaration names.
    The Ephemerists card sheet is the cornice band, so `-card-muted` is
-   `-plate-band-quiet` — an ink measured on #0a0c15. This column's grounds are
-   the page, the plate and the panel cell, and `-plate-quiet` is the sibling
-   minted for exactly those three (#1173), clearing them at 6.38 / 5.98 / 5.52
-   in BOTH cascades. It is also what the plate's own quiet prose already reads,
+   `-plate-band-quiet` — an ink measured on the compass blue. This column's
+   grounds are the page, the plate and the panel cell, and `-plate-quiet` is the
+   sibling minted for exactly those three (#1173), clearing them at 6.67 / 7.35
+   / 8.21 in light and 6.38 / 5.98 / 5.52 in dark. It is also what the plate's
+   own quiet prose already reads,
    so the label tier joins the register rather than adding a fourth warm tone
    to one sheet. Dark spends ~2.3 points for that (8.33 -> 5.98 on the plate)
    and stays well over the 4.5 floor; a faction ink is not the most-painted
@@ -5141,7 +5174,7 @@
    three pairings it creates were already gated there. */
 .eph-plate-sheet {
   --label-ink: var(--faction-ephemerists-plate-quiet);
-  --link-ink: var(--faction-ephemerists-plate-nile);
+  --link-ink: var(--faction-ephemerists-plate-brass-light);
   --link-ink-hover: var(--faction-ephemerists-plate-ink);
   background-color: var(--faction-ephemerists-plate-page);
   background-image: radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%);
