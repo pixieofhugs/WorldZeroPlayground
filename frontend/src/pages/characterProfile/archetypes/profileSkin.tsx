@@ -312,7 +312,7 @@ export function AboutBlock({
  * measure in `ch` so it follows whatever face the kit hands it.
  *
  * Hidden when empty, per the house rule. No character has written one yet, so
- * on day one this column is credential card, level ring and progression bar —
+ * on day one this column is credential card, level readout and progression bar —
  * that is the design, not a missing placeholder.
  */
 export function TaglineSlot({

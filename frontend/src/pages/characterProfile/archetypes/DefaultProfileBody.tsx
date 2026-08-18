@@ -667,7 +667,7 @@ function MobileProfile({
               {t('profile.handleJoined', { username: character.username, joined })}
             </span>
 
-            {/* progression panel — level ring + points-into-level bar */}
+            {/* progression panel — level readout + points-into-level bar */}
             {progression && (
               <div
                 style={{
