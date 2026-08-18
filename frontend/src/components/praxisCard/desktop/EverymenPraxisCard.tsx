@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { factionCssVar } from "../../../utils/factions";
+import FactionMasthead from "../../cardMasthead/FactionMasthead";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -14,7 +15,9 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *
  *  • the MASTHEAD was absent entirely — the loudest single thing the design
  *    gives this faction, and the reason the card reads as a newspaper rather
- *    than as a beige panel;
+ *    than as a beige panel. What #841 put back was a hand-rolled bar that did
+ *    not match the task card's; #2185 replaced it with the shared band, which
+ *    is the same correction made once for both kits;
  *  • the frame's border was `--color-border`, the app's neutral chrome. On a
  *    broadsheet the rule around the sheet is part of the PRINTING, so it is the
  *    faction ink (`--everymen-frame`);
@@ -22,7 +25,8 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *    invented, and it clipped the foot of every card it was on.
  *
  * The masthead is kept deliberately low and tightly tracked so it frames the
- * report rather than shouting over the headline.
+ * report rather than shouting over the headline — and since #2185 that setting
+ * is the task card's, not a second one measured here.
  */
 
 /** The red margin rule down the ruled sheet. Static (#586). */
@@ -58,39 +62,19 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         transition: "background 150ms, color 150ms",
       }}
     >
-      {/* Masthead — the paper's name across the head of the sheet. */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "var(--space-md)",
-          padding: "var(--space-xs) var(--space-lg)",
-          background: "var(--everymen-red)",
-          color: "var(--everymen-masthead-text)",
-          fontFamily: "var(--font-accent)",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead lettering at the design's 15, kept low so it frames rather than shouts (§4a)
-          fontSize: 15,
-          letterSpacing: "0.3em",
-          textTransform: "uppercase",
-          // ornament (#1609): a printed RULE under the masthead, drawn as a
-          // zero-blur shadow. Nothing is lifted, so no cast token. Stays raw.
-          boxShadow: "0 2px 0 rgba(34, 26, 18, 0.22)",
-        }}
-      >
-        {/* Cogs flank the name — a drawn glyph, not an icon (§7). The name
-            itself ("The Everymen", `card.masthead.everymen`) was CUT by #1909:
-            once the masthead is generic it reads "Praxis" on a praxis card, and
-            Everymen's was only ever the faction's own name. The cogs stay. */}
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: flanking cog glyph, sized under the lettering (§4a) */}
-        <span aria-hidden style={{ fontSize: 12, opacity: 0.85 }}>
-          ⚙
-        </span>
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: flanking cog glyph, sized under the lettering (§4a) */}
-        <span aria-hidden style={{ fontSize: 12, opacity: 0.85 }}>
-          ⚙
-        </span>
-      </div>
+      {/* THE MASTHEAD IS THE BILL'S OWN NOW (#2185).
+
+          This card drew its own red bar — `--everymen-red`, `--font-accent` at
+          15px, two flanking cogs and no name — while `EverymenTaskCard` drew
+          `--faction-everymen-bill-mast` in Bebas at `--text-title` under a
+          double rule. Two mastheads for one faction, which is exactly what
+          `CardMasthead` was created to prevent. The band is mounted from
+          `cardMasthead/FactionMasthead` now, so there is one of them.
+
+          THE COGS STAND DOWN, for the reason they did on the task card (#2029):
+          they flanked the centre the wordmark now holds. The cog stays the
+          bill's motif on the hero rule and the in-progress line. */}
+      <FactionMasthead slug="everymen" />
 
       <div
         style={{

@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import FactionMasthead from "../../cardMasthead/FactionMasthead";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -10,10 +11,9 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *
  *  • the GRADIENT RUNNING-HEAD BAND with the masthead set in it. The design's
  *    running head is a 6px gold/plum STRIPE carrying no text at all, and the
- *    masthead is an eyebrow LINE inside the text column ("CHRONICLE OF PROOF ·
- *    № 663"), where it stops at the score stamp instead of running under it.
- *    That band is also what forced #838 to deepen four header stops for
- *    contrast — nothing needs protecting once no text sits on the gold;
+ *    eyebrow LINE it replaced sat inside the text column ("CHRONICLE OF PROOF ·
+ *    № 663"). The stripe stays; what sits above it now is the faction's own
+ *    band (see below), which is a different thing in the same place.
  *  • the PLUM FRAME. `ChronicleTheme` carried a single `accent` doing duty as
  *    border AND rule AND ink tint, so the card bound itself in plum and the
  *    design's gold frame never shipped (#860 ask 2). The border is its own token
@@ -22,6 +22,13 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *  • the shared ChroniclePraxisCard itself. It existed only because Coven was
  *    wearing WOW's frame; with Coven on its own sticker, one indirection for one
  *    caller was just a place for the two palettes to meet again.
+ *
+ * IT WEARS THE DECREE'S BANNER NOW (#2185). The praxis card had no masthead at
+ * all: #1909 removed the praxis-card masthead on the judgement that a card
+ * answering a task does not need a band. THE OWNER HAS SINCE DECIDED IT DOES,
+ * and this card wears the same plum-and-gilt banner `WowTaskCard` wears. Nothing
+ * about #1909 was wrong at the time — the decision changed, and #2185 is the
+ * record. Do not restore the old rationale beside the band it argues against.
  *
  * THE ARCHAIC REGISTER IS GONE (#1909). Four strings fed the shared slots —
  * `card.masthead.wow` ("Chronicle of proof · № {{id}}"), `card.wow.forQuest`
@@ -54,7 +61,15 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         transition: "background 150ms, color 150ms",
       } as CSSProperties}
     >
-      {/* The running head: a woven gold/plum stripe. No text — see the note above. */}
+      {/* THE BANNER (#2185) — the same band `WowTaskCard` wears, mounted from
+          `cardMasthead/FactionMasthead` rather than restated, so the chronicle
+          and the decree cannot drift apart. */}
+      <FactionMasthead slug="wow" />
+
+      {/* The running head: a woven gold/plum stripe. No text — see the note
+          above. It survives the band because it is not a masthead: it is the
+          chronicle's own woven rule, and on the task card the same place under
+          the band is where `Bunting` hangs. */}
       <div
         aria-hidden
         style={{
