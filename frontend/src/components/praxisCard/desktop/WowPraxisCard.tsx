@@ -105,7 +105,8 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             textTransform: "none",
             letterSpacing: "0.06em",
             fontSize: "var(--text-content)",
-            opacity: 1,
+            // The `opacity: 1` that used to sit here cancelled a shared 0.7 the
+            // slot no longer carries (#2248) — nothing to cancel, so it goes.
           }}
           footnote={
             submitted && (

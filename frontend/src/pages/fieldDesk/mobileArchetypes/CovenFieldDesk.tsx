@@ -140,7 +140,12 @@ const actionPillStyle: CSSProperties = {
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
-  color: DEEP,
+  // INK, not DEEP (#2248). The pill's ground IS the slip sheet, whose darkest
+  // stop `--faction-coven-slip-mid` is the one an ink owes AA against: DEEP
+  // reads 3.33:1 there, which is exactly the figure `covenSlip`'s own docblock
+  // records and exactly the substitution it prescribes — "reach for INK when
+  // DEEP was doing a job", and a control is a job. INK measures 5.46:1.
+  color: INK,
   textDecoration: 'none',
   cursor: 'pointer',
   transition: 'opacity 120ms ease',

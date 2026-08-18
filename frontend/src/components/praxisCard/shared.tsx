@@ -863,7 +863,14 @@ export function PraxisMediaGallery({
           fontFamily: fonts?.body,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
-          opacity: 0.7,
+          // NO `opacity` HERE (#2248). This carried `opacity: 0.7`, which is a
+          // contrast cut no guard can see: the alpha composites the ink over
+          // the ground at the CALL SITE, so the token the manifest measures is
+          // not the colour the reader gets. On UA the pairing measured 2.85:1
+          // in light and 3.22:1 in dark, for an 11px label owing 4.5:1; at full
+          // strength the same ink reads 4.64:1 and 4.96:1 on the same grounds.
+          // The slot still recedes — that is the GROUND's job here, and it is
+          // already doing it: a 4% wash of the accent behind a 45% dashed rule.
           ...emptyStyle,
         }}
       >
