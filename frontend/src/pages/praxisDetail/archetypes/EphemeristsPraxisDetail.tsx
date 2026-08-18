@@ -87,6 +87,7 @@
  * around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
  */
 import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
@@ -98,6 +99,7 @@ import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import {
   BRASS,
+  BRASS_RULE,
   CAPS,
   CAPTION,
   Cornice,
@@ -153,6 +155,53 @@ const ASIDE_WIDTH = 330;
  */
 const VOTER_DISC = 28;
 const VOTER_SIGIL = 16;
+
+/**
+ * The narrowest voter row that still PRINTS the metal's word beside the name
+ * (#2147). Arithmetic on the row's own flex track: the chip (28) + the leader
+ * rule's 10px floor + three 8px gaps + roughly 66px for "platinum" in the
+ * label ramp's small caps leaves ~130px for the name, about eight characters
+ * at `--text-content` before the ellipsis takes over. The 330px aside clears
+ * it comfortably; a 320px phone does not.
+ *
+ * Below it the word DROPS — it is not shrunk, ellipsed or hover-gated. It stays
+ * in the accessibility tree on the same span, visually hidden, so the row still
+ * reads "wanderingclock, platinum" at every width.
+ */
+const VOTER_WORD_MIN = 260;
+
+/**
+ * Does the metal's word fit? A WIDTH decision, not a breakpoint: this panel is
+ * a fixed 330px aside on desktop but the full page column on mobile, so the
+ * form factor is not the predicate — a wide phone has more room here than a
+ * desktop, and `useFormFactor` would drop the word on exactly the rows that
+ * have space for it.
+ *
+ * `null` is "not measured yet" — first paint, and forever where there is no
+ * `ResizeObserver` (SSR, the static test harness). It reads as ROOMY: the word
+ * is the same span either way, so the failure mode is a visible word on a
+ * cramped row rather than a row that never says which metal.
+ */
+export function voterMetalWordFits(rowWidth: number | null): boolean {
+  return rowWidth === null || rowWidth >= VOTER_WORD_MIN;
+}
+
+/**
+ * The observed width of one element, and the ref callback that observes it.
+ * A ref callback rather than `useRef` so the effect re-runs when the node
+ * arrives — the panel is conditional on there being voters at all.
+ */
+function useObservedWidth(): [(node: HTMLElement | null) => void, number | null] {
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const [width, setWidth] = useState<number | null>(null);
+  useEffect(() => {
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [node]);
+  return [setNode, width];
+}
 
 interface SizeSet {
   /** Masthead band height, and the width its registers are drawn to fill. */
@@ -282,6 +331,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   const { t } = useTranslation("praxis");
   const desktop = useFormFactor() !== "mobile";
   const size = SIZES[desktop ? "desktop" : "mobile"];
+  // The voters panel measures ITSELF - see `voterMetalWordFits`. Declared up
+  // here with the other hooks, above the `!praxis` return.
+  const [votersRef, votersWidth] = useObservedWidth();
   const { praxis, voters } = state;
 
   // Guarded non-null by the dispatcher.
@@ -706,8 +758,17 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // drawing the vote widget strikes, out of the same `METAL_SIGILS`, so the
   // mark a voter chose and the mark their vote is filed under cannot diverge.
   //
+  // The sigil is inked in ITS OWN METAL (#2147) rather than in one shared
+  // ochre. One ink made the glyph the only difference between a lead vote and a
+  // platinum one, and at 16px the Saturn and Venus marks are close enough that
+  // the right margin stopped being scannable. The metals can keep full strength
+  // here — and only here on this sheet, where silver measures 1.32:1 and
+  // platinum 1.02:1 — because the disc's ground is `-plate-disc`, dark in BOTH
+  // themes (#2141). Its rim is the RULE brass, not the mark brass: a border is
+  // a line (#2140).
+  //
   // THE METAL'S NAME IS THE ONLY IDENTIFYING INFORMATION in the row, so it is
-  // carried by a VISUALLY-HIDDEN LABEL and not by `title`. That is a deliberate
+  // carried by A REAL SPAN OF TEXT and not by `title`. That is a deliberate
   // departure from `GlossedGlyph`, which the kit uses for the masthead's kanji:
   // a `title` is a pointer affordance — unreliably announced, unreachable on
   // touch — and `GlossedGlyph`'s own justification is that the English it hides
@@ -716,19 +777,38 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // first: hiding the word behind a hover would leave a screen-reader user a
   // row that reads a name and stops. `reframeLabel` still produces the word —
   // the vocabulary is not invented here, only its rendering.
+  //
+  // That word is ONE span in both renderings — printed between the name and the
+  // chip where the row has room, `sr-only` where it does not (#2147). One span
+  // rather than a visible copy plus a hidden one is what keeps the row reading
+  // "name, platinum" exactly once at every width. #2147 asked for the word in
+  // the ROW's `aria-label`; that is NOT built, because a `div` has no role and
+  // an `aria-label` on a role-less generic is dropped rather than announced —
+  // the in-flow text is what actually delivers the row it describes.
+  const metalWordFits = voterMetalWordFits(votersWidth);
   const votersBlock = voters.length > 0 && (
     <section style={panel}>
       {sectionHead(
         t("detail.voters.heading"),
         <span style={plateEyebrow}>{t("detail.voters.count", { count: voters.length })}</span>,
       )}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+      <div
+        ref={votersRef}
+        style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}
+      >
         {voters.map((voter) => {
           const metal = METAL_SIGILS[voter.value - 1] ?? METAL_SIGILS[0];
           return (
             <div
               key={voter.character_id}
-              style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}
+              style={{
+                // Positioned so the `sr-only` word below is clipped against the
+                // ROW and cannot escape to the page's origin.
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+              }}
             >
               <Link
                 to={`/characters/${voter.character_id}`}
@@ -748,8 +828,18 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               </Link>
               <span aria-hidden style={{ flex: 1, minWidth: 10, height: 1, background: LINE }} />
               <span
+                className={metalWordFits ? undefined : "sr-only"}
+                style={
+                  metalWordFits
+                    ? { ...plateEyebrow, flexShrink: 0, whiteSpace: "nowrap" }
+                    : undefined
+                }
+              >
+                {reframeLabel(praxis.task_faction_slug, voter.value)}
+              </span>
+              <span
+                aria-hidden
                 style={{
-                  position: "relative",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
@@ -757,7 +847,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   width: VOTER_DISC,
                   height: VOTER_DISC,
                   borderRadius: "50%",
-                  border: `1px solid ${BRASS}`,
+                  border: `1px solid ${BRASS_RULE}`,
                   background: DISC,
                 }}
               >
@@ -771,15 +861,12 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   <path
                     d={metal.glyph}
                     fill="none"
-                    stroke={OCHRE}
+                    stroke={metal.color}
                     strokeWidth={metal.weight}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="sr-only">
-                  {reframeLabel(praxis.task_faction_slug, voter.value)}
-                </span>
               </span>
             </div>
           );

@@ -30,7 +30,7 @@ vi.mock("../../../hooks/useFormFactor", () => ({
 }));
 
 // Imported after the mock so the archetype picks it up.
-const { default: EphemeristsPraxisDetail } = await import(
+const { default: EphemeristsPraxisDetail, voterMetalWordFits } = await import(
   "../archetypes/EphemeristsPraxisDetail"
 );
 
@@ -291,8 +291,8 @@ describe("Ephemerists praxis detail — the state axes", () => {
 
   /**
    * #1638 — "who voted" is THE STRUCK METAL: the sigil for the metal that voter
-   * cast, in a brass-ringed disc, with the tier WORD carried to assistive tech
-   * on a visually-hidden label rather than on `title`.
+   * cast, in a brass-ringed disc, with the tier WORD carried as real text
+   * rather than on `title`.
    *
    * The name reaching text is the load-bearing half, and it is the half the
    * design's `title` would have failed silently: an attribute is not text
@@ -303,13 +303,62 @@ describe("Ephemerists praxis detail — the state axes", () => {
     const { text, html } = render(state());
     // The word still comes from the shipped `reframeLabel` — no invented copy —
     // and reaches the accessibility tree as text rather than as a tooltip.
-    expect(html, "visually hidden, not withheld").toContain('class="sr-only"');
     expect(text, "the tier for 5").toContain("platinum");
     expect(text, "the tier for 3").toContain("silver");
     expect(html, "and never as a hover-only title").not.toContain('title="platinum"');
     // The roman numerals went with the vote plate's own pips: the sigil in the
     // disc is what says which rank, on both surfaces.
     expect(text, "no numeral beside the mark").not.toContain("III");
+  });
+
+  /**
+   * #2147 — the chip is the readable column down the right margin, so each
+   * metal is inked in ITS OWN token. Shipped with all five stroked in one
+   * `-plate-ochre`, which made the glyph the sole difference between a lead
+   * vote and a platinum one; at 16px Saturn and Venus are too close for that.
+   *
+   * A colour is normally an eyeball check, but "which of five" is not: this
+   * asserts the two fixture rows do not share an ink, which is exactly what a
+   * regression back to one shared constant would break.
+   */
+  it("inks each vote's sigil in its own metal, on a rule-brass rim", () => {
+    const { html } = render(state());
+    expect(html, "rank 5").toContain(
+      'stroke="var(--faction-ephemerists-metal-platinum)"',
+    );
+    expect(html, "rank 3").toContain('stroke="var(--faction-ephemerists-metal-silver)"');
+    // A border is a LINE, so it takes the rule brass and not the mark brass
+    // (#2140's split, landed by #2141).
+    expect(html, "the chip's rim").toContain(
+      "1px solid var(--faction-ephemerists-plate-brass-rule)",
+    );
+  });
+
+  /**
+   * #2147 — the metal's word prints between the name and the chip where the row
+   * has room and drops where it does not, and it is ONE span either way so the
+   * row reads "name, platinum" exactly once at every width.
+   *
+   * The width itself arrives from a `ResizeObserver`, which this harness has no
+   * DOM to run, so the decision is tested at the pure predicate and the DOM is
+   * asserted in the unmeasured state the harness actually renders. The narrow
+   * render is the eyeball check named on the PR.
+   */
+  it("prints the metal's word only where the row has room", () => {
+    expect(voterMetalWordFits(330), "a desktop aside").toBe(true);
+    expect(voterMetalWordFits(200), "a 320px phone").toBe(false);
+    // Unmeasured — first paint, SSR, and this harness. Reads as roomy: the word
+    // is the same span either way, so the failure mode is a visible word on a
+    // cramped row, never a row that cannot say which metal.
+    expect(voterMetalWordFits(null), "not measured yet").toBe(true);
+
+    const { html, text } = render(state());
+    expect(html, "printed, not hidden, at the unmeasured default").not.toContain(
+      'class="sr-only">platinum',
+    );
+    // One span, not a visible copy beside a hidden one. Counted on the TEXT:
+    // the markup names the metal a second time in the sigil's stroke token.
+    expect(text.match(/platinum/g)?.length, "said once").toBe(1);
   });
 
   it("credits every co-author and shows the members section on a collab", () => {
