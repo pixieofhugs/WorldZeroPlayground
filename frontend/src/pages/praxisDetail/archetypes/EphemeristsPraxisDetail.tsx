@@ -113,6 +113,7 @@ import {
   MARGINALIA,
   OCHRE,
   Octagon,
+  OCTAGON_CLIP,
   PLATE,
   QUIET,
   READING,
@@ -247,13 +248,11 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
  * set these in a row, so a shared record reads as shared before a single name is
  * parsed.
  */
-/**
- * The inner (`inset={7}`) octagon of the cartouche below, restated in percent so
- * a portrait can be clipped to it: `Octagon`'s path over a 100-unit box, scaled
- * 0.86 about the centre — p' = 50 + 0.86 × (p − 50). Geometry, not dress.
- */
-const OCTAGON_CLIP =
-  "polygon(32.8% 10.44%, 67.2% 10.44%, 89.56% 32.8%, 89.56% 67.2%, 67.2% 89.56%, 32.8% 89.56%, 10.44% 67.2%, 10.44% 32.8%)";
+/* `OCTAGON_CLIP` stood here — the inner octagon restated in percent so a
+   portrait could be clipped to it. #2228 needed the same derivation for the
+   faction page's roster, and a second copy of a kit path is exactly what #1654
+   swept out of this vocabulary, so it moved to the kit and this page imports
+   it. The polygon is unchanged to the digit. */
 
 function AuthorOctagon({
   name,

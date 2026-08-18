@@ -73,7 +73,14 @@ const dress: ProfileDress = {
   ink: INK,
   muted: QUIET,
   headerMuted: BAND_QUIET,
-  accent: BRASS_LIGHT,
+  // BAND_INK, not the plate's `-plate-brass-light`, for the same reason
+  // `headerMuted` and `taglineExtra` below are band inks: `accent` has one
+  // reader now (#2213 deleted the ring), the progression panel's level numeral,
+  // and this kit's panel is transparent over the cornice BAND. The plate brass
+  // reads 2.83:1 there — it was measured on the hub disc the ring painted in
+  // `surface`, which no longer exists. `-plate-band-ink` is the mark that stock
+  // is drawn for, at 7.59:1.
+  accent: BAND_INK,
   surface: PLATE,
   border: BRASS,
   displayFont: DECO,
@@ -118,14 +125,9 @@ const dress: ProfileDress = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  // The level ring is a brass instrument, so its label is engraved rather than
-  // whispered (#1630). Not free from #1645's card-* repoint, which is where this
-  // was expected to fall out: that landed `--faction-ephemerists-card-accent` on
-  // the brass, and this kit reads none of the `card-*` family — its accent is
-  // the plate's link ink, which #2141 moved from the retired aqua to
-  // `-plate-brass-light`, and this label was `-plate-quiet`. 5.09:1 on the
-  // vellum sheet, 9.68:1 on the night plate.
-  ringLabelInk: BRASS_LIGHT,
+  // A `ringLabelInk: BRASS_LIGHT` engraved the ring's "lvl" label here (#1630).
+  // The ring is gone (#2213) and the label reads in `headerMuted` with the rest
+  // of the panel; see `accent` above for where the brass went instead.
   barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
   barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
   formatLevel: romanLevel,

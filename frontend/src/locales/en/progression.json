@@ -17,10 +17,6 @@
     "paragon": "Paragon"
   },
   "unlocks": {
-    "sign_up_task": {
-      "name": "Sign up for a task",
-      "desc": "Pick a task from the board and begin your first praxis."
-    },
     "start_collaboration": {
       "name": "Start a collaboration",
       "desc": "Pool a task with other questers and split the work."

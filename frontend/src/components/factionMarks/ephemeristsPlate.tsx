@@ -33,6 +33,7 @@
  * half, so these values already read on the dark page.
  */
 import type { CSSProperties } from "react";
+import { mediaUrl } from "../../utils/media";
 
 /* ── The plate's palette, under the names the skins read ── */
 
@@ -617,18 +618,43 @@ export function initialsOf(name: string): string {
 }
 
 /**
- * One player's monogram, struck in a stepped octagon cartouche — the design's
- * ONLY drawing of a person in a list. The roster row, the comment row and the
- * byline all take it, at three sizes, so the Ephemerists never show a circle
- * where the plate's geometry is a cut corner.
+ * The INNER (`inset={7}`) octagon of the cartouche below, restated in percent so
+ * a portrait can be clipped to it: {@link Octagon}'s path over a 100-unit box,
+ * scaled 0.86 about the centre — p' = 50 + 0.86 × (p − 50). Geometry, not dress.
+ *
+ * Clipping to the inner rule and not the outer one is what leaves the brass ring
+ * whole: the photo stops inside the cartouche instead of painting over its own
+ * frame. `EphemeristsPraxisDetail` cut the same polygon locally until #2228
+ * needed it a second time — and a restated derivation of a kit path is the exact
+ * duplication #1654 swept out of this vocabulary, so it lives here now.
+ */
+export const OCTAGON_CLIP =
+  "polygon(32.8% 10.44%, 67.2% 10.44%, 89.56% 32.8%, 89.56% 67.2%, 67.2% 89.56%, 32.8% 89.56%, 10.44% 67.2%, 10.44% 32.8%)";
+
+/**
+ * One player's portrait — or, failing that, their monogram — struck in a stepped
+ * octagon cartouche. The design's ONLY drawing of a person in a list: the roster
+ * row, the comment row and the byline all take it, at three sizes, so the
+ * Ephemerists never show a circle where the plate's geometry is a cut corner.
+ *
+ * `avatarUrl` is the character's `avatar_url`, which is `''` and never null when
+ * nothing has been uploaded — so the empty string IS the fallback signal. The
+ * monogram was ALL this drew until #2228: the faction page passed a name and
+ * nothing else, which is not a fallback misfiring but a surface with no image
+ * path to fall back from, and a photographed keeper rendered as two letters.
+ *
+ * The photo replaces the cartouche's inner content and nothing else — it is
+ * clipped to {@link OCTAGON_CLIP} and laid over the disc, so the brass ring and
+ * the inner rule are the same two strokes either way.
  *
  * `fontSize` is the monogram's optical size inside the cartouche: it scales with
  * the drawn octagon rather than with the type ramp, so it is geometry.
  */
-export function AuthorOctagon({ name, size, fontSize }: {
+export function AuthorOctagon({ name, size, fontSize, avatarUrl }: {
   name: string
   size: number
   fontSize: number
+  avatarUrl?: string
 }) {
   return (
     <span
@@ -639,25 +665,40 @@ export function AuthorOctagon({ name, size, fontSize }: {
         <Octagon inset={0} stroke={BRASS} width={2} fill={DISC} />
         <Octagon inset={7} stroke={BRASS_LIGHT} width={0.8} />
       </svg>
-      <span
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: CAPS,
-          fontWeight: 500,
-          // ornament: the monogram is sized from the octagon it is cut into, not
-          // from the type ramp. A prop rather than a literal, so the rule never
-          // fires here — the note is for the reader, not the linter.
-          fontSize,
-          letterSpacing: "0.08em",
-          color: INK,
-        }}
-      >
-        {initialsOf(name)}
-      </span>
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            clipPath: OCTAGON_CLIP,
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: CAPS,
+            fontWeight: 500,
+            // ornament: the monogram is sized from the octagon it is cut into, not
+            // from the type ramp. A prop rather than a literal, so the rule never
+            // fires here — the note is for the reader, not the linter.
+            fontSize,
+            letterSpacing: "0.08em",
+            color: INK,
+          }}
+        >
+          {initialsOf(name)}
+        </span>
+      )}
     </span>
   );
 }
