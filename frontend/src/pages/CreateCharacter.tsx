@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../utils/factions'
 import CredentialCard from '../components/CredentialCard'
+import FactionSigil from '../components/sigil/FactionSigil'
 import ImageEditModal from '../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../hooks/useFormFactor'
@@ -158,7 +159,10 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
                         boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
                       }}
                     >
-                      <span style={{ ...dot, background: factionCssVar(slug) }} />
+                      {/* The faction's own mark, from the dispatcher every
+                          other chooser draws (#2223) — the 12px disc it
+                          replaces was a placeholder for a mark that exists. */}
+                      <FactionSigil slug={slug} size={18} />
                       <span style={{ fontFamily: factionCssVar(slug, 'card-font'), fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
                         {factionName(slug)}
                       </span>
@@ -250,7 +254,6 @@ const pickerCell: CSSProperties = {
   background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-strong)',
   borderRadius: 6, padding: 'var(--space-md)', textAlign: 'left',
 }
-const dot: CSSProperties = { width: 12, height: 12, borderRadius: '50%', flexShrink: 0 }
 const errorBox: CSSProperties = {
   marginTop: 'var(--space-lg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: 'var(--color-danger)',
   border: '1px solid var(--color-danger)', borderRadius: 4, padding: 'var(--space-sm) var(--space-md)',
